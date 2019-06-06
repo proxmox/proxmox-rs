@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "proxmox-tools",
+    "proxmox-api",
     "proxmox",
 ]

@@ -8,4 +8,5 @@ authors = [
 ]
 
 [dependencies]
+proxmox-api = { path = "../proxmox-api" }
 proxmox-tools = { path = "../proxmox-tools" }
