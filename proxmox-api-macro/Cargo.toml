@@ -1,0 +1,24 @@
+[package]
+name = "proxmox-api-macro"
+edition = "2018"
+version = "0.1.0"
+authors = [ "Wolfgang Bumiller <w.bumiller@proxmox.com>" ]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+derive_builder = "0.7"
+failure = "0.1"
+proc-macro2 = "0.4"
+quote = "0.6"
+syn = { version = "0.15", features = [ "full" ] }
+
+[dev-dependencies]
+bytes = "0.4"
+futures-preview = { version = "0.3.0-alpha.16", features = [ "compat" ] }
+http = "0.1"
+proxmox-api = { path = "../proxmox-api" }
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
