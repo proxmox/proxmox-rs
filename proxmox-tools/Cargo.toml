@@ -1,0 +1,21 @@
+[package]
+name = "proxmox-tools"
+edition = "2018"
+version = "0.1.0"
+authors = [
+    "Dietmar Maurer <dietmar@proxmox.com>",
+    "Wolfgang Bumiller <w.bumiller@proxmox.com>",
+]
+
+[dependencies]
+endian_trait = { version = "0.6", features = ["arrays"] }
+libc = "0.2"
+valgrind_request = { version = "1.1.0", optional = true }
+
+[features]
+default = [ "valgrind" ]
+valgrind = [ "valgrind_request" ]
+
+# Docs should be able to reference the proxmox crate.
+[dev-dependencies]
+proxmox = { path = "../proxmox" }

@@ -1,0 +1,11 @@
+[package]
+name = "proxmox"
+edition = "2018"
+version = "0.1.0"
+authors = [
+    "Dietmar Maurer <dietmar@proxmox.com>",
+    "Wolfgang Bumiller <w.bumiller@proxmox.com>",
+]
+
+[dependencies]
+proxmox-tools = { path = "../proxmox-tools" }
