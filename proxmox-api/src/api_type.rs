@@ -35,7 +35,7 @@ pub struct TypeInfo {
     pub complete_fn: Option<CompleteFn>,
 }
 
-/// Until we can slap `#[api]` onto all the functions we cann start translating our existing
+/// Until we can slap `#[api]` onto all the functions we can start translating our existing
 /// `ApiMethod` structs to this new layout.
 /// Otherwise this is mostly there so we can run the tests in the tests subdirectory without
 /// depending on the api-macro crate. Tests using the macros belong into the api-macro crate itself
