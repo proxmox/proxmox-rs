@@ -51,11 +51,13 @@ fn handle_function(
     // variables. (I'd prefer a struct and using `#{func.description}`, `#{func.protected}` etc.
     // but that's not supported.
 
-    let fn_api_description = definition.remove("description")
+    let fn_api_description = definition
+        .remove("description")
         .ok_or_else(|| format_err!("missing 'description' in method definition"))?
         .expect_lit_str()?;
 
-    let fn_api_protected = definition.remove("protected")
+    let fn_api_protected = definition
+        .remove("protected")
         .map(|v| v.expect_lit_bool())
         .transpose()?
         .unwrap_or_else(|| syn::LitBool {
@@ -63,7 +65,8 @@ fn handle_function(
             value: false,
         });
 
-    let fn_api_reload_timezone = definition.remove("reload_timezone")
+    let fn_api_reload_timezone = definition
+        .remove("reload_timezone")
         .map(|v| v.expect_lit_bool())
         .transpose()?
         .unwrap_or_else(|| syn::LitBool {
@@ -79,7 +82,9 @@ fn handle_function(
     let name = std::mem::replace(&mut item.ident, impl_ident.clone());
     let mut return_type = match item.decl.output {
         syn::ReturnType::Default => syn::Type::Tuple(syn::TypeTuple {
-            paren_token: syn::token::Paren { span: Span::call_site() },
+            paren_token: syn::token::Paren {
+                span: Span::call_site(),
+            },
             elems: syn::punctuated::Punctuated::new(),
         }),
         syn::ReturnType::Type(_, ref ty) => ty.as_ref().clone(),
@@ -215,11 +220,14 @@ fn handle_function(
     } else {
         // Non async fn must return an ApiFuture already!
         return_type = syn::Type::Verbatim(syn::TypeVerbatim {
-            tts: definition.remove("returns")
-                .ok_or_else(|| format_err!(
-                    "non async-fn must return a Response \
-                     and specify its return type via the `returns` property",
-                ))?
+            tts: definition
+                .remove("returns")
+                .ok_or_else(|| {
+                    format_err!(
+                        "non async-fn must return a Response \
+                         and specify its return type via the `returns` property",
+                    )
+                })?
                 .expect_ident()?
                 .into_token_stream(),
         });

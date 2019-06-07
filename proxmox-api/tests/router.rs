@@ -55,7 +55,9 @@ mod methods {
     use serde_derive::{Deserialize, Serialize};
     use serde_json::Value;
 
-    use proxmox_api::{get_type_info, ApiFuture, ApiMethod, ApiOutput, ApiType, Parameter, TypeInfo};
+    use proxmox_api::{
+        get_type_info, ApiFuture, ApiMethod, ApiOutput, ApiType, Parameter, TypeInfo,
+    };
 
     pub async fn get_people(value: Value) -> ApiOutput {
         Ok(Response::builder()
@@ -79,9 +81,7 @@ mod methods {
                 return_type: get_type_info::<String>(),
                 protected: false,
                 reload_timezone: false,
-                handler: |value: Value| -> ApiFuture {
-                    Box::pin(get_people(value))
-                },
+                handler: |value: Value| -> ApiFuture { Box::pin(get_people(value)) },
             }
         };
     }

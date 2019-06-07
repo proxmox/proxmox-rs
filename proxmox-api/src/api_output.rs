@@ -1,4 +1,4 @@
-//! Module to help converting various types into an ApiOutput, mostly required to support 
+//! Module to help converting various types into an ApiOutput, mostly required to support
 
 use serde_json::json;
 
@@ -24,8 +24,7 @@ impl<T: ApiType + serde::Serialize> IntoApiOutput<()> for T {
         Ok(http::Response::builder()
             .status(200)
             .header("content-type", "application/json")
-            .body(bytes::Bytes::from(output))?
-        )
+            .body(bytes::Bytes::from(output))?)
     }
 }
 

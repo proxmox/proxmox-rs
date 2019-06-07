@@ -70,7 +70,9 @@ async fn get_loopback(param: String) -> Result<String, Error> {
     returns: String
 })]
 fn non_async_test(param: String) -> proxmox_api::ApiFuture {
-    Box::pin((async move || proxmox_api::IntoApiOutput::into_api_output(param))())
+    Box::pin((async move || {
+        proxmox_api::IntoApiOutput::into_api_output(param)
+    })())
 }
 
 proxmox_api_macro::router! {
@@ -132,5 +134,8 @@ fn router() {
     // And can I...
     let res = futures::executor::block_on(get_loopback("FOO".to_string()))
         .expect("expected result from get_loopback");
-    assert!(res == "FOO", "expected FOO from direct get_loopback('FOO') call");
+    assert!(
+        res == "FOO",
+        "expected FOO from direct get_loopback('FOO') call"
+    );
 }

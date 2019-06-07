@@ -106,7 +106,9 @@ mod vg {
                     MAKE_MEM_UNDEFINED,
                     addr as usize as ValgrindValue,
                     len as ValgrindValue,
-                    0, 0, 0,
+                    0,
+                    0,
+                    0,
                 ],
             )
         }

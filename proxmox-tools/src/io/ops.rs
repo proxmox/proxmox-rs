@@ -213,14 +213,10 @@ impl<R: io::Read> ReadExtOps for R {
     }
 
     unsafe fn read_le_value<T: Endian>(&mut self) -> io::Result<T> {
-        Ok(self.read_host_value::<T>()?.
-            from_le()
-        )
+        Ok(self.read_host_value::<T>()?.from_le())
     }
 
     unsafe fn read_be_value<T: Endian>(&mut self) -> io::Result<T> {
-        Ok(self.read_host_value::<T>()?
-            .from_be()
-        )
+        Ok(self.read_host_value::<T>()?.from_be())
     }
 }
