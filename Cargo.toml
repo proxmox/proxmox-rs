@@ -3,5 +3,6 @@ members = [
     "proxmox-tools",
     "proxmox-api",
     "proxmox-api-macro",
+    "proxmox-sys",
     "proxmox",
 ]

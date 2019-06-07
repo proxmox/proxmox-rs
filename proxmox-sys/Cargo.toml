@@ -1,5 +1,5 @@
 [package]
-name = "proxmox"
+name = "proxmox-sys"
 edition = "2018"
 version = "0.1.0"
 authors = [
@@ -8,7 +8,11 @@ authors = [
 ]
 
 [dependencies]
-proxmox-api = { path = "../proxmox-api" }
-proxmox-api-macro = { path = "../proxmox-api-macro" }
+failure = "0.1"
+libc = "0.2"
+nix = "0.13"
 proxmox-tools = { path = "../proxmox-tools" }
-proxmox-sys = { path = "../proxmox-sys" }
+
+# Docs should be able to reference the proxmox crate.
+[dev-dependencies]
+proxmox = { path = "../proxmox" }
