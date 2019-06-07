@@ -167,8 +167,8 @@ fn handle_function(
             //   perform the serialization/http::Response-building automatically.
             //   (Alternatively we could do exactly that with a trait so we don't have to parse the
             //   return type?)
-            fn wrapped_api_handler(args: ::serde_json::Value) -> ::proxmox_api::ApiFuture {
-                async fn handler(mut args: ::serde_json::Value) -> ::proxmox_api::ApiOutput {
+            fn wrapped_api_handler(args: ::serde_json::Value) -> ::proxmox::api::ApiFuture {
+                async fn handler(mut args: ::serde_json::Value) -> ::proxmox::api::ApiOutput {
                     let mut empty_args = ::serde_json::map::Map::new();
                     let args = args.as_object_mut()
                         .unwrap_or(&mut empty_args);
@@ -183,11 +183,11 @@ fn handle_function(
                             }
                             extra.push_str(arg);
                         }
-                        bail!("unexpected extra parameters: {}", extra);
+                        ::failure::bail!("unexpected extra parameters: {}", extra);
                     }
 
                     let output = #struct_name::#impl_ident(#extracted_args).await?;
-                    ::proxmox_api::IntoApiOutput::into_api_output(output)
+                    ::proxmox::api::IntoApiOutput::into_api_output(output)
                 }
                 Box::pin(handler(args))
             }
@@ -238,10 +238,10 @@ fn handle_function(
             // Unfortunately we cannot return the actual function since that won't work for
             // `async fn`, since an `async fn` cannot appear as a return type :(
             impl ::std::ops::Deref for #struct_name {
-                type Target = fn(#inputs) -> ::proxmox_api::ApiFuture;
+                type Target = fn(#inputs) -> ::proxmox::api::ApiFuture;
 
                 fn deref(&self) -> &Self::Target {
-                    const FUNC: fn(#inputs) -> ::proxmox_api::ApiFuture = |#inputs| {
+                    const FUNC: fn(#inputs) -> ::proxmox::api::ApiFuture = |#inputs| {
                         #struct_name::#impl_ident(#passed_args)
                     };
                     &FUNC
@@ -256,18 +256,18 @@ fn handle_function(
         //
         // Note that technically we don't need the `description` member in this trait, as this is
         // mostly used at compile time for documentation!
-        impl ::proxmox_api::ApiMethodInfo for #struct_name {
+        impl ::proxmox::api::ApiMethodInfo for #struct_name {
             fn description(&self) -> &'static str {
                 #fn_api_description
             }
 
-            fn parameters(&self) -> &'static [::proxmox_api::Parameter] {
+            fn parameters(&self) -> &'static [::proxmox::api::Parameter] {
                 // FIXME!
                 &[]
             }
 
-            fn return_type(&self) -> &'static ::proxmox_api::TypeInfo {
-                <#return_type as ::proxmox_api::ApiType>::type_info()
+            fn return_type(&self) -> &'static ::proxmox::api::TypeInfo {
+                <#return_type as ::proxmox::api::ApiType>::type_info()
             }
 
             fn protected(&self) -> bool {
@@ -278,7 +278,7 @@ fn handle_function(
                 #fn_api_reload_timezone
             }
 
-            fn handler(&self) -> fn(::serde_json::Value) -> ::proxmox_api::ApiFuture {
+            fn handler(&self) -> fn(::serde_json::Value) -> ::proxmox::api::ApiFuture {
                 #struct_name::wrapped_api_handler
             }
         }
@@ -322,13 +322,13 @@ fn handle_struct_unnamed(
 
     let validator = match apidef.validate {
         Some(ident) => quote! { #ident(&self.0) },
-        None => quote! { proxmox_api::ApiType::verify(&self.0) },
+        None => quote! { ::proxmox::api::ApiType::verify(&self.0) },
     };
 
     Ok(quote! {
-        impl ::proxmox_api::ApiType for #name {
-            fn type_info() -> &'static ::proxmox_api::TypeInfo {
-                const INFO: ::proxmox_api::TypeInfo = ::proxmox_api::TypeInfo {
+        impl ::proxmox::api::ApiType for #name {
+            fn type_info() -> &'static ::proxmox::api::TypeInfo {
+                const INFO: ::proxmox::api::TypeInfo = ::proxmox::api::TypeInfo {
                     name: stringify!(#name),
                     description: "FIXME",
                     complete_fn: None, // FIXME!
@@ -371,9 +371,9 @@ fn handle_struct_named(
     );
 
     Ok(quote! {
-        impl ::proxmox_api::ApiType for #name {
-            fn type_info() -> &'static ::proxmox_api::TypeInfo {
-                const INFO: ::proxmox_api::TypeInfo = ::proxmox_api::TypeInfo {
+        impl ::proxmox::api::ApiType for #name {
+            fn type_info() -> &'static ::proxmox::api::TypeInfo {
+                const INFO: ::proxmox::api::TypeInfo = ::proxmox::api::TypeInfo {
                     name: stringify!(#name),
                     description: #description,
                     complete_fn: None, // FIXME!
