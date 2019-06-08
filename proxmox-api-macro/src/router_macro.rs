@@ -197,10 +197,13 @@ impl Router {
 
             quote! {
                 #[allow(non_camel_case_types)]
-                struct #type_name(std::cell::Cell<Option<Router>>, std::sync::Once);
+                struct #type_name(
+                    std::cell::Cell<Option<::proxmox::api::Router>>,
+                    std::sync::Once,
+                );
                 unsafe impl Sync for #type_name {}
                 impl std::ops::Deref for #type_name {
-                    type Target = Router;
+                    type Target = ::proxmox::api::Router;
                     fn deref(&self) -> &Self::Target {
                         self.1.call_once(|| unsafe {
                             self.0.set(Some(#router_expression));
