@@ -1,8 +1,6 @@
 #![feature(async_await)]
 
-use bytes::Bytes;
-use failure::{bail, format_err, Error};
-use http::Response;
+use failure::{bail, Error};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
 

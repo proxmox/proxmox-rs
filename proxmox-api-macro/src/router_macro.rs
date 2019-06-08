@@ -148,8 +148,6 @@ impl Router {
     fn into_token_stream(self, name: Option<Ident>) -> TokenStream {
         use std::iter::FromIterator;
 
-        use proc_macro2::{Group, Literal, Punct, Spacing};
-
         let mut out = quote! {
             ::proxmox::api::Router::new()
         };
@@ -277,7 +275,10 @@ fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
 
     fn push_component(path: &mut Path, component: &mut String, span: &mut Option<Span>) {
         if !component.is_empty() {
-            path.push(Component::Name(LitStr::new(&component, span.take().unwrap())));
+            path.push(Component::Name(LitStr::new(
+                &component,
+                span.take().unwrap(),
+            )));
             component.clear();
         }
     };
