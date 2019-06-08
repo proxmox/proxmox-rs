@@ -14,6 +14,10 @@ use super::ApiMethodInfo;
 /// current directory, a `Parameter` entry is used. Note that the parameter name is fixed at this
 /// point, so all method calls beneath will receive a parameter ot that particular name.
 pub enum SubRoute {
+    /// Call this router for any further subdirectory paths, and provide the relative path via the
+    /// given parameter.
+    Wildcard(&'static str),
+
     /// This is used for plain subdirectories.
     Directories(HashMap<&'static str, Router>),
 
@@ -59,14 +63,24 @@ impl Router {
     // The actual implementation taking the parameter as &str
     fn lookup_do(&self, path: &str) -> Option<(&Self, Option<Value>)> {
         let mut matched_params = None;
+        let mut matched_wildcard: Option<String> = None;
 
         let mut this = self;
         for component in path.split('/') {
+            if let Some(ref mut relative_path) = matched_wildcard {
+                relative_path.push('/');
+                relative_path.push_str(component);
+                continue;
+            }
             if component.is_empty() {
                 // `foo//bar` or the first `/` in `/foo`
                 continue;
             }
             this = match &this.subroute {
+                Some(SubRoute::Wildcard(_)) => {
+                    matched_wildcard = Some(component.to_string());
+                    continue;
+                }
                 Some(SubRoute::Directories(subdirs)) => subdirs.get(component)?,
                 Some(SubRoute::Parameter(param_name, router)) => {
                     let previous = matched_params
@@ -79,6 +93,15 @@ impl Router {
                 }
                 None => return None,
             };
+        }
+
+        if let Some(SubRoute::Wildcard(param_name)) = &this.subroute {
+            matched_params
+                .get_or_insert_with(serde_json::Map::new)
+                .insert(
+                    param_name.to_string(),
+                    Value::String(matched_wildcard.unwrap_or(String::new())),
+                );
         }
 
         Some((this, matched_params.map(Value::Object)))
@@ -132,7 +155,7 @@ impl Router {
         self
     }
 
-    /// Builder method to add a regular directory entro to this router.
+    /// Builder method to add a regular directory entry to this router.
     ///
     /// This is supposed to be used statically (via `lazy_static!), therefore we panic if we
     /// already have a subdir entry!
@@ -152,5 +175,18 @@ impl Router {
         }
         self
     }
-}
 
+    /// Builder method to match the rest of the path into a parameter.
+    ///
+    /// This is supposed to be used statically (via `lazy_static!), therefore we panic if we
+    /// already have a subdir entry!
+    pub fn wildcard(mut self, path_parameter_name: &'static str) -> Self {
+        if self.subroute.is_some() {
+            panic!("'wildcard' and other sub routers are mutually exclusive");
+        }
+
+        self.subroute = Some(SubRoute::Wildcard(path_parameter_name));
+
+        self
+    }
+}

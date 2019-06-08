@@ -7,43 +7,78 @@ use proxmox_api::Router;
 #[test]
 fn basic() {
     let info: &proxmox_api::ApiMethod = &methods::GET_PEOPLE;
-    let router = Router::new().subdir(
-        "people",
-        Router::new().parameter_subdir("person", Router::new().get(info)),
+    let get_subpath: &proxmox_api::ApiMethod = &methods::GET_SUBPATH;
+    let router = Router::new()
+        .subdir(
+            "people",
+            Router::new().parameter_subdir("person", Router::new().get(info)),
+        )
+        .subdir(
+            "wildcard",
+            Router::new().wildcard("subpath").get(get_subpath),
+        );
+
+    check_with_matched_params(&router, "people/foo", "person", "foo", "foo");
+    check_with_matched_params(&router, "people//foo", "person", "foo", "foo");
+    check_with_matched_params(&router, "wildcard", "subpath", "", "");
+    check_with_matched_params(&router, "wildcard/", "subpath", "", "");
+    check_with_matched_params(&router, "wildcard//", "subpath", "", "");
+    check_with_matched_params(&router, "wildcard/dir1", "subpath", "dir1", "dir1");
+    check_with_matched_params(
+        &router,
+        "wildcard/dir1/dir2",
+        "subpath",
+        "dir1/dir2",
+        "dir1/dir2",
     );
+    check_with_matched_params(&router, "wildcard/dir1//2", "subpath", "dir1//2", "dir1//2");
+}
 
+fn check_with_matched_params(
+    router: &Router,
+    path: &str,
+    param_name: &str,
+    param_value: &str,
+    expected_body: &str,
+) {
     let (target, params) = router
-        .lookup("people/foo")
-        .expect("must be able to lookup 'people/foo'");
+        .lookup(path)
+        .expect(&format!("must be able to lookup '{}'", path));
 
-    let params = params.expect("expected people/foo to create a parameter object");
+    let params = params.expect(&format!(
+        "expected parameters to be matched into '{}'",
+        param_name,
+    ));
 
     let apifn = target
         .get
         .as_ref()
-        .expect("expected GET method on people/foo")
+        .expect(&format!("expected GET method on {}", path))
         .handler();
 
-    let person = params["person"]
-        .as_str()
-        .expect("expected lookup() to fill the 'person' parameter");
+    let arg = params[param_name].as_str().expect(&format!(
+        "expected lookup() to fill the '{}' parameter",
+        param_name
+    ));
 
-    assert!(
-        person == "foo",
-        "lookup of 'people/foo' should set 'person' to 'foo'"
+    assert_eq!(
+        arg, param_value,
+        "lookup of '{}' should set '{}' to '{}'",
+        path, param_name, param_value,
     );
 
     let response = futures::executor::block_on(Pin::from(apifn(params)))
         .expect("expected the simple test api function to be ready immediately");
 
-    assert!(response.status() == 200, "response status must be 200");
+    assert_eq!(response.status(), 200, "response status must be 200");
 
     let body =
         std::str::from_utf8(response.body().as_ref()).expect("expected a valid utf8 repsonse body");
 
-    assert!(
-        body == "foo",
-        "repsonse of people/foo should simply be 'foo'"
+    assert_eq!(
+        body, expected_body,
+        "response of {} should be '{}', got '{}'",
+        path, expected_body, body,
     );
 }
 
@@ -66,6 +101,13 @@ mod methods {
             .body(value["person"].as_str().unwrap().into())?)
     }
 
+    pub async fn get_subpath(value: Value) -> ApiOutput {
+        Ok(Response::builder()
+            .status(200)
+            .header("content-type", "application/json")
+            .body(value["subpath"].as_str().unwrap().into())?)
+    }
+
     lazy_static! {
         static ref GET_PEOPLE_PARAMS: Vec<Parameter> = {
             vec![Parameter {
@@ -82,6 +124,23 @@ mod methods {
                 protected: false,
                 reload_timezone: false,
                 handler: |value: Value| -> ApiFuture { Box::pin(get_people(value)) },
+            }
+        };
+        static ref GET_SUBPATH_PARAMS: Vec<Parameter> = {
+            vec![Parameter {
+                name: "subpath",
+                description: "the matched relative subdir path",
+                type_info: get_type_info::<String>(),
+            }]
+        };
+        pub static ref GET_SUBPATH: ApiMethod = {
+            ApiMethod {
+                description: "get the 'subpath' parameter returned back",
+                parameters: &GET_SUBPATH_PARAMS,
+                return_type: get_type_info::<String>(),
+                protected: false,
+                reload_timezone: false,
+                handler: |value: Value| -> ApiFuture { Box::pin(get_subpath(value)) },
             }
         };
     }
