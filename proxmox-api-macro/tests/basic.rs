@@ -90,6 +90,8 @@ proxmox_api_macro::router! {
 
             /dir: { GET: non_async_test },
         },
+
+        /wild/{param}*: { GET: get_loopback },
     };
 }
 
@@ -127,6 +129,12 @@ fn router() {
     );
     check_body(&TEST_ROUTER, "/another/foo", r#"{"data":"foo"}"#);
     check_body(&TEST_ROUTER, "/another/foo/dir", r#"{"data":"foo"}"#);
+
+    check_body(&TEST_ROUTER, "/wild", r#"{"data":""}"#);
+    check_body(&TEST_ROUTER, "/wild/", r#"{"data":""}"#);
+    check_body(&TEST_ROUTER, "/wild/asdf", r#"{"data":"asdf"}"#);
+    check_body(&TEST_ROUTER, "/wild//asdf", r#"{"data":"asdf"}"#);
+    check_body(&TEST_ROUTER, "/wild/asdf/poiu", r#"{"data":"asdf/poiu"}"#);
 
     // And can I...
     let res = futures::executor::block_on(get_loopback("FOO".to_string()))

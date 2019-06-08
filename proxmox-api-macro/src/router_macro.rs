@@ -41,6 +41,7 @@ pub fn router_macro(input: TokenStream) -> Result<TokenStream, Error> {
 pub enum SubRoute {
     Directories(HashMap<LitStr, Router>),
     Parameter(LitStr, Box<Router>),
+    Wildcard(LitStr),
 }
 
 impl SubRoute {
@@ -80,8 +81,12 @@ enum Entry {
 enum Component {
     /// This component is a fixed sub directory name. Eg. `foo` or `baz` in `/foo/{bar}/baz`.
     Name(LitStr),
+
     /// This component matches everything into a parameter. Eg. `bar` in `/foo/{bar}/baz`.
     Match(LitStr),
+
+    /// Matches the rest of the path into a parameters
+    Wildcard(LitStr),
 }
 
 /// A path is just a list of components.
@@ -91,7 +96,7 @@ impl Router {
     /// Insert a new router at a specific path.
     ///
     /// Note that this does not allow replacing an already existing router node.
-    fn insert(&mut self, path: Path, router: Router) -> Result<(), Error> {
+    fn insert(&mut self, path: Path, mut router: Router) -> Result<(), Error> {
         let mut at = self;
         let mut created = false;
         for component in path {
@@ -106,8 +111,11 @@ impl Router {
                                 Router::default()
                             });
                         }
-                        SubRoute::Parameter(_param, _router) => {
+                        SubRoute::Parameter(_, _) => {
                             bail!("subdir '{}' clashes with matched parameter", name.value());
+                        }
+                        SubRoute::Wildcard(_) => {
+                            bail!("cannot add subdir '{}', it is already matched by a wildcard");
                         }
                     }
                 }
@@ -117,12 +125,6 @@ impl Router {
                         SubRoute::parameter(name.clone())
                     });
                     match subroute {
-                        SubRoute::Directories(_) => {
-                            bail!(
-                                "parameter matcher '{}' clashes with existing directory",
-                                name.value()
-                            );
-                        }
                         SubRoute::Parameter(existing_name, router) => {
                             if name != *existing_name {
                                 bail!(
@@ -133,7 +135,26 @@ impl Router {
                             }
                             at = router.as_mut();
                         }
+                        SubRoute::Directories(_) => {
+                            bail!(
+                                "parameter matcher '{}' clashes with existing directory",
+                                name.value()
+                            );
+                        }
+                        SubRoute::Wildcard(_) => {
+                            bail!("parameter matcher '{}' clashes with wildcard", name.value());
+                        }
                     }
+                }
+                Component::Wildcard(name) => {
+                    if at.subroute.is_some() {
+                        bail!("wildcard clashes with existing subdirectory");
+                    }
+                    created = true;
+                    if router.subroute.is_some() {
+                        bail!("wildcard sub router cannot have subdirectories!");
+                    }
+                    router.subroute = Some(SubRoute::Wildcard(name.clone()));
                 }
             }
         }
@@ -187,6 +208,11 @@ impl Router {
                         .subdir(#name, #router)
                     });
                 }
+            }
+            Some(SubRoute::Wildcard(name)) => {
+                out.extend(quote! {
+                    .wildcard(#name)
+                });
             }
         }
 
@@ -363,6 +389,18 @@ fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
                 '/' => {
                     push_component(&mut path, &mut component, &mut span);
                     // `component` is cleared, we start the next one
+                }
+                '*' => {
+                    // must be the last component, after a matcher
+                    if !component.is_empty() {
+                        bail!("wildcard must be the final matcher");
+                    }
+                    if let Some(Component::Match(name)) = path.pop() {
+                        path.push(Component::Wildcard(name));
+                        match_colon(&mut *tokens)?;
+                        break;
+                    }
+                    bail!("asterisk only allowed at the end of a match pattern");
                 }
                 other => bail!("invalid punctuation in path: {:?}", other),
             },
