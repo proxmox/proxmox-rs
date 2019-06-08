@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
-use proc_macro2::{Delimiter, Ident, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, Error};
 use quote::quote;
+use syn::LitStr;
 
 use super::parsing::*;
 
@@ -38,8 +39,8 @@ pub fn router_macro(input: TokenStream) -> Result<TokenStream, Error> {
 /// This can either be a fixed set of directories, or a parameter name, in which case it matches
 /// all directory names into the parameter of the specified name.
 pub enum SubRoute {
-    Directories(HashMap<String, Router>),
-    Parameter(String, Box<Router>),
+    Directories(HashMap<LitStr, Router>),
+    Parameter(LitStr, Box<Router>),
 }
 
 impl SubRoute {
@@ -49,7 +50,7 @@ impl SubRoute {
     }
 
     /// Create a parameter entry with an empty default router.
-    fn parameter(name: String) -> Self {
+    fn parameter(name: LitStr) -> Self {
         SubRoute::Parameter(name, Box::new(Router::default()))
     }
 }
@@ -78,9 +79,9 @@ enum Entry {
 /// The components making up a path.
 enum Component {
     /// This component is a fixed sub directory name. Eg. `foo` or `baz` in `/foo/{bar}/baz`.
-    Name(String),
+    Name(LitStr),
     /// This component matches everything into a parameter. Eg. `bar` in `/foo/{bar}/baz`.
-    Match(String),
+    Match(LitStr),
 }
 
 /// A path is just a list of components.
@@ -106,7 +107,7 @@ impl Router {
                             });
                         }
                         SubRoute::Parameter(_param, _router) => {
-                            bail!("subdirectory '{}' clashes with parameter matcher", name);
+                            bail!("subdir '{}' clashes with matched parameter", name.value());
                         }
                     }
                 }
@@ -119,15 +120,15 @@ impl Router {
                         SubRoute::Directories(_) => {
                             bail!(
                                 "parameter matcher '{}' clashes with existing directory",
-                                name
+                                name.value()
                             );
                         }
                         SubRoute::Parameter(existing_name, router) => {
                             if name != *existing_name {
                                 bail!(
                                     "paramter matcher '{}' clashes with existing name '{}'",
-                                    name,
-                                    existing_name,
+                                    name.value(),
+                                    existing_name.value(),
                                 );
                             }
                             at = router.as_mut();
@@ -147,23 +148,17 @@ impl Router {
     fn into_token_stream(self, name: Option<Ident>) -> TokenStream {
         use std::iter::FromIterator;
 
-        use proc_macro2::{Group, Literal, Punct, Spacing, Span};
+        use proc_macro2::{Group, Literal, Punct, Spacing};
 
-        let mut out = vec![
-            TokenTree::Ident(Ident::new("Router", Span::call_site())),
-            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
-            TokenTree::Punct(Punct::new(':', Spacing::Alone)),
-            TokenTree::Ident(Ident::new("new", Span::call_site())),
-            TokenTree::Group(Group::new(Delimiter::Parenthesis, TokenStream::new())),
-        ];
+        let mut out = quote! {
+            ::proxmox::api::Router::new()
+        };
 
-        fn add_method(out: &mut Vec<TokenTree>, name: &str, func_name: Ident) {
-            out.push(TokenTree::Punct(Punct::new('.', Spacing::Alone)));
-            out.push(TokenTree::Ident(Ident::new(name, Span::call_site())));
-            out.push(TokenTree::Group(Group::new(
-                Delimiter::Parenthesis,
-                TokenStream::from_iter(vec![TokenTree::Ident(func_name)]),
-            )));
+        fn add_method(out: &mut TokenStream, name: &'static str, func_name: Ident) {
+            let name = Ident::new(name, func_name.span());
+            out.extend(quote! {
+                .#name(#func_name)
+            });
         }
 
         if let Some(method) = self.get {
@@ -182,34 +177,17 @@ impl Router {
         match self.subroute {
             None => (),
             Some(SubRoute::Parameter(name, router)) => {
-                out.push(TokenTree::Punct(Punct::new('.', Spacing::Alone)));
-                out.push(TokenTree::Ident(Ident::new(
-                    "parameter_subdir",
-                    Span::call_site(),
-                )));
-                let mut sub_route = TokenStream::from_iter(vec![
-                    TokenTree::Literal(Literal::string(&name)),
-                    TokenTree::Punct(Punct::new(',', Spacing::Alone)),
-                ]);
-                sub_route.extend(router.into_token_stream(None));
-                out.push(TokenTree::Group(Group::new(
-                    Delimiter::Parenthesis,
-                    sub_route,
-                )));
+                let router = router.into_token_stream(None);
+                out.extend(quote! {
+                    .parameter_subdir(#name, #router)
+                });
             }
             Some(SubRoute::Directories(hash)) => {
                 for (name, router) in hash {
-                    out.push(TokenTree::Punct(Punct::new('.', Spacing::Alone)));
-                    out.push(TokenTree::Ident(Ident::new("subdir", Span::call_site())));
-                    let mut sub_route = TokenStream::from_iter(vec![
-                        TokenTree::Literal(Literal::string(&name)),
-                        TokenTree::Punct(Punct::new(',', Spacing::Alone)),
-                    ]);
-                    sub_route.extend(router.into_token_stream(None));
-                    out.push(TokenTree::Group(Group::new(
-                        Delimiter::Parenthesis,
-                        sub_route,
-                    )));
+                    let router = router.into_token_stream(None);
+                    out.extend(quote! {
+                        .subdir(#name, #router)
+                    });
                 }
             }
         }
@@ -295,6 +273,15 @@ fn parse_entry_key(tokens: &mut TokenIter) -> Result<Option<Entry>, Error> {
 fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
     let mut path = Path::new();
     let mut component = String::new();
+    let mut span = None;
+
+    fn push_component(path: &mut Path, component: &mut String, span: &mut Option<Span>) {
+        if !component.is_empty() {
+            path.push(Component::Name(LitStr::new(&component, span.take().unwrap())));
+            component.clear();
+        }
+    };
+
     loop {
         match tokens.next() {
             None => bail!("expected path component"),
@@ -303,11 +290,8 @@ fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
                     bail!("invalid path component: {:?}", group);
                 }
                 let name = need_hyphenated_name(&mut group.stream().into_iter().peekable())?;
-                if !component.is_empty() {
-                    path.push(Component::Name(component));
-                    component = String::new();
-                }
-                path.push(Component::Match(name.into_string()));
+                push_component(&mut path, &mut component, &mut span);
+                path.push(Component::Match(name));
 
                 // Now:
                 //     `component` is empty
@@ -324,6 +308,9 @@ fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
             }
             Some(TokenTree::Ident(ident)) => {
                 component.push_str(&ident.to_string());
+                if span.is_none() {
+                    span = Some(ident.span());
+                }
 
                 // Now:
                 //     `component` is partially or fully filled
@@ -348,10 +335,7 @@ fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
                     // `component` is partially filled, we need more
                 }
                 '/' => {
-                    if !component.is_empty() {
-                        path.push(Component::Name(component));
-                        component = String::new();
-                    }
+                    push_component(&mut path, &mut component, &mut span);
                     // `component` is cleared, we start the next one
                 }
                 other => bail!("invalid punctuation in path: {:?}", other),
@@ -363,9 +347,7 @@ fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
         }
     }
 
-    if !component.is_empty() {
-        path.push(Component::Name(component));
-    }
+    push_component(&mut path, &mut component, &mut span);
 
     Ok(path)
 }

@@ -108,12 +108,12 @@ impl From<Ident> for Name {
     }
 }
 
-pub fn need_hyphenated_name(tokens: &mut TokenIter) -> Result<Name, Error> {
+pub fn need_hyphenated_name(tokens: &mut TokenIter) -> Result<syn::LitStr, Error> {
     let start = need_ident(&mut *tokens)?;
     finish_hyphenated_name(&mut *tokens, start)
 }
 
-pub fn finish_hyphenated_name(tokens: &mut TokenIter, name: Ident) -> Result<Name, Error> {
+pub fn finish_hyphenated_name(tokens: &mut TokenIter, name: Ident) -> Result<syn::LitStr, Error> {
     let span = name.span();
     let mut name = name.to_string();
 
@@ -137,7 +137,7 @@ pub fn finish_hyphenated_name(tokens: &mut TokenIter, name: Ident) -> Result<Nam
         }
     }
 
-    Ok(Name(name, span))
+    Ok(syn::LitStr::new(&name, span))
 }
 
 // parse an object notation:
