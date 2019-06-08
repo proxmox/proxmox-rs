@@ -319,6 +319,28 @@ fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
                 //     `/` (and we start the next component)
                 //     `-` (the component name is not finished yet)
             }
+            Some(TokenTree::Literal(literal)) => {
+                let text = literal.to_string();
+                let litspan = literal.span();
+                match syn::Lit::new(literal) {
+                    syn::Lit::Int(_) => {
+                        component.push_str(&text);
+                        if span.is_none() {
+                            span = Some(litspan);
+                        }
+                    }
+                    other => {
+                        bail!("invalid literal path component: {:?}", other);
+                    }
+                }
+                // Same case as the Ident case above:
+                // Now:
+                //     `component` is partially or fully filled
+                // Next tokens:
+                //     `:` (and we're done)
+                //     `/` (and we start the next component)
+                //     `-` (the component name is not finished yet)
+            }
             Some(other) => bail!("invalid path component: {:?}", other),
         }
 
