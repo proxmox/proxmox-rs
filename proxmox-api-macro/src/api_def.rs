@@ -59,7 +59,7 @@ impl ParameterDefinition {
     ) {
         verifiers.push(match self.validate {
             Some(ref ident) => quote! { #ident(&#this)?; },
-            None => quote! { proxmox_api::ApiType::verify(&#this)?; },
+            None => quote! { ::proxmox::api::ApiType::verify(&#this)?; },
         });
 
         if let Some(ref lit) = self.minimum {

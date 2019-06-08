@@ -6,8 +6,7 @@ use http::Response;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
 
-use proxmox_api::Router;
-use proxmox_api_macro::api;
+use proxmox::api::{api, Router};
 
 #[api({
     description: "A hostname or IP address",
@@ -69,9 +68,9 @@ async fn get_loopback(param: String) -> Result<String, Error> {
     },
     returns: String
 })]
-fn non_async_test(param: String) -> proxmox_api::ApiFuture {
+fn non_async_test(param: String) -> proxmox::api::ApiFuture {
     Box::pin((async move || {
-        proxmox_api::IntoApiOutput::into_api_output(param)
+        proxmox::api::IntoApiOutput::into_api_output(param)
     })())
 }
 
