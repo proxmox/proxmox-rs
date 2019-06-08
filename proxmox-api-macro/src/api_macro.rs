@@ -196,7 +196,6 @@ fn handle_function(
 
     if item.asyncness.is_some() {
         // An async function is expected to return its value, so we wrap it a bit:
-
         body.push(quote! {
             // Our helper type derefs to a wrapper performing input validation and returning a
             // Pin<Box<Future>>.

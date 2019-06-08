@@ -317,6 +317,9 @@ unconstrained_api_type! {&str}
 unconstrained_api_type! {String, isize, usize, i64, u64, i32, u32, i16, u16, i8, u8, f64, f32}
 unconstrained_api_type! {Vec<String>}
 
+// Raw return types are also okay:
+unconstrained_api_type! {Response<Bytes>}
+
 // FIXME: make const once feature(const_fn) is stable!
 pub fn get_type_info<T: ApiType>() -> &'static TypeInfo {
     T::type_info()
