@@ -66,7 +66,7 @@ fn handle_function(
         });
 
     let fn_api_reload_timezone = definition
-        .remove("reload_timezone")
+        .remove("reload-timezone")
         .map(|v| v.expect_lit_bool())
         .transpose()?
         .unwrap_or_else(|| syn::LitBool {
