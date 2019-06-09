@@ -74,6 +74,12 @@ fn handle_function(
             value: false,
         });
 
+    //let mut body_type = definition
+    //    .remove("body")
+    //    .map(|v| v.expect_tt())
+    //    .transpose()?
+    //    .unwrap_or_else(|| quote! { ::hyper::Body });
+
     let vis = std::mem::replace(&mut item.vis, syn::Visibility::Inherited);
     let span = item.ident.span();
     let name_str = item.ident.to_string();
