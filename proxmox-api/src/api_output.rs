@@ -10,36 +10,41 @@ use super::{ApiOutput, ApiType};
 /// wrapped in a `http::Response` with a status code of `200`, but if an API method returns a
 /// `http::Response`, we don't want that, our wrappers produced by the `#[api]` macro simply call
 /// `output.into_api_output()`, and the trait implementation decides how to proceed.
-pub trait IntoApiOutput<T> {
-    fn into_api_output(self) -> ApiOutput;
+pub trait IntoApiOutput<Body, T> {
+    fn into_api_output(self) -> ApiOutput<Body>;
 }
 
-impl<T: ApiType + serde::Serialize> IntoApiOutput<()> for T {
+impl<Body, T> IntoApiOutput<Body, ()> for T
+where
+    Body: 'static,
+    T: ApiType + serde::Serialize,
+    Body: From<String>,
+{
     /// By default, any serializable type is serialized into a `{"data": output}` json structure,
     /// and returned as http status 200.
-    fn into_api_output(self) -> ApiOutput {
+    fn into_api_output(self) -> ApiOutput<Body> {
         let output = serde_json::to_value(self)?;
         let res = json!({ "data": output });
         let output = serde_json::to_string(&res)?;
         Ok(http::Response::builder()
             .status(200)
             .header("content-type", "application/json")
-            .body(bytes::Bytes::from(output))?)
+            .body(Body::from(output))?)
     }
 }
 
 /// Methods returning `ApiOutput` (which is a `Result<http::Result<Bytes>, Error>`) don't need
 /// anything to happen to the value anymore, return the result as is:
-impl IntoApiOutput<ApiOutput> for ApiOutput {
-    fn into_api_output(self) -> ApiOutput {
+impl<Body> IntoApiOutput<Body, ApiOutput<Body>> for ApiOutput<Body> {
+    fn into_api_output(self) -> ApiOutput<Body> {
         self
     }
 }
 
 /// Methods returning a `http::Response` (without the `Result<_, Error>` around it) need to be
 /// wrapped in a `Result`, as we do apply a `?` operator on our methods.
-impl IntoApiOutput<ApiOutput> for http::Response<bytes::Bytes> {
-    fn into_api_output(self) -> ApiOutput {
+impl<Body> IntoApiOutput<Body, ApiOutput<Body>> for http::Response<Body> {
+    fn into_api_output(self) -> ApiOutput<Body> {
         Ok(self)
     }
 }

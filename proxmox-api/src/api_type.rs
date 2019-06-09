@@ -3,7 +3,6 @@
 use std::cell::Cell;
 use std::sync::Once;
 
-use bytes::Bytes;
 use failure::Error;
 use http::Response;
 use serde_json::Value;
@@ -11,13 +10,13 @@ use serde_json::Value;
 /// Method entries in a `Router` are actually just `&dyn ApiMethodInfo` trait objects.
 /// This contains all the info required to call, document, or command-line-complete parameters for
 /// a method.
-pub trait ApiMethodInfo {
+pub trait ApiMethodInfo<Body> {
     fn description(&self) -> &'static str;
     fn parameters(&self) -> &'static [Parameter];
     fn return_type(&self) -> &'static TypeInfo;
     fn protected(&self) -> bool;
     fn reload_timezone(&self) -> bool;
-    fn handler(&self) -> fn(Value) -> super::ApiFuture;
+    fn handler(&self) -> fn(Value) -> super::ApiFuture<Body>;
 }
 
 /// Shortcut to not having to type it out. This function signature is just a dummy and not yet
@@ -46,16 +45,16 @@ pub struct TypeInfo {
 /// Otherwise this is mostly there so we can run the tests in the tests subdirectory without
 /// depending on the api-macro crate. Tests using the macros belong into the api-macro crate itself
 /// after all!
-pub struct ApiMethod {
+pub struct ApiMethod<Body> {
     pub description: &'static str,
     pub parameters: &'static [Parameter],
     pub return_type: &'static TypeInfo,
     pub protected: bool,
     pub reload_timezone: bool,
-    pub handler: fn(Value) -> super::ApiFuture,
+    pub handler: fn(Value) -> super::ApiFuture<Body>,
 }
 
-impl ApiMethodInfo for ApiMethod {
+impl<Body> ApiMethodInfo<Body> for ApiMethod<Body> {
     fn description(&self) -> &'static str {
         self.description
     }
@@ -76,7 +75,7 @@ impl ApiMethodInfo for ApiMethod {
         self.reload_timezone
     }
 
-    fn handler(&self) -> fn(Value) -> super::ApiFuture {
+    fn handler(&self) -> fn(Value) -> super::ApiFuture<Body> {
         self.handler
     }
 }
@@ -222,7 +221,20 @@ unconstrained_api_type! {String, isize, usize, i64, u64, i32, u32, i16, u16, i8,
 unconstrained_api_type! {Vec<String>}
 
 // Raw return types are also okay:
-unconstrained_api_type! {Response<Bytes>}
+impl<Body> ApiType for Response<Body> {
+    fn verify(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
+    fn type_info() -> &'static TypeInfo {
+        const INFO: TypeInfo = TypeInfo {
+            name: "http::Response<>",
+            description: "A raw http response",
+            complete_fn: None,
+        };
+        &INFO
+    }
+}
 
 // FIXME: make const once feature(const_fn) is stable!
 pub fn get_type_info<T: ApiType>() -> &'static TypeInfo {

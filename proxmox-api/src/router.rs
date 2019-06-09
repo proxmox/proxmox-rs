@@ -13,16 +13,16 @@ use super::ApiMethodInfo;
 /// When subdirectories are supposed to be passed as a `String` parameter to methods beneath the
 /// current directory, a `Parameter` entry is used. Note that the parameter name is fixed at this
 /// point, so all method calls beneath will receive a parameter ot that particular name.
-pub enum SubRoute {
+pub enum SubRoute<Body: 'static> {
     /// Call this router for any further subdirectory paths, and provide the relative path via the
     /// given parameter.
     Wildcard(&'static str),
 
     /// This is used for plain subdirectories.
-    Directories(HashMap<&'static str, Router>),
+    Directories(HashMap<&'static str, Router<Body>>),
 
     /// Match subdirectories as the given parameter name to the underlying router.
-    Parameter(&'static str, Box<Router>),
+    Parameter(&'static str, Box<Router<Body>>),
 }
 
 /// A router is a nested structure. On the one hand it contains HTTP method entries (`GET`, `PUT`,
@@ -30,24 +30,27 @@ pub enum SubRoute {
 /// sub directories as parameters, so the nesting uses a `SubRoute` `enum` representing which of
 /// the two is the case.
 #[derive(Default)]
-pub struct Router {
+pub struct Router<Body: 'static> {
     /// The `GET` http method.
-    pub get: Option<&'static dyn ApiMethodInfo>,
+    pub get: Option<&'static dyn ApiMethodInfo<Body>>,
 
     /// The `PUT` http method.
-    pub put: Option<&'static dyn ApiMethodInfo>,
+    pub put: Option<&'static dyn ApiMethodInfo<Body>>,
 
     /// The `POST` http method.
-    pub post: Option<&'static dyn ApiMethodInfo>,
+    pub post: Option<&'static dyn ApiMethodInfo<Body>>,
 
     /// The `DELETE` http method.
-    pub delete: Option<&'static dyn ApiMethodInfo>,
+    pub delete: Option<&'static dyn ApiMethodInfo<Body>>,
 
     /// Specifies the behavior of sub directories. See [`SubRoute`].
-    pub subroute: Option<SubRoute>,
+    pub subroute: Option<SubRoute<Body>>,
 }
 
-impl Router {
+impl<Body> Router<Body>
+where
+    Self: Default,
+{
     /// Create a new empty router.
     pub fn new() -> Self {
         Self::default()
@@ -110,7 +113,7 @@ impl Router {
     /// Builder method to provide a `GET` method info.
     pub fn get<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo,
+        I: ApiMethodInfo<Body>,
     {
         self.get = Some(method);
         self
@@ -119,7 +122,7 @@ impl Router {
     /// Builder method to provide a `PUT` method info.
     pub fn put<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo,
+        I: ApiMethodInfo<Body>,
     {
         self.put = Some(method);
         self
@@ -128,7 +131,7 @@ impl Router {
     /// Builder method to provide a `POST` method info.
     pub fn post<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo,
+        I: ApiMethodInfo<Body>,
     {
         self.post = Some(method);
         self
@@ -137,7 +140,7 @@ impl Router {
     /// Builder method to provide a `DELETE` method info.
     pub fn delete<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo,
+        I: ApiMethodInfo<Body>,
     {
         self.delete = Some(method);
         self
@@ -147,7 +150,7 @@ impl Router {
     ///
     /// This is supposed to be used statically (via `lazy_static!), therefore we panic if we
     /// already have a subdir entry!
-    pub fn parameter_subdir(mut self, parameter_name: &'static str, router: Router) -> Self {
+    pub fn parameter_subdir(mut self, parameter_name: &'static str, router: Router<Body>) -> Self {
         if self.subroute.is_some() {
             panic!("match_parameter can only be used once and without sub directories");
         }
@@ -159,7 +162,7 @@ impl Router {
     ///
     /// This is supposed to be used statically (via `lazy_static!), therefore we panic if we
     /// already have a subdir entry!
-    pub fn subdir(mut self, dir_name: &'static str, router: Router) -> Self {
+    pub fn subdir(mut self, dir_name: &'static str, router: Router<Body>) -> Self {
         let previous = match self.subroute {
             Some(SubRoute::Directories(ref mut map)) => map.insert(dir_name, router),
             None => {

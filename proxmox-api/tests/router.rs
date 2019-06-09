@@ -2,13 +2,15 @@
 
 use std::pin::Pin;
 
+use bytes::Bytes;
+
 use proxmox_api::Router;
 
 #[test]
 fn basic() {
-    let info: &proxmox_api::ApiMethod = &methods::GET_PEOPLE;
-    let get_subpath: &proxmox_api::ApiMethod = &methods::GET_SUBPATH;
-    let router = Router::new()
+    let info: &proxmox_api::ApiMethod<Bytes> = &methods::GET_PEOPLE;
+    let get_subpath: &proxmox_api::ApiMethod<Bytes> = &methods::GET_SUBPATH;
+    let router: Router<Bytes> = Router::new()
         .subdir(
             "people",
             Router::new().parameter_subdir("person", Router::new().get(info)),
@@ -35,7 +37,7 @@ fn basic() {
 }
 
 fn check_with_matched_params(
-    router: &Router,
+    router: &Router<Bytes>,
     path: &str,
     param_name: &str,
     param_value: &str,
@@ -84,6 +86,7 @@ fn check_with_matched_params(
 
 #[cfg(test)]
 mod methods {
+    use bytes::Bytes;
     use failure::{bail, Error};
     use http::Response;
     use lazy_static::lazy_static;
@@ -94,14 +97,14 @@ mod methods {
         get_type_info, ApiFuture, ApiMethod, ApiOutput, ApiType, Parameter, TypeInfo,
     };
 
-    pub async fn get_people(value: Value) -> ApiOutput {
+    pub async fn get_people(value: Value) -> ApiOutput<Bytes> {
         Ok(Response::builder()
             .status(200)
             .header("content-type", "application/json")
             .body(value["person"].as_str().unwrap().into())?)
     }
 
-    pub async fn get_subpath(value: Value) -> ApiOutput {
+    pub async fn get_subpath(value: Value) -> ApiOutput<Bytes> {
         Ok(Response::builder()
             .status(200)
             .header("content-type", "application/json")
@@ -116,14 +119,14 @@ mod methods {
                 type_info: get_type_info::<String>(),
             }]
         };
-        pub static ref GET_PEOPLE: ApiMethod = {
+        pub static ref GET_PEOPLE: ApiMethod<Bytes> = {
             ApiMethod {
                 description: "get some people",
                 parameters: &GET_PEOPLE_PARAMS,
                 return_type: get_type_info::<String>(),
                 protected: false,
                 reload_timezone: false,
-                handler: |value: Value| -> ApiFuture { Box::pin(get_people(value)) },
+                handler: |value: Value| -> ApiFuture<Bytes> { Box::pin(get_people(value)) },
             }
         };
         static ref GET_SUBPATH_PARAMS: Vec<Parameter> = {
@@ -133,14 +136,14 @@ mod methods {
                 type_info: get_type_info::<String>(),
             }]
         };
-        pub static ref GET_SUBPATH: ApiMethod = {
+        pub static ref GET_SUBPATH: ApiMethod<Bytes> = {
             ApiMethod {
                 description: "get the 'subpath' parameter returned back",
                 parameters: &GET_SUBPATH_PARAMS,
                 return_type: get_type_info::<String>(),
                 protected: false,
                 reload_timezone: false,
-                handler: |value: Value| -> ApiFuture { Box::pin(get_subpath(value)) },
+                handler: |value: Value| -> ApiFuture<Bytes> { Box::pin(get_subpath(value)) },
             }
         };
     }

@@ -9,7 +9,6 @@
 use std::future::Future;
 use std::pin::Pin;
 
-use bytes::Bytes;
 use failure::Error;
 use http::Response;
 
@@ -23,7 +22,7 @@ mod router;
 pub use router::*;
 
 /// Return type of an API method.
-pub type ApiOutput = Result<Response<Bytes>, Error>;
+pub type ApiOutput<Body> = Result<Response<Body>, Error>;
 
 /// Future type of an API method. In order to support `async fn` this is a pinned box.
-pub type ApiFuture = Pin<Box<dyn Future<Output = ApiOutput>>>;
+pub type ApiFuture<Body> = Pin<Box<dyn Future<Output = ApiOutput<Body>>>>;
