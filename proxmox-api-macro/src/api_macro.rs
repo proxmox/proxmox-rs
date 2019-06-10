@@ -20,7 +20,7 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
         _ => bail!("expected api definition in braces"),
     };
 
-    let definition = parse_object(definition)?;
+    let definition = parse_object2(definition)?;
 
     // Now parse the item, based on which we decide whether this is an API method which needs a
     // wrapper, or an API type which needs an ApiType implementation!
@@ -39,7 +39,7 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
 }
 
 fn handle_function(
-    mut definition: HashMap<String, Value>,
+    mut definition: HashMap<String, Expression>,
     mut item: syn::ItemFn,
 ) -> Result<TokenStream, Error> {
     if item.decl.generics.lt_token.is_some() {
@@ -233,7 +233,7 @@ fn handle_function(
                          and specify its return type via the `returns` property",
                     )
                 })?
-                .expect_ident()?
+                .expect_type()?
                 .into_token_stream(),
         });
 
@@ -295,7 +295,7 @@ fn handle_function(
 }
 
 fn handle_struct(
-    definition: HashMap<String, Value>,
+    definition: HashMap<String, Expression>,
     item: &syn::ItemStruct,
 ) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {
@@ -312,7 +312,7 @@ fn handle_struct(
 }
 
 fn handle_struct_unnamed(
-    definition: HashMap<String, Value>,
+    definition: HashMap<String, Expression>,
     name: &Ident,
     item: &syn::FieldsUnnamed,
 ) -> Result<TokenStream, Error> {
@@ -349,7 +349,7 @@ fn handle_struct_unnamed(
 }
 
 fn handle_struct_named(
-    definition: HashMap<String, Value>,
+    definition: HashMap<String, Expression>,
     name: &Ident,
     item: &syn::FieldsNamed,
 ) -> Result<TokenStream, Error> {
@@ -396,7 +396,7 @@ fn handle_struct_named(
 
 fn handle_named_struct_fields(
     item: &syn::FieldsNamed,
-    mut field_def: HashMap<String, Value>,
+    mut field_def: HashMap<String, Expression>,
 ) -> Result<Vec<TokenStream>, Error> {
     let mut verify_entries = Vec::new();
 

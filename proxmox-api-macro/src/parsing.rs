@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, Error};
-use syn::Lit;
+use syn::{Expr, Lit};
 
 pub type RawTokenIter = proc_macro2::token_stream::IntoIter;
 pub type TokenIter = std::iter::Peekable<RawTokenIter>;
@@ -136,106 +136,131 @@ pub fn finish_hyphenated_name(tokens: &mut TokenIter, name: Ident) -> Result<syn
     Ok(syn::LitStr::new(&name, span))
 }
 
-// parse an object notation:
-// object := '{' [ member * ] '}'
-// member := <ident> ':' <member_value>
-// member_value := [ "optional" ] ( <ident> | <literal> | <object> )
 #[derive(Debug)]
-pub enum Value {
-    //Ident(Ident),                 // eg. `string` or `integer`
-    //Description(syn::LitStr),       // eg. `"some text"`
-    Ident(Ident),       // eg. `foo`, for referencing stuff, may become `expression`?
-    Literal(syn::Lit),  // eg. `123`
-    Negative(syn::Lit), // eg. `-123`
-    Object(HashMap<String, Value>), // eg. `{ key: value }`
+pub enum Expression {
+    Expr(Expr),
+    Object(HashMap<String, Expression>),
 }
 
-impl Value {
-    pub fn expect_lit(self) -> Result<syn::Lit, Error> {
-        match self {
-            Value::Literal(lit) => Ok(lit),
-            other => bail!("expected string literal, got: {:?}", other),
-        }
-    }
-
+impl Expression {
     pub fn expect_lit_str(self) -> Result<syn::LitStr, Error> {
         match self {
-            Value::Literal(syn::Lit::Str(lit)) => Ok(lit),
-            Value::Literal(other) => bail!("expected string literal, got: {:?}", other),
-            other => bail!("expected string literal, got: {:?}", other),
-        }
-    }
-
-    pub fn expect_ident(self) -> Result<Ident, Error> {
-        match self {
-            Value::Ident(ident) => Ok(ident),
-            other => bail!("expected ident, got: {:?}", other),
-        }
-    }
-
-    pub fn expect_object(self) -> Result<HashMap<String, Value>, Error> {
-        match self {
-            Value::Object(obj) => Ok(obj),
-            other => bail!("expected ident, got: {:?}", other),
+            Expression::Expr(expr) => match expr {
+                Expr::Lit(lit) => match lit.lit {
+                    Lit::Str(lit) => Ok(lit),
+                    other => bail!("expected string literal, got: {:?}", other),
+                }
+                other => bail!("expected string literal, got: {:?}", other),
+            }
+            _ => bail!("expected string literal"),
         }
     }
 
     pub fn expect_lit_bool(self) -> Result<syn::LitBool, Error> {
         match self {
-            Value::Literal(syn::Lit::Bool(lit)) => Ok(lit),
-            Value::Literal(other) => bail!("expected booleanliteral, got: {:?}", other),
-            other => bail!("expected boolean literal, got: {:?}", other),
+            Expression::Expr(expr) => match expr {
+                Expr::Lit(lit) => match lit.lit {
+                    Lit::Bool(lit) => Ok(lit),
+                    other => bail!("expected boolean literal, got: {:?}", other),
+                }
+                other => bail!("expected boolean literal, got: {:?}", other),
+            }
+            _ => bail!("expected boolean literal"),
+        }
+    }
+
+    pub fn expect_expr(self) -> Result<syn::Expr, Error> {
+        match self {
+            Expression::Expr(expr) => Ok(expr),
+            _ => bail!("expected expression, found {:?}", self),
+        }
+    }
+
+    pub fn expect_object(self) -> Result<HashMap<String, Expression>, Error> {
+        match self {
+            Expression::Object(obj) => Ok(obj),
+            _ => bail!("expected object, found an expression"),
+        }
+    }
+
+    pub fn expect_type(self) -> Result<syn::ExprPath, Error> {
+        match self {
+            Expression::Expr(expr) => match expr {
+                Expr::Path(path) => Ok(path),
+                other => bail!("expected a type name, got {:?}", other),
+            }
+            _ => bail!("expected a type name, got {:?}", self),
         }
     }
 }
 
-pub fn parse_object(tokens: TokenStream) -> Result<HashMap<String, Value>, Error> {
+pub fn parse_object2(tokens: TokenStream) -> Result<HashMap<String, Expression>, Error> {
     let mut tokens = tokens.into_iter().peekable();
     let mut out = HashMap::new();
 
     loop {
-        if tokens.peek().is_none() {
-            break;
-        }
-
-        let key = need_ident_or_string(&mut tokens)?;
-        match_colon(&mut tokens)?;
-
+        let key = match parse_object_key(&mut tokens)? {
+            Some(key) => key,
+            None => break,
+        };
         let key_name = key.to_string();
 
-        let member = match tokens.next() {
-            Some(TokenTree::Group(group)) => {
-                if group.delimiter() == Delimiter::Brace {
-                    Value::Object(parse_object(group.stream())?)
-                } else {
-                    bail!("invalid group delimiter: {:?}", group.delimiter());
-                }
-            }
-            Some(TokenTree::Punct(ref punct)) if punct.as_char() == '-' => {
-                if let Some(TokenTree::Literal(literal)) = tokens.next() {
-                    let lit = Lit::new(literal);
-                    match lit {
-                        Lit::Int(_) | Lit::Float(_) => Value::Negative(lit),
-                        _ => bail!("expected literal after unary minus"),
-                    }
-                } else {
-                    bail!("expected literal value");
-                }
-            }
-            Some(TokenTree::Literal(literal)) => Value::Literal(Lit::new(literal)),
-            Some(TokenTree::Ident(ident)) => Value::Ident(ident),
-            Some(other) => bail!("expected member value at {}", other),
-            None => bail!("missing member value after {}", key_name),
-        };
+        let value = parse_object_value(&mut tokens, &key_name)?;
 
-        if out.insert(key_name.clone(), member).is_some() {
+        if out.insert(key_name.clone(), value).is_some() {
             bail!("duplicate entry: {}", key_name);
         }
-
-        comma_or_end(&mut tokens)?;
     }
 
     Ok(out)
+}
+
+fn parse_object_key(tokens: &mut TokenIter) -> Result<Option<Name>, Error> {
+    if tokens.peek().is_none() {
+        return Ok(None);
+    }
+
+    let key = need_ident_or_string(&mut *tokens)?;
+    match_colon(&mut *tokens)?;
+    Ok(Some(key))
+}
+
+fn parse_object_value(tokens: &mut TokenIter, key: &str) -> Result<Expression, Error> {
+    let mut value_tokens = TokenStream::new();
+
+    let mut first = true;
+    loop {
+        let token = match tokens.next() {
+            Some(token) => token,
+            None => {
+                if first {
+                    bail!("missing value after key '{}'", key);
+                }
+                break;
+            }
+        };
+
+        if first {
+            first = false;
+            if let TokenTree::Group(group) = token {
+                let expr = parse_object2(group.stream())?;
+                comma_or_end(tokens)?;
+                return Ok(Expression::Object(expr));
+            }
+        }
+
+        match token {
+            TokenTree::Punct(ref punct) if punct.as_char() == ',' => {
+                // This is the end of the value!
+                break;
+            }
+            _ => value_tokens.extend(vec![token]),
+        }
+    }
+
+    let expr: Expr = syn::parse2(value_tokens)?;
+
+    Ok(Expression::Expr(expr))
 }
 
 fn need_ident_or_string(tokens: &mut TokenIter) -> Result<Name, Error> {
@@ -249,7 +274,7 @@ fn need_ident_or_string(tokens: &mut TokenIter) -> Result<Name, Error> {
             }
         }
         Some(other) => bail!(
-            "expected colon after key in api definition at {:?}",
+            "expected an identifier or a string: {:?}",
             other.span()
         ),
         None => bail!("ident expected"),

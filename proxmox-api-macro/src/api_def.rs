@@ -1,22 +1,22 @@
 use std::collections::HashMap;
 
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::TokenStream;
 
 use derive_builder::Builder;
 use failure::{bail, Error};
 use quote::{quote, ToTokens};
 
-use super::parsing::Value;
+use super::parsing::Expression;
 
 #[derive(Builder)]
 pub struct ParameterDefinition {
     pub description: syn::LitStr,
     #[builder(default)]
-    pub validate: Option<Ident>,
+    pub validate: Option<syn::Expr>,
     #[builder(default)]
-    pub minimum: Option<syn::Lit>,
+    pub minimum: Option<syn::Expr>,
     #[builder(default)]
-    pub maximum: Option<syn::Lit>,
+    pub maximum: Option<syn::Expr>,
 }
 
 impl ParameterDefinition {
@@ -24,7 +24,7 @@ impl ParameterDefinition {
         ParameterDefinitionBuilder::default()
     }
 
-    pub fn from_object(obj: HashMap<String, Value>) -> Result<Self, Error> {
+    pub fn from_object(obj: HashMap<String, Expression>) -> Result<Self, Error> {
         let mut def = ParameterDefinition::builder();
 
         for (key, value) in obj {
@@ -33,13 +33,13 @@ impl ParameterDefinition {
                     def.description(value.expect_lit_str()?);
                 }
                 "validate" => {
-                    def.validate(Some(value.expect_ident()?));
+                    def.validate(Some(value.expect_expr()?));
                 }
                 "minimum" => {
-                    def.minimum(Some(value.expect_lit()?));
+                    def.minimum(Some(value.expect_expr()?));
                 }
                 "maximum" => {
-                    def.maximum(Some(value.expect_lit()?));
+                    def.maximum(Some(value.expect_expr()?));
                 }
                 other => bail!("invalid key in type definition: {}", other),
             }
