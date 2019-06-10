@@ -32,16 +32,16 @@ pub enum SubRoute<Body: 'static> {
 #[derive(Default)]
 pub struct Router<Body: 'static> {
     /// The `GET` http method.
-    pub get: Option<&'static dyn ApiMethodInfo<Body>>,
+    pub get: Option<&'static (dyn ApiMethodInfo<Body> + Send + Sync)>,
 
     /// The `PUT` http method.
-    pub put: Option<&'static dyn ApiMethodInfo<Body>>,
+    pub put: Option<&'static (dyn ApiMethodInfo<Body> + Send + Sync)>,
 
     /// The `POST` http method.
-    pub post: Option<&'static dyn ApiMethodInfo<Body>>,
+    pub post: Option<&'static (dyn ApiMethodInfo<Body> + Send + Sync)>,
 
     /// The `DELETE` http method.
-    pub delete: Option<&'static dyn ApiMethodInfo<Body>>,
+    pub delete: Option<&'static (dyn ApiMethodInfo<Body> + Send + Sync)>,
 
     /// Specifies the behavior of sub directories. See [`SubRoute`].
     pub subroute: Option<SubRoute<Body>>,
@@ -113,7 +113,7 @@ where
     /// Builder method to provide a `GET` method info.
     pub fn get<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo<Body>,
+        I: ApiMethodInfo<Body> + Send + Sync,
     {
         self.get = Some(method);
         self
@@ -122,7 +122,7 @@ where
     /// Builder method to provide a `PUT` method info.
     pub fn put<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo<Body>,
+        I: ApiMethodInfo<Body> + Send + Sync,
     {
         self.put = Some(method);
         self
@@ -131,7 +131,7 @@ where
     /// Builder method to provide a `POST` method info.
     pub fn post<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo<Body>,
+        I: ApiMethodInfo<Body> + Send + Sync,
     {
         self.post = Some(method);
         self
@@ -140,7 +140,7 @@ where
     /// Builder method to provide a `DELETE` method info.
     pub fn delete<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo<Body>,
+        I: ApiMethodInfo<Body> + Send + Sync,
     {
         self.delete = Some(method);
         self
