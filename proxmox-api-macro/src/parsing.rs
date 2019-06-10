@@ -149,9 +149,9 @@ impl Expression {
                 Expr::Lit(lit) => match lit.lit {
                     Lit::Str(lit) => Ok(lit),
                     other => bail!("expected string literal, got: {:?}", other),
-                }
+                },
                 other => bail!("expected string literal, got: {:?}", other),
-            }
+            },
             _ => bail!("expected string literal"),
         }
     }
@@ -162,9 +162,9 @@ impl Expression {
                 Expr::Lit(lit) => match lit.lit {
                     Lit::Bool(lit) => Ok(lit),
                     other => bail!("expected boolean literal, got: {:?}", other),
-                }
+                },
                 other => bail!("expected boolean literal, got: {:?}", other),
-            }
+            },
             _ => bail!("expected boolean literal"),
         }
     }
@@ -188,7 +188,7 @@ impl Expression {
             Expression::Expr(expr) => match expr {
                 Expr::Path(path) => Ok(path),
                 other => bail!("expected a type name, got {:?}", other),
-            }
+            },
             _ => bail!("expected a type name, got {:?}", self),
         }
     }
@@ -273,10 +273,7 @@ fn need_ident_or_string(tokens: &mut TokenIter) -> Result<Name, Error> {
                 _ => bail!("expected ident or string as key: {:?}", span),
             }
         }
-        Some(other) => bail!(
-            "expected an identifier or a string: {:?}",
-            other.span()
-        ),
+        Some(other) => bail!("expected an identifier or a string: {:?}", other.span()),
         None => bail!("ident expected"),
     }
 }

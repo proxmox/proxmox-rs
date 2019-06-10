@@ -78,10 +78,7 @@ fn handle_function(
         .remove("body")
         .map(|v| v.expect_type())
         .transpose()?
-        .map_or_else(
-            || quote! { ::hyper::Body },
-            |v| v.into_token_stream(),
-        );
+        .map_or_else(|| quote! { ::hyper::Body }, |v| v.into_token_stream());
 
     let vis = std::mem::replace(&mut item.vis, syn::Visibility::Inherited);
     let span = item.ident.span();
