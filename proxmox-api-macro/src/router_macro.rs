@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use proc_macro2::{Delimiter, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, Error};
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::LitStr;
 
 use super::parsing::*;
@@ -20,11 +20,20 @@ pub fn router_macro(input: TokenStream) -> Result<TokenStream, Error> {
 
         match_keyword(&mut input, "static")?;
         let router_name = need_ident(&mut input)?;
+
+        match_colon(&mut input)?;
+        match_keyword(&mut input, "Router");
+        match_punct(&mut input, '<')?;
+        let body_type = need_ident(&mut input)?;
+        match_punct(&mut input, '>')?;
+
         match_punct(&mut input, '=')?;
         let content = need_group(&mut input, Delimiter::Brace)?;
 
         let router = parse_router(content.stream().into_iter().peekable())?;
-        let router = router.into_token_stream(Some(router_name));
+        let router = router.into_token_stream(&body_type, Some(router_name));
+
+        //eprintln!("{}", router.to_string());
 
         out.extend(router);
 
@@ -166,11 +175,11 @@ impl Router {
         Ok(())
     }
 
-    fn into_token_stream(self, name: Option<Ident>) -> TokenStream {
+    fn into_token_stream(self, body_type: &Ident, name: Option<Ident>) -> TokenStream {
         use std::iter::FromIterator;
 
-        let mut out = quote! {
-            ::proxmox::api::Router::new()
+        let mut out = quote_spanned! {
+            body_type.span() => ::proxmox::api::Router::<#body_type>::new()
         };
 
         fn add_method(out: &mut TokenStream, name: &'static str, func_name: Ident) {
@@ -196,14 +205,14 @@ impl Router {
         match self.subroute {
             None => (),
             Some(SubRoute::Parameter(name, router)) => {
-                let router = router.into_token_stream(None);
+                let router = router.into_token_stream(body_type, None);
                 out.extend(quote! {
                     .parameter_subdir(#name, #router)
                 });
             }
             Some(SubRoute::Directories(hash)) => {
                 for (name, router) in hash {
-                    let router = router.into_token_stream(None);
+                    let router = router.into_token_stream(body_type, None);
                     out.extend(quote! {
                         .subdir(#name, #router)
                     });
@@ -224,12 +233,12 @@ impl Router {
             quote! {
                 #[allow(non_camel_case_types)]
                 struct #type_name(
-                    std::cell::Cell<Option<::proxmox::api::Router>>,
+                    std::cell::Cell<Option<::proxmox::api::Router<#body_type>>>,
                     std::sync::Once,
                 );
                 unsafe impl Sync for #type_name {}
                 impl std::ops::Deref for #type_name {
-                    type Target = ::proxmox::api::Router;
+                    type Target = ::proxmox::api::Router<#body_type>;
                     fn deref(&self) -> &Self::Target {
                         self.1.call_once(|| unsafe {
                             self.0.set(Some(#router_expression));

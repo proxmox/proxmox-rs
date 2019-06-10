@@ -1,5 +1,6 @@
 #![feature(async_await)]
 
+use bytes::Bytes;
 use failure::{bail, Error};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
@@ -42,6 +43,7 @@ pub struct Person {
 }
 
 #[api({
+    body: Bytes,
     description: "A test function returning a fixed text",
     parameters: {},
 })]
@@ -50,6 +52,7 @@ async fn test_body() -> Result<&'static str, Error> {
 }
 
 #[api({
+    body: Bytes,
     description: "Loopback the `input` parameter",
     parameters: {
         input: "the input",
@@ -60,20 +63,21 @@ async fn get_loopback(param: String) -> Result<String, Error> {
 }
 
 #[api({
+    body: Bytes,
     description: "Loopback the `input` parameter",
     parameters: {
         input: "the input",
     },
     returns: String
 })]
-fn non_async_test(param: String) -> proxmox::api::ApiFuture {
+fn non_async_test(param: String) -> proxmox::api::ApiFuture<Bytes> {
     Box::pin((async move || {
         proxmox::api::IntoApiOutput::into_api_output(param)
     })())
 }
 
 proxmox_api_macro::router! {
-    static TEST_ROUTER = {
+    static TEST_ROUTER: Router<Bytes> = {
         GET: test_body,
 
         /subdir: { GET: test_body },
@@ -95,7 +99,7 @@ proxmox_api_macro::router! {
     };
 }
 
-fn check_body(router: &Router, path: &str, expect: &'static str) {
+fn check_body(router: &Router<Bytes>, path: &str, expect: &'static str) {
     let (router, parameters) = router
         .lookup(path)
         .expect("expected method to exist on test router");
