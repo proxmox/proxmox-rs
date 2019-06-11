@@ -22,7 +22,7 @@ pub fn router_macro(input: TokenStream) -> Result<TokenStream, Error> {
         let router_name = need_ident(&mut input)?;
 
         match_colon(&mut input)?;
-        match_keyword(&mut input, "Router");
+        match_keyword(&mut input, "Router")?;
         match_punct(&mut input, '<')?;
         let body_type = need_ident(&mut input)?;
         match_punct(&mut input, '>')?;
