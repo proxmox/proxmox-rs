@@ -55,7 +55,7 @@ async fn test_body() -> Result<&'static str, Error> {
     body: Bytes,
     description: "Loopback the `input` parameter",
     parameters: {
-        input: "the input",
+        param: "the input",
     },
 })]
 async fn get_loopback(param: String) -> Result<String, Error> {
@@ -66,7 +66,7 @@ async fn get_loopback(param: String) -> Result<String, Error> {
     body: Bytes,
     description: "Loopback the `input` parameter",
     parameters: {
-        input: "the input",
+        param: "the input",
     },
     returns: String
 })]

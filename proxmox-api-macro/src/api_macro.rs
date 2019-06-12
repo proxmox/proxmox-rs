@@ -80,6 +80,13 @@ fn handle_function(
         .transpose()?
         .map_or_else(|| quote! { ::hyper::Body }, |v| v.into_token_stream());
 
+    let mut parameters = definition
+        .remove("parameters")
+        .map(|v| v.expect_object())
+        .transpose()?
+        .unwrap_or_else(HashMap::new);
+    let mut parameter_tokens = TokenStream::new();
+
     let vis = std::mem::replace(&mut item.vis, syn::Visibility::Inherited);
     let span = item.ident.span();
     let name_str = item.ident.to_string();
@@ -124,6 +131,21 @@ fn handle_function(
                     .unwrap_or(::serde_json::Value::Null)
             )?;
         });
+
+        let _info = parameters
+            .remove(&name_str)
+            .ok_or_else(|| format_err!("missing parameter '{}' in api defintion", name_str))?;
+    }
+
+    if !parameters.is_empty() {
+        let mut list = String::new();
+        for param in parameters.keys() {
+            if !list.is_empty() {
+                list.push_str(", ");
+            }
+            list.push_str(&param);
+        }
+        bail!("api definition contains parameters not found in function declaration: {}", list);
     }
 
     use std::iter::FromIterator;
