@@ -145,7 +145,10 @@ fn handle_function(
             }
             list.push_str(&param);
         }
-        bail!("api definition contains parameters not found in function declaration: {}", list);
+        bail!(
+            "api definition contains parameters not found in function declaration: {}",
+            list
+        );
     }
 
     use std::iter::FromIterator;
