@@ -112,7 +112,7 @@ impl<Body> dyn ApiMethodInfo<Body> + Send + Sync {
             "protected": self.protected(),
             "reload-timezone": self.reload_timezone(),
             "parameters": parameters,
-            //"returns": self.return_type().api_dump()?, <- add api_dump() to TypeInfo
+            "returns": self.return_type().api_dump(),
         })
     }
 }
