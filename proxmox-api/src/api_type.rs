@@ -28,7 +28,7 @@ pub type CompleteFn = fn(&str) -> Vec<String>;
 pub struct Parameter {
     pub name: &'static str,
     pub description: &'static str,
-    pub type_info: &'static TypeInfo,
+    pub type_info: fn() -> &'static TypeInfo,
 }
 
 /// Bare type info. Types themselves should also have a description, even if a method's parameter

@@ -4,7 +4,7 @@ use proc_macro2::{Delimiter, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, format_err, Error};
 use quote::{quote, ToTokens};
-use syn::Token;
+use syn::{Expr, Token};
 
 use super::api_def::ParameterDefinition;
 use super::parsing::*;
@@ -85,7 +85,7 @@ fn handle_function(
         .map(|v| v.expect_object())
         .transpose()?
         .unwrap_or_else(HashMap::new);
-    let mut parameter_tokens = TokenStream::new();
+    let mut parameter_entries = TokenStream::new();
 
     let vis = std::mem::replace(&mut item.vis, syn::Visibility::Inherited);
     let span = item.ident.span();
@@ -114,6 +114,7 @@ fn handle_function(
             other => bail!("unhandled type of method parameter ({:?})", other),
         };
 
+        let arg_type = &arg.ty;
         let name = match &arg.pat {
             syn::Pat::Ident(name) => &name.ident,
             other => bail!("invalid kind of parameter pattern: {:?}", other),
@@ -132,9 +133,25 @@ fn handle_function(
             )?;
         });
 
-        let _info = parameters
+        let info = parameters
             .remove(&name_str)
             .ok_or_else(|| format_err!("missing parameter '{}' in api defintion", name_str))?;
+
+        match info {
+            Expression::Expr(Expr::Lit(lit)) => {
+                parameter_entries.extend(quote! {
+                    ::proxmox::api::Parameter {
+                        name: #name_str,
+                        description: #lit,
+                        type_info: <#arg_type as ::proxmox::api::ApiType>::type_info,
+                    },
+                });
+            }
+            Expression::Expr(_) => bail!("description must be a string literal!"),
+            Expression::Object(_) => {
+                bail!("TODO: parameters with more than just a description...");
+            }
+        }
     }
 
     if !parameters.is_empty() {
@@ -297,7 +314,7 @@ fn handle_function(
 
             fn parameters(&self) -> &'static [::proxmox::api::Parameter] {
                 // FIXME!
-                &[]
+                &[ #parameter_entries ]
             }
 
             fn return_type(&self) -> &'static ::proxmox::api::TypeInfo {

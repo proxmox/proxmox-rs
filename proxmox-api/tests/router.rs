@@ -116,7 +116,7 @@ mod methods {
             vec![Parameter {
                 name: "person",
                 description: "the person to get",
-                type_info: get_type_info::<String>(),
+                type_info: String::type_info,
             }]
         };
         pub static ref GET_PEOPLE: ApiMethod<Bytes> = {
@@ -133,7 +133,7 @@ mod methods {
             vec![Parameter {
                 name: "subpath",
                 description: "the matched relative subdir path",
-                type_info: get_type_info::<String>(),
+                type_info: String::type_info,
             }]
         };
         pub static ref GET_SUBPATH: ApiMethod<Bytes> = {
