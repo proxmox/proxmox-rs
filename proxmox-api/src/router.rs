@@ -2,7 +2,8 @@
 
 use std::collections::HashMap;
 
-use serde_json::Value;
+use failure::Error;
+use serde_json::{json, Value};
 
 use super::ApiMethodInfo;
 
@@ -110,6 +111,58 @@ where
         Some((this, matched_params.map(Value::Object)))
     }
 
+    pub fn api_dump(&self) -> Value {
+        let mut this = serde_json::Map::<String, Value>::new();
+
+        if let Some(get) = self.get {
+            this.insert("GET".to_string(), get.api_dump());
+        }
+
+        if let Some(put) = self.put {
+            this.insert("PUT".to_string(), put.api_dump());
+        }
+
+        if let Some(post) = self.post {
+            this.insert("POST".to_string(), post.api_dump());
+        }
+
+        if let Some(delete) = self.delete {
+            this.insert("DELETE".to_string(), delete.api_dump());
+        }
+
+        match &self.subroute {
+            None => (),
+            Some(SubRoute::Wildcard(name)) => {
+                this.insert("wildcard".to_string(), Value::String(name.to_string()));
+            }
+            Some(SubRoute::Directories(subdirs)) => {
+                for (dir, router) in subdirs.iter() {
+                    this.insert(dir.to_string(), router.api_dump());
+                }
+            }
+            Some(SubRoute::Parameter(name, other)) => {
+                this.insert(
+                    "sub-router".to_string(),
+                    json!({
+                        "parameter": name,
+                        "router": other.api_dump(),
+                    }),
+                );
+            }
+        }
+
+        Value::Object(this)
+    }
+}
+
+//
+// Router as a builder methods:
+//
+
+impl<Body> Router<Body>
+where
+    Self: Default,
+{
     /// Builder method to provide a `GET` method info.
     pub fn get<I>(mut self, method: &'static I) -> Self
     where

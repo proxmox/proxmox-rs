@@ -5,7 +5,7 @@ use std::sync::Once;
 
 use failure::Error;
 use http::Response;
-use serde_json::Value;
+use serde_json::{json, Value};
 
 /// Method entries in a `Router` are actually just `&dyn ApiMethodInfo` trait objects.
 /// This contains all the info required to call, document, or command-line-complete parameters for
@@ -31,6 +31,18 @@ pub struct Parameter {
     pub type_info: fn() -> &'static TypeInfo,
 }
 
+impl Parameter {
+    pub fn api_dump(&self) -> (&'static str, Value) {
+        (
+            self.name,
+            json!({
+                "description": self.description,
+                "type": (self.type_info)().name,
+            }),
+        )
+    }
+}
+
 /// Bare type info. Types themselves should also have a description, even if a method's parameter
 /// usually overrides it. Ideally we can hyperlink the parameter to the type information in the
 /// generated documentation.
@@ -38,6 +50,12 @@ pub struct TypeInfo {
     pub name: &'static str,
     pub description: &'static str,
     pub complete_fn: Option<CompleteFn>,
+}
+
+impl TypeInfo {
+    pub fn api_dump(&self) -> Value {
+        Value::String(self.name.to_string())
+    }
 }
 
 /// Until we can slap `#[api]` onto all the functions we can start translating our existing
@@ -77,6 +95,25 @@ impl<Body> ApiMethodInfo<Body> for ApiMethod<Body> {
 
     fn handler(&self) -> fn(Value) -> super::ApiFuture<Body> {
         self.handler
+    }
+}
+
+impl<Body> dyn ApiMethodInfo<Body> + Send + Sync {
+    pub fn api_dump(&self) -> Value {
+        let parameters = Value::Object(std::iter::FromIterator::from_iter(
+            self.parameters()
+                .iter()
+                .map(|p| p.api_dump())
+                .map(|(name, value)| (name.to_string(), value)),
+        ));
+
+        json!({
+            "description": self.description(),
+            "protected": self.protected(),
+            "reload-timezone": self.reload_timezone(),
+            "parameters": parameters,
+            //"returns": self.return_type().api_dump()?, <- add api_dump() to TypeInfo
+        })
     }
 }
 

@@ -46,6 +46,12 @@ fn main() {
     let www_dir = args.next().expect("expected a www/ subdirectory");
     api::set_www_dir(www_dir.to_string());
 
+    // show our api info:
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&api::ROUTER.api_dump()).unwrap()
+    );
+
     // Construct our SocketAddr to listen on...
     let addr = ([0, 0, 0, 0], 3000).into();
 
