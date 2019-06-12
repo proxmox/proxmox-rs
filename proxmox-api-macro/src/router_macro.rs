@@ -18,6 +18,8 @@ pub fn router_macro(input: TokenStream) -> Result<TokenStream, Error> {
             break;
         }
 
+        let public = optional_visibility(&mut input)?;
+
         match_keyword(&mut input, "static")?;
         let router_name = need_ident(&mut input)?;
 
@@ -31,7 +33,7 @@ pub fn router_macro(input: TokenStream) -> Result<TokenStream, Error> {
         let content = need_group(&mut input, Delimiter::Brace)?;
 
         let router = parse_router(content.stream().into_iter().peekable())?;
-        let router = router.into_token_stream(&body_type, Some(router_name));
+        let router = router.into_token_stream(&body_type, Some((router_name, public)));
 
         //eprintln!("{}", router.to_string());
 
@@ -175,7 +177,11 @@ impl Router {
         Ok(())
     }
 
-    fn into_token_stream(self, body_type: &Ident, name: Option<Ident>) -> TokenStream {
+    fn into_token_stream(
+        self,
+        body_type: &Ident,
+        name: Option<(Ident, syn::Visibility)>,
+    ) -> TokenStream {
         use std::iter::FromIterator;
 
         let mut out = quote_spanned! {
@@ -225,14 +231,14 @@ impl Router {
             }
         }
 
-        if let Some(name) = name {
+        if let Some((name, vis)) = name {
             let type_name = Ident::new(&format!("{}_TYPE", name.to_string()), name.span());
             let var_name = name;
             let router_expression = TokenStream::from_iter(out);
 
             quote! {
                 #[allow(non_camel_case_types)]
-                struct #type_name(
+                #vis struct #type_name(
                     std::cell::Cell<Option<::proxmox::api::Router<#body_type>>>,
                     std::sync::Once,
                 );
@@ -248,7 +254,7 @@ impl Router {
                         }
                     }
                 }
-                static #var_name : #type_name = #type_name(
+                #vis static #var_name : #type_name = #type_name(
                     std::cell::Cell::new(None),
                     std::sync::Once::new(),
                 );

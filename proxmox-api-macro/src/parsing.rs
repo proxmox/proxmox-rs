@@ -3,10 +3,50 @@ use std::collections::HashMap;
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, Error};
+use quote::quote;
 use syn::{Expr, Lit};
 
 pub type RawTokenIter = proc_macro2::token_stream::IntoIter;
 pub type TokenIter = std::iter::Peekable<RawTokenIter>;
+
+pub fn optional_visibility(tokens: &mut TokenIter) -> Result<syn::Visibility, Error> {
+    // peek:
+    if let Some(TokenTree::Ident(ident)) = tokens.peek() {
+        if ident.to_string() != "pub" {
+            return Ok(syn::Visibility::Inherited);
+        }
+    } else {
+        return Ok(syn::Visibility::Inherited);
+    }
+
+    // consume:
+    let ident = match tokens.next().unwrap() {
+        TokenTree::Ident(ident) => ident,
+        _ => unreachable!(),
+    };
+
+    // peek:
+    let restriction = match tokens.peek() {
+        Some(TokenTree::Group(_)) => true,
+        _ => false,
+    };
+
+    let visibility = if restriction {
+        // consume:
+        match tokens.next().unwrap() {
+            TokenTree::Group(g) => {
+                quote! { #ident #g }
+            }
+            _ => unreachable!(),
+        }
+    } else {
+        quote! { #ident }
+    };
+
+    use syn::parse::Parser;
+    let parser = <syn::Visibility as syn::parse::Parse>::parse;
+    return Ok(parser.parse2(visibility)?);
+}
 
 pub fn match_keyword(tokens: &mut TokenIter, keyword: &'static str) -> Result<(), Error> {
     if let Some(tt) = tokens.next() {
