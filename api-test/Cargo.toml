@@ -1,0 +1,20 @@
+[package]
+name = "api-test"
+edition = "2018"
+version = "0.1.0"
+authors = [
+    "Dietmar Maurer <dietmar@proxmox.com>",
+    "Wolfgang Bumiller <w.bumiller@proxmox.com>",
+]
+
+[dependencies]
+bytes = "0.4"
+endian_trait = { version = "0.6", features = [ "arrays" ] }
+failure = "0.1"
+futures-01 = { package = "futures", version = "0.1" }
+futures-preview = { version = "0.3.0-alpha.16", features = [ "compat", "io-compat" ] }
+http = "0.1"
+hyper = "0.12"
+proxmox = { path = "../proxmox" }
+serde_json = "1.0"
+tokio = "0.1"
