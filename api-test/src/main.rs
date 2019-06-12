@@ -8,7 +8,6 @@ use hyper::{Body, Server};
 use serde_json::Value;
 
 mod api;
-pub static FOO: u32 = 3;
 
 async fn run_request(request: Request<Body>) -> Result<http::Response<Body>, hyper::Error> {
     match route_request(request).await {
