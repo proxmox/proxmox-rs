@@ -86,13 +86,18 @@ fn handle_function(
         .transpose()?
         .unwrap_or_else(HashMap::new);
     let mut parameter_entries = TokenStream::new();
+    let mut parameter_verifiers = TokenStream::new();
 
     let vis = std::mem::replace(&mut item.vis, syn::Visibility::Inherited);
     let span = item.ident.span();
     let name_str = item.ident.to_string();
-    let impl_str = format!("{}_impl", name_str);
-    let impl_ident = Ident::new(&impl_str, span);
-    let name = std::mem::replace(&mut item.ident, impl_ident.clone());
+    //let impl_str = format!("{}_impl", name_str);
+    //let impl_ident = Ident::new(&impl_str, span);
+    let impl_checked_str = format!("{}_checked_impl", name_str);
+    let impl_checked_ident = Ident::new(&impl_checked_str, span);
+    let impl_unchecked_str = format!("{}_unchecked_impl", name_str);
+    let impl_unchecked_ident = Ident::new(&impl_unchecked_str, span);
+    let name = std::mem::replace(&mut item.ident, impl_unchecked_ident.clone());
     let mut return_type = match item.decl.output {
         syn::ReturnType::Default => syn::Type::Tuple(syn::TypeTuple {
             paren_token: syn::token::Paren {
@@ -148,8 +153,26 @@ fn handle_function(
                 });
             }
             Expression::Expr(_) => bail!("description must be a string literal!"),
-            Expression::Object(_) => {
-                bail!("TODO: parameters with more than just a description...");
+            Expression::Object(mut param_info) => {
+                let description = param_info
+                    .remove("description")
+                    .ok_or_else(|| format_err!("missing 'description' in parameter definition"))?
+                    .expect_lit_str()?;
+
+                parameter_entries.extend(quote! {
+                    ::proxmox::api::Parameter {
+                        name: #name_str,
+                        description: #description,
+                        type_info: <#arg_type as ::proxmox::api::ApiType>::type_info,
+                    },
+                });
+
+                make_parameter_verifier(
+                    &name,
+                    &name_str,
+                    &mut param_info,
+                    &mut parameter_verifiers,
+                )?;
             }
         }
     }
@@ -201,7 +224,7 @@ fn handle_function(
 
         // Namespace some of our code into the helper type:
         impl #struct_name {
-            // This is the original function, renamed to `#impl_ident`
+            // This is the original function, renamed to `#impl_unchecked_ident`
             #item
 
             // This is the handler used by our router, which extracts the parameters out of a
@@ -238,7 +261,7 @@ fn handle_function(
                         ::failure::bail!("unexpected extra parameters: {}", extra);
                     }
 
-                    let output = #struct_name::#impl_ident(#extracted_args).await?;
+                    let output = #struct_name::#impl_checked_ident(#extracted_args).await?;
                     ::proxmox::api::IntoApiOutput::into_api_output(output)
                 }
                 Box::pin(handler(args))
@@ -249,6 +272,13 @@ fn handle_function(
     if item.asyncness.is_some() {
         // An async function is expected to return its value, so we wrap it a bit:
         body.push(quote! {
+            impl #struct_name {
+                async fn #impl_checked_ident(#inputs) -> #return_type {
+                    #parameter_verifiers
+                    Self::#impl_unchecked_ident(#passed_args).await
+                }
+            }
+
             // Our helper type derefs to a wrapper performing input validation and returning a
             // Pin<Box<Future>>.
             // Unfortunately we cannot return the actual function since that won't work for
@@ -262,7 +292,7 @@ fn handle_function(
                     const FUNC: fn(#inputs) -> ::std::pin::Pin<Box<dyn ::std::future::Future<
                         Output = #return_type,
                     >>> = |#inputs| {
-                        Box::pin(#struct_name::#impl_ident(#passed_args))
+                        Box::pin(#struct_name::#impl_checked_ident(#passed_args))
                     };
                     &FUNC
                 }
@@ -284,6 +314,13 @@ fn handle_function(
         });
 
         body.push(quote! {
+            impl #struct_name {
+                fn #impl_checked_ident(#inputs) -> ::proxmox::api::ApiFuture<#body_type> {
+                    #parameter_verifiers
+                    Self::#impl_unchecked_ident(#passed_args)
+                }
+            }
+
             // Our helper type derefs to a wrapper performing input validation and returning a
             // Pin<Box<Future>>.
             // Unfortunately we cannot return the actual function since that won't work for
@@ -292,10 +329,7 @@ fn handle_function(
                 type Target = fn(#inputs) -> ::proxmox::api::ApiFuture<#body_type>;
 
                 fn deref(&self) -> &Self::Target {
-                    const FUNC: fn(#inputs) -> ::proxmox::api::ApiFuture<#body_type> = |#inputs| {
-                        #struct_name::#impl_ident(#passed_args)
-                    };
-                    &FUNC
+                    &(Self::#impl_checked_ident as Self::Target)
                 }
             }
         });
@@ -338,6 +372,37 @@ fn handle_function(
     let body = TokenStream::from_iter(body);
     //dbg!("{}", &body);
     Ok(body)
+}
+
+fn make_parameter_verifier(
+    var: &Ident,
+    var_str: &str,
+    info: &mut HashMap<String, Expression>,
+    out: &mut TokenStream,
+) -> Result<(), Error> {
+    match info.remove("minimum") {
+        None => (),
+        Some(Expression::Expr(expr)) => out.extend(quote! {
+            let cmp = #expr;
+            if #var < cmp {
+                bail!("parameter '{}' is out of range (must be >= {})", #var_str, cmp);
+            }
+        }),
+        Some(_) => bail!("invalid value for 'minimum'"),
+    }
+
+    match info.remove("maximum") {
+        None => (),
+        Some(Expression::Expr(expr)) => out.extend(quote! {
+            let cmp = #expr;
+            if #var > cmp {
+                bail!("parameter '{}' is out of range (must be <= {})", #var_str, cmp);
+            }
+        }),
+        Some(_) => bail!("invalid value for 'maximum'"),
+    }
+
+    Ok(())
 }
 
 fn handle_struct(
