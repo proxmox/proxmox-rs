@@ -3,7 +3,7 @@
 use std::cell::Cell;
 use std::sync::Once;
 
-use failure::Error;
+use failure::{bail, Error};
 use http::Response;
 use serde_json::{json, Value};
 
@@ -40,6 +40,13 @@ impl Parameter {
                 "type": (self.type_info)().name,
             }),
         )
+    }
+
+    /// Parse a commnd line option: if it is None, we only saw an `--option` without value, this is
+    /// fine for booleans. If we saw a value, we should try to parse it out into a json value. For
+    /// string parameters this means passing them as is, for others it means using FromStr...
+    pub fn parse_cli(&self, _value: Option<&str>) -> Result<Value, Error> {
+        bail!("TODO");
     }
 }
 
