@@ -11,6 +11,7 @@ authors = [
 endian_trait = { version = "0.6", features = ["arrays"] }
 libc = "0.2"
 valgrind_request = { version = "1.1.0", optional = true }
+failure = "0.1"
 
 [features]
 default = [ "valgrind" ]
