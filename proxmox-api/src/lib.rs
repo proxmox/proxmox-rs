@@ -21,6 +21,8 @@ pub use api_type::*;
 mod router;
 pub use router::*;
 
+pub mod cli;
+
 /// Return type of an API method.
 pub type ApiOutput<Body> = Result<Response<Body>, Error>;
 
