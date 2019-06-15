@@ -49,7 +49,10 @@ impl Parameter {
         let info = (self.type_info)();
         match info.parse_cli {
             Some(func) => func(name, value),
-            None => bail!("cannot parse parameter '{}' as command line parameter", name),
+            None => bail!(
+                "cannot parse parameter '{}' as command line parameter",
+                name
+            ),
         }
     }
 }

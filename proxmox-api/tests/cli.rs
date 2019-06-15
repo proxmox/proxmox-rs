@@ -16,19 +16,22 @@ fn simple() {
             "newboth",
             cli::Command::method(simple_method, &["foo", "bar"]),
         );
+
+    let result = cli
+        .run(&["new", "--foo=FOO", "--bar=BAR"])
+        .expect("command should execute successfully");
+    let body =
+        std::str::from_utf8(result.body().as_ref()).expect("expected a valid utf8 repsonse body");
+    assert_eq!(body, "FOO:BAR");
 }
 
 mod methods {
     use bytes::Bytes;
-    use failure::{bail, Error};
     use http::Response;
     use lazy_static::lazy_static;
-    use serde_derive::{Deserialize, Serialize};
     use serde_json::Value;
 
-    use proxmox_api::{
-        get_type_info, ApiFuture, ApiMethod, ApiOutput, ApiType, Parameter, TypeInfo,
-    };
+    use proxmox_api::{get_type_info, ApiFuture, ApiMethod, ApiOutput, ApiType, Parameter};
 
     pub async fn simple_method(value: Value) -> ApiOutput<Bytes> {
         let foo = value["foo"].as_str().unwrap();

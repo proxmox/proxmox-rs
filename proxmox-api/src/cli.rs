@@ -9,6 +9,8 @@ use serde_json::Value;
 
 use super::{ApiMethodInfo, ApiOutput, Parameter};
 
+type MethodInfoRef<Body> = &'static (dyn ApiMethodInfo<Body> + Send + Sync);
+
 /// A CLI root node.
 pub struct App<Body: 'static> {
     name: &'static str,
@@ -55,11 +57,19 @@ impl<Body: 'static> App<Body> {
         }
     }
 
-    pub fn resolve(&self, args: &[&str]) -> Result<ApiOutput<Body>, Error> {
+    /// Resolve a list of parameters to a method and a parameter json value.
+    pub fn resolve(&self, args: &[&str]) -> Result<(MethodInfoRef<Body>, Value), Error> {
         self.command
             .as_ref()
             .ok_or_else(|| format_err!("no commands available"))?
             .resolve(args.iter())
+    }
+
+    /// Run a command through this command line interface.
+    pub fn run(&self, args: &[&str]) -> ApiOutput<Body> {
+        let (method, params) = self.resolve(args)?;
+        let handler = method.handler();
+        futures::executor::block_on(handler(params))
     }
 }
 
@@ -83,7 +93,7 @@ impl<Body: 'static> Command<Body> {
         Command::SubCommands(SubCommands::new())
     }
 
-    fn resolve(&self, args: std::slice::Iter<&str>) -> Result<ApiOutput<Body>, Error> {
+    fn resolve(&self, args: std::slice::Iter<&str>) -> Result<(MethodInfoRef<Body>, Value), Error> {
         match self {
             Command::Method(method) => method.resolve(args),
             Command::SubCommands(subcmd) => subcmd.resolve(args),
@@ -120,7 +130,10 @@ impl<Body: 'static> SubCommands<Body> {
         self
     }
 
-    fn resolve(&self, mut args: std::slice::Iter<&str>) -> Result<ApiOutput<Body>, Error> {
+    fn resolve(
+        &self,
+        mut args: std::slice::Iter<&str>,
+    ) -> Result<(MethodInfoRef<Body>, Value), Error> {
         match args.next() {
             None => bail!("missing subcommand"),
             Some(arg) => match self.commands.get(arg) {
@@ -139,7 +152,7 @@ impl<Body: 'static> SubCommands<Body> {
 // XXX: If we want optional positional parameters - should we make an enum or just say the
 // parameter name should have brackets around it?
 pub struct Method<Body: 'static> {
-    pub method: &'static (dyn ApiMethodInfo<Body> + Send + Sync),
+    pub method: MethodInfoRef<Body>,
     pub positional_args: &'static [&'static str],
     //pub formatter: Option<()>, // TODO: output formatter
 }
@@ -156,7 +169,10 @@ impl<Body: 'static> Method<Body> {
         }
     }
 
-    fn resolve(&self, mut args: std::slice::Iter<&str>) -> Result<ApiOutput<Body>, Error> {
+    fn resolve(
+        &self,
+        mut args: std::slice::Iter<&str>,
+    ) -> Result<(MethodInfoRef<Body>, Value), Error> {
         let mut params = serde_json::Map::new();
         let mut positionals = self.positional_args.iter();
 
@@ -210,7 +226,7 @@ impl<Body: 'static> Method<Body> {
             bail!("missing positional parameters: {}", missing);
         }
 
-        unreachable!();
+        Ok((self.method, Value::Object(params)))
     }
 
     /// This should insert the parameter 'arg' with value 'value' into 'params'.
@@ -276,7 +292,10 @@ pub trait ParseCli {
 // Saves us another mass impl macro such as the one below:
 impl<T> ParseCli for T {
     default fn parse_cli(name: &str, _value: Option<&str>) -> Result<Value, Error> {
-        bail!("invalid type for command line interface found for parameter '{}'", name);
+        bail!(
+            "invalid type for command line interface found for parameter '{}'",
+            name
+        );
     }
 }
 
@@ -300,24 +319,29 @@ impl_parse_cli_from_str! {isize, usize, i64, u64, i32, u32, i16, u16, i8, u8, f6
 impl ParseCli for Value {
     fn parse_cli(name: &str, _value: Option<&str>) -> Result<Value, Error> {
         // FIXME: we could of course allow generic json parameters...?
-        bail!("found generic json parameter ('{}') in command line...", name);
+        bail!(
+            "found generic json parameter ('{}') in command line...",
+            name
+        );
     }
 }
 
 impl ParseCli for &str {
     fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
-        Ok(Value::String(value
-            .ok_or_else(|| format_err!("missing value for parameter '{}'", name))?
-            .to_string()
+        Ok(Value::String(
+            value
+                .ok_or_else(|| format_err!("missing value for parameter '{}'", name))?
+                .to_string(),
         ))
     }
 }
 
 impl ParseCli for String {
     fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
-        Ok(Value::String(value
-            .ok_or_else(|| format_err!("missing value for parameter '{}'", name))?
-            .to_string()
+        Ok(Value::String(
+            value
+                .ok_or_else(|| format_err!("missing value for parameter '{}'", name))?
+                .to_string(),
         ))
     }
 }
