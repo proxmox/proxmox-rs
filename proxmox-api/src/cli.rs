@@ -1,8 +1,10 @@
 //! Provides Command Line Interface to API methods
 
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use failure::{bail, format_err, Error};
+use serde::Serialize;
 use serde_json::Value;
 
 use super::{ApiMethodInfo, ApiOutput, Parameter};
@@ -223,7 +225,7 @@ impl<Body: 'static> Method<Body> {
         let param_def = self
             .find_parameter(arg)
             .ok_or_else(|| format_err!("no such parameter: '{}'", arg))?;
-        params.insert(arg.to_string(), param_def.parse_cli(value)?);
+        params.insert(arg.to_string(), param_def.parse_cli(arg, value)?);
         Ok(())
     }
 
@@ -251,4 +253,71 @@ fn next_arg<'a>(args: &mut std::slice::Iter<&'a str>) -> Option<Arg<'a>> {
             Arg::Positional(arg)
         }
     })
+}
+
+pub fn parse_cli_from_str<T>(name: &str, value: Option<&str>) -> Result<Value, Error>
+where
+    T: FromStr + Serialize,
+    <T as FromStr>::Err: Into<Error>,
+{
+    let this: T = value
+        .ok_or_else(|| format_err!("missing parameter value for '{}'", name))?
+        .parse()
+        .map_err(|e: <T as FromStr>::Err| e.into())?;
+    Ok(serde_json::to_value(this)?)
+}
+
+/// We use this trait so we can keep the "mass implementation macro" for the ApiType trait simple
+/// and specialize the CLI parameter parsing via this trait separately.
+pub trait ParseCli {
+    fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error>;
+}
+
+// Saves us another mass impl macro such as the one below:
+impl<T> ParseCli for T {
+    default fn parse_cli(name: &str, _value: Option<&str>) -> Result<Value, Error> {
+        bail!("invalid type for command line interface found for parameter '{}'", name);
+    }
+}
+
+#[macro_export]
+macro_rules! impl_parse_cli_from_str {
+    ($type:ty $(, $more:ty)*) => {
+        impl $crate::cli::ParseCli for $type {
+            fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
+                parse_cli_from_str::<$type>(name, value)
+            }
+        }
+
+        $crate::impl_parse_cli_from_str!{$($more),*}
+    };
+    () => {};
+}
+
+impl_parse_cli_from_str! {bool}
+impl_parse_cli_from_str! {isize, usize, i64, u64, i32, u32, i16, u16, i8, u8, f64, f32}
+
+impl ParseCli for Value {
+    fn parse_cli(name: &str, _value: Option<&str>) -> Result<Value, Error> {
+        // FIXME: we could of course allow generic json parameters...?
+        bail!("found generic json parameter ('{}') in command line...", name);
+    }
+}
+
+impl ParseCli for &str {
+    fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
+        Ok(Value::String(value
+            .ok_or_else(|| format_err!("missing value for parameter '{}'", name))?
+            .to_string()
+        ))
+    }
+}
+
+impl ParseCli for String {
+    fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
+        Ok(Value::String(value
+            .ok_or_else(|| format_err!("missing value for parameter '{}'", name))?
+            .to_string()
+        ))
+    }
 }

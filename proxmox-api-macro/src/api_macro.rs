@@ -448,6 +448,7 @@ fn handle_struct_unnamed(
                     name: stringify!(#name),
                     description: "FIXME",
                     complete_fn: None, // FIXME!
+                    parse_cli: Some(<#name as ::proxmox::api::cli::ParseCli>::parse_cli),
                 };
                 &INFO
             }
@@ -493,6 +494,7 @@ fn handle_struct_named(
                     name: stringify!(#name),
                     description: #description,
                     complete_fn: None, // FIXME!
+                    parse_cli: Some(<#name as ::proxmox::api::cli::ParseCli>::parse_cli),
                 };
                 &INFO
             }

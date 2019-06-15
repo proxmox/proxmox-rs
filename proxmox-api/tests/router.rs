@@ -165,6 +165,7 @@ mod methods {
                 name: "Thing",
                 description: "A thing",
                 complete_fn: None,
+                parse_cli: None,
             };
             &INFO
         }

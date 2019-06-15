@@ -45,8 +45,12 @@ impl Parameter {
     /// Parse a commnd line option: if it is None, we only saw an `--option` without value, this is
     /// fine for booleans. If we saw a value, we should try to parse it out into a json value. For
     /// string parameters this means passing them as is, for others it means using FromStr...
-    pub fn parse_cli(&self, _value: Option<&str>) -> Result<Value, Error> {
-        bail!("TODO");
+    pub fn parse_cli(&self, name: &str, value: Option<&str>) -> Result<Value, Error> {
+        let info = (self.type_info)();
+        match info.parse_cli {
+            Some(func) => func(name, value),
+            None => bail!("cannot parse parameter '{}' as command line parameter", name),
+        }
     }
 }
 
@@ -57,6 +61,7 @@ pub struct TypeInfo {
     pub name: &'static str,
     pub description: &'static str,
     pub complete_fn: Option<CompleteFn>,
+    pub parse_cli: Option<fn(name: &str, value: Option<&str>) -> Result<Value, Error>>,
 }
 
 impl TypeInfo {
@@ -135,24 +140,6 @@ impl<Body> dyn ApiMethodInfo<Body> + Send + Sync {
 /// While this is very useful for structural types, we sometimes to want to be able to pass a
 /// simple unconstrainted type like a `String` with no restrictions, so most basic types implement
 /// `ApiType` as well.
-//
-// FIXME: I've actually moved most of this into the types in `api_type.rs` now, so this is
-// probably unused at this point?
-// `verify` should be moved to `TypeInfo` (for the type related verifier), and `Parameter` should
-// get an additional verify method for constraints added by *methods*.
-//
-// We actually have 2 layers of validation:
-//   When entering the API: The type validation
-//       obviously a `String` should also be a string in the json object...
-//       This does not happen when we call the method from rust-code as we have no json layer
-//       there.
-//   When entering the function: The input validation
-//       if the function says `Integer`, the type itself has no validation other than that it has
-//       to be an integer type, but the function may still say `minimum: 5, maximum: 10`.
-//       This should also happen for direct calls from within rust, the `#[api]` macro can take
-//       care of this.
-//   When leaving the function: The output validation
-//       Yep, we need to add this ;-)
 pub trait ApiType {
     /// API types need to provide a `TypeInfo`, providing details about the underlying type.
     fn type_info() -> &'static TypeInfo;
@@ -210,7 +197,8 @@ impl<T: ApiType> ApiType for Option<T> {
             DATA.info.set(Some(TypeInfo {
                 name: unsafe { (*DATA.name.as_ptr()).as_ref().unwrap().as_str() },
                 description: unsafe { (*DATA.description.as_ptr()).as_ref().unwrap().as_str() },
-                complete_fn: None,
+                complete_fn: info.complete_fn,
+                parse_cli: info.parse_cli,
             }));
         });
         unsafe { (*DATA.info.as_ptr()).as_ref().unwrap() }
@@ -249,6 +237,7 @@ macro_rules! unconstrained_api_type {
                     name: stringify!($type),
                     description: stringify!($type),
                     complete_fn: None,
+                    parse_cli: Some(<$type as $crate::cli::ParseCli>::parse_cli),
                 };
                 &INFO
             }
@@ -276,6 +265,7 @@ impl<Body> ApiType for Response<Body> {
             name: "http::Response<>",
             description: "A raw http response",
             complete_fn: None,
+            parse_cli: None,
         };
         &INFO
     }

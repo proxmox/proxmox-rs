@@ -2,7 +2,6 @@
 
 use std::collections::HashMap;
 
-use failure::Error;
 use serde_json::{json, Value};
 
 use super::ApiMethodInfo;
