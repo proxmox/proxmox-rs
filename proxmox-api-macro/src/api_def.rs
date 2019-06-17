@@ -46,7 +46,9 @@ impl CliMode {
     pub fn quote(&self, name: &proc_macro2::Ident) -> TokenStream {
         match self {
             CliMode::Disabled => quote! { None },
-            CliMode::ParseCli => quote! { Some(<#name as ::proxmox::api::cli::ParseCli>::parse_cli) },
+            CliMode::ParseCli => {
+                quote! { Some(<#name as ::proxmox::api::cli::ParseCli>::parse_cli) }
+            }
             CliMode::FromStr => quote! {
                 Some(<#name as ::proxmox::api::cli::ParseCliFromStr>::parse_cli)
             },

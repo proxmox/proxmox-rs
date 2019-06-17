@@ -304,7 +304,8 @@ impl<T> ParseCliFromStr for T
 where
     T: FromStr + Serialize,
     <T as FromStr>::Err: Into<Error>,
-{}
+{
+}
 
 #[macro_export]
 macro_rules! no_cli_type {

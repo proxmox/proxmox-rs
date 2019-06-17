@@ -10,7 +10,7 @@ pub mod vec;
 macro_rules! offsetof {
     ($ty:ty, $field:ident) => {
         unsafe { &(*(0 as *const $ty)).$field as *const _ as usize }
-    }
+    };
 }
 
 const HEX_CHARS: &'static [u8; 16] = b"0123456789abcdef";
@@ -20,7 +20,7 @@ pub fn digest_to_hex(digest: &[u8]) -> String {
 }
 
 pub fn bin_to_hex(digest: &[u8]) -> String {
-    let mut buf = Vec::<u8>::with_capacity(digest.len()*2);
+    let mut buf = Vec::<u8>::with_capacity(digest.len() * 2);
 
     for i in 0..digest.len() {
         buf.push(HEX_CHARS[(digest[i] >> 4) as usize]);
@@ -35,19 +35,27 @@ pub fn hex_to_bin(hex: &str) -> Result<Vec<u8>, Error> {
 
     let bytes = hex.as_bytes();
 
-    if (bytes.len() % 2) != 0 { bail!("hex_to_bin: got wrong input length."); }
+    if (bytes.len() % 2) != 0 {
+        bail!("hex_to_bin: got wrong input length.");
+    }
 
     let val = |c| {
-        if c >= b'0' && c <= b'9' { return Ok(c - b'0'); }
-        if c >= b'a' && c <= b'f' { return Ok(c - b'a' + 10); }
-        if c >= b'A' && c <= b'F' { return Ok(c - b'A' + 10); }
+        if c >= b'0' && c <= b'9' {
+            return Ok(c - b'0');
+        }
+        if c >= b'a' && c <= b'f' {
+            return Ok(c - b'a' + 10);
+        }
+        if c >= b'A' && c <= b'F' {
+            return Ok(c - b'A' + 10);
+        }
         bail!("found illegal hex character.");
     };
 
     for pair in bytes.chunks(2) {
         let h = val(pair[0])?;
         let l = val(pair[1])?;
-        result.push((h<<4)|l);
+        result.push((h << 4) | l);
     }
 
     Ok(result)
@@ -58,25 +66,37 @@ pub fn hex_to_digest(hex: &str) -> Result<[u8; 32], Error> {
 
     let bytes = hex.as_bytes();
 
-    if bytes.len() != 64 { bail!("got wrong digest length."); }
+    if bytes.len() != 64 {
+        bail!("got wrong digest length.");
+    }
 
     let val = |c| {
-        if c >= b'0' && c <= b'9' { return Ok(c - b'0'); }
-        if c >= b'a' && c <= b'f' { return Ok(c - b'a' + 10); }
-        if c >= b'A' && c <= b'F' { return Ok(c - b'A' + 10); }
+        if c >= b'0' && c <= b'9' {
+            return Ok(c - b'0');
+        }
+        if c >= b'a' && c <= b'f' {
+            return Ok(c - b'a' + 10);
+        }
+        if c >= b'A' && c <= b'F' {
+            return Ok(c - b'A' + 10);
+        }
         bail!("found illegal hex character.");
     };
 
     let mut pos = 0;
     for pair in bytes.chunks(2) {
-        if pos >= digest.len() { bail!("hex digest too long."); }
+        if pos >= digest.len() {
+            bail!("hex digest too long.");
+        }
         let h = val(pair[0])?;
         let l = val(pair[1])?;
-        digest[pos] = (h<<4)|l;
-        pos +=1;
+        digest[pos] = (h << 4) | l;
+        pos += 1;
     }
 
-    if pos != digest.len() {  bail!("hex digest too short."); }
+    if pos != digest.len() {
+        bail!("hex digest too short.");
+    }
 
     Ok(digest)
 }
