@@ -16,6 +16,10 @@ macro_rules! offsetof {
 const HEX_CHARS: &'static [u8; 16] = b"0123456789abcdef";
 
 pub fn digest_to_hex(digest: &[u8]) -> String {
+    bin_to_hex(digest)
+}
+
+pub fn bin_to_hex(digest: &[u8]) -> String {
     let mut buf = Vec::<u8>::with_capacity(digest.len()*2);
 
     for i in 0..digest.len() {
@@ -24,6 +28,29 @@ pub fn digest_to_hex(digest: &[u8]) -> String {
     }
 
     unsafe { String::from_utf8_unchecked(buf) }
+}
+
+pub fn hex_to_bin(hex: &str) -> Result<Vec<u8>, Error> {
+    let mut result = vec![];
+
+    let bytes = hex.as_bytes();
+
+    if (bytes.len() % 2) != 0 { bail!("hex_to_bin: got wrong input length."); }
+
+    let val = |c| {
+        if c >= b'0' && c <= b'9' { return Ok(c - b'0'); }
+        if c >= b'a' && c <= b'f' { return Ok(c - b'a' + 10); }
+        if c >= b'A' && c <= b'F' { return Ok(c - b'A' + 10); }
+        bail!("found illegal hex character.");
+    };
+
+    for pair in bytes.chunks(2) {
+        let h = val(pair[0])?;
+        let l = val(pair[1])?;
+        result.push((h<<4)|l);
+    }
+
+    Ok(result)
 }
 
 pub fn hex_to_digest(hex: &str) -> Result<[u8; 32], Error> {
