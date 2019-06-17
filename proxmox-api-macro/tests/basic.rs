@@ -15,6 +15,9 @@ use proxmox::api::{api, Router};
 #[repr(transparent)]
 pub struct HostOrIp(String);
 
+// We don't bother with the CLI interface in this test:
+proxmox::api::no_cli_type! {HostOrIp}
+
 // Simplified for example purposes
 fn validate_hostname(name: &str) -> Result<(), Error> {
     if name == "<bad>" {
@@ -35,6 +38,7 @@ fn validate_hostname(name: &str) -> Result<(), Error> {
             maximum: 10000,
         },
     },
+    cli: false,
 })]
 #[derive(Deserialize, Serialize)]
 pub struct Person {

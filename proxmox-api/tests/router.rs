@@ -151,6 +151,8 @@ mod methods {
     #[derive(Deserialize, Serialize)]
     pub struct CubicMeters(f64);
 
+    // We don't bother with the CLI interface in this test:
+    proxmox_api::no_cli_type! {CubicMeters}
     proxmox_api::unconstrained_api_type! {CubicMeters}
 
     #[derive(Deserialize, Serialize)]

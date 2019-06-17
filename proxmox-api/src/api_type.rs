@@ -226,6 +226,9 @@ impl<T: ApiType> ApiType for Result<T, Error> {
 /// This is not supposed to be used, but can be if needed. This will provide an empty `ApiType`
 /// declaration with no description and no verifier.
 ///
+/// This requires that the type already implements the `ParseCli` trait (or has a `parse_cli` type
+/// of the same signature in view from any other trait).
+///
 /// This rarely makes sense, but sometimes a `string` is just a `string`.
 #[macro_export]
 macro_rules! unconstrained_api_type {
@@ -236,11 +239,12 @@ macro_rules! unconstrained_api_type {
             }
 
             fn type_info() -> &'static $crate::TypeInfo {
+                use $crate::cli::ParseCli;
                 const INFO: $crate::TypeInfo = $crate::TypeInfo {
                     name: stringify!($type),
                     description: stringify!($type),
                     complete_fn: None,
-                    parse_cli: Some(<$type as $crate::cli::ParseCli>::parse_cli),
+                    parse_cli: Some(<$type>::parse_cli),
                 };
                 &INFO
             }

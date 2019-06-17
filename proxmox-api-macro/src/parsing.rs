@@ -196,6 +196,19 @@ impl Expression {
         }
     }
 
+    pub fn is_lit_bool(&self) -> Result<syn::LitBool, Error> {
+        match self {
+            Expression::Expr(expr) => match expr {
+                Expr::Lit(lit) => match &lit.lit {
+                    Lit::Bool(lit) => Ok(lit.clone()),
+                    other => bail!("expected boolean literal, got: {:?}", other),
+                },
+                other => bail!("expected boolean literal, got: {:?}", other),
+            },
+            _ => bail!("expected boolean literal"),
+        }
+    }
+
     pub fn expect_lit_bool(self) -> Result<syn::LitBool, Error> {
         match self {
             Expression::Expr(expr) => match expr {
@@ -230,6 +243,16 @@ impl Expression {
                 other => bail!("expected a type name, got {:?}", other),
             },
             _ => bail!("expected a type name, got {:?}", self),
+        }
+    }
+
+    pub fn is_ident(&self, ident: &str) -> bool {
+        match self {
+            Expression::Expr(expr) => match expr {
+                Expr::Path(path) => path.path.is_ident(Ident::new(ident, Span::call_site())),
+                _ => false,
+            },
+            _ => false,
         }
     }
 }

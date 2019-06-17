@@ -6,7 +6,7 @@ use failure::{bail, format_err, Error};
 use quote::{quote, ToTokens};
 use syn::{Expr, Token};
 
-use super::api_def::ParameterDefinition;
+use super::api_def::{CommonTypeDefinition, ParameterDefinition};
 use super::parsing::*;
 
 pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Error> {
@@ -423,7 +423,7 @@ fn handle_struct(
 }
 
 fn handle_struct_unnamed(
-    definition: HashMap<String, Expression>,
+    mut definition: HashMap<String, Expression>,
     name: &Ident,
     item: &syn::FieldsUnnamed,
 ) -> Result<TokenStream, Error> {
@@ -434,6 +434,7 @@ fn handle_struct_unnamed(
 
     //let field = fields.first().unwrap().value();
 
+    let common = CommonTypeDefinition::from_object(&mut definition)?;
     let apidef = ParameterDefinition::from_object(definition)?;
 
     let validator = match apidef.validate {
@@ -441,14 +442,18 @@ fn handle_struct_unnamed(
         None => quote! { ::proxmox::api::ApiType::verify(&self.0) },
     };
 
+    let description = common.description;
+    let parse_cli = common.cli.quote(&name);
     Ok(quote! {
         impl ::proxmox::api::ApiType for #name {
             fn type_info() -> &'static ::proxmox::api::TypeInfo {
+                use ::proxmox::api::cli::ParseCli;
+                use ::proxmox::api::cli::ParseCliFromStr;
                 const INFO: ::proxmox::api::TypeInfo = ::proxmox::api::TypeInfo {
                     name: stringify!(#name),
-                    description: "FIXME",
+                    description: #description,
                     complete_fn: None, // FIXME!
-                    parse_cli: Some(<#name as ::proxmox::api::cli::ParseCli>::parse_cli),
+                    parse_cli: #parse_cli,
                 };
                 &INFO
             }
@@ -461,32 +466,28 @@ fn handle_struct_unnamed(
 }
 
 fn handle_struct_named(
-    definition: HashMap<String, Expression>,
+    mut definition: HashMap<String, Expression>,
     name: &Ident,
     item: &syn::FieldsNamed,
 ) -> Result<TokenStream, Error> {
     let mut verify_entries = None;
-    let mut description = None;
+    let common = CommonTypeDefinition::from_object(&mut definition)?;
     for (key, value) in definition {
         match key.as_str() {
             "fields" => {
                 verify_entries = Some(handle_named_struct_fields(item, value.expect_object()?)?);
             }
-            "description" => {
-                description = Some(value.expect_lit_str()?);
-            }
             other => bail!("unknown api definition field: {}", other),
         }
     }
-
-    let description = description
-        .ok_or_else(|| format_err!("missing 'description' for type {}", name.to_string()))?;
 
     use std::iter::FromIterator;
     let verifiers = TokenStream::from_iter(
         verify_entries.ok_or_else(|| format_err!("missing 'fields' definition for struct"))?,
     );
 
+    let description = common.description;
+    let parse_cli = common.cli.quote(&name);
     Ok(quote! {
         impl ::proxmox::api::ApiType for #name {
             fn type_info() -> &'static ::proxmox::api::TypeInfo {
@@ -494,7 +495,7 @@ fn handle_struct_named(
                     name: stringify!(#name),
                     description: #description,
                     complete_fn: None, // FIXME!
-                    parse_cli: Some(<#name as ::proxmox::api::cli::ParseCli>::parse_cli),
+                    parse_cli: #parse_cli,
                 };
                 &INFO
             }

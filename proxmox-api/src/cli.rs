@@ -289,15 +289,41 @@ pub trait ParseCli {
     fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error>;
 }
 
-// Saves us another mass impl macro such as the one below:
-impl<T> ParseCli for T {
-    default fn parse_cli(name: &str, _value: Option<&str>) -> Result<Value, Error> {
-        bail!(
-            "invalid type for command line interface found for parameter '{}'",
-            name
-        );
+/// This is a version of ParseCli with a default implementation falling to FromStr.
+pub trait ParseCliFromStr
+where
+    Self: FromStr + Serialize,
+    <Self as FromStr>::Err: Into<Error>,
+{
+    fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
+        parse_cli_from_str::<Self>(name, value)
     }
 }
+
+impl<T> ParseCliFromStr for T
+where
+    T: FromStr + Serialize,
+    <T as FromStr>::Err: Into<Error>,
+{}
+
+#[macro_export]
+macro_rules! no_cli_type {
+    ($type:ty $(, $more:ty)*) => {
+        impl $crate::cli::ParseCli for $type {
+            fn parse_cli(name: &str, _value: Option<&str>) -> Result<Value, Error> {
+                bail!(
+                    "invalid type for command line interface found for parameter '{}'",
+                    name
+                );
+            }
+        }
+
+        $crate::impl_parse_cli_from_str!{$($more),*}
+    };
+    () => {};
+}
+
+no_cli_type! {Vec<String>}
 
 #[macro_export]
 macro_rules! impl_parse_cli_from_str {
