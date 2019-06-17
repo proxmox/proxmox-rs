@@ -180,20 +180,20 @@ impl<Body: 'static> Method<Body> {
         loop {
             match next_arg(&mut args) {
                 Some(Arg::Opt(arg)) => {
-                    if let Some(arg) = current_option {
+                    if let Some(arg) = current_option.take() {
                         self.add_parameter(&mut params, arg, None)?;
                     }
 
                     current_option = Some(arg);
                 }
                 Some(Arg::OptArg(arg, value)) => {
-                    if let Some(arg) = current_option {
+                    if let Some(arg) = current_option.take() {
                         self.add_parameter(&mut params, arg, None)?;
                     }
 
                     self.add_parameter(&mut params, arg, Some(value))?;
                 }
-                Some(Arg::Positional(value)) => match current_option {
+                Some(Arg::Positional(value)) => match current_option.take() {
                     Some(arg) => self.add_parameter(&mut params, arg, Some(value))?,
                     None => match positionals.next() {
                         Some(arg) => self.add_parameter(&mut params, arg, Some(value))?,
@@ -201,7 +201,7 @@ impl<Body: 'static> Method<Body> {
                     },
                 },
                 None => {
-                    if let Some(arg) = current_option {
+                    if let Some(arg) = current_option.take() {
                         self.add_parameter(&mut params, arg, None)?;
                     }
                     break;
