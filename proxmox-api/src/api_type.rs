@@ -197,7 +197,8 @@ impl<T: ApiType> ApiType for Option<T> {
         DATA.once.call_once(|| {
             let info = T::type_info();
             DATA.name.set(Some(format!("optional: {}", info.name)));
-            DATA.description.set(Some(format!("optional: {}", info.description)));
+            DATA.description
+                .set(Some(format!("optional: {}", info.description)));
             DATA.info.set(Some(TypeInfo {
                 name: unsafe { (*DATA.name.as_ptr()).as_ref().unwrap().as_str() },
                 description: unsafe { (*DATA.description.as_ptr()).as_ref().unwrap().as_str() },

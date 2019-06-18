@@ -19,7 +19,11 @@ fn simple() {
 
     check_cli(&cli, &["new", "--foo=FOO", "--bar=BAR"], Ok("FOO:BAR"));
     check_cli(&cli, &["new", "--foo", "FOO", "--bar=BAR"], Ok("FOO:BAR"));
-    check_cli(&cli, &["new", "--foo", "FOO", "--bar", "BAR"], Ok("FOO:BAR"));
+    check_cli(
+        &cli,
+        &["new", "--foo", "FOO", "--bar", "BAR"],
+        Ok("FOO:BAR"),
+    );
     check_cli(&cli, &["new", "--foo=FOO"], Err("missing parameter: 'bar'"));
     check_cli(&cli, &["new", "--bar=BAR"], Err("missing parameter: 'foo'"));
     check_cli(&cli, &["new"], Err("missing parameter: 'foo'"));
@@ -27,14 +31,26 @@ fn simple() {
     check_cli(&cli, &["newfoo", "POSFOO"], Err("missing parameter: 'bar'"));
     check_cli(&cli, &["newfoo", "POSFOO", "--bar=BAR"], Ok("POSFOO:BAR"));
     check_cli(&cli, &["newfoo", "--bar=BAR", "POSFOO"], Ok("POSFOO:BAR"));
-    check_cli(&cli, &["newfoo", "--bar=BAR"], Err("missing positional parameters: foo"));
+    check_cli(
+        &cli,
+        &["newfoo", "--bar=BAR"],
+        Err("missing positional parameters: foo"),
+    );
 
     check_cli(&cli, &["newbar", "POSBAR"], Err("missing parameter: 'foo'"));
     check_cli(&cli, &["newbar", "POSBAR", "--foo=ABC"], Ok("ABC:POSBAR"));
     check_cli(&cli, &["newbar", "--foo=ABC", "POSBAR"], Ok("ABC:POSBAR"));
-    check_cli(&cli, &["newbar", "--foo=ABC"], Err("missing positional parameters: bar"));
+    check_cli(
+        &cli,
+        &["newbar", "--foo=ABC"],
+        Err("missing positional parameters: bar"),
+    );
 
-    check_cli(&cli, &["newfoo", "FOO1", "--foo=FOO2", "--bar=BAR", "--baz=OMG"], Ok("FOO2:BAR:OMG"));
+    check_cli(
+        &cli,
+        &["newfoo", "FOO1", "--foo=FOO2", "--bar=BAR", "--baz=OMG"],
+        Ok("FOO2:BAR:OMG"),
+    );
 }
 
 fn check_cli(cli: &cli::App<Bytes>, args: &[&str], expect: Result<&str, &str>) {
@@ -48,15 +64,19 @@ fn check_cli(cli: &cli::App<Bytes>, args: &[&str], expect: Result<&str, &str>) {
             let result = result.to_string();
             assert_eq!(result, expected, "expected specific error message");
         }
-        (Ok(result), Err(err)) => {
-            match std::str::from_utf8(result.body().as_ref()) {
-                Ok(value) => panic!("expected error '{}', got success with value '{}'", err, value),
-                Err(_) => panic!("expected error '{}', got success with non-utf8 string", err),
-            }
-        }
+        (Ok(result), Err(err)) => match std::str::from_utf8(result.body().as_ref()) {
+            Ok(value) => panic!(
+                "expected error '{}', got success with value '{}'",
+                err, value
+            ),
+            Err(_) => panic!("expected error '{}', got success with non-utf8 string", err),
+        },
         (Err(err), Ok(expected)) => {
             let err = err.to_string();
-            panic!("expected success with value '{}', got error '{}'", expected, err);
+            panic!(
+                "expected success with value '{}', got error '{}'",
+                expected, err
+            );
         }
     }
 }
@@ -71,7 +91,9 @@ mod methods {
     use proxmox_api::{get_type_info, ApiFuture, ApiMethod, ApiOutput, ApiType, Parameter};
 
     fn required_str<'a>(value: &'a Value, name: &'static str) -> Result<&'a str, Error> {
-        value[name].as_str().ok_or_else(|| format_err!("missing parameter: '{}'", name))
+        value[name]
+            .as_str()
+            .ok_or_else(|| format_err!("missing parameter: '{}'", name))
     }
 
     pub async fn simple_method(value: Value) -> ApiOutput<Bytes> {
@@ -80,7 +102,11 @@ mod methods {
 
         let baz = value
             .get("baz")
-            .map(|value| value.as_str().ok_or_else(|| format_err!("'baz' must be a string")))
+            .map(|value| {
+                value
+                    .as_str()
+                    .ok_or_else(|| format_err!("'baz' must be a string"))
+            })
             .transpose()?;
 
         let output = match baz {
