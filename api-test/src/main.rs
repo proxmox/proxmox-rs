@@ -71,5 +71,6 @@ fn main() {
             .map_err(|err| eprintln!("server error: {}", err))
     };
 
+    println!("Serving {} under http://localhost:3000/www/", www_dir);
     tokio::run(server);
 }
