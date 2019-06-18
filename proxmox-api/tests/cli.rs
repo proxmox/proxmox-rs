@@ -52,9 +52,17 @@ fn simple() {
         Ok("FOO2:BAR:OMG"),
     );
 
-    check_cli(&cli, &["newfoo", "foo", "--bar=b", "--maybe"], Ok("foo:b:[true]"));
-    check_cli(&cli, &["newfoo", "foo", "--bar=b", "--maybe=false"], Ok("foo:b:[false]"));
-    check_cli(&cli, &["newfoo", "foo", "--bar=b", "--maybe", "false"], Ok("foo:b:[false]"));
+    check_cli(&cli, &["newboth", "a", "b", "--maybe"], Ok("a:b:[true]"));
+    check_cli(
+        &cli,
+        &["newboth", "a", "b", "--maybe=false"],
+        Ok("a:b:[false]"),
+    );
+    check_cli(
+        &cli,
+        &["newboth", "a", "b", "--maybe", "false"],
+        Ok("a:b:[false]"),
+    );
 }
 
 fn check_cli(cli: &cli::App<Bytes>, args: &[&str], expect: Result<&str, &str>) {
