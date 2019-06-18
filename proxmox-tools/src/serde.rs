@@ -54,6 +54,28 @@ pub mod date_time_as_rfc3339 {
 }
 
 /// Serialize Vec<u8> as base64 encoded string.
+///
+/// Usage example:
+/// ```
+/// # pub extern crate proxmox_tools;
+/// # mod proxmox { pub use proxmox_tools as tools; }
+///
+/// use serde::{Deserialize, Serialize};
+///
+/// # #[derive(Debug)]
+/// #[derive(Deserialize, PartialEq, Serialize)]
+/// struct Foo {
+///     #[serde(with = "proxmox::tools::serde::bytes_as_base64")]
+///     data: Vec<u8>,
+/// }
+///
+/// let obj = Foo { data: vec![1, 2, 3, 4] };
+/// let json = serde_json::to_string(&obj).unwrap();
+/// assert_eq!(json, r#"{"data":"AQIDBA=="}"#);
+///
+/// let deserialized: Foo = serde_json::from_str(&json).unwrap();
+/// assert_eq!(obj, deserialized);
+/// ```
 pub mod bytes_as_base64 {
 
     use base64;
