@@ -23,3 +23,4 @@ valgrind = [ "valgrind_request" ]
 # Docs should be able to reference the proxmox crate.
 [dev-dependencies]
 proxmox = { path = "../proxmox" }
+serde_json = "1.0"
