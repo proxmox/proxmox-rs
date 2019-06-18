@@ -340,8 +340,19 @@ macro_rules! impl_parse_cli_from_str {
     () => {};
 }
 
-impl_parse_cli_from_str! {bool}
 impl_parse_cli_from_str! {isize, usize, i64, u64, i32, u32, i16, u16, i8, u8, f64, f32}
+
+impl ParseCli for bool {
+    fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
+        // for booleans, using `--arg` without an option counts as `true`:
+        match value {
+            None => Ok(Value::Bool(true)),
+            Some("true") | Some("yes") | Some("on") | Some("1") => Ok(Value::Bool(true)),
+            Some("false") | Some("no") | Some("off") | Some("0") => Ok(Value::Bool(false)),
+            Some(other) => bail!("parameter '{}' must be a boolean, found: '{}'", name, other),
+        }
+    }
+}
 
 impl ParseCli for Value {
     fn parse_cli(name: &str, _value: Option<&str>) -> Result<Value, Error> {

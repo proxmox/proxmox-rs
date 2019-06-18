@@ -1,8 +1,5 @@
 //! This contains traits used to implement methods to be added to the `Router`.
 
-use std::cell::Cell;
-use std::sync::Once;
-
 use failure::{bail, Error};
 use http::Response;
 use serde_json::{json, Value};
@@ -181,6 +178,10 @@ impl<T: ApiType> ApiType for Option<T> {
     }
 
     fn type_info() -> &'static TypeInfo {
+        // FIXME: rust does not parameterize statics by the outer functions' generic parameters, so
+        // we cannot build special TypeInfo objects for options...
+        <T as ApiType>::type_info()
+        /* DOES NOT WORK:
         struct Data {
             info: Cell<Option<TypeInfo>>,
             once: Once,
@@ -207,6 +208,7 @@ impl<T: ApiType> ApiType for Option<T> {
             }));
         });
         unsafe { (*DATA.info.as_ptr()).as_ref().unwrap() }
+        */
     }
 }
 
@@ -241,12 +243,11 @@ macro_rules! unconstrained_api_type {
             }
 
             fn type_info() -> &'static $crate::TypeInfo {
-                use $crate::cli::ParseCli;
                 const INFO: $crate::TypeInfo = $crate::TypeInfo {
                     name: stringify!($type),
                     description: stringify!($type),
                     complete_fn: None,
-                    parse_cli: Some(<$type>::parse_cli),
+                    parse_cli: Some(<$type as $crate::cli::ParseCli>::parse_cli),
                 };
                 &INFO
             }

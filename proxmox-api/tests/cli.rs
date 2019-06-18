@@ -51,6 +51,10 @@ fn simple() {
         &["newfoo", "FOO1", "--foo=FOO2", "--bar=BAR", "--baz=OMG"],
         Ok("FOO2:BAR:OMG"),
     );
+
+    check_cli(&cli, &["newfoo", "foo", "--bar=b", "--maybe"], Ok("foo:b:[true]"));
+    check_cli(&cli, &["newfoo", "foo", "--bar=b", "--maybe=false"], Ok("foo:b:[false]"));
+    check_cli(&cli, &["newfoo", "foo", "--bar=b", "--maybe", "false"], Ok("foo:b:[false]"));
 }
 
 fn check_cli(cli: &cli::App<Bytes>, args: &[&str], expect: Result<&str, &str>) {
@@ -109,9 +113,23 @@ mod methods {
             })
             .transpose()?;
 
+        let maybe = value
+            .get("maybe")
+            .map(|value| {
+                value
+                    .as_bool()
+                    .ok_or_else(|| format_err!("'maybe' must be a boolean, found: {:?}", value))
+            })
+            .transpose()?;
+
         let output = match baz {
             Some(baz) => format!("{}:{}:{}", foo, bar, baz),
             None => format!("{}:{}", foo, bar),
+        };
+
+        let output = match maybe {
+            Some(maybe) => format!("{}:[{}]", output, maybe),
+            None => output,
         };
 
         Ok(Response::builder()
@@ -137,6 +155,11 @@ mod methods {
                     name: "baz",
                     description: "another test parameter",
                     type_info: Option::<String>::type_info,
+                },
+                Parameter {
+                    name: "maybe",
+                    description: "optional boolean test parameter",
+                    type_info: Option::<bool>::type_info,
                 },
             ]
         };
