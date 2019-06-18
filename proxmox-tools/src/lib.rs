@@ -4,6 +4,7 @@ use failure::*;
 
 pub mod io;
 pub mod vec;
+pub mod serde;
 
 /// Evaluates to the offset (in bytes) of a given member within a struct
 #[macro_export]
