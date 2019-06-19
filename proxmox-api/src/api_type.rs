@@ -7,13 +7,15 @@ use serde_json::{json, Value};
 /// Method entries in a `Router` are actually just `&dyn ApiMethodInfo` trait objects.
 /// This contains all the info required to call, document, or command-line-complete parameters for
 /// a method.
-pub trait ApiMethodInfo<Body> {
+pub trait ApiMethodInfo {
+    type Body;
+
     fn description(&self) -> &'static str;
     fn parameters(&self) -> &'static [Parameter];
     fn return_type(&self) -> &'static TypeInfo;
     fn protected(&self) -> bool;
     fn reload_timezone(&self) -> bool;
-    fn handler(&self) -> fn(Value) -> super::ApiFuture<Body>;
+    fn handler(&self) -> fn(Value) -> super::ApiFuture<Self::Body>;
 }
 
 /// Shortcut to not having to type it out. This function signature is just a dummy and not yet
@@ -84,7 +86,9 @@ pub struct ApiMethod<Body> {
     pub handler: fn(Value) -> super::ApiFuture<Body>,
 }
 
-impl<Body> ApiMethodInfo<Body> for ApiMethod<Body> {
+impl<Body> ApiMethodInfo for ApiMethod<Body> {
+    type Body = Body;
+
     fn description(&self) -> &'static str {
         self.description
     }
@@ -110,7 +114,7 @@ impl<Body> ApiMethodInfo<Body> for ApiMethod<Body> {
     }
 }
 
-impl<Body> dyn ApiMethodInfo<Body> + Send + Sync {
+impl<Body> dyn ApiMethodInfo<Body = Body> + Send + Sync {
     pub fn api_dump(&self) -> Value {
         let parameters = Value::Object(std::iter::FromIterator::from_iter(
             self.parameters()

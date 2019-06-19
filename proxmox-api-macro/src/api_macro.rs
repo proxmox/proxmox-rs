@@ -341,7 +341,9 @@ fn handle_function(
         //
         // Note that technically we don't need the `description` member in this trait, as this is
         // mostly used at compile time for documentation!
-        impl ::proxmox::api::ApiMethodInfo<#body_type> for #struct_name {
+        impl ::proxmox::api::ApiMethodInfo for #struct_name {
+            type Body = #body_type;
+
             fn description(&self) -> &'static str {
                 #fn_api_description
             }

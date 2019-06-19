@@ -65,7 +65,7 @@ fn simple() {
     );
 }
 
-fn check_cli(cli: &cli::App<Bytes>, args: &[&str], expect: Result<&str, &str>) {
+fn check_cli(cli: &cli::App, args: &[&str], expect: Result<&str, &str>) {
     match (cli.run(args), expect) {
         (Ok(result), Ok(expect)) => {
             let body = std::str::from_utf8(result.body().as_ref())

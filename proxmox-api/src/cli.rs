@@ -3,21 +3,22 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use bytes::Bytes;
 use failure::{bail, format_err, Error};
 use serde::Serialize;
 use serde_json::Value;
 
 use super::{ApiMethodInfo, ApiOutput, Parameter};
 
-type MethodInfoRef<Body> = &'static (dyn ApiMethodInfo<Body> + Send + Sync);
+type MethodInfoRef = &'static dyn UnifiedApiMethod;
 
 /// A CLI root node.
-pub struct App<Body: 'static> {
+pub struct App {
     name: &'static str,
-    command: Option<Command<Body>>,
+    command: Option<Command>,
 }
 
-impl<Body: 'static> App<Body> {
+impl App {
     /// Create a new empty App instance.
     pub fn new(name: &'static str) -> Self {
         Self {
@@ -29,7 +30,7 @@ impl<Body: 'static> App<Body> {
     /// Directly connect this instance to a single API method.
     ///
     /// This is a builder method and will panic if there's already a method registered!
-    pub fn method(mut self, method: Method<Body>) -> Self {
+    pub fn method(mut self, method: Method) -> Self {
         assert!(
             self.command.is_none(),
             "app {} already has a comman!",
@@ -44,7 +45,7 @@ impl<Body: 'static> App<Body> {
     ///
     /// This is a builder method and will panic if the subcommand already exists or no subcommands
     /// may be added.
-    pub fn subcommand(mut self, name: &'static str, subcommand: Command<Body>) -> Self {
+    pub fn subcommand(mut self, name: &'static str, subcommand: Command) -> Self {
         match self
             .command
             .get_or_insert_with(|| Command::SubCommands(SubCommands::new()))
@@ -58,7 +59,7 @@ impl<Body: 'static> App<Body> {
     }
 
     /// Resolve a list of parameters to a method and a parameter json value.
-    pub fn resolve(&self, args: &[&str]) -> Result<(MethodInfoRef<Body>, Value), Error> {
+    pub fn resolve(&self, args: &[&str]) -> Result<(MethodInfoRef, Value), Error> {
         self.command
             .as_ref()
             .ok_or_else(|| format_err!("no commands available"))?
@@ -66,25 +67,29 @@ impl<Body: 'static> App<Body> {
     }
 
     /// Run a command through this command line interface.
-    pub fn run(&self, args: &[&str]) -> ApiOutput<Body> {
+    pub fn run(&self, args: &[&str]) -> ApiOutput<Bytes> {
         let (method, params) = self.resolve(args)?;
-        let handler = method.handler();
-        futures::executor::block_on(handler(params))
+        let future = method.call(params);
+        futures::executor::block_on(future)
     }
 }
 
 /// A node in the CLI command router. This is either
-pub enum Command<Body: 'static> {
-    Method(Method<Body>),
-    SubCommands(SubCommands<Body>),
+pub enum Command {
+    Method(Method),
+    SubCommands(SubCommands),
 }
 
-impl<Body: 'static> Command<Body> {
+impl Command {
     /// Create a Command entry pointing to an API method
-    pub fn method(
-        method: &'static (dyn ApiMethodInfo<Body> + Send + Sync),
+    pub fn method<T: Send + Sync>(
+        method: &'static T,
         positional_args: &'static [&'static str],
-    ) -> Self {
+    ) -> Self
+    where
+        T: ApiMethodInfo,
+        T::Body: 'static + Into<Bytes>,
+    {
         Command::Method(Method::new(method, positional_args))
     }
 
@@ -93,7 +98,7 @@ impl<Body: 'static> Command<Body> {
         Command::SubCommands(SubCommands::new())
     }
 
-    fn resolve(&self, args: std::slice::Iter<&str>) -> Result<(MethodInfoRef<Body>, Value), Error> {
+    fn resolve(&self, args: std::slice::Iter<&str>) -> Result<(MethodInfoRef, Value), Error> {
         match self {
             Command::Method(method) => method.resolve(args),
             Command::SubCommands(subcmd) => subcmd.resolve(args),
@@ -101,11 +106,11 @@ impl<Body: 'static> Command<Body> {
     }
 }
 
-pub struct SubCommands<Body: 'static> {
-    commands: HashMap<&'static str, Command<Body>>,
+pub struct SubCommands {
+    commands: HashMap<&'static str, Command>,
 }
 
-impl<Body: 'static> SubCommands<Body> {
+impl SubCommands {
     /// Create a new empty SubCommands hash.
     pub fn new() -> Self {
         Self {
@@ -116,7 +121,7 @@ impl<Body: 'static> SubCommands<Body> {
     /// Add a subcommand.
     ///
     /// Note that it is illegal for the subcommand to already exist, which will cause a panic.
-    pub fn add_subcommand(&mut self, name: &'static str, command: Command<Body>) -> &mut Self {
+    pub fn add_subcommand(&mut self, name: &'static str, command: Command) -> &mut Self {
         let old = self.commands.insert(name, command);
         assert!(old.is_none(), "subcommand '{}' already exists", name);
         self
@@ -125,15 +130,12 @@ impl<Body: 'static> SubCommands<Body> {
     /// Builder method to add a subcommand.
     ///
     /// Note that it is illegal for the subcommand to already exist, which will cause a panic.
-    pub fn subcommand(mut self, name: &'static str, command: Command<Body>) -> Self {
+    pub fn subcommand(mut self, name: &'static str, command: Command) -> Self {
         self.add_subcommand(name, command);
         self
     }
 
-    fn resolve(
-        &self,
-        mut args: std::slice::Iter<&str>,
-    ) -> Result<(MethodInfoRef<Body>, Value), Error> {
+    fn resolve(&self, mut args: std::slice::Iter<&str>) -> Result<(MethodInfoRef, Value), Error> {
         match args.next() {
             None => bail!("missing subcommand"),
             Some(arg) => match self.commands.get(arg) {
@@ -144,6 +146,36 @@ impl<Body: 'static> SubCommands<Body> {
     }
 }
 
+/// API methods can have different body types. For the CLI we don't care whether it is a
+/// hyper::Body or a bytes::Bytes (also because we don't care for partia bodies etc.), so the
+/// output needs to be wrapped to a common format. So basically the CLI will only ever see
+/// `ApiOutput<Bytes>`.
+pub trait UnifiedApiMethod: Send + Sync {
+    fn parameters(&self) -> &'static [Parameter];
+    fn call(&self, params: Value) -> super::ApiFuture<Bytes>;
+}
+
+impl<T: Send + Sync> UnifiedApiMethod for T
+where
+    T: ApiMethodInfo,
+    T::Body: 'static + Into<Bytes>,
+{
+    fn parameters(&self) -> &'static [Parameter] {
+        ApiMethodInfo::parameters(self)
+    }
+
+    fn call(&self, params: Value) -> super::ApiFuture<Bytes> {
+        //async fn real_handler(this: &Self, params: Value) -> ApiOutput<Bytes> {
+        //    (Self::handler(this))(params)
+        //        .await
+        //        .map(|res| res.into())
+        //}
+        let handler = self.handler();
+        use futures::future::TryFutureExt;
+        Box::pin(handler(params).map_ok(|res| res.map(|body| body.into())))
+    }
+}
+
 /// A reference to an API method. Note that when coming from the command line, it is possible to
 /// match some parameters as positional parameters rather than argument switches, therefor this
 /// contains an ordered list of positional parameters.
@@ -151,28 +183,22 @@ impl<Body: 'static> SubCommands<Body> {
 /// Note that we currently do not support optional positional parameters.
 // XXX: If we want optional positional parameters - should we make an enum or just say the
 // parameter name should have brackets around it?
-pub struct Method<Body: 'static> {
-    pub method: MethodInfoRef<Body>,
+pub struct Method {
+    pub method: MethodInfoRef,
     pub positional_args: &'static [&'static str],
     //pub formatter: Option<()>, // TODO: output formatter
 }
 
-impl<Body: 'static> Method<Body> {
+impl Method {
     /// Create a new reference to an API method.
-    pub fn new(
-        method: &'static (dyn ApiMethodInfo<Body> + Send + Sync),
-        positional_args: &'static [&'static str],
-    ) -> Self {
+    pub fn new(method: MethodInfoRef, positional_args: &'static [&'static str]) -> Self {
         Self {
             method,
             positional_args,
         }
     }
 
-    fn resolve(
-        &self,
-        mut args: std::slice::Iter<&str>,
-    ) -> Result<(MethodInfoRef<Body>, Value), Error> {
+    fn resolve(&self, mut args: std::slice::Iter<&str>) -> Result<(MethodInfoRef, Value), Error> {
         let mut params = serde_json::Map::new();
         let mut positionals = self.positional_args.iter();
 
