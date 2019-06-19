@@ -20,6 +20,14 @@ pub fn digest_to_hex(digest: &[u8]) -> String {
     bin_to_hex(digest)
 }
 
+/// Convert a byte slice to a string of hexadecimal digits.
+///
+/// ```
+/// # use proxmox_tools::bin_to_hex;
+///
+/// let text = bin_to_hex(&[1, 2, 0xff]);
+/// assert_eq!(text, "0102ff");
+/// ```
 pub fn bin_to_hex(digest: &[u8]) -> String {
     let mut buf = Vec::<u8>::with_capacity(digest.len() * 2);
 
@@ -31,6 +39,17 @@ pub fn bin_to_hex(digest: &[u8]) -> String {
     unsafe { String::from_utf8_unchecked(buf) }
 }
 
+/// Convert a string of hexadecimal digits to a byte vector. Any non-digits are treated as an
+/// error, so when there is possible whitespace in the string it must be stripped by the caller
+/// first. Also, only full bytes are allowed, so the input must consist of an even number of
+/// digits.
+///
+/// ```
+/// # use proxmox_tools::hex_to_bin;
+///
+/// let data = hex_to_bin("aabb0123").unwrap();
+/// assert_eq!(&data, &[0xaa, 0xbb, 0x01, 0x23]);
+/// ```
 pub fn hex_to_bin(hex: &str) -> Result<Vec<u8>, Error> {
     let mut result = vec![];
 
@@ -62,6 +81,8 @@ pub fn hex_to_bin(hex: &str) -> Result<Vec<u8>, Error> {
     Ok(result)
 }
 
+// FIXME: This should be renamed to contain the digest algorithm, so that the array's size makes
+// sense.
 pub fn hex_to_digest(hex: &str) -> Result<[u8; 32], Error> {
     let mut digest = [0u8; 32];
 
