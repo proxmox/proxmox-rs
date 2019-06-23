@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use serde_json::{json, Value};
 
-use super::ApiMethodInfo;
+use super::ApiHandler;
 
 /// This enum specifies what to do when a subdirectory is requested from the current router.
 ///
@@ -32,16 +32,16 @@ pub enum SubRoute<Body: 'static> {
 #[derive(Default)]
 pub struct Router<Body: 'static> {
     /// The `GET` http method.
-    pub get: Option<&'static (dyn ApiMethodInfo<Body = Body> + Send + Sync)>,
+    pub get: Option<&'static (dyn ApiHandler<Body = Body> + Send + Sync)>,
 
     /// The `PUT` http method.
-    pub put: Option<&'static (dyn ApiMethodInfo<Body = Body> + Send + Sync)>,
+    pub put: Option<&'static (dyn ApiHandler<Body = Body> + Send + Sync)>,
 
     /// The `POST` http method.
-    pub post: Option<&'static (dyn ApiMethodInfo<Body = Body> + Send + Sync)>,
+    pub post: Option<&'static (dyn ApiHandler<Body = Body> + Send + Sync)>,
 
     /// The `DELETE` http method.
-    pub delete: Option<&'static (dyn ApiMethodInfo<Body = Body> + Send + Sync)>,
+    pub delete: Option<&'static (dyn ApiHandler<Body = Body> + Send + Sync)>,
 
     /// Specifies the behavior of sub directories. See [`SubRoute`].
     pub subroute: Option<SubRoute<Body>>,
@@ -114,19 +114,19 @@ where
         let mut this = serde_json::Map::<String, Value>::new();
 
         if let Some(get) = self.get {
-            this.insert("GET".to_string(), get.api_dump());
+            this.insert("GET".to_string(), get.method_info().api_dump());
         }
 
         if let Some(put) = self.put {
-            this.insert("PUT".to_string(), put.api_dump());
+            this.insert("PUT".to_string(), put.method_info().api_dump());
         }
 
         if let Some(post) = self.post {
-            this.insert("POST".to_string(), post.api_dump());
+            this.insert("POST".to_string(), post.method_info().api_dump());
         }
 
         if let Some(delete) = self.delete {
-            this.insert("DELETE".to_string(), delete.api_dump());
+            this.insert("DELETE".to_string(), delete.method_info().api_dump());
         }
 
         match &self.subroute {
@@ -165,7 +165,7 @@ where
     /// Builder method to provide a `GET` method info.
     pub fn get<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo<Body = Body> + Send + Sync,
+        I: ApiHandler<Body = Body> + Send + Sync,
     {
         self.get = Some(method);
         self
@@ -174,7 +174,7 @@ where
     /// Builder method to provide a `PUT` method info.
     pub fn put<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo<Body = Body> + Send + Sync,
+        I: ApiHandler<Body = Body> + Send + Sync,
     {
         self.put = Some(method);
         self
@@ -183,7 +183,7 @@ where
     /// Builder method to provide a `POST` method info.
     pub fn post<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo<Body = Body> + Send + Sync,
+        I: ApiHandler<Body = Body> + Send + Sync,
     {
         self.post = Some(method);
         self
@@ -192,7 +192,7 @@ where
     /// Builder method to provide a `DELETE` method info.
     pub fn delete<I>(mut self, method: &'static I) -> Self
     where
-        I: ApiMethodInfo<Body = Body> + Send + Sync,
+        I: ApiHandler<Body = Body> + Send + Sync,
     {
         self.delete = Some(method);
         self

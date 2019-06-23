@@ -194,20 +194,20 @@ fn handle_function(
     use std::iter::FromIterator;
     let arg_extraction = TokenStream::from_iter(arg_extraction.into_iter());
 
-    // The router expects an ApiMethod, or more accurately, an object implementing ApiMethodInfo.
+    // The router expects an ApiMethod, or more accurately, an object implementing ApiHandler.
     // This is because we need access to a bunch of additional attributes of the functions both at
     // runtime and when doing command line parsing/completion/help output.
     //
     // When manually implementing methods, we usually just write them out as an `ApiMethod` which
-    // is a type requiring all the info made available by the ApiMethodInfo trait as members.
+    // is a type requiring all the info made available by the ApiHandler trait as members.
     //
     // While we could just generate a `const ApiMethod` for our functions, we would like them to
     // also be usable as functions simply because the syntax we use to create them makes them
     // *look* like functions, so it would be nice if they also *behaved* like real functions.
     //
-    // Therefore all the fields of an ApiMethod are accessed via methods from the ApiMethodInfo
-    // trait and we perform the same trick lazy_static does: Create a new type implementing
-    // ApiMethodInfo, and make its instance Deref to an actual function.
+    // Therefore all the fields of an ApiMethod are accessed via methods from the ApiHandler trait
+    // and we perform the same trick lazy_static does: Create a new type implementing ApiHandler,
+    // and make its instance Deref to an actual function.
     // This way the function can still be used normally. Validators for parameters will be
     // executed, serialization happens only when coming from the method's `handler`.
 
@@ -334,8 +334,6 @@ fn handle_function(
         // Note that technically we don't need the `description` member in this trait, as this is
         // mostly used at compile time for documentation!
         impl ::proxmox::api::ApiMethodInfo for #struct_name {
-            type Body = #body_type;
-
             fn description(&self) -> &'static str {
                 #fn_api_description
             }
@@ -356,9 +354,17 @@ fn handle_function(
             fn reload_timezone(&self) -> bool {
                 #fn_api_reload_timezone
             }
+        }
+
+        impl ::proxmox::api::ApiHandler for #struct_name {
+            type Body = #body_type;
 
             fn call(&self, params: ::serde_json::Value) -> ::proxmox::api::ApiFuture<#body_type> {
                 #struct_name::wrapped_api_handler(params)
+            }
+
+            fn method_info(&self) -> &(dyn ::proxmox::api::ApiMethodInfo + Send + Sync) {
+                self as _
             }
         }
     });

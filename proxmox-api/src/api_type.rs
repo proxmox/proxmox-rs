@@ -8,17 +8,21 @@ use serde_json::{json, Value};
 /// This contains all the info required to call, document, or command-line-complete parameters for
 /// a method.
 pub trait ApiMethodInfo {
-    type Body;
-
     fn description(&self) -> &'static str;
     fn parameters(&self) -> &'static [Parameter];
     fn return_type(&self) -> &'static TypeInfo;
     fn protected(&self) -> bool;
     fn reload_timezone(&self) -> bool;
-    fn call(&self, params: Value) -> super::ApiFuture<Self::Body>;
 }
 
-impl<Body: 'static> dyn ApiMethodInfo<Body = Body> {
+pub trait ApiHandler: ApiMethodInfo + Send + Sync {
+    type Body;
+
+    fn call(&self, params: Value) -> super::ApiFuture<Self::Body>;
+    fn method_info(&self) -> &(dyn ApiMethodInfo + Send + Sync);
+}
+
+impl<Body: 'static> dyn ApiHandler<Body = Body> {
     pub fn call_as<ToBody>(&self, params: Value) -> super::ApiFuture<ToBody>
     where
         Body: Into<ToBody>,
@@ -97,8 +101,6 @@ pub struct ApiMethod<Body> {
 }
 
 impl<Body> ApiMethodInfo for ApiMethod<Body> {
-    type Body = Body;
-
     fn description(&self) -> &'static str {
         self.description
     }
@@ -118,13 +120,21 @@ impl<Body> ApiMethodInfo for ApiMethod<Body> {
     fn reload_timezone(&self) -> bool {
         self.reload_timezone
     }
+}
+
+impl<Body> ApiHandler for ApiMethod<Body> {
+    type Body = Body;
 
     fn call(&self, params: Value) -> super::ApiFuture<Body> {
         (self.handler)(params)
     }
+
+    fn method_info(&self) -> &(dyn ApiMethodInfo + Send + Sync) {
+        self as _
+    }
 }
 
-impl<Body> dyn ApiMethodInfo<Body = Body> + Send + Sync {
+impl dyn ApiMethodInfo + Send + Sync {
     pub fn api_dump(&self) -> Value {
         let parameters = Value::Object(std::iter::FromIterator::from_iter(
             self.parameters()
@@ -311,7 +321,7 @@ pub trait UnifiedApiMethod<Body>: Send + Sync {
 
 impl<T: Send + Sync + 'static, Body> UnifiedApiMethod<Body> for T
 where
-    T: ApiMethodInfo,
+    T: ApiHandler,
     T::Body: 'static + Into<Body>,
 {
     fn parameters(&self) -> &'static [Parameter] {
@@ -319,6 +329,6 @@ where
     }
 
     fn call(&self, params: Value) -> super::ApiFuture<Body> {
-        (self as &dyn ApiMethodInfo<Body = T::Body>).call_as(params)
+        (self as &dyn ApiHandler<Body = T::Body>).call_as(params)
     }
 }

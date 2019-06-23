@@ -8,7 +8,7 @@ use failure::{bail, format_err, Error};
 use serde::Serialize;
 use serde_json::Value;
 
-use super::{ApiMethodInfo, ApiOutput, Parameter, UnifiedApiMethod};
+use super::{ApiHandler, ApiOutput, Parameter, UnifiedApiMethod};
 
 type MethodInfoRef = &'static dyn UnifiedApiMethod<Bytes>;
 
@@ -87,7 +87,7 @@ impl Command {
         positional_args: &'static [&'static str],
     ) -> Self
     where
-        T: ApiMethodInfo,
+        T: ApiHandler,
         T::Body: 'static + Into<Bytes>,
     {
         Command::Method(Method::new(method, positional_args))
