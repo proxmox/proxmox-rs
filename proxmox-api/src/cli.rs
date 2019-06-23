@@ -165,14 +165,8 @@ where
     }
 
     fn call(&self, params: Value) -> super::ApiFuture<Bytes> {
-        //async fn real_handler(this: &Self, params: Value) -> ApiOutput<Bytes> {
-        //    (Self::handler(this))(params)
-        //        .await
-        //        .map(|res| res.into())
-        //}
-        let handler = self.handler();
         use futures::future::TryFutureExt;
-        Box::pin(handler(params).map_ok(|res| res.map(|body| body.into())))
+        Box::pin(ApiMethodInfo::call(self, params).map_ok(|res| res.map(|body| body.into())))
     }
 }
 

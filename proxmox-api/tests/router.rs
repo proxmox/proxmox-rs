@@ -1,7 +1,5 @@
 #![feature(async_await)]
 
-use std::pin::Pin;
-
 use bytes::Bytes;
 
 use proxmox_api::Router;
@@ -52,12 +50,6 @@ fn check_with_matched_params(
         param_name,
     ));
 
-    let apifn = target
-        .get
-        .as_ref()
-        .expect(&format!("expected GET method on {}", path))
-        .handler();
-
     let arg = params[param_name].as_str().expect(&format!(
         "expected lookup() to fill the '{}' parameter",
         param_name
@@ -69,7 +61,13 @@ fn check_with_matched_params(
         path, param_name, param_value,
     );
 
-    let response = futures::executor::block_on(Pin::from(apifn(params)))
+    let apifut = target
+        .get
+        .as_ref()
+        .expect(&format!("expected GET method on {}", path))
+        .call(params);
+
+    let response = futures::executor::block_on(apifut)
         .expect("expected the simple test api function to be ready immediately");
 
     assert_eq!(response.status(), 200, "response status must be 200");

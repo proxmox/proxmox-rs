@@ -357,8 +357,8 @@ fn handle_function(
                 #fn_api_reload_timezone
             }
 
-            fn handler(&self) -> fn(::serde_json::Value) -> ::proxmox::api::ApiFuture<#body_type> {
-                #struct_name::wrapped_api_handler
+            fn call(&self, params: ::serde_json::Value) -> ::proxmox::api::ApiFuture<#body_type> {
+                #struct_name::wrapped_api_handler(params)
             }
         }
     });

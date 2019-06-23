@@ -26,13 +26,12 @@ async fn route_request(request: Request<Body>) -> Result<http::Response<Body>, E
         .lookup(path)
         .ok_or_else(|| format_err!("missing path: {}", path))?;
 
-    let handler = target
+    target
         .get
         .as_ref()
         .ok_or_else(|| format_err!("no GET method for: {}", path))?
-        .handler();
-
-    Ok(handler(params.unwrap_or(Value::Null)).await?)
+        .call(params.unwrap_or(Value::Null))
+        .await
 }
 
 type BoxFut = Box<dyn futures_01::Future<Item = Response<Body>, Error = hyper::Error> + Send>;

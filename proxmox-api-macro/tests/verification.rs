@@ -45,7 +45,7 @@ fn check_parameter(
         .get
         .as_ref()
         .expect("expected GET method on router at path");
-    let fut = method.handler()(parameters);
+    let fut = method.call(parameters);
     match (futures::executor::block_on(fut), expect) {
         (Ok(resp), Ok(exp)) => {
             assert_eq!(resp.status(), 200, "test response should have status 200");

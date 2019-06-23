@@ -15,7 +15,7 @@ pub trait ApiMethodInfo {
     fn return_type(&self) -> &'static TypeInfo;
     fn protected(&self) -> bool;
     fn reload_timezone(&self) -> bool;
-    fn handler(&self) -> fn(Value) -> super::ApiFuture<Self::Body>;
+    fn call(&self, params: Value) -> super::ApiFuture<Self::Body>;
 }
 
 /// Shortcut to not having to type it out. This function signature is just a dummy and not yet
@@ -109,8 +109,8 @@ impl<Body> ApiMethodInfo for ApiMethod<Body> {
         self.reload_timezone
     }
 
-    fn handler(&self) -> fn(Value) -> super::ApiFuture<Body> {
-        self.handler
+    fn call(&self, params: Value) -> super::ApiFuture<Body> {
+        (self.handler)(params)
     }
 }
 
