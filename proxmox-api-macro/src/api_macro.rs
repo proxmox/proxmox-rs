@@ -230,14 +230,6 @@ fn handle_function(
             // This is the handler used by our router, which extracts the parameters out of a
             // serde_json::Value, running the actual method, then serializing the output into an
             // API response.
-            //
-            // FIXME: For now this always returns status 200, we're going to have to figure out how
-            // to use different success status values.
-            //   This could be a simple optional parameter to just replace the number, or
-            //   alternatively we could just recognize functions returning a http::Response and not
-            //   perform the serialization/http::Response-building automatically.
-            //   (Alternatively we could do exactly that with a trait so we don't have to parse the
-            //   return type?)
             fn wrapped_api_handler(
                 args: ::serde_json::Value,
             ) -> ::proxmox::api::ApiFuture<#body_type> {
