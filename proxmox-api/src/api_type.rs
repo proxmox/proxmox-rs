@@ -18,6 +18,16 @@ pub trait ApiMethodInfo {
     fn call(&self, params: Value) -> super::ApiFuture<Self::Body>;
 }
 
+impl<Body: 'static> dyn ApiMethodInfo<Body = Body> {
+    pub fn call_as<ToBody>(&self, params: Value) -> super::ApiFuture<ToBody>
+    where
+        Body: Into<ToBody>,
+    {
+        use futures::future::TryFutureExt;
+        Box::pin(self.call(params).map_ok(|res| res.map(|res| res.into())))
+    }
+}
+
 /// Shortcut to not having to type it out. This function signature is just a dummy and not yet
 /// stabalized!
 pub type CompleteFn = fn(&str) -> Vec<String>;
@@ -288,4 +298,27 @@ impl<Body> ApiType for Response<Body> {
 // FIXME: make const once feature(const_fn) is stable!
 pub fn get_type_info<T: ApiType>() -> &'static TypeInfo {
     T::type_info()
+}
+
+/// API methods can have different body types. For the CLI we don't care whether it is a
+/// hyper::Body or a bytes::Bytes (also because we don't care for partia bodies etc.), so the
+/// output needs to be wrapped to a common format. So basically the CLI will only ever see
+/// `ApiOutput<Bytes>`.
+pub trait UnifiedApiMethod<Body>: Send + Sync {
+    fn parameters(&self) -> &'static [Parameter];
+    fn call(&self, params: Value) -> super::ApiFuture<Body>;
+}
+
+impl<T: Send + Sync + 'static, Body> UnifiedApiMethod<Body> for T
+where
+    T: ApiMethodInfo,
+    T::Body: 'static + Into<Body>,
+{
+    fn parameters(&self) -> &'static [Parameter] {
+        ApiMethodInfo::parameters(self)
+    }
+
+    fn call(&self, params: Value) -> super::ApiFuture<Body> {
+        (self as &dyn ApiMethodInfo<Body = T::Body>).call_as(params)
+    }
 }

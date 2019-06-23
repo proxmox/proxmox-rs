@@ -8,9 +8,9 @@ use failure::{bail, format_err, Error};
 use serde::Serialize;
 use serde_json::Value;
 
-use super::{ApiMethodInfo, ApiOutput, Parameter};
+use super::{ApiMethodInfo, ApiOutput, Parameter, UnifiedApiMethod};
 
-type MethodInfoRef = &'static dyn UnifiedApiMethod;
+type MethodInfoRef = &'static dyn UnifiedApiMethod<Bytes>;
 
 /// A CLI root node.
 pub struct App {
@@ -143,30 +143,6 @@ impl SubCommands {
                 Some(cmd) => cmd.resolve(args),
             },
         }
-    }
-}
-
-/// API methods can have different body types. For the CLI we don't care whether it is a
-/// hyper::Body or a bytes::Bytes (also because we don't care for partia bodies etc.), so the
-/// output needs to be wrapped to a common format. So basically the CLI will only ever see
-/// `ApiOutput<Bytes>`.
-pub trait UnifiedApiMethod: Send + Sync {
-    fn parameters(&self) -> &'static [Parameter];
-    fn call(&self, params: Value) -> super::ApiFuture<Bytes>;
-}
-
-impl<T: Send + Sync> UnifiedApiMethod for T
-where
-    T: ApiMethodInfo,
-    T::Body: 'static + Into<Bytes>,
-{
-    fn parameters(&self) -> &'static [Parameter] {
-        ApiMethodInfo::parameters(self)
-    }
-
-    fn call(&self, params: Value) -> super::ApiFuture<Bytes> {
-        use futures::future::TryFutureExt;
-        Box::pin(ApiMethodInfo::call(self, params).map_ok(|res| res.map(|body| body.into())))
     }
 }
 
