@@ -257,7 +257,7 @@ impl Expression {
     }
 }
 
-pub fn parse_object2(tokens: TokenStream) -> Result<HashMap<String, Expression>, Error> {
+pub fn parse_object(tokens: TokenStream) -> Result<HashMap<String, Expression>, Error> {
     let mut tokens = tokens.into_iter().peekable();
     let mut out = HashMap::new();
 
@@ -306,7 +306,7 @@ fn parse_object_value(tokens: &mut TokenIter, key: &str) -> Result<Expression, E
         if first {
             first = false;
             if let TokenTree::Group(group) = token {
-                let expr = parse_object2(group.stream())?;
+                let expr = parse_object(group.stream())?;
                 comma_or_end(tokens)?;
                 return Ok(Expression::Object(expr));
             }

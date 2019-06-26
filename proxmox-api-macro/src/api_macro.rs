@@ -20,7 +20,7 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
         _ => bail!("expected api definition in braces"),
     };
 
-    let definition = parse_object2(definition)?;
+    let definition = parse_object(definition)?;
 
     // Now parse the item, based on which we decide whether this is an API method which needs a
     // wrapper, or an API type which needs an ApiType implementation!
