@@ -1,7 +1,4 @@
-//! This module provides additional operations for handling byte buffers for types implementing
-//! [`Read`](std::io::Read).
-//!
-//! See the [`ReadExtOps`](ops::ReadExtOps) trait for examples.
+//! Helpers for `Read`.
 
 use std::io;
 
@@ -16,7 +13,7 @@ use crate::vec::{self, ops::*};
 ///
 /// Examples:
 /// ```no_run
-/// use proxmox::tools::io::ops::*;
+/// use proxmox::tools::io::ReadExt;
 ///
 /// # fn code() -> std::io::Result<()> {
 /// let mut file = std::fs::File::open("some.data")?;
@@ -35,7 +32,7 @@ use crate::vec::{self, ops::*};
 ///
 /// ```no_run
 /// # use endian_trait::Endian;
-/// # use proxmox::tools::io::ops::*;
+/// # use proxmox::tools::io::ReadExt;
 ///
 /// #[derive(Endian)]
 /// #[repr(C)]
@@ -53,7 +50,7 @@ use crate::vec::{self, ops::*};
 /// ```
 ///
 /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
-pub trait ReadExtOps {
+pub trait ReadExt {
     /// Read data into a newly allocated vector. This is a shortcut for:
     /// ```ignore
     /// let mut data = Vec::with_capacity(len);
@@ -65,7 +62,7 @@ pub trait ReadExtOps {
     ///
     /// With this trait, we just use:
     /// ```no_run
-    /// use proxmox::tools::io::ops::*;
+    /// use proxmox::tools::io::ReadExt;
     /// # fn code(mut reader: std::fs::File, len: usize) -> std::io::Result<()> {
     /// let data = reader.read_exact_allocated(len)?;
     /// # Ok(())
@@ -89,7 +86,7 @@ pub trait ReadExtOps {
     ///
     /// ```no_run
     /// # use endian_trait::Endian;
-    /// use proxmox::tools::io::ops::*;
+    /// use proxmox::tools::io::ReadExt;
     ///
     /// #[derive(Endian)]
     /// #[repr(C, packed)]
@@ -121,7 +118,7 @@ pub trait ReadExtOps {
     ///
     /// ```no_run
     /// # use endian_trait::Endian;
-    /// use proxmox::tools::io::ops::*;
+    /// use proxmox::tools::io::ReadExt;
     ///
     /// #[derive(Endian)]
     /// #[repr(C, packed)]
@@ -153,7 +150,7 @@ pub trait ReadExtOps {
     ///
     /// ```no_run
     /// # use endian_trait::Endian;
-    /// use proxmox::tools::io::ops::*;
+    /// use proxmox::tools::io::ReadExt;
     ///
     /// #[derive(Endian)]
     /// #[repr(C, packed)]
@@ -175,7 +172,7 @@ pub trait ReadExtOps {
     unsafe fn read_be_value<T: Endian>(&mut self) -> io::Result<T>;
 }
 
-impl<R: io::Read> ReadExtOps for R {
+impl<R: io::Read> ReadExt for R {
     fn read_exact_allocated(&mut self, size: usize) -> io::Result<Vec<u8>> {
         let mut out = unsafe { vec::uninitialized(size) };
         self.read_exact(&mut out)?;
