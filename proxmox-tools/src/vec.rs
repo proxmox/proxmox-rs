@@ -17,7 +17,7 @@
 //!
 //! Examples:
 //! ```no_run
-//! use proxmox::tools::vec::{self, ops::*};
+//! use proxmox::tools::vec::{self, ByteVecExt};
 //!
 //! # let size = 64usize;
 //! # let more = 64usize;
@@ -31,7 +31,9 @@
 //! });
 //! ```
 
-pub mod ops;
+mod byte_vec;
+pub use byte_vec::*;
+
 
 /// Create an uninitialized byte vector of a specific size.
 ///

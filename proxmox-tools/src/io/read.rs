@@ -4,7 +4,7 @@ use std::io;
 
 use endian_trait::Endian;
 
-use crate::vec::{self, ops::*};
+use crate::vec::{self, ByteVecExt};
 
 /// Adds some additional related functionality for types implementing [`Read`](std::io::Read).
 ///
