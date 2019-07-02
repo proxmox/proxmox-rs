@@ -17,7 +17,7 @@ base64 = "0.10"
 chrono = "0.4"
 
 [features]
-default = [ "valgrind" ]
+default = []
 valgrind = [ "valgrind_request" ]
 
 # Docs should be able to reference the proxmox crate.

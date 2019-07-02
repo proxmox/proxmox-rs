@@ -12,3 +12,7 @@ proxmox-api = { path = "../proxmox-api" }
 proxmox-api-macro = { path = "../proxmox-api-macro" }
 proxmox-tools = { path = "../proxmox-tools" }
 proxmox-sys = { path = "../proxmox-sys" }
+
+[features]
+default = []
+valgrind = ["proxmox-tools/valgrind"]
