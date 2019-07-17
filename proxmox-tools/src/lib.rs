@@ -3,6 +3,7 @@
 use failure::*;
 
 pub mod io;
+pub mod raw;
 pub mod serde;
 pub mod vec;
 
