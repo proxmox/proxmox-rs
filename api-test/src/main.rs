@@ -3,7 +3,7 @@
 use failure::{format_err, Error};
 use http::Request;
 use http::Response;
-use hyper::service::service_fn;
+use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Server};
 use serde_json::Value;
 
@@ -34,7 +34,27 @@ async fn route_request(request: Request<Body>) -> Result<http::Response<Body>, E
         .await
 }
 
-type BoxFut = Box<dyn futures_01::Future<Item = Response<Body>, Error = hyper::Error> + Send>;
+async fn main_do(www_dir: String) {
+    // Construct our SocketAddr to listen on...
+    let addr = ([0, 0, 0, 0], 3000).into();
+
+    // And a MakeService to handle each connection...
+    let service = make_service_fn(|_| {
+        async {
+            Ok::<_, hyper::Error>(service_fn(run_request))
+        }
+    });
+
+    // Then bind and serve...
+    let server = Server::bind(&addr)
+        .serve(service);
+
+    println!("Serving {} under http://localhost:3000/www/", www_dir);
+
+    if let Err(e) = server.await {
+        eprintln!("server error: {}", e);
+    }
+}
 
 fn main() {
     // We expect a path, where to find our files we expose via the www/ dir:
@@ -51,25 +71,6 @@ fn main() {
         serde_json::to_string_pretty(&api::ROUTER.api_dump()).unwrap()
     );
 
-    // Construct our SocketAddr to listen on...
-    let addr = ([0, 0, 0, 0], 3000).into();
-
-    // And a MakeService to handle each connection...
-    let make_service = || {
-        service_fn(|req| {
-            let fut: BoxFut = Box::new(futures::compat::Compat::new(Box::pin(run_request(req))));
-            fut
-        })
-    };
-
-    // Then bind and serve...
-    let server = {
-        use futures_01::Future;
-        Server::bind(&addr)
-            .serve(make_service)
-            .map_err(|err| eprintln!("server error: {}", err))
-    };
-
-    println!("Serving {} under http://localhost:3000/www/", www_dir);
-    tokio::run(server);
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    rt.block_on(main_do(www_dir));
 }

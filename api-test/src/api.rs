@@ -2,9 +2,7 @@ use std::io;
 use std::path::Path;
 
 use failure::{bail, Error};
-use futures::compat::AsyncRead01CompatExt;
-use futures::compat::Future01CompatExt;
-use futures::io::AsyncReadExt;
+use tokio::io::AsyncReadExt;
 use http::Response;
 use hyper::Body;
 
@@ -50,10 +48,7 @@ async fn get_www(path: String) -> Result<Response<Body>, Error> {
         bail!("illegal path");
     }
 
-    let mut file = match tokio::fs::File::open(format!("{}/{}", www_dir(), path))
-        .compat()
-        .await
-    {
+    let mut file = match tokio::fs::File::open(format!("{}/{}", www_dir(), path)).await {
         Ok(file) => file,
         Err(ref err) if err.kind() == io::ErrorKind::NotFound => {
             return Ok(http::Response::builder()
@@ -61,8 +56,7 @@ async fn get_www(path: String) -> Result<Response<Body>, Error> {
                 .body(Body::from(format!("No such file or directory: {}", path)))?);
         }
         Err(e) => return Err(e.into()),
-    }
-    .compat();
+    };
 
     let mut data = Vec::new();
     file.read_to_end(&mut data).await?;
