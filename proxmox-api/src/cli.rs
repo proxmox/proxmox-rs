@@ -315,7 +315,7 @@ macro_rules! no_cli_type {
             }
         }
 
-        $crate::impl_parse_cli_from_str!{$($more),*}
+        $crate::derive_parse_cli_from_str!{$($more),*}
     };
     () => {};
 }
@@ -323,20 +323,23 @@ macro_rules! no_cli_type {
 no_cli_type! {Vec<String>}
 
 #[macro_export]
-macro_rules! impl_parse_cli_from_str {
+macro_rules! derive_parse_cli_from_str {
     ($type:ty $(, $more:ty)*) => {
         impl $crate::cli::ParseCli for $type {
-            fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
-                parse_cli_from_str::<$type>(name, value)
+            fn parse_cli(
+                name: &str,
+                value: Option<&str>,
+            ) -> Result<::serde_json::Value, ::failure::Error> {
+                $crate::cli::parse_cli_from_str::<$type>(name, value)
             }
         }
 
-        $crate::impl_parse_cli_from_str!{$($more),*}
+        $crate::derive_parse_cli_from_str!{$($more),*}
     };
     () => {};
 }
 
-impl_parse_cli_from_str! {isize, usize, i64, u64, i32, u32, i16, u16, i8, u8, f64, f32}
+derive_parse_cli_from_str! {isize, usize, i64, u64, i32, u32, i16, u16, i8, u8, f64, f32}
 
 impl ParseCli for bool {
     fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
