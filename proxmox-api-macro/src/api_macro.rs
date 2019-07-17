@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use proc_macro2::{Delimiter, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, format_err, Error};
-use quote::{quote, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{Expr, Token};
 
 use super::api_def::{CommonTypeDefinition, ParameterDefinition};
@@ -43,7 +43,9 @@ fn handle_function(
     mut item: syn::ItemFn,
 ) -> Result<TokenStream, Error> {
     if item.decl.generics.lt_token.is_some() {
-        bail!("cannot use generic functions for api macros currently");
+        return Ok(quote_spanned! { item.decl.generics.lt_token.unwrap().span =>
+            compile_error!("cannot use generic functions for api macros currently");
+        }.into());
         // Not until we stabilize our generated representation!
     }
 
