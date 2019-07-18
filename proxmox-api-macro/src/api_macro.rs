@@ -1,3 +1,5 @@
+use std::mem;
+
 use proc_macro2::{Delimiter, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, format_err, Error};
@@ -596,6 +598,25 @@ fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<Token
         let variant_ident = &variant.ident;
         let span = variant_ident.span();
         let underscore_name = util::to_underscore_case(&variant_ident.to_string());
+        let mut underscore_name = syn::LitStr::new(&underscore_name, variant_ident.span());
+
+        let cap = variant.attrs.len();
+        for attr in mem::replace(&mut variant.attrs, Vec::with_capacity(cap)) {
+            if attr.path.is_ident(Ident::new("api", Span::call_site())) {
+                use util::ApiItem;
+
+                let attrs: util::ApiAttr = syn::parse2(attr.tts)?;
+
+                for attr in attrs.items {
+                    match attr {
+                        ApiItem::Rename(to) => underscore_name = to,
+                        //other => c_bail!(other.span(), "unsupported attribute on enum variant"),
+                    }
+                }
+            } else {
+                variant.attrs.push(attr);
+            }
+        }
 
         display_entries.extend(quote_spanned! {
             span => #enum_ident::#variant_ident => write!(f, #underscore_name),

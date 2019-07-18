@@ -28,10 +28,6 @@ impl Name {
         &self.0
     }
 
-    pub fn to_string(&self) -> String {
-        self.0.clone()
-    }
-
     pub fn span(&self) -> Span {
         self.1.clone()
     }

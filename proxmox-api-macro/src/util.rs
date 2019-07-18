@@ -1,6 +1,6 @@
 use proc_macro2::Ident;
 
-use syn::Token;
+use syn::{parenthesized, Token};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 
@@ -52,3 +52,44 @@ pub fn to_underscore_case(text: &str) -> String {
 
     out
 }
+
+pub struct ApiAttr {
+    pub paren_token: syn::token::Paren,
+    pub items: Punctuated<ApiItem, Token![,]>,
+}
+
+impl Parse for ApiAttr {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let content;
+        Ok(ApiAttr {
+            paren_token: parenthesized!(content in input),
+            items: content.parse_terminated(ApiItem::parse)?,
+        })
+    }
+}
+
+pub enum ApiItem {
+    Rename(syn::LitStr),
+}
+
+impl Parse for ApiItem {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let what: Ident = input.parse()?;
+        let what_str = what.to_string();
+        match what_str.as_str() {
+            "rename" => {
+                let _: Token![=] = input.parse()?;
+                Ok(ApiItem::Rename(input.parse()?))
+            }
+            _ => c_bail!(what => "unrecognized api attribute: {}", what_str),
+        }
+    }
+}
+
+//impl ApiItem {
+//    pub fn span(&self) -> Span {
+//        match self {
+//            ApiItem::Rename(x) => x.span(),
+//        }
+//    }
+//}
