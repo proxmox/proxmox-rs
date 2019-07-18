@@ -539,10 +539,20 @@ fn handle_named_struct_fields(
             .remove(&name_str)
             .ok_or_else(|| {
                 c_format_err!(name.span(), "missing field in definition: '{}'", name_str)
-            })?
-            .expect_object()?;
+            })?;
 
-        let def = ParameterDefinition::from_object(def)?;
+        let def = match def {
+            Expression::Expr(syn::Expr::Lit(lit)) => match lit.lit {
+                syn::Lit::Str(description) => ParameterDefinition::builder()
+                    .description(Some(description))
+                    .build()
+                    .unwrap(),
+                other => c_bail!(other.span(), "expected description as literal string"),
+            },
+            Expression::Object(obj) => ParameterDefinition::from_object(obj)?,
+            other => c_bail!(other.span(), "expected description or field definition"),
+        };
+
         def.add_verifiers(&name_str, this, &mut verify_entries);
     }
 
