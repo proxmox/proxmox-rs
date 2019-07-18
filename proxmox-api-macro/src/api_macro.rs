@@ -470,7 +470,7 @@ fn handle_struct_unnamed(
                 &INFO
             }
 
-            fn verify(&self) -> Result<(), Error> {
+            fn verify(&self) -> ::std::result::Result<(), ::failure::Error> {
                 #validator
             }
         }
@@ -512,7 +512,7 @@ fn handle_struct_named(
                 &INFO
             }
 
-            fn verify(&self) -> Result<(), Error> {
+            fn verify(&self) -> ::std::result::Result<(), ::failure::Error> {
                 #verifiers
                 Ok(())
             }
@@ -592,7 +592,7 @@ fn handle_enum(
         let underscore_name = util::to_underscore_case(&variant_ident.to_string());
 
         display_entries.extend(quote_spanned! {
-            span => #enum_ident::#variant_ident => write!(f, "{}", #underscore_name),
+            span => #enum_ident::#variant_ident => write!(f, #underscore_name),
         });
 
         from_str_entries.extend(quote_spanned! {
