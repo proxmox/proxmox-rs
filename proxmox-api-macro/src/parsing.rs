@@ -200,6 +200,13 @@ impl IntoIterator for Object {
 }
 
 impl Expression {
+    pub fn span(&self) -> Span {
+        match self {
+            Expression::Expr(expr) => expr.span(),
+            Expression::Object(obj) => obj.span(),
+        }
+    }
+
     pub fn expect_lit_str(self) -> Result<syn::LitStr, Error> {
         match self {
             Expression::Expr(expr) => match expr {
@@ -209,7 +216,7 @@ impl Expression {
                 },
                 other => bail!("expected string literal, got: {:?}", other),
             },
-            _ => bail!("expected string literal"),
+            other => c_bail!(other.span(), "expected string literal"),
         }
     }
 
@@ -222,7 +229,7 @@ impl Expression {
                 },
                 other => bail!("expected boolean literal, got: {:?}", other),
             },
-            _ => bail!("expected boolean literal"),
+            other => c_bail!(other.span(), "expected boolean literal"),
         }
     }
 
@@ -235,21 +242,21 @@ impl Expression {
                 },
                 other => bail!("expected boolean literal, got: {:?}", other),
             },
-            _ => bail!("expected boolean literal"),
+            other => c_bail!(other.span(), "expected boolean literal"),
         }
     }
 
     pub fn expect_expr(self) -> Result<syn::Expr, Error> {
         match self {
             Expression::Expr(expr) => Ok(expr),
-            _ => bail!("expected expression, found {:?}", self),
+            other => c_bail!(other.span(), "expected expression, found {:?}", other),
         }
     }
 
     pub fn expect_object(self) -> Result<Object, Error> {
         match self {
             Expression::Object(obj) => Ok(obj),
-            _ => bail!("expected object, found an expression"),
+            other => c_bail!(other.span(), "expected object, found an expression"),
         }
     }
 
@@ -259,7 +266,7 @@ impl Expression {
                 Expr::Path(path) => Ok(path),
                 other => bail!("expected a type name, got {:?}", other),
             },
-            _ => bail!("expected a type name, got {:?}", self),
+            other => c_bail!(other.span(), "expected a type name, got {:?}", other),
         }
     }
 
