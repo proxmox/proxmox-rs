@@ -17,9 +17,10 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
 
     let definition = match definition {
         TokenTree::Group(ref group) if group.delimiter() == Delimiter::Brace => group.stream(),
-        _ => cbail!(definition.span() => "expected api definition in braces"),
+        _ => c_bail!(definition.span() => "expected api definition in braces"),
     };
 
+    let def_span = definition.span();
     let definition = parse_object(definition)?;
 
     // Now parse the item, based on which we decide whether this is an API method which needs a
@@ -33,17 +34,18 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
             output.extend(extra);
             Ok(output)
         }
-        syn::Item::Fn(func) => handle_function(definition, func),
-        _ => cbail!(item.span() => "api macro currently only applies to structs and functions"),
+        syn::Item::Fn(func) => handle_function(def_span, definition, func),
+        _ => c_bail!(item.span() => "api macro currently only applies to structs and functions"),
     }
 }
 
 fn handle_function(
+    def_span: Span,
     mut definition: HashMap<String, Expression>,
     mut item: syn::ItemFn,
 ) -> Result<TokenStream, Error> {
     if item.decl.generics.lt_token.is_some() {
-        cbail!(
+        c_bail!(
             item.decl.generics.span(),
             "cannot use generic functions for api macros currently",
         );
@@ -56,7 +58,7 @@ fn handle_function(
 
     let fn_api_description = definition
         .remove("description")
-        .ok_or_else(|| format_err!("missing 'description' in method definition"))?
+        .ok_or_else(|| c_format_err!(def_span, "missing 'description' in method definition"))?
         .expect_lit_str()?;
 
     let fn_api_protected = definition

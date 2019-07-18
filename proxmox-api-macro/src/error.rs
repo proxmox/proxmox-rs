@@ -14,11 +14,18 @@ impl std::fmt::Display for CompileError {
 
 impl std::error::Error for CompileError {}
 
-macro_rules! cbail {
+macro_rules! c_format_err {
     ($span:expr => $($msg:tt)*) => {
-        return Err(::failure::Error::from(crate::error::CompileError {
+        crate::error::CompileError {
             tokens: ::quote::quote_spanned! { $span => compile_error!($($msg)*); }.into()
-        }))
+        }
     };
-    ($span:expr, $($msg:tt)*) => { cbail!($span => $($msg)*) }
+    ($span:expr, $($msg:tt)*) => { c_format_err!($span => $($msg)*) }
+}
+
+macro_rules! c_bail {
+    ($span:expr => $($msg:tt)*) => {
+        return Err(c_format_err!($span => $($msg)*).into());
+    };
+    ($span:expr, $($msg:tt)*) => { c_bail!($span => $($msg)*) }
 }
