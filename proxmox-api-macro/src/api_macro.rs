@@ -569,7 +569,7 @@ fn handle_named_struct_fields(
 /// For enums we automatically implement `ToString`, `FromStr`, and derive `Serialize` and
 /// `Deserialize` via `serde_plain`.
 fn handle_enum(
-    _definition: HashMap<String, Expression>,
+    mut definition: HashMap<String, Expression>,
     item: &syn::ItemEnum,
 ) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {
@@ -577,7 +577,8 @@ fn handle_enum(
     }
 
     let enum_ident = &item.ident;
-    let expected = format!("valid {}", enum_ident.to_string());
+    let enum_name = enum_ident.to_string();
+    let expected = format!("valid {}", enum_ident);
 
     let mut display_entries = TokenStream::new();
     let mut from_str_entries = TokenStream::new();
@@ -600,6 +601,15 @@ fn handle_enum(
         });
     }
 
+    let common = CommonTypeDefinition::from_object(&mut definition)?;
+    let apidef = ParameterDefinition::from_object(definition)?;
+
+    if let Some(validate) = apidef.validate {
+        c_bail!(validate.span() => "validators are not allowed on enum types");
+    }
+
+    let description = common.description;
+    let parse_cli = common.cli.quote(&enum_ident);
     Ok(quote_spanned! { item.span() =>
         impl ::std::fmt::Display for #enum_ident {
             fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -624,5 +634,21 @@ fn handle_enum(
         ::serde_plain::derive_serialize_from_display!(#enum_ident);
 
         ::proxmox::api::derive_parse_cli_from_str!(#enum_ident);
+
+        impl ::proxmox::api::ApiType for #enum_ident {
+            fn type_info() -> &'static ::proxmox::api::TypeInfo {
+                const INFO: ::proxmox::api::TypeInfo = ::proxmox::api::TypeInfo {
+                    name: #enum_name,
+                    description: #description,
+                    complete_fn: None, // FIXME!
+                    parse_cli: #parse_cli,
+                };
+                &INFO
+            }
+
+            fn verify(&self) -> ::std::result::Result<(), ::failure::Error> {
+                Ok(())
+            }
+        }
     })
 }
