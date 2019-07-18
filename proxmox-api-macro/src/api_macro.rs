@@ -35,6 +35,12 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
             Ok(output)
         }
         syn::Item::Fn(func) => handle_function(def_span, definition, func),
+        syn::Item::Enum(ref itemenum) => {
+            let extra = handle_enum(definition, itemenum)?;
+            let mut output = item.into_token_stream();
+            output.extend(extra);
+            Ok(output)
+        }
         _ => c_bail!(item.span() => "api macro currently only applies to structs and functions"),
     }
 }
@@ -415,7 +421,7 @@ fn handle_struct(
     item: &syn::ItemStruct,
 ) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {
-        bail!("generic types are currently not supported");
+        c_bail!(item.generics.span(), "generic types are currently not supported");
     }
 
     let name = &item.ident;
@@ -553,6 +559,17 @@ fn handle_named_struct_fields(
     }
 
     Ok(verify_entries)
+}
+
+fn handle_enum(
+    _definition: HashMap<String, Expression>,
+    item: &syn::ItemEnum,
+) -> Result<TokenStream, Error> {
+    if item.generics.lt_token.is_some() {
+        c_bail!(item.generics.span(), "generic types are currently not supported");
+    }
+
+    c_bail!(item.span(), "todo");
 }
 
 //fn parse_api_definition(def: &mut ApiDefinitionBuilder, tokens: TokenStream) -> Result<(), Error> {
