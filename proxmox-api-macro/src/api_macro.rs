@@ -16,7 +16,7 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
 
     let definition = match definition {
         TokenTree::Group(ref group) if group.delimiter() == Delimiter::Brace => group.stream(),
-        _ => c_bail!(definition.span() => "expected api definition in braces"),
+        _ => c_bail!(definition => "expected api definition in braces"),
     };
 
     let def_span = definition.span();
@@ -24,7 +24,7 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
 
     // Now parse the item, based on which we decide whether this is an API method which needs a
     // wrapper, or an API type which needs an ApiType implementation!
-    let item: syn::Item = syn::parse2(item).unwrap();
+    let mut item: syn::Item = syn::parse2(item).unwrap();
 
     match item {
         syn::Item::Struct(ref itemstruct) => {
@@ -34,13 +34,13 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
             Ok(output)
         }
         syn::Item::Fn(func) => handle_function(def_span, definition, func),
-        syn::Item::Enum(ref itemenum) => {
+        syn::Item::Enum(ref mut itemenum) => {
             let extra = handle_enum(definition, itemenum)?;
             let mut output = item.into_token_stream();
             output.extend(extra);
             Ok(output)
         }
-        _ => c_bail!(item.span() => "api macro currently only applies to structs and functions"),
+        _ => c_bail!(item => "api macro currently only applies to structs and functions"),
     }
 }
 
@@ -573,7 +573,7 @@ fn handle_named_struct_fields(
 ///
 /// For enums we automatically implement `ToString`, `FromStr`, and derive `Serialize` and
 /// `Deserialize` via `serde_plain`.
-fn handle_enum(mut definition: Object, item: &syn::ItemEnum) -> Result<TokenStream, Error> {
+fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {
         c_bail!(
             item.generics.span(),
@@ -588,7 +588,7 @@ fn handle_enum(mut definition: Object, item: &syn::ItemEnum) -> Result<TokenStre
     let mut display_entries = TokenStream::new();
     let mut from_str_entries = TokenStream::new();
 
-    for variant in item.variants.iter() {
+    for variant in item.variants.iter_mut() {
         if variant.fields != syn::Fields::Unit {
             c_bail!(variant.span(), "#[api] enums cannot have fields");
         }
@@ -610,7 +610,7 @@ fn handle_enum(mut definition: Object, item: &syn::ItemEnum) -> Result<TokenStre
     let apidef = ParameterDefinition::from_object(definition)?;
 
     if let Some(validate) = apidef.validate {
-        c_bail!(validate.span() => "validators are not allowed on enum types");
+        c_bail!(validate => "validators are not allowed on enum types");
     }
 
     let description = common.description;

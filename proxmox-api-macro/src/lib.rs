@@ -6,19 +6,18 @@ extern crate proc_macro2;
 use proc_macro::TokenStream;
 
 #[macro_use]
-mod error;
+mod util;
 
 mod api_def;
 mod parsing;
 mod types;
-mod util;
 
 mod api_macro;
 mod router_macro;
 
 fn handle_error(kind: &'static str, err: failure::Error) -> TokenStream {
-    match err.downcast::<error::CompileError>() {
-        Ok(err) => err.tokens,
+    match err.downcast::<syn::Error>() {
+        Ok(err) => err.to_compile_error().into(),
         Err(err) => panic!("error in {}: {}", kind, err),
     }
 }

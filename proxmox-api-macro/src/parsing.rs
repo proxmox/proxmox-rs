@@ -287,7 +287,7 @@ pub fn parse_object(tokens: TokenStream) -> Result<Object, Error> {
         let value = parse_object_value(&mut tokens, &key)?;
 
         if out.insert(key.clone(), value).is_some() {
-            c_bail!(key.span() => "duplicate entry: {}", key.as_str());
+            c_bail!(key.span(), "duplicate entry: {}", key.as_str());
         }
     }
 
@@ -313,7 +313,7 @@ fn parse_object_value(tokens: &mut TokenIter, key: &Name) -> Result<Expression, 
             Some(token) => token,
             None => {
                 if first {
-                    c_bail!(key.span(), "missing value after key '{}'", key.as_str());
+                    c_bail!(key => "missing value after key '{}'", key.as_str());
                 }
                 break;
             }
