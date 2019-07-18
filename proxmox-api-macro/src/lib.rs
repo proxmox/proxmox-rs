@@ -5,12 +5,22 @@ extern crate proc_macro2;
 
 use proc_macro::TokenStream;
 
+#[macro_use]
+mod error;
+
 mod api_def;
 mod parsing;
 mod util;
 
 mod api_macro;
 mod router_macro;
+
+fn handle_error(kind: &'static str, err: failure::Error) -> TokenStream {
+    match err.downcast::<error::CompileError>() {
+        Ok(err) => err.tokens,
+        Err(err) => panic!("error in {}: {}", kind, err),
+    }
+}
 
 /// This is the `#[api(api definition)]` attribute for functions. An Api definition defines the
 /// parameters and return type of an API call. The function will automatically be wrapped in a
@@ -44,7 +54,7 @@ mod router_macro;
 pub fn api(attr: TokenStream, item: TokenStream) -> TokenStream {
     match api_macro::api_macro(attr.into(), item.into()) {
         Ok(output) => output.into(),
-        Err(err) => panic!("error in api definition: {}", err),
+        Err(err) => handle_error("api definition", err),
     }
 }
 
@@ -135,6 +145,6 @@ pub fn router(input: TokenStream) -> TokenStream {
     // TODO...
     match router_macro::router_macro(input.into()) {
         Ok(output) => output.into(),
-        Err(err) => panic!("error in router macro: {}", err),
+        Err(err) => handle_error("router", err),
     }
 }

@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use proc_macro2::{Delimiter, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, format_err, Error};
-use quote::{quote, quote_spanned, ToTokens};
-use syn::{Expr, Token};
+use quote::{quote, ToTokens};
+use syn::{spanned::Spanned, Expr, Token};
 
 use super::api_def::{CommonTypeDefinition, ParameterDefinition};
 use super::parsing::*;
@@ -17,7 +17,7 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
 
     let definition = match definition {
         TokenTree::Group(ref group) if group.delimiter() == Delimiter::Brace => group.stream(),
-        _ => bail!("expected api definition in braces"),
+        _ => cbail!(definition.span() => "expected api definition in braces"),
     };
 
     let definition = parse_object(definition)?;
@@ -34,7 +34,7 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
             Ok(output)
         }
         syn::Item::Fn(func) => handle_function(definition, func),
-        _ => bail!("api macro currently only applies to structs and functions"),
+        _ => cbail!(item.span() => "api macro currently only applies to structs and functions"),
     }
 }
 
@@ -43,9 +43,10 @@ fn handle_function(
     mut item: syn::ItemFn,
 ) -> Result<TokenStream, Error> {
     if item.decl.generics.lt_token.is_some() {
-        return Ok(quote_spanned! { item.decl.generics.lt_token.unwrap().span =>
-            compile_error!("cannot use generic functions for api macros currently");
-        }.into());
+        cbail!(
+            item.decl.generics.span(),
+            "cannot use generic functions for api macros currently",
+        );
         // Not until we stabilize our generated representation!
     }
 
