@@ -3,11 +3,12 @@ use std::collections::HashMap;
 use proc_macro2::{Delimiter, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, format_err, Error};
-use quote::{quote, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{spanned::Spanned, Expr, Token};
 
-use super::api_def::{CommonTypeDefinition, ParameterDefinition};
-use super::parsing::*;
+use crate::util;
+use crate::api_def::{CommonTypeDefinition, ParameterDefinition};
+use crate::parsing::*;
 
 pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Error> {
     let definition = attr
@@ -561,6 +562,12 @@ fn handle_named_struct_fields(
     Ok(verify_entries)
 }
 
+/// Enums are string types. Note that we usually use lower case enum values, but rust wants
+/// CamelCase, so unless otherwise requested by the user (todo!), we convert CamelCase to
+/// underscore_case automatically.
+///
+/// For enums we automatically implement `ToString`, `FromStr`, and derive `Serialize` and
+/// `Deserialize` via `serde_plain`.
 fn handle_enum(
     _definition: HashMap<String, Expression>,
     item: &syn::ItemEnum,
@@ -569,7 +576,55 @@ fn handle_enum(
         c_bail!(item.generics.span(), "generic types are currently not supported");
     }
 
-    c_bail!(item.span(), "todo");
+    let enum_ident = &item.ident;
+    let expected = format!("valid {}", enum_ident.to_string());
+
+    let mut display_entries = TokenStream::new();
+    let mut from_str_entries = TokenStream::new();
+
+    for variant in item.variants.iter() {
+        if variant.fields != syn::Fields::Unit {
+            c_bail!(variant.span(), "#[api] enums cannot have fields");
+        }
+
+        let variant_ident = &variant.ident;
+        let span = variant_ident.span();
+        let underscore_name = util::to_underscore_case(&variant_ident.to_string());
+
+        display_entries.extend(quote_spanned! {
+            span => #enum_ident::#variant_ident => write!(f, "{}", #underscore_name),
+        });
+
+        from_str_entries.extend(quote_spanned! {
+            span => #underscore_name => Ok(#enum_ident::#variant_ident),
+        });
+    }
+
+    Ok(quote_spanned! { item.span() =>
+        impl ::std::fmt::Display for #enum_ident {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                match self {
+                    #display_entries
+                }
+            }
+        }
+
+        impl ::std::str::FromStr for #enum_ident {
+            type Err = ::failure::Error;
+
+            fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
+                match s {
+                    #from_str_entries
+                    _ => ::failure::bail!("expected {}", #expected),
+                }
+            }
+        }
+
+        ::serde_plain::derive_deserialize_from_str!(#enum_ident, #expected);
+        ::serde_plain::derive_serialize_from_display!(#enum_ident);
+
+        ::proxmox::api::derive_parse_cli_from_str!(#enum_ident);
+    })
 }
 
 //fn parse_api_definition(def: &mut ApiDefinitionBuilder, tokens: TokenStream) -> Result<(), Error> {
