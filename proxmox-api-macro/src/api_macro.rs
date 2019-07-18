@@ -535,7 +535,9 @@ fn handle_named_struct_fields(
 
         let def = field_def
             .remove(&name_str)
-            .ok_or_else(|| format_err!("missing field in definition: '{}'", name_str))?
+            .ok_or_else(|| {
+                c_format_err!(name.span(), "missing field in definition: '{}'", name_str)
+            })?
             .expect_object()?;
 
         let def = ParameterDefinition::from_object(def)?;
@@ -544,14 +546,19 @@ fn handle_named_struct_fields(
 
     if !field_def.is_empty() {
         // once SliceConcatExt is stable we can join(",") on the fields...
+        let mut span = None;
         let mut missing = String::new();
         for key in field_def.keys() {
             if !missing.is_empty() {
                 missing.push_str(", ");
             }
+            if span.is_none() {
+                span = Some(key.span());
+            }
             missing.push_str(key.as_str());
         }
-        bail!(
+        c_bail!(
+            span.unwrap(),
             "the following struct fields are not handled in the api definition: {}",
             missing
         );
