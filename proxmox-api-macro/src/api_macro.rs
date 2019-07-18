@@ -4,9 +4,9 @@ use failure::{bail, format_err, Error};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::{spanned::Spanned, Expr, Token};
 
-use crate::util;
 use crate::api_def::{CommonTypeDefinition, ParameterDefinition};
 use crate::parsing::*;
+use crate::util;
 
 pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Error> {
     let definition = attr
@@ -415,12 +415,12 @@ fn make_parameter_verifier(
     Ok(())
 }
 
-fn handle_struct(
-    definition: Object,
-    item: &syn::ItemStruct,
-) -> Result<TokenStream, Error> {
+fn handle_struct(definition: Object, item: &syn::ItemStruct) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {
-        c_bail!(item.generics.span(), "generic types are currently not supported");
+        c_bail!(
+            item.generics.span(),
+            "generic types are currently not supported"
+        );
     }
 
     let name = &item.ident;
@@ -573,12 +573,12 @@ fn handle_named_struct_fields(
 ///
 /// For enums we automatically implement `ToString`, `FromStr`, and derive `Serialize` and
 /// `Deserialize` via `serde_plain`.
-fn handle_enum(
-    mut definition: Object,
-    item: &syn::ItemEnum,
-) -> Result<TokenStream, Error> {
+fn handle_enum(mut definition: Object, item: &syn::ItemEnum) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {
-        c_bail!(item.generics.span(), "generic types are currently not supported");
+        c_bail!(
+            item.generics.span(),
+            "generic types are currently not supported"
+        );
     }
 
     let enum_ident = &item.ident;

@@ -82,9 +82,8 @@ impl AsRef<str> for Name {
 impl std::hash::Hash for Name {
     fn hash<H>(&self, state: &mut H)
     where
-        H: std::hash::Hasher
+        H: std::hash::Hasher,
     {
         std::hash::Hash::hash::<H>(&self.0, state)
     }
 }
-
