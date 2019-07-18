@@ -10,6 +10,7 @@ mod error;
 
 mod api_def;
 mod parsing;
+mod types;
 mod util;
 
 mod api_macro;

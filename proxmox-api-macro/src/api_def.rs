@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::convert::TryFrom;
 
 use proc_macro2::TokenStream;
@@ -7,7 +6,7 @@ use derive_builder::Builder;
 use failure::{bail, Error};
 use quote::{quote, ToTokens};
 
-use super::parsing::Expression;
+use super::parsing::{Expression, Object};
 
 #[derive(Clone)]
 pub enum CliMode {
@@ -69,7 +68,7 @@ impl CommonTypeDefinition {
         CommonTypeDefinitionBuilder::default()
     }
 
-    pub fn from_object(obj: &mut HashMap<String, Expression>) -> Result<Self, Error> {
+    pub fn from_object(obj: &mut Object) -> Result<Self, Error> {
         let mut def = Self::builder();
 
         if let Some(value) = obj.remove("description") {
@@ -103,7 +102,7 @@ impl ParameterDefinition {
         ParameterDefinitionBuilder::default()
     }
 
-    pub fn from_object(obj: HashMap<String, Expression>) -> Result<Self, Error> {
+    pub fn from_object(obj: Object) -> Result<Self, Error> {
         let mut def = ParameterDefinition::builder();
 
         for (key, value) in obj {

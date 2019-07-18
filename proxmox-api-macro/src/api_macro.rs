@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use proc_macro2::{Delimiter, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, format_err, Error};
@@ -48,7 +46,7 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
 
 fn handle_function(
     def_span: Span,
-    mut definition: HashMap<String, Expression>,
+    mut definition: Object,
     mut item: syn::ItemFn,
 ) -> Result<TokenStream, Error> {
     if item.decl.generics.lt_token.is_some() {
@@ -96,7 +94,7 @@ fn handle_function(
         .remove("parameters")
         .map(|v| v.expect_object())
         .transpose()?
-        .unwrap_or_else(HashMap::new);
+        .unwrap_or_else(|| Object::new(Span::call_site()));
     let mut parameter_entries = TokenStream::new();
     let mut parameter_verifiers = TokenStream::new();
 
@@ -195,7 +193,7 @@ fn handle_function(
             if !list.is_empty() {
                 list.push_str(", ");
             }
-            list.push_str(&param);
+            list.push_str(param.as_str());
         }
         bail!(
             "api definition contains parameters not found in function declaration: {}",
@@ -389,7 +387,7 @@ fn handle_function(
 fn make_parameter_verifier(
     var: &Ident,
     var_str: &str,
-    info: &mut HashMap<String, Expression>,
+    info: &mut Object,
     out: &mut TokenStream,
 ) -> Result<(), Error> {
     match info.remove("minimum") {
@@ -418,7 +416,7 @@ fn make_parameter_verifier(
 }
 
 fn handle_struct(
-    definition: HashMap<String, Expression>,
+    definition: Object,
     item: &syn::ItemStruct,
 ) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {
@@ -435,7 +433,7 @@ fn handle_struct(
 }
 
 fn handle_struct_unnamed(
-    mut definition: HashMap<String, Expression>,
+    mut definition: Object,
     name: &Ident,
     item: &syn::FieldsUnnamed,
 ) -> Result<TokenStream, Error> {
@@ -478,7 +476,7 @@ fn handle_struct_unnamed(
 }
 
 fn handle_struct_named(
-    mut definition: HashMap<String, Expression>,
+    mut definition: Object,
     name: &Ident,
     item: &syn::FieldsNamed,
 ) -> Result<TokenStream, Error> {
@@ -522,7 +520,7 @@ fn handle_struct_named(
 
 fn handle_named_struct_fields(
     item: &syn::FieldsNamed,
-    mut field_def: HashMap<String, Expression>,
+    mut field_def: Object,
 ) -> Result<Vec<TokenStream>, Error> {
     let mut verify_entries = Vec::new();
 
@@ -551,7 +549,7 @@ fn handle_named_struct_fields(
             if !missing.is_empty() {
                 missing.push_str(", ");
             }
-            missing.push_str(&key);
+            missing.push_str(key.as_str());
         }
         bail!(
             "the following struct fields are not handled in the api definition: {}",
@@ -569,7 +567,7 @@ fn handle_named_struct_fields(
 /// For enums we automatically implement `ToString`, `FromStr`, and derive `Serialize` and
 /// `Deserialize` via `serde_plain`.
 fn handle_enum(
-    mut definition: HashMap<String, Expression>,
+    mut definition: Object,
     item: &syn::ItemEnum,
 ) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {

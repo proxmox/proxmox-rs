@@ -4,7 +4,9 @@ use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 
 use failure::{bail, Error};
 use quote::quote;
-use syn::{Expr, Lit};
+use syn::{spanned::Spanned, Expr, Lit};
+
+use crate::types::Name;
 
 pub type RawTokenIter = proc_macro2::token_stream::IntoIter;
 pub type TokenIter = std::iter::Peekable<RawTokenIter>;
@@ -117,33 +119,6 @@ pub fn comma_or_end(tokens: &mut TokenIter) -> Result<(), Error> {
     Ok(())
 }
 
-/// A more relaxed version of Ident which allows hyphens.
-pub struct Name(String, Span);
-
-impl Name {
-    pub fn new(name: String, span: Span) -> Result<Self, Error> {
-        let beg = name.as_bytes()[0];
-        if !(beg.is_ascii_alphanumeric() || beg == b'_')
-            || !name
-                .bytes()
-                .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
-        {
-            bail!("`{}` is not a valid name", name);
-        }
-        Ok(Self(name, span))
-    }
-
-    pub fn to_string(&self) -> String {
-        self.0.clone()
-    }
-}
-
-impl From<Ident> for Name {
-    fn from(ident: Ident) -> Name {
-        Name(ident.to_string(), ident.span())
-    }
-}
-
 pub fn need_hyphenated_name(tokens: &mut TokenIter) -> Result<syn::LitStr, Error> {
     let start = need_ident(&mut *tokens)?;
     finish_hyphenated_name(&mut *tokens, start)
@@ -179,7 +154,49 @@ pub fn finish_hyphenated_name(tokens: &mut TokenIter, name: Ident) -> Result<syn
 #[derive(Debug)]
 pub enum Expression {
     Expr(Expr),
-    Object(HashMap<String, Expression>),
+    Object(Object),
+}
+
+#[derive(Debug)]
+pub struct Object {
+    span: Span,
+    map: HashMap<Name, Expression>,
+}
+
+impl std::ops::Deref for Object {
+    type Target = HashMap<Name, Expression>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.map
+    }
+}
+
+impl std::ops::DerefMut for Object {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.map
+    }
+}
+
+impl Object {
+    pub fn new(span: Span) -> Self {
+        Self {
+            span,
+            map: HashMap::new(),
+        }
+    }
+
+    pub fn span(&self) -> Span {
+        self.span
+    }
+}
+
+impl IntoIterator for Object {
+    type Item = <HashMap<Name, Expression> as IntoIterator>::Item;
+    type IntoIter = <HashMap<Name, Expression> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.map.into_iter()
+    }
 }
 
 impl Expression {
@@ -229,7 +246,7 @@ impl Expression {
         }
     }
 
-    pub fn expect_object(self) -> Result<HashMap<String, Expression>, Error> {
+    pub fn expect_object(self) -> Result<Object, Error> {
         match self {
             Expression::Object(obj) => Ok(obj),
             _ => bail!("expected object, found an expression"),
@@ -257,21 +274,20 @@ impl Expression {
     }
 }
 
-pub fn parse_object(tokens: TokenStream) -> Result<HashMap<String, Expression>, Error> {
+pub fn parse_object(tokens: TokenStream) -> Result<Object, Error> {
+    let mut out = Object::new(tokens.span());
     let mut tokens = tokens.into_iter().peekable();
-    let mut out = HashMap::new();
 
     loop {
         let key = match parse_object_key(&mut tokens)? {
             Some(key) => key,
             None => break,
         };
-        let key_name = key.to_string();
 
-        let value = parse_object_value(&mut tokens, &key_name)?;
+        let value = parse_object_value(&mut tokens, &key)?;
 
-        if out.insert(key_name.clone(), value).is_some() {
-            bail!("duplicate entry: {}", key_name);
+        if out.insert(key.clone(), value).is_some() {
+            c_bail!(key.span() => "duplicate entry: {}", key.as_str());
         }
     }
 
@@ -288,7 +304,7 @@ fn parse_object_key(tokens: &mut TokenIter) -> Result<Option<Name>, Error> {
     Ok(Some(key))
 }
 
-fn parse_object_value(tokens: &mut TokenIter, key: &str) -> Result<Expression, Error> {
+fn parse_object_value(tokens: &mut TokenIter, key: &Name) -> Result<Expression, Error> {
     let mut value_tokens = TokenStream::new();
 
     let mut first = true;
@@ -297,7 +313,7 @@ fn parse_object_value(tokens: &mut TokenIter, key: &str) -> Result<Expression, E
             Some(token) => token,
             None => {
                 if first {
-                    bail!("missing value after key '{}'", key);
+                    c_bail!(key.span(), "missing value after key '{}'", key.as_str());
                 }
                 break;
             }
