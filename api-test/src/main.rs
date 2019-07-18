@@ -39,15 +39,10 @@ async fn main_do(www_dir: String) {
     let addr = ([0, 0, 0, 0], 3000).into();
 
     // And a MakeService to handle each connection...
-    let service = make_service_fn(|_| {
-        async {
-            Ok::<_, hyper::Error>(service_fn(run_request))
-        }
-    });
+    let service = make_service_fn(|_| async { Ok::<_, hyper::Error>(service_fn(run_request)) });
 
     // Then bind and serve...
-    let server = Server::bind(&addr)
-        .serve(service);
+    let server = Server::bind(&addr).serve(service);
 
     println!("Serving {} under http://localhost:3000/www/", www_dir);
 

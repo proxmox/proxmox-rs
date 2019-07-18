@@ -2,9 +2,9 @@ use std::io;
 use std::path::Path;
 
 use failure::{bail, Error};
-use tokio::io::AsyncReadExt;
 use http::Response;
 use hyper::Body;
+use tokio::io::AsyncReadExt;
 
 use proxmox::api::{api, router};
 

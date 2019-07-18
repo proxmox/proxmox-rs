@@ -75,9 +75,7 @@ async fn get_loopback(param: String) -> Result<String, Error> {
     returns: String
 })]
 fn non_async_test(param: String) -> proxmox::api::ApiFuture<Bytes> {
-    Box::pin(async {
-        proxmox::api::IntoApiOutput::into_api_output(param)
-    })
+    Box::pin(async { proxmox::api::IntoApiOutput::into_api_output(param) })
 }
 
 proxmox_api_macro::router! {

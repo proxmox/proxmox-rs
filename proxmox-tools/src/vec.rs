@@ -34,7 +34,6 @@
 mod byte_vec;
 pub use byte_vec::*;
 
-
 /// Create an uninitialized byte vector of a specific size.
 ///
 /// This is just a shortcut for:
