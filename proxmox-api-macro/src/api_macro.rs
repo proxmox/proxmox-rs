@@ -494,6 +494,13 @@ fn handle_struct_named(
         .transpose()?
         .unwrap_or(false);
 
+    if derive_default {
+        // We currently fill the actual `default` values from the schema into Option<Foo>, but
+        // really Option<Foo> should default to None even when there's a Default as our accessors
+        // will fill in the default at use-time...
+        panic!("derive_default is not finished");
+    }
+
     let field_count = item.named.len();
 
     let type_s = type_ident.to_string();
