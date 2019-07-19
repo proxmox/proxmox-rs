@@ -40,7 +40,6 @@ fn validate_hostname(name: &str) -> Result<(), Error> {
     },
     cli: false,
 })]
-#[derive(Deserialize, Serialize)]
 pub struct Person {
     name: String,
     id: usize,

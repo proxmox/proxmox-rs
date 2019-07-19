@@ -479,32 +479,182 @@ fn handle_struct_unnamed(
 
 fn handle_struct_named(
     mut definition: Object,
-    name: &Ident,
+    type_ident: &Ident,
     item: &syn::FieldsNamed,
 ) -> Result<TokenStream, Error> {
-    let mut verify_entries = None;
     let common = CommonTypeDefinition::from_object(&mut definition)?;
-    for (key, value) in definition {
-        match key.as_str() {
-            "fields" => {
-                verify_entries = Some(handle_named_struct_fields(item, value.expect_object()?)?);
+    let mut field_def = definition.remove("fields")
+        .ok_or_else(|| c_format_err!(definition.span(), "missing 'fields' entry"))?
+        .expect_object()?;
+
+    let field_count = item.named.len();
+
+    let type_s = type_ident.to_string();
+    let type_span = type_ident.span();
+    let type_str = syn::LitStr::new(&type_s, type_span);
+    let struct_type_str = syn::LitStr::new(&format!("struct {}", type_s), type_span);
+    let struct_type_field_str =
+        syn::LitStr::new(&format!("struct {} field name", type_s), type_span);
+
+    let mut serialize_entries = TokenStream::new();
+    let mut field_option_init_list = TokenStream::new();
+    let mut field_option_check_or_default_list = TokenStream::new();
+    let mut accessors = TokenStream::new();
+    let mut field_name_str_list = TokenStream::new(); // ` "member1", "member2", `
+    let mut field_ident_list = TokenStream::new(); // ` member1, member2, `
+    let mut field_name_matches = TokenStream::new(); // ` "member0" => 0, "member1" => 1, `
+    let mut field_value_matches = TokenStream::new();
+    let mut visitor_ident = Ident::new(&format!("{}Visitor", type_s), type_span);
+
+    let mut mem_id: isize = 0;
+    for field in item.named.iter() {
+        mem_id += 1;
+
+        let field_ident = field.ident
+            .as_ref()
+            .ok_or_else(|| c_format_err!(field => "missing field name"))?;
+        let field_s = field_ident.to_string();
+
+        let def = field_def
+            .remove(&field_s)
+            .ok_or_else(|| {
+                c_format_err!(field => "missing api description entry for field {}", field_s)
+            })?;
+
+        let field_span = field_ident.span();
+        let field_str = syn::LitStr::new(&field_s, field_span);
+
+        field_name_str_list.extend(quote_spanned! { field_span => #field_str, });
+        field_ident_list.extend(quote_spanned! { field_span => #field_ident, });
+
+        serialize_entries.extend(quote_spanned! { field_span =>
+            state.serialize_field(#field_str, &self.#field_ident)?;
+        });
+
+        field_option_init_list.extend(quote_spanned! { field_span =>
+            let mut #field_ident = None;
+        });
+
+        field_option_check_or_default_list.extend(quote_spanned! { field_span =>
+            let #field_ident = #field_ident.ok_or_else(|| {
+                ::serde::de::Error::missing_field(#field_str)
+            })?;
+        });
+
+        field_name_matches.extend(quote_spanned! { field_span =>
+            #field_str => Field(#mem_id),
+        });
+        field_value_matches.extend(quote_spanned! { field_span =>
+            Field(#mem_id) => {
+                if #field_ident.is_some() {
+                    return Err(::serde::de::Error::duplicate_field(#field_str));
+                }
+                #field_ident = Some(__api_macro__map.next_value()?);
             }
-            other => bail!("unknown api definition field: {}", other),
-        }
+        });
     }
 
-    use std::iter::FromIterator;
-    let verifiers = TokenStream::from_iter(
-        verify_entries.ok_or_else(|| format_err!("missing 'fields' definition for struct"))?,
-    );
-
     let description = common.description;
-    let parse_cli = common.cli.quote(&name);
-    Ok(quote! {
-        impl ::proxmox::api::ApiType for #name {
+    let parse_cli = common.cli.quote(&type_ident);
+    Ok(quote_spanned! { item.span() =>
+        impl ::serde::ser::Serialize for #type_ident {
+            fn serialize<S>(&self, serializer: S) -> ::std::result::Result<S::Ok, S::Error>
+            where
+                S: ::serde::ser::Serializer,
+            {
+                use ::serde::ser::SerializeStruct;
+                let mut state = serializer.serialize_struct(#type_str, #field_count)?;
+                #serialize_entries
+                state.end()
+            }
+        }
+
+        impl<'de> ::serde::de::Deserialize<'de> for #type_ident {
+            fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+            where
+                D: ::serde::de::Deserializer<'de>,
+            {
+                #[repr(transparent)]
+                struct Field(isize);
+
+                impl<'de> ::serde::de::Deserialize<'de> for Field {
+                    fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+                    where
+                        D: ::serde::de::Deserializer<'de>,
+                    {
+                        struct FieldVisitor;
+
+                        impl<'de> ::serde::de::Visitor<'de> for FieldVisitor {
+                            type Value = Field;
+
+                            fn expecting(
+                                &self,
+                                formatter: &mut ::std::fmt::Formatter,
+                            ) -> ::std::fmt::Result {
+                                formatter.write_str(#struct_type_field_str)
+                            }
+
+                            fn visit_str<E>(self, value: &str) -> ::std::result::Result<Field, E>
+                            where
+                                E: ::serde::de::Error,
+                            {
+                                Ok(match value {
+                                    #field_name_matches
+                                    _ => {
+                                        return Err(
+                                            ::serde::de::Error::unknown_field(value, FIELDS)
+                                        );
+                                    }
+                                })
+                            }
+                        }
+
+                        deserializer.deserialize_identifier(FieldVisitor)
+                    }
+                }
+
+                struct #visitor_ident;
+
+                impl<'de> ::serde::de::Visitor<'de> for #visitor_ident {
+                    type Value = #type_ident;
+
+                    fn expecting(
+                        &self,
+                        formatter: &mut ::std::fmt::Formatter,
+                    ) -> ::std::fmt::Result {
+                        formatter.write_str(#struct_type_str)
+                    }
+
+                    fn visit_map<V>(
+                        self,
+                        mut __api_macro__map: V,
+                    ) -> ::std::result::Result<#type_ident, V::Error>
+                    where
+                        V: ::serde::de::MapAccess<'de>,
+                    {
+                        #field_option_init_list
+                        while let Some(__api_macro__key) = __api_macro__map.next_key()? {
+                            match __api_macro__key {
+                                #field_value_matches
+                                _ => unreachable!(),
+                            }
+                        }
+                        #field_option_check_or_default_list
+                        Ok(#type_ident {
+                            #field_ident_list
+                        })
+                    }
+                }
+
+                const FIELDS: &'static [&'static str] = &[ #field_name_str_list ];
+                deserializer.deserialize_struct(#type_str, FIELDS, #visitor_ident)
+            }
+        }
+
+        impl ::proxmox::api::ApiType for #type_ident {
             fn type_info() -> &'static ::proxmox::api::TypeInfo {
                 const INFO: ::proxmox::api::TypeInfo = ::proxmox::api::TypeInfo {
-                    name: stringify!(#name),
+                    name: #type_str,
                     description: #description,
                     complete_fn: None, // FIXME!
                     parse_cli: #parse_cli,
@@ -513,70 +663,11 @@ fn handle_struct_named(
             }
 
             fn verify(&self) -> ::std::result::Result<(), ::failure::Error> {
-                #verifiers
+                // FIXME: #verifiers
                 Ok(())
             }
         }
     })
-}
-
-fn handle_named_struct_fields(
-    item: &syn::FieldsNamed,
-    mut field_def: Object,
-) -> Result<Vec<TokenStream>, Error> {
-    let mut verify_entries = Vec::new();
-
-    for field in item.named.iter() {
-        let name = &field.ident;
-        let name_str = name
-            .as_ref()
-            .expect("field name in struct of named fields")
-            .to_string();
-
-        let this = quote! { self.#name };
-
-        let def = field_def
-            .remove(&name_str)
-            .ok_or_else(|| {
-                c_format_err!(name.span(), "missing field in definition: '{}'", name_str)
-            })?;
-
-        let def = match def {
-            Expression::Expr(syn::Expr::Lit(lit)) => match lit.lit {
-                syn::Lit::Str(description) => ParameterDefinition::builder()
-                    .description(Some(description))
-                    .build()
-                    .unwrap(),
-                other => c_bail!(other.span(), "expected description as literal string"),
-            },
-            Expression::Object(obj) => ParameterDefinition::from_object(obj)?,
-            other => c_bail!(other.span(), "expected description or field definition"),
-        };
-
-        def.add_verifiers(&name_str, this, &mut verify_entries);
-    }
-
-    if !field_def.is_empty() {
-        // once SliceConcatExt is stable we can join(",") on the fields...
-        let mut span = None;
-        let mut missing = String::new();
-        for key in field_def.keys() {
-            if !missing.is_empty() {
-                missing.push_str(", ");
-            }
-            if span.is_none() {
-                span = Some(key.span());
-            }
-            missing.push_str(key.as_str());
-        }
-        c_bail!(
-            span.unwrap(),
-            "the following struct fields are not handled in the api definition: {}",
-            missing
-        );
-    }
-
-    Ok(verify_entries)
 }
 
 /// Enums are string types. Note that we usually use lower case enum values, but rust wants
