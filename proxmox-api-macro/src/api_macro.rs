@@ -428,7 +428,7 @@ fn handle_struct(definition: Object, item: &syn::ItemStruct) -> Result<TokenStre
     let name = &item.ident;
 
     match item.fields {
-        syn::Fields::Unit => bail!("unit types are not allowed"),
+        syn::Fields::Unit => c_bail!(item.span(), "unit types are not allowed"),
         syn::Fields::Unnamed(ref fields) => handle_struct_unnamed(definition, name, fields),
         syn::Fields::Named(ref fields) => handle_struct_named(definition, name, fields),
     }
