@@ -88,18 +88,20 @@ impl CommonTypeDefinition {
 #[derive(Builder)]
 pub struct ParameterDefinition {
     #[builder(default)]
+    pub default: Option<syn::Expr>,
+    #[builder(default)]
     pub description: Option<syn::LitStr>,
     #[builder(default)]
-    pub validate: Option<syn::Expr>,
+    pub maximum: Option<syn::Expr>,
     #[builder(default)]
     pub minimum: Option<syn::Expr>,
     #[builder(default)]
-    pub maximum: Option<syn::Expr>,
+    pub validate: Option<syn::Expr>,
 }
 
 impl ParameterDefinition {
     pub fn builder() -> ParameterDefinitionBuilder {
-        ParameterDefinitionBuilder::default()
+        Default::default()
     }
 
     pub fn from_object(obj: Object) -> Result<Self, Error> {
@@ -108,17 +110,20 @@ impl ParameterDefinition {
         let obj_span = obj.span();
         for (key, value) in obj {
             match key.as_str() {
+                "default" => {
+                    def.default(Some(value.expect_expr()?));
+                }
                 "description" => {
                     def.description(Some(value.expect_lit_str()?));
                 }
-                "validate" => {
-                    def.validate(Some(value.expect_expr()?));
+                "maximum" => {
+                    def.maximum(Some(value.expect_expr()?));
                 }
                 "minimum" => {
                     def.minimum(Some(value.expect_expr()?));
                 }
-                "maximum" => {
-                    def.maximum(Some(value.expect_expr()?));
+                "validate" => {
+                    def.validate(Some(value.expect_expr()?));
                 }
                 other => c_bail!(key.span(), "invalid key in type definition: {}", other),
             }
