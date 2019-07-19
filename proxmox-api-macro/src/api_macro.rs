@@ -488,6 +488,12 @@ fn handle_struct_named(
         .ok_or_else(|| c_format_err!(definition.span(), "missing 'fields' entry"))?
         .expect_object()?;
 
+    let derive_default = definition
+        .remove("derive_default")
+        .map(|e| e.expect_lit_bool_direct())
+        .transpose()?
+        .unwrap_or(false);
+
     let field_count = item.named.len();
 
     let type_s = type_ident.to_string();
@@ -506,6 +512,7 @@ fn handle_struct_named(
     let mut field_name_matches = TokenStream::new(); // ` "member0" => 0, "member1" => 1, `
     let mut field_value_matches = TokenStream::new();
     let mut auto_methods = TokenStream::new();
+    let mut default_impl = TokenStream::new();
 
     let mut mem_id: isize = 0;
     for field in item.named.iter() {
@@ -576,7 +583,29 @@ fn handle_struct_named(
                     ::proxmox::api::meta::OrDefault::set(&mut self.#field_ident, value)
                 }
             });
+
+            default_impl.extend(quote_spanned! { field_span =>
+                #field_ident: #default.into(),
+            });
+        } else {
+            if derive_default {
+                default_impl.extend(quote_spanned! { field_span =>
+                    #field_ident: Default::default(),
+                });
+            }
         }
+    }
+
+    if derive_default {
+        default_impl = quote_spanned! { item.span() =>
+            impl ::std::default::Default for #type_ident {
+                fn default() -> Self {
+                    Self {
+                        #default_impl
+                    }
+                }
+            }
+        };
     }
 
     let description = common.description;
@@ -692,6 +721,8 @@ fn handle_struct_named(
                 Ok(())
             }
         }
+
+        #default_impl
 
         impl #type_ident {
             #auto_methods

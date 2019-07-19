@@ -246,6 +246,10 @@ impl Expression {
         }
     }
 
+    pub fn expect_lit_bool_direct(self) -> Result<bool, Error> {
+        Ok(self.expect_lit_bool()?.value)
+    }
+
     pub fn expect_expr(self) -> Result<syn::Expr, Error> {
         match self {
             Expression::Expr(expr) => Ok(expr),
