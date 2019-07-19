@@ -584,9 +584,11 @@ fn handle_struct_named(
                 }
             });
 
-            default_impl.extend(quote_spanned! { field_span =>
-                #field_ident: #default.into(),
-            });
+            if derive_default {
+                default_impl.extend(quote_spanned! { field_span =>
+                    #field_ident: #default.into(),
+                });
+            }
         } else {
             if derive_default {
                 default_impl.extend(quote_spanned! { field_span =>
