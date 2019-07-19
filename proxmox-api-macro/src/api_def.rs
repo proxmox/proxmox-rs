@@ -135,6 +135,22 @@ impl ParameterDefinition {
         }
     }
 
+    pub fn from_expression(expr: Expression) -> Result<Self, Error> {
+        let span = expr.span();
+        match expr {
+            Expression::Expr(syn::Expr::Lit(lit)) => match lit.lit {
+                syn::Lit::Str(description) => Ok(ParameterDefinition::builder()
+                    .description(Some(description))
+                    .build()
+                    .map_err(|e| c_format_err!(span, "{}", e))?
+                ),
+                _ => c_bail!(span, "expected description or field definition"),
+            }
+            Expression::Object(obj) => ParameterDefinition::from_object(obj),
+            _ => c_bail!(span, "expected description or field definition"),
+        }
+    }
+
     pub fn add_verifiers(
         &self,
         name_str: &str,

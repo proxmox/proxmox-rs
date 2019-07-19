@@ -504,6 +504,7 @@ fn handle_struct_named(
     let mut field_ident_list = TokenStream::new(); // ` member1, member2, `
     let mut field_name_matches = TokenStream::new(); // ` "member0" => 0, "member1" => 1, `
     let mut field_value_matches = TokenStream::new();
+    let mut auto_methods = TokenStream::new();
 
     let mut mem_id: isize = 0;
     for field in item.named.iter() {
@@ -514,11 +515,12 @@ fn handle_struct_named(
             .ok_or_else(|| c_format_err!(field => "missing field name"))?;
         let field_s = field_ident.to_string();
 
-        let _def = field_def
+        let def = field_def
             .remove(&field_s)
             .ok_or_else(|| {
                 c_format_err!(field => "missing api description entry for field {}", field_s)
             })?;
+        let def = ParameterDefinition::from_expression(def)?;
 
         let field_span = field_ident.span();
         let field_str = syn::LitStr::new(&field_s, field_span);
@@ -553,6 +555,27 @@ fn handle_struct_named(
                 #field_ident = Some(_api_macro_map_.next_value()?);
             }
         });
+
+        if let Some(default) = def.default {
+            let field_ty = &field.ty;
+            let set_field_ident = Ident::new(&format!("set_{}", field_s), field_ident.span());
+
+            auto_methods.extend(quote_spanned! { default.span() =>
+                pub fn #field_ident(
+                    &self,
+                ) -> &<#field_ty as ::proxmox::api::meta::OrDefault>::Output {
+                    const DEF: <#field_ty as ::proxmox::api::meta::OrDefault>::Output = #default;
+                    ::proxmox::api::meta::OrDefault::or_default(&self.#field_ident, &DEF)
+                }
+
+                pub fn #set_field_ident(
+                    &mut self,
+                    value: <#field_ty as ::proxmox::api::meta::OrDefault>::Output,
+                ) {
+                    ::proxmox::api::meta::OrDefault::set(&mut self.#field_ident, value)
+                }
+            });
+        }
     }
 
     let description = common.description;
@@ -667,6 +690,10 @@ fn handle_struct_named(
                 // FIXME: #verifiers
                 Ok(())
             }
+        }
+
+        impl #type_ident {
+            #auto_methods
         }
     })
 }
