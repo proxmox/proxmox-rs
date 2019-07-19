@@ -495,16 +495,15 @@ fn handle_struct_named(
     let struct_type_str = syn::LitStr::new(&format!("struct {}", type_s), type_span);
     let struct_type_field_str =
         syn::LitStr::new(&format!("struct {} field name", type_s), type_span);
+    let visitor_ident = Ident::new(&format!("{}Visitor", type_s), type_span);
 
     let mut serialize_entries = TokenStream::new();
     let mut field_option_init_list = TokenStream::new();
     let mut field_option_check_or_default_list = TokenStream::new();
-    let mut accessors = TokenStream::new();
     let mut field_name_str_list = TokenStream::new(); // ` "member1", "member2", `
     let mut field_ident_list = TokenStream::new(); // ` member1, member2, `
     let mut field_name_matches = TokenStream::new(); // ` "member0" => 0, "member1" => 1, `
     let mut field_value_matches = TokenStream::new();
-    let mut visitor_ident = Ident::new(&format!("{}Visitor", type_s), type_span);
 
     let mut mem_id: isize = 0;
     for field in item.named.iter() {
@@ -515,7 +514,7 @@ fn handle_struct_named(
             .ok_or_else(|| c_format_err!(field => "missing field name"))?;
         let field_s = field_ident.to_string();
 
-        let def = field_def
+        let _def = field_def
             .remove(&field_s)
             .ok_or_else(|| {
                 c_format_err!(field => "missing api description entry for field {}", field_s)
@@ -549,7 +548,7 @@ fn handle_struct_named(
                 if #field_ident.is_some() {
                     return Err(::serde::de::Error::duplicate_field(#field_str));
                 }
-                #field_ident = Some(__api_macro__map.next_value()?);
+                #field_ident = Some(_api_macro_map_.next_value()?);
             }
         });
     }
@@ -627,14 +626,14 @@ fn handle_struct_named(
 
                     fn visit_map<V>(
                         self,
-                        mut __api_macro__map: V,
+                        mut _api_macro_map_: V,
                     ) -> ::std::result::Result<#type_ident, V::Error>
                     where
                         V: ::serde::de::MapAccess<'de>,
                     {
                         #field_option_init_list
-                        while let Some(__api_macro__key) = __api_macro__map.next_key()? {
-                            match __api_macro__key {
+                        while let Some(_api_macro_key_) = _api_macro_map_.next_key()? {
+                            match _api_macro_key_ {
                                 #field_value_matches
                                 _ => unreachable!(),
                             }
