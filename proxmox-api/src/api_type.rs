@@ -186,6 +186,7 @@ pub trait ApiType {
         Self::type_info()
     }
 
+    #[inline]
     fn should_skip_serialization(&self) -> bool {
         false
     }
@@ -239,6 +240,7 @@ impl<T: ApiType> ApiType for Option<T> {
         */
     }
 
+    #[inline]
     fn should_skip_serialization(&self) -> bool {
         self.is_none()
     }
