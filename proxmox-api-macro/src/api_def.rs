@@ -142,10 +142,9 @@ impl ParameterDefinition {
                 syn::Lit::Str(description) => Ok(ParameterDefinition::builder()
                     .description(Some(description))
                     .build()
-                    .map_err(|e| c_format_err!(span, "{}", e))?
-                ),
+                    .map_err(|e| c_format_err!(span, "{}", e))?),
                 _ => c_bail!(span, "expected description or field definition"),
-            }
+            },
             Expression::Object(obj) => ParameterDefinition::from_object(obj),
             _ => c_bail!(span, "expected description or field definition"),
         }

@@ -1,8 +1,8 @@
 use proc_macro2::Ident;
 
-use syn::{parenthesized, Token};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
+use syn::{parenthesized, Token};
 
 macro_rules! c_format_err {
     ($span:expr => $($msg:tt)*) => { syn::Error::new_spanned($span, format!($($msg)*)) };

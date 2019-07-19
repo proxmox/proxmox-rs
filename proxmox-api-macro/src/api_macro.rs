@@ -483,7 +483,8 @@ fn handle_struct_named(
     item: &syn::FieldsNamed,
 ) -> Result<TokenStream, Error> {
     let common = CommonTypeDefinition::from_object(&mut definition)?;
-    let mut field_def = definition.remove("fields")
+    let mut field_def = definition
+        .remove("fields")
         .ok_or_else(|| c_format_err!(definition.span(), "missing 'fields' entry"))?
         .expect_object()?;
 
@@ -510,16 +511,15 @@ fn handle_struct_named(
     for field in item.named.iter() {
         mem_id += 1;
 
-        let field_ident = field.ident
+        let field_ident = field
+            .ident
             .as_ref()
             .ok_or_else(|| c_format_err!(field => "missing field name"))?;
         let field_s = field_ident.to_string();
 
-        let def = field_def
-            .remove(&field_s)
-            .ok_or_else(|| {
-                c_format_err!(field => "missing api description entry for field {}", field_s)
-            })?;
+        let def = field_def.remove(&field_s).ok_or_else(
+            || c_format_err!(field => "missing api description entry for field {}", field_s),
+        )?;
         let def = ParameterDefinition::from_expression(def)?;
 
         let field_span = field_ident.span();
