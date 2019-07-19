@@ -539,9 +539,10 @@ fn handle_struct_named(
         });
 
         field_option_check_or_default_list.extend(quote_spanned! { field_span =>
-            let #field_ident = #field_ident.ok_or_else(|| {
-                ::serde::de::Error::missing_field(#field_str)
-            })?;
+            let #field_ident = ::proxmox::api::ApiType::deserialization_check(
+                #field_ident,
+                || ::serde::de::Error::missing_field(#field_str),
+            )?;
         });
 
         field_name_matches.extend(quote_spanned! { field_span =>

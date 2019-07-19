@@ -164,7 +164,7 @@ impl dyn ApiMethodInfo + Send + Sync {
 /// While this is very useful for structural types, we sometimes to want to be able to pass a
 /// simple unconstrainted type like a `String` with no restrictions, so most basic types implement
 /// `ApiType` as well.
-pub trait ApiType {
+pub trait ApiType: Sized {
     /// API types need to provide a `TypeInfo`, providing details about the underlying type.
     fn type_info() -> &'static TypeInfo;
 
@@ -189,6 +189,14 @@ pub trait ApiType {
     #[inline]
     fn should_skip_serialization(&self) -> bool {
         false
+    }
+
+    #[inline]
+    fn deserialization_check<F, E>(this: Option<Self>, missing_error: F) -> Result<Self, E>
+    where
+        F: FnOnce() -> E,
+    {
+        this.ok_or_else(missing_error)
     }
 }
 
@@ -243,6 +251,14 @@ impl<T: ApiType> ApiType for Option<T> {
     #[inline]
     fn should_skip_serialization(&self) -> bool {
         self.is_none()
+    }
+
+    #[inline]
+    fn deserialization_check<F, E>(this: Option<Self>, _missing_error: F) -> Result<Self, E>
+    where
+        F: FnOnce() -> E,
+    {
+        Ok(this.unwrap_or(None))
     }
 }
 
