@@ -527,7 +527,9 @@ fn handle_struct_named(
         field_ident_list.extend(quote_spanned! { field_span => #field_ident, });
 
         serialize_entries.extend(quote_spanned! { field_span =>
-            state.serialize_field(#field_str, &self.#field_ident)?;
+            if !::proxmox::api::ApiType::should_skip_serialization(&self.#field_ident) {
+                state.serialize_field(#field_str, &self.#field_ident)?;
+            }
         });
 
         field_option_init_list.extend(quote_spanned! { field_span =>

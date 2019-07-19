@@ -185,6 +185,10 @@ pub trait ApiType {
     fn get_type_info(&self) -> &'static TypeInfo {
         Self::type_info()
     }
+
+    fn should_skip_serialization(&self) -> bool {
+        false
+    }
 }
 
 /// Option types are supposed to wrap their underlying types with an `optional:` text in their
@@ -233,6 +237,10 @@ impl<T: ApiType> ApiType for Option<T> {
         });
         unsafe { (*DATA.info.as_ptr()).as_ref().unwrap() }
         */
+    }
+
+    fn should_skip_serialization(&self) -> bool {
+        self.is_none()
     }
 }
 
