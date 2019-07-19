@@ -105,6 +105,7 @@ impl ParameterDefinition {
     pub fn from_object(obj: Object) -> Result<Self, Error> {
         let mut def = ParameterDefinition::builder();
 
+        let obj_span = obj.span();
         for (key, value) in obj {
             match key.as_str() {
                 "description" => {
@@ -119,13 +120,13 @@ impl ParameterDefinition {
                 "maximum" => {
                     def.maximum(Some(value.expect_expr()?));
                 }
-                other => bail!("invalid key in type definition: {}", other),
+                other => c_bail!(key.span(), "invalid key in type definition: {}", other),
             }
         }
 
         match def.build() {
             Ok(r) => Ok(r),
-            Err(err) => bail!("{}", err),
+            Err(err) => c_bail!(obj_span, "{}", err),
         }
     }
 
