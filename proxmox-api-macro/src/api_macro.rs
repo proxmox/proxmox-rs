@@ -540,12 +540,12 @@ fn handle_struct_named(
         });
     }
 
+    let impl_verify = named_struct_impl_verify(item.span(), &fields)?;
     let impl_serialize =
         named_struct_derive_serialize(item.span(), type_ident, &type_str, &fields)?;
     let impl_deserialize =
         named_struct_derive_deserialize(item.span(), type_ident, &type_str, &fields)?;
-    let accessors =
-        named_struct_impl_accessors(item.span(), type_ident, &fields)?;
+    let accessors = named_struct_impl_accessors(item.span(), type_ident, &fields)?;
 
     let impl_default = if derive_default {
         named_struct_impl_default(item.span(), type_ident, &fields)?
@@ -575,10 +575,58 @@ fn handle_struct_named(
                 &INFO
             }
 
-            fn verify(&self) -> ::std::result::Result<(), ::failure::Error> {
-                // FIXME: #verifiers
-                Ok(())
+            #impl_verify
+        }
+    })
+}
+
+fn named_struct_impl_verify(
+    span: Span,
+    fields: &[StructField],
+) -> Result<TokenStream, Error> {
+    let mut body = TokenStream::new();
+    for field in fields {
+        let field_ident = field.ident;
+        let field_str = &field.strlit;
+
+        if let Some(ref minimum) = field.def.minimum {
+            body.extend(quote_spanned! { minimum.span() =>
+                let minimum = #minimum;
+                if !::proxmox::api::verify::Verify::test_minimum(&self.#field_ident, &minimum) {
+                    error_string.push_str(
+                        &format!("field {} out of range, must be >= {}", #field_str, minimum)
+                    );
+                }
+            });
+        }
+
+        if let Some(ref maximum) = field.def.maximum {
+            body.extend(quote_spanned! { maximum.span() =>
+                let maximum = #maximum;
+                if !::proxmox::api::verify::Verify::test_maximum(&self.#field_ident, &maximum) {
+                    error_string.push_str(
+                        &format!("field {} out of range, must be <= {}", #field_str, maximum)
+                    );
+                }
+            });
+        }
+    }
+
+    if !body.is_empty() {
+        body = quote_spanned! { span =>
+            let mut error_string = String::new();
+            #body
+            if !error_string.is_empty() {
+                return Err(::failure::format_err!("{}", error_string));
             }
+        };
+    }
+
+    Ok(quote_spanned! { span =>
+        fn verify(&self) -> ::std::result::Result<(), ::failure::Error> {
+            #body
+
+            Ok(())
         }
     })
 }

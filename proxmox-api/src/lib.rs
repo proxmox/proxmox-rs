@@ -24,6 +24,7 @@ pub use router::*;
 pub mod cli;
 
 pub mod meta;
+pub mod verify;
 
 /// Return type of an API method.
 pub type ApiOutput<Body> = Result<Response<Body>, Error>;
