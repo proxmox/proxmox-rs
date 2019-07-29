@@ -580,32 +580,57 @@ fn handle_struct_named(
     })
 }
 
-fn named_struct_impl_verify(
-    span: Span,
-    fields: &[StructField],
-) -> Result<TokenStream, Error> {
+fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenStream, Error> {
     let mut body = TokenStream::new();
     for field in fields {
         let field_ident = field.ident;
         let field_str = &field.strlit;
 
-        if let Some(ref minimum) = field.def.minimum {
-            body.extend(quote_spanned! { minimum.span() =>
-                let minimum = #minimum;
-                if !::proxmox::api::verify::TestMinMax::test_minimum(&self.#field_ident, &minimum) {
+        if let Some(ref value) = field.def.minimum {
+            body.extend(quote_spanned! { value.span() =>
+                let value = #value;
+                if !::proxmox::api::verify::TestMinMax::test_minimum(&self.#field_ident, &value) {
                     error_string.push_str(
-                        &format!("field {} out of range, must be >= {}", #field_str, minimum)
+                        &format!("field {} out of range, must be >= {}", #field_str, value)
                     );
                 }
             });
         }
 
-        if let Some(ref maximum) = field.def.maximum {
-            body.extend(quote_spanned! { maximum.span() =>
-                let maximum = #maximum;
-                if !::proxmox::api::verify::TestMinMax::test_maximum(&self.#field_ident, &maximum) {
+        if let Some(ref value) = field.def.maximum {
+            body.extend(quote_spanned! { value.span() =>
+                let value = #value;
+                if !::proxmox::api::verify::TestMinMax::test_maximum(&self.#field_ident, &value) {
                     error_string.push_str(
-                        &format!("field {} out of range, must be <= {}", #field_str, maximum)
+                        &format!("field {} out of range, must be <= {}", #field_str, value)
+                    );
+                }
+            });
+        }
+
+        if let Some(ref value) = field.def.minimum_length {
+            body.extend(quote_spanned! { value.span() =>
+                let value = #value;
+                if !::proxmox::api::verify::TestMinMaxLen::test_minimum_length(
+                    &self.#field_ident,
+                    value,
+                ) {
+                    error_string.push_str(
+                        &format!("field {} too short, must be >= {} characters", #field_str, value)
+                    );
+                }
+            });
+        }
+
+        if let Some(ref value) = field.def.maximum_length {
+            body.extend(quote_spanned! { value.span() =>
+                let value = #value;
+                if !::proxmox::api::verify::TestMinMaxLen::test_maximum_length(
+                    &self.#field_ident,
+                    value,
+                ) {
+                    error_string.push_str(
+                        &format!("field {} too long, must be <= {} characters", #field_str, value)
                     );
                 }
             });

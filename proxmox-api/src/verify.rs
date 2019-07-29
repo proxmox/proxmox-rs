@@ -74,3 +74,32 @@ where
         self.as_ref().map(|x| *x <= *maximum).unwrap_or(true)
     }
 }
+
+pub trait TestMinMaxLen<Mark> {
+    fn test_minimum_length(&self, minimum: usize) -> bool;
+    fn test_maximum_length(&self, maximum: usize) -> bool;
+}
+
+impl<T: AsRef<str>> TestMinMaxLen<mark::Default> for T {
+    #[inline]
+    fn test_minimum_length(&self, minimum: usize) -> bool {
+        self.as_ref().len() >= minimum
+    }
+
+    #[inline]
+    fn test_maximum_length(&self, maximum: usize) -> bool {
+        self.as_ref().len() <= maximum
+    }
+}
+
+impl<T: AsRef<str>> TestMinMaxLen<mark::Special> for Option<T> {
+    #[inline]
+    fn test_minimum_length(&self, minimum: usize) -> bool {
+        self.as_ref().map(|x| x.as_ref().len() >= minimum).unwrap_or(true)
+    }
+
+    #[inline]
+    fn test_maximum_length(&self, maximum: usize) -> bool {
+        self.as_ref().map(|x| x.as_ref().len() <= maximum).unwrap_or(true)
+    }
+}

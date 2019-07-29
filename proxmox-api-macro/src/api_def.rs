@@ -96,6 +96,10 @@ pub struct ParameterDefinition {
     #[builder(default)]
     pub minimum: Option<syn::Expr>,
     #[builder(default)]
+    pub maximum_length: Option<syn::Expr>,
+    #[builder(default)]
+    pub minimum_length: Option<syn::Expr>,
+    #[builder(default)]
     pub validate: Option<syn::Expr>,
 }
 
@@ -121,6 +125,12 @@ impl ParameterDefinition {
                 }
                 "minimum" => {
                     def.minimum(Some(value.expect_expr()?));
+                }
+                "maximum_length" => {
+                    def.maximum_length(Some(value.expect_expr()?));
+                }
+                "minimum_length" => {
+                    def.minimum_length(Some(value.expect_expr()?));
                 }
                 "validate" => {
                     def.validate(Some(value.expect_expr()?));
