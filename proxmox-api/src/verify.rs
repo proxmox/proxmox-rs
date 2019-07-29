@@ -40,12 +40,12 @@ pub mod mark {
     pub struct Special;
 }
 
-pub trait Verify<Other> {
+pub trait TestMinMax<Other> {
     fn test_minimum(&self, minimum: &Other) -> bool;
     fn test_maximum(&self, maximum: &Other) -> bool;
 }
 
-impl<Other> Verify<Other> for Other
+impl<Other> TestMinMax<Other> for Other
 where
     Other: Ord,
 {
@@ -60,7 +60,7 @@ where
     }
 }
 
-impl<Other> Verify<Other> for Option<Other>
+impl<Other> TestMinMax<Other> for Option<Other>
 where
     Other: Ord,
 {
@@ -73,8 +73,4 @@ where
     fn test_maximum(&self, maximum: &Other) -> bool {
         self.as_ref().map(|x| *x <= *maximum).unwrap_or(true)
     }
-}
-
-pub fn test_minimum<U, T: Verify<U>>(value: &T, minimum: &U) -> bool {
-    value.test_minimum(minimum)
 }

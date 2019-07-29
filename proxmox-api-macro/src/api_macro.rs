@@ -592,7 +592,7 @@ fn named_struct_impl_verify(
         if let Some(ref minimum) = field.def.minimum {
             body.extend(quote_spanned! { minimum.span() =>
                 let minimum = #minimum;
-                if !::proxmox::api::verify::Verify::test_minimum(&self.#field_ident, &minimum) {
+                if !::proxmox::api::verify::TestMinMax::test_minimum(&self.#field_ident, &minimum) {
                     error_string.push_str(
                         &format!("field {} out of range, must be >= {}", #field_str, minimum)
                     );
@@ -603,7 +603,7 @@ fn named_struct_impl_verify(
         if let Some(ref maximum) = field.def.maximum {
             body.extend(quote_spanned! { maximum.span() =>
                 let maximum = #maximum;
-                if !::proxmox::api::verify::Verify::test_maximum(&self.#field_ident, &maximum) {
+                if !::proxmox::api::verify::TestMinMax::test_maximum(&self.#field_ident, &maximum) {
                     error_string.push_str(
                         &format!("field {} out of range, must be <= {}", #field_str, maximum)
                     );
