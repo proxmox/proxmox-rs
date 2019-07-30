@@ -673,22 +673,28 @@ fn wrap_serialize_with(
     with: &syn::Path,
 ) -> (TokenStream, Ident) {
     let helper_name = Ident::new(
-        &format!("SerializeWith{}", crate::util::to_camel_case(&name.to_string())),
+        &format!(
+            "SerializeWith{}",
+            crate::util::to_camel_case(&name.to_string())
+        ),
         name.span(),
     );
 
-    (quote_spanned! { span =>
-        struct #helper_name<'a>(&'a #ty);
+    (
+        quote_spanned! { span =>
+            struct #helper_name<'a>(&'a #ty);
 
-        impl<'a> ::serde::ser::Serialize for #helper_name<'a> {
-            fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-            where
-                S: ::serde::ser::Serializer,
-            {
-                #with(self.0, serializer)
+            impl<'a> ::serde::ser::Serialize for #helper_name<'a> {
+                fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+                where
+                    S: ::serde::ser::Serializer,
+                {
+                    #with(self.0, serializer)
+                }
             }
-        }
-    }, helper_name)
+        },
+        helper_name,
+    )
 }
 
 fn named_struct_derive_serialize(
@@ -749,28 +755,34 @@ fn wrap_deserialize_with(
     with: &syn::Path,
 ) -> (TokenStream, Ident) {
     let helper_name = Ident::new(
-        &format!("DeserializeWith{}", crate::util::to_camel_case(&name.to_string())),
+        &format!(
+            "DeserializeWith{}",
+            crate::util::to_camel_case(&name.to_string())
+        ),
         name.span(),
     );
 
-    (quote_spanned! { span =>
-        struct #helper_name<'de> {
-            value: #ty,
-            _lifetime: ::std::marker::PhantomData<&'de ()>,
-        }
-
-        impl<'de> ::serde::de::Deserialize<'de> for #helper_name<'de> {
-            fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-            where
-                D: ::serde::de::Deserializer<'de>,
-            {
-                Ok(Self {
-                    value: #with(deserializer)?,
-                    _lifetime: ::std::marker::PhantomData,
-                })
+    (
+        quote_spanned! { span =>
+            struct #helper_name<'de> {
+                value: #ty,
+                _lifetime: ::std::marker::PhantomData<&'de ()>,
             }
-        }
-    }, helper_name)
+
+            impl<'de> ::serde::de::Deserialize<'de> for #helper_name<'de> {
+                fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+                where
+                    D: ::serde::de::Deserializer<'de>,
+                {
+                    Ok(Self {
+                        value: #with(deserializer)?,
+                        _lifetime: ::std::marker::PhantomData,
+                    })
+                }
+            }
+        },
+        helper_name,
+    )
 }
 
 fn named_struct_derive_deserialize(
