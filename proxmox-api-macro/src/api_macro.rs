@@ -635,6 +635,18 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
                 }
             });
         }
+
+        if let Some(ref value) = field.def.format {
+            body.extend(quote_spanned! { value.span() =>
+                if !#value::verify(::proxmox::api::meta::AsOptionStr::as_option_str(
+                    &self.#field_ident,
+                )) {
+                    error_string.push_str(
+                        &format!("field {} does not match format {}", #field_str, #value::NAME)
+                    );
+                }
+            });
+        }
     }
 
     if !body.is_empty() {

@@ -26,3 +26,31 @@ where
         *self = Some(value);
     }
 }
+
+pub trait AsOptionStr {
+    fn as_option_str(&self) -> Option<&str>;
+}
+
+impl AsOptionStr for String {
+    fn as_option_str(&self) -> Option<&str> {
+        Some(self.as_str())
+    }
+}
+
+impl AsOptionStr for str {
+    fn as_option_str(&self) -> Option<&str> {
+        Some(self)
+    }
+}
+
+impl AsOptionStr for Option<String> {
+    fn as_option_str(&self) -> Option<&str> {
+        self.as_ref().map(String::as_str)
+    }
+}
+
+impl AsOptionStr for Option<&str> {
+    fn as_option_str(&self) -> Option<&str> {
+        *self
+    }
+}

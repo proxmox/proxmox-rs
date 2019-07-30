@@ -257,6 +257,13 @@ impl Expression {
         }
     }
 
+    pub fn expect_path(self) -> Result<syn::Path, Error> {
+        match self {
+            Expression::Expr(Expr::Path(path)) => Ok(path.path),
+            other => c_bail!(other.span(), "expected expression, found {:?}", other),
+        }
+    }
+
     pub fn expect_object(self) -> Result<Object, Error> {
         match self {
             Expression::Object(obj) => Ok(obj),

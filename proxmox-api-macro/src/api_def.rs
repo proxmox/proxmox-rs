@@ -101,6 +101,12 @@ pub struct ParameterDefinition {
     pub minimum_length: Option<syn::Expr>,
     #[builder(default)]
     pub validate: Option<syn::Expr>,
+
+    /// Formats are module paths. The module must contain a verify function:
+    /// `fn verify(Option<&str>) -> bool`, and a `NAME` constant used in error messages to refer to
+    /// the format name.
+    #[builder(default)]
+    pub format: Option<syn::Path>,
 }
 
 impl ParameterDefinition {
@@ -134,6 +140,9 @@ impl ParameterDefinition {
                 }
                 "validate" => {
                     def.validate(Some(value.expect_expr()?));
+                }
+                "format" => {
+                    def.format(Some(value.expect_path()?));
                 }
                 other => c_bail!(key.span(), "invalid key in type definition: {}", other),
             }
