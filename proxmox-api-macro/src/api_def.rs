@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 
 use derive_builder::Builder;
 use failure::{bail, Error};
@@ -107,6 +107,11 @@ pub struct ParameterDefinition {
     /// the format name.
     #[builder(default)]
     pub format: Option<syn::Path>,
+
+    #[builder(default)]
+    pub serialize_with: Option<syn::Path>,
+    #[builder(default)]
+    pub deserialize_with: Option<syn::Path>,
 }
 
 impl ParameterDefinition {
@@ -143,6 +148,26 @@ impl ParameterDefinition {
                 }
                 "format" => {
                     def.format(Some(value.expect_path()?));
+                }
+                "serialize_with" => {
+                    def.serialize_with(Some(value.expect_path()?));
+                }
+                "deserialize_with" => {
+                    def.deserialize_with(Some(value.expect_path()?));
+                }
+                "serialization" => {
+                    let mut de = value.expect_path()?;
+                    let mut ser = de.clone();
+                    ser.segments.push(syn::PathSegment {
+                        ident: Ident::new("serialize", obj_span),
+                        arguments: syn::PathArguments::None,
+                    });
+                    de.segments.push(syn::PathSegment {
+                        ident: Ident::new("deserialize", obj_span),
+                        arguments: syn::PathArguments::None,
+                    });
+                    def.deserialize_with(Some(de));
+                    def.serialize_with(Some(ser));
                 }
                 other => c_bail!(key.span(), "invalid key in type definition: {}", other),
             }

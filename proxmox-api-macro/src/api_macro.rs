@@ -666,6 +666,31 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
     })
 }
 
+fn wrap_serialize_with(
+    span: Span,
+    name: &Ident,
+    ty: &syn::Type,
+    with: &syn::Path,
+) -> (TokenStream, Ident) {
+    let helper_name = Ident::new(
+        &format!("SerializeWith{}", crate::util::to_camel_case(&name.to_string())),
+        name.span(),
+    );
+
+    (quote_spanned! { span =>
+        struct #helper_name<'a>(&'a #ty);
+
+        impl<'a> ::serde::ser::Serialize for #helper_name<'a> {
+            fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+            where
+                S: ::serde::ser::Serializer,
+            {
+                #with(self.0, serializer)
+            }
+        }
+    }, helper_name)
+}
+
 fn named_struct_derive_serialize(
     span: Span,
     type_ident: &Ident,
@@ -679,11 +704,27 @@ fn named_struct_derive_serialize(
         let field_ident = field.ident;
         let field_span = field.ident.span();
         let field_str = &field.strlit;
-        entries.extend(quote_spanned! { field_span =>
-            if !::proxmox::api::ApiType::should_skip_serialization(&self.#field_ident) {
-                state.serialize_field(#field_str, &self.#field_ident)?;
+        match field.def.serialize_with.as_ref() {
+            Some(path) => {
+                let (serializer, serializer_name) =
+                    wrap_serialize_with(field_span, field_ident, &field.ty, path);
+
+                entries.extend(quote_spanned! { field_span =>
+                    if !::proxmox::api::ApiType::should_skip_serialization(&self.#field_ident) {
+                        #serializer
+
+                        state.serialize_field(#field_str, &#serializer_name(&self.#field_ident))?;
+                    }
+                });
             }
-        });
+            None => {
+                entries.extend(quote_spanned! { field_span =>
+                    if !::proxmox::api::ApiType::should_skip_serialization(&self.#field_ident) {
+                        state.serialize_field(#field_str, &self.#field_ident)?;
+                    }
+                });
+            }
+        }
     }
 
     Ok(quote_spanned! { span =>
@@ -699,6 +740,37 @@ fn named_struct_derive_serialize(
             }
         }
     })
+}
+
+fn wrap_deserialize_with(
+    span: Span,
+    name: &Ident,
+    ty: &syn::Type,
+    with: &syn::Path,
+) -> (TokenStream, Ident) {
+    let helper_name = Ident::new(
+        &format!("DeserializeWith{}", crate::util::to_camel_case(&name.to_string())),
+        name.span(),
+    );
+
+    (quote_spanned! { span =>
+        struct #helper_name<'de> {
+            value: #ty,
+            _lifetime: ::std::marker::PhantomData<&'de ()>,
+        }
+
+        impl<'de> ::serde::de::Deserialize<'de> for #helper_name<'de> {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+            where
+                D: ::serde::de::Deserializer<'de>,
+            {
+                Ok(Self {
+                    value: #with(deserializer)?,
+                    _lifetime: ::std::marker::PhantomData,
+                })
+            }
+        }
+    }, helper_name)
 }
 
 fn named_struct_derive_deserialize(
@@ -740,18 +812,42 @@ fn named_struct_derive_deserialize(
             )?;
         });
 
-        field_option_init_list.extend(quote_spanned! { field_span =>
-            let mut #field_ident = None;
-        });
+        match field.def.deserialize_with.as_ref() {
+            Some(path) => {
+                let (deserializer, deserializer_name) =
+                    wrap_deserialize_with(field_span, field_ident, &field.ty, path);
 
-        field_value_matches.extend(quote_spanned! { field_span =>
-            Field(#mem_id) => {
-                if #field_ident.is_some() {
-                    return Err(::serde::de::Error::duplicate_field(#field_str));
-                }
-                #field_ident = Some(_api_macro_map_.next_value()?);
+                field_option_init_list.extend(quote_spanned! { field_span =>
+                    #deserializer
+
+                    let mut #field_ident = None;
+                });
+
+                field_value_matches.extend(quote_spanned! { field_span =>
+                    Field(#mem_id) => {
+                        if #field_ident.is_some() {
+                            return Err(::serde::de::Error::duplicate_field(#field_str));
+                        }
+                        let tmp: #deserializer_name = _api_macro_map_.next_value()?;
+                        #field_ident = Some(tmp.value);
+                    }
+                });
             }
-        });
+            None => {
+                field_option_init_list.extend(quote_spanned! { field_span =>
+                    let mut #field_ident = None;
+                });
+
+                field_value_matches.extend(quote_spanned! { field_span =>
+                    Field(#mem_id) => {
+                        if #field_ident.is_some() {
+                            return Err(::serde::de::Error::duplicate_field(#field_str));
+                        }
+                        #field_ident = Some(_api_macro_map_.next_value()?);
+                    }
+                });
+            }
+        }
     }
 
     Ok(quote_spanned! { span =>
