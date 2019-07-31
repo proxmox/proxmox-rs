@@ -2,6 +2,7 @@
 
 use failure::*;
 
+pub mod common_regex;
 pub mod io;
 pub mod raw;
 pub mod serde;
