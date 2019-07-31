@@ -605,6 +605,13 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
         let field_ident = field.ident;
         let field_str = &field.strlit;
 
+        // first of all, recurse into the contained types:
+        body.extend(quote_spanned! { field_ident.span() =>
+            ::proxmox::api::ApiType::verify(&self.#field_ident)?;
+        });
+
+        // then go through all the additional verifiers:
+
         if let Some(ref value) = field.def.minimum {
             body.extend(quote_spanned! { value.span() =>
                 let value = #value;
