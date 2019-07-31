@@ -510,6 +510,12 @@ fn handle_struct_named(
         bail!("derive_default is not finished");
     }
 
+    let serialize_as_string = definition
+        .remove("serialize_as_string")
+        .map(|e| e.expect_lit_bool_direct())
+        .transpose()?
+        .unwrap_or(false);
+
     let type_s = type_ident.to_string();
     let type_span = type_ident.span();
     let type_str = syn::LitStr::new(&type_s, type_span);
@@ -541,10 +547,23 @@ fn handle_struct_named(
     }
 
     let impl_verify = named_struct_impl_verify(item.span(), &fields)?;
-    let impl_serialize =
-        named_struct_derive_serialize(item.span(), type_ident, &type_str, &fields)?;
-    let impl_deserialize =
-        named_struct_derive_deserialize(item.span(), type_ident, &type_str, &fields)?;
+    let (impl_serialize, impl_deserialize) = if serialize_as_string {
+        let expected = format!("valid {}", type_ident);
+        (
+            quote_spanned! { item.span() =>
+                ::serde_plain::derive_serialize_from_display!(#type_ident);
+            },
+            quote_spanned! { item.span() =>
+                ::serde_plain::derive_deserialize_from_str!(#type_ident, #expected);
+            },
+        )
+    } else {
+        (
+            named_struct_derive_serialize(item.span(), type_ident, &type_str, &fields)?,
+            named_struct_derive_deserialize(item.span(), type_ident, &type_str, &fields)?,
+        )
+    };
+
     let accessors = named_struct_impl_accessors(item.span(), type_ident, &fields)?;
 
     let impl_default = if derive_default {
@@ -644,6 +663,32 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
                     );
                 }
             });
+        }
+
+        if let Some(ref value) = field.def.pattern {
+            match value {
+                syn::Expr::Lit(regex) => body.extend(quote_spanned! { value.span() =>
+                    {
+                        ::lazy_static::lazy_static! {
+                            static ref RE: ::regex::Regex = ::regex::Regex::new(#regex).unwrap();
+                        }
+                        if !RE.is_match(&self.#field_ident) {
+                            error_string.push_str(&format!(
+                                "field {} does not match the allowed pattern: {}",
+                                #field_str,
+                                #regex,
+                            ));
+                        }
+                    }
+                }),
+                regex => body.extend(quote_spanned! { value.span() =>
+                    if !#regex.is_match(&self.#field_ident) {
+                        error_string.push_str(
+                            &format!("field {} does not match the allowed pattern", #field_str)
+                        );
+                    }
+                }),
+            }
         }
     }
 

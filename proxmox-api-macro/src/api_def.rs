@@ -108,6 +108,12 @@ pub struct ParameterDefinition {
     #[builder(default)]
     pub format: Option<syn::Path>,
 
+    /// Patterns are regular expressions. When a literal string is provided, a `lazy_static` regex
+    /// is created for the verifier. Otherwise it is taken as an expression (i.e. a path) to an
+    /// existing regex variable/method.
+    #[builder(default)]
+    pub pattern: Option<syn::Expr>,
+
     #[builder(default)]
     pub serialize_with: Option<syn::Path>,
     #[builder(default)]
@@ -148,6 +154,9 @@ impl ParameterDefinition {
                 }
                 "format" => {
                     def.format(Some(value.expect_path()?));
+                }
+                "pattern" => {
+                    def.pattern(Some(value.expect_expr()?));
                 }
                 "serialize_with" => {
                     def.serialize_with(Some(value.expect_path()?));
