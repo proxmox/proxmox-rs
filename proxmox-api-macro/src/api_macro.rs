@@ -701,6 +701,7 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
 
     if !body.is_empty() {
         body = quote_spanned! { span =>
+            #[allow(unused_mut)]
             let mut error_string = String::new();
             #body
             if !error_string.is_empty() {
