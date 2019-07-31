@@ -14,23 +14,26 @@ pub fn router_macro(input: TokenStream) -> Result<TokenStream, Error> {
     let mut out = TokenStream::new();
 
     loop {
-        if input.peek().is_none() {
-            break;
-        }
+        let mut at_span = match input.peek() {
+            Some(ref val) => val.span(),
+            None => break,
+        };
 
         let public = optional_visibility(&mut input)?;
 
-        match_keyword(&mut input, "static")?;
-        let router_name = need_ident(&mut input)?;
+        at_span = match_keyword(at_span, &mut input, "static")?;
+        let router_name = need_ident(at_span, &mut input)?;
 
-        match_colon(&mut input)?;
-        match_keyword(&mut input, "Router")?;
-        match_punct(&mut input, '<')?;
-        let body_type = need_ident(&mut input)?;
-        match_punct(&mut input, '>')?;
+        at_span = match_colon2(router_name.span(), &mut input)?;
+        at_span = match_keyword(at_span, &mut input, "Router")?;
+        at_span = match_punct(at_span, &mut input, '<')?;
+        let body_type = need_ident(at_span, &mut input)?;
+        at_span = match_punct(body_type.span(), &mut input, '>')?;
 
-        match_punct(&mut input, '=')?;
+        at_span = match_punct(at_span, &mut input, '=')?;
         let content = need_group(&mut input, Delimiter::Brace)?;
+        let _ = at_span;
+        at_span = content.span();
 
         let router = parse_router(content.stream().into_iter().peekable())?;
         let router = router.into_token_stream(&body_type, Some((router_name, public)));
@@ -39,7 +42,7 @@ pub fn router_macro(input: TokenStream) -> Result<TokenStream, Error> {
 
         out.extend(router);
 
-        match_punct(&mut input, ';')?;
+        match_punct(at_span, &mut input, ';')?;
     }
 
     Ok(out)
@@ -270,7 +273,7 @@ fn parse_router(mut input: TokenIter) -> Result<Router, Error> {
     loop {
         match parse_entry_key(&mut input)? {
             Some(Entry::Method(name)) => {
-                let function = need_ident(&mut input)?;
+                let function = need_ident(name.span(), &mut input)?;
 
                 let method_ptr = match name.to_string().as_str() {
                     "GET" => &mut router.get,
@@ -334,7 +337,10 @@ fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
                 if group.delimiter() != Delimiter::Brace {
                     bail!("invalid path component: {:?}", group);
                 }
-                let name = need_hyphenated_name(&mut group.stream().into_iter().peekable())?;
+                let name = need_hyphenated_name(
+                    group.span(),
+                    &mut group.stream().into_iter().peekable(),
+                )?;
                 push_component(&mut path, &mut component, &mut span);
                 path.push(Component::Match(name));
 

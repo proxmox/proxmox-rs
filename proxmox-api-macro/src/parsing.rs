@@ -50,33 +50,38 @@ pub fn optional_visibility(tokens: &mut TokenIter) -> Result<syn::Visibility, Er
     return Ok(parser.parse2(visibility)?);
 }
 
-pub fn match_keyword(tokens: &mut TokenIter, keyword: &'static str) -> Result<(), Error> {
+pub fn match_keyword(
+    span: Span,
+    tokens: &mut TokenIter,
+    keyword: &'static str,
+) -> Result<Span, Error> {
     if let Some(tt) = tokens.next() {
         if let TokenTree::Ident(ident) = tt {
             if ident.to_string() == keyword {
-                return Ok(());
+                return Ok(ident.span());
             }
         }
     }
-    bail!("expected `{}` keyword", keyword);
+    c_bail!(span, "expected `{}` keyword", keyword);
 }
 
-pub fn need_ident(tokens: &mut TokenIter) -> Result<Ident, Error> {
+pub fn need_ident(before: Span, tokens: &mut TokenIter) -> Result<Ident, Error> {
     match tokens.next() {
         Some(TokenTree::Ident(ident)) => Ok(ident),
-        other => bail!("expected ident: {:?}", other),
+        Some(other) => c_bail!(other.span(), "expected ident"),
+        None => c_bail!(before, "expected ident after this expression"),
     }
 }
 
-pub fn match_punct(tokens: &mut TokenIter, punct: char) -> Result<(), Error> {
+pub fn match_punct(span: Span, tokens: &mut TokenIter, punct: char) -> Result<Span, Error> {
     if let Some(tt) = tokens.next() {
         if let TokenTree::Punct(p) = tt {
             if p.as_char() == punct {
-                return Ok(());
+                return Ok(p.span());
             }
         }
     }
-    bail!("expected `{}`", punct);
+    c_bail!(span, "expected `{}` after this expression", punct);
 }
 
 pub fn need_group(tokens: &mut TokenIter, delimiter: Delimiter) -> Result<Group, Error> {
@@ -91,8 +96,16 @@ pub fn need_group(tokens: &mut TokenIter, delimiter: Delimiter) -> Result<Group,
 pub fn match_colon(tokens: &mut TokenIter) -> Result<(), Error> {
     match tokens.next() {
         Some(TokenTree::Punct(ref punct)) if punct.as_char() == ':' => Ok(()),
-        Some(other) => bail!("expected colon at {:?}", other.span()),
+        Some(other) => c_bail!(other.span(), "expected colon"),
         None => bail!("colon expected"),
+    }
+}
+
+pub fn match_colon2(span: Span, tokens: &mut TokenIter) -> Result<Span, Error> {
+    match tokens.next() {
+        Some(TokenTree::Punct(ref punct)) if punct.as_char() == ':' => Ok(punct.span()),
+        Some(other) => c_bail!(other.span(), "expected colon"),
+        None => c_bail!(span, "colon expected following this expression"),
     }
 }
 
@@ -119,8 +132,8 @@ pub fn comma_or_end(tokens: &mut TokenIter) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn need_hyphenated_name(tokens: &mut TokenIter) -> Result<syn::LitStr, Error> {
-    let start = need_ident(&mut *tokens)?;
+pub fn need_hyphenated_name(span: Span, tokens: &mut TokenIter) -> Result<syn::LitStr, Error> {
+    let start = need_ident(span, &mut *tokens)?;
     finish_hyphenated_name(&mut *tokens, start)
 }
 
@@ -313,12 +326,13 @@ pub fn parse_object(tokens: TokenStream) -> Result<Object, Error> {
 }
 
 fn parse_object_key(tokens: &mut TokenIter) -> Result<Option<Name>, Error> {
-    if tokens.peek().is_none() {
-        return Ok(None);
-    }
+    let span = match tokens.peek() {
+        Some(ref val) => val.span(),
+        None => return Ok(None),
+    };
 
     let key = need_ident_or_string(&mut *tokens)?;
-    match_colon(&mut *tokens)?;
+    match_colon2(span, &mut *tokens)?;
     Ok(Some(key))
 }
 
