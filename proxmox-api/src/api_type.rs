@@ -1,5 +1,7 @@
 //! This contains traits used to implement methods to be added to the `Router`.
 
+use std::collections::HashSet;
+
 use failure::{bail, Error};
 use http::Response;
 use serde_json::{json, Value};
@@ -313,6 +315,7 @@ unconstrained_api_type! {String, &str}
 unconstrained_api_type! {bool}
 unconstrained_api_type! {isize, usize, i64, u64, i32, u32, i16, u16, i8, u8, f64, f32}
 unconstrained_api_type! {Vec<String>}
+unconstrained_api_type! {HashSet<String>}
 
 // Raw return types are also okay:
 impl<Body> ApiType for Response<Body> {
