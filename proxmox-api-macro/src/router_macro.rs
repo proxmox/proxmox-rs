@@ -337,10 +337,8 @@ fn parse_path_name(tokens: &mut TokenIter) -> Result<Path, Error> {
                 if group.delimiter() != Delimiter::Brace {
                     bail!("invalid path component: {:?}", group);
                 }
-                let name = need_hyphenated_name(
-                    group.span(),
-                    &mut group.stream().into_iter().peekable(),
-                )?;
+                let name =
+                    need_hyphenated_name(group.span(), &mut group.stream().into_iter().peekable())?;
                 push_component(&mut path, &mut component, &mut span);
                 path.push(Component::Match(name));
 

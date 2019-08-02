@@ -62,7 +62,9 @@ impl<'de> serde::de::Visitor<'de> for StringListVisitor {
     }
 
     fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
-        let mut out = seq.size_hint().map_or_else(Vec::new, |size| Vec::with_capacity(size));
+        let mut out = seq
+            .size_hint()
+            .map_or_else(Vec::new, |size| Vec::with_capacity(size));
         loop {
             match seq.next_element::<String>()? {
                 Some(el) => out.push(el),

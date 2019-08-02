@@ -33,7 +33,10 @@ where
     value
         .for_each_str(|s| {
             if s.contains(';') {
-                bail!("cannot include value \"{}\" in a semicolon separated list", s);
+                bail!(
+                    "cannot include value \"{}\" in a semicolon separated list",
+                    s
+                );
             }
 
             if !data.is_empty() {

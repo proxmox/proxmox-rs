@@ -73,10 +73,7 @@ pub mod safe_path {
 
     pub fn verify<T: crate::schema::tools::StringContainer>(value: &T) -> bool {
         value.all(|s| {
-            s != ".."
-            && !s.starts_with("../")
-            && !s.ends_with("/..")
-            && !s.contains("/../")
+            s != ".." && !s.starts_with("../") && !s.ends_with("/..") && !s.contains("/../")
         })
     }
 }

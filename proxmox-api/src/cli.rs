@@ -385,13 +385,14 @@ impl ParseCli for String {
 
 impl ParseCli for HashSet<String> {
     fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
-        Ok(serde_json::Value::Array(value
-            .ok_or_else(|| format_err!("missing value for parameter '{}'", name))?
-            .split(';')
-            .fold(Vec::new(), |mut list, entry| {
-                list.push(serde_json::Value::String(entry.trim().to_string()));
-                list
-            })
+        Ok(serde_json::Value::Array(
+            value
+                .ok_or_else(|| format_err!("missing value for parameter '{}'", name))?
+                .split(';')
+                .fold(Vec::new(), |mut list, entry| {
+                    list.push(serde_json::Value::String(entry.trim().to_string()));
+                    list
+                }),
         ))
     }
 }

@@ -33,7 +33,9 @@ impl StringContainer for Vec<String> {
 
 impl StringContainer for Option<Vec<String>> {
     fn all<F: Fn(&str) -> bool>(&self, pred: F) -> bool {
-        self.as_ref().map(|c| StringContainer::all(c, pred)).unwrap_or(true)
+        self.as_ref()
+            .map(|c| StringContainer::all(c, pred))
+            .unwrap_or(true)
     }
 }
 
@@ -45,6 +47,8 @@ impl StringContainer for HashSet<String> {
 
 impl StringContainer for Option<HashSet<String>> {
     fn all<F: Fn(&str) -> bool>(&self, pred: F) -> bool {
-        self.as_ref().map(|c| StringContainer::all(c, pred)).unwrap_or(true)
+        self.as_ref()
+            .map(|c| StringContainer::all(c, pred))
+            .unwrap_or(true)
     }
 }

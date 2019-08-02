@@ -42,12 +42,7 @@ pub enum ConsoleMode {
 pub mod mount_options {
     pub const NAME: &'static str = "mount options";
 
-    const VALID_MOUNT_OPTIONS: &[&'static str] = &[
-        "noatime",
-        "nodev",
-        "noexec",
-        "nosuid",
-    ];
+    const VALID_MOUNT_OPTIONS: &[&'static str] = &["noatime", "nodev", "noexec", "nosuid"];
 
     pub fn verify<T: crate::schema::tools::StringContainer>(value: &T) -> bool {
         value.all(|s| VALID_MOUNT_OPTIONS.contains(&s))

@@ -5,18 +5,23 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
+#[rustfmt::skip]
 #[macro_export]
 macro_rules! IPV4OCTET { () => (r"(?:25[0-5]|(?:2[0-4]|1[0-9]|[1-9])?[0-9])") }
+#[rustfmt::skip]
 #[macro_export]
 macro_rules! IPV6H16 { () => (r"(?:[0-9a-fA-F]{1,4})") }
+#[rustfmt::skip]
 #[macro_export]
 macro_rules! IPV6LS32 { () => (concat!(r"(?:(?:", IPV4RE!(), "|", IPV6H16!(), ":", IPV6H16!(), "))" )) }
 
 /// Returns the regular expression string to match IPv4 addresses
+#[rustfmt::skip]
 #[macro_export]
 macro_rules! IPV4RE { () => (concat!(r"(?:(?:", IPV4OCTET!(), r"\.){3}", IPV4OCTET!(), ")")) }
 
 /// Returns the regular expression string to match IPv6 addresses
+#[rustfmt::skip]
 #[macro_export]
 macro_rules! IPV6RE { () => (concat!(r"(?:",
     r"(?:(?:",                                               r"(?:", IPV6H16!(), r":){6})", IPV6LS32!(), r")|",
@@ -31,17 +36,13 @@ macro_rules! IPV6RE { () => (concat!(r"(?:",
 }
 
 /// Returns the regular expression string to match IP addresses (v4 or v6)
+#[rustfmt::skip]
 #[macro_export]
 macro_rules! IPRE { () => (concat!(r"(?:", IPV4RE!(), "|", IPV6RE!(), ")")) }
 
 lazy_static! {
     pub static ref IP_REGEX: Regex = Regex::new(IPRE!()).unwrap();
-
-    pub static ref SHA256_HEX_REGEX: Regex =
-        Regex::new(r"^[a-f0-9]{64}$")
-        .unwrap();
-
+    pub static ref SHA256_HEX_REGEX: Regex = Regex::new(r"^[a-f0-9]{64}$").unwrap();
     pub static ref SYSTEMD_DATETIME_REGEX: Regex =
-        Regex::new(r"^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$")
-        .unwrap();
+        Regex::new(r"^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$").unwrap();
 }
