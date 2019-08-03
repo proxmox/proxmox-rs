@@ -10,7 +10,7 @@ authors = [
 [dependencies]
 failure = "0.1"
 libc = "0.2"
-nix = "0.13"
+nix = "0.14"
 proxmox-tools = { path = "../proxmox-tools" }
 lazy_static = "1.1"
 regex = "1.0"

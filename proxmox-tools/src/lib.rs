@@ -1,6 +1,7 @@
 //! This is a general utility crate used by all our rust projects.
 
 use failure::*;
+use lazy_static::lazy_static;
 
 pub mod common_regex;
 pub mod io;
@@ -145,4 +146,22 @@ pub fn hex_to_digest(hex: &str) -> Result<[u8; 32], Error> {
     }
 
     Ok(digest)
+}
+
+/// Returns the hosts node name (UTS node name)
+pub fn nodename() -> &'static str {
+
+    lazy_static!{
+        static ref NODENAME: String = {
+
+            nix::sys::utsname::uname()
+                .nodename()
+                .split('.')
+                .next()
+                .unwrap()
+                .to_owned()
+        };
+    }
+
+    &NODENAME
 }
