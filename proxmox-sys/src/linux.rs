@@ -3,6 +3,8 @@
 use failure::*;
 use proxmox_tools as tools;
 
+pub mod magic;
+
 /// Get pseudo random data (/dev/urandom)
 pub fn random_data(size: usize) -> Result<Vec<u8>, Error> {
     let mut buffer = tools::vec::undefined(size);
