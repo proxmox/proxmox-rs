@@ -159,6 +159,33 @@ pub fn fchown(
     Ok(())
 }
 
+/// Creates directory at the provided path with specified ownership
+///
+/// Simply returns if the directory already exists.
+pub fn create_dir_chown<P: AsRef<Path>>(
+    path: P,
+    perm: Option<stat::Mode>,
+    owner: Option<unistd::Uid>,
+    group: Option<unistd::Gid>,
+) -> Result<(), nix::Error>
+{
+    let mode : stat::Mode = perm.unwrap_or(stat::Mode::from_bits_truncate(0o770));
+
+    let path = path.as_ref();
+
+    match nix::unistd::mkdir(path, mode) {
+        Ok(()) => {},
+        Err(nix::Error::Sys(nix::errno::Errno::EEXIST)) => {
+            return Ok(());
+        },
+        err => return err,
+    }
+
+    unistd::chown(path, owner, group)?;
+
+    Ok(())
+}
+
 // /usr/include/linux/fs.h: #define BLKGETSIZE64 _IOR(0x12,114,size_t)
 // return device size in bytes (u64 *arg)
 nix::ioctl_read!(blkgetsize64, 0x12, 114, u64);
