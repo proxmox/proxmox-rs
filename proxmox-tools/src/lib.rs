@@ -4,6 +4,7 @@ use failure::*;
 
 pub mod common_regex;
 pub mod io;
+pub mod fs;
 pub mod raw;
 pub mod serde;
 pub mod vec;
@@ -14,6 +15,27 @@ macro_rules! offsetof {
     ($ty:ty, $field:ident) => {
         unsafe { &(*(0 as *const $ty)).$field as *const _ as usize }
     };
+}
+
+/// Macro to write error-handling blocks (like perl eval {})
+///
+/// #### Example:
+/// ```
+/// # #[macro_use] extern crate proxmox_backup;
+/// # use failure::*;
+/// # let some_condition = false;
+/// let result = try_block!({
+///     if (some_condition) {
+///         bail!("some error");
+///     }
+///     Ok(())
+/// })
+/// .map_err(|e| format_err!("my try block returned an error - {}", e));
+/// ```
+
+#[macro_export]
+macro_rules! try_block {
+    { $($token:tt)* } => {{ (|| -> Result<_,_> { $($token)* })() }}
 }
 
 const HEX_CHARS: &'static [u8; 16] = b"0123456789abcdef";
