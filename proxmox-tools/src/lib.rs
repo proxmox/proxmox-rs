@@ -150,10 +150,8 @@ pub fn hex_to_digest(hex: &str) -> Result<[u8; 32], Error> {
 
 /// Returns the hosts node name (UTS node name)
 pub fn nodename() -> &'static str {
-
-    lazy_static!{
+    lazy_static! {
         static ref NODENAME: String = {
-
             nix::sys::utsname::uname()
                 .nodename()
                 .split('.')

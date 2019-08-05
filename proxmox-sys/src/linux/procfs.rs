@@ -31,7 +31,6 @@ pub struct ProcFsPidStat {
 }
 
 pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<ProcFsPidStat, Error> {
-
     let statstr = file_read_firstline(format!("/proc/{}/stat", pid))?;
 
     lazy_static! {
@@ -56,14 +55,12 @@ pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<ProcFsPidStat, Error> {
             vsize: cap["vsize"].parse::<u64>().unwrap(),
             rss: cap["rss"].parse::<i64>().unwrap() * 4096,
         });
-
     }
 
     bail!("unable to read pid stat for process '{}'", pid);
 }
 
 pub fn read_proc_starttime(pid: libc::pid_t) -> Result<u64, Error> {
-
     let info = read_proc_pid_stat(pid)?;
 
     Ok(info.starttime)
@@ -414,7 +411,7 @@ mod tests {
     fn test_read_proc_net_route() {
         read_proc_net_route().unwrap();
     }
-    
+
     #[test]
     fn test_read_proc_net_ipv6_route() {
         read_proc_net_ipv6_route().unwrap();

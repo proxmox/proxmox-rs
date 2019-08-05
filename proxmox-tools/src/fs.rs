@@ -92,7 +92,6 @@ pub fn file_set_contents_full<P: AsRef<Path>>(
     owner: Option<unistd::Uid>,
     group: Option<unistd::Gid>,
 ) -> Result<(), Error> {
-
     let path = path.as_ref();
 
     // Note: we use mkstemp heŕe, because this worka with different
@@ -192,7 +191,6 @@ nix::ioctl_read!(blkgetsize64, 0x12, 114, u64);
 
 /// Return file or block device size
 pub fn image_size(path: &Path) -> Result<u64, Error> {
-
     use std::os::unix::fs::FileTypeExt;
 
     let file = std::fs::File::open(path)?;
