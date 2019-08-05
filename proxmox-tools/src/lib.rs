@@ -22,7 +22,7 @@ macro_rules! offsetof {
 ///
 /// #### Example:
 /// ```
-/// # #[macro_use] extern crate proxmox_backup;
+/// # use proxmox_tools::try_block;
 /// # use failure::*;
 /// # let some_condition = false;
 /// let result = try_block!({
