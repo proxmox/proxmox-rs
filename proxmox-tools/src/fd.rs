@@ -1,3 +1,5 @@
+//! Raw file descriptor related structures.
+
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 
 /// Guard a raw file descriptor with a drop handler. This is mostly useful when access to an owned
