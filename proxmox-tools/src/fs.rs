@@ -1,12 +1,12 @@
-use failure::*;
-use std::path::Path;
-use std::io::{Write, BufRead, BufReader};
 use std::fs::File;
+use std::io::{BufRead, BufReader, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
+use std::path::Path;
 
-use serde_json::Value;
-use nix::unistd;
+use failure::{bail, format_err, Error};
 use nix::sys::stat;
+use nix::unistd;
+use serde_json::Value;
 
 use super::try_block;
 

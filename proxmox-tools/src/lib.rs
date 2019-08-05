@@ -4,9 +4,9 @@ use failure::*;
 use lazy_static::lazy_static;
 
 pub mod common_regex;
-pub mod io;
 pub mod fd;
 pub mod fs;
+pub mod io;
 pub mod serde;
 pub mod vec;
 

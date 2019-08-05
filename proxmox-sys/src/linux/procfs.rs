@@ -1,14 +1,15 @@
-use failure::*;
-
-use std::u32;
+use std::collections::HashSet;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader};
-use std::collections::HashSet;
 use std::net::{Ipv4Addr, Ipv6Addr};
-use proxmox_tools::fs::file_read_firstline;
+use std::u32;
+
+use failure::*;
 use lazy_static::lazy_static;
-use regex::Regex;
 use libc;
+use regex::Regex;
+
+use proxmox_tools::fs::file_read_firstline;
 
 /// POSIX sysconf call
 pub fn sysconf(name: i32) -> i64 {
