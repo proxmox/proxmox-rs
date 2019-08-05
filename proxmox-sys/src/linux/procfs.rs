@@ -13,7 +13,9 @@ use proxmox_tools::fs::file_read_firstline;
 
 /// POSIX sysconf call
 pub fn sysconf(name: i32) -> i64 {
-    extern { fn sysconf(name: i32) -> i64; }
+    extern "C" {
+        fn sysconf(name: i32) -> i64;
+    }
     unsafe { sysconf(name) }
 }
 
@@ -44,7 +46,10 @@ pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<ProcFsPidStat, Error> {
 
     if let Some(cap) = REGEX.captures(&statstr) {
         if pid != cap["pid"].parse::<i32>().unwrap() {
-            bail!("unable to read pid stat for process '{}' - got wrong pid", pid);
+            bail!(
+                "unable to read pid stat for process '{}' - got wrong pid",
+                pid
+            );
         }
 
         return Ok(ProcFsPidStat {
@@ -168,7 +173,9 @@ pub struct ProcFsCPUInfo {
 static CPU_INFO: Option<ProcFsCPUInfo> = None;
 
 pub fn read_cpuinfo() -> Result<ProcFsCPUInfo, Error> {
-    if let Some(cpu_info) = &CPU_INFO { return Ok(cpu_info.clone()); }
+    if let Some(cpu_info) = &CPU_INFO {
+        return Ok(cpu_info.clone());
+    }
 
     let path = "/proc/cpuinfo";
     let file = OpenOptions::new().read(true).open(&path)?;
@@ -185,21 +192,21 @@ pub fn read_cpuinfo() -> Result<ProcFsCPUInfo, Error> {
     let mut socket_ids = HashSet::new();
     for line in BufReader::new(&file).lines() {
         let content = line?;
-        if content.is_empty() { continue; }
+        if content.is_empty() {
+            continue;
+        }
         let mut content_iter = content.split(":");
         match (content_iter.next(), content_iter.next()) {
-            (Some(key), Some(value)) => {
-                match key.trim_end() {
-                    "processor" => cpuinfo.cpus += 1,
-                    "model name" => cpuinfo.model = value.trim().to_string(),
-                    "cpu MHz" => cpuinfo.mhz = value.trim().parse::<f64>()?,
-                    "flags" => cpuinfo.hvm = value.contains(" vmx ") || value.contains(" svm "),
-                    "physical id" => {
-                        let id = value.trim().parse::<u8>()?;
-                        socket_ids.insert(id);
-                    },
-                    _ => continue,
+            (Some(key), Some(value)) => match key.trim_end() {
+                "processor" => cpuinfo.cpus += 1,
+                "model name" => cpuinfo.model = value.trim().to_string(),
+                "cpu MHz" => cpuinfo.mhz = value.trim().parse::<f64>()?,
+                "flags" => cpuinfo.hvm = value.contains(" vmx ") || value.contains(" svm "),
+                "physical id" => {
+                    let id = value.trim().parse::<u8>()?;
+                    socket_ids.insert(id);
                 }
+                _ => continue,
             },
             _ => bail!("Error while parsing '{}'", path),
         }
@@ -223,12 +230,11 @@ pub fn read_memory_usage() -> Result<ProcFsMemUsage, Error> {
 
     let ps = 4096;
     match (values.next(), values.next(), values.next()) {
-        (Some(Ok(size)), Some(Ok(resident)), Some(Ok(shared))) =>
-            Ok(ProcFsMemUsage {
-                size: size * ps,
-                resident: resident * ps,
-                shared: shared * ps,
-            }),
+        (Some(Ok(size)), Some(Ok(resident)), Some(Ok(shared))) => Ok(ProcFsMemUsage {
+            size: size * ps,
+            resident: resident * ps,
+            shared: shared * ps,
+        }),
         _ => bail!("Error while parsing '{}'", path),
     }
 }
@@ -251,11 +257,11 @@ pub fn read_proc_net_dev() -> Result<Vec<ProcFsNetDev>, Error> {
         match (iter.next(), iter.next(), iter.skip(7).next()) {
             (Some(device), Some(receive), Some(send)) => {
                 result.push(ProcFsNetDev {
-                    device: device[..device.len()-1].to_string(),
+                    device: device[..device.len() - 1].to_string(),
                     receive: receive.parse::<u64>()?,
                     send: send.parse::<u64>()?,
                 });
-            },
+            }
             _ => bail!("Error while parsing '{}'", path),
         }
     }
@@ -303,14 +309,20 @@ pub fn read_proc_net_route() -> Result<Vec<ProcFsNetRoute>, Error> {
     let mut result = Vec::new();
     for line in BufReader::new(&file).lines().skip(1) {
         let content = line?;
-        if content.is_empty() { continue; }
+        if content.is_empty() {
+            continue;
+        }
         let mut iter = content.split_whitespace();
 
-        let mut next = || iter.next()
-            .ok_or(format_err!("Error while parsing '{}'", path));
+        let mut next = || {
+            iter.next()
+                .ok_or(format_err!("Error while parsing '{}'", path))
+        };
 
         let (iface, dest, gateway) = (next()?, next()?, next()?);
-        for _ in 0..3 { next()?; }
+        for _ in 0..3 {
+            next()?;
+        }
         let (metric, mask, mtu) = (next()?, next()?, next()?);
 
         result.push(ProcFsNetRoute {
@@ -379,16 +391,24 @@ pub fn read_proc_net_ipv6_route() -> Result<Vec<ProcFsNetIPv6Route>, Error> {
     let mut result = Vec::new();
     for line in BufReader::new(&file).lines() {
         let content = line?;
-        if content.is_empty() { continue; }
+        if content.is_empty() {
+            continue;
+        }
         let mut iter = content.split_whitespace();
 
-        let mut next = || iter.next()
-            .ok_or_else(|| format_err!("Error while parsing '{}'", path));
+        let mut next = || {
+            iter.next()
+                .ok_or_else(|| format_err!("Error while parsing '{}'", path))
+        };
 
         let (dest, prefix) = (next()?, next()?);
-        for _ in 0..2 { next()?; }
+        for _ in 0..2 {
+            next()?;
+        }
         let (nexthop, metric) = (next()?, next()?);
-        for _ in 0..3 { next()?; }
+        for _ in 0..3 {
+            next()?;
+        }
         let iface = next()?;
 
         result.push(ProcFsNetIPv6Route {
