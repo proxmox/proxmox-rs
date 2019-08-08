@@ -429,9 +429,68 @@ fn handle_struct(definition: Object, item: &syn::ItemStruct) -> Result<TokenStre
 
     match item.fields {
         syn::Fields::Unit => c_bail!(item.span(), "unit types are not allowed"),
+        syn::Fields::Unnamed(ref fields) if fields.unnamed.len() == 1 => {
+            handle_newtype(definition, name, fields)
+        }
         syn::Fields::Unnamed(ref fields) => handle_struct_unnamed(definition, name, fields),
         syn::Fields::Named(ref fields) => handle_struct_named(definition, name, fields),
     }
+}
+
+struct StructField<'i, 't> {
+    def: ParameterDefinition,
+    ident: Option<&'i Ident>,
+    access: syn::Member,
+    mem_id: isize,
+    string: String,
+    strlit: syn::LitStr,
+    ty: &'t syn::Type,
+}
+
+fn handle_newtype(
+    mut definition: Object,
+    name: &Ident,
+    item: &syn::FieldsUnnamed,
+) -> Result<TokenStream, Error> {
+    let fields = &item.unnamed;
+    let field_punct = fields.first().unwrap();
+    let field = field_punct.value();
+
+    let common = CommonTypeDefinition::from_object(&mut definition)?;
+    let apidef = ParameterDefinition::from_object(definition)?;
+
+    let impl_verify = struct_fields_impl_verify(item.span(), &[StructField {
+        def: apidef,
+        ident: None,
+        access: syn::Member::Unnamed(syn::Index {
+            index: 0,
+            span: name.span(),
+        }),
+        mem_id: 0,
+        string: "0".to_string(),
+        strlit: syn::LitStr::new("0", name.span()),
+        ty: &field.ty,
+    }])?;
+
+    let description = common.description;
+    let parse_cli = common.cli.quote(&name);
+    Ok(quote! {
+        impl ::proxmox::api::ApiType for #name {
+            fn type_info() -> &'static ::proxmox::api::TypeInfo {
+                use ::proxmox::api::cli::ParseCli;
+                use ::proxmox::api::cli::ParseCliFromStr;
+                const INFO: ::proxmox::api::TypeInfo = ::proxmox::api::TypeInfo {
+                    name: stringify!(#name),
+                    description: #description,
+                    complete_fn: None, // FIXME!
+                    parse_cli: #parse_cli,
+                };
+                &INFO
+            }
+
+            #impl_verify
+        }
+    })
 }
 
 fn handle_struct_unnamed(
@@ -475,15 +534,6 @@ fn handle_struct_unnamed(
             }
         }
     })
-}
-
-struct StructField<'i, 't> {
-    def: ParameterDefinition,
-    ident: &'i Ident,
-    mem_id: isize,
-    string: String,
-    strlit: syn::LitStr,
-    ty: &'t syn::Type,
 }
 
 fn handle_struct_named(
@@ -538,7 +588,8 @@ fn handle_struct_named(
         let def = ParameterDefinition::from_expression(def)?;
         fields.push(StructField {
             def,
-            ident: field_ident,
+            ident: Some(field_ident),
+            access: syn::Member::Named(field_ident.clone()),
             mem_id,
             string: field_string,
             strlit: field_strlit,
@@ -546,7 +597,7 @@ fn handle_struct_named(
         });
     }
 
-    let impl_verify = named_struct_impl_verify(item.span(), &fields)?;
+    let impl_verify = struct_fields_impl_verify(item.span(), &fields)?;
     let (impl_serialize, impl_deserialize) = if serialize_as_string {
         let expected = format!("valid {}", type_ident);
         (
@@ -599,15 +650,15 @@ fn handle_struct_named(
     })
 }
 
-fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenStream, Error> {
+fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenStream, Error> {
     let mut body = TokenStream::new();
     for field in fields {
-        let field_ident = field.ident;
+        let field_access = &field.access;
         let field_str = &field.strlit;
 
         // first of all, recurse into the contained types:
-        body.extend(quote_spanned! { field_ident.span() =>
-            ::proxmox::api::ApiType::verify(&self.#field_ident)?;
+        body.extend(quote_spanned! { field_access.span() =>
+            ::proxmox::api::ApiType::verify(&self.#field_access)?;
         });
 
         // then go through all the additional verifiers:
@@ -615,7 +666,7 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
         if let Some(ref value) = field.def.minimum {
             body.extend(quote_spanned! { value.span() =>
                 let value = #value;
-                if !::proxmox::api::verify::TestMinMax::test_minimum(&self.#field_ident, &value) {
+                if !::proxmox::api::verify::TestMinMax::test_minimum(&self.#field_access, &value) {
                     error_string.push_str(
                         &format!("field {} out of range, must be >= {}", #field_str, value)
                     );
@@ -626,7 +677,7 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
         if let Some(ref value) = field.def.maximum {
             body.extend(quote_spanned! { value.span() =>
                 let value = #value;
-                if !::proxmox::api::verify::TestMinMax::test_maximum(&self.#field_ident, &value) {
+                if !::proxmox::api::verify::TestMinMax::test_maximum(&self.#field_access, &value) {
                     error_string.push_str(
                         &format!("field {} out of range, must be <= {}", #field_str, value)
                     );
@@ -638,7 +689,7 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
             body.extend(quote_spanned! { value.span() =>
                 let value = #value;
                 if !::proxmox::api::verify::TestMinMaxLen::test_minimum_length(
-                    &self.#field_ident,
+                    &self.#field_access,
                     value,
                 ) {
                     error_string.push_str(
@@ -652,7 +703,7 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
             body.extend(quote_spanned! { value.span() =>
                 let value = #value;
                 if !::proxmox::api::verify::TestMinMaxLen::test_maximum_length(
-                    &self.#field_ident,
+                    &self.#field_access,
                     value,
                 ) {
                     error_string.push_str(
@@ -664,7 +715,7 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
 
         if let Some(ref value) = field.def.format {
             body.extend(quote_spanned! { value.span() =>
-                if !#value::verify(&self.#field_ident) {
+                if !#value::verify(&self.#field_access) {
                     error_string.push_str(
                         &format!("field {} does not match format {}", #field_str, #value::NAME)
                     );
@@ -679,7 +730,7 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
                         ::lazy_static::lazy_static! {
                             static ref RE: ::regex::Regex = ::regex::Regex::new(#regex).unwrap();
                         }
-                        if !RE.is_match(&self.#field_ident) {
+                        if !RE.is_match(&self.#field_access) {
                             error_string.push_str(&format!(
                                 "field {} does not match the allowed pattern: {}",
                                 #field_str,
@@ -689,13 +740,21 @@ fn named_struct_impl_verify(span: Span, fields: &[StructField]) -> Result<TokenS
                     }
                 }),
                 regex => body.extend(quote_spanned! { value.span() =>
-                    if !#regex.is_match(&self.#field_ident) {
+                    if !#regex.is_match(&self.#field_access) {
                         error_string.push_str(
                             &format!("field {} does not match the allowed pattern", #field_str)
                         );
                     }
                 }),
             }
+        }
+
+        if let Some(ref value) = field.def.validate {
+            body.extend(quote_spanned! { value.span() =>
+                if let Err(err) = #value(&self.#field_access) {
+                    error_string.push_str(&err.to_string());
+                }
+            });
         }
     }
 
@@ -760,8 +819,8 @@ fn named_struct_derive_serialize(
 
     let mut entries = TokenStream::new();
     for field in fields {
-        let field_ident = field.ident;
-        let field_span = field.ident.span();
+        let field_ident = field.ident.unwrap();
+        let field_span = field_ident.span();
         let field_str = &field.strlit;
         match field.def.serialize_with.as_ref() {
             Some(path) => {
@@ -857,8 +916,8 @@ fn named_struct_derive_deserialize(
     let mut field_option_init_list = TokenStream::new();
     let mut field_value_matches = TokenStream::new();
     for field in fields {
-        let field_ident = field.ident;
-        let field_span = field.ident.span();
+        let field_ident = field.ident.unwrap();
+        let field_span = field_ident.span();
         let field_str = &field.strlit;
         let mem_id = field.mem_id;
 
@@ -1047,11 +1106,11 @@ fn named_struct_impl_default(
     for field in fields {
         let field_ident = field.ident;
         if let Some(ref default) = field.def.default {
-            entries.extend(quote_spanned! { field.ident.span() =>
+            entries.extend(quote_spanned! { field_ident.span() =>
                 #field_ident: #default.into(),
             });
         } else {
-            entries.extend(quote_spanned! { field.ident.span() =>
+            entries.extend(quote_spanned! { field_ident.span() =>
                 #field_ident: Default::default(),
             });
         }
