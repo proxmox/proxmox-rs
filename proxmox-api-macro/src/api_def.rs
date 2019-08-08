@@ -42,7 +42,7 @@ impl TryFrom<Expression> for CliMode {
 }
 
 impl CliMode {
-    pub fn quote(&self, name: &proc_macro2::Ident) -> TokenStream {
+    pub fn quote(&self, name: &Ident) -> TokenStream {
         match self {
             CliMode::Disabled => quote_spanned! { name.span() => None },
             CliMode::ParseCli => quote_spanned! { name.span() =>

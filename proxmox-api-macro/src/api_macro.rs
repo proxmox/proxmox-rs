@@ -1286,7 +1286,6 @@ fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<Token
 
         ::serde_plain::derive_deserialize_from_str!(#enum_ident, #expected);
         ::serde_plain::derive_serialize_from_display!(#enum_ident);
-
         ::proxmox::api::derive_parse_cli_from_str!(#enum_ident);
 
         impl ::proxmox::api::ApiType for #enum_ident {
