@@ -2,7 +2,6 @@
 
 use bytes::Bytes;
 use failure::{bail, Error};
-use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
 
 use proxmox::api::{api, Router};
@@ -11,7 +10,6 @@ use proxmox::api::{api, Router};
     description: "A hostname or IP address",
     validate: validate_hostname,
 })]
-#[derive(Deserialize, Serialize)]
 #[repr(transparent)]
 pub struct HostOrIp(String);
 

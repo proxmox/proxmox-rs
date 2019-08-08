@@ -8,6 +8,7 @@ use proxmox::api::api;
 // representations. Numeric always being bytes, string having suffixes.
 #[api({
     description: "Represents an amount of memory and can be expressed with suffixes such as MiB.",
+    serialize_as_string: true,
 })]
 #[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug)]
 #[repr(transparent)]
@@ -40,7 +41,6 @@ impl std::str::FromStr for Memory {
         }
     }
 }
-serde_plain::derive_deserialize_from_str!(Memory, "valid memory amount description");
 proxmox::api::derive_parse_cli_from_str!(Memory);
 
 impl std::fmt::Display for Memory {
@@ -55,7 +55,6 @@ impl std::fmt::Display for Memory {
         write!(f, "{}{}", n, SUFFIXES[i])
     }
 }
-serde_plain::derive_serialize_from_display!(Memory);
 
 impl Memory {
     pub const fn from_bytes(v: u64) -> Self {

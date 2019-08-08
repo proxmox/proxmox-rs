@@ -449,14 +449,25 @@ struct StructField<'i, 't> {
 
 fn handle_newtype(
     mut definition: Object,
-    name: &Ident,
+    type_ident: &Ident,
     item: &syn::FieldsUnnamed,
 ) -> Result<TokenStream, Error> {
+    let type_s = type_ident.to_string();
+    let type_span = type_ident.span();
+    let type_str = syn::LitStr::new(&type_s, type_span);
+
     let fields = &item.unnamed;
     let field_punct = fields.first().unwrap();
     let field = field_punct.value();
 
     let common = CommonTypeDefinition::from_object(&mut definition)?;
+
+    let serialize_as_string = definition
+        .remove("serialize_as_string")
+        .map(|e| e.expect_lit_bool_direct())
+        .transpose()?
+        .unwrap_or(false);
+
     let apidef = ParameterDefinition::from_object(definition)?;
 
     let impl_verify = struct_fields_impl_verify(item.span(), &[StructField {
@@ -464,23 +475,44 @@ fn handle_newtype(
         ident: None,
         access: syn::Member::Unnamed(syn::Index {
             index: 0,
-            span: name.span(),
+            span: type_ident.span(),
         }),
         mem_id: 0,
         string: "0".to_string(),
-        strlit: syn::LitStr::new("0", name.span()),
+        strlit: syn::LitStr::new("0", type_ident.span()),
         ty: &field.ty,
     }])?;
 
+    let (impl_serialize, impl_deserialize) = if serialize_as_string {
+        let expected = format!("valid {}", type_ident);
+        (
+            quote_spanned! { item.span() =>
+                ::serde_plain::derive_serialize_from_display!(#type_ident);
+            },
+            quote_spanned! { item.span() =>
+                ::serde_plain::derive_deserialize_from_str!(#type_ident, #expected);
+            },
+        )
+    } else {
+        (
+            newtype_derive_serialize(item.span(), type_ident),
+            newtype_derive_deserialize(item.span(), type_ident),
+        )
+    };
+
     let description = common.description;
-    let parse_cli = common.cli.quote(&name);
+    let parse_cli = common.cli.quote(&type_ident);
     Ok(quote! {
-        impl ::proxmox::api::ApiType for #name {
+        #impl_serialize
+
+        #impl_deserialize
+
+        impl ::proxmox::api::ApiType for #type_ident {
             fn type_info() -> &'static ::proxmox::api::TypeInfo {
                 use ::proxmox::api::cli::ParseCli;
                 use ::proxmox::api::cli::ParseCliFromStr;
                 const INFO: ::proxmox::api::TypeInfo = ::proxmox::api::TypeInfo {
-                    name: stringify!(#name),
+                    name: #type_str,
                     description: #description,
                     complete_fn: None, // FIXME!
                     parse_cli: #parse_cli,
@@ -491,6 +523,38 @@ fn handle_newtype(
             #impl_verify
         }
     })
+}
+
+fn newtype_derive_serialize(
+    span: Span,
+    type_ident: &Ident,
+) -> TokenStream {
+    quote_spanned! { span =>
+        impl ::serde::ser::Serialize for #type_ident {
+            fn serialize<S>(&self, serializer: S) -> ::std::result::Result<S::Ok, S::Error>
+            where
+                S: ::serde::ser::Serializer,
+            {
+                ::serde::ser::Serialize::serialize::<S>(&self.0, serializer)
+            }
+        }
+    }
+}
+
+fn newtype_derive_deserialize(
+    span: Span,
+    type_ident: &Ident,
+) -> TokenStream {
+    quote_spanned! { span =>
+        impl<'de> ::serde::de::Deserialize<'de> for #type_ident {
+            fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+            where
+                D: ::serde::de::Deserializer<'de>,
+            {
+                Ok(Self(::serde::de::Deserialize::<'de>::deserialize::<D>(deserializer)?))
+            }
+        }
+    }
 }
 
 fn handle_struct_unnamed(
