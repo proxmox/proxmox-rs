@@ -15,9 +15,13 @@ mod types;
 mod api_macro;
 mod router_macro;
 
-fn handle_error(kind: &'static str, err: failure::Error) -> TokenStream {
+fn handle_error(mut item: proc_macro2::TokenStream, kind: &'static str, err: failure::Error) -> TokenStream {
     match err.downcast::<syn::Error>() {
-        Ok(err) => err.to_compile_error().into(),
+        Ok(err) => {
+            let err: proc_macro2::TokenStream = err.to_compile_error().into();
+            item.extend(err);
+            item.into()
+        }
         Err(err) => panic!("error in {}: {}", kind, err),
     }
 }
@@ -52,9 +56,10 @@ fn handle_error(kind: &'static str, err: failure::Error) -> TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn api(attr: TokenStream, item: TokenStream) -> TokenStream {
-    match api_macro::api_macro(attr.into(), item.into()) {
+    let item: proc_macro2::TokenStream = item.into();
+    match api_macro::api_macro(attr.into(), item.clone()) {
         Ok(output) => output.into(),
-        Err(err) => handle_error("api definition", err),
+        Err(err) => handle_error(item, "api definition", err),
     }
 }
 
@@ -143,8 +148,9 @@ pub fn api(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn router(input: TokenStream) -> TokenStream {
     // TODO...
-    match router_macro::router_macro(input.into()) {
+    let input: proc_macro2::TokenStream = input.into();
+    match router_macro::router_macro(input.clone()) {
         Ok(output) => output.into(),
-        Err(err) => handle_error("router", err),
+        Err(err) => handle_error(input, "router", err),
     }
 }
