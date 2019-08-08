@@ -667,8 +667,8 @@ fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<Token
             body.extend(quote_spanned! { value.span() =>
                 let value = #value;
                 if !::proxmox::api::verify::TestMinMax::test_minimum(&self.#field_access, &value) {
-                    error_string.push_str(
-                        &format!("field {} out of range, must be >= {}", #field_str, value)
+                    error_list.push(
+                        format!("field {} out of range, must be >= {}", #field_str, value)
                     );
                 }
             });
@@ -678,8 +678,8 @@ fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<Token
             body.extend(quote_spanned! { value.span() =>
                 let value = #value;
                 if !::proxmox::api::verify::TestMinMax::test_maximum(&self.#field_access, &value) {
-                    error_string.push_str(
-                        &format!("field {} out of range, must be <= {}", #field_str, value)
+                    error_list.push(
+                        format!("field {} out of range, must be <= {}", #field_str, value)
                     );
                 }
             });
@@ -692,8 +692,8 @@ fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<Token
                     &self.#field_access,
                     value,
                 ) {
-                    error_string.push_str(
-                        &format!("field {} too short, must be >= {} characters", #field_str, value)
+                    error_list.push(
+                        format!("field {} too short, must be >= {} characters", #field_str, value)
                     );
                 }
             });
@@ -706,8 +706,8 @@ fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<Token
                     &self.#field_access,
                     value,
                 ) {
-                    error_string.push_str(
-                        &format!("field {} too long, must be <= {} characters", #field_str, value)
+                    error_list.push(
+                        format!("field {} too long, must be <= {} characters", #field_str, value)
                     );
                 }
             });
@@ -716,8 +716,8 @@ fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<Token
         if let Some(ref value) = field.def.format {
             body.extend(quote_spanned! { value.span() =>
                 if !#value::verify(&self.#field_access) {
-                    error_string.push_str(
-                        &format!("field {} does not match format {}", #field_str, #value::NAME)
+                    error_list.push(
+                        format!("field {} does not match format {}", #field_str, #value::NAME)
                     );
                 }
             });
@@ -731,7 +731,7 @@ fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<Token
                             static ref RE: ::regex::Regex = ::regex::Regex::new(#regex).unwrap();
                         }
                         if !RE.is_match(&self.#field_access) {
-                            error_string.push_str(&format!(
+                            error_list.push(format!(
                                 "field {} does not match the allowed pattern: {}",
                                 #field_str,
                                 #regex,
@@ -741,8 +741,8 @@ fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<Token
                 }),
                 regex => body.extend(quote_spanned! { value.span() =>
                     if !#regex.is_match(&self.#field_access) {
-                        error_string.push_str(
-                            &format!("field {} does not match the allowed pattern", #field_str)
+                        error_list.push(
+                            format!("field {} does not match the allowed pattern", #field_str)
                         );
                     }
                 }),
@@ -752,7 +752,7 @@ fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<Token
         if let Some(ref value) = field.def.validate {
             body.extend(quote_spanned! { value.span() =>
                 if let Err(err) = #value(&self.#field_access) {
-                    error_string.push_str(&err.to_string());
+                    error_list.push(err.to_string());
                 }
             });
         }
@@ -761,9 +761,16 @@ fn struct_fields_impl_verify(span: Span, fields: &[StructField]) -> Result<Token
     if !body.is_empty() {
         body = quote_spanned! { span =>
             #[allow(unused_mut)]
-            let mut error_string = String::new();
+            let mut error_list: Vec<String> = Vec::new();
             #body
-            if !error_string.is_empty() {
+            if !error_list.is_empty() {
+                let mut error_string = String::new();
+                for e in error_list.iter() {
+                    if !error_string.is_empty() {
+                        error_string.push_str("\n");
+                    }
+                    error_string.push_str(&e);
+                }
                 return Err(::failure::format_err!("{}", error_string));
             }
         };
