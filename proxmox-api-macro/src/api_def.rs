@@ -202,42 +202,4 @@ impl ParameterDefinition {
             _ => c_bail!(span, "expected description or field definition"),
         }
     }
-
-    pub fn add_verifiers(
-        &self,
-        name_str: &str,
-        this: TokenStream,
-        verifiers: &mut Vec<TokenStream>,
-    ) {
-        verifiers.push(match self.validate {
-            Some(ref ident) => quote! { #ident(&#this)?; },
-            None => quote! { ::proxmox::api::ApiType::verify(&#this)?; },
-        });
-
-        if let Some(ref lit) = self.minimum {
-            let errstr = format!(
-                "parameter '{}' out of range: (must be >= {})",
-                name_str,
-                lit.clone().into_token_stream().to_string(),
-            );
-            verifiers.push(quote! {
-                if #this < #lit {
-                    bail!("{}", #errstr);
-                }
-            });
-        }
-
-        if let Some(ref lit) = self.maximum {
-            let errstr = format!(
-                "parameter '{}' out of range: (must be <= {})",
-                name_str,
-                lit.clone().into_token_stream().to_string(),
-            );
-            verifiers.push(quote! {
-                if #this > #lit {
-                    bail!("{}", #errstr);
-                }
-            });
-        }
-    }
 }
