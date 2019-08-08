@@ -4,7 +4,7 @@ use proc_macro2::{Ident, TokenStream};
 
 use derive_builder::Builder;
 use failure::{bail, Error};
-use quote::{quote, ToTokens};
+use quote::quote_spanned;
 
 use super::parsing::{Expression, Object};
 
@@ -44,14 +44,14 @@ impl TryFrom<Expression> for CliMode {
 impl CliMode {
     pub fn quote(&self, name: &proc_macro2::Ident) -> TokenStream {
         match self {
-            CliMode::Disabled => quote! { None },
-            CliMode::ParseCli => {
-                quote! { Some(<#name as ::proxmox::api::cli::ParseCli>::parse_cli) }
-            }
-            CliMode::FromStr => quote! {
+            CliMode::Disabled => quote_spanned! { name.span() => None },
+            CliMode::ParseCli => quote_spanned! { name.span() =>
+                Some(<#name as ::proxmox::api::cli::ParseCli>::parse_cli)
+            },
+            CliMode::FromStr => quote_spanned! { name.span() =>
                 Some(<#name as ::proxmox::api::cli::ParseCliFromStr>::parse_cli)
             },
-            CliMode::Function(func) => quote! { Some(#func) },
+            CliMode::Function(func) => quote_spanned! { name.span() => Some(#func) },
         }
     }
 }
