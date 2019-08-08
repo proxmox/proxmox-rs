@@ -470,18 +470,21 @@ fn handle_newtype(
 
     let apidef = ParameterDefinition::from_object(definition)?;
 
-    let impl_verify = struct_fields_impl_verify(item.span(), &[StructField {
-        def: apidef,
-        ident: None,
-        access: syn::Member::Unnamed(syn::Index {
-            index: 0,
-            span: type_ident.span(),
-        }),
-        mem_id: 0,
-        string: "0".to_string(),
-        strlit: syn::LitStr::new("0", type_ident.span()),
-        ty: &field.ty,
-    }])?;
+    let impl_verify = struct_fields_impl_verify(
+        item.span(),
+        &[StructField {
+            def: apidef,
+            ident: None,
+            access: syn::Member::Unnamed(syn::Index {
+                index: 0,
+                span: type_ident.span(),
+            }),
+            mem_id: 0,
+            string: "0".to_string(),
+            strlit: syn::LitStr::new("0", type_ident.span()),
+            ty: &field.ty,
+        }],
+    )?;
 
     let (impl_serialize, impl_deserialize) = if serialize_as_string {
         let expected = format!("valid {}", type_ident);
@@ -525,10 +528,7 @@ fn handle_newtype(
     })
 }
 
-fn newtype_derive_serialize(
-    span: Span,
-    type_ident: &Ident,
-) -> TokenStream {
+fn newtype_derive_serialize(span: Span, type_ident: &Ident) -> TokenStream {
     quote_spanned! { span =>
         impl ::serde::ser::Serialize for #type_ident {
             fn serialize<S>(&self, serializer: S) -> ::std::result::Result<S::Ok, S::Error>
@@ -541,10 +541,7 @@ fn newtype_derive_serialize(
     }
 }
 
-fn newtype_derive_deserialize(
-    span: Span,
-    type_ident: &Ident,
-) -> TokenStream {
+fn newtype_derive_deserialize(span: Span, type_ident: &Ident) -> TokenStream {
     quote_spanned! { span =>
         impl<'de> ::serde::de::Deserialize<'de> for #type_ident {
             fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
