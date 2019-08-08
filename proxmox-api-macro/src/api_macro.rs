@@ -29,9 +29,9 @@ pub fn api_macro(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Er
     let mut item: syn::Item = syn::parse2(item).unwrap();
 
     match item {
-        syn::Item::Struct(ref itemstruct) => {
-            let extra = handle_struct(definition, itemstruct)?;
-            let mut output = item.into_token_stream();
+        syn::Item::Struct(mut itemstruct) => {
+            let extra = handle_struct(definition, &mut itemstruct)?;
+            let mut output = itemstruct.into_token_stream();
             output.extend(extra);
             Ok(output)
         }
@@ -417,7 +417,7 @@ fn make_parameter_verifier(
     Ok(())
 }
 
-fn handle_struct(definition: Object, item: &syn::ItemStruct) -> Result<TokenStream, Error> {
+fn handle_struct(definition: Object, item: &mut syn::ItemStruct) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {
         c_bail!(
             item.generics.span(),
@@ -430,7 +430,7 @@ fn handle_struct(definition: Object, item: &syn::ItemStruct) -> Result<TokenStre
     match item.fields {
         syn::Fields::Unit => c_bail!(item.span(), "unit types are not allowed"),
         syn::Fields::Unnamed(ref fields) if fields.unnamed.len() == 1 => {
-            handle_newtype(definition, name, fields)
+            handle_newtype(definition, name, fields, &mut item.attrs)
         }
         syn::Fields::Unnamed(ref fields) => handle_struct_unnamed(definition, name, fields),
         syn::Fields::Named(ref fields) => handle_struct_named(definition, name, fields),
@@ -451,6 +451,7 @@ fn handle_newtype(
     mut definition: Object,
     type_ident: &Ident,
     item: &syn::FieldsUnnamed,
+    attrs: &mut Vec<syn::Attribute>,
 ) -> Result<TokenStream, Error> {
     let type_s = type_ident.to_string();
     let type_span = type_ident.span();
@@ -503,12 +504,16 @@ fn handle_newtype(
         )
     };
 
+    let derive_impls = newtype_filter_derive_attrs(type_ident, &field.ty, attrs)?;
+
     let description = common.description;
     let parse_cli = common.cli.quote(&type_ident);
     Ok(quote! {
         #impl_serialize
 
         #impl_deserialize
+
+        #derive_impls
 
         impl ::proxmox::api::ApiType for #type_ident {
             fn type_info() -> &'static ::proxmox::api::TypeInfo {
@@ -549,6 +554,59 @@ fn newtype_derive_deserialize(span: Span, type_ident: &Ident) -> TokenStream {
                 D: ::serde::de::Deserializer<'de>,
             {
                 Ok(Self(::serde::de::Deserialize::<'de>::deserialize::<D>(deserializer)?))
+            }
+        }
+    }
+}
+
+fn newtype_filter_derive_attrs(
+    type_ident: &Ident,
+    inner_type: &syn::Type,
+    attrs: &mut Vec<syn::Attribute>,
+) -> Result<TokenStream, Error> {
+    let mut code = TokenStream::new();
+    let mut had_from_str = false;
+
+    let cap = attrs.len();
+    for mut attr in mem::replace(attrs, Vec::with_capacity(cap)) {
+        if !attr.path.is_ident("derive") {
+            attrs.push(attr);
+            continue;
+        }
+
+        let mut content: syn::Expr = syn::parse2(attr.tts)?;
+        if let syn::Expr::Tuple(ref mut exprtuple) = content {
+            for ty in mem::replace(&mut exprtuple.elems, syn::punctuated::Punctuated::new()) {
+                if let syn::Expr::Path(ref exprpath) = ty {
+                    if exprpath.path.is_ident("FromStr") {
+                        if !had_from_str {
+                            code.extend(newtype_derive_from_str(
+                                exprpath.path.span(),
+                                type_ident,
+                                inner_type,
+                            ));
+                        }
+                        had_from_str = true;
+                        continue;
+                    }
+                }
+                exprtuple.elems.push(ty);
+            }
+        }
+        attr.tts = quote! { #content };
+        attrs.push(attr);
+    }
+
+    Ok(code)
+}
+
+fn newtype_derive_from_str(span: Span, type_ident: &Ident, inner_type: &syn::Type) -> TokenStream {
+    quote_spanned! { span =>
+        impl ::std::str::FromStr for #type_ident {
+            type Err = <#inner_type as ::std::str::FromStr>::Err;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                Ok(Self(::std::str::FromStr::from_str(s)?))
             }
         }
     }
