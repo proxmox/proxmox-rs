@@ -16,7 +16,7 @@ mod newtype;
 mod unnamed;
 
 /// Commonly used items of a struct field.
-struct StructField<'i, 't> {
+pub struct StructField<'i, 't> {
     def: ParameterDefinition,
     ident: Option<&'i Ident>,
     access: syn::Member,
