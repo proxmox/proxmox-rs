@@ -15,7 +15,11 @@ mod types;
 mod api_macro;
 mod router_macro;
 
-fn handle_error(mut item: proc_macro2::TokenStream, kind: &'static str, err: failure::Error) -> TokenStream {
+fn handle_error(
+    mut item: proc_macro2::TokenStream,
+    kind: &'static str,
+    err: failure::Error,
+) -> TokenStream {
     match err.downcast::<syn::Error>() {
         Ok(err) => {
             let err: proc_macro2::TokenStream = err.to_compile_error().into();
