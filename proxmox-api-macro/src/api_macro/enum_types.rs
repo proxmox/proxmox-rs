@@ -98,7 +98,10 @@ pub fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<T
                 let unnamed = &unnamedfields.unnamed;
 
                 if unnamed.len() != 1 {
-                    c_bail!(unnamed.span(), "#[api] enums variants may have at most 1 element");
+                    c_bail!(
+                        unnamed.span(),
+                        "#[api] enums variants may have at most 1 element"
+                    );
                 }
 
                 verify_entries.extend(quote_spanned! { unnamed.span() =>
