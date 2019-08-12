@@ -59,10 +59,6 @@ pub fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<T
     let mut verify_entries = TokenStream::new();
 
     for variant in item.variants.iter_mut() {
-        if variant.fields != syn::Fields::Unit {
-            c_bail!(variant.span(), "#[api] enums cannot have fields");
-        }
-
         let variant_ident = &variant.ident;
         let span = variant_ident.span();
         let underscore_name = util::to_underscore_case(&variant_ident.to_string());
