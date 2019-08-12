@@ -101,11 +101,10 @@ pub fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<T
                     c_bail!(unnamed.span(), "#[api] enums variants may have at most 1 element");
                 }
 
-                let field = unnamed.first().unwrap();
-                let field = field.value();
-                let field_ty = &field.ty;
                 verify_entries.extend(quote_spanned! { unnamed.span() =>
-                    #enum_ident::#field_ty(ref inner) => ::proxmox::api::ApiType::verify(inner),
+                    #enum_ident::#variant_ident(ref inner) => {
+                        ::proxmox::api::ApiType::verify(inner)
+                    }
                 });
             }
         }
