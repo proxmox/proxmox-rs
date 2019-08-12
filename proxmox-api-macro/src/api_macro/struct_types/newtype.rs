@@ -132,6 +132,7 @@ fn newtype_filter_derive_attrs(
 ) -> Result<TokenStream, Error> {
     let mut code = TokenStream::new();
     let mut had_from_str = false;
+    let mut had_display = false;
 
     let cap = attrs.len();
     for mut attr in mem::replace(attrs, Vec::with_capacity(cap)) {
@@ -154,6 +155,12 @@ fn newtype_filter_derive_attrs(
                         }
                         had_from_str = true;
                         continue;
+                    } else if exprpath.path.is_ident("Display") {
+                        if !had_display {
+                            code.extend(newtype_derive_display(exprpath.path.span(), type_ident));
+                        }
+                        had_display = true;
+                        continue;
                     }
                 }
                 exprtuple.elems.push(ty);
@@ -173,6 +180,16 @@ fn newtype_derive_from_str(span: Span, type_ident: &Ident, inner_type: &syn::Typ
 
             fn from_str(s: &str) -> Result<Self, Self::Err> {
                 Ok(Self(::std::str::FromStr::from_str(s)?))
+            }
+        }
+    }
+}
+
+fn newtype_derive_display(span: Span, type_ident: &Ident) -> TokenStream {
+    quote_spanned! { span =>
+        impl ::std::fmt::Display for #type_ident {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                ::std::fmt::Display::fmt(&self.0, f)
             }
         }
     }
