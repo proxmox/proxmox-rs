@@ -20,6 +20,26 @@ use crate::parsing::Object;
 
 use crate::util;
 
+fn filter_api_items<F>(attrs: &mut Vec<syn::Attribute>, mut func: F) -> Result<(), Error>
+where
+    F: FnMut(util::ApiItem) -> Result<(), Error>,
+{
+    let cap = attrs.len();
+    for attr in mem::replace(attrs, Vec::with_capacity(cap)) {
+        if attr.path.is_ident(Ident::new("api", Span::call_site())) {
+            let attrs: util::ApiAttr = syn::parse2(attr.tts)?;
+
+            for attr in attrs.items {
+                func(attr)?;
+            }
+        } else {
+            attrs.push(attr);
+        }
+    }
+
+    Ok(())
+}
+
 pub fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<TokenStream, Error> {
     if item.generics.lt_token.is_some() {
         c_bail!(
@@ -32,8 +52,11 @@ pub fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<T
     let enum_name = enum_ident.to_string();
     let expected = format!("valid {}", enum_ident);
 
+    let mut has_fields = false;
+    let mut has_verifier_unit_case = false;
     let mut display_entries = TokenStream::new();
     let mut from_str_entries = TokenStream::new();
+    let mut verify_entries = TokenStream::new();
 
     for variant in item.variants.iter_mut() {
         if variant.fields != syn::Fields::Unit {
@@ -45,31 +68,51 @@ pub fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<T
         let underscore_name = util::to_underscore_case(&variant_ident.to_string());
         let mut underscore_name = syn::LitStr::new(&underscore_name, variant_ident.span());
 
-        let cap = variant.attrs.len();
-        for attr in mem::replace(&mut variant.attrs, Vec::with_capacity(cap)) {
-            if attr.path.is_ident(Ident::new("api", Span::call_site())) {
-                use util::ApiItem;
+        filter_api_items(&mut variant.attrs, |attr| {
+            use util::ApiItem;
+            match attr {
+                ApiItem::Rename(to) => underscore_name = to,
+                //other => c_bail!(other.span(), "unsupported attribute on enum variant"),
+            }
+            Ok(())
+        })?;
 
-                let attrs: util::ApiAttr = syn::parse2(attr.tts)?;
+        match &variant.fields {
+            syn::Fields::Unit => {
+                if !has_fields {
+                    display_entries.extend(quote_spanned! {
+                        span => #enum_ident::#variant_ident => write!(f, #underscore_name),
+                    });
 
-                for attr in attrs.items {
-                    match attr {
-                        ApiItem::Rename(to) => underscore_name = to,
-                        //other => c_bail!(other.span(), "unsupported attribute on enum variant"),
-                    }
+                    from_str_entries.extend(quote_spanned! {
+                        span => #underscore_name => Ok(#enum_ident::#variant_ident),
+                    });
                 }
-            } else {
-                variant.attrs.push(attr);
+
+                if !has_verifier_unit_case {
+                    has_verifier_unit_case = true;
+                    verify_entries.extend(quote_spanned! { span => _ => Ok(()), });
+                }
+            }
+            syn::Fields::Named(_) => {
+                c_bail!(variant.span(), "#[api] enums cannot have struct fields");
+            }
+            syn::Fields::Unnamed(unnamedfields) => {
+                has_fields = true;
+                let unnamed = &unnamedfields.unnamed;
+
+                if unnamed.len() != 1 {
+                    c_bail!(unnamed.span(), "#[api] enums variants may have at most 1 element");
+                }
+
+                let field = unnamed.first().unwrap();
+                let field = field.value();
+                let field_ty = &field.ty;
+                verify_entries.extend(quote_spanned! { unnamed.span() =>
+                    #enum_ident::#field_ty(ref inner) => ::proxmox::api::ApiType::verify(inner),
+                });
             }
         }
-
-        display_entries.extend(quote_spanned! {
-            span => #enum_ident::#variant_ident => write!(f, #underscore_name),
-        });
-
-        from_str_entries.extend(quote_spanned! {
-            span => #underscore_name => Ok(#enum_ident::#variant_ident),
-        });
     }
 
     let common = CommonTypeDefinition::from_object(&mut definition)?;
@@ -79,27 +122,51 @@ pub fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<T
         c_bail!(validate => "validators are not allowed on enum types");
     }
 
+    let display_fromstr_impls = if has_fields {
+        None
+    } else {
+        Some(quote_spanned! { item.span() =>
+            impl ::std::fmt::Display for #enum_ident {
+                fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                    match self {
+                        #display_entries
+                    }
+                }
+            }
+
+            impl ::std::str::FromStr for #enum_ident {
+                type Err = ::failure::Error;
+
+                fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
+                    match s {
+                        #from_str_entries
+                        _ => ::failure::bail!("expected {}", #expected),
+                    }
+                }
+            }
+        })
+    };
+
+    let verify_impl = if has_fields {
+        quote_spanned! { item.span() =>
+            fn verify(&self) -> ::std::result::Result<(), ::failure::Error> {
+                match self {
+                    #verify_entries
+                }
+            }
+        }
+    } else {
+        quote_spanned! { item.span() =>
+            fn verify(&self) -> ::std::result::Result<(), ::failure::Error> {
+                Ok(())
+            }
+        }
+    };
+
     let description = common.description;
     let parse_cli = common.cli.quote(&enum_ident);
     Ok(quote_spanned! { item.span() =>
-        impl ::std::fmt::Display for #enum_ident {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-                match self {
-                    #display_entries
-                }
-            }
-        }
-
-        impl ::std::str::FromStr for #enum_ident {
-            type Err = ::failure::Error;
-
-            fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
-                match s {
-                    #from_str_entries
-                    _ => ::failure::bail!("expected {}", #expected),
-                }
-            }
-        }
+        #display_fromstr_impls
 
         ::serde_plain::derive_deserialize_from_str!(#enum_ident, #expected);
         ::serde_plain::derive_serialize_from_display!(#enum_ident);
@@ -116,9 +183,7 @@ pub fn handle_enum(mut definition: Object, item: &mut syn::ItemEnum) -> Result<T
                 &INFO
             }
 
-            fn verify(&self) -> ::std::result::Result<(), ::failure::Error> {
-                Ok(())
-            }
+            #verify_impl
         }
     })
 }

@@ -85,11 +85,3 @@ impl Parse for ApiItem {
         }
     }
 }
-
-//impl ApiItem {
-//    pub fn span(&self) -> Span {
-//        match self {
-//            ApiItem::Rename(x) => x.span(),
-//        }
-//    }
-//}
