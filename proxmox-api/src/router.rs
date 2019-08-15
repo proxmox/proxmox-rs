@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use serde_json::{json, Value};
+use serde_json::{json, map::Map, Value};
 
 use super::ApiHandler;
 
@@ -59,12 +59,12 @@ where
     /// Lookup a path in the router. Note that this returns a tuple: the router we ended up on
     /// (providing methods and subdirectories available for the given path), and optionally a json
     /// value containing all the matched parameters ([`SubRoute::Parameter`] subdirectories).
-    pub fn lookup<T: AsRef<str>>(&self, path: T) -> Option<(&Self, Option<Value>)> {
+    pub fn lookup<T: AsRef<str>>(&self, path: T) -> Option<(&Self, Option<Map<String, Value>>)> {
         self.lookup_do(path.as_ref())
     }
 
     // The actual implementation taking the parameter as &str
-    fn lookup_do(&self, path: &str) -> Option<(&Self, Option<Value>)> {
+    fn lookup_do(&self, path: &str) -> Option<(&Self, Option<Map<String, Value>>)> {
         let mut matched_params = None;
         let mut matched_wildcard: Option<String> = None;
 
@@ -107,7 +107,7 @@ where
                 );
         }
 
-        Some((this, matched_params.map(Value::Object)))
+        Some((this, matched_params))
     }
 
     pub fn api_dump(&self) -> Value {
