@@ -1,6 +1,7 @@
 #![feature(async_await)]
 
 use bytes::Bytes;
+use serde_json::Value;
 
 use proxmox_api::Router;
 
@@ -65,7 +66,7 @@ fn check_with_matched_params(
         .get
         .as_ref()
         .expect(&format!("expected GET method on {}", path))
-        .call(params);
+        .call(Value::Object(params));
 
     let response = futures::executor::block_on(apifut)
         .expect("expected the simple test api function to be ready immediately");

@@ -106,7 +106,7 @@ fn check_body(router: &Router<Bytes>, path: &str, expect: &'static str) {
         .get
         .as_ref()
         .expect("expected GET method on router at path");
-    let fut = method.call(parameters.unwrap_or(Value::Null));
+    let fut = method.call(parameters.map(Value::Object).unwrap_or(Value::Null));
     let resp = futures::executor::block_on(fut)
         .expect("expected `GET` on test_body to return successfully");
     assert!(resp.status() == 200, "test response should have status 200");
