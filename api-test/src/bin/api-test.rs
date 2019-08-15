@@ -45,7 +45,7 @@ router! {
         GET: hello,
         /www/{path}*: { GET: get_www },
         /api/1: {
-            // fill with more stuff
+            /greet: { GET: greet_person_with },
         }
     };
 }
@@ -103,19 +103,39 @@ async fn get_www(path: String) -> Result<Response<Body>, Error> {
     Ok(response.body(Body::from(data))?)
 }
 
+#[api({
+    description: "Create a greeting message with various parameters...",
+    parameters: {
+        person: "The person to greet",
+        message: "The message to give",
+        ps: "An optional PS message",
+    },
+})]
+async fn greet_person_with(
+    person: String,
+    message: String,
+    ps: Option<String>,
+) -> Result<String, Error> {
+    Ok(match ps {
+        Some(ps) => format!("{}, {}.\n{}", person, message, ps),
+        None => format!("{}, {}.", person, message),
+    })
+}
+
 //
 // Hyper glue
 //
 
 async fn route_request(request: Request<Body>) -> Result<http::Response<Body>, Error> {
-    let path = request.uri().path();
+    let (parts, body) = request.into_parts();
+    let path = parts.uri.path();
 
-    let (target, params) = ROUTER
+    let (target, mut params) = ROUTER
         .lookup(path)
         .ok_or_else(|| format_err!("missing path: {}", path))?;
 
     use hyper::Method;
-    let method = match *request.method() {
+    let method = match parts.method {
         Method::GET => target.get.as_ref(),
         Method::PUT => target.put.as_ref(),
         Method::POST => target.post.as_ref(),
@@ -123,9 +143,33 @@ async fn route_request(request: Request<Body>) -> Result<http::Response<Body>, E
         _ => bail!("unexpected method type"),
     };
 
+    if let Some(ty) = parts.headers.get(http::header::CONTENT_TYPE) {
+        if ty.to_str()? == "application/json" {
+            use futures::stream::TryStreamExt;
+            let json = serde_json::from_str(std::str::from_utf8(
+                body
+                    .try_concat()
+                    .await?
+                    .as_ref()
+            )?)?;
+            match json {
+                Value::Object(map) => for (k, v) in map {
+                    let existed = params
+                        .get_or_insert_with(serde_json::Map::new)
+                        .insert(k, v)
+                        .is_some();
+                    if existed {
+                        bail!("tried to override path-based parameter!");
+                    }
+                }
+                _ => bail!("expected a json object"),
+            }
+        }
+    }
+
     method
         .ok_or_else(|| format_err!("no GET method for: {}", path))?
-        .call(params.unwrap_or(Value::Null))
+        .call(params.map(Value::Object).unwrap_or(Value::Null))
         .await
 }
 
