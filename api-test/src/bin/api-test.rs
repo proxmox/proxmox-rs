@@ -169,10 +169,10 @@ async fn greet_person_with(
         entry: "The mount point configuration to replace the entry with",
     },
 })]
-async fn update_mount_point(id: String, entry: MountEntry) -> Result<(), Error> {
+async fn update_mount_point(id: String, entry: MountEntry) -> Result<String, Error> {
     eprintln!("Got request to update mount point '{}'", id);
     eprintln!("New configuration: {:?}", entry);
-    Ok(())
+    Ok(format!("Updating '{}' with: {:?}", id, entry))
 }
 
 //
