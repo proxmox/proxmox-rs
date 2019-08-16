@@ -20,3 +20,11 @@ curl -XPOST -H 'Content-type: application/json' \
   -d '{"entry":{"mount_type":"volume","source":"/source","destination":"/destination","ro":true}}' \
   'http://127.0.0.1:3000/api/1/mount/rootfs'
 echo
+
+echo "Calling /api/1/mount/rootfs again, but with a destination which does NOT match the regex"
+echo "Expect an error:"
+# with the optional 'ro' field
+curl -XPOST -H 'Content-type: application/json' \
+  -d '{"entry":{"mount_type":"volume","source":"/source","destination":"./foo","ro":true}}' \
+  'http://127.0.0.1:3000/api/1/mount/rootfs'
+echo
