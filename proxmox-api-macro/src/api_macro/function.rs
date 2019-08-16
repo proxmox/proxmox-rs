@@ -286,7 +286,13 @@ pub fn handle_function(
         body.push(quote! {
             impl #struct_name {
                 fn #impl_checked_ident(#inputs) -> ::proxmox::api::ApiFuture<#body_type> {
-                    #parameter_verifiers
+                    let check = (|| -> Result<(), Error> {
+                        #parameter_verifiers
+                        Ok(())
+                    })();
+                    if let Err(err) = check {
+                        return Box::pin(async move { Err(err) });
+                    }
                     Self::#impl_unchecked_ident(#passed_args)
                 }
             }
