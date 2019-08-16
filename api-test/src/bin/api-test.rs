@@ -37,6 +37,45 @@ pub fn set_www_dir(dir: String) {
 }
 
 //
+// Complex types allowed in the API
+//
+
+#[api({
+    description: "A test enum",
+})]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MountType {
+    Volume,
+    BindMount,
+    #[api(rename = "pass-through-device")]
+    PassThrough,
+}
+
+#[api({
+    description: "A test struct",
+    cli: false, // no CLI interface for now...
+    fields: {
+        mount_type: "The type of mount point",
+        source: "The path to mount",
+        destination: {
+            description: "Target path to mount at",
+            pattern: r#"^[^.]"#, // must not start with a dot
+        },
+        ro: {
+            description: "Whether to mount read-only",
+            default: false,
+        },
+    },
+})]
+#[derive(Debug)]
+pub struct MountEntry {
+    mount_type: MountType,
+    source: String,
+    destination: String,
+    ro: Option<bool>,
+}
+
+//
 // API methods
 //
 
@@ -46,6 +85,7 @@ router! {
         /www/{path}*: { GET: get_www },
         /api/1: {
             /greet: { GET: greet_person_with },
+            /mount/{id}: { POST: update_mount_point },
         }
     };
 }
@@ -122,6 +162,19 @@ async fn greet_person_with(
     })
 }
 
+#[api({
+    description: "Update or create the configuration for a mount point",
+    parameters: {
+        id: "Which mount point entry to configure",
+        entry: "The mount point configuration to replace the entry with",
+    },
+})]
+async fn update_mount_point(id: String, entry: MountEntry) -> Result<(), Error> {
+    eprintln!("Got request to update mount point '{}'", id);
+    eprintln!("New configuration: {:?}", entry);
+    Ok(())
+}
+
 //
 // Hyper glue
 //
@@ -168,7 +221,7 @@ async fn route_request(request: Request<Body>) -> Result<http::Response<Body>, E
     }
 
     method
-        .ok_or_else(|| format_err!("no GET method for: {}", path))?
+        .ok_or_else(|| format_err!("no {:?} method found for: {}", parts.method, path))?
         .call(params.map(Value::Object).unwrap_or(Value::Null))
         .await
 }
