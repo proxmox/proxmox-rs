@@ -3,6 +3,7 @@
 use failure::*;
 use lazy_static::lazy_static;
 
+pub mod borrow;
 pub mod common_regex;
 pub mod fd;
 pub mod fs;
