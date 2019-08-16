@@ -341,6 +341,12 @@ macro_rules! derive_parse_cli_from_str {
 
 derive_parse_cli_from_str! {isize, usize, i64, u64, i32, u32, i16, u16, i8, u8, f64, f32}
 
+impl ParseCli for () {
+    fn parse_cli(_name: &str, _value: Option<&str>) -> Result<Value, Error> {
+        panic!("() type must not be used in command line interface!");
+    }
+}
+
 impl ParseCli for bool {
     fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
         // for booleans, using `--arg` without an option counts as `true`:

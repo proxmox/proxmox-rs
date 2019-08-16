@@ -312,6 +312,7 @@ macro_rules! unconstrained_api_type {
 
 unconstrained_api_type! {Value} // basically our API's "any" type
 unconstrained_api_type! {String, &str}
+unconstrained_api_type! {()}
 unconstrained_api_type! {bool}
 unconstrained_api_type! {isize, usize, i64, u64, i32, u32, i16, u16, i8, u8, f64, f32}
 unconstrained_api_type! {Vec<String>}
