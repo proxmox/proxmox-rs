@@ -3,7 +3,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 
 use failure::{bail, format_err, Error};
-use quote::{quote, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::{spanned::Spanned, Expr, Token};
 
 use crate::parsing::{Expression, Object};
@@ -117,6 +117,9 @@ pub fn handle_function(
             .remove(&name_str)
             .ok_or_else(|| format_err!("missing parameter '{}' in api defintion", name_str))?;
 
+        parameter_verifiers.extend(quote_spanned! { name.span() =>
+            ::proxmox::api::ApiType::verify(&#name)?;
+        });
         match info {
             Expression::Expr(Expr::Lit(lit)) => {
                 parameter_entries.extend(quote! {
@@ -349,6 +352,7 @@ pub fn handle_function(
     Ok(body)
 }
 
+// FIXME: Unify with the struct version of this to avoid duplicate code!
 fn make_parameter_verifier(
     var: &Ident,
     var_str: &str,
