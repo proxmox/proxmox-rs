@@ -9,7 +9,6 @@
 ///
 /// Example:
 /// ```
-/// // Our owner which we want to borrow from.
 /// struct Owner(i64);
 /// struct Borrow<'a>(&'a mut i64);
 ///
