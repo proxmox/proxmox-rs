@@ -1,14 +1,18 @@
+use std::ffi::CStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
 use std::path::Path;
 
 use failure::{bail, format_err, Error};
+use nix::errno::Errno;
+use nix::fcntl::OFlag;
 use nix::sys::stat;
 use nix::unistd::{self, Gid, Uid};
 use serde_json::Value;
 
-use super::try_block;
+use crate::fd::Fd;
+use crate::try_block;
 
 /// Read the entire contents of a file into a bytes vector
 ///
@@ -142,9 +146,42 @@ pub fn fchown(fd: RawFd, owner: Option<Uid>, group: Option<Gid>) -> Result<(), E
         .unwrap_or((0 as libc::gid_t).wrapping_sub(1));
 
     let res = unsafe { libc::fchown(fd, uid, gid) };
-    nix::errno::Errno::result(res)?;
+    Errno::result(res)?;
 
     Ok(())
+}
+
+#[derive(Clone, Default)]
+pub struct CreateOptions {
+    perm: Option<stat::Mode>,
+    owner: Option<Uid>,
+    group: Option<Gid>,
+}
+
+impl CreateOptions {
+    // contrary to Default::default() this is const
+    pub const fn empty() -> Self {
+        Self {
+            perm: None,
+            owner: None,
+            group: None,
+        }
+    }
+
+    pub fn perm(mut self, perm: stat::Mode) -> Self {
+        self.perm = Some(perm);
+        self
+    }
+
+    pub fn owner(mut self, owner: Uid) -> Self {
+        self.owner = Some(owner);
+        self
+    }
+
+    pub fn group(mut self, group: Gid) -> Self {
+        self.group = Some(group);
+        self
+    }
 }
 
 /// Creates directory at the provided path with specified ownership
@@ -162,7 +199,7 @@ pub fn create_dir_chown<P: AsRef<Path>>(
 
     match nix::unistd::mkdir(path, mode) {
         Ok(()) => {}
-        Err(nix::Error::Sys(nix::errno::Errno::EEXIST)) => {
+        Err(nix::Error::Sys(Errno::EEXIST)) => {
             return Ok(());
         }
         err => return err,
@@ -171,6 +208,130 @@ pub fn create_dir_chown<P: AsRef<Path>>(
     unistd::chown(path, owner, group)?;
 
     Ok(())
+}
+
+/// Recursively create a path with separately defined metadata for intermediate directories and the
+/// final component in the path.
+///
+/// ```no_run
+/// # use nix::sys::stat::Mode;
+/// # use nix::unistd::{Gid, Uid};
+/// # use proxmox_tools::fs::{create_path, CreateOptions};
+/// # fn code() -> Result<(), failure::Error> {
+/// create_path(
+///     "/var/lib/mytool/wwwdata",
+///     None,
+///     Some(CreateOptions::empty()
+///         .perm(Mode::from_bits(0o777).unwrap())
+///         .owner(Uid::from_raw(33))
+///     ),
+/// )?;
+/// # Ok(())
+/// # }
+/// ```
+pub fn create_path<P: AsRef<Path>>(
+    path: P,
+    intermediate_opts: Option<CreateOptions>,
+    final_opts: Option<CreateOptions>,
+) -> Result<(), Error> {
+    create_path_do(path.as_ref(), intermediate_opts, final_opts)
+}
+
+fn create_path_do(
+    path: &Path,
+    intermediate_opts: Option<CreateOptions>,
+    final_opts: Option<CreateOptions>,
+) -> Result<(), Error> {
+    use std::path::Component;
+
+    let mut iter = path.components().peekable();
+    let at: Fd = match iter.peek() {
+        Some(Component::Prefix(_)) => bail!("illegal prefix path component encountered"),
+        Some(Component::RootDir) => {
+            let _ = iter.next();
+            Fd::open(
+                unsafe { CStr::from_bytes_with_nul_unchecked(b"/\0") },
+                OFlag::O_DIRECTORY | OFlag::O_PATH,
+                stat::Mode::empty(),
+            )?
+        }
+        Some(Component::CurDir) => {
+            let _ = iter.next();
+            Fd::cwd()
+        }
+        Some(Component::ParentDir) => {
+            let _ = iter.next();
+            Fd::open(
+                unsafe { CStr::from_bytes_with_nul_unchecked(b"..\0") },
+                OFlag::O_DIRECTORY | OFlag::O_PATH,
+                stat::Mode::empty(),
+            )?
+        }
+        Some(Component::Normal(_)) => {
+            // simply do not advance the iterator, heavy lifting happens in create_path_at_do()
+            Fd::cwd()
+        }
+        None => bail!("create_path on empty path?"),
+    };
+
+    create_path_at_do(at, iter, intermediate_opts, final_opts)
+}
+
+fn create_path_at_do(
+    mut at: Fd,
+    mut iter: std::iter::Peekable<std::path::Components>,
+    intermediate_opts: Option<CreateOptions>,
+    final_opts: Option<CreateOptions>,
+) -> Result<(), Error> {
+    loop {
+        use std::path::Component;
+
+        match iter.next() {
+            None => return Ok(()),
+
+            Some(Component::ParentDir) => {
+                at = Fd::openat(
+                    at,
+                    unsafe { CStr::from_bytes_with_nul_unchecked(b"..\0") },
+                    OFlag::O_DIRECTORY | OFlag::O_PATH,
+                    stat::Mode::empty(),
+                )?;
+            }
+
+            Some(Component::Normal(path)) => {
+                let opts = if iter.peek().is_some() {
+                    intermediate_opts.as_ref()
+                } else {
+                    final_opts.as_ref()
+                };
+
+                let mode = opts
+                    .and_then(|o| o.perm)
+                    .unwrap_or(stat::Mode::from_bits(0o755).unwrap());
+
+                let created = match stat::mkdirat(at.as_raw_fd(), path, mode) {
+                    Err(nix::Error::Sys(Errno::EEXIST)) => false,
+                    Err(e) => return Err(e.into()),
+                    Ok(_) => true,
+                };
+                at = Fd::openat(
+                    at,
+                    path,
+                    OFlag::O_DIRECTORY | OFlag::O_PATH,
+                    stat::Mode::empty(),
+                )?;
+
+                if let (true, Some(opts)) = (created, opts) {
+                    if opts.owner.is_some() || opts.group.is_some() {
+                        fchown(at.as_raw_fd(), opts.owner, opts.group)?;
+                    }
+                }
+            }
+
+            // impossible according to the docs:
+            Some(_) => bail!("encountered unexpected special path component"),
+        }
+    }
 }
 
 // /usr/include/linux/fs.h: #define BLKGETSIZE64 _IOR(0x12,114,size_t)
