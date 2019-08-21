@@ -61,7 +61,7 @@ impl Memory {
         Self(v)
     }
 
-    pub const fn as_bytes(&self) -> u64 {
+    pub const fn as_bytes(self) -> u64 {
         self.0
     }
 
@@ -69,7 +69,7 @@ impl Memory {
         Self(v * 1024)
     }
 
-    pub const fn as_kibibytes(&self) -> u64 {
+    pub const fn as_kibibytes(self) -> u64 {
         self.0 / 1024
     }
 
@@ -77,7 +77,7 @@ impl Memory {
         Self(v * 1_000)
     }
 
-    pub const fn as_si_kilobytes(&self) -> u64 {
+    pub const fn as_si_kilobytes(self) -> u64 {
         self.0 / 1_000
     }
 
@@ -85,7 +85,7 @@ impl Memory {
         Self(v * 1024 * 1024)
     }
 
-    pub const fn as_mebibytes(&self) -> u64 {
+    pub const fn as_mebibytes(self) -> u64 {
         self.0 / 1024 / 1024
     }
 
@@ -93,7 +93,7 @@ impl Memory {
         Self(v * 1_000_000)
     }
 
-    pub const fn as_si_megabytes(&self) -> u64 {
+    pub const fn as_si_megabytes(self) -> u64 {
         self.0 / 1_000_000
     }
 
@@ -101,7 +101,7 @@ impl Memory {
         Self(v * 1024 * 1024 * 1024)
     }
 
-    pub const fn as_gibibytes(&self) -> u64 {
+    pub const fn as_gibibytes(self) -> u64 {
         self.0 / 1024 / 1024 / 1024
     }
 
@@ -109,7 +109,7 @@ impl Memory {
         Self(v * 1_000_000_000)
     }
 
-    pub const fn as_si_gigabytes(&self) -> u64 {
+    pub const fn as_si_gigabytes(self) -> u64 {
         self.0 / 1_000_000_000
     }
 
@@ -117,7 +117,7 @@ impl Memory {
         Self(v * 1024 * 1024 * 1024 * 1024)
     }
 
-    pub const fn as_tebibytes(&self) -> u64 {
+    pub const fn as_tebibytes(self) -> u64 {
         self.0 / 1024 / 1024 / 1024 / 1024
     }
 
@@ -125,7 +125,7 @@ impl Memory {
         Self(v * 1_000_000_000_000)
     }
 
-    pub const fn as_si_terabytes(&self) -> u64 {
+    pub const fn as_si_terabytes(self) -> u64 {
         self.0 / 1_000_000_000_000
     }
 }
