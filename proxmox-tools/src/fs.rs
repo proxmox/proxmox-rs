@@ -160,7 +160,7 @@ pub struct CreateOptions {
 
 impl CreateOptions {
     // contrary to Default::default() this is const
-    pub const fn empty() -> Self {
+    pub const fn new() -> Self {
         Self {
             perm: None,
             owner: None,
@@ -221,7 +221,7 @@ pub fn create_dir_chown<P: AsRef<Path>>(
 /// create_path(
 ///     "/var/lib/mytool/wwwdata",
 ///     None,
-///     Some(CreateOptions::empty()
+///     Some(CreateOptions::new()
 ///         .perm(Mode::from_bits(0o777).unwrap())
 ///         .owner(Uid::from_raw(33))
 ///     ),
