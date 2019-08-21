@@ -26,15 +26,15 @@ impl std::str::FromStr for Memory {
             Ok(Self::from_gibibytes(s[..s.len() - 3].parse()?))
         } else if s.ends_with("TiB") {
             Ok(Self::from_tebibytes(s[..s.len() - 3].parse()?))
-        } else if s.ends_with("K") {
+        } else if s.ends_with('K') {
             Ok(Self::from_kibibytes(s[..s.len() - 1].parse()?))
-        } else if s.ends_with("M") {
+        } else if s.ends_with('M') {
             Ok(Self::from_mebibytes(s[..s.len() - 1].parse()?))
-        } else if s.ends_with("G") {
+        } else if s.ends_with('G') {
             Ok(Self::from_gibibytes(s[..s.len() - 1].parse()?))
-        } else if s.ends_with("T") {
+        } else if s.ends_with('T') {
             Ok(Self::from_tebibytes(s[..s.len() - 1].parse()?))
-        } else if s.ends_with("b") || s.ends_with("B") {
+        } else if s.ends_with('b') || s.ends_with('B') {
             Ok(Self::from_bytes(s[..s.len() - 1].parse()?))
         } else {
             Ok(Self::from_bytes(s[..s.len() - 1].parse()?))
@@ -48,7 +48,7 @@ impl std::fmt::Display for Memory {
         const SUFFIXES: &'static [&'static str] = &["b", "KiB", "MiB", "GiB", "TiB"];
         let mut n = self.0;
         let mut i = 0;
-        while i < SUFFIXES.len() && (n & 0x3ff) == 0 {
+        while i < SUFFIXES.len() && n.trailing_zeros() >= 10 {
             n >>= 10;
             i += 1;
         }
