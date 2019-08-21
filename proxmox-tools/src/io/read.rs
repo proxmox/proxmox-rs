@@ -201,12 +201,12 @@ impl<R: io::Read> ReadExt for R {
     }
 
     unsafe fn read_host_value<T: Endian>(&mut self) -> io::Result<T> {
-        let mut value: T = std::mem::uninitialized();
+        let mut value = std::mem::MaybeUninit::<T>::uninit();
         self.read_exact(std::slice::from_raw_parts_mut(
-            &mut value as *mut T as *mut u8,
+            value.as_mut_ptr() as *mut u8,
             std::mem::size_of::<T>(),
         ))?;
-        Ok(value)
+        Ok(value.assume_init())
     }
 
     unsafe fn read_le_value<T: Endian>(&mut self) -> io::Result<T> {

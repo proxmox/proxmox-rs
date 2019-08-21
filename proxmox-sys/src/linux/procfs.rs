@@ -284,7 +284,7 @@ fn hexstr_to_ipv4addr<T: AsRef<[u8]>>(hex: T) -> Result<Ipv4Addr, Error> {
         bail!("Error while converting hex string to IPv4 address: unexpected string length");
     }
 
-    let mut addr: [u8; 4] = unsafe { std::mem::uninitialized() };
+    let mut addr = [0u8; 4];
     for i in 0..4 {
         addr[3 - i] = (hex_nibble(hex[i * 2])? << 4) + hex_nibble(hex[i * 2 + 1])?;
     }
@@ -344,10 +344,14 @@ fn hexstr_to_ipv6addr<T: AsRef<[u8]>>(hex: T) -> Result<Ipv6Addr, Error> {
         bail!("Error while converting hex string to IPv6 address: unexpected string length");
     }
 
-    let mut addr: [u8; 16] = unsafe { std::mem::uninitialized() };
-    for i in 0..16 {
-        addr[i] = (hex_nibble(hex[i * 2])? << 4) + hex_nibble(hex[i * 2 + 1])?;
-    }
+    let mut addr = std::mem::MaybeUninit::<[u8; 16]>::uninit();
+    let addr = unsafe {
+        let ap = &mut *addr.as_mut_ptr();
+        for i in 0..16 {
+            ap[i] = (hex_nibble(hex[i * 2])? << 4) + hex_nibble(hex[i * 2 + 1])?;
+        }
+        addr.assume_init()
+    };
 
     Ok(Ipv6Addr::from(addr))
 }
@@ -367,7 +371,7 @@ fn hexstr_to_u32<T: AsRef<[u8]>>(hex: T) -> Result<u32, Error> {
         bail!("Error while converting hex string to u32: unexpected string length");
     }
 
-    let mut bytes: [u8; 4] = unsafe { std::mem::uninitialized() };
+    let mut bytes = [0u8; 4];
     for i in 0..4 {
         bytes[i] = (hex_nibble(hex[i * 2])? << 4) + hex_nibble(hex[i * 2 + 1])?;
     }
