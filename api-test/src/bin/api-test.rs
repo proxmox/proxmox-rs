@@ -199,20 +199,18 @@ async fn route_request(request: Request<Body>) -> Result<http::Response<Body>, E
     if let Some(ty) = parts.headers.get(http::header::CONTENT_TYPE) {
         if ty.to_str()? == "application/json" {
             use futures::stream::TryStreamExt;
-            let json = serde_json::from_str(std::str::from_utf8(
-                body
-                    .try_concat()
-                    .await?
-                    .as_ref()
-            )?)?;
+            let json =
+                serde_json::from_str(std::str::from_utf8(body.try_concat().await?.as_ref())?)?;
             match json {
-                Value::Object(map) => for (k, v) in map {
-                    let existed = params
-                        .get_or_insert_with(serde_json::Map::new)
-                        .insert(k, v)
-                        .is_some();
-                    if existed {
-                        bail!("tried to override path-based parameter!");
+                Value::Object(map) => {
+                    for (k, v) in map {
+                        let existed = params
+                            .get_or_insert_with(serde_json::Map::new)
+                            .insert(k, v)
+                            .is_some();
+                        if existed {
+                            bail!("tried to override path-based parameter!");
+                        }
                     }
                 }
                 _ => bail!("expected a json object"),
