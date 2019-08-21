@@ -5,7 +5,7 @@ use std::path::Path;
 
 use failure::{bail, format_err, Error};
 use nix::sys::stat;
-use nix::unistd;
+use nix::unistd::{self, Gid, Uid};
 use serde_json::Value;
 
 use super::try_block;
@@ -80,8 +80,8 @@ pub fn file_set_contents_full<P: AsRef<Path>>(
     path: P,
     data: &[u8],
     perm: Option<stat::Mode>,
-    owner: Option<unistd::Uid>,
-    group: Option<unistd::Gid>,
+    owner: Option<Uid>,
+    group: Option<Gid>,
 ) -> Result<(), Error> {
     let path = path.as_ref();
 
@@ -130,11 +130,7 @@ pub fn file_set_contents_full<P: AsRef<Path>>(
 }
 
 /// Change ownership of an open file handle
-pub fn fchown(
-    fd: RawFd,
-    owner: Option<nix::unistd::Uid>,
-    group: Option<nix::unistd::Gid>,
-) -> Result<(), Error> {
+pub fn fchown(fd: RawFd, owner: Option<Uid>, group: Option<Gid>) -> Result<(), Error> {
     // According to the POSIX specification, -1 is used to indicate that owner and group
     // are not to be changed.  Since uid_t and gid_t are unsigned types, we have to wrap
     // around to get -1 (copied fron nix crate).
@@ -157,8 +153,8 @@ pub fn fchown(
 pub fn create_dir_chown<P: AsRef<Path>>(
     path: P,
     perm: Option<stat::Mode>,
-    owner: Option<unistd::Uid>,
-    group: Option<unistd::Gid>,
+    owner: Option<Uid>,
+    group: Option<Gid>,
 ) -> Result<(), nix::Error> {
     let mode: stat::Mode = perm.unwrap_or(stat::Mode::from_bits_truncate(0o770));
 
