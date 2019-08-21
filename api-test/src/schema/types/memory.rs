@@ -37,11 +37,24 @@ impl std::str::FromStr for Memory {
         } else if s.ends_with('b') || s.ends_with('B') {
             Ok(Self::from_bytes(s[..s.len() - 1].parse()?))
         } else {
-            Ok(Self::from_bytes(s[..s.len() - 1].parse()?))
+            Ok(Self::from_bytes(s.parse()?))
         }
     }
 }
 proxmox::api::derive_parse_cli_from_str!(Memory);
+
+#[test]
+fn test_suffixes() {
+    use std::str::FromStr;
+    assert_eq!(
+        Memory::from_str("1234b").unwrap(),
+        Memory::from_str("1234").unwrap()
+    );
+    assert_eq!(
+        Memory::from_str("4096K").unwrap(),
+        Memory::from_str("4M").unwrap()
+    );
+}
 
 impl std::fmt::Display for Memory {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
