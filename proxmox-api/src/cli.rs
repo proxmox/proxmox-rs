@@ -110,6 +110,7 @@ pub struct SubCommands {
     commands: HashMap<&'static str, Command>,
 }
 
+#[allow(clippy::new_without_default)]
 impl SubCommands {
     /// Create a new empty SubCommands hash.
     pub fn new() -> Self {
@@ -246,6 +247,7 @@ impl Method {
     }
 }
 
+#[allow(clippy::enum_variant_names)]
 enum Arg<'a> {
     Positional(&'a str),
     Opt(&'a str),
@@ -389,7 +391,7 @@ impl ParseCli for String {
     }
 }
 
-impl ParseCli for HashSet<String> {
+impl<S: std::hash::BuildHasher> ParseCli for HashSet<String, S> {
     fn parse_cli(name: &str, value: Option<&str>) -> Result<Value, Error> {
         Ok(serde_json::Value::Array(
             value

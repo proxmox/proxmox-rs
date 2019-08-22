@@ -103,7 +103,7 @@ where
                 .get_or_insert_with(serde_json::Map::new)
                 .insert(
                     param_name.to_string(),
-                    Value::String(matched_wildcard.unwrap_or(String::new())),
+                    Value::String(matched_wildcard.unwrap_or_else(String::new)),
                 );
         }
 

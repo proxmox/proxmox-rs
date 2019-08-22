@@ -72,6 +72,8 @@ impl Parameter {
     }
 }
 
+pub type ParseCliFn = fn(name: &str, value: Option<&str>) -> Result<Value, Error>;
+
 /// Bare type info. Types themselves should also have a description, even if a method's parameter
 /// usually overrides it. Ideally we can hyperlink the parameter to the type information in the
 /// generated documentation.
@@ -79,7 +81,7 @@ pub struct TypeInfo {
     pub name: &'static str,
     pub description: &'static str,
     pub complete_fn: Option<CompleteFn>,
-    pub parse_cli: Option<fn(name: &str, value: Option<&str>) -> Result<Value, Error>>,
+    pub parse_cli: Option<ParseCliFn>,
 }
 
 impl TypeInfo {
