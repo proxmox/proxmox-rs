@@ -399,7 +399,7 @@ fn named_struct_derive_deserialize(
                     }
                 }
 
-                const FIELDS: &'static [&'static str] = &[ #field_name_str_list ];
+                const FIELDS: &[&str] = &[ #field_name_str_list ];
                 deserializer.deserialize_struct(#type_str, FIELDS, #visitor_ident)
             }
         }
@@ -423,7 +423,7 @@ fn named_struct_impl_accessors(
                 pub fn #field_ident(
                     &self,
                 ) -> &<#field_ty as ::proxmox::api::meta::OrDefault>::Output {
-                    const DEF: <#field_ty as ::proxmox::api::meta::OrDefault>::Output = #default;
+                    static DEF: <#field_ty as ::proxmox::api::meta::OrDefault>::Output = #default;
                     ::proxmox::api::meta::OrDefault::or_default(&self.#field_ident, &DEF)
                 }
 

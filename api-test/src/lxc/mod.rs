@@ -71,7 +71,7 @@ pub mod schema;
                  \n\n\
                  NOTE: You can disable fair-scheduler configuration by setting this to 0.",
             minimum: 0,
-            maximum: 500000,
+            maximum: 500_000,
             default: 1024,
         },
         memory: {

@@ -43,7 +43,7 @@ pub mod dns_name {
     use lazy_static::lazy_static;
     use regex::Regex;
 
-    pub const NAME: &'static str = "DNS name";
+    pub const NAME: &str = "DNS name";
 
     lazy_static! {
         //static ref DNS_BASE_RE: Regex =
@@ -61,7 +61,7 @@ pub mod dns_name {
 }
 
 pub mod ip_address {
-    pub const NAME: &'static str = "IP Address";
+    pub const NAME: &str = "IP Address";
 
     pub fn verify<T: crate::schema::tools::StringContainer>(value: &T) -> bool {
         value.all(|s| proxmox::tools::common_regex::IP_REGEX.is_match(s))
@@ -69,7 +69,7 @@ pub mod ip_address {
 }
 
 pub mod safe_path {
-    pub const NAME: &'static str = "A canonical, absolute file system path";
+    pub const NAME: &str = "A canonical, absolute file system path";
 
     pub fn verify<T: crate::schema::tools::StringContainer>(value: &T) -> bool {
         value.all(|s| {
