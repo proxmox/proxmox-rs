@@ -3,6 +3,7 @@
 // from /usr/include/linux/magic.h
 // and from casync util.h
 #[rustfmt::skip]
+#[allow(clippy::unreadable_literal)]
 mod consts {
     pub const BINFMTFS_MAGIC      : i64 = 0x42494e4d;
     pub const CGROUP2_SUPER_MAGIC : i64 = 0x63677270;

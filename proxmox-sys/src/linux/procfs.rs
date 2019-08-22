@@ -73,7 +73,7 @@ pub fn read_proc_starttime(pid: libc::pid_t) -> Result<u64, Error> {
 
 pub fn check_process_running(pid: libc::pid_t) -> Option<ProcFsPidStat> {
     if let Ok(info) = read_proc_pid_stat(pid) {
-        if info.status != 'Z' as u8 {
+        if info.status != b'Z' {
             return Some(info);
         }
     }
@@ -95,7 +95,7 @@ pub fn read_proc_uptime() -> Result<(f64, f64), Error> {
     let mut values = line.split_whitespace().map(|v| v.parse::<f64>());
 
     match (values.next(), values.next()) {
-        (Some(Ok(up)), Some(Ok(idle))) => return Ok((up, idle)),
+        (Some(Ok(up)), Some(Ok(idle))) => Ok((up, idle)),
         _ => bail!("Error while parsing '{}'", path),
     }
 }
@@ -195,7 +195,7 @@ pub fn read_cpuinfo() -> Result<ProcFsCPUInfo, Error> {
         if content.is_empty() {
             continue;
         }
-        let mut content_iter = content.split(":");
+        let mut content_iter = content.split(':');
         match (content_iter.next(), content_iter.next()) {
             (Some(key), Some(value)) => match key.trim_end() {
                 "processor" => cpuinfo.cpus += 1,
@@ -254,7 +254,7 @@ pub fn read_proc_net_dev() -> Result<Vec<ProcFsNetDev>, Error> {
     for line in BufReader::new(&file).lines().skip(2) {
         let content = line?;
         let mut iter = content.split_whitespace();
-        match (iter.next(), iter.next(), iter.skip(7).next()) {
+        match (iter.next(), iter.next(), iter.nth(7)) {
             (Some(device), Some(receive), Some(send)) => {
                 result.push(ProcFsNetDev {
                     device: device[..device.len() - 1].to_string(),
@@ -316,7 +316,7 @@ pub fn read_proc_net_route() -> Result<Vec<ProcFsNetRoute>, Error> {
 
         let mut next = || {
             iter.next()
-                .ok_or(format_err!("Error while parsing '{}'", path))
+                .ok_or_else(|| format_err!("Error while parsing '{}'", path))
         };
 
         let (iface, dest, gateway) = (next()?, next()?, next()?);
