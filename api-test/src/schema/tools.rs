@@ -39,13 +39,13 @@ impl StringContainer for Option<Vec<String>> {
     }
 }
 
-impl StringContainer for HashSet<String> {
+impl<S: std::hash::BuildHasher> StringContainer for HashSet<String, S> {
     fn all<F: Fn(&str) -> bool>(&self, pred: F) -> bool {
         self.iter().all(|s| pred(s))
     }
 }
 
-impl StringContainer for Option<HashSet<String>> {
+impl<S: std::hash::BuildHasher> StringContainer for Option<HashSet<String, S>> {
     fn all<F: Fn(&str) -> bool>(&self, pred: F) -> bool {
         self.as_ref()
             .map(|c| StringContainer::all(c, pred))

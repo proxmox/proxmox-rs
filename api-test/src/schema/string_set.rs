@@ -13,7 +13,7 @@ pub trait ForEachStr {
         F: FnMut(&str) -> Result<(), Error>;
 }
 
-impl ForEachStr for HashSet<String> {
+impl<S: std::hash::BuildHasher> ForEachStr for HashSet<String, S> {
     fn for_each_str<F>(&self, mut func: F) -> Result<(), Error>
     where
         F: FnMut(&str) -> Result<(), Error>,
@@ -69,7 +69,7 @@ impl<'de> serde::de::Visitor<'de> for StringSetVisitor {
     fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
         let mut out = seq
             .size_hint()
-            .map_or_else(HashSet::new, |size| HashSet::with_capacity(size));
+            .map_or_else(HashSet::new, HashSet::with_capacity);
         loop {
             match seq.next_element::<String>()? {
                 Some(el) => out.insert(el),
