@@ -1,5 +1,7 @@
 //! Helpers for borrowing and self-borrowing values.
 
+use std::mem::ManuallyDrop;
+
 /// This ties two values together, so that one value can borrow from the other, while allowing the
 /// resulting object to be stored in a struct. The life time of the borrow will not infect the
 /// surrounding type's signature.
@@ -43,16 +45,21 @@
 /// usage.tied.i_am_a_borrow();
 /// ```
 pub struct Tied<T, U: ?Sized> {
+    // FIXME: ManuallyDrop::take() is nightly-only so we need an Option for inner for now...
     /// The contained "value" of which we want to borrow something.
     inner: Option<Box<T>>,
     /// The thing borrowing from `inner`. This is what the `Tied` value ultimately dereferences to.
-    borrow: Option<Box<U>>,
+    borrow: ManuallyDrop<Box<U>>,
 }
 
 impl<T, U: ?Sized> Drop for Tied<T, U> {
     fn drop(&mut self) {
-        // let's be explicit about order here!
-        std::mem::drop(self.borrow.take());
+        unsafe {
+            // let's be explicit about order here!
+            ManuallyDrop::drop(&mut self.borrow);
+            let _ = self.inner.take();
+            //ManuallyDrop::drop(&mut self.inner);
+        }
     }
 }
 
@@ -68,12 +75,15 @@ impl<T, U: ?Sized> Tied<T, U> {
         let borrow = producer(&mut *value);
         Self {
             inner: Some(value),
-            borrow: Some(borrow),
+            borrow: ManuallyDrop::new(borrow),
         }
     }
 
     pub fn into_boxed_inner(mut self) -> Box<T> {
-        self.borrow = None;
+        unsafe {
+            ManuallyDrop::drop(&mut self.borrow);
+            //ManuallyDrop::take(&mut self.inner)
+        }
         self.inner.take().unwrap()
     }
 
@@ -84,13 +94,13 @@ impl<T, U: ?Sized> Tied<T, U> {
 
 impl<T, U: ?Sized> AsRef<U> for Tied<T, U> {
     fn as_ref(&self) -> &U {
-        self.borrow.as_ref().unwrap()
+        &self.borrow
     }
 }
 
 impl<T, U: ?Sized> AsMut<U> for Tied<T, U> {
     fn as_mut(&mut self) -> &mut U {
-        self.borrow.as_mut().unwrap()
+        &mut self.borrow
     }
 }
 
