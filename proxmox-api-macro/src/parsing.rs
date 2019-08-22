@@ -14,7 +14,7 @@ pub type TokenIter = std::iter::Peekable<RawTokenIter>;
 pub fn optional_visibility(tokens: &mut TokenIter) -> Result<syn::Visibility, Error> {
     // peek:
     if let Some(TokenTree::Ident(ident)) = tokens.peek() {
-        if ident.to_string() != "pub" {
+        if ident != "pub" {
             return Ok(syn::Visibility::Inherited);
         }
     } else {
@@ -57,7 +57,7 @@ pub fn match_keyword(
 ) -> Result<Span, Error> {
     if let Some(tt) = tokens.next() {
         if let TokenTree::Ident(ident) = tt {
-            if ident.to_string() == keyword {
+            if ident == keyword {
                 return Ok(ident.span());
             }
         }
