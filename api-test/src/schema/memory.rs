@@ -42,16 +42,16 @@ impl<'de, U: Unit> serde::de::Visitor<'de> for MemoryVisitor<U> {
     }
 
     fn visit_u8<E: serde::de::Error>(self, v: u8) -> Result<Self::Value, E> {
-        Ok(Memory::from_bytes(v as u64 * U::FACTOR))
+        Ok(Memory::from_bytes(u64::from(v) * U::FACTOR))
     }
     fn visit_u16<E: serde::de::Error>(self, v: u16) -> Result<Self::Value, E> {
-        Ok(Memory::from_bytes(v as u64 * U::FACTOR))
+        Ok(Memory::from_bytes(u64::from(v) * U::FACTOR))
     }
     fn visit_u32<E: serde::de::Error>(self, v: u32) -> Result<Self::Value, E> {
-        Ok(Memory::from_bytes(v as u64 * U::FACTOR))
+        Ok(Memory::from_bytes(u64::from(v) * U::FACTOR))
     }
     fn visit_u64<E: serde::de::Error>(self, v: u64) -> Result<Self::Value, E> {
-        Ok(Memory::from_bytes(v as u64 * U::FACTOR))
+        Ok(Memory::from_bytes(v * U::FACTOR))
     }
 
     fn visit_str<E: serde::de::Error>(self, v: &str) -> Result<Self::Value, E> {

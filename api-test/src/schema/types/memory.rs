@@ -58,7 +58,7 @@ fn test_suffixes() {
 
 impl std::fmt::Display for Memory {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        const SUFFIXES: &'static [&'static str] = &["b", "KiB", "MiB", "GiB", "TiB"];
+        const SUFFIXES: &[&str] = &["b", "KiB", "MiB", "GiB", "TiB"];
         let mut n = self.0;
         let mut i = 0;
         while i < SUFFIXES.len() && n.trailing_zeros() >= 10 {
