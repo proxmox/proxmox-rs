@@ -70,11 +70,8 @@ impl<'de> serde::de::Visitor<'de> for StringSetVisitor {
         let mut out = seq
             .size_hint()
             .map_or_else(HashSet::new, HashSet::with_capacity);
-        loop {
-            match seq.next_element::<String>()? {
-                Some(el) => out.insert(el),
-                None => break,
-            };
+        while let Some(el) = seq.next_element::<String>()? {
+            out.insert(el);
         }
         Ok(out)
     }
