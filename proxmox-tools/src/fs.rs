@@ -100,9 +100,9 @@ pub fn file_set_contents_full<P: AsRef<Path>>(
 
     let tmp_path = tmp_path.as_path();
 
-    let mode: stat::Mode = perm.unwrap_or(stat::Mode::from(
-        stat::Mode::S_IRUSR | stat::Mode::S_IWUSR | stat::Mode::S_IRGRP | stat::Mode::S_IROTH,
-    ));
+    // clippy bug?: from_bits_truncate is actually a const fn...
+    #[allow(clippy::or_fun_call)]
+    let mode: stat::Mode = perm.unwrap_or(stat::Mode::from_bits_truncate(0o644));
 
     if perm != None {
         if let Err(err) = stat::fchmod(fd, mode) {
@@ -138,12 +138,8 @@ pub fn fchown(fd: RawFd, owner: Option<Uid>, group: Option<Gid>) -> Result<(), E
     // According to the POSIX specification, -1 is used to indicate that owner and group
     // are not to be changed.  Since uid_t and gid_t are unsigned types, we have to wrap
     // around to get -1 (copied fron nix crate).
-    let uid = owner
-        .map(Into::into)
-        .unwrap_or((0 as libc::uid_t).wrapping_sub(1));
-    let gid = group
-        .map(Into::into)
-        .unwrap_or((0 as libc::gid_t).wrapping_sub(1));
+    let uid = owner.map(Into::into).unwrap_or(!(0 as libc::uid_t));
+    let gid = group.map(Into::into).unwrap_or(!(0 as libc::gid_t));
 
     let res = unsafe { libc::fchown(fd, uid, gid) };
     Errno::result(res)?;
@@ -193,6 +189,8 @@ pub fn create_dir_chown<P: AsRef<Path>>(
     owner: Option<Uid>,
     group: Option<Gid>,
 ) -> Result<(), nix::Error> {
+    // clippy bug?: from_bits_truncate is actually a const fn...
+    #[allow(clippy::or_fun_call)]
     let mode: stat::Mode = perm.unwrap_or(stat::Mode::from_bits_truncate(0o770));
 
     let path = path.as_ref();
@@ -305,9 +303,11 @@ fn create_path_at_do(
                     final_opts.as_ref()
                 };
 
+                // clippy bug?: from_bits_truncate is actually a const fn...
+                #[allow(clippy::or_fun_call)]
                 let mode = opts
                     .and_then(|o| o.perm)
-                    .unwrap_or(stat::Mode::from_bits(0o755).unwrap());
+                    .unwrap_or(stat::Mode::from_bits_truncate(0o755));
 
                 let created = match stat::mkdirat(at.as_raw_fd(), path, mode) {
                     Err(nix::Error::Sys(Errno::EEXIST)) => false,

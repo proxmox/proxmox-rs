@@ -40,7 +40,7 @@ macro_rules! try_block {
     { $($token:tt)* } => {{ (|| -> Result<_,_> { $($token)* })() }}
 }
 
-const HEX_CHARS: &'static [u8; 16] = b"0123456789abcdef";
+const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 
 pub fn digest_to_hex(digest: &[u8]) -> String {
     bin_to_hex(digest)
