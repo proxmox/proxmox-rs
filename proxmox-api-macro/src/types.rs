@@ -29,7 +29,7 @@ impl Name {
     }
 
     pub fn span(&self) -> Span {
-        self.1.clone()
+        self.1
     }
 }
 
@@ -42,10 +42,6 @@ impl From<Ident> for Name {
 impl PartialEq for Name {
     fn eq(&self, rhs: &Self) -> bool {
         self.0 == rhs.0
-    }
-
-    fn ne(&self, rhs: &Self) -> bool {
-        self.0 != rhs.0
     }
 }
 

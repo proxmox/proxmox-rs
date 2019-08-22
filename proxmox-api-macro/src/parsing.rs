@@ -47,7 +47,8 @@ pub fn optional_visibility(tokens: &mut TokenIter) -> Result<syn::Visibility, Er
 
     use syn::parse::Parser;
     let parser = <syn::Visibility as syn::parse::Parse>::parse;
-    return Ok(parser.parse2(visibility)?);
+
+    Ok(parser.parse2(visibility)?)
 }
 
 pub fn match_keyword(
@@ -309,12 +310,7 @@ pub fn parse_object(tokens: TokenStream) -> Result<Object, Error> {
     let mut out = Object::new(tokens.span());
     let mut tokens = tokens.into_iter().peekable();
 
-    loop {
-        let key = match parse_object_key(&mut tokens)? {
-            Some(key) => key,
-            None => break,
-        };
-
+    while let Some(key) = parse_object_key(&mut tokens)? {
         let value = parse_object_value(&mut tokens, &key)?;
 
         if out.insert(key.clone(), value).is_some() {

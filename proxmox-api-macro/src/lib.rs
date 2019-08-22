@@ -22,7 +22,7 @@ fn handle_error(
 ) -> TokenStream {
     match err.downcast::<syn::Error>() {
         Ok(err) => {
-            let err: proc_macro2::TokenStream = err.to_compile_error().into();
+            let err: proc_macro2::TokenStream = err.to_compile_error();
             item.extend(err);
             item.into()
         }

@@ -22,13 +22,11 @@ pub fn to_camel_case(text: &str) -> String {
     for c in text.chars() {
         if c == '_' {
             capitalize = true;
+        } else if capitalize {
+            out.extend(c.to_uppercase());
+            capitalize = false;
         } else {
-            if capitalize {
-                out.extend(c.to_uppercase());
-                capitalize = false;
-            } else {
-                out.push(c);
-            }
+            out.push(c);
         }
     }
 
@@ -61,6 +59,7 @@ pub struct ApiAttr {
 impl Parse for ApiAttr {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let content;
+        #[allow(clippy::eval_order_dependence)]
         Ok(ApiAttr {
             paren_token: parenthesized!(content in input),
             items: content.parse_terminated(ApiItem::parse)?,

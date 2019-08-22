@@ -13,11 +13,8 @@ pub fn router_macro(input: TokenStream) -> Result<TokenStream, Error> {
 
     let mut out = TokenStream::new();
 
-    loop {
-        let mut at_span = match input.peek() {
-            Some(ref val) => val.span(),
-            None => break,
-        };
+    while let Some(ref peek_val) = input.peek() {
+        let mut at_span = peek_val.span();
 
         let public = optional_visibility(&mut input)?;
 
