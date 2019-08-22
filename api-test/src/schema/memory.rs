@@ -65,7 +65,7 @@ impl<'de, U: Unit> serde::de::Visitor<'de> for MemoryVisitor<U> {
 pub struct Parser<U: Unit>(PhantomData<U>);
 
 impl<U: Unit> Parser<U> {
-    pub fn serialize<S>(value: &Memory, ser: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(value: Memory, ser: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -97,7 +97,7 @@ pub mod optional {
         where
             S: serde::Serializer,
         {
-            super::Parser::<U>::serialize::<S>(&value.unwrap(), ser)
+            super::Parser::<U>::serialize::<S>(value.unwrap(), ser)
         }
 
         pub fn deserialize<'de, D>(de: D) -> Result<Option<Memory>, D::Error>
