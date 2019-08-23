@@ -19,6 +19,16 @@ macro_rules! offsetof {
     };
 }
 
+/// Static assertions
+#[macro_export]
+macro_rules! static_assert_size {
+    ($ty:ty, $size:expr) => {
+        const _: fn() -> () = || {
+            let _ = ::std::mem::transmute::<[u8; $size], $ty>;
+        };
+    };
+}
+
 /// Macro to write error-handling blocks (like perl eval {})
 ///
 /// #### Example:
