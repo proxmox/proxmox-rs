@@ -19,7 +19,27 @@ macro_rules! offsetof {
     };
 }
 
-/// Static assertions
+/// Statically assert the size of a type at compile time.
+///
+/// This should compile:
+/// ```
+/// # use proxmox_tools::static_assert_size;
+/// #[repr(C)]
+/// struct Stuff {
+///     value: [u8; 32]
+/// }
+/// static_assert_size!(Stuff, 32);
+/// ```
+///
+/// This should fail to compile:
+/// ```compile_fail
+/// # use proxmox_tools::static_assert_size;
+/// #[repr(C)]
+/// struct Stuff {
+///     value: [u8; 32]
+/// }
+/// static_assert_size!(Stuff, 128);
+/// ```
 #[macro_export]
 macro_rules! static_assert_size {
     ($ty:ty, $size:expr) => {
