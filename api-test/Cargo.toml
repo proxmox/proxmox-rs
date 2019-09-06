@@ -13,12 +13,11 @@ endian_trait = { version = "0.6", features = [ "arrays" ] }
 failure = "0.1"
 futures-preview = "0.3.0-alpha"
 http = "0.1"
-hyper = { version = "0.13.0-a.0", git = "https://github.com/hyperium/hyper" }
+hyper = { version = "0.13.0-alpha.1" }
 lazy_static = "1.3"
 proxmox = { path = "../proxmox" }
 regex = "1.1"
 serde = "1.0"
 serde_json = "1.0"
 serde_plain = "0.3"
-#tokio = { version = "0.2.0-alpha.2", git = "https://github.com/tokio-rs/tokio" }
-tokio = { version = "0.2.0-alpha.2" }
+tokio = { version = "0.2.0-alpha.4" }

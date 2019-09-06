@@ -16,7 +16,7 @@ syn = { version = "0.15", features = [ "full" ] }
 
 [dev-dependencies]
 bytes = "0.4"
-futures-preview = { version = "0.3.0-alpha", features = [ "compat" ] }
+futures-preview = { version = "0.3.0-alpha" }
 http = "0.1"
 proxmox = { path = "../proxmox" }
 serde = "1.0"
