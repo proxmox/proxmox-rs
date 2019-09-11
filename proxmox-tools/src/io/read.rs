@@ -1,6 +1,7 @@
 //! Helpers for `Read`.
 
 use std::io;
+use std::mem;
 
 use endian_trait::Endian;
 
@@ -170,6 +171,37 @@ pub trait ReadExt {
     ///
     /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
     unsafe fn read_be_value<T: Endian>(&mut self) -> io::Result<T>;
+
+    /// Read a boxed value with host endianess.
+    ///
+    /// This is currently not limited to types implementing the [`Endian`] trait as in our use
+    /// cases we use this for types which are too big to want to always perform endian swaps
+    /// immediately on all values.
+    ///
+    /// ```
+    /// # use proxmox::tools::vec;
+    /// use proxmox::tools::io::ReadExt;
+    ///
+    /// #[repr(C)]
+    /// struct Data {
+    ///     v1: u64,
+    ///     buf: [u8; 4088],
+    /// }
+    ///
+    /// # let mut input = [0u8; 4096];
+    /// # use proxmox::tools::io::WriteExt;
+    /// # let mut writer = &mut input[..];
+    /// # unsafe { writer.write_host_value(32u64).unwrap() };
+    /// # let mut file = &input[..];
+    ///
+    /// # fn code<T: std::io::Read>(mut file: T) -> std::io::Result<()> {
+    /// let data: Box<Data> = unsafe { file.read_host_value_boxed()? };
+    /// assert_eq!(data.v1, 32);
+    /// # Ok(())
+    /// # }
+    /// # code(&input[..]).unwrap();
+    /// ```
+    unsafe fn read_host_value_boxed<T>(&mut self) -> io::Result<Box<T>>;
 }
 
 impl<R: io::Read> ReadExt for R {
@@ -204,7 +236,7 @@ impl<R: io::Read> ReadExt for R {
         let mut value = std::mem::MaybeUninit::<T>::uninit();
         self.read_exact(std::slice::from_raw_parts_mut(
             value.as_mut_ptr() as *mut u8,
-            std::mem::size_of::<T>(),
+            mem::size_of::<T>(),
         ))?;
         Ok(value.assume_init())
     }
@@ -215,5 +247,16 @@ impl<R: io::Read> ReadExt for R {
 
     unsafe fn read_be_value<T: Endian>(&mut self) -> io::Result<T> {
         Ok(self.read_host_value::<T>()?.from_be())
+    }
+
+    unsafe fn read_host_value_boxed<T>(&mut self) -> io::Result<Box<T>> {
+        // FIXME: Change this once #![feature(new_uninit)] lands for Box<T>!
+
+        let ptr = std::alloc::alloc(std::alloc::Layout::new::<T>()) as *mut T;
+        self.read_exact(std::slice::from_raw_parts_mut(
+            ptr as *mut u8,
+            mem::size_of::<T>(),
+        ))?;
+        Ok(Box::from_raw(ptr))
     }
 }
