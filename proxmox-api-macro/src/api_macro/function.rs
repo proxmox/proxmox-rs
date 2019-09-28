@@ -195,10 +195,10 @@ pub fn handle_function(
     body.push(quote! {
         // This is our helper struct which Derefs to a wrapper of our original function, which
         // applies the added validators.
-        #vis struct #struct_name();
+        #vis struct #struct_name;
 
         #[allow(non_upper_case_globals)]
-        const #name: &#struct_name = &#struct_name();
+        const #name: &#struct_name = &#struct_name;
 
         // Namespace some of our code into the helper type:
         impl #struct_name {
