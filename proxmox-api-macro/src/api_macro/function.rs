@@ -347,7 +347,7 @@ pub fn handle_function(
                 #struct_name::wrapped_api_handler(params)
             }
 
-            fn method_info(&self) -> &(dyn ::proxmox::api::ApiMethodInfo + Send + Sync) {
+            fn method_info(&self) -> &dyn ::proxmox::api::ApiMethodInfo {
                 self as _
             }
         }
