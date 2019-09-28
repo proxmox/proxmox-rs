@@ -9,10 +9,11 @@ authors = [
 
 [dependencies]
 proxmox-api = { path = "../proxmox-api" }
-proxmox-api-macro = { path = "../proxmox-api-macro" }
+proxmox-api-macro = { path = "../proxmox-api-macro", optional = true }
 proxmox-sys = { path = "../proxmox-sys" }
 proxmox-tools = { path = "../proxmox-tools" }
 
 [features]
 default = []
 valgrind = ["proxmox-tools/valgrind"]
+api-macro = ["proxmox-api-macro"]
