@@ -179,6 +179,14 @@ async fn update_mount_point(id: String, entry: MountEntry) -> Result<String, Err
 // Hyper glue
 //
 
+async fn json_body(mut body: Body) -> Result<Value, Error> {
+    let mut data = Vec::new();
+    while let Some(chunk) = body.next().await {
+        data.extend(chunk?);
+    }
+    Ok(serde_json::from_str(std::str::from_utf8(&data)?)?)
+}
+
 async fn route_request(request: Request<Body>) -> Result<http::Response<Body>, Error> {
     let (parts, body) = request.into_parts();
     let path = parts.uri.path();
@@ -198,9 +206,7 @@ async fn route_request(request: Request<Body>) -> Result<http::Response<Body>, E
 
     if let Some(ty) = parts.headers.get(http::header::CONTENT_TYPE) {
         if ty.to_str()? == "application/json" {
-            use futures::stream::TryStreamExt;
-            let json =
-                serde_json::from_str(std::str::from_utf8(body.try_concat().await?.as_ref())?)?;
+            let json = json_body(body).await?;
             match json {
                 Value::Object(map) => {
                     for (k, v) in map {
