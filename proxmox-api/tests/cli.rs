@@ -1,5 +1,3 @@
-#![feature(async_await)]
-
 use bytes::Bytes;
 
 use proxmox_api::cli;

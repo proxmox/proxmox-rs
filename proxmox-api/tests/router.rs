@@ -1,5 +1,3 @@
-#![feature(async_await)]
-
 use bytes::Bytes;
 use serde_json::Value;
 

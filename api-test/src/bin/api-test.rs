@@ -1,5 +1,3 @@
-#![feature(async_await)]
-
 use std::io;
 use std::path::Path;
 
