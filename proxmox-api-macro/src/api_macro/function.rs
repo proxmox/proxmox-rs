@@ -255,13 +255,13 @@ pub fn handle_function(
             // `async fn`, since an `async fn` cannot appear as a return type :(
             impl ::std::ops::Deref for #struct_name {
                 type Target = fn(#inputs) -> ::std::pin::Pin<Box<
-                    dyn ::std::future::Future<Output = #return_type>
+                    dyn ::std::future::Future<Output = #return_type> + Send
                 >>;
 
                 fn deref(&self) -> &Self::Target {
                     const FUNC: fn(#inputs) -> ::std::pin::Pin<Box<dyn ::std::future::Future<
                         Output = #return_type,
-                    >>> = |#inputs| {
+                    > + Send>> = |#inputs| {
                         Box::pin(#struct_name::#impl_checked_ident(#passed_args))
                     };
                     &FUNC
