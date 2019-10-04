@@ -24,8 +24,7 @@ pub fn handle_newtype(
     let type_str = syn::LitStr::new(&type_s, type_span);
 
     let fields = &item.unnamed;
-    let field_punct = fields.first().unwrap();
-    let field = field_punct.value();
+    let field = fields.first().unwrap();
 
     let common = CommonTypeDefinition::from_object(&mut definition)?;
 
@@ -141,7 +140,7 @@ fn newtype_filter_derive_attrs(
             continue;
         }
 
-        let mut content: syn::Expr = syn::parse2(attr.tts)?;
+        let mut content: syn::Expr = syn::parse2(attr.tokens)?;
         if let syn::Expr::Tuple(ref mut exprtuple) = content {
             for ty in mem::replace(&mut exprtuple.elems, syn::punctuated::Punctuated::new()) {
                 if let syn::Expr::Path(ref exprpath) = ty {
@@ -166,7 +165,7 @@ fn newtype_filter_derive_attrs(
                 exprtuple.elems.push(ty);
             }
         }
-        attr.tts = quote! { #content };
+        attr.tokens = quote! { #content };
         attrs.push(attr);
     }
 

@@ -298,7 +298,7 @@ impl Expression {
     pub fn is_ident(&self, ident: &str) -> bool {
         match self {
             Expression::Expr(expr) => match expr {
-                Expr::Path(path) => path.path.is_ident(Ident::new(ident, Span::call_site())),
+                Expr::Path(path) => path.path.get_ident().map(|i| i == ident).unwrap_or(false),
                 _ => false,
             },
             _ => false,

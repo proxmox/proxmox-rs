@@ -14,9 +14,9 @@ pub fn handle_function(
     mut definition: Object,
     mut item: syn::ItemFn,
 ) -> Result<TokenStream, Error> {
-    if item.decl.generics.lt_token.is_some() {
+    if item.sig.generics.lt_token.is_some() {
         c_bail!(
-            item.decl.generics.span(),
+            item.sig.generics.span(),
             "cannot use generic functions for api macros currently",
         );
         // Not until we stabilize our generated representation!
@@ -64,16 +64,16 @@ pub fn handle_function(
     let mut parameter_verifiers = TokenStream::new();
 
     let vis = std::mem::replace(&mut item.vis, syn::Visibility::Inherited);
-    let span = item.ident.span();
-    let name_str = item.ident.to_string();
+    let span = item.sig.ident.span();
+    let name_str = item.sig.ident.to_string();
     //let impl_str = format!("{}_impl", name_str);
     //let impl_ident = Ident::new(&impl_str, span);
     let impl_checked_str = format!("{}_checked_impl", name_str);
     let impl_checked_ident = Ident::new(&impl_checked_str, span);
     let impl_unchecked_str = format!("{}_unchecked_impl", name_str);
     let impl_unchecked_ident = Ident::new(&impl_unchecked_str, span);
-    let name = std::mem::replace(&mut item.ident, impl_unchecked_ident.clone());
-    let mut return_type = match item.decl.output {
+    let name = std::mem::replace(&mut item.sig.ident, impl_unchecked_ident.clone());
+    let mut return_type = match item.sig.output {
         syn::ReturnType::Default => syn::Type::Tuple(syn::TypeTuple {
             paren_token: syn::token::Paren {
                 span: Span::call_site(),
@@ -87,15 +87,15 @@ pub fn handle_function(
     let mut passed_args = syn::punctuated::Punctuated::<Ident, Token![,]>::new();
     let mut arg_extraction = Vec::new();
 
-    let inputs = item.decl.inputs.clone();
-    for arg in item.decl.inputs.iter() {
+    let inputs = item.sig.inputs.clone();
+    for arg in item.sig.inputs.iter() {
         let arg = match arg {
-            syn::FnArg::Captured(ref arg) => arg,
+            syn::FnArg::Typed(ref arg) => arg,
             other => bail!("unhandled type of method parameter ({:?})", other),
         };
 
         let arg_type = &arg.ty;
-        let name = match &arg.pat {
+        let name = match &*arg.pat {
             syn::Pat::Ident(name) => &name.ident,
             other => bail!("invalid kind of parameter pattern: {:?}", other),
         };
@@ -239,7 +239,7 @@ pub fn handle_function(
         }
     });
 
-    if item.asyncness.is_some() {
+    if item.sig.asyncness.is_some() {
         // An async function is expected to return its value, so we wrap it a bit:
         body.push(quote! {
             impl #struct_name {
@@ -270,8 +270,8 @@ pub fn handle_function(
         });
     } else {
         // Non async fn must return an ApiFuture already!
-        return_type = syn::Type::Verbatim(syn::TypeVerbatim {
-            tts: definition
+        return_type = syn::Type::Verbatim(
+            definition
                 .remove("returns")
                 .ok_or_else(|| {
                     format_err!(
@@ -281,7 +281,7 @@ pub fn handle_function(
                 })?
                 .expect_type()?
                 .into_token_stream(),
-        });
+        );
 
         body.push(quote! {
             impl #struct_name {

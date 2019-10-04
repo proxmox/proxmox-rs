@@ -9,7 +9,7 @@
 
 use std::mem;
 
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::TokenStream;
 
 use failure::Error;
 use quote::quote_spanned;
@@ -26,8 +26,8 @@ where
 {
     let cap = attrs.len();
     for attr in mem::replace(attrs, Vec::with_capacity(cap)) {
-        if attr.path.is_ident(Ident::new("api", Span::call_site())) {
-            let attrs: util::ApiAttr = syn::parse2(attr.tts)?;
+        if attr.path.get_ident().map(|i| i == "api").unwrap_or(false) {
+            let attrs: util::ApiAttr = syn::parse2(attr.tokens)?;
 
             for attr in attrs.items {
                 func(attr)?;
