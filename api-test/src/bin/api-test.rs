@@ -110,7 +110,9 @@ async fn get_www(path: String) -> Result<Response<Body>, Error> {
     }
 
     // FIXME: Add support for an ApiError type for 404s etc. to reduce error handling code size:
-    let mut file = match tokio::fs::File::open(format!("{}/{}", www_dir(), path)).await {
+    // Compiler bug: cannot use format!() in await expressions...
+    let file_path = format!("{}/{}", www_dir(), path);
+    let mut file = match tokio::fs::File::open(&file_path).await {
         Ok(file) => file,
         Err(ref err) if err.kind() == io::ErrorKind::NotFound => {
             return Ok(http::Response::builder()
