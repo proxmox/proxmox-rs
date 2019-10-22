@@ -2,12 +2,11 @@ use std::collections::HashSet;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader};
 use std::net::{Ipv4Addr, Ipv6Addr};
-use std::u32;
+use std::str::FromStr;
 
 use failure::*;
 use lazy_static::lazy_static;
 use libc;
-use regex::Regex;
 
 use proxmox_tools::fs::file_read_firstline;
 
@@ -40,34 +39,67 @@ pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<ProcFsPidStat, Error> {
 }
 
 fn parse_proc_pid_stat(pid: libc::pid_t, statstr: &str) -> Result<ProcFsPidStat, Error> {
-    lazy_static! {
-        static ref REGEX: Regex = Regex::new(concat!(
-            r"^(?P<pid>\d+) \(.*\) (?P<status>\S) -?\d+ -?\d+ -?\d+ -?\d+ -?\d+ \d+ \d+ \d+ \d+ \d+ ",
-            r"(?P<utime>\d+) (?P<stime>\d+) -?\d+ -?\d+ -?\d+ -?\d+ -?\d+ 0 ",
-            r"(?P<starttime>\d+) (?P<vsize>\d+) (?P<rss>-?\d+) ",
-            r"\d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ \d+ -?\d+ -?\d+ \d+ \d+ \d+"
-        )).unwrap();
+    // It starts with the pid followed by a '('.
+    let cmdbeg = statstr
+        .find('(')
+        .ok_or_else(|| format_err!("missing '(' in /proc/PID/stat"))?;
+
+    if !statstr[..=cmdbeg].ends_with(" (") {
+        bail!("bad /proc/PID/stat line before the '('");
     }
 
-    if let Some(cap) = REGEX.captures(&statstr) {
-        if pid != cap["pid"].parse::<i32>().unwrap() {
-            bail!(
-                "unable to read pid stat for process '{}' - got wrong pid",
-                pid
-            );
+    let stat_pid: u32 = statstr[..(cmdbeg - 1)]
+        .parse()
+        .map_err(|e| format_err!("bad pid in /proc/PID/stat: {}", e))?;
+
+    if (pid as u32) != stat_pid {
+        bail!(
+            "unexpected pid for process: found pid {} in /proc/{}/stat",
+            stat_pid,
+            pid
+        );
+    }
+
+    // After the '(' we have an arbitrary command name, then ')' and the remaining values
+    let cmdend = statstr
+        .rfind(')')
+        .ok_or_else(|| format_err!("missing ')' in /proc/PID/stat"))?;
+    let mut parts = statstr[cmdend + 1..].trim_start().split_ascii_whitespace();
+
+    // helpers:
+    fn required<'a>(value: Option<&'a str>, what: &'static str) -> Result<&'a str, Error> {
+        value.ok_or_else(|| format_err!("missing '{}' in /proc/PID/stat", what))
+    }
+
+    fn req_num<T>(value: Option<&str>, what: &'static str) -> Result<T, Error>
+    where
+        T: FromStr,
+        <T as FromStr>::Err: Into<Error>,
+    {
+        required(value, what)?.parse::<T>().map_err(|e| e.into())
+    }
+
+    fn req_byte(value: Option<&str>, what: &'static str) -> Result<u8, Error> {
+        let value = required(value, what)?;
+        if value.len() != 1 {
+            bail!("invalid '{}' in /proc/PID/stat", what);
         }
-
-        return Ok(ProcFsPidStat {
-            status: cap["status"].as_bytes()[0],
-            utime: cap["utime"].parse::<u64>().unwrap(),
-            stime: cap["stime"].parse::<u64>().unwrap(),
-            starttime: cap["starttime"].parse::<u64>().unwrap(),
-            vsize: cap["vsize"].parse::<u64>().unwrap(),
-            rss: cap["rss"].parse::<i64>().unwrap() * 4096,
-        });
+        Ok(value.as_bytes()[0])
     }
 
-    bail!("unable to read pid stat for process '{}'", pid);
+    let out = ProcFsPidStat {
+        status: req_byte(parts.next(), "status")?,
+        utime: req_num::<u64>(parts.nth(10), "utime")?,
+        stime: req_num::<u64>(parts.next(), "stime")?,
+        starttime: req_num::<u64>(parts.nth(6), "start_time")?,
+        vsize: req_num::<u64>(parts.next(), "vsize")?,
+        rss: req_num::<i64>(parts.next(), "rss")? * 4096,
+    };
+
+    let _ = req_num::<u64>(parts.next(), "it_real_value")?;
+    // and more...
+
+    Ok(out)
 }
 
 #[test]
