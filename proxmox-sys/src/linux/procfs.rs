@@ -33,8 +33,13 @@ pub struct ProcFsPidStat {
 }
 
 pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<ProcFsPidStat, Error> {
-    let statstr = file_read_firstline(format!("/proc/{}/stat", pid))?;
+    parse_proc_pid_stat(
+        pid,
+        std::str::from_utf8(&std::fs::read(format!("/proc/{}/stat", pid))?)?,
+    )
+}
 
+fn parse_proc_pid_stat(pid: libc::pid_t, statstr: &str) -> Result<ProcFsPidStat, Error> {
     lazy_static! {
         static ref REGEX: Regex = Regex::new(concat!(
             r"^(?P<pid>\d+) \(.*\) (?P<status>\S) -?\d+ -?\d+ -?\d+ -?\d+ -?\d+ \d+ \d+ \d+ \d+ \d+ ",
@@ -63,6 +68,25 @@ pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<ProcFsPidStat, Error> {
     }
 
     bail!("unable to read pid stat for process '{}'", pid);
+}
+
+#[test]
+fn test_read_proc_pid_stat() {
+    let stat = parse_proc_pid_stat(
+        28900,
+        "28900 (zsh) S 22489 28900 28900 34826 10252 4194304 6851 5946551 0 2344 6 3 25205 1413 \
+         20 0 1 0 287592 12496896 1910 18446744073709551615 93999319244800 93999319938061 \
+         140722897984224 0 0 0 2 3686404 134295555 1 0 0 17 10 0 0 0 0 0 93999320079088 \
+         93999320108360 93999343271936 140722897992565 140722897992570 140722897992570 \
+         140722897993707 0",
+    )
+    .expect("successful parsing of a sample /proc/PID/stat entry");
+    assert_eq!(stat.status, b'S');
+    assert_eq!(stat.utime, 6);
+    assert_eq!(stat.stime, 3);
+    assert_eq!(stat.starttime, 287592);
+    assert_eq!(stat.vsize, 12496896);
+    assert_eq!(stat.rss, 1910 * 4096);
 }
 
 pub fn read_proc_starttime(pid: libc::pid_t) -> Result<u64, Error> {
