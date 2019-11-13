@@ -9,7 +9,11 @@ pub mod fd;
 pub mod fs;
 pub mod io;
 pub mod serde;
+pub mod uuid;
 pub mod vec;
+
+#[doc(inline)]
+pub use uuid::Uuid;
 
 /// Evaluates to the offset (in bytes) of a given member within a struct
 #[macro_export]
