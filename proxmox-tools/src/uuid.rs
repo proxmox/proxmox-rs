@@ -2,16 +2,16 @@
 
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt;
-use std::os::raw::c_int;
 
 use failure::{bail, Error};
+
+use crate::parse::hex_nibble;
 
 #[link(name = "uuid")]
 extern "C" {
     fn uuid_generate(out: *mut [u8; 16]);
     fn uuid_unparse_lower(input: *const [u8; 16], out: *mut u8);
     fn uuid_unparse_upper(input: *const [u8; 16], out: *mut u8);
-    fn uuid_parse(input: *const u8, out: *mut [u8; 16]) -> c_int;
 }
 
 /// Uuid generated with the system's native libuuid.
@@ -63,13 +63,45 @@ impl Uuid {
     /// let text = format!("{}", gen);
     /// let parsed: Uuid = text.parse().unwrap();
     /// assert_eq!(gen, parsed);
+    ///
+    /// let uuid1: Uuid = "65b8563978d7433085c639502b2f9b01".parse().unwrap();
+    /// let uuid2: Uuid = "65b85639-78d7-4330-85c6-39502b2f9b01".parse().unwrap();
+    /// assert_eq!(uuid1, uuid2);
     /// ```
     pub fn parse_str(src: &str) -> Result<Self, Error> {
         use std::alloc::{alloc, Layout};
-        let uuid = unsafe { alloc(Layout::new::<[u8; 16]>()) as *mut [u8; 16] };
-        let rc = unsafe { uuid_parse(src.as_bytes().as_ptr(), uuid) };
-        if rc != 0 {
-            bail!("failed to parse uuid");
+        let uuid: *mut [u8; 16] = unsafe { alloc(Layout::new::<[u8; 16]>()) as *mut [u8; 16] };
+        if src.len() == 36 {
+            // Unfortunately the manpage of `uuid_parse(3)` states that it technically requiers a
+            // terminating null byte at the end, which we don't have, so do this manually:
+            let uuid: &mut [u8] = unsafe { &mut (*uuid)[..] };
+            let src = src.as_bytes();
+            if src[8] != b'-' || src[13] != b'-' || src[18] != b'-' || src[23] != b'-' {
+                bail!("failed to parse uuid");
+            }
+            for i in 0..4 {
+                uuid[i] = hex_nibble(src[2 * i])? << 4 | hex_nibble(src[2 * i + 1])?;
+            }
+            for i in 4..6 {
+                uuid[i] = hex_nibble(src[2 * i + 1])? << 4 | hex_nibble(src[2 * i + 2])?;
+            }
+            for i in 6..8 {
+                uuid[i] = hex_nibble(src[2 * i + 2])? << 4 | hex_nibble(src[2 * i + 3])?;
+            }
+            for i in 8..10 {
+                uuid[i] = hex_nibble(src[2 * i + 3])? << 4 | hex_nibble(src[2 * i + 4])?;
+            }
+            for i in 10..16 {
+                uuid[i] = hex_nibble(src[2 * i + 4])? << 4 | hex_nibble(src[2 * i + 5])?;
+            }
+        } else if src.len() == 32 {
+            let uuid: &mut [u8] = unsafe { &mut (*uuid)[..] };
+            let src = src.as_bytes();
+            for i in 0..16 {
+                uuid[i] = hex_nibble(src[2 * i])? << 4 | hex_nibble(src[2 * i + 1])?;
+            }
+        } else {
+            bail!("unrecognized uuid format");
         }
         Ok(Self(unsafe { Box::from_raw(uuid) }))
     }
