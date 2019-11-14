@@ -22,11 +22,11 @@ extern "C" {
 /// let uuid = Uuid::generate();
 /// println!("Generated uuid: {}", uuid);
 /// // prints somethign like:
-/// //    Generated uuid: d79191c-724-415f-a1bf-2256b8ea76e
+/// //    Generated uuid: 65b85639-78d7-4330-85c6-39502b2f9b01
 ///
 /// let bytes: &[u8] = uuid.as_ref();
 /// println!("raw byte string: {:?}", bytes);
-/// //    raw byte string: [215, 9, 25, 28, 114, 4, 65, 95, 161, 191, 34, 86, 184, 234, 118, 14]
+/// //    raw byte string: [101, 184, 86, 57, 120, 215, 67, 48, 133, 198, 57, 80, 43, 47, 155, 1]
 ///
 /// let text = format!("{}", uuid);
 /// let parsed: Uuid = text.parse().unwrap();
