@@ -9,6 +9,7 @@ use lazy_static::lazy_static;
 use libc;
 
 use proxmox_tools::fs::file_read_firstline;
+use proxmox_tools::parse::hex_nibble;
 
 /// POSIX sysconf call
 pub fn sysconf(name: i32) -> i64 {
@@ -323,15 +324,6 @@ pub fn read_proc_net_dev() -> Result<Vec<ProcFsNetDev>, Error> {
     }
 
     Ok(result)
-}
-
-fn hex_nibble(c: u8) -> Result<u8, Error> {
-    Ok(match c {
-        b'0'..=b'9' => c - b'0',
-        b'a'..=b'f' => c - b'a' + 0xa,
-        b'A'..=b'F' => c - b'A' + 0xa,
-        _ => bail!("not a hex digit: {}", c as char),
-    })
 }
 
 fn hexstr_to_ipv4addr<T: AsRef<[u8]>>(hex: T) -> Result<Ipv4Addr, Error> {

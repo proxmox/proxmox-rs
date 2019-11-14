@@ -8,6 +8,7 @@ pub mod common_regex;
 pub mod fd;
 pub mod fs;
 pub mod io;
+pub mod parse;
 pub mod serde;
 pub mod uuid;
 pub mod vec;
