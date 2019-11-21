@@ -12,10 +12,10 @@ proxmox-api = { path = "../proxmox-api" }
 proxmox-api-macro = { path = "../proxmox-api-macro", optional = true }
 proxmox-sys = { path = "../proxmox-sys" }
 proxmox-tools = { path = "../proxmox-tools" }
-sorted-data = { path = "../sorted-data", optional = true }
+proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true }
 
 [features]
 default = []
 valgrind = ["proxmox-tools/valgrind"]
 api-macro = ["proxmox-api-macro"]
-sortable-macro = ["sorted-data"]
+sortable-macro = ["proxmox-sortable-macro"]

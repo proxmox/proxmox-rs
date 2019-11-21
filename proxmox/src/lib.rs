@@ -11,5 +11,9 @@ pub mod api {
 
 #[cfg(feature = "sortable-macro")]
 pub use proxmox_tools::identity;
+
 #[cfg(feature = "sortable-macro")]
-pub use sorted_data::{self, sortable};
+pub use proxmox_sortable_macro as sortable_macro;
+
+#[cfg(feature = "sortable-macro")]
+pub use proxmox_sortable_macro::sortable;

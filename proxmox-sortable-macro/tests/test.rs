@@ -1,4 +1,4 @@
-use sorted_data::sortable;
+use proxmox_sortable_macro::sortable;
 
 // The way #[sorted] works we require an 'identity' macro due to the inability of the syntax tree
 // visitor to change the type of a syntax tree element.

@@ -1,5 +1,5 @@
 [package]
-name = "sorted-data"
+name = "proxmox-sortable-macro"
 version = "0.1.0"
 authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
 edition = "2018"
