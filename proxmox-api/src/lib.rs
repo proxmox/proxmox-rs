@@ -7,6 +7,7 @@ use hyper::http::request::Parts;
 use hyper::{Body, Response};
 use serde_json::Value;
 
+pub mod error;
 pub mod router;
 pub mod rpc_environment;
 pub mod schema;
@@ -16,6 +17,9 @@ pub use rpc_environment::{RpcEnvironment, RpcEnvironmentType};
 
 #[doc(inline)]
 pub use router::ApiMethod;
+
+#[doc(inline)]
+pub use error::HttpError;
 
 /// A synchronous API handler gets a json Value as input and returns a json Value as output.
 pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<Value, Error>
