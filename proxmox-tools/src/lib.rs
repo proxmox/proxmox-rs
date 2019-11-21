@@ -16,6 +16,12 @@ pub mod vec;
 #[doc(inline)]
 pub use uuid::Uuid;
 
+/// An identity (nop) macro. Used by the `#[sortable]` proc macro.
+#[macro_export]
+macro_rules! identity {
+    ($($any:tt)*) => ($($any)*)
+}
+
 /// Evaluates to the offset (in bytes) of a given member within a struct
 #[macro_export]
 macro_rules! offsetof {
