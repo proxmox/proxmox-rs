@@ -6,6 +6,8 @@ members = [
     "proxmox-sys",
     "proxmox",
 
+    "sorted-data",
+
 # This is an api server test and may be temporarily broken by changes to
 # proxmox-api or proxmox-api-macro, but should ultimately be updated to work
 # again as it's supposed to serve as an example code!
