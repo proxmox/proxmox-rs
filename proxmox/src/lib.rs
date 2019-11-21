@@ -8,3 +8,8 @@ pub mod api {
     #[cfg(feature = "api-macro")]
     pub use proxmox_api_macro::{api, router};
 }
+
+#[cfg(feature = "sortable-macro")]
+pub use proxmox_tools::identity;
+#[cfg(feature = "sortable-macro")]
+pub use sorted_data::{self, sortable};
