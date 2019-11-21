@@ -45,12 +45,12 @@ impl fmt::Display for ParameterError {
             msg.push_str("parameter verification errors\n\n");
         }
 
-        msg.push_str(
-            &self
-                .error_list
-                .iter()
-                .fold(String::from(""), |acc, item| acc + &item.to_string() + "\n"),
-        );
+        for item in self.error_list.iter() {
+            let s = item.to_string();
+            msg.reserve(s.len() + 1);
+            msg.push_str(&s);
+            msg.push_str("\n");
+        }
 
         write!(f, "{}", msg)
     }
