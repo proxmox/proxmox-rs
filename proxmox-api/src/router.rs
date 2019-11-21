@@ -1,38 +1,11 @@
 use std::collections::HashMap;
-use std::fmt;
 
 use failure::Error;
 use hyper::Method;
 use serde_json::Value;
 
 use crate::schema::{ObjectSchema, Schema};
-use crate::{ApiHandler, RpcEnvironment};
-
-/// This struct defines synchronous API call which returns the restulkt as json `Value`
-pub struct ApiMethod {
-    /// The protected flag indicates that the provides function should be forwarded
-    /// to the deaemon running in priviledged mode.
-    pub protected: bool,
-    /// This flag indicates that the provided method may change the local timezone, so the server
-    /// should do a tzset afterwards
-    pub reload_timezone: bool,
-    /// Parameter type Schema
-    pub parameters: &'static ObjectSchema,
-    /// Return type Schema
-    pub returns: &'static Schema,
-    /// Handler function
-    pub handler: &'static ApiHandler,
-}
-
-impl std::fmt::Debug for ApiMethod {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ApiMethod {{ ")?;
-        write!(f, "  parameters: {:?}", self.parameters)?;
-        write!(f, "  returns: {:?}", self.returns)?;
-        write!(f, "  handler: {:p}", &self.handler)?;
-        write!(f, "}}")
-    }
-}
+use crate::{ApiHandler, ApiMethod, RpcEnvironment};
 
 const NULL_SCHEMA: Schema = Schema::Null;
 
