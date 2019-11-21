@@ -3,6 +3,7 @@
 use failure::*;
 use lazy_static::lazy_static;
 
+pub mod as_any;
 pub mod borrow;
 pub mod common_regex;
 pub mod fd;
@@ -15,6 +16,9 @@ pub mod vec;
 
 #[doc(inline)]
 pub use uuid::Uuid;
+
+#[doc(inline)]
+pub use as_any::AsAny;
 
 /// An identity (nop) macro. Used by the `#[sortable]` proc macro.
 #[macro_export]
