@@ -8,6 +8,7 @@ use hyper::http::request::Parts;
 use hyper::{Body, Response};
 use serde_json::Value;
 
+pub mod const_regex;
 pub mod error;
 pub mod router;
 pub mod rpc_environment;

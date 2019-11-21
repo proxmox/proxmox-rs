@@ -1,7 +1,9 @@
 use std::fmt;
 
 use failure::Fail;
-use hyper::StatusCode;
+
+#[doc(hidden)]
+pub use hyper::StatusCode;
 
 #[derive(Debug, Fail)]
 pub struct HttpError {
@@ -24,6 +26,9 @@ impl fmt::Display for HttpError {
 #[macro_export]
 macro_rules! http_err {
     ($status:ident, $msg:expr) => {{
-        Error::from(HttpError::new(StatusCode::$status, $msg))
+        ::failure::Error::from($crate::error::HttpError::new(
+            $crate::error::StatusCode::$status,
+            $msg,
+        ))
     }};
 }

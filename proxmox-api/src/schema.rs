@@ -156,37 +156,6 @@ impl std::fmt::Debug for ConstRegexPattern {
     }
 }
 
-/// Macro to generate a ConstRegexPattern
-#[macro_export]
-macro_rules! const_regex {
-    () =>   {};
-    ($(#[$attr:meta])* pub ($($vis:tt)+) $name:ident = $regex:expr; $($rest:tt)*) =>  {
-        const_regex! { (pub ($($vis)+)) $(#[$attr])* $name = $regex; $($rest)* }
-    };
-    ($(#[$attr:meta])* pub $name:ident = $regex:expr; $($rest:tt)*) =>  {
-        const_regex! { (pub) $(#[$attr])* $name = $regex; $($rest)* }
-    };
-    ($(#[$attr:meta])* $name:ident = $regex:expr; $($rest:tt)*) =>  {
-        const_regex! { () $(#[$attr])* $name = $regex; $($rest)* }
-    };
-    (
-        ($($pub:tt)*) $(#[$attr:meta])* $name:ident = $regex:expr;
-        $($rest:tt)*
-    ) =>  {
-        $(#[$attr])* $($pub)* const $name: ConstRegexPattern = ConstRegexPattern {
-            regex_string: $regex,
-            regex_obj: (|| ->   &'static regex::Regex {
-                lazy_static::lazy_static! {
-                    static ref SCHEMA: regex::Regex = regex::Regex::new($regex).unwrap();
-                }
-                &SCHEMA
-            })
-        };
-
-        const_regex! { $($rest)* }
-    };
-}
-
 #[derive(Debug)]
 pub struct StringSchema {
     pub description: &'static str,
@@ -740,7 +709,7 @@ fn test_query_string() {
     }
 
     // TEST regex pattern
-    const_regex! {
+    crate::const_regex! {
         TEST_REGEX = "test";
         TEST2_REGEX = "^test$";
     }

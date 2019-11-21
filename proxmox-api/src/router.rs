@@ -75,15 +75,15 @@ pub enum SubRoute {
 #[macro_export]
 macro_rules! list_subdirs_api_method {
     ($map:expr) => {
-        ApiMethod::new(
-            &ApiHandler::Sync( & |_, _, _| {
-                let index = serde_json::json!(
-                    $map.iter().map(|s| serde_json::json!({ "subdir": s.0}))
-                        .collect::<Vec<serde_json::Value>>()
+        $crate::ApiMethod::new(
+            &$crate::ApiHandler::Sync( & |_, _, _| {
+                let index = ::serde_json::json!(
+                    $map.iter().map(|s| ::serde_json::json!({ "subdir": s.0}))
+                        .collect::<Vec<::serde_json::Value>>()
                 );
                 Ok(index)
             }),
-            &crate::api_schema::ObjectSchema::new("Directory index.", &[]).additional_properties(true)
+            &$crate::schema::ObjectSchema::new("Directory index.", &[]).additional_properties(true)
         )
     }
 }
