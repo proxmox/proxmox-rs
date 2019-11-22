@@ -2,6 +2,7 @@
 
 use std::fmt;
 use std::future::Future;
+use std::pin::Pin;
 
 use failure::Error;
 use hyper::http::request::Parts;
@@ -31,19 +32,13 @@ pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironm
               + 'static);
 
 /// Asynchronous API handlers get more lower level access to request data.
-pub type ApiAsyncHandlerFn = &'static (dyn Fn(
-    Parts,
-    Body,
-    Value,
-    &'static ApiMethod,
-    Box<dyn RpcEnvironment>,
-) -> Result<ApiFuture, Error>
+pub type ApiAsyncHandlerFn = &'static (dyn Fn(Parts, Body, Value, &'static ApiMethod, Box<dyn RpcEnvironment>) -> ApiFuture
               + Send
               + Sync
               + 'static);
 
 /// The output of an asynchronous API handler is a futrue yielding a `Response`.
-pub type ApiFuture = Box<dyn Future<Output = Result<Response<Body>, failure::Error>> + Send>;
+pub type ApiFuture = Pin<Box<dyn Future<Output = Result<Response<Body>, failure::Error>> + Send>>;
 
 pub enum ApiHandler {
     Sync(ApiHandlerFn),
