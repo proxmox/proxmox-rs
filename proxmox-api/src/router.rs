@@ -77,6 +77,25 @@ pub struct Router {
 }
 
 impl Router {
+    /// Create a new Router.
+    ///
+    /// Routers are meant to be build a compile time, and you can use
+    /// all `const fn(mut self, ..)` methods to configure them.
+    ///
+    ///```
+    /// # use failure::*;
+    /// # use serde_json::{json, Value};
+    /// # use proxmox_api::{*, schema::*};
+    /// #
+    /// const API_METHOD_HELLO: ApiMethod = ApiMethod::new(
+    ///    &ApiHandler::Sync(&|_, _, _| {
+    ///         Ok(json!("Hello world!"))
+    ///    }),
+    ///    &ObjectSchema::new("Hello World Example", &[])
+    /// );
+    /// const ROUTER: Router = Router::new()
+    ///    .get(&API_METHOD_HELLO);
+    ///```
     pub const fn new() -> Self {
         Self {
             get: None,
@@ -87,54 +106,67 @@ impl Router {
         }
     }
 
+    /// Configure a static map as `subroute`.
     pub const fn subdirs(mut self, map: SubdirMap) -> Self {
         self.subroute = Some(SubRoute::Map(map));
         self
     }
 
+    /// Configure a `SubRoute::MatchAll` as `subroute`.
     pub const fn match_all(mut self, param_name: &'static str, router: &'static Router) -> Self {
         self.subroute = Some(SubRoute::MatchAll { router, param_name });
         self
     }
 
+    /// Configure the GET method.
     pub const fn get(mut self, m: &'static ApiMethod) -> Self {
         self.get = Some(m);
         self
     }
 
+    /// Configure the PUT method.
     pub const fn put(mut self, m: &'static ApiMethod) -> Self {
         self.put = Some(m);
         self
     }
 
+    /// Configure the POST method.
     pub const fn post(mut self, m: &'static ApiMethod) -> Self {
         self.post = Some(m);
         self
     }
 
-    /// Same as post, buth async (fixme: expect Async)
+    /// Same as `post`, but expects an `AsyncHttp` handler.
     pub const fn upload(mut self, m: &'static ApiMethod) -> Self {
+        // fixme: expect AsyncHttp
         self.post = Some(m);
         self
     }
 
-    /// Same as get, but async (fixme: expect Async)
+    /// Same as `get`, but expects an `AsyncHttp` handler.
     pub const fn download(mut self, m: &'static ApiMethod) -> Self {
+        // fixme: expect AsyncHttp
         self.get = Some(m);
         self
     }
 
-    /// Same as get, but async (fixme: expect Async)
+    /// Same as `get`, but expects an `AsyncHttp` handler.
     pub const fn upgrade(mut self, m: &'static ApiMethod) -> Self {
+        // fixme: expect AsyncHttp
         self.get = Some(m);
         self
     }
 
+    /// Configure the DELETE method
     pub const fn delete(mut self, m: &'static ApiMethod) -> Self {
         self.delete = Some(m);
         self
     }
 
+    /// Find the router for a specic path.
+    ///
+    /// - `components`: Path, split into individual components.
+    /// - `uri_param`: Mutable hash map to store paramater from `MatchAll` router.
     pub fn find_route(
         &self,
         components: &[&str],
@@ -165,6 +197,10 @@ impl Router {
         None
     }
 
+    /// Lookup the API method for a specific path.
+    /// - `components`: Path, split into individual components.
+    /// - `method`: The HTTP method.
+    /// - `uri_param`: Mutable hash map to store paramater from `MatchAll` router.
     pub fn find_method(
         &self,
         components: &[&str],

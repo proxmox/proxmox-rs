@@ -47,7 +47,7 @@ pub use error::HttpError;
 ///    info: &ApiMethod,
 ///    rpcenv: &mut dyn RpcEnvironment,
 /// ) -> Result<Value, Error> {
-///    Ok(json!("hello world!"))
+///    Ok(json!("Hello world!"))
 /// }
 ///
 /// const API_METHOD_HELLO: ApiMethod = ApiMethod::new(
