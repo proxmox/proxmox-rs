@@ -428,6 +428,9 @@ pub enum Schema {
 ///
 /// let res = parse_simple_value("1,2,3", &SCHEMA);
 /// assert!(res.is_ok());
+///
+/// let data = parse_property_string("1,2", &LIST_SCHEMA);
+/// assert!(data.is_ok());
 /// ```
 pub enum ApiStringFormat {
     /// Enumerate all valid strings
@@ -436,7 +439,7 @@ pub enum ApiStringFormat {
     Pattern(&'static ConstRegexPattern),
     /// Use a schema to describe complex types encoded as string.
     ///
-    /// **Note:** This only works for arrays of simply data types, and
+    /// **Note:** This only works for arrays of simple data types, and
     /// objects with simple properties.
     ///
     /// Arrays are parsed as comma separated lists, i.e: `"1,2,3"`
@@ -459,6 +462,10 @@ impl std::fmt::Debug for ApiStringFormat {
     }
 }
 
+/// Helper function to parse boolean values
+///
+/// - true:  `1 | on | yes | true`
+/// - false: `0 | off | no | false`
 pub fn parse_boolean(value_str: &str) -> Result<bool, Error> {
     match value_str.to_lowercase().as_str() {
         "1" | "on" | "yes" | "true" => Ok(true),
@@ -467,13 +474,12 @@ pub fn parse_boolean(value_str: &str) -> Result<bool, Error> {
     }
 }
 
-fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, Error> {
-    println!("Parse property string: {}", value_str);
-
-    let mut param_list: Vec<(String, String)> = vec![];
+/// Parse a complex property string (`ApiStringFormat::Complex`)
+pub fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, Error> {
 
     match schema {
         Schema::Object(object_schema) => {
+            let mut param_list: Vec<(String, String)> = vec![];
             for key_val in value_str.split(',').filter(|s| !s.is_empty()) {
                 let kv: Vec<&str> = key_val.splitn(2, '=').collect();
                 if kv.len() == 2 {
@@ -503,6 +509,7 @@ fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, Erro
     }
 }
 
+/// Parse a simple value (no arrays and no objects)
 pub fn parse_simple_value(value_str: &str, schema: &Schema) -> Result<Value, Error> {
     let value = match schema {
         Schema::Null => {
@@ -526,6 +533,10 @@ pub fn parse_simple_value(value_str: &str, schema: &Schema) -> Result<Value, Err
     Ok(value)
 }
 
+/// Parse key/value pairs and verify with object schema
+///
+/// - `test_required`: is set, checks if all required properties are
+///   present.
 pub fn parse_parameter_strings(
     data: &[(String, String)],
     schema: &ObjectSchema,
@@ -615,6 +626,9 @@ pub fn parse_parameter_strings(
     }
 }
 
+/// Parse a `form_urlencoded` query string and verify with object schema
+/// - `test_required`: is set, checks if all required properties are
+///   present.
 pub fn parse_query_string(
     query: &str,
     schema: &ObjectSchema,
@@ -627,6 +641,7 @@ pub fn parse_query_string(
     parse_parameter_strings(&param_list, schema, test_required)
 }
 
+/// Verify JSON value with `schema`.
 pub fn verify_json(data: &Value, schema: &Schema) -> Result<(), Error> {
     match schema {
         Schema::Object(object_schema) => {
@@ -647,6 +662,7 @@ pub fn verify_json(data: &Value, schema: &Schema) -> Result<(), Error> {
     Ok(())
 }
 
+/// Verify JSON value using a `StringSchema`.
 pub fn verify_json_string(data: &Value, schema: &StringSchema) -> Result<(), Error> {
     if let Some(value) = data.as_str() {
         schema.check_constraints(value)
@@ -655,6 +671,7 @@ pub fn verify_json_string(data: &Value, schema: &StringSchema) -> Result<(), Err
     }
 }
 
+/// Verify JSON value using a `BooleanSchema`.
 pub fn verify_json_boolean(data: &Value, _schema: &BooleanSchema) -> Result<(), Error> {
     if !data.is_boolean() {
         bail!("Expected boolean value.");
@@ -662,6 +679,7 @@ pub fn verify_json_boolean(data: &Value, _schema: &BooleanSchema) -> Result<(), 
     Ok(())
 }
 
+/// Verify JSON value using an `IntegerSchema`.
 pub fn verify_json_integer(data: &Value, schema: &IntegerSchema) -> Result<(), Error> {
     if let Some(value) = data.as_i64() {
         schema.check_constraints(value as isize)
@@ -670,6 +688,7 @@ pub fn verify_json_integer(data: &Value, schema: &IntegerSchema) -> Result<(), E
     }
 }
 
+/// Verify JSON value using an `ArraySchema`.
 pub fn verify_json_array(data: &Value, schema: &ArraySchema) -> Result<(), Error> {
     let list = match data {
         Value::Array(ref list) => list,
@@ -686,6 +705,7 @@ pub fn verify_json_array(data: &Value, schema: &ArraySchema) -> Result<(), Error
     Ok(())
 }
 
+/// Verify JSON value using an `ObjectSchema`.
 pub fn verify_json_object(data: &Value, schema: &ObjectSchema) -> Result<(), Error> {
     let map = match data {
         Value::Object(ref map) => map,
