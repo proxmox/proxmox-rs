@@ -22,7 +22,10 @@ impl fmt::Debug for ConstRegexPattern {
 
 /// Macro to generate a ConstRegexPattern
 ///
-/// ```ignore
+/// ```
+/// # #[macro_use]
+/// # use proxmox_api::*;
+/// #
 /// const_regex!{
 ///    FILE_EXTENSION_REGEX = r".*\.([a-zA-Z]+)$";
 ///    pub SHA256_HEX_REGEX = r"^[a-f0-9]{64}$";
@@ -44,8 +47,8 @@ macro_rules! const_regex {
         ($($pub:tt)*) $(#[$attr:meta])* $name:ident = $regex:expr;
         $($rest:tt)*
     ) =>  {
-        $(#[$attr])* $($pub)* const $name: $crate::schema::ConstRegexPattern =
-            $crate::schema::ConstRegexPattern {
+        $(#[$attr])* $($pub)* const $name: $crate::const_regex::ConstRegexPattern =
+            $crate::const_regex::ConstRegexPattern {
                 regex_string: $regex,
                 regex_obj: (|| ->   &'static ::regex::Regex {
                     ::lazy_static::lazy_static! {
