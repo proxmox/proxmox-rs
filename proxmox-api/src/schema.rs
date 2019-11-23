@@ -1,23 +1,31 @@
+//! Data types to decscribe data types.
+//!
+//! This is loosly based on JSON Schema, but uses static RUST data
+//! types. This way we can build completely static API
+//! definitions included with the programs read-only text segment.
+
 use std::fmt;
 
 use failure::*;
 use serde_json::{json, Value};
 use url::form_urlencoded;
 
-#[derive(Default, Debug, Fail)]
-pub struct ParameterError {
-    error_list: Vec<Error>,
-}
+use crate::const_regex::ConstRegexPattern;
 
 /// Error type for schema validation
 ///
 /// The validation functions may produce several error message,
 /// i.e. when validation objects, it can produce one message for each
 /// erroneous object property.
+#[derive(Default, Debug, Fail)]
+pub struct ParameterError {
+    error_list: Vec<Error>,
+}
 
 // fixme: record parameter names, to make it usefull to display errord
 // on HTML forms.
 impl ParameterError {
+
     pub fn new() -> Self {
         Self {
             error_list: Vec::new(),
@@ -139,20 +147,6 @@ impl IntegerSchema {
         }
 
         Ok(())
-    }
-}
-
-/// Helper to represent const regular expressions
-///
-/// This is mostly a workaround, unless we can create const_fn Regex.
-pub struct ConstRegexPattern {
-    pub regex_string: &'static str,
-    pub regex_obj: fn() -> &'static regex::Regex,
-}
-
-impl std::fmt::Debug for ConstRegexPattern {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self.regex_string)
     }
 }
 

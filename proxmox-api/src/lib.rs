@@ -9,6 +9,7 @@ use hyper::http::request::Parts;
 use hyper::{Body, Response};
 use serde_json::Value;
 
+#[doc(hidden)]
 pub mod const_regex;
 #[doc(hidden)]
 pub mod error;
@@ -18,6 +19,9 @@ pub mod router;
 #[doc(hidden)]
 pub mod rpc_environment;
 pub mod schema;
+
+#[doc(inline)]
+pub use const_regex::ConstRegexPattern;
 
 #[doc(inline)]
 pub use rpc_environment::{RpcEnvironment, RpcEnvironmentType};

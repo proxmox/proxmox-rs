@@ -1,10 +1,33 @@
-//! Allow to build Regex within `const_fn`
-//!
-//! The current Regex::new() function is not `const_fn`. Unless that
-//! works, we use a macro to generate something we can use inside
-//! `const_fn`.
+
+use std::fmt;
+
+/// Helper to represent const regular expressions
+///
+/// The current Regex::new() function is not `const_fn`. Unless that
+/// works, we use `ConstRegexPattern` to represent static regular
+/// expressions. Please use the `const_regex` macro to generate
+/// instances of this type (uses lazy_static).
+pub struct ConstRegexPattern {
+    /// This is only used for documentation and debugging
+    pub regex_string: &'static str,
+    /// This function return the the actual Regex
+    pub regex_obj: fn() -> &'static regex::Regex,
+}
+
+impl fmt::Debug for ConstRegexPattern {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.regex_string)
+    }
+}
 
 /// Macro to generate a ConstRegexPattern
+///
+/// ```ignore
+/// const_regex!{
+///    FILE_EXTENSION_REGEX = r".*\.([a-zA-Z]+)$";
+///    pub SHA256_HEX_REGEX = r"^[a-f0-9]{64}$";
+/// }
+/// ```
 #[macro_export]
 macro_rules! const_regex {
     () =>   {};

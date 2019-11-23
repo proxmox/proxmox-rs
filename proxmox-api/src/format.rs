@@ -1,3 +1,4 @@
+//! Module to generate and format API Documenation
 use failure::*;
 
 use std::io::Write;
