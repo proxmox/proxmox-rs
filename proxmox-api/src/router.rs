@@ -4,11 +4,33 @@ use hyper::Method;
 
 use crate::ApiMethod;
 
+/// Lookup table to child `Router`s
+///
+/// Stores a sorted list of `(name, router)` tuples:
+///
+/// - `name`: The name of the subdir
+/// - `router`: The router for this subdir
+///
+/// **Note:** The list has to be storted by name, because we use a binary
+/// search to find items.
+///
+/// This is a workaround unless RUST can const_fn `Hash::new()`
 pub type SubdirMap = &'static [(&'static str, &'static Router)];
 
+/// Clasify different types of routers
 pub enum SubRoute {
     //Hash(HashMap<String, Router>),
+    /// Router with static lookup map.
+    ///
+    /// The first path element is used to lookup a new
+    /// router with `SubdirMap`. If found, the rest of the path is
+    /// passed to that router.
     Map(SubdirMap),
+    /// Router that always match the first path element
+    ///
+    /// The matched path element is stored as parameter
+    /// `param_name`. The rest of the path is matched using the
+    /// `router`.
     MatchAll {
         router: &'static Router,
         param_name: &'static str,
@@ -32,11 +54,25 @@ macro_rules! list_subdirs_api_method {
     }
 }
 
+/// Define APIs with routing information
+///
+/// REST APIs use hierarchical paths to identify resources. A path
+/// consists of zero or more components, separated by `/`. A `Router`
+/// is a simple data structure to define such APIs. Each `Router` is
+/// responsible for a specific path, and may define `ApiMethod`s for
+/// different HTTP requests (GET, PUT, POST, DELETE). If the path
+/// contains more elements, `subroute` is used to find the correct
+/// endpoint.
 pub struct Router {
+    /// GET requests
     pub get: Option<&'static ApiMethod>,
+    /// PUT requests
     pub put: Option<&'static ApiMethod>,
+    /// POST requests
     pub post: Option<&'static ApiMethod>,
+    /// DELETE requests
     pub delete: Option<&'static ApiMethod>,
+    /// Used to find the correct API endpoint.
     pub subroute: Option<SubRoute>,
 }
 

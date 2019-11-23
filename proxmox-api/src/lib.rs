@@ -29,7 +29,7 @@ pub use const_regex::ConstRegexPattern;
 pub use rpc_environment::{RpcEnvironment, RpcEnvironmentType};
 
 #[doc(inline)]
-pub use router::Router;
+pub use router::{Router, SubRoute, SubdirMap};
 
 #[doc(inline)]
 pub use error::HttpError;

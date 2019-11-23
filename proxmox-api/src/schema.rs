@@ -289,16 +289,16 @@ impl ArraySchema {
 
 /// Lookup table to Schema properties
 ///
-/// Stores a sorted list of (name, optional, schema) tuples:
+/// Stores a sorted list of `(name, optional, schema)` tuples:
 ///
-/// name: The name of the property
-/// optional: Set when the property is optional
-/// schema: Property type schema
+/// - `name`: The name of the property
+/// - `optional`: Set when the property is optional
+/// - `schema`: Property type schema
 ///
-/// NOTE: The list has to be storted by name, because we use
+/// **Note:** The list has to be storted by name, because we use
 /// a binary search to find items.
 ///
-/// This is a workaround unless RUST can const_fn Hash::new()
+/// This is a workaround unless RUST can const_fn `Hash::new()`
 pub type SchemaPropertyMap = &'static [(&'static str, bool, &'static Schema)];
 
 #[derive(Debug)]
