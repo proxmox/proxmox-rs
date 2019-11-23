@@ -63,6 +63,24 @@ macro_rules! list_subdirs_api_method {
 /// different HTTP requests (GET, PUT, POST, DELETE). If the path
 /// contains more elements, `subroute` is used to find the correct
 /// endpoint.
+///
+/// Routers are meant to be build a compile time, and you can use
+/// all `const fn(mut self, ..)` methods to configure them.
+///
+///```
+/// # use failure::*;
+/// # use serde_json::{json, Value};
+/// # use proxmox_api::{*, schema::*};
+/// #
+/// const API_METHOD_HELLO: ApiMethod = ApiMethod::new(
+///    &ApiHandler::Sync(&|_, _, _| {
+///         Ok(json!("Hello world!"))
+///    }),
+///    &ObjectSchema::new("Hello World Example", &[])
+/// );
+/// const ROUTER: Router = Router::new()
+///    .get(&API_METHOD_HELLO);
+///```
 pub struct Router {
     /// GET requests
     pub get: Option<&'static ApiMethod>,
@@ -78,24 +96,6 @@ pub struct Router {
 
 impl Router {
     /// Create a new Router.
-    ///
-    /// Routers are meant to be build a compile time, and you can use
-    /// all `const fn(mut self, ..)` methods to configure them.
-    ///
-    ///```
-    /// # use failure::*;
-    /// # use serde_json::{json, Value};
-    /// # use proxmox_api::{*, schema::*};
-    /// #
-    /// const API_METHOD_HELLO: ApiMethod = ApiMethod::new(
-    ///    &ApiHandler::Sync(&|_, _, _| {
-    ///         Ok(json!("Hello world!"))
-    ///    }),
-    ///    &ObjectSchema::new("Hello World Example", &[])
-    /// );
-    /// const ROUTER: Router = Router::new()
-    ///    .get(&API_METHOD_HELLO);
-    ///```
     pub const fn new() -> Self {
         Self {
             get: None,
