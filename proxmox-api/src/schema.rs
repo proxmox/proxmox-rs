@@ -64,9 +64,11 @@ impl fmt::Display for ParameterError {
     }
 }
 
+/// Data type to describe boolean values
 #[derive(Debug)]
 pub struct BooleanSchema {
     pub description: &'static str,
+    /// Optional default value.
     pub default: Option<bool>,
 }
 
@@ -88,11 +90,15 @@ impl BooleanSchema {
     }
 }
 
+/// Data type to describe integer values.
 #[derive(Debug)]
 pub struct IntegerSchema {
     pub description: &'static str,
+    /// Optional minimum.
     pub minimum: Option<isize>,
+    /// Optional maximum.
     pub maximum: Option<isize>,
+    /// Optional default.
     pub default: Option<isize>,
 }
 
@@ -150,12 +156,17 @@ impl IntegerSchema {
     }
 }
 
+/// Data type to describe string values.
 #[derive(Debug)]
 pub struct StringSchema {
     pub description: &'static str,
+    /// Optional default value.
     pub default: Option<&'static str>,
+    /// Optional minimal length.
     pub min_length: Option<usize>,
+    /// Optional maximal length.
     pub max_length: Option<usize>,
+    /// Optional microformat.
     pub format: Option<&'static ApiStringFormat>,
 }
 
@@ -238,11 +249,18 @@ impl StringSchema {
     }
 }
 
+/// Data type to describe array of values.
+///
+/// All array elements are of the same type, as defined in the `items`
+/// schema.
 #[derive(Debug)]
 pub struct ArraySchema {
     pub description: &'static str,
+    /// Element type schema.
     pub items: &'static Schema,
+    /// Optional minimal length.
     pub min_length: Option<usize>,
+    /// Optional maximal length.
     pub max_length: Option<usize>,
 }
 
@@ -301,11 +319,16 @@ impl ArraySchema {
 /// This is a workaround unless RUST can const_fn `Hash::new()`
 pub type SchemaPropertyMap = &'static [(&'static str, bool, &'static Schema)];
 
+/// Data type to describe objects (maps).
 #[derive(Debug)]
 pub struct ObjectSchema {
     pub description: &'static str,
+    /// If set, allow additional properties which are not defined in
+    /// the schema.
     pub additional_properties: bool,
+    /// Property schema definitions.
     pub properties: SchemaPropertyMap,
+    /// Default key name - used by `parse_parameter_string()`
     pub default_key: Option<&'static str>,
 }
 
@@ -346,6 +369,35 @@ impl ObjectSchema {
     }
 }
 
+/// Schemas are used to describe complex data types.
+///
+/// All schema types implement constant builder methods, and a final
+/// `schema()` method to convert them into a `Schema`.
+///
+/// ```
+/// # use proxmox_api::{*, schema::*};
+/// #
+/// const SIMPLE_OBJECT: Schema = ObjectSchema::new(
+///     "A very simple object with 2 properties",
+///     &[ // this arrays needs to be storted by name!
+///         (
+///             "property_one",
+///             false /* required */,
+///             &IntegerSchema::new("A required integer property.")
+///                 .minimum(0)
+///                 .maximum(100)
+///                 .schema()
+///         ),
+///         (
+///             "property_two",
+///             true /* optional */,
+///             &BooleanSchema::new("An optional boolean property.")
+///                 .default(true)
+///                 .schema()
+///         ),
+///     ],
+/// ).schema();
+/// ```
 #[derive(Debug)]
 pub enum Schema {
     Null,
@@ -356,10 +408,43 @@ pub enum Schema {
     Array(ArraySchema),
 }
 
+/// String microformat definitions.
+///
+/// ```
+/// # use proxmox_api::{*, schema::*};
+/// #
+/// const LIST_SCHEMA: Schema =
+///             ArraySchema::new("Integer List.", &IntegerSchema::new("Soemething").schema())
+///                 .min_length(1)
+///                 .max_length(3)
+///                 .schema();
+///
+/// const SCHEMA: Schema = StringSchema::new("A list on integers, comma separated.")
+///     .format(&ApiStringFormat::Complex(&LIST_SCHEMA))
+///     .schema();
+///
+/// let res = parse_simple_value("", &SCHEMA);
+/// assert!(res.is_err());
+///
+/// let res = parse_simple_value("1,2,3", &SCHEMA);
+/// assert!(res.is_ok());
+/// ```
 pub enum ApiStringFormat {
+    /// Enumerate all valid strings
     Enum(&'static [&'static str]),
+    /// Use a regular expression to describe valid strings.
     Pattern(&'static ConstRegexPattern),
+    /// Use a schema to describe complex types encoded as string.
+    ///
+    /// **Note:** This only works for arrays of simply data types, and
+    /// objects with simple properties.
+    ///
+    /// Arrays are parsed as comma separated lists, i.e: `"1,2,3"`
+    ///
+    /// Objects are parsed as comma separated `key=value` pairs, i.e:
+    /// `"prop1=2,prop2=test"`
     Complex(&'static Schema),
+    /// Use a verification function.
     VerifyFn(fn(&str) -> Result<(), Error>),
 }
 
