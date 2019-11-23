@@ -220,7 +220,7 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
 
             let mut method = method;
 
-            if let ApiHandler::Async(_) = api_method.handler {
+            if let ApiHandler::AsyncHttp(_) = api_method.handler {
                 method = if method == "POST" { "UPLOAD" } else { method };
                 method = if method == "GET" { "DOWNLOAD" } else { method };
             }

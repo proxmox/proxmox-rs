@@ -26,13 +26,64 @@ pub use router::Router;
 pub use error::HttpError;
 
 /// A synchronous API handler gets a json Value as input and returns a json Value as output.
+///
+/// Most API handler are synchronous. Use this to define such handler:
+/// ```
+/// # use failure::*;
+/// # use serde_json::{json, Value};
+/// # use proxmox_api::{*, schema::*};
+/// #
+/// fn hello(
+///    param: Value,
+///    info: &ApiMethod,
+///    rpcenv: &mut dyn RpcEnvironment,
+/// ) -> Result<Value, Error> {
+///    Ok(json!("hello world!"))
+/// }
+///
+/// const API_METHOD_HELLO: ApiMethod = ApiMethod::new(
+///    &ApiHandler::Sync(&hello),
+///    &ObjectSchema::new("Hello World Example", &[])
+/// );
+/// ```
 pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<Value, Error>
               + Send
               + Sync
               + 'static);
 
-/// Asynchronous API handlers get more lower level access to request data.
-pub type ApiAsyncHandlerFn = &'static (dyn Fn(Parts, Body, Value, &'static ApiMethod, Box<dyn RpcEnvironment>) -> ApiFuture
+/// Asynchronous HTTP API handlers
+///
+/// They get low level access to request and response data. Use this
+/// to implement custom upload/download functions.
+/// ```
+/// # use failure::*;
+/// # use serde_json::{json, Value};
+/// # use proxmox_api::{*, schema::*};
+/// #
+/// use futures::*;
+/// use hyper::{Body, Response, http::request::Parts};
+///
+/// fn low_level_hello(
+///    parts: Parts,
+///    req_body: Body,
+///    param: Value,
+///    info: &ApiMethod,
+///    rpcenv: Box<dyn RpcEnvironment>,
+/// ) -> ApiFuture {
+///    async move {
+///        let response = http::Response::builder()
+///            .status(200)
+///            .body(Body::from("Hello world!"))?;
+///        Ok(response)
+///    }.boxed()
+/// }
+///
+/// const API_METHOD_LOW_LEVEL_HELLO: ApiMethod = ApiMethod::new(
+///    &ApiHandler::AsyncHttp(&low_level_hello),
+///    &ObjectSchema::new("Hello World Example (low level)", &[])
+/// );
+/// ```
+pub type ApiAsyncHttpHandlerFn = &'static (dyn Fn(Parts, Body, Value, &'static ApiMethod, Box<dyn RpcEnvironment>) -> ApiFuture
               + Send
               + Sync
               + 'static);
@@ -40,9 +91,10 @@ pub type ApiAsyncHandlerFn = &'static (dyn Fn(Parts, Body, Value, &'static ApiMe
 /// The output of an asynchronous API handler is a futrue yielding a `Response`.
 pub type ApiFuture = Pin<Box<dyn Future<Output = Result<Response<Body>, failure::Error>> + Send>>;
 
+/// Enum for different types of API handler functions.
 pub enum ApiHandler {
     Sync(ApiHandlerFn),
-    Async(ApiAsyncHandlerFn),
+    AsyncHttp(ApiAsyncHttpHandlerFn),
 }
 
 /// This struct defines synchronous API call which returns the restulkt as json `Value`
