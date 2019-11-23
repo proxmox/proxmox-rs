@@ -10,9 +10,12 @@ use hyper::{Body, Response};
 use serde_json::Value;
 
 pub mod const_regex;
+#[doc(hidden)]
 pub mod error;
 pub mod format;
+#[doc(hidden)]
 pub mod router;
+#[doc(hidden)]
 pub mod rpc_environment;
 pub mod schema;
 

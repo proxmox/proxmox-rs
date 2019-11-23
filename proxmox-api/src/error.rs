@@ -5,6 +5,7 @@ use failure::Fail;
 #[doc(hidden)]
 pub use hyper::StatusCode;
 
+/// HTTP error including `StatusCode` and message.
 #[derive(Debug, Fail)]
 pub struct HttpError {
     pub code: StatusCode,
@@ -23,6 +24,7 @@ impl fmt::Display for HttpError {
     }
 }
 
+/// Macro to create a HttpError inside a failure::Error
 #[macro_export]
 macro_rules! http_err {
     ($status:ident, $msg:expr) => {{

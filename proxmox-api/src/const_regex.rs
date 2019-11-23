@@ -1,3 +1,9 @@
+//! Allow to build Regex within `const_fn`
+//!
+//! The current Regex::new() function is not `const_fn`. Unless that
+//! works, we use a macro to generate something we can use inside
+//! `const_fn`.
+
 /// Macro to generate a ConstRegexPattern
 #[macro_export]
 macro_rules! const_regex {
