@@ -1,64 +1,8 @@
 use std::collections::HashMap;
 
-use failure::Error;
 use hyper::Method;
-use serde_json::Value;
 
-use crate::schema::{ObjectSchema, Schema};
-use crate::{ApiHandler, ApiMethod, RpcEnvironment};
-
-const NULL_SCHEMA: Schema = Schema::Null;
-
-fn dummy_handler_fn(
-    _arg: Value,
-    _method: &ApiMethod,
-    _env: &mut dyn RpcEnvironment,
-) -> Result<Value, Error> {
-    // do nothing
-    Ok(Value::Null)
-}
-
-const DUMMY_HANDLER: ApiHandler = ApiHandler::Sync(&dummy_handler_fn);
-
-impl ApiMethod {
-    pub const fn new(handler: &'static ApiHandler, parameters: &'static ObjectSchema) -> Self {
-        Self {
-            parameters,
-            handler,
-            returns: &NULL_SCHEMA,
-            protected: false,
-            reload_timezone: false,
-        }
-    }
-
-    pub const fn new_dummy(parameters: &'static ObjectSchema) -> Self {
-        Self {
-            parameters,
-            handler: &DUMMY_HANDLER,
-            returns: &NULL_SCHEMA,
-            protected: false,
-            reload_timezone: false,
-        }
-    }
-
-    pub const fn returns(mut self, schema: &'static Schema) -> Self {
-        self.returns = schema;
-
-        self
-    }
-
-    pub const fn protected(mut self, protected: bool) -> Self {
-        self.protected = protected;
-
-        self
-    }
-
-    pub const fn reload_timezone(mut self, reload_timezone: bool) -> Self {
-        self.reload_timezone = reload_timezone;
-
-        self
-    }
-}
+use crate::ApiMethod;
 
 pub type SubdirMap = &'static [(&'static str, &'static Router)];
 

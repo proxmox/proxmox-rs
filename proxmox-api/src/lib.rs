@@ -20,6 +20,8 @@ pub mod router;
 pub mod rpc_environment;
 pub mod schema;
 
+use schema::{ObjectSchema, Schema};
+
 #[doc(inline)]
 pub use const_regex::ConstRegexPattern;
 
@@ -104,6 +106,19 @@ pub enum ApiHandler {
     AsyncHttp(ApiAsyncHttpHandlerFn),
 }
 
+const NULL_SCHEMA: Schema = Schema::Null;
+
+fn dummy_handler_fn(
+    _arg: Value,
+    _method: &ApiMethod,
+    _env: &mut dyn RpcEnvironment,
+) -> Result<Value, Error> {
+    // do nothing
+    Ok(Value::Null)
+}
+
+const DUMMY_HANDLER: ApiHandler = ApiHandler::Sync(&dummy_handler_fn);
+
 /// This struct defines synchronous API call which returns the restulkt as json `Value`
 pub struct ApiMethod {
     /// The protected flag indicates that the provides function should be forwarded
@@ -127,5 +142,45 @@ impl std::fmt::Debug for ApiMethod {
         write!(f, "  returns: {:?}", self.returns)?;
         write!(f, "  handler: {:p}", &self.handler)?;
         write!(f, "}}")
+    }
+}
+
+impl ApiMethod {
+    pub const fn new(handler: &'static ApiHandler, parameters: &'static ObjectSchema) -> Self {
+        Self {
+            parameters,
+            handler,
+            returns: &NULL_SCHEMA,
+            protected: false,
+            reload_timezone: false,
+        }
+    }
+
+    pub const fn new_dummy(parameters: &'static ObjectSchema) -> Self {
+        Self {
+            parameters,
+            handler: &DUMMY_HANDLER,
+            returns: &NULL_SCHEMA,
+            protected: false,
+            reload_timezone: false,
+        }
+    }
+
+    pub const fn returns(mut self, schema: &'static Schema) -> Self {
+        self.returns = schema;
+
+        self
+    }
+
+    pub const fn protected(mut self, protected: bool) -> Self {
+        self.protected = protected;
+
+        self
+    }
+
+    pub const fn reload_timezone(mut self, reload_timezone: bool) -> Self {
+        self.reload_timezone = reload_timezone;
+
+        self
     }
 }
