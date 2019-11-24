@@ -236,7 +236,7 @@ impl StringSchema {
                         bail!("value '{}' is not defined in the enumeration.", value);
                     }
                 }
-                ApiStringFormat::Complex(subschema) => {
+                ApiStringFormat::PropertyString(subschema) => {
                     parse_property_string(value, subschema)?;
                 }
                 ApiStringFormat::VerifyFn(verify_fn) => {
@@ -420,7 +420,7 @@ pub enum Schema {
 ///                 .schema();
 ///
 /// const SCHEMA: Schema = StringSchema::new("A list on integers, comma separated.")
-///     .format(&ApiStringFormat::Complex(&LIST_SCHEMA))
+///     .format(&ApiStringFormat::PropertyString(&LIST_SCHEMA))
 ///     .schema();
 ///
 /// let res = parse_simple_value("", &SCHEMA);
@@ -446,7 +446,7 @@ pub enum ApiStringFormat {
     ///
     /// Objects are parsed as comma separated `key=value` pairs, i.e:
     /// `"prop1=2,prop2=test"`
-    Complex(&'static Schema),
+    PropertyString(&'static Schema),
     /// Use a verification function.
     VerifyFn(fn(&str) -> Result<(), Error>),
 }
@@ -457,7 +457,7 @@ impl std::fmt::Debug for ApiStringFormat {
             ApiStringFormat::VerifyFn(fnptr) => write!(f, "VerifyFn({:p}", fnptr),
             ApiStringFormat::Enum(strvec) => write!(f, "Enum({:?}", strvec),
             ApiStringFormat::Pattern(regex) => write!(f, "Pattern({:?}", regex),
-            ApiStringFormat::Complex(schema) => write!(f, "Complex({:?}", schema),
+            ApiStringFormat::PropertyString(schema) => write!(f, "PropertyString({:?}", schema),
         }
     }
 }
@@ -474,7 +474,7 @@ pub fn parse_boolean(value_str: &str) -> Result<bool, Error> {
     }
 }
 
-/// Parse a complex property string (`ApiStringFormat::Complex`)
+/// Parse a complex property string (`ApiStringFormat::PropertyString`)
 pub fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, Error> {
 
     match schema {
@@ -1032,7 +1032,7 @@ fn test_verify_complex_object() {
             "net0",
             false,
             &StringSchema::new("First Network device.")
-                .format(&ApiStringFormat::Complex(&PARAM_SCHEMA))
+                .format(&ApiStringFormat::PropertyString(&PARAM_SCHEMA))
                 .schema(),
         )],
     );
@@ -1068,7 +1068,7 @@ fn test_verify_complex_array() {
                 "list",
                 false,
                 &StringSchema::new("A list on integers, comma separated.")
-                    .format(&ApiStringFormat::Complex(&PARAM_SCHEMA))
+                    .format(&ApiStringFormat::PropertyString(&PARAM_SCHEMA))
                     .schema(),
             )],
         );
@@ -1102,7 +1102,7 @@ fn test_verify_complex_array() {
                 "list",
                 false,
                 &StringSchema::new("A list on integers, comma separated.")
-                    .format(&ApiStringFormat::Complex(&PARAM_SCHEMA))
+                    .format(&ApiStringFormat::PropertyString(&PARAM_SCHEMA))
                     .schema(),
             )],
         );
