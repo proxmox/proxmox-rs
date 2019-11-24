@@ -23,7 +23,6 @@ impl fmt::Debug for ConstRegexPattern {
 /// Macro to generate a ConstRegexPattern
 ///
 /// ```
-/// # #[macro_use]
 /// # use proxmox_api::*;
 /// #
 /// const_regex!{

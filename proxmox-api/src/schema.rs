@@ -410,26 +410,62 @@ pub enum Schema {
 
 /// String microformat definitions.
 ///
+/// Strings are probably the most flexible data type, and there are
+/// several ways to define their content.
+///
+/// ## Enumerations
+///
+/// Simple list all possible values.
+///
+/// ```
+/// # use proxmox_api::{*, schema::*};
+/// const format: ApiStringFormat = ApiStringFormat::Enum(&["vm", "ct"]);
+/// ```
+///
+/// ## Regular Expressions
+///
+/// Use a regular expression to describe valid strings.
+///
+/// ```
+/// # use proxmox_api::{*, schema::*};
+/// const_regex! {
+///     pub SHA256_HEX_REGEX = r"^[a-f0-9]{64}$";
+/// }
+/// const format: ApiStringFormat = ApiStringFormat::Pattern(&SHA256_HEX_REGEX);
+/// ```
+///
+/// ## Property Strings
+///
+/// Use a schema to describe complex types encoded as string.
+///
+/// Arrays are parsed as comma separated lists, i.e: `"1,2,3"`
+///
+/// Objects are parsed as comma separated `key=value` pairs, i.e:
+/// `"prop1=2,prop2=test"`
+///
+/// **Note:** This only works for types which does not allow using the
+/// comma separator inside the value, i.e. this only works for arrays
+/// of simple data types, and objects with simple properties.
+///
 /// ```
 /// # use proxmox_api::{*, schema::*};
 /// #
-/// const LIST_SCHEMA: Schema =
-///             ArraySchema::new("Integer List.", &IntegerSchema::new("Soemething").schema())
+/// const PRODUCT_LIST_SCHEMA: Schema =
+///             ArraySchema::new("Product List.", &IntegerSchema::new("Product ID").schema())
 ///                 .min_length(1)
-///                 .max_length(3)
 ///                 .schema();
 ///
-/// const SCHEMA: Schema = StringSchema::new("A list on integers, comma separated.")
-///     .format(&ApiStringFormat::PropertyString(&LIST_SCHEMA))
+/// const SCHEMA: Schema = StringSchema::new("A list of Product IDs, comma separated.")
+///     .format(&ApiStringFormat::PropertyString(&PRODUCT_LIST_SCHEMA))
 ///     .schema();
 ///
 /// let res = parse_simple_value("", &SCHEMA);
 /// assert!(res.is_err());
 ///
-/// let res = parse_simple_value("1,2,3", &SCHEMA);
+/// let res = parse_simple_value("1,2,3", &SCHEMA); // parse as String
 /// assert!(res.is_ok());
 ///
-/// let data = parse_property_string("1,2", &LIST_SCHEMA);
+/// let data = parse_property_string("1,2", &PRODUCT_LIST_SCHEMA); // parse as Array
 /// assert!(data.is_ok());
 /// ```
 pub enum ApiStringFormat {
@@ -438,14 +474,6 @@ pub enum ApiStringFormat {
     /// Use a regular expression to describe valid strings.
     Pattern(&'static ConstRegexPattern),
     /// Use a schema to describe complex types encoded as string.
-    ///
-    /// **Note:** This only works for arrays of simple data types, and
-    /// objects with simple properties.
-    ///
-    /// Arrays are parsed as comma separated lists, i.e: `"1,2,3"`
-    ///
-    /// Objects are parsed as comma separated `key=value` pairs, i.e:
-    /// `"prop1=2,prop2=test"`
     PropertyString(&'static Schema),
     /// Use a verification function.
     VerifyFn(fn(&str) -> Result<(), Error>),
