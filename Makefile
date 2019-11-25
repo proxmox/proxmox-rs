@@ -6,6 +6,7 @@ all: check
 
 .PHONY: check
 check:
+	cargo fmt -- --check
 	cargo test
 
 # Run the api-test server, serving the api-test/www/ subdir as 'www' dir over
