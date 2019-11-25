@@ -25,7 +25,6 @@ pub struct ParameterError {
 // fixme: record parameter names, to make it usefull to display errord
 // on HTML forms.
 impl ParameterError {
-
     pub fn new() -> Self {
         Self {
             error_list: Vec::new(),
@@ -504,7 +503,6 @@ pub fn parse_boolean(value_str: &str) -> Result<bool, Error> {
 
 /// Parse a complex property string (`ApiStringFormat::PropertyString`)
 pub fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, Error> {
-
     match schema {
         Schema::Object(object_schema) => {
             let mut param_list: Vec<(String, String)> = vec![];

@@ -1,4 +1,3 @@
-
 use std::fmt;
 
 /// Helper to represent const regular expressions
