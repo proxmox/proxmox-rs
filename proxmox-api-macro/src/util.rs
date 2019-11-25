@@ -1,86 +1,104 @@
-use proc_macro2::Ident;
+use std::borrow::Borrow;
+use std::fmt;
 
+use proc_macro2::{Ident, TokenStream};
 use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{parenthesized, Token};
+use syn::Token;
 
-macro_rules! c_format_err {
-    ($span:expr => $($msg:tt)*) => { syn::Error::new_spanned($span, format!($($msg)*)) };
-    ($span:expr, $($msg:tt)*) => { syn::Error::new($span, format!($($msg)*)) };
-}
+/// A more relaxed version of Ident which allows hyphens.
+#[derive(Clone, Debug)]
+pub struct SimpleIdent(Ident, String);
 
-macro_rules! c_bail {
-    ($span:expr => $($msg:tt)*) => { return Err(c_format_err!($span => $($msg)*).into()) };
-    ($span:expr, $($msg:tt)*) => { return Err(c_format_err!($span, $($msg)*).into()) };
-}
+impl SimpleIdent {
+    //pub fn new(name: String, span: Span) -> Self {
+    //    Self(Ident::new(&name, span), name)
+    //}
 
-/// Convert `this_kind_of_text` to `ThisKindOfText`.
-pub fn to_camel_case(text: &str) -> String {
-    let mut out = String::new();
-
-    let mut capitalize = true;
-    for c in text.chars() {
-        if c == '_' {
-            capitalize = true;
-        } else if capitalize {
-            out.extend(c.to_uppercase());
-            capitalize = false;
-        } else {
-            out.push(c);
-        }
+    #[inline]
+    pub fn as_str(&self) -> &str {
+        &self.1
     }
 
-    out
+    //#[inline]
+    //pub fn span(&self) -> Span {
+    //    self.0.span()
+    //}
 }
 
-/// Convert `ThisKindOfText` to `this_kind_of_text`.
-pub fn to_underscore_case(text: &str) -> String {
-    let mut out = String::new();
+impl Eq for SimpleIdent {}
 
-    for c in text.chars() {
-        if c.is_uppercase() {
-            if !out.is_empty() {
-                out.push('_');
-            }
-            out.extend(c.to_lowercase());
-        } else {
-            out.push(c);
-        }
+impl PartialEq for SimpleIdent {
+    fn eq(&self, other: &Self) -> bool {
+        self.1 == other.1
     }
-
-    out
 }
 
-pub struct ApiAttr {
-    pub paren_token: syn::token::Paren,
-    pub items: Punctuated<ApiItem, Token![,]>,
+impl std::hash::Hash for SimpleIdent {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::hash::Hash::hash(&self.1, state)
+    }
 }
 
-impl Parse for ApiAttr {
+impl From<Ident> for SimpleIdent {
+    fn from(ident: Ident) -> Self {
+        let s = ident.to_string();
+        Self(ident, s)
+    }
+}
+
+impl From<SimpleIdent> for Ident {
+    fn from(this: SimpleIdent) -> Ident {
+        this.0
+    }
+}
+
+impl fmt::Display for SimpleIdent {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
+
+impl std::ops::Deref for SimpleIdent {
+    type Target = Ident;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for SimpleIdent {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Borrow<str> for SimpleIdent {
+    #[inline]
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl quote::ToTokens for SimpleIdent {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.0.to_tokens(tokens)
+    }
+}
+
+/// Note that the 'type' keyword is handled separately in `syn`. It's not an `Ident`:
+impl Parse for SimpleIdent {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let content;
-        #[allow(clippy::eval_order_dependence)]
-        Ok(ApiAttr {
-            paren_token: parenthesized!(content in input),
-            items: content.parse_terminated(ApiItem::parse)?,
-        })
-    }
-}
-
-pub enum ApiItem {
-    Rename(syn::LitStr),
-}
-
-impl Parse for ApiItem {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let what: Ident = input.parse()?;
-        let what_str = what.to_string();
-        match what_str.as_str() {
-            "rename" => {
-                let _: Token![=] = input.parse()?;
-                Ok(ApiItem::Rename(input.parse()?))
-            }
-            _ => c_bail!(what => "unrecognized api attribute: {}", what_str),
-        }
+        let lookahead = input.lookahead1();
+        Ok(Self::from(if lookahead.peek(Token![type]) {
+            let ty: Token![type] = input.parse()?;
+            Ident::new("type", ty.span)
+        } else if lookahead.peek(syn::LitStr) {
+            let s: syn::LitStr = input.parse()?;
+            Ident::new(&s.value(), s.span())
+        } else {
+            input.parse()?
+        }))
     }
 }

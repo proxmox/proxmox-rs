@@ -1,6 +1,8 @@
 extern crate proc_macro;
 extern crate proc_macro2;
 
+use std::collections::HashMap;
+use std::convert::{TryFrom, TryInto};
 use std::mem;
 
 use failure::Error;
@@ -13,497 +15,396 @@ use syn::spanned::Spanned;
 use syn::Ident;
 use syn::{parenthesized, Token};
 
-/// Any 'keywords' we introduce as part of our schema related api macro syntax.
-mod token {
-    syn::custom_keyword!(optional);
+use crate::util::SimpleIdent;
+
+/// Most of our schema definition consists of a json-like notation.
+/// For parsing we mostly just need to destinguish between objects and non-objects.
+/// For specific expression types we match on the contained expression later on.
+enum JSONValue {
+    Object(JSONObject),
+    Expr(syn::Expr),
 }
 
-/// Our syntax elements which represent an API Schema implement this. This is similar to
-/// `quote::ToTokens`, but rather than translating back into the input, this produces the resulting
-/// `proxmox::api::schema::Schema` instantiation.
-///
-/// For example:
-/// ```ignore
-/// Schema {
-///     item_type: "Boolean",
-///     paren_token: ...,
-///     description: Some("Some value"),
-///     comma_token: ...,
-///     item: SchemaItem::Boolean(SchemaItemBoolean {
-///         default_value: Some(DefaultValue {
-///             default_token: ...,
-///             colon: ...,
-///             value: syn::ExprLit(syn::LitBool(true)), // simplified...
-///         }),
-///     }),
-///     constraints: Vec::new(),
-/// }.to_schema(ts);
-/// ```
-///
-/// produces:
-///
-/// ```ignore
-/// ::proxmox::api::schema::BooleanSchema::new("Some value")
-///     .default(true)
-/// ```
-trait ToSchema {
-    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error>;
-
-    #[inline]
-    fn add_constraints(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        let _ = ts;
-        Ok(())
-    }
-}
-
-/// A generic schema entry.
-///
-/// Since all our schema types have at least a description, we define this "top level" schema
-/// syntax element which parses the description as first parameter (if it is available), and then
-/// parses the remaining parts as `SchemaItem`.
-///
-/// ```text
-/// Object    ( "Description", { Elements } ) .default_key("hello")
-/// ^^^^^^    ~ ^^^^^^^^^^^^^^ ~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~~~~~~~~
-/// item_type   description    item           constraints
-/// ```
-struct Schema {
-    pub item_type: Ident,
-    pub paren_token: syn::token::Paren,
-    pub description: Option<syn::LitStr>,
-    pub comma_token: Option<Token![,]>,
-    pub item: SchemaItem,
-    pub constraints: Vec<syn::ExprCall>,
-}
-
-impl ToSchema for Schema {
-    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        let item_type = &self.item_type;
-        let schema_type = Ident::new(
-            &format!("{}Schema", item_type.to_string()),
-            item_type.span(),
-        );
-        let description = self
-            .description
-            .as_ref()
-            .ok_or_else(|| format_err!(item_type => "missing description"))?;
-
-        let mut item = TokenStream::new();
-        self.item.to_schema(&mut item)?;
-
-        ts.extend(quote! {
-            ::proxmox::api::schema::#schema_type::new(
-                #description,
-                #item
-            )
-        });
-        self.item.add_constraints(ts)?;
-
-        for constraint in self.constraints.iter() {
-            ts.extend(quote! { . #constraint });
-        }
-
-        Ok(())
-    }
-}
-
-impl Parse for Schema {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let item_type: Ident = input.parse()?;
-        let item_type_span = item_type.span();
-        let item_type_str = item_type.to_string();
-        let content;
-        let mut comma_token = None;
-        Ok(Self {
-            item_type,
-            paren_token: parenthesized!(content in input),
-            description: {
-                let lookahead = content.lookahead1();
-                if lookahead.peek(syn::LitStr) {
-                    let desc = content.parse()?;
-                    if !content.is_empty() {
-                        comma_token = Some(content.parse()?);
-                    }
-                    Some(desc)
-                } else {
-                    None
-                }
-            },
-            comma_token,
-            item: {
-                match item_type_str.as_str() {
-                    "Null" => content.parse().map(SchemaItem::Null)?,
-                    "Boolean" => content.parse().map(SchemaItem::Boolean)?,
-                    "Integer" => content.parse().map(SchemaItem::Integer)?,
-                    "String" => content.parse().map(SchemaItem::String)?,
-                    "Object" => content.parse().map(SchemaItem::Object)?,
-                    "Array" => content.parse().map(SchemaItem::Array)?,
-                    _ => bail!(item_type_span, "unknown schema type"),
-                }
-            },
-            constraints: {
-                let mut constraints = Vec::<syn::ExprCall>::new();
-                while input.lookahead1().peek(Token![.]) {
-                    let _dot: Token![.] = input.parse()?;
-                    constraints.push(input.parse()?);
-                }
-                constraints
-            },
-        })
-    }
-}
-
-/// This is the collection of possible schema elements we have.
-///
-/// Its `ToSchema` implementation simply defers to the inner types. It has no `Parse`
-/// implementation directly. This is handled by the parser for `Schema`.
-enum SchemaItem {
-    Null(SchemaItemNull),
-    Boolean(SchemaItemBoolean),
-    Integer(SchemaItemInteger),
-    String(SchemaItemString),
-    Object(SchemaItemObject),
-    Array(SchemaItemArray),
-}
-
-impl ToSchema for SchemaItem {
-    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
+impl JSONValue {
+    /// When we expect an object, it's nicer to know why/what kind, so instead of
+    /// `TryInto<JSONObject>` we provide this method:
+    fn into_object(self, expected: &str) -> Result<JSONObject, syn::Error> {
         match self {
-            SchemaItem::Null(i) => i.to_schema(ts),
-            SchemaItem::Boolean(i) => i.to_schema(ts),
-            SchemaItem::Integer(i) => i.to_schema(ts),
-            SchemaItem::String(i) => i.to_schema(ts),
-            SchemaItem::Object(i) => i.to_schema(ts),
-            SchemaItem::Array(i) => i.to_schema(ts),
-        }
-    }
-
-    #[inline]
-    fn add_constraints(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        match self {
-            SchemaItem::Null(i) => i.add_constraints(ts),
-            SchemaItem::Boolean(i) => i.add_constraints(ts),
-            SchemaItem::Integer(i) => i.add_constraints(ts),
-            SchemaItem::String(i) => i.add_constraints(ts),
-            SchemaItem::Object(i) => i.add_constraints(ts),
-            SchemaItem::Array(i) => i.add_constraints(ts),
+            JSONValue::Object(s) => Ok(s),
+            JSONValue::Expr(e) => bail!(e => "expected {}", expected),
         }
     }
 }
 
-/// A "default key" for an object schema.
-///
-/// This serves mostly as an example of how we could extend the macro syntax.
-/// This is used typing the following:
-///
-/// ```ignore
-/// Object("Description", default: "foo", { "foo": String("Foo"), "bar": String("Bar") })
-/// ```
-///
-/// instead of:
-///
-/// ```ignore
-/// Object("Description", { "foo": String("Foo"), "bar": String("Bar") }).default_key("foo")
-/// ```
-struct DefaultKey {
-    pub default_token: Token![default],
-    pub colon: Token![:],
-    pub key_name: syn::LitStr,
-    pub comma_token: Token![,],
-}
-
-impl Parse for DefaultKey {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        Ok(Self {
-            default_token: input.parse()?,
-            colon: input.parse()?,
-            key_name: input.parse()?,
-            comma_token: input.parse()?,
-        })
+/// Expect a json value to be an expression, not an object:
+impl TryFrom<JSONValue> for syn::Expr {
+    type Error = syn::Error;
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        match value {
+            JSONValue::Object(s) => bail!(s.brace_token.span, "unexpected object"),
+            JSONValue::Expr(e) => Ok(e),
+        }
     }
 }
 
-/// An object schema. This currently allows parsing a default key as an example of what we could do
-/// instead of keeping the builder-pattern syntax within the macro invocation.
-///
-/// The elements then follow enclosed in braces:
-///
-/// ```ignore
-/// Object("Description", { "key1": Integer("Key One"), optional "key2": Integer("Key Two") })
-/// ```
-struct SchemaItemObject {
-    pub default_key: Option<DefaultKey>,
-    pub brace_token: syn::token::Brace,
-    pub elements: Punctuated<ObjectElement, Token![,]>,
-}
-
-impl ToSchema for SchemaItemObject {
-    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        let mut elements: Vec<&ObjectElement> = self.elements.iter().collect();
-        elements.sort_by(|a, b| a.cmp(b));
-
-        let mut elem_ts = TokenStream::new();
-        for element in elements {
-            if !elem_ts.is_empty() {
-                elem_ts.extend(quote![, ]);
+/// Expect a json value to be a literal string:
+impl TryFrom<JSONValue> for syn::LitStr {
+    type Error = syn::Error;
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        let expr = syn::Expr::try_from(value)?;
+        if let syn::Expr::Lit(lit) = expr {
+            if let syn::Lit::Str(lit) = lit.lit {
+                return Ok(lit);
             }
-
-            element.to_schema(&mut elem_ts)?;
+            bail!(lit => "expected string literal");
         }
-
-        ts.extend(quote! { & [ #elem_ts ] });
-
-        Ok(())
-    }
-
-    fn add_constraints(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        if let Some(def) = &self.default_key {
-            let key = &def.key_name;
-            ts.extend(quote! { .default_key(#key) });
-        }
-        Ok(())
+        bail!(expr => "expected string literal");
     }
 }
 
-impl Parse for SchemaItemObject {
+/// Expect a json value to be a literal boolean:
+impl TryFrom<JSONValue> for syn::LitBool {
+    type Error = syn::Error;
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        let expr = syn::Expr::try_from(value)?;
+        if let syn::Expr::Lit(lit) = expr {
+            if let syn::Lit::Bool(lit) = lit.lit {
+                return Ok(lit);
+            }
+            bail!(lit => "expected literal boolean");
+        }
+        bail!(expr => "expected literal boolean");
+    }
+}
+
+/// Expect a json value to be an identifier:
+impl TryFrom<JSONValue> for Ident {
+    type Error = syn::Error;
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        let expr = syn::Expr::try_from(value)?;
+        let span = expr.span();
+        if let syn::Expr::Path(path) = expr {
+            let mut iter = path.path.segments.into_pairs();
+            let segment = iter
+                .next()
+                .ok_or_else(|| format_err!(span, "expected an identify, got an empty path"))?
+                .into_value();
+            if iter.next().is_some() {
+                bail!(span, "expected an identifier, not a path");
+            }
+            if !segment.arguments.is_empty() {
+                bail!(segment.arguments => "unexpected path arguments, expected an identifier");
+            }
+            return Ok(segment.ident);
+        }
+        bail!(expr => "expected an identifier");
+    }
+}
+
+/// Expect a json value to be our "simple" identifier, which can be either an Ident or a String, or
+/// the 'type' keyword:
+impl TryFrom<JSONValue> for SimpleIdent {
+    type Error = syn::Error;
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        Ok(SimpleIdent::from(Ident::try_from(value)?))
+    }
+}
+
+/// Parsing a json value should be simple enough: braces means we have an object, otherwise it must
+/// be an "expression".
+impl Parse for JSONValue {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let elements;
-        Ok(Self {
-            default_key: {
-                let lookahead = input.lookahead1();
-                if lookahead.peek(Token![default]) {
-                    Some(input.parse()?)
-                } else {
-                    None
-                }
-            },
-            brace_token: syn::braced!(elements in input),
-            elements: elements.parse_terminated(ObjectElement::parse)?,
-        })
-    }
-}
-
-/// This represents a member in the comma separated list of fields of an object.
-///
-/// ```text
-/// Object("Description", { "key1": Integer("Key One"), optional "key2": Integer("Key Two") })
-///                         ^^^^^^^^^^^^^^^^^^^^^^^^^^  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-///                         one `ObjectElement`         another `ObjectElement`
-/// ```
-struct ObjectElement {
-    pub optional: Option<token::optional>,
-    pub field_name: syn::LitStr,
-    pub colon: Token![:],
-    pub item: Schema,
-}
-
-impl ObjectElement {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.field_name.suffix().cmp(other.field_name.suffix())
-    }
-}
-
-impl ToSchema for ObjectElement {
-    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        let mut schema = TokenStream::new();
-        self.item.to_schema(&mut schema)?;
-
-        let name = &self.field_name;
-
-        let optional = if self.optional.is_some() {
-            quote!(true)
+        let lookahead = input.lookahead1();
+        Ok(if lookahead.peek(syn::token::Brace) {
+            JSONValue::Object(input.parse()?)
         } else {
-            quote!(false)
-        };
-
-        ts.extend(quote! {
-            (#name, #optional, & #schema .schema())
-        });
-
-        Ok(())
-    }
-}
-
-impl Parse for ObjectElement {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        Ok(Self {
-            optional: input.parse()?,
-            field_name: input.parse()?,
-            colon: input.parse()?,
-            item: input.parse()?,
+            JSONValue::Expr(input.parse()?)
         })
     }
 }
 
-/// Array schemas simply contain their inner type.
-///
-/// ```ignore
-/// Array("Some data", Integer("A data element"))
-/// ```
-struct SchemaItemArray {
-    pub item_schema: Box<Schema>,
+/// The "core" of our schema is a json object.
+struct JSONObject {
+    pub brace_token: syn::token::Brace,
+    pub elements: HashMap<SimpleIdent, JSONValue>,
 }
 
-impl ToSchema for SchemaItemArray {
-    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        ts.extend(quote! { & });
-        self.item_schema.to_schema(ts)?;
-        self.item_schema.add_constraints(ts)?;
-        ts.extend(quote! { .schema() });
-        Ok(())
-    }
-}
+//impl TryFrom<JSONValue> for JSONObject {
+//    type Error = syn::Error;
+//
+//    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+//        value.into_object()
+//    }
+//}
 
-impl Parse for SchemaItemArray {
+impl Parse for JSONObject {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        let content;
         Ok(Self {
-            item_schema: Box::new(input.parse()?),
+            brace_token: syn::braced!(content in input),
+            elements: {
+                let map_elems: Punctuated<JSONMapEntry, Token![,]> =
+                    content.parse_terminated(JSONMapEntry::parse)?;
+                let mut elems = HashMap::with_capacity(map_elems.len());
+                for c in map_elems {
+                    if elems.insert(c.key.clone().into(), c.value).is_some() {
+                        bail!(&c.key => "duplicate '{}' in schema", c.key);
+                    }
+                }
+                elems
+            },
         })
     }
 }
 
-/// The `Null` schema.
-struct SchemaItemNull {}
+impl JSONObject {
+    fn span(&self) -> Span {
+        self.brace_token.span
+    }
 
-impl ToSchema for SchemaItemNull {
-    fn to_schema(&self, _ts: &mut TokenStream) -> Result<(), Error> {
-        Ok(())
+    fn remove(&mut self, name: &str) -> Option<JSONValue> {
+        self.elements.remove(name)
+    }
+
+    fn remove_required_element(&mut self, name: &str) -> Result<JSONValue, syn::Error> {
+        self.remove(name)
+            .ok_or_else(|| format_err!(self.span(), "missing required element: {}", name))
     }
 }
 
-impl Parse for SchemaItemNull {
-    fn parse(_input: ParseStream) -> syn::Result<Self> {
-        Ok(Self {})
+impl IntoIterator for JSONObject {
+    type Item = <HashMap<SimpleIdent, JSONValue> as IntoIterator>::Item;
+    type IntoIter = <HashMap<SimpleIdent, JSONValue> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.elements.into_iter()
     }
 }
 
-/// A default value. Similar to the default keys in objects, this is an example of a different
-/// syntax instead of the builder pattern.
-///
-/// ```ignore
-/// String("Something", default: "The default value")
-/// ```
-///
-/// instead of:
-///
-/// ```ignore
-/// String("Something").default("The default value")
-/// ```
-struct DefaultValue {
-    pub default_token: Token![default],
-    pub colon: Token![:],
-    pub value: syn::Expr,
+/// An element in a json style map.
+struct JSONMapEntry {
+    pub key: SimpleIdent,
+    pub colon_token: Token![:],
+    pub value: JSONValue,
 }
 
-impl ToSchema for DefaultValue {
-    fn to_schema(&self, _ts: &mut TokenStream) -> Result<(), Error> {
-        Ok(())
-    }
-
-    fn add_constraints(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        let value = &self.value;
-        ts.extend(quote! { .default(#value) });
-        Ok(())
-    }
-}
-
-impl Parse for DefaultValue {
+impl Parse for JSONMapEntry {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(Self {
-            default_token: input.parse()?,
-            colon: input.parse()?,
+            key: input.parse()?,
+            colon_token: input.parse()?,
             value: input.parse()?,
         })
     }
 }
 
-macro_rules! try_parse_default_value {
-    ($input:expr) => {{
-        let input = $input;
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Token![default]) {
-            Some(input.parse()?)
-        } else {
-            None
-        }
-    }};
+/// The main `Schema` type.
+///
+/// We have 2 fixed keys: `type` and `description`. The remaining keys depend on the `type`.
+/// Generally, we create the following mapping:
+///
+/// ```text
+/// {
+///     type: Object,
+///     description: "text",
+///     foo: bar, // "unknown", will be added as a builder-pattern method
+///     elements: { ... }
+/// }
+/// ```
+///
+/// to:
+///
+/// ```text
+/// {
+///     ObjectSchema::new("text", &[ ... ]).foo(bar)
+/// }
+/// ```
+struct Schema {
+    span: Span,
+
+    /// Common in all schema entry types:
+    description: Option<syn::LitStr>,
+
+    /// The specific schema type (Object, String, ...)
+    item: SchemaItem,
+
+    /// The remaining key-value pairs the `SchemaItem` parser did not extract will be appended as
+    /// builder-pattern method calls to this schema.
+    properties: Vec<(Ident, syn::Expr)>,
 }
 
-/// A boolean schema entry.
-struct SchemaItemBoolean {
-    pub default_value: Option<DefaultValue>,
-}
-
-impl ToSchema for SchemaItemBoolean {
-    fn to_schema(&self, _ts: &mut TokenStream) -> Result<(), Error> {
-        Ok(())
-    }
-
-    fn add_constraints(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        if let Some(def) = &self.default_value {
-            def.add_constraints(ts)?;
-        }
-        Ok(())
-    }
-}
-
-impl Parse for SchemaItemBoolean {
+/// We parse this in 2 steps: first we parse a `JSONValue`, then we "parse" that further.
+impl Parse for Schema {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        let obj: JSONObject = input.parse()?;
+        Self::try_from(obj)
+    }
+}
+
+/// Shortcut:
+impl TryFrom<JSONValue> for Schema {
+    type Error = syn::Error;
+
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        Self::try_from(value.into_object("a schema definition")?)
+    }
+}
+
+/// To go from a `JSONObject` to a `Schema` we first extract the description, as it is a common
+/// element in all schema entries, then we parse the specific `SchemaItem`, and collect all the
+/// remaining "unused" keys as "constraints"/"properties" which will be appended as builder-pattern
+/// method calls when translating the object to a schema definition.
+impl TryFrom<JSONObject> for Schema {
+    type Error = syn::Error;
+
+    fn try_from(mut obj: JSONObject) -> Result<Self, syn::Error> {
+        let description = obj
+            .remove("description")
+            .map(|v| v.try_into())
+            .transpose()?;
+
         Ok(Self {
-            default_value: try_parse_default_value!(input),
+            span: obj.brace_token.span,
+            description,
+            item: SchemaItem::try_extract_from(&mut obj)?,
+            properties: obj.into_iter().try_fold(
+                Vec::new(),
+                |mut properties, (key, value)| -> Result<_, syn::Error> {
+                    properties.push((Ident::from(key), value.try_into()?));
+                    Ok(properties)
+                },
+            )?,
         })
     }
 }
 
-/// An integer schema entry.
-struct SchemaItemInteger {
-    pub default_value: Option<DefaultValue>,
-}
+impl Schema {
+    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
+        // First defer to the SchemaItem's `.to_schema()` method:
+        let description = self
+            .description
+            .as_ref()
+            .ok_or_else(|| format_err!(self.span, "missing description"))?;
 
-impl ToSchema for SchemaItemInteger {
-    fn to_schema(&self, _ts: &mut TokenStream) -> Result<(), Error> {
+        self.item.to_schema(ts, description)?;
+
+        // Then append all the remaining builder-pattern properties:
+        for prop in self.properties.iter() {
+            let key = &prop.0;
+            let value = &prop.1;
+            ts.extend(quote! { .#key(#value) });
+        }
+
         Ok(())
     }
+}
 
-    fn add_constraints(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        if let Some(def) = &self.default_value {
-            def.add_constraints(ts)?;
+enum SchemaItem {
+    Null,
+    Boolean,
+    Integer,
+    String,
+    Object(SchemaObject),
+    Array(SchemaArray),
+}
+
+impl SchemaItem {
+    fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
+        match SimpleIdent::try_from(obj.remove_required_element("type")?)?.as_str() {
+            "Null" => Ok(SchemaItem::Null),
+            "Boolean" => Ok(SchemaItem::Boolean),
+            "Integer" => Ok(SchemaItem::Integer),
+            "String" => Ok(SchemaItem::String),
+            "Object" => Ok(SchemaItem::Object(SchemaObject::try_extract_from(obj)?)),
+            "Array" => Ok(SchemaItem::Array(SchemaArray::try_extract_from(obj)?)),
+            ty => bail!(obj.span(), "unknown type name '{}'", ty),
+        }
+    }
+
+    fn to_schema(&self, ts: &mut TokenStream, description: &syn::LitStr) -> Result<(), Error> {
+        ts.extend(quote! { ::proxmox::api::schema });
+        match self {
+            SchemaItem::Null => ts.extend(quote! { ::NullSchema::new(#description) }),
+            SchemaItem::Boolean => ts.extend(quote! { ::BooleanSchema::new(#description) }),
+            SchemaItem::Integer => ts.extend(quote! { ::IntegerSchema::new(#description) }),
+            SchemaItem::String => ts.extend(quote! { ::StringSchema::new(#description) }),
+            SchemaItem::Object(obj) => {
+                let mut elems = TokenStream::new();
+                obj.to_schema_inner(&mut elems)?;
+                ts.extend(quote! { ::ObjectSchema::new(#description, &[#elems]) })
+            }
+            SchemaItem::Array(array) => {
+                let mut items = TokenStream::new();
+                array.to_schema_inner(&mut items)?;
+                ts.extend(quote! { ::ArraySchema::new(#description, &#items.schema()) })
+            }
         }
         Ok(())
     }
 }
 
-impl Parse for SchemaItemInteger {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
+/// Contains a sorted list of elements:
+struct SchemaObject {
+    elements: Vec<(String, bool, Schema)>,
+}
+
+impl SchemaObject {
+    fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
         Ok(Self {
-            default_value: try_parse_default_value!(input),
+            elements: obj
+                .remove_required_element("elements")?
+                .into_object("object field definition")?
+                .into_iter()
+                .try_fold(
+                    Vec::new(),
+                    |mut elements, (key, value)| -> Result<_, syn::Error> {
+                        let mut schema: JSONObject =
+                            value.into_object("schema definition for field")?;
+                        let optional: bool = schema
+                            .remove("optional")
+                            .map(|opt| -> Result<bool, syn::Error> {
+                                let v: syn::LitBool = opt.try_into()?;
+                                Ok(v.value)
+                            })
+                            .transpose()?
+                            .unwrap_or(false);
+                        elements.push((key.to_string(), optional, schema.try_into()?));
+                        Ok(elements)
+                    },
+                )
+                // This must be kept sorted!
+                .map(|mut elements| {
+                    elements.sort_by(|a, b| (a.0).cmp(&b.0));
+                    elements
+                })?,
         })
     }
-}
 
-/// An string schema entry.
-struct SchemaItemString {
-    pub default_value: Option<DefaultValue>,
-}
-
-impl ToSchema for SchemaItemString {
-    fn to_schema(&self, _ts: &mut TokenStream) -> Result<(), Error> {
-        Ok(())
-    }
-
-    fn add_constraints(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        if let Some(def) = &self.default_value {
-            def.add_constraints(ts)?;
+    fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
+        for element in self.elements.iter() {
+            let key = &element.0;
+            let optional = element.1;
+            let mut schema = TokenStream::new();
+            element.2.to_schema(&mut schema)?;
+            ts.extend(quote! { (#key, #optional, &#schema.schema()), });
         }
         Ok(())
     }
 }
 
-impl Parse for SchemaItemString {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
+struct SchemaArray {
+    item: Box<Schema>,
+}
+
+impl SchemaArray {
+    fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
         Ok(Self {
-            default_value: try_parse_default_value!(input),
+            item: Box::new(obj.remove_required_element("items")?.try_into()?),
         })
+    }
+
+    fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
+        self.item.to_schema(ts)
     }
 }
 

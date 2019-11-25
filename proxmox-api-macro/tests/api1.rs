@@ -7,17 +7,38 @@ use failure::Error;
 use serde_json::Value;
 
 #[api]
-#[input(Object(default: "test", {
-    "username": String("User name.").max_length(64),
-    "password": String("The secret password or a valid ticket."),
-    optional "test": Integer("What?", default: 3),
-    "data": Array("Some Integers", Integer("Some Thing").maximum(4)),
-}))]
-#[returns(Object("Returns a ticket", {
-    "username": String("User name."),
-    "ticket": String("Auth ticket."),
-    "CSRFPreventionToken": String("Cross Site Request Forgerty Prevention Token."),
-}))]
+#[input({
+    type: Object,
+    elements: {
+        username: {
+            type: String,
+            description: "User name",
+            max_length: 64,
+        },
+        password: {
+            type: String,
+            description: "The secret password or a valid ticket.",
+        },
+    }
+})]
+#[returns({
+    type: Object,
+    description: "Returns a ticket",
+    elements: {
+        "username": {
+            type: String,
+            description: "User name.",
+        },
+        "ticket": {
+            type: String,
+            description: "Auth ticket.",
+        },
+        "CSRFPreventionToken": {
+            type: String,
+            description: "Cross Site Request Forgerty Prevention Token.",
+        },
+    },
+})]
 /// Create or verify authentication ticket.
 ///
 /// Returns: ...

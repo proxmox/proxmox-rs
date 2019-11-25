@@ -19,6 +19,7 @@ macro_rules! bail {
 }
 
 mod api;
+mod util;
 
 fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
     match data {
@@ -70,15 +71,38 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     use serde_json::Value;
 
     #[api]
-    #[input(Object({
-        "username": String("User name.").max_length(64),
-        "password": String("The secret password or a valid ticket."),
-    }))]
-    #[returns(Object("Returns a ticket", {
-        "username": String("User name."),
-        "ticket": String("Auth ticket."),
-        "CSRFPreventionToken": String("Cross Site Request Forgerty Prevention Token."),
-    }))]
+    #[input({
+        type: Object,
+        elements: {
+            username: {
+                type: String,
+                description: "User name",
+                max_length: 64,
+            },
+            password: {
+                type: String,
+                description: "The secret password or a valid ticket.",
+            },
+        }
+    })]
+    #[returns({
+        type: Object,
+        description: "Returns a ticket",
+        elements: {
+            "username": {
+                type: String,
+                description: "User name.",
+            },
+            "ticket": {
+                type: String,
+                description: "Auth ticket.",
+            },
+            "CSRFPreventionToken": {
+                type: String,
+                description: "Cross Site Request Forgerty Prevention Token.",
+            },
+        },
+    })]
     /// Create or verify authentication ticket.
     ///
     /// Returns: ...
