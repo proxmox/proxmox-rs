@@ -73,7 +73,7 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     #[api]
     #[input({
         type: Object,
-        elements: {
+        properties: {
             username: {
                 type: String,
                 description: "User name",
@@ -88,7 +88,7 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     #[returns({
         type: Object,
         description: "Returns a ticket",
-        elements: {
+        properties: {
             "username": {
                 type: String,
                 description: "User name.",

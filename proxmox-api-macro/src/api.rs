@@ -208,7 +208,7 @@ impl Parse for JSONMapEntry {
 ///     type: Object,
 ///     description: "text",
 ///     foo: bar, // "unknown", will be added as a builder-pattern method
-///     elements: { ... }
+///     properties: { ... }
 /// }
 /// ```
 ///
@@ -343,21 +343,21 @@ impl SchemaItem {
     }
 }
 
-/// Contains a sorted list of elements:
+/// Contains a sorted list of properties:
 struct SchemaObject {
-    elements: Vec<(String, bool, Schema)>,
+    properties: Vec<(String, bool, Schema)>,
 }
 
 impl SchemaObject {
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
         Ok(Self {
-            elements: obj
-                .remove_required_element("elements")?
+            properties: obj
+                .remove_required_element("properties")?
                 .into_object("object field definition")?
                 .into_iter()
                 .try_fold(
                     Vec::new(),
-                    |mut elements, (key, value)| -> Result<_, syn::Error> {
+                    |mut properties, (key, value)| -> Result<_, syn::Error> {
                         let mut schema: JSONObject =
                             value.into_object("schema definition for field")?;
                         let optional: bool = schema
@@ -368,20 +368,20 @@ impl SchemaObject {
                             })
                             .transpose()?
                             .unwrap_or(false);
-                        elements.push((key.to_string(), optional, schema.try_into()?));
-                        Ok(elements)
+                        properties.push((key.to_string(), optional, schema.try_into()?));
+                        Ok(properties)
                     },
                 )
                 // This must be kept sorted!
-                .map(|mut elements| {
-                    elements.sort_by(|a, b| (a.0).cmp(&b.0));
-                    elements
+                .map(|mut properties| {
+                    properties.sort_by(|a, b| (a.0).cmp(&b.0));
+                    properties
                 })?,
         })
     }
 
     fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        for element in self.elements.iter() {
+        for element in self.properties.iter() {
             let key = &element.0;
             let optional = element.1;
             let mut schema = TokenStream::new();
