@@ -480,7 +480,10 @@ pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, 
 
         if attr.path.is_ident("doc") {
             let doc: BareAssignment<syn::LitStr> = syn::parse2(attr.tokens.clone())?;
-            doc_comment.push_str(&doc.content.value());
+            if !doc_comment.is_empty() {
+                doc_comment.push_str("\n");
+            }
+            doc_comment.push_str(doc.content.value().trim());
             func.attrs.push(attr);
         } else if attr.path.is_ident("input") {
             let input: Parenthesized<Schema> = syn::parse2(attr.tokens)?;
@@ -504,7 +507,7 @@ pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, 
         input_schema.ok_or_else(|| format_err!(sig_span, "missing input schema"))?;
 
     if input_schema.description.is_none() {
-        input_schema.description = Some(syn::LitStr::new(doc_comment.trim(), doc_span));
+        input_schema.description = Some(syn::LitStr::new(&doc_comment, doc_span));
     }
 
     let input_schema = {
