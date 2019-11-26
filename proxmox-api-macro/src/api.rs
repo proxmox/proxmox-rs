@@ -506,8 +506,32 @@ pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, 
     let mut input_schema =
         input_schema.ok_or_else(|| format_err!(sig_span, "missing input schema"))?;
 
-    if input_schema.description.is_none() {
-        input_schema.description = Some(syn::LitStr::new(&doc_comment, doc_span));
+    let mut returns_schema =
+        returns_schema.ok_or_else(|| format_err!(sig_span, "missing returns schema"))?;
+
+    // If we have a doc comment, allow automatically inferring the description for the input and
+    // output objects:
+    if !doc_comment.is_empty() {
+        let mut parts = doc_comment.splitn(2, "\nReturns:");
+
+        if let Some(first) = parts.next() {
+            if input_schema.description.is_none() {
+                input_schema.description = Some(syn::LitStr::new(first.trim(), doc_span));
+            }
+        }
+
+        if let Some(second) = parts.next() {
+            if returns_schema.description.is_none() {
+                returns_schema.description = Some(syn::LitStr::new(second.trim(), doc_span));
+            }
+        }
+
+        if parts.next().is_some() {
+            bail!(
+                doc_span,
+                "multiple 'Returns:' sections found in doc comment!"
+            );
+        }
     }
 
     let input_schema = {
@@ -515,9 +539,6 @@ pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, 
         input_schema.to_schema(&mut ts)?;
         ts
     };
-
-    let returns_schema =
-        returns_schema.ok_or_else(|| format_err!(sig_span, "missing returns schema"))?;
 
     let returns_schema = {
         let mut ts = TokenStream::new();

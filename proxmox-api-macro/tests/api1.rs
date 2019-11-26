@@ -21,7 +21,6 @@ use serde_json::Value;
     }
 })]
 #[returns({
-    description: "Returns a ticket",
     properties: {
         "username": {
             type: String,
@@ -39,7 +38,7 @@ use serde_json::Value;
 })]
 /// Create or verify authentication ticket.
 ///
-/// Returns: ...
+/// Returns: A ticket.
 fn create_ticket(
     _param: Value,
     _info: &ApiMethod,
