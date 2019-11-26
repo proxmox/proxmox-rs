@@ -129,14 +129,6 @@ struct JSONObject {
     pub elements: HashMap<SimpleIdent, JSONValue>,
 }
 
-//impl TryFrom<JSONValue> for JSONObject {
-//    type Error = syn::Error;
-//
-//    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
-//        value.into_object()
-//    }
-//}
-
 impl Parse for JSONObject {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let content;
@@ -157,13 +149,23 @@ impl Parse for JSONObject {
     }
 }
 
+impl std::ops::Deref for JSONObject {
+    type Target = HashMap<SimpleIdent, JSONValue>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.elements
+    }
+}
+
+impl std::ops::DerefMut for JSONObject {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.elements
+    }
+}
+
 impl JSONObject {
     fn span(&self) -> Span {
         self.brace_token.span
-    }
-
-    fn remove(&mut self, name: &str) -> Option<JSONValue> {
-        self.elements.remove(name)
     }
 
     fn remove_required_element(&mut self, name: &str) -> Result<JSONValue, syn::Error> {
@@ -309,8 +311,23 @@ enum SchemaItem {
 }
 
 impl SchemaItem {
+    /// If there's a `type` specified, parse it as that type. Otherwise check for keys which
+    /// uniqueply identify the type, such as "properties" for type `Object`.
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
-        match SimpleIdent::try_from(obj.remove_required_element("type")?)?.as_str() {
+        let ty = obj.remove("type").map(SimpleIdent::try_from).transpose()?;
+        let ty = match &ty {
+            Some(ty) => ty.as_str(),
+            None => {
+                if obj.contains_key("properties") {
+                    "Object"
+                } else if obj.contains_key("items") {
+                    "Array"
+                } else {
+                    bail!(obj.span(), "failed to guess 'type' in schema definition");
+                }
+            }
+        };
+        match ty {
             "Null" => Ok(SchemaItem::Null),
             "Boolean" => Ok(SchemaItem::Boolean),
             "Integer" => Ok(SchemaItem::Integer),

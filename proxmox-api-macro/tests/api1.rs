@@ -8,7 +8,6 @@ use serde_json::Value;
 
 #[api]
 #[input({
-    type: Object,
     properties: {
         username: {
             type: String,
@@ -22,7 +21,6 @@ use serde_json::Value;
     }
 })]
 #[returns({
-    type: Object,
     description: "Returns a ticket",
     properties: {
         "username": {
