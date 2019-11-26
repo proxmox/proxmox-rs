@@ -278,76 +278,8 @@ impl<T: Parse> Parse for BareAssignment<T> {
 pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, Error> {
     let mut func: syn::ItemFn = syn::parse2(item)?;
 
-    let sig_span = func.sig.span();
-
-    let mut protected = false;
-
-    let mut input_schema = None;
-    let mut returns_schema = None;
-    let mut doc_comment = String::new();
-    let doc_span = Span::call_site(); // FIXME: set to first doc comment
-    for attr in mem::replace(&mut func.attrs, Vec::new()) {
-        // don't mess with #![...]
-        if let syn::AttrStyle::Inner(_) = &attr.style {
-            func.attrs.push(attr);
-            continue;
-        }
-
-        if attr.path.is_ident("doc") {
-            let doc: BareAssignment<syn::LitStr> = syn::parse2(attr.tokens.clone())?;
-            if !doc_comment.is_empty() {
-                doc_comment.push_str("\n");
-            }
-            doc_comment.push_str(doc.content.value().trim());
-            func.attrs.push(attr);
-        } else if attr.path.is_ident("input") {
-            let input: Parenthesized<Schema> = syn::parse2(attr.tokens)?;
-            input_schema = Some(input.content);
-        } else if attr.path.is_ident("returns") {
-            let input: Parenthesized<Schema> = syn::parse2(attr.tokens)?;
-            returns_schema = Some(input.content);
-        } else if attr.path.is_ident("protected") {
-            if attr.tokens.is_empty() {
-                protected = true;
-            } else {
-                let value: Parenthesized<syn::LitBool> = syn::parse2(attr.tokens)?;
-                protected = value.content.value;
-            }
-        } else {
-            func.attrs.push(attr);
-        }
-    }
-
-    let mut input_schema =
-        input_schema.ok_or_else(|| format_err!(sig_span, "missing input schema"))?;
-
-    let mut returns_schema =
-        returns_schema.ok_or_else(|| format_err!(sig_span, "missing returns schema"))?;
-
-    // If we have a doc comment, allow automatically inferring the description for the input and
-    // output objects:
-    if !doc_comment.is_empty() {
-        let mut parts = doc_comment.split("\nReturns:");
-
-        if let Some(first) = parts.next() {
-            if input_schema.description.is_none() {
-                input_schema.description = Some(syn::LitStr::new(first.trim(), doc_span));
-            }
-        }
-
-        if let Some(second) = parts.next() {
-            if returns_schema.description.is_none() {
-                returns_schema.description = Some(syn::LitStr::new(second.trim(), doc_span));
-            }
-        }
-
-        if parts.next().is_some() {
-            bail!(
-                doc_span,
-                "multiple 'Returns:' sections found in doc comment!"
-            );
-        }
-    }
+    let (input_schema, returns_schema, protected) =
+        api_function_attributes(&mut func.attrs, func.sig.span())?;
 
     let input_schema = {
         let mut ts = TokenStream::new();
@@ -368,7 +300,7 @@ pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, 
         func.sig.ident.span(),
     );
 
-    Ok(quote_spanned! { sig_span =>
+    Ok(quote_spanned! { func.sig.span() =>
         #vis const #api_method_name: ::proxmox::api::ApiMethod =
             ::proxmox::api::ApiMethod::new(
                 &::proxmox::api::ApiHandler::Sync(&#func_name),
@@ -379,4 +311,98 @@ pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, 
         #func
     })
     //Ok(quote::quote!(#func))
+}
+
+fn api_function_attributes(
+    attrs: &mut Vec<syn::Attribute>,
+    sig_span: Span,
+) -> Result<(Schema, Schema, bool), Error> {
+    let mut protected = false;
+    let mut input_schema = None;
+    let mut returns_schema = None;
+    let mut doc_comment = String::new();
+    let doc_span = Span::call_site(); // FIXME: set to first doc comment
+
+    for attr in mem::replace(attrs, Vec::new()) {
+        // don't mess with #![...]
+        if let syn::AttrStyle::Inner(_) = &attr.style {
+            attrs.push(attr);
+            continue;
+        }
+
+        if attr.path.is_ident("doc") {
+            let doc: BareAssignment<syn::LitStr> = syn::parse2(attr.tokens.clone())?;
+            if !doc_comment.is_empty() {
+                doc_comment.push_str("\n");
+            }
+            doc_comment.push_str(doc.content.value().trim());
+            attrs.push(attr);
+        } else if attr.path.is_ident("input") {
+            let input: Parenthesized<Schema> = syn::parse2(attr.tokens)?;
+            input_schema = Some(input.content);
+        } else if attr.path.is_ident("returns") {
+            let input: Parenthesized<Schema> = syn::parse2(attr.tokens)?;
+            returns_schema = Some(input.content);
+        } else if attr.path.is_ident("protected") {
+            if attr.tokens.is_empty() {
+                protected = true;
+            } else {
+                let value: Parenthesized<syn::LitBool> = syn::parse2(attr.tokens)?;
+                protected = value.content.value;
+            }
+        } else {
+            attrs.push(attr);
+        }
+    }
+
+    let mut input_schema =
+        input_schema.ok_or_else(|| format_err!(sig_span, "missing input schema"))?;
+
+    let mut returns_schema =
+        returns_schema.ok_or_else(|| format_err!(sig_span, "missing returns schema"))?;
+
+    derive_descriptions(
+        &mut input_schema,
+        &mut returns_schema,
+        &doc_comment,
+        doc_span,
+    )?;
+
+    Ok((input_schema, returns_schema, protected))
+}
+
+fn derive_descriptions(
+    input_schema: &mut Schema,
+    returns_schema: &mut Schema,
+    doc_comment: &str,
+    doc_span: Span,
+) -> Result<(), Error> {
+    // If we have a doc comment, allow automatically inferring the description for the input and
+    // output objects:
+    if doc_comment.is_empty() {
+        return Ok(());
+    }
+
+    let mut parts = doc_comment.split("\nReturns:");
+
+    if let Some(first) = parts.next() {
+        if input_schema.description.is_none() {
+            input_schema.description = Some(syn::LitStr::new(first.trim(), doc_span));
+        }
+    }
+
+    if let Some(second) = parts.next() {
+        if returns_schema.description.is_none() {
+            returns_schema.description = Some(syn::LitStr::new(second.trim(), doc_span));
+        }
+    }
+
+    if parts.next().is_some() {
+        bail!(
+            doc_span,
+            "multiple 'Returns:' sections found in doc comment!"
+        );
+    }
+
+    Ok(())
 }
