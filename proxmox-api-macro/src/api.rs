@@ -487,7 +487,7 @@ pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, 
         input_schema.ok_or_else(|| format_err!(sig_span, "missing input schema"))?;
 
     if input_schema.description.is_none() {
-        input_schema.description = Some(syn::LitStr::new(&doc_comment, doc_span));
+        input_schema.description = Some(syn::LitStr::new(doc_comment.trim(), doc_span));
     }
 
     let input_schema = {
