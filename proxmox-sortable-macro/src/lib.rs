@@ -24,12 +24,15 @@ macro_rules! format_err {
 //    ($span:expr, $($msg:tt)*) => { return Err(format_err!($span, $($msg)*).into()) };
 //}
 
-fn handle_error(data: Result<TokenStream, Error>) -> TokenStream {
+fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
     match data {
         Ok(output) => output,
         Err(err) => match err.downcast::<syn::Error>() {
-            Ok(err) => err.to_compile_error(),
-            Err(err) => panic!("error in sorted_struct macro: {}", err),
+            Ok(err) => {
+                item.extend(err.to_compile_error());
+                item
+            }
+            Err(err) => panic!("error in sortable macro: {}", err),
         },
     }
 }
@@ -37,7 +40,8 @@ fn handle_error(data: Result<TokenStream, Error>) -> TokenStream {
 /// Enable the `sorted!` expression-position macro in a statement.
 #[proc_macro_attribute]
 pub fn sortable(_attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
-    handle_error(sortable_do(item.into())).into()
+    let item: TokenStream = item.into();
+    handle_error(item.clone(), sortable_do(item)).into()
 }
 
 struct SortedData;
@@ -53,7 +57,7 @@ impl VisitMut for SortedData {
             });
 
             let tokens = mem::replace(&mut i.mac.tokens, TokenStream::new());
-            i.mac.tokens = handle_error(sort_data(tokens));
+            i.mac.tokens = handle_error(tokens.clone(), sort_data(tokens));
         }
         // and recurse:
         self.visit_macro_mut(&mut i.mac)
