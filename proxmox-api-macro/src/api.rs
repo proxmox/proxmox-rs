@@ -512,7 +512,7 @@ pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, 
     // If we have a doc comment, allow automatically inferring the description for the input and
     // output objects:
     if !doc_comment.is_empty() {
-        let mut parts = doc_comment.splitn(2, "\nReturns:");
+        let mut parts = doc_comment.split("\nReturns:");
 
         if let Some(first) = parts.next() {
             if input_schema.description.is_none() {
