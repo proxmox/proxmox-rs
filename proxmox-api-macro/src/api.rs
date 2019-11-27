@@ -1,6 +1,7 @@
 extern crate proc_macro;
 extern crate proc_macro2;
 
+use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::mem;
 
@@ -297,7 +298,13 @@ pub(crate) fn api(attr: TokenStream, item: TokenStream) -> Result<TokenStream, E
 
     api_function_attributes(&mut input_schema, &mut returns_schema, &mut func.attrs)?;
 
-    handle_function_signature(&mut input_schema, &mut returns_schema, &mut func)?;
+    let mut wrapper_ts = TokenStream::new();
+    let api_func_name = handle_function_signature(
+        &mut input_schema,
+        &mut returns_schema,
+        &mut func,
+        &mut wrapper_ts,
+    )?;
 
     let input_schema = {
         let mut ts = TokenStream::new();
@@ -321,11 +328,12 @@ pub(crate) fn api(attr: TokenStream, item: TokenStream) -> Result<TokenStream, E
     Ok(quote_spanned! { func.sig.span() =>
         #vis const #api_method_name: ::proxmox::api::ApiMethod =
             ::proxmox::api::ApiMethod::new(
-                &::proxmox::api::ApiHandler::Sync(&#func_name),
+                &::proxmox::api::ApiHandler::Sync(&#api_func_name),
                 &#input_schema,
             )
             .returns(& #returns_schema .schema())
             .protected(#protected);
+        #wrapper_ts
         #func
     })
     //Ok(quote::quote!(#func))
@@ -401,12 +409,97 @@ fn handle_function_signature(
     _input_schema: &mut Schema,
     _returns_schema: &mut Schema,
     func: &mut syn::ItemFn,
-) -> Result<(), Error> {
+    wrapper_ts: &mut TokenStream,
+) -> Result<Ident, Error> {
     let sig = &func.sig;
 
     if sig.asyncness.is_some() {
         bail!(sig => "async fn is currently not supported");
     }
 
-    Ok(())
+    let mut has_api_method = false;
+    let mut has_rpc_env = false;
+
+    let mut inputs = HashMap::<SimpleIdent, &syn::Type>::new();
+    for input in sig.inputs.iter() {
+        let pat_type = match input {
+            syn::FnArg::Receiver(r) => bail!(r => "methods taking a 'self' are not supported"),
+            syn::FnArg::Typed(pat_type) => pat_type,
+        };
+
+        let pat = match &*pat_type.pat {
+            syn::Pat::Ident(pat) => pat,
+            _ => bail!(pat_type => "unsupported parameter type"),
+        };
+
+        if is_api_method_type(&pat_type.ty) {
+            if has_api_method {
+                bail!(pat_type => "multiple ApiMethod parameters found");
+            }
+            has_api_method = true;
+        }
+
+        if is_rpc_env_type(&pat_type.ty) {
+            if has_rpc_env {
+                bail!(pat_type => "multiple RpcEnvironment parameters found");
+            }
+            has_rpc_env = true;
+        }
+
+        if inputs
+            .insert(pat.ident.clone().into(), &pat_type.ty)
+            .is_some()
+        {
+            bail!(&pat.ident => "duplicate parameter");
+        }
+    }
+
+    let func_name = &sig.ident;
+
+    if inputs.len() == 3 && has_api_method && has_rpc_env {
+        // No wrapper needed:
+        return Ok(func_name.clone());
+    }
+
+    let api_func_name = Ident::new(
+        &format!("api_function_{}", func_name),
+        func.sig.ident.span(),
+    );
+
+    // build the wrapping function:
+    wrapper_ts.extend(quote! {
+        fn #api_func_name(
+            param: ::serde_json::Value,
+            info: &::proxmox::api::ApiMethod,
+            rpcenv: &mut dyn ::proxmox::api::RpcEnvironment,
+        ) -> Result<::serde_json::Value, ::failure::Error> {
+            #func_name(param, info, rpcenv)
+        }
+    });
+
+    return Ok(api_func_name);
+}
+
+fn is_api_method_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Reference(r) = ty {
+        if let syn::Type::Path(p) = &*r.elem {
+            if let Some(ps) = p.path.segments.last() {
+                return ps.ident == "ApiMethod";
+            }
+        }
+    }
+    false
+}
+
+fn is_rpc_env_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Reference(r) = ty {
+        if let syn::Type::TraitObject(t) = &*r.elem {
+            if let Some(syn::TypeParamBound::Trait(b)) = t.bounds.first() {
+                if let Some(ps) = b.path.segments.last() {
+                    return ps.ident == "RpcEnvironment";
+                }
+            }
+        }
+    }
+    false
 }
