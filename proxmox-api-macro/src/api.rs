@@ -297,6 +297,8 @@ pub(crate) fn api(attr: TokenStream, item: TokenStream) -> Result<TokenStream, E
 
     api_function_attributes(&mut input_schema, &mut returns_schema, &mut func.attrs)?;
 
+    handle_function_signature(&mut input_schema, &mut returns_schema, &mut func)?;
+
     let input_schema = {
         let mut ts = TokenStream::new();
         input_schema.to_schema(&mut ts)?;
@@ -390,6 +392,20 @@ fn derive_descriptions(
             doc_span,
             "multiple 'Returns:' sections found in doc comment!"
         );
+    }
+
+    Ok(())
+}
+
+fn handle_function_signature(
+    _input_schema: &mut Schema,
+    _returns_schema: &mut Schema,
+    func: &mut syn::ItemFn,
+) -> Result<(), Error> {
+    let sig = &func.sig;
+
+    if sig.asyncness.is_some() {
+        bail!(sig => "async fn is currently not supported");
     }
 
     Ok(())
