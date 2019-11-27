@@ -1,7 +1,6 @@
 extern crate proc_macro;
 extern crate proc_macro2;
 
-use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 use std::mem;
 
@@ -435,7 +434,7 @@ enum ParameterType<'a> {
 
 fn handle_function_signature(
     input_schema: &mut Schema,
-    _returns_schema: &mut Schema,
+    returns_schema: &mut Schema,
     func: &mut syn::ItemFn,
     wrapper_ts: &mut TokenStream,
 ) -> Result<Ident, Error> {
@@ -447,9 +446,9 @@ fn handle_function_signature(
 
     let mut api_method_param = None;
     let mut rpc_env_param = None;
+    let mut value_param = None;
 
-    let mut inputs = HashMap::<SimpleIdent, ParameterType>::new();
-    let mut need_wrapper = false;
+    let mut param_list = Vec::<(SimpleIdent, ParameterType)>::new();
 
     // Go through the function signature to figure out whether we need to create an internal
     // wrapping function.
@@ -496,61 +495,45 @@ fn handle_function_signature(
         let param_type = if let Some((optional, schema)) =
             input_schema.find_object_property(&pat.ident.to_string())
         {
-            need_wrapper = true;
             // Found an explicit parameter: extract it:
             ParameterType::Other(&pat_type.ty, optional, schema)
         } else if is_api_method_type(&pat_type.ty) {
             if api_method_param.is_some() {
                 bail!(pat_type => "multiple ApiMethod parameters found");
             }
-            api_method_param = Some(inputs.len());
+            api_method_param = Some(param_list.len());
             ParameterType::ApiMethod
         } else if is_rpc_env_type(&pat_type.ty) {
             if rpc_env_param.is_some() {
                 bail!(pat_type => "multiple RpcEnvironment parameters found");
             }
-            rpc_env_param = Some(inputs.len());
+            rpc_env_param = Some(param_list.len());
             ParameterType::RpcEnv
         } else if is_value_type(&pat_type.ty) {
+            if value_param.is_some() {
+                bail!(pat_type => "multiple additional Value parameters found");
+            }
+            value_param = Some(param_list.len());
             ParameterType::Value
         } else {
             bail!(&pat.ident => "unexpected parameter");
         };
 
-        if inputs
-            .insert(pat.ident.clone().into(), param_type)
-            .is_some()
-        {
-            bail!(&pat.ident => "duplicate parameter");
-        }
+        param_list.push((pat.ident.clone().into(), param_type));
     }
 
-    let func_name = &sig.ident;
-
-    if (inputs.len(), api_method_param, rpc_env_param) == (3, Some(1), Some(2)) {
-        // No wrapper needed:
-        return Ok(func_name.clone());
+    // If our function has the correct signature we may not even need a wrapper:
+    if (
+        param_list.len(),
+        value_param,
+        api_method_param,
+        rpc_env_param,
+    ) == (3, Some(0), Some(1), Some(2))
+    {
+        return Ok(sig.ident.clone());
     }
 
-    let api_func_name = Ident::new(
-        &format!("api_function_{}", func_name),
-        func.sig.ident.span(),
-    );
-
-    let mut args = TokenStream::new();
-
-    // build the wrapping function:
-    wrapper_ts.extend(quote! {
-        fn #api_func_name(
-            param: ::serde_json::Value,
-            info: &::proxmox::api::ApiMethod,
-            rpcenv: &mut dyn ::proxmox::api::RpcEnvironment,
-        ) -> Result<::serde_json::Value, ::failure::Error> {
-            #func_name(param, info, rpcenv)
-        }
-    });
-
-    return Ok(api_func_name);
+    create_wrapper_function(input_schema, returns_schema, param_list, func, wrapper_ts)
 }
 
 fn is_api_method_type(ty: &syn::Type) -> bool {
@@ -591,4 +574,78 @@ fn is_value_type(ty: &syn::Type) -> bool {
         }
     }
     false
+}
+
+fn create_wrapper_function(
+    _input_schema: &Schema,
+    _returns_schema: &Schema,
+    param_list: Vec<(SimpleIdent, ParameterType)>,
+    func: &syn::ItemFn,
+    wrapper_ts: &mut TokenStream,
+) -> Result<Ident, Error> {
+    let api_func_name = Ident::new(
+        &format!("api_function_{}", &func.sig.ident),
+        func.sig.ident.span(),
+    );
+
+    let mut body = TokenStream::new();
+    let mut args = TokenStream::new();
+
+    for (name, param) in param_list {
+        let span = name.span();
+        match param {
+            ParameterType::Value => args.extend(quote_spanned! { span => input_params, }),
+            ParameterType::ApiMethod => args.extend(quote_spanned! { span => api_method_param, }),
+            ParameterType::RpcEnv => args.extend(quote_spanned! { span => rpc_env_param, }),
+            ParameterType::Other(_ty, optional, _schema) => {
+                let name_str = syn::LitStr::new(&name.to_string(), span);
+                let arg_name = Ident::new(&format!("input_arg_{}", name), span);
+
+                // Optional parameters are expected to be Option<> types in the real function
+                // signature, so we can just keep the returned Option from `input_map.remove()`.
+                body.extend(quote_spanned! { span =>
+                    let #arg_name = input_map
+                        .remove(#name_str)
+                        .map(::serde_json::from_value)
+                        .transpose()?;
+                });
+                if !optional {
+                    // Non-optional types need to be extracted out of the option though:
+                    //
+                    // Whether the parameter is optional should have been verified by the schema
+                    // verifier already, so here we just use failure::bail! instead of building a
+                    // proper http error!
+                    body.extend(quote_spanned! { span =>
+                        let #arg_name = match #arg_name {
+                            Some(v) => v,
+                            None => ::failure::bail!(
+                                "missing non-optional parameter: {}",
+                                #name_str,
+                            ),
+                        };
+                    });
+                }
+                args.extend(quote_spanned! { span => #arg_name, });
+            }
+        }
+    }
+
+    // build the wrapping function:
+    let func_name = &func.sig.ident;
+    wrapper_ts.extend(quote! {
+        fn #api_func_name(
+            mut input_params: ::serde_json::Value,
+            api_method_param: &::proxmox::api::ApiMethod,
+            rpc_env_param: &mut dyn ::proxmox::api::RpcEnvironment,
+        ) -> Result<::serde_json::Value, ::failure::Error> {
+            if let Value::Object(ref mut input_map) = &mut input_params {
+                #body
+                #func_name(#args)
+            } else {
+                ::failure::bail!("api function wrapper called with a non-object json value");
+            }
+        }
+    });
+
+    return Ok(api_func_name);
 }
