@@ -539,6 +539,9 @@ fn handle_function_signature(
 fn is_api_method_type(ty: &syn::Type) -> bool {
     if let syn::Type::Reference(r) = ty {
         if let syn::Type::Path(p) = &*r.elem {
+            if p.qself.is_some() {
+                return false;
+            }
             if let Some(ps) = p.path.segments.last() {
                 return ps.ident == "ApiMethod";
             }
@@ -563,6 +566,9 @@ fn is_rpc_env_type(ty: &syn::Type) -> bool {
 /// Note that we cannot handle renamed imports at all here...
 fn is_value_type(ty: &syn::Type) -> bool {
     if let syn::Type::Path(p) = ty {
+        if p.qself.is_some() {
+            return false;
+        }
         let segs = &p.path.segments;
         match segs.len() {
             1 => return segs.last().unwrap().ident == "Value",
@@ -636,6 +642,7 @@ fn create_wrapper_function(
             api_method_param: &::proxmox::api::ApiMethod,
             rpc_env_param: &mut dyn ::proxmox::api::RpcEnvironment,
         ) -> Result<::serde_json::Value, ::failure::Error> {
+            #[allow(unused_variables)]
             if let Value::Object(ref mut input_map) = &mut input_params {
                 #body
                 #func_name(#args)
