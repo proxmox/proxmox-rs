@@ -646,9 +646,9 @@ fn create_wrapper_function(
             api_method_param: &::proxmox::api::ApiMethod,
             rpc_env_param: &mut dyn ::proxmox::api::RpcEnvironment,
         ) -> Result<::serde_json::Value, ::failure::Error> {
-            if let Value::Object(ref mut input_map) = &mut input_params {
+            if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
                 #body
-                Ok(serde_json::to_value(#func_name(#args)?)?)
+                Ok(::serde_json::to_value(#func_name(#args)?)?)
             } else {
                 ::failure::bail!("api function wrapper called with a non-object json value");
             }

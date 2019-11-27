@@ -79,8 +79,10 @@ fn create_ticket(_param: Value) -> Result<Value, Error> {
 /// Create or verify authentication ticket.
 ///
 /// Returns: A ticket.
-fn create_ticket_direct(username: String, password: String) -> Result<Value, Error> {
+fn create_ticket_direct(username: String, password: String) -> Result<&'static str, Error> {
     let _ = username;
     let _ = password;
-    panic!("implement me");
+    // This sill not pass the schema's output validation, but the code still compiles as this can
+    // successfully produce a `serde_json::Value`!
+    Ok("an:invalid:ticket")
 }
