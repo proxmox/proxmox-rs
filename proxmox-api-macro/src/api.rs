@@ -450,10 +450,6 @@ fn handle_function_signature(
 
     let mut param_list = Vec::<(SimpleIdent, ParameterType)>::new();
 
-    // Go through the function signature to figure out whether we need to create an internal
-    // wrapping function.
-    //
-    // First: go through the parameters:
     for input in sig.inputs.iter() {
         // `self` types are not supported:
         let pat_type = match input {
@@ -522,16 +518,24 @@ fn handle_function_signature(
         param_list.push((pat.ident.clone().into(), param_type));
     }
 
-    // If our function has the correct signature we may not even need a wrapper:
-    if (
-        param_list.len(),
-        value_param,
-        api_method_param,
-        rpc_env_param,
-    ) == (3, Some(0), Some(1), Some(2))
+    /*
+     * Doing this is actually unreliable, since we cannot support aliased Result types, or all
+     * poassible combinations of paths like `result::Result<>` or `std::result::Result<>` or
+     * `ApiResult`.
+
+    // Secondly, take a look at the return type, and then decide what to do:
+    // If our function has the correct signature we may not even need a wrapper.
+    if is_default_return_type(&sig.output)
+        && (
+            param_list.len(),
+            value_param,
+            api_method_param,
+            rpc_env_param,
+        ) == (3, Some(0), Some(1), Some(2))
     {
         return Ok(sig.ident.clone());
     }
+    */
 
     create_wrapper_function(input_schema, returns_schema, param_list, func, wrapper_ts)
 }
@@ -642,10 +646,9 @@ fn create_wrapper_function(
             api_method_param: &::proxmox::api::ApiMethod,
             rpc_env_param: &mut dyn ::proxmox::api::RpcEnvironment,
         ) -> Result<::serde_json::Value, ::failure::Error> {
-            #[allow(unused_variables)]
             if let Value::Object(ref mut input_map) = &mut input_params {
                 #body
-                #func_name(#args)
+                Ok(serde_json::to_value(#func_name(#args)?)?)
             } else {
                 ::failure::bail!("api function wrapper called with a non-object json value");
             }
