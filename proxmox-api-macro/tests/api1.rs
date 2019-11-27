@@ -36,6 +36,7 @@ use serde_json::Value;
         },
     },
 })]
+#[protected]
 /// Create or verify authentication ticket.
 ///
 /// Returns: A ticket.
