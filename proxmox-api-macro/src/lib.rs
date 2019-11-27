@@ -70,39 +70,40 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     use failure::Error;
     use serde_json::Value;
 
-    #[api]
-    #[input({
-        type: Object,
-        properties: {
-            username: {
-                type: String,
-                description: "User name",
-                max_length: 64,
-            },
-            password: {
-                type: String,
-                description: "The secret password or a valid ticket.",
-            },
-        }
-    })]
-    #[returns({
-        type: Object,
-        description: "Returns a ticket",
-        properties: {
-            "username": {
-                type: String,
-                description: "User name.",
-            },
-            "ticket": {
-                type: String,
-                description: "Auth ticket.",
-            },
-            "CSRFPreventionToken": {
-                type: String,
-                description: "Cross Site Request Forgerty Prevention Token.",
+    #[api(
+        input: {
+            type: Object,
+            properties: {
+                username: {
+                    type: String,
+                    description: "User name",
+                    max_length: 64,
+                },
+                password: {
+                    type: String,
+                    description: "The secret password or a valid ticket.",
+                },
+            }
+        },
+        returns: {
+            type: Object,
+            description: "Returns a ticket",
+            properties: {
+                "username": {
+                    type: String,
+                    description: "User name.",
+                },
+                "ticket": {
+                    type: String,
+                    description: "Auth ticket.",
+                },
+                "CSRFPreventionToken": {
+                    type: String,
+                    description: "Cross Site Request Forgerty Prevention Token.",
+                },
             },
         },
-    })]
+    )]
     /// Create or verify authentication ticket.
     ///
     /// Returns: ...

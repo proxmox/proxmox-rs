@@ -8,7 +8,7 @@ use failure::Error;
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
-use syn::parse::{Parse, ParseStream};
+use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
 use syn::Ident;
 use syn::{parenthesized, Token};
@@ -275,11 +275,27 @@ impl<T: Parse> Parse for BareAssignment<T> {
 /// with an `#[api]` attribute and produce a `const ApiMethod` named after the function.
 ///
 /// See the top level macro documentation for a complete example.
-pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, Error> {
+pub(crate) fn api(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Error> {
+    let mut attribs = JSONObject::parse_inner.parse2(attr)?;
     let mut func: syn::ItemFn = syn::parse2(item)?;
 
-    let (input_schema, returns_schema, protected) =
-        api_function_attributes(&mut func.attrs, func.sig.span())?;
+    let mut input_schema: Schema = attribs
+        .remove_required_element("input")?
+        .into_object("input schema definition")?
+        .try_into()?;
+
+    let mut returns_schema: Schema = attribs
+        .remove_required_element("returns")?
+        .into_object("return schema definition")?
+        .try_into()?;
+
+    let protected: bool = attribs
+        .remove("protected")
+        .map(TryFrom::try_from)
+        .transpose()?
+        .unwrap_or(false);
+
+    api_function_attributes(&mut input_schema, &mut returns_schema, &mut func.attrs)?;
 
     let input_schema = {
         let mut ts = TokenStream::new();
@@ -314,12 +330,10 @@ pub(crate) fn api(_attr: TokenStream, item: TokenStream) -> Result<TokenStream, 
 }
 
 fn api_function_attributes(
+    input_schema: &mut Schema,
+    returns_schema: &mut Schema,
     attrs: &mut Vec<syn::Attribute>,
-    sig_span: Span,
-) -> Result<(Schema, Schema, bool), Error> {
-    let mut protected = false;
-    let mut input_schema = None;
-    let mut returns_schema = None;
+) -> Result<(), Error> {
     let mut doc_comment = String::new();
     let doc_span = Span::call_site(); // FIXME: set to first doc comment
 
@@ -337,38 +351,12 @@ fn api_function_attributes(
             }
             doc_comment.push_str(doc.content.value().trim());
             attrs.push(attr);
-        } else if attr.path.is_ident("input") {
-            let input: Parenthesized<Schema> = syn::parse2(attr.tokens)?;
-            input_schema = Some(input.content);
-        } else if attr.path.is_ident("returns") {
-            let input: Parenthesized<Schema> = syn::parse2(attr.tokens)?;
-            returns_schema = Some(input.content);
-        } else if attr.path.is_ident("protected") {
-            if attr.tokens.is_empty() {
-                protected = true;
-            } else {
-                let value: Parenthesized<syn::LitBool> = syn::parse2(attr.tokens)?;
-                protected = value.content.value;
-            }
         } else {
             attrs.push(attr);
         }
     }
 
-    let mut input_schema =
-        input_schema.ok_or_else(|| format_err!(sig_span, "missing input schema"))?;
-
-    let mut returns_schema =
-        returns_schema.ok_or_else(|| format_err!(sig_span, "missing returns schema"))?;
-
-    derive_descriptions(
-        &mut input_schema,
-        &mut returns_schema,
-        &doc_comment,
-        doc_span,
-    )?;
-
-    Ok((input_schema, returns_schema, protected))
+    derive_descriptions(input_schema, returns_schema, &doc_comment, doc_span)
 }
 
 fn derive_descriptions(
