@@ -228,7 +228,7 @@ pub struct JSONObject {
 }
 
 impl JSONObject {
-    fn parse_inner(input: ParseStream) -> syn::Result<HashMap<SimpleIdent, JSONValue>> {
+    fn parse_elements(input: ParseStream) -> syn::Result<HashMap<SimpleIdent, JSONValue>> {
         let map_elems: Punctuated<JSONMapEntry, Token![,]> =
             input.parse_terminated(JSONMapEntry::parse)?;
         let mut elems = HashMap::with_capacity(map_elems.len());
@@ -239,6 +239,15 @@ impl JSONObject {
         }
         Ok(elems)
     }
+
+    pub fn parse_inner(input: ParseStream) -> syn::Result<Self> {
+        Ok(Self {
+            brace_token: syn::token::Brace {
+                span: Span::call_site(),
+            },
+            elements: Self::parse_elements(input)?,
+        })
+    }
 }
 
 impl Parse for JSONObject {
@@ -246,7 +255,7 @@ impl Parse for JSONObject {
         let content;
         Ok(Self {
             brace_token: syn::braced!(content in input),
-            elements: Self::parse_inner(&content)?,
+            elements: Self::parse_elements(&content)?,
         })
     }
 }
