@@ -219,22 +219,26 @@ pub struct JSONObject {
     pub elements: HashMap<SimpleIdent, JSONValue>,
 }
 
+impl JSONObject {
+    fn parse_inner(input: ParseStream) -> syn::Result<HashMap<SimpleIdent, JSONValue>> {
+        let map_elems: Punctuated<JSONMapEntry, Token![,]> =
+            input.parse_terminated(JSONMapEntry::parse)?;
+        let mut elems = HashMap::with_capacity(map_elems.len());
+        for c in map_elems {
+            if elems.insert(c.key.clone().into(), c.value).is_some() {
+                bail!(&c.key => "duplicate '{}' in schema", c.key);
+            }
+        }
+        Ok(elems)
+    }
+}
+
 impl Parse for JSONObject {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let content;
         Ok(Self {
             brace_token: syn::braced!(content in input),
-            elements: {
-                let map_elems: Punctuated<JSONMapEntry, Token![,]> =
-                    content.parse_terminated(JSONMapEntry::parse)?;
-                let mut elems = HashMap::with_capacity(map_elems.len());
-                for c in map_elems {
-                    if elems.insert(c.key.clone().into(), c.value).is_some() {
-                        bail!(&c.key => "duplicate '{}' in schema", c.key);
-                    }
-                }
-                elems
-            },
+            elements: Self::parse_inner(&content)?,
         })
     }
 }
