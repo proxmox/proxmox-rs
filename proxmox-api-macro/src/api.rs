@@ -115,6 +115,17 @@ impl Schema {
 
         Ok(())
     }
+
+    fn as_object(&self) -> Option<&SchemaObject> {
+        match &self.item {
+            SchemaItem::Object(obj) => Some(obj),
+            _ => None,
+        }
+    }
+
+    fn find_object_property(&self, key: &str) -> Option<(bool, &Schema)> {
+        self.as_object().and_then(|obj| obj.find_property(key))
+    }
 }
 
 enum SchemaItem {
@@ -222,6 +233,16 @@ impl SchemaObject {
             ts.extend(quote! { (#key, #optional, &#schema.schema()), });
         }
         Ok(())
+    }
+
+    fn find_property(&self, key: &str) -> Option<(bool, &Schema)> {
+        match self
+            .properties
+            .binary_search_by(|prope| prope.0.as_str().cmp(key))
+        {
+            Ok(idx) => Some((self.properties[idx].1, &self.properties[idx].2)),
+            Err(_) => None,
+        }
     }
 }
 
@@ -405,8 +426,15 @@ fn derive_descriptions(
     Ok(())
 }
 
+enum ParameterType<'a> {
+    Value,
+    ApiMethod,
+    RpcEnv,
+    Other(&'a syn::Type, bool, &'a Schema),
+}
+
 fn handle_function_signature(
-    _input_schema: &mut Schema,
+    input_schema: &mut Schema,
     _returns_schema: &mut Schema,
     func: &mut syn::ItemFn,
     wrapper_ts: &mut TokenStream,
@@ -417,37 +445,80 @@ fn handle_function_signature(
         bail!(sig => "async fn is currently not supported");
     }
 
-    let mut has_api_method = false;
-    let mut has_rpc_env = false;
+    let mut api_method_param = None;
+    let mut rpc_env_param = None;
 
-    let mut inputs = HashMap::<SimpleIdent, &syn::Type>::new();
+    let mut inputs = HashMap::<SimpleIdent, ParameterType>::new();
+    let mut need_wrapper = false;
+
+    // Go through the function signature to figure out whether we need to create an internal
+    // wrapping function.
+    //
+    // First: go through the parameters:
     for input in sig.inputs.iter() {
+        // `self` types are not supported:
         let pat_type = match input {
             syn::FnArg::Receiver(r) => bail!(r => "methods taking a 'self' are not supported"),
             syn::FnArg::Typed(pat_type) => pat_type,
         };
 
+        // Normally function parameters are simple Ident patterns. Anything else is an error.
         let pat = match &*pat_type.pat {
             syn::Pat::Ident(pat) => pat,
             _ => bail!(pat_type => "unsupported parameter type"),
         };
 
-        if is_api_method_type(&pat_type.ty) {
-            if has_api_method {
+        // Here's the deal: we need to distinguish between parameters we need to extract before
+        // calling the function, a general "Value" parameter covering all the remaining json
+        // values, and our 2 fixed function parameters: `&ApiMethod` and `&mut dyn RpcEnvironment`.
+        //
+        // Our strategy is as follows:
+        //     1) See if the parameter name also appears in the input schema. In this case we
+        //        assume that we want the parameter to be extracted from the `Value` and passed
+        //        directly to the function.
+        //
+        //     2) Check the parameter type for `&ApiMethod` and remember its position (since we may
+        //        need to reorder it!)
+        //
+        //     3) Check the parameter type for `&dyn RpcEnvironment` and remember its position
+        //        (since we may need to reorder it!).
+        //
+        //     4) Check for a `Value` or `serde_json::Value` parameter. This becomes the
+        //        "catch-all" parameter and only 1 may exist.
+        //        Note that we may still use further `Value` parameters if they have been
+        //        explicitly named in the `input_schema`. However, only 1 unnamed `Value` parameter
+        //        is allowed.
+        //        If no such parameter exists, we automatically fail the function if the `Value` is
+        //        not empty after extracting the parameters.
+        //
+        //     5) Finally, if none of the above conditions are met, we do not know what to do and
+        //        bail out with an error.
+        let param_type = if let Some((optional, schema)) =
+            input_schema.find_object_property(&pat.ident.to_string())
+        {
+            need_wrapper = true;
+            // Found an explicit parameter: extract it:
+            ParameterType::Other(&pat_type.ty, optional, schema)
+        } else if is_api_method_type(&pat_type.ty) {
+            if api_method_param.is_some() {
                 bail!(pat_type => "multiple ApiMethod parameters found");
             }
-            has_api_method = true;
-        }
-
-        if is_rpc_env_type(&pat_type.ty) {
-            if has_rpc_env {
+            api_method_param = Some(inputs.len());
+            ParameterType::ApiMethod
+        } else if is_rpc_env_type(&pat_type.ty) {
+            if rpc_env_param.is_some() {
                 bail!(pat_type => "multiple RpcEnvironment parameters found");
             }
-            has_rpc_env = true;
-        }
+            rpc_env_param = Some(inputs.len());
+            ParameterType::RpcEnv
+        } else if is_value_type(&pat_type.ty) {
+            ParameterType::Value
+        } else {
+            bail!(&pat.ident => "unexpected parameter");
+        };
 
         if inputs
-            .insert(pat.ident.clone().into(), &pat_type.ty)
+            .insert(pat.ident.clone().into(), param_type)
             .is_some()
         {
             bail!(&pat.ident => "duplicate parameter");
@@ -456,7 +527,7 @@ fn handle_function_signature(
 
     let func_name = &sig.ident;
 
-    if inputs.len() == 3 && has_api_method && has_rpc_env {
+    if (inputs.len(), api_method_param, rpc_env_param) == (3, Some(1), Some(2)) {
         // No wrapper needed:
         return Ok(func_name.clone());
     }
@@ -465,6 +536,8 @@ fn handle_function_signature(
         &format!("api_function_{}", func_name),
         func.sig.ident.span(),
     );
+
+    let mut args = TokenStream::new();
 
     // build the wrapping function:
     wrapper_ts.extend(quote! {
@@ -499,6 +572,22 @@ fn is_rpc_env_type(ty: &syn::Type) -> bool {
                     return ps.ident == "RpcEnvironment";
                 }
             }
+        }
+    }
+    false
+}
+
+/// Note that we cannot handle renamed imports at all here...
+fn is_value_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(p) = ty {
+        let segs = &p.path.segments;
+        match segs.len() {
+            1 => return segs.last().unwrap().ident == "Value",
+            2 => {
+                return segs.first().unwrap().ident == "serde_json"
+                    && segs.last().unwrap().ident == "Value"
+            }
+            _ => return false,
         }
     }
     false

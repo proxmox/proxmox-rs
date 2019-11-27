@@ -41,10 +41,6 @@ use serde_json::Value;
 /// Create or verify authentication ticket.
 ///
 /// Returns: A ticket.
-fn create_ticket(
-    _param: Value,
-    _info: &ApiMethod,
-    _rpcenv: &mut dyn RpcEnvironment,
-) -> Result<Value, Error> {
+fn create_ticket(_param: Value) -> Result<Value, Error> {
     panic!("implement me");
 }
