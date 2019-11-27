@@ -167,6 +167,14 @@ impl TryFrom<JSONValue> for syn::LitBool {
     }
 }
 
+/// Expect a json value to be a literal boolean:
+impl TryFrom<JSONValue> for bool {
+    type Error = syn::Error;
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        Ok(syn::LitBool::try_from(value)?.value)
+    }
+}
+
 /// Expect a json value to be an identifier:
 impl TryFrom<JSONValue> for Ident {
     type Error = syn::Error;
