@@ -607,7 +607,7 @@ fn create_wrapper_function(
                     let #arg_name = input_map
                         .remove(#name_str)
                         .map(::serde_json::from_value)
-                        .transpose()?;
+                        .transpose()?
                 });
                 if !optional {
                     // Non-optional types need to be extracted out of the option though:
@@ -616,15 +616,13 @@ fn create_wrapper_function(
                     // verifier already, so here we just use failure::bail! instead of building a
                     // proper http error!
                     body.extend(quote_spanned! { span =>
-                        let #arg_name = match #arg_name {
-                            Some(v) => v,
-                            None => ::failure::bail!(
-                                "missing non-optional parameter: {}",
-                                #name_str,
-                            ),
-                        };
+                        .ok_or_else(|| ::failure::format_err!(
+                            "missing non-optional parameter: {}",
+                            #name_str,
+                        ))?
                     });
                 }
+                body.extend(quote_spanned! { span => ; });
                 args.extend(quote_spanned! { span => #arg_name, });
             }
         }
