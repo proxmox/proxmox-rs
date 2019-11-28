@@ -13,7 +13,7 @@ use crate::util::{JSONObject, JSONValue, SimpleIdent};
 
 /// `parse_macro_input!` expects a TokenStream_1
 struct AttrArgs {
-    paren_token: syn::token::Paren,
+    _paren_token: syn::token::Paren,
     args: Punctuated<syn::NestedMeta, Token![,]>,
 }
 
@@ -21,7 +21,7 @@ impl Parse for AttrArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let content;
         Ok(Self {
-            paren_token: syn::parenthesized!(content in input),
+            _paren_token: syn::parenthesized!(content in input),
             args: Punctuated::parse_terminated(&content)?,
         })
     }

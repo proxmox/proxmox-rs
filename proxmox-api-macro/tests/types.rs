@@ -5,7 +5,7 @@ use proxmox::api::schema;
 use proxmox_api_macro::api;
 
 use failure::Error;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::Value;
 
 #[api(
