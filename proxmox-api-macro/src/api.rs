@@ -10,6 +10,7 @@ use syn::{ExprPath, Ident};
 
 use crate::util::{JSONObject, JSONValue};
 
+mod enums;
 mod method;
 mod structs;
 
@@ -356,6 +357,7 @@ pub(crate) fn api(attr: TokenStream, item: TokenStream) -> Result<TokenStream, E
     match item {
         syn::Item::Fn(item) => method::handle_method(attribs, item),
         syn::Item::Struct(item) => structs::handle_struct(attribs, item),
+        syn::Item::Enum(item) => enums::handle_enum(attribs, item),
         _ => bail!(item => "api macro only works on functions"),
     }
 }

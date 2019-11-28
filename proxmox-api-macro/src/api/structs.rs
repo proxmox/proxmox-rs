@@ -8,10 +8,6 @@ use quote::quote_spanned;
 use super::Schema;
 use crate::util::JSONObject;
 
-/// Parse `input`, `returns` and `protected` attributes out of an function annotated
-/// with an `#[api]` attribute and produce a `const ApiMethod` named after the function.
-///
-/// See the top level macro documentation for a complete example.
 pub fn handle_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<TokenStream, Error> {
     let schema = {
         let schema: Schema = attribs.try_into()?;

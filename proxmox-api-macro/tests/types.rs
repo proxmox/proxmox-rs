@@ -23,6 +23,13 @@ impl OkString {
         .schema();
 }
 
+#[api(description: "A selection of either A, B or C")]
+pub enum Selection {
+    A,
+    B,
+    C,
+}
+
 // Initial test:
 #[api(
     input: {

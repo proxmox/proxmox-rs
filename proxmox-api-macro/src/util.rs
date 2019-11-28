@@ -14,9 +14,9 @@ use syn::Token;
 pub struct SimpleIdent(Ident, String);
 
 impl SimpleIdent {
-    //pub fn new(name: String, span: Span) -> Self {
-    //    Self(Ident::new(&name, span), name)
-    //}
+    pub fn new(name: String, span: Span) -> Self {
+        Self(Ident::new(&name, span), name)
+    }
 
     #[inline]
     pub fn as_str(&self) -> &str {
@@ -122,6 +122,38 @@ impl JSONValue {
         match self {
             JSONValue::Object(s) => Ok(s),
             JSONValue::Expr(e) => bail!(e => "expected {}", expected),
+        }
+    }
+
+    pub fn new_string(value: &str, span: Span) -> JSONValue {
+        JSONValue::Expr(syn::Expr::Lit(syn::ExprLit {
+            attrs: Vec::new(),
+            lit: syn::Lit::Str(syn::LitStr::new(value, span)),
+        }))
+    }
+
+    pub fn new_ident(ident: Ident) -> JSONValue {
+        JSONValue::Expr(syn::Expr::Path(syn::ExprPath {
+            attrs: Vec::new(),
+            qself: None,
+            path: syn::Path {
+                leading_colon: None,
+                segments: {
+                    let mut p = Punctuated::new();
+                    p.push(syn::PathSegment {
+                        ident,
+                        arguments: Default::default(),
+                    });
+                    p
+                },
+            },
+        }))
+    }
+
+    pub fn span(&self) -> Span {
+        match self {
+            JSONValue::Object(obj) => obj.brace_token.span,
+            JSONValue::Expr(expr) => expr.span(),
         }
     }
 }
