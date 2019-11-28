@@ -5,12 +5,20 @@ use proxmox::api::schema;
 use proxmox_api_macro::api;
 
 use failure::Error;
-use serde::{Deserialize, Serialize};
+//use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[api(
+    type: String,
+    description: "A string",
+    format: &schema::ApiStringFormat::Enum(&["ok", "not-ok"]),
+)]
+//#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OkString(String);
+
+// generates the following without the '_' prefix in the constant:
 impl OkString {
-    pub const API_SCHEMA: &'static schema::Schema = &schema::StringSchema::new("A string")
+    pub const _API_SCHEMA: &'static schema::Schema = &schema::StringSchema::new("A string")
         .format(&schema::ApiStringFormat::Enum(&["ok", "not-ok"]))
         .schema();
 }
@@ -27,6 +35,7 @@ impl OkString {
 /// Check a string.
 ///
 /// Returns: Whether the string was "ok".
-pub fn string_check(arg: OkString) -> Result<bool, Error> {
-    Ok(arg.0 == "ok")
+pub fn string_check(arg: Value) -> Result<bool, Error> {
+    let _ = arg;
+    panic!("body")
 }

@@ -11,6 +11,7 @@ use syn::{ExprPath, Ident};
 use crate::util::{JSONObject, JSONValue};
 
 mod method;
+mod structs;
 
 /// The main `Schema` type.
 ///
@@ -353,7 +354,8 @@ pub(crate) fn api(attr: TokenStream, item: TokenStream) -> Result<TokenStream, E
     let item: syn::Item = syn::parse2(item)?;
 
     match item {
-        syn::Item::Fn(func) => method::handle_method(attribs, func),
+        syn::Item::Fn(item) => method::handle_method(attribs, item),
+        syn::Item::Struct(item) => structs::handle_struct(attribs, item),
         _ => bail!(item => "api macro only works on functions"),
     }
 }
