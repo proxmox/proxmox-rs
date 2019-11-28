@@ -3,11 +3,12 @@ use std::convert::{TryFrom, TryInto};
 use failure::Error;
 
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::parse::{Parse, ParseStream, Parser};
-use syn::Ident;
+use syn::spanned::Spanned;
+use syn::{ExprPath, Ident};
 
-use crate::util::{JSONObject, JSONValue, SimpleIdent};
+use crate::util::{JSONObject, JSONValue};
 
 mod method;
 
@@ -92,23 +93,24 @@ impl TryFrom<JSONObject> for Schema {
 }
 
 impl Schema {
+    fn to_typed_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
+        self.item.to_schema(
+            ts,
+            self.description.as_ref(),
+            &self.span,
+            &self.properties,
+            true,
+        )
+    }
+
     fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        // First defer to the SchemaItem's `.to_schema()` method:
-        let description = self
-            .description
-            .as_ref()
-            .ok_or_else(|| format_err!(self.span, "missing description"))?;
-
-        self.item.to_schema(ts, description)?;
-
-        // Then append all the remaining builder-pattern properties:
-        for prop in self.properties.iter() {
-            let key = &prop.0;
-            let value = &prop.1;
-            ts.extend(quote! { .#key(#value) });
-        }
-
-        Ok(())
+        self.item.to_schema(
+            ts,
+            self.description.as_ref(),
+            &self.span,
+            &self.properties,
+            false,
+        )
     }
 
     fn as_object(&self) -> Option<&SchemaObject> {
@@ -130,53 +132,138 @@ enum SchemaItem {
     String,
     Object(SchemaObject),
     Array(SchemaArray),
+    ExternType(ExprPath),
 }
 
 impl SchemaItem {
     /// If there's a `type` specified, parse it as that type. Otherwise check for keys which
     /// uniqueply identify the type, such as "properties" for type `Object`.
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
-        let ty = obj.remove("type").map(SimpleIdent::try_from).transpose()?;
-        let ty = match &ty {
-            Some(ty) => ty.as_str(),
+        let ty = obj.remove("type").map(ExprPath::try_from).transpose()?;
+        let ty = match ty {
+            Some(ty) => ty,
             None => {
                 if obj.contains_key("properties") {
-                    "Object"
+                    return Ok(SchemaItem::Object(SchemaObject::try_extract_from(obj)?));
                 } else if obj.contains_key("items") {
-                    "Array"
+                    return Ok(SchemaItem::Array(SchemaArray::try_extract_from(obj)?));
                 } else {
                     bail!(obj.span(), "failed to guess 'type' in schema definition");
                 }
             }
         };
-        match ty {
-            "Null" => Ok(SchemaItem::Null),
-            "Boolean" => Ok(SchemaItem::Boolean),
-            "Integer" => Ok(SchemaItem::Integer),
-            "String" => Ok(SchemaItem::String),
-            "Object" => Ok(SchemaItem::Object(SchemaObject::try_extract_from(obj)?)),
-            "Array" => Ok(SchemaItem::Array(SchemaArray::try_extract_from(obj)?)),
-            ty => bail!(obj.span(), "unknown type name '{}'", ty),
+
+        if !ty.attrs.is_empty() {
+            bail!(ty => "unexpected attributes on type path");
+        }
+
+        if ty.qself.is_some() || ty.path.segments.len() != 1 {
+            return Ok(SchemaItem::ExternType(ty));
+        }
+
+        let name = &ty
+            .path
+            .segments
+            .first()
+            .ok_or_else(|| format_err!(&ty.path => "invalid empty path"))?
+            .ident;
+
+        if name == "Null" {
+            Ok(SchemaItem::Null)
+        } else if name == "Boolean" {
+            Ok(SchemaItem::Boolean)
+        } else if name == "Integer" {
+            Ok(SchemaItem::Integer)
+        } else if name == "String" {
+            Ok(SchemaItem::String)
+        } else if name == "Object" {
+            Ok(SchemaItem::Object(SchemaObject::try_extract_from(obj)?))
+        } else if name == "Array" {
+            Ok(SchemaItem::Array(SchemaArray::try_extract_from(obj)?))
+        } else {
+            Ok(SchemaItem::ExternType(ty))
         }
     }
 
-    fn to_schema(&self, ts: &mut TokenStream, description: &syn::LitStr) -> Result<(), Error> {
-        ts.extend(quote! { ::proxmox::api::schema });
+    fn to_inner_schema(
+        &self,
+        ts: &mut TokenStream,
+        description: Option<&syn::LitStr>,
+        span: &Span,
+        properties: &[(Ident, syn::Expr)],
+    ) -> Result<bool, Error> {
+        let description = description.ok_or_else(|| format_err!(*span, "missing description"));
+
         match self {
-            SchemaItem::Null => ts.extend(quote! { ::NullSchema::new(#description) }),
-            SchemaItem::Boolean => ts.extend(quote! { ::BooleanSchema::new(#description) }),
-            SchemaItem::Integer => ts.extend(quote! { ::IntegerSchema::new(#description) }),
-            SchemaItem::String => ts.extend(quote! { ::StringSchema::new(#description) }),
+            SchemaItem::Null => {
+                let description = description?;
+                ts.extend(quote! { ::proxmox::api::schema::NullSchema::new(#description) });
+            }
+            SchemaItem::Boolean => {
+                let description = description?;
+                ts.extend(quote! { ::proxmox::api::schema::BooleanSchema::new(#description) });
+            }
+            SchemaItem::Integer => {
+                let description = description?;
+                ts.extend(quote! { ::proxmox::api::schema::IntegerSchema::new(#description) });
+            }
+            SchemaItem::String => {
+                let description = description?;
+                ts.extend(quote! { ::proxmox::api::schema::StringSchema::new(#description) });
+            }
             SchemaItem::Object(obj) => {
+                let description = description?;
                 let mut elems = TokenStream::new();
                 obj.to_schema_inner(&mut elems)?;
-                ts.extend(quote! { ::ObjectSchema::new(#description, &[#elems]) })
+                ts.extend(
+                    quote! { ::proxmox::api::schema::ObjectSchema::new(#description, &[#elems]) },
+                );
             }
             SchemaItem::Array(array) => {
+                let description = description?;
                 let mut items = TokenStream::new();
-                array.to_schema_inner(&mut items)?;
-                ts.extend(quote! { ::ArraySchema::new(#description, &#items.schema()) })
+                array.to_schema(&mut items)?;
+                ts.extend(quote! {
+                    ::proxmox::api::schema::ArraySchema::new(#description, #items)
+                });
             }
+            SchemaItem::ExternType(path) => {
+                if !properties.is_empty() {
+                    bail!(&properties[0].0 => "additional properties not allowed on external type");
+                }
+                ts.extend(quote_spanned! { path.span() => #path::API_SCHEMA });
+                return Ok(true);
+            }
+        }
+
+        // Then append all the remaining builder-pattern properties:
+        for prop in properties {
+            let key = &prop.0;
+            let value = &prop.1;
+            ts.extend(quote! { .#key(#value) });
+        }
+
+        Ok(false)
+    }
+
+    fn to_schema(
+        &self,
+        ts: &mut TokenStream,
+        description: Option<&syn::LitStr>,
+        span: &Span,
+        properties: &[(Ident, syn::Expr)],
+        typed: bool,
+    ) -> Result<(), Error> {
+        if typed {
+            let _: bool = self.to_inner_schema(ts, description, span, properties)?;
+            return Ok(());
+        }
+
+        let mut inner_ts = TokenStream::new();
+        if self.to_inner_schema(&mut inner_ts, description, span, properties)? {
+            ts.extend(inner_ts);
+        } else {
+            ts.extend(quote! { & #inner_ts .schema() });
         }
         Ok(())
     }
@@ -225,7 +312,7 @@ impl SchemaObject {
             let optional = element.1;
             let mut schema = TokenStream::new();
             element.2.to_schema(&mut schema)?;
-            ts.extend(quote! { (#key, #optional, &#schema.schema()), });
+            ts.extend(quote! { (#key, #optional, #schema), });
         }
         Ok(())
     }
@@ -252,7 +339,7 @@ impl SchemaArray {
         })
     }
 
-    fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
+    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
         self.item.to_schema(ts)
     }
 }

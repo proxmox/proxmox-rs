@@ -208,6 +208,18 @@ impl TryFrom<JSONValue> for SimpleIdent {
     }
 }
 
+/// Expect a json value to be a path. This means it's supposed to be an expression which evaluates
+/// to a path.
+impl TryFrom<JSONValue> for syn::ExprPath {
+    type Error = syn::Error;
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        match syn::Expr::try_from(value)? {
+            syn::Expr::Path(path) => Ok(path),
+            other => bail!(other => "expected a type path"),
+        }
+    }
+}
+
 /// Parsing a json value should be simple enough: braces means we have an object, otherwise it must
 /// be an "expression".
 impl Parse for JSONValue {

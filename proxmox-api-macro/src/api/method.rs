@@ -44,7 +44,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
 
     let input_schema = {
         let mut ts = TokenStream::new();
-        input_schema.to_schema(&mut ts)?;
+        input_schema.to_typed_schema(&mut ts)?;
         ts
     };
 
@@ -67,7 +67,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
                 &::proxmox::api::ApiHandler::Sync(&#api_func_name),
                 &#input_schema,
             )
-            .returns(& #returns_schema .schema())
+            .returns(#returns_schema)
             .protected(#protected);
         #wrapper_ts
         #func
