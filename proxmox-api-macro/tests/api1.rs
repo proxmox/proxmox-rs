@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use proxmox_api_macro::api;
 
 use failure::Error;
@@ -40,7 +38,7 @@ use serde_json::Value;
 /// Create or verify authentication ticket.
 ///
 /// Returns: A ticket.
-fn create_ticket(_param: Value) -> Result<Value, Error> {
+pub fn create_ticket(_param: Value) -> Result<Value, Error> {
     panic!("implement me");
 }
 
@@ -79,7 +77,7 @@ fn create_ticket(_param: Value) -> Result<Value, Error> {
 /// Create or verify authentication ticket.
 ///
 /// Returns: A ticket.
-fn create_ticket_direct(username: String, password: String) -> Result<&'static str, Error> {
+pub fn create_ticket_direct(username: String, password: String) -> Result<&'static str, Error> {
     let _ = username;
     let _ = password;
     // This sill not pass the schema's output validation, but the code still compiles as this can
