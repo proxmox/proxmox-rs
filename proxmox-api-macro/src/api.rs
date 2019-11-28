@@ -263,6 +263,10 @@ impl SchemaArray {
 /// See the top level macro documentation for a complete example.
 pub(crate) fn api(attr: TokenStream, item: TokenStream) -> Result<TokenStream, Error> {
     let attribs = JSONObject::parse_inner.parse2(attr)?;
+    let item: syn::Item = syn::parse2(item)?;
 
-    method::handle_method(attribs, item)
+    match item {
+        syn::Item::Fn(func) => method::handle_method(attribs, func),
+        _ => bail!(item => "api macro only works on functions"),
+    }
 }

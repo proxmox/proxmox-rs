@@ -15,9 +15,7 @@ use crate::util::{BareAssignment, JSONObject, SimpleIdent};
 /// with an `#[api]` attribute and produce a `const ApiMethod` named after the function.
 ///
 /// See the top level macro documentation for a complete example.
-pub fn handle_method(mut attribs: JSONObject, item: TokenStream) -> Result<TokenStream, Error> {
-    let mut func: syn::ItemFn = syn::parse2(item)?;
-
+pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<TokenStream, Error> {
     let mut input_schema: Schema = attribs
         .remove_required_element("input")?
         .into_object("input schema definition")?
