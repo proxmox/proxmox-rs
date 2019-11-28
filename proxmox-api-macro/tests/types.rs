@@ -5,7 +5,7 @@ use proxmox::api::schema;
 use proxmox_api_macro::api;
 
 use failure::Error;
-//use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[api(
@@ -24,7 +24,9 @@ impl OkString {
 }
 
 #[api(description: "A selection of either A, B or C")]
+#[derive(Deserialize)]
 pub enum Selection {
+    #[serde(rename = "a")]
     A,
     B,
     C,

@@ -1,15 +1,31 @@
 use std::convert::TryInto;
-use std::mem;
 
 use failure::Error;
 
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::{quote, quote_spanned};
+use quote::quote_spanned;
+use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::Token;
 
 use super::Schema;
 use crate::util::{JSONObject, JSONValue, SimpleIdent};
+
+/// `parse_macro_input!` expects a TokenStream_1
+struct AttrArgs {
+    paren_token: syn::token::Paren,
+    args: Punctuated<syn::NestedMeta, Token![,]>,
+}
+
+impl Parse for AttrArgs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let content;
+        Ok(Self {
+            paren_token: syn::parenthesized!(content in input),
+            args: Punctuated::parse_terminated(&content)?,
+        })
+    }
+}
 
 /// Enums, provided they're simple enums, simply get an enum string schema attached to them.
 pub fn handle_enum(
@@ -45,30 +61,24 @@ pub fn handle_enum(
 
         let mut renamed = false;
         for attrib in &mut variant.attrs {
-            if !attrib.path.is_ident("api") {
+            if !attrib.path.is_ident("serde") {
                 continue;
             }
 
-            attrib.path = syn::parse2(quote! { serde })?;
-
-            let mut obj: JSONObject =
-                syn::parse2(mem::replace(&mut attrib.tokens, TokenStream::new()))?;
-            match obj.remove("rename") {
-                Some(JSONValue::Expr(syn::Expr::Lit(lit))) => {
-                    if let syn::Lit::Str(lit) = lit.lit {
-                        attrib.tokens.extend(quote! { rename = #lit });
-                        variants.push(lit);
-                        renamed = true;
-                    } else {
-                        bail!(attrib => "'rename' must be a literal string");
+            let args: AttrArgs = syn::parse2(attrib.tokens.clone())?;
+            for arg in args.args {
+                match arg {
+                    syn::NestedMeta::Meta(syn::Meta::NameValue(var)) => {
+                        if var.path.is_ident("rename") {
+                            match var.lit {
+                                syn::Lit::Str(lit) => variants.push(lit),
+                                _ => bail!(var.lit => "'rename' value must be a string literal"),
+                            }
+                            renamed = true;
+                        }
                     }
+                    _ => (), // ignore
                 }
-                Some(_) => bail!(attrib => "'rename' must be a literal string"),
-                None => (),
-            }
-
-            if !obj.is_empty() {
-                bail!(attrib => "unknown fields in attribute");
             }
         }
 
