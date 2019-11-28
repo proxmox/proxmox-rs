@@ -37,6 +37,7 @@ pub enum Selection {
     input: {
         properties: {
             arg: { type: OkString },
+            selection: { type: Selection },
         }
     },
     returns: { type: Boolean },
@@ -44,7 +45,8 @@ pub enum Selection {
 /// Check a string.
 ///
 /// Returns: Whether the string was "ok".
-pub fn string_check(arg: Value) -> Result<bool, Error> {
+pub fn string_check(arg: Value, selection: Selection) -> Result<bool, Error> {
     let _ = arg;
+    let _ = selection;
     panic!("body")
 }
