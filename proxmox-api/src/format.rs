@@ -48,13 +48,24 @@ pub fn wrap_text(
         .filter(|p| !p.is_empty())
         .fold(String::new(), |mut acc, p| {
             if acc.is_empty() {
-                acc.push_str(&wrapper1.wrap(p).concat());
+                acc.push_str(&wrapper1.wrap(p).join("\n"));
             } else {
-                acc.push_str(&wrapper2.wrap(p).concat());
+                acc.push_str(&wrapper2.wrap(p).join("\n"));
             }
             acc.push_str("\n\n");
             acc
         })
+}
+
+#[test]
+fn test_wrap_text() {
+    let text = "Command. This may be a list in order to spefify nested sub-commands.";
+    let expect = "             Command. This may be a list in order to spefify nested sub-\n             commands.\n\n";
+
+    let indent = "             ";
+    let wrapped = wrap_text(indent, indent, text, 80);
+
+    assert_eq!(wrapped, expect);
 }
 
 /// TODO: Document output format.
