@@ -255,3 +255,162 @@ pub fn get_completions(
 
     (start, completions)
 }
+
+#[cfg(test)]
+mod test {
+
+    use failure::*;
+    use serde_json::Value;
+
+    use crate::{*, schema::*, cli::*};
+
+    fn dummy_method(
+        _param: Value,
+        _info: &ApiMethod,
+        _rpcenv: &mut dyn RpcEnvironment,
+    ) -> Result<Value, Error> {
+
+        Ok(Value::Null)
+    }
+
+    const API_METHOD_SIMPLE1: ApiMethod = ApiMethod::new(
+        &ApiHandler::Sync(&dummy_method),
+        &ObjectSchema::new(
+            "Simple API method with one required and one optionl argument.",
+            &[
+                ( "optional-arg", true, &BooleanSchema::new("Optional boolean argument.")
+                   .default(false)
+                   .schema()
+                ),
+                ( "reqired-arg", false, &StringSchema::new("Required string argument.").schema()),
+            ]
+        )
+    );
+
+    fn get_complex_test_cmddef() -> CommandLineInterface {
+        let sub_def = CliCommandMap::new()
+            .insert("l1c1", CliCommand::new(&API_METHOD_SIMPLE1).into())
+            .insert("l1c2", CliCommand::new(&API_METHOD_SIMPLE1).into());
+
+        let cmd_def = CliCommandMap::new()
+            .insert_help()
+            .insert("l0sub", CommandLineInterface::Nested(sub_def))
+            .insert("l0c1", CliCommand::new(&API_METHOD_SIMPLE1).into())
+            .insert("l0c2", CliCommand::new(&API_METHOD_SIMPLE1)
+                    .arg_param(&["required-arg"])
+                    .into())
+            .insert("l0c3", CliCommand::new(&API_METHOD_SIMPLE1)
+                    .arg_param(&["required-arg", "optional-arg"])
+                    .into());
+
+
+        cmd_def.into()
+    }
+
+    fn test_completions(
+        cmd_def: &CommandLineInterface,
+        line: &str,
+        start: usize,
+        expect: &[&str],
+    ) {
+        let mut expect: Vec<String> = expect.iter().map(|s| s.to_string()).collect();
+        expect.sort();
+
+        let (completion_start, mut completions) = get_completions(cmd_def, line, false);
+        completions.sort();
+
+        assert_eq!((start, expect), (completion_start, completions));
+    }
+
+    #[test]
+    fn test_help_completion() {
+
+        let cmd_def = get_complex_test_cmddef();
+
+        test_completions(
+            &cmd_def,
+            "h",
+            0,
+            &["help"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help ",
+            5,
+            &["help", "l0sub", "l0c1", "l0c3", "l0c2"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help l0",
+            5,
+            &["l0sub", "l0c1", "l0c3", "l0c2"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help -",
+            5,
+            &["--verbose"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help l0c2",
+            5,
+            &["l0c2"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help l0c2 ",
+            10,
+            &["--verbose"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help l0c2 --verbose -",
+            20,
+            &[],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help l0s",
+            5,
+            &["l0sub"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help l0sub ",
+            11,
+            &["l1c1", "l1c2"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help l0sub l1c2 -",
+            16,
+            &["--verbose"],
+        );
+
+         test_completions(
+            &cmd_def,
+            "help l0sub l1c2 --verbose -",
+            26,
+            &[],
+        );
+
+        test_completions(
+            &cmd_def,
+            "help l0sub l1c3",
+            11,
+            &[],
+        );
+
+    }
+
+}
