@@ -47,6 +47,19 @@ fn get_property_completion(
             return completions;
         }
     }
+
+    if let Schema::Boolean(BooleanSchema { .. }) = schema {
+        let mut completions = Vec::new();
+        let mut lowercase_arg = arg.to_string();
+        lowercase_arg.make_ascii_lowercase();
+        for value in ["0", "1", "yes", "no", "true", "false", "on", "off"].iter() {
+            if value.starts_with(&lowercase_arg) {
+                completions.push(value.to_string());
+            }
+        }
+        return completions;
+    }
+
     return Vec::new();
 }
 
@@ -282,7 +295,7 @@ mod test {
                    .default(false)
                    .schema()
                 ),
-                ( "reqired-arg", false, &StringSchema::new("Required string argument.").schema()),
+                ( "required-arg", false, &StringSchema::new("Required string argument.").schema()),
             ]
         )
     );
@@ -321,6 +334,111 @@ mod test {
 
         assert_eq!((start, expect), (completion_start, completions));
     }
+
+    #[test]
+    fn test_nested_completion() {
+
+        let cmd_def = get_complex_test_cmddef();
+
+        test_completions(
+            &cmd_def,
+            "",
+            0,
+            &["help", "l0c1", "l0c2", "l0c3", "l0sub"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 ",
+            5,
+            &["--optional-arg", "--required-arg"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 -",
+            5,
+            &["--optional-arg", "--required-arg"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --",
+            5,
+            &["--optional-arg", "--required-arg"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 ---",
+            5,
+            &[],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 x",
+            5,
+            &[],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --r",
+            5,
+            &["--required-arg"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --required-arg",
+            5,
+            &["--required-arg"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --required-arg -",
+            20,
+            // Note: --required-arg is not finished, so it still pops up
+            &["--required-arg", "--optional-arg"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --required-arg test -",
+            25,
+            &["--optional-arg"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --required-arg test --optional-arg ",
+            40,
+            &["0", "1", "false", "no", "true", "yes", "on", "off"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --required-arg test --optional-arg f",
+            40,
+            &["false"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --required-arg test --optional-arg F",
+            40,
+            &["false"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --required-arg test --optional-arg Yes",
+            40,
+            &["yes"],
+        );
+   }
 
     #[test]
     fn test_help_completion() {
