@@ -68,7 +68,10 @@ fn test_wrap_text() {
     assert_eq!(wrapped, expect);
 }
 
-/// TODO: Document output format.
+/// Helper to format the type text
+///
+/// The result is a short string including important constraints, for
+/// example ``<integer> (0 - N)``.
 pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> String {
     match schema {
         Schema::Null => String::from("<null>"), // should not happen
@@ -85,7 +88,7 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
     }
 }
 
-/// TODO: Document output format.
+/// Helper to format an object property, including name, type and description.
 pub fn get_property_description(
     name: &str,
     schema: &Schema,
@@ -246,7 +249,7 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
     }
 }
 
-/// TODO: Document output format.
+/// Generate ReST Documentaion for a complete API defined by a ``Router``.
 pub fn dump_api(
     output: &mut dyn Write,
     router: &Router,
