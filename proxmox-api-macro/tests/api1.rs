@@ -100,3 +100,14 @@ pub fn some_call(verbose: bool) -> Result<(), Error> {
     let _ = verbose;
     Ok(())
 }
+
+#[api(
+    input: {
+        properties: {}
+    },
+)]
+/// Basic function
+pub fn basic_function() -> Result<(), Error> {
+    let _ = verbose;
+    Ok(())
+}
