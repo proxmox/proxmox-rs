@@ -274,6 +274,7 @@ impl SchemaItem {
     }
 }
 
+#[derive(Default)]
 /// Contains a sorted list of properties:
 struct SchemaObject {
     properties: Vec<(String, bool, Schema)>,

@@ -101,13 +101,8 @@ pub fn some_call(verbose: bool) -> Result<(), Error> {
     Ok(())
 }
 
-#[api(
-    input: {
-        properties: {}
-    },
-)]
+#[api]
 /// Basic function
 pub fn basic_function() -> Result<(), Error> {
-    let _ = verbose;
     Ok(())
 }

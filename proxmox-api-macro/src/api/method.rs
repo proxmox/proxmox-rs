@@ -16,10 +16,15 @@ use crate::util::{BareAssignment, JSONObject, SimpleIdent};
 ///
 /// See the top level macro documentation for a complete example.
 pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<TokenStream, Error> {
-    let mut input_schema: Schema = attribs
-        .remove_required_element("input")?
-        .into_object("input schema definition")?
-        .try_into()?;
+    let mut input_schema: Schema = match attribs.remove("input") {
+        Some(input) => input.into_object("input schema definition")?.try_into()?,
+        None => Schema {
+            span: Span::call_site(),
+            description: None,
+            item: super::SchemaItem::Object(Default::default()),
+            properties: Vec::new(),
+        },
+    };
 
     let mut returns_schema: Option<Schema> = attribs
         .remove("returns")
