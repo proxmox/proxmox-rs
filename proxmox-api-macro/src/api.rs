@@ -170,11 +170,14 @@ impl SchemaItem {
             .ok_or_else(|| format_err!(&ty.path => "invalid empty path"))?
             .ident;
 
+        const INTNAMES: &[&'static str] = &[
+            "Integer", "i8", "i16", "i32", "i64", "isize", "u8", "u16", "u32", "u64", "usize",
+        ];
         if name == "Null" {
             Ok(SchemaItem::Null)
-        } else if name == "Boolean" {
+        } else if name == "Boolean" || name == "bool" {
             Ok(SchemaItem::Boolean)
-        } else if name == "Integer" {
+        } else if INTNAMES.iter().any(|n| name == n) {
             Ok(SchemaItem::Integer)
         } else if name == "String" {
             Ok(SchemaItem::String)
