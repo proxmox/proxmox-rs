@@ -1,5 +1,8 @@
 use failure::*;
-use rustyline::completion::Quote;
+
+/// Shell quote type
+pub use rustyline::completion::Quote;
+
 
 #[derive(PartialEq)]
 enum ParseMode {
