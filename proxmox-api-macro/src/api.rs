@@ -14,6 +14,10 @@ mod enums;
 mod method;
 mod structs;
 
+pub const INTNAMES: &[&'static str] = &[
+    "Integer", "i8", "i16", "i32", "i64", "isize", "u8", "u16", "u32", "u64", "usize",
+];
+
 /// The main `Schema` type.
 ///
 /// We have 2 fixed keys: `type` and `description`. The remaining keys depend on the `type`.
@@ -122,8 +126,20 @@ impl Schema {
         }
     }
 
+    fn as_object_mut(&mut self) -> Option<&mut SchemaObject> {
+        match &mut self.item {
+            SchemaItem::Object(obj) => Some(obj),
+            _ => None,
+        }
+    }
+
     fn find_object_property(&self, key: &str) -> Option<(bool, &Schema)> {
         self.as_object().and_then(|obj| obj.find_property(key))
+    }
+
+    fn find_object_property_mut(&mut self, key: &str) -> Option<(&mut bool, &mut Schema)> {
+        self.as_object_mut()
+            .and_then(|obj| obj.find_property_mut(key))
     }
 }
 
@@ -135,6 +151,7 @@ enum SchemaItem {
     Object(SchemaObject),
     Array(SchemaArray),
     ExternType(ExprPath),
+    Inferred(Span),
 }
 
 impl SchemaItem {
@@ -150,7 +167,7 @@ impl SchemaItem {
                 } else if obj.contains_key("items") {
                     return Ok(SchemaItem::Array(SchemaArray::try_extract_from(obj)?));
                 } else {
-                    bail!(obj.span(), "failed to guess 'type' in schema definition");
+                    return Ok(SchemaItem::Inferred(obj.span()));
                 }
             }
         };
@@ -170,9 +187,6 @@ impl SchemaItem {
             .ok_or_else(|| format_err!(&ty.path => "invalid empty path"))?
             .ident;
 
-        const INTNAMES: &[&'static str] = &[
-            "Integer", "i8", "i16", "i32", "i64", "isize", "u8", "u16", "u32", "u64", "usize",
-        ];
         if name == "Null" {
             Ok(SchemaItem::Null)
         } else if name == "Boolean" || name == "bool" {
@@ -238,6 +252,9 @@ impl SchemaItem {
                 }
                 ts.extend(quote_spanned! { path.span() => #path::API_SCHEMA });
                 return Ok(true);
+            }
+            SchemaItem::Inferred(span) => {
+                bail!(*span, "failed to guess 'type' in schema definition");
             }
         }
 
@@ -329,6 +346,19 @@ impl SchemaObject {
             .binary_search_by(|prope| prope.0.as_str().cmp(key))
         {
             Ok(idx) => Some((self.properties[idx].1, &self.properties[idx].2)),
+            Err(_) => None,
+        }
+    }
+
+    fn find_property_mut(&mut self, key: &str) -> Option<(&mut bool, &mut Schema)> {
+        match self
+            .properties
+            .binary_search_by(|prope| prope.0.as_str().cmp(key))
+        {
+            Ok(idx) => {
+                let props = &mut self.properties[idx];
+                Some((&mut props.1, &mut props.2))
+            }
             Err(_) => None,
         }
     }

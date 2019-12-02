@@ -8,7 +8,7 @@ use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::Ident;
 
-use super::Schema;
+use super::{Schema, SchemaItem};
 use crate::util::{BareAssignment, JSONObject, SimpleIdent};
 
 /// Parse `input`, `returns` and `protected` attributes out of an function annotated
@@ -21,7 +21,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         None => Schema {
             span: Span::call_site(),
             description: None,
-            item: super::SchemaItem::Object(Default::default()),
+            item: SchemaItem::Object(Default::default()),
             properties: Vec::new(),
         },
     };
@@ -164,6 +164,22 @@ enum ParameterType<'a> {
     Other(&'a syn::Type, bool, &'a Schema),
 }
 
+fn check_input_type(input: &syn::FnArg) -> Result<(&syn::PatType, &syn::PatIdent), Error> {
+    // `self` types are not supported:
+    let pat_type = match input {
+        syn::FnArg::Receiver(r) => bail!(r => "methods taking a 'self' are not supported"),
+        syn::FnArg::Typed(pat_type) => pat_type,
+    };
+
+    // Normally function parameters are simple Ident patterns. Anything else is an error.
+    let pat = match &*pat_type.pat {
+        syn::Pat::Ident(pat) => pat,
+        _ => bail!(pat_type => "unsupported parameter type"),
+    };
+
+    Ok((pat_type, pat))
+}
+
 fn handle_function_signature(
     input_schema: &mut Schema,
     returns_schema: &mut Option<Schema>,
@@ -183,17 +199,46 @@ fn handle_function_signature(
     let mut param_list = Vec::<(SimpleIdent, ParameterType)>::new();
 
     for input in sig.inputs.iter() {
-        // `self` types are not supported:
-        let pat_type = match input {
-            syn::FnArg::Receiver(r) => bail!(r => "methods taking a 'self' are not supported"),
-            syn::FnArg::Typed(pat_type) => pat_type,
+        let (pat_type, pat) = check_input_type(input)?;
+
+        // For any named type which exists on the function signature...
+        let schema: &mut Schema = if let Some((_optional, schema)) =
+            input_schema.find_object_property_mut(&pat.ident.to_string())
+        {
+            // ... if it has no `type` property (item = SchemaItem::Inferred), get a mutable
+            // reference to the schema, so that we can...
+            match &mut schema.item {
+                SchemaItem::Inferred(_span) => schema,
+                // other types are fine:
+                _ => continue,
+            }
+        } else {
+            continue;
         };
 
-        // Normally function parameters are simple Ident patterns. Anything else is an error.
-        let pat = match &*pat_type.pat {
-            syn::Pat::Ident(pat) => pat,
-            _ => bail!(pat_type => "unsupported parameter type"),
-        };
+        // ... infer the type from the function parameters:
+        match &*pat_type.ty {
+            syn::Type::Path(path) if path.qself.is_none() => {
+                if path.path.is_ident("String") {
+                    schema.item = SchemaItem::String;
+                    continue;
+                } else if path.path.is_ident("bool") {
+                    schema.item = SchemaItem::Boolean;
+                    continue;
+                } else if super::INTNAMES.iter().any(|n| path.path.is_ident(n)) {
+                    schema.item = SchemaItem::Integer;
+                    continue;
+                }
+            }
+            _ => (),
+        }
+
+        // if we can't, bail out:
+        bail!(&pat_type.ty => "cannot infer parameter type from this rust type");
+    }
+
+    for input in sig.inputs.iter() {
+        let (pat_type, pat) = check_input_type(input)?;
 
         // Here's the deal: we need to distinguish between parameters we need to extract before
         // calling the function, a general "Value" parameter covering all the remaining json
@@ -223,6 +268,10 @@ fn handle_function_signature(
         let param_type = if let Some((optional, schema)) =
             input_schema.find_object_property(&pat.ident.to_string())
         {
+            match &schema.item {
+                SchemaItem::Inferred(span) => bail!(*span, "failed to infer type"),
+                _ => (),
+            }
             // Found an explicit parameter: extract it:
             ParameterType::Other(&pat_type.ty, optional, schema)
         } else if is_api_method_type(&pat_type.ty) {
