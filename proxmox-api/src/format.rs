@@ -7,24 +7,28 @@ use super::router::{Router, SubRoute};
 use super::schema::*;
 use super::{ApiHandler, ApiMethod};
 
+/// Enumerate different styles to display parameters/properties.
 #[derive(Copy, Clone)]
 pub enum ParameterDisplayStyle {
+    /// Used for properties in configuration files: ``key:``
     Config,
     //SonfigSub,
+    /// Used for command line options: ``--key``
     Arg,
+    /// Used for command line options passed as arguments: ``<key>``
     Fixed,
 }
 
-/// CLI usage information format
+/// CLI usage information format.
 #[derive(Copy, Clone, PartialEq)]
 pub enum DocumentationFormat {
-    /// text, command line only (one line)
+    /// Text, command line only (one line).
     Short,
-    /// text, list all options
+    /// Text, list all options.
     Long,
-    /// text, include description
+    /// Text, include description.
     Full,
-    /// like full, but in reStructuredText format
+    /// Like full, but in reStructuredText format.
     ReST,
 }
 
