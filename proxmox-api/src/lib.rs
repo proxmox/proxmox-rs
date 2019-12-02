@@ -20,6 +20,8 @@ pub mod router;
 pub mod rpc_environment;
 pub mod schema;
 
+pub mod cli;
+
 use schema::{ObjectSchema, Schema};
 
 #[doc(inline)]
