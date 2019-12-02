@@ -84,3 +84,19 @@ pub fn create_ticket_direct(username: String, password: String) -> Result<&'stat
     // successfully produce a `serde_json::Value`!
     Ok("an:invalid:ticket")
 }
+
+#[api(
+    input: {
+        properties: {
+            verbose: {
+                type: Boolean,
+                description: "Verbose output.",
+            },
+        },
+    },
+)]
+/// Test something
+pub fn some_call(verbose: bool) -> Result<(), Error> {
+    let _ = verbose;
+    Ok(())
+}

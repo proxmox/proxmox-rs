@@ -21,10 +21,12 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         .into_object("input schema definition")?
         .try_into()?;
 
-    let mut returns_schema: Schema = attribs
-        .remove_required_element("returns")?
-        .into_object("return schema definition")?
-        .try_into()?;
+    let mut returns_schema: Option<Schema> = attribs
+        .remove("returns")
+        .map(|ret| ret.into_object("return schema definition"))
+        .transpose()?
+        .map(|ret| ret.try_into())
+        .transpose()?;
 
     let protected: bool = attribs
         .remove("protected")
@@ -50,7 +52,14 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
 
     let returns_schema = {
         let mut ts = TokenStream::new();
-        returns_schema.to_schema(&mut ts)?;
+        match returns_schema {
+            Some(schema) => {
+                let mut inner = TokenStream::new();
+                schema.to_schema(&mut inner)?;
+                ts.extend(quote! { .returns(#inner) });
+            }
+            None => (),
+        }
         ts
     };
 
@@ -67,7 +76,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
                 &::proxmox::api::ApiHandler::Sync(&#api_func_name),
                 &#input_schema,
             )
-            .returns(#returns_schema)
+            #returns_schema
             .protected(#protected);
         #wrapper_ts
         #func
@@ -77,7 +86,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
 
 fn api_function_attributes(
     input_schema: &mut Schema,
-    returns_schema: &mut Schema,
+    returns_schema: &mut Option<Schema>,
     attrs: &mut Vec<syn::Attribute>,
 ) -> Result<(), Error> {
     let mut doc_comment = String::new();
@@ -107,7 +116,7 @@ fn api_function_attributes(
 
 fn derive_descriptions(
     input_schema: &mut Schema,
-    returns_schema: &mut Schema,
+    returns_schema: &mut Option<Schema>,
     doc_comment: &str,
     doc_span: Span,
 ) -> Result<(), Error> {
@@ -126,16 +135,18 @@ fn derive_descriptions(
     }
 
     if let Some(second) = parts.next() {
-        if returns_schema.description.is_none() {
-            returns_schema.description = Some(syn::LitStr::new(second.trim(), doc_span));
+        if let Some(ref mut returns_schema) = returns_schema {
+            if returns_schema.description.is_none() {
+                returns_schema.description = Some(syn::LitStr::new(second.trim(), doc_span));
+            }
         }
-    }
 
-    if parts.next().is_some() {
-        bail!(
-            doc_span,
-            "multiple 'Returns:' sections found in doc comment!"
-        );
+        if parts.next().is_some() {
+            bail!(
+                doc_span,
+                "multiple 'Returns:' sections found in doc comment!"
+            );
+        }
     }
 
     Ok(())
@@ -150,7 +161,7 @@ enum ParameterType<'a> {
 
 fn handle_function_signature(
     input_schema: &mut Schema,
-    returns_schema: &mut Schema,
+    returns_schema: &mut Option<Schema>,
     func: &mut syn::ItemFn,
     wrapper_ts: &mut TokenStream,
 ) -> Result<Ident, Error> {
@@ -304,7 +315,7 @@ fn is_value_type(ty: &syn::Type) -> bool {
 
 fn create_wrapper_function(
     _input_schema: &Schema,
-    _returns_schema: &Schema,
+    returns_schema: &Option<Schema>,
     param_list: Vec<(SimpleIdent, ParameterType)>,
     func: &syn::ItemFn,
     wrapper_ts: &mut TokenStream,
@@ -316,6 +327,7 @@ fn create_wrapper_function(
 
     let mut body = TokenStream::new();
     let mut args = TokenStream::new();
+    let mut return_stmt = TokenStream::new();
 
     for (name, param) in param_list {
         let span = name.span();
@@ -354,6 +366,17 @@ fn create_wrapper_function(
         }
     }
 
+    if returns_schema.is_some() {
+        return_stmt.extend(quote! {
+            Ok(::serde_json::to_value(output)?)
+        });
+    } else {
+        return_stmt.extend(quote! {
+            let _ = output;
+            Ok(::serde_json::Value::Null)
+        });
+    }
+
     // build the wrapping function:
     let func_name = &func.sig.ident;
     wrapper_ts.extend(quote! {
@@ -364,7 +387,8 @@ fn create_wrapper_function(
         ) -> Result<::serde_json::Value, ::failure::Error> {
             if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
                 #body
-                Ok(::serde_json::to_value(#func_name(#args)?)?)
+                let output = #func_name(#args)?;
+                #return_stmt
             } else {
                 ::failure::bail!("api function wrapper called with a non-object json value");
             }
