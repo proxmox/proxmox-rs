@@ -128,7 +128,7 @@ pub fn get_property_description(
             }
         };
 
-        text.push_str(&wrap_text("", "", descr, 80));
+        text.push_str(&wrap_text("", "  ", descr, 80));
         text.push('\n');
         text.push('\n');
 
