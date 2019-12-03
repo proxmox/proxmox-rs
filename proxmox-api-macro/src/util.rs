@@ -10,6 +10,13 @@ use syn::spanned::Spanned;
 use syn::Token;
 
 /// A more relaxed version of Ident which allows hyphens.
+///
+/// Note that this acts both as an Ident and as a String so that we can easily access an &str
+/// (which Ident does not provide, instead, Ident always requires you to produce a newly owned
+/// `String`).
+/// Because of this the user also needs to be aware of the differences between idents and strings,
+/// and therefore we do not implement `Into<Ident>` anymore, but the user needs to explicitly ask
+/// for it via the `.into_ident()` method.
 #[derive(Clone, Debug)]
 pub struct SimpleIdent(Ident, String);
 
@@ -21,6 +28,19 @@ impl SimpleIdent {
     #[inline]
     pub fn as_str(&self) -> &str {
         &self.1
+    }
+
+    #[inline]
+    pub unsafe fn into_ident_unchecked(self) -> Ident {
+        self.0
+    }
+
+    #[inline]
+    pub fn into_ident(self) -> Result<Ident, syn::Error> {
+        if self.1.as_bytes().contains(&b'-') {
+            bail!(self.0 => "invalid identifier: '{}'", self.1);
+        }
+        Ok(unsafe { self.into_ident_unchecked() })
     }
 
     //#[inline]
@@ -47,12 +67,6 @@ impl From<Ident> for SimpleIdent {
     fn from(ident: Ident) -> Self {
         let s = ident.to_string();
         Self(ident, s)
-    }
-}
-
-impl From<SimpleIdent> for Ident {
-    fn from(this: SimpleIdent) -> Ident {
-        this.0
     }
 }
 

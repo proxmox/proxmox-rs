@@ -90,7 +90,7 @@ impl TryFrom<JSONObject> for Schema {
             properties: obj.into_iter().try_fold(
                 Vec::new(),
                 |mut properties, (key, value)| -> Result<_, syn::Error> {
-                    properties.push((Ident::from(key), value.try_into()?));
+                    properties.push((key.into_ident()?, value.try_into()?));
                     Ok(properties)
                 },
             )?,
