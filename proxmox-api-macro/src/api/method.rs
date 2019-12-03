@@ -8,7 +8,7 @@ use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::Ident;
 
-use super::{Schema, SchemaItem};
+use super::{PropertySchema, Schema, SchemaItem};
 use crate::util::{BareAssignment, JSONObject, SimpleIdent};
 
 /// Parse `input`, `returns` and `protected` attributes out of an function annotated
@@ -161,7 +161,7 @@ enum ParameterType<'a> {
     Value,
     ApiMethod,
     RpcEnv,
-    Other(&'a syn::Type, bool, &'a Schema),
+    Other(&'a syn::Type, bool, &'a PropertySchema),
 }
 
 fn check_input_type(input: &syn::FnArg) -> Result<(&syn::PatType, &syn::PatIdent), Error> {
@@ -205,11 +205,14 @@ fn handle_function_signature(
         let schema: &mut Schema = if let Some((_optional, schema)) =
             input_schema.find_object_property_mut(&pat.ident.to_string())
         {
-            // ... if it has no `type` property (item = SchemaItem::Inferred), get a mutable
-            // reference to the schema, so that we can...
-            match &mut schema.item {
-                SchemaItem::Inferred(_span) => schema,
-                // other types are fine:
+            match schema {
+                PropertySchema::Schema(schema) => match &mut schema.item {
+                    // ... if it has no `type` property (item = SchemaItem::Inferred), get a mutable
+                    // reference to the schema, so that we can...
+                    SchemaItem::Inferred(_span) => schema,
+                    // other types are fine:
+                    _ => continue,
+                },
                 _ => continue,
             }
         } else {
@@ -268,8 +271,11 @@ fn handle_function_signature(
         let param_type = if let Some((optional, schema)) =
             input_schema.find_object_property(&pat.ident.to_string())
         {
-            match &schema.item {
-                SchemaItem::Inferred(span) => bail!(*span, "failed to infer type"),
+            match schema {
+                PropertySchema::Schema(schema) => match &schema.item {
+                    SchemaItem::Inferred(span) => bail!(*span, "failed to infer type"),
+                    _ => (),
+                },
                 _ => (),
             }
             // Found an explicit parameter: extract it:

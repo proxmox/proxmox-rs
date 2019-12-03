@@ -133,11 +133,11 @@ impl Schema {
         }
     }
 
-    fn find_object_property(&self, key: &str) -> Option<(bool, &Schema)> {
+    fn find_object_property(&self, key: &str) -> Option<(bool, &PropertySchema)> {
         self.as_object().and_then(|obj| obj.find_property(key))
     }
 
-    fn find_object_property_mut(&mut self, key: &str) -> Option<(&mut bool, &mut Schema)> {
+    fn find_object_property_mut(&mut self, key: &str) -> Option<(&mut bool, &mut PropertySchema)> {
         self.as_object_mut()
             .and_then(|obj| obj.find_property_mut(key))
     }
@@ -291,10 +291,28 @@ impl SchemaItem {
     }
 }
 
+/// A property in an object either has its own schema or references an external schema.
+enum PropertySchema {
+    Schema(Schema),
+    Ref(ExprPath),
+}
+
+impl PropertySchema {
+    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
+        match self {
+            PropertySchema::Schema(s) => s.to_schema(ts),
+            PropertySchema::Ref(path) => {
+                ts.extend(quote! { & #path });
+                Ok(())
+            }
+        }
+    }
+}
+
 #[derive(Default)]
 /// Contains a sorted list of properties:
 struct SchemaObject {
-    properties: Vec<(String, bool, Schema)>,
+    properties: Vec<(String, bool, PropertySchema)>,
 }
 
 impl SchemaObject {
@@ -309,6 +327,7 @@ impl SchemaObject {
                     |mut properties, (key, value)| -> Result<_, syn::Error> {
                         let mut schema: JSONObject =
                             value.into_object("schema definition for field")?;
+
                         let optional: bool = schema
                             .remove("optional")
                             .map(|opt| -> Result<bool, syn::Error> {
@@ -317,7 +336,19 @@ impl SchemaObject {
                             })
                             .transpose()?
                             .unwrap_or(false);
-                        properties.push((key.to_string(), optional, schema.try_into()?));
+
+                        let external_schema = schema
+                            .remove("schema")
+                            .map(ExprPath::try_from)
+                            .transpose()?;
+
+                        let schema = match external_schema {
+                            Some(path) => PropertySchema::Ref(path),
+                            None => PropertySchema::Schema(schema.try_into()?),
+                        };
+
+                        properties.push((key.to_string(), optional, schema));
+
                         Ok(properties)
                     },
                 )
@@ -340,7 +371,7 @@ impl SchemaObject {
         Ok(())
     }
 
-    fn find_property(&self, key: &str) -> Option<(bool, &Schema)> {
+    fn find_property(&self, key: &str) -> Option<(bool, &PropertySchema)> {
         match self
             .properties
             .binary_search_by(|prope| prope.0.as_str().cmp(key))
@@ -350,7 +381,7 @@ impl SchemaObject {
         }
     }
 
-    fn find_property_mut(&mut self, key: &str) -> Option<(&mut bool, &mut Schema)> {
+    fn find_property_mut(&mut self, key: &str) -> Option<(&mut bool, &mut PropertySchema)> {
         match self
             .properties
             .binary_search_by(|prope| prope.0.as_str().cmp(key))
