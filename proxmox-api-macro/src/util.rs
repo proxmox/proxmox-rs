@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt;
 
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Span};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
@@ -43,10 +43,10 @@ impl SimpleIdent {
         Ok(unsafe { self.into_ident_unchecked() })
     }
 
-    //#[inline]
-    //pub fn span(&self) -> Span {
-    //    self.0.span()
-    //}
+    #[inline]
+    pub fn span(&self) -> Span {
+        self.0.span()
+    }
 }
 
 impl Eq for SimpleIdent {}
@@ -80,12 +80,6 @@ impl Borrow<str> for SimpleIdent {
     #[inline]
     fn borrow(&self) -> &str {
         self.as_str()
-    }
-}
-
-impl quote::ToTokens for SimpleIdent {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.0.to_tokens(tokens)
     }
 }
 
@@ -276,7 +270,7 @@ impl JSONObject {
         let mut elems = HashMap::with_capacity(map_elems.len());
         for c in map_elems {
             if elems.insert(c.key.clone().into(), c.value).is_some() {
-                bail!(&c.key => "duplicate '{}' in schema", c.key);
+                bail!(c.key.span(), "duplicate '{}' in schema", c.key);
             }
         }
         Ok(elems)
