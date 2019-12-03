@@ -22,7 +22,7 @@ pub struct SimpleIdent(Ident, String);
 
 impl SimpleIdent {
     pub fn new(name: String, span: Span) -> Self {
-        Self(Ident::new(&name, span), name)
+        Self(Ident::new(&name.replace("-", "_"), span), name)
     }
 
     #[inline]
