@@ -13,14 +13,14 @@ pub const NAME_SCHEMA: schema::Schema = schema::StringSchema::new("Archive name.
 #[api(
     input: {
         properties: {
-            name: {
+            "archive-name": {
                 schema: NAME_SCHEMA,
             }
         }
     }
 )]
 /// Get an archive.
-pub fn get_archive(name: String) -> Result<(), Error> {
-    let _ = name;
+pub fn get_archive(archive_name: String) -> Result<(), Error> {
+    let _ = archive_name;
     Ok(())
 }

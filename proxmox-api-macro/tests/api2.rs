@@ -1,7 +1,6 @@
 use proxmox_api_macro::api;
 
 use failure::Error;
-use serde_json::Value;
 
 #[api(
     input: {

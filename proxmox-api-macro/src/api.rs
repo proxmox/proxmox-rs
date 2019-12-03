@@ -8,7 +8,7 @@ use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
 use syn::{ExprPath, Ident};
 
-use crate::util::{JSONObject, JSONValue};
+use crate::util::{JSONObject, JSONValue, SimpleIdent};
 
 mod enums;
 mod method;
@@ -90,7 +90,7 @@ impl TryFrom<JSONObject> for Schema {
             properties: obj.into_iter().try_fold(
                 Vec::new(),
                 |mut properties, (key, value)| -> Result<_, syn::Error> {
-                    properties.push((key.into_ident()?, value.try_into()?));
+                    properties.push((key.into_ident(), value.try_into()?));
                     Ok(properties)
                 },
             )?,
@@ -133,13 +133,20 @@ impl Schema {
         }
     }
 
-    fn find_object_property(&self, key: &str) -> Option<(bool, &PropertySchema)> {
-        self.as_object().and_then(|obj| obj.find_property(key))
+    fn find_obj_property_by_ident(
+        &self,
+        key: &str,
+    ) -> Option<&(SimpleIdent, bool, PropertySchema)> {
+        self.as_object()
+            .and_then(|obj| obj.find_property_by_ident(key))
     }
 
-    fn find_object_property_mut(&mut self, key: &str) -> Option<(&mut bool, &mut PropertySchema)> {
+    fn find_obj_property_by_ident_mut(
+        &mut self,
+        key: &str,
+    ) -> Option<&mut (SimpleIdent, bool, PropertySchema)> {
         self.as_object_mut()
-            .and_then(|obj| obj.find_property_mut(key))
+            .and_then(|obj| obj.find_property_by_ident_mut(key))
     }
 }
 
@@ -312,7 +319,7 @@ impl PropertySchema {
 #[derive(Default)]
 /// Contains a sorted list of properties:
 struct SchemaObject {
-    properties: Vec<(String, bool, PropertySchema)>,
+    properties: Vec<(SimpleIdent, bool, PropertySchema)>,
 }
 
 impl SchemaObject {
@@ -347,7 +354,7 @@ impl SchemaObject {
                             None => PropertySchema::Schema(schema.try_into()?),
                         };
 
-                        properties.push((key.to_string(), optional, schema));
+                        properties.push((key, optional, schema));
 
                         Ok(properties)
                     },
@@ -362,7 +369,7 @@ impl SchemaObject {
 
     fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
         for element in self.properties.iter() {
-            let key = &element.0;
+            let key = element.0.as_str();
             let optional = element.1;
             let mut schema = TokenStream::new();
             element.2.to_schema(&mut schema)?;
@@ -371,25 +378,25 @@ impl SchemaObject {
         Ok(())
     }
 
-    fn find_property(&self, key: &str) -> Option<(bool, &PropertySchema)> {
+    fn find_property_by_ident(&self, key: &str) -> Option<&(SimpleIdent, bool, PropertySchema)> {
         match self
             .properties
-            .binary_search_by(|prope| prope.0.as_str().cmp(key))
+            .binary_search_by(|p| p.0.as_ident_str().cmp(key))
         {
-            Ok(idx) => Some((self.properties[idx].1, &self.properties[idx].2)),
+            Ok(idx) => Some(&self.properties[idx]),
             Err(_) => None,
         }
     }
 
-    fn find_property_mut(&mut self, key: &str) -> Option<(&mut bool, &mut PropertySchema)> {
+    fn find_property_by_ident_mut(
+        &mut self,
+        key: &str,
+    ) -> Option<&mut (SimpleIdent, bool, PropertySchema)> {
         match self
             .properties
-            .binary_search_by(|prope| prope.0.as_str().cmp(key))
+            .binary_search_by(|p| p.0.as_ident_str().cmp(key))
         {
-            Ok(idx) => {
-                let props = &mut self.properties[idx];
-                Some((&mut props.1, &mut props.2))
-            }
+            Ok(idx) => Some(&mut self.properties[idx]),
             Err(_) => None,
         }
     }

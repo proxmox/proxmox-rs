@@ -1,7 +1,6 @@
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::fmt;
 
 use proc_macro2::{Ident, Span};
 use syn::parse::{Parse, ParseStream};
@@ -18,34 +17,50 @@ use syn::Token;
 /// and therefore we do not implement `Into<Ident>` anymore, but the user needs to explicitly ask
 /// for it via the `.into_ident()` method.
 #[derive(Clone, Debug)]
-pub struct SimpleIdent(Ident, String);
+pub struct SimpleIdent {
+    ident: Ident,
+    ident_str: String, // cached string version to avoid all the .to_string() calls
+    string: String,    // hyphenated version
+}
 
 impl SimpleIdent {
     pub fn new(name: String, span: Span) -> Self {
-        Self(Ident::new(&name.replace("-", "_"), span), name)
+        let ident_str = name.replace("-", "_");
+
+        Self {
+            ident: Ident::new(&ident_str, span),
+            ident_str,
+            string: name,
+        }
     }
 
     #[inline]
     pub fn as_str(&self) -> &str {
-        &self.1
+        &self.string
     }
 
     #[inline]
-    pub unsafe fn into_ident_unchecked(self) -> Ident {
-        self.0
+    pub fn as_ident_str(&self) -> &str {
+        &self.ident_str
     }
 
     #[inline]
-    pub fn into_ident(self) -> Result<Ident, syn::Error> {
-        if self.1.as_bytes().contains(&b'-') {
-            bail!(self.0 => "invalid identifier: '{}'", self.1);
-        }
-        Ok(unsafe { self.into_ident_unchecked() })
+    pub fn as_ident(&self) -> &Ident {
+        &self.ident
+    }
+
+    #[inline]
+    pub fn into_ident(self) -> Ident {
+        self.ident
     }
 
     #[inline]
     pub fn span(&self) -> Span {
-        self.0.span()
+        self.ident.span()
+    }
+
+    pub fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.string.cmp(&other.string)
     }
 }
 
@@ -53,26 +68,24 @@ impl Eq for SimpleIdent {}
 
 impl PartialEq for SimpleIdent {
     fn eq(&self, other: &Self) -> bool {
-        self.1 == other.1
+        self.string == other.string
     }
 }
 
 impl std::hash::Hash for SimpleIdent {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        std::hash::Hash::hash(&self.1, state)
+        std::hash::Hash::hash(&self.string, state)
     }
 }
 
 impl From<Ident> for SimpleIdent {
     fn from(ident: Ident) -> Self {
-        let s = ident.to_string();
-        Self(ident, s)
-    }
-}
-
-impl fmt::Display for SimpleIdent {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&self.0, f)
+        let string = ident.to_string();
+        Self {
+            ident,
+            ident_str: string.clone(),
+            string,
+        }
     }
 }
 
@@ -87,15 +100,16 @@ impl Borrow<str> for SimpleIdent {
 impl Parse for SimpleIdent {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
-        Ok(Self::from(if lookahead.peek(Token![type]) {
+        Ok(if lookahead.peek(Token![type]) {
             let ty: Token![type] = input.parse()?;
-            Ident::new("type", ty.span)
+            Self::new("type".to_string(), ty.span)
         } else if lookahead.peek(syn::LitStr) {
             let s: syn::LitStr = input.parse()?;
-            Ident::new(&s.value(), s.span())
+            Self::new(s.value(), s.span())
         } else {
-            input.parse()?
-        }))
+            let ident: Ident = input.parse()?;
+            Self::from(ident)
+        })
     }
 }
 
@@ -270,7 +284,7 @@ impl JSONObject {
         let mut elems = HashMap::with_capacity(map_elems.len());
         for c in map_elems {
             if elems.insert(c.key.clone().into(), c.value).is_some() {
-                bail!(c.key.span(), "duplicate '{}' in schema", c.key);
+                bail!(c.key.span(), "duplicate '{}' in schema", c.key.as_str());
             }
         }
         Ok(elems)

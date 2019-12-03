@@ -202,8 +202,8 @@ fn handle_function_signature(
         let (pat_type, pat) = check_input_type(input)?;
 
         // For any named type which exists on the function signature...
-        let schema: &mut Schema = if let Some((_optional, schema)) =
-            input_schema.find_object_property_mut(&pat.ident.to_string())
+        let schema: &mut Schema = if let Some((_ident, _optional, schema)) =
+            input_schema.find_obj_property_by_ident_mut(&pat.ident.to_string())
         {
             match schema {
                 PropertySchema::Schema(schema) => match &mut schema.item {
@@ -268,8 +268,9 @@ fn handle_function_signature(
         //
         //     5) Finally, if none of the above conditions are met, we do not know what to do and
         //        bail out with an error.
-        let param_type = if let Some((optional, schema)) =
-            input_schema.find_object_property(&pat.ident.to_string())
+        let mut param_name: SimpleIdent = pat.ident.clone().into();
+        let param_type = if let Some((name, optional, schema)) =
+            input_schema.find_obj_property_by_ident(&pat.ident.to_string())
         {
             match schema {
                 PropertySchema::Schema(schema) => match &schema.item {
@@ -278,8 +279,9 @@ fn handle_function_signature(
                 },
                 _ => (),
             }
+            param_name = name.clone();
             // Found an explicit parameter: extract it:
-            ParameterType::Other(&pat_type.ty, optional, schema)
+            ParameterType::Other(&pat_type.ty, *optional, schema)
         } else if is_api_method_type(&pat_type.ty) {
             if api_method_param.is_some() {
                 bail!(pat_type => "multiple ApiMethod parameters found");
@@ -302,7 +304,7 @@ fn handle_function_signature(
             bail!(&pat.ident => "unexpected parameter");
         };
 
-        param_list.push((pat.ident.clone().into(), param_type));
+        param_list.push((param_name, param_type));
     }
 
     /*
@@ -396,8 +398,9 @@ fn create_wrapper_function(
             ParameterType::ApiMethod => args.extend(quote_spanned! { span => api_method_param, }),
             ParameterType::RpcEnv => args.extend(quote_spanned! { span => rpc_env_param, }),
             ParameterType::Other(_ty, optional, _schema) => {
-                let name_str = syn::LitStr::new(&name.to_string(), span);
-                let arg_name = Ident::new(&format!("input_arg_{}", name), span);
+                let name_str = syn::LitStr::new(name.as_str(), span);
+                let arg_name =
+                    Ident::new(&format!("input_arg_{}", name.as_ident().to_string()), span);
 
                 // Optional parameters are expected to be Option<> types in the real function
                 // signature, so we can just keep the returned Option from `input_map.remove()`.
