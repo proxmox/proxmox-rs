@@ -76,22 +76,6 @@ impl fmt::Display for SimpleIdent {
     }
 }
 
-impl std::ops::Deref for SimpleIdent {
-    type Target = Ident;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl std::ops::DerefMut for SimpleIdent {
-    #[inline]
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 impl Borrow<str> for SimpleIdent {
     #[inline]
     fn borrow(&self) -> &str {
