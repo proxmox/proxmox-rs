@@ -352,7 +352,7 @@ fn is_value_type(ty: &syn::Type) -> bool {
 
 fn create_wrapper_function(
     _input_schema: &Schema,
-    returns_schema: &Option<Schema>,
+    _returns_schema: &Option<Schema>,
     param_list: Vec<(FieldName, ParameterType)>,
     func: &syn::ItemFn,
     wrapper_ts: &mut TokenStream,
@@ -364,7 +364,6 @@ fn create_wrapper_function(
 
     let mut body = TokenStream::new();
     let mut args = TokenStream::new();
-    let mut return_stmt = TokenStream::new();
 
     for (name, param) in param_list {
         let span = name.span();
@@ -404,17 +403,6 @@ fn create_wrapper_function(
         }
     }
 
-    if returns_schema.is_some() {
-        return_stmt.extend(quote! {
-            Ok(::serde_json::to_value(output)?)
-        });
-    } else {
-        return_stmt.extend(quote! {
-            let _ = output;
-            Ok(::serde_json::Value::Null)
-        });
-    }
-
     // build the wrapping function:
     let func_name = &func.sig.ident;
     wrapper_ts.extend(quote! {
@@ -425,8 +413,7 @@ fn create_wrapper_function(
         ) -> Result<::serde_json::Value, ::failure::Error> {
             if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
                 #body
-                let output = #func_name(#args)?;
-                #return_stmt
+                Ok(::serde_json::to_value(#func_name(#args)?)?)
             } else {
                 ::failure::bail!("api function wrapper called with a non-object json value");
             }
