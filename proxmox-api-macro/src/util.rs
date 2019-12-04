@@ -375,3 +375,25 @@ impl<T: Parse> Parse for BareAssignment<T> {
         })
     }
 }
+
+pub fn get_doc_comments(attributes: &[syn::Attribute]) -> Result<(String, Span), syn::Error> {
+    let mut doc_comment = String::new();
+    let doc_span = Span::call_site(); // FIXME: set to first doc comment
+
+    for attr in attributes {
+        // skip #![...]
+        if let syn::AttrStyle::Inner(_) = &attr.style {
+            continue;
+        }
+
+        if attr.path.is_ident("doc") {
+            let doc: BareAssignment<syn::LitStr> = syn::parse2(attr.tokens.clone())?;
+            if !doc_comment.is_empty() {
+                doc_comment.push_str("\n");
+            }
+            doc_comment.push_str(doc.content.value().trim());
+        }
+    }
+
+    Ok((doc_comment, doc_span))
+}

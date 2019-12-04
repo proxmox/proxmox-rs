@@ -1,5 +1,4 @@
 use std::convert::{TryFrom, TryInto};
-use std::mem;
 
 use failure::Error;
 
@@ -9,7 +8,7 @@ use syn::spanned::Spanned;
 use syn::Ident;
 
 use super::{PropertySchema, Schema, SchemaItem};
-use crate::util::{BareAssignment, JSONObject, FieldName};
+use crate::util::{self, FieldName, JSONObject};
 
 /// Parse `input`, `returns` and `protected` attributes out of an function annotated
 /// with an `#[api]` attribute and produce a `const ApiMethod` named after the function.
@@ -39,7 +38,13 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         .transpose()?
         .unwrap_or(false);
 
-    api_function_attributes(&mut input_schema, &mut returns_schema, &mut func.attrs)?;
+    let (doc_comment, doc_span) = util::get_doc_comments(&func.attrs)?;
+    derive_descriptions(
+        &mut input_schema,
+        &mut returns_schema,
+        &doc_comment,
+        doc_span,
+    )?;
 
     let mut wrapper_ts = TokenStream::new();
     let api_func_name = handle_function_signature(
@@ -87,36 +92,6 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         #func
     })
     //Ok(quote::quote!(#func))
-}
-
-fn api_function_attributes(
-    input_schema: &mut Schema,
-    returns_schema: &mut Option<Schema>,
-    attrs: &mut Vec<syn::Attribute>,
-) -> Result<(), Error> {
-    let mut doc_comment = String::new();
-    let doc_span = Span::call_site(); // FIXME: set to first doc comment
-
-    for attr in mem::replace(attrs, Vec::new()) {
-        // don't mess with #![...]
-        if let syn::AttrStyle::Inner(_) = &attr.style {
-            attrs.push(attr);
-            continue;
-        }
-
-        if attr.path.is_ident("doc") {
-            let doc: BareAssignment<syn::LitStr> = syn::parse2(attr.tokens.clone())?;
-            if !doc_comment.is_empty() {
-                doc_comment.push_str("\n");
-            }
-            doc_comment.push_str(doc.content.value().trim());
-            attrs.push(attr);
-        } else {
-            attrs.push(attr);
-        }
-    }
-
-    derive_descriptions(input_schema, returns_schema, &doc_comment, doc_span)
 }
 
 fn derive_descriptions(
