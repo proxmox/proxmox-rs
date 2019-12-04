@@ -9,7 +9,7 @@ use syn::punctuated::Punctuated;
 use syn::Token;
 
 use super::Schema;
-use crate::util::{JSONObject, JSONValue, FieldName};
+use crate::util::{self, FieldName, JSONObject, JSONValue};
 
 /// `parse_macro_input!` expects a TokenStream_1
 struct AttrArgs {
@@ -44,7 +44,13 @@ pub fn handle_enum(
     }
 
     let schema = {
-        let schema: Schema = attribs.try_into()?;
+        let mut schema: Schema = attribs.try_into()?;
+
+        if schema.description.is_none() {
+            let (comment, span) = util::get_doc_comments(&enum_ty.attrs)?;
+            schema.description = Some(syn::LitStr::new(comment.trim(), span));
+        }
+
         let mut ts = TokenStream::new();
         schema.to_typed_schema(&mut ts)?;
         ts

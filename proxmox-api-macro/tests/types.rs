@@ -23,8 +23,9 @@ impl OkString {
         .schema();
 }
 
-#[api(description: "A selection of either a, B or C")]
+#[api]
 #[derive(Deserialize)]
+/// A selection of either a, B or C
 pub enum Selection {
     #[serde(rename = "a")]
     A,
