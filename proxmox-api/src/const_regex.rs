@@ -19,6 +19,14 @@ impl fmt::Debug for ConstRegexPattern {
     }
 }
 
+impl std::ops::Deref for ConstRegexPattern {
+    type Target = regex::Regex;
+
+    fn deref(&self) -> &Self::Target {
+        (self.regex_obj)()
+    }
+}
+
 /// Macro to generate a ConstRegexPattern
 ///
 /// ```
