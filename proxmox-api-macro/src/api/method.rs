@@ -405,6 +405,12 @@ fn create_wrapper_function(
 
     // build the wrapping function:
     let func_name = &func.sig.ident;
+
+    let question_mark = match func.sig.output {
+        syn::ReturnType::Default => None,
+        _ => Some(quote!(?)),
+    };
+
     wrapper_ts.extend(quote! {
         fn #api_func_name(
             mut input_params: ::serde_json::Value,
@@ -413,7 +419,7 @@ fn create_wrapper_function(
         ) -> Result<::serde_json::Value, ::failure::Error> {
             if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
                 #body
-                Ok(::serde_json::to_value(#func_name(#args)?)?)
+                Ok(::serde_json::to_value(#func_name(#args) #question_mark)?)
             } else {
                 ::failure::bail!("api function wrapper called with a non-object json value");
             }

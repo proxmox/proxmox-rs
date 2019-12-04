@@ -21,9 +21,8 @@ pub const NAME_SCHEMA: schema::Schema = schema::StringSchema::new("Archive name.
     }
 )]
 /// Get an archive.
-pub fn get_archive(archive_name: String) -> Result<(), Error> {
+pub fn get_archive(archive_name: String) {
     let _ = archive_name;
-    Ok(())
 }
 
 #[api(
