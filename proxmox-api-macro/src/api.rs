@@ -8,7 +8,7 @@ use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
 use syn::{ExprPath, Ident};
 
-use crate::util::{JSONObject, JSONValue, SimpleIdent};
+use crate::util::{JSONObject, JSONValue, FieldName};
 
 mod enums;
 mod method;
@@ -136,7 +136,7 @@ impl Schema {
     fn find_obj_property_by_ident(
         &self,
         key: &str,
-    ) -> Option<&(SimpleIdent, bool, PropertySchema)> {
+    ) -> Option<&(FieldName, bool, PropertySchema)> {
         self.as_object()
             .and_then(|obj| obj.find_property_by_ident(key))
     }
@@ -144,7 +144,7 @@ impl Schema {
     fn find_obj_property_by_ident_mut(
         &mut self,
         key: &str,
-    ) -> Option<&mut (SimpleIdent, bool, PropertySchema)> {
+    ) -> Option<&mut (FieldName, bool, PropertySchema)> {
         self.as_object_mut()
             .and_then(|obj| obj.find_property_by_ident_mut(key))
     }
@@ -319,7 +319,7 @@ impl PropertySchema {
 #[derive(Default)]
 /// Contains a sorted list of properties:
 struct SchemaObject {
-    properties: Vec<(SimpleIdent, bool, PropertySchema)>,
+    properties: Vec<(FieldName, bool, PropertySchema)>,
 }
 
 impl SchemaObject {
@@ -378,7 +378,7 @@ impl SchemaObject {
         Ok(())
     }
 
-    fn find_property_by_ident(&self, key: &str) -> Option<&(SimpleIdent, bool, PropertySchema)> {
+    fn find_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, PropertySchema)> {
         match self
             .properties
             .binary_search_by(|p| p.0.as_ident_str().cmp(key))
@@ -391,7 +391,7 @@ impl SchemaObject {
     fn find_property_by_ident_mut(
         &mut self,
         key: &str,
-    ) -> Option<&mut (SimpleIdent, bool, PropertySchema)> {
+    ) -> Option<&mut (FieldName, bool, PropertySchema)> {
         match self
             .properties
             .binary_search_by(|p| p.0.as_ident_str().cmp(key))

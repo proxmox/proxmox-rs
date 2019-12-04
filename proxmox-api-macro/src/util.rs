@@ -17,13 +17,13 @@ use syn::Token;
 /// and therefore we do not implement `Into<Ident>` anymore, but the user needs to explicitly ask
 /// for it via the `.into_ident()` method.
 #[derive(Clone, Debug)]
-pub struct SimpleIdent {
+pub struct FieldName {
     ident: Ident,
     ident_str: String, // cached string version to avoid all the .to_string() calls
     string: String,    // hyphenated version
 }
 
-impl SimpleIdent {
+impl FieldName {
     pub fn new(name: String, span: Span) -> Self {
         let ident_str = name.replace("-", "_");
 
@@ -64,21 +64,21 @@ impl SimpleIdent {
     }
 }
 
-impl Eq for SimpleIdent {}
+impl Eq for FieldName {}
 
-impl PartialEq for SimpleIdent {
+impl PartialEq for FieldName {
     fn eq(&self, other: &Self) -> bool {
         self.string == other.string
     }
 }
 
-impl std::hash::Hash for SimpleIdent {
+impl std::hash::Hash for FieldName {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::hash::Hash::hash(&self.string, state)
     }
 }
 
-impl From<Ident> for SimpleIdent {
+impl From<Ident> for FieldName {
     fn from(ident: Ident) -> Self {
         let string = ident.to_string();
         Self {
@@ -89,7 +89,7 @@ impl From<Ident> for SimpleIdent {
     }
 }
 
-impl Borrow<str> for SimpleIdent {
+impl Borrow<str> for FieldName {
     #[inline]
     fn borrow(&self) -> &str {
         self.as_str()
@@ -97,7 +97,7 @@ impl Borrow<str> for SimpleIdent {
 }
 
 /// Note that the 'type' keyword is handled separately in `syn`. It's not an `Ident`:
-impl Parse for SimpleIdent {
+impl Parse for FieldName {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let lookahead = input.lookahead1();
         Ok(if lookahead.peek(Token![type]) {
@@ -239,10 +239,10 @@ impl TryFrom<JSONValue> for Ident {
 
 /// Expect a json value to be our "simple" identifier, which can be either an Ident or a String, or
 /// the 'type' keyword:
-impl TryFrom<JSONValue> for SimpleIdent {
+impl TryFrom<JSONValue> for FieldName {
     type Error = syn::Error;
     fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
-        Ok(SimpleIdent::from(Ident::try_from(value)?))
+        Ok(FieldName::from(Ident::try_from(value)?))
     }
 }
 
@@ -274,11 +274,11 @@ impl Parse for JSONValue {
 /// The "core" of our schema is a json object.
 pub struct JSONObject {
     pub brace_token: syn::token::Brace,
-    pub elements: HashMap<SimpleIdent, JSONValue>,
+    pub elements: HashMap<FieldName, JSONValue>,
 }
 
 impl JSONObject {
-    fn parse_elements(input: ParseStream) -> syn::Result<HashMap<SimpleIdent, JSONValue>> {
+    fn parse_elements(input: ParseStream) -> syn::Result<HashMap<FieldName, JSONValue>> {
         let map_elems: Punctuated<JSONMapEntry, Token![,]> =
             input.parse_terminated(JSONMapEntry::parse)?;
         let mut elems = HashMap::with_capacity(map_elems.len());
@@ -311,7 +311,7 @@ impl Parse for JSONObject {
 }
 
 impl std::ops::Deref for JSONObject {
-    type Target = HashMap<SimpleIdent, JSONValue>;
+    type Target = HashMap<FieldName, JSONValue>;
 
     fn deref(&self) -> &Self::Target {
         &self.elements
@@ -336,8 +336,8 @@ impl JSONObject {
 }
 
 impl IntoIterator for JSONObject {
-    type Item = <HashMap<SimpleIdent, JSONValue> as IntoIterator>::Item;
-    type IntoIter = <HashMap<SimpleIdent, JSONValue> as IntoIterator>::IntoIter;
+    type Item = <HashMap<FieldName, JSONValue> as IntoIterator>::Item;
+    type IntoIter = <HashMap<FieldName, JSONValue> as IntoIterator>::IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         self.elements.into_iter()
@@ -346,7 +346,7 @@ impl IntoIterator for JSONObject {
 
 /// An element in a json style map.
 struct JSONMapEntry {
-    pub key: SimpleIdent,
+    pub key: FieldName,
     pub colon_token: Token![:],
     pub value: JSONValue,
 }

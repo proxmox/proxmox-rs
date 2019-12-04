@@ -9,7 +9,7 @@ use syn::spanned::Spanned;
 use syn::Ident;
 
 use super::{PropertySchema, Schema, SchemaItem};
-use crate::util::{BareAssignment, JSONObject, SimpleIdent};
+use crate::util::{BareAssignment, JSONObject, FieldName};
 
 /// Parse `input`, `returns` and `protected` attributes out of an function annotated
 /// with an `#[api]` attribute and produce a `const ApiMethod` named after the function.
@@ -196,7 +196,7 @@ fn handle_function_signature(
     let mut rpc_env_param = None;
     let mut value_param = None;
 
-    let mut param_list = Vec::<(SimpleIdent, ParameterType)>::new();
+    let mut param_list = Vec::<(FieldName, ParameterType)>::new();
 
     for input in sig.inputs.iter() {
         let (pat_type, pat) = check_input_type(input)?;
@@ -268,7 +268,7 @@ fn handle_function_signature(
         //
         //     5) Finally, if none of the above conditions are met, we do not know what to do and
         //        bail out with an error.
-        let mut param_name: SimpleIdent = pat.ident.clone().into();
+        let mut param_name: FieldName = pat.ident.clone().into();
         let param_type = if let Some((name, optional, schema)) =
             input_schema.find_obj_property_by_ident(&pat.ident.to_string())
         {
@@ -378,7 +378,7 @@ fn is_value_type(ty: &syn::Type) -> bool {
 fn create_wrapper_function(
     _input_schema: &Schema,
     returns_schema: &Option<Schema>,
-    param_list: Vec<(SimpleIdent, ParameterType)>,
+    param_list: Vec<(FieldName, ParameterType)>,
     func: &syn::ItemFn,
     wrapper_ts: &mut TokenStream,
 ) -> Result<Ident, Error> {

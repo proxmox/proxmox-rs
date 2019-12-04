@@ -9,7 +9,7 @@ use syn::punctuated::Punctuated;
 use syn::Token;
 
 use super::Schema;
-use crate::util::{JSONObject, JSONValue, SimpleIdent};
+use crate::util::{JSONObject, JSONValue, FieldName};
 
 /// `parse_macro_input!` expects a TokenStream_1
 struct AttrArgs {
@@ -34,7 +34,7 @@ pub fn handle_enum(
 ) -> Result<TokenStream, Error> {
     if !attribs.contains_key("type") {
         attribs.insert(
-            SimpleIdent::new("type".to_string(), Span::call_site()),
+            FieldName::new("type".to_string(), Span::call_site()),
             JSONValue::new_ident(Ident::new("String", enum_ty.enum_token.span)),
         );
     }
