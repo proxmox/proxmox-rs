@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use hyper::Method;
+use http::Method;
 
 use crate::ApiMethod;
 

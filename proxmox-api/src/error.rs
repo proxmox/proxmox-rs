@@ -3,7 +3,7 @@ use std::fmt;
 use failure::Fail;
 
 #[doc(hidden)]
-pub use hyper::StatusCode;
+pub use http::StatusCode;
 
 /// HTTP error including `StatusCode` and message.
 #[derive(Debug, Fail)]

@@ -5,8 +5,9 @@ use std::future::Future;
 use std::pin::Pin;
 
 use failure::Error;
-use hyper::http::request::Parts;
-use hyper::{Body, Response};
+use http::request::Parts;
+use http::Response;
+use hyper::Body;
 use serde_json::Value;
 
 #[doc(hidden)]
