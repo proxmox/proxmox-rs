@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use crate::{RpcEnvironment, RpcEnvironmentType};
 
 /// `RpcEnvironmet` implementation for command line tools
+#[derive(Default)]
 pub struct CliEnvironment {
     result_attributes: HashMap<String, Value>,
     user: Option<String>,
@@ -11,10 +12,7 @@ pub struct CliEnvironment {
 
 impl CliEnvironment {
     pub fn new() -> Self {
-        Self {
-            result_attributes: HashMap::new(),
-            user: None,
-        }
+        Default::default()
     }
 }
 

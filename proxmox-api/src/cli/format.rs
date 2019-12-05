@@ -1,3 +1,5 @@
+#![allow(clippy::match_bool)] // just no...
+
 use serde_json::Value;
 
 use std::collections::HashSet;
@@ -93,7 +95,7 @@ pub fn generate_usage_str(
         let type_text = get_schema_type_text(param_schema, ParameterDisplayStyle::Arg);
 
         if *optional {
-            if options.len() > 0 {
+            if !options.is_empty() {
                 options.push('\n');
             }
             options.push_str(&get_property_description(
@@ -112,7 +114,11 @@ pub fn generate_usage_str(
         done_hash.insert(prop);
     }
 
-    let option_indicator = if options.len() > 0 { " [OPTIONS]" } else { "" };
+    let option_indicator = if !options.is_empty() {
+        " [OPTIONS]"
+    } else {
+        ""
+    };
 
     let mut text = match format {
         DocumentationFormat::Short => {
@@ -131,11 +137,11 @@ pub fn generate_usage_str(
         ),
     };
 
-    if arg_descr.len() > 0 {
+    if !arg_descr.is_empty() {
         text.push_str(&arg_descr);
         text.push('\n');
     }
-    if options.len() > 0 {
+    if !options.is_empty() {
         text.push_str(&options);
         text.push('\n');
     }
@@ -170,7 +176,7 @@ pub fn generate_nested_usage(
 
         match def.commands.get(cmd).unwrap() {
             CommandLineInterface::Simple(cli_cmd) => {
-                if usage.len() > 0 && format == DocumentationFormat::ReST {
+                if !usage.is_empty() && format == DocumentationFormat::ReST {
                     usage.push_str("----\n\n");
                 }
                 usage.push_str(&generate_usage_str(&new_prefix, cli_cmd, format, ""));
@@ -188,7 +194,7 @@ pub fn generate_nested_usage(
 pub fn print_help(
     top_def: &CommandLineInterface,
     mut prefix: String,
-    args: &Vec<String>,
+    args: &[String],
     verbose: Option<bool>,
 ) {
     let mut iface = top_def;

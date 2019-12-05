@@ -45,7 +45,7 @@ fn get_property_completion(
             let mut completions = Vec::new();
             for value in list.iter() {
                 if value.starts_with(arg) {
-                    completions.push(value.to_string());
+                    completions.push((*value).to_string());
                 }
             }
             return completions;
@@ -58,13 +58,13 @@ fn get_property_completion(
         lowercase_arg.make_ascii_lowercase();
         for value in ["0", "1", "yes", "no", "true", "false", "on", "off"].iter() {
             if value.starts_with(&lowercase_arg) {
-                completions.push(value.to_string());
+                completions.push((*value).to_string());
             }
         }
         return completions;
     }
 
-    return Vec::new();
+    Vec::new()
 }
 
 fn get_simple_completion(
@@ -81,7 +81,9 @@ fn get_simple_completion(
         if args.len() > 1 {
             record_done_argument(done, cli_cmd.info.parameters, prop_name, &args[0]);
             return get_simple_completion(cli_cmd, done, &arg_param[1..], &args[1..]);
-        } else if args.len() == 1 {
+        }
+
+        if args.len() == 1 {
             record_done_argument(done, cli_cmd.info.parameters, prop_name, &args[0]);
             if let Some((_, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
                 return get_property_completion(
@@ -93,6 +95,7 @@ fn get_simple_completion(
                 );
             }
         }
+
         return Vec::new();
     }
     if args.is_empty() {
@@ -115,7 +118,7 @@ fn get_simple_completion(
     let prefix = &args[args.len() - 1]; // match on last arg
 
     // complete option-name or option-value ?
-    if !prefix.starts_with("-") && args.len() > 1 {
+    if !prefix.starts_with('-') && args.len() > 1 {
         let last = &args[args.len() - 2];
         if last.starts_with("--") && last.len() > 2 {
             let prop_name = &last[2..];
@@ -156,9 +159,7 @@ fn get_help_completion(
     let mut done = HashMap::new();
 
     match def {
-        CommandLineInterface::Simple(_) => {
-            return get_simple_completion(help_cmd, &mut done, &[], args);
-        }
+        CommandLineInterface::Simple(_) => get_simple_completion(help_cmd, &mut done, &[], args),
         CommandLineInterface::Nested(map) => {
             if args.is_empty() {
                 let mut completions = Vec::new();
@@ -177,7 +178,7 @@ fn get_help_completion(
                 return Vec::new();
             }
 
-            if first.starts_with("-") {
+            if first.starts_with('-') {
                 return get_simple_completion(help_cmd, &mut done, &[], args);
             }
 
@@ -187,7 +188,7 @@ fn get_help_completion(
                     completions.push(cmd.to_string());
                 }
             }
-            return completions;
+            completions
         }
     }
 }
@@ -199,7 +200,7 @@ fn get_nested_completion(def: &CommandLineInterface, args: &[String]) -> Vec<Str
             cli_cmd.fixed_param.iter().for_each(|(key, value)| {
                 record_done_argument(&mut done, &cli_cmd.info.parameters, &key, &value);
             });
-            return get_simple_completion(cli_cmd, &mut done, &cli_cmd.arg_param, args);
+            get_simple_completion(cli_cmd, &mut done, &cli_cmd.arg_param, args)
         }
         CommandLineInterface::Nested(map) => {
             if args.is_empty() {
@@ -222,7 +223,7 @@ fn get_nested_completion(def: &CommandLineInterface, args: &[String]) -> Vec<Str
                     completions.push(cmd.to_string());
                 }
             }
-            return completions;
+            completions
         }
     }
 }
@@ -272,7 +273,7 @@ pub fn get_completions(
     };
 
     if skip_first {
-        if args.len() == 0 {
+        if args.is_empty() {
             return (0, Vec::new());
         }
 

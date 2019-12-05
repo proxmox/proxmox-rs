@@ -93,6 +93,7 @@ impl CliCommand {
 }
 
 /// Define nested CLI commands.
+#[derive(Default)]
 pub struct CliCommandMap {
     /// Each command has an unique name. The map associates names with
     /// command definitions.
@@ -102,9 +103,7 @@ pub struct CliCommandMap {
 impl CliCommandMap {
     /// Create a new instance.
     pub fn new() -> Self {
-        Self {
-            commands: HashMap::new(),
-        }
+        Default::default()
     }
 
     /// Insert another command.

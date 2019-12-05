@@ -634,7 +634,7 @@ pub fn parse_parameter_strings(
         }
     }
 
-    if test_required && errors.len() == 0 {
+    if test_required && errors.is_empty() {
         for (name, optional, _prop_schema) in schema.properties {
             if !(*optional) && params[name] == Value::Null {
                 errors.push(format_err!(

@@ -21,28 +21,27 @@ fn parse_argument(arg: &str) -> RawArgument {
         };
     }
 
-    let mut first = 1;
-
-    if bytes[1] == b'-' {
+    let first = if bytes[1] == b'-' {
         if length == 2 {
             return RawArgument::Separator;
         }
-        first = 2;
-    }
+        2
+    } else {
+        1
+    };
 
-    for start in first..length {
-        if bytes[start] == b'=' {
-            // Since we take a &str, we know the contents of it are valid utf8.
-            // Since bytes[start] == b'=', we know the byte beginning at start is a single-byte
-            // code pointer. We also know that 'first' points exactly after a single-byte code
-            // point as it points to the first byte after a hyphen.
-            // Therefore we know arg[first..start] is valid utf-8, therefore it is safe to use
-            // get_unchecked() to speed things up.
-            return RawArgument::Option {
-                name: unsafe { arg.get_unchecked(first..start).to_string() },
-                value: Some(unsafe { arg.get_unchecked((start + 1)..).to_string() }),
-            };
-        }
+    if let Some(i) = bytes[first..length].iter().position(|b| *b == b'=') {
+        let start = i + first;
+        // Since we take a &str, we know the contents of it are valid utf8.
+        // Since bytes[start] == b'=', we know the byte beginning at start is a single-byte
+        // code pointer. We also know that 'first' points exactly after a single-byte code
+        // point as it points to the first byte after a hyphen.
+        // Therefore we know arg[first..start] is valid utf-8, therefore it is safe to use
+        // get_unchecked() to speed things up.
+        return RawArgument::Option {
+            name: unsafe { arg.get_unchecked(first..start).to_string() },
+            value: Some(unsafe { arg.get_unchecked((start + 1)..).to_string() }),
+        };
     }
 
     RawArgument::Option {
@@ -76,12 +75,9 @@ pub(crate) fn parse_argument_list<T: AsRef<str>>(
                     if let Some((_optional, param_schema)) = schema.lookup(&name) {
                         if let Schema::Boolean(boolean_schema) = param_schema {
                             want_bool = true;
-                            if let Some(default) = boolean_schema.default {
-                                if default == false {
-                                    can_default = true;
-                                }
-                            } else {
-                                can_default = true;
+                            match boolean_schema.default {
+                                Some(false) | None => can_default = true,
+                                Some(true) => (),
                             }
                         }
                     }
@@ -93,7 +89,7 @@ pub(crate) fn parse_argument_list<T: AsRef<str>>(
                         let next = args[pos + 1].as_ref();
                         if let RawArgument::Argument { .. } = parse_argument(next) {
                             next_is_argument = true;
-                            if let Ok(_) = parse_boolean(next) {
+                            if parse_boolean(next).is_ok() {
                                 next_is_bool = true;
                             }
                         }
@@ -181,7 +177,7 @@ pub fn parse_arguments<T: AsRef<str>>(
         let name = arg_param[i];
         let is_last_arg_param = i == (arg_param.len() - 1);
 
-        if rest.len() == 0 {
+        if rest.is_empty() {
             if !(is_last_arg_param && last_arg_param_is_optional) {
                 errors.push(format_err!("missing argument '{}'", name));
             }
@@ -195,7 +191,7 @@ pub fn parse_arguments<T: AsRef<str>>(
         }
     }
 
-    if errors.len() > 0 {
+    if !errors.is_empty() {
         return Err(errors);
     }
 

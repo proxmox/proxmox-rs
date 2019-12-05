@@ -73,7 +73,7 @@ fn handle_nested_command(
     def: &CliCommandMap,
     mut args: Vec<String>,
 ) -> Result<(), Error> {
-    if args.len() < 1 {
+    if args.is_empty() {
         let mut cmds: Vec<&String> = def.commands.keys().collect();
         cmds.sort();
 
@@ -214,7 +214,7 @@ pub fn handle_command(
 pub fn run_cli_command(def: CommandLineInterface) {
     let def = match def {
         CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
-        CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help().into()),
+        CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help()),
     };
 
     let mut args = std::env::args();
@@ -244,7 +244,7 @@ pub fn run_cli_command(def: CommandLineInterface) {
         }
     }
 
-    if let Err(_) = handle_command(Arc::new(def), &prefix, args) {
+    if handle_command(Arc::new(def), &prefix, args).is_err() {
         std::process::exit(-1);
     }
 }

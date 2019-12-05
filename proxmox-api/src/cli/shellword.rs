@@ -112,7 +112,7 @@ pub fn shellword_split_unclosed(
 /// Return words unescaped and without quotes.
 pub fn shellword_split(s: &str) -> Result<Vec<String>, Error> {
     let (args, unclosed_field) = shellword_split_unclosed(s, true);
-    if !unclosed_field.is_none() {
+    if unclosed_field.is_some() {
         bail!("shellword split failed - found unclosed quote.");
     }
     Ok(args)

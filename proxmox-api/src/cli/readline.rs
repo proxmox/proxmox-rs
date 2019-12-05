@@ -36,7 +36,7 @@ impl rustyline::completion::Completer for CliHelper {
 
         let (start, completions) = super::get_completions(&*self.cmd_def, line, false);
 
-        return Ok((start, completions));
+        Ok((start, completions))
     }
 }
 

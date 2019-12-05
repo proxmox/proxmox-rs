@@ -291,7 +291,7 @@ pub fn dump_api(
             //keys.sort_unstable_by(|a, b| a.cmp(b));
             for (key, sub_router) in dirmap.iter() {
                 let sub_path = if path == "." {
-                    key.to_string()
+                    (*key).to_string()
                 } else {
                     format!("{}/{}", path, key)
                 };
