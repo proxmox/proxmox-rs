@@ -116,6 +116,8 @@ impl Parse for FieldName {
 /// Most of our schema definition consists of a json-like notation.
 /// For parsing we mostly just need to destinguish between objects and non-objects.
 /// For specific expression types we match on the contained expression later on.
+// FIXME: Expr(Box<syn::Expr>)
+#[allow(clippy::large_enum_variant)]
 pub enum JSONValue {
     Object(JSONObject),
     Expr(syn::Expr),
@@ -283,7 +285,7 @@ impl JSONObject {
             input.parse_terminated(JSONMapEntry::parse)?;
         let mut elems = HashMap::with_capacity(map_elems.len());
         for c in map_elems {
-            if elems.insert(c.key.clone().into(), c.value).is_some() {
+            if elems.insert(c.key.clone(), c.value).is_some() {
                 bail!(c.key.span(), "duplicate '{}' in schema", c.key.as_str());
             }
         }

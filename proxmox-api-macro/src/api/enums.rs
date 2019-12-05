@@ -73,17 +73,14 @@ pub fn handle_enum(
 
             let args: AttrArgs = syn::parse2(attrib.tokens.clone())?;
             for arg in args.args {
-                match arg {
-                    syn::NestedMeta::Meta(syn::Meta::NameValue(var)) => {
-                        if var.path.is_ident("rename") {
-                            match var.lit {
-                                syn::Lit::Str(lit) => variants.push(lit),
-                                _ => bail!(var.lit => "'rename' value must be a string literal"),
-                            }
-                            renamed = true;
+                if let syn::NestedMeta::Meta(syn::Meta::NameValue(var)) = arg {
+                    if var.path.is_ident("rename") {
+                        match var.lit {
+                            syn::Lit::Str(lit) => variants.push(lit),
+                            _ => bail!(var.lit => "'rename' value must be a string literal"),
                         }
+                        renamed = true;
                     }
-                    _ => (), // ignore
                 }
             }
         }

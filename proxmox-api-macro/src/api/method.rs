@@ -62,13 +62,10 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
 
     let returns_schema = {
         let mut ts = TokenStream::new();
-        match returns_schema {
-            Some(schema) => {
-                let mut inner = TokenStream::new();
-                schema.to_schema(&mut inner)?;
-                ts.extend(quote! { .returns(#inner) });
-            }
-            None => (),
+        if let Some(schema) = returns_schema {
+            let mut inner = TokenStream::new();
+            schema.to_schema(&mut inner)?;
+            ts.extend(quote! { .returns(#inner) });
         }
         ts
     };
@@ -247,12 +244,10 @@ fn handle_function_signature(
         let param_type = if let Some((name, optional, schema)) =
             input_schema.find_obj_property_by_ident(&pat.ident.to_string())
         {
-            match schema {
-                PropertySchema::Schema(schema) => match &schema.item {
-                    SchemaItem::Inferred(span) => bail!(*span, "failed to infer type"),
-                    _ => (),
-                },
-                _ => (),
+            if let PropertySchema::Schema(schema) = schema {
+                if let SchemaItem::Inferred(span) = &schema.item {
+                    bail!(*span, "failed to infer type");
+                }
             }
             param_name = name.clone();
             // Found an explicit parameter: extract it:
@@ -426,5 +421,5 @@ fn create_wrapper_function(
         }
     });
 
-    return Ok(api_func_name);
+    Ok(api_func_name)
 }

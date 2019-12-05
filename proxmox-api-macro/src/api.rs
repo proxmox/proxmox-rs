@@ -14,7 +14,7 @@ mod enums;
 mod method;
 mod structs;
 
-pub const INTNAMES: &[&'static str] = &[
+pub const INTNAMES: &[&str] = &[
     "Integer", "i8", "i16", "i32", "i64", "isize", "u8", "u16", "u32", "u64", "usize",
 ];
 
@@ -103,7 +103,7 @@ impl Schema {
         self.item.to_schema(
             ts,
             self.description.as_ref(),
-            &self.span,
+            self.span,
             &self.properties,
             true,
         )
@@ -113,7 +113,7 @@ impl Schema {
         self.item.to_schema(
             ts,
             self.description.as_ref(),
-            &self.span,
+            self.span,
             &self.properties,
             false,
         )
@@ -212,10 +212,10 @@ impl SchemaItem {
         &self,
         ts: &mut TokenStream,
         description: Option<&syn::LitStr>,
-        span: &Span,
+        span: Span,
         properties: &[(Ident, syn::Expr)],
     ) -> Result<bool, Error> {
-        let description = description.ok_or_else(|| format_err!(*span, "missing description"));
+        let description = description.ok_or_else(|| format_err!(span, "missing description"));
 
         match self {
             SchemaItem::Null => {
@@ -276,7 +276,7 @@ impl SchemaItem {
         &self,
         ts: &mut TokenStream,
         description: Option<&syn::LitStr>,
-        span: &Span,
+        span: Span,
         properties: &[(Ident, syn::Expr)],
         typed: bool,
     ) -> Result<(), Error> {
