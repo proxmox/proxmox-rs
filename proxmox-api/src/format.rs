@@ -1,11 +1,11 @@
 //! Module to generate and format API Documenation
-use failure::*;
+
+use failure::Error;
 
 use std::io::Write;
 
-use super::router::{Router, SubRoute};
-use super::schema::*;
-use super::{ApiHandler, ApiMethod};
+use crate::schema::*;
+use crate::{ApiHandler, ApiMethod};
 
 /// Enumerate different styles to display parameters/properties.
 #[derive(Copy, Clone)]
@@ -256,10 +256,12 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
 /// Generate ReST Documentaion for a complete API defined by a ``Router``.
 pub fn dump_api(
     output: &mut dyn Write,
-    router: &Router,
+    router: &crate::Router,
     path: &str,
     mut pos: usize,
 ) -> Result<(), Error> {
+    use crate::SubRoute;
+
     let mut cond_print = |x| -> Result<_, Error> {
         if let Some(text) = x {
             if pos > 0 {
