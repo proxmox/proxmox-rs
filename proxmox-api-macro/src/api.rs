@@ -8,7 +8,7 @@ use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
 use syn::{ExprPath, Ident};
 
-use crate::util::{JSONObject, JSONValue, FieldName};
+use crate::util::{FieldName, JSONObject, JSONValue};
 
 mod enums;
 mod method;
@@ -133,10 +133,7 @@ impl Schema {
         }
     }
 
-    fn find_obj_property_by_ident(
-        &self,
-        key: &str,
-    ) -> Option<&(FieldName, bool, PropertySchema)> {
+    fn find_obj_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, PropertySchema)> {
         self.as_object()
             .and_then(|obj| obj.find_property_by_ident(key))
     }
