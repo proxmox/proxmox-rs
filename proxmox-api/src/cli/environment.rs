@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde_json::Value;
+use std::collections::HashMap;
 
 use crate::{RpcEnvironment, RpcEnvironmentType};
 
@@ -19,7 +19,6 @@ impl CliEnvironment {
 }
 
 impl RpcEnvironment for CliEnvironment {
-
     fn set_result_attrib(&mut self, name: &str, value: Value) {
         self.result_attributes.insert(name.into(), value);
     }

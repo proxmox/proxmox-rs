@@ -63,11 +63,11 @@ pub struct CliCommand {
 }
 
 impl CliCommand {
-
     /// Create a new instance.
     pub fn new(info: &'static ApiMethod) -> Self {
         Self {
-            info, arg_param: &[],
+            info,
+            arg_param: &[],
             fixed_param: HashMap::new(),
             completion_functions: HashMap::new(),
         }
@@ -86,7 +86,7 @@ impl CliCommand {
     }
 
     /// Set completion functions.
-    pub fn completion_cb(mut self, param_name: &str, cb:  CompletionFunction) -> Self {
+    pub fn completion_cb(mut self, param_name: &str, cb: CompletionFunction) -> Self {
         self.completion_functions.insert(param_name.into(), cb);
         self
     }
@@ -100,10 +100,11 @@ pub struct CliCommandMap {
 }
 
 impl CliCommandMap {
-
     /// Create a new instance.
     pub fn new() -> Self {
-        Self { commands: HashMap:: new() }
+        Self {
+            commands: HashMap::new(),
+        }
     }
 
     /// Insert another command.
@@ -114,12 +115,12 @@ impl CliCommandMap {
 
     /// Insert the help command.
     pub fn insert_help(mut self) -> Self {
-        self.commands.insert(String::from("help"), help_command_def().into());
+        self.commands
+            .insert(String::from("help"), help_command_def().into());
         self
     }
 
     fn find_command(&self, name: &str) -> Option<(String, &CommandLineInterface)> {
-
         if let Some(sub_cmd) = self.commands.get(name) {
             return Some((name.to_string(), sub_cmd));
         };
@@ -128,10 +129,13 @@ impl CliCommandMap {
 
         for cmd in self.commands.keys() {
             if cmd.starts_with(name) {
-                matches.push(cmd); }
+                matches.push(cmd);
+            }
         }
 
-        if matches.len() != 1 { return None; }
+        if matches.len() != 1 {
+            return None;
+        }
 
         if let Some(sub_cmd) = self.commands.get(matches[0]) {
             return Some((matches[0].to_string(), sub_cmd));
@@ -149,7 +153,7 @@ pub enum CommandLineInterface {
 
 impl From<CliCommand> for CommandLineInterface {
     fn from(cli_cmd: CliCommand) -> Self {
-         CommandLineInterface::Simple(cli_cmd)
+        CommandLineInterface::Simple(cli_cmd)
     }
 }
 

@@ -6,13 +6,14 @@ fn record_done_argument(
     done: &mut HashMap<String, String>,
     parameters: &ObjectSchema,
     key: &str,
-    value: &str
+    value: &str,
 ) {
-
     if let Some((_, schema)) = parameters.lookup(key) {
         match schema {
             Schema::Array(_) => { /* do nothing ?? */ }
-            _ => { done.insert(key.to_owned(), value.to_owned()); }
+            _ => {
+                done.insert(key.to_owned(), value.to_owned());
+            }
         }
     }
 }
@@ -24,7 +25,6 @@ fn get_property_completion(
     arg: &str,
     param: &HashMap<String, String>,
 ) -> Vec<String> {
-
     if let Some(callback) = completion_functions.get(name) {
         let list = (callback)(arg, param);
         let mut completions = Vec::new();
@@ -36,7 +36,11 @@ fn get_property_completion(
         return completions;
     }
 
-    if let Schema::String(StringSchema { format: Some(format),  ..} ) = schema {
+    if let Schema::String(StringSchema {
+        format: Some(format),
+        ..
+    }) = schema
+    {
         if let ApiStringFormat::Enum(list) = format {
             let mut completions = Vec::new();
             for value in list.iter() {
@@ -80,31 +84,49 @@ fn get_simple_completion(
         } else if args.len() == 1 {
             record_done_argument(done, cli_cmd.info.parameters, prop_name, &args[0]);
             if let Some((_, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
-                return get_property_completion(schema, prop_name, &cli_cmd.completion_functions, &args[0], done);
+                return get_property_completion(
+                    schema,
+                    prop_name,
+                    &cli_cmd.completion_functions,
+                    &args[0],
+                    done,
+                );
             }
         }
         return Vec::new();
     }
-    if args.is_empty() { return Vec::new(); }
+    if args.is_empty() {
+        return Vec::new();
+    }
 
     // Try to parse all argumnets but last, record args already done
     if args.len() > 1 {
         let mut errors = ParameterError::new(); // we simply ignore any parsing errors here
-        let (data, _rest) = getopts::parse_argument_list(&args[0..args.len()-1], &cli_cmd.info.parameters, &mut errors);
+        let (data, _rest) = getopts::parse_argument_list(
+            &args[0..args.len() - 1],
+            &cli_cmd.info.parameters,
+            &mut errors,
+        );
         for (key, value) in &data {
             record_done_argument(done, &cli_cmd.info.parameters, key, value);
         }
     }
 
-    let prefix = &args[args.len()-1]; // match on last arg
+    let prefix = &args[args.len() - 1]; // match on last arg
 
     // complete option-name or option-value ?
     if !prefix.starts_with("-") && args.len() > 1 {
-        let last = &args[args.len()-2];
+        let last = &args[args.len() - 2];
         if last.starts_with("--") && last.len() > 2 {
             let prop_name = &last[2..];
             if let Some((_, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
-                return get_property_completion(schema, prop_name, &cli_cmd.completion_functions, &prefix, done);
+                return get_property_completion(
+                    schema,
+                    prop_name,
+                    &cli_cmd.completion_functions,
+                    &prefix,
+                    done,
+                );
             }
             return Vec::new();
         }
@@ -112,8 +134,12 @@ fn get_simple_completion(
 
     let mut completions = Vec::new();
     for (name, _optional, _schema) in cli_cmd.info.parameters.properties {
-        if done.contains_key(*name) { continue; }
-        if cli_cmd.arg_param.contains(name) { continue; }
+        if done.contains_key(*name) {
+            continue;
+        }
+        if cli_cmd.arg_param.contains(name) {
+            continue;
+        }
         let option = String::from("--") + name;
         if option.starts_with(prefix) {
             completions.push(option);
@@ -127,7 +153,6 @@ fn get_help_completion(
     help_cmd: &CliCommand,
     args: &[String],
 ) -> Vec<String> {
-
     let mut done = HashMap::new();
 
     match def {
@@ -145,7 +170,8 @@ fn get_help_completion(
 
             let first = &args[0];
             if args.len() > 1 {
-                if let Some(sub_cmd) = map.commands.get(first) { // do exact match here
+                if let Some(sub_cmd) = map.commands.get(first) {
+                    // do exact match here
                     return get_help_completion(sub_cmd, help_cmd, &args[1..]);
                 }
                 return Vec::new();
@@ -166,11 +192,7 @@ fn get_help_completion(
     }
 }
 
-fn get_nested_completion(
-    def: &CommandLineInterface,
-    args: &[String],
-) -> Vec<String> {
-
+fn get_nested_completion(def: &CommandLineInterface, args: &[String]) -> Vec<String> {
     match def {
         CommandLineInterface::Simple(cli_cmd) => {
             let mut done: HashMap<String, String> = HashMap::new();
@@ -212,14 +234,11 @@ fn get_nested_completion(
 /// passed to ``get_completions()``. Returned values are printed to
 /// ``stdout``.
 pub fn print_bash_completion(def: &CommandLineInterface) {
-
     let comp_point: usize = match std::env::var("COMP_POINT") {
-        Ok(val) => {
-            match usize::from_str_radix(&val, 10) {
-                Ok(i) => i,
-                Err(_) => return,
-            }
-        }
+        Ok(val) => match usize::from_str_radix(&val, 10) {
+            Ok(i) => i,
+            Err(_) => return,
+        },
         Err(_) => return,
     };
 
@@ -241,21 +260,21 @@ pub fn get_completions(
     line: &str,
     skip_first: bool,
 ) -> (usize, Vec<String>) {
-
-    let (mut args, start ) = match shellword_split_unclosed(line, false) {
+    let (mut args, start) = match shellword_split_unclosed(line, false) {
         (mut args, None) => {
             args.push("".into());
             (args, line.len())
         }
-        (mut args, Some((start , arg, _quote))) => {
+        (mut args, Some((start, arg, _quote))) => {
             args.push(arg);
             (args, start)
         }
     };
 
     if skip_first {
-
-        if args.len() == 0 { return (0, Vec::new()); }
+        if args.len() == 0 {
+            return (0, Vec::new());
+        }
 
         args.remove(0); // no need for program name
     }
@@ -275,14 +294,13 @@ mod test {
     use failure::*;
     use serde_json::Value;
 
-    use crate::{*, schema::*, cli::*};
+    use crate::{cli::*, schema::*, *};
 
     fn dummy_method(
         _param: Value,
         _info: &ApiMethod,
         _rpcenv: &mut dyn RpcEnvironment,
     ) -> Result<Value, Error> {
-
         Ok(Value::Null)
     }
 
@@ -291,13 +309,20 @@ mod test {
         &ObjectSchema::new(
             "Simple API method with one required and one optionl argument.",
             &[
-                ( "optional-arg", true, &BooleanSchema::new("Optional boolean argument.")
-                   .default(false)
-                   .schema()
+                (
+                    "optional-arg",
+                    true,
+                    &BooleanSchema::new("Optional boolean argument.")
+                        .default(false)
+                        .schema(),
                 ),
-                ( "required-arg", false, &StringSchema::new("Required string argument.").schema()),
-            ]
-        )
+                (
+                    "required-arg",
+                    false,
+                    &StringSchema::new("Required string argument.").schema(),
+                ),
+            ],
+        ),
     );
 
     fn get_complex_test_cmddef() -> CommandLineInterface {
@@ -309,23 +334,23 @@ mod test {
             .insert_help()
             .insert("l0sub", CommandLineInterface::Nested(sub_def))
             .insert("l0c1", CliCommand::new(&API_METHOD_SIMPLE1).into())
-            .insert("l0c2", CliCommand::new(&API_METHOD_SIMPLE1)
+            .insert(
+                "l0c2",
+                CliCommand::new(&API_METHOD_SIMPLE1)
                     .arg_param(&["required-arg"])
-                    .into())
-            .insert("l0c3", CliCommand::new(&API_METHOD_SIMPLE1)
+                    .into(),
+            )
+            .insert(
+                "l0c3",
+                CliCommand::new(&API_METHOD_SIMPLE1)
                     .arg_param(&["required-arg", "optional-arg"])
-                    .into());
-
+                    .into(),
+            );
 
         cmd_def.into()
     }
 
-    fn test_completions(
-        cmd_def: &CommandLineInterface,
-        line: &str,
-        start: usize,
-        expect: &[&str],
-    ) {
+    fn test_completions(cmd_def: &CommandLineInterface, line: &str, start: usize, expect: &[&str]) {
         let mut expect: Vec<String> = expect.iter().map(|s| s.to_string()).collect();
         expect.sort();
 
@@ -337,29 +362,13 @@ mod test {
 
     #[test]
     fn test_nested_completion() {
-
         let cmd_def = get_complex_test_cmddef();
 
-        test_completions(
-            &cmd_def,
-            "",
-            0,
-            &["help", "l0c1", "l0c2", "l0c3", "l0sub"],
-        );
+        test_completions(&cmd_def, "", 0, &["help", "l0c1", "l0c2", "l0c3", "l0sub"]);
 
-        test_completions(
-            &cmd_def,
-            "l0c1 ",
-            5,
-            &["--optional-arg", "--required-arg"],
-        );
+        test_completions(&cmd_def, "l0c1 ", 5, &["--optional-arg", "--required-arg"]);
 
-        test_completions(
-            &cmd_def,
-            "l0c1 -",
-            5,
-            &["--optional-arg", "--required-arg"],
-        );
+        test_completions(&cmd_def, "l0c1 -", 5, &["--optional-arg", "--required-arg"]);
 
         test_completions(
             &cmd_def,
@@ -368,33 +377,13 @@ mod test {
             &["--optional-arg", "--required-arg"],
         );
 
-        test_completions(
-            &cmd_def,
-            "l0c1 ---",
-            5,
-            &[],
-        );
+        test_completions(&cmd_def, "l0c1 ---", 5, &[]);
 
-        test_completions(
-            &cmd_def,
-            "l0c1 x",
-            5,
-            &[],
-        );
+        test_completions(&cmd_def, "l0c1 x", 5, &[]);
 
-        test_completions(
-            &cmd_def,
-            "l0c1 --r",
-            5,
-            &["--required-arg"],
-        );
+        test_completions(&cmd_def, "l0c1 --r", 5, &["--required-arg"]);
 
-        test_completions(
-            &cmd_def,
-            "l0c1 --required-arg",
-            5,
-            &["--required-arg"],
-        );
+        test_completions(&cmd_def, "l0c1 --required-arg", 5, &["--required-arg"]);
 
         test_completions(
             &cmd_def,
@@ -438,19 +427,13 @@ mod test {
             40,
             &["yes"],
         );
-   }
+    }
 
     #[test]
     fn test_help_completion() {
-
         let cmd_def = get_complex_test_cmddef();
 
-        test_completions(
-            &cmd_def,
-            "h",
-            0,
-            &["help"],
-        );
+        test_completions(&cmd_def, "h", 0, &["help"]);
 
         test_completions(
             &cmd_def,
@@ -459,76 +442,24 @@ mod test {
             &["help", "l0sub", "l0c1", "l0c3", "l0c2"],
         );
 
-        test_completions(
-            &cmd_def,
-            "help l0",
-            5,
-            &["l0sub", "l0c1", "l0c3", "l0c2"],
-        );
+        test_completions(&cmd_def, "help l0", 5, &["l0sub", "l0c1", "l0c3", "l0c2"]);
 
-        test_completions(
-            &cmd_def,
-            "help -",
-            5,
-            &["--verbose"],
-        );
+        test_completions(&cmd_def, "help -", 5, &["--verbose"]);
 
-        test_completions(
-            &cmd_def,
-            "help l0c2",
-            5,
-            &["l0c2"],
-        );
+        test_completions(&cmd_def, "help l0c2", 5, &["l0c2"]);
 
-        test_completions(
-            &cmd_def,
-            "help l0c2 ",
-            10,
-            &["--verbose"],
-        );
+        test_completions(&cmd_def, "help l0c2 ", 10, &["--verbose"]);
 
-        test_completions(
-            &cmd_def,
-            "help l0c2 --verbose -",
-            20,
-            &[],
-        );
+        test_completions(&cmd_def, "help l0c2 --verbose -", 20, &[]);
 
-        test_completions(
-            &cmd_def,
-            "help l0s",
-            5,
-            &["l0sub"],
-        );
+        test_completions(&cmd_def, "help l0s", 5, &["l0sub"]);
 
-        test_completions(
-            &cmd_def,
-            "help l0sub ",
-            11,
-            &["l1c1", "l1c2"],
-        );
+        test_completions(&cmd_def, "help l0sub ", 11, &["l1c1", "l1c2"]);
 
-        test_completions(
-            &cmd_def,
-            "help l0sub l1c2 -",
-            16,
-            &["--verbose"],
-        );
+        test_completions(&cmd_def, "help l0sub l1c2 -", 16, &["--verbose"]);
 
-         test_completions(
-            &cmd_def,
-            "help l0sub l1c2 --verbose -",
-            26,
-            &[],
-        );
+        test_completions(&cmd_def, "help l0sub l1c2 --verbose -", 26, &[]);
 
-        test_completions(
-            &cmd_def,
-            "help l0sub l1c3",
-            11,
-            &[],
-        );
-
+        test_completions(&cmd_def, "help l0sub l1c3", 11, &[]);
     }
-
 }

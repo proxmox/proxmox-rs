@@ -54,12 +54,11 @@ fn parse_argument(arg: &str) -> RawArgument {
 /// parse as many arguments as possible into a Vec<String, String>. This does not
 /// verify the schema.
 /// Returns parsed data and the rest as separate array
-pub (crate) fn parse_argument_list<T: AsRef<str>>(
+pub(crate) fn parse_argument_list<T: AsRef<str>>(
     args: &[T],
     schema: &ObjectSchema,
     errors: &mut ParameterError,
 ) -> (Vec<(String, String)>, Vec<String>) {
-
     let mut data: Vec<(String, String)> = vec![];
     let mut rest: Vec<String> = vec![];
 
@@ -107,16 +106,21 @@ pub (crate) fn parse_argument_list<T: AsRef<str>>(
                         } else if can_default {
                             data.push((name, "true".to_string()));
                         } else {
-                            errors.push(format_err!("parameter '{}': {}", name,
-                                                    "missing boolean value."));
+                            errors.push(format_err!(
+                                "parameter '{}': {}",
+                                name,
+                                "missing boolean value."
+                            ));
                         }
-
                     } else if next_is_argument {
                         pos += 1;
                         data.push((name, args[pos].as_ref().to_string()));
                     } else {
-                        errors.push(format_err!("parameter '{}': {}", name,
-                                                "missing parameter value."));
+                        errors.push(format_err!(
+                            "parameter '{}': {}",
+                            name,
+                            "missing parameter value."
+                        ));
                     }
                 }
                 Some(v) => {
@@ -158,7 +162,7 @@ pub fn parse_arguments<T: AsRef<str>>(
     for i in 0..arg_param.len() {
         let name = arg_param[i];
         if let Some((optional, param_schema)) = schema.lookup(&name) {
-            if i == arg_param.len() -1 {
+            if i == arg_param.len() - 1 {
                 last_arg_param_is_optional = optional;
                 if let Schema::Array(_) = param_schema {
                     last_arg_param_is_array = true;
@@ -174,7 +178,6 @@ pub fn parse_arguments<T: AsRef<str>>(
     let (mut data, mut rest) = parse_argument_list(args, schema, &mut errors);
 
     for i in 0..arg_param.len() {
-
         let name = arg_param[i];
         let is_last_arg_param = i == (arg_param.len() - 1);
 
@@ -203,10 +206,9 @@ pub fn parse_arguments<T: AsRef<str>>(
 
 #[test]
 fn test_boolean_arg() {
-
     const PARAMETERS: ObjectSchema = ObjectSchema::new(
         "Parameters:",
-        &[ ("enable", false, &BooleanSchema::new("Enable").schema()) ],
+        &[("enable", false, &BooleanSchema::new("Enable").schema())],
     );
 
     let mut variants: Vec<(Vec<&str>, bool)> = vec![];
@@ -235,7 +237,6 @@ fn test_boolean_arg() {
 
 #[test]
 fn test_argument_paramenter() {
-
     const PARAMETERS: ObjectSchema = ObjectSchema::new(
         "Parameters:",
         &[

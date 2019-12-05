@@ -1,17 +1,17 @@
 use failure::*;
 use serde_json::Value;
-use std::sync::Arc;
 use std::cell::RefCell;
+use std::sync::Arc;
 
-use crate::*;
 use crate::format::*;
 use crate::schema::*;
+use crate::*;
 
 use super::environment::CliEnvironment;
 
-use super::getopts;
-use super::{CommandLineInterface, CliCommand, CliCommandMap, completion::*};
 use super::format::*;
+use super::getopts;
+use super::{completion::*, CliCommand, CliCommandMap, CommandLineInterface};
 
 /// Schema definition for ``--output-format`` parameter.
 ///
@@ -19,8 +19,7 @@ use super::format::*;
 /// - ``json``: JSON, single line.
 /// - ``json-pretty``: JSON, human readable.
 ///
-pub const OUTPUT_FORMAT: Schema =
-    StringSchema::new("Output format.")
+pub const OUTPUT_FORMAT: Schema = StringSchema::new("Output format.")
     .format(&ApiStringFormat::Enum(&["text", "json", "json-pretty"]))
     .schema();
 
@@ -29,16 +28,15 @@ fn handle_simple_command(
     cli_cmd: &CliCommand,
     args: Vec<String>,
 ) -> Result<(), Error> {
-
-    let (params, rest) = match getopts::parse_arguments(
-        &args, cli_cmd.arg_param, &cli_cmd.info.parameters) {
-        Ok((p, r)) => (p, r),
-        Err(err) => {
-            let err_msg = err.to_string();
-            print_simple_usage_error(prefix, cli_cmd, &err_msg);
-            return Err(format_err!("{}", err_msg));
-        }
-    };
+    let (params, rest) =
+        match getopts::parse_arguments(&args, cli_cmd.arg_param, &cli_cmd.info.parameters) {
+            Ok((p, r)) => (p, r),
+            Err(err) => {
+                let err_msg = err.to_string();
+                print_simple_usage_error(prefix, cli_cmd, &err_msg);
+                return Err(format_err!("{}", err_msg));
+            }
+        };
 
     if !rest.is_empty() {
         let err_msg = format!("got additional arguments: {:?}", rest);
@@ -49,22 +47,19 @@ fn handle_simple_command(
     let mut rpcenv = CliEnvironment::new();
 
     match cli_cmd.info.handler {
-        ApiHandler::Sync(handler) => {
-            match (handler)(params, &cli_cmd.info, &mut rpcenv) {
-                Ok(value) => {
-                    if value != Value::Null {
-                        println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
-                    }
-                }
-                Err(err) => {
-                    eprintln!("Error: {}", err);
-                    return Err(err);
+        ApiHandler::Sync(handler) => match (handler)(params, &cli_cmd.info, &mut rpcenv) {
+            Ok(value) => {
+                if value != Value::Null {
+                    println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
                 }
             }
-        }
+            Err(err) => {
+                eprintln!("Error: {}", err);
+                return Err(err);
+            }
+        },
         ApiHandler::AsyncHttp(_) => {
-            let err_msg =
-                "CliHandler does not support ApiHandler::AsyncHttp - internal error";
+            let err_msg = "CliHandler does not support ApiHandler::AsyncHttp - internal error";
             print_simple_usage_error(prefix, cli_cmd, err_msg);
             return Err(format_err!("{}", err_msg));
         }
@@ -78,13 +73,14 @@ fn handle_nested_command(
     def: &CliCommandMap,
     mut args: Vec<String>,
 ) -> Result<(), Error> {
-
     if args.len() < 1 {
         let mut cmds: Vec<&String> = def.commands.keys().collect();
         cmds.sort();
 
-        let list = cmds.iter().fold(String::new(),|mut s,item| {
-            if !s.is_empty() { s+= ", "; }
+        let list = cmds.iter().fold(String::new(), |mut s, item| {
+            if !s.is_empty() {
+                s += ", ";
+            }
             s += item;
             s
         });
@@ -124,19 +120,22 @@ const API_METHOD_COMMAND_HELP: ApiMethod = ApiMethod::new(
     &ObjectSchema::new(
         "Get help about specified command (or sub-command).",
         &[
-            ( "command",
-               true,
-               &ArraySchema::new(
-                   "Command. This may be a list in order to spefify nested sub-commands.",
-                   &StringSchema::new("Name.").schema()
-               ).schema()
+            (
+                "command",
+                true,
+                &ArraySchema::new(
+                    "Command. This may be a list in order to spefify nested sub-commands.",
+                    &StringSchema::new("Name.").schema(),
+                )
+                .schema(),
             ),
-            ( "verbose",
-               true,
-               &BooleanSchema::new("Verbose help.").schema()
+            (
+                "verbose",
+                true,
+                &BooleanSchema::new("Verbose help.").schema(),
             ),
         ],
-    )
+    ),
 );
 
 std::thread_local! {
@@ -148,23 +147,21 @@ fn help_command(
     _info: &ApiMethod,
     _rpcenv: &mut dyn RpcEnvironment,
 ) -> Result<Value, Error> {
-
-    let command: Vec<String> = param["command"].as_array().unwrap_or(&Vec::new())
+    let command: Vec<String> = param["command"]
+        .as_array()
+        .unwrap_or(&Vec::new())
         .iter()
         .map(|v| v.as_str().unwrap().to_string())
         .collect();
 
-
     let verbose = param["verbose"].as_bool();
 
-    HELP_CONTEXT.with(|ctx| {
-        match &*ctx.borrow() {
-            Some(def) => {
-                 print_help(def, String::from(""), &command, verbose);
-            }
-            None => {
-                eprintln!("Sorry, help context not set - internal error.");
-            }
+    HELP_CONTEXT.with(|ctx| match &*ctx.borrow() {
+        Some(def) => {
+            print_help(def, String::from(""), &command, verbose);
+        }
+        None => {
+            eprintln!("Sorry, help context not set - internal error.");
         }
     });
 
@@ -172,12 +169,13 @@ fn help_command(
 }
 
 fn set_help_context(def: Option<Arc<CommandLineInterface>>) {
-    HELP_CONTEXT.with(|ctx| { *ctx.borrow_mut() = def; });
+    HELP_CONTEXT.with(|ctx| {
+        *ctx.borrow_mut() = def;
+    });
 }
 
-pub(crate) fn help_command_def() ->  CliCommand {
-    CliCommand::new(&API_METHOD_COMMAND_HELP)
-        .arg_param(&["command"])
+pub(crate) fn help_command_def() -> CliCommand {
+    CliCommand::new(&API_METHOD_COMMAND_HELP).arg_param(&["command"])
 }
 
 /// Handle command invocation.
@@ -189,16 +187,11 @@ pub fn handle_command(
     prefix: &str,
     args: Vec<String>,
 ) -> Result<(), Error> {
-
     set_help_context(Some(def.clone()));
 
     let result = match &*def {
-        CommandLineInterface::Simple(ref cli_cmd) => {
-            handle_simple_command(&prefix, &cli_cmd, args)
-        }
-        CommandLineInterface::Nested(ref map) => {
-            handle_nested_command(&prefix, &map, args)
-        }
+        CommandLineInterface::Simple(ref cli_cmd) => handle_simple_command(&prefix, &cli_cmd, args),
+        CommandLineInterface::Nested(ref map) => handle_nested_command(&prefix, &map, args),
     };
 
     set_help_context(None);
@@ -219,11 +212,9 @@ pub fn handle_command(
 /// - ``printdoc``: Output ReST documentation.
 ///
 pub fn run_cli_command(def: CommandLineInterface) {
-
     let def = match def {
         CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
-        CommandLineInterface::Nested(map) =>
-            CommandLineInterface::Nested(map.insert_help().into()),
+        CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help().into()),
     };
 
     let mut args = std::env::args();
@@ -242,7 +233,7 @@ pub fn run_cli_command(def: CommandLineInterface) {
         if args[0] == "printdoc" {
             let usage = match def {
                 CommandLineInterface::Simple(cli_cmd) => {
-                    generate_usage_str(&prefix, &cli_cmd,  DocumentationFormat::ReST, "")
+                    generate_usage_str(&prefix, &cli_cmd, DocumentationFormat::ReST, "")
                 }
                 CommandLineInterface::Nested(map) => {
                     generate_nested_usage(&prefix, &map, DocumentationFormat::ReST)

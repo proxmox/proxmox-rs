@@ -2,21 +2,17 @@ use serde_json::Value;
 
 use std::collections::HashSet;
 
-use crate::schema::*;
 use crate::format::*;
+use crate::schema::*;
 
-use super::{CommandLineInterface, CliCommand, CliCommandMap};
+use super::{CliCommand, CliCommandMap, CommandLineInterface};
 
 /// Helper function to format and print result.
 ///
 /// This is implemented for machine generatable formats 'json' and
 /// 'json-pretty'. The 'text' format needs to be handled somewhere
 /// else.
-pub fn format_and_print_result(
-    result: &Value,
-    output_format: &str,
-) {
-
+pub fn format_and_print_result(result: &Value, output_format: &str) {
     if output_format == "json-pretty" {
         println!("{}", serde_json::to_string_pretty(&result).unwrap());
     } else if output_format == "json" {
@@ -31,8 +27,8 @@ pub fn generate_usage_str(
     prefix: &str,
     cli_cmd: &CliCommand,
     format: DocumentationFormat,
-    indent: &str) -> String {
-
+    indent: &str,
+) -> String {
     let arg_param = cli_cmd.arg_param;
     let fixed_param = &cli_cmd.fixed_param;
     let schema = cli_cmd.info.parameters;
@@ -45,12 +41,26 @@ pub fn generate_usage_str(
             Some((optional, param_schema)) => {
                 args.push(' ');
 
-                let is_array = if let Schema::Array(_) = param_schema { true } else { false };
-                if optional { args.push('['); }
-                if is_array { args.push('{'); }
-                args.push('<'); args.push_str(positional_arg); args.push('>');
-                if is_array { args.push('}'); }
-                if optional { args.push(']'); }
+                let is_array = if let Schema::Array(_) = param_schema {
+                    true
+                } else {
+                    false
+                };
+                if optional {
+                    args.push('[');
+                }
+                if is_array {
+                    args.push('{');
+                }
+                args.push('<');
+                args.push_str(positional_arg);
+                args.push('>');
+                if is_array {
+                    args.push('}');
+                }
+                if optional {
+                    args.push(']');
+                }
 
                 done_hash.insert(positional_arg);
             }
@@ -62,25 +72,39 @@ pub fn generate_usage_str(
     for positional_arg in arg_param {
         let (_optional, param_schema) = schema.lookup(positional_arg).unwrap();
         let param_descr = get_property_description(
-            positional_arg, param_schema, ParameterDisplayStyle::Fixed, format);
+            positional_arg,
+            param_schema,
+            ParameterDisplayStyle::Fixed,
+            format,
+        );
         arg_descr.push_str(&param_descr);
     }
 
     let mut options = String::new();
 
     for (prop, optional, param_schema) in schema.properties {
-        if done_hash.contains(prop) { continue; }
-        if fixed_param.contains_key(prop) { continue; }
+        if done_hash.contains(prop) {
+            continue;
+        }
+        if fixed_param.contains_key(prop) {
+            continue;
+        }
 
         let type_text = get_schema_type_text(param_schema, ParameterDisplayStyle::Arg);
 
         if *optional {
-
-            if options.len() > 0 { options.push('\n'); }
-            options.push_str(&get_property_description(prop, param_schema, ParameterDisplayStyle::Arg, format));
-
+            if options.len() > 0 {
+                options.push('\n');
+            }
+            options.push_str(&get_property_description(
+                prop,
+                param_schema,
+                ParameterDisplayStyle::Arg,
+                format,
+            ));
         } else {
-            args.push_str(" --"); args.push_str(prop);
+            args.push_str(" --");
+            args.push_str(prop);
             args.push(' ');
             args.push_str(&type_text);
         }
@@ -97,12 +121,14 @@ pub fn generate_usage_str(
         DocumentationFormat::Long => {
             format!("{}{}{}{}\n\n", indent, prefix, args, option_indicator)
         }
-        DocumentationFormat::Full => {
-            format!("{}{}{}{}\n\n{}\n\n", indent, prefix, args, option_indicator, schema.description)
-        }
-        DocumentationFormat::ReST => {
-            format!("``{}{}{}``\n\n{}\n\n", prefix, args, option_indicator, schema.description)
-        }
+        DocumentationFormat::Full => format!(
+            "{}{}{}{}\n\n{}\n\n",
+            indent, prefix, args, option_indicator, schema.description
+        ),
+        DocumentationFormat::ReST => format!(
+            "``{}{}{}``\n\n{}\n\n",
+            prefix, args, option_indicator, schema.description
+        ),
     };
 
     if arg_descr.len() > 0 {
@@ -117,21 +143,13 @@ pub fn generate_usage_str(
 }
 
 /// Print command usage for simple commands to ``stderr``.
-pub fn print_simple_usage_error(
-    prefix: &str,
-    cli_cmd: &CliCommand,
-    err_msg: &str,
-) {
-    let usage =  generate_usage_str(prefix, cli_cmd, DocumentationFormat::Long, "");
+pub fn print_simple_usage_error(prefix: &str, cli_cmd: &CliCommand, err_msg: &str) {
+    let usage = generate_usage_str(prefix, cli_cmd, DocumentationFormat::Long, "");
     eprint!("Error: {}\nUsage: {}", err_msg, usage);
 }
 
 /// Print command usage for nested commands to ``stderr``.
-pub fn print_nested_usage_error(
-    prefix: &str,
-    def: &CliCommandMap,
-    err_msg: &str,
-) {
+pub fn print_nested_usage_error(prefix: &str, def: &CliCommandMap, err_msg: &str) {
     let usage = generate_nested_usage(prefix, def, DocumentationFormat::Short);
     eprintln!("Error: {}\n\nUsage:\n\n{}", err_msg, usage);
 }
@@ -140,9 +158,8 @@ pub fn print_nested_usage_error(
 pub fn generate_nested_usage(
     prefix: &str,
     def: &CliCommandMap,
-    format: DocumentationFormat
+    format: DocumentationFormat,
 ) -> String {
-
     let mut cmds: Vec<&String> = def.commands.keys().collect();
     cmds.sort();
 
@@ -180,7 +197,9 @@ pub fn print_help(
         if let CommandLineInterface::Nested(map) = iface {
             if let Some((full_name, subcmd)) = map.find_command(cmd) {
                 iface = subcmd;
-                if !prefix.is_empty() { prefix.push(' '); }
+                if !prefix.is_empty() {
+                    prefix.push(' ');
+                }
                 prefix.push_str(&full_name);
                 continue;
             }
@@ -203,7 +222,10 @@ pub fn print_help(
             println!("Usage:\n\n{}", generate_nested_usage(&prefix, map, format));
         }
         CommandLineInterface::Simple(cli_cmd) => {
-            println!("Usage: {}", generate_usage_str(&prefix, cli_cmd, format, ""));
+            println!(
+                "Usage: {}",
+                generate_usage_str(&prefix, cli_cmd, format, "")
+            );
         }
     }
 }

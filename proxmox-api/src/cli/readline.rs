@@ -12,9 +12,10 @@ pub struct CliHelper {
 }
 
 impl CliHelper {
-
     pub fn new(cmd_def: CommandLineInterface) -> Self {
-        Self { cmd_def: Arc::new(cmd_def) }
+        Self {
+            cmd_def: Arc::new(cmd_def),
+        }
     }
 
     pub fn cmd_def(&self) -> Arc<CommandLineInterface> {
@@ -31,7 +32,6 @@ impl rustyline::completion::Completer for CliHelper {
         pos: usize,
         _ctx: &rustyline::Context<'_>,
     ) -> rustyline::Result<(usize, Vec<Self::Candidate>)> {
-
         let line = &line[..pos];
 
         let (start, completions) = super::get_completions(&*self.cmd_def, line, false);
