@@ -172,7 +172,11 @@ pub fn generate_nested_usage(
     let mut usage = String::new();
 
     for cmd in cmds {
-        let new_prefix = format!("{} {}", prefix, cmd);
+        let new_prefix = if prefix.is_empty() {
+            String::from(cmd)
+        } else {
+            format!("{} {}", prefix, cmd)
+        };
 
         match def.commands.get(cmd).unwrap() {
             CommandLineInterface::Simple(cli_cmd) => {
