@@ -328,24 +328,22 @@ mod test {
 
     fn get_complex_test_cmddef() -> CommandLineInterface {
         let sub_def = CliCommandMap::new()
-            .insert("l1c1", CliCommand::new(&API_METHOD_SIMPLE1).into())
-            .insert("l1c2", CliCommand::new(&API_METHOD_SIMPLE1).into());
+            .insert("l1c1", CliCommand::new(&API_METHOD_SIMPLE1))
+            .insert("l1c2", CliCommand::new(&API_METHOD_SIMPLE1));
 
         let cmd_def = CliCommandMap::new()
             .insert_help()
             .insert("l0sub", CommandLineInterface::Nested(sub_def))
-            .insert("l0c1", CliCommand::new(&API_METHOD_SIMPLE1).into())
+            .insert("l0c1", CliCommand::new(&API_METHOD_SIMPLE1))
             .insert(
                 "l0c2",
                 CliCommand::new(&API_METHOD_SIMPLE1)
                     .arg_param(&["required-arg"])
-                    .into(),
             )
             .insert(
                 "l0c3",
                 CliCommand::new(&API_METHOD_SIMPLE1)
                     .arg_param(&["required-arg", "optional-arg"])
-                    .into(),
             );
 
         cmd_def.into()
