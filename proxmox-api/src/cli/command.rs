@@ -212,7 +212,6 @@ pub fn handle_command(
 /// - ``printdoc``: Output ReST documentation.
 ///
 pub fn run_cli_command<C: Into<CommandLineInterface>>(def: C) {
-
     let def = match def.into() {
         CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
         CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help()),

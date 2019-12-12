@@ -337,13 +337,11 @@ mod test {
             .insert("l0c1", CliCommand::new(&API_METHOD_SIMPLE1))
             .insert(
                 "l0c2",
-                CliCommand::new(&API_METHOD_SIMPLE1)
-                    .arg_param(&["required-arg"])
+                CliCommand::new(&API_METHOD_SIMPLE1).arg_param(&["required-arg"]),
             )
             .insert(
                 "l0c3",
-                CliCommand::new(&API_METHOD_SIMPLE1)
-                    .arg_param(&["required-arg", "optional-arg"])
+                CliCommand::new(&API_METHOD_SIMPLE1).arg_param(&["required-arg", "optional-arg"]),
             );
 
         cmd_def.into()

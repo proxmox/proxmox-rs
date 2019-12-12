@@ -107,11 +107,7 @@ impl CliCommandMap {
     }
 
     /// Insert another command.
-    pub fn insert<C: Into<CommandLineInterface>>(
-        mut self,
-        name: &'static str,
-        cli: C,
-    ) -> Self {
+    pub fn insert<C: Into<CommandLineInterface>>(mut self, name: &'static str, cli: C) -> Self {
         self.commands.insert(name.into(), cli.into());
         self
     }
