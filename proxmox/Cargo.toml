@@ -8,14 +8,16 @@ authors = [
 ]
 
 [dependencies]
-proxmox-api = { path = "../proxmox-api" }
+proxmox-api = { path = "../proxmox-api", default-features = false }
 proxmox-api-macro = { path = "../proxmox-api-macro", optional = true }
 proxmox-sys = { path = "../proxmox-sys" }
 proxmox-tools = { path = "../proxmox-tools" }
 proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true }
 
 [features]
-default = []
-valgrind = ["proxmox-tools/valgrind"]
 api-macro = ["proxmox-api-macro"]
+cli = ["proxmox-api/cli"]
+default = [ "router", "cli" ]
+router = ["proxmox-api/router"]
 sortable-macro = ["proxmox-sortable-macro"]
+valgrind = ["proxmox-tools/valgrind"]
