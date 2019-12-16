@@ -133,7 +133,7 @@ impl Schema {
         }
     }
 
-    fn find_obj_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, PropertySchema)> {
+    fn find_obj_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, Schema)> {
         self.as_object()
             .and_then(|obj| obj.find_property_by_ident(key))
     }
@@ -141,7 +141,7 @@ impl Schema {
     fn find_obj_property_by_ident_mut(
         &mut self,
         key: &str,
-    ) -> Option<&mut (FieldName, bool, PropertySchema)> {
+    ) -> Option<&mut (FieldName, bool, Schema)> {
         self.as_object_mut()
             .and_then(|obj| obj.find_property_by_ident_mut(key))
     }
@@ -307,28 +307,10 @@ impl SchemaItem {
     }
 }
 
-/// A property in an object either has its own schema or references an external schema.
-enum PropertySchema {
-    Schema(Schema),
-    Ref(ExprPath),
-}
-
-impl PropertySchema {
-    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        match self {
-            PropertySchema::Schema(s) => s.to_schema(ts),
-            PropertySchema::Ref(path) => {
-                ts.extend(quote! { & #path });
-                Ok(())
-            }
-        }
-    }
-}
-
 #[derive(Default)]
 /// Contains a sorted list of properties:
 struct SchemaObject {
-    properties: Vec<(FieldName, bool, PropertySchema)>,
+    properties: Vec<(FieldName, bool, Schema)>,
 }
 
 impl SchemaObject {
@@ -353,17 +335,7 @@ impl SchemaObject {
                             .transpose()?
                             .unwrap_or(false);
 
-                        let external_schema = schema
-                            .remove("schema")
-                            .map(ExprPath::try_from)
-                            .transpose()?;
-
-                        let schema = match external_schema {
-                            Some(path) => PropertySchema::Ref(path),
-                            None => PropertySchema::Schema(schema.try_into()?),
-                        };
-
-                        properties.push((key, optional, schema));
+                        properties.push((key, optional, schema.try_into()?));
 
                         Ok(properties)
                     },
@@ -387,7 +359,7 @@ impl SchemaObject {
         Ok(())
     }
 
-    fn find_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, PropertySchema)> {
+    fn find_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, Schema)> {
         match self
             .properties
             .binary_search_by(|p| p.0.as_ident_str().cmp(key))
@@ -397,10 +369,7 @@ impl SchemaObject {
         }
     }
 
-    fn find_property_by_ident_mut(
-        &mut self,
-        key: &str,
-    ) -> Option<&mut (FieldName, bool, PropertySchema)> {
+    fn find_property_by_ident_mut(&mut self, key: &str) -> Option<&mut (FieldName, bool, Schema)> {
         match self
             .properties
             .binary_search_by(|p| p.0.as_ident_str().cmp(key))

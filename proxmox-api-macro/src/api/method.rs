@@ -7,7 +7,7 @@ use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::Ident;
 
-use super::{PropertySchema, Schema, SchemaItem};
+use super::{Schema, SchemaItem};
 use crate::util::{self, FieldName, JSONObject};
 
 /// Parse `input`, `returns` and `protected` attributes out of an function annotated
@@ -140,7 +140,7 @@ enum ParameterType<'a> {
     Value,
     ApiMethod,
     RpcEnv,
-    Other(&'a syn::Type, bool, &'a PropertySchema),
+    Other(&'a syn::Type, bool, &'a Schema),
 }
 
 fn check_input_type(input: &syn::FnArg) -> Result<(&syn::PatType, &syn::PatIdent), Error> {
@@ -181,14 +181,11 @@ fn handle_function_signature(
         let schema: &mut Schema = if let Some((_ident, _optional, schema)) =
             input_schema.find_obj_property_by_ident_mut(&pat.ident.to_string())
         {
-            match schema {
-                PropertySchema::Schema(schema) => match &mut schema.item {
-                    // ... if it has no `type` property (item = SchemaItem::Inferred), get a mutable
-                    // reference to the schema, so that we can...
-                    SchemaItem::Inferred(_span) => schema,
-                    // other types are fine:
-                    _ => continue,
-                },
+            match &mut schema.item {
+                // ... if it has no `type` property (item = SchemaItem::Inferred), get a mutable
+                // reference to the schema, so that we can...
+                SchemaItem::Inferred(_span) => schema,
+                // other types are fine:
                 _ => continue,
             }
         } else {
@@ -248,10 +245,8 @@ fn handle_function_signature(
         let param_type = if let Some((name, optional, schema)) =
             input_schema.find_obj_property_by_ident(&pat.ident.to_string())
         {
-            if let PropertySchema::Schema(schema) = schema {
-                if let SchemaItem::Inferred(span) = &schema.item {
-                    bail!(*span, "failed to infer type");
-                }
+            if let SchemaItem::Inferred(span) = &schema.item {
+                bail!(*span, "failed to infer type");
             }
             param_name = name.clone();
             // Found an explicit parameter: extract it:
