@@ -47,6 +47,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     )?;
 
     let mut wrapper_ts = TokenStream::new();
+    let is_async = func.sig.asyncness.is_some();
     let api_func_name = handle_function_signature(
         &mut input_schema,
         &mut returns_schema,
@@ -77,10 +78,16 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         func.sig.ident.span(),
     );
 
+    let api_handler = if is_async {
+        quote! { ::proxmox::api::ApiHandler::Async(&#api_func_name) }
+    } else {
+        quote! { ::proxmox::api::ApiHandler::Sync(&#api_func_name) }
+    };
+
     Ok(quote_spanned! { func.sig.span() =>
         #vis const #api_method_name: ::proxmox::api::ApiMethod =
             ::proxmox::api::ApiMethod::new(
-                &::proxmox::api::ApiHandler::Sync(&#api_func_name),
+                &#api_handler,
                 &#input_schema,
             )
             #returns_schema
@@ -159,10 +166,7 @@ fn handle_function_signature(
     wrapper_ts: &mut TokenStream,
 ) -> Result<Ident, Error> {
     let sig = &func.sig;
-
-    if sig.asyncness.is_some() {
-        bail!(sig => "async fn is currently not supported");
-    }
+    let is_async = sig.asyncness.is_some();
 
     let mut api_method_param = None;
     let mut rpc_env_param = None;
@@ -296,7 +300,14 @@ fn handle_function_signature(
     }
     */
 
-    create_wrapper_function(input_schema, returns_schema, param_list, func, wrapper_ts)
+    create_wrapper_function(
+        input_schema,
+        returns_schema,
+        param_list,
+        func,
+        wrapper_ts,
+        is_async,
+    )
 }
 
 fn is_api_method_type(ty: &syn::Type) -> bool {
@@ -351,6 +362,7 @@ fn create_wrapper_function(
     param_list: Vec<(FieldName, ParameterType)>,
     func: &syn::ItemFn,
     wrapper_ts: &mut TokenStream,
+    is_async: bool,
 ) -> Result<Ident, Error> {
     let api_func_name = Ident::new(
         &format!("api_function_{}", &func.sig.ident),
@@ -401,25 +413,53 @@ fn create_wrapper_function(
     // build the wrapping function:
     let func_name = &func.sig.ident;
 
+    let await_keyword = if is_async { Some(quote!(.await)) } else { None };
+
     let question_mark = match func.sig.output {
         syn::ReturnType::Default => None,
         _ => Some(quote!(?)),
     };
 
-    wrapper_ts.extend(quote! {
-        fn #api_func_name(
-            mut input_params: ::serde_json::Value,
-            api_method_param: &::proxmox::api::ApiMethod,
-            rpc_env_param: &mut dyn ::proxmox::api::RpcEnvironment,
-        ) -> Result<::serde_json::Value, ::failure::Error> {
-            if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
-                #body
-                Ok(::serde_json::to_value(#func_name(#args) #question_mark)?)
-            } else {
-                ::failure::bail!("api function wrapper called with a non-object json value");
-            }
+    let body = quote! {
+        if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
+            #body
+            Ok(::serde_json::to_value(#func_name(#args) #await_keyword #question_mark)?)
+        } else {
+            ::failure::bail!("api function wrapper called with a non-object json value");
         }
-    });
+    };
+
+    if is_async {
+        wrapper_ts.extend(quote! {
+            fn #api_func_name<'a>(
+                mut input_params: ::serde_json::Value,
+                api_method_param: &'static ::proxmox::api::ApiMethod,
+                rpc_env_param: &'a mut dyn ::proxmox::api::RpcEnvironment,
+            ) -> ::proxmox::api::ApiFuture<'a> {
+                //async fn func<'a>(
+                //    mut input_params: ::serde_json::Value,
+                //    api_method_param: &'static ::proxmox::api::ApiMethod,
+                //    rpc_env_param: &'a mut dyn ::proxmox::api::RpcEnvironment,
+                //) -> ::std::result::Result<::serde_json::Value, ::failure::Error> {
+                //    #body
+                //}
+                //::std::boxed::Box::pin(async move {
+                //    func(input_params, api_method_param, rpc_env_param).await
+                //})
+                ::std::boxed::Box::pin(async move { #body })
+            }
+        });
+    } else {
+        wrapper_ts.extend(quote! {
+            fn #api_func_name(
+                mut input_params: ::serde_json::Value,
+                api_method_param: &::proxmox::api::ApiMethod,
+                rpc_env_param: &mut dyn ::proxmox::api::RpcEnvironment,
+            ) -> ::std::result::Result<::serde_json::Value, ::failure::Error> {
+                #body
+            }
+        });
+    }
 
     Ok(api_func_name)
 }
