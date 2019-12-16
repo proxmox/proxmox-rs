@@ -155,6 +155,7 @@ enum SchemaItem {
     Object(SchemaObject),
     Array(SchemaArray),
     ExternType(ExprPath),
+    ExternSchema(ExprPath),
     Inferred(Span),
 }
 
@@ -162,6 +163,10 @@ impl SchemaItem {
     /// If there's a `type` specified, parse it as that type. Otherwise check for keys which
     /// uniqueply identify the type, such as "properties" for type `Object`.
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
+        if let Some(ext) = obj.remove("schema").map(ExprPath::try_from).transpose()? {
+            return Ok(SchemaItem::ExternSchema(ext));
+        }
+
         let ty = obj.remove("type").map(ExprPath::try_from).transpose()?;
         let ty = match ty {
             Some(ty) => ty,
@@ -255,6 +260,13 @@ impl SchemaItem {
                     bail!(&properties[0].0 => "additional properties not allowed on external type");
                 }
                 ts.extend(quote_spanned! { path.span() => #path::API_SCHEMA });
+                return Ok(true);
+            }
+            SchemaItem::ExternSchema(path) => {
+                if !properties.is_empty() {
+                    bail!(&properties[0].0 => "additional properties not allowed on schema ref");
+                }
+                ts.extend(quote_spanned! { path.span() => &#path });
                 return Ok(true);
             }
             SchemaItem::Inferred(span) => {

@@ -40,3 +40,22 @@ pub fn get_archive_2(param: Value, rpcenv: &mut dyn RpcEnvironment) -> Result<Va
     let _ = rpcenv;
     Ok(json!("test"))
 }
+
+#[api(
+    input: {
+        properties: {
+            "data": {
+                description: "The data",
+                type: Array,
+                items: {
+                    schema: NAME_SCHEMA,
+                }
+            }
+        }
+    }
+)]
+/// Get data.
+pub fn get_data(param: Value) -> Result<(), Error> {
+    let _ = param;
+    Ok(())
+}

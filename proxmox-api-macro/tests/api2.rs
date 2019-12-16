@@ -31,3 +31,23 @@ pub fn hello(message: String) -> Result<(), Error> {
 pub async fn number(num: u32) -> Result<u32, Error> {
     Ok(num)
 }
+
+#[api(
+    input: {
+        properties: {
+            foo: {
+                type: String,
+                description: "The great Foo",
+            },
+            bar: {
+                type: String,
+                description: "The great Bar",
+            },
+        },
+    },
+)]
+/// Return the number...
+pub async fn more_async_params(param: Value) -> Result<(), Error> {
+    let _ = param;
+    Ok(())
+}
