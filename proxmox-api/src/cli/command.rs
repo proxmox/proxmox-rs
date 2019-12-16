@@ -58,6 +58,22 @@ fn handle_simple_command(
                 return Err(err);
             }
         },
+        ApiHandler::Async(handler) => {
+            let future = (handler)(params, &cli_cmd.info, &mut rpcenv);
+            let mut rt = tokio::runtime::Runtime::new().unwrap();
+
+            match rt.block_on(future) {
+                Ok(value) => {
+                    if value != Value::Null {
+                        println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
+                    }
+                }
+                Err(err) => {
+                    eprintln!("Error: {}", err);
+                    return Err(err);
+                }
+            }
+        }
         ApiHandler::AsyncHttp(_) => {
             let err_msg = "CliHandler does not support ApiHandler::AsyncHttp - internal error";
             print_simple_usage_error(prefix, cli_cmd, err_msg);
