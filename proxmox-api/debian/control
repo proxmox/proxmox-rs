@@ -1,0 +1,62 @@
+Source: rust-proxmox-api
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 21~),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-bytes-0.5+default-dev <!nocheck>,
+ librust-failure-0.1+default-dev <!nocheck>,
+ librust-futures-0.3+default-dev <!nocheck>,
+ librust-http-0.2+default-dev <!nocheck>,
+ librust-proxmox-tools-0.1.0+default-dev <!nocheck>,
+ librust-regex-1.2+default-dev <!nocheck>,
+ librust-rustyline-5.0.5+default-dev <!nocheck>,
+ librust-serde-1.0+default-dev <!nocheck>,
+ librust-serde-derive-1.0+default-dev <!nocheck>,
+ librust-serde-json-1.0+default-dev <!nocheck>,
+ librust-textwrap-0.11+default-dev <!nocheck>,
+ librust-url-2.1+default-dev <!nocheck>,
+ librust-tokio-0.2-dev <!nocheck>,
+ librust-hyper-0.13+default-dev <!nocheck>,
+ librust-lazy-static-1.4+default-dev <!nocheck>,
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.4.1
+
+Package: librust-proxmox-api-dev
+Architecture: any
+Depends:
+ ${misc:Depends},
+ librust-bytes-0.5+default-dev,
+ librust-failure-0.1+default-dev,
+ librust-futures-0.3+default-dev,
+ librust-http-0.2+default-dev,
+ librust-proxmox-tools-0.1.0+default-dev,
+ librust-regex-1.2+default-dev,
+ librust-rustyline-5.0.5+default-dev,
+ librust-serde-1.0+default-dev,
+ librust-serde-derive-1.0+default-dev,
+ librust-serde-json-1.0+default-dev,
+ librust-textwrap-0.11+default-dev,
+ librust-url-2.1+default-dev,
+ librust-tokio-0.2-dev,
+ librust-hyper-0.13+default-dev,
+Provides:
+ librust-proxmox-api+default-dev (= ${binary:Version}),
+ librust-proxmox-api+router-dev (= ${binary:Version}),
+ librust-proxmox-api+cli-dev (= ${binary:Version}),
+ librust-proxmox-api-0-dev (= ${binary:Version}),
+ librust-proxmox-api-0+default-dev (= ${binary:Version}),
+ librust-proxmox-api-0+router-dev (= ${binary:Version}),
+ librust-proxmox-api-0+cli-dev (= ${binary:Version}),
+ librust-proxmox-api-0.1-dev (= ${binary:Version}),
+ librust-proxmox-api-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-api-0.1+router-dev (= ${binary:Version}),
+ librust-proxmox-api-0.1+cli-dev (= ${binary:Version}),
+ librust-proxmox-api-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-api-0.1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-api-0.1.0+router-dev (= ${binary:Version}),
+ librust-proxmox-api-0.1.0+cli-dev (= ${binary:Version}),
+Description: Proxmox API library - Rust source code
+ This package contains the source for the Rust proxmox-api crate.
