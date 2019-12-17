@@ -1,0 +1,33 @@
+Source: rust-proxmox-api-macro
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 21~),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-failure-0.1+default-dev <!nocheck>,
+ librust-proc-macro2-1.0+default-dev <!nocheck>,
+ librust-quote-1.0+default-dev <!nocheck>,
+ librust-syn-1.0+full-dev <!nocheck>,
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.4.1
+
+Package: librust-proxmox-api-macro-dev
+Architecture: any
+Depends:
+ ${misc:Depends},
+ librust-failure-0.1+default-dev,
+ librust-proc-macro2-1.0+default-dev,
+ librust-quote-1.0+default-dev,
+ librust-syn-1.0+full-dev,
+Provides:
+ librust-proxmox-api-macro+default-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0+default-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0.1-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0.1.0+default-dev (= ${binary:Version}),
+Description: Proxmox API Macro library - Rust source code
+ This package contains the source for the Rust proxmox-api-macro crate.
