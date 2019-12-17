@@ -1,0 +1,5 @@
+rust-proxmox-sortable-macro (0.1.0) proxmox-rust; urgency=medium
+
+  * Initial packaging.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 17 Dec 2019 14:47:44 +0100

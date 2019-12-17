@@ -1,0 +1,35 @@
+Source: rust-proxmox-sortable-macro
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 21~),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-failure-0.1+default-dev <!nocheck>,
+ librust-proc-macro2-1.0+default-dev <!nocheck>,
+ librust-quote-1.0+default-dev <!nocheck>,
+ librust-syn-1.0+full-dev <!nocheck>,
+ librust-syn-1.0+visit-mut-dev <!nocheck>,
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.4.1
+
+Package: librust-proxmox-sortable-macro-dev
+Architecture: any
+Depends:
+ ${misc:Depends},
+ librust-failure-0.1+default-dev,
+ librust-proc-macro2-1.0+default-dev,
+ librust-quote-1.0+default-dev,
+ librust-syn-1.0+full-dev,
+ librust-syn-1.0+visit-mut-dev,
+Provides:
+ librust-proxmox-sortable-macro+default-dev (= ${binary:Version}),
+ librust-proxmox-sortable-macro-0-dev (= ${binary:Version}),
+ librust-proxmox-sortable-macro-0+default-dev (= ${binary:Version}),
+ librust-proxmox-sortable-macro-0.1-dev (= ${binary:Version}),
+ librust-proxmox-sortable-macro-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-sortable-macro-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-sortable-macro-0.1.0+default-dev (= ${binary:Version}),
+Description: Proxmox Sortable Macro - Rust source code
+ This package contains the source for the Rust proxmox-sortable-macro crate.
