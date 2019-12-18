@@ -215,18 +215,15 @@ impl CreateOptions {
     }
 }
 
-/// Creates directory at the provided path with specified ownership
+/// Creates directory at the provided path with specified ownership.
 ///
 /// Simply returns if the directory already exists.
-pub fn create_dir_chown<P: AsRef<Path>>(
-    path: P,
-    perm: Option<stat::Mode>,
-    owner: Option<Uid>,
-    group: Option<Gid>,
-) -> Result<(), nix::Error> {
+pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(), nix::Error> {
     // clippy bug?: from_bits_truncate is actually a const fn...
     #[allow(clippy::or_fun_call)]
-    let mode: stat::Mode = perm.unwrap_or(stat::Mode::from_bits_truncate(0o770));
+    let mode: stat::Mode = options
+        .perm
+        .unwrap_or(stat::Mode::from_bits_truncate(0o770));
 
     let path = path.as_ref();
 
@@ -238,7 +235,7 @@ pub fn create_dir_chown<P: AsRef<Path>>(
         err => return err,
     }
 
-    unistd::chown(path, owner, group)?;
+    unistd::chown(path, options.owner, options.group)?;
 
     Ok(())
 }
