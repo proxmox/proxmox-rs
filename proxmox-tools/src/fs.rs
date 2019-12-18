@@ -76,43 +76,6 @@ pub fn replace_file<P: AsRef<Path>>(
     data: &[u8],
     options: CreateOptions,
 ) -> Result<(), Error> {
-    file_set_contents_full(
-        path.as_ref(),
-        data,
-        options.perm,
-        options.owner,
-        options.group,
-    )
-}
-
-/// (To be deprecated) Atomically replace a file.
-///
-/// This first creates a temporary file and then rotates it in place.
-///
-/// FIXME: Mark as deprecated in favor of `replace_file`.
-/// Rationale:
-///   1) The name suggests that the contents of an existing file is changed.
-///   2) The function is split into this and a `_full` counterpart of which you need to remember
-///      the order of parameters. But we already introduced `CreateOptions` which can be used to
-///      provide a better API for both.
-///   3) `CreateOptions` is a builder, so more options can be added without having to change all
-///      its users!
-pub fn file_set_contents<P: AsRef<Path>>(
-    path: P,
-    data: &[u8],
-    perm: Option<stat::Mode>,
-) -> Result<(), Error> {
-    file_set_contents_full(path, data, perm, None, None)
-}
-
-/// Atomically write a file with owner and group
-pub fn file_set_contents_full<P: AsRef<Path>>(
-    path: P,
-    data: &[u8],
-    perm: Option<stat::Mode>,
-    owner: Option<Uid>,
-    group: Option<Gid>,
-) -> Result<(), Error> {
     let path = path.as_ref();
 
     // Note: we use mkstemp heŕe, because this worka with different
@@ -128,17 +91,19 @@ pub fn file_set_contents_full<P: AsRef<Path>>(
 
     // clippy bug?: from_bits_truncate is actually a const fn...
     #[allow(clippy::or_fun_call)]
-    let mode: stat::Mode = perm.unwrap_or(stat::Mode::from_bits_truncate(0o644));
+    let mode: stat::Mode = options
+        .perm
+        .unwrap_or(stat::Mode::from_bits_truncate(0o644));
 
-    if perm != None {
+    if options.perm.is_some() {
         if let Err(err) = stat::fchmod(fd, mode) {
             let _ = unistd::unlink(tmp_path);
             bail!("fchmod {:?} failed: {}", tmp_path, err);
         }
     }
 
-    if owner != None || group != None {
-        if let Err(err) = fchown(fd, owner, group) {
+    if options.owner.is_some() || options.group.is_some() {
+        if let Err(err) = fchown(fd, options.owner, options.group) {
             let _ = unistd::unlink(tmp_path);
             bail!("fchown {:?} failed: {}", tmp_path, err);
         }
@@ -157,6 +122,49 @@ pub fn file_set_contents_full<P: AsRef<Path>>(
     }
 
     Ok(())
+}
+
+/// Atomically replace a file.
+///
+/// This first creates a temporary file and then rotates it in place.
+///
+/// Deprecated for the following reasons:
+///   1) The name suggests that the contents of an existing file is changed.
+///   2) The function is split into this and a `_full` counterpart of which you need to remember
+///      the order of parameters. But we already introduced `CreateOptions` which can be used to
+///      provide a better API for both.
+///   3) `CreateOptions` is a builder, so more options can be added without having to change all
+///      its users!
+#[deprecated(note = "use replace_file instead")]
+pub fn file_set_contents<P: AsRef<Path>>(
+    path: P,
+    data: &[u8],
+    perm: Option<stat::Mode>,
+) -> Result<(), Error> {
+    #[allow(deprecated)]
+    file_set_contents_full(path.as_ref(), data, perm, None, None)
+}
+
+/// Atomically write a file with owner and group
+#[deprecated(note = "use replace_file instead")]
+pub fn file_set_contents_full<P: AsRef<Path>>(
+    path: P,
+    data: &[u8],
+    perm: Option<stat::Mode>,
+    owner: Option<Uid>,
+    group: Option<Gid>,
+) -> Result<(), Error> {
+    let mut options = CreateOptions::new();
+    if let Some(perm) = perm {
+        options = options.perm(perm);
+    }
+    if let Some(owner) = owner {
+        options = options.owner(owner);
+    }
+    if let Some(group) = group {
+        options = options.group(group);
+    }
+    replace_file(path.as_ref(), data, options)
 }
 
 /// Change ownership of an open file handle
