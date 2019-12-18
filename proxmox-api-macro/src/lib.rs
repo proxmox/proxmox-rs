@@ -34,22 +34,7 @@ fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> Toke
     }
 }
 
-/// Macro for building a Router:
-///
-/// ```ignore
-/// router! {
-///     pub const ROUTER = {
-///         "access": {
-///             "ticket": {
-///                 post = create_ticket,
-///             }
-///         }
-///     };
-/// }
-///
-/// #[api]
-/// fn create_ticket(param: Value) -> Result<Value, Error> { ... }
-/// ```
+/// TODO!
 #[proc_macro]
 pub fn router(item: TokenStream_1) -> TokenStream_1 {
     let item: TokenStream = item.into();
