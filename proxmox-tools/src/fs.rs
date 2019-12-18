@@ -281,7 +281,7 @@ fn create_path_do(
             let _ = iter.next();
             Fd::open(
                 unsafe { CStr::from_bytes_with_nul_unchecked(b"/\0") },
-                OFlag::O_DIRECTORY | OFlag::O_PATH,
+                OFlag::O_DIRECTORY,
                 stat::Mode::empty(),
             )?
         }
@@ -293,7 +293,7 @@ fn create_path_do(
             let _ = iter.next();
             Fd::open(
                 unsafe { CStr::from_bytes_with_nul_unchecked(b"..\0") },
-                OFlag::O_DIRECTORY | OFlag::O_PATH,
+                OFlag::O_DIRECTORY,
                 stat::Mode::empty(),
             )?
         }
@@ -323,7 +323,7 @@ fn create_path_at_do(
                 at = Fd::openat(
                     at,
                     unsafe { CStr::from_bytes_with_nul_unchecked(b"..\0") },
-                    OFlag::O_DIRECTORY | OFlag::O_PATH,
+                    OFlag::O_DIRECTORY,
                     stat::Mode::empty(),
                 )?;
             }
@@ -346,12 +346,7 @@ fn create_path_at_do(
                     Err(e) => return Err(e.into()),
                     Ok(_) => true,
                 };
-                at = Fd::openat(
-                    at,
-                    path,
-                    OFlag::O_DIRECTORY | OFlag::O_PATH,
-                    stat::Mode::empty(),
-                )?;
+                at = Fd::openat(at, path, OFlag::O_DIRECTORY, stat::Mode::empty())?;
 
                 if let (true, Some(opts)) = (created, opts) {
                     if opts.owner.is_some() || opts.group.is_some() {
@@ -364,6 +359,20 @@ fn create_path_at_do(
             Some(_) => bail!("encountered unexpected special path component"),
         }
     }
+}
+
+#[test]
+fn test_create_path() {
+    create_path(
+        "testdir/testsub/testsub2/testfinal",
+        Some(CreateOptions::new().perm(stat::Mode::from_bits_truncate(0o755))),
+        Some(
+            CreateOptions::new()
+                .owner(Uid::effective())
+                .group(Gid::effective()),
+        ),
+    )
+    .expect("expected create_path to work");
 }
 
 // /usr/include/linux/fs.h: #define BLKGETSIZE64 _IOR(0x12,114,size_t)
