@@ -240,6 +240,9 @@ pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(),
 /// Recursively create a path with separately defined metadata for intermediate directories and the
 /// final component in the path.
 ///
+/// Returns `true` if the final directory was created. Otherwise `false` is returned and no changes
+/// to the directory's metadata have been performed.
+///
 /// ```no_run
 /// # use nix::sys::stat::Mode;
 /// # use nix::unistd::{Gid, Uid};
@@ -260,7 +263,7 @@ pub fn create_path<P: AsRef<Path>>(
     path: P,
     intermediate_opts: Option<CreateOptions>,
     final_opts: Option<CreateOptions>,
-) -> Result<(), Error> {
+) -> Result<bool, Error> {
     create_path_do(path.as_ref(), intermediate_opts, final_opts)
 }
 
@@ -268,7 +271,7 @@ fn create_path_do(
     path: &Path,
     intermediate_opts: Option<CreateOptions>,
     final_opts: Option<CreateOptions>,
-) -> Result<(), Error> {
+) -> Result<bool, Error> {
     use std::path::Component;
 
     let mut iter = path.components().peekable();
@@ -309,12 +312,13 @@ fn create_path_at_do(
     mut iter: std::iter::Peekable<std::path::Components>,
     intermediate_opts: Option<CreateOptions>,
     final_opts: Option<CreateOptions>,
-) -> Result<(), Error> {
+) -> Result<bool, Error> {
+    let mut created = false;
     loop {
         use std::path::Component;
 
         match iter.next() {
-            None => return Ok(()),
+            None => return Ok(created),
 
             Some(Component::ParentDir) => {
                 at = Fd::openat(
@@ -338,7 +342,7 @@ fn create_path_at_do(
                     .and_then(|o| o.perm)
                     .unwrap_or(stat::Mode::from_bits_truncate(0o755));
 
-                let created = match stat::mkdirat(at.as_raw_fd(), path, mode) {
+                created = match stat::mkdirat(at.as_raw_fd(), path, mode) {
                     Err(nix::Error::Sys(Errno::EEXIST)) => false,
                     Err(e) => return Err(e.into()),
                     Ok(_) => true,
