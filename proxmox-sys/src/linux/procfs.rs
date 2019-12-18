@@ -3,6 +3,8 @@ use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader};
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
+use std::sync::RwLock;
+use std::time::Instant;
 
 use failure::*;
 use lazy_static::lazy_static;
@@ -162,6 +164,196 @@ pub fn read_proc_uptime_ticks() -> Result<(u64, u64), Error> {
     up *= *CLOCK_TICKS;
     idle *= *CLOCK_TICKS;
     Ok((up as u64, idle as u64))
+}
+
+#[derive(Debug, Default)]
+/// The CPU fields from `/proc/stat` with their native time value. Multiply
+/// with CLOCK_TICKS to get the real value.
+pub struct ProcFsStat {
+    /// Time spent in user mode.
+    pub user: u64,
+    /// Time spent in user mode with low priority (nice).
+    pub nice: u64,
+    /// Time spent in system mode.
+    pub system: u64,
+    /// Time spent in the  idle  task.
+    pub idle: u64,
+    /// Time waiting for I/O to complete.  This value is not reiable, see `man 5 proc`
+    pub iowait: u64,
+    /// Time servicing interrupts.
+    pub irq: u64,
+    /// Time servicing softirqs.
+    pub softirq: u64,
+    /// Stolen time, which is the time spent in other operating systems when running
+    /// in a virtualized environment.
+    pub steal: u64,
+    /// Time spent running a virtual  CPU  for  guest  operating systems under the control of the
+    /// Linux kernel.
+    pub guest: u64,
+    /// Time spent running a niced guest (virtual CPU for guest operating systems under the control
+    /// of the Linux kernel).
+    pub guest_nice: u64,
+    /// The sum of all other u64  fields
+    pub total: u64,
+    /// The percentage (0 - 1.0) of cpu utilization from the whole system, basica underlying calculation
+    /// `1 - (idle / total)` but with delta values between now and the last call to `read_proc_stat` (min. 1s interval)
+    pub cpu: f64,
+}
+
+lazy_static! {
+    static ref PROC_LAST_STAT: RwLock<(ProcFsStat, Instant, bool)> =
+        RwLock::new((ProcFsStat::default(), Instant::now(), true));
+}
+
+/// reads `/proc/stat`. For now only total host CPU usage is handled as the
+/// other metrics are not really interesting
+pub fn read_proc_stat() -> Result<ProcFsStat, Error> {
+    let sample_time = Instant::now();
+    let mut stat =
+        parse_proc_stat(unsafe { std::str::from_utf8_unchecked(&std::fs::read("/proc/stat")?) })
+            .unwrap();
+
+    {
+        // read lock scope
+        let prev_read_guarded = PROC_LAST_STAT.read().unwrap();
+        let (prev_stat, prev_time, first_time) = &*prev_read_guarded;
+        let last_update = sample_time
+            .saturating_duration_since(*prev_time)
+            .as_millis();
+        // only update if data is old
+        if last_update < 1000 && !first_time {
+            stat.cpu = prev_stat.cpu;
+            return Ok(stat);
+        }
+    }
+
+    {
+        // write lock scope
+        let mut prev_write_guarded = PROC_LAST_STAT.write().unwrap();
+        // we do not expect much lock contention, so sample_time should be
+        // recent. Else, we'd need to reread & parse here to get current data
+        let (prev_stat, prev_time, first_time) = &mut *prev_write_guarded;
+
+        let delta_total = stat.total - prev_stat.total;
+        let delta_idle = stat.idle - prev_stat.idle;
+
+        stat.cpu = 1. - (delta_idle as f64) / (delta_total as f64);
+
+        *prev_stat = ProcFsStat { ..stat };
+        *prev_time = sample_time;
+        *first_time = false;
+    }
+
+    Ok(stat)
+}
+
+fn parse_proc_stat(statstr: &str) -> Result<ProcFsStat, Error> {
+    // for now we just use the first accumulated "cpu" line
+
+    let mut parts = statstr.trim_start().split_ascii_whitespace();
+    parts.next(); // swallow initial cpu string
+
+    // helpers:
+    fn required<'a>(value: Option<&'a str>, what: &'static str) -> Result<&'a str, Error> {
+        value.ok_or_else(|| format_err!("missing '{}' in /proc/stat", what))
+    }
+
+    fn req_num<T>(value: Option<&str>, what: &'static str) -> Result<T, Error>
+    where
+        T: FromStr,
+        <T as FromStr>::Err: std::fmt::Display,
+    {
+        required(value, what)?
+            .parse::<T>()
+            .map_err(|e| format_err!("error parsing {}: {}", what, e))
+    }
+
+    let mut stat = ProcFsStat {
+        user: req_num::<u64>(parts.next(), "user")?,
+        nice: req_num::<u64>(parts.next(), "nice")?,
+        system: req_num::<u64>(parts.next(), "system")?,
+        idle: req_num::<u64>(parts.next(), "idle")?,
+        iowait: req_num::<u64>(parts.next(), "iowait")?,
+        irq: req_num::<u64>(parts.next(), "irq")?,
+        softirq: req_num::<u64>(parts.next(), "softirq")?,
+        steal: req_num::<u64>(parts.next(), "steal")?,
+        guest: req_num::<u64>(parts.next(), "guest")?,
+        guest_nice: req_num::<u64>(parts.next(), "guest_nice")?,
+        total: 0,
+        cpu: 0.0,
+    };
+    stat.total = stat.user
+        + stat.nice
+        + stat.system
+        + stat.iowait
+        + stat.irq
+        + stat.softirq
+        + stat.steal
+        + stat.guest
+        + stat.guest_nice
+        + stat.idle;
+
+    // returns avg. heuristic for the first request
+    stat.cpu = 1. - (stat.idle as f64) / (stat.total as f64);
+
+    Ok(stat)
+}
+
+#[test]
+fn test_read_proc_stat() {
+    let stat = parse_proc_stat(
+        "cpu  2845612 241 173179 264715515 93366 0 7925 141017 0 0\n\
+         cpu0 174375 9 11367 16548335 5741 0 2394 8500 0 0\n\
+         cpu1 183367 11 11423 16540656 4644 0 1235 8888 0 0\n\
+         cpu2 179636 21 20463 16534540 4802 0 456 9270 0 0\n\
+         cpu3 184560 9 11379 16532136 7113 0 225 8967 0 0\n\
+         cpu4 182341 17 10277 16542865 3274 0 181 8461 0 0\n\
+         cpu5 179771 22 9910 16548859 2259 0 112 8328 0 0\n\
+         cpu6 181185 14 8933 16548550 2057 0 78 8313 0 0\n\
+         cpu7 176326 12 8514 16553428 2246 0 76 8812 0 0\n\
+         cpu8 177341 13 7942 16553880 1576 0 56 8565 0 0\n\
+         cpu9 176883 10 8648 16547886 3067 0 103 8788 0 0\n\
+         cpu10 169446 4 7993 16561700 1584 0 39 8797 0 0\n\
+         cpu11 170878 7 7783 16560870 1526 0 23 8444 0 0\n\
+         cpu12 164062 12 7839 16567155 1686 0 43 8794 0 0\n\
+         cpu13 164303 4 7661 16567497 1528 0 41 8525 0 0\n\
+         cpu14 173709 2 11478 16546352 3965 0 571 9414 0 0\n\
+         cpu15 207422 67 21561 16460798 46292 0 2283 10142 0 0\n\
+         intr 29200426 1 9 0 0 0 0 3 0 1 0 275744 40 16 0 0 166292 0 0 0 0 0 0 0 0 0 0 \
+         0 1463843 0 1048751 328317 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+         0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n\
+         ctxt 27543372\n\
+         btime 1576502436\n\
+         processes 701089\n\
+         procs_running 2\n\
+         procs_blocked 0\n\
+         softirq 36227960 0 16653965 39 1305264 1500573 0 38330 5024204 356 11705229",
+    )
+    .expect("successful parsed a sample /proc/stat entry");
+    assert_eq!(stat.user, 2845612);
+    assert_eq!(stat.nice, 241);
+    assert_eq!(stat.system, 173179);
+    assert_eq!(stat.idle, 264715515);
+    assert_eq!(stat.iowait, 93366);
+    assert_eq!(stat.irq, 0);
+    assert_eq!(stat.softirq, 7925);
+    assert_eq!(stat.steal, 141017);
+    assert_eq!(stat.guest, 0);
+    assert_eq!(stat.guest_nice, 0);
+    assert_eq!(stat.total, 267976855);
+    assert_eq!(stat.cpu, 0.012170230149167183);
 }
 
 #[derive(Debug)]
