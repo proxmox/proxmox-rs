@@ -199,7 +199,7 @@ pub fn print_help(
     top_def: &CommandLineInterface,
     mut prefix: String,
     args: &[String],
-    verbose: Option<bool>,
+    mut verbose: Option<bool>,
 ) {
     let mut iface = top_def;
 
@@ -220,6 +220,12 @@ pub fn print_help(
             eprintln!("no such command '{} {}'", prefix, cmd);
         }
         return;
+    }
+
+    if verbose.is_none() {
+        if let CommandLineInterface::Simple(_) = iface {
+            verbose = Some(true);
+        }
     }
 
     let format = match verbose.unwrap_or(false) {
