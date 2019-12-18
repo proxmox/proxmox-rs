@@ -217,7 +217,7 @@ impl CreateOptions {
 
 /// Creates directory at the provided path with specified ownership.
 ///
-/// Simply returns if the directory already exists.
+/// Errors if the directory already exists.
 pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(), nix::Error> {
     // clippy bug?: from_bits_truncate is actually a const fn...
     #[allow(clippy::or_fun_call)]
@@ -229,9 +229,6 @@ pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(),
 
     match nix::unistd::mkdir(path, mode) {
         Ok(()) => {}
-        Err(nix::Error::Sys(Errno::EEXIST)) => {
-            return Ok(());
-        }
         err => return err,
     }
 
