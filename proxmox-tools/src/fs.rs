@@ -226,12 +226,7 @@ pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(),
         .unwrap_or(stat::Mode::from_bits_truncate(0o770));
 
     let path = path.as_ref();
-
-    match nix::unistd::mkdir(path, mode) {
-        Ok(()) => {}
-        err => return err,
-    }
-
+    nix::unistd::mkdir(path, mode)?;
     unistd::chown(path, options.owner, options.group)?;
 
     Ok(())
