@@ -17,9 +17,7 @@ mod structs;
 pub const INTNAMES: &[&str] = &[
     "Integer", "i8", "i16", "i32", "i64", "isize", "u8", "u16", "u32", "u64", "usize",
 ];
-pub const NUMBERNAMES: &[&str] = &[
-    "Number", "f32", "f64",
-];
+pub const NUMBERNAMES: &[&str] = &["Number", "f32", "f64"];
 
 /// The main `Schema` type.
 ///

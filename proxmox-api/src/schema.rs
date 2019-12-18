@@ -155,7 +155,6 @@ impl IntegerSchema {
     }
 }
 
-
 /// Data type to describe (JSON like) number value
 #[derive(Debug)]
 pub struct NumberSchema {
