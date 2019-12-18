@@ -74,9 +74,8 @@ pub fn file_read_firstline<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 pub fn replace_file<P: AsRef<Path>>(
     path: P,
     data: &[u8],
-    options: Option<CreateOptions>,
+    options: CreateOptions,
 ) -> Result<(), Error> {
-    let options = options.unwrap_or_default();
     file_set_contents_full(
         path.as_ref(),
         data,
