@@ -68,9 +68,36 @@ pub fn file_read_firstline<P: AsRef<Path>>(path: P) -> Result<String, Error> {
     .map_err(|err: Error| format_err!("unable to read {:?} - {}", path, err))
 }
 
-/// Atomically write a file
+/// Atomically replace a file.
 ///
-/// We first create a temporary file, which is then renamed.
+/// This first creates a temporary file and then rotates it in place.
+pub fn replace_file<P: AsRef<Path>>(
+    path: P,
+    data: &[u8],
+    options: Option<CreateOptions>,
+) -> Result<(), Error> {
+    let options = options.unwrap_or_default();
+    file_set_contents_full(
+        path.as_ref(),
+        data,
+        options.perm,
+        options.owner,
+        options.group,
+    )
+}
+
+/// (To be deprecated) Atomically replace a file.
+///
+/// This first creates a temporary file and then rotates it in place.
+///
+/// FIXME: Mark as deprecated in favor of `replace_file`.
+/// Rationale:
+///   1) The name suggests that the contents of an existing file is changed.
+///   2) The function is split into this and a `_full` counterpart of which you need to remember
+///      the order of parameters. But we already introduced `CreateOptions` which can be used to
+///      provide a better API for both.
+///   3) `CreateOptions` is a builder, so more options can be added without having to change all
+///      its users!
 pub fn file_set_contents<P: AsRef<Path>>(
     path: P,
     data: &[u8],
@@ -147,6 +174,7 @@ pub fn fchown(fd: RawFd, owner: Option<Uid>, group: Option<Gid>) -> Result<(), E
     Ok(())
 }
 
+// FIXME: Consider using derive-builder!
 #[derive(Clone, Default)]
 pub struct CreateOptions {
     perm: Option<stat::Mode>,
