@@ -87,6 +87,12 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
             (None, Some(max)) => format!("<integer> (-N - {})", max),
             _ => String::from("<integer>"),
         },
+        Schema::Number(number_schema) => match (number_schema.minimum, number_schema.maximum) {
+            (Some(min), Some(max)) => format!("<number> ({} - {})", min, max),
+            (Some(min), None) => format!("<number> ({} - N)", min),
+            (None, Some(max)) => format!("<number> (-N - {})", max),
+            _ => String::from("<integer>"),
+        },
         Schema::Object(_) => String::from("<object>"),
         Schema::Array(_) => String::from("<array>"),
     }
@@ -106,6 +112,7 @@ pub fn get_property_description(
         Schema::String(ref schema) => (schema.description, schema.default.map(|v| v.to_owned())),
         Schema::Boolean(ref schema) => (schema.description, schema.default.map(|v| v.to_string())),
         Schema::Integer(ref schema) => (schema.description, schema.default.map(|v| v.to_string())),
+        Schema::Number(ref schema) => (schema.description, schema.default.map(|v| v.to_string())),
         Schema::Object(ref schema) => (schema.description, None),
         Schema::Array(ref schema) => (schema.description, None),
     };
@@ -208,6 +215,10 @@ fn dump_api_return_schema(schema: &Schema) -> String {
             res.push_str(&description);
         }
         Schema::Integer(schema) => {
+            let description = wrap_text("", "", schema.description, 80);
+            res.push_str(&description);
+        }
+        Schema::Number(schema) => {
             let description = wrap_text("", "", schema.description, 80);
             res.push_str(&description);
         }

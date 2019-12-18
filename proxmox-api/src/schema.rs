@@ -155,6 +155,73 @@ impl IntegerSchema {
     }
 }
 
+
+/// Data type to describe (JSON like) number value
+#[derive(Debug)]
+pub struct NumberSchema {
+    pub description: &'static str,
+    /// Optional minimum.
+    pub minimum: Option<f64>,
+    /// Optional maximum.
+    pub maximum: Option<f64>,
+    /// Optional default.
+    pub default: Option<f64>,
+}
+
+impl NumberSchema {
+    pub const fn new(description: &'static str) -> Self {
+        NumberSchema {
+            description,
+            default: None,
+            minimum: None,
+            maximum: None,
+        }
+    }
+
+    pub const fn default(mut self, default: f64) -> Self {
+        self.default = Some(default);
+        self
+    }
+
+    pub const fn minimum(mut self, minimum: f64) -> Self {
+        self.minimum = Some(minimum);
+        self
+    }
+
+    pub const fn maximum(mut self, maximium: f64) -> Self {
+        self.maximum = Some(maximium);
+        self
+    }
+
+    pub const fn schema(self) -> Schema {
+        Schema::Number(self)
+    }
+
+    fn check_constraints(&self, value: f64) -> Result<(), Error> {
+        if let Some(minimum) = self.minimum {
+            if value < minimum {
+                bail!(
+                    "value must have a minimum value of {} (got {})",
+                    minimum,
+                    value
+                );
+            }
+        }
+
+        if let Some(maximum) = self.maximum {
+            if value > maximum {
+                bail!(
+                    "value must have a maximum value of {} (got {})",
+                    maximum,
+                    value
+                );
+            }
+        }
+
+        Ok(())
+    }
+}
+
 /// Data type to describe string values.
 #[derive(Debug)]
 pub struct StringSchema {
@@ -402,6 +469,7 @@ pub enum Schema {
     Null,
     Boolean(BooleanSchema),
     Integer(IntegerSchema),
+    Number(NumberSchema),
     String(StringSchema),
     Object(ObjectSchema),
     Array(ArraySchema),
@@ -550,6 +618,11 @@ pub fn parse_simple_value(value_str: &str, schema: &Schema) -> Result<Value, Err
             integer_schema.check_constraints(res)?;
             Value::Number(res.into())
         }
+        Schema::Number(number_schema) => {
+            let res: f64 = value_str.parse()?;
+            number_schema.check_constraints(res)?;
+            Value::Number(serde_json::Number::from_f64(res).unwrap())
+        }
         Schema::String(string_schema) => {
             string_schema.check_constraints(value_str)?;
             Value::String(value_str.into())
@@ -683,6 +756,7 @@ pub fn verify_json(data: &Value, schema: &Schema) -> Result<(), Error> {
         }
         Schema::Boolean(boolean_schema) => verify_json_boolean(data, &boolean_schema)?,
         Schema::Integer(integer_schema) => verify_json_integer(data, &integer_schema)?,
+        Schema::Number(number_schema) => verify_json_number(data, &number_schema)?,
         Schema::String(string_schema) => verify_json_string(data, &string_schema)?,
     }
     Ok(())
@@ -711,6 +785,15 @@ pub fn verify_json_integer(data: &Value, schema: &IntegerSchema) -> Result<(), E
         schema.check_constraints(value as isize)
     } else {
         bail!("Expected integer value.");
+    }
+}
+
+/// Verify JSON value using an `NumberSchema`.
+pub fn verify_json_number(data: &Value, schema: &NumberSchema) -> Result<(), Error> {
+    if let Some(value) = data.as_f64() {
+        schema.check_constraints(value)
+    } else {
+        bail!("Expected number value.");
     }
 }
 

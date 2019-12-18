@@ -204,6 +204,9 @@ fn handle_function_signature(
                 } else if super::INTNAMES.iter().any(|n| path.path.is_ident(n)) {
                     schema.item = SchemaItem::Integer;
                     continue;
+                } else if super::NUMBERNAMES.iter().any(|n| path.path.is_ident(n)) {
+                    schema.item = SchemaItem::Number;
+                    continue;
                 }
             }
             _ => (),

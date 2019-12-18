@@ -17,6 +17,9 @@ mod structs;
 pub const INTNAMES: &[&str] = &[
     "Integer", "i8", "i16", "i32", "i64", "isize", "u8", "u16", "u32", "u64", "usize",
 ];
+pub const NUMBERNAMES: &[&str] = &[
+    "Number", "f32", "f64",
+];
 
 /// The main `Schema` type.
 ///
@@ -151,6 +154,7 @@ enum SchemaItem {
     Null,
     Boolean,
     Integer,
+    Number,
     String,
     Object(SchemaObject),
     Array(SchemaArray),
@@ -202,6 +206,8 @@ impl SchemaItem {
             Ok(SchemaItem::Boolean)
         } else if INTNAMES.iter().any(|n| name == n) {
             Ok(SchemaItem::Integer)
+        } else if NUMBERNAMES.iter().any(|n| name == n) {
+            Ok(SchemaItem::Number)
         } else if name == "String" {
             Ok(SchemaItem::String)
         } else if name == "Object" {
@@ -234,6 +240,10 @@ impl SchemaItem {
             SchemaItem::Integer => {
                 let description = description?;
                 ts.extend(quote! { ::proxmox::api::schema::IntegerSchema::new(#description) });
+            }
+            SchemaItem::Number => {
+                let description = description?;
+                ts.extend(quote! { ::proxmox::api::schema::NumberSchema::new(#description) });
             }
             SchemaItem::String => {
                 let description = description?;
