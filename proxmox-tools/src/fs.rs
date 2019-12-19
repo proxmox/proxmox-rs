@@ -1,3 +1,5 @@
+//! File related utilities such as `replace_file`.
+
 use std::ffi::CStr;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
