@@ -97,11 +97,9 @@ pub fn replace_file<P: AsRef<Path>>(
         .perm
         .unwrap_or(stat::Mode::from_bits_truncate(0o644));
 
-    if options.perm.is_some() {
-        if let Err(err) = stat::fchmod(fd, mode) {
-            let _ = unistd::unlink(tmp_path);
-            bail!("fchmod {:?} failed: {}", tmp_path, err);
-        }
+    if let Err(err) = stat::fchmod(fd, mode) {
+        let _ = unistd::unlink(tmp_path);
+        bail!("fchmod {:?} failed: {}", tmp_path, err);
     }
 
     if options.owner.is_some() || options.group.is_some() {
