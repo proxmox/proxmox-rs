@@ -1,7 +1,7 @@
 [package]
 name = "proxmox-api"
 edition = "2018"
-version = "0.1.0"
+version = "0.1.1-dev.1"
 authors = [ "Wolfgang Bumiller <w.bumiller@proxmox.com>" ]
 
 [dependencies]
@@ -9,7 +9,7 @@ bytes = "0.5"
 failure = "0.1"
 futures = "0.3"
 http = "0.2"
-proxmox-tools = { version = "0.1", path = "../proxmox-tools" }
+proxmox-tools = { version = "0.1.1-dev.1", path = "../proxmox-tools" }
 regex = "1.2"
 rustyline = "5.0.5"
 serde = "1.0"
