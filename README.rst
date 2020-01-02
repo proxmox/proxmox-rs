@@ -17,3 +17,20 @@ we'll include teh ``.1``.
 
 When releasing a crate, the final commit should be the one stripping the ``-dev`` version and
 updating the ``debian/changelog``.
+
+Local (packaged) crates
+=======================
+
+To use locally installed, packaged crates instead of crates.io put the
+following into ./.cargo/config (or point CARGO_HOME to a directory containing
+such a config file)::
+
+   [source]
+   [source.debian-packages]
+   directory = "/usr/share/cargo/registry"
+   [source.crates-io]
+   replace-with = "debian-packages"
+
+This is akin to what happens when building with dh_cargo. Cargo.lock needs to
+be deleted when switching between packaged crates and crates.io, since the
+checksums are not compatible.
