@@ -11,6 +11,7 @@ authors = [
 failure = "0.1"
 lazy_static = "1.4"
 libc = "0.2"
+nix = "0.16"
 proxmox-tools = { version = "0.1.1-dev.1", path = "../proxmox-tools" }
 
 # Docs should be able to reference the proxmox crate.
