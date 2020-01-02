@@ -1,3 +1,9 @@
+rust-proxmox-tools (0.1.1) proxmox-rust; urgency=medium
+
+  * correctly default to mode 0644 in replace_file
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 02 Jan 2020 14:38:22 +0100
+
 rust-proxmox-tools (0.1.0) proxmox-rust; urgency=medium
 
   * Initial packaging.

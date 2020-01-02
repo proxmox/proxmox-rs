@@ -1,3 +1,11 @@
+rust-proxmox (0.1.1) proxmox-rust; urgency=medium
+
+  * proxmox-sys: added: helpers for dealing with nix and io errors
+
+  * dependency updates
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 02 Jan 2020 14:21:56 +0100
+
 rust-proxmox (0.1.0) proxmox-rust; urgency=medium
 
   * Initial packaging.

@@ -1,3 +1,9 @@
+rust-proxmox-api (0.1.1) proxmox-rust; urgency=medium
+
+  * bump proxmox-tools dependency
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 02 Jan 2020 14:25:22 +0100
+
 rust-proxmox-api (0.1.0) proxmox-rust; urgency=medium
 
   * Initial packaging.

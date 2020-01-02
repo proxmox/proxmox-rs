@@ -40,8 +40,8 @@ Provides:
  librust-proxmox-tools-0+default-dev (= ${binary:Version}),
  librust-proxmox-tools-0.1-dev (= ${binary:Version}),
  librust-proxmox-tools-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-tools-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-tools-0.1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-tools-0.1.1-dev (= ${binary:Version}),
+ librust-proxmox-tools-0.1.1+default-dev (= ${binary:Version}),
 Description: Proxmox tools library - Rust source code
  This package contains the source for the Rust proxmox-tools crate.
 
@@ -64,4 +64,4 @@ Description: Proxmox tools library - Rust source code
 # Provides:
 #  librust-proxmox-tools-0+valgrind-dev (= ${binary:Version}),
 #  librust-proxmox-tools-0.1+valgrind-dev (= ${binary:Version}),
-#  librust-proxmox-tools-0.1.0+valgrind-dev (= ${binary:Version}),
+#  librust-proxmox-tools-0.1.1+valgrind-dev (= ${binary:Version}),
