@@ -86,20 +86,18 @@ fn handle_regular_struct(
 
             let ident_name: String = ident.to_string();
 
-            let field_def: &mut (FieldName, bool, Schema) = match schema_fields.remove(&ident_name)
-            {
-                Some(field) => field,
+            match schema_fields.remove(&ident_name) {
+                Some(field_def) => handle_regular_field(field_def, field)?,
                 None => {
-                    new_fields.push((
+                    let mut field_def = (
                         FieldName::new(ident_name.clone(), ident.span()),
                         false,
                         Schema::blank(ident.span()),
-                    ));
-                    new_fields.last_mut().unwrap()
+                    );
+                    handle_regular_field(&mut field_def, field)?;
+                    new_fields.push(field_def);
                 }
-            };
-
-            handle_regular_field(field_def, field)?;
+            }
         }
     } else {
         unreachable!();
