@@ -87,14 +87,14 @@ fn handle_regular_struct(
             let ident_name: String = ident.to_string();
 
             match schema_fields.remove(&ident_name) {
-                Some(field_def) => handle_regular_field(field_def, field)?,
+                Some(field_def) => handle_regular_field(field_def, field, false)?,
                 None => {
                     let mut field_def = (
                         FieldName::new(ident_name.clone(), ident.span()),
                         false,
                         Schema::blank(ident.span()),
                     );
-                    handle_regular_field(&mut field_def, field)?;
+                    handle_regular_field(&mut field_def, field, true)?;
                     new_fields.push(field_def);
                 }
             }
@@ -136,6 +136,7 @@ fn handle_regular_struct(
 fn handle_regular_field(
     field_def: &mut (FieldName, bool, Schema),
     field: &syn::Field,
+    derived: bool, // whether this field was missing in the schema
 ) -> Result<(), Error> {
     let schema: &mut Schema = &mut field_def.2;
 
@@ -147,7 +148,9 @@ fn handle_regular_field(
     util::infer_type(schema, &field.ty)?;
 
     if is_option_type(&field.ty) {
-        if !field_def.1 {
+        if derived {
+            field_def.1 = true;
+        } else if !field_def.1 {
             bail!(&field.ty => "non-optional Option type?");
         }
     }
