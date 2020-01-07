@@ -8,6 +8,10 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::Token;
 
+use failure::Error;
+
+use crate::api::Schema;
+
 /// A more relaxed version of Ident which allows hyphens.
 ///
 /// Note that this acts both as an Ident and as a String so that we can easily access an &str
@@ -398,4 +402,42 @@ pub fn get_doc_comments(attributes: &[syn::Attribute]) -> Result<(String, Span),
     }
 
     Ok((doc_comment, doc_span))
+}
+
+pub fn derive_descriptions(
+    input_schema: &mut Schema,
+    returns_schema: &mut Option<Schema>,
+    doc_comment: &str,
+    doc_span: Span,
+) -> Result<(), Error> {
+    // If we have a doc comment, allow automatically inferring the description for the input and
+    // output objects:
+    if doc_comment.is_empty() {
+        return Ok(());
+    }
+
+    let mut parts = doc_comment.split("\nReturns:");
+
+    if let Some(first) = parts.next() {
+        if input_schema.description.is_none() {
+            input_schema.description = Some(syn::LitStr::new(first.trim(), doc_span));
+        }
+    }
+
+    if let Some(second) = parts.next() {
+        if let Some(ref mut returns_schema) = returns_schema {
+            if returns_schema.description.is_none() {
+                returns_schema.description = Some(syn::LitStr::new(second.trim(), doc_span));
+            }
+        }
+
+        if parts.next().is_some() {
+            bail!(
+                doc_span,
+                "multiple 'Returns:' sections found in doc comment!"
+            );
+        }
+    }
+
+    Ok(())
 }

@@ -40,11 +40,11 @@ pub const NUMBERNAMES: &[&str] = &["Number", "f32", "f64"];
 ///     ObjectSchema::new("text", &[ ... ]).foo(bar)
 /// }
 /// ```
-struct Schema {
+pub struct Schema {
     span: Span,
 
     /// Common in all schema entry types:
-    description: Option<syn::LitStr>,
+    pub description: Option<syn::LitStr>,
 
     /// The specific schema type (Object, String, ...)
     item: SchemaItem,

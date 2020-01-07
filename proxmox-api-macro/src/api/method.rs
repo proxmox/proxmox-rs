@@ -39,7 +39,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         .unwrap_or(false);
 
     let (doc_comment, doc_span) = util::get_doc_comments(&func.attrs)?;
-    derive_descriptions(
+    util::derive_descriptions(
         &mut input_schema,
         &mut returns_schema,
         &doc_comment,
@@ -96,44 +96,6 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         #func
     })
     //Ok(quote::quote!(#func))
-}
-
-fn derive_descriptions(
-    input_schema: &mut Schema,
-    returns_schema: &mut Option<Schema>,
-    doc_comment: &str,
-    doc_span: Span,
-) -> Result<(), Error> {
-    // If we have a doc comment, allow automatically inferring the description for the input and
-    // output objects:
-    if doc_comment.is_empty() {
-        return Ok(());
-    }
-
-    let mut parts = doc_comment.split("\nReturns:");
-
-    if let Some(first) = parts.next() {
-        if input_schema.description.is_none() {
-            input_schema.description = Some(syn::LitStr::new(first.trim(), doc_span));
-        }
-    }
-
-    if let Some(second) = parts.next() {
-        if let Some(ref mut returns_schema) = returns_schema {
-            if returns_schema.description.is_none() {
-                returns_schema.description = Some(syn::LitStr::new(second.trim(), doc_span));
-            }
-        }
-
-        if parts.next().is_some() {
-            bail!(
-                doc_span,
-                "multiple 'Returns:' sections found in doc comment!"
-            );
-        }
-    }
-
-    Ok(())
 }
 
 enum ParameterType<'a> {

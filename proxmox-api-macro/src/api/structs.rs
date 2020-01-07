@@ -6,11 +6,17 @@ use proc_macro2::TokenStream;
 use quote::quote_spanned;
 
 use super::Schema;
-use crate::util::JSONObject;
+use crate::util::{self, JSONObject};
 
 pub fn handle_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<TokenStream, Error> {
+    let mut schema: Schema = attribs.try_into()?;
+
+    if schema.description.is_none() {
+        let (doc_comment, doc_span) = util::get_doc_comments(&stru.attrs)?;
+        util::derive_descriptions(&mut schema, &mut None, &doc_comment, doc_span)?;
+    }
+
     let schema = {
-        let schema: Schema = attribs.try_into()?;
         let mut ts = TokenStream::new();
         schema.to_schema(&mut ts)?;
         ts

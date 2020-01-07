@@ -16,6 +16,19 @@ use serde_json::Value;
 //#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OkString(String);
 
+#[api(
+    properties: {
+        test: {
+            type: String,
+            description: "Hello",
+        },
+    },
+)]
+/// A Foo.
+pub struct Foo {
+    test: String,
+}
+
 // generates the following without the '_' prefix in the constant:
 impl OkString {
     pub const _API_SCHEMA: &'static schema::Schema = &schema::StringSchema::new("A string")
