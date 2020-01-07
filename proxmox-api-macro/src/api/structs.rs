@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::convert::TryInto;
 
 use failure::Error;
@@ -6,7 +7,8 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote_spanned;
 
 use super::Schema;
-use crate::util::{self, JSONObject};
+use crate::api;
+use crate::util::{self, FieldName, JSONObject};
 
 pub fn handle_struct(attribs: JSONObject, mut stru: syn::ItemStruct) -> Result<TokenStream, Error> {
     let mut schema: Schema = attribs.try_into()?;
@@ -26,11 +28,11 @@ pub fn handle_struct(attribs: JSONObject, mut stru: syn::ItemStruct) -> Result<T
             fields.paren_token.span,
             "api macro does not support tuple structs"
         ),
-        syn::Fields::Named(fields) => handle_regular_struct(schema, &mut stru),
+        syn::Fields::Named(_) => handle_regular_struct(schema, &mut stru),
     }
 }
 
-pub fn finish_schema(
+fn finish_schema(
     schema: Schema,
     stru: &syn::ItemStruct,
     name: &Ident,
@@ -49,16 +51,110 @@ pub fn finish_schema(
     })
 }
 
-pub fn handle_newtype_struct(
-    schema: Schema,
-    stru: &mut syn::ItemStruct,
-) -> Result<TokenStream, Error> {
+fn handle_newtype_struct(schema: Schema, stru: &mut syn::ItemStruct) -> Result<TokenStream, Error> {
     finish_schema(schema, &stru, &stru.ident)
 }
 
-pub fn handle_regular_struct(
-    schema: Schema,
+fn handle_regular_struct(
+    mut schema: Schema,
     stru: &mut syn::ItemStruct,
 ) -> Result<TokenStream, Error> {
-    todo!();
+    // sanity check, first get us some quick by-name access to our fields:
+    //
+    // NOTE: We remove references we're "done with" and in the end fail with a list of extraneous
+    // fields if there are any.
+    let mut schema_fields: HashMap<String, &mut (FieldName, bool, Schema)> = HashMap::new();
+
+    // We also keep a reference to the SchemaObject around since we derive missing fields
+    // automatically.
+    if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
+        for field in &mut obj.properties {
+            schema_fields.insert(field.0.as_str().to_string(), field);
+        }
+    } else {
+        bail!(schema.span, "structs need an object schema");
+    }
+
+    let mut new_fields: Vec<(FieldName, bool, Schema)> = Vec::new();
+
+    if let syn::Fields::Named(ref fields) = &stru.fields {
+        for field in &fields.named {
+            let ident: &Ident = field
+                .ident
+                .as_ref()
+                .ok_or_else(|| format_err!(field => "field without name?"))?;
+
+            let ident_name: String = ident.to_string();
+
+            let field_def: &mut (FieldName, bool, Schema) = match schema_fields.remove(&ident_name)
+            {
+                Some(field) => field,
+                None => {
+                    new_fields.push((
+                        FieldName::new(ident_name.clone(), ident.span()),
+                        false,
+                        Schema::blank(ident.span()),
+                    ));
+                    new_fields.last_mut().unwrap()
+                }
+            };
+
+            handle_regular_field(field_def, field)?;
+        }
+    } else {
+        unreachable!();
+    };
+
+    // add the fields we derived:
+    if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
+        obj.properties.extend(new_fields);
+    } else {
+        unreachable!();
+    }
+
+    finish_schema(schema, &stru, &stru.ident)
+}
+
+/// Field handling:
+///
+/// For each field we derive the description from doc-attributes if available.
+fn handle_regular_field(
+    field_def: &mut (FieldName, bool, Schema),
+    field: &syn::Field,
+) -> Result<(), Error> {
+    let schema: &mut Schema = &mut field_def.2;
+
+    if schema.description.is_none() {
+        let (doc_comment, doc_span) = util::get_doc_comments(&field.attrs)?;
+        util::derive_descriptions(schema, &mut None, &doc_comment, doc_span)?;
+    }
+
+    util::infer_type(schema, &field.ty)?;
+
+    if is_option_type(&field.ty) {
+        if !field_def.1 {
+            bail!(&field.ty => "non-optional Option type?");
+        }
+    }
+
+    Ok(())
+}
+
+/// Note that we cannot handle renamed imports at all here...
+fn is_option_type(ty: &syn::Type) -> bool {
+    if let syn::Type::Path(p) = ty {
+        if p.qself.is_some() {
+            return false;
+        }
+        let segs = &p.path.segments;
+        match segs.len() {
+            1 => return segs.last().unwrap().ident == "Option",
+            2 => {
+                return segs.first().unwrap().ident == "std"
+                    && segs.last().unwrap().ident == "Option"
+            }
+            _ => return false,
+        }
+    }
+    false
 }

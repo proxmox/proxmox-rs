@@ -17,15 +17,11 @@ use serde_json::Value;
 pub struct OkString(String);
 
 #[api(
-    properties: {
-        test: {
-            type: String,
-            description: "Hello",
-        },
-    },
+    properties: {}
 )]
 /// A Foo.
 pub struct Foo {
+    /// A test string.
     test: String,
 }
 
