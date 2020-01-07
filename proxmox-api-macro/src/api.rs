@@ -47,7 +47,7 @@ pub struct Schema {
     pub description: Option<syn::LitStr>,
 
     /// The specific schema type (Object, String, ...)
-    item: SchemaItem,
+    pub item: SchemaItem,
 
     /// The remaining key-value pairs the `SchemaItem` parser did not extract will be appended as
     /// builder-pattern method calls to this schema.
@@ -100,6 +100,15 @@ impl TryFrom<JSONObject> for Schema {
 }
 
 impl Schema {
+    fn blank(span: Span) -> Self {
+        Self {
+            span,
+            description: None,
+            item: SchemaItem::Inferred(span),
+            properties: Vec::new(),
+        }
+    }
+
     fn to_typed_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
         self.item.to_schema(
             ts,
@@ -148,7 +157,7 @@ impl Schema {
     }
 }
 
-enum SchemaItem {
+pub enum SchemaItem {
     Null,
     Boolean,
     Integer,
@@ -317,7 +326,7 @@ impl SchemaItem {
 
 #[derive(Default)]
 /// Contains a sorted list of properties:
-struct SchemaObject {
+pub struct SchemaObject {
     properties: Vec<(FieldName, bool, Schema)>,
 }
 
@@ -388,7 +397,7 @@ impl SchemaObject {
     }
 }
 
-struct SchemaArray {
+pub struct SchemaArray {
     item: Box<Schema>,
 }
 

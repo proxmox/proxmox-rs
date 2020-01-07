@@ -10,7 +10,7 @@ use syn::Token;
 
 use failure::Error;
 
-use crate::api::Schema;
+use crate::api::{self, Schema, SchemaItem};
 
 /// A more relaxed version of Ident which allows hyphens.
 ///
@@ -437,6 +437,34 @@ pub fn derive_descriptions(
                 "multiple 'Returns:' sections found in doc comment!"
             );
         }
+    }
+
+    Ok(())
+}
+
+pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<(), Error> {
+    if let SchemaItem::Inferred(_) = schema.item {
+        //
+    } else {
+        return Ok(());
+    }
+
+    // infer the type from a rust type:
+    match ty {
+        syn::Type::Path(path) if path.qself.is_none() => {
+            if path.path.is_ident("String") {
+                schema.item = SchemaItem::String;
+            } else if path.path.is_ident("bool") {
+                schema.item = SchemaItem::Boolean;
+            } else if api::INTNAMES.iter().any(|n| path.path.is_ident(n)) {
+                schema.item = SchemaItem::Integer;
+            } else if api::NUMBERNAMES.iter().any(|n| path.path.is_ident(n)) {
+                schema.item = SchemaItem::Number;
+            } else {
+                bail!(ty => "cannot infer parameter type from this rust type");
+            }
+        }
+        _ => (),
     }
 
     Ok(())

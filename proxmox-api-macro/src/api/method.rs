@@ -140,42 +140,14 @@ fn handle_function_signature(
         let (pat_type, pat) = check_input_type(input)?;
 
         // For any named type which exists on the function signature...
-        let schema: &mut Schema = if let Some((_ident, _optional, schema)) =
+        if let Some((_ident, _optional, ref mut schema)) =
             input_schema.find_obj_property_by_ident_mut(&pat.ident.to_string())
         {
-            match &mut schema.item {
-                // ... if it has no `type` property (item = SchemaItem::Inferred), get a mutable
-                // reference to the schema, so that we can...
-                SchemaItem::Inferred(_span) => schema,
-                // other types are fine:
-                _ => continue,
-            }
+            // try to infer the type in the schema if it is not specified explicitly:
+            util::infer_type(schema, &*pat_type.ty)?;
         } else {
             continue;
         };
-
-        // ... infer the type from the function parameters:
-        match &*pat_type.ty {
-            syn::Type::Path(path) if path.qself.is_none() => {
-                if path.path.is_ident("String") {
-                    schema.item = SchemaItem::String;
-                    continue;
-                } else if path.path.is_ident("bool") {
-                    schema.item = SchemaItem::Boolean;
-                    continue;
-                } else if super::INTNAMES.iter().any(|n| path.path.is_ident(n)) {
-                    schema.item = SchemaItem::Integer;
-                    continue;
-                } else if super::NUMBERNAMES.iter().any(|n| path.path.is_ident(n)) {
-                    schema.item = SchemaItem::Number;
-                    continue;
-                }
-            }
-            _ => (),
-        }
-
-        // if we can't, bail out:
-        bail!(&pat_type.ty => "cannot infer parameter type from this rust type");
     }
 
     for input in sig.inputs.iter() {
