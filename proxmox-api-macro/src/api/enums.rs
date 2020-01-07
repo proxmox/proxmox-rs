@@ -66,7 +66,7 @@ pub fn handle_enum(
         }
 
         let mut renamed = false;
-        for attrib in &mut variant.attrs {
+        for attrib in &variant.attrs {
             if !attrib.path.is_ident("serde") {
                 continue;
             }

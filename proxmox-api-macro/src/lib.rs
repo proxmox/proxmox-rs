@@ -19,6 +19,7 @@ macro_rules! bail {
 }
 
 mod api;
+mod serde;
 mod util;
 
 fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
@@ -46,7 +47,7 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
 }
 
 /**
-    Macro for building an API method:
+    Macro for building API methods and types:
 
     ```
     # use proxmox_api_macro::api;

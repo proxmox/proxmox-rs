@@ -93,6 +93,12 @@ impl From<Ident> for FieldName {
     }
 }
 
+impl From<&syn::LitStr> for FieldName {
+    fn from(s: &syn::LitStr) -> Self {
+        Self::new(s.value(), s.span())
+    }
+}
+
 impl Borrow<str> for FieldName {
     #[inline]
     fn borrow(&self) -> &str {
@@ -500,4 +506,20 @@ fn is_option_type(ty: &syn::Type) -> Option<&syn::Type> {
         }
     }
     None
+}
+
+/// `parse_macro_input!` expects a TokenStream_1
+pub struct AttrArgs {
+    _paren_token: syn::token::Paren,
+    pub args: Punctuated<syn::NestedMeta, Token![,]>,
+}
+
+impl Parse for AttrArgs {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let content;
+        Ok(Self {
+            _paren_token: syn::parenthesized!(content in input),
+            args: Punctuated::parse_terminated(&content)?,
+        })
+    }
 }
