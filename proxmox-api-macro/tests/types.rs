@@ -23,6 +23,9 @@ pub struct OkString(String);
 pub struct Foo {
     /// A test string.
     test: String,
+
+    /// An optional auto-derived value for testing:
+    another: Option<String>,
 }
 
 // generates the following without the '_' prefix in the constant:

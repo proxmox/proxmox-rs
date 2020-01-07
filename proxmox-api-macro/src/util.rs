@@ -442,12 +442,17 @@ pub fn derive_descriptions(
     Ok(())
 }
 
-pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<(), Error> {
+pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<bool, Error> {
     if let SchemaItem::Inferred(_) = schema.item {
         //
     } else {
-        return Ok(());
+        return Ok(is_option_type(ty).is_some());
     }
+
+    let (ty, is_option) = match is_option_type(ty) {
+        Some(ty) => (ty, true),
+        None => (ty, false),
+    };
 
     // infer the type from a rust type:
     match ty {
@@ -467,5 +472,32 @@ pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<(), Error> {
         _ => (),
     }
 
-    Ok(())
+    Ok(is_option)
+}
+
+/// Note that we cannot handle renamed imports at all here...
+fn is_option_type(ty: &syn::Type) -> Option<&syn::Type> {
+    if let syn::Type::Path(p) = ty {
+        if p.qself.is_some() {
+            return None;
+        }
+        let segs = &p.path.segments;
+        let is_option = match segs.len() {
+            1 => segs.last().unwrap().ident == "Option",
+            2 => segs.first().unwrap().ident == "std" && segs.last().unwrap().ident == "Option",
+            _ => false,
+        };
+        if !is_option {
+            return None;
+        }
+
+        if let syn::PathArguments::AngleBracketed(generic) = &segs.last().unwrap().arguments {
+            if generic.args.len() == 1 {
+                if let syn::GenericArgument::Type(ty) = generic.args.first().unwrap() {
+                    return Some(ty);
+                }
+            }
+        }
+    }
+    None
 }

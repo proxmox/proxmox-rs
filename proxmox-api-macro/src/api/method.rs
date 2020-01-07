@@ -140,11 +140,14 @@ fn handle_function_signature(
         let (pat_type, pat) = check_input_type(input)?;
 
         // For any named type which exists on the function signature...
-        if let Some((_ident, _optional, ref mut schema)) =
+        if let Some((_ident, optional, ref mut schema)) =
             input_schema.find_obj_property_by_ident_mut(&pat.ident.to_string())
         {
             // try to infer the type in the schema if it is not specified explicitly:
-            util::infer_type(schema, &*pat_type.ty)?;
+            let is_option = util::infer_type(schema, &*pat_type.ty)?;
+            if !is_option && *optional {
+                bail!(pat_type => "non-optional `Option` type");
+            }
         } else {
             continue;
         };
