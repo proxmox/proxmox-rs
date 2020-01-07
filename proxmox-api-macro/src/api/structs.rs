@@ -105,6 +105,23 @@ fn handle_regular_struct(
         unreachable!();
     };
 
+    // now error out about all the fields not found in the struct:
+    if !schema_fields.is_empty() {
+        let bad_fields = schema_fields.keys().fold(String::new(), |mut acc, key| {
+            if !acc.is_empty() {
+                acc.push_str(", ");
+                acc
+            } else {
+                key.to_owned()
+            }
+        });
+        bail!(
+            schema.span,
+            "struct does not contain the following fields: {}",
+            bad_fields
+        );
+    }
+
     // add the fields we derived:
     if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
         obj.properties.extend(new_fields);
