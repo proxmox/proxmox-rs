@@ -37,12 +37,13 @@ impl OkString {
 
 #[api]
 #[derive(Deserialize)]
-/// A selection of either a, B or C
+#[serde(rename_all = "kebab-case")]
+/// A selection of either 'onekind', 'another-kind' or 'selection-number-three'.
 pub enum Selection {
-    #[serde(rename = "a")]
-    A,
-    B,
-    C,
+    #[serde(rename = "onekind")]
+    OneKind,
+    AnotherKind,
+    SelectionNumberThree,
 }
 
 // Initial test:

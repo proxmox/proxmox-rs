@@ -8,7 +8,7 @@ use syn::punctuated::Punctuated;
 use syn::Token;
 
 use super::Schema;
-use crate::serde::SerdeAttrib;
+use crate::serde::{self, SerdeAttrib};
 use crate::util::{self, FieldName, JSONObject, JSONValue};
 
 /// Enums, provided they're simple enums, simply get an enum string schema attached to them.
@@ -40,6 +40,8 @@ pub fn handle_enum(
         ts
     };
 
+    let container_attrs = serde::ContainerAttrib::try_from(&enum_ty.attrs[..])?;
+
     // with_capacity(enum_ty.variants.len());
     // doesn't exist O.o
     let mut variants = Punctuated::<syn::LitStr, Token![,]>::new();
@@ -52,6 +54,9 @@ pub fn handle_enum(
         let attrs = SerdeAttrib::try_from(&variant.attrs[..])?;
         if let Some(renamed) = attrs.rename {
             variants.push(renamed.into_lit_str());
+        } else if let Some(rename_all) = container_attrs.rename_all {
+            let name = rename_all.apply_to_variant(&variant.ident.to_string());
+            variants.push(syn::LitStr::new(&name, variant.ident.span()));
         } else {
             let name = &variant.ident;
             variants.push(syn::LitStr::new(&name.to_string(), name.span()));
