@@ -66,6 +66,10 @@ impl FieldName {
     pub fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.string.cmp(&other.string)
     }
+
+    pub fn into_lit_str(self) -> syn::LitStr {
+        syn::LitStr::new(&self.string, self.ident.span())
+    }
 }
 
 impl Eq for FieldName {}

@@ -5,10 +5,6 @@
 
 use std::convert::TryFrom;
 
-use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::Token;
-
 use crate::util::{AttrArgs, FieldName};
 
 /// Serde name types.
@@ -127,7 +123,7 @@ impl RenameAll {
 /// `serde` container attributes we support
 #[derive(Default)]
 pub struct ContainerAttrib {
-    rename_all: Option<RenameAll>,
+    pub rename_all: Option<RenameAll>,
 }
 
 impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
@@ -162,7 +158,7 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
 /// `serde` field/variant attributes we support
 #[derive(Default)]
 pub struct SerdeAttrib {
-    rename: Option<FieldName>,
+    pub rename: Option<FieldName>,
 }
 
 impl TryFrom<&[syn::Attribute]> for SerdeAttrib {

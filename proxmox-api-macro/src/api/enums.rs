@@ -1,31 +1,15 @@
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 
 use failure::Error;
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
-use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::Token;
 
 use super::Schema;
+use crate::serde::SerdeAttrib;
 use crate::util::{self, FieldName, JSONObject, JSONValue};
-
-/// `parse_macro_input!` expects a TokenStream_1
-struct AttrArgs {
-    _paren_token: syn::token::Paren,
-    args: Punctuated<syn::NestedMeta, Token![,]>,
-}
-
-impl Parse for AttrArgs {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let content;
-        Ok(Self {
-            _paren_token: syn::parenthesized!(content in input),
-            args: Punctuated::parse_terminated(&content)?,
-        })
-    }
-}
 
 /// Enums, provided they're simple enums, simply get an enum string schema attached to them.
 pub fn handle_enum(
@@ -65,27 +49,10 @@ pub fn handle_enum(
             _ => bail!(variant => "api macro does not support enums with fields"),
         }
 
-        let mut renamed = false;
-        for attrib in &variant.attrs {
-            if !attrib.path.is_ident("serde") {
-                continue;
-            }
-
-            let args: AttrArgs = syn::parse2(attrib.tokens.clone())?;
-            for arg in args.args {
-                if let syn::NestedMeta::Meta(syn::Meta::NameValue(var)) = arg {
-                    if var.path.is_ident("rename") {
-                        match var.lit {
-                            syn::Lit::Str(lit) => variants.push(lit),
-                            _ => bail!(var.lit => "'rename' value must be a string literal"),
-                        }
-                        renamed = true;
-                    }
-                }
-            }
-        }
-
-        if !renamed {
+        let attrs = SerdeAttrib::try_from(&variant.attrs[..])?;
+        if let Some(renamed) = attrs.rename {
+            variants.push(renamed.into_lit_str());
+        } else {
             let name = &variant.ident;
             variants.push(syn::LitStr::new(&name.to_string(), name.span()));
         }
