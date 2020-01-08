@@ -38,8 +38,17 @@ use serde_json::{json, Value};
 /// Create or verify authentication ticket.
 ///
 /// Returns: A ticket.
-pub fn create_ticket(_param: Value) -> Result<Value, Error> {
-    panic!("implement me");
+pub fn create_ticket(param: Value) -> Result<Value, Error> {
+    let obj = param.as_object().expect("expected object parameter");
+    assert!(obj.contains_key("username"));
+    assert!(obj.contains_key("password"));
+    let user = obj["username"].as_str().expect("expected a username");
+    assert!(obj["password"].as_str().is_some());
+    Ok(json!({
+        "username": user,
+        "ticket": "<TICKET>",
+        "CSRFPreventionToken": "<TOKEN>",
+    }))
 }
 
 #[test]
@@ -293,4 +302,15 @@ fn test_invocations() {
         &mut env,
     )
     .expect("func with option should work");
+
+    let login = api_function_create_ticket(
+        json!({"username":"hello","password":"world"}),
+        &API_METHOD_CREATE_TICKET,
+        &mut env,
+    )
+    .expect("expected a ticket");
+    let login = login.as_object().expect("expected a valid result");
+    assert_eq!(login["username"], "hello");
+    assert_eq!(login["ticket"], "<TICKET>");
+    assert_eq!(login["CSRFPreventionToken"], "<TOKEN>");
 }
