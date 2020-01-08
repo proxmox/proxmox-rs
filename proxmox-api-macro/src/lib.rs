@@ -183,7 +183,8 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     }
     ```
 
-    Note that the schema itself contains the already renamed fields!
+    Note that when writing out parts or all of the schema manually, the schema itself has to
+    contain the already renamed fields!
 
     ```
     # use proxmox_api_macro::api;
@@ -203,6 +204,13 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
         AND_MORE: String,
     }
     ```
+
+    There are a few shortcuts for schemas: if the `type` refers to an arbitrary rust type other
+    than strings or integers, we assume that it has an `impl` block containing a `pub const
+    API_SCHEMA: &'static Schema`. This is what the `#[api]` macro produces on `struct` and `enum`
+    declarations. If it contains a `schema` key, this is expected to be the path to an existing
+    schema. (Hence `type: Foo` is the same as `schema: Foo::API_SCHEMA`.)
+
 */
 #[proc_macro_attribute]
 pub fn api(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
