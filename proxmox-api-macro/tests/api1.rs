@@ -42,6 +42,61 @@ pub fn create_ticket(_param: Value) -> Result<Value, Error> {
     panic!("implement me");
 }
 
+#[test]
+fn create_ticket_schema_check() {
+    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
+        &::proxmox::api::ApiHandler::Sync(&api_function_create_ticket),
+        &::proxmox::api::schema::ObjectSchema::new(
+            "Create or verify authentication ticket.",
+            &[
+                (
+                    "password",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new(
+                        "The secret password or a valid ticket.",
+                    )
+                    .schema(),
+                ),
+                (
+                    "username",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new("User name")
+                        .max_length(64)
+                        .schema(),
+                ),
+            ],
+        ),
+    )
+    .returns(
+        &::proxmox::api::schema::ObjectSchema::new(
+            "A ticket.",
+            &[
+                (
+                    "CSRFPreventionToken",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new(
+                        "Cross Site Request Forgerty Prevention Token.",
+                    )
+                    .schema(),
+                ),
+                (
+                    "ticket",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new("Auth ticket.").schema(),
+                ),
+                (
+                    "username",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new("User name.").schema(),
+                ),
+            ],
+        )
+        .schema(),
+    )
+    .protected(true);
+    assert_eq!(TEST_METHOD, API_METHOD_CREATE_TICKET);
+}
+
 #[api(
     input: {
         properties: {
@@ -85,6 +140,61 @@ pub fn create_ticket_direct(username: String, password: String) -> Result<&'stat
     Ok("an:invalid:ticket")
 }
 
+#[test]
+fn create_ticket_direct_schema_check() {
+    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
+        &::proxmox::api::ApiHandler::Sync(&api_function_create_ticket_direct),
+        &::proxmox::api::schema::ObjectSchema::new(
+            "Create or verify authentication ticket.",
+            &[
+                (
+                    "password",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new(
+                        "The secret password or a valid ticket.",
+                    )
+                    .schema(),
+                ),
+                (
+                    "username",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new("User name")
+                        .max_length(64)
+                        .schema(),
+                ),
+            ],
+        ),
+    )
+    .returns(
+        &::proxmox::api::schema::ObjectSchema::new(
+            "A ticket.",
+            &[
+                (
+                    "CSRFPreventionToken",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new(
+                        "Cross Site Request Forgerty Prevention Token.",
+                    )
+                    .schema(),
+                ),
+                (
+                    "ticket",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new("Auth ticket.").schema(),
+                ),
+                (
+                    "username",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new("User name.").schema(),
+                ),
+            ],
+        )
+        .schema(),
+    )
+    .protected(true);
+    assert_eq!(TEST_METHOD, API_METHOD_CREATE_TICKET_DIRECT);
+}
+
 #[api(
     input: {
         properties: {
@@ -122,6 +232,24 @@ pub fn basic_function() -> Result<(), Error> {
 pub fn func_with_option(verbose: Option<bool>) -> Result<(), Error> {
     let _ = verbose;
     Ok(())
+}
+
+#[test]
+fn func_with_option_schema_check() {
+    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
+        &::proxmox::api::ApiHandler::Sync(&api_function_func_with_option),
+        &::proxmox::api::schema::ObjectSchema::new(
+            "Optional parameter",
+            &[(
+                "verbose",
+                true,
+                &::proxmox::api::schema::BooleanSchema::new("Verbose output.").schema(),
+            )],
+        ),
+    )
+    .protected(false);
+
+    assert_eq!(TEST_METHOD, API_METHOD_FUNC_WITH_OPTION);
 }
 
 struct RpcEnv;

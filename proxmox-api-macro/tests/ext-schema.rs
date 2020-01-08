@@ -25,6 +25,19 @@ pub fn get_archive(archive_name: String) {
     let _ = archive_name;
 }
 
+#[test]
+fn get_archive_schema_check() {
+    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
+        &::proxmox::api::ApiHandler::Sync(&api_function_get_archive),
+        &::proxmox::api::schema::ObjectSchema::new(
+            "Get an archive.",
+            &[("archive-name", false, &NAME_SCHEMA)],
+        ),
+    )
+    .protected(false);
+    assert_eq!(TEST_METHOD, API_METHOD_GET_ARCHIVE);
+}
+
 #[api(
     input: {
         properties: {
@@ -39,6 +52,19 @@ pub fn get_archive_2(param: Value, rpcenv: &mut dyn RpcEnvironment) -> Result<Va
     let _ = param;
     let _ = rpcenv;
     Ok(json!("test"))
+}
+
+#[test]
+fn get_archive_2_schema_check() {
+    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
+        &::proxmox::api::ApiHandler::Sync(&api_function_get_archive_2),
+        &::proxmox::api::schema::ObjectSchema::new(
+            "Get an archive.",
+            &[("archive-name", false, &NAME_SCHEMA)],
+        ),
+    )
+    .protected(false);
+    assert_eq!(TEST_METHOD, API_METHOD_GET_ARCHIVE_2);
 }
 
 #[api(
@@ -58,4 +84,22 @@ pub fn get_archive_2(param: Value, rpcenv: &mut dyn RpcEnvironment) -> Result<Va
 pub fn get_data(param: Value) -> Result<(), Error> {
     let _ = param;
     Ok(())
+}
+
+#[test]
+fn get_data_schema_test() {
+    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
+        &::proxmox::api::ApiHandler::Sync(&api_function_get_data),
+        &::proxmox::api::schema::ObjectSchema::new(
+            "Get data.",
+            &[(
+                "data",
+                false,
+                &::proxmox::api::schema::ArraySchema::new("The data", &NAME_SCHEMA).schema(),
+            )],
+        ),
+    )
+    .protected(false);
+
+    assert_eq!(TEST_METHOD, API_METHOD_GET_DATA);
 }
