@@ -124,6 +124,29 @@ pub enum ApiHandler {
     AsyncHttp(ApiAsyncHttpHandlerFn),
 }
 
+#[cfg(feature = "test-harness")]
+impl Eq for ApiHandler {}
+
+#[cfg(feature = "test-harness")]
+impl PartialEq for ApiHandler {
+    fn eq(&self, rhs: &Self) -> bool {
+        unsafe {
+            match (self, rhs) {
+                (ApiHandler::Sync(l), ApiHandler::Sync(r)) => {
+                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
+                }
+                (ApiHandler::Async(l), ApiHandler::Async(r)) => {
+                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
+                }
+                (ApiHandler::AsyncHttp(l), ApiHandler::AsyncHttp(r)) => {
+                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
+                }
+                _ => false,
+            }
+        }
+    }
+}
+
 /// Lookup table to child `Router`s
 ///
 /// Stores a sorted list of `(name, router)` tuples:
@@ -361,6 +384,7 @@ fn dummy_handler_fn(
 const DUMMY_HANDLER: ApiHandler = ApiHandler::Sync(&dummy_handler_fn);
 
 /// This struct defines synchronous API call which returns the restulkt as json `Value`
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ApiMethod {
     /// The protected flag indicates that the provides function should be forwarded
     /// to the deaemon running in priviledged mode.

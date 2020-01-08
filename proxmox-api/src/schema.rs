@@ -65,6 +65,7 @@ impl fmt::Display for ParameterError {
 
 /// Data type to describe boolean values
 #[derive(Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct BooleanSchema {
     pub description: &'static str,
     /// Optional default value.
@@ -91,6 +92,7 @@ impl BooleanSchema {
 
 /// Data type to describe integer values.
 #[derive(Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct IntegerSchema {
     pub description: &'static str,
     /// Optional minimum.
@@ -221,8 +223,30 @@ impl NumberSchema {
     }
 }
 
+#[cfg(feature = "test-harness")]
+impl Eq for NumberSchema {}
+
+#[cfg(feature = "test-harness")]
+impl PartialEq for NumberSchema {
+    fn eq(&self, rhs: &Self) -> bool {
+        fn f64_eq(l: Option<f64>, r: Option<f64>) -> bool {
+            match (l, r) {
+                (None, None) => true,
+                (Some(l), Some(r)) => (l - r).abs() < 0.0001,
+                _ => false,
+            }
+        }
+
+        self.description == rhs.description
+            && f64_eq(self.minimum, rhs.minimum)
+            && f64_eq(self.maximum, rhs.maximum)
+            && f64_eq(self.default, rhs.default)
+    }
+}
+
 /// Data type to describe string values.
 #[derive(Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct StringSchema {
     pub description: &'static str,
     /// Optional default value.
@@ -319,6 +343,7 @@ impl StringSchema {
 /// All array elements are of the same type, as defined in the `items`
 /// schema.
 #[derive(Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ArraySchema {
     pub description: &'static str,
     /// Element type schema.
@@ -386,6 +411,7 @@ pub type SchemaPropertyMap = &'static [(&'static str, bool, &'static Schema)];
 
 /// Data type to describe objects (maps).
 #[derive(Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ObjectSchema {
     pub description: &'static str,
     /// If set, allow additional properties which are not defined in
@@ -464,6 +490,7 @@ impl ObjectSchema {
 /// ).schema();
 /// ```
 #[derive(Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub enum Schema {
     Null,
     Boolean(BooleanSchema),
@@ -552,6 +579,24 @@ impl std::fmt::Debug for ApiStringFormat {
             ApiStringFormat::Enum(strvec) => write!(f, "Enum({:?}", strvec),
             ApiStringFormat::Pattern(regex) => write!(f, "Pattern({:?}", regex),
             ApiStringFormat::PropertyString(schema) => write!(f, "PropertyString({:?}", schema),
+        }
+    }
+}
+
+#[cfg(feature = "test-harness")]
+impl Eq for ApiStringFormat {}
+
+#[cfg(feature = "test-harness")]
+impl PartialEq for ApiStringFormat {
+    fn eq(&self, rhs: &Self) -> bool {
+        match (self, rhs) {
+            (ApiStringFormat::Enum(l), ApiStringFormat::Enum(r)) => l == r,
+            (ApiStringFormat::Pattern(l), ApiStringFormat::Pattern(r)) => l == r,
+            (ApiStringFormat::PropertyString(l), ApiStringFormat::PropertyString(r)) => l == r,
+            (ApiStringFormat::VerifyFn(l), ApiStringFormat::VerifyFn(r)) => {
+                (l as *const fn(&str) -> _ as usize) == (r as *const fn(&str) -> _ as usize)
+            }
+            (_, _) => false,
         }
     }
 }

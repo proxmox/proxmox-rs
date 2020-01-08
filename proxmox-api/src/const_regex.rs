@@ -67,3 +67,13 @@ macro_rules! const_regex {
         $crate::const_regex! { $($rest)* }
     };
 }
+
+#[cfg(feature = "test-harness")]
+impl Eq for ConstRegexPattern {}
+
+#[cfg(feature = "test-harness")]
+impl PartialEq for ConstRegexPattern {
+    fn eq(&self, rhs: &Self) -> bool {
+        self.regex_string == rhs.regex_string
+    }
+}
