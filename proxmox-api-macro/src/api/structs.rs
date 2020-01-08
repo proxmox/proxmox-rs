@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 
 use failure::Error;
 
@@ -8,6 +8,7 @@ use quote::quote_spanned;
 
 use super::Schema;
 use crate::api;
+use crate::serde;
 use crate::util::{self, FieldName, JSONObject};
 
 pub fn handle_struct(attribs: JSONObject, mut stru: syn::ItemStruct) -> Result<TokenStream, Error> {
@@ -77,22 +78,35 @@ fn handle_regular_struct(
 
     let mut new_fields: Vec<(FieldName, bool, Schema)> = Vec::new();
 
+    let container_attrs = serde::ContainerAttrib::try_from(&stru.attrs[..])?;
+
     if let syn::Fields::Named(ref fields) = &stru.fields {
         for field in &fields.named {
-            let ident: &Ident = field
-                .ident
-                .as_ref()
-                .ok_or_else(|| format_err!(field => "field without name?"))?;
+            let attrs = serde::SerdeAttrib::try_from(&field.attrs[..])?;
 
-            let ident_name: String = ident.to_string();
+            let (name, span) = {
+                let ident: &Ident = field
+                    .ident
+                    .as_ref()
+                    .ok_or_else(|| format_err!(field => "field without name?"))?;
 
-            match schema_fields.remove(&ident_name) {
+                if let Some(renamed) = attrs.rename {
+                    (renamed.into_str(), ident.span())
+                } else if let Some(rename_all) = container_attrs.rename_all {
+                    let name = rename_all.apply_to_field(&ident.to_string());
+                    (name, ident.span())
+                } else {
+                    (ident.to_string(), ident.span())
+                }
+            };
+
+            match schema_fields.remove(&name) {
                 Some(field_def) => handle_regular_field(field_def, field, false)?,
                 None => {
                     let mut field_def = (
-                        FieldName::new(ident_name.clone(), ident.span()),
+                        FieldName::new(name.clone(), span),
                         false,
-                        Schema::blank(ident.span()),
+                        Schema::blank(span),
                     );
                     handle_regular_field(&mut field_def, field, true)?;
                     new_fields.push(field_def);

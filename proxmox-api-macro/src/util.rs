@@ -70,6 +70,10 @@ impl FieldName {
     pub fn into_lit_str(self) -> syn::LitStr {
         syn::LitStr::new(&self.string, self.ident.span())
     }
+
+    pub fn into_str(self) -> String {
+        self.string
+    }
 }
 
 impl Eq for FieldName {}

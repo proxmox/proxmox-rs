@@ -8,7 +8,7 @@ use syn::punctuated::Punctuated;
 use syn::Token;
 
 use super::Schema;
-use crate::serde::{self, SerdeAttrib};
+use crate::serde;
 use crate::util::{self, FieldName, JSONObject, JSONValue};
 
 /// Enums, provided they're simple enums, simply get an enum string schema attached to them.
@@ -51,7 +51,7 @@ pub fn handle_enum(
             _ => bail!(variant => "api macro does not support enums with fields"),
         }
 
-        let attrs = SerdeAttrib::try_from(&variant.attrs[..])?;
+        let attrs = serde::SerdeAttrib::try_from(&variant.attrs[..])?;
         if let Some(renamed) = attrs.rename {
             variants.push(renamed.into_lit_str());
         } else if let Some(rename_all) = container_attrs.rename_all {
