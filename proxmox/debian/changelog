@@ -1,3 +1,13 @@
+rust-proxmox (0.1.2) proxmox-rust; urgency=medium
+
+  * api-macro: bump to 0.1.1
+
+  * api-macro: cover all the basic struct support in the #[api] macro
+
+  * api-macro: support #[serde(rename_all)] on enums and structs
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 08 Jan 2020 14:12:57 +0100
+
 rust-proxmox (0.1.1) proxmox-rust; urgency=medium
 
   * proxmox-sys: added: helpers for dealing with nix and io errors
