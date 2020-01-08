@@ -109,6 +109,15 @@ impl Schema {
         }
     }
 
+    fn empty_object(span: Span) -> Self {
+        Self {
+            span,
+            description: None,
+            item: SchemaItem::Object(SchemaObject::new()),
+            properties: Vec::new(),
+        }
+    }
+
     fn to_typed_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
         self.item.to_schema(
             ts,
@@ -331,6 +340,12 @@ pub struct SchemaObject {
 }
 
 impl SchemaObject {
+    pub fn new() -> Self {
+        Self {
+            properties: Vec::new(),
+        }
+    }
+
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
         Ok(Self {
             properties: obj

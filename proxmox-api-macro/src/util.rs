@@ -298,6 +298,10 @@ pub struct JSONObject {
 }
 
 impl JSONObject {
+    pub fn is_empty(&self) -> bool {
+        self.elements.is_empty()
+    }
+
     fn parse_elements(input: ParseStream) -> syn::Result<HashMap<FieldName, JSONValue>> {
         let map_elems: Punctuated<JSONMapEntry, Token![,]> =
             input.parse_terminated(JSONMapEntry::parse)?;

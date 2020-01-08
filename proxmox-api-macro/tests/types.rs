@@ -16,9 +16,7 @@ use serde_json::Value;
 //#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OkString(String);
 
-#[api(
-    properties: {}
-)]
+#[api]
 /// A Foo.
 pub struct Foo {
     /// A test string.

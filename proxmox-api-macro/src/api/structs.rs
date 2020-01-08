@@ -3,7 +3,7 @@ use std::convert::{TryFrom, TryInto};
 
 use failure::Error;
 
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
 
 use super::Schema;
@@ -12,7 +12,11 @@ use crate::serde;
 use crate::util::{self, FieldName, JSONObject};
 
 pub fn handle_struct(attribs: JSONObject, mut stru: syn::ItemStruct) -> Result<TokenStream, Error> {
-    let mut schema: Schema = attribs.try_into()?;
+    let mut schema: Schema = if attribs.is_empty() {
+        Schema::empty_object(Span::call_site())
+    } else {
+        attribs.try_into()?
+    };
 
     if schema.description.is_none() {
         let (doc_comment, doc_span) = util::get_doc_comments(&stru.attrs)?;
