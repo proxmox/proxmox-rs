@@ -1,3 +1,11 @@
+rust-proxmox-api-macro (0.1.1) proxmox-rust; urgency=medium
+
+  * cover all the basic struct support in the #[api] macro
+
+  * support #[serde(rename_all)] on enums and structs
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 08 Jan 2020 11:03:31 +0100
+
 rust-proxmox-api-macro (0.1.0) proxmox-rust; urgency=medium
 
   * Initial packaging.

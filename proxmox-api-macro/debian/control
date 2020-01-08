@@ -27,7 +27,7 @@ Provides:
  librust-proxmox-api-macro-0+default-dev (= ${binary:Version}),
  librust-proxmox-api-macro-0.1-dev (= ${binary:Version}),
  librust-proxmox-api-macro-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-api-macro-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-api-macro-0.1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0.1.1-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0.1.1+default-dev (= ${binary:Version}),
 Description: Proxmox API Macro library - Rust source code
  This package contains the source for the Rust proxmox-api-macro crate.
