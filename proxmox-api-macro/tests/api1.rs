@@ -313,4 +313,12 @@ fn test_invocations() {
     assert_eq!(login["username"], "hello");
     assert_eq!(login["ticket"], "<TICKET>");
     assert_eq!(login["CSRFPreventionToken"], "<TOKEN>");
+
+    let login = api_function_create_ticket_direct(
+        json!({"username":"hello","password":"world"}),
+        &API_METHOD_CREATE_TICKET,
+        &mut env,
+    )
+    .expect("expected a ticket");
+    assert_eq!(login, "an:invalid:ticket");
 }
