@@ -163,3 +163,17 @@ fn string_check_schema_test() {
 
     assert_eq!(TEST_METHOD, API_METHOD_STRING_CHECK);
 }
+
+#[api(
+    properties: {
+        "a-field": {
+            description: "Some description.",
+        },
+    },
+)]
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
+/// Some Description.
+pub struct RenamedAndDescribed {
+    a_field: String,
+}

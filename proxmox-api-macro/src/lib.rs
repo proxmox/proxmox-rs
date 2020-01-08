@@ -132,6 +132,77 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
         ...
     }
     ```
+
+    The `#[api]` macro can also be used on type declarations to create schemas for structs to be
+    used instead of accessing json values via string indexing.
+
+    For a simple struct, the schema can be left empty and will be completely derived from the
+    information available in rust:
+
+    ```no_run
+    # use proxmox_api_macro::api;
+    # use serde::{Deserialize, Serialize};
+    #[api]
+    #[derive(Deserialize, Serialize)]
+    #[serde(rename_all = "kebab-case")]
+    /// An example of a struct with renamed fields.
+    pub struct RenamedStruct {
+        /// A test string.
+        test_string: String,
+
+        /// An optional auto-derived value for testing:
+        #[serde(rename = "SomeOther")]
+        another: Option<String>,
+    }
+    ```
+
+    This will produce the following schema:
+    ```no_run
+    # struct RenamedStruct;
+    impl RenamedStruct {
+        pub const API_SCHEMA: &'static ::proxmox::api::schema::Schema =
+            &::proxmox::api::schema::ObjectSchema::new(
+                "An example of a struct with renamed fields.",
+                &[
+                    (
+                        "test-string",
+                        false,
+                        &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
+                    ),
+                    (
+                        "SomeOther",
+                        true,
+                        &::proxmox::api::schema::StringSchema::new(
+                            "An optional auto-derived value for testing:",
+                        )
+                        .schema(),
+                    ),
+                ],
+            )
+            .schema();
+    }
+    ```
+
+    Note that the schema itself contains the already renamed fields!
+
+    ```
+    # use proxmox_api_macro::api;
+    # use serde::{Deserialize, Serialize};
+    #[api(
+        properties: {
+            "A-RENAMED-FIELD": { description: "Some description.", },
+            "another": { description: "Some description.", },
+        },
+    )]
+    #[derive(Deserialize, Serialize)]
+    #[serde(rename_all = "SCREAMING-KEBAB-CASE")]
+    /// Some Description.
+    pub struct SomeStruct {
+        a_renamed_field: String,
+        #[serde(rename = "another")]
+        AND_MORE: String,
+    }
+    ```
 */
 #[proc_macro_attribute]
 pub fn api(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
