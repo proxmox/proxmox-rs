@@ -9,6 +9,7 @@ use std::time::Instant;
 use failure::*;
 use lazy_static::lazy_static;
 use libc;
+use nix::unistd::Pid;
 
 use proxmox_tools::fs::file_read_firstline;
 use proxmox_tools::parse::hex_nibble;
@@ -25,23 +26,34 @@ lazy_static! {
     static ref CLOCK_TICKS: f64 = sysconf(libc::_SC_CLK_TCK) as f64;
 }
 
-pub struct ProcFsPidStat {
+pub struct PidStat {
+    pub pid: Pid,
+    pub ppid: Pid,
     pub status: u8,
     pub utime: u64,
     pub stime: u64,
+    pub num_threads: u64,
     pub starttime: u64,
     pub vsize: u64,
     pub rss: i64,
 }
 
-pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<ProcFsPidStat, Error> {
-    parse_proc_pid_stat(
-        pid,
-        std::str::from_utf8(&std::fs::read(format!("/proc/{}/stat", pid))?)?,
-    )
+pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<PidStat, Error> {
+    let stat = parse_proc_pid_stat(std::str::from_utf8(&std::fs::read(format!(
+        "/proc/{}/stat",
+        pid
+    ))?)?)?;
+    if stat.pid.as_raw() != pid {
+        bail!(
+            "unexpected pid for process: found pid {} in /proc/{}/stat",
+            stat.pid.as_raw(),
+            pid
+        );
+    }
+    Ok(stat)
 }
 
-fn parse_proc_pid_stat(pid: libc::pid_t, statstr: &str) -> Result<ProcFsPidStat, Error> {
+fn parse_proc_pid_stat(statstr: &str) -> Result<PidStat, Error> {
     // It starts with the pid followed by a '('.
     let cmdbeg = statstr
         .find('(')
@@ -51,17 +63,10 @@ fn parse_proc_pid_stat(pid: libc::pid_t, statstr: &str) -> Result<ProcFsPidStat,
         bail!("bad /proc/PID/stat line before the '('");
     }
 
-    let stat_pid: u32 = statstr[..(cmdbeg - 1)]
+    let pid: u32 = statstr[..(cmdbeg - 1)]
         .parse()
         .map_err(|e| format_err!("bad pid in /proc/PID/stat: {}", e))?;
-
-    if (pid as u32) != stat_pid {
-        bail!(
-            "unexpected pid for process: found pid {} in /proc/{}/stat",
-            stat_pid,
-            pid
-        );
-    }
+    let pid = Pid::from_raw(pid as i32);
 
     // After the '(' we have an arbitrary command name, then ')' and the remaining values
     let cmdend = statstr
@@ -90,11 +95,14 @@ fn parse_proc_pid_stat(pid: libc::pid_t, statstr: &str) -> Result<ProcFsPidStat,
         Ok(value.as_bytes()[0])
     }
 
-    let out = ProcFsPidStat {
+    let out = PidStat {
+        pid,
         status: req_byte(parts.next(), "status")?,
-        utime: req_num::<u64>(parts.nth(10), "utime")?,
+        ppid: Pid::from_raw(req_num::<u32>(parts.next(), "ppid")? as i32),
+        utime: req_num::<u64>(parts.nth(9), "utime")?,
         stime: req_num::<u64>(parts.next(), "stime")?,
-        starttime: req_num::<u64>(parts.nth(6), "start_time")?,
+        num_threads: req_num::<u64>(parts.nth(4), "num_threads")?,
+        starttime: req_num::<u64>(parts.nth(1), "start_time")?,
         vsize: req_num::<u64>(parts.next(), "vsize")?,
         rss: req_num::<i64>(parts.next(), "rss")? * 4096,
     };
@@ -108,7 +116,6 @@ fn parse_proc_pid_stat(pid: libc::pid_t, statstr: &str) -> Result<ProcFsPidStat,
 #[test]
 fn test_read_proc_pid_stat() {
     let stat = parse_proc_pid_stat(
-        28900,
         "28900 (zsh) S 22489 28900 28900 34826 10252 4194304 6851 5946551 0 2344 6 3 25205 1413 \
          20 0 1 0 287592 12496896 1910 18446744073709551615 93999319244800 93999319938061 \
          140722897984224 0 0 0 2 3686404 134295555 1 0 0 17 10 0 0 0 0 0 93999320079088 \
@@ -116,9 +123,12 @@ fn test_read_proc_pid_stat() {
          140722897993707 0",
     )
     .expect("successful parsing of a sample /proc/PID/stat entry");
+    assert_eq!(stat.pid, Pid::from_raw(28900));
+    assert_eq!(stat.ppid, Pid::from_raw(22489));
     assert_eq!(stat.status, b'S');
     assert_eq!(stat.utime, 6);
     assert_eq!(stat.stime, 3);
+    assert_eq!(stat.num_threads, 1);
     assert_eq!(stat.starttime, 287592);
     assert_eq!(stat.vsize, 12496896);
     assert_eq!(stat.rss, 1910 * 4096);
@@ -130,7 +140,7 @@ pub fn read_proc_starttime(pid: libc::pid_t) -> Result<u64, Error> {
     Ok(info.starttime)
 }
 
-pub fn check_process_running(pid: libc::pid_t) -> Option<ProcFsPidStat> {
+pub fn check_process_running(pid: libc::pid_t) -> Option<PidStat> {
     if let Ok(info) = read_proc_pid_stat(pid) {
         if info.status != b'Z' {
             return Some(info);
@@ -139,7 +149,7 @@ pub fn check_process_running(pid: libc::pid_t) -> Option<ProcFsPidStat> {
     None
 }
 
-pub fn check_process_running_pstart(pid: libc::pid_t, pstart: u64) -> Option<ProcFsPidStat> {
+pub fn check_process_running_pstart(pid: libc::pid_t, pstart: u64) -> Option<PidStat> {
     if let Some(info) = check_process_running(pid) {
         if info.starttime == pstart {
             return Some(info);
