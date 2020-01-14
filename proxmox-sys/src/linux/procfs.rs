@@ -15,6 +15,8 @@ use nix::unistd::Pid;
 use proxmox_tools::fs::file_read_firstline;
 use proxmox_tools::parse::hex_nibble;
 
+pub mod mountinfo;
+
 /// POSIX sysconf call
 pub fn sysconf(name: i32) -> i64 {
     extern "C" {
