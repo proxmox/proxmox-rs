@@ -165,7 +165,11 @@ pub struct MountInfo {
     entries: Vec<Entry>,
 }
 
+/// An iterator over entries in a `MountInfo`.
 pub type Iter<'a> = std::slice::Iter<'a, Entry>;
+
+/// An iterator over mutable entries in a `MountInfo`.
+pub type IterMut<'a> = std::slice::IterMut<'a, Entry>;
 
 impl MountInfo {
     /// Read the current mount point information.
@@ -194,6 +198,55 @@ impl MountInfo {
     /// Iterate over mount entries.
     pub fn iter(&self) -> Iter {
         self.entries.iter()
+    }
+
+    /// Check if there exists a mount point for a specific path.
+    ///
+    /// FIXME: Do we need to verify that mount points don't get "hidden" by other higher level
+    /// mount points? For this we'd need to implement mountpoint-tree iteration first, the info for
+    /// which we have available in the `Entry` struct!
+    pub fn path_is_mounted<P>(&self, path: &P) -> bool
+    where
+        PathBuf: PartialEq<P>,
+    {
+        self.iter().any(|entry| entry.mount_point == *path)
+    }
+
+    /// Check whether there exists a mount point for a specified source.
+    pub fn source_is_mounted<T>(&self, source: &T) -> bool
+    where
+        OsString: PartialEq<T>,
+    {
+        self.iter()
+            .filter_map(|entry| entry.mount_source.as_ref())
+            .any(|s| *s == *source)
+    }
+}
+
+impl IntoIterator for MountInfo {
+    type Item = Entry;
+    type IntoIter = std::vec::IntoIter<Entry>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a MountInfo {
+    type Item = &'a Entry;
+    type IntoIter = Iter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        (&self.entries).into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut MountInfo {
+    type Item = &'a mut Entry;
+    type IntoIter = IterMut<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        (&mut self.entries).into_iter()
     }
 }
 
