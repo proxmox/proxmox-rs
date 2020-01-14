@@ -54,7 +54,7 @@ impl Fd {
         nix::fcntl::open(path, oflag, mode).map(Self)
     }
 
-    pub fn openat<D, P>(dirfd: D, path: &P, oflag: OFlag, mode: Mode) -> Result<Self, nix::Error>
+    pub fn openat<D, P>(dirfd: &D, path: &P, oflag: OFlag, mode: Mode) -> Result<Self, nix::Error>
     where
         D: AsRawFd,
         P: ?Sized + NixPath,

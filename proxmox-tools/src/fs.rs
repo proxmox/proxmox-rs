@@ -317,7 +317,7 @@ fn create_path_at_do(
 
             Some(Component::ParentDir) => {
                 at = Fd::openat(
-                    at,
+                    &at,
                     unsafe { CStr::from_bytes_with_nul_unchecked(b"..\0") },
                     OFlag::O_DIRECTORY,
                     stat::Mode::empty(),
@@ -342,7 +342,7 @@ fn create_path_at_do(
                     Err(e) => return Err(e.into()),
                     Ok(_) => true,
                 };
-                at = Fd::openat(at, path, OFlag::O_DIRECTORY, stat::Mode::empty())?;
+                at = Fd::openat(&at, path, OFlag::O_DIRECTORY, stat::Mode::empty())?;
 
                 if let (true, Some(opts)) = (created, opts) {
                     if opts.owner.is_some() || opts.group.is_some() {
