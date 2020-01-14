@@ -1,6 +1,8 @@
 //! `/proc/PID/mountinfo` handling.
 
+use std::collections::BTreeMap;
 use std::ffi::{OsStr, OsString};
+use std::iter::FromIterator;
 use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -10,7 +12,7 @@ use nix::sys::stat;
 use nix::unistd::Pid;
 
 /// A mount ID as found within `/proc/PID/mountinfo`.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 #[repr(transparent)]
 pub struct MountId(usize);
 
@@ -162,14 +164,14 @@ impl Entry {
 // TODO: Add some structure to this? Eg. sort by parent/child relation? Make a tree?
 /// Mount info found in `/proc/PID/mountinfo`.
 pub struct MountInfo {
-    entries: Vec<Entry>,
+    entries: BTreeMap<MountId, Entry>,
 }
 
 /// An iterator over entries in a `MountInfo`.
-pub type Iter<'a> = std::slice::Iter<'a, Entry>;
+pub type Iter<'a> = std::collections::btree_map::Iter<'a, MountId, Entry>;
 
 /// An iterator over mutable entries in a `MountInfo`.
-pub type IterMut<'a> = std::slice::IterMut<'a, Entry>;
+pub type IterMut<'a> = std::collections::btree_map::IterMut<'a, MountId, Entry>;
 
 impl MountInfo {
     /// Read the current mount point information.
@@ -192,6 +194,8 @@ impl MountInfo {
             },
         )?;
 
+        let entries = BTreeMap::from_iter(entries.into_iter().map(|entry| (entry.id, entry)));
+
         Ok(Self { entries })
     }
 
@@ -209,7 +213,7 @@ impl MountInfo {
     where
         PathBuf: PartialEq<P>,
     {
-        self.iter().any(|entry| entry.mount_point == *path)
+        self.iter().any(|(_id, entry)| entry.mount_point == *path)
     }
 
     /// Check whether there exists a mount point for a specified source.
@@ -218,14 +222,14 @@ impl MountInfo {
         OsString: PartialEq<T>,
     {
         self.iter()
-            .filter_map(|entry| entry.mount_source.as_ref())
+            .filter_map(|(_id, entry)| entry.mount_source.as_ref())
             .any(|s| *s == *source)
     }
 }
 
 impl IntoIterator for MountInfo {
-    type Item = Entry;
-    type IntoIter = std::vec::IntoIter<Entry>;
+    type Item = (MountId, Entry);
+    type IntoIter = std::collections::btree_map::IntoIter<MountId, Entry>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.entries.into_iter()
@@ -233,7 +237,7 @@ impl IntoIterator for MountInfo {
 }
 
 impl<'a> IntoIterator for &'a MountInfo {
-    type Item = &'a Entry;
+    type Item = (&'a MountId, &'a Entry);
     type IntoIter = Iter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -242,11 +246,25 @@ impl<'a> IntoIterator for &'a MountInfo {
 }
 
 impl<'a> IntoIterator for &'a mut MountInfo {
-    type Item = &'a mut Entry;
+    type Item = (&'a MountId, &'a mut Entry);
     type IntoIter = IterMut<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
         (&mut self.entries).into_iter()
+    }
+}
+
+impl std::ops::Deref for MountInfo {
+    type Target = BTreeMap<MountId, Entry>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.entries
+    }
+}
+
+impl std::ops::DerefMut for MountInfo {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.entries
     }
 }
 
