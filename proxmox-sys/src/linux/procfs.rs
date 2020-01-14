@@ -16,6 +16,8 @@ use proxmox_tools::fs::file_read_firstline;
 use proxmox_tools::parse::hex_nibble;
 
 pub mod mountinfo;
+#[doc(inline)]
+pub use mountinfo::MountInfo;
 
 /// POSIX sysconf call
 pub fn sysconf(name: i32) -> i64 {
