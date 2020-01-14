@@ -84,6 +84,7 @@ impl Tag {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Entry {
     /// unique identifier of the mount (may be reused after being unmounted)
     pub id: MountId,
@@ -163,6 +164,7 @@ impl Entry {
 
 // TODO: Add some structure to this? Eg. sort by parent/child relation? Make a tree?
 /// Mount info found in `/proc/PID/mountinfo`.
+#[derive(Clone, Debug)]
 pub struct MountInfo {
     entries: BTreeMap<MountId, Entry>,
 }
