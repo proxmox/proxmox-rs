@@ -26,6 +26,7 @@ lazy_static! {
     static ref CLOCK_TICKS: f64 = sysconf(libc::_SC_CLK_TCK) as f64;
 }
 
+/// Selected contents of the `/proc/PID/stat` file.
 pub struct PidStat {
     pub pid: Pid,
     pub ppid: Pid,
@@ -38,84 +39,94 @@ pub struct PidStat {
     pub rss: i64,
 }
 
-pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<PidStat, Error> {
-    let stat = parse_proc_pid_stat(std::str::from_utf8(&std::fs::read(format!(
-        "/proc/{}/stat",
-        pid
-    ))?)?)?;
-    if stat.pid.as_raw() != pid {
-        bail!(
-            "unexpected pid for process: found pid {} in /proc/{}/stat",
-            stat.pid.as_raw(),
+impl PidStat {
+    /// Retrieve the `stat` file contents of a process.
+    pub fn read_for_pid(pid: Pid) -> Result<Self, Error> {
+        let stat = Self::parse(std::str::from_utf8(&std::fs::read(format!(
+            "/proc/{}/stat",
             pid
-        );
+        ))?)?)?;
+        if stat.pid != pid {
+            bail!(
+                "unexpected pid for process: found pid {} in /proc/{}/stat",
+                stat.pid.as_raw(),
+                pid
+            );
+        }
+        Ok(stat)
     }
-    Ok(stat)
+
+    /// Parse the contents of a `/proc/PID/stat` file.
+    pub fn parse(statstr: &str) -> Result<PidStat, Error> {
+        // It starts with the pid followed by a '('.
+        let cmdbeg = statstr
+            .find('(')
+            .ok_or_else(|| format_err!("missing '(' in /proc/PID/stat"))?;
+
+        if !statstr[..=cmdbeg].ends_with(" (") {
+            bail!("bad /proc/PID/stat line before the '('");
+        }
+
+        let pid: u32 = statstr[..(cmdbeg - 1)]
+            .parse()
+            .map_err(|e| format_err!("bad pid in /proc/PID/stat: {}", e))?;
+        let pid = Pid::from_raw(pid as i32);
+
+        // After the '(' we have an arbitrary command name, then ')' and the remaining values
+        let cmdend = statstr
+            .rfind(')')
+            .ok_or_else(|| format_err!("missing ')' in /proc/PID/stat"))?;
+        let mut parts = statstr[cmdend + 1..].trim_start().split_ascii_whitespace();
+
+        // helpers:
+        fn required<'a>(value: Option<&'a str>, what: &'static str) -> Result<&'a str, Error> {
+            value.ok_or_else(|| format_err!("missing '{}' in /proc/PID/stat", what))
+        }
+
+        fn req_num<T>(value: Option<&str>, what: &'static str) -> Result<T, Error>
+        where
+            T: FromStr,
+            <T as FromStr>::Err: Into<Error>,
+        {
+            required(value, what)?.parse::<T>().map_err(|e| e.into())
+        }
+
+        fn req_byte(value: Option<&str>, what: &'static str) -> Result<u8, Error> {
+            let value = required(value, what)?;
+            if value.len() != 1 {
+                bail!("invalid '{}' in /proc/PID/stat", what);
+            }
+            Ok(value.as_bytes()[0])
+        }
+
+        let out = PidStat {
+            pid,
+            status: req_byte(parts.next(), "status")?,
+            ppid: Pid::from_raw(req_num::<u32>(parts.next(), "ppid")? as i32),
+            utime: req_num::<u64>(parts.nth(9), "utime")?,
+            stime: req_num::<u64>(parts.next(), "stime")?,
+            num_threads: req_num::<u64>(parts.nth(4), "num_threads")?,
+            starttime: req_num::<u64>(parts.nth(1), "start_time")?,
+            vsize: req_num::<u64>(parts.next(), "vsize")?,
+            rss: req_num::<i64>(parts.next(), "rss")? * 4096,
+        };
+
+        let _ = req_num::<u64>(parts.next(), "it_real_value")?;
+        // and more...
+
+        Ok(out)
+    }
 }
 
-fn parse_proc_pid_stat(statstr: &str) -> Result<PidStat, Error> {
-    // It starts with the pid followed by a '('.
-    let cmdbeg = statstr
-        .find('(')
-        .ok_or_else(|| format_err!("missing '(' in /proc/PID/stat"))?;
-
-    if !statstr[..=cmdbeg].ends_with(" (") {
-        bail!("bad /proc/PID/stat line before the '('");
-    }
-
-    let pid: u32 = statstr[..(cmdbeg - 1)]
-        .parse()
-        .map_err(|e| format_err!("bad pid in /proc/PID/stat: {}", e))?;
-    let pid = Pid::from_raw(pid as i32);
-
-    // After the '(' we have an arbitrary command name, then ')' and the remaining values
-    let cmdend = statstr
-        .rfind(')')
-        .ok_or_else(|| format_err!("missing ')' in /proc/PID/stat"))?;
-    let mut parts = statstr[cmdend + 1..].trim_start().split_ascii_whitespace();
-
-    // helpers:
-    fn required<'a>(value: Option<&'a str>, what: &'static str) -> Result<&'a str, Error> {
-        value.ok_or_else(|| format_err!("missing '{}' in /proc/PID/stat", what))
-    }
-
-    fn req_num<T>(value: Option<&str>, what: &'static str) -> Result<T, Error>
-    where
-        T: FromStr,
-        <T as FromStr>::Err: Into<Error>,
-    {
-        required(value, what)?.parse::<T>().map_err(|e| e.into())
-    }
-
-    fn req_byte(value: Option<&str>, what: &'static str) -> Result<u8, Error> {
-        let value = required(value, what)?;
-        if value.len() != 1 {
-            bail!("invalid '{}' in /proc/PID/stat", what);
-        }
-        Ok(value.as_bytes()[0])
-    }
-
-    let out = PidStat {
-        pid,
-        status: req_byte(parts.next(), "status")?,
-        ppid: Pid::from_raw(req_num::<u32>(parts.next(), "ppid")? as i32),
-        utime: req_num::<u64>(parts.nth(9), "utime")?,
-        stime: req_num::<u64>(parts.next(), "stime")?,
-        num_threads: req_num::<u64>(parts.nth(4), "num_threads")?,
-        starttime: req_num::<u64>(parts.nth(1), "start_time")?,
-        vsize: req_num::<u64>(parts.next(), "vsize")?,
-        rss: req_num::<i64>(parts.next(), "rss")? * 4096,
-    };
-
-    let _ = req_num::<u64>(parts.next(), "it_real_value")?;
-    // and more...
-
-    Ok(out)
+/// Read `/proc/PID/stat` for a pid.
+#[deprecated(note = "use `PidStat::read_for_pid`")]
+pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<PidStat, Error> {
+    PidStat::read_for_pid(Pid::from_raw(pid))
 }
 
 #[test]
 fn test_read_proc_pid_stat() {
-    let stat = parse_proc_pid_stat(
+    let stat = PidStat::parse(
         "28900 (zsh) S 22489 28900 28900 34826 10252 4194304 6851 5946551 0 2344 6 3 25205 1413 \
          20 0 1 0 287592 12496896 1910 18446744073709551615 93999319244800 93999319938061 \
          140722897984224 0 0 0 2 3686404 134295555 1 0 0 17 10 0 0 0 0 0 93999320079088 \
@@ -134,19 +145,15 @@ fn test_read_proc_pid_stat() {
     assert_eq!(stat.rss, 1910 * 4096);
 }
 
+#[deprecated(note = "use `PidStat`")]
 pub fn read_proc_starttime(pid: libc::pid_t) -> Result<u64, Error> {
-    let info = read_proc_pid_stat(pid)?;
-
-    Ok(info.starttime)
+    PidStat::read_for_pid(Pid::from_raw(pid)).map(|stat| stat.starttime)
 }
 
 pub fn check_process_running(pid: libc::pid_t) -> Option<PidStat> {
-    if let Ok(info) = read_proc_pid_stat(pid) {
-        if info.status != b'Z' {
-            return Some(info);
-        }
-    }
-    None
+    PidStat::read_for_pid(Pid::from_raw(pid))
+        .ok()
+        .filter(|stat| stat.status != b'Z')
 }
 
 pub fn check_process_running_pstart(pid: libc::pid_t, pstart: u64) -> Option<PidStat> {
