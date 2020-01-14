@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::convert::TryFrom;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader};
 use std::net::{Ipv4Addr, Ipv6Addr};
@@ -115,6 +116,14 @@ impl PidStat {
         // and more...
 
         Ok(out)
+    }
+}
+
+impl TryFrom<Pid> for PidStat {
+    type Error = Error;
+
+    fn try_from(pid: Pid) -> Result<Self, Error> {
+        Self::read_for_pid(pid)
     }
 }
 
