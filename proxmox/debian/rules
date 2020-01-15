@@ -1,7 +1,0 @@
-#!/usr/bin/make -f
-%:
-	dh $@ --buildsystem cargo
-
-override_dh_auto_build:
-	sed -ie 's/path = "\.\.\/proxmox-.*"/version = "0.1.0"/' Cargo.toml
-	dh_auto_build

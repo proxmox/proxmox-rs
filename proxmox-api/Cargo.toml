@@ -3,6 +3,10 @@ name = "proxmox-api"
 edition = "2018"
 version = "0.1.1"
 authors = [ "Wolfgang Bumiller <w.bumiller@proxmox.com>" ]
+license = "AGPL-3"
+description = "Proxmox API library"
+
+exclude = [ "debian" ]
 
 [dependencies]
 bytes = "0.5"

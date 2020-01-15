@@ -1,3 +1,9 @@
+rust-proxmox (0.1.2-1) proxmox-rust; urgency=medium
+
+  * switch packaging to debcargo with local crate support
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 13 Jan 2020 10:41:01 +0100
+
 rust-proxmox (0.1.2) proxmox-rust; urgency=medium
 
   * api-macro: bump to 0.1.1

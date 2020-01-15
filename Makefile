@@ -1,8 +1,19 @@
 # Shortcut for common operations:
 
+CRATES=proxmox proxmox-api proxmox-api-macro proxmox-sortable-macro proxmox-sys proxmox-tools
+
 # By default we just run checks:
 .PHONY: all
 all: check
+
+.PHONY: deb
+deb: $(foreach c,$(CRATES), $c-deb)
+	echo $(foreach c,$(CRATES), $c-deb)
+	lintian build/*.deb
+
+%-deb:
+	./build.sh $*
+	touch $@
 
 .PHONY: check
 check:
@@ -33,6 +44,7 @@ doc:
 .PHONY: clean
 clean:
 	cargo clean
+	rm -rf build *-deb
 
 .PHONY: update
 update:

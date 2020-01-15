@@ -6,13 +6,17 @@ authors = [
     "Dietmar Maurer <dietmar@proxmox.com>",
     "Wolfgang Bumiller <w.bumiller@proxmox.com>",
 ]
+license = "AGPL-3"
+description = "Proxmox library"
+
+exclude = [ "debian" ]
 
 [dependencies]
-proxmox-api = { path = "../proxmox-api", default-features = false }
-proxmox-api-macro = { path = "../proxmox-api-macro", optional = true }
-proxmox-sys = { path = "../proxmox-sys" }
-proxmox-tools = { path = "../proxmox-tools" }
-proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true }
+proxmox-api = { path = "../proxmox-api", default-features = false, version = "0.1.1" }
+proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = "0.1.1" }
+proxmox-sys = { path = "../proxmox-sys", version = "0.1.1" }
+proxmox-tools = { path = "../proxmox-tools", version = "0.1.1" }
+proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.0" }
 
 [features]
 api-macro = ["proxmox-api-macro"]

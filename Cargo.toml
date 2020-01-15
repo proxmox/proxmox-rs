@@ -8,3 +8,6 @@ members = [
     "proxmox-tools",
     "proxmox",
 ]
+exclude = [
+    "build",
+]

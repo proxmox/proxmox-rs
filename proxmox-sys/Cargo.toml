@@ -6,6 +6,10 @@ authors = [
     "Dietmar Maurer <dietmar@proxmox.com>",
     "Wolfgang Bumiller <w.bumiller@proxmox.com>",
 ]
+license = "AGPL-3"
+description = "Proxmox system library"
+
+exclude = [ "debian" ]
 
 [dependencies]
 failure = "0.1"
