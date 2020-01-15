@@ -4,6 +4,7 @@ use failure::*;
 use proxmox_tools as tools;
 
 pub mod magic;
+pub mod pid;
 pub mod procfs;
 
 /// Get pseudo random data (/dev/urandom)
