@@ -1,6 +1,8 @@
 //! This should test the usage of "external" types. For any unrecognized schema type we expect the
 //! type's impl to provide an `pub const API_SCHEMA: &Schema`.
 
+#![allow(dead_code)]
+
 use proxmox::api::schema;
 use proxmox_api_macro::api;
 
