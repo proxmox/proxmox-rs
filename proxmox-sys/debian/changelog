@@ -1,3 +1,22 @@
+rust-proxmox-sys (0.1.2-1) proxmox-rust; urgency=medium
+
+  * Add helper macros for ffi code: c_try, c_result, io_bail, io_bail_last,
+    io_format_err, c_str
+
+  * Add SysResult and SysError traits which provide convenient methods to
+    convert nix::Results and nix::Errors to std::io::Result and
+    std::io::Error.
+
+  * Extend /proc/PID/stat parsing by pid, ppid and num_threads
+
+  * Rename ProcFsPidStat to PidStat, deprecate standalone functions for it.
+
+  * Add /proc/PID/mountinfo parsing (proxmox::sys::procfs::MountInfo)
+
+  * Add proxmox::sys::pid::PidFd for pidfd handling
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2020 15:31:05 +0100
+
 rust-proxmox-sys (0.1.1-1) proxmox-rust; urgency=medium
 
   * switch packaging to debcargo with local crate support
