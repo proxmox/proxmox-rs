@@ -94,21 +94,18 @@ pub fn generate_usage_str(
 
         let type_text = get_schema_type_text(param_schema, ParameterDisplayStyle::Arg);
 
+        let prop_descr =
+            get_property_description(prop, param_schema, ParameterDisplayStyle::Arg, format);
+
         if *optional {
-            if !options.is_empty() {
-                options.push('\n');
-            }
-            options.push_str(&get_property_description(
-                prop,
-                param_schema,
-                ParameterDisplayStyle::Arg,
-                format,
-            ));
+            options.push_str(&prop_descr);
         } else {
             args.push_str(" --");
             args.push_str(prop);
             args.push(' ');
             args.push_str(&type_text);
+
+            arg_descr.push_str(&prop_descr);
         }
 
         done_hash.insert(prop);
@@ -139,9 +136,10 @@ pub fn generate_usage_str(
 
     if !arg_descr.is_empty() {
         text.push_str(&arg_descr);
-        text.push('\n');
     }
+
     if !options.is_empty() {
+        text.push_str("Optional parameters:\n\n");
         text.push_str(&options);
         text.push('\n');
     }
