@@ -1,3 +1,9 @@
+rust-proxmox-api (0.1.2-1) unstable; urgency=medium
+
+  * improve generate_usage_str()
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2020 15:21:40 +0100
+
 rust-proxmox-api (0.1.1-1) proxmox-rust; urgency=medium
 
   * switch packaging to debcargo with local crate support

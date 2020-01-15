@@ -1,3 +1,13 @@
+rust-proxmox (0.1.3-1) unstable; urgency=medium
+
+  * proxmox-tools: bump to 0.1.2
+
+  * proxmox-api: bump to 0.1.2
+
+  * bump proxmox-sys to 0.1.2
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2020 15:32:29 +0100
+
 rust-proxmox (0.1.2-1) proxmox-rust; urgency=medium
 
   * switch packaging to debcargo with local crate support

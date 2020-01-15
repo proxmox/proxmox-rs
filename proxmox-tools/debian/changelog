@@ -1,4 +1,8 @@
-rust-proxmox-tools (0.1.1-1) proxmox-rust; urgency=medium
+rust-proxmox-tools (0.1.2-1) unstable; urgency=medium
+
+  * take a reference to the dirfd in Fd::openat
+
+  * remove accidentally commited debian/files
 
   * switch packaging to debcargo with local crate support
 
