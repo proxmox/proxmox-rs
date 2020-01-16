@@ -17,7 +17,7 @@ deb: $(foreach c,$(CRATES), $c-deb)
 
 .PHONY: check
 check:
-	cargo fmt -- --check
+	cargo +nightly fmt -- --check
 	cargo test
 
 # Run the api-test server, serving the api-test/www/ subdir as 'www' dir over
