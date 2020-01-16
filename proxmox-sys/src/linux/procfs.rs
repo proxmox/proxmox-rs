@@ -46,7 +46,7 @@ pub struct PidStat {
 
 impl PidStat {
     /// Retrieve the `stat` file contents of a process.
-    pub fn read_for_pid(pid: Pid) -> Result<Self, Error> {
+    pub fn read_from_pid(pid: Pid) -> Result<Self, Error> {
         let stat = Self::parse(std::str::from_utf8(&std::fs::read(format!(
             "/proc/{}/stat",
             pid
@@ -127,14 +127,8 @@ impl TryFrom<Pid> for PidStat {
     type Error = Error;
 
     fn try_from(pid: Pid) -> Result<Self, Error> {
-        Self::read_for_pid(pid)
+        Self::read_from_pid(pid)
     }
-}
-
-/// Read `/proc/PID/stat` for a pid.
-#[deprecated(note = "use `PidStat::read_for_pid`")]
-pub fn read_proc_pid_stat(pid: libc::pid_t) -> Result<PidStat, Error> {
-    PidStat::read_for_pid(Pid::from_raw(pid))
 }
 
 #[test]
@@ -158,13 +152,8 @@ fn test_read_proc_pid_stat() {
     assert_eq!(stat.rss, 1910 * 4096);
 }
 
-#[deprecated(note = "use `PidStat`")]
-pub fn read_proc_starttime(pid: libc::pid_t) -> Result<u64, Error> {
-    PidStat::read_for_pid(Pid::from_raw(pid)).map(|stat| stat.starttime)
-}
-
 pub fn check_process_running(pid: libc::pid_t) -> Option<PidStat> {
-    PidStat::read_for_pid(Pid::from_raw(pid))
+    PidStat::read_from_pid(Pid::from_raw(pid))
         .ok()
         .filter(|stat| stat.status != b'Z')
 }
