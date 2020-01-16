@@ -1,3 +1,11 @@
+rust-proxmox-sys (0.1.3-1) proxmox-rust; urgency=medium
+
+  * rename PidStat::read_for_pid -> read_from_pid
+
+  * sys: drop deprecated items
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 16 Jan 2020 11:34:14 +0100
+
 rust-proxmox-sys (0.1.2-1) proxmox-rust; urgency=medium
 
   * Add helper macros for ffi code: c_try, c_result, io_bail, io_bail_last,
