@@ -202,7 +202,7 @@ impl MountInfo {
                         );
                     }
                 };
-                acc.push(Entry::parse(line)?);
+                acc.push(entry);
                 Ok(acc)
             })?;
 
