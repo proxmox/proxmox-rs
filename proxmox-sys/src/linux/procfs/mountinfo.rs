@@ -188,13 +188,23 @@ impl MountInfo {
 
     /// Parse a `mountinfo` file.
     pub fn parse(statstr: &[u8]) -> Result<Self, Error> {
-        let entries = statstr.split(|b| *b == b'\n').try_fold(
-            Vec::new(),
-            |mut acc, line| -> Result<_, Error> {
+        let entries = statstr
+            .split(|b| *b == b'\n')
+            .filter(|line| !line.is_empty())
+            .try_fold(Vec::new(), |mut acc, line| -> Result<_, Error> {
+                let entry = match Entry::parse(line) {
+                    Ok(entry) => entry,
+                    Err(err) => {
+                        bail!(
+                            "failed to parse mount info line: {:?}\n    error: {}",
+                            line,
+                            err,
+                        );
+                    }
+                };
                 acc.push(Entry::parse(line)?);
                 Ok(acc)
-            },
-        )?;
+            })?;
 
         let entries = BTreeMap::from_iter(entries.into_iter().map(|entry| (entry.id, entry)));
 
