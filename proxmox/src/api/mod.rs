@@ -38,6 +38,3 @@ pub use router::{
 
 #[cfg(feature = "cli")]
 pub mod cli;
-
-#[cfg(feature = "api-macro")]
-pub use proxmox_api_macro::{api, router};

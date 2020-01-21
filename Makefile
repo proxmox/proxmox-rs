@@ -12,7 +12,9 @@ deb: $(foreach c,$(CRATES), $c-deb)
 	lintian build/*.deb
 
 .PHONY: dinstall
-dinstall: deb
+dinstall:
+	$(MAKE) clean
+	$(MAKE) deb
 	sudo -k dpkg -i build/librust-*.deb
 
 %-deb:
