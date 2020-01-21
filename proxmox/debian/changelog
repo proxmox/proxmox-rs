@@ -1,9 +1,16 @@
-rust-proxmox (0.1.5-1) unstable; urgency=medium
+rust-proxmox (0.1.6-1) unstable; urgency=medium
 
   * merge tools, sys and api crate into the proxmox main crate to reduce
     the dependency management burden
 
- -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Jan 2020 12:13:18 +0100
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Jan 2020 12:19:32 +0100
+
+rust-proxmox (0.1.5-1) unstable; urgency=medium
+
+  * src/cli/command.rs: avoid creating a tokio runtime by making
+    run_cli_command async
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Jan 2020 11:18:29 +0100
 
 rust-proxmox (0.1.4-1) unstable; urgency=medium
 
