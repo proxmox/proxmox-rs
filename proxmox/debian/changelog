@@ -1,3 +1,9 @@
+rust-proxmox (0.1.7-1) unstable; urgency=medium
+
+  * disable valgrind features for now due to packaging issues
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Jan 2020 12:23:58 +0100
+
 rust-proxmox (0.1.6-1) unstable; urgency=medium
 
   * merge tools, sys and api crate into the proxmox main crate to reduce
