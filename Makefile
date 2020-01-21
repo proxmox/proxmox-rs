@@ -11,6 +11,16 @@ deb: $(foreach c,$(CRATES), $c-deb)
 	echo $(foreach c,$(CRATES), $c-deb)
 	lintian build/*.deb
 
+.PHONY: dinstall
+dinstall:
+	$(MAKE) proxmox-tools-deb proxmox-sortable-macro-deb
+	sudo dpkg -i build/librust-*.deb
+	$(MAKE) proxmox-api-macro-deb proxmox-sys-deb
+	sudo dpkg -i build/librust-*.deb
+	$(MAKE) proxmox-deb
+	sudo dpkg -i build/librust-*.deb
+	sudo -k
+
 %-deb:
 	./build.sh $*
 	touch $@
