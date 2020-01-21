@@ -19,8 +19,7 @@ syn = { version = "1.0", features = [ "full" ] }
 
 [dev-dependencies]
 futures = "0.3"
-proxmox = { path = "../proxmox" }
-proxmox-api = { path = "../proxmox-api", features = [ "test-harness" ] }
+proxmox = { path = "../proxmox", features = [ "test-harness" ] }
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"

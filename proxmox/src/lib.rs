@@ -1,19 +1,16 @@
-pub use proxmox_sys as sys;
-pub use proxmox_tools as tools;
+//! Proxmox "tools" package containing some generic tools along with the schema, API and CLI
+//! helpers.
 
-// Both `proxmox_api` and the 2 macros from `proxmox_api_macro` should be
-// exposed via `proxmox::api`.
-pub mod api {
-    pub use proxmox_api::*;
-    #[cfg(feature = "api-macro")]
-    pub use proxmox_api_macro::{api, router};
+pub mod api;
+pub mod sys;
+pub mod tools;
+
+/// An identity (nop) macro. Used by the `#[sortable]` proc macro.
+#[cfg(feature = "sortable-macro")]
+#[macro_export]
+macro_rules! identity {
+    ($($any:tt)*) => ($($any)*)
 }
-
-#[cfg(feature = "sortable-macro")]
-pub use proxmox_tools::identity;
-
-#[cfg(feature = "sortable-macro")]
-pub use proxmox_sortable_macro as sortable_macro;
 
 #[cfg(feature = "sortable-macro")]
 pub use proxmox_sortable_macro::sortable;

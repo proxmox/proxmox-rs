@@ -1,6 +1,6 @@
 # Shortcut for common operations:
 
-CRATES=proxmox proxmox-api proxmox-api-macro proxmox-sortable-macro proxmox-sys proxmox-tools
+CRATES=proxmox proxmox-api-macro proxmox-sortable-macro
 
 # By default we just run checks:
 .PHONY: all
@@ -12,14 +12,8 @@ deb: $(foreach c,$(CRATES), $c-deb)
 	lintian build/*.deb
 
 .PHONY: dinstall
-dinstall:
-	$(MAKE) proxmox-tools-deb proxmox-sortable-macro-deb
-	sudo dpkg -i build/librust-*.deb
-	$(MAKE) proxmox-api-macro-deb proxmox-sys-deb
-	sudo dpkg -i build/librust-*.deb
-	$(MAKE) proxmox-deb
-	sudo dpkg -i build/librust-*.deb
-	sudo -k
+dinstall: deb
+	sudo -k dpkg -i build/librust-*.deb
 
 %-deb:
 	./build.sh $*
