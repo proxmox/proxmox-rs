@@ -88,7 +88,6 @@ async fn handle_nested_command(
     def: &CliCommandMap,
     mut args: Vec<String>,
 ) -> Result<(), Error> {
-
     let mut map = def;
     let mut prefix = prefix.to_string();
 
@@ -128,12 +127,9 @@ async fn handle_nested_command(
             CommandLineInterface::Simple(cli_cmd) => {
                 return handle_simple_command(&prefix, cli_cmd, args).await;
             }
-            CommandLineInterface::Nested(new_map) => {
-                map = new_map
-            }
+            CommandLineInterface::Nested(new_map) => map = new_map,
         }
     }
-
 }
 
 const API_METHOD_COMMAND_HELP: ApiMethod = ApiMethod::new(
@@ -211,7 +207,9 @@ pub async fn handle_command(
     set_help_context(Some(def.clone()));
 
     let result = match &*def {
-        CommandLineInterface::Simple(ref cli_cmd) => handle_simple_command(&prefix, &cli_cmd, args).await,
+        CommandLineInterface::Simple(ref cli_cmd) => {
+            handle_simple_command(&prefix, &cli_cmd, args).await
+        }
         CommandLineInterface::Nested(ref map) => handle_nested_command(&prefix, &map, args).await,
     };
 
