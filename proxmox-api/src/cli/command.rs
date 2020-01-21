@@ -23,7 +23,7 @@ pub const OUTPUT_FORMAT: Schema = StringSchema::new("Output format.")
     .format(&ApiStringFormat::Enum(&["text", "json", "json-pretty"]))
     .schema();
 
-fn handle_simple_command(
+async fn handle_simple_command(
     prefix: &str,
     cli_cmd: &CliCommand,
     args: Vec<String>,
@@ -60,9 +60,8 @@ fn handle_simple_command(
         },
         ApiHandler::Async(handler) => {
             let future = (handler)(params, &cli_cmd.info, &mut rpcenv);
-            let mut rt = tokio::runtime::Runtime::new().unwrap();
 
-            match rt.block_on(future) {
+            match future.await {
                 Ok(value) => {
                     if value != Value::Null {
                         println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
@@ -84,51 +83,57 @@ fn handle_simple_command(
     Ok(())
 }
 
-fn handle_nested_command(
+async fn handle_nested_command(
     prefix: &str,
     def: &CliCommandMap,
     mut args: Vec<String>,
 ) -> Result<(), Error> {
-    if args.is_empty() {
-        let mut cmds: Vec<&String> = def.commands.keys().collect();
-        cmds.sort();
 
-        let list = cmds.iter().fold(String::new(), |mut s, item| {
-            if !s.is_empty() {
-                s += ", ";
-            }
-            s += item;
-            s
-        });
+    let mut map = def;
+    let mut prefix = prefix.to_string();
 
-        let err_msg = format!("no command specified.\nPossible commands: {}", list);
-        print_nested_usage_error(prefix, def, &err_msg);
-        return Err(format_err!("{}", err_msg));
-    }
+    // Note: Avoid async recursive function, because current rust compiler cant handle that
+    loop {
+        if args.is_empty() {
+            let mut cmds: Vec<&String> = def.commands.keys().collect();
+            cmds.sort();
 
-    let command = args.remove(0);
+            let list = cmds.iter().fold(String::new(), |mut s, item| {
+                if !s.is_empty() {
+                    s += ", ";
+                }
+                s += item;
+                s
+            });
 
-    let (_, sub_cmd) = match def.find_command(&command) {
-        Some(cmd) => cmd,
-        None => {
-            let err_msg = format!("no such command '{}'", command);
-            print_nested_usage_error(prefix, def, &err_msg);
+            let err_msg = format!("no command specified.\nPossible commands: {}", list);
+            print_nested_usage_error(&prefix, def, &err_msg);
             return Err(format_err!("{}", err_msg));
         }
-    };
 
-    let new_prefix = format!("{} {}", prefix, command);
+        let command = args.remove(0);
 
-    match sub_cmd {
-        CommandLineInterface::Simple(cli_cmd) => {
-            handle_simple_command(&new_prefix, cli_cmd, args)?;
-        }
-        CommandLineInterface::Nested(map) => {
-            handle_nested_command(&new_prefix, map, args)?;
+        let (_, sub_cmd) = match map.find_command(&command) {
+            Some(cmd) => cmd,
+            None => {
+                let err_msg = format!("no such command '{}'", command);
+                print_nested_usage_error(&prefix, def, &err_msg);
+                return Err(format_err!("{}", err_msg));
+            }
+        };
+
+        prefix = format!("{} {}", prefix, command);
+
+        match sub_cmd {
+            CommandLineInterface::Simple(cli_cmd) => {
+                return handle_simple_command(&prefix, cli_cmd, args).await;
+            }
+            CommandLineInterface::Nested(new_map) => {
+                map = new_map
+            }
         }
     }
 
-    Ok(())
 }
 
 const API_METHOD_COMMAND_HELP: ApiMethod = ApiMethod::new(
@@ -198,7 +203,7 @@ pub(crate) fn help_command_def() -> CliCommand {
 ///
 /// This command gets the command line ``args`` and tries to invoke
 /// the corresponding API handler.
-pub fn handle_command(
+pub async fn handle_command(
     def: Arc<CommandLineInterface>,
     prefix: &str,
     args: Vec<String>,
@@ -206,8 +211,8 @@ pub fn handle_command(
     set_help_context(Some(def.clone()));
 
     let result = match &*def {
-        CommandLineInterface::Simple(ref cli_cmd) => handle_simple_command(&prefix, &cli_cmd, args),
-        CommandLineInterface::Nested(ref map) => handle_nested_command(&prefix, &map, args),
+        CommandLineInterface::Simple(ref cli_cmd) => handle_simple_command(&prefix, &cli_cmd, args).await,
+        CommandLineInterface::Nested(ref map) => handle_nested_command(&prefix, &map, args).await,
     };
 
     set_help_context(None);
@@ -227,7 +232,7 @@ pub fn handle_command(
 /// - ``bashcomplete``: Output bash completions instead of running the command.
 /// - ``printdoc``: Output ReST documentation.
 ///
-pub fn run_cli_command<C: Into<CommandLineInterface>>(def: C) {
+pub async fn run_cli_command<C: Into<CommandLineInterface>>(def: C) {
     let def = match def.into() {
         CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
         CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help()),
@@ -260,7 +265,7 @@ pub fn run_cli_command<C: Into<CommandLineInterface>>(def: C) {
         }
     }
 
-    if handle_command(Arc::new(def), &prefix, args).is_err() {
+    if handle_command(Arc::new(def), &prefix, args).await.is_err() {
         std::process::exit(-1);
     }
 }
