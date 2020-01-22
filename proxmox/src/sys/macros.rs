@@ -27,6 +27,7 @@ macro_rules! io_bail {
     }};
 }
 
+#[doc(hidden)]
 /// Non-panicking assertion: shortcut for returning an `io::Error` if the condition is not met.
 /// Essentially: `if !expr { io_bail_last!() }`.
 #[macro_export]
