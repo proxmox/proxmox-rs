@@ -30,6 +30,9 @@ macro_rules! io_bail {
 #[doc(hidden)]
 /// Non-panicking assertion: shortcut for returning an `io::Error` if the condition is not met.
 /// Essentially: `if !expr { io_bail_last!() }`.
+///
+/// Note that this uses `errno`, care must be taken not to overwrite it with different value as a
+/// side effect.
 #[macro_export]
 macro_rules! io_assert {
     ($value:expr) => {
