@@ -1,3 +1,9 @@
+rust-proxmox (0.1.8-1) unstable; urgency=medium
+
+  * bump api macro to 0.1.2: fix a case were object properties weren't sorted
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 23 Jan 2020 13:17:20 +0100
+
 rust-proxmox (0.1.7-1) unstable; urgency=medium
 
   * disable valgrind features for now due to packaging issues
