@@ -28,7 +28,7 @@ async fn handle_simple_command(
     cli_cmd: &CliCommand,
     args: Vec<String>,
 ) -> Result<(), Error> {
-    let (params, rest) =
+    let (params, remaining) =
         match getopts::parse_arguments(&args, cli_cmd.arg_param, &cli_cmd.info.parameters) {
             Ok((p, r)) => (p, r),
             Err(err) => {
@@ -38,8 +38,8 @@ async fn handle_simple_command(
             }
         };
 
-    if !rest.is_empty() {
-        let err_msg = format!("got additional arguments: {:?}", rest);
+    if !remaining.is_empty() {
+        let err_msg = format!("got additional arguments: {:?}", remaining);
         print_simple_usage_error(prefix, cli_cmd, &err_msg);
         return Err(format_err!("{}", err_msg));
     }

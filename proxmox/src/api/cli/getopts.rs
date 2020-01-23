@@ -52,14 +52,14 @@ fn parse_argument(arg: &str) -> RawArgument {
 
 /// parse as many arguments as possible into a Vec<String, String>. This does not
 /// verify the schema.
-/// Returns parsed data and the rest as separate array
+/// Returns parsed data and the remaining arguments as two separate array
 pub(crate) fn parse_argument_list<T: AsRef<str>>(
     args: &[T],
     schema: &ObjectSchema,
     errors: &mut ParameterError,
 ) -> (Vec<(String, String)>, Vec<String>) {
     let mut data: Vec<(String, String)> = vec![];
-    let mut rest: Vec<String> = vec![];
+    let mut remaining: Vec<String> = vec![];
 
     let mut pos = 0;
 
@@ -124,19 +124,19 @@ pub(crate) fn parse_argument_list<T: AsRef<str>>(
                 }
             },
             RawArgument::Argument { value } => {
-                rest.push(value);
+                remaining.push(value);
             }
         }
 
         pos += 1;
     }
 
-    rest.reserve(args.len() - pos);
+    remaining.reserve(args.len() - pos);
     for i in &args[pos..] {
-        rest.push(i.as_ref().to_string());
+        remaining.push(i.as_ref().to_string());
     }
 
-    (data, rest)
+    (data, remaining)
 }
 
 /// Parses command line arguments using a `Schema`
@@ -171,23 +171,23 @@ pub fn parse_arguments<T: AsRef<str>>(
         }
     }
 
-    let (mut data, mut rest) = parse_argument_list(args, schema, &mut errors);
+    let (mut data, mut remaining) = parse_argument_list(args, schema, &mut errors);
 
     for i in 0..arg_param.len() {
         let name = arg_param[i];
         let is_last_arg_param = i == (arg_param.len() - 1);
 
-        if rest.is_empty() {
+        if remaining.is_empty() {
             if !(is_last_arg_param && last_arg_param_is_optional) {
                 errors.push(format_err!("missing argument '{}'", name));
             }
         } else if is_last_arg_param && last_arg_param_is_array {
-            for value in rest {
+            for value in remaining {
                 data.push((name.to_string(), value));
             }
-            rest = vec![];
+            remaining = vec![];
         } else {
-            data.push((name.to_string(), rest.remove(0)));
+            data.push((name.to_string(), remaining.remove(0)));
         }
     }
 
@@ -197,7 +197,7 @@ pub fn parse_arguments<T: AsRef<str>>(
 
     let options = parse_parameter_strings(&data, schema, true)?;
 
-    Ok((options, rest))
+    Ok((options, remaining))
 }
 
 #[test]
@@ -224,9 +224,9 @@ fn test_boolean_arg() {
     for (args, expect) in variants {
         let res = parse_arguments(&args, &vec![], &PARAMETERS);
         assert!(res.is_ok());
-        if let Ok((options, rest)) = res {
+        if let Ok((options, remaining)) = res {
             assert!(options["enable"] == expect);
-            assert!(rest.len() == 0);
+            assert!(remaining.len() == 0);
         }
     }
 }
@@ -244,9 +244,9 @@ fn test_argument_paramenter() {
     let args = vec!["-enable", "local"];
     let res = parse_arguments(&args, &vec!["storage"], &PARAMETERS);
     assert!(res.is_ok());
-    if let Ok((options, rest)) = res {
+    if let Ok((options, remaining)) = res {
         assert!(options["enable"] == true);
         assert!(options["storage"] == "local");
-        assert!(rest.len() == 0);
+        assert!(remaining.len() == 0);
     }
 }

@@ -166,14 +166,13 @@ pub enum SubRoute {
     /// Router with static lookup map.
     ///
     /// The first path element is used to lookup a new
-    /// router with `SubdirMap`. If found, the rest of the path is
+    /// router with `SubdirMap`. If found, the remaining path is
     /// passed to that router.
     Map(SubdirMap),
     /// Router that always match the first path element
     ///
     /// The matched path element is stored as parameter
-    /// `param_name`. The rest of the path is matched using the
-    /// `router`.
+    /// `param_name`. The remaining path is matched using the `router`.
     MatchAll {
         router: &'static Router,
         param_name: &'static str,
@@ -320,7 +319,7 @@ impl Router {
             return Some(self);
         };
 
-        let (dir, rest) = (components[0], &components[1..]);
+        let (dir, remaining) = (components[0], &components[1..]);
 
         match self.subroute {
             None => {}
@@ -328,13 +327,13 @@ impl Router {
                 if let Ok(ind) = dirmap.binary_search_by_key(&dir, |(name, _)| name) {
                     let (_name, router) = dirmap[ind];
                     //println!("FOUND SUBDIR {}", dir);
-                    return router.find_route(rest, uri_param);
+                    return router.find_route(remaining, uri_param);
                 }
             }
             Some(SubRoute::MatchAll { router, param_name }) => {
                 //println!("URI PARAM {} = {}", param_name, dir); // fixme: store somewhere
                 uri_param.insert(param_name.to_owned(), dir.into());
-                return router.find_route(rest, uri_param);
+                return router.find_route(remaining, uri_param);
             }
         }
 

@@ -105,7 +105,7 @@ fn get_simple_completion(
     // Try to parse all argumnets but last, record args already done
     if args.len() > 1 {
         let mut errors = ParameterError::new(); // we simply ignore any parsing errors here
-        let (data, _rest) = getopts::parse_argument_list(
+        let (data, _remaining) = getopts::parse_argument_list(
             &args[0..args.len() - 1],
             &cli_cmd.info.parameters,
             &mut errors,
