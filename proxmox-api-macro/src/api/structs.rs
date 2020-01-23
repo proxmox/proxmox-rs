@@ -73,7 +73,7 @@ fn handle_regular_struct(
     // We also keep a reference to the SchemaObject around since we derive missing fields
     // automatically.
     if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
-        for field in &mut obj.properties {
+        for field in obj.properties_mut() {
             schema_fields.insert(field.0.as_str().to_string(), field);
         }
     } else {
@@ -140,7 +140,7 @@ fn handle_regular_struct(
 
     // add the fields we derived:
     if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
-        obj.properties.extend(new_fields);
+        obj.extend_properties(new_fields);
     } else {
         unreachable!();
     }

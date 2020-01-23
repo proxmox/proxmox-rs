@@ -336,19 +336,28 @@ impl SchemaItem {
 #[derive(Default)]
 /// Contains a sorted list of properties:
 pub struct SchemaObject {
-    properties: Vec<(FieldName, bool, Schema)>,
+    properties_: Vec<(FieldName, bool, Schema)>,
 }
 
 impl SchemaObject {
     pub fn new() -> Self {
         Self {
-            properties: Vec::new(),
+            properties_: Vec::new(),
         }
     }
 
+    #[inline]
+    fn properties_mut(&mut self) -> &mut [(FieldName, bool, Schema)] {
+        &mut self.properties_
+    }
+
+    fn sort_properties(&mut self) {
+        self.properties_.sort_by(|a, b| (a.0).cmp(&b.0));
+    }
+
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
-        Ok(Self {
-            properties: obj
+        let mut this = Self {
+            properties_: obj
                 .remove_required_element("properties")?
                 .into_object("object field definition")?
                 .into_iter()
@@ -371,17 +380,14 @@ impl SchemaObject {
 
                         Ok(properties)
                     },
-                )
-                // This must be kept sorted!
-                .map(|mut properties| {
-                    properties.sort_by(|a, b| (a.0).cmp(&b.0));
-                    properties
-                })?,
-        })
+                )?,
+        };
+        this.sort_properties();
+        Ok(this)
     }
 
     fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
-        for element in self.properties.iter() {
+        for element in self.properties_.iter() {
             let key = element.0.as_str();
             let optional = element.1;
             let mut schema = TokenStream::new();
@@ -393,22 +399,27 @@ impl SchemaObject {
 
     fn find_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, Schema)> {
         match self
-            .properties
+            .properties_
             .binary_search_by(|p| p.0.as_ident_str().cmp(key))
         {
-            Ok(idx) => Some(&self.properties[idx]),
+            Ok(idx) => Some(&self.properties_[idx]),
             Err(_) => None,
         }
     }
 
     fn find_property_by_ident_mut(&mut self, key: &str) -> Option<&mut (FieldName, bool, Schema)> {
         match self
-            .properties
+            .properties_
             .binary_search_by(|p| p.0.as_ident_str().cmp(key))
         {
-            Ok(idx) => Some(&mut self.properties[idx]),
+            Ok(idx) => Some(&mut self.properties_[idx]),
             Err(_) => None,
         }
+    }
+
+    fn extend_properties(&mut self, new_fields: Vec<(FieldName, bool, Schema)>) {
+        self.properties_.extend(new_fields);
+        self.sort_properties();
     }
 }
 

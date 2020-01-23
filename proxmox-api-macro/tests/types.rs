@@ -44,17 +44,17 @@ fn test_struct() {
             "An example of a simple struct type.",
             &[
                 (
-                    "test_string",
-                    false,
-                    &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
-                ),
-                (
                     "another",
                     true,
                     &::proxmox::api::schema::StringSchema::new(
                         "An optional auto-derived value for testing:",
                     )
                     .schema(),
+                ),
+                (
+                    "test_string",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
                 ),
             ],
         )
@@ -83,17 +83,17 @@ fn renamed_struct() {
             "An example of a struct with renamed fields.",
             &[
                 (
-                    "test-string",
-                    false,
-                    &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
-                ),
-                (
                     "SomeOther",
                     true,
                     &::proxmox::api::schema::StringSchema::new(
                         "An optional auto-derived value for testing:",
                     )
                     .schema(),
+                ),
+                (
+                    "test-string",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
                 ),
             ],
         )
