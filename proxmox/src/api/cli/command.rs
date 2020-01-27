@@ -94,7 +94,7 @@ async fn handle_nested_command(
     // Note: Avoid async recursive function, because current rust compiler cant handle that
     loop {
         if args.is_empty() {
-            let mut cmds: Vec<&String> = def.commands.keys().collect();
+            let mut cmds: Vec<&String> = map.commands.keys().collect();
             cmds.sort();
 
             let list = cmds.iter().fold(String::new(), |mut s, item| {
@@ -106,7 +106,7 @@ async fn handle_nested_command(
             });
 
             let err_msg = format!("no command specified.\nPossible commands: {}", list);
-            print_nested_usage_error(&prefix, def, &err_msg);
+            print_nested_usage_error(&prefix, map, &err_msg);
             return Err(format_err!("{}", err_msg));
         }
 
@@ -116,7 +116,7 @@ async fn handle_nested_command(
             Some(cmd) => cmd,
             None => {
                 let err_msg = format!("no such command '{}'", command);
-                print_nested_usage_error(&prefix, def, &err_msg);
+                print_nested_usage_error(&prefix, map, &err_msg);
                 return Err(format_err!("{}", err_msg));
             }
         };
