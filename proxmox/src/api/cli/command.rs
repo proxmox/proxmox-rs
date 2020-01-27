@@ -23,12 +23,13 @@ pub const OUTPUT_FORMAT: Schema = StringSchema::new("Output format.")
     .format(&ApiStringFormat::Enum(&["text", "json", "json-pretty"]))
     .schema();
 
-async fn handle_simple_command(
+fn parse_arguments(
     prefix: &str,
     cli_cmd: &CliCommand,
     args: Vec<String>,
-) -> Result<(), Error> {
-    let (params, remaining) =
+) -> Result<Value, Error> {
+
+   let (params, remaining) =
         match getopts::parse_arguments(&args, cli_cmd.arg_param, &cli_cmd.info.parameters) {
             Ok((p, r)) => (p, r),
             Err(err) => {
@@ -43,6 +44,16 @@ async fn handle_simple_command(
         print_simple_usage_error(prefix, cli_cmd, &err_msg);
         return Err(format_err!("{}", err_msg));
     }
+
+    Ok(params)
+}
+
+async fn handle_simple_command_future(
+    prefix: &str,
+    cli_cmd: &CliCommand,
+    args: Vec<String>,
+) -> Result<(), Error> {
+    let params = parse_arguments(prefix, cli_cmd, args)?;
 
     let mut rpcenv = CliEnvironment::new();
 
@@ -83,11 +94,63 @@ async fn handle_simple_command(
     Ok(())
 }
 
-async fn handle_nested_command(
+fn handle_simple_command(
     prefix: &str,
-    def: &CliCommandMap,
-    mut args: Vec<String>,
+    cli_cmd: &CliCommand,
+    args: Vec<String>,
+    run: Option<fn(ApiFuture) -> Result<Value, Error>>,
 ) -> Result<(), Error> {
+    let params = parse_arguments(prefix, cli_cmd, args)?;
+
+    let mut rpcenv = CliEnvironment::new();
+
+    match cli_cmd.info.handler {
+        ApiHandler::Sync(handler) => match (handler)(params, &cli_cmd.info, &mut rpcenv) {
+            Ok(value) => {
+                if value != Value::Null {
+                    println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
+                }
+            }
+            Err(err) => {
+                eprintln!("Error: {}", err);
+                return Err(err);
+            }
+        },
+        ApiHandler::Async(handler) => {
+            let future = (handler)(params, &cli_cmd.info, &mut rpcenv);
+            if let Some(run) = run {
+                match (run)(future) {
+                    Ok(value) => {
+                        if value != Value::Null {
+                            println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
+                        }
+                    }
+                    Err(err) => {
+                        eprintln!("Error: {}", err);
+                        return Err(err);
+                    }
+                }
+            } else {
+                let err_msg = "CliHandler does not support ApiHandler::Async - internal error";
+                print_simple_usage_error(prefix, cli_cmd, err_msg);
+                return Err(format_err!("{}", err_msg));
+            }
+        }
+        ApiHandler::AsyncHttp(_) => {
+            let err_msg = "CliHandler does not support ApiHandler::AsyncHttp - internal error";
+            print_simple_usage_error(prefix, cli_cmd, err_msg);
+            return Err(format_err!("{}", err_msg));
+        }
+    }
+
+    Ok(())
+}
+
+fn parse_nested_command<'a>(
+    prefix: &str,
+    def: &'a CliCommandMap,
+    args: &mut Vec<String>,
+) -> Result<&'a CliCommand, Error> {
     let mut map = def;
     let mut prefix = prefix.to_string();
 
@@ -125,7 +188,8 @@ async fn handle_nested_command(
 
         match sub_cmd {
             CommandLineInterface::Simple(cli_cmd) => {
-                return handle_simple_command(&prefix, cli_cmd, args).await;
+                //return handle_simple_command(&prefix, cli_cmd, args).await;
+                return Ok(&cli_cmd);
             }
             CommandLineInterface::Nested(new_map) => map = new_map,
         }
@@ -199,18 +263,21 @@ pub(crate) fn help_command_def() -> CliCommand {
 ///
 /// This command gets the command line ``args`` and tries to invoke
 /// the corresponding API handler.
-pub async fn handle_command(
+pub async fn handle_command_future(
     def: Arc<CommandLineInterface>,
     prefix: &str,
-    args: Vec<String>,
+    mut args: Vec<String>,
 ) -> Result<(), Error> {
     set_help_context(Some(def.clone()));
 
     let result = match &*def {
         CommandLineInterface::Simple(ref cli_cmd) => {
-            handle_simple_command(&prefix, &cli_cmd, args).await
+            handle_simple_command_future(&prefix, &cli_cmd, args).await
         }
-        CommandLineInterface::Nested(ref map) => handle_nested_command(&prefix, &map, args).await,
+        CommandLineInterface::Nested(ref map) => {
+            let cli_cmd = parse_nested_command(&prefix, &map, &mut args)?;
+            handle_simple_command_future(&prefix, &cli_cmd, args).await
+        }
     };
 
     set_help_context(None);
@@ -218,35 +285,45 @@ pub async fn handle_command(
     result
 }
 
-/// Helper to get arguments and invoke the command.
+/// Handle command invocation.
 ///
-/// This helper reads arguments with ``std::env::args()``. The first
-/// argument is assumed to be the program name, and is passed as ``prefix`` to
-/// ``handle_command()``.
-///
-/// This helper automatically add the help command, and two special
-/// sub-command:
-///
-/// - ``bashcomplete``: Output bash completions instead of running the command.
-/// - ``printdoc``: Output ReST documentation.
-///
-pub async fn run_cli_command<C: Into<CommandLineInterface>>(def: C) {
-    let def = match def.into() {
-        CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
-        CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help()),
+/// This command gets the command line ``args`` and tries to invoke
+/// the corresponding API handler.
+pub fn handle_command(
+    def: Arc<CommandLineInterface>,
+    prefix: &str,
+    mut args: Vec<String>,
+    run: Option<fn(ApiFuture) -> Result<Value, Error>>,
+) -> Result<(), Error> {
+    set_help_context(Some(def.clone()));
+
+    let result = match &*def {
+        CommandLineInterface::Simple(ref cli_cmd) => {
+            handle_simple_command(&prefix, &cli_cmd, args, run)
+        }
+        CommandLineInterface::Nested(ref map) => {
+            let cli_cmd = parse_nested_command(&prefix, &map, &mut args)?;
+            handle_simple_command(&prefix, &cli_cmd, args, run)
+        }
     };
 
+    set_help_context(None);
+
+    result
+}
+
+fn prepare_cli_command(def: &CommandLineInterface) -> (String, Vec<String>) {
     let mut args = std::env::args();
 
     let prefix = args.next().unwrap();
-    let prefix = prefix.rsplit('/').next().unwrap(); // without path
+    let prefix = prefix.rsplit('/').next().unwrap().to_string(); // without path
 
     let args: Vec<String> = args.collect();
 
     if !args.is_empty() {
         if args[0] == "bashcomplete" {
             print_bash_completion(&def);
-            return;
+            std::process::exit(0);
         }
 
         if args[0] == "printdoc" {
@@ -259,11 +336,55 @@ pub async fn run_cli_command<C: Into<CommandLineInterface>>(def: C) {
                 }
             };
             println!("{}", usage);
-            return;
+            std::process::exit(0);
         }
     }
 
-    if handle_command(Arc::new(def), &prefix, args).await.is_err() {
+    (prefix, args)
+}
+
+/// Helper to get arguments and invoke the command (async).
+///
+/// This helper reads arguments with ``std::env::args()``. The first
+/// argument is assumed to be the program name, and is passed as ``prefix`` to
+/// ``handle_command()``.
+///
+/// This helper automatically add the help command, and two special
+/// sub-command:
+///
+/// - ``bashcomplete``: Output bash completions instead of running the command.
+/// - ``printdoc``: Output ReST documentation.
+///
+pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C) {
+    let def = match def.into() {
+        CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
+        CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help()),
+    };
+
+    let (prefix, args) = prepare_cli_command(&def);
+
+    if handle_command_future(Arc::new(def), &prefix, args).await.is_err() {
+        std::process::exit(-1);
+    }
+}
+
+/// Helper to get arguments and invoke the command.
+///
+/// This is the synchrounous version of run_async_cli_command. You can
+/// pass an optional ``run`` function to execute async commands (else
+/// async commands simply fail).
+pub fn run_cli_command<C: Into<CommandLineInterface>>(
+    def: C,
+    run: Option<fn(ApiFuture) -> Result<Value, Error>>,
+) {
+    let def = match def.into() {
+        CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
+        CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help()),
+    };
+
+    let (prefix, args) = prepare_cli_command(&def);
+
+    if handle_command(Arc::new(def), &prefix, args, run).is_err() {
         std::process::exit(-1);
     }
 }
