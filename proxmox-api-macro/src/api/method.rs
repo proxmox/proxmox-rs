@@ -61,22 +61,27 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         ts
     };
 
-    let returns_schema = {
-        let mut ts = TokenStream::new();
-        if let Some(schema) = returns_schema {
-            let mut inner = TokenStream::new();
-            schema.to_schema(&mut inner)?;
-            ts.extend(quote! { .returns(#inner) });
-        }
-        ts
-    };
-
     let vis = &func.vis;
     let func_name = &func.sig.ident;
     let api_method_name = Ident::new(
         &format!("API_METHOD_{}", func_name.to_string().to_uppercase()),
         func.sig.ident.span(),
     );
+    let return_schema_name = Ident::new(
+        &format!("API_RETURN_SCHEMA_{}", func_name.to_string().to_uppercase()),
+        func.sig.ident.span(),
+    );
+
+    let mut returns_schema_definition = TokenStream::new();
+    let mut returns_schema_setter = TokenStream::new();
+    if let Some(schema) = returns_schema {
+        let mut inner = TokenStream::new();
+        schema.to_schema(&mut inner)?;
+        returns_schema_definition = quote_spanned! { func.sig.span() =>
+            #vis const #return_schema_name: &'static ::proxmox::api::schema::Schema = (#inner);
+        };
+        returns_schema_setter = quote! { .returns(#return_schema_name) };
+    }
 
     let api_handler = if is_async {
         quote! { ::proxmox::api::ApiHandler::Async(&#api_func_name) }
@@ -85,14 +90,18 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     };
 
     Ok(quote_spanned! { func.sig.span() =>
+        #returns_schema_definition
+
         #vis const #api_method_name: ::proxmox::api::ApiMethod =
             ::proxmox::api::ApiMethod::new(
                 &#api_handler,
                 &#input_schema,
             )
-            #returns_schema
+            #returns_schema_setter
             .protected(#protected);
+
         #wrapper_ts
+
         #func
     })
     //Ok(quote::quote!(#func))
