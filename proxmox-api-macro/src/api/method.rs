@@ -71,6 +71,10 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         &format!("API_RETURN_SCHEMA_{}", func_name.to_string().to_uppercase()),
         func.sig.ident.span(),
     );
+    let input_schema_name = Ident::new(
+        &format!("API_PARAMETER_SCHEMA_{}", func_name.to_string().to_uppercase()),
+        func.sig.ident.span(),
+    );
 
     let mut returns_schema_definition = TokenStream::new();
     let mut returns_schema_setter = TokenStream::new();
@@ -92,10 +96,13 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     Ok(quote_spanned! { func.sig.span() =>
         #returns_schema_definition
 
+        #vis const #input_schema_name: &'static ::proxmox::api::schema::ObjectSchema =
+            (&#input_schema);
+
         #vis const #api_method_name: ::proxmox::api::ApiMethod =
             ::proxmox::api::ApiMethod::new(
                 &#api_handler,
-                &#input_schema,
+                #input_schema_name,
             )
             #returns_schema_setter
             .protected(#protected);
