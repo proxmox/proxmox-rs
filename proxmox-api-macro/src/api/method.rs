@@ -72,7 +72,10 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         func.sig.ident.span(),
     );
     let input_schema_name = Ident::new(
-        &format!("API_PARAMETER_SCHEMA_{}", func_name.to_string().to_uppercase()),
+        &format!(
+            "API_PARAMETER_SCHEMA_{}",
+            func_name.to_string().to_uppercase()
+        ),
         func.sig.ident.span(),
     );
 
