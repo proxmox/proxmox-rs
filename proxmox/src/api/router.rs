@@ -113,7 +113,7 @@ pub type ApiAsyncHttpHandlerFn = &'static (dyn Fn(
               + Sync
               + 'static);
 
-/// The output of an asynchronous API handler is a futrue yielding a `Response`.
+/// The output of an asynchronous API handler is a future yielding a `Response`.
 pub type ApiResponseFuture =
     Pin<Box<dyn Future<Output = Result<Response<Body>, failure::Error>> + Send>>;
 
@@ -154,13 +154,13 @@ impl PartialEq for ApiHandler {
 /// - `name`: The name of the subdir
 /// - `router`: The router for this subdir
 ///
-/// **Note:** The list has to be storted by name, because we use a binary
+/// **Note:** The list has to be sorted by name, because we use a binary
 /// search to find items.
 ///
 /// This is a workaround unless RUST can const_fn `Hash::new()`
 pub type SubdirMap = &'static [(&'static str, &'static Router)];
 
-/// Clasify different types of routers
+/// Classify different types of routers
 pub enum SubRoute {
     //Hash(HashMap<String, Router>),
     /// Router with static lookup map.
@@ -306,10 +306,10 @@ impl Router {
         self
     }
 
-    /// Find the router for a specic path.
+    /// Find the router for a specific path.
     ///
     /// - `components`: Path, split into individual components.
-    /// - `uri_param`: Mutable hash map to store paramater from `MatchAll` router.
+    /// - `uri_param`: Mutable hash map to store parameter from `MatchAll` router.
     pub fn find_route(
         &self,
         components: &[&str],
@@ -343,7 +343,7 @@ impl Router {
     /// Lookup the API method for a specific path.
     /// - `components`: Path, split into individual components.
     /// - `method`: The HTTP method.
-    /// - `uri_param`: Mutable hash map to store paramater from `MatchAll` router.
+    /// - `uri_param`: Mutable hash map to store parameter from `MatchAll` router.
     pub fn find_method(
         &self,
         components: &[&str],
@@ -383,11 +383,11 @@ fn dummy_handler_fn(
 
 const DUMMY_HANDLER: ApiHandler = ApiHandler::Sync(&dummy_handler_fn);
 
-/// This struct defines synchronous API call which returns the restulkt as json `Value`
+/// This struct defines a synchronous API call which returns the result as json `Value`
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ApiMethod {
     /// The protected flag indicates that the provides function should be forwarded
-    /// to the deaemon running in priviledged mode.
+    /// to the daemon running in privileged mode.
     pub protected: bool,
     /// This flag indicates that the provided method may change the local timezone, so the server
     /// should do a tzset afterwards
