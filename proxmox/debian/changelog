@@ -1,3 +1,9 @@
+rust-proxmox (0.1.10-1) unstable; urgency=medium
+
+  * implement text table formatter
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 30 Jan 2020 11:45:38 +0100
+
 rust-proxmox (0.1.9-1) unstable; urgency=medium
 
   * cli command helper: imple sync and async versions
