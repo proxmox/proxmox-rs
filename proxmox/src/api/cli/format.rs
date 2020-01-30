@@ -8,6 +8,7 @@ use crate::api::format::*;
 use crate::api::schema::*;
 
 use super::{CliCommand, CliCommandMap, CommandLineInterface};
+use super::{TableFormatOptions, value_to_text};
 
 /// Helper function to format and print result.
 ///
@@ -21,6 +22,30 @@ pub fn format_and_print_result(result: &Value, output_format: &str) {
         println!("{}", serde_json::to_string(&result).unwrap());
     } else {
         unimplemented!();
+    }
+}
+
+/// Helper function to format and print result.
+///
+/// This is implemented for machine generatable formats 'json' and
+/// 'json-pretty', and for the 'text' format which generates nicely
+/// formatted tables with borders.
+pub fn format_and_print_result_full(
+    result: &mut Value,
+    schema: &Schema,
+    output_format: &str,
+    options: &TableFormatOptions,
+) {
+    if output_format == "json-pretty" {
+        println!("{}", serde_json::to_string_pretty(&result).unwrap());
+    } else if output_format == "json" {
+        println!("{}", serde_json::to_string(&result).unwrap());
+    } else if output_format == "text" {
+        if let Err(err) = value_to_text(std::io::stdout(), result, schema, options) {
+            eprintln!("unable to format result: {}", err);
+        }
+    } else {
+        eprintln!("undefined output format '{}'", output_format);
     }
 }
 

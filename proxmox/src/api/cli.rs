@@ -21,6 +21,9 @@ pub use shellword::*;
 mod format;
 pub use format::*;
 
+mod text_table;
+pub use text_table::*;
+
 mod completion;
 pub use completion::*;
 
