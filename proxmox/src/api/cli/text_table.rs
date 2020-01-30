@@ -245,6 +245,12 @@ impl TableFormatOptions {
         self.column_config = column_config;
         self
     }
+
+    /// Add a single column configuration
+    pub fn column(mut self, column_config: ColumnConfig) -> Self {
+        self.column_config.push(column_config);
+        self
+    }
 }
 
 struct TableCell {
