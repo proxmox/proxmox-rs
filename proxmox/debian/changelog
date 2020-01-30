@@ -1,3 +1,9 @@
+rust-proxmox (0.1.11-1) unstable; urgency=medium
+
+  * bump api-macro dependency version
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 30 Jan 2020 12:46:01 +0100
+
 rust-proxmox (0.1.10-1) unstable; urgency=medium
 
   * implement text table formatter
