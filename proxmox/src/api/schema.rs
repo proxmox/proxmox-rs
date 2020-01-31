@@ -871,15 +871,18 @@ pub fn verify_json_object(data: &Value, schema: &ObjectSchema) -> Result<(), Err
 
     for (key, value) in map {
         if let Some((_optional, prop_schema)) = schema.lookup(&key) {
-            match prop_schema {
+            let result = match prop_schema {
                 Schema::Object(object_schema) => {
-                    verify_json_object(value, object_schema)?;
+                    verify_json_object(value, object_schema)
                 }
                 Schema::Array(array_schema) => {
-                    verify_json_array(value, array_schema)?;
+                    verify_json_array(value, array_schema)
                 }
-                _ => verify_json(value, prop_schema)?,
-            }
+                _ => verify_json(value, prop_schema),
+            };
+            if let Err(err) = result {
+                bail!("property '{}': {}", key, err);
+            };
         } else if !additional_properties {
             bail!(
                 "property '{}': schema does not allow additional properties.",
