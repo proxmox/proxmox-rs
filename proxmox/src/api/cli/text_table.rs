@@ -197,10 +197,9 @@ impl TableFormatOptions {
         let is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) == 1 };
 
         if is_tty {
-            let mut winsize = libc::winsize { ws_row: 0, ws_col: 0, ws_xpixel: 0, ws_ypixel: 0 };
-            unsafe { libc::ioctl(libc::STDOUT_FILENO, libc::TIOCGWINSZ, &mut winsize) };
-            if winsize.ws_col > 0 {
-                me.columns = Some(winsize.ws_col as usize);
+            let (_rows, columns) = crate::sys::linux::tty::stdout_terminal_size();
+            if columns > 0 {
+                me.columns = Some(columns);
             }
         }
 
