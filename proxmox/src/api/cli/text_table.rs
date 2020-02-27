@@ -141,6 +141,7 @@ impl TableBorders {
 /// This structure can be used to set additional rendering information for a table column.
 pub struct ColumnConfig {
     pub name: String,
+    pub header: Option<String>,
     pub right_align: Option<bool>,
     pub renderer: Option<RenderFunction>,
 }
@@ -150,6 +151,7 @@ impl ColumnConfig {
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
+            header: None,
             right_align: None,
             renderer: None,
         }
@@ -164,15 +166,21 @@ impl ColumnConfig {
         self.renderer = Some(renderer);
         self
     }
+
+    pub fn header<S: Into<String>>(mut self, header: S) -> Self {
+        self.header = Some(header.into());
+        self
+    }
 }
 
 /// Table formatter configuration
 #[derive(Default)]
 pub struct TableFormatOptions {
-    /// Can be used to sort after a specific column, if it isn't set we sort
-    /// after the leftmost column (with no undef value in $data) this can be
-    /// turned off by passing "" as sort_key.
-    pub sortkey: Option<String>,
+    /// Can be used to sort after a specific columns, if it isn't set
+    /// we sort after the leftmost column (with no undef value in
+    /// $data) this can be turned off by passing and empty array. The
+    /// boolean argument specifies the sort order (false => ASC, true => DESC)
+    pub sortkeys: Option<Vec<(String, bool)>>,
     /// Print without asciiart border.
     pub noborder: bool,
     /// Print without table header.
@@ -218,10 +226,26 @@ impl TableFormatOptions {
         me
     }
 
-    pub fn sortkey(mut self, sortkey: Option<String>) -> Self {
-        self.sortkey = sortkey;
+    pub fn disable_sort(mut self) -> Self {
+        self.sortkeys = Some(Vec::new());
         self
     }
+
+    pub fn sortby<S: Into<String>>(mut self, key: S, sort_desc: bool) -> Self {
+        let key = key.into();
+        match self.sortkeys {
+            None => {
+                let mut list = Vec::new();
+                list.push((key.to_string(), sort_desc));
+                self.sortkeys = Some(list);
+            }
+            Some(ref mut list) => {
+               list.push((key.to_string(), sort_desc));
+            }
+        }
+        self
+    }
+
     pub fn noborder(mut self, noborder: bool) -> Self {
         self.noborder = noborder;
         self
@@ -280,49 +304,76 @@ fn format_table<W: Write>(
     let column_count = properties_to_print.len();
     if column_count == 0 { return Ok(()); };
 
-    let sortkey = if let Some(ref sortkey) = options.sortkey {
-        sortkey.clone()
+    let sortkeys = if let Some(ref sortkeys) = options.sortkeys {
+        sortkeys.clone()
     } else {
-        properties_to_print[0].clone() // leftmost
+        let mut keys = Vec::new();
+        keys.push((properties_to_print[0].clone(), false)); // leftmost, ASC
+        keys
     };
 
-    let (_optional, sort_prop_schema) = match schema.lookup(&sortkey) {
-        Some(tup) => tup,
-        None => bail!("property {} does not exist in schema.", sortkey),
-    };
+    let mut sortinfo = Vec::new();
 
-    let numeric_sort = match sort_prop_schema {
-        Schema::Integer(_) => true,
-        Schema::Number(_) => true,
-        _ => false,
-    };
-
-    if numeric_sort {
-        use std::cmp::Ordering;
-        list.sort_unstable_by(move |a, b| {
-            let d1 = a[&sortkey].as_f64();
-            let d2 = b[&sortkey].as_f64();
-            match (d1,d2) {
-                (None, None) => return Ordering::Greater,
-                (Some(_), None) => return Ordering::Greater,
-                (None, Some(_)) => return Ordering::Less,
-                (Some(a), Some(b)) => {
-                    if a.is_nan() { return Ordering::Greater; }
-                    if b.is_nan() { return Ordering::Less; }
-                    if a < b {
-                        return Ordering::Less;
-                    } else if a > b {
-                        return Ordering::Greater;
-                    }
-                    return Ordering::Equal;
-                }
-            };
-        })
-    } else {
-        list.sort_unstable_by_key(move |d| d[&sortkey].to_string());
+    for (sortkey, sort_order) in sortkeys {
+        let (_optional, sort_prop_schema) = match schema.lookup(&sortkey) {
+            Some(tup) => tup,
+            None => bail!("property {} does not exist in schema.", sortkey),
+        };
+        let numeric_sort = match sort_prop_schema {
+            Schema::Integer(_) => true,
+            Schema::Number(_) => true,
+            _ => false,
+        };
+        sortinfo.push((sortkey, sort_order, numeric_sort));
     }
 
+    use std::cmp::Ordering;
+    list.sort_unstable_by(move |a, b| {
+
+        for pos in 0..sortinfo.len() {
+            let (ref sortkey, sort_desc, numeric) = sortinfo[pos];
+            let res = if numeric {
+                let (v1, v2) = if sort_desc {
+                    (b[&sortkey].as_f64(), a[&sortkey].as_f64())
+                } else {
+                    (a[&sortkey].as_f64(), b[&sortkey].as_f64())
+                };
+                match (v1,v2) {
+                    (None, None) => Ordering::Greater,
+                    (Some(_), None) => Ordering::Greater,
+                    (None, Some(_)) => Ordering::Less,
+                    (Some(a), Some(b)) => {
+                        if a.is_nan() {
+                            Ordering::Greater
+                        } else if b.is_nan() {
+                            Ordering::Less
+                        } else {
+                            if a < b {
+                                Ordering::Less
+                            } else if a > b {
+                                Ordering::Greater
+                            } else {
+                                Ordering::Equal
+                            }
+                        }
+                    }
+                }
+            } else {
+                let (v1, v2) = if sort_desc {
+                    (b[sortkey].as_str(), a[sortkey].as_str())
+                } else {
+                    (a[sortkey].as_str(), b[sortkey].as_str())
+                };
+                v1.cmp(&v2)
+            };
+            if res != Ordering::Equal { return res; }
+        }
+        return Ordering::Equal;
+    });
+
     let mut tabledata: Vec<TableColumn> = Vec::new();
+
+    let mut column_names = Vec::new();
 
     for name in properties_to_print.iter() {
         let (_optional, prop_schema) = match schema.lookup(name) {
@@ -339,13 +390,23 @@ fn format_table<W: Write>(
 
         let mut renderer = None;
 
+        let header;
+
         if let Some(column_config) = options.column_config.iter().find(|v| v.name == *name) {
             renderer = column_config.renderer;
             right_align = column_config.right_align.unwrap_or(right_align);
+            if let Some(ref h) = column_config.header {
+                header = h.to_owned();
+            } else {
+                header = name.to_string();
+            }
+        } else {
+            header = name.to_string();
         }
 
-        let mut max_width = name.chars().count();
+        let mut max_width = header.chars().count();
 
+        column_names.push(header);
 
         let mut cells = Vec::new();
         for entry in list.iter() {
@@ -372,7 +433,7 @@ fn format_table<W: Write>(
         tabledata.push(TableColumn { cells, width: max_width, right_align});
     }
 
-    render_table(output, &tabledata, &properties_to_print, options)
+    render_table(output, &tabledata, &column_names, options)
 }
 
 fn render_table<W: Write>(
