@@ -276,6 +276,28 @@ impl TableFormatOptions {
         self.column_config.push(column_config);
         self
     }
+
+    fn lookup_column_info(&self, column_name: &str) -> (String, Option<bool>, Option<RenderFunction>) {
+
+        let mut renderer = None;
+
+        let header;
+        let mut right_align = None;
+
+        if let Some(column_config) = self.column_config.iter().find(|v| v.name == *column_name) {
+            renderer = column_config.renderer;
+            right_align = column_config.right_align;
+            if let Some(ref h) = column_config.header {
+                header = h.to_owned();
+            } else {
+                header = column_name.to_string();
+            }
+        } else {
+            header = column_name.to_string();
+        }
+
+        (header, right_align, renderer)
+    }
 }
 
 struct TableCell {
@@ -381,28 +403,16 @@ fn format_table<W: Write>(
             None => bail!("property {} does not exist in schema.", name),
         };
 
-        let mut right_align = match prop_schema {
+        let is_numeric = match prop_schema {
             Schema::Integer(_) => true,
             Schema::Number(_) => true,
             Schema::Boolean(_) => true,
             _ => false,
         };
 
-        let mut renderer = None;
+        let (header, right_align, renderer) = options.lookup_column_info(name);
 
-        let header;
-
-        if let Some(column_config) = options.column_config.iter().find(|v| v.name == *name) {
-            renderer = column_config.renderer;
-            right_align = column_config.right_align.unwrap_or(right_align);
-            if let Some(ref h) = column_config.header {
-                header = h.to_owned();
-            } else {
-                header = name.to_string();
-            }
-        } else {
-            header = name.to_string();
-        }
+        let right_align = right_align.unwrap_or(is_numeric);
 
         let mut max_width = header.chars().count();
 
@@ -549,21 +559,31 @@ fn format_object<W: Write>(
     let mut name_cells = Vec::new();
     let mut value_cells = Vec::new();
 
+    let mut all_right_aligned = true;
+
     for name in properties_to_print.iter() {
         let (_optional, prop_schema) = match schema.lookup(name) {
             Some(tup) => tup,
             None => bail!("property {} does not exist in schema.", name),
         };
 
-        let mut renderer = None;
-        if let Some(column_config) = options.column_config.iter().find(|v| v.name == *name) {
-            renderer = column_config.renderer;
-        }
+        let is_numeric = match prop_schema {
+            Schema::Integer(_) => true,
+            Schema::Number(_) => true,
+            Schema::Boolean(_) => true,
+            _ => false,
+        };
 
-        let name_width = name.chars().count();
-        if name_width > max_name_width { max_name_width = name_width; }
+        let (header, right_align, renderer) = options.lookup_column_info(name);
 
-        name_cells.push(TableCell { lines: vec![ name.to_string() ] });
+        let right_align = right_align.unwrap_or(is_numeric);
+
+        if !right_align { all_right_aligned = false; }
+
+        let header_width = header.chars().count();
+        if header_width > max_name_width { max_name_width = header_width; }
+
+        name_cells.push(TableCell { lines: vec![ header ] });
 
         let result = if let Some(renderer) = renderer {
             (renderer)(&data[name], &data)
@@ -586,7 +606,7 @@ fn format_object<W: Write>(
     }
 
     let name_column = TableColumn { cells: name_cells, width: max_name_width, right_align: false };
-    let value_column = TableColumn { cells: value_cells, width: max_value_width, right_align: false };
+    let value_column = TableColumn { cells: value_cells, width: max_value_width, right_align: all_right_aligned };
 
     let mut tabledata: Vec<TableColumn> = Vec::new();
     tabledata.push(name_column);
