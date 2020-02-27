@@ -5,6 +5,36 @@ use serde_json::Value;
 
 use crate::api::schema::*;
 
+/// allows to configure the default output fromat using environment vars
+pub const ENV_VAR_PROXMOX_OUTPUT_FORMAT: &str = "PROXMOX_OUTPUT_FORMAT";
+/// if set, supress borders (and headers) when printing tables
+pub const ENV_VAR_PROXMOX_OUTPUT_NO_BORDER: &str = "PROXMOX_OUTPUT_NO_BORDER";
+/// if set, supress headers when printing tables
+pub const ENV_VAR_PROXMOX_OUTPUT_NO_HEADER: &str = "PROXMOX_OUTPUT_NO_HEADER";
+
+/// Helper to get output format from parameters or environment
+pub fn get_output_format(param: &Value) -> String {
+    let mut output_format = None;
+
+    if let Some(format) = param["output-format"].as_str() {
+         output_format = Some(format.to_owned());
+    } else if let Some(format) = std::env::var(ENV_VAR_PROXMOX_OUTPUT_FORMAT).ok() {
+        output_format = Some(format.to_owned());
+    }
+
+    let output_format = output_format.unwrap_or(String::from("text"));
+
+    output_format
+}
+
+/// Helper to get TableFormatOptions with default from environment
+pub fn default_table_format_options() -> TableFormatOptions {
+    let no_border = std::env::var(ENV_VAR_PROXMOX_OUTPUT_NO_BORDER).ok().is_some();
+    let no_header = std::env::var(ENV_VAR_PROXMOX_OUTPUT_NO_HEADER).ok().is_some();
+
+    TableFormatOptions::new().noborder(no_border).noheader(no_header)
+}
+
 /// Render function
 ///
 /// Should convert the json `value` into a text string. `record` points to
