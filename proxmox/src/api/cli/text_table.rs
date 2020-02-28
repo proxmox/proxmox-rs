@@ -130,7 +130,7 @@ impl TableBorders {
                 }
             }
 
-            for _j in 0..*column_width {
+            for _j in 0..*column_width+2 {
                 if ascii_delimiters {
                     top.push('=');
                     head.push('=');
@@ -504,11 +504,13 @@ fn render_table<W: Write>(
     for (i, name) in column_names.iter().enumerate() {
         let column = &tabledata[i];
         header.push(borders.column_separator);
+        header.push(' ');
         if column.right_align {
             header.push_str(&format!("{:>width$}", name, width = column.width));
         } else {
             header.push_str(&format!("{:<width$}", name, width = column.width));
         }
+        header.push(' ');
     }
 
     if !(options.noheader || options.noborder) {
@@ -538,6 +540,7 @@ fn render_table<W: Write>(
                     if i > 0 { text.push(' '); }
                 } else {
                     text.push(borders.column_separator);
+                    text.push(' ');
                 }
 
                 if column.right_align {
@@ -545,6 +548,8 @@ fn render_table<W: Write>(
                 } else {
                     text.push_str(&format!("{:<width$}", line, width = column.width));
                 }
+
+                if !options.noborder { text.push(' '); }
             }
             if !options.noborder { text.push(borders.column_separator); }
             write_line(&text)?;
