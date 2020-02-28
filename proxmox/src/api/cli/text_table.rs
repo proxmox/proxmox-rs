@@ -444,7 +444,7 @@ fn format_table<W: Write>(
 
         let right_align = right_align.unwrap_or(is_numeric);
 
-        let mut max_width = header.chars().count();
+        let mut max_width = if options.noheader || options.noborder { 0 } else { header.chars().count() };
 
         column_names.push(header);
 
@@ -586,8 +586,8 @@ fn format_object<W: Write>(
     const NAME_TITLE: &str = "Name";
     const VALUE_TITLE: &str = "Value";
 
-    let mut max_name_width = NAME_TITLE.len();
-    let mut max_value_width = VALUE_TITLE.len();
+    let mut max_name_width = if options.noheader || options.noborder { 0 } else { NAME_TITLE.len() };
+    let mut max_value_width =  if options.noheader || options.noborder { 0 } else { VALUE_TITLE.len() };
 
     let column_names = vec![NAME_TITLE.to_string(), VALUE_TITLE.to_string()];
 
