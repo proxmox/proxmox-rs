@@ -227,8 +227,8 @@ impl TableFormatOptions {
 
     /// Create a new Instance with reasonable defaults for terminal output
     ///
-    /// This tests if stdout is a TTY and sets the columns toö the terminal width,
-    /// and sets ascii_delimiters toö true If the locale CODESET is not UTF-8.
+    /// This tests if stdout is a TTY and sets the columns to the terminal width,
+    /// and sets ascii_delimiters to true If the locale CODESET is not UTF-8.
     pub fn new() -> Self {
         let mut me = Self::default();
 
