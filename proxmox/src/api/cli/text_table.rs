@@ -108,7 +108,7 @@ impl TableBorders {
         let mut middle = String::new();
         let mut bottom = String::new();
 
-        let column_separator = '│';
+        let column_separator = if ascii_delimiters { '|' } else { '│' };
 
         for (i, column_width) in column_widths.iter().enumerate() {
             if ascii_delimiters {
