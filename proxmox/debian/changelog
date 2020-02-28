@@ -1,3 +1,9 @@
+rust-proxmox (0.1.17-1) unstable; urgency=medium
+
+  * improve text-table output formatting
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 28 Feb 2020 10:07:56 +0100
+
 rust-proxmox (0.1.16-1) unstable; urgency=medium
 
   * bump api-macro dependency to 0.1.4
