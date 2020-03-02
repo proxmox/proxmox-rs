@@ -1,4 +1,10 @@
-//! Proxmox API module. This provides utilities for HTTP and command line APIs.
+//! Proxmox API module.
+//!
+//! This provides utilities to define APIs in a declarative way using
+//! Schemas. Primary use case it to define REST/HTTP APIs. Another use case
+//! is to define command line tools using Schemas. Finally, it is
+//! possible to use schema definitions to derive configuration file
+//! parsers.
 
 #[cfg(feature = "api-macro")]
 pub use proxmox_api_macro::{api, router};
@@ -8,6 +14,7 @@ pub mod const_regex;
 #[doc(hidden)]
 pub mod error;
 pub mod schema;
+pub mod section_config;
 
 #[doc(inline)]
 pub use const_regex::ConstRegexPattern;
