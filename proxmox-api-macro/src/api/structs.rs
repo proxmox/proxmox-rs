@@ -11,30 +11,45 @@ use crate::api;
 use crate::serde;
 use crate::util::{self, FieldName, JSONObject};
 
-pub fn handle_struct(attribs: JSONObject, mut stru: syn::ItemStruct) -> Result<TokenStream, Error> {
+pub fn handle_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<TokenStream, Error> {
+    match &stru.fields {
+        // unit structs, not sure about these?
+        syn::Fields::Unit => handle_unit_struct(attribs, stru),
+        syn::Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
+            handle_newtype_struct(attribs, stru)
+        }
+        syn::Fields::Unnamed(fields) => bail!(
+            fields.paren_token.span,
+            "api macro does not support tuple structs"
+        ),
+        syn::Fields::Named(_) => handle_regular_struct(attribs, stru)
+    }
+}
+
+fn get_struct_description(schema: &mut Schema, stru: &syn::ItemStruct) -> Result<(), Error> {
+    if schema.description.is_none() {
+        let (doc_comment, doc_span) = util::get_doc_comments(&stru.attrs)?;
+        util::derive_descriptions(schema, &mut None, &doc_comment, doc_span)?;
+    }
+
+    Ok(())
+}
+
+fn handle_unit_struct(
+    attribs: JSONObject,
+    stru: syn::ItemStruct,
+) -> Result<TokenStream, Error> {
+    // unit structs, not sure about these?
+
     let mut schema: Schema = if attribs.is_empty() {
         Schema::empty_object(Span::call_site())
     } else {
         attribs.try_into()?
     };
 
-    if schema.description.is_none() {
-        let (doc_comment, doc_span) = util::get_doc_comments(&stru.attrs)?;
-        util::derive_descriptions(&mut schema, &mut None, &doc_comment, doc_span)?;
-    }
+    get_struct_description(&mut schema, &stru)?;
 
-    match &stru.fields {
-        // unit structs, not sure about these?
-        syn::Fields::Unit => finish_schema(schema, &stru, &stru.ident),
-        syn::Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
-            handle_newtype_struct(schema, &mut stru)
-        }
-        syn::Fields::Unnamed(fields) => bail!(
-            fields.paren_token.span,
-            "api macro does not support tuple structs"
-        ),
-        syn::Fields::Named(_) => handle_regular_struct(schema, &mut stru),
-    }
+    finish_schema(schema, &stru, &stru.ident)
 }
 
 fn finish_schema(
@@ -56,14 +71,33 @@ fn finish_schema(
     })
 }
 
-fn handle_newtype_struct(schema: Schema, stru: &mut syn::ItemStruct) -> Result<TokenStream, Error> {
+fn handle_newtype_struct(
+    attribs: JSONObject,
+    stru: syn::ItemStruct,
+) -> Result<TokenStream, Error> {
+    let mut schema: Schema = if attribs.is_empty() {
+        Schema::empty_object(Span::call_site())
+    } else {
+        attribs.try_into()?
+    };
+
+    get_struct_description(&mut schema, &stru)?;
+
     finish_schema(schema, &stru, &stru.ident)
 }
 
 fn handle_regular_struct(
-    mut schema: Schema,
-    stru: &mut syn::ItemStruct,
+    attribs: JSONObject,
+    stru: syn::ItemStruct,
 ) -> Result<TokenStream, Error> {
+    let mut schema: Schema = if attribs.is_empty() {
+        Schema::empty_object(Span::call_site())
+    } else {
+        attribs.try_into()?
+    };
+
+    get_struct_description(&mut schema, &stru)?;
+
     // sanity check, first get us some quick by-name access to our fields:
     //
     // NOTE: We remove references we're "done with" and in the end fail with a list of extraneous
