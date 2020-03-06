@@ -41,7 +41,10 @@ fn number_schema_check() {
             &[(
                 "num",
                 false,
-                &::proxmox::api::schema::IntegerSchema::new("The version to upgrade to").schema(),
+                &::proxmox::api::schema::IntegerSchema::new("The version to upgrade to")
+                    .minimum(0)
+                    .maximum(0xffffffff)
+                    .schema(),
             )],
         ),
     )

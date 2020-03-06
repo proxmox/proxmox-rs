@@ -14,8 +14,25 @@ mod enums;
 mod method;
 mod structs;
 
-pub const INTNAMES: &[&str] = &[
-    "Integer", "i8", "i16", "i32", "i64", "isize", "u8", "u16", "u32", "u64", "usize",
+pub struct IntType {
+    pub name: &'static str,
+    pub minimum: Option<&'static str>,
+    pub maximum: Option<&'static str>,
+}
+
+#[rustfmt::skip]
+pub const INTTYPES: &[IntType] = &[
+    IntType { name: "Integer", minimum: None,                maximum: None,               },
+    IntType { name: "i8",      minimum: Some("-0x80"),       maximum: Some("0x7f"),       },
+    IntType { name: "i16",     minimum: Some("-0x8000"),     maximum: Some("0x7fff"),     },
+    IntType { name: "i32",     minimum: Some("-0x80000000"), maximum: Some("0x7fffffff"), },
+    IntType { name: "i64",     minimum: None,                maximum: None,               },
+    IntType { name: "isize",   minimum: None,                maximum: None,               },
+    IntType { name: "u8",      minimum: Some("0"),           maximum: Some("0xff"),       },
+    IntType { name: "u16",     minimum: Some("0"),           maximum: Some("0xffff"),     },
+    IntType { name: "u32",     minimum: Some("0"),           maximum: Some("0xffffffff"), },
+    IntType { name: "u64",     minimum: Some("0"),           maximum: None,               },
+    IntType { name: "usize",   minimum: Some("0"),           maximum: None,               },
 ];
 pub const NUMBERNAMES: &[&str] = &["Number", "f32", "f64"];
 
@@ -164,6 +181,23 @@ impl Schema {
         self.as_object_mut()
             .and_then(|obj| obj.find_property_by_ident_mut(key))
     }
+
+    // FIXME: Should we turn the property list into a map? We used to have no need to find keys in
+    // it, but we do now...
+    fn find_schema_property(&self, key: &str) -> Option<&syn::Expr> {
+        for prop in &self.properties {
+            if prop.0 == key {
+                return Some(&prop.1)
+            }
+        }
+        None
+    }
+
+    pub fn add_default_property(&mut self, key: &str, value: syn::Expr) {
+        if !self.find_schema_property(key).is_some() {
+            self.properties.push((Ident::new(key, Span::call_site()), value));
+        }
+    }
 }
 
 pub enum SchemaItem {
@@ -220,7 +254,7 @@ impl SchemaItem {
             Ok(SchemaItem::Null)
         } else if name == "Boolean" || name == "bool" {
             Ok(SchemaItem::Boolean)
-        } else if INTNAMES.iter().any(|n| name == n) {
+        } else if INTTYPES.iter().any(|n| name == n.name) {
             Ok(SchemaItem::Integer)
         } else if NUMBERNAMES.iter().any(|n| name == n) {
             Ok(SchemaItem::Number)

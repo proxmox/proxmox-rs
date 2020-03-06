@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 
-use proc_macro2::{Ident, Span};
+use proc_macro2::{Ident, Span, TokenStream};
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
@@ -460,7 +460,7 @@ pub fn derive_descriptions(
     Ok(())
 }
 
-pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<bool, Error> {
+pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<bool, syn::Error> {
     if let SchemaItem::Inferred(_) = schema.item {
         //
     } else {
@@ -479,8 +479,14 @@ pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<bool, Error> {
                 schema.item = SchemaItem::String;
             } else if path.path.is_ident("bool") {
                 schema.item = SchemaItem::Boolean;
-            } else if api::INTNAMES.iter().any(|n| path.path.is_ident(n)) {
+            } else if let Some(ty) = api::INTTYPES.iter().find(|i| path.path.is_ident(i.name)) {
                 schema.item = SchemaItem::Integer;
+                if let Some(min) = ty.minimum {
+                    schema.add_default_property("minimum", syn::Expr::Verbatim(min.parse()?));
+                }
+                if let Some(max) = ty.maximum {
+                    schema.add_default_property("maximum", syn::Expr::Verbatim(max.parse()?));
+                }
             } else if api::NUMBERNAMES.iter().any(|n| path.path.is_ident(n)) {
                 schema.item = SchemaItem::Number;
             } else {
