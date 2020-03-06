@@ -171,7 +171,7 @@ fn handle_regular_struct(
             }
         }
     } else {
-        unreachable!();
+        panic!("handle_regular struct without named fields");
     };
 
     // now error out about all the fields not found in the struct:
@@ -195,7 +195,7 @@ fn handle_regular_struct(
     if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
         obj.extend_properties(new_fields);
     } else {
-        unreachable!();
+        panic!("handle_regular_struct with non-object schema");
     }
 
     finish_schema(schema, &stru, &stru.ident)
