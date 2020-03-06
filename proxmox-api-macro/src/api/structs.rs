@@ -83,7 +83,7 @@ fn handle_newtype_struct(
 
     let mut schema: Schema = attribs.try_into()?;
     match schema.item {
-        SchemaItem::Inferred(span) => {
+        SchemaItem::Inferred(_span) => {
             // The schema has no `type` and we failed to guess it. Infer it from the contained
             // field!
 
