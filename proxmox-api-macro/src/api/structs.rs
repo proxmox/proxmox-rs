@@ -7,7 +7,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
 
 use super::Schema;
-use crate::api;
+use crate::api::{self, SchemaItem};
 use crate::serde;
 use crate::util::{self, FieldName, JSONObject};
 
@@ -75,10 +75,29 @@ fn handle_newtype_struct(
     attribs: JSONObject,
     stru: syn::ItemStruct,
 ) -> Result<TokenStream, Error> {
-    let mut schema: Schema = if attribs.is_empty() {
-        Schema::empty_object(Span::call_site())
-    } else {
-        attribs.try_into()?
+    // Ideally we could clone the contained item's schema, but this is "hard", so for now we assume
+    // the contained type is a simple type.
+    //
+    // In order to support "specializing" an already existing type, we'd need to be able to
+    // create "linked" schemas. We cannot do this purely via the macro.
+
+    let mut schema: Schema = attribs.try_into()?;
+    match schema.item {
+        SchemaItem::Inferred(span) => {
+            // The schema has no `type` and we failed to guess it. Infer it from the contained
+            // field!
+
+            let fields = match &stru.fields {
+                syn::Fields::Unnamed(fields) => &fields.unnamed,
+                _ => panic!("handle_unit_struct on non-unit struct"), // `handle_struct()` verified this!
+            };
+            // this is also part of `handle_struct()`'s verification!
+            assert_eq!(fields.len(), 1, "handle_unit_struct needs a struct with exactly 1 field");
+
+            // Now infer the type information:
+            util::infer_type(&mut schema, &fields[0].ty)?;
+        }
+        _ => (),
     };
 
     get_struct_description(&mut schema, &stru)?;
