@@ -105,13 +105,10 @@ impl TryFrom<JSONObject> for Schema {
             span: obj.brace_token.span,
             description,
             item: SchemaItem::try_extract_from(&mut obj)?,
-            properties: obj.into_iter().try_fold(
-                Vec::new(),
-                |mut properties, (key, value)| -> Result<_, syn::Error> {
-                    properties.push((key.into_ident(), value.try_into()?));
-                    Ok(properties)
-                },
-            )?,
+            properties: obj
+                .into_iter()
+                .map(|(key, value)| Ok((key.into_ident(), value.try_into()?)))
+                .collect::<Result<_, syn::Error>>()?,
         })
     }
 }
