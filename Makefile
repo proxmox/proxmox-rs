@@ -23,7 +23,6 @@ dinstall:
 
 .PHONY: check
 check:
-	cargo +nightly fmt -- --check
 	cargo test
 
 # Run the api-test server, serving the api-test/www/ subdir as 'www' dir over
@@ -34,13 +33,8 @@ apitest:
 
 # Prints a diff between the current code and the one rustfmt would produce
 .PHONY: fmt
-checkfmt:
-	cargo fmt --all -- --check
-
-# Reformat the code (ppply the output of `make checkfmt`)
-.PHONY: fmt
 fmt:
-	cargo fmt --all
+	cargo +nightly fmt -- --check
 
 # Doc without dependencies
 .PHONY: doc
