@@ -150,7 +150,6 @@ pub fn get_property_description(
         let indent = "             ";
         text.push('\n');
         text.push_str(&wrap_text(indent, indent, descr, 80));
-        text.push('\n');
 
         text
     }

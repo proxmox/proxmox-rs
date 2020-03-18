@@ -144,10 +144,10 @@ pub fn generate_usage_str(
 
     let mut text = match format {
         DocumentationFormat::Short => {
-            return format!("{}{}{}{}\n\n", indent, prefix, args, option_indicator);
+            return format!("{}{}{}{}\n", indent, prefix, args, option_indicator);
         }
         DocumentationFormat::Long => {
-            format!("{}{}{}{}\n\n", indent, prefix, args, option_indicator)
+            format!("{}{}{}{}\n", indent, prefix, args, option_indicator)
         }
         DocumentationFormat::Full => format!(
             "{}{}{}{}\n\n{}\n\n",
@@ -166,7 +166,6 @@ pub fn generate_usage_str(
     if !options.is_empty() {
         text.push_str("Optional parameters:\n\n");
         text.push_str(&options);
-        text.push('\n');
     }
     text
 }
