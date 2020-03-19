@@ -500,7 +500,7 @@ pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<bool, syn::Erro
 }
 
 /// Note that we cannot handle renamed imports at all here...
-fn is_option_type(ty: &syn::Type) -> Option<&syn::Type> {
+pub fn is_option_type(ty: &syn::Type) -> Option<&syn::Type> {
     if let syn::Type::Path(p) = ty {
         if p.qself.is_some() {
             return None;

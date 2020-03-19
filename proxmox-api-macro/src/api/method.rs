@@ -164,8 +164,14 @@ fn handle_function_signature(
         {
             // try to infer the type in the schema if it is not specified explicitly:
             let is_option = util::infer_type(schema, &*pat_type.ty)?;
+            let has_default = schema.find_schema_property("default").is_some();
             if !is_option && *optional {
-                bail!(pat_type => "non-optional `Option` type");
+                if !has_default {
+                    bail!(pat_type => "optional types need a default or be an Option<T>");
+                }
+            }
+            if has_default && !*optional {
+                bail!(pat_type => "non-optional parameter cannot have a default");
             }
         } else {
             continue;
@@ -332,7 +338,7 @@ fn create_wrapper_function(
             ParameterType::Value => args.extend(quote_spanned! { span => input_params, }),
             ParameterType::ApiMethod => args.extend(quote_spanned! { span => api_method_param, }),
             ParameterType::RpcEnv => args.extend(quote_spanned! { span => rpc_env_param, }),
-            ParameterType::Other(_ty, optional, _schema) => {
+            ParameterType::Other(ty, optional, schema) => {
                 let name_str = syn::LitStr::new(name.as_str(), span);
                 let arg_name =
                     Ident::new(&format!("input_arg_{}", name.as_ident().to_string()), span);
@@ -346,7 +352,8 @@ fn create_wrapper_function(
                         .transpose()?
                 });
                 if !optional {
-                    // Non-optional types need to be extracted out of the option though:
+                    // Non-optional types need to be extracted out of the option though (unless
+                    // they have a default):
                     //
                     // Whether the parameter is optional should have been verified by the schema
                     // verifier already, so here we just use failure::bail! instead of building a
@@ -357,6 +364,15 @@ fn create_wrapper_function(
                             #name_str,
                         ))?
                     });
+                } else if util::is_option_type(ty).is_none() {
+                    // Optional parameter without an Option<T> type requires a default:
+                    if let Some(def) = schema.find_schema_property("default") {
+                        body.extend(quote_spanned! { span =>
+                            .unwrap_or_else(|| #def)
+                        });
+                    } else {
+                        bail!(ty => "Optional parameter without Option<T> requires a default");
+                    }
                 }
                 body.extend(quote_spanned! { span => ; });
                 args.extend(quote_spanned! { span => #arg_name, });
