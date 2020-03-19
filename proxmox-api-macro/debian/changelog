@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (0.1.5-1) proxmox-rust; urgency=medium
+
+  * include default min/max for integer types
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 19 Mar 2020 09:55:25 +0100
+
 rust-proxmox-api-macro (0.1.4-1) proxmox-rust; urgency=medium
 
   * make parameter and return schema of api methods public
