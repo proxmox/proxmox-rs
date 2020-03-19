@@ -1,3 +1,11 @@
+rust-proxmox (0.1.19-1) unstable; urgency=medium
+
+  * remove superfluous newlines in cli help output
+
+  * bump api macro to 0.1.5: add implicit minimum/maximum to integer types
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 19 Mar 2020 09:59:58 +0100
+
 rust-proxmox (0.1.18-1) unstable; urgency=medium
 
   * Added SectionConfig (moved from proxmox-backup)
