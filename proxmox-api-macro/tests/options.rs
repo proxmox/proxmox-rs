@@ -21,6 +21,24 @@ pub fn test_option(value: bool) -> Result<bool, Error> {
     Ok(value)
 }
 
+#[api(
+    input: {
+        properties: {
+            value: {
+                description: "The optional value with default.",
+                optional: true,
+                default: 5,
+            }
+        }
+    }
+)]
+/// Print the given message.
+///
+/// Returns: the input.
+pub fn test_default_macro(value: Option<isize>) -> Result<isize, Error> {
+    Ok(value.unwrap_or(api_get_default!("value")))
+}
+
 struct RpcEnv;
 impl proxmox::api::RpcEnvironment for RpcEnv {
     fn set_result_attrib(&mut self, name: &str, value: Value) {
@@ -65,4 +83,8 @@ fn test_invocations() {
     let value = api_function_test_option(json!({"value": false}), &API_METHOD_TEST_OPTION, &mut env)
         .expect("func with option should work");
     assert_eq!(value, false);
+
+    let value = api_function_test_default_macro(json!({}), &API_METHOD_TEST_DEFAULT_MACRO, &mut env)
+        .expect("func with option should work");
+    assert_eq!(value, 5);
 }

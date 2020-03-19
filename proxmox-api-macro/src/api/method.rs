@@ -1,4 +1,5 @@
 use std::convert::{TryFrom, TryInto};
+use std::mem;
 
 use failure::Error;
 
@@ -6,6 +7,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::Ident;
+use syn::visit_mut::{self, VisitMut};
 
 use super::{Schema, SchemaItem};
 use crate::util::{self, FieldName, JSONObject};
@@ -54,6 +56,9 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         &mut func,
         &mut wrapper_ts,
     )?;
+
+    // input schema is done, let's give the method body a chance to extract default parameters:
+    DefaultParameters(&input_schema).visit_item_fn_mut(&mut func);
 
     let input_schema = {
         let mut ts = TokenStream::new();
@@ -432,4 +437,39 @@ fn create_wrapper_function(
     }
 
     Ok(api_func_name)
+}
+
+struct DefaultParameters<'a>(&'a Schema);
+
+impl<'a> VisitMut for DefaultParameters<'a> {
+    fn visit_expr_mut(&mut self, i: &mut syn::Expr) {
+        if let syn::Expr::Macro(exprmac) = i {
+            if exprmac.mac.path.is_ident("api_get_default") {
+                // replace api_get_default macros with the actual default found in the #[api]
+                // macro.
+                match self.get_default(mem::take(&mut exprmac.mac.tokens)) {
+                    Ok(expr) => *i = expr,
+                    Err(err) => {
+                        *i = syn::Expr::Verbatim(err.to_compile_error());
+                        return;
+                    }
+                }
+            }
+        }
+
+        visit_mut::visit_expr_mut(self, i)
+    }
+}
+
+impl<'a> DefaultParameters<'a> {
+    fn get_default(&self, param_tokens: TokenStream) -> Result<syn::Expr, syn::Error> {
+        let param_name: syn::LitStr = syn::parse2(param_tokens)?;
+        match self.0.find_obj_property_by_ident(&param_name.value()) {
+            Some((_ident, _optional, schema)) => match schema.find_schema_property("default") {
+                Some(def) => Ok(def.clone()),
+                None => bail!(param_name => "no default found in schema")
+            }
+            None => bail!(param_name => "todo"),
+        }
+    }
 }
