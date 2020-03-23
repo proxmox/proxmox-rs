@@ -1,3 +1,12 @@
+//! `#[api]` macro and API schema core module.
+//!
+//! This contains the `Schema` type, which represents the schema items we have in our api library,
+//! but as seen within the `#[api]` macro context.
+//!
+//! The main job here is to parse our `util::JSONObject` into a `Schema`.
+//!
+//! The handling of methods vs type definitions happens in their corresponding submodules.
+
 use std::convert::{TryFrom, TryInto};
 
 use failure::Error;

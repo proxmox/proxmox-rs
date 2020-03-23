@@ -8,11 +8,17 @@ use failure::Error;
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;
 
+/// Our `format_err` macro replacement to enforce the inclusion of a `Span`.
+/// The arrow variant takes a spanned syntax element, the comma variant expects an actual `Span` as
+/// first parameter.
 macro_rules! format_err {
     ($span:expr => $($msg:tt)*) => { syn::Error::new_spanned($span, format!($($msg)*)) };
     ($span:expr, $($msg:tt)*) => { syn::Error::new($span, format!($($msg)*)) };
 }
 
+/// Our `bail` macro replacement to enforce the inclusion of a `Span`.
+/// The arrow variant takes a spanned syntax element, the comma variant expects an actual `Span` as
+/// first parameter.
 macro_rules! bail {
     ($span:expr => $($msg:tt)*) => { return Err(format_err!($span => $($msg)*).into()) };
     ($span:expr, $($msg:tt)*) => { return Err(format_err!($span, $($msg)*).into()) };
@@ -22,6 +28,7 @@ mod api;
 mod serde;
 mod util;
 
+/// Handle errors by appending a `compile_error!()` macro invocation to the original token stream.
 fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
     match data {
         Ok(output) => output,

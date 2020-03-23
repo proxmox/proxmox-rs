@@ -1,3 +1,15 @@
+//! `#[api]` macro for `struct` types.
+//!
+//! This module implements struct handling.
+//!
+//! We distinguish between 3 types at the moment:
+//! 1) Unit structs (`struct Foo;`),which don't do much really and aren't very useful for the API
+//!    currently)
+//! 2) Newtypes (`struct Foo(T)`), a 1-tuple, which is supposed to be a wrapper for a type `T` and
+//!    therefore should implicitly deserialize/serialize to `T`. Currently we only support simple
+//!    types for which we "know" the schema type used in the API.
+//! 3) Object structs (`struct Foo { ... }`), which declare an `ObjectSchema`.
+
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 

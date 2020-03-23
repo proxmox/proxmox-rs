@@ -1,3 +1,10 @@
+//! Method handling.
+//!
+//! This has to perform quite a few things: infer types from parameters, deal with optional types
+//! and defaults, expose parameter and return value schema to the public, and finally create the
+//! wrapper function converting from a json Value hash to the parameters listed in the function
+//! signature, while recognizing specially handling `RPCEnvironment` and `ApiMethod` parameters.
+
 use std::convert::{TryFrom, TryInto};
 use std::mem;
 

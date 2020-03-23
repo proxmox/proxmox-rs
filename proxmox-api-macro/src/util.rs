@@ -526,7 +526,8 @@ pub fn is_option_type(ty: &syn::Type) -> Option<&syn::Type> {
     None
 }
 
-/// `parse_macro_input!` expects a TokenStream_1
+/// Helper to do basically what `parse_macro_input!` does, except the macro expects a
+/// `TokenStream_1`, and we always have a `TokenStream` from `proc_macro2`.
 pub struct AttrArgs {
     _paren_token: syn::token::Paren,
     pub args: Punctuated<syn::NestedMeta, Token![,]>,
