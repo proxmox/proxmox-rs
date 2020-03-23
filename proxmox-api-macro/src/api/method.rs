@@ -49,12 +49,15 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     )?;
 
     let mut wrapper_ts = TokenStream::new();
+    let mut default_consts = TokenStream::new();
+
     let is_async = func.sig.asyncness.is_some();
     let api_func_name = handle_function_signature(
         &mut input_schema,
         &mut returns_schema,
         &mut func,
         &mut wrapper_ts,
+        &mut default_consts,
     )?;
 
     // input schema is done, let's give the method body a chance to extract default parameters:
@@ -115,6 +118,8 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
             #returns_schema_setter
             .protected(#protected);
 
+        #default_consts
+
         #wrapper_ts
 
         #func
@@ -150,6 +155,7 @@ fn handle_function_signature(
     returns_schema: &mut Option<Schema>,
     func: &mut syn::ItemFn,
     wrapper_ts: &mut TokenStream,
+    default_consts: &mut TokenStream,
 ) -> Result<Ident, Error> {
     let sig = &func.sig;
     let is_async = sig.asyncness.is_some();
@@ -271,6 +277,7 @@ fn handle_function_signature(
         param_list,
         func,
         wrapper_ts,
+        default_consts,
         is_async,
     )
 }
@@ -327,6 +334,7 @@ fn create_wrapper_function(
     param_list: Vec<(FieldName, ParameterType)>,
     func: &syn::ItemFn,
     wrapper_ts: &mut TokenStream,
+    default_consts: &mut TokenStream,
     is_async: bool,
 ) -> Result<Ident, Error> {
     let api_func_name = Ident::new(
@@ -336,6 +344,8 @@ fn create_wrapper_function(
 
     let mut body = TokenStream::new();
     let mut args = TokenStream::new();
+
+    let func_uc = func.sig.ident.to_string().to_uppercase();
 
     for (name, param) in param_list {
         let span = name.span();
@@ -356,6 +366,7 @@ fn create_wrapper_function(
                         .map(::serde_json::from_value)
                         .transpose()?
                 });
+                let default_value = schema.find_schema_property("default");
                 if !optional {
                     // Non-optional types need to be extracted out of the option though (unless
                     // they have a default):
@@ -371,7 +382,7 @@ fn create_wrapper_function(
                     });
                 } else if util::is_option_type(ty).is_none() {
                     // Optional parameter without an Option<T> type requires a default:
-                    if let Some(def) = schema.find_schema_property("default") {
+                    if let Some(def) = &default_value {
                         body.extend(quote_spanned! { span =>
                             .unwrap_or_else(|| #def)
                         });
@@ -381,6 +392,19 @@ fn create_wrapper_function(
                 }
                 body.extend(quote_spanned! { span => ; });
                 args.extend(quote_spanned! { span => #arg_name, });
+
+                if let Some(def) = &default_value {
+                    let name_uc = name.as_ident().to_string().to_uppercase();
+                    let name = Ident::new(
+                        &format!("API_METHOD_{}_PARAM_DEFAULT_{}", func_uc, name_uc),
+                        span,
+                    );
+                    // strip possible Option<> from this type:
+                    let ty = util::is_option_type(ty).unwrap_or(ty);
+                    default_consts.extend(quote_spanned! { span =>
+                        pub const #name: #ty = #def;
+                    });
+                }
             }
         }
     }
