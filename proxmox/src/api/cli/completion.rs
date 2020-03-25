@@ -73,30 +73,36 @@ fn get_simple_completion(
     arg_param: &[&str], // we remove done arguments
     args: &[String],
 ) -> Vec<String> {
-    // fixme: arg_param, fixed_param
     //eprintln!("COMPL: {:?} {:?} {}", arg_param, args, args.len());
 
     if !arg_param.is_empty() {
         let prop_name = arg_param[0];
-        if args.len() > 1 {
-            record_done_argument(done, cli_cmd.info.parameters, prop_name, &args[0]);
-            return get_simple_completion(cli_cmd, done, &arg_param[1..], &args[1..]);
-        }
+        if let Some((optional, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
+            if optional && args[0].starts_with('-') {
+                // argument parameter is optional, and arg looks like an option,
+                // so assume its empty and complete the rest
+            } else {
+                record_done_argument(done, cli_cmd.info.parameters, prop_name, &args[0]);
+                if args.len() > 1 {
+                    return get_simple_completion(cli_cmd, done, &arg_param[1..], &args[1..]);
+                }
 
-        if args.len() == 1 {
-            record_done_argument(done, cli_cmd.info.parameters, prop_name, &args[0]);
-            if let Some((_, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
-                return get_property_completion(
-                    schema,
-                    prop_name,
-                    &cli_cmd.completion_functions,
-                    &args[0],
-                    done,
-                );
+                if args.len() == 1 {
+                    return get_property_completion(
+                        schema,
+                        prop_name,
+                        &cli_cmd.completion_functions,
+                        &args[0],
+                        done,
+                    );
+                }
+
+                return Vec::new();
             }
+        } else {
+            // unknown arg_param - should never happen
+            return Vec::new();
         }
-
-        return Vec::new();
     }
     if args.is_empty() {
         return Vec::new();
