@@ -15,6 +15,7 @@ pub mod const_regex;
 pub mod error;
 pub mod schema;
 pub mod section_config;
+pub mod permission;
 
 #[doc(inline)]
 pub use const_regex::ConstRegexPattern;

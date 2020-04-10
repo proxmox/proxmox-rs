@@ -11,6 +11,7 @@ use serde_json::Value;
 
 use crate::api::schema::{self, ObjectSchema, Schema};
 use crate::api::RpcEnvironment;
+use super::permission::Permission;
 
 /// A synchronous API handler gets a json Value as input and returns a json Value as output.
 ///
@@ -383,6 +384,12 @@ fn dummy_handler_fn(
 
 const DUMMY_HANDLER: ApiHandler = ApiHandler::Sync(&dummy_handler_fn);
 
+/// Access permission with description
+pub struct ApiAccessPermissions {
+    pub description: &'static str,
+    pub permission: &'static Permission,
+}
+
 /// This struct defines a synchronous API call which returns the result as json `Value`
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ApiMethod {
@@ -398,6 +405,8 @@ pub struct ApiMethod {
     pub returns: &'static schema::Schema,
     /// Handler function
     pub handler: &'static ApiHandler,
+    /// Access Permissions
+    pub access: ApiAccessPermissions,
 }
 
 impl std::fmt::Debug for ApiMethod {
@@ -406,6 +415,7 @@ impl std::fmt::Debug for ApiMethod {
         write!(f, "  parameters: {:?}", self.parameters)?;
         write!(f, "  returns: {:?}", self.returns)?;
         write!(f, "  handler: {:p}", &self.handler)?;
+        write!(f, "  permissions: {:?}", &self.access.permission)?;
         write!(f, "}}")
     }
 }
@@ -418,6 +428,10 @@ impl ApiMethod {
             returns: &NULL_SCHEMA,
             protected: false,
             reload_timezone: false,
+            access: ApiAccessPermissions {
+                description: "Default access permissions (superuser only).",
+                permission: &Permission::Superuser
+            },
         }
     }
 
@@ -428,6 +442,10 @@ impl ApiMethod {
             returns: &NULL_SCHEMA,
             protected: false,
             reload_timezone: false,
+            access: ApiAccessPermissions {
+                description: "Default access permissions (superuser only).",
+                permission: &Permission::Superuser
+            },
         }
     }
 
@@ -445,6 +463,12 @@ impl ApiMethod {
 
     pub const fn reload_timezone(mut self, reload_timezone: bool) -> Self {
         self.reload_timezone = reload_timezone;
+
+        self
+    }
+
+    pub const fn permissions(mut self, description: &'static str, permission: &'static Permission) -> Self {
+        self.access = ApiAccessPermissions { description, permission };
 
         self
     }
