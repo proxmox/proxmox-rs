@@ -11,7 +11,8 @@ use serde_json::Value;
 
 use crate::api::schema::{self, ObjectSchema, Schema};
 use crate::api::RpcEnvironment;
-use super::permission::Permission;
+
+use super::Permission;
 
 /// A synchronous API handler gets a json Value as input and returns a json Value as output.
 ///
