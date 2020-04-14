@@ -36,9 +36,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
 
     let mut returns_schema: Option<Schema> = attribs
         .remove("returns")
-        .map(|ret| ret.into_object("return schema definition"))
-        .transpose()?
-        .map(|ret| ret.try_into())
+        .map(|ret| ret.into_object("return schema definition")?.try_into())
         .transpose()?;
 
     let protected: bool = attribs
