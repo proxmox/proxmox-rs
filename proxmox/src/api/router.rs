@@ -386,6 +386,7 @@ fn dummy_handler_fn(
 const DUMMY_HANDLER: ApiHandler = ApiHandler::Sync(&dummy_handler_fn);
 
 /// Access permission with description
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ApiAccessPermissions {
     pub description: &'static str,
     pub permission: &'static Permission,

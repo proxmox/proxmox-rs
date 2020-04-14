@@ -6,6 +6,7 @@ use std::fmt;
 use serde_json::Value;
 
 /// Access permission
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub enum Permission {
     /// Allow Superuser
     Superuser,
@@ -70,6 +71,7 @@ impl fmt::Debug for Permission {
         }
     }
 }
+
 /// Trait to query user information (used by check_api_permission)
 pub trait UserInformation {
     fn is_superuser(&self, userid: &str) -> bool;
