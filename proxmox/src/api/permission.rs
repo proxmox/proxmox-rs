@@ -42,28 +42,28 @@ impl fmt::Debug for Permission {
                 f.write_str("Anybody")
             }
             Permission::User(ref userid) => {
-                 f.write_fmt(format_args!("User({})", userid))
+                write!(f, "User({})", userid)
             }
             Permission::Group(ref group) => {
-                 f.write_fmt(format_args!("Group({})", group))
+                write!(f, "Group({})", group)
             }
             Permission::WithParam(param_name, subtest) => {
-                f.write_fmt(format_args!("WithParam({}, {:?})", param_name, subtest))
+                write!(f, "WithParam({}, {:?})", param_name, subtest)
             }
             Permission::Privilege(path, privs, partial) => {
-               f.write_fmt(format_args!("Privilege({:?}, {:0b}, {})", path, privs, partial))
+                write!(f, "Privilege({:?}, {:0b}, {})", path, privs, partial)
             }
             Permission::And(list) => {
                 f.write_str("And(\n")?;
                 for subtest in list.iter() {
-                    f.write_fmt(format_args!("  {:?}\n", subtest))?;
+                    write!(f, "  {:?}\n", subtest)?;
                 }
                 f.write_str(")\n")
             }
             Permission::Or(list) => {
                 f.write_str("Or(\n")?;
                 for subtest in list.iter() {
-                    f.write_fmt(format_args!("  {:?}\n", subtest))?;
+                    write!(f, "  {:?}\n", subtest)?;
                 }
                 f.write_str(")\n")
             }
