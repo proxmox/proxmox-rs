@@ -45,6 +45,14 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         .transpose()?
         .unwrap_or(false);
 
+    if !attribs.is_empty() {
+        bail!(
+            attribs.span(),
+            "unexpected api elements: {}",
+            util::join_debug(", ", attribs.elements.keys()),
+        );
+    }
+
     let (doc_comment, doc_span) = util::get_doc_comments(&func.attrs)?;
     util::derive_descriptions(
         &mut input_schema,
