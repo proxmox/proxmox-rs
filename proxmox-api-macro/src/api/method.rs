@@ -17,7 +17,7 @@ use syn::Ident;
 use syn::visit_mut::{self, VisitMut};
 
 use super::{Schema, SchemaItem};
-use crate::util::{self, FieldName, JSONObject};
+use crate::util::{self, FieldName, JSONObject, JSONValue};
 
 /// Parse `input`, `returns` and `protected` attributes out of an function annotated
 /// with an `#[api]` attribute and produce a `const ApiMethod` named after the function.
@@ -38,6 +38,18 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         .remove("returns")
         .map(|ret| ret.into_object("return schema definition")?.try_into())
         .transpose()?;
+
+    let access_setter = match attribs.remove("access") {
+        Some(access) => {
+            let access = Access::try_from(access.into_object("access rules")?)?;
+            let description: syn::LitStr = access.description.try_into()?;
+            let permission: syn::Expr = access.permission.try_into()?;
+            quote_spanned! { access.span =>
+                .permissions(#description, #permission)
+            }
+        }
+        None => TokenStream::new(),
+    };
 
     let protected: bool = attribs
         .remove("protected")
@@ -129,6 +141,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
                 #input_schema_name,
             )
             #returns_schema_setter
+            #access_setter
             .protected(#protected);
 
         #default_consts
@@ -508,5 +521,49 @@ impl<'a> DefaultParameters<'a> {
             }
             None => bail!(param_name => "todo"),
         }
+    }
+}
+
+struct Access {
+    span: Span,
+    description: syn::LitStr,
+    permission: syn::Expr,
+}
+
+impl TryFrom<JSONValue> for Access {
+    type Error = syn::Error;
+
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        Self::try_from(value.into_object("an access definition")?)
+    }
+}
+
+impl TryFrom<JSONObject> for Access {
+    type Error = syn::Error;
+
+    fn try_from(mut obj: JSONObject) -> Result<Self, syn::Error> {
+        let description = obj
+            .remove("description")
+            .ok_or_else(|| format_err!(obj.span(), "missing description"))?
+            .try_into()?;
+
+        let permission = obj
+            .remove("permission")
+            .ok_or_else(|| format_err!(obj.span(), "missing `permissions` field"))?
+            .try_into()?;
+
+        if !obj.is_empty() {
+            bail!(
+                obj.span(),
+                "unexpected elements: {}",
+                util::join_debug(", ", obj.elements.keys()),
+            );
+        }
+
+        Ok(Self {
+            span: obj.span(),
+            description,
+            permission,
+        })
     }
 }

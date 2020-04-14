@@ -3,6 +3,8 @@ use proxmox_api_macro::api;
 use failure::Error;
 use serde_json::{json, Value};
 
+use proxmox::api::Permission;
+
 #[api(
     input: {
         properties: {
@@ -32,6 +34,10 @@ use serde_json::{json, Value};
                 description: "Cross Site Request Forgerty Prevention Token.",
             },
         },
+    },
+    access: {
+        description: "Only root can access this.",
+        permission: &Permission::Superuser,
     },
     protected: true,
 )]
@@ -102,6 +108,7 @@ fn create_ticket_schema_check() {
         )
         .schema(),
     )
+    .permissions("Only root can access this.", &Permission::Superuser)
     .protected(true);
     assert_eq!(TEST_METHOD, API_METHOD_CREATE_TICKET);
 }
