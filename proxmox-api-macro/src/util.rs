@@ -542,3 +542,31 @@ impl Parse for AttrArgs {
         })
     }
 }
+
+/// Join an iterator over `Display` values.
+pub fn join<T>(separator: &str, iter: impl Iterator<Item = T>) -> String
+where
+    T: std::fmt::Display,
+{
+    let mut text = String::new();
+    let mut sep = "";
+    for i in iter {
+        text = format!("{}{}{}", text, sep, i);
+        sep = separator;
+    }
+    text
+}
+
+/// Join an iterator over `Debug` values.
+pub fn join_debug<T>(separator: &str, iter: impl Iterator<Item = T>) -> String
+where
+    T: std::fmt::Debug,
+{
+    let mut text = String::new();
+    let mut sep = "";
+    for i in iter {
+        text = format!("{}{}{:?}", text, sep, i);
+        sep = separator;
+    }
+    text
+}

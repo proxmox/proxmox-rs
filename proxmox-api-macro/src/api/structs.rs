@@ -188,14 +188,7 @@ fn handle_regular_struct(
 
     // now error out about all the fields not found in the struct:
     if !schema_fields.is_empty() {
-        let bad_fields = schema_fields.keys().fold(String::new(), |mut acc, key| {
-            if !acc.is_empty() {
-                acc.push_str(", ");
-                acc
-            } else {
-                key.to_owned()
-            }
-        });
+        let bad_fields = util::join(", ", schema_fields.keys());
         bail!(
             schema.span,
             "struct does not contain the following fields: {}",
