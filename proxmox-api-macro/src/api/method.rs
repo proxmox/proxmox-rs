@@ -13,8 +13,8 @@ use failure::Error;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
-use syn::Ident;
 use syn::visit_mut::{self, VisitMut};
+use syn::Ident;
 
 use super::{Schema, SchemaItem};
 use crate::util::{self, FieldName, JSONObject, JSONValue};
@@ -517,8 +517,8 @@ impl<'a> DefaultParameters<'a> {
         match self.0.find_obj_property_by_ident(&param_name.value()) {
             Some((_ident, _optional, schema)) => match schema.find_schema_property("default") {
                 Some(def) => Ok(def.clone()),
-                None => bail!(param_name => "no default found in schema")
-            }
+                None => bail!(param_name => "no default found in schema"),
+            },
             None => bail!(param_name => "todo"),
         }
     }
