@@ -51,6 +51,12 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         None => TokenStream::new(),
     };
 
+    let reload_timezone: bool = attribs
+        .remove("reload_timezone")
+        .map(TryFrom::try_from)
+        .transpose()?
+        .unwrap_or(false);
+
     let protected: bool = attribs
         .remove("protected")
         .map(TryFrom::try_from)
@@ -142,6 +148,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
             )
             #returns_schema_setter
             #access_setter
+            .reload_timezone(#reload_timezone)
             .protected(#protected);
 
         #default_consts
