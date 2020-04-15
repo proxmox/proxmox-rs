@@ -387,7 +387,7 @@ const DUMMY_HANDLER: ApiHandler = ApiHandler::Sync(&dummy_handler_fn);
 
 /// Access permission with description
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
-pub struct ApiAccessPermissions {
+pub struct ApiAccess {
     pub description: &'static str,
     pub permission: &'static Permission,
 }
@@ -408,7 +408,7 @@ pub struct ApiMethod {
     /// Handler function
     pub handler: &'static ApiHandler,
     /// Access Permissions
-    pub access: ApiAccessPermissions,
+    pub access: ApiAccess,
 }
 
 impl std::fmt::Debug for ApiMethod {
@@ -430,9 +430,9 @@ impl ApiMethod {
             returns: &NULL_SCHEMA,
             protected: false,
             reload_timezone: false,
-            access: ApiAccessPermissions {
+            access: ApiAccess {
                 description: "Default access permissions (superuser only).",
-                permission: &Permission::Superuser
+                permission: &Permission::Superuser,
             },
         }
     }
@@ -444,9 +444,9 @@ impl ApiMethod {
             returns: &NULL_SCHEMA,
             protected: false,
             reload_timezone: false,
-            access: ApiAccessPermissions {
+            access: ApiAccess {
                 description: "Default access permissions (superuser only).",
-                permission: &Permission::Superuser
+                permission: &Permission::Superuser,
             },
         }
     }
@@ -469,8 +469,15 @@ impl ApiMethod {
         self
     }
 
-    pub const fn permissions(mut self, description: &'static str, permission: &'static Permission) -> Self {
-        self.access = ApiAccessPermissions { description, permission };
+    pub const fn access(
+        mut self,
+        description: &'static str,
+        permission: &'static Permission,
+    ) -> Self {
+        self.access = ApiAccess {
+            description,
+            permission,
+        };
 
         self
     }

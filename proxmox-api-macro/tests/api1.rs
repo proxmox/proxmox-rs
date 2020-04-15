@@ -108,7 +108,7 @@ fn create_ticket_schema_check() {
         )
         .schema(),
     )
-    .permissions("Only root can access this.", &Permission::Superuser)
+    .access("Only root can access this.", &Permission::Superuser)
     .protected(true);
     assert_eq!(TEST_METHOD, API_METHOD_CREATE_TICKET);
 }

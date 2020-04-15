@@ -45,7 +45,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
             let description: syn::LitStr = access.description.try_into()?;
             let permission: syn::Expr = access.permission.try_into()?;
             quote_spanned! { access.span =>
-                .permissions(#description, #permission)
+                .access(#description, #permission)
             }
         }
         None => TokenStream::new(),
