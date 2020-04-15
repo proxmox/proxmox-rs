@@ -195,6 +195,9 @@ macro_rules! list_subdirs_api_method {
             }),
             &$crate::api::schema::ObjectSchema::new("Directory index.", &[])
                 .additional_properties(true)
+        ).access(
+            "Any authenticated user may access the directory index.",
+            &$crate::api::Permission::Anybody
         )
     }
 }
