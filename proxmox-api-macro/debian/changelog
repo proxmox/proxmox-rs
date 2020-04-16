@@ -1,3 +1,15 @@
+rust-proxmox-api-macro (0.1.6-1)  proxmox-rust; urgency=medium
+
+  * support reload_timezone option for methods
+
+  * support 'access' specification for methods
+
+  * error on unexpected keys
+
+  * cleanups, more tests
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 16 Apr 2020 08:29:31 +0200
+
 rust-proxmox-api-macro (0.1.5-1) proxmox-rust; urgency=medium
 
   * include default min/max for integer types
