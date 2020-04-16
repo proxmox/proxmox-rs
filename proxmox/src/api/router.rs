@@ -195,10 +195,7 @@ macro_rules! list_subdirs_api_method {
             }),
             &$crate::api::schema::ObjectSchema::new("Directory index.", &[])
                 .additional_properties(true)
-        ).access(
-            "Any authenticated user may access the directory index.",
-            &$crate::api::Permission::Anybody
-        )
+        ).access(None, &$crate::api::Permission::Anybody)
     }
 }
 
@@ -391,7 +388,7 @@ const DUMMY_HANDLER: ApiHandler = ApiHandler::Sync(&dummy_handler_fn);
 /// Access permission with description
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ApiAccess {
-    pub description: &'static str,
+    pub description: Option<&'static str>,
     pub permission: &'static Permission,
 }
 
@@ -434,7 +431,7 @@ impl ApiMethod {
             protected: false,
             reload_timezone: false,
             access: ApiAccess {
-                description: "Default access permissions (superuser only).",
+                description: None,
                 permission: &Permission::Superuser,
             },
         }
@@ -448,7 +445,7 @@ impl ApiMethod {
             protected: false,
             reload_timezone: false,
             access: ApiAccess {
-                description: "Default access permissions (superuser only).",
+                description: None,
                 permission: &Permission::Superuser,
             },
         }
@@ -474,7 +471,7 @@ impl ApiMethod {
 
     pub const fn access(
         mut self,
-        description: &'static str,
+        description: Option<&'static str>,
         permission: &'static Permission,
     ) -> Self {
         self.access = ApiAccess {

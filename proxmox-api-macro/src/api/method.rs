@@ -42,10 +42,16 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     let access_setter = match attribs.remove("access") {
         Some(access) => {
             let access = Access::try_from(access.into_object("access rules")?)?;
-            let description: syn::LitStr = access.description.try_into()?;
+            let description: Option<syn::LitStr> = access.description.try_into()?;
             let permission: syn::Expr = access.permission.try_into()?;
-            quote_spanned! { access.span =>
-                .access(#description, #permission)
+            if let Some(description) = description {
+                quote_spanned! { access.span =>
+                   .access(Some(#description), #permission)
+                }
+            } else {
+                quote_spanned! { access.span =>
+                    .access(None, #permission)
+                }
             }
         }
         None => TokenStream::new(),
@@ -533,7 +539,7 @@ impl<'a> DefaultParameters<'a> {
 
 struct Access {
     span: Span,
-    description: syn::LitStr,
+    description: Option<syn::LitStr>,
     permission: syn::Expr,
 }
 
@@ -549,10 +555,10 @@ impl TryFrom<JSONObject> for Access {
     type Error = syn::Error;
 
     fn try_from(mut obj: JSONObject) -> Result<Self, syn::Error> {
-        let description = obj
-            .remove("description")
-            .ok_or_else(|| format_err!(obj.span(), "missing description"))?
-            .try_into()?;
+        let description = match obj.remove("description") {
+            Some(v) => Some(v.try_into()?),
+            None => None,
+        };
 
         let permission = obj
             .remove("permission")
