@@ -1,3 +1,9 @@
+rust-proxmox (0.1.21-1) unstable; urgency=medium
+
+  * add access permission framework
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 16 Apr 2020 08:26:41 +0200
+
 rust-proxmox (0.1.20-1) unstable; urgency=medium
 
   * improve command line completion with optional argument parameters
