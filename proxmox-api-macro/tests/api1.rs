@@ -143,6 +143,9 @@ fn create_ticket_schema_check() {
             },
         },
     },
+    access: {
+        permission: &Permission::World,
+    },
     protected: true,
 )]
 /// Create or verify authentication ticket.
@@ -207,6 +210,7 @@ fn create_ticket_direct_schema_check() {
         )
         .schema(),
     )
+    .access(None, &Permission::World)
     .protected(true);
     assert_eq!(TEST_METHOD, API_METHOD_CREATE_TICKET_DIRECT);
 }
