@@ -42,16 +42,13 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     let access_setter = match attribs.remove("access") {
         Some(access) => {
             let access = Access::try_from(access.into_object("access rules")?)?;
-            let description: Option<syn::LitStr> = access.description;
-            let permission: syn::Expr = access.permission;
-            if let Some(description) = description {
-                quote_spanned! { access.span =>
-                   .access(Some(#description), #permission)
-                }
-            } else {
-                quote_spanned! { access.span =>
-                    .access(None, #permission)
-                }
+            let permission = access.permission;
+            let description = match access.description {
+                Some(desc) => quote_spanned! { desc.span() => Some(#desc) },
+                None => quote_spanned! { access.span => None }
+            };
+            quote_spanned! { access.span =>
+               .access(#description, #permission)
             }
         }
         None => TokenStream::new(),
