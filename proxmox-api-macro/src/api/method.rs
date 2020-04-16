@@ -42,8 +42,8 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     let access_setter = match attribs.remove("access") {
         Some(access) => {
             let access = Access::try_from(access.into_object("access rules")?)?;
-            let description: Option<syn::LitStr> = access.description.try_into()?;
-            let permission: syn::Expr = access.permission.try_into()?;
+            let description: Option<syn::LitStr> = access.description;
+            let permission: syn::Expr = access.permission;
             if let Some(description) = description {
                 quote_spanned! { access.span =>
                    .access(Some(#description), #permission)
