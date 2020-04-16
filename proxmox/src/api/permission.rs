@@ -3,7 +3,7 @@
 //! A declarative way to define API access permissions.
 
 use std::fmt;
-use serde_json::Value;
+use std::collections::HashMap;
 
 /// Access permission
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
@@ -87,7 +87,7 @@ pub trait UserInformation {
 pub fn check_api_permission(
     perm: &Permission,
     userid: Option<&str>,
-    param: &Value,
+    param: &HashMap<String, String>,
     info: &dyn UserInformation,
 ) -> bool {
 
@@ -95,6 +95,15 @@ pub fn check_api_permission(
         if info.is_superuser(userid) { return true; }
     }
 
+    check_api_permission_tail(perm, userid, param, info)
+}
+
+fn check_api_permission_tail(
+    perm: &Permission,
+    userid: Option<&str>,
+    param: &HashMap<String, String>,
+    info: &dyn UserInformation,
+) -> bool {
     match perm {
         Permission::World => return true,
         Permission::Anybody => {
@@ -119,7 +128,7 @@ pub fn check_api_permission(
             }
         }
         Permission::WithParam(param_name, subtest) => {
-            return check_api_permission(subtest, param[param_name].as_str(), param, info);
+            return check_api_permission(subtest, param.get(*param_name).map(|v| v.as_str()), param, info);
         }
         Permission::Privilege(path, expected_privs, partial) => {
             // replace uri vars
@@ -127,7 +136,7 @@ pub fn check_api_permission(
             for comp in path.iter() {
                 if comp.starts_with('{') && comp.ends_with('}') {
                     let param_name = unsafe { comp.get_unchecked(1..comp.len()-1) };
-                    match param[param_name].as_str() {
+                    match param.get(param_name) {
                         None => return false,
                         Some(value) => {
                             new_path.push(value);
@@ -139,6 +148,7 @@ pub fn check_api_permission(
                 None => return false,
                 Some(userid) => {
                     let privs = info.lookup_privs(userid, &new_path);
+                    if privs == 0 { return false };
                     if *partial {
                         return (expected_privs & privs) != 0;
                     } else {
@@ -149,13 +159,13 @@ pub fn check_api_permission(
         }
         Permission::And(list) => {
             for subtest in list.iter() {
-                if !check_api_permission(subtest, userid, param, info) { return false; }
+                if !check_api_permission_tail(subtest, userid, param, info) { return false; }
             }
             return true;
         }
         Permission::Or(list) => {
             for subtest in list.iter() {
-                if check_api_permission(subtest, userid, param, info) { return true; }
+                if check_api_permission_tail(subtest, userid, param, info) { return true; }
             }
             return false;
         }
