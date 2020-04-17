@@ -1,3 +1,11 @@
+rust-proxmox-api-macro (0.1.7-1)  proxmox-rust; urgency=medium
+
+  * replace failure with anyhow crate
+
+  * fix error message suggestiong 'permissions' instead of 'permission'
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 17 Apr 2020 18:36:03 +0200
+
 rust-proxmox-api-macro (0.1.6-1)  proxmox-rust; urgency=medium
 
   * support reload_timezone option for methods
