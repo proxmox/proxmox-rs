@@ -1,3 +1,9 @@
+rust-proxmox-sortable-macro (0.1.1-1) proxmox-rust; urgency=medium
+
+  * replace failure with anyhow crate
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 17 Apr 2020 18:37:05 +0200
+
 rust-proxmox-sortable-macro (0.1.0-1) proxmox-rust; urgency=medium
 
   * switch packaging to debcargo with local crate support
