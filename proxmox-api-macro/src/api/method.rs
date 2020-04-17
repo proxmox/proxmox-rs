@@ -559,7 +559,7 @@ impl TryFrom<JSONObject> for Access {
 
         let permission = obj
             .remove("permission")
-            .ok_or_else(|| format_err!(obj.span(), "missing `permissions` field"))?
+            .ok_or_else(|| format_err!(obj.span(), "missing `permission` field"))?
             .try_into()?;
 
         if !obj.is_empty() {
