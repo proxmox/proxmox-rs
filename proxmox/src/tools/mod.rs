@@ -1,6 +1,6 @@
 //! This is a general utility crate used by all our rust projects.
 
-use failure::*;
+use anyhow::*;
 use lazy_static::lazy_static;
 
 pub mod as_any;
@@ -63,7 +63,7 @@ macro_rules! static_assert_size {
 /// #### Example:
 /// ```
 /// # use proxmox::try_block;
-/// # use failure::*;
+/// # use anyhow::*;
 /// # let some_condition = false;
 /// let result = try_block!({
 ///     if (some_condition) {

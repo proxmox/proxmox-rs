@@ -13,7 +13,7 @@
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 
-use failure::Error;
+use anyhow::Error;
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;

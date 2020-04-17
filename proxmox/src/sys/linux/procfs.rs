@@ -7,7 +7,7 @@ use std::str::FromStr;
 use std::sync::RwLock;
 use std::time::Instant;
 
-use failure::*;
+use anyhow::*;
 use lazy_static::lazy_static;
 use libc;
 use nix::unistd::Pid;

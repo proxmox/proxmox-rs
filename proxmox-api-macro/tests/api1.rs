@@ -1,6 +1,6 @@
 use proxmox_api_macro::api;
 
-use failure::Error;
+use anyhow::Error;
 use serde_json::{json, Value};
 
 use proxmox::api::Permission;

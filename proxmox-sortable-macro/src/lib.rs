@@ -4,7 +4,7 @@ extern crate proc_macro2;
 use std::iter::FromIterator;
 use std::mem;
 
-use failure::Error;
+use anyhow::Error;
 
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;

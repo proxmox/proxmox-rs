@@ -298,7 +298,7 @@ pub fn get_completions(
 #[cfg(test)]
 mod test {
 
-    use failure::*;
+    use anyhow::*;
     use serde_json::Value;
 
     use crate::api::{cli::*, schema::*, *};

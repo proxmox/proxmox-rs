@@ -33,7 +33,7 @@ pub fn io_err_other<E: ToString>(e: E) -> io::Error {
 /// Usage examples:
 ///
 /// ```
-/// # use failure::{bail, Error};
+/// # use anyhow::{bail, Error};
 /// use nix::{dir::Dir, fcntl::OFlag, sys::stat::Mode};
 ///
 /// use proxmox::sys::error::SysError;
@@ -114,7 +114,7 @@ impl SysError for nix::Error {
 ///
 /// ```no_run
 /// # use std::os::unix::io::RawFd;
-/// # use failure::{bail, Error};
+/// # use anyhow::{bail, Error};
 ///
 /// use proxmox::sys::error::SysResult;
 ///

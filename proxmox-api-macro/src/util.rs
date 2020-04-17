@@ -8,7 +8,7 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::Token;
 
-use failure::Error;
+use anyhow::Error;
 
 use crate::api::{self, Schema, SchemaItem};
 

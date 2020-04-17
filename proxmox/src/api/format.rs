@@ -1,6 +1,6 @@
 //! Module to generate and format API Documenation
 
-use failure::Error;
+use anyhow::Error;
 
 use std::io::Write;
 

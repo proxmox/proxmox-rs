@@ -6,7 +6,7 @@
 
 use std::fmt;
 
-use failure::*;
+use anyhow::{bail, format_err, Error};
 use serde_json::{json, Value};
 use url::form_urlencoded;
 
@@ -17,10 +17,12 @@ use crate::api::const_regex::ConstRegexPattern;
 /// The validation functions may produce several error message,
 /// i.e. when validation objects, it can produce one message for each
 /// erroneous object property.
-#[derive(Default, Debug, Fail)]
+#[derive(Default, Debug)]
 pub struct ParameterError {
     error_list: Vec<Error>,
 }
+
+impl std::error::Error for ParameterError {}
 
 // fixme: record parameter names, to make it usefull to display errord
 // on HTML forms.

@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use failure::*;
+use anyhow::*;
 use serde_json::Value;
 
 use crate::api::schema::*;

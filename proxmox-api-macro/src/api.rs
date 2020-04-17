@@ -9,7 +9,7 @@
 
 use std::convert::{TryFrom, TryInto};
 
-use failure::Error;
+use anyhow::Error;
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};

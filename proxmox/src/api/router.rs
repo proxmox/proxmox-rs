@@ -3,7 +3,7 @@ use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
 
-use failure::Error;
+use anyhow::Error;
 use http::request::Parts;
 use http::{Method, Response};
 use hyper::Body;
@@ -18,7 +18,7 @@ use super::Permission;
 ///
 /// Most API handler are synchronous. Use this to define such handler:
 /// ```
-/// # use failure::*;
+/// # use anyhow::*;
 /// # use serde_json::{json, Value};
 /// # use proxmox::api::{*, schema::*};
 /// #
@@ -44,7 +44,7 @@ pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironm
 ///
 /// Returns a future Value.
 /// ```
-/// # use failure::*;
+/// # use anyhow::*;
 /// # use serde_json::{json, Value};
 /// # use proxmox::api::{*, schema::*};
 /// #
@@ -70,14 +70,14 @@ pub type ApiAsyncHandlerFn = &'static (dyn for<'a> Fn(Value, &'static ApiMethod,
               + Send
               + Sync);
 
-pub type ApiFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, failure::Error>> + Send + 'a>>;
+pub type ApiFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, anyhow::Error>> + Send + 'a>>;
 
 /// Asynchronous HTTP API handlers
 ///
 /// They get low level access to request and response data. Use this
 /// to implement custom upload/download functions.
 /// ```
-/// # use failure::*;
+/// # use anyhow::*;
 /// # use serde_json::{json, Value};
 /// # use proxmox::api::{*, schema::*};
 /// #
@@ -117,7 +117,7 @@ pub type ApiAsyncHttpHandlerFn = &'static (dyn Fn(
 
 /// The output of an asynchronous API handler is a future yielding a `Response`.
 pub type ApiResponseFuture =
-    Pin<Box<dyn Future<Output = Result<Response<Body>, failure::Error>> + Send>>;
+    Pin<Box<dyn Future<Output = Result<Response<Body>, anyhow::Error>> + Send>>;
 
 /// Enum for different types of API handler functions.
 pub enum ApiHandler {
@@ -213,7 +213,7 @@ macro_rules! list_subdirs_api_method {
 /// all `const fn(mut self, ..)` methods to configure them.
 ///
 ///```
-/// # use failure::*;
+/// # use anyhow::*;
 /// # use serde_json::{json, Value};
 /// # use proxmox::api::{*, schema::*};
 /// #

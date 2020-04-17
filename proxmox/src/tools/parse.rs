@@ -1,6 +1,6 @@
 //! Some parsing utilities.
 
-use failure::{bail, Error};
+use anyhow::{bail, Error};
 
 /// Parse a hexadecimal digit into a byte.
 #[inline]

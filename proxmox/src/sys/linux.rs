@@ -1,6 +1,6 @@
 //! Linux specific helpers and syscall wrapper
 
-use failure::*;
+use anyhow::*;
 
 pub mod magic;
 pub mod pid;

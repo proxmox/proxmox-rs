@@ -1,7 +1,7 @@
-//! A set of macros for I/O handling. These provide for `std::io::Error` what `failure` provides
-//! for `failure::Error.`
+//! A set of macros for I/O handling. These provide for `std::io::Error` what `anyhow` provides
+//! for `anyhow::Error.`
 
-/// Like failure's `format_err` but producing a `std::io::Error`.
+/// Like anyhow's `format_err` but producing a `std::io::Error`.
 #[macro_export]
 macro_rules! io_format_err {
     ($($msg:tt)+) => {
@@ -19,7 +19,7 @@ macro_rules! io_bail_last {
     };
 }
 
-/// Like failure's `bail` but producing a `std::io::Error`.
+/// Like anyhow's `bail` but producing a `std::io::Error`.
 #[macro_export]
 macro_rules! io_bail {
     ($($msg:tt)+) => {{

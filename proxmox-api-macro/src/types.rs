@@ -5,7 +5,7 @@
 
 use proc_macro2::{Ident, Span, TokenStream};
 
-use failure::Error;
+use anyhow::Error;
 
 /// A more relaxed version of Ident which allows hyphens.
 #[derive(Clone, Debug)]

@@ -6,7 +6,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
 use std::path::Path;
 
-use failure::{bail, format_err, Error};
+use anyhow::{bail, format_err, Error};
 use nix::errno::Errno;
 use nix::fcntl::OFlag;
 use nix::sys::stat;
@@ -242,7 +242,7 @@ pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(),
 /// # use nix::sys::stat::Mode;
 /// # use nix::unistd::{Gid, Uid};
 /// # use proxmox::tools::fs::{create_path, CreateOptions};
-/// # fn code() -> Result<(), failure::Error> {
+/// # fn code() -> Result<(), anyhow::Error> {
 /// create_path(
 ///     "/var/lib/mytool/wwwdata",
 ///     None,

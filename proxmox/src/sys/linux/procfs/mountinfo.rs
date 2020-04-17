@@ -7,7 +7,7 @@ use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use failure::{bail, format_err, Error};
+use anyhow::{bail, format_err, Error};
 use nix::sys::stat;
 use nix::unistd::Pid;
 

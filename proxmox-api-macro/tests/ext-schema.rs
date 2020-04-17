@@ -4,7 +4,7 @@
 use proxmox::api::{schema, RpcEnvironment};
 use proxmox_api_macro::api;
 
-use failure::Error;
+use anyhow::Error;
 use serde_json::{json, Value};
 
 pub const NAME_SCHEMA: schema::Schema = schema::StringSchema::new("Archive name.")

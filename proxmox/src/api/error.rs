@@ -1,16 +1,16 @@
 use std::fmt;
 
-use failure::Fail;
-
 #[doc(hidden)]
 pub use http::StatusCode;
 
 /// HTTP error including `StatusCode` and message.
-#[derive(Debug, Fail)]
+#[derive(Debug)]
 pub struct HttpError {
     pub code: StatusCode,
     pub message: String,
 }
+
+impl std::error::Error for HttpError {}
 
 impl HttpError {
     pub fn new(code: StatusCode, message: String) -> Self {
@@ -24,11 +24,11 @@ impl fmt::Display for HttpError {
     }
 }
 
-/// Macro to create a HttpError inside a failure::Error
+/// Macro to create a HttpError inside a anyhow::Error
 #[macro_export]
 macro_rules! http_err {
     ($status:ident, $msg:expr) => {{
-        ::failure::Error::from($crate::api::error::HttpError::new(
+        ::anyhow::Error::from($crate::api::error::HttpError::new(
             $crate::api::error::StatusCode::$status,
             $msg,
         ))

@@ -18,7 +18,7 @@
 //!     ...
 //! ```
 
-use failure::*;
+use anyhow::*;
 
 use std::collections::HashMap;
 use std::collections::HashSet;

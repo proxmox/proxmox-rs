@@ -8,7 +8,7 @@
 use std::convert::{TryFrom, TryInto};
 use std::mem;
 
-use failure::Error;
+use anyhow::Error;
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
@@ -408,10 +408,10 @@ fn create_wrapper_function(
                     // they have a default):
                     //
                     // Whether the parameter is optional should have been verified by the schema
-                    // verifier already, so here we just use failure::bail! instead of building a
+                    // verifier already, so here we just use anyhow::bail! instead of building a
                     // proper http error!
                     body.extend(quote_spanned! { span =>
-                        .ok_or_else(|| ::failure::format_err!(
+                        .ok_or_else(|| ::anyhow::format_err!(
                             "missing non-optional parameter: {}",
                             #name_str,
                         ))?
@@ -460,7 +460,7 @@ fn create_wrapper_function(
             #body
             Ok(::serde_json::to_value(#func_name(#args) #await_keyword #question_mark)?)
         } else {
-            ::failure::bail!("api function wrapper called with a non-object json value");
+            ::anyhow::bail!("api function wrapper called with a non-object json value");
         }
     };
 
@@ -475,7 +475,7 @@ fn create_wrapper_function(
                 //    mut input_params: ::serde_json::Value,
                 //    api_method_param: &'static ::proxmox::api::ApiMethod,
                 //    rpc_env_param: &'a mut dyn ::proxmox::api::RpcEnvironment,
-                //) -> ::std::result::Result<::serde_json::Value, ::failure::Error> {
+                //) -> ::std::result::Result<::serde_json::Value, ::anyhow::Error> {
                 //    #body
                 //}
                 //::std::boxed::Box::pin(async move {
@@ -490,7 +490,7 @@ fn create_wrapper_function(
                 mut input_params: ::serde_json::Value,
                 api_method_param: &::proxmox::api::ApiMethod,
                 rpc_env_param: &mut dyn ::proxmox::api::RpcEnvironment,
-            ) -> ::std::result::Result<::serde_json::Value, ::failure::Error> {
+            ) -> ::std::result::Result<::serde_json::Value, ::anyhow::Error> {
                 #body
             }
         });

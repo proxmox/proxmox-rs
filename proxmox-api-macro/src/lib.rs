@@ -3,7 +3,7 @@
 extern crate proc_macro;
 extern crate proc_macro2;
 
-use failure::Error;
+use anyhow::Error;
 
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;
@@ -60,7 +60,7 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     # use proxmox_api_macro::api;
     # use proxmox::api::{ApiMethod, RpcEnvironment};
 
-    use failure::Error;
+    use anyhow::Error;
     use serde_json::Value;
 
     #[api(

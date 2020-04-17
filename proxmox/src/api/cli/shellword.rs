@@ -1,4 +1,4 @@
-use failure::*;
+use anyhow::*;
 
 /// Shell quote type
 pub use rustyline::completion::Quote;

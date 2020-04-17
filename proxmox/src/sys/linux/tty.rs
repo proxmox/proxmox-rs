@@ -2,7 +2,7 @@ use std::io::{Read, Write};
 use std::mem::MaybeUninit;
 use std::os::unix::io::AsRawFd;
 
-use failure::*;
+use anyhow::*;
 
 use crate::try_block;
 

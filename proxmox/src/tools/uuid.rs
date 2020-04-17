@@ -3,7 +3,7 @@
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt;
 
-use failure::{bail, Error};
+use anyhow::{bail, Error};
 
 use crate::tools::parse::hex_nibble;
 
