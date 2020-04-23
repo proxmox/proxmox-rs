@@ -75,7 +75,7 @@ impl AsRawFd for RawFdNum {
 }
 
 impl FromRawFd for RawFdNum {
-    fn from_raw_fd(fd: RawFd) -> Self {
+    unsafe fn from_raw_fd(fd: RawFd) -> Self {
         Self(fd)
     }
 }
