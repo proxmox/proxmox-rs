@@ -36,32 +36,35 @@ fn get_property_completion(
         return completions;
     }
 
-    if let Schema::String(StringSchema {
-        format: Some(format),
-        ..
-    }) = schema
-    {
-        if let ApiStringFormat::Enum(list) = format {
+    match schema {
+        Schema::String(StringSchema { format: Some(format), .. }) => {
+            if let ApiStringFormat::Enum(list) = format {
+                let mut completions = Vec::new();
+                for value in list.iter() {
+                    if value.starts_with(arg) {
+                        completions.push((*value).to_string());
+                    }
+                }
+                return completions;
+            }
+        }
+        Schema::Boolean(BooleanSchema { .. }) => {
             let mut completions = Vec::new();
-            for value in list.iter() {
-                if value.starts_with(arg) {
+            let mut lowercase_arg = arg.to_string();
+            lowercase_arg.make_ascii_lowercase();
+            for value in ["0", "1", "yes", "no", "true", "false", "on", "off"].iter() {
+                if value.starts_with(&lowercase_arg) {
                     completions.push((*value).to_string());
                 }
             }
             return completions;
         }
-    }
-
-    if let Schema::Boolean(BooleanSchema { .. }) = schema {
-        let mut completions = Vec::new();
-        let mut lowercase_arg = arg.to_string();
-        lowercase_arg.make_ascii_lowercase();
-        for value in ["0", "1", "yes", "no", "true", "false", "on", "off"].iter() {
-            if value.starts_with(&lowercase_arg) {
-                completions.push((*value).to_string());
+        Schema::Array(ArraySchema { items, .. }) => {
+            if let Schema::String(_) = items {
+                return get_property_completion(&items, name, completion_functions, arg, param);
             }
         }
-        return completions;
+        _ => {}
     }
 
     Vec::new()
