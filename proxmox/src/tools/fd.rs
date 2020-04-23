@@ -62,3 +62,26 @@ impl Fd {
         nix::fcntl::openat(dirfd.as_raw_fd(), path, oflag, mode).map(Self)
     }
 }
+
+/// Raw file descriptor by number. Thin wrapper to provide `AsRawFd` which a simple `RawFd` does
+/// not since it's just an `i32`.
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct RawFdNum(RawFd);
+
+impl AsRawFd for RawFdNum {
+    fn as_raw_fd(&self) -> RawFd {
+        self.0
+    }
+}
+
+impl FromRawFd for RawFdNum {
+    fn from_raw_fd(fd: RawFd) -> Self {
+        Self(fd)
+    }
+}
+
+impl IntoRawFd for RawFdNum {
+    fn into_raw_fd(self) -> RawFd {
+        self.0
+    }
+}
