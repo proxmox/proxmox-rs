@@ -55,7 +55,13 @@ pub fn io_err_other<E: ToString>(e: E) -> io::Error {
 /// ```
 pub trait SysError {
     /// Check if this error is a specific error returned from a system call.
-    fn is_errno(&self, value: Errno) -> bool;
+    fn is_errno(&self, value: Errno) -> bool {
+        self.is_errno_raw(value as i32)
+    }
+
+    /// Check if this error is a specific error returned from a system call, without involving the
+    /// `nix::errno::Errno` type as it is incomplete.
+    fn is_errno_raw(&self, value: i32) -> bool;
 
     /// Convert this error into a `std::io::Error`. This must use the correct `std::io::ErrorKind`,
     /// so that for example `ErrorKind::WouldBlock` means that the previous system call failed with
@@ -83,8 +89,8 @@ pub trait SysError {
 
 impl SysError for io::Error {
     #[inline]
-    fn is_errno(&self, value: Errno) -> bool {
-        self.raw_os_error() == Some(value as i32)
+    fn is_errno_raw(&self, value: i32) -> bool {
+        self.raw_os_error() == Some(value)
     }
 
     #[inline]
@@ -97,6 +103,14 @@ impl SysError for nix::Error {
     #[inline]
     fn is_errno(&self, value: Errno) -> bool {
         *self == Error::Sys(value)
+    }
+
+    #[inline]
+    fn is_errno_raw(&self, value: i32) -> bool {
+        match *self {
+            Error::Sys(errno) => value == errno as i32,
+            _ => false,
+        }
     }
 
     #[inline]
