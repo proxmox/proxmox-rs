@@ -30,7 +30,9 @@ fn parse_arguments(
 ) -> Result<Value, Error> {
 
    let (params, remaining) =
-        match getopts::parse_arguments(&args, cli_cmd.arg_param, &cli_cmd.info.parameters) {
+        match getopts::parse_arguments(
+            &args, cli_cmd.arg_param, &cli_cmd.fixed_param, &cli_cmd.info.parameters
+        ) {
             Ok((p, r)) => (p, r),
             Err(err) => {
                 let err_msg = err.to_string();
