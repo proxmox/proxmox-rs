@@ -1,3 +1,17 @@
+rust-proxmox (0.1.23-1) unstable; urgency=medium
+
+  * api/cli/command.rs: handle fixed_param
+
+  * add SysError::is_errno_raw
+
+  * tools: add RawFdNum helper
+
+  * api/cli/completion.rs: implement completion for lists of strings
+
+  * IP_REGEX - match whole string
+
+ -- root <root@elsa>  Sat, 25 Apr 2020 17:04:19 +0200
+
 rust-proxmox (0.1.22-1) unstable; urgency=medium
 
   * replace failure with anyhow crate
