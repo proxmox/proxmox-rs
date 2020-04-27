@@ -597,7 +597,7 @@ fn format_object<W: Write>(
     let mut all_right_aligned = true;
 
     for name in properties_to_print.iter() {
-        let (_optional, prop_schema) = match schema.lookup(name) {
+        let (optional, prop_schema) = match schema.lookup(name) {
             Some(tup) => tup,
             None => bail!("property {} does not exist in schema.", name),
         };
@@ -614,6 +614,12 @@ fn format_object<W: Write>(
         let right_align = right_align.unwrap_or(is_numeric);
 
         if !right_align { all_right_aligned = false; }
+
+        if optional {
+            if let Some(object) = data.as_object() {
+                if object.get(name).is_none() { continue; }
+            }
+        }
 
         let header_width = header.chars().count();
         if header_width > max_name_width { max_name_width = header_width; }
