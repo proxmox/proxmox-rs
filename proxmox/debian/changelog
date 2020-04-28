@@ -18,7 +18,7 @@ rust-proxmox (0.1.23-1) unstable; urgency=medium
 
   * IP_REGEX - match whole string
 
- -- root <root@elsa>  Sat, 25 Apr 2020 17:04:19 +0200
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 25 Apr 2020 17:04:19 +0200
 
 rust-proxmox (0.1.22-1) unstable; urgency=medium
 
