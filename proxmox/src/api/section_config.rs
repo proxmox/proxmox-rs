@@ -120,7 +120,7 @@ impl SectionConfigData {
     ///
     /// The array representation is useful to display configuration
     /// data with GUI frameworks like ExtJS.
-    pub fn convert_to_array(&self, id_prop: &str, digest: Option<&[u8;32]>, skip: &[&'static str]) -> Value {
+    pub fn convert_to_array(&self, id_prop: &str, digest: Option<&[u8;32]>, skip: &[&str]) -> Value {
         let mut list: Vec<Value> = vec![];
 
         let digest: Value = match digest {
