@@ -1,3 +1,11 @@
+rust-proxmox (0.1.24-1) unstable; urgency=medium
+
+  * section_config.rs - convert_to_array: remove static lifetime
+
+  * text_table.rs - format_object: skip optional properties without data
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 28 Apr 2020 08:16:28 +0200
+
 rust-proxmox (0.1.23-1) unstable; urgency=medium
 
   * api/cli/command.rs: handle fixed_param
