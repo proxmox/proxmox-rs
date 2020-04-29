@@ -37,12 +37,15 @@ fn get_property_completion(
     }
 
     match schema {
-        Schema::String(StringSchema { format: Some(format), .. }) => {
-            if let ApiStringFormat::Enum(list) = format {
+        Schema::String(StringSchema {
+            format: Some(format),
+            ..
+        }) => {
+            if let ApiStringFormat::Enum(variants) = format {
                 let mut completions = Vec::new();
-                for value in list.iter() {
-                    if value.starts_with(arg) {
-                        completions.push((*value).to_string());
+                for variant in variants.iter() {
+                    if variant.value.starts_with(arg) {
+                        completions.push(variant.value.to_string());
                     }
                 }
                 return completions;

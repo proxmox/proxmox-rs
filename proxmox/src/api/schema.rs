@@ -322,8 +322,8 @@ impl StringSchema {
                         bail!("value does not match the regex pattern");
                     }
                 }
-                ApiStringFormat::Enum(stringvec) => {
-                    if stringvec.iter().find(|&e| *e == value) == None {
+                ApiStringFormat::Enum(variants) => {
+                    if variants.iter().find(|&e| e.value == value).is_none() {
                         bail!("value '{}' is not defined in the enumeration.", value);
                     }
                 }
@@ -503,6 +503,21 @@ pub enum Schema {
     Array(ArraySchema),
 }
 
+/// A string enum entry. An enum entry must have a value and a description.
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+pub struct EnumEntry {
+    pub value: &'static str,
+    pub description: &'static str,
+}
+
+impl EnumEntry {
+    /// Convenience method as long as we only have 2 mandatory fields in an `EnumEntry`.
+    pub const fn new(value: &'static str, description: &'static str) -> Self {
+        Self { value, description }
+    }
+}
+
 /// String microformat definitions.
 ///
 /// Strings are probably the most flexible data type, and there are
@@ -514,7 +529,10 @@ pub enum Schema {
 ///
 /// ```
 /// # use proxmox::api::{*, schema::*};
-/// const format: ApiStringFormat = ApiStringFormat::Enum(&["vm", "ct"]);
+/// const format: ApiStringFormat = ApiStringFormat::Enum(&[
+///     EnumEntry::new("vm", "A guest VM run via qemu"),
+///     EnumEntry::new("ct", "A guest container run via lxc"),
+/// ]);
 /// ```
 ///
 /// ## Regular Expressions
@@ -566,7 +584,7 @@ pub enum Schema {
 /// ```
 pub enum ApiStringFormat {
     /// Enumerate all valid strings
-    Enum(&'static [&'static str]),
+    Enum(&'static [EnumEntry]),
     /// Use a regular expression to describe valid strings.
     Pattern(&'static ConstRegexPattern),
     /// Use a schema to describe complex types encoded as string.
@@ -579,7 +597,7 @@ impl std::fmt::Debug for ApiStringFormat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ApiStringFormat::VerifyFn(fnptr) => write!(f, "VerifyFn({:p}", fnptr),
-            ApiStringFormat::Enum(strvec) => write!(f, "Enum({:?}", strvec),
+            ApiStringFormat::Enum(variants) => write!(f, "Enum({:?}", variants),
             ApiStringFormat::Pattern(regex) => write!(f, "Pattern({:?}", regex),
             ApiStringFormat::PropertyString(schema) => write!(f, "PropertyString({:?}", schema),
         }
@@ -874,12 +892,8 @@ pub fn verify_json_object(data: &Value, schema: &ObjectSchema) -> Result<(), Err
     for (key, value) in map {
         if let Some((_optional, prop_schema)) = schema.lookup(&key) {
             let result = match prop_schema {
-                Schema::Object(object_schema) => {
-                    verify_json_object(value, object_schema)
-                }
-                Schema::Array(array_schema) => {
-                    verify_json_array(value, array_schema)
-                }
+                Schema::Object(object_schema) => verify_json_object(value, object_schema),
+                Schema::Array(array_schema) => verify_json_array(value, array_schema),
                 _ => verify_json(value, prop_schema),
             };
             if let Err(err) = result {
@@ -1018,7 +1032,10 @@ fn test_query_string() {
                 "name",
                 false,
                 &StringSchema::new("Name.")
-                    .format(&ApiStringFormat::Enum(&["ev1", "ev2"]))
+                    .format(&ApiStringFormat::Enum(&[
+                        EnumEntry::new("ev1", "desc ev1"),
+                        EnumEntry::new("ev2", "desc ev2"),
+                    ]))
                     .schema(),
             )],
         );
@@ -1163,7 +1180,10 @@ fn test_verify_function() {
 
 #[test]
 fn test_verify_complex_object() {
-    const NIC_MODELS: ApiStringFormat = ApiStringFormat::Enum(&["e1000", "virtio"]);
+    const NIC_MODELS: ApiStringFormat = ApiStringFormat::Enum(&[
+        EnumEntry::new("e1000", "Intel E1000"),
+        EnumEntry::new("virtio", "Paravirtualized ethernet device"),
+    ]);
 
     const PARAM_SCHEMA: Schema = ObjectSchema::new(
         "Properties.",

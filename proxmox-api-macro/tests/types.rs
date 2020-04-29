@@ -3,7 +3,7 @@
 
 #![allow(dead_code)]
 
-use proxmox::api::schema;
+use proxmox::api::schema::{self, EnumEntry};
 use proxmox_api_macro::api;
 
 use anyhow::Error;
@@ -13,7 +13,10 @@ use serde_json::Value;
 #[api(
     type: String,
     description: "A string",
-    format: &schema::ApiStringFormat::Enum(&["ok", "not-ok"]),
+    format: &schema::ApiStringFormat::Enum(&[
+        EnumEntry::new("ok", "Ok"),
+        EnumEntry::new("not-ok", "Not OK"),
+    ]),
 )]
 //#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct OkString(String);
@@ -22,7 +25,10 @@ pub struct OkString(String);
 fn ok_string() {
     const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
         &::proxmox::api::schema::StringSchema::new("A string")
-            .format(&schema::ApiStringFormat::Enum(&["ok", "not-ok"]))
+            .format(&schema::ApiStringFormat::Enum(&[
+                EnumEntry::new("ok", "Ok"),
+                EnumEntry::new("not-ok", "Not OK"),
+            ]))
             .schema();
     assert_eq!(TEST_SCHEMA, OkString::API_SCHEMA);
 }
@@ -107,9 +113,12 @@ fn renamed_struct() {
 #[serde(rename_all = "kebab-case")]
 /// A selection of either 'onekind', 'another-kind' or 'selection-number-three'.
 pub enum Selection {
+    /// The first kind.
     #[serde(rename = "onekind")]
     OneKind,
+    /// Some other kind.
     AnotherKind,
+    /// And yet another.
     SelectionNumberThree,
 }
 
@@ -120,9 +129,9 @@ fn selection_test() {
             "A selection of either \'onekind\', \'another-kind\' or \'selection-number-three\'.",
         )
         .format(&::proxmox::api::schema::ApiStringFormat::Enum(&[
-            "onekind",
-            "another-kind",
-            "selection-number-three",
+            EnumEntry::new("onekind", "The first kind."),
+            EnumEntry::new("another-kind", "Some other kind."),
+            EnumEntry::new("selection-number-three", "And yet another."),
         ]))
         .schema();
 

@@ -4,8 +4,6 @@ use anyhow::Error;
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
-use syn::punctuated::Punctuated;
-use syn::Token;
 
 use super::Schema;
 use crate::serde;
@@ -42,25 +40,35 @@ pub fn handle_enum(
 
     let container_attrs = serde::ContainerAttrib::try_from(&enum_ty.attrs[..])?;
 
-    // with_capacity(enum_ty.variants.len());
-    // doesn't exist O.o
-    let mut variants = Punctuated::<syn::LitStr, Token![,]>::new();
+    let mut variants = TokenStream::new();
     for variant in &mut enum_ty.variants {
         match &variant.fields {
             syn::Fields::Unit => (),
             _ => bail!(variant => "api macro does not support enums with fields"),
         }
 
+        let (comment, _doc_span) = util::get_doc_comments(&variant.attrs)?;
+        if comment.is_empty() {
+            bail!(variant => "enum variant needs a description");
+        }
+
         let attrs = serde::SerdeAttrib::try_from(&variant.attrs[..])?;
-        if let Some(renamed) = attrs.rename {
-            variants.push(renamed.into_lit_str());
+        let variant_string = if let Some(renamed) = attrs.rename {
+            renamed.into_lit_str()
         } else if let Some(rename_all) = container_attrs.rename_all {
             let name = rename_all.apply_to_variant(&variant.ident.to_string());
-            variants.push(syn::LitStr::new(&name, variant.ident.span()));
+            syn::LitStr::new(&name, variant.ident.span())
         } else {
             let name = &variant.ident;
-            variants.push(syn::LitStr::new(&name.to_string(), name.span()));
-        }
+            syn::LitStr::new(&name.to_string(), name.span())
+        };
+
+        variants.extend(quote_spanned! { variant.ident.span() =>
+            ::proxmox::api::schema::EnumEntry {
+                value: #variant_string,
+                description: #comment,
+            },
+        });
     }
 
     let name = &enum_ty.ident;

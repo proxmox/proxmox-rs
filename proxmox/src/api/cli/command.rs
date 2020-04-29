@@ -20,26 +20,27 @@ use super::{completion::*, CliCommand, CliCommandMap, CommandLineInterface};
 /// - ``json-pretty``: JSON, human readable.
 ///
 pub const OUTPUT_FORMAT: Schema = StringSchema::new("Output format.")
-    .format(&ApiStringFormat::Enum(&["text", "json", "json-pretty"]))
+    .format(&ApiStringFormat::Enum(&[
+        EnumEntry::new("text", "plain text output"),
+        EnumEntry::new("json", "single-line json formatted output"),
+        EnumEntry::new("json-pretty", "pretty-printed json output"),
+    ]))
     .schema();
 
-fn parse_arguments(
-    prefix: &str,
-    cli_cmd: &CliCommand,
-    args: Vec<String>,
-) -> Result<Value, Error> {
-
-   let (params, remaining) =
-        match getopts::parse_arguments(
-            &args, cli_cmd.arg_param, &cli_cmd.fixed_param, &cli_cmd.info.parameters
-        ) {
-            Ok((p, r)) => (p, r),
-            Err(err) => {
-                let err_msg = err.to_string();
-                print_simple_usage_error(prefix, cli_cmd, &err_msg);
-                return Err(format_err!("{}", err_msg));
-            }
-        };
+fn parse_arguments(prefix: &str, cli_cmd: &CliCommand, args: Vec<String>) -> Result<Value, Error> {
+    let (params, remaining) = match getopts::parse_arguments(
+        &args,
+        cli_cmd.arg_param,
+        &cli_cmd.fixed_param,
+        &cli_cmd.info.parameters,
+    ) {
+        Ok((p, r)) => (p, r),
+        Err(err) => {
+            let err_msg = err.to_string();
+            print_simple_usage_error(prefix, cli_cmd, &err_msg);
+            return Err(format_err!("{}", err_msg));
+        }
+    };
 
     if !remaining.is_empty() {
         let err_msg = format!("got additional arguments: {:?}", remaining);
@@ -365,7 +366,10 @@ pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C) {
 
     let (prefix, args) = prepare_cli_command(&def);
 
-    if handle_command_future(Arc::new(def), &prefix, args).await.is_err() {
+    if handle_command_future(Arc::new(def), &prefix, args)
+        .await
+        .is_err()
+    {
         std::process::exit(-1);
     }
 }
