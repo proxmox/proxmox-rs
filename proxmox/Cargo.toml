@@ -44,7 +44,7 @@ url = "2.1"
 #regex, serde, serde_json
 
 # Macro crates:
-proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = "0.1.7" }
+proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = "0.1.8" }
 proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.1" }
 
 [features]

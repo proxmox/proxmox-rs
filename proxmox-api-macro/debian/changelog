@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (0.1.8-1)  proxmox-rust; urgency=medium
+
+  * add descriptions to enum variants
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 29 Apr 2020 10:45:50 +0200
+
 rust-proxmox-api-macro (0.1.7-1)  proxmox-rust; urgency=medium
 
   * replace failure with anyhow crate
