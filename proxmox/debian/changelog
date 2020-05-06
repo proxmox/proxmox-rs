@@ -1,3 +1,9 @@
+rust-proxmox (0.1.26-1) unstable; urgency=medium
+
+  * run_cli_command: add additional rpcenv parameter
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 06 May 2020 12:28:02 +0200
+
 rust-proxmox (0.1.25-1) unstable; urgency=medium
 
   * add descriptions to enum variants
