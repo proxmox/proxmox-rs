@@ -55,10 +55,9 @@ async fn handle_simple_command_future(
     prefix: &str,
     cli_cmd: &CliCommand,
     args: Vec<String>,
+    mut rpcenv: CliEnvironment,
 ) -> Result<(), Error> {
     let params = parse_arguments(prefix, cli_cmd, args)?;
-
-    let mut rpcenv = CliEnvironment::new();
 
     match cli_cmd.info.handler {
         ApiHandler::Sync(handler) => match (handler)(params, &cli_cmd.info, &mut rpcenv) {
@@ -101,11 +100,10 @@ fn handle_simple_command(
     prefix: &str,
     cli_cmd: &CliCommand,
     args: Vec<String>,
+    mut rpcenv: CliEnvironment,
     run: Option<fn(ApiFuture) -> Result<Value, Error>>,
 ) -> Result<(), Error> {
     let params = parse_arguments(prefix, cli_cmd, args)?;
-
-    let mut rpcenv = CliEnvironment::new();
 
     match cli_cmd.info.handler {
         ApiHandler::Sync(handler) => match (handler)(params, &cli_cmd.info, &mut rpcenv) {
@@ -270,16 +268,17 @@ pub async fn handle_command_future(
     def: Arc<CommandLineInterface>,
     prefix: &str,
     mut args: Vec<String>,
+    rpcenv: CliEnvironment,
 ) -> Result<(), Error> {
     set_help_context(Some(def.clone()));
 
     let result = match &*def {
         CommandLineInterface::Simple(ref cli_cmd) => {
-            handle_simple_command_future(&prefix, &cli_cmd, args).await
+            handle_simple_command_future(&prefix, &cli_cmd, args, rpcenv).await
         }
         CommandLineInterface::Nested(ref map) => {
             let cli_cmd = parse_nested_command(&prefix, &map, &mut args)?;
-            handle_simple_command_future(&prefix, &cli_cmd, args).await
+            handle_simple_command_future(&prefix, &cli_cmd, args, rpcenv).await
         }
     };
 
@@ -296,17 +295,18 @@ pub fn handle_command(
     def: Arc<CommandLineInterface>,
     prefix: &str,
     mut args: Vec<String>,
+    rpcenv: CliEnvironment,
     run: Option<fn(ApiFuture) -> Result<Value, Error>>,
 ) -> Result<(), Error> {
     set_help_context(Some(def.clone()));
 
     let result = match &*def {
         CommandLineInterface::Simple(ref cli_cmd) => {
-            handle_simple_command(&prefix, &cli_cmd, args, run)
+            handle_simple_command(&prefix, &cli_cmd, args, rpcenv, run)
         }
         CommandLineInterface::Nested(ref map) => {
             let cli_cmd = parse_nested_command(&prefix, &map, &mut args)?;
-            handle_simple_command(&prefix, &cli_cmd, args, run)
+            handle_simple_command(&prefix, &cli_cmd, args, rpcenv, run)
         }
     };
 
@@ -358,7 +358,7 @@ fn prepare_cli_command(def: &CommandLineInterface) -> (String, Vec<String>) {
 /// - ``bashcomplete``: Output bash completions instead of running the command.
 /// - ``printdoc``: Output ReST documentation.
 ///
-pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C) {
+pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C, rpcenv: CliEnvironment) {
     let def = match def.into() {
         CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
         CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help()),
@@ -366,7 +366,7 @@ pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C) {
 
     let (prefix, args) = prepare_cli_command(&def);
 
-    if handle_command_future(Arc::new(def), &prefix, args)
+    if handle_command_future(Arc::new(def), &prefix, args, rpcenv)
         .await
         .is_err()
     {
@@ -381,6 +381,7 @@ pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C) {
 /// async commands simply fail).
 pub fn run_cli_command<C: Into<CommandLineInterface>>(
     def: C,
+    rpcenv: CliEnvironment,
     run: Option<fn(ApiFuture) -> Result<Value, Error>>,
 ) {
     let def = match def.into() {
@@ -390,7 +391,7 @@ pub fn run_cli_command<C: Into<CommandLineInterface>>(
 
     let (prefix, args) = prepare_cli_command(&def);
 
-    if handle_command(Arc::new(def), &prefix, args, run).is_err() {
+    if handle_command(Arc::new(def), &prefix, args, rpcenv, run).is_err() {
         std::process::exit(-1);
     }
 }
