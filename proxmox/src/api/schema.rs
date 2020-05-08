@@ -552,14 +552,17 @@ impl EnumEntry {
 ///
 /// Use a schema to describe complex types encoded as string.
 ///
-/// Arrays are parsed as comma separated lists, i.e: `"1,2,3"`
+/// Arrays are parsed as comma separated lists, i.e: `"1,2,3"`. The
+/// list may be sparated by comma, semicolon or whitespace.
 ///
-/// Objects are parsed as comma separated `key=value` pairs, i.e:
-/// `"prop1=2,prop2=test"`
+/// Objects are parsed as comma (or semicolon) separated `key=value` pairs, i.e:
+/// `"prop1=2,prop2=test"`. Any whitespace is trimmed from key and value.
+///
 ///
 /// **Note:** This only works for types which does not allow using the
-/// comma separator inside the value, i.e. this only works for arrays
-/// of simple data types, and objects with simple properties.
+/// comma, semicolon or whitespace separator inside the value,
+/// i.e. this only works for arrays of simple data types, and objects
+/// with simple properties (no nesting).
 ///
 /// ```
 /// # use proxmox::api::{*, schema::*};
@@ -639,12 +642,16 @@ pub fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, 
     match schema {
         Schema::Object(object_schema) => {
             let mut param_list: Vec<(String, String)> = vec![];
-            for key_val in value_str.split(',').filter(|s| !s.is_empty()) {
+            let key_val_list: Vec<&str> = value_str
+                .split(|c: char| c == ',' || c == ';')
+                .filter(|s| !s.is_empty())
+                .collect();
+            for key_val in key_val_list {
                 let kv: Vec<&str> = key_val.splitn(2, '=').collect();
                 if kv.len() == 2 {
-                    param_list.push((kv[0].into(), kv[1].into()));
+                    param_list.push((kv[0].trim().into(), kv[1].trim().into()));
                 } else if let Some(key) = object_schema.default_key {
-                    param_list.push((key.into(), kv[0].into()));
+                    param_list.push((key.into(), kv[0].trim().into()));
                 } else {
                     bail!("Value without key, but schema does not define a default key.");
                 }
@@ -654,8 +661,12 @@ pub fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, 
         }
         Schema::Array(array_schema) => {
             let mut array: Vec<Value> = vec![];
-            for value in value_str.split(',').filter(|s| !s.is_empty()) {
-                match parse_simple_value(value, &array_schema.items) {
+            let list: Vec<&str> = value_str.split(|c: char| {
+                c == ',' || c == ';' || char::is_ascii_whitespace(&c)
+            }).filter(|s| !s.is_empty()).collect();
+
+            for value in list {
+                match parse_simple_value(value.trim(), &array_schema.items) {
                     Ok(res) => array.push(res),
                     Err(err) => bail!("unable to parse array element: {}", err),
                 }
