@@ -154,10 +154,22 @@ impl SectionConfig {
         Self {
             plugins: HashMap::new(),
             id_schema,
-            parse_section_header: SectionConfig::default_parse_section_header,
-            parse_section_content: SectionConfig::default_parse_section_content,
-            format_section_header: SectionConfig::default_format_section_header,
-            format_section_content: SectionConfig::default_format_section_content,
+            parse_section_header: Self::default_parse_section_header,
+            parse_section_content: Self::default_parse_section_content,
+            format_section_header: Self::default_format_section_header,
+            format_section_content: Self::default_format_section_content,
+        }
+    }
+
+    /// Create a new `SectionConfig` using the systemd config file syntax.
+    pub fn with_systemd_syntax(id_schema: &'static Schema) -> Self {
+        Self {
+            plugins: HashMap::new(),
+            id_schema,
+            parse_section_header: Self::systemd_parse_section_header,
+            parse_section_content: Self::systemd_parse_section_content,
+            format_section_header: Self::systemd_format_section_header,
+            format_section_content: Self::systemd_format_section_content,
         }
     }
 
@@ -432,6 +444,78 @@ impl SectionConfig {
         };
 
         Some((section_type.into(), section_id.into()))
+    }
+
+    fn systemd_format_section_header(type_name: &str, section_id: &str, _data: &Value) -> Result<String, Error> {
+        if type_name != section_id { bail!("gut unexpexted section type"); }
+        Ok(format!("[{}]\n", section_id))
+    }
+
+    fn systemd_format_section_content(
+        type_name: &str,
+        section_id: &str,
+        key: &str,
+        value: &Value,
+    ) -> Result<String, Error> {
+
+        if let Value::Array(array) = value {
+            let mut list = String::new();
+            for item in array {
+                let line = Self::systemd_format_section_content(type_name, section_id, key, item)?;
+                if !line.is_empty() { list.push_str(&line); }
+            }
+            return Ok(list);
+        }
+
+        let text = match value {
+            Value::Null => { return Ok(String::new()) }, // return empty string (delete)
+            Value::Bool(v) => v.to_string(),
+            Value::String(v) => v.to_string(),
+            Value::Number(v) => v.to_string(),
+            _ => {
+                bail!("got unsupported type in section '{}' key '{}'", section_id, key);
+            },
+        };
+
+        if text.chars().any(|c| c.is_control()) {
+            bail!("detected unexpected control character in section '{}' key '{}'", section_id, key);
+        }
+
+        Ok(format!("{}={}\n", key, text))
+    }
+
+    fn systemd_parse_section_content(line: &str) -> Option<(String, String)> {
+
+        let line = line.trim_end();
+
+        if line.is_empty() { return None; }
+
+        if line.starts_with(char::is_whitespace) { return None; }
+
+        let kvpair: Vec<&str> = line.splitn(2, '=').collect();
+
+        if kvpair.len() != 2 { return None; }
+
+        let key = kvpair[0].trim_end();
+        let value = kvpair[1].trim_start();
+
+        Some((key.into(), value.into()))
+    }
+
+    fn systemd_parse_section_header(line: &str) -> Option<(String, String)> {
+
+        let line = line.trim_end();
+
+        if line.is_empty() { return None; };
+
+        if !line.starts_with("[") { return None; }
+        if !line.ends_with("]") { return None; }
+
+        let section = line[1..line.len()-1].trim();
+
+        if section.len() == 0 { return None; }
+
+        Some((section.into(), section.into()))
     }
 }
 
