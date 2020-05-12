@@ -112,7 +112,10 @@ impl SectionConfigData {
         Ok(data)
     }
 
-    fn record_order(&mut self, section_id: &str) {
+    /// Record section ordering
+    ///
+    /// Sections are written in the recorder order.
+    pub fn record_order(&mut self, section_id: &str) {
         self.order.push_back(section_id.to_string());
     }
 
