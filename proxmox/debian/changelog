@@ -1,3 +1,9 @@
+rust-proxmox (0.1.28-1) unstable; urgency=medium
+
+  * section_config add support for systemd config files
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 12 May 2020 09:15:23 +0200
+
 rust-proxmox (0.1.27-1) unstable; urgency=medium
 
   * schema: split property string lists with comma, semicolon and white space.
