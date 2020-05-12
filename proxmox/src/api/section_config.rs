@@ -298,21 +298,32 @@ impl SectionConfig {
                             if let Some((key, value)) = (self.parse_section_content)(line) {
                                 //println!("CONTENT: key: {} value: {}", key, value);
 
-                                if let Some((_optional, prop_schema)) = plugin.properties.lookup(&key) {
-                                    match parse_simple_value(&value, prop_schema) {
-                                        Ok(value) => {
-                                            if config[&key] == Value::Null {
-                                                config[key] = value;
-                                            } else {
-                                                bail!("duplicate property '{}'", key);
-                                            }
-                                        }
-                                        Err(err) => {
-                                            bail!("property '{}': {}", key, err.to_string());
-                                        }
+                                let schema = plugin.properties.lookup(&key);
+                                let (is_array, prop_schema) = match schema {
+                                    Some((_optional, Schema::Array(ArraySchema { items, .. }))) => (true, items),
+                                    Some((_optional, ref prop_schema)) => (false, prop_schema),
+                                    None =>  bail!("unknown property '{}'", key),
+                                };
+
+                                let value = match parse_simple_value(&value, prop_schema) {
+                                    Ok(value) => value,
+                                    Err(err) => {
+                                        bail!("property '{}': {}", key, err.to_string());
                                     }
+                                };
+
+                                if is_array {
+                                   if config[&key] == Value::Null {
+                                       config[key] = json!([value]);
+                                   } else {
+                                       config[key].as_array_mut().unwrap().push(value);
+                                   }
                                 } else {
-                                    bail!("unknown property '{}'", key)
+                                    if config[&key] == Value::Null {
+                                        config[key] = value;
+                                    } else {
+                                        bail!("duplicate property '{}'", key);
+                                    }
                                 }
                             } else {
                                 bail!("syntax error (expected section properties)");
@@ -342,11 +353,20 @@ impl SectionConfig {
     }
 
     fn default_format_section_content(
-        _type_name: &str,
+        type_name: &str,
         section_id: &str,
         key: &str,
         value: &Value,
     ) -> Result<String, Error> {
+
+        if let Value::Array(array) = value {
+            let mut list = String::new();
+            for item in array {
+                let line = Self::default_format_section_content(type_name, section_id, key, item)?;
+                if !line.is_empty() { list.push_str(&line); }
+            }
+            return Ok(list);
+        }
 
         let text = match value {
             Value::Null => { return Ok(String::new()) }, // return empty string (delete)
