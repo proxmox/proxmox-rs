@@ -127,7 +127,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         let mut inner = TokenStream::new();
         schema.to_schema(&mut inner)?;
         returns_schema_definition = quote_spanned! { func.sig.span() =>
-            pub const #return_schema_name: &'static ::proxmox::api::schema::Schema = (#inner);
+            pub const #return_schema_name: &'static ::proxmox::api::schema::Schema = #inner;
         };
         returns_schema_setter = quote! { .returns(#return_schema_name) };
     }
