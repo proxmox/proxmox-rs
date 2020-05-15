@@ -142,7 +142,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         #returns_schema_definition
 
         pub const #input_schema_name: &'static ::proxmox::api::schema::ObjectSchema =
-            (&#input_schema);
+            &#input_schema;
 
         #vis const #api_method_name: ::proxmox::api::ApiMethod =
             ::proxmox::api::ApiMethod::new(
