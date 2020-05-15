@@ -13,6 +13,7 @@ pub mod parse;
 pub mod serde;
 pub mod uuid;
 pub mod vec;
+pub mod time;
 
 #[doc(inline)]
 pub use uuid::Uuid;
