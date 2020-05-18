@@ -35,12 +35,26 @@ use crate::try_block;
 pub struct SectionConfigPlugin {
     type_name: String,
     properties: &'static ObjectSchema,
+    id_property: Option<String>,
 }
 
 impl SectionConfigPlugin {
 
-    pub fn new(type_name: String, properties: &'static ObjectSchema) -> Self {
-        Self { type_name, properties }
+    pub fn new(type_name: String, id_property: Option<String>, properties: &'static ObjectSchema) -> Self {
+        Self { type_name, properties, id_property }
+    }
+
+    pub fn get_id_schema(&self) -> Option<&Schema> {
+        match &self.id_property {
+            Some(id_prop) => {
+                if let Some((_, schema)) = self.properties.lookup(&id_prop) {
+                    Some(schema)
+                } else {
+                    None
+                }
+            },
+            None => None,
+        }
     }
 
 }
@@ -228,7 +242,11 @@ impl SectionConfig {
                 let (type_name, section_config) = config.sections.get(section_id).unwrap();
                 let plugin = self.plugins.get(type_name).unwrap();
 
-                if let Err(err) = parse_simple_value(&section_id, &self.id_schema) {
+                let id_schema = match plugin.get_id_schema() {
+                    Some(schema) => schema,
+                    None => &self.id_schema,
+                };
+                if let Err(err) = parse_simple_value(&section_id, &id_schema) {
                     bail!("syntax error in section identifier: {}", err.to_string());
                 }
                 if section_id.chars().any(|c| c.is_control()) {
@@ -243,6 +261,11 @@ impl SectionConfig {
                 raw += &(self.format_section_header)(type_name, section_id, section_config)?;
 
                 for (key, value) in section_config.as_object().unwrap() {
+                    if let Some(id_property) = &plugin.id_property {
+                        if id_property == key {
+                            continue; // skip writing out id properties, they are in the section header
+                        }
+                    }
                     raw += &(self.format_section_content)(type_name, section_id, key, value)?;
                 }
             }
@@ -260,8 +283,14 @@ impl SectionConfig {
 
         let mut state = ParseState::BeforeHeader;
 
-        let test_required_properties = |value: &Value, schema: &ObjectSchema| -> Result<(), Error> {
+        let test_required_properties = |value: &Value, schema: &ObjectSchema, id_property: &Option<String>| -> Result<(), Error> {
             for (name, optional, _prop_schema) in schema.properties {
+                if let Some(id_property) = id_property {
+                    if name == id_property {
+                        // the id_property is the section header, skip for requirement check
+                        continue;
+                    }
+                }
                 if *optional == false && value[name] == Value::Null {
                     return Err(format_err!("property '{}' is missing and it is not optional.", name));
                 }
@@ -288,8 +317,10 @@ impl SectionConfig {
                             if let Some((section_type, section_id)) = (self.parse_section_header)(line) {
                                 //println!("OKLINE: type: {} ID: {}", section_type, section_id);
                                 if let Some(ref plugin) = self.plugins.get(&section_type) {
-                                    if let Err(err) = parse_simple_value(&section_id, &self.id_schema) {
-                                        bail!("syntax error in section identifier: {}", err.to_string());
+                                    if let Some(id_schema) = plugin.get_id_schema() {
+                                        if let Err(err) = parse_simple_value(&section_id, id_schema) {
+                                            bail!("syntax error in section identifier: {}", err.to_string());
+                                        }
                                     }
                                     state = ParseState::InsideSection(plugin, section_id, json!({}));
                                 } else {
@@ -303,7 +334,10 @@ impl SectionConfig {
 
                             if line.trim().is_empty() {
                                 // finish section
-                                test_required_properties(config, &plugin.properties)?;
+                                test_required_properties(config, &plugin.properties, &plugin.id_property)?;
+                                if let Some(id_property) = &plugin.id_property {
+                                    config[id_property] = Value::from(section_id.clone());
+                                }
                                 result.set_data(section_id, &plugin.type_name, config.take())?;
                                 result.record_order(section_id);
 
@@ -347,9 +381,12 @@ impl SectionConfig {
                     }
                 }
 
-                if let ParseState::InsideSection(plugin, section_id, config) = state {
+                if let ParseState::InsideSection(plugin, ref mut section_id, ref mut config) = state {
                     // finish section
-                    test_required_properties(&config, &plugin.properties)?;
+                    test_required_properties(&config, &plugin.properties, &plugin.id_property)?;
+                    if let Some(id_property) = &plugin.id_property {
+                        config[id_property] = Value::from(section_id.clone());
+                    }
                     result.set_data(&section_id, &plugin.type_name, config)?;
                     result.record_order(&section_id);
                 }
@@ -541,12 +578,11 @@ fn test_section_config1() {
         ],
     );
 
-    let plugin = SectionConfigPlugin::new("lvmthin".to_string(), &PROPERTIES);
+    let plugin = SectionConfigPlugin::new("lvmthin".to_string(), None, &PROPERTIES);
 
     const ID_SCHEMA: Schema = StringSchema::new("Storage ID schema.")
         .min_length(3)
         .schema();
-
     let mut config = SectionConfig::new(&ID_SCHEMA);
     config.register_plugin(plugin);
 
@@ -561,6 +597,56 @@ lvmthin: local-lvm2
         thinpool data
         vgname pve5
         content rootdir,images
+";
+
+    let res = config.parse(filename, &raw);
+    println!("RES: {:?}", res);
+    let raw = config.write(filename, &res.unwrap());
+    println!("CONFIG:\n{}", raw.unwrap());
+
+
+}
+
+// cargo test test_section_config2 -- --nocapture
+#[test]
+fn test_section_config2() {
+
+    let filename = "user.cfg";
+
+    const ID_SCHEMA: Schema = StringSchema::new("default id schema.")
+        .min_length(3)
+        .schema();
+    let mut config = SectionConfig::new(&ID_SCHEMA);
+
+    const USER_PROPERTIES: ObjectSchema = ObjectSchema::new(
+        "user properties",
+        &[
+            ("email", false, &StringSchema::new("The e-mail of the user").schema()),
+            ("userid", true, &StringSchema::new("The id of the user (name@realm).").min_length(3).schema()),
+        ],
+    );
+
+    const GROUP_PROPERTIES: ObjectSchema = ObjectSchema::new(
+        "group properties",
+        &[
+            ("comment", false, &StringSchema::new("Comment").schema()),
+            ("groupid", true, &StringSchema::new("The id of the group.").min_length(3).schema()),
+        ],
+    );
+
+    let plugin = SectionConfigPlugin::new("user".to_string(), Some("userid".to_string()), &USER_PROPERTIES);
+    config.register_plugin(plugin);
+
+    let plugin = SectionConfigPlugin::new("group".to_string(), Some("groupid".to_string()), &GROUP_PROPERTIES);
+    config.register_plugin(plugin);
+
+    let raw = r"
+
+user: root@pam
+        email root@example.com
+
+group: mygroup
+        comment a very important group
 ";
 
     let res = config.parse(filename, &raw);
