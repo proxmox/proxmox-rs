@@ -159,6 +159,22 @@ impl SectionConfigData {
 
         list.into()
     }
+
+    /// API helper to represent configuration data as typed array.
+    ///
+    /// The array representation is useful to display configuration
+    /// data with GUI frameworks like ExtJS.
+    pub fn convert_to_typed_array<T: DeserializeOwned>(&self, type_name: &str) -> Result<Vec<T>, Error> {
+        let mut list: Vec<T> = vec![];
+
+        for (_, (section_type, data)) in &self.sections {
+            if section_type == type_name {
+                list.push(T::deserialize(data.clone())?);
+            }
+        }
+
+        Ok(list.into())
+    }
 }
 
 impl SectionConfig {
