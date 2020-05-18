@@ -19,7 +19,7 @@ libc = "0.2"
 nix = "0.16"
 
 # tools module:
-base64 = "0.10"
+base64 = "0.12"
 chrono = "0.4"
 endian_trait = { version = "0.6", features = ["arrays"] }
 regex = "1.2"
@@ -36,7 +36,7 @@ bytes = "0.5"
 futures = "0.3"
 http = "0.2"
 hyper = { version = "0.13", optional = true }
-rustyline = "5.0.5"
+rustyline = "6"
 serde_derive = "1.0"
 textwrap = "0.11"
 tokio = { version = "0.2", features = [], optional = true }
