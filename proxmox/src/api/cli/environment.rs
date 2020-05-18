@@ -1,12 +1,11 @@
 use serde_json::Value;
-use std::collections::HashMap;
 
 use crate::api::{RpcEnvironment, RpcEnvironmentType};
 
 /// `RpcEnvironmet` implementation for command line tools
 #[derive(Default)]
 pub struct CliEnvironment {
-    result_attributes: HashMap<String, Value>,
+    result_attributes: Value,
     user: Option<String>,
 }
 
@@ -17,12 +16,12 @@ impl CliEnvironment {
 }
 
 impl RpcEnvironment for CliEnvironment {
-    fn set_result_attrib(&mut self, name: &str, value: Value) {
-        self.result_attributes.insert(name.into(), value);
+    fn result_attrib_mut(&mut self) -> &mut Value {
+        &mut self.result_attributes
     }
 
-    fn get_result_attrib(&self, name: &str) -> Option<&Value> {
-        self.result_attributes.get(name)
+    fn result_attrib(&self) -> &Value {
+        &self.result_attributes
     }
 
     fn env_type(&self) -> RpcEnvironmentType {

@@ -6,10 +6,10 @@ use serde_json::Value;
 pub trait RpcEnvironment: std::any::Any + AsAny + Send {
     /// Use this to pass additional result data. It is up to the environment
     /// how the data is used.
-    fn set_result_attrib(&mut self, name: &str, value: Value);
+    fn result_attrib_mut(&mut self) -> &mut Value;
 
-    /// Query additional result data.
-    fn get_result_attrib(&self, name: &str) -> Option<&Value>;
+    /// Access result attribute immutable
+    fn result_attrib(&self) -> &Value;
 
     /// The environment type
     fn env_type(&self) -> RpcEnvironmentType;
@@ -34,4 +34,27 @@ pub enum RpcEnvironmentType {
     PUBLIC,
     /// Access from privileged server (run as root)
     PRIVILEGED,
+}
+
+impl core::ops::Index<&str> for &dyn RpcEnvironment
+{
+    type Output = Value;
+    fn index(&self, index: &str) -> &Value {
+        &self.result_attrib().index(index)
+    }
+}
+
+impl core::ops::Index<&str> for &mut dyn RpcEnvironment
+{
+    type Output = Value;
+    fn index(&self, index: &str) -> &Value {
+        &self.result_attrib().index(index)
+    }
+}
+
+impl core::ops::IndexMut<&str> for &mut dyn RpcEnvironment
+{
+    fn index_mut(&mut self, index: &str) -> &mut Value {
+        self.result_attrib_mut().index_mut(index)
+    }
 }

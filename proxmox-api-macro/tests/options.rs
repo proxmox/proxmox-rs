@@ -41,15 +41,12 @@ pub fn test_default_macro(value: Option<isize>) -> Result<isize, Error> {
 
 struct RpcEnv;
 impl proxmox::api::RpcEnvironment for RpcEnv {
-    fn set_result_attrib(&mut self, name: &str, value: Value) {
-        let _ = (name, value);
-        panic!("set_result_attrib called");
+    fn result_attrib_mut(&mut self) -> &mut Value {
+        panic!("result_attrib_mut called");
     }
 
-    /// Query additional result data.
-    fn get_result_attrib(&self, name: &str) -> Option<&Value> {
-        let _ = name;
-        panic!("get_result_attrib called");
+    fn result_attrib(&self) -> &Value {
+        panic!("result_attrib called");
     }
 
     /// The environment type
