@@ -333,10 +333,12 @@ impl SectionConfig {
                             if let Some((section_type, section_id)) = (self.parse_section_header)(line) {
                                 //println!("OKLINE: type: {} ID: {}", section_type, section_id);
                                 if let Some(ref plugin) = self.plugins.get(&section_type) {
-                                    if let Some(id_schema) = plugin.get_id_schema() {
-                                        if let Err(err) = parse_simple_value(&section_id, id_schema) {
-                                            bail!("syntax error in section identifier: {}", err.to_string());
-                                        }
+                                    let id_schema = match plugin.get_id_schema() {
+                                        Some(schema) => schema,
+                                        None => self.id_schema,
+                                    };
+                                    if let Err(err) = parse_simple_value(&section_id, id_schema) {
+                                        bail!("syntax error in section identifier: {}", err.to_string());
                                     }
                                     state = ParseState::InsideSection(plugin, section_id, json!({}));
                                 } else {
