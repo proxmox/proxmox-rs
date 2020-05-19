@@ -1,3 +1,11 @@
+rust-proxmox (0.1.32-1) unstable; urgency=medium
+
+  * section_config: add convert_to_typed_array
+
+  * add id_property to SectionConfigPlugin
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 19 May 2020 09:50:55 +0200
+
 rust-proxmox (0.1.31-1) unstable; urgency=medium
 
   * rpc_environment.rs: use Value to store metadata
