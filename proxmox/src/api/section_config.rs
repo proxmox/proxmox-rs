@@ -258,10 +258,7 @@ impl SectionConfig {
                 let (type_name, section_config) = config.sections.get(section_id).unwrap();
                 let plugin = self.plugins.get(type_name).unwrap();
 
-                let id_schema = match plugin.get_id_schema() {
-                    Some(schema) => schema,
-                    None => &self.id_schema,
-                };
+                let id_schema = plugin.get_id_schema().unwrap_or(self.id_schema);
                 if let Err(err) = parse_simple_value(&section_id, &id_schema) {
                     bail!("syntax error in section identifier: {}", err.to_string());
                 }
@@ -333,10 +330,7 @@ impl SectionConfig {
                             if let Some((section_type, section_id)) = (self.parse_section_header)(line) {
                                 //println!("OKLINE: type: {} ID: {}", section_type, section_id);
                                 if let Some(ref plugin) = self.plugins.get(&section_type) {
-                                    let id_schema = match plugin.get_id_schema() {
-                                        Some(schema) => schema,
-                                        None => self.id_schema,
-                                    };
+                                    let id_schema = plugin.get_id_schema().unwrap_or(self.id_schema);
                                     if let Err(err) = parse_simple_value(&section_id, id_schema) {
                                         bail!("syntax error in section identifier: {}", err.to_string());
                                     }
