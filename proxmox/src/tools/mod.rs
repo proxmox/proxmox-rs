@@ -14,6 +14,7 @@ pub mod serde;
 pub mod uuid;
 pub mod vec;
 pub mod time;
+pub mod constnamemap;
 
 #[doc(inline)]
 pub use uuid::Uuid;
