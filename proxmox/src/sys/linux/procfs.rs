@@ -308,8 +308,6 @@ fn parse_proc_stat(statstr: &str) -> Result<ProcFsStat, Error> {
         + stat.irq
         + stat.softirq
         + stat.steal
-        + stat.guest
-        + stat.guest_nice
         + stat.idle;
 
     // returns avg. heuristic for the first request
