@@ -1,3 +1,9 @@
+rust-proxmox (0.1.36-1) unstable; urgency=medium
+
+  * procfs: fixup iowait_percent
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 25 May 2020 12:11:50 +0200
+
 rust-proxmox (0.1.35-1) unstable; urgency=medium
 
   * procfs: add loadavg
