@@ -28,7 +28,7 @@ pub fn sysconf(name: i32) -> i64 {
 }
 
 lazy_static! {
-    static ref CLOCK_TICKS: f64 = sysconf(libc::_SC_CLK_TCK) as f64;
+    pub static ref CLOCK_TICKS: f64 = sysconf(libc::_SC_CLK_TCK) as f64;
 }
 
 /// Selected contents of the `/proc/PID/stat` file.
