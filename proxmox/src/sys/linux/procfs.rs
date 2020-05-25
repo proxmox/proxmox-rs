@@ -217,6 +217,10 @@ pub struct ProcFsStat {
     /// The percentage (0 - 1.0) of cpu utilization from the whole system, basica underlying calculation
     /// `1 - (idle / total)` but with delta values between now and the last call to `read_proc_stat` (min. 1s interval)
     pub cpu: f64,
+    /// The number of cpus listed in `/proc/stat`.
+    pub cpu_count: u32,
+    /// The percentage (0 - 1.0) of system wide iowait.
+    pub iowait_percent: f64,
 }
 
 lazy_static! {
@@ -228,6 +232,7 @@ lazy_static! {
 /// other metrics are not really interesting
 pub fn read_proc_stat() -> Result<ProcFsStat, Error> {
     let sample_time = Instant::now();
+    let update_duration;
     let mut stat =
         parse_proc_stat(unsafe { std::str::from_utf8_unchecked(&std::fs::read("/proc/stat")?) })
             .unwrap();
@@ -236,17 +241,19 @@ pub fn read_proc_stat() -> Result<ProcFsStat, Error> {
         // read lock scope
         let prev_read_guarded = PROC_LAST_STAT.read().unwrap();
         let (prev_stat, prev_time, first_time) = &*prev_read_guarded;
-        let last_update = sample_time
+        update_duration = sample_time
             .saturating_duration_since(*prev_time)
             .as_millis();
         // only update if data is old
-        if last_update < 1000 && !first_time {
+        if update_duration < 1000 && !first_time {
             stat.cpu = prev_stat.cpu;
             return Ok(stat);
         }
     }
 
     {
+        let diff = (update_duration as f64) * *CLOCK_TICKS * (stat.cpu_count as f64);
+
         // write lock scope
         let mut prev_write_guarded = PROC_LAST_STAT.write().unwrap();
         // we do not expect much lock contention, so sample_time should be
@@ -258,6 +265,9 @@ pub fn read_proc_stat() -> Result<ProcFsStat, Error> {
 
         stat.cpu = 1. - (delta_idle as f64) / (delta_total as f64);
 
+        let delta_iowait = ((stat.iowait - prev_stat.iowait) as f64).min(diff);
+        stat.iowait_percent = delta_iowait / diff;
+
         *prev_stat = ProcFsStat { ..stat };
         *prev_time = sample_time;
         *first_time = false;
@@ -267,11 +277,30 @@ pub fn read_proc_stat() -> Result<ProcFsStat, Error> {
 }
 
 fn parse_proc_stat(statstr: &str) -> Result<ProcFsStat, Error> {
-    // for now we just use the first accumulated "cpu" line
+    let mut cpu_count = 0u32;
+    let mut data = None;
+    for line in statstr.lines() {
+        let mut parts = line.trim_start().split_ascii_whitespace();
+        match parts.next() {
+            None => continue,
+            Some("cpu") => data = Some(parse_proc_stat_cpu_line(parts)?),
+            Some(key) if key.starts_with("cpu") => cpu_count += 1,
+            _ => (),
+        }
+    }
 
-    let mut parts = statstr.trim_start().split_ascii_whitespace();
-    parts.next(); // swallow initial cpu string
+    match data {
+        None => bail!("failed to find 'cpu' line in /proc/stat"),
+        Some(mut data) => {
+            data.cpu_count = cpu_count;
+            Ok(data)
+        }
+    }
+}
 
+fn parse_proc_stat_cpu_line<'a>(
+    mut parts: impl Iterator<Item = &'a str>,
+) -> Result<ProcFsStat, Error> {
     // helpers:
     fn required<'a>(value: Option<&'a str>, what: &'static str) -> Result<&'a str, Error> {
         value.ok_or_else(|| format_err!("missing '{}' in /proc/stat", what))
@@ -300,6 +329,8 @@ fn parse_proc_stat(statstr: &str) -> Result<ProcFsStat, Error> {
         guest_nice: req_num::<u64>(parts.next(), "guest_nice")?,
         total: 0,
         cpu: 0.0,
+        cpu_count: 0,
+        iowait_percent: 0.0,
     };
     stat.total = stat.user
         + stat.nice
@@ -371,6 +402,7 @@ fn test_read_proc_stat() {
     assert_eq!(stat.guest_nice, 0);
     assert_eq!(stat.total, 267976855);
     assert_eq!(stat.cpu, 0.012170230149167183);
+    assert_eq!(stat.cpu_count, 16);
 }
 
 #[derive(Debug)]
