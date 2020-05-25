@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::convert::TryFrom;
+use std::fmt;
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader};
 use std::net::{Ipv4Addr, Ipv6Addr};
@@ -729,4 +730,60 @@ mod tests {
     fn test_read_proc_net_ipv6_route() {
         read_proc_net_ipv6_route().unwrap();
     }
+}
+
+/// Read the load avage from `/proc/loadavg`.
+pub fn read_loadavg() -> Result<Loadavg, Error> {
+    Loadavg::read()
+}
+
+/// Load avarage: floating point values for 1, 5 and 15 minutes of runtime.
+#[derive(Clone, Debug)]
+pub struct Loadavg(pub f64, pub f64, pub f64);
+
+impl Loadavg {
+    /// Read the load avage from `/proc/loadavg`.
+    pub fn read() -> Result<Self, Error> {
+        Self::parse(unsafe { std::str::from_utf8_unchecked(&std::fs::read("/proc/loadavg")?) })
+    }
+
+    /// Parse the value triplet.
+    fn parse(line: &str) -> Result<Self, Error> {
+        let mut parts = line.trim_start().split_ascii_whitespace();
+        let missing = || format_err!("missing field in /proc/loadavg");
+        let one: f64 = parts.next().ok_or_else(missing)?.parse()?;
+        let five: f64 = parts.next().ok_or_else(missing)?.parse()?;
+        let fifteen: f64 = parts.next().ok_or_else(missing)?.parse()?;
+        Ok(Self(one, five, fifteen))
+    }
+
+    /// Named method for the one minute load average.
+    pub fn one(&self) -> f64 {
+        self.0
+    }
+
+    /// Named method for the five minute load average.
+    pub fn five(&self) -> f64 {
+        self.1
+    }
+
+    /// Named method for the fifteen minute load average.
+    pub fn fifteen(&self) -> f64 {
+        self.2
+    }
+}
+
+impl fmt::Display for Loadavg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {}, {})", self.0, self.1, self.2)
+    }
+}
+
+#[test]
+fn test_loadavg() {
+    let avg = Loadavg::parse("0.44 0.48 0.44 2/1062 18549")
+        .expect("loadavg parser failed");
+    assert_eq!((avg.one() * 1000.0) as u64, 440u64);
+    assert_eq!((avg.five() * 1000.0) as u64, 480u64);
+    assert_eq!((avg.fifteen() * 1000.0) as u64, 440u64);
 }
