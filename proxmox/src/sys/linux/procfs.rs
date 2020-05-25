@@ -781,8 +781,7 @@ impl fmt::Display for Loadavg {
 
 #[test]
 fn test_loadavg() {
-    let avg = Loadavg::parse("0.44 0.48 0.44 2/1062 18549")
-        .expect("loadavg parser failed");
+    let avg = Loadavg::parse("0.44 0.48 0.44 2/1062 18549").expect("loadavg parser failed");
     assert_eq!((avg.one() * 1000.0) as u64, 440u64);
     assert_eq!((avg.five() * 1000.0) as u64, 480u64);
     assert_eq!((avg.fifteen() * 1000.0) as u64, 440u64);
