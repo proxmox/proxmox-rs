@@ -243,17 +243,18 @@ pub fn read_proc_stat() -> Result<ProcFsStat, Error> {
         let prev_read_guarded = PROC_LAST_STAT.read().unwrap();
         let (prev_stat, prev_time, first_time) = &*prev_read_guarded;
         update_duration = sample_time
-            .saturating_duration_since(*prev_time)
-            .as_millis();
+            .saturating_duration_since(*prev_time);
         // only update if data is old
-        if update_duration < 1000 && !first_time {
+        if update_duration.as_millis() < 1000 && !first_time {
             stat.cpu = prev_stat.cpu;
+            stat.iowait_percent = prev_stat.iowait_percent;
             return Ok(stat);
         }
     }
 
     {
-        let diff = (update_duration as f64) * *CLOCK_TICKS * (stat.cpu_count as f64);
+        let delta_seconds =
+            (update_duration.as_secs() as f64) * *CLOCK_TICKS * (stat.cpu_count as f64);
 
         // write lock scope
         let mut prev_write_guarded = PROC_LAST_STAT.write().unwrap();
@@ -266,8 +267,10 @@ pub fn read_proc_stat() -> Result<ProcFsStat, Error> {
 
         stat.cpu = 1. - (delta_idle as f64) / (delta_total as f64);
 
-        let delta_iowait = ((stat.iowait - prev_stat.iowait) as f64).min(diff);
-        stat.iowait_percent = delta_iowait / diff;
+        if !*first_time {
+            let delta_iowait = ((stat.iowait - prev_stat.iowait) as f64).min(delta_seconds);
+            stat.iowait_percent = delta_iowait / delta_seconds;
+        }
 
         *prev_stat = ProcFsStat { ..stat };
         *prev_time = sample_time;
@@ -404,6 +407,7 @@ fn test_read_proc_stat() {
     assert_eq!(stat.total, 267976855);
     assert_eq!(stat.cpu, 0.012170230149167183);
     assert_eq!(stat.cpu_count, 16);
+    assert_eq!(stat.iowait_percent, 0.0);
 }
 
 #[derive(Debug)]
