@@ -95,3 +95,52 @@ pub mod bytes_as_base64 {
         })
     }
 }
+
+/// Serialize String as base64 encoded string.
+///
+/// Usage example:
+/// ```
+/// use serde::{Deserialize, Serialize};
+///
+/// # #[derive(Debug)]
+/// #[derive(Deserialize, PartialEq, Serialize)]
+/// struct Foo {
+///     #[serde(with = "proxmox::tools::serde::string_as_base64")]
+///     data: String,
+/// }
+///
+/// let obj = Foo { data: "FOO".to_string() };
+/// let json = serde_json::to_string(&obj).unwrap();
+/// assert_eq!(json, r#"{"data":"Rk9P"}"#);
+///
+/// let deserialized: Foo = serde_json::from_str(&json).unwrap();
+/// assert_eq!(obj, deserialized);
+/// ```
+pub mod string_as_base64 {
+
+    use base64;
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(data: &String, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&base64::encode(data.as_bytes()))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<String, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+        let string = String::deserialize(deserializer)?;
+        let bytes = base64::decode(&string).map_err(|err| {
+            let msg = format!("base64 decode: {}" , err.to_string());
+            Error::custom(msg)
+        })?;
+        String::from_utf8(bytes).map_err(|err| {
+            let msg = format!("utf8 decode: {}", err.to_string());
+            Error::custom(msg)
+        })
+    }
+}
