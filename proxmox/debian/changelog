@@ -1,3 +1,9 @@
+rust-proxmox (0.1.37-1) unstable; urgency=medium
+
+  * proxmox: add string_as_base64 serde (de)serializer
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 26 May 2020 12:54:36 +0200
+
 rust-proxmox (0.1.36-1) unstable; urgency=medium
 
   * procfs: fixup iowait_percent
