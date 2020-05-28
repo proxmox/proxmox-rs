@@ -26,6 +26,54 @@ pub fn file_get_contents<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
     std::fs::read(path).map_err(|err| format_err!("unable to read {:?} - {}", path, err))
 }
 
+/// Read the entire contents of a file into a bytes vector if the file exists
+///
+/// Same as file_get_contents(), but returns 'Ok(None)' instead of
+/// 'Err' if the file dose not exist.
+pub fn file_get_optional_contents<P: AsRef<Path>>(path: P) -> Result<Option<Vec<u8>>, Error> {
+    let path = path.as_ref();
+
+    match std::fs::read(path) {
+        Ok(content) => Ok(Some(content)),
+        Err(err) => {
+            if err.kind() == std::io::ErrorKind::NotFound {
+                Ok(None)
+            } else {
+                bail!("unable to read '{:?}' - {}", path, err);
+            }
+        }
+    }
+}
+
+/// Read the entire contents of a file into a String
+///
+/// This basically call ``std::fs::read_to_string``, but provides more elaborate
+/// error messages including the path.
+pub fn file_read_string<P: AsRef<Path>>(path: P) -> Result<String, Error> {
+    let path = path.as_ref();
+
+    std::fs::read_to_string(path).map_err(|err| format_err!("unable to read {:?} - {}", path, err))
+}
+
+/// Read the entire contents of a file into a String if the file exists
+///
+/// Same as file_read_string(), but returns 'Ok(None)' instead of
+/// 'Err' if the file dose not exist.
+pub fn file_read_optional_string<P: AsRef<Path>>(path: P) -> Result<Option<String>, Error> {
+    let path = path.as_ref();
+
+    match std::fs::read_to_string(path) {
+        Ok(content) => Ok(Some(content)),
+        Err(err) => {
+            if err.kind() == std::io::ErrorKind::NotFound {
+                Ok(None)
+            } else {
+                bail!("unable to read '{:?}' - {}", path, err);
+            }
+        }
+    }
+}
+
 /// Read .json file into a ``Value``
 ///
 /// The optional ``default`` is used when the file does not exist.
