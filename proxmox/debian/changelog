@@ -1,3 +1,9 @@
+rust-proxmox (0.1.38-1) unstable; urgency=medium
+
+  * tools/fs.rs: add additional helpers to get file contents
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 28 May 2020 09:51:08 +0200
+
 rust-proxmox (0.1.37-1) unstable; urgency=medium
 
   * proxmox: add string_as_base64 serde (de)serializer
