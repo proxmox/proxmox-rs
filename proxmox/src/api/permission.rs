@@ -171,3 +171,128 @@ fn check_api_permission_tail(
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+
+    use crate::api::permission::{*};
+    use serde_json::{json, Value};
+
+    struct MockedUserInfo {
+        privs: Value,
+        groups: Value,
+    }
+
+    impl UserInformation for MockedUserInfo {
+        fn is_superuser(&self, userid: &str) -> bool {
+            userid == "root"
+        }
+
+        fn is_group_member(&self, userid: &str, group: &str) -> bool {
+            if let Some(groups) = self.groups[userid].as_array() {
+                return groups.contains(&Value::from(group));
+            }
+
+            return false;
+        }
+
+        fn lookup_privs(&self, userid: &str, path: &[&str]) -> u64 {
+            let path = format!("/{}", path.join("/"));
+            if let Some(users) = self.privs.get(path) {
+                if let Some(privilege) = users.get(userid) {
+                    return privilege.as_u64().unwrap();
+                }
+            }
+
+            return 0;
+        }
+    }
+
+    #[test]
+    fn test_privileges() {
+        let userinfo = MockedUserInfo{
+            privs: json!({
+                "/": {
+                    "user1": 0b10,
+                },
+                "/datastore": {
+                    "user1": 0b00,
+                    "user2": 0b01,
+                },
+                "/datastore/foo": {
+                    "user1": 0b01,
+                },
+            }),
+            groups: json!({
+                "user1": [
+                    "group1",
+                ],
+                "user2": [
+                    "group2",
+                ],
+            }),
+        };
+
+        let mut param = HashMap::new();
+        param.insert("user".to_string(), "user1".to_string());
+        param.insert("datastore".to_string(), "foo".to_string());
+
+        let test_check = | perm: &Permission, userid: Option<&str>, should_succeed: bool | {
+            println!("{:?} on {:?}: {}", userid, perm, should_succeed);
+            assert_eq!(check_api_permission(perm, userid, &param, &userinfo), should_succeed)
+        };
+
+        test_check(&Permission::Superuser, Some("root"), true);
+        test_check(&Permission::Superuser, Some("user1"), false);
+        test_check(&Permission::Superuser, None, false);
+
+        test_check(&Permission::World, Some("root"), true);
+        test_check(&Permission::World, Some("user1"), true);
+        test_check(&Permission::World, None, true);
+
+        test_check(&Permission::Anybody, Some("root"), true);
+        test_check(&Permission::Anybody, Some("user1"), true);
+        test_check(&Permission::Anybody, None, false);
+
+        test_check(&Permission::User("user1"), Some("root"), true);
+        test_check(&Permission::User("user1"), Some("user1"), true);
+        test_check(&Permission::User("user1"), Some("user2"), false);
+        test_check(&Permission::User("user1"), None, false);
+
+        test_check(&Permission::Group("group1"), Some("root"), true);
+        test_check(&Permission::Group("group1"), Some("user1"), true);
+        test_check(&Permission::Group("group1"), Some("user2"), false);
+        test_check(&Permission::Group("group1"), None, false);
+
+        test_check(&Permission::WithParam("user", &Permission::User("root")), Some("root"),   true);
+        test_check(&Permission::WithParam("user", &Permission::User("user1")), Some("user1"), true);
+        test_check(&Permission::WithParam("user", &Permission::User("user2")), Some("user2"), false);
+        test_check(&Permission::WithParam("user", &Permission::User("")), None,               false);
+
+        test_check(&Permission::And(&[ &Permission::User("user1"), &Permission::Group("group2"), ]), Some("root"), true);
+        test_check(&Permission::And(&[ &Permission::User("user1"), &Permission::Group("group2"), ]), Some("user1"), false);
+        test_check(&Permission::And(&[ &Permission::User("user1"), &Permission::Group("group1"), ]), Some("user1"), true);
+        test_check(&Permission::And(&[ &Permission::User("user1"), &Permission::Group("group2"), ]), None, false);
+
+        test_check(&Permission::Or(&[ &Permission::User("user1"), &Permission::Group("group2"), ]), Some("root"), true);
+        test_check(&Permission::Or(&[ &Permission::User("user1"), &Permission::Group("group2"), ]), Some("user1"), true);
+        test_check(&Permission::Or(&[ &Permission::User("user1"), &Permission::Group("group1"), ]), Some("user2"), false);
+        test_check(&Permission::Or(&[ &Permission::User("user1"), &Permission::Group("group2"), ]), None, false);
+
+        test_check(&Permission::Privilege(&[], 0b11, true), Some("root"), true);
+        test_check(&Permission::Privilege(&[], 0b11, true), Some("user1"), true);
+        test_check(&Permission::Privilege(&[], 0b11, false), Some("user1"), false);
+        test_check(&Permission::Privilege(&[], 0b11, true), Some("user2"), false);
+        test_check(&Permission::Privilege(&[], 0b11, false), Some("user2"), false);
+        test_check(&Permission::Privilege(&[], 0b11, true), None, false);
+        test_check(&Permission::Privilege(&[], 0b11, false), None, false);
+
+        test_check(&Permission::Privilege(&["datastore"], 0b01, true), Some("user1"), false);
+        test_check(&Permission::Privilege(&["datastore"], 0b01, true), Some("user2"), true);
+        test_check(&Permission::Privilege(&["datastore"], 0b01, true), None, false);
+
+        test_check(&Permission::Privilege(&["datastore", "{datastore}"], 0b01, true), Some("user1"), true);
+        test_check(&Permission::Privilege(&["datastore", "{datastore}"], 0b01, true), Some("user2"), false);
+        test_check(&Permission::Privilege(&["datastore", "{datastore}"], 0b01, true), None, false);
+    }
+}
