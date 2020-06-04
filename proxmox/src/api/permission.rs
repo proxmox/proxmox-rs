@@ -142,6 +142,8 @@ fn check_api_permission_tail(
                             new_path.push(value);
                         }
                     }
+                } else {
+                    new_path.push(comp);
                 }
             }
             match userid {
