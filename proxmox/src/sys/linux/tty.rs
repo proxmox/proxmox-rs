@@ -1,10 +1,14 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 use std::mem::MaybeUninit;
 use std::os::unix::io::AsRawFd;
 
 use anyhow::*;
+use nix::fcntl::OFlag;
+use nix::sys::stat::Mode;
 
-use crate::try_block;
+use crate::sys::error::SysError;
+use crate::tools::fd::Fd;
+use crate::{c_try, try_block};
 
 /// Get the current size of the terminal (for stdout).
 /// # Safety
@@ -37,6 +41,56 @@ pub fn stdin_isatty() -> bool {
     unsafe { libc::isatty(std::io::stdin().as_raw_fd()) == 1 }
 }
 
+pub enum TtyOutput {
+    Stdout(std::io::Stdout),
+    DevTty(Fd),
+}
+
+impl Write for TtyOutput {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        match self {
+            TtyOutput::Stdout(out) => out.write(buf),
+            TtyOutput::DevTty(out) => {
+                let written = c_try!(unsafe {
+                    libc::write(
+                        out.as_raw_fd(),
+                        buf.as_ptr() as *const libc::c_void,
+                        buf.len(),
+                    )
+                });
+                Ok(written as usize)
+            }
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        match self {
+            TtyOutput::Stdout(out) => out.flush(),
+            TtyOutput::DevTty(_) => Ok(()),
+        }
+    }
+}
+
+impl TtyOutput {
+    /// Get an output file descriptor for the current terminal.
+    pub fn open() -> io::Result<Option<Self>> {
+        let stdout = std::io::stdout();
+        if unsafe { libc::isatty(stdout.as_raw_fd()) } == 1 {
+            Ok(Some(TtyOutput::Stdout(stdout)))
+        } else {
+            match Fd::open(
+                "/dev/tty",
+                OFlag::O_WRONLY | OFlag::O_CLOEXEC | OFlag::O_NOCTTY,
+                Mode::empty(),
+            ) {
+                Ok(fd) => Ok(Some(TtyOutput::DevTty(fd))),
+                Err(nix::Error::Sys(nix::errno::Errno::ENXIO)) => Ok(None),
+                Err(err) => Err(err.into_io_error()),
+            }
+        }
+    }
+}
+
 /// Read a password from stdin.
 ///
 /// Masking the echoed output with asterisks and writing a query
@@ -49,7 +103,9 @@ pub fn read_password(query: &str) -> Result<Vec<u8>, Error> {
         return Ok(out.into_bytes());
     }
 
-    let mut out = std::io::stdout();
+    let mut out = TtyOutput::open()?
+        .ok_or_else(|| format_err!("cannot read password without a controlling tty"))?;
+
     let _ignore_error = out.write_all(query.as_bytes());
     let _ignore_error = out.flush();
 
