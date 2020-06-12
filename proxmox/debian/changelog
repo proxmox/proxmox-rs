@@ -1,3 +1,13 @@
+rust-proxmox (0.1.40-1) unstable; urgency=medium
+
+  * use tty for prompt when reading passwords to not clobber redirected stdout
+
+  * introduce AsHex helper for displaying byte slices as hex
+
+  * add Mmap helper for memory mapped slices or raw data
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 12 Jun 2020 13:54:49 +0200
+
 rust-proxmox (0.1.39-1) unstable; urgency=medium
 
   * fix Permission::Privilege path check
