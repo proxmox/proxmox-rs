@@ -8,15 +8,16 @@ use lazy_static::lazy_static;
 pub mod as_any;
 pub mod borrow;
 pub mod common_regex;
+pub mod constnamemap;
 pub mod fd;
 pub mod fs;
 pub mod io;
+pub mod mmap;
 pub mod parse;
 pub mod serde;
+pub mod time;
 pub mod uuid;
 pub mod vec;
-pub mod time;
-pub mod constnamemap;
 
 #[doc(inline)]
 pub use uuid::Uuid;
