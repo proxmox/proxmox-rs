@@ -1,5 +1,7 @@
 //! This is a general utility crate used by all our rust projects.
 
+use std::fmt;
+
 use anyhow::*;
 use lazy_static::lazy_static;
 
@@ -83,6 +85,35 @@ macro_rules! try_block {
 
 const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 
+/// Helper to provide a `Display` for arbitrary byte slices.
+#[derive(Clone, Copy, Debug)]
+pub struct AsHex<'a>(pub &'a [u8]);
+
+impl AsHex<'_> {
+    pub fn display_len(self) -> usize {
+        self.0.len() * 2
+    }
+
+    pub fn to_string(self) -> String {
+        use std::fmt::Write;
+        let mut s = String::with_capacity(self.display_len());
+        write!(&mut s, "{}", self).expect("failed to format hex string");
+        s
+    }
+}
+
+impl fmt::Display for AsHex<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut buf = [0u8, 0u8];
+        for b in self.0 {
+            buf[0] = HEX_CHARS[(*b >> 4) as usize];
+            buf[1] = HEX_CHARS[(*b & 0xf) as usize];
+            f.write_str(unsafe { std::str::from_utf8_unchecked(&buf[..]) })?;
+        }
+        Ok(())
+    }
+}
+
 pub fn digest_to_hex(digest: &[u8]) -> String {
     bin_to_hex(digest)
 }
@@ -96,14 +127,7 @@ pub fn digest_to_hex(digest: &[u8]) -> String {
 /// assert_eq!(text, "0102ff");
 /// ```
 pub fn bin_to_hex(digest: &[u8]) -> String {
-    let mut buf = Vec::<u8>::with_capacity(digest.len() * 2);
-
-    for i in 0..digest.len() {
-        buf.push(HEX_CHARS[(digest[i] >> 4) as usize]);
-        buf.push(HEX_CHARS[(digest[i] & 0xf) as usize]);
-    }
-
-    unsafe { String::from_utf8_unchecked(buf) }
+    AsHex(digest).to_string()
 }
 
 /// Convert a string of hexadecimal digits to a byte vector. Any non-digits are treated as an
