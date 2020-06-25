@@ -8,6 +8,7 @@ use http::request::Parts;
 use http::{Method, Response};
 use hyper::Body;
 use serde_json::Value;
+use percent_encoding::percent_decode_str;
 
 use crate::api::schema::{self, ObjectSchema, Schema};
 use crate::api::RpcEnvironment;
@@ -323,10 +324,15 @@ impl Router {
 
         let (dir, remaining) = (components[0], &components[1..]);
 
+        let dir = match percent_decode_str(dir).decode_utf8() {
+            Ok(dir) => dir.to_string(),
+            Err(_) => return None,
+        };
+
         match self.subroute {
             None => {}
             Some(SubRoute::Map(dirmap)) => {
-                if let Ok(ind) = dirmap.binary_search_by_key(&dir, |(name, _)| name) {
+                if let Ok(ind) = dirmap.binary_search_by_key(&dir.as_str(), |(name, _)| name) {
                     let (_name, router) = dirmap[ind];
                     //println!("FOUND SUBDIR {}", dir);
                     return router.find_route(remaining, uri_param);
@@ -334,7 +340,7 @@ impl Router {
             }
             Some(SubRoute::MatchAll { router, param_name }) => {
                 //println!("URI PARAM {} = {}", param_name, dir); // fixme: store somewhere
-                uri_param.insert(param_name.to_owned(), dir.into());
+                uri_param.insert(param_name.to_owned(), dir);
                 return router.find_route(remaining, uri_param);
             }
         }
