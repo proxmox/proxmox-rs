@@ -1,3 +1,9 @@
+rust-proxmox (0.1.41-1) unstable; urgency=medium
+
+  * api/router: percent decode the components of the uri
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 26 Jun 2020 10:36:14 +0200
+
 rust-proxmox (0.1.40-1) unstable; urgency=medium
 
   * use tty for prompt when reading passwords to not clobber redirected stdout
