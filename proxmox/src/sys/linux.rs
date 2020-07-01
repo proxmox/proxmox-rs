@@ -20,9 +20,8 @@ pub fn random_data(size: usize) -> Result<Vec<u8>, Error> {
 /// This code uses the Linux syscall getrandom() - see "man 2 getrandom".
 pub fn fill_with_random_data(buffer: &mut [u8]) -> Result<(), Error> {
     let res = unsafe {
-        libc::syscall(
-            libc::SYS_getrandom,
-            buffer.as_mut_ptr(),
+        libc::getrandom(
+            buffer.as_mut_ptr() as *mut libc::c_void,
             buffer.len() as libc::size_t,
             0 as libc::c_uint,
         )
