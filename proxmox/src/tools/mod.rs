@@ -19,6 +19,7 @@ pub mod serde;
 pub mod time;
 pub mod uuid;
 pub mod vec;
+pub mod websocket;
 
 #[doc(inline)]
 pub use uuid::Uuid;
