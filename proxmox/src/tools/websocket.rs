@@ -70,7 +70,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Vec<u8>) -> &mut Vec<u8> {
 }
 
 pub fn create_frame(
-    mask: &Option<[u8; 4]>,
+    mask: Option<[u8; 4]>,
     mut data: Vec<u8>,
     frametype: OpCode,
 ) -> io::Result<Vec<u8>> {
@@ -83,10 +83,7 @@ pub fn create_frame(
         ));
     }
 
-    let mask_bit = match mask {
-        Some(_) => 0b10000000,
-        None => 0b00000000,
-    };
+    let mask_bit = if mask.is_some() { 0b10000000 } else { 0b00000000 };
 
     let mut buf = Vec::new();
     buf.push(first_byte);
@@ -102,17 +99,17 @@ pub fn create_frame(
     }
 
     if let Some(mask) = mask {
-        buf.extend_from_slice(&*mask);
+        buf.extend_from_slice(&mask);
     }
 
-    buf.append(&mut mask_bytes(*mask, &mut data));
+    buf.append(&mut mask_bytes(mask, &mut data));
     Ok(buf)
 }
 
 pub struct WebSocketWriter<W: AsyncWrite> {
     writer: W,
     text: bool,
-    mask: Option<[u8; 4]>, // only for write trait
+    mask: Option<[u8; 4]>,
     frame: Option<(Vec<u8>, usize, usize)>,
 }
 
@@ -142,7 +139,7 @@ impl<W: AsyncWrite> AsyncWrite for WebSocketWriter<W> {
 
         if this.frame.is_none() {
             // create frame buf
-            let frame = match create_frame(&this.mask, buf.to_vec(), frametype) {
+            let frame = match create_frame(this.mask, buf.to_vec(), frametype) {
                 Ok(f) => f,
                 Err(e) => {
                     return Poll::Ready(Err(e));
