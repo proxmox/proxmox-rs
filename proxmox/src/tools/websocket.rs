@@ -291,7 +291,7 @@ pub struct WebSocketReader<R: AsyncRead> {
     state: ReaderState<R>,
 }
 
-impl<R: AsyncReadExt + Unpin + Send + 'static> WebSocketReader<R> {
+impl<R: AsyncReadExt> WebSocketReader<R> {
     pub fn new(reader: R, callback: CallBack) -> WebSocketReader<R> {
         Self::with_capacity(reader, callback, 4096)
     }
@@ -307,12 +307,13 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> WebSocketReader<R> {
     }
 }
 
-
 enum ReaderState<R> {
     NoData,
     WaitingForData(Pin<Box<dyn Future<Output = Result<(R, ByteBuffer), Error>> + Send + 'static>>),
     HaveData,
 }
+
+unsafe impl<R: Sync> Sync for ReaderState<R> {}
 
 impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
     fn poll_read(
