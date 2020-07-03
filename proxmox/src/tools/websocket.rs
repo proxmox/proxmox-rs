@@ -19,16 +19,24 @@ use crate::tools::byte_buffer::ByteBuffer;
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
+/// Represents an OpCode of a websocket frame
 pub enum OpCode {
+    /// A fragmented frame
     Continuation = 0,
+    /// A non-fragmented text frame
     Text = 1,
+    /// A non-fragmented binary frame
     Binary = 2,
+    /// A closing frame
     Close = 8,
+    /// A ping frame
     Ping = 9,
+    /// A pong frame
     Pong = 10,
 }
 
 impl OpCode {
+    /// Tells whether it is a control frame or not
     pub fn is_control(self) -> bool {
         return self as u8 & 0b1000 > 0;
     }
@@ -69,6 +77,50 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Vec<u8>) -> &mut Vec<u8> {
     data
 }
 
+/// Can be used to create a complete WebSocket Frame.
+///
+/// Takes an optional mask, the data and the frame type
+///
+/// Examples:
+///
+/// A normal Frame
+/// ```
+/// # use proxmox::tools::websocket::*;
+/// # use std::io;
+/// # fn main() -> io::Result<()> {
+/// let data = vec![0,1,2,3,4];
+/// let frame = create_frame(None, data, OpCode::Text)?;
+/// assert_eq!(frame, vec![0b10000001, 5, 0, 1, 2, 3, 4]);
+/// # Ok(())
+/// # }
+///
+/// ```
+///
+/// A masked Frame
+/// ```
+/// # use proxmox::tools::websocket::*;
+/// # use std::io;
+/// # fn main() -> io::Result<()> {
+/// let data = vec![0,1,2,3,4];
+/// let frame = create_frame(Some([0u8, 1u8, 2u8, 3u8]), data, OpCode::Text)?;
+/// assert_eq!(frame, vec![0b10000001, 0b10000101, 0, 1, 2, 3, 0, 0, 0, 0, 4]);
+/// # Ok(())
+/// # }
+///
+/// ```
+///
+/// A ping Frame
+/// ```
+/// # use proxmox::tools::websocket::*;
+/// # use std::io;
+/// # fn main() -> io::Result<()> {
+/// let data = vec![0,1,2,3,4];
+/// let frame = create_frame(None, data, OpCode::Ping)?;
+/// assert_eq!(frame, vec![0b10001001, 0b00000101, 0, 1, 2, 3, 4]);
+/// # Ok(())
+/// # }
+///
+/// ```
 pub fn create_frame(
     mask: Option<[u8; 4]>,
     mut data: Vec<u8>,
@@ -106,6 +158,23 @@ pub fn create_frame(
     Ok(buf)
 }
 
+/// Wraps a writer that implements AsyncWrite
+///
+/// Can be used to send websocket frames to any writer that implements
+/// AsyncWrite. Every write to it gets encoded as a seperate websocket frame,
+/// without fragmentation.
+///
+/// Example usage:
+/// ```
+/// # use proxmox::tools::websocket::*;
+/// # use std::io;
+/// # use tokio::io::{AsyncWrite, AsyncWriteExt};
+/// async fn code<I: AsyncWrite + Unpin>(writer: I) -> io::Result<()> {
+///     let mut ws = WebSocketWriter::new(None, false, writer);
+///     ws.write(&[1u8,2u8,3u8]).await?;
+///     Ok(())
+/// }
+/// ```
 pub struct WebSocketWriter<W: AsyncWrite + Unpin> {
     writer: W,
     text: bool,
@@ -114,6 +183,8 @@ pub struct WebSocketWriter<W: AsyncWrite + Unpin> {
 }
 
 impl<W: AsyncWrite + Unpin> WebSocketWriter<W> {
+    /// Creates a new WebSocketWriter which will use the given mask (if any),
+    /// and mark the frames as either 'Text' or 'Binary'
     pub fn new(mask: Option<[u8; 4]>, text: bool, writer: W) -> WebSocketWriter<W> {
         WebSocketWriter {
             writer: writer,
@@ -176,20 +247,59 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
+/// Represents the header of a websocket Frame
 pub struct FrameHeader {
+    /// True if the frame is either non-fragmented, or the last fragment
     pub fin: bool,
+    /// The optional mask of the frame
     pub mask: Option<[u8; 4]>,
+    /// The frametype
     pub frametype: OpCode,
+    /// The length of the header (without payload).
     pub header_len: u8,
+    /// The length of the payload.
     pub payload_len: usize,
 }
 
 impl FrameHeader {
+    /// Returns true if the frame is a control frame.
     pub fn is_control_frame(&self) -> bool {
         return self.frametype.is_control();
     }
 
+    /// Tries to parse a FrameHeader from bytes.
+    ///
+    /// When there are not enough bytes to completely parse the header,
+    /// returns Ok(Err(size)) where size determines how many bytes
+    /// are missing to parse further (this amount can change when more
+    /// information is available)
+    ///
+    /// Example:
+    /// ```
+    /// # use proxmox::tools::websocket::*;
+    /// # use std::io;
+    /// # fn main() -> io::Result<()> {
+    /// let frame = create_frame(None, vec![0,1,2,3], OpCode::Ping)?;
+    /// let header = FrameHeader::try_from_bytes(&frame[..1])?;
+    /// match header {
+    ///     Ok(_) => unreachable!(),
+    ///     Err(x) => assert_eq!(x, 1),
+    /// }
+    /// let header = FrameHeader::try_from_bytes(&frame[..2])?;
+    /// match header {
+    ///     Err(x) => unreachable!(),
+    ///     Ok(header) => assert_eq!(header, FrameHeader{
+    ///         fin: true,
+    ///         mask: None,
+    ///         frametype: OpCode::Ping,
+    ///         header_len: 2,
+    ///         payload_len: 4,
+    ///     }),
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn try_from_bytes(data: &[u8]) -> Result<Result<FrameHeader, usize>, Error> {
         let len = data.len();
         if len < 2 {
@@ -281,8 +391,16 @@ impl FrameHeader {
     }
 }
 
+/// Callback for control frames
 pub type CallBack = fn(frametype: OpCode, payload: &[u8]);
 
+/// Wraps a reader that implements AsyncRead and implements it itself.
+///
+/// On read, reads the underlying reader and tries to decode the frames and
+/// simply returns the data stream.
+/// When it encounters a control frame, calls the given callback.
+///
+/// Has an internal Buffer for storing incomplete headers.
 pub struct WebSocketReader<R: AsyncRead> {
     reader: Option<R>,
     callback: CallBack,
@@ -292,6 +410,8 @@ pub struct WebSocketReader<R: AsyncRead> {
 }
 
 impl<R: AsyncReadExt> WebSocketReader<R> {
+    /// Creates a new WebSocketReader with the given CallBack for control frames
+    /// and a default buffer size of 4096.
     pub fn new(reader: R, callback: CallBack) -> WebSocketReader<R> {
         Self::with_capacity(reader, callback, 4096)
     }
