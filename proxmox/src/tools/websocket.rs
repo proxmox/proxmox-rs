@@ -106,14 +106,14 @@ pub fn create_frame(
     Ok(buf)
 }
 
-pub struct WebSocketWriter<W: AsyncWrite> {
+pub struct WebSocketWriter<W: AsyncWrite + Unpin> {
     writer: W,
     text: bool,
     mask: Option<[u8; 4]>,
     frame: Option<(Vec<u8>, usize, usize)>,
 }
 
-impl<W: AsyncWrite> WebSocketWriter<W> {
+impl<W: AsyncWrite + Unpin> WebSocketWriter<W> {
     pub fn new(mask: Option<[u8; 4]>, text: bool, writer: W) -> WebSocketWriter<W> {
         WebSocketWriter {
             writer: writer,
@@ -124,13 +124,13 @@ impl<W: AsyncWrite> WebSocketWriter<W> {
     }
 }
 
-impl<W: AsyncWrite> AsyncWrite for WebSocketWriter<W> {
+impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
     fn poll_write(
         self: Pin<&mut Self>,
         cx: &mut Context,
         buf: &[u8],
     ) -> Poll<Result<usize, Error>> {
-        let this = unsafe { Pin::into_inner_unchecked(self) };
+        let this = Pin::get_mut(self);
 
         let frametype = match this.text {
             true => OpCode::Text,
@@ -151,8 +151,7 @@ impl<W: AsyncWrite> AsyncWrite for WebSocketWriter<W> {
         // we have a frame in any case, so unwrap is ok
         let (buf, pos, origsize) = this.frame.as_mut().unwrap();
         loop {
-            //let size = unsafe { Pin::new_unchecked(&mut this.writer) }.poll_write(cx, &buf[*pos..]))?
-            match unsafe { Pin::new_unchecked(&mut this.writer) }.poll_write(cx, &buf[*pos..]) {
+            match Pin::new(&mut this.writer).poll_write(cx, &buf[*pos..]) {
                 Poll::Ready(Ok(size)) => {
                     *pos += size;
                     if *pos == buf.len() {
@@ -167,11 +166,13 @@ impl<W: AsyncWrite> AsyncWrite for WebSocketWriter<W> {
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Error>> {
-        unsafe { self.map_unchecked_mut(|x| &mut x.writer).poll_flush(cx) }
+        let this = Pin::get_mut(self);
+        Pin::new(&mut this.writer).poll_flush(cx)
     }
 
     fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Error>> {
-        unsafe { self.map_unchecked_mut(|x| &mut x.writer).poll_shutdown(cx) }
+        let this = Pin::get_mut(self);
+        Pin::new(&mut this.writer).poll_shutdown(cx)
     }
 }
 
