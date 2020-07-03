@@ -1,3 +1,15 @@
+rust-proxmox (0.1.42-1) unstable; urgency=medium
+
+  * tools: add Websocket helper
+
+  * sys/linux: add PTY helper
+
+  * tools: add ByteBuffer
+
+  * cleanup: libc has 'getrandom' since 0.2.59
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 03 Jul 2020 13:00:44 +0200
+
 rust-proxmox (0.1.41-1) unstable; urgency=medium
 
   * api/router: percent decode the components of the uri
