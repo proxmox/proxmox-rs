@@ -1,20 +1,6 @@
 //! Helper for creating a pseudo-terminal
 //!
-//! normally used like this:
-//! ```norun
-//! let (mut pty, secondary) = PTY::new()?;
-//!
-//! // fork somehow, e.g. std::process::Command
-//! if child {
-//!     make_controlling_terminal(secondary)?;
-//!     // exec or exit
-//! }
-//!
-//! // parent can read/write/set_size
-//! pty.read(...);
-//! pty.write(...);
-//! pty.set_size(100,20);
-//! ```
+//! see [PTY](struct.PTY.html) for an example on how to use it
 
 use std::os::unix::io::{AsRawFd, RawFd};
 
@@ -30,10 +16,47 @@ use crate::tools::fd::Fd;
 ioctl_write_int_bad!(set_controlling_tty, libc::TIOCSCTTY);
 ioctl_write_ptr_bad!(set_size, libc::TIOCSWINSZ, nix::pty::Winsize);
 
+/// Represents a PTY
+///
+/// Implements Read and Write (from std::io) so one can simply use it
+/// to read and write the terminal of a child process
+///
+/// Example:
+/// ```
+/// # use proxmox::sys::linux::pty::*;
+/// # use std::process::Command;
+/// # use nix::Result;
+/// fn fork() -> Result<u64> {
+///     // Code that forks and returs the pid/0
+/// # Ok(1)
+/// }
+///
+/// fn exec(cmd: &str) -> Result<()> {
+///     // Code that execs the cmd
+/// #    Ok(())
+/// }
+///
+/// fn main() -> Result<()> {
+///     let (mut pty, secondary) = PTY::new()?;
+///
+///     let child = fork()?;
+///     if child == 0 {
+///         make_controlling_terminal(&secondary)?;
+///         exec("/some/binary")?;
+///     }
+///
+///     // read/write or set size of the terminal
+///     pty.set_size(80, 20);
+///
+///     Ok(())
+///  }
+/// ```
 pub struct PTY {
     primary: PtyMaster,
 }
 
+/// Used to make a new process group of the current process,
+/// and make the given terminal its controlling terminal
 pub fn make_controlling_terminal(terminal: &str) -> Result<()> {
     setsid()?; // make new process group
     let mode = Mode::S_IRUSR | Mode::S_IWUSR | Mode::S_IRGRP | Mode::S_IWGRP | Mode::S_IROTH | Mode::S_IWOTH; // 0666
@@ -52,6 +75,8 @@ pub fn make_controlling_terminal(terminal: &str) -> Result<()> {
 }
 
 impl PTY {
+    /// Creates a new PTY by opening /dev/ptmx and returns
+    /// a new PTY and the path to the secondary terminal on success.
     pub fn new() -> Result<(Self, String)> {
         let primary = posix_openpt(OFlag::O_RDWR | OFlag::O_NOCTTY | OFlag::O_NONBLOCK | OFlag::O_CLOEXEC)?;
         grantpt(&primary)?;
@@ -62,6 +87,8 @@ impl PTY {
         }, secondary))
     }
 
+    /// Uses the ioctl 'TIOCSWINSZ' on the terminal fd to set the terminals
+    /// columns and rows
     pub fn set_size(&mut self, col: u16, row: u16) -> Result<()> {
         let size = nix::pty::Winsize{
             ws_row: row,
