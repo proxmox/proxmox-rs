@@ -97,7 +97,7 @@ impl AsHex<'_> {
         self.0.len() * 2
     }
 
-    pub fn to_string(self) -> String {
+    pub fn to_hex_string(self) -> String {
         use std::fmt::Write;
         let mut s = String::with_capacity(self.display_len());
         write!(&mut s, "{}", self).expect("failed to format hex string");

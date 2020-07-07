@@ -73,8 +73,6 @@ pub mod date_time_as_rfc3339 {
 /// assert_eq!(obj, deserialized);
 /// ```
 pub mod bytes_as_base64 {
-
-    use base64;
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>

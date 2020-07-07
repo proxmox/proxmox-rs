@@ -135,7 +135,7 @@ pub fn read_password(query: &str) -> Result<Vec<u8>, Error> {
                 9 => asterisks = false,  // tab disables echo
                 0xA | 0xD => {
                     // newline, we're done
-                    let _ignore_error = out.write_all("\r\n".as_bytes());
+                    let _ignore_error = out.write_all(b"\r\n");
                     let _ignore_error = out.flush();
                     break;
                 }
@@ -144,7 +144,7 @@ pub fn read_password(query: &str) -> Result<Vec<u8>, Error> {
                     if !password.is_empty() {
                         password.pop();
                         if asterisks {
-                            let _ignore_error = out.write_all("\x08 \x08".as_bytes());
+                            let _ignore_error = out.write_all(b"\x08 \x08");
                             let _ignore_error = out.flush();
                         }
                     }

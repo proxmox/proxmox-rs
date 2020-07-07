@@ -253,7 +253,7 @@ impl<'a> IntoIterator for &'a MountInfo {
     type IntoIter = Iter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        (&self.entries).into_iter()
+        self.entries.iter()
     }
 }
 
@@ -262,7 +262,7 @@ impl<'a> IntoIterator for &'a mut MountInfo {
     type IntoIter = IterMut<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        (&mut self.entries).into_iter()
+        self.entries.iter_mut()
     }
 }
 

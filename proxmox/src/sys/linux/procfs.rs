@@ -10,7 +10,6 @@ use std::time::Instant;
 
 use anyhow::*;
 use lazy_static::lazy_static;
-use libc;
 use nix::unistd::Pid;
 
 use crate::tools::fs::file_read_firstline;

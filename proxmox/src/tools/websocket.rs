@@ -38,7 +38,7 @@ pub enum OpCode {
 impl OpCode {
     /// Tells whether it is a control frame or not
     pub fn is_control(self) -> bool {
-        return self as u8 & 0b1000 > 0;
+        (self as u8 & 0b1000) > 0
     }
 }
 
@@ -187,7 +187,7 @@ impl<W: AsyncWrite + Unpin> WebSocketWriter<W> {
     /// and mark the frames as either 'Text' or 'Binary'
     pub fn new(mask: Option<[u8; 4]>, text: bool, writer: W) -> WebSocketWriter<W> {
         WebSocketWriter {
-            writer: writer,
+            writer,
             text,
             mask,
             frame: None,
@@ -265,7 +265,7 @@ pub struct FrameHeader {
 impl FrameHeader {
     /// Returns true if the frame is a control frame.
     pub fn is_control_frame(&self) -> bool {
-        return self.frametype.is_control();
+        self.frametype.is_control()
     }
 
     /// Tries to parse a FrameHeader from bytes.
