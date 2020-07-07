@@ -20,7 +20,7 @@ pub mod time;
 pub mod uuid;
 pub mod vec;
 
-#[cfg(features = "websocket")]
+#[cfg(feature = "websocket")]
 pub mod websocket;
 
 #[doc(inline)]
