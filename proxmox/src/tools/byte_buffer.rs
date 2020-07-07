@@ -13,6 +13,7 @@
 //!     assert_eq!(data.len(), amount);
 //!     Ok(data)
 //! }
+//! # code(&mut &b"testdata"[..]).expect("byte buffer test failed");
 //! ```
 
 use std::cmp::min;
