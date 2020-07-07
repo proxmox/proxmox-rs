@@ -33,7 +33,7 @@ serde_json = "1.0"
 
 # api module:
 bytes = "0.5"
-futures = "0.3"
+futures = { version = "0.3", optional = true }
 http = "0.2"
 hyper = { version = "0.13", optional = true }
 percent-encoding = "2.1"
@@ -49,7 +49,7 @@ proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = 
 proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.1" }
 
 [features]
-default = [ "router", "cli" ]
+default = [ "router", "cli", "websocket" ]
 sortable-macro = ["proxmox-sortable-macro"]
 
 # api:
@@ -57,6 +57,7 @@ api-macro = ["proxmox-api-macro"]
 test-harness = []
 cli = [ "router", "hyper", "tokio" ]
 router = [ "hyper", "tokio" ]
+websocket = [ "tokio" ]
 
 # tools:
 #valgrind = ["proxmox-tools/valgrind"]
