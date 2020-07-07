@@ -19,6 +19,8 @@ pub mod serde;
 pub mod time;
 pub mod uuid;
 pub mod vec;
+
+#[cfg(features = "tokio")]
 pub mod websocket;
 
 #[doc(inline)]
