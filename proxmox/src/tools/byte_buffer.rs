@@ -21,7 +21,7 @@ use std::io::{Read, Result};
 
 use crate::tools::vec;
 
-use tokio::io::AsyncReadExt;
+use tokio::io::{AsyncRead, AsyncReadExt};
 
 /// A Buffer that holds bytes (u8)
 /// has convenience methods for reading (with any reader that
@@ -159,7 +159,7 @@ impl ByteBuffer {
 
     /// Same as read_from, but for reader that implement tokio::io::AsyncRead.
     /// See [read_from](#method.read_from) for an example
-    pub async fn read_from_async<T: AsyncReadExt + Unpin>(&mut self, input: &mut T) -> Result<usize> {
+    pub async fn read_from_async<T: AsyncRead + Unpin>(&mut self, input: &mut T) -> Result<usize> {
         let amount = input.read(self.get_free_mut_slice()).await?;
         self.add_size(amount);
         Ok(amount)
