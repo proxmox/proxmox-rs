@@ -6,7 +6,7 @@
 //! ```
 //! # use std::io::Read;
 //! # use proxmox::tools::byte_buffer::ByteBuffer;
-//! fn code<T: Read>(input: &mut T) -> std::io::Result<Box<[u8]>> {
+//! fn code<T: Read + ?Sized>(input: &mut T) -> std::io::Result<Box<[u8]>> {
 //!     let mut buffer = ByteBuffer::new();
 //!     let amount = buffer.read_from(input)?;
 //!     let data = buffer.consume(amount);
@@ -151,7 +151,7 @@ impl ByteBuffer {
     /// // do something with the buffer
     /// ...
     /// ```
-    pub fn read_from<T: Read>(&mut self, input: &mut T) -> Result<usize> {
+    pub fn read_from<T: Read + ?Sized>(&mut self, input: &mut T) -> Result<usize> {
         let amount = input.read(self.get_free_mut_slice())?;
         self.add_size(amount);
         Ok(amount)
