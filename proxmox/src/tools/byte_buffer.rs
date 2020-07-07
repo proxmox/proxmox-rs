@@ -127,7 +127,7 @@ impl ByteBuffer {
     /// assert_eq!(buf.data_size(), 2);
     ///
     /// let data = buf.consume(100);
-    /// assert_eq!(data, vec![1u8, 2u8].into_boxed_slice());
+    /// assert_eq!(&data[..], &[1u8, 2u8]);
     /// assert!(buf.is_empty());
     /// ```
     pub fn consume(&mut self, max_amount: usize) -> Box<[u8]> {
