@@ -131,11 +131,10 @@ impl ByteBuffer {
     /// ```
     pub fn consume(&mut self, max_amount: usize) -> Box<[u8]> {
         let size = min(max_amount, self.data_size);
-        let mut tmp = Vec::with_capacity(size);
-        tmp.extend_from_slice(&self.buf[..size]);
+        let tmp: Box<[u8]> = self.buf[..size].into();
         self.buf.copy_within(size..self.capacity, 0);
         self.data_size -= size;
-        tmp.into_boxed_slice()
+        tmp
     }
 
     /// Takes a reader and reads into the back of the buffer (up to the
