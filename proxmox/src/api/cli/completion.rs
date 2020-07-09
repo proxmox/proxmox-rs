@@ -256,7 +256,12 @@ pub fn print_bash_completion(def: &CommandLineInterface) {
     };
 
     let cmdline = match std::env::var("COMP_LINE") {
-        Ok(val) => val[0..comp_point].to_owned(),
+        Ok(mut val) => {
+            if let Some((byte_pos, _)) = val.char_indices().skip(comp_point).next() {
+                val.truncate(byte_pos);
+            }
+            val
+        }
         Err(_) => return,
     };
 
