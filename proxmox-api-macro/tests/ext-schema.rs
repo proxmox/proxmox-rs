@@ -103,3 +103,31 @@ fn get_data_schema_test() {
 
     assert_eq!(TEST_METHOD, API_METHOD_GET_DATA);
 }
+
+#[api(
+    returns: {
+        type: String,
+    }
+)]
+/// Get some text.
+///
+/// Returns: some text.
+pub fn get_some_text() -> Result<String, Error> {
+    Ok("Hello".to_string())
+}
+
+#[api(
+    returns: {
+        properties: {
+            "text": {
+                schema: API_RETURN_SCHEMA_GET_SOME_TEXT
+            },
+        },
+    },
+)]
+/// Get some text data.
+///
+/// Returns: data withsome text.
+pub fn get_some_text_data() -> Result<Value, Error> {
+    Ok(json!({ "text": get_some_text()? }))
+}
