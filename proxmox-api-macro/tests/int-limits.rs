@@ -8,8 +8,8 @@ pub struct AnI16(i16);
 
 #[test]
 fn test_an_i16_schema() {
-    const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::IntegerSchema::new("An i16: -32768 to 32767.")
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::IntegerSchema::new("An i16: -32768 to 32767.")
             .minimum(-32768)
             .maximum(32767)
             .schema();
@@ -23,8 +23,8 @@ pub struct I16G50(i16);
 
 #[test]
 fn test_i16g50_schema() {
-    const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::IntegerSchema::new("Already limited on one side.")
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::IntegerSchema::new("Already limited on one side.")
             .minimum(-50)
             .maximum(32767)
             .schema();
@@ -38,8 +38,8 @@ pub struct AnI32(i32);
 
 #[test]
 fn test_an_i32_schema() {
-    const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::IntegerSchema::new("An i32: -0x8000_0000 to 0x7fff_ffff.")
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::IntegerSchema::new("An i32: -0x8000_0000 to 0x7fff_ffff.")
             .minimum(-0x8000_0000)
             .maximum(0x7fff_ffff)
             .schema();
@@ -53,8 +53,8 @@ pub struct AnU32(u32);
 
 #[test]
 fn test_an_u32_schema() {
-    const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::IntegerSchema::new("Unsigned implies a minimum of zero.")
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::IntegerSchema::new("Unsigned implies a minimum of zero.")
             .minimum(0)
             .maximum(0xffff_ffff)
             .schema();
@@ -68,8 +68,8 @@ pub struct AnI64(i64);
 
 #[test]
 fn test_an_i64_schema() {
-    const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::IntegerSchema::new("An i64: this is left unlimited.")
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::IntegerSchema::new("An i64: this is left unlimited.")
             .schema();
 
     assert_eq!(TEST_SCHEMA, AnI64::API_SCHEMA);
@@ -81,8 +81,8 @@ pub struct AnU64(u64);
 
 #[test]
 fn test_an_u64_schema() {
-    const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::IntegerSchema::new("Unsigned implies a minimum of zero.")
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::IntegerSchema::new("Unsigned implies a minimum of zero.")
             .minimum(0)
             .schema();
 

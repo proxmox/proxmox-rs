@@ -127,9 +127,9 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         let mut inner = TokenStream::new();
         schema.to_schema(&mut inner)?;
         returns_schema_definition = quote_spanned! { func.sig.span() =>
-            pub const #return_schema_name: &'static ::proxmox::api::schema::Schema = #inner;
+            pub const #return_schema_name: ::proxmox::api::schema::Schema = #inner;
         };
-        returns_schema_setter = quote! { .returns(#return_schema_name) };
+        returns_schema_setter = quote! { .returns(&#return_schema_name) };
     }
 
     let api_handler = if is_async {
@@ -141,13 +141,13 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     Ok(quote_spanned! { func.sig.span() =>
         #returns_schema_definition
 
-        pub const #input_schema_name: &'static ::proxmox::api::schema::ObjectSchema =
-            &#input_schema;
+        pub const #input_schema_name: ::proxmox::api::schema::ObjectSchema =
+            #input_schema;
 
         #vis const #api_method_name: ::proxmox::api::ApiMethod =
             ::proxmox::api::ApiMethod::new(
                 &#api_handler,
-                #input_schema_name,
+                &#input_schema_name,
             )
             #returns_schema_setter
             #access_setter

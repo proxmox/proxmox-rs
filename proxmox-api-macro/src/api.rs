@@ -318,7 +318,7 @@ impl SchemaItem {
                 let mut items = TokenStream::new();
                 array.to_schema(&mut items)?;
                 ts.extend(quote! {
-                    ::proxmox::api::schema::ArraySchema::new(#description, #items)
+                    ::proxmox::api::schema::ArraySchema::new(#description, &#items)
                 });
             }
             SchemaItem::ExternType(path) => {
@@ -332,7 +332,7 @@ impl SchemaItem {
                 if !properties.is_empty() {
                     bail!(&properties[0].0 => "additional properties not allowed on schema ref");
                 }
-                ts.extend(quote_spanned! { path.span() => &#path });
+                ts.extend(quote_spanned! { path.span() => #path });
                 return Ok(true);
             }
             SchemaItem::Inferred(span) => {
@@ -367,7 +367,7 @@ impl SchemaItem {
         if self.to_inner_schema(&mut inner_ts, description, span, properties)? {
             ts.extend(inner_ts);
         } else {
-            ts.extend(quote! { & #inner_ts .schema() });
+            ts.extend(quote! { #inner_ts .schema() });
         }
         Ok(())
     }
@@ -432,7 +432,7 @@ impl SchemaObject {
             let optional = element.1;
             let mut schema = TokenStream::new();
             element.2.to_schema(&mut schema)?;
-            ts.extend(quote! { (#key, #optional, #schema), });
+            ts.extend(quote! { (#key, #optional, &#schema), });
         }
         Ok(())
     }

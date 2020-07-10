@@ -76,8 +76,8 @@ pub fn handle_enum(
     Ok(quote_spanned! { name.span() =>
         #enum_ty
         impl #name {
-            pub const API_SCHEMA: &'static ::proxmox::api::schema::Schema =
-                & #schema
+            pub const API_SCHEMA: ::proxmox::api::schema::Schema =
+                #schema
                 .format(&::proxmox::api::schema::ApiStringFormat::Enum(&[#variants]))
                 .schema();
         }

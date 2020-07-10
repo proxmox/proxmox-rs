@@ -23,8 +23,8 @@ pub struct OkString(String);
 
 #[test]
 fn ok_string() {
-    const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::StringSchema::new("A string")
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::StringSchema::new("A string")
             .format(&schema::ApiStringFormat::Enum(&[
                 EnumEntry::new("ok", "Ok"),
                 EnumEntry::new("not-ok", "Not OK"),
@@ -45,8 +45,8 @@ pub struct TestStruct {
 
 #[test]
 fn test_struct() {
-    pub const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::ObjectSchema::new(
+    pub const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::ObjectSchema::new(
             "An example of a simple struct type.",
             &[
                 (
@@ -84,8 +84,8 @@ pub struct RenamedStruct {
 
 #[test]
 fn renamed_struct() {
-    const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::ObjectSchema::new(
             "An example of a struct with renamed fields.",
             &[
                 (
@@ -124,8 +124,8 @@ pub enum Selection {
 
 #[test]
 fn selection_test() {
-    const TEST_SCHEMA: &'static ::proxmox::api::schema::Schema =
-        &::proxmox::api::schema::StringSchema::new(
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
+        ::proxmox::api::schema::StringSchema::new(
             "A selection of either \'onekind\', \'another-kind\' or \'selection-number-three\'.",
         )
         .format(&::proxmox::api::schema::ApiStringFormat::Enum(&[
@@ -164,8 +164,8 @@ fn string_check_schema_test() {
         &::proxmox::api::schema::ObjectSchema::new(
             "Check a string.",
             &[
-                ("arg", false, OkString::API_SCHEMA),
-                ("selection", false, Selection::API_SCHEMA),
+                ("arg", false, &OkString::API_SCHEMA),
+                ("selection", false, &Selection::API_SCHEMA),
             ],
         ),
     )

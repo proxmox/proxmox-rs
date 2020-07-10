@@ -78,7 +78,7 @@ fn finish_schema(
     Ok(quote_spanned! { name.span() =>
         #stru
         impl #name {
-            pub const API_SCHEMA: &'static ::proxmox::api::schema::Schema = #schema;
+            pub const API_SCHEMA: ::proxmox::api::schema::Schema = #schema;
         }
     })
 }
