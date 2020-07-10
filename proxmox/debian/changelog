@@ -1,3 +1,13 @@
+rust-proxmox (0.2.0-1) unstable; urgency=medium
+
+  * bump api-macro dependency to 0.2.0
+
+  * cleanup ByteBuffer API and docs
+
+  * fix utf-8 handling in bash completion
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 10 Jul 2020 10:58:30 +0200
+
 rust-proxmox (0.1.42-1) unstable; urgency=medium
 
   * tools: add Websocket helper
