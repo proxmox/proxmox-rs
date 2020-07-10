@@ -1,3 +1,12 @@
+rust-proxmox-api-macro (0.2.0-1)  proxmox-rust; urgency=medium
+
+  * All api-macro generated schema declarations are now values instead of
+    references, usage of them always adds the '&' instead of "sometimes", for
+    consistency. This allows referencing generated schemas (eg.
+    API_RETURN_SCHEMA_FOO) via the `schema:` key inside objects.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 10 Jul 2020 10:50:38 +0200
+
 rust-proxmox-api-macro (0.1.9-1)  proxmox-rust; urgency=medium
 
   * remove some unnecessary parentheses to silence warnings in newer rustc
