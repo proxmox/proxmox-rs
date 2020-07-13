@@ -40,9 +40,39 @@ macro_rules! IPV6RE { () => (concat!(r"(?:",
 #[macro_export]
 macro_rules! IPRE { () => (concat!(r"(?:", IPV4RE!(), "|", IPV6RE!(), ")")) }
 
+/// Regular expression string to match IP addresses where IPv6 addresses require brackets around
+/// them, while for IPv4 they are optional.
+#[rustfmt::skip]
+#[macro_export]
+macro_rules! IPRE_BRACKET { () => (
+    concat!(r"(?:",
+        IPV4RE!(),
+        r"|\[(?:",
+            IPV4RE!(), "|", IPV6RE!(),
+        r")\]",
+    r")"))
+}
+
 lazy_static! {
     pub static ref IP_REGEX: Regex = Regex::new(concat!(r"^", IPRE!(), r"$")).unwrap();
+    pub static ref IP_BRACKET_REGEX: Regex = Regex::new(concat!(r"^", IPRE_BRACKET!(), r"$")).unwrap();
     pub static ref SHA256_HEX_REGEX: Regex = Regex::new(r"^[a-f0-9]{64}$").unwrap();
     pub static ref SYSTEMD_DATETIME_REGEX: Regex =
         Regex::new(r"^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$").unwrap();
+}
+
+#[test]
+fn test_regexes() {
+    assert!(IP_REGEX.is_match("127.0.0.1"));
+    assert!(IP_REGEX.is_match("::1"));
+    assert!(IP_REGEX.is_match("2014:b3a::27"));
+    assert!(IP_REGEX.is_match("2014:b3a::192.168.0.1"));
+    assert!(IP_REGEX.is_match("2014:b3a:0102:adf1:1234:4321:4afA:BCDF"));
+
+    assert!(IP_BRACKET_REGEX.is_match("127.0.0.1"));
+    assert!(IP_BRACKET_REGEX.is_match("[127.0.0.1]"));
+    assert!(IP_BRACKET_REGEX.is_match("[::1]"));
+    assert!(IP_BRACKET_REGEX.is_match("[2014:b3a::27]"));
+    assert!(IP_BRACKET_REGEX.is_match("[2014:b3a::192.168.0.1]"));
+    assert!(IP_BRACKET_REGEX.is_match("[2014:b3a:0102:adf1:1234:4321:4afA:BCDF]"));
 }
