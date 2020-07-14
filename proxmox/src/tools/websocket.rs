@@ -432,7 +432,7 @@ impl<R: AsyncReadExt> WebSocketReader<R> {
 
 enum ReaderState<R> {
     NoData,
-    WaitingForData(Pin<Box<dyn Future<Output = Result<(R, ByteBuffer), Error>> + Send + 'static>>),
+    WaitingForData(Pin<Box<dyn Future<Output = Result<(usize, R, ByteBuffer), Error>> + Send + 'static>>),
     HaveData,
 }
 
@@ -463,18 +463,20 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                     let future = async move {
                         buffer.read_from_async(&mut reader)
                             .await
-                            .map(move |_| (reader, buffer))
+                            .map(move |len| (len, reader, buffer))
                     };
 
                     this.state = ReaderState::WaitingForData(future.boxed());
                 },
                 ReaderState::WaitingForData(ref mut future) => {
                     match ready!(future.as_mut().poll(cx)) {
-                        Ok((reader, buffer)) => {
+                        Ok((len, reader, buffer)) => {
                             this.reader = Some(reader);
                             this.read_buffer = Some(buffer);
                             this.state = ReaderState::HaveData;
-
+                            if len == 0 {
+                                return Poll::Ready(Ok(0));
+                            }
                         },
                         Err(err) => return Poll::Ready(Err(Error::new(ErrorKind::Other, err))),
                     }
@@ -545,7 +547,9 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                     };
                     this.read_buffer = Some(read_buffer);
 
-                    return Poll::Ready(Ok(offset));
+                    if offset > 0 {
+                        return Poll::Ready(Ok(offset));
+                    }
                 },
             }
         }
