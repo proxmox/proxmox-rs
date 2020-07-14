@@ -7,14 +7,16 @@
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::cmp::min;
-use std::io::{self, Error, ErrorKind};
+use std::io::{self, ErrorKind};
 use std::future::Future;
 
 use tokio::io::{AsyncWrite, AsyncRead, AsyncReadExt};
+use anyhow::{bail, format_err, Error};
 
 use futures::future::FutureExt;
 use futures::ready;
 
+use crate::io_format_err;
 use crate::tools::byte_buffer::ByteBuffer;
 
 #[repr(u8)]
@@ -129,7 +131,7 @@ pub fn create_frame(
     let first_byte = 0b10000000 | (frametype as u8);
     let len = data.len();
     if (frametype as u8) & 0b00001000 > 0 && len > 125 {
-        return Err(Error::new(
+        return Err(io::Error::new(
             ErrorKind::InvalidData,
             "Control frames cannot have data longer than 125 bytes",
         ));
@@ -200,7 +202,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
         self: Pin<&mut Self>,
         cx: &mut Context,
         buf: &[u8],
-    ) -> Poll<Result<usize, Error>> {
+    ) -> Poll<io::Result<usize>> {
         let this = Pin::get_mut(self);
 
         let frametype = match this.text {
@@ -233,18 +235,18 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
                 },
                 Err(err) => {
                     eprintln!("error in writer: {}", err);
-                    return Poll::Ready(Err(Error::new(ErrorKind::Other, err)))
+                    return Poll::Ready(Err(err))
                 },
             }
         }
     }
 
-    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Error>> {
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context) -> Poll<io::Result<()>> {
         let this = Pin::get_mut(self);
         Pin::new(&mut this.writer).poll_flush(cx)
     }
 
-    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), Error>> {
+    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context) -> Poll<io::Result<()>> {
         let this = Pin::get_mut(self);
         Pin::new(&mut this.writer).poll_shutdown(cx)
     }
@@ -303,7 +305,7 @@ impl FrameHeader {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn try_from_bytes(data: &[u8]) -> Result<Result<FrameHeader, usize>, Error> {
+    pub fn try_from_bytes(data: &[u8]) -> io::Result<Result<FrameHeader, usize>> {
         let len = data.len();
         if len < 2 {
             return Ok(Err(2 - len));
@@ -313,7 +315,7 @@ impl FrameHeader {
 
         // we do not support extensions
         if data[0] & 0b01110000 > 0 {
-            return Err(Error::new(
+            return Err(io::Error::new(
                 ErrorKind::InvalidData,
                 "Extensions not supported",
             ));
@@ -328,12 +330,12 @@ impl FrameHeader {
             9 => OpCode::Ping,
             10 => OpCode::Pong,
             other => {
-                return Err(Error::new(ErrorKind::InvalidData, format!("Unknown OpCode {}", other)));
+                return Err(io::Error::new(ErrorKind::InvalidData, format!("Unknown OpCode {}", other)));
             }
         };
 
         if !fin && frametype.is_control() {
-            return Err(Error::new(
+            return Err(io::Error::new(
                 ErrorKind::InvalidData,
                 "Control frames cannot be fragmented",
             ));
@@ -366,7 +368,7 @@ impl FrameHeader {
         }
 
         if payload_len > 125 && frametype.is_control() {
-            return Err(Error::new(
+            return Err(io::Error::new(
                 ErrorKind::InvalidData,
                 "Control frames cannot carry more than 125 bytes of data",
             ));
@@ -430,9 +432,15 @@ impl<R: AsyncReadExt> WebSocketReader<R> {
     }
 }
 
+struct ReadResult<R> {
+    len: usize,
+    reader: R,
+    buffer: ByteBuffer,
+}
+
 enum ReaderState<R> {
     NoData,
-    WaitingForData(Pin<Box<dyn Future<Output = Result<(usize, R, ByteBuffer), Error>> + Send + 'static>>),
+    WaitingForData(Pin<Box<dyn Future<Output = io::Result<ReadResult<R>>> + Send + 'static>>),
     HaveData,
 }
 
@@ -443,7 +451,7 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
         self: Pin<&mut Self>,
         cx: &mut Context,
         buf: &mut [u8],
-    ) -> Poll<Result<usize, Error>> {
+    ) -> Poll<io::Result<usize>> {
         let this = Pin::get_mut(self);
         let mut offset = 0;
 
@@ -452,25 +460,25 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                 ReaderState::NoData => {
                     let mut reader = match this.reader.take() {
                         Some(reader) => reader,
-                        None => return Poll::Ready(Err(Error::new(ErrorKind::Other, "no reader"))),
+                        None => return Poll::Ready(Err(io_format_err!("no reader"))),
                     };
 
                     let mut buffer = match this.read_buffer.take() {
                         Some(buffer) => buffer,
-                        None => return Poll::Ready(Err(Error::new(ErrorKind::Other, "no buffer"))),
+                        None => return Poll::Ready(Err(io_format_err!("no buffer"))),
                     };
 
                     let future = async move {
                         buffer.read_from_async(&mut reader)
                             .await
-                            .map(move |len| (len, reader, buffer))
+                            .map(move |len| ReadResult { len, reader, buffer })
                     };
 
                     this.state = ReaderState::WaitingForData(future.boxed());
                 },
                 ReaderState::WaitingForData(ref mut future) => {
                     match ready!(future.as_mut().poll(cx)) {
-                        Ok((len, reader, buffer)) => {
+                        Ok(ReadResult { len, reader, buffer }) => {
                             this.reader = Some(reader);
                             this.read_buffer = Some(buffer);
                             this.state = ReaderState::HaveData;
@@ -478,13 +486,13 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                                 return Poll::Ready(Ok(0));
                             }
                         },
-                        Err(err) => return Poll::Ready(Err(Error::new(ErrorKind::Other, err))),
+                        Err(err) => return Poll::Ready(Err(err)),
                     }
                 },
                 ReaderState::HaveData => {
                     let mut read_buffer = match this.read_buffer.take() {
                         Some(read_buffer) => read_buffer,
-                        None => return Poll::Ready(Err(Error::new(ErrorKind::Other, "no buffer"))),
+                        None => return Poll::Ready(Err(io_format_err!("no buffer"))),
                     };
 
                     let mut header = match this.header.take() {
