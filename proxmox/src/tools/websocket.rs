@@ -194,6 +194,11 @@ impl<W: AsyncWrite + Unpin> WebSocketWriter<W> {
             frame: None,
         }
     }
+
+    pub async fn send_control_frame(&mut self, mask: Option<[u8; 4]>, opcode: OpCode, data: &[u8]) -> Result<(), Error> {
+        let frame = create_frame(mask, data, opcode)?;
+        self.writer.write_all(&frame).await.map_err(Error::from)
+    }
 }
 
 impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
