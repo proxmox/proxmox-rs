@@ -10,9 +10,21 @@ use std::cmp::min;
 use std::io::{self, ErrorKind};
 use std::future::Future;
 
-use tokio::io::{AsyncWrite, AsyncRead, AsyncReadExt};
+use futures::select;
 use anyhow::{bail, format_err, Error};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::sync::mpsc;
+use hyper::{Body, Response, StatusCode};
+use hyper::header::{
+    HeaderMap,
+    HeaderValue,
+    UPGRADE,
+    CONNECTION,
+    SEC_WEBSOCKET_KEY,
+    SEC_WEBSOCKET_PROTOCOL,
+    SEC_WEBSOCKET_VERSION,
+    SEC_WEBSOCKET_ACCEPT,
+};
 
 use futures::future::FutureExt;
 use futures::ready;
@@ -564,5 +576,158 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                 },
             }
         }
+    }
+}
+
+/// Global Identifier for WebSockets, see RFC6455
+pub const MAGIC_WEBSOCKET_GUID: &str = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+/// Provides methods for connecting a WebSocket endpoint with another
+pub struct WebSocket {
+    text: bool,
+}
+
+impl WebSocket {
+    /// Returns a new WebSocket instance and the generates the correct
+    /// WebSocket response from request headers
+    pub fn new(headers: HeaderMap<HeaderValue>) -> Result<(Self, Response<Body>), Error> {
+        let protocols = headers
+            .get(UPGRADE)
+            .ok_or_else(|| format_err!("missing Upgrade header"))?
+            .to_str()?;
+
+        let version = headers
+            .get(SEC_WEBSOCKET_VERSION)
+            .ok_or_else(|| format_err!("missing websocket version"))?
+            .to_str()?;
+
+        let key = headers
+            .get(SEC_WEBSOCKET_KEY)
+            .ok_or_else(|| format_err!("missing websocket key"))?
+            .to_str()?;
+
+        let ws_proto = headers
+            .get(SEC_WEBSOCKET_PROTOCOL)
+            .ok_or_else(|| format_err!("missing websocket key"))?
+            .to_str()?;
+
+        let text = ws_proto == "text";
+
+        if protocols != "websocket" {
+            bail!("invalid protocol name");
+        }
+
+        if version != "13" {
+            bail!("invalid websocket version");
+        }
+
+        // we ignore extensions
+
+        let mut sha1 = openssl::sha::Sha1::new();
+        let data = format!("{}{}", key, MAGIC_WEBSOCKET_GUID);
+        sha1.update(data.as_bytes());
+        let response_key = base64::encode(sha1.finish());
+
+        let response = Response::builder()
+            .status(StatusCode::SWITCHING_PROTOCOLS)
+            .header(UPGRADE, HeaderValue::from_static("websocket"))
+            .header(CONNECTION, HeaderValue::from_static("Upgrade"))
+            .header(SEC_WEBSOCKET_ACCEPT, response_key)
+            .header(SEC_WEBSOCKET_PROTOCOL, ws_proto)
+            .body(Body::empty())?;
+
+        Ok((Self { text }, response))
+    }
+
+    async fn copy_to_websocket<R, W>(
+        mut reader: &mut R,
+        writer: &mut WebSocketWriter<W>,
+        receiver: &mut mpsc::UnboundedReceiver<(OpCode, Box<[u8]>)>) -> Result<bool, Error>
+    where
+        R: AsyncRead + Unpin + Send,
+        W: AsyncWrite + Unpin + Send,
+    {
+        let mut buf = ByteBuffer::new();
+        let mut eof = false;
+        loop {
+            if !buf.is_full() {
+                let bytes = select!{
+                    res = buf.read_from_async(&mut reader).fuse() => res?,
+                    res = receiver.recv().fuse() => {
+                        let (opcode, msg) = res.ok_or(format_err!("control channel closed"))?;
+                        match opcode {
+                            OpCode::Ping => {
+                                writer.send_control_frame(None, OpCode::Pong, &msg).await?;
+                                continue;
+                            }
+                            OpCode::Close => {
+                                writer.send_control_frame(None, OpCode::Close, &msg).await?;
+                                return Ok(true);
+                            }
+                            _ => {
+                                // ignore other frames
+                                continue;
+                            }
+                        }
+                    }
+                };
+
+                if bytes == 0 {
+                    eof = true;
+                }
+            }
+            if buf.len() > 0 {
+                let bytes = writer.write(&buf).await?;
+                if bytes == 0 {
+                    eof = true;
+                }
+                buf.consume(bytes);
+            }
+
+            if eof && buf.is_empty() {
+                return Ok(false);
+            }
+        }
+    }
+
+    /// Takes two endpoints and connects them via a websocket, where the
+    /// 'upstream' endpoint sends and receives WebSocket frames, while
+    /// 'downstream' only expects and sends raw data.
+    /// This method takes care of copying the data between endpoints, and
+    /// sending correct responses for control frames (e.g. a Pont to a Ping).
+    pub async fn serve_connection<S, L>(&self, upstream: S, downstream: L) -> Result<(), Error>
+    where
+        S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+        L: AsyncRead + AsyncWrite + Unpin + Send,
+    {
+
+        let (usreader, uswriter) = tokio::io::split(upstream);
+        let (mut dsreader, mut dswriter) = tokio::io::split(downstream);
+
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        let mut wsreader = WebSocketReader::new(usreader, tx);
+        let mut wswriter = WebSocketWriter::new(None, self.text, uswriter);
+
+
+        let ws_future = tokio::io::copy(&mut wsreader, &mut dswriter);
+        let term_future = Self::copy_to_websocket(&mut dsreader, &mut wswriter, &mut rx);
+
+        let res = select!{
+            res = ws_future.fuse() => match res {
+                Ok(_) => Ok(()),
+                Err(err) => Err(Error::from(err)),
+            },
+            res = term_future.fuse() => match res {
+                Ok(sent_close) if !sent_close => {
+                    // status code 1000 => 0x03E8
+                    wswriter.send_control_frame(None, OpCode::Close, &[0x03, 0xE8]).await?;
+                    Ok(())
+                }
+                Ok(_) => Ok(()),
+                Err(err) => Err(err),
+            }
+        };
+
+        res
     }
 }

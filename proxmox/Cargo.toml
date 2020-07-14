@@ -37,6 +37,7 @@ futures = { version = "0.3", optional = true }
 http = "0.2"
 hyper = { version = "0.13", optional = true }
 percent-encoding = "2.1"
+openssl =  { version = "0.10", optional = true }
 rustyline = "6"
 serde_derive = "1.0"
 textwrap = "0.11"
@@ -57,7 +58,7 @@ api-macro = ["proxmox-api-macro"]
 test-harness = []
 cli = [ "router", "hyper", "tokio" ]
 router = [ "hyper", "tokio" ]
-websocket = [ "tokio", "futures", "tokio/sync" ]
+websocket = [ "tokio", "futures", "tokio/sync", "openssl" ]
 
 # tools:
 #valgrind = ["proxmox-tools/valgrind"]
