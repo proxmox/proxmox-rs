@@ -57,7 +57,7 @@ api-macro = ["proxmox-api-macro"]
 test-harness = []
 cli = [ "router", "hyper", "tokio" ]
 router = [ "hyper", "tokio" ]
-websocket = [ "tokio", "futures" ]
+websocket = [ "tokio", "futures", "tokio/sync" ]
 
 # tools:
 #valgrind = ["proxmox-tools/valgrind"]
