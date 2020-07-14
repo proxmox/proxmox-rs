@@ -222,16 +222,19 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
         // we have a frame in any case, so unwrap is ok
         let (buf, pos, origsize) = this.frame.as_mut().unwrap();
         loop {
-            match Pin::new(&mut this.writer).poll_write(cx, &buf[*pos..]) {
-                Poll::Ready(Ok(size)) => {
+            match ready!(Pin::new(&mut this.writer).poll_write(cx, &buf[*pos..])) {
+                Ok(size) => {
                     *pos += size;
                     if *pos == buf.len() {
                         let size = *origsize;
                         this.frame = None;
                         return Poll::Ready(Ok(size));
                     }
-                }
-                other => return other,
+                },
+                Err(err) => {
+                    eprintln!("error in writer: {}", err);
+                    return Poll::Ready(Err(Error::new(ErrorKind::Other, err)))
+                },
             }
         }
     }
