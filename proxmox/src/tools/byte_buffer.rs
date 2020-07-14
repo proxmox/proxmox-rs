@@ -179,6 +179,12 @@ impl ByteBuffer {
     }
 }
 
+impl Default for ByteBuffer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl std::ops::Deref for ByteBuffer {
     type Target = [u8];
 
