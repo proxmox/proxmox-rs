@@ -9,14 +9,13 @@
 //! fn code<T: Read + ?Sized>(input: &mut T) -> std::io::Result<Box<[u8]>> {
 //!     let mut buffer = ByteBuffer::new();
 //!     let amount = buffer.read_from(input)?;
-//!     let data = buffer.consume(amount);
+//!     let data = buffer.remove_data(amount);
 //!     assert_eq!(data.len(), amount);
 //!     Ok(data)
 //! }
 //! # code(&mut &b"testdata"[..]).expect("byte buffer test failed");
 //! ```
 
-use std::cmp::min;
 use std::io::{Read, Result};
 
 use crate::tools::vec;
@@ -49,21 +48,16 @@ impl ByteBuffer {
         }
     }
 
-    /// Returns the length of the data in the Buffer
-    pub fn data_size(&self) -> usize {
-        self.data_size
-    }
-
     pub fn free_size(&self) -> usize {
         self.capacity - self.data_size
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.data_size == 0
-    }
-
     pub fn is_full(&self) -> bool {
         self.data_size >= self.capacity
+    }
+
+    pub fn clear(&mut self) {
+        self.data_size = 0
     }
 
     /// Sets the length of the data. Useful if data was manually added
@@ -92,19 +86,6 @@ impl ByteBuffer {
         self.data_size += size;
     }
 
-    /// Gets an immutable reference to the data in the buffer
-    /// Example:
-    /// ```
-    /// # use proxmox::tools::byte_buffer::ByteBuffer;
-    /// let mut buf = ByteBuffer::new();
-    /// buf.get_free_mut_slice()[..2].copy_from_slice(&[1u8, 2u8]);
-    /// buf.add_size(2);
-    /// assert_eq!(buf.get_data_slice(), &[1u8, 2u8]);
-    /// ```
-    pub fn get_data_slice(&self) -> &[u8] {
-        &self.buf[..self.data_size]
-    }
-
     /// Returns a mutable reference to the free section of the
     /// Buffer. There are no guarantees about the content of the
     /// free part of the Buffer (may even be uninitialized).
@@ -113,8 +94,8 @@ impl ByteBuffer {
         &mut self.buf[self.data_size..self.capacity]
     }
 
-    /// Consumes up to max_amount of data from the front
-    /// of the buffer. If there was less than max_amount present,
+    /// Removes up to max_amount of data from the front
+    /// of the buffer and returns. If there was less than max_amount present,
     /// it will return as much data as there was in the buffer.
     /// The rest of the data will be moved to the front, and
     /// the data size will be updated accordingly.
@@ -125,18 +106,48 @@ impl ByteBuffer {
     /// let mut buf = ByteBuffer::new();
     /// buf.get_free_mut_slice()[..2].copy_from_slice(&[1u8, 2u8]);
     /// buf.add_size(2);
-    /// assert_eq!(buf.data_size(), 2);
+    /// assert_eq!(buf.len(), 2);
     ///
-    /// let data = buf.consume(100);
+    /// let data = buf.remove_data(100);
     /// assert_eq!(&data[..], &[1u8, 2u8]);
     /// assert!(buf.is_empty());
     /// ```
-    pub fn consume(&mut self, max_amount: usize) -> Box<[u8]> {
-        let size = min(max_amount, self.data_size);
+    #[must_use]
+    pub fn remove_data(&mut self, max_amount: usize) -> Box<[u8]> {
+        let size = max_amount.min(self.data_size);
         let tmp: Box<[u8]> = self.buf[..size].into();
         self.buf.copy_within(size..self.capacity, 0);
         self.data_size -= size;
         tmp
+    }
+
+    /// Removes up to max_amount of data from the front and returns
+    /// the amount of data removed. If there was less than max_amount present,
+    /// it will empty out the buffer and return the amount removed.
+    ///
+    /// Example:
+    /// ```
+    /// # use proxmox::tools::byte_buffer::ByteBuffer;
+    /// let mut buf = ByteBuffer::new();
+    /// buf.get_free_mut_slice()[..2].copy_from_slice(&[1u8, 2u8]);
+    /// buf.add_size(2);
+    /// assert_eq!(buf.len(), 2);
+    ///
+    /// let amount = buf.consume(1);
+    /// assert_eq!(amount, 1);
+    /// let amount = buf.consume(100);
+    /// assert_eq!(amount, 1);
+    /// assert!(buf.is_empty());
+    /// ```
+    pub fn consume(&mut self, max_amount: usize) -> usize {
+        let size = max_amount.min(self.data_size);
+        if size < max_amount {
+            self.clear()
+        } else {
+            self.buf.copy_within(size..self.capacity, 0);
+            self.data_size -= size;
+        }
+        size
     }
 
     /// Takes a reader and reads into the back of the buffer (up to the
@@ -168,6 +179,20 @@ impl ByteBuffer {
     }
 }
 
+impl std::ops::Deref for ByteBuffer {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        &self.buf[..self.data_size]
+    }
+}
+
+impl std::ops::DerefMut for ByteBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.buf[..self.data_size]
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::tools::byte_buffer::ByteBuffer;
@@ -181,7 +206,7 @@ mod test {
         }
         buffer.add_size(5);
 
-        let slice2 = buffer.get_data_slice();
+        let slice2 = &buffer[..];
 
         assert_eq!(slice2, &[0, 1, 2, 3, 4]);
     }
@@ -190,7 +215,7 @@ mod test {
     fn test2() {
         let mut buffer = ByteBuffer::with_capacity(1024);
         let size = buffer.read_from(&mut std::io::repeat(54)).unwrap();
-        assert_eq!(buffer.data_size(), size);
-        assert_eq!(buffer.get_data_slice()[0], 54);
+        assert_eq!(buffer.len(), size);
+        assert_eq!(buffer[0], 54);
     }
 }

@@ -485,7 +485,7 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                     let mut header = match this.header.take() {
                         Some(header) => header,
                         None => {
-                            let header = match FrameHeader::try_from_bytes(read_buffer.get_data_slice())? {
+                            let header = match FrameHeader::try_from_bytes(&read_buffer[..])? {
                                 Ok(header) => header,
                                 Err(_) => {
                                     this.state = ReaderState::NoData;
@@ -500,12 +500,12 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                     };
 
                     if header.is_control_frame() {
-                        if read_buffer.data_size() >= header.payload_len {
+                        if read_buffer.len() >= header.payload_len {
                             (this.callback)(
                                 header.frametype,
                                 mask_bytes(
                                     header.mask,
-                                    &mut read_buffer.consume(header.payload_len).into_vec(),
+                                    &mut read_buffer.remove_data(header.payload_len).into_vec(),
                                 ),
                             );
                             this.state =  if read_buffer.is_empty() {
@@ -523,8 +523,9 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                         }
                     }
 
-                    let len = min(buf.len() - offset, min(header.payload_len, read_buffer.data_size()));
-                    let mut data = read_buffer.consume(len).into_vec();
+                    let len = min(buf.len() - offset, min(header.payload_len, read_buffer.len()));
+
+                    let mut data = read_buffer.remove_data(len).into_vec();
                     buf[offset..offset+len].copy_from_slice(mask_bytes(header.mask, &mut data));
                     offset += len;
 
