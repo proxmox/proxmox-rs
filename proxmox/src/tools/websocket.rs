@@ -44,18 +44,17 @@ impl OpCode {
     }
 }
 
-fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Vec<u8>) -> &mut Vec<u8> {
+fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Box<[u8]>) {
     let mask = match mask {
-        Some([0,0,0,0]) | None => return data,
+        Some([0,0,0,0]) | None => return,
         Some(mask) => mask,
     };
 
     if data.len() < 32 {
-        let mut_data = data.as_mut_slice();
-        for i in 0..mut_data.len() {
-            mut_data[i] ^= mask[i%4];
+        for i in 0..data.len() {
+            data[i] ^= mask[i%4];
         }
-        return data;
+        return;
     }
 
     let mut newmask: u32 = u32::from_le_bytes(mask);
@@ -75,8 +74,6 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Vec<u8>) -> &mut Vec<u8> {
         *s ^= newmask as u8;
         newmask = newmask.rotate_right(8);
     }
-
-    data
 }
 
 /// Can be used to create a complete WebSocket Frame.
@@ -91,7 +88,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Vec<u8>) -> &mut Vec<u8> {
 /// # use std::io;
 /// # fn main() -> io::Result<()> {
 /// let data = vec![0,1,2,3,4];
-/// let frame = create_frame(None, data, OpCode::Text)?;
+/// let frame = create_frame(None, &data, OpCode::Text)?;
 /// assert_eq!(frame, vec![0b10000001, 5, 0, 1, 2, 3, 4]);
 /// # Ok(())
 /// # }
@@ -104,7 +101,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Vec<u8>) -> &mut Vec<u8> {
 /// # use std::io;
 /// # fn main() -> io::Result<()> {
 /// let data = vec![0,1,2,3,4];
-/// let frame = create_frame(Some([0u8, 1u8, 2u8, 3u8]), data, OpCode::Text)?;
+/// let frame = create_frame(Some([0u8, 1u8, 2u8, 3u8]), &data, OpCode::Text)?;
 /// assert_eq!(frame, vec![0b10000001, 0b10000101, 0, 1, 2, 3, 0, 0, 0, 0, 4]);
 /// # Ok(())
 /// # }
@@ -117,7 +114,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Vec<u8>) -> &mut Vec<u8> {
 /// # use std::io;
 /// # fn main() -> io::Result<()> {
 /// let data = vec![0,1,2,3,4];
-/// let frame = create_frame(None, data, OpCode::Ping)?;
+/// let frame = create_frame(None, &data, OpCode::Ping)?;
 /// assert_eq!(frame, vec![0b10001001, 0b00000101, 0, 1, 2, 3, 4]);
 /// # Ok(())
 /// # }
@@ -125,7 +122,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Vec<u8>) -> &mut Vec<u8> {
 /// ```
 pub fn create_frame(
     mask: Option<[u8; 4]>,
-    mut data: Vec<u8>,
+    data: &[u8],
     frametype: OpCode,
 ) -> io::Result<Vec<u8>> {
     let first_byte = 0b10000000 | (frametype as u8);
@@ -155,8 +152,10 @@ pub fn create_frame(
     if let Some(mask) = mask {
         buf.extend_from_slice(&mask);
     }
+    let mut data = data.to_vec().into_boxed_slice();
+    mask_bytes(mask, &mut data);
 
-    buf.append(&mut mask_bytes(mask, &mut data));
+    buf.append(&mut data.into_vec());
     Ok(buf)
 }
 
@@ -212,7 +211,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
 
         if this.frame.is_none() {
             // create frame buf
-            let frame = match create_frame(this.mask, buf.to_vec(), frametype) {
+            let frame = match create_frame(this.mask, buf, frametype) {
                 Ok(f) => f,
                 Err(e) => {
                     return Poll::Ready(Err(e));
@@ -285,7 +284,7 @@ impl FrameHeader {
     /// # use proxmox::tools::websocket::*;
     /// # use std::io;
     /// # fn main() -> io::Result<()> {
-    /// let frame = create_frame(None, vec![0,1,2,3], OpCode::Ping)?;
+    /// let frame = create_frame(None, &[0,1,2,3], OpCode::Ping)?;
     /// let header = FrameHeader::try_from_bytes(&frame[..1])?;
     /// match header {
     ///     Ok(_) => unreachable!(),
@@ -514,12 +513,11 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
 
                     if header.is_control_frame() {
                         if read_buffer.len() >= header.payload_len {
+                            let mut data = read_buffer.remove_data(header.payload_len);
+                            mask_bytes(header.mask, &mut data);
                             (this.callback)(
                                 header.frametype,
-                                mask_bytes(
-                                    header.mask,
-                                    &mut read_buffer.remove_data(header.payload_len).into_vec(),
-                                ),
+                                &data,
                             );
                             this.state =  if read_buffer.is_empty() {
                                 ReaderState::NoData
@@ -538,8 +536,9 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
 
                     let len = min(buf.len() - offset, min(header.payload_len, read_buffer.len()));
 
-                    let mut data = read_buffer.remove_data(len).into_vec();
-                    buf[offset..offset+len].copy_from_slice(mask_bytes(header.mask, &mut data));
+                    let mut data = read_buffer.remove_data(len);
+                    mask_bytes(header.mask, &mut data);
+                    buf[offset..offset+len].copy_from_slice(&data);
                     offset += len;
 
                     header.payload_len -= len;
