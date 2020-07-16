@@ -34,7 +34,7 @@ pub fn handle_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<Token
             fields.paren_token.span,
             "api macro does not support tuple structs"
         ),
-        syn::Fields::Named(_) => handle_regular_struct(attribs, stru)
+        syn::Fields::Named(_) => handle_regular_struct(attribs, stru),
     }
 }
 
@@ -47,10 +47,7 @@ fn get_struct_description(schema: &mut Schema, stru: &syn::ItemStruct) -> Result
     Ok(())
 }
 
-fn handle_unit_struct(
-    attribs: JSONObject,
-    stru: syn::ItemStruct,
-) -> Result<TokenStream, Error> {
+fn handle_unit_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<TokenStream, Error> {
     // unit structs, not sure about these?
 
     let mut schema: Schema = if attribs.is_empty() {
@@ -83,10 +80,7 @@ fn finish_schema(
     })
 }
 
-fn handle_newtype_struct(
-    attribs: JSONObject,
-    stru: syn::ItemStruct,
-) -> Result<TokenStream, Error> {
+fn handle_newtype_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<TokenStream, Error> {
     // Ideally we could clone the contained item's schema, but this is "hard", so for now we assume
     // the contained type is a simple type.
     //
@@ -104,7 +98,11 @@ fn handle_newtype_struct(
             _ => panic!("handle_unit_struct on non-unit struct"),
         };
         // this is also part of `handle_struct()`'s verification!
-        assert_eq!(fields.len(), 1, "handle_unit_struct needs a struct with exactly 1 field");
+        assert_eq!(
+            fields.len(),
+            1,
+            "handle_unit_struct needs a struct with exactly 1 field"
+        );
 
         // Now infer the type information:
         util::infer_type(&mut schema, &fields[0].ty)?;
@@ -115,10 +113,7 @@ fn handle_newtype_struct(
     finish_schema(schema, &stru, &stru.ident)
 }
 
-fn handle_regular_struct(
-    attribs: JSONObject,
-    stru: syn::ItemStruct,
-) -> Result<TokenStream, Error> {
+fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<TokenStream, Error> {
     let mut schema: Schema = if attribs.is_empty() {
         Schema::empty_object(Span::call_site())
     } else {

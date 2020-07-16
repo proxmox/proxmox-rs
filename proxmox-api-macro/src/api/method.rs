@@ -45,7 +45,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
             let permission = access.permission;
             let description = match access.description {
                 Some(desc) => quote_spanned! { desc.span() => Some(#desc) },
-                None => quote_spanned! { access.span => None }
+                None => quote_spanned! { access.span => None },
             };
             quote_spanned! { access.span =>
                .access(#description, #permission)

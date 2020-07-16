@@ -84,26 +84,25 @@ pub struct RenamedStruct {
 
 #[test]
 fn renamed_struct() {
-    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
-        ::proxmox::api::schema::ObjectSchema::new(
-            "An example of a struct with renamed fields.",
-            &[
-                (
-                    "SomeOther",
-                    true,
-                    &::proxmox::api::schema::StringSchema::new(
-                        "An optional auto-derived value for testing:",
-                    )
-                    .schema(),
-                ),
-                (
-                    "test-string",
-                    false,
-                    &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
-                ),
-            ],
-        )
-        .schema();
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema = ::proxmox::api::schema::ObjectSchema::new(
+        "An example of a struct with renamed fields.",
+        &[
+            (
+                "SomeOther",
+                true,
+                &::proxmox::api::schema::StringSchema::new(
+                    "An optional auto-derived value for testing:",
+                )
+                .schema(),
+            ),
+            (
+                "test-string",
+                false,
+                &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
+            ),
+        ],
+    )
+    .schema();
 
     assert_eq!(TEST_SCHEMA, RenamedStruct::API_SCHEMA);
 }
@@ -124,16 +123,15 @@ pub enum Selection {
 
 #[test]
 fn selection_test() {
-    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
-        ::proxmox::api::schema::StringSchema::new(
-            "A selection of either \'onekind\', \'another-kind\' or \'selection-number-three\'.",
-        )
-        .format(&::proxmox::api::schema::ApiStringFormat::Enum(&[
-            EnumEntry::new("onekind", "The first kind."),
-            EnumEntry::new("another-kind", "Some other kind."),
-            EnumEntry::new("selection-number-three", "And yet another."),
-        ]))
-        .schema();
+    const TEST_SCHEMA: ::proxmox::api::schema::Schema = ::proxmox::api::schema::StringSchema::new(
+        "A selection of either \'onekind\', \'another-kind\' or \'selection-number-three\'.",
+    )
+    .format(&::proxmox::api::schema::ApiStringFormat::Enum(&[
+        EnumEntry::new("onekind", "The first kind."),
+        EnumEntry::new("another-kind", "Some other kind."),
+        EnumEntry::new("selection-number-three", "And yet another."),
+    ]))
+    .schema();
 
     assert_eq!(TEST_SCHEMA, Selection::API_SCHEMA);
 }

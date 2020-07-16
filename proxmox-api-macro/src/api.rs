@@ -193,7 +193,7 @@ impl Schema {
     fn find_schema_property(&self, key: &str) -> Option<&syn::Expr> {
         for prop in &self.properties {
             if prop.0 == key {
-                return Some(&prop.1)
+                return Some(&prop.1);
             }
         }
         None
@@ -201,7 +201,8 @@ impl Schema {
 
     pub fn add_default_property(&mut self, key: &str, value: syn::Expr) {
         if self.find_schema_property(key).is_none() {
-            self.properties.push((Ident::new(key, Span::call_site()), value));
+            self.properties
+                .push((Ident::new(key, Span::call_site()), value));
         }
     }
 }

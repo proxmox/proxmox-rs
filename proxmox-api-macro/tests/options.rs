@@ -77,11 +77,13 @@ fn test_invocations() {
         .expect("func with option should work");
     assert_eq!(value, true);
 
-    let value = api_function_test_option(json!({"value": false}), &API_METHOD_TEST_OPTION, &mut env)
-        .expect("func with option should work");
+    let value =
+        api_function_test_option(json!({"value": false}), &API_METHOD_TEST_OPTION, &mut env)
+            .expect("func with option should work");
     assert_eq!(value, false);
 
-    let value = api_function_test_default_macro(json!({}), &API_METHOD_TEST_DEFAULT_MACRO, &mut env)
-        .expect("func with option should work");
+    let value =
+        api_function_test_default_macro(json!({}), &API_METHOD_TEST_DEFAULT_MACRO, &mut env)
+            .expect("func with option should work");
     assert_eq!(value, 5);
 }

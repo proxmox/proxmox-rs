@@ -69,8 +69,7 @@ pub struct AnI64(i64);
 #[test]
 fn test_an_i64_schema() {
     const TEST_SCHEMA: ::proxmox::api::schema::Schema =
-        ::proxmox::api::schema::IntegerSchema::new("An i64: this is left unlimited.")
-            .schema();
+        ::proxmox::api::schema::IntegerSchema::new("An i64: this is left unlimited.").schema();
 
     assert_eq!(TEST_SCHEMA, AnI64::API_SCHEMA);
 }
