@@ -44,6 +44,12 @@ pub use byte_vec::*;
 ///     v.set_len(len);
 /// }
 /// ```
+///
+/// # Safety
+///
+/// It's generally not unsafe to use this method, but the contents are uninitialized, and since
+/// this does not return a `MaybeUninit` type to track the initialization state, this is simply
+/// marked as unsafe for good measure.
 #[inline]
 pub unsafe fn uninitialized(len: usize) -> Vec<u8> {
     let mut out = Vec::with_capacity(len);

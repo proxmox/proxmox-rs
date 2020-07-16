@@ -212,10 +212,8 @@ fn handle_function_signature(
             // try to infer the type in the schema if it is not specified explicitly:
             let is_option = util::infer_type(schema, &*pat_type.ty)?;
             let has_default = schema.find_schema_property("default").is_some();
-            if !is_option && *optional {
-                if !has_default {
-                    bail!(pat_type => "optional types need a default or be an Option<T>");
-                }
+            if !is_option && *optional && !has_default {
+                bail!(pat_type => "optional types need a default or be an Option<T>");
             }
             if has_default && !*optional {
                 bail!(pat_type => "non-optional parameter cannot have a default");

@@ -17,6 +17,11 @@ unsafe impl<T> Send for Mmap<T> where T: Send {}
 unsafe impl<T> Sync for Mmap<T> where T: Sync {}
 
 impl<T> Mmap<T> {
+    /// Map a file into memory.
+    ///
+    /// # Safety
+    ///
+    /// `fd` must refer to a valid file descriptor.
     pub unsafe fn map_fd(
         fd: RawFd,
         ofs: u64,
@@ -25,6 +30,8 @@ impl<T> Mmap<T> {
         flags: mman::MapFlags,
     ) -> io::Result<Self> {
         let byte_len = count * mem::size_of::<T>();
+        // libc::size_t vs usize
+        #[allow(clippy::useless_conversion)]
         let data = mman::mmap(
             ptr::null_mut(),
             libc::size_t::try_from(byte_len).map_err(io_err_other)?,

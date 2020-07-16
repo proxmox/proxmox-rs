@@ -70,6 +70,11 @@ pub trait WriteExt {
     /// # }
     /// ```
     ///
+    /// # Safety
+    ///
+    /// This should only used for types with a defined storage representation, usually
+    /// `#[repr(C)]`, otherwise the results may be inconsistent.
+    ///
     /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
     unsafe fn write_host_value<T: Endian>(&mut self, value: T) -> io::Result<()>;
 
@@ -108,6 +113,11 @@ pub trait WriteExt {
     /// # }
     /// ```
     ///
+    /// # Safety
+    ///
+    /// This should only used for types with a defined storage representation, usually
+    /// `#[repr(C)]`, otherwise the results may be inconsistent.
+    ///
     /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
     unsafe fn write_le_value<T: Endian>(&mut self, value: T) -> io::Result<()>;
 
@@ -145,6 +155,11 @@ pub trait WriteExt {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// This should only used for types with a defined storage representation, usually
+    /// `#[repr(C)]`, otherwise the results may be inconsistent.
     ///
     /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
     unsafe fn write_be_value<T: Endian>(&mut self, value: T) -> io::Result<()>;

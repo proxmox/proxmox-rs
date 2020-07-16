@@ -50,7 +50,7 @@ pub fn localtime(epoch: i64) -> Result<libc::tm, Error> {
     let mut result = new_libc_tm();
 
     unsafe {
-        if libc::localtime_r(&epoch, &mut result) == std::ptr::null_mut() {
+        if libc::localtime_r(&epoch, &mut result).is_null() {
             bail!("libc::localtime failed for '{}'", epoch);
         }
     }
@@ -64,7 +64,7 @@ pub fn gmtime(epoch: i64) -> Result<libc::tm, Error> {
     let mut result = new_libc_tm();
 
     unsafe {
-        if libc::gmtime_r(&epoch, &mut result) == std::ptr::null_mut() {
+        if libc::gmtime_r(&epoch, &mut result).is_null() {
             bail!("libc::gmtime failed for '{}'", epoch);
         }
     }

@@ -119,7 +119,7 @@ pub mod string_as_base64 {
     use base64;
     use serde::{Deserialize, Deserializer, Serializer};
 
-    pub fn serialize<S>(data: &String, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(data: &str, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {

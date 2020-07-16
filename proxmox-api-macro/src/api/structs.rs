@@ -94,23 +94,21 @@ fn handle_newtype_struct(
     // create "linked" schemas. We cannot do this purely via the macro.
 
     let mut schema: Schema = attribs.try_into()?;
-    match schema.item {
-        SchemaItem::Inferred(_span) => {
-            // The schema has no `type` and we failed to guess it. Infer it from the contained
-            // field!
+    if let SchemaItem::Inferred(_span) = schema.item {
+        // The schema has no `type` and we failed to guess it. Infer it from the contained field!
 
-            let fields = match &stru.fields {
-                syn::Fields::Unnamed(fields) => &fields.unnamed,
-                _ => panic!("handle_unit_struct on non-unit struct"), // `handle_struct()` verified this!
-            };
-            // this is also part of `handle_struct()`'s verification!
-            assert_eq!(fields.len(), 1, "handle_unit_struct needs a struct with exactly 1 field");
+        let fields = match &stru.fields {
+            syn::Fields::Unnamed(fields) => &fields.unnamed,
 
-            // Now infer the type information:
-            util::infer_type(&mut schema, &fields[0].ty)?;
-        }
-        _ => (),
-    };
+            // `handle_struct()` verified this!
+            _ => panic!("handle_unit_struct on non-unit struct"),
+        };
+        // this is also part of `handle_struct()`'s verification!
+        assert_eq!(fields.len(), 1, "handle_unit_struct needs a struct with exactly 1 field");
+
+        // Now infer the type information:
+        util::infer_type(&mut schema, &fields[0].ty)?;
+    }
 
     get_struct_description(&mut schema, &stru)?;
 

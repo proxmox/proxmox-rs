@@ -105,6 +105,11 @@ pub trait ReadExt {
     /// # }
     /// ```
     ///
+    /// # Safety
+    ///
+    /// This should only used for types with a defined storage representation, usually
+    /// `#[repr(C)]`, otherwise the results may be inconsistent.
+    ///
     /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
     unsafe fn read_host_value<T: Endian>(&mut self) -> io::Result<T>;
 
@@ -136,6 +141,11 @@ pub trait ReadExt {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// This should only used for types with a defined storage representation, usually
+    /// `#[repr(C)]`, otherwise the results may be inconsistent.
     ///
     /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
     unsafe fn read_le_value<T: Endian>(&mut self) -> io::Result<T>;
@@ -169,6 +179,11 @@ pub trait ReadExt {
     /// # }
     /// ```
     ///
+    /// # Safety
+    ///
+    /// This should only used for types with a defined storage representation, usually
+    /// `#[repr(C)]`, otherwise the results may be inconsistent.
+    ///
     /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
     unsafe fn read_be_value<T: Endian>(&mut self) -> io::Result<T>;
 
@@ -201,6 +216,11 @@ pub trait ReadExt {
     /// # }
     /// # code(&input[..]).unwrap();
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// This should only used for types with a defined storage representation, usually
+    /// `#[repr(C)]`, otherwise the results may be inconsistent.
     unsafe fn read_host_value_boxed<T>(&mut self) -> io::Result<Box<T>>;
 }
 

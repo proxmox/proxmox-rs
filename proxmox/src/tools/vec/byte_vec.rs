@@ -64,6 +64,12 @@ pub trait ByteVecExt {
     /// file.append_to_vec(&mut buffer, 1024)?;
     /// ```
     ///
+    /// # Safety
+    ///
+    /// When increasing the size, the new contents are uninitialized and have nothing to do with
+    /// the previously contained content. Since we cannot track this state through the type system,
+    /// this method is marked as an unsafe API for good measure.
+    ///
     /// [`ReadExt`]: crate::io::ReadExt
     unsafe fn grow_uninitialized(&mut self, more: usize) -> &mut [u8];
 
@@ -77,6 +83,12 @@ pub trait ByteVecExt {
     ///     }
     /// }
     /// ```
+    ///
+    /// # Safety
+    ///
+    /// When increasing the size, the new contents are uninitialized and have nothing to do with
+    /// the previously contained content. Since we cannot track this state through the type system,
+    /// this method is marked as an unsafe API for good measure.
     unsafe fn resize_uninitialized(&mut self, total: usize);
 }
 
