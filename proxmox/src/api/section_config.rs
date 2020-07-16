@@ -82,8 +82,13 @@ pub struct SectionConfigData {
     order: VecDeque<String>,
 }
 
-impl SectionConfigData {
+impl Default for SectionConfigData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
+impl SectionConfigData {
     /// Creates a new instance without any data.
     pub fn new() -> Self {
         Self { sections: HashMap::new(), order: VecDeque::new() }
@@ -167,13 +172,13 @@ impl SectionConfigData {
     pub fn convert_to_typed_array<T: DeserializeOwned>(&self, type_name: &str) -> Result<Vec<T>, Error> {
         let mut list: Vec<T> = vec![];
 
-        for (_, (section_type, data)) in &self.sections {
+        for (section_type, data) in self.sections.values() {
             if section_type == type_name {
                 list.push(T::deserialize(data.clone())?);
             }
         }
 
-        Ok(list.into())
+        Ok(list)
     }
 }
 
@@ -235,7 +240,6 @@ impl SectionConfig {
     /// plugins. Please note that `filename` is only used to improve
     /// error messages.
     pub fn write(&self, filename: &str, config: &SectionConfigData) -> Result<String, Error> {
-
         try_block!({
             let mut list = VecDeque::new();
 
@@ -247,7 +251,7 @@ impl SectionConfig {
                 done.insert(section_id);
             }
 
-            for (section_id, _) in &config.sections {
+            for section_id in config.sections.keys() {
                 if done.contains(section_id) { continue };
                 list.push_back(section_id);
             }
@@ -293,7 +297,6 @@ impl SectionConfig {
     /// plugins. Please note that `filename` is only used to improve
     /// error messages.
     pub fn parse(&self, filename: &str, raw: &str) -> Result<SectionConfigData, Error> {
-
         let mut state = ParseState::BeforeHeader;
 
         let test_required_properties = |value: &Value, schema: &ObjectSchema, id_property: &Option<String>| -> Result<(), Error> {
@@ -304,7 +307,7 @@ impl SectionConfig {
                         continue;
                     }
                 }
-                if *optional == false && value[name] == Value::Null {
+                if !*optional && value[name] == Value::Null {
                     return Err(format_err!("property '{}' is missing and it is not optional.", name));
                 }
             }
@@ -373,6 +376,7 @@ impl SectionConfig {
                                     }
                                 };
 
+                                #[allow(clippy::collapsible_if)] // clearer
                                 if is_array {
                                    if config[&key] == Value::Null {
                                        config[key] = json!([value]);
@@ -422,7 +426,6 @@ impl SectionConfig {
         key: &str,
         value: &Value,
     ) -> Result<String, Error> {
-
         if let Value::Array(array) = value {
             let mut list = String::new();
             for item in array {
@@ -450,11 +453,15 @@ impl SectionConfig {
     }
 
     fn default_parse_section_content(line: &str) -> Option<(String, String)> {
+        if line.is_empty() {
+            return None;
+        }
 
-        if line.is_empty() { return None; }
         let first_char = line.chars().next().unwrap();
 
-        if !first_char.is_whitespace() { return None }
+        if !first_char.is_whitespace() {
+            return None;
+        }
 
         let mut kv_iter = line.trim_start().splitn(2, |c: char| c.is_whitespace());
 
@@ -463,7 +470,7 @@ impl SectionConfig {
             None => return None,
         };
 
-        if key.len() == 0 { return None; }
+        if key.is_empty() { return None; }
 
         let value = match kv_iter.next() {
             Some(v) => v.trim(),
@@ -474,12 +481,15 @@ impl SectionConfig {
    }
 
     fn default_parse_section_header(line: &str) -> Option<(String, String)> {
-
-        if line.is_empty() { return None; };
+        if line.is_empty() {
+            return None;
+        };
 
         let first_char = line.chars().next().unwrap();
 
-        if !first_char.is_alphabetic() { return None }
+        if !first_char.is_alphabetic() {
+            return None;
+        }
 
         let mut head_iter = line.splitn(2, ':');
 
@@ -488,7 +498,9 @@ impl SectionConfig {
             None => return None,
         };
 
-        if section_type.len() == 0 { return None; }
+        if section_type.is_empty() {
+            return None;
+        }
 
         let section_id = match head_iter.next() {
             Some(v) => v.trim(),
@@ -499,7 +511,10 @@ impl SectionConfig {
     }
 
     fn systemd_format_section_header(type_name: &str, section_id: &str, _data: &Value) -> Result<String, Error> {
-        if type_name != section_id { bail!("gut unexpexted section type"); }
+        if type_name != section_id {
+            bail!("gut unexpexted section type");
+        }
+
         Ok(format!("[{}]\n", section_id))
     }
 
@@ -537,7 +552,6 @@ impl SectionConfig {
     }
 
     fn systemd_parse_section_content(line: &str) -> Option<(String, String)> {
-
         let line = line.trim_end();
 
         if line.is_empty() { return None; }
@@ -555,17 +569,21 @@ impl SectionConfig {
     }
 
     fn systemd_parse_section_header(line: &str) -> Option<(String, String)> {
-
         let line = line.trim_end();
 
-        if line.is_empty() { return None; };
+        if line.is_empty() {
+            return None;
+        };
 
-        if !line.starts_with("[") { return None; }
-        if !line.ends_with("]") { return None; }
+        if !line.starts_with('[') || !line.ends_with(']') {
+            return None;
+        }
 
         let section = line[1..line.len()-1].trim();
 
-        if section.len() == 0 { return None; }
+        if section.is_empty() {
+            return None;
+        }
 
         Some((section.into(), section.into()))
     }

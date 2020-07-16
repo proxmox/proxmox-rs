@@ -18,13 +18,11 @@ pub fn get_output_format(param: &Value) -> String {
 
     if let Some(format) = param["output-format"].as_str() {
          output_format = Some(format.to_owned());
-    } else if let Some(format) = std::env::var(ENV_VAR_PROXMOX_OUTPUT_FORMAT).ok() {
-        output_format = Some(format.to_owned());
+    } else if let Ok(format) = std::env::var(ENV_VAR_PROXMOX_OUTPUT_FORMAT) {
+        output_format = Some(format);
     }
 
-    let output_format = output_format.unwrap_or(String::from("text"));
-
-    output_format
+    output_format.unwrap_or_else(|| String::from("text"))
 }
 
 /// Helper to get TableFormatOptions with default from environment
@@ -77,7 +75,7 @@ fn data_to_text(data: &Value, schema: &Schema) -> Result<String, Error> {
         Schema::String(_string_schema) => {
             match data.as_str() {
                 Some(value) => {
-                    Ok(format!("{}", value))
+                    Ok(value.to_string())
                 }
                 None => bail!("got unexpected data (expected string)."),
             }
@@ -101,7 +99,10 @@ struct TableBorders {
 
 impl TableBorders {
 
-    fn new(column_widths: &Vec<usize>, ascii_delimiters: bool) -> Self {
+    fn new<I>(column_widths: I, ascii_delimiters: bool) -> Self
+    where
+        I: Iterator<Item = usize>,
+    {
 
         let mut top = String::new();
         let mut head = String::new();
@@ -110,27 +111,25 @@ impl TableBorders {
 
         let column_separator = if ascii_delimiters { '|' } else { '│' };
 
-        for (i, column_width) in column_widths.iter().enumerate() {
+        for (i, column_width) in column_widths.enumerate() {
             if ascii_delimiters {
                 top.push('+');
                 head.push('+');
                 middle.push('+');
                 bottom.push('+');
+            } else if i == 0 {
+                top.push('┌');
+                head.push('╞');
+                middle.push('├');
+                bottom.push('└');
             } else {
-                if i == 0 {
-                    top.push('┌');
-                    head.push('╞');
-                    middle.push('├');
-                    bottom.push('└');
-                } else {
-                    top.push('┬');
-                    head.push('╪');
-                    middle.push('┼');
-                    bottom.push('┴');
-                }
+                top.push('┬');
+                head.push('╪');
+                middle.push('┼');
+                bottom.push('┴');
             }
 
-            for _j in 0..*column_width+2 {
+            for _j in 0..(column_width + 2) {
                 if ascii_delimiters {
                     top.push('=');
                     head.push('=');
@@ -266,11 +265,11 @@ impl TableFormatOptions {
         match self.sortkeys {
             None => {
                 let mut list = Vec::new();
-                list.push((key.to_string(), sort_desc));
+                list.push((key, sort_desc));
                 self.sortkeys = Some(list);
             }
             Some(ref mut list) => {
-               list.push((key.to_string(), sort_desc));
+               list.push((key, sort_desc));
             }
         }
         self
@@ -381,9 +380,7 @@ fn format_table<W: Write>(
 
     use std::cmp::Ordering;
     list.sort_unstable_by(move |a, b| {
-
-        for pos in 0..sortinfo.len() {
-            let (ref sortkey, sort_desc, numeric) = sortinfo[pos];
+        for &(ref sortkey, sort_desc, numeric) in &sortinfo {
             let res = if numeric {
                 let (v1, v2) = if sort_desc {
                     (b[&sortkey].as_f64(), a[&sortkey].as_f64())
@@ -395,18 +392,17 @@ fn format_table<W: Write>(
                     (Some(_), None) => Ordering::Greater,
                     (None, Some(_)) => Ordering::Less,
                     (Some(a), Some(b)) => {
+                        #[allow(clippy::if_same_then_else)]
                         if a.is_nan() {
                             Ordering::Greater
                         } else if b.is_nan() {
                             Ordering::Less
+                        } else if a < b {
+                            Ordering::Less
+                        } else if a > b {
+                            Ordering::Greater
                         } else {
-                            if a < b {
-                                Ordering::Less
-                            } else if a > b {
-                                Ordering::Greater
-                            } else {
-                                Ordering::Equal
-                            }
+                            Ordering::Equal
                         }
                     }
                 }
@@ -418,9 +414,12 @@ fn format_table<W: Write>(
                 };
                 v1.cmp(&v2)
             };
-            if res != Ordering::Equal { return res; }
+
+            if res != Ordering::Equal {
+                return res;
+            }
         }
-        return Ordering::Equal;
+        Ordering::Equal
     });
 
     let mut tabledata: Vec<TableColumn> = Vec::new();
@@ -478,8 +477,8 @@ fn format_table<W: Write>(
 
 fn render_table<W: Write>(
     mut output: W,
-    tabledata: &Vec<TableColumn>,
-    column_names: &Vec<String>,
+    tabledata: &[TableColumn],
+    column_names: &[String],
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
 
@@ -494,9 +493,8 @@ fn render_table<W: Write>(
         Ok(())
     };
 
-    let column_widths = tabledata.iter().map(|d| d.width).collect();
-
-    let borders = TableBorders::new(&column_widths, options.ascii_delimiters);
+    let column_widths = tabledata.iter().map(|d| d.width);
+    let borders = TableBorders::new(column_widths, options.ascii_delimiters);
 
     if !options.noborder { write_line(&borders.top)?; }
 

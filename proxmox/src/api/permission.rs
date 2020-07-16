@@ -57,14 +57,14 @@ impl fmt::Debug for Permission {
             Permission::And(list) => {
                 f.write_str("And(\n")?;
                 for subtest in list.iter() {
-                    write!(f, "  {:?}\n", subtest)?;
+                    writeln!(f, "  {:?}", subtest)?;
                 }
                 f.write_str(")\n")
             }
             Permission::Or(list) => {
                 f.write_str("Or(\n")?;
                 for subtest in list.iter() {
-                    write!(f, "  {:?}\n", subtest)?;
+                    writeln!(f, "  {:?}", subtest)?;
                 }
                 f.write_str(")\n")
             }
@@ -98,6 +98,8 @@ pub fn check_api_permission(
     check_api_permission_tail(perm, userid, param, info)
 }
 
+// some of them are deeply nested
+#[allow(clippy::needless_return)]
 fn check_api_permission_tail(
     perm: &Permission,
     userid: Option<&str>,
@@ -161,14 +163,20 @@ fn check_api_permission_tail(
         }
         Permission::And(list) => {
             for subtest in list.iter() {
-                if !check_api_permission_tail(subtest, userid, param, info) { return false; }
+                if !check_api_permission_tail(subtest, userid, param, info) {
+                    return false;
+                }
             }
+
             return true;
         }
         Permission::Or(list) => {
             for subtest in list.iter() {
-                if check_api_permission_tail(subtest, userid, param, info) { return true; }
+                if check_api_permission_tail(subtest, userid, param, info) {
+                    return true;
+                }
             }
+
             return false;
         }
     }
