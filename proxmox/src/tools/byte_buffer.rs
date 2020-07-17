@@ -154,14 +154,15 @@ impl ByteBuffer {
     /// free space in the buffer) and updates its size accordingly.
     ///
     /// Example:
-    /// ```norun
-    /// // create some reader
-    /// let reader = ...;
-    ///
-    /// let mut buf = ByteBuffer::new();
-    /// let res = buf.read_from(reader);
-    /// // do something with the buffer
-    /// ...
+    /// ```
+    /// # use std::io;
+    /// # use proxmox::tools::byte_buffer::ByteBuffer;
+    /// fn code<R: io::Read>(mut reader: R) -> io::Result<()> {
+    ///     let mut buf = ByteBuffer::new();
+    ///     let res = buf.read_from(&mut reader)?;
+    ///     // do something with the buffer
+    ///     Ok(())
+    /// }
     /// ```
     pub fn read_from<T: Read + ?Sized>(&mut self, input: &mut T) -> Result<usize> {
         let amount = input.read(self.get_free_mut_slice())?;
