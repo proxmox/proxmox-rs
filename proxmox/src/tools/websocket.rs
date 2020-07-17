@@ -1,8 +1,7 @@
 //! Websocket helpers
 //!
-//! Provides methods to read and write from websockets
-//! The reader and writer take a reader/writer with AsyncRead/AsyncWrite
-//! respectively and provides the same
+//! Provides methods to read and write from websockets The reader and writer take a reader/writer
+//! with AsyncRead/AsyncWrite respectively and provides the same
 
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -113,7 +112,7 @@ impl OpCode {
     }
 }
 
-fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Box<[u8]>) {
+fn mask_bytes(mask: Option<[u8; 4]>, data: &mut [u8]) {
     let mask = match mask {
         Some([0,0,0,0]) | None => return,
         Some(mask) => mask,
@@ -278,10 +277,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
     ) -> Poll<io::Result<usize>> {
         let this = Pin::get_mut(self);
 
-        let frametype = match this.text {
-            true => OpCode::Text,
-            false => OpCode::Binary,
-        };
+        let frametype = if this.text { OpCode::Text } else { OpCode::Binary };
 
         if this.frame.is_none() {
             // create frame buf
@@ -448,16 +444,15 @@ impl FrameHeader {
             ));
         }
 
-        let mask = match mask_bit {
-            true => {
-                if len < mask_offset + 4 {
-                    return Ok(None);
-                }
-                let mut mask = [0u8; 4];
-                mask.copy_from_slice(&data[mask_offset as usize..payload_offset as usize]);
-                Some(mask)
+        let mask = if mask_bit {
+            if len < mask_offset + 4 {
+                return Ok(None);
             }
-            false => None,
+            let mut mask = [0u8; 4];
+            mask.copy_from_slice(&data[mask_offset as usize..payload_offset as usize]);
+            Some(mask)
+        } else {
+            None
         };
 
         Ok(Some(FrameHeader {
@@ -513,7 +508,7 @@ struct ReadResult<R> {
 
 enum ReaderState<R> {
     NoData,
-    WaitingForData(Pin<Box<dyn Future<Output = io::Result<ReadResult<R>>> + Send + 'static>>),
+    Receiving(Pin<Box<dyn Future<Output = io::Result<ReadResult<R>>> + Send + 'static>>),
     HaveData,
 }
 
@@ -547,9 +542,9 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                             .map(move |len| ReadResult { len, reader, buffer })
                     };
 
-                    this.state = ReaderState::WaitingForData(future.boxed());
+                    this.state = ReaderState::Receiving(future.boxed());
                 },
-                ReaderState::WaitingForData(ref mut future) => {
+                ReaderState::Receiving(ref mut future) => {
                     match ready!(future.as_mut().poll(cx)) {
                         Ok(ReadResult { len, reader, buffer }) => {
                             this.reader = Some(reader);
