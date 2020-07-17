@@ -155,7 +155,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Box<[u8]>) {
 /// ```
 /// # use proxmox::tools::websocket::*;
 /// # use std::io;
-/// # fn main() -> io::Result<()> {
+/// # fn main() -> Result<(), WebSocketError> {
 /// let data = vec![0,1,2,3,4];
 /// let frame = create_frame(None, &data, OpCode::Text)?;
 /// assert_eq!(frame, vec![0b10000001, 5, 0, 1, 2, 3, 4]);
@@ -168,7 +168,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Box<[u8]>) {
 /// ```
 /// # use proxmox::tools::websocket::*;
 /// # use std::io;
-/// # fn main() -> io::Result<()> {
+/// # fn main() -> Result<(), WebSocketError> {
 /// let data = vec![0,1,2,3,4];
 /// let frame = create_frame(Some([0u8, 1u8, 2u8, 3u8]), &data, OpCode::Text)?;
 /// assert_eq!(frame, vec![0b10000001, 0b10000101, 0, 1, 2, 3, 0, 0, 0, 0, 4]);
@@ -181,7 +181,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut Box<[u8]>) {
 /// ```
 /// # use proxmox::tools::websocket::*;
 /// # use std::io;
-/// # fn main() -> io::Result<()> {
+/// # fn main() -> Result<(), WebSocketError> {
 /// let data = vec![0,1,2,3,4];
 /// let frame = create_frame(None, &data, OpCode::Ping)?;
 /// assert_eq!(frame, vec![0b10001001, 0b00000101, 0, 1, 2, 3, 4]);
@@ -193,13 +193,13 @@ pub fn create_frame(
     mask: Option<[u8; 4]>,
     data: &[u8],
     frametype: OpCode,
-) -> io::Result<Vec<u8>> {
+) -> Result<Vec<u8>, WebSocketError> {
     let first_byte = 0b10000000 | (frametype as u8);
     let len = data.len();
     if (frametype as u8) & 0b00001000 > 0 && len > 125 {
-        return Err(io::Error::new(
-            ErrorKind::InvalidData,
-            "Control frames cannot have data longer than 125 bytes",
+        return Err(WebSocketError::new(
+                WebSocketErrorKind::Unexpected,
+                "Control frames cannot have data longer than 125 bytes",
         ));
     }
 
@@ -265,7 +265,7 @@ impl<W: AsyncWrite + Unpin> WebSocketWriter<W> {
     }
 
     pub async fn send_control_frame(&mut self, mask: Option<[u8; 4]>, opcode: OpCode, data: &[u8]) -> Result<(), Error> {
-        let frame = create_frame(mask, data, opcode)?;
+        let frame = create_frame(mask, data, opcode).map_err(Error::from)?;
         self.writer.write_all(&frame).await.map_err(Error::from)
     }
 }
@@ -288,7 +288,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
             let frame = match create_frame(this.mask, buf, frametype) {
                 Ok(f) => f,
                 Err(e) => {
-                    return Poll::Ready(Err(e));
+                    return Poll::Ready(Err(io_err_other(e)));
                 }
             };
             this.frame = Some((frame, 0, buf.len()));
@@ -533,12 +533,12 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                 ReaderState::NoData => {
                     let mut reader = match this.reader.take() {
                         Some(reader) => reader,
-                        None => return Poll::Ready(Err(io_format_err!("no reader"))),
+                        None => return Poll::Ready(Err(io_err_other("no reader"))),
                     };
 
                     let mut buffer = match this.read_buffer.take() {
                         Some(buffer) => buffer,
-                        None => return Poll::Ready(Err(io_format_err!("no buffer"))),
+                        None => return Poll::Ready(Err(io_err_other("no buffer"))),
                     };
 
                     let future = async move {
@@ -565,7 +565,7 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                 ReaderState::HaveData => {
                     let mut read_buffer = match this.read_buffer.take() {
                         Some(read_buffer) => read_buffer,
-                        None => return Poll::Ready(Err(io_format_err!("no buffer"))),
+                        None => return Poll::Ready(Err(io_err_other("no buffer"))),
                     };
 
                     let mut header = match this.header.take() {
