@@ -1,3 +1,13 @@
+rust-proxmox (0.2.1-1) unstable; urgency=medium
+
+  * improve byte buffer
+
+  * add WebSocket implementation
+
+  * improve error handling and clippy lint fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 23 Jul 2020 12:03:44 +0200
+
 rust-proxmox (0.2.0-1) unstable; urgency=medium
 
   * bump api-macro dependency to 0.2.0
