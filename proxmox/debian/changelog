@@ -1,3 +1,11 @@
+rust-proxmox (0.3.0-1) unstable; urgency=medium
+
+  * change http_err macro to imply formatting and add http_bail macro
+
+  * fix #2882: fix parsing of optional fields in mountinfo
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 29 Jul 2020 09:35:50 +0200
+
 rust-proxmox (0.2.1-1) unstable; urgency=medium
 
   * improve byte buffer
