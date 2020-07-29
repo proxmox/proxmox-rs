@@ -34,3 +34,11 @@ macro_rules! http_err {
         ))
     }};
 }
+
+/// Bail with an error generated with the `http_err!` macro.
+#[macro_export]
+macro_rules! http_bail {
+    ($status:ident, $($fmt:tt)+) => {{
+        return Err($crate::http_err!($status, $($fmt)+));
+    }};
+}
