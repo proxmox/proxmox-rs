@@ -140,3 +140,27 @@ pub mod string_as_base64 {
         })
     }
 }
+
+use crate::tools::uuid::Uuid;
+use ::serde::{Deserialize, Serialize, Serializer, Deserializer};
+
+impl Serialize for Uuid {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&format!("{}", self))
+    }
+}
+
+impl<'de> Deserialize<'de> for Uuid {
+    fn deserialize<D>(deserializer: D) -> Result<Uuid, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+        String::deserialize(deserializer).and_then(|string| {
+            Uuid::parse_str(&string).map_err(|err| Error::custom(err.to_string()))
+        })
+    }
+}
