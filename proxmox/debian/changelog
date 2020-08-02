@@ -1,3 +1,9 @@
+rust-proxmox (0.3.1-1) unstable; urgency=medium
+
+  * Uuid: implement Serlialize/Deserialize
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 02 Aug 2020 11:51:35 +0200
+
 rust-proxmox (0.3.0-1) unstable; urgency=medium
 
   * change http_err macro to imply formatting and add http_bail macro
