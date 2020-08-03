@@ -4,6 +4,7 @@ use std::borrow::{Borrow, BorrowMut};
 use std::fmt;
 
 use anyhow::{bail, Error};
+use serde::{Deserialize, Serialize, Serializer, Deserializer};
 
 use crate::tools::parse::hex_nibble;
 
@@ -189,4 +190,53 @@ impl std::str::FromStr for Uuid {
     fn from_str(src: &str) -> Result<Self, Error> {
         Self::parse_str(src)
     }
+}
+
+impl Serialize for Uuid {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut buf = [0u8; 37];
+        unsafe {
+            uuid_unparse_lower(self.as_bytes(), buf.as_mut_ptr());
+        }
+        serializer.serialize_str(unsafe {
+            std::str::from_utf8_unchecked(&buf[..36])
+        })
+    }
+}
+
+impl<'de> Deserialize<'de> for Uuid {
+    fn deserialize<D>(deserializer: D) -> Result<Uuid, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::{Error, Visitor};
+
+        struct UuidVisitor;
+
+        impl<'a> Visitor<'a> for UuidVisitor {
+            type Value = Uuid;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a uuid")
+            }
+
+            fn visit_str<E: Error>(self, v: &str) -> Result<Uuid, E> {
+                v.parse::<Uuid>()
+                    .map_err(|err| Error::custom(err.to_string()))
+            }
+        }
+
+        deserializer.deserialize_str(UuidVisitor)
+    }
+}
+
+#[test]
+fn test_uuid() {
+    let uuid = Uuid::generate();
+    let ser: String = serde_json::to_string(&uuid).expect("failed to serialize uuid");
+    let de: Uuid = serde_json::from_str(&ser).expect("failed to deserialize uuid");
+    assert_eq!(uuid, de);
 }
