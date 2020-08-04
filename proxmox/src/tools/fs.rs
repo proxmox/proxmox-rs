@@ -1,10 +1,11 @@
 //! File related utilities such as `replace_file`.
 
 use std::ffi::CStr;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Write};
+use std::fs::{File, OpenOptions};
+use std::io::{self, BufRead, BufReader, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
 use std::path::Path;
+use std::time::Duration;
 
 use anyhow::{bail, format_err, Error};
 use nix::errno::Errno;
@@ -13,6 +14,8 @@ use nix::sys::stat;
 use nix::unistd::{self, Gid, Uid};
 use serde_json::Value;
 
+use crate::sys::error::SysResult;
+use crate::sys::timer;
 use crate::tools::fd::Fd;
 use crate::try_block;
 
@@ -446,5 +449,72 @@ pub fn image_size(path: &Path) -> Result<u64, Error> {
             "image size failed - got unexpected file type {:?}",
             file_type
         );
+    }
+}
+
+/// Create a file lock using fntl. This function allows you to specify
+/// a timeout if you want to avoid infinite blocking.
+///
+/// With timeout set to 0, non-blocking mode is used and the function
+/// will fail immediately if the lock can't be acquired.
+pub fn lock_file<F: AsRawFd>(
+    file: &mut F,
+    exclusive: bool,
+    timeout: Option<Duration>,
+) -> Result<(), io::Error> {
+    let lockarg = if exclusive {
+        nix::fcntl::FlockArg::LockExclusive
+    } else {
+        nix::fcntl::FlockArg::LockShared
+    };
+
+    let timeout = match timeout {
+        None => {
+            nix::fcntl::flock(file.as_raw_fd(), lockarg).into_io_result()?;
+            return Ok(());
+        }
+        Some(t) => t,
+    };
+
+    if timeout.as_nanos() == 0 {
+        let lockarg = if exclusive {
+            nix::fcntl::FlockArg::LockExclusiveNonblock
+        } else {
+            nix::fcntl::FlockArg::LockSharedNonblock
+        };
+        nix::fcntl::flock(file.as_raw_fd(), lockarg).into_io_result()?;
+        return Ok(());
+    }
+
+    // unblock the timeout signal temporarily
+    let _sigblock_guard = timer::unblock_timeout_signal();
+
+    // setup a timeout timer
+    let mut timer = timer::Timer::create(
+        timer::Clock::Realtime,
+        timer::TimerEvent::ThisThreadSignal(timer::SIGTIMEOUT),
+    )?;
+
+    timer.arm(
+        timer::TimerSpec::new()
+            .value(Some(timeout))
+            .interval(Some(Duration::from_millis(10))),
+    )?;
+
+    nix::fcntl::flock(file.as_raw_fd(), lockarg).into_io_result()?;
+    Ok(())
+}
+
+/// Open or create a lock file (append mode). Then try to
+/// acquire a lock using `lock_file()`.
+pub fn open_file_locked<P: AsRef<Path>>(path: P, timeout: Duration) -> Result<File, Error> {
+    let path = path.as_ref();
+    let mut file = match OpenOptions::new().create(true).append(true).open(path) {
+        Ok(file) => file,
+        Err(err) => bail!("Unable to open lock {:?} - {}", path, err),
+    };
+    match lock_file(&mut file, true, Some(timeout)) {
+        Ok(_) => Ok(file),
+        Err(err) => bail!("Unable to acquire lock {:?} - {}", path, err),
     }
 }
