@@ -134,3 +134,49 @@ pub mod string_as_base64 {
         })
     }
 }
+
+/// Serialize Vec<u8> as base64url encoded string without padding.
+///
+/// Usage example:
+/// ```
+/// use serde::{Deserialize, Serialize};
+///
+/// # #[derive(Debug)]
+/// #[derive(Deserialize, PartialEq, Serialize)]
+/// struct Foo {
+///     #[serde(with = "proxmox::tools::serde::bytes_as_base64url_nopad")]
+///     data: Vec<u8>,
+/// }
+///
+/// let obj = Foo { data: vec![1, 2, 3, 4] };
+/// let json = serde_json::to_string(&obj).unwrap();
+/// assert_eq!(json, r#"{"data":"AQIDBA"}"#);
+///
+/// let deserialized: Foo = serde_json::from_str(&json).unwrap();
+/// assert_eq!(obj, deserialized);
+/// ```
+pub mod bytes_as_base64url_nopad {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: AsRef<[u8]>,
+        S: Serializer,
+    {
+        serializer.serialize_str(&base64::encode_config(
+            data.as_ref(),
+            base64::URL_SAFE_NO_PAD,
+        ))
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+        String::deserialize(deserializer).and_then(|string| {
+            base64::decode_config(&string, base64::URL_SAFE_NO_PAD)
+                .map_err(|err| Error::custom(err.to_string()))
+        })
+    }
+}

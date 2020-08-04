@@ -11,6 +11,10 @@ description = "Proxmox library"
 
 exclude = [ "debian" ]
 
+[[examples]]
+name = "u2ftest"
+required-features = [ "tokio", "u2f" ]
+
 [dependencies]
 # General dependencies
 anyhow = "1.0"
@@ -19,6 +23,7 @@ libc = "0.2"
 nix = "0.19"
 
 # tools module:
+base32 = { version = "0.4", optional = true }
 base64 = "0.12"
 endian_trait = { version = "0.6", features = ["arrays"] }
 regex = "1.2"
@@ -49,7 +54,7 @@ proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = 
 proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.1" }
 
 [features]
-default = [ "router", "cli", "websocket" ]
+default = [ "cli", "router", "tfa", "u2f", "websocket" ]
 sortable-macro = ["proxmox-sortable-macro"]
 
 # api:
@@ -58,6 +63,10 @@ test-harness = []
 cli = [ "router", "hyper", "tokio" ]
 router = [ "hyper", "tokio" ]
 websocket = [ "futures", "hyper", "openssl", "tokio/sync", "tokio/io-util", "openssl" ]
+tfa = [ "openssl" ]
+u2f = [ "base32" ]
+
+examples = ["tokio/macros", "u2f"]
 
 # tools:
 #valgrind = ["proxmox-tools/valgrind"]

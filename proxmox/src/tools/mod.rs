@@ -24,6 +24,9 @@ pub mod vec;
 #[cfg(feature = "websocket")]
 pub mod websocket;
 
+#[cfg(feature = "tfa")]
+pub mod tfa;
+
 #[doc(inline)]
 pub use uuid::Uuid;
 
