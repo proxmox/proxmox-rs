@@ -5,9 +5,9 @@ use std::fmt;
 use anyhow::*;
 use lazy_static::lazy_static;
 
-pub mod byte_buffer;
 pub mod as_any;
 pub mod borrow;
+pub mod byte_buffer;
 pub mod common_regex;
 pub mod constnamemap;
 pub mod fd;
