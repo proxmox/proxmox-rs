@@ -68,11 +68,7 @@ pub fn generate_usage_str(
             Some((optional, param_schema)) => {
                 args.push(' ');
 
-                let is_array = if let Schema::Array(_) = param_schema {
-                    true
-                } else {
-                    false
-                };
+                let is_array = matches!(param_schema, Schema::Array(_));
                 if optional {
                     args.push('[');
                 }
