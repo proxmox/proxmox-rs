@@ -1,3 +1,13 @@
+rust-proxmox (0.3.2-1) unstable; urgency=medium
+
+  * add proxmox::sys::timer
+
+  * add proxmox::tools::fs::lock_file
+
+  * add proxmox::tools::fs::open_file_locked
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 04 Aug 2020 11:10:34 +0200
+
 rust-proxmox (0.3.1-1) unstable; urgency=medium
 
   * Uuid: implement Serlialize/Deserialize
