@@ -4,3 +4,4 @@ pub mod macros;
 
 pub mod error;
 pub mod linux;
+pub mod timer;
