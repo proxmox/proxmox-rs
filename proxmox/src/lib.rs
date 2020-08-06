@@ -1,6 +1,9 @@
 //! Proxmox "tools" package containing some generic tools along with the schema, API and CLI
 //! helpers.
 
+#[macro_use]
+pub mod serde_macros;
+
 pub mod api;
 pub mod sys;
 pub mod tools;

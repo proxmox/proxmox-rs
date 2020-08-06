@@ -4,7 +4,7 @@ use std::borrow::{Borrow, BorrowMut};
 use std::fmt;
 
 use anyhow::{bail, Error};
-use serde::{Deserialize, Serialize, Serializer, Deserializer};
+use serde::{Serialize, Serializer};
 
 use crate::tools::parse::hex_nibble;
 
@@ -207,31 +207,7 @@ impl Serialize for Uuid {
     }
 }
 
-impl<'de> Deserialize<'de> for Uuid {
-    fn deserialize<D>(deserializer: D) -> Result<Uuid, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::{Error, Visitor};
-
-        struct UuidVisitor;
-
-        impl<'a> Visitor<'a> for UuidVisitor {
-            type Value = Uuid;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("a uuid")
-            }
-
-            fn visit_str<E: Error>(self, v: &str) -> Result<Uuid, E> {
-                v.parse::<Uuid>()
-                    .map_err(|err| Error::custom(err.to_string()))
-            }
-        }
-
-        deserializer.deserialize_str(UuidVisitor)
-    }
-}
+forward_deserialize_to_from_str!(Uuid);
 
 #[test]
 fn test_uuid() {
