@@ -241,8 +241,7 @@ pub fn read_proc_stat() -> Result<ProcFsStat, Error> {
         // read lock scope
         let prev_read_guarded = PROC_LAST_STAT.read().unwrap();
         let (prev_stat, prev_time, first_time) = &*prev_read_guarded;
-        update_duration = sample_time
-            .saturating_duration_since(*prev_time);
+        update_duration = sample_time.saturating_duration_since(*prev_time);
         // only update if data is old
         if update_duration.as_millis() < 1000 && !first_time {
             stat.cpu = prev_stat.cpu;

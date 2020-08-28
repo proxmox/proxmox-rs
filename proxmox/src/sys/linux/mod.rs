@@ -5,8 +5,8 @@ use anyhow::*;
 pub mod magic;
 pub mod pid;
 pub mod procfs;
-pub mod tty;
 pub mod pty;
+pub mod tty;
 
 /// Get pseudo random data (/dev/urandom)
 pub fn random_data(size: usize) -> Result<Vec<u8>, Error> {

@@ -4,7 +4,6 @@ use anyhow::{bail, Error};
 ///
 /// We set tm_isdst to -1.
 pub fn timelocal(mut t: libc::tm) -> Result<i64, Error> {
-
     t.tm_isdst = -1;
 
     let epoch = unsafe { libc::mktime(&mut t) };
@@ -18,7 +17,6 @@ pub fn timelocal(mut t: libc::tm) -> Result<i64, Error> {
 ///
 /// We set tm_isdst to 0.
 pub fn timegm(mut t: libc::tm) -> Result<i64, Error> {
-
     t.tm_isdst = 0;
 
     let epoch = unsafe { libc::timegm(&mut t) };
@@ -46,7 +44,6 @@ fn new_libc_tm() -> libc::tm {
 
 /// Safe bindings to libc localtime
 pub fn localtime(epoch: i64) -> Result<libc::tm, Error> {
-
     let mut result = new_libc_tm();
 
     unsafe {
@@ -60,7 +57,6 @@ pub fn localtime(epoch: i64) -> Result<libc::tm, Error> {
 
 /// Safe bindings to libc gmtime
 pub fn gmtime(epoch: i64) -> Result<libc::tm, Error> {
-
     let mut result = new_libc_tm();
 
     unsafe {

@@ -7,8 +7,8 @@ use std::collections::HashSet;
 use crate::api::format::*;
 use crate::api::schema::*;
 
+use super::{value_to_text, TableFormatOptions};
 use super::{CliCommand, CliCommandMap, CommandLineInterface};
-use super::{TableFormatOptions, value_to_text};
 
 /// Helper function to format and print result.
 ///
@@ -142,9 +142,7 @@ pub fn generate_usage_str(
         DocumentationFormat::Short => {
             return format!("{}{}{}{}\n", indent, prefix, args, option_indicator);
         }
-        DocumentationFormat::Long => {
-            format!("{}{}{}{}\n", indent, prefix, args, option_indicator)
-        }
+        DocumentationFormat::Long => format!("{}{}{}{}\n", indent, prefix, args, option_indicator),
         DocumentationFormat::Full => format!(
             "{}{}{}{}\n\n{}\n\n",
             indent, prefix, args, option_indicator, schema.description

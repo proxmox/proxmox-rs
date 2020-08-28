@@ -71,7 +71,10 @@ impl<T> Drop for Mmap<T> {
             // In theory this can fail if too many memory mappings are already present and
             // unmapping a smaller region inside a bigger one, causing it to become split into 2
             // regions. But then we have bigger problems already anyway, so we'll just ignore this.
-            let _ = mman::munmap(self.data as *mut libc::c_void, self.len * mem::size_of::<T>());
+            let _ = mman::munmap(
+                self.data as *mut libc::c_void,
+                self.len * mem::size_of::<T>(),
+            );
         }
     }
 }

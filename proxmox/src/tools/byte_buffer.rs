@@ -34,7 +34,6 @@ pub struct ByteBuffer {
 }
 
 impl ByteBuffer {
-
     /// Creates a new instance with a default capacity of 4096
     pub fn new() -> Self {
         Self::with_capacity(4096)
@@ -209,7 +208,7 @@ mod test {
         let mut buffer = ByteBuffer::new();
         let slice = buffer.get_free_mut_slice();
         for i in 0..slice.len() {
-            slice[i] = (i%255) as u8;
+            slice[i] = (i % 255) as u8;
         }
         buffer.add_size(5);
 

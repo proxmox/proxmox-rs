@@ -146,8 +146,7 @@ impl Entry {
                 }
                 tags
             },
-            fs_type: std::str::from_utf8(next()?)?
-            .to_string(),
+            fs_type: std::str::from_utf8(next()?)?.to_string(),
             mount_source: next().map(|src| match src {
                 b"none" => None,
                 other => Some(OsStr::from_bytes(other).to_owned()),
@@ -352,34 +351,35 @@ fn test_entry() {
     );
 
     // test different tag configurations
-    let l3: &[u8] =
-        b"225 224 0:46 / /proc rw,nosuid,nodev,noexec,relatime - proc proc rw";
+    let l3: &[u8] = b"225 224 0:46 / /proc rw,nosuid,nodev,noexec,relatime - proc proc rw";
     let entry = Entry::parse(l3).expect("failed to parse third mountinfo test entry");
     assert_eq!(entry.tags, &[]);
 
-    let l4: &[u8] =
-        b"48 32 0:43 / /sys/fs/cgroup/blkio rw,nosuid,nodev,noexec,relatime \
+    let l4: &[u8] = b"48 32 0:43 / /sys/fs/cgroup/blkio rw,nosuid,nodev,noexec,relatime \
           shared:5 master:7 propagate_from:2 unbindable \
           - cgroup cgroup rw,blkio";
     let entry = Entry::parse(l4).expect("failed to parse fourth mountinfo test entry");
-    assert_eq!(entry.tags, &[
-        Tag {
-            tag: OsString::from("shared"),
-            value: Some(OsString::from("5")),
-        },
-        Tag {
-            tag: OsString::from("master"),
-            value: Some(OsString::from("7")),
-        },
-        Tag {
-            tag: OsString::from("propagate_from"),
-            value: Some(OsString::from("2")),
-        },
-        Tag {
-            tag: OsString::from("unbindable"),
-            value: None,
-        },
-    ]);
+    assert_eq!(
+        entry.tags,
+        &[
+            Tag {
+                tag: OsString::from("shared"),
+                value: Some(OsString::from("5")),
+            },
+            Tag {
+                tag: OsString::from("master"),
+                value: Some(OsString::from("7")),
+            },
+            Tag {
+                tag: OsString::from("propagate_from"),
+                value: Some(OsString::from("2")),
+            },
+            Tag {
+                tag: OsString::from("unbindable"),
+                value: None,
+            },
+        ]
+    );
 
     let mount_info = [l1, l2].join(&b"\n"[..]);
     MountInfo::parse(&mount_info).expect("failed to parse mount info file");

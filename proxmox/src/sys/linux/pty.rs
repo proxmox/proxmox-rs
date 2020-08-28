@@ -4,12 +4,12 @@
 
 use std::os::unix::io::{AsRawFd, RawFd};
 
-use nix::pty::{posix_openpt, grantpt, unlockpt, ptsname_r, PtyMaster};
-use nix::fcntl::{OFlag};
-use nix::sys::stat::Mode;
-use nix::{ioctl_write_int_bad, ioctl_write_ptr_bad, Result};
-use nix::unistd::{dup2, setsid};
 use nix::errno::Errno::EINVAL;
+use nix::fcntl::OFlag;
+use nix::pty::{grantpt, posix_openpt, ptsname_r, unlockpt, PtyMaster};
+use nix::sys::stat::Mode;
+use nix::unistd::{dup2, setsid};
+use nix::{ioctl_write_int_bad, ioctl_write_ptr_bad, Result};
 
 use crate::tools::fd::Fd;
 
@@ -59,7 +59,12 @@ pub struct PTY {
 /// and make the given terminal its controlling terminal
 pub fn make_controlling_terminal(terminal: &str) -> Result<()> {
     setsid()?; // make new process group
-    let mode = Mode::S_IRUSR | Mode::S_IWUSR | Mode::S_IRGRP | Mode::S_IWGRP | Mode::S_IROTH | Mode::S_IWOTH; // 0666
+    let mode = Mode::S_IRUSR
+        | Mode::S_IWUSR
+        | Mode::S_IRGRP
+        | Mode::S_IWGRP
+        | Mode::S_IROTH
+        | Mode::S_IWOTH; // 0666
     let secondary_fd = Fd::open(terminal, OFlag::O_RDWR | OFlag::O_NOCTTY, mode)?;
     let s_raw_fd = secondary_fd.as_raw_fd();
     unsafe { set_controlling_tty(s_raw_fd, 0) }?;
@@ -78,19 +83,18 @@ impl PTY {
     /// Creates a new PTY by opening /dev/ptmx and returns
     /// a new PTY and the path to the secondary terminal on success.
     pub fn new() -> Result<(Self, String)> {
-        let primary = posix_openpt(OFlag::O_RDWR | OFlag::O_NOCTTY | OFlag::O_NONBLOCK | OFlag::O_CLOEXEC)?;
+        let primary =
+            posix_openpt(OFlag::O_RDWR | OFlag::O_NOCTTY | OFlag::O_NONBLOCK | OFlag::O_CLOEXEC)?;
         grantpt(&primary)?;
         unlockpt(&primary)?;
         let secondary = ptsname_r(&primary)?; // linux specific
-        Ok((Self{
-            primary,
-        }, secondary))
+        Ok((Self { primary }, secondary))
     }
 
     /// Uses the ioctl 'TIOCSWINSZ' on the terminal fd to set the terminals
     /// columns and rows
     pub fn set_size(&mut self, col: u16, row: u16) -> Result<()> {
-        let size = nix::pty::Winsize{
+        let size = nix::pty::Winsize {
             ws_row: row,
             ws_col: col,
             ws_xpixel: 0,
@@ -104,7 +108,7 @@ impl PTY {
 }
 
 impl std::io::Read for PTY {
-    fn read(&mut self, buf: &mut[u8]) -> std::io::Result<usize> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         match nix::unistd::read(self.primary.as_raw_fd(), buf) {
             Ok(val) => Ok(val),
             Err(err) => Err(err.as_errno().unwrap_or(EINVAL).into()),
@@ -126,9 +130,7 @@ impl std::io::Write for PTY {
 }
 
 impl AsRawFd for PTY {
-    fn as_raw_fd(&self) -> RawFd{
+    fn as_raw_fd(&self) -> RawFd {
         self.primary.as_raw_fd()
     }
 }
-
-

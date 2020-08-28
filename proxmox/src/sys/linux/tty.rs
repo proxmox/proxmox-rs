@@ -172,7 +172,6 @@ pub fn read_password(query: &str) -> Result<Vec<u8>, Error> {
 
 /// Read a password from stdin, then read again to verify it.
 pub fn read_and_verify_password(prompt: &str) -> Result<Vec<u8>, Error> {
-
     let password = String::from_utf8(read_password(prompt)?)?;
     let verify_password = String::from_utf8(read_password("Verify Password: ")?)?;
 

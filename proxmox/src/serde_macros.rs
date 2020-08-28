@@ -26,7 +26,7 @@ macro_rules! forward_deserialize_to_from_str {
                 deserializer.deserialize_str(ForwardToStrVisitor)
             }
         }
-    }
+    };
 }
 
 #[macro_export]
@@ -40,5 +40,5 @@ macro_rules! forward_serialize_to_display {
                 serializer.serialize_str(&ToString::to_string(self))
             }
         }
-    }
+    };
 }

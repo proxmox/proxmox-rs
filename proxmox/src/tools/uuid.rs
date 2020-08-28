@@ -201,9 +201,7 @@ impl Serialize for Uuid {
         unsafe {
             uuid_unparse_lower(self.as_bytes(), buf.as_mut_ptr());
         }
-        serializer.serialize_str(unsafe {
-            std::str::from_utf8_unchecked(&buf[..36])
-        })
+        serializer.serialize_str(unsafe { std::str::from_utf8_unchecked(&buf[..36]) })
     }
 }
 
