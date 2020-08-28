@@ -1,21 +1,22 @@
 //! Email related utilities.
 
-use std::process::{Command, Stdio};
-use anyhow::{bail, Error};
-use std::io::Write;
-use chrono::{DateTime, Local};
 use crate::tools::time::time;
-
+use anyhow::{bail, Error};
+use chrono::{DateTime, Local};
+use std::io::Write;
+use std::process::{Command, Stdio};
 
 /// Sends multi-part mail with text and/or html to a list of recipients
 ///
 /// ``sendmail`` is used for sending the mail.
-pub fn sendmail(mailto: Vec<&str>,
-                subject: &str,
-                text: Option<&str>,
-                html: Option<&str>,
-                mailfrom: Option<&str>,
-                author: Option<&str>) -> Result<(), Error> {
+pub fn sendmail(
+    mailto: Vec<&str>,
+    subject: &str,
+    text: Option<&str>,
+    html: Option<&str>,
+    mailfrom: Option<&str>,
+    author: Option<&str>,
+) -> Result<(), Error> {
     let mail_regex = regex::Regex::new(r"^[a-zA-Z\.0-9-]+@[a-zA-Z\.0-9-]+$").unwrap();
 
     if mailto.is_empty() {
@@ -46,9 +47,10 @@ pub fn sendmail(mailto: Vec<&str>,
         .arg("--")
         .arg(&recipients)
         .stdin(Stdio::piped())
-        .spawn() {
+        .spawn()
+    {
         Err(err) => bail!("could not spawn sendmail process: {}", err),
-        Ok(process) => process
+        Ok(process) => process,
     };
     let mut is_multipart = false;
     if let (Some(_), Some(_)) = (text, html) {
@@ -65,7 +67,10 @@ pub fn sendmail(mailto: Vec<&str>,
         body.push_str("MIME-Version: 1.0\n");
     }
     if !subject.is_ascii() {
-        body.push_str(&format!("Subject: =?utf-8?B?{}?=\n", base64::encode(subject)));
+        body.push_str(&format!(
+            "Subject: =?utf-8?B?{}?=\n",
+            base64::encode(subject)
+        ));
     } else {
         body.push_str(&format!("Subject: {}\n", subject));
     }
@@ -98,7 +103,12 @@ pub fn sendmail(mailto: Vec<&str>,
         }
     }
 
-    if let Err(err) = sendmail_process.stdin.take().unwrap().write_all(body.as_bytes()) {
+    if let Err(err) = sendmail_process
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(body.as_bytes())
+    {
         bail!("couldn't write to sendmail stdin: {}", err)
     };
 
@@ -122,7 +132,8 @@ mod test {
             Some("TEXT"),
             Some("<b>HTML</b>"),
             Some("bim@bam.bum"),
-            Some("test1"));
+            Some("test1"),
+        );
         assert!(result.is_err());
     }
 
@@ -134,7 +145,8 @@ mod test {
             None,
             Some("<b>HTML</b>"),
             None,
-            Some("test1"));
+            Some("test1"),
+        );
         assert!(result.is_err());
     }
 
@@ -146,7 +158,8 @@ mod test {
             None,
             Some("<b>HTML</b>"),
             Some("notv@lid.com!"),
-            Some("test1"));
+            Some("test1"),
+        );
         assert!(result.is_err());
     }
 }
