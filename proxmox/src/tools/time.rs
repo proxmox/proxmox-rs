@@ -3,10 +3,11 @@ use anyhow::{bail, Error};
 /// Safe bindings to libc timelocal
 ///
 /// We set tm_isdst to -1.
-pub fn timelocal(mut t: libc::tm) -> Result<i64, Error> {
+/// This also normalizes the parameter
+pub fn timelocal(t: &mut libc::tm) -> Result<i64, Error> {
     t.tm_isdst = -1;
 
-    let epoch = unsafe { libc::mktime(&mut t) };
+    let epoch = unsafe { libc::mktime(t) };
     if epoch == -1 {
         bail!("libc::mktime failed for {:?}", t);
     }
@@ -16,10 +17,11 @@ pub fn timelocal(mut t: libc::tm) -> Result<i64, Error> {
 /// Safe bindings to libc timegm
 ///
 /// We set tm_isdst to 0.
-pub fn timegm(mut t: libc::tm) -> Result<i64, Error> {
+/// This also normalizes the parameter
+pub fn timegm(t: &mut libc::tm) -> Result<i64, Error> {
     t.tm_isdst = 0;
 
-    let epoch = unsafe { libc::timegm(&mut t) };
+    let epoch = unsafe { libc::timegm(t) };
     if epoch == -1 {
         bail!("libc::timegm failed for {:?}", t);
     }
