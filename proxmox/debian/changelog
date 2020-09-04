@@ -1,3 +1,11 @@
+rust-proxmox (0.3.5-1) unstable; urgency=medium
+
+  * tools/time: give tm struct as mut reference
+
+  * and run rustfmt over another big chunk of code, formatting fixups
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 04 Sep 2020 06:36:31 +0200
+
 rust-proxmox (0.3.4-1) unstable; urgency=medium
 
   * email: add small function to send multi-part emails using sendmail
