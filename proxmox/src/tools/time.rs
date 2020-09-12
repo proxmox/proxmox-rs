@@ -78,3 +78,46 @@ pub fn time() -> Result<i64, Error> {
     }
     Ok(now)
 }
+
+//  rust libc bindings do not include strftime
+#[link(name = "c")]
+extern {
+    #[link_name = "strftime"]
+    fn libc_strftime(
+        s: *mut libc::c_char,
+        max: libc::size_t,
+        format: *const libc::c_char,
+        time: *const libc::tm,
+    ) -> libc::size_t;
+}
+
+/// Safe bindings to libc strftime
+pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
+
+    let format = CString::new(format)?;
+    let mut buf = vec![0u8; 8192];
+
+    let res = unsafe {
+        libc_strftime(
+            buf.as_mut_ptr() as *mut libc::c_char,
+            buf.len() as libc::size_t,
+            format.as_ptr(),
+            t as *const libc::tm,
+        )
+    };
+
+    let len = nix::errno::Errno::result(res).map(|r| r as usize)?;
+    if len == 0 {
+        bail!("strftime: result len is 0 (string too large)");
+    };
+
+    let c_str = CStr::from_bytes_with_nul(&buf[..len+1])?;
+    let str_slice: &str = c_str.to_str().unwrap();
+    Ok(str_slice.to_owned())
+}
+
+/// Convert Unix epoch into RFC3339 UTC string
+pub fn epoch_to_rfc_3339_utc(epoch: i64) -> Result<String, Error> {
+    let gmtime = proxmox::tools::time::gmtime(epoch)?;
+    strftime("%FT%TZ", &gmtime)
+}
