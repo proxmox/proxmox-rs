@@ -1,3 +1,9 @@
+rust-proxmox (0.3.6-1) unstable; urgency=medium
+
+  * proxmox/src/tools/time.rs: add strftime bindings
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 12 Sep 2020 15:01:01 +0200
+
 rust-proxmox (0.3.5-1) unstable; urgency=medium
 
   * tools/time: give tm struct as mut reference
