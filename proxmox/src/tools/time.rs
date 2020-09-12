@@ -1,4 +1,5 @@
 use anyhow::{bail, Error};
+use std::ffi::{CStr, CString};
 
 /// Safe bindings to libc timelocal
 ///
@@ -118,6 +119,6 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
 
 /// Convert Unix epoch into RFC3339 UTC string
 pub fn epoch_to_rfc_3339_utc(epoch: i64) -> Result<String, Error> {
-    let gmtime = proxmox::tools::time::gmtime(epoch)?;
+    let gmtime = gmtime(epoch)?;
     strftime("%FT%TZ", &gmtime)
 }
