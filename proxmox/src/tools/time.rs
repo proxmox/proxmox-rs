@@ -1,6 +1,9 @@
 use anyhow::{bail, Error};
 use std::ffi::{CStr, CString};
 
+mod tm_editor;
+pub use tm_editor::*;
+
 /// Safe bindings to libc timelocal
 ///
 /// We set tm_isdst to -1.
