@@ -1,3 +1,15 @@
+rust-proxmox (0.3.7-1) unstable; urgency=medium
+
+  * implement epoch_as_rfc3339 serializer
+
+  * email.rs: avoid chrono dependency
+
+  * time.rs: add epoch_to_rfc_3339 and parse_rfc_3339
+
+  * tm_editor.rs: copied from proxmox backup
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 13 Sep 2020 16:15:31 +0200
+
 rust-proxmox (0.3.6-1) unstable; urgency=medium
 
   * proxmox/src/tools/time.rs: add strftime bindings
