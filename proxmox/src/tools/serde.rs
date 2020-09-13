@@ -52,6 +52,54 @@ pub mod date_time_as_rfc3339 {
     }
 }
 
+/// Serialize Unix epoch (i64) as RFC3339.
+///
+/// Usage example:
+/// ```
+/// # use proxmox::tools;
+///
+/// use serde::{Deserialize, Serialize};
+///
+/// # #[derive(Debug)]
+/// #[derive(Deserialize, PartialEq, Serialize)]
+/// struct Foo {
+///     #[serde(with = "proxmox::tools::serde::epoch_as_rfc3339")]
+///     date: i64,
+/// }
+///
+/// let obj = Foo { date: 86400 }; // random test value
+/// let json = serde_json::to_string(&obj).unwrap();
+/// assert_eq!(json, r#"{"date":"1970-01-02T00:00:00+00:00"}"#);
+///
+/// let deserialized: Foo = serde_json::from_str(&json).unwrap();
+/// assert_eq!(obj, deserialized);
+/// ```
+pub mod epoch_as_rfc3339 {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S>(epoch: i64, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        use serde::ser::Error;
+        let s = crate::tools::time::epoch_to_rfc3339(epoch)
+            .map_err(|err| Error::custom(err.to_string()))?;
+
+        serializer.serialize_str(&s)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<i64, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+        String::deserialize(deserializer).and_then(|string| {
+            crate::tools::time::parse_rfc3339(&string)
+                .map_err(|err| Error::custom(err.to_string()))
+        })
+    }
+}
+
 /// Serialize Vec<u8> as base64 encoded string.
 ///
 /// Usage example:
