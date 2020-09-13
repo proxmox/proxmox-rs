@@ -77,12 +77,12 @@ pub mod date_time_as_rfc3339 {
 pub mod epoch_as_rfc3339 {
     use serde::{Deserialize, Deserializer, Serializer};
 
-    pub fn serialize<S>(epoch: i64, serializer: S) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(epoch: &i64, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
         use serde::ser::Error;
-        let s = crate::tools::time::epoch_to_rfc3339(epoch)
+        let s = crate::tools::time::epoch_to_rfc3339(*epoch)
             .map_err(|err| Error::custom(err.to_string()))?;
 
         serializer.serialize_str(&s)
