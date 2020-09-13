@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{bail, format_err, Error};
 use std::ffi::{CStr, CString};
 
 mod tm_editor;
@@ -151,4 +151,80 @@ pub fn epoch_to_rfc_3339(epoch: i64) -> Result<String, Error> {
     s.push_str(&format!("{:02}:{:02}", hours, mins));
 
     Ok(s)
+}
+
+/// Parse RFC3339 into Unix epoch
+pub fn parse_rfc_3339(i: &str) -> Result<i64, Error> {
+
+    let input = i.as_bytes();
+
+    let expect = |pos: usize, c: u8| {
+        if input[pos] != c {
+            bail!("unexpected char at pos {}", pos);
+        }
+        Ok(())
+    };
+
+    let digit = |pos: usize| -> Result<i32, Error> {
+        let digit = input[pos] as i32;
+        if digit < 48 || digit > 57 {
+            bail!("unexpected char at pos {}", pos);
+        }
+        Ok(digit - 48)
+    };
+
+    let check_max = |i: i32, max: i32| {
+        if i > max {
+            bail!("value too large ({} > {})", i, max);
+        }
+        Ok(i)
+    };
+
+    crate::try_block!({
+
+        if i.len() < 20 { bail!("wrong length"); }
+
+        let tz = input[19];
+
+        match tz {
+            b'Z' => if i.len() != 20 { bail!("wrong length"); },
+            b'+' | b'-' =>  if i.len() != 25 { bail!("wrong length"); },
+            _ => bail!("got unknown timezone indicator"),
+        }
+
+        let mut tm = TmEditor::new(true);
+
+        tm.set_year(digit(0)?*1000 + digit(1)?*100 + digit(2)?*10+digit(3)?)?;
+        expect(4, b'-')?;
+        tm.set_mon(check_max(digit(5)?*10 + digit(6)?, 12)?)?;
+        expect(7, b'-')?;
+        tm.set_mday(check_max(digit(8)?*10 + digit(9)?, 31)?)?;
+
+        expect(10, b'T')?;
+
+        tm.set_hour(check_max(digit(11)?*10 + digit(12)?, 23)?)?;
+        expect(13, b':')?;
+        tm.set_min(check_max(digit(14)?*10 + digit(15)?, 59)?)?;
+        expect(16, b':')?;
+        tm.set_sec(check_max(digit(17)?*10 + digit(18)?, 59)?)?;
+
+        let epoch = tm.into_epoch()?;
+        if tz == b'Z' {
+            return Ok(epoch);
+        }
+
+        let hours = check_max(digit(20)?*10 + digit(21)?, 23)?;
+        expect(22, b':')?;
+        let mins = check_max(digit(23)?*10 + digit(24)?, 23)?;
+
+        let offset = (hours*3600 + mins*60) as i64;
+
+        let epoch = match tz {
+            b'+' => epoch - offset,
+            b'-' => epoch + offset,
+            _ => unreachable!(), // already checked above
+        };
+
+        Ok(epoch)
+    }).map_err(|err| format_err!("parse_rfc_3339 failed - {}", err))
 }
