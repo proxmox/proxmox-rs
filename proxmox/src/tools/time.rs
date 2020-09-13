@@ -122,3 +122,30 @@ pub fn epoch_to_rfc_3339_utc(epoch: i64) -> Result<String, Error> {
     let gmtime = gmtime(epoch)?;
     strftime("%FT%TZ", &gmtime)
 }
+
+/// Convert Unix epoch into RFC3339 local time with TZ
+pub fn epoch_to_rfc_3339(epoch: i64) -> Result<String, Error> {
+
+    let localtime = localtime(epoch)?;
+
+    // Note: We cannot use strftime %z because of missing collon
+
+    let mut offset = localtime.tm_gmtoff;
+
+    let prefix = if offset < 0 {
+        offset = -offset;
+        '-'
+    } else {
+        '+'
+    };
+
+    let mins = offset / 60;
+    let hours = mins / 60;
+    let mins = mins % 60;
+
+    let mut s = strftime("%FT%T", &localtime)?;
+    s.push(prefix);
+    s.push_str(&format!("{:02}:{:02}", hours, mins));
+
+    Ok(s)
+}
