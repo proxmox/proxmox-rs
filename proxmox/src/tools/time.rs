@@ -121,13 +121,13 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
 }
 
 /// Convert Unix epoch into RFC3339 UTC string
-pub fn epoch_to_rfc_3339_utc(epoch: i64) -> Result<String, Error> {
+pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
     let gmtime = gmtime(epoch)?;
     strftime("%FT%TZ", &gmtime)
 }
 
 /// Convert Unix epoch into RFC3339 local time with TZ
-pub fn epoch_to_rfc_3339(epoch: i64) -> Result<String, Error> {
+pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 
     let localtime = localtime(epoch)?;
 
@@ -154,7 +154,7 @@ pub fn epoch_to_rfc_3339(epoch: i64) -> Result<String, Error> {
 }
 
 /// Parse RFC3339 into Unix epoch
-pub fn parse_rfc_3339(i: &str) -> Result<i64, Error> {
+pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
 
     let input = i.as_bytes();
 
