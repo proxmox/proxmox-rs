@@ -2,7 +2,6 @@
 
 use crate::tools::time::time;
 use anyhow::{bail, Error};
-use chrono::{DateTime, Local};
 use std::io::Write;
 use std::process::{Command, Stdio};
 
@@ -37,7 +36,7 @@ pub fn sendmail(
     let recipients = mailto.join(",");
     let author = author.unwrap_or("Proxmox Backup Server");
 
-    let now: DateTime<Local> = Local::now();
+    let now = crate::tools::time::time()?;
 
     let mut sendmail_process = match Command::new("/usr/sbin/sendmail")
         .arg("-B")
@@ -76,7 +75,9 @@ pub fn sendmail(
     }
     body.push_str(&format!("From: {} <{}>\n", author, mailfrom));
     body.push_str(&format!("To: {}\n", &recipients));
-    body.push_str(&format!("Date: {}\n", now.to_rfc2822()));
+    let localtime = crate::tools::time::localtime(now)?;
+    let rfc2822_date = crate::tools::time::strftime("%a, %d %b %Y %T %z", &localtime)?;
+    body.push_str(&format!("Date: {}\n", rfc2822_date));
     if is_multipart {
         body.push('\n');
         body.push_str("This is a multi-part message in MIME format.\n");
