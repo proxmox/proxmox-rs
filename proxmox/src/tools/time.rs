@@ -146,9 +146,28 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
     Ok(str_slice.to_owned())
 }
 
+/// Format epoch as local time
+pub fn strftime_local(format: &str, epoch: i64) -> Result<String, Error> {
+    let localtime = localtime(epoch)?;
+    strftime(format, &localtime)
+}
+
+/// Format epoch as utc time
+pub fn strftime_utc(format: &str, epoch: i64) -> Result<String, Error> {
+    let gmtime = gmtime(epoch)?;
+    strftime(format, &gmtime)
+}
+
 /// Convert Unix epoch into RFC3339 UTC string
 pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
+
     let gmtime = gmtime(epoch)?;
+
+    let year = gmtime.tm_year + 1900;
+    if year < 0 || year > 9999 {
+        bail!("epoch_to_rfc3339_utc: wrong year '{}'", year);
+    }
+
     strftime("%FT%TZ", &gmtime)
 }
 
@@ -156,6 +175,12 @@ pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
 pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 
     let localtime = localtime(epoch)?;
+
+    let year = localtime.tm_year + 1900;
+    if year < 0 || year > 9999 {
+        bail!("epoch_to_rfc3339: wrong year '{}'", year);
+
+    }
 
     // Note: We cannot use strftime %z because of missing collon
 
@@ -208,7 +233,7 @@ pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
 
     crate::try_block!({
 
-        if i.len() < 20 { bail!("wrong length"); }
+        if i.len() < 20 || i.len() > 25 { bail!("wrong length"); }
 
         let tz = input[19];
 
