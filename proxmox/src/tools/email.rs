@@ -1,6 +1,6 @@
 //! Email related utilities.
 
-use crate::tools::time::time;
+use crate::tools::time::epoch_i64;
 use anyhow::{bail, Error};
 use std::io::Write;
 use std::process::{Command, Stdio};
@@ -36,7 +36,7 @@ pub fn sendmail(
     let recipients = mailto.join(",");
     let author = author.unwrap_or("Proxmox Backup Server");
 
-    let now = crate::tools::time::time()?;
+    let now = epoch_i64();
 
     let mut sendmail_process = match Command::new("/usr/sbin/sendmail")
         .arg("-B")
@@ -57,7 +57,7 @@ pub fn sendmail(
     }
 
     let mut body = String::new();
-    let boundary = format!("----_=_NextPart_001_{}", time()?);
+    let boundary = format!("----_=_NextPart_001_{}", now);
     if is_multipart {
         body.push_str("Content-Type: multipart/alternative;\n");
         body.push_str(&format!("\tboundary=\"{}\"\n", boundary));

@@ -74,13 +74,39 @@ pub fn gmtime(epoch: i64) -> Result<libc::tm, Error> {
     Ok(result)
 }
 
-/// Safe bindings to libc time
-pub fn time() -> Result<i64, Error> {
-    let now = unsafe { libc::time(std::ptr::null_mut()) };
-    if now < 0 {
-        bail!("libc::time failed with {}", now);
+/// Returns Unix Epoch (now)
+///
+/// Note: This panics if the SystemTime::now() returns values not
+/// repesentable as i64 (should never happen).
+pub fn epoch_i64() -> i64 {
+    use std::convert::TryFrom;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let now = SystemTime::now();
+
+    if now > UNIX_EPOCH {
+        i64::try_from(now.duration_since(UNIX_EPOCH).unwrap().as_secs())
+            .expect("epoch_i64: now is too large")
+    } else {
+        -i64::try_from(UNIX_EPOCH.duration_since(now).unwrap().as_secs())
+            .expect("epoch_i64: now is too small")
+     }
+}
+
+/// Returns Unix Epoch (now) as f64 with subseconds resolution
+///
+/// Note: This can be inacurrate for values greater the 2^53. But this
+/// should never happen.
+pub fn epoch_f64() -> f64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let now = SystemTime::now();
+
+    if now > UNIX_EPOCH {
+        now.duration_since(UNIX_EPOCH).unwrap().as_secs_f64()
+    } else {
+        -UNIX_EPOCH.duration_since(now).unwrap().as_secs_f64()
     }
-    Ok(now)
 }
 
 //  rust libc bindings do not include strftime
