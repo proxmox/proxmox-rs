@@ -1,3 +1,14 @@
+rust-proxmox (0.3.8-1) unstable; urgency=medium
+
+  * remove chrono dependency and related code
+
+  * check year in epoch_to_rfc3339, new helpers strftime_local and
+    strftime_utc
+
+  * new helpers epoch_i64 and epoch_f64
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 14 Sep 2020 13:40:54 +0200
+
 rust-proxmox (0.3.7-1) unstable; urgency=medium
 
   * implement epoch_as_rfc3339 serializer
