@@ -279,3 +279,26 @@ pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
         Ok(epoch)
     }).map_err(|err| format_err!("parse_rfc_3339 failed - {}", err))
 }
+
+#[test]
+fn test_leap_seconds() {
+    let convert_reconvert = |epoch| {
+        let rfc3339 = epoch_to_rfc3339_utc(epoch)
+            .expect("leap second epoch to rfc3339 should work");
+
+        let parsed = parse_rfc3339(&rfc3339)
+            .expect("parsing converted leap second epoch should work");
+
+        assert_eq!(epoch, parsed);
+    };
+
+    // 2005-12-31T23:59:59Z was followed by a leap second
+    let epoch = 1136073599;
+    convert_reconvert(epoch);
+    convert_reconvert(epoch + 1);
+    convert_reconvert(epoch + 2);
+
+    let parsed = parse_rfc3339("2005-12-31T23:59:60Z")
+        .expect("parsing leap second should work");
+    assert_eq!(parsed, epoch + 1);
+}
