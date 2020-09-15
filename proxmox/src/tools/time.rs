@@ -356,3 +356,26 @@ fn test_rfc3339_range() {
         .expect("parsing first millenium string should work");
     assert_eq!(parsed, first_millenium);
 }
+
+#[test]
+fn test_gmtime_range() {
+    // year must fit into i32
+    let lower = -67768040609740800;
+    let upper = 67768036191676799;
+
+    let mut lower_tm = gmtime(lower)
+        .expect("gmtime should work as long as years fit into i32");
+    let res = timegm(&mut lower_tm).expect("converting back to epoch should work");
+    assert_eq!(lower, res);
+
+    gmtime(lower-1)
+        .expect_err("gmtime should fail for years not fitting into i32");
+
+    let mut upper_tm = gmtime(upper)
+        .expect("gmtime should work as long as years fit into i32");
+    let res = timegm(&mut upper_tm).expect("converting back to epoch should work");
+    assert_eq!(upper, res);
+
+    gmtime(upper+1)
+        .expect_err("gmtime should fail for years not fitting into i32");
+}
