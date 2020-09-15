@@ -257,7 +257,7 @@ pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
         expect(13, b':')?;
         tm.set_min(check_max(digit(14)?*10 + digit(15)?, 59)?)?;
         expect(16, b':')?;
-        tm.set_sec(check_max(digit(17)?*10 + digit(18)?, 59)?)?;
+        tm.set_sec(check_max(digit(17)?*10 + digit(18)?, 60)?)?;
 
         let epoch = tm.into_epoch()?;
         if tz == b'Z' {
