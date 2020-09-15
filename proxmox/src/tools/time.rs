@@ -168,7 +168,7 @@ pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
         bail!("epoch_to_rfc3339_utc: wrong year '{}'", year);
     }
 
-    strftime("%FT%TZ", &gmtime)
+    strftime("%010FT%TZ", &gmtime)
 }
 
 /// Convert Unix epoch into RFC3339 local time with TZ
@@ -197,7 +197,7 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
     let hours = mins / 60;
     let mins = mins % 60;
 
-    let mut s = strftime("%FT%T", &localtime)?;
+    let mut s = strftime("%10FT%T", &localtime)?;
     s.push(prefix);
     s.push_str(&format!("{:02}:{:02}", hours, mins));
 
