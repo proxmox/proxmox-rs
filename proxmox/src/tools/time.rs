@@ -302,3 +302,57 @@ fn test_leap_seconds() {
         .expect("parsing leap second should work");
     assert_eq!(parsed, epoch + 1);
 }
+
+#[test]
+fn test_rfc3339_range() {
+    // also tests single-digit years/first decade values
+    let lower = -62167219200;
+    let lower_str = "0000-01-01T00:00:00Z";
+
+    let upper = 253402300799;
+    let upper_str = "9999-12-31T23:59:59Z";
+
+    let converted = epoch_to_rfc3339_utc(lower)
+        .expect("converting lower bound of RFC3339 range should work");
+    assert_eq!(converted, lower_str);
+
+    let converted = epoch_to_rfc3339_utc(upper)
+        .expect("converting upper bound of RFC3339 range should work");
+    assert_eq!(converted, upper_str);
+
+    let parsed = parse_rfc3339(lower_str)
+        .expect("parsing lower bound of RFC3339 range should work");
+    assert_eq!(parsed, lower);
+
+    let parsed = parse_rfc3339(upper_str)
+        .expect("parsing upper bound of RFC3339 range should work");
+    assert_eq!(parsed, upper);
+
+    epoch_to_rfc3339_utc(lower-1)
+        .expect_err("converting below lower bound of RFC3339 range should fail");
+
+    epoch_to_rfc3339_utc(upper+1)
+        .expect_err("converting above upper bound of RFC3339 range should fail");
+
+    let first_century = -59011459201;
+    let first_century_str = "0099-12-31T23:59:59Z";
+
+    let converted = epoch_to_rfc3339_utc(first_century)
+        .expect("converting epoch representing first century year should work");
+    assert_eq!(converted, first_century_str);
+
+    let parsed = parse_rfc3339(first_century_str)
+        .expect("parsing first century string should work");
+    assert_eq!(parsed, first_century);
+
+    let first_millenium = -59011459200;
+    let first_millenium_str = "0100-01-01T00:00:00Z";
+
+    let converted = epoch_to_rfc3339_utc(first_millenium)
+        .expect("converting epoch representing first millenium year should work");
+    assert_eq!(converted, first_millenium_str);
+
+    let parsed = parse_rfc3339(first_millenium_str)
+        .expect("parsing first millenium string should work");
+    assert_eq!(parsed, first_millenium);
+}
