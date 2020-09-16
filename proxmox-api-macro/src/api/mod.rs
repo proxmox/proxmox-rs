@@ -8,6 +8,7 @@
 //! The handling of methods vs type definitions happens in their corresponding submodules.
 
 use std::convert::{TryFrom, TryInto};
+use std::collections::HashMap;
 
 use anyhow::Error;
 
@@ -378,12 +379,14 @@ impl SchemaItem {
 /// Contains a sorted list of properties:
 pub struct SchemaObject {
     properties_: Vec<(FieldName, bool, Schema)>,
+    ident_hash: HashMap<String, usize>,
 }
 
 impl SchemaObject {
     pub fn new() -> Self {
         Self {
             properties_: Vec::new(),
+            ident_hash: HashMap::new(),
         }
     }
 
@@ -394,6 +397,9 @@ impl SchemaObject {
 
     fn sort_properties(&mut self) {
         self.properties_.sort_by(|a, b| (a.0).cmp(&b.0));
+        for (idx, prop) in self.properties_.iter().enumerate() {
+            self.ident_hash.insert(prop.0.as_ident_str().to_string(), idx);
+        }
     }
 
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
@@ -422,6 +428,7 @@ impl SchemaObject {
                         Ok(properties)
                     },
                 )?,
+            ident_hash: HashMap::new(),
         };
         this.sort_properties();
         Ok(this)
@@ -439,22 +446,16 @@ impl SchemaObject {
     }
 
     fn find_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, Schema)> {
-        match self
-            .properties_
-            .binary_search_by(|p| p.0.as_ident_str().cmp(key))
-        {
-            Ok(idx) => Some(&self.properties_[idx]),
-            Err(_) => None,
+        match self.ident_hash.get(key) {
+            Some(idx) => Some(&self.properties_[*idx]),
+            None => None,
         }
     }
 
     fn find_property_by_ident_mut(&mut self, key: &str) -> Option<&mut (FieldName, bool, Schema)> {
-        match self
-            .properties_
-            .binary_search_by(|p| p.0.as_ident_str().cmp(key))
-        {
-            Ok(idx) => Some(&mut self.properties_[idx]),
-            Err(_) => None,
+        match self.ident_hash.get(key) {
+            Some(idx) => Some(&mut self.properties_[*idx]),
+            None => None,
         }
     }
 
