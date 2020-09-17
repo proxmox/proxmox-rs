@@ -1,3 +1,11 @@
+rust-proxmox-api-macro (0.2.1-1) unstable; urgency=medium
+
+  * api-macro: relax Fieldname rules
+
+  * api-macro: fix broken binary ident search
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 17 Sep 2020 08:25:55 +0200
+
 rust-proxmox-api-macro (0.2.0-1)  proxmox-rust; urgency=medium
 
   * All api-macro generated schema declarations are now values instead of
