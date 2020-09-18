@@ -16,6 +16,8 @@ pub enum Permission {
     Anybody,
     /// Allow access for the specified user
     User(&'static str),
+    /// Allow access if specified param matches logged in user
+    UserParam(&'static str),
     /// Allow access for the specified group of users
     Group(&'static str),
     /// Use a parameter value as userid to run sub-permission tests.
@@ -44,6 +46,9 @@ impl fmt::Debug for Permission {
             }
             Permission::User(ref userid) => {
                 write!(f, "User({})", userid)
+            }
+            Permission::UserParam(param_name) => {
+                write!(f, "UserParam({})", param_name)
             }
             Permission::Group(ref group) => {
                 write!(f, "Group({})", group)
@@ -121,6 +126,13 @@ fn check_api_permission_tail(
             match userid {
                 None => return false,
                 Some(ref userid) => return userid == expected_userid,
+            }
+        }
+        Permission::UserParam(param_name) => {
+            match (userid, param.get(&param_name.to_string())) {
+                (None, _) => return false,
+                (_, None) => return false,
+                (Some(ref userid), Some(ref expected)) => return userid == expected,
             }
         }
         Permission::Group(expected_group) => {
