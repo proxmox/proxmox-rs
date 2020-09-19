@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (0.2.2-1) unstable; urgency=medium
+
+  * api-macro: replace ident hashmap with simple find
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 19 Sep 2020 06:29:31 +0200
+
 rust-proxmox-api-macro (0.2.1-1) unstable; urgency=medium
 
   * api-macro: relax Fieldname rules
