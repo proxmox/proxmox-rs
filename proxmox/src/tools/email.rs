@@ -9,7 +9,7 @@ use std::process::{Command, Stdio};
 ///
 /// ``sendmail`` is used for sending the mail.
 pub fn sendmail(
-    mailto: Vec<&str>,
+    mailto: &[&str],
     subject: &str,
     text: Option<&str>,
     html: Option<&str>,
@@ -22,7 +22,7 @@ pub fn sendmail(
         bail!("At least one recipient has to be specified!")
     }
 
-    for recipient in &mailto {
+    for recipient in mailto {
         if !mail_regex.is_match(recipient) {
             bail!("'{}' is not a valid email address", recipient)
         }
@@ -128,7 +128,7 @@ mod test {
     #[test]
     fn test1() {
         let result = sendmail(
-            vec!["somenotvalidemail!", "somealmostvalid email"],
+            &["somenotvalidemail!", "somealmostvalid email"],
             "Subject1",
             Some("TEXT"),
             Some("<b>HTML</b>"),
@@ -141,7 +141,7 @@ mod test {
     #[test]
     fn test2() {
         let result = sendmail(
-            vec![],
+            &[],
             "Subject2",
             None,
             Some("<b>HTML</b>"),
@@ -154,7 +154,7 @@ mod test {
     #[test]
     fn test3() {
         let result = sendmail(
-            vec!["a@b.c"],
+            &["a@b.c"],
             "Subject3",
             None,
             Some("<b>HTML</b>"),
