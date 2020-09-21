@@ -10,7 +10,7 @@ rust-proxmox (0.4.0-1) unstable; urgency=medium
 
   * bump api-macro dependency to 0.2.2
 
- -- root <root@elsa>  Sat, 19 Sep 2020 06:27:18 +0200
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 19 Sep 2020 06:27:18 +0200
 
 rust-proxmox (0.3.9-1) unstable; urgency=medium
 
