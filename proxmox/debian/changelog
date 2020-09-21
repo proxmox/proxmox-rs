@@ -1,3 +1,9 @@
+rust-proxmox (0.4.1-1) unstable; urgency=medium
+
+  * proxmox/src/tools/email.rs: use slice instead of Vec
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 21 Sep 2020 10:22:31 +0200
+
 rust-proxmox (0.4.0-1) unstable; urgency=medium
 
   * permissions: introduce UserParam permission
