@@ -4,7 +4,7 @@ use std::ffi::CStr;
 use std::fs::{File, OpenOptions};
 use std::io::{self, BufRead, BufReader, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use anyhow::{bail, format_err, Error};
@@ -121,14 +121,12 @@ pub fn file_read_firstline<P: AsRef<Path>>(path: P) -> Result<String, Error> {
     .map_err(|err: Error| format_err!("unable to read {:?} - {}", path, err))
 }
 
-/// Atomically replace a file.
-///
-/// This first creates a temporary file and then rotates it in place.
-pub fn replace_file<P: AsRef<Path>>(
+/// Takes a Path and CreateOptions, creates a tmpfile from it and returns
+/// a RawFd and PathBuf for it
+pub fn make_tmp_file<P: AsRef<Path>>(
     path: P,
-    data: &[u8],
     options: CreateOptions,
-) -> Result<(), Error> {
+) -> Result<(RawFd, PathBuf), Error> {
     let path = path.as_ref();
 
     // Note: we use mkstemp heŕe, because this worka with different
@@ -140,8 +138,6 @@ pub fn replace_file<P: AsRef<Path>>(
         Err(err) => bail!("mkstemp {:?} failed: {}", template, err),
     };
 
-    let tmp_path = tmp_path.as_path();
-
     // clippy bug?: from_bits_truncate is actually a const fn...
     #[allow(clippy::or_fun_call)]
     let mode: stat::Mode = options
@@ -149,27 +145,40 @@ pub fn replace_file<P: AsRef<Path>>(
         .unwrap_or(stat::Mode::from_bits_truncate(0o644));
 
     if let Err(err) = stat::fchmod(fd, mode) {
-        let _ = unistd::unlink(tmp_path);
+        let _ = unistd::unlink(&tmp_path);
         bail!("fchmod {:?} failed: {}", tmp_path, err);
     }
 
     if options.owner.is_some() || options.group.is_some() {
         if let Err(err) = fchown(fd, options.owner, options.group) {
-            let _ = unistd::unlink(tmp_path);
+            let _ = unistd::unlink(&tmp_path);
             bail!("fchown {:?} failed: {}", tmp_path, err);
         }
     }
 
+    Ok((fd, tmp_path))
+}
+
+/// Atomically replace a file.
+///
+/// This first creates a temporary file and then rotates it in place.
+pub fn replace_file<P: AsRef<Path>>(
+    path: P,
+    data: &[u8],
+    options: CreateOptions,
+) -> Result<(), Error> {
+    let (fd, tmp_path) = make_tmp_file(&path, options)?;
+
     let mut file = unsafe { File::from_raw_fd(fd) };
 
     if let Err(err) = file.write_all(data) {
-        let _ = unistd::unlink(tmp_path);
+        let _ = unistd::unlink(&tmp_path);
         bail!("write failed: {}", err);
     }
 
-    if let Err(err) = std::fs::rename(tmp_path, path) {
-        let _ = unistd::unlink(tmp_path);
-        bail!("Atomic rename failed for file {:?} - {}", path, err);
+    if let Err(err) = std::fs::rename(&tmp_path, &path) {
+        let _ = unistd::unlink(&tmp_path);
+        bail!("Atomic rename failed for file {:?} - {}", path.as_ref(), err);
     }
 
     Ok(())
