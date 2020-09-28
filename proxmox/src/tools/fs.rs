@@ -515,18 +515,8 @@ pub fn lock_file<F: AsRawFd>(
 }
 
 /// Open or create a lock file (append mode). Then try to
-/// acquire a shared lock using `lock_file()`.
-pub fn open_file_locked_shared<P: AsRef<Path>>(path: P, timeout: Duration) -> Result<File, Error> {
-    open_file_locked_impl(path, timeout, false)
-}
-
-/// Open or create a lock file (append mode). Then try to
 /// acquire a lock using `lock_file()`.
-pub fn open_file_locked<P: AsRef<Path>>(path: P, timeout: Duration) -> Result<File, Error> {
-    open_file_locked_impl(path, timeout, true)
-}
-
-fn open_file_locked_impl<P: AsRef<Path>>(path: P, timeout: Duration, exclusive: bool) -> Result<File, Error> {
+pub fn open_file_locked<P: AsRef<Path>>(path: P, timeout: Duration, exclusive: bool) -> Result<File, Error> {
 
     let path = path.as_ref();
     let mut file = match OpenOptions::new().create(true).append(true).open(path) {
