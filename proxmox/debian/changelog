@@ -1,3 +1,11 @@
+rust-proxmox (0.4.2-1) unstable; urgency=medium
+
+  * add exclusive parameter to open_file_locked
+
+  * proxmox/tools/fs: create tmpfile helper
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 28 Sep 2020 10:05:00 +0200
+
 rust-proxmox (0.4.1-1) unstable; urgency=medium
 
   * proxmox/src/tools/email.rs: use slice instead of Vec
