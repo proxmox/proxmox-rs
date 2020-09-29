@@ -41,14 +41,14 @@ macro_rules! IPV6RE { () => (concat!(r"(?:",
 macro_rules! IPRE { () => (concat!(r"(?:", IPV4RE!(), "|", IPV6RE!(), ")")) }
 
 /// Regular expression string to match IP addresses where IPv6 addresses require brackets around
-/// them, while for IPv4 they are optional.
+/// them, while for IPv4 they are forbidden.
 #[rustfmt::skip]
 #[macro_export]
 macro_rules! IPRE_BRACKET { () => (
     concat!(r"(?:",
         IPV4RE!(),
         r"|\[(?:",
-            IPV4RE!(), "|", IPV6RE!(),
+            IPV6RE!(),
         r")\]",
     r")"))
 }
@@ -71,7 +71,6 @@ fn test_regexes() {
     assert!(IP_REGEX.is_match("2014:b3a:0102:adf1:1234:4321:4afA:BCDF"));
 
     assert!(IP_BRACKET_REGEX.is_match("127.0.0.1"));
-    assert!(IP_BRACKET_REGEX.is_match("[127.0.0.1]"));
     assert!(IP_BRACKET_REGEX.is_match("[::1]"));
     assert!(IP_BRACKET_REGEX.is_match("[2014:b3a::27]"));
     assert!(IP_BRACKET_REGEX.is_match("[2014:b3a::192.168.0.1]"));
