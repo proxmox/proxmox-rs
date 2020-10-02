@@ -90,7 +90,7 @@ pub fn epoch_i64() -> i64 {
     } else {
         -i64::try_from(UNIX_EPOCH.duration_since(now).unwrap().as_secs())
             .expect("epoch_i64: now is too small")
-     }
+    }
 }
 
 /// Returns Unix Epoch (now) as f64 with subseconds resolution
@@ -111,7 +111,7 @@ pub fn epoch_f64() -> f64 {
 
 //  rust libc bindings do not include strftime
 #[link(name = "c")]
-extern {
+extern "C" {
     #[link_name = "strftime"]
     fn libc_strftime(
         s: *mut libc::c_char,
@@ -123,7 +123,6 @@ extern {
 
 /// Safe bindings to libc strftime
 pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
-
     let format = CString::new(format)?;
     let mut buf = vec![0u8; 8192];
 
@@ -141,7 +140,7 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
         bail!("strftime: result len is 0 (string too large)");
     };
 
-    let c_str = CStr::from_bytes_with_nul(&buf[..len+1])?;
+    let c_str = CStr::from_bytes_with_nul(&buf[..len + 1])?;
     let str_slice: &str = c_str.to_str().unwrap();
     Ok(str_slice.to_owned())
 }
@@ -160,7 +159,6 @@ pub fn strftime_utc(format: &str, epoch: i64) -> Result<String, Error> {
 
 /// Convert Unix epoch into RFC3339 UTC string
 pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
-
     let gmtime = gmtime(epoch)?;
 
     let year = gmtime.tm_year + 1900;
@@ -173,13 +171,11 @@ pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
 
 /// Convert Unix epoch into RFC3339 local time with TZ
 pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
-
     let localtime = localtime(epoch)?;
 
     let year = localtime.tm_year + 1900;
     if year < 0 || year > 9999 {
         bail!("epoch_to_rfc3339: wrong year '{}'", year);
-
     }
 
     // Note: We cannot use strftime %z because of missing collon
@@ -206,7 +202,6 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 
 /// Parse RFC3339 into Unix epoch
 pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
-
     let input = i.as_bytes();
 
     let expect = |pos: usize, c: u8| {
@@ -232,43 +227,52 @@ pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
     };
 
     crate::try_block!({
-
-        if i.len() < 20 || i.len() > 25 { bail!("wrong length"); }
+        if i.len() < 20 || i.len() > 25 {
+            bail!("wrong length");
+        }
 
         let tz = input[19];
 
         match tz {
-            b'Z' => if i.len() != 20 { bail!("wrong length"); },
-            b'+' | b'-' =>  if i.len() != 25 { bail!("wrong length"); },
+            b'Z' => {
+                if i.len() != 20 {
+                    bail!("wrong length");
+                }
+            }
+            b'+' | b'-' => {
+                if i.len() != 25 {
+                    bail!("wrong length");
+                }
+            }
             _ => bail!("got unknown timezone indicator"),
         }
 
         let mut tm = TmEditor::new(true);
 
-        tm.set_year(digit(0)?*1000 + digit(1)?*100 + digit(2)?*10+digit(3)?)?;
+        tm.set_year(digit(0)? * 1000 + digit(1)? * 100 + digit(2)? * 10 + digit(3)?)?;
         expect(4, b'-')?;
-        tm.set_mon(check_max(digit(5)?*10 + digit(6)?, 12)?)?;
+        tm.set_mon(check_max(digit(5)? * 10 + digit(6)?, 12)?)?;
         expect(7, b'-')?;
-        tm.set_mday(check_max(digit(8)?*10 + digit(9)?, 31)?)?;
+        tm.set_mday(check_max(digit(8)? * 10 + digit(9)?, 31)?)?;
 
         expect(10, b'T')?;
 
-        tm.set_hour(check_max(digit(11)?*10 + digit(12)?, 23)?)?;
+        tm.set_hour(check_max(digit(11)? * 10 + digit(12)?, 23)?)?;
         expect(13, b':')?;
-        tm.set_min(check_max(digit(14)?*10 + digit(15)?, 59)?)?;
+        tm.set_min(check_max(digit(14)? * 10 + digit(15)?, 59)?)?;
         expect(16, b':')?;
-        tm.set_sec(check_max(digit(17)?*10 + digit(18)?, 60)?)?;
+        tm.set_sec(check_max(digit(17)? * 10 + digit(18)?, 60)?)?;
 
         let epoch = tm.into_epoch()?;
         if tz == b'Z' {
             return Ok(epoch);
         }
 
-        let hours = check_max(digit(20)?*10 + digit(21)?, 23)?;
+        let hours = check_max(digit(20)? * 10 + digit(21)?, 23)?;
         expect(22, b':')?;
-        let mins = check_max(digit(23)?*10 + digit(24)?, 23)?;
+        let mins = check_max(digit(23)? * 10 + digit(24)?, 23)?;
 
-        let offset = (hours*3600 + mins*60) as i64;
+        let offset = (hours * 3600 + mins * 60) as i64;
 
         let epoch = match tz {
             b'+' => epoch - offset,
@@ -277,17 +281,18 @@ pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
         };
 
         Ok(epoch)
-    }).map_err(|err| format_err!("parse_rfc_3339 failed - {}", err))
+    })
+    .map_err(|err| format_err!("parse_rfc_3339 failed - {}", err))
 }
 
 #[test]
 fn test_leap_seconds() {
     let convert_reconvert = |epoch| {
-        let rfc3339 = epoch_to_rfc3339_utc(epoch)
-            .expect("leap second epoch to rfc3339 should work");
+        let rfc3339 =
+            epoch_to_rfc3339_utc(epoch).expect("leap second epoch to rfc3339 should work");
 
-        let parsed = parse_rfc3339(&rfc3339)
-            .expect("parsing converted leap second epoch should work");
+        let parsed =
+            parse_rfc3339(&rfc3339).expect("parsing converted leap second epoch should work");
 
         assert_eq!(epoch, parsed);
     };
@@ -298,8 +303,7 @@ fn test_leap_seconds() {
     convert_reconvert(epoch + 1);
     convert_reconvert(epoch + 2);
 
-    let parsed = parse_rfc3339("2005-12-31T23:59:60Z")
-        .expect("parsing leap second should work");
+    let parsed = parse_rfc3339("2005-12-31T23:59:60Z").expect("parsing leap second should work");
     assert_eq!(parsed, epoch + 1);
 }
 
@@ -312,26 +316,26 @@ fn test_rfc3339_range() {
     let upper = 253402300799;
     let upper_str = "9999-12-31T23:59:59Z";
 
-    let converted = epoch_to_rfc3339_utc(lower)
-        .expect("converting lower bound of RFC3339 range should work");
+    let converted =
+        epoch_to_rfc3339_utc(lower).expect("converting lower bound of RFC3339 range should work");
     assert_eq!(converted, lower_str);
 
-    let converted = epoch_to_rfc3339_utc(upper)
-        .expect("converting upper bound of RFC3339 range should work");
+    let converted =
+        epoch_to_rfc3339_utc(upper).expect("converting upper bound of RFC3339 range should work");
     assert_eq!(converted, upper_str);
 
-    let parsed = parse_rfc3339(lower_str)
-        .expect("parsing lower bound of RFC3339 range should work");
+    let parsed =
+        parse_rfc3339(lower_str).expect("parsing lower bound of RFC3339 range should work");
     assert_eq!(parsed, lower);
 
-    let parsed = parse_rfc3339(upper_str)
-        .expect("parsing upper bound of RFC3339 range should work");
+    let parsed =
+        parse_rfc3339(upper_str).expect("parsing upper bound of RFC3339 range should work");
     assert_eq!(parsed, upper);
 
-    epoch_to_rfc3339_utc(lower-1)
+    epoch_to_rfc3339_utc(lower - 1)
         .expect_err("converting below lower bound of RFC3339 range should fail");
 
-    epoch_to_rfc3339_utc(upper+1)
+    epoch_to_rfc3339_utc(upper + 1)
         .expect_err("converting above upper bound of RFC3339 range should fail");
 
     let first_century = -59011459201;
@@ -341,8 +345,8 @@ fn test_rfc3339_range() {
         .expect("converting epoch representing first century year should work");
     assert_eq!(converted, first_century_str);
 
-    let parsed = parse_rfc3339(first_century_str)
-        .expect("parsing first century string should work");
+    let parsed =
+        parse_rfc3339(first_century_str).expect("parsing first century string should work");
     assert_eq!(parsed, first_century);
 
     let first_millenium = -59011459200;
@@ -352,8 +356,8 @@ fn test_rfc3339_range() {
         .expect("converting epoch representing first millenium year should work");
     assert_eq!(converted, first_millenium_str);
 
-    let parsed = parse_rfc3339(first_millenium_str)
-        .expect("parsing first millenium string should work");
+    let parsed =
+        parse_rfc3339(first_millenium_str).expect("parsing first millenium string should work");
     assert_eq!(parsed, first_millenium);
 }
 
@@ -363,19 +367,15 @@ fn test_gmtime_range() {
     let lower = -67768040609740800;
     let upper = 67768036191676799;
 
-    let mut lower_tm = gmtime(lower)
-        .expect("gmtime should work as long as years fit into i32");
+    let mut lower_tm = gmtime(lower).expect("gmtime should work as long as years fit into i32");
     let res = timegm(&mut lower_tm).expect("converting back to epoch should work");
     assert_eq!(lower, res);
 
-    gmtime(lower-1)
-        .expect_err("gmtime should fail for years not fitting into i32");
+    gmtime(lower - 1).expect_err("gmtime should fail for years not fitting into i32");
 
-    let mut upper_tm = gmtime(upper)
-        .expect("gmtime should work as long as years fit into i32");
+    let mut upper_tm = gmtime(upper).expect("gmtime should work as long as years fit into i32");
     let res = timegm(&mut upper_tm).expect("converting back to epoch should work");
     assert_eq!(upper, res);
 
-    gmtime(upper+1)
-        .expect_err("gmtime should fail for years not fitting into i32");
+    gmtime(upper + 1).expect_err("gmtime should fail for years not fitting into i32");
 }

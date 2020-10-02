@@ -661,9 +661,10 @@ pub fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, 
         }
         Schema::Array(array_schema) => {
             let mut array: Vec<Value> = vec![];
-            let list: Vec<&str> = value_str.split(|c: char| {
-                c == ',' || c == ';' || char::is_ascii_whitespace(&c)
-            }).filter(|s| !s.is_empty()).collect();
+            let list: Vec<&str> = value_str
+                .split(|c: char| c == ',' || c == ';' || char::is_ascii_whitespace(&c))
+                .filter(|s| !s.is_empty())
+                .collect();
 
             for value in list {
                 match parse_simple_value(value.trim(), &array_schema.items) {

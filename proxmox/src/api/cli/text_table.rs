@@ -17,7 +17,7 @@ pub fn get_output_format(param: &Value) -> String {
     let mut output_format = None;
 
     if let Some(format) = param["output-format"].as_str() {
-         output_format = Some(format.to_owned());
+        output_format = Some(format.to_owned());
     } else if let Ok(format) = std::env::var(ENV_VAR_PROXMOX_OUTPUT_FORMAT) {
         output_format = Some(format);
     }
@@ -27,65 +27,53 @@ pub fn get_output_format(param: &Value) -> String {
 
 /// Helper to get TableFormatOptions with default from environment
 pub fn default_table_format_options() -> TableFormatOptions {
-    let no_border = std::env::var(ENV_VAR_PROXMOX_OUTPUT_NO_BORDER).ok().is_some();
-    let no_header = std::env::var(ENV_VAR_PROXMOX_OUTPUT_NO_HEADER).ok().is_some();
+    let no_border = std::env::var(ENV_VAR_PROXMOX_OUTPUT_NO_BORDER)
+        .ok()
+        .is_some();
+    let no_header = std::env::var(ENV_VAR_PROXMOX_OUTPUT_NO_HEADER)
+        .ok()
+        .is_some();
 
-    TableFormatOptions::new().noborder(no_border).noheader(no_header)
+    TableFormatOptions::new()
+        .noborder(no_border)
+        .noheader(no_header)
 }
 
 /// Render function
 ///
 /// Should convert the json `value` into a text string. `record` points to
 /// the surrounding data object.
-pub type RenderFunction = fn(/* value: */ &Value, /* record: */ &Value) -> Result<String, Error>;
+pub type RenderFunction =
+    fn(/* value: */ &Value, /* record: */ &Value) -> Result<String, Error>;
 
 fn data_to_text(data: &Value, schema: &Schema) -> Result<String, Error> {
-
-    if data.is_null() { return Ok(String::new()); }
+    if data.is_null() {
+        return Ok(String::new());
+    }
 
     match schema {
         Schema::Null => {
             // makes no sense to display Null columns
             bail!("internal error");
         }
-        Schema::Boolean(_boolean_schema) => {
-            match data.as_bool() {
-                Some(value) => {
-                    Ok(String::from(if value { "1" } else { "0" }))
-                }
-                None => bail!("got unexpected data (expected bool)."),
-            }
-        }
-        Schema::Integer(_integer_schema) => {
-            match data.as_i64() {
-                Some(value) => {
-                    Ok(format!("{}", value))
-                }
-                None => bail!("got unexpected data (expected integer)."),
-            }
-        }
-        Schema::Number(_number_schema) => {
-            match data.as_f64() {
-                Some(value) => {
-                    Ok(format!("{}", value))
-                }
-                None => bail!("got unexpected data (expected number)."),
-            }
-        }
-        Schema::String(_string_schema) => {
-            match data.as_str() {
-                Some(value) => {
-                    Ok(value.to_string())
-                }
-                None => bail!("got unexpected data (expected string)."),
-            }
-        }
-        Schema::Object(_object_schema) => {
-            Ok(data.to_string())
-        }
-        Schema::Array(_array_schema) => {
-            Ok(data.to_string())
-        }
+        Schema::Boolean(_boolean_schema) => match data.as_bool() {
+            Some(value) => Ok(String::from(if value { "1" } else { "0" })),
+            None => bail!("got unexpected data (expected bool)."),
+        },
+        Schema::Integer(_integer_schema) => match data.as_i64() {
+            Some(value) => Ok(format!("{}", value)),
+            None => bail!("got unexpected data (expected integer)."),
+        },
+        Schema::Number(_number_schema) => match data.as_f64() {
+            Some(value) => Ok(format!("{}", value)),
+            None => bail!("got unexpected data (expected number)."),
+        },
+        Schema::String(_string_schema) => match data.as_str() {
+            Some(value) => Ok(value.to_string()),
+            None => bail!("got unexpected data (expected string)."),
+        },
+        Schema::Object(_object_schema) => Ok(data.to_string()),
+        Schema::Array(_array_schema) => Ok(data.to_string()),
     }
 }
 
@@ -98,12 +86,10 @@ struct TableBorders {
 }
 
 impl TableBorders {
-
     fn new<I>(column_widths: I, ascii_delimiters: bool) -> Self
     where
         I: Iterator<Item = usize>,
     {
-
         let mut top = String::new();
         let mut head = String::new();
         let mut middle = String::new();
@@ -176,7 +162,6 @@ pub struct ColumnConfig {
 }
 
 impl ColumnConfig {
-
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -223,7 +208,6 @@ pub struct TableFormatOptions {
 }
 
 impl TableFormatOptions {
-
     /// Create a new Instance with reasonable defaults for terminal output
     ///
     /// This tests if stdout is a TTY and sets the columns to the terminal width,
@@ -269,7 +253,7 @@ impl TableFormatOptions {
                 self.sortkeys = Some(list);
             }
             Some(ref mut list) => {
-               list.push((key, sort_desc));
+                list.push((key, sort_desc));
             }
         }
         self
@@ -306,8 +290,10 @@ impl TableFormatOptions {
         self
     }
 
-    fn lookup_column_info(&self, column_name: &str) -> (String, Option<bool>, Option<RenderFunction>) {
-
+    fn lookup_column_info(
+        &self,
+        column_name: &str,
+    ) -> (String, Option<bool>, Option<RenderFunction>) {
         let mut renderer = None;
 
         let header;
@@ -345,15 +331,20 @@ fn format_table<W: Write>(
     schema: &ObjectSchema,
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
-
     let properties_to_print = if options.column_config.is_empty() {
         extract_properties_to_print(schema)
     } else {
-        options.column_config.iter().map(|v| v.name.clone()).collect()
+        options
+            .column_config
+            .iter()
+            .map(|v| v.name.clone())
+            .collect()
     };
 
     let column_count = properties_to_print.len();
-    if column_count == 0 { return Ok(()); };
+    if column_count == 0 {
+        return Ok(());
+    };
 
     let sortkeys = if let Some(ref sortkeys) = options.sortkeys {
         sortkeys.clone()
@@ -387,11 +378,12 @@ fn format_table<W: Write>(
                 } else {
                     (a[&sortkey].as_f64(), b[&sortkey].as_f64())
                 };
-                match (v1,v2) {
+                match (v1, v2) {
                     (None, None) => Ordering::Greater,
                     (Some(_), None) => Ordering::Greater,
                     (None, Some(_)) => Ordering::Less,
-                    (Some(a), Some(b)) => {
+                    (Some(a), Some(b)) =>
+                    {
                         #[allow(clippy::if_same_then_else)]
                         if a.is_nan() {
                             Ordering::Greater
@@ -443,7 +435,11 @@ fn format_table<W: Write>(
 
         let right_align = right_align.unwrap_or(is_numeric);
 
-        let mut max_width = if options.noheader || options.noborder { 0 } else { header.chars().count() };
+        let mut max_width = if options.noheader || options.noborder {
+            0
+        } else {
+            header.chars().count()
+        };
 
         column_names.push(header);
 
@@ -460,16 +456,25 @@ fn format_table<W: Write>(
                 Err(err) => bail!("unable to format property {} - {}", name, err),
             };
 
-            let lines: Vec<String> = text.lines().map(|line| {
-                let width = line.chars().count();
-                if width > max_width { max_width = width; }
-                line.to_string()
-            }).collect();
+            let lines: Vec<String> = text
+                .lines()
+                .map(|line| {
+                    let width = line.chars().count();
+                    if width > max_width {
+                        max_width = width;
+                    }
+                    line.to_string()
+                })
+                .collect();
 
             cells.push(TableCell { lines });
         }
 
-        tabledata.push(TableColumn { cells, width: max_width, right_align});
+        tabledata.push(TableColumn {
+            cells,
+            width: max_width,
+            right_align,
+        });
     }
 
     render_table(output, &tabledata, &column_names, options)
@@ -481,7 +486,6 @@ fn render_table<W: Write>(
     column_names: &[String],
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
-
     let mut write_line = |line: &str| -> Result<(), Error> {
         if let Some(columns) = options.columns {
             let line: String = line.chars().take(columns).collect();
@@ -496,7 +500,9 @@ fn render_table<W: Write>(
     let column_widths = tabledata.iter().map(|d| d.width);
     let borders = TableBorders::new(column_widths, options.ascii_delimiters);
 
-    if !options.noborder { write_line(&borders.top)?; }
+    if !options.noborder {
+        write_line(&borders.top)?;
+    }
 
     let mut header = String::new();
     for (i, name) in column_names.iter().enumerate() {
@@ -524,7 +530,9 @@ fn render_table<W: Write>(
         for (i, _name) in column_names.iter().enumerate() {
             let cells = &tabledata[i].cells;
             let lines = &cells[pos].lines;
-            if lines.len() > max_lines { max_lines = lines.len(); }
+            if lines.len() > max_lines {
+                max_lines = lines.len();
+            }
         }
         for line_nr in 0..max_lines {
             let mut text = String::new();
@@ -535,7 +543,9 @@ fn render_table<W: Write>(
                 let line = lines.get(line_nr).unwrap_or(&empty_string);
 
                 if options.noborder {
-                    if i > 0 { text.push(' '); }
+                    if i > 0 {
+                        text.push(' ');
+                    }
                 } else {
                     text.push(borders.column_separator);
                     text.push(' ');
@@ -547,9 +557,13 @@ fn render_table<W: Write>(
                     text.push_str(&format!("{:<width$}", line, width = column.width));
                 }
 
-                if !options.noborder { text.push(' '); }
+                if !options.noborder {
+                    text.push(' ');
+                }
             }
-            if !options.noborder { text.push(borders.column_separator); }
+            if !options.noborder {
+                text.push(borders.column_separator);
+            }
             write_line(&text)?;
         }
 
@@ -571,21 +585,34 @@ fn format_object<W: Write>(
     schema: &ObjectSchema,
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
-
     let properties_to_print = if options.column_config.is_empty() {
         extract_properties_to_print(schema)
     } else {
-        options.column_config.iter().map(|v| v.name.clone()).collect()
+        options
+            .column_config
+            .iter()
+            .map(|v| v.name.clone())
+            .collect()
     };
 
     let row_count = properties_to_print.len();
-    if row_count == 0 { return Ok(()); };
+    if row_count == 0 {
+        return Ok(());
+    };
 
     const NAME_TITLE: &str = "Name";
     const VALUE_TITLE: &str = "Value";
 
-    let mut max_name_width = if options.noheader || options.noborder { 0 } else { NAME_TITLE.len() };
-    let mut max_value_width =  if options.noheader || options.noborder { 0 } else { VALUE_TITLE.len() };
+    let mut max_name_width = if options.noheader || options.noborder {
+        0
+    } else {
+        NAME_TITLE.len()
+    };
+    let mut max_value_width = if options.noheader || options.noborder {
+        0
+    } else {
+        VALUE_TITLE.len()
+    };
 
     let column_names = vec![NAME_TITLE.to_string(), VALUE_TITLE.to_string()];
 
@@ -611,18 +638,26 @@ fn format_object<W: Write>(
 
         let right_align = right_align.unwrap_or(is_numeric);
 
-        if !right_align { all_right_aligned = false; }
+        if !right_align {
+            all_right_aligned = false;
+        }
 
         if optional {
             if let Some(object) = data.as_object() {
-                if object.get(name).is_none() { continue; }
+                if object.get(name).is_none() {
+                    continue;
+                }
             }
         }
 
         let header_width = header.chars().count();
-        if header_width > max_name_width { max_name_width = header_width; }
+        if header_width > max_name_width {
+            max_name_width = header_width;
+        }
 
-        name_cells.push(TableCell { lines: vec![ header ] });
+        name_cells.push(TableCell {
+            lines: vec![header],
+        });
 
         let result = if let Some(renderer) = renderer {
             (renderer)(&data[name], &data)
@@ -635,17 +670,30 @@ fn format_object<W: Write>(
             Err(err) => bail!("unable to format property {} - {}", name, err),
         };
 
-        let lines: Vec<String> = text.lines().map(|line| {
-            let width = line.chars().count();
-            if width > max_value_width { max_value_width = width; }
-            line.to_string()
-        }).collect();
+        let lines: Vec<String> = text
+            .lines()
+            .map(|line| {
+                let width = line.chars().count();
+                if width > max_value_width {
+                    max_value_width = width;
+                }
+                line.to_string()
+            })
+            .collect();
 
         value_cells.push(TableCell { lines });
     }
 
-    let name_column = TableColumn { cells: name_cells, width: max_name_width, right_align: false };
-    let value_column = TableColumn { cells: value_cells, width: max_value_width, right_align: all_right_aligned };
+    let name_column = TableColumn {
+        cells: name_cells,
+        width: max_name_width,
+        right_align: false,
+    };
+    let value_column = TableColumn {
+        cells: value_cells,
+        width: max_value_width,
+        right_align: all_right_aligned,
+    };
 
     let mut tabledata: Vec<TableColumn> = Vec::new();
     tabledata.push(name_column);
@@ -658,10 +706,14 @@ fn extract_properties_to_print(schema: &ObjectSchema) -> Vec<String> {
     let mut result = Vec::new();
 
     for (name, optional, _prop_schema) in schema.properties {
-        if !*optional { result.push(name.to_string()); }
+        if !*optional {
+            result.push(name.to_string());
+        }
     }
     for (name, optional, _prop_schema) in schema.properties {
-        if *optional { result.push(name.to_string()); }
+        if *optional {
+            result.push(name.to_string());
+        }
     }
     result
 }
@@ -673,7 +725,6 @@ pub fn value_to_text<W: Write>(
     schema: &Schema,
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
-
     match schema {
         Schema::Null => {
             if *data != Value::Null {
@@ -700,7 +751,9 @@ pub fn value_to_text<W: Write>(
                 Some(list) => list,
                 None => bail!("got unexpected data (expected array)."),
             };
-            if list.is_empty() { return Ok(()); }
+            if list.is_empty() {
+                return Ok(());
+            }
 
             match array_schema.items {
                 Schema::Object(object_schema) => {
