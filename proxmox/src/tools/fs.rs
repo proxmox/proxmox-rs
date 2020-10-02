@@ -178,7 +178,11 @@ pub fn replace_file<P: AsRef<Path>>(
 
     if let Err(err) = std::fs::rename(&tmp_path, &path) {
         let _ = unistd::unlink(&tmp_path);
-        bail!("Atomic rename failed for file {:?} - {}", path.as_ref(), err);
+        bail!(
+            "Atomic rename failed for file {:?} - {}",
+            path.as_ref(),
+            err
+        );
     }
 
     Ok(())
@@ -516,8 +520,11 @@ pub fn lock_file<F: AsRawFd>(
 
 /// Open or create a lock file (append mode). Then try to
 /// acquire a lock using `lock_file()`.
-pub fn open_file_locked<P: AsRef<Path>>(path: P, timeout: Duration, exclusive: bool) -> Result<File, Error> {
-
+pub fn open_file_locked<P: AsRef<Path>>(
+    path: P,
+    timeout: Duration,
+    exclusive: bool,
+) -> Result<File, Error> {
     let path = path.as_ref();
     let mut file = match OpenOptions::new().create(true).append(true).open(path) {
         Ok(file) => file,

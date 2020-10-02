@@ -41,8 +41,7 @@ pub mod epoch_as_rfc3339 {
     {
         use serde::de::Error;
         String::deserialize(deserializer).and_then(|string| {
-            crate::tools::time::parse_rfc3339(&string)
-                .map_err(|err| Error::custom(err.to_string()))
+            crate::tools::time::parse_rfc3339(&string).map_err(|err| Error::custom(err.to_string()))
         })
     }
 }

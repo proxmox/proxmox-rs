@@ -443,7 +443,9 @@ impl SchemaObject {
     }
 
     fn find_property_by_ident_mut(&mut self, key: &str) -> Option<&mut (FieldName, bool, Schema)> {
-        self.properties_.iter_mut().find(|p| p.0.as_ident_str() == key)
+        self.properties_
+            .iter_mut()
+            .find(|p| p.0.as_ident_str() == key)
     }
 
     fn extend_properties(&mut self, new_fields: Vec<(FieldName, bool, Schema)>) {
