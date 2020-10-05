@@ -201,8 +201,8 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 }
 
 /// Parse RFC3339 into Unix epoch
-pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
-    let input = i.as_bytes();
+pub fn parse_rfc3339(input_str: &str) -> Result<i64, Error> {
+    let input = input_str.as_bytes();
 
     let expect = |pos: usize, c: u8| {
         if input[pos] != c {
@@ -227,24 +227,24 @@ pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
     };
 
     crate::try_block!({
-        if i.len() < 20 || i.len() > 25 {
-            bail!("wrong length");
+        if input.len() < 20 || input.len() > 25 {
+            bail!("timestamp of unexpected length");
         }
 
         let tz = input[19];
 
         match tz {
             b'Z' => {
-                if i.len() != 20 {
-                    bail!("wrong length");
+                if input.len() != 20 {
+                    bail!("unexpected length in UTC timestamp");
                 }
             }
             b'+' | b'-' => {
-                if i.len() != 25 {
-                    bail!("wrong length");
+                if input.len() != 25 {
+                    bail!("unexpected length in timestamp");
                 }
             }
-            _ => bail!("got unknown timezone indicator"),
+            _ => bail!("unexpected timezone indicator"),
         }
 
         let mut tm = TmEditor::new(true);
@@ -282,7 +282,7 @@ pub fn parse_rfc3339(i: &str) -> Result<i64, Error> {
 
         Ok(epoch)
     })
-    .map_err(|err| format_err!("parse_rfc_3339 failed - {}", err))
+    .map_err(|err| format_err!("failed to parse rfc3339 timestamp ({:?}) - {}", input_str, err))
 }
 
 #[test]
