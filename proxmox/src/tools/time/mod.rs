@@ -282,7 +282,13 @@ pub fn parse_rfc3339(input_str: &str) -> Result<i64, Error> {
 
         Ok(epoch)
     })
-    .map_err(|err| format_err!("failed to parse rfc3339 timestamp ({:?}) - {}", input_str, err))
+    .map_err(|err| {
+        format_err!(
+            "failed to parse rfc3339 timestamp ({:?}) - {}",
+            input_str,
+            err
+        )
+    })
 }
 
 #[test]
