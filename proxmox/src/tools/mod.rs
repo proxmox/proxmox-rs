@@ -9,7 +9,7 @@ pub mod as_any;
 pub mod borrow;
 pub mod byte_buffer;
 pub mod common_regex;
-pub mod constnamemap;
+pub mod constnamedbitmap;
 pub mod email;
 pub mod fd;
 pub mod fs;

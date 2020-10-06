@@ -1,19 +1,23 @@
-/// A macro to generate a list of pub const variabales and
-/// an accompaning static array of a given name + value
-/// (with doc comments)
+/// A macro to generate a list of pub const variabales, and
+/// an accompaning static array of a given name, the values are automatically
+/// assigned to a bit (with doc comments)
 ///
 /// Example:
 /// ```
-/// # use proxmox::constnamemap;
+/// # use proxmox::constnamedbitmap;
 ///
-/// constnamemap! {
+/// constnamedbitmap! {
 ///     /// A list of privileges
 ///     PRIVS: u64 => {
 ///         /// Some comment for Priv1
-///         PRIV1("Priv1") = 1;
-///         PRIV2("Priv2") = 2;
+///         PRIV1("Priv1");
+///         PRIV2("Priv2");
+///         PRIV3("Priv3");
 ///     }
 /// }
+/// # assert!(PRIV1 == 1<<0);
+/// # assert!(PRIV2 == 1<<1);
+/// # assert!(PRIV3 == 1<<2);
 /// ```
 ///
 /// this will generate the following variables:
@@ -21,15 +25,17 @@
 /// /// Some comment for Priv1
 /// pub const PRIV1: u64 = 1;
 /// pub const PRIV2: u64 = 2;
+/// pub const PRIV3: u64 = 4;
 ///
 /// /// A list of privileges
 /// pub const PRIVS: &[(&str, u64)] = &[
-///     ("Priv1", 1),
-///     ("Priv2", 2),
+///     ("Priv1", PRIV1),
+///     ("Priv2", PRIV2),
+///     ("Priv3", PRIV3),
 /// ];
 /// ```
 #[macro_export(local_inner_macros)]
-macro_rules! constnamemap {
+macro_rules! constnamedbitmap {
     (
         $(#[$outer:meta])*
         $name:ident : $type:ty => {
@@ -37,7 +43,7 @@ macro_rules! constnamemap {
         }
     ) => {
         __constnamemap_consts! {
-            $type => $($content)+
+            ($type) (0) => $($content)+
         }
 
         $(#[$outer])*
@@ -51,17 +57,20 @@ macro_rules! constnamemap {
 #[doc(hidden)]
 #[macro_export(local_inner_macros)]
 macro_rules! __constnamemap_consts {
+    (($type:ty) ($counter:expr) => ) => {};
     (
-        $type:ty =>
+        ($type:ty) ($counter:expr) =>
+        $(#[$outer:meta])*
+        $name:ident($text:expr);
         $(
-            $(#[$outer:meta])*
-            $name:ident($text:expr) = $value:expr;
-        )+
+            $content:tt
+        )*
     ) => {
-        $(
-            $(#[$outer])*
-            pub const $name: $type = $value;
-        )+
+        $(#[$outer])*
+        pub const $name: $type = 1 << ($counter);
+        __constnamemap_consts! {
+                ($type) (1+$counter) => $($content)*
+        }
     }
 }
 
@@ -71,11 +80,11 @@ macro_rules! __constnamemap_entries {
     (
         $(
             $(#[$outer:meta])*
-            $name:ident($text:expr) = $value:expr;
+            $name:ident($text:expr);
         )*
     ) => {
         &[
-            $(($text,$value),)*
+            $(($text,$name),)*
         ]
     }
 }
