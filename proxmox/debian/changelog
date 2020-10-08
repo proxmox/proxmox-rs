@@ -1,3 +1,15 @@
+rust-proxmox (0.4.3-1) unstable; urgency=medium
+
+  * tools: change constnamemap to a more automatic constnamedbitmap
+
+  * improve error messages in parse_rfc3339
+
+  * big formatting cleanup
+
+  * proxmox/tools/common_regex: improve IPRE_BRACKET
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 08 Oct 2020 09:00:09 +0200
+
 rust-proxmox (0.4.2-1) unstable; urgency=medium
 
   * add exclusive parameter to open_file_locked
