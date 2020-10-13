@@ -19,6 +19,16 @@ pub trait RpcEnvironment: std::any::Any + AsAny + Send {
 
     /// Get user name
     fn get_user(&self) -> Option<String>;
+
+    /// Set the client IP, should be re-set if a proxied connection was detected
+    fn set_client_ip(&mut self, _client_ip: Option<std::net::SocketAddr>) {
+        // dummy no-op implementation, as most environments don't need this
+    }
+
+    /// Get the (real) client IP
+    fn get_client_ip(&self) -> Option<std::net::SocketAddr> {
+        None // dummy no-op implementation, as most environments don't need this
+    }
 }
 
 /// Environment Type
