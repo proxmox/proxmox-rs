@@ -417,7 +417,7 @@ pub fn get_doc_comments(attributes: &[syn::Attribute]) -> Result<(String, Span),
         if attr.path.is_ident("doc") {
             let doc: BareAssignment<syn::LitStr> = syn::parse2(attr.tokens.clone())?;
             if !doc_comment.is_empty() {
-                doc_comment.push_str("\n");
+                doc_comment.push('\n');
             }
             doc_comment.push_str(doc.content.value().trim());
         }

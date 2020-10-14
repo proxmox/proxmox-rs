@@ -58,7 +58,7 @@ impl fmt::Display for ParameterError {
             let s = item.to_string();
             msg.reserve(s.len() + 1);
             msg.push_str(&s);
-            msg.push_str("\n");
+            msg.push('\n');
         }
 
         write!(f, "{}", msg)
