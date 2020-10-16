@@ -1,3 +1,9 @@
+rust-proxmox (0.4.4-1) unstable; urgency=medium
+
+  * api: RPC environment: add client IP getter/setter to trait
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 16 Oct 2020 10:30:07 +0200
+
 rust-proxmox (0.4.3-1) unstable; urgency=medium
 
   * tools: change constnamemap to a more automatic constnamedbitmap
