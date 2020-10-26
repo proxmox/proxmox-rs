@@ -414,18 +414,8 @@ fn create_wrapper_function(
                             #name_str,
                         ))?
                     });
-                } else if util::is_option_type(ty).is_none() {
-                    // Optional parameter without an Option<T> type requires a default:
-                    if let Some(def) = &default_value {
-                        body.extend(quote_spanned! { span =>
-                            .unwrap_or_else(|| #def)
-                        });
-                    } else {
-                        bail!(ty => "Optional parameter without Option<T> requires a default");
-                    }
                 }
-                body.extend(quote_spanned! { span => ; });
-                args.extend(quote_spanned! { span => #arg_name, });
+                let no_option_type = util::is_option_type(ty).is_none();
 
                 if let Some(def) = &default_value {
                     let name_uc = name.as_ident().to_string().to_uppercase();
@@ -438,7 +428,17 @@ fn create_wrapper_function(
                     default_consts.extend(quote_spanned! { span =>
                         pub const #name: #ty = #def;
                     });
+                    if optional && no_option_type {
+                        // Optional parameter without an Option<T> type requires a default:
+                        body.extend(quote_spanned! { span =>
+                            .unwrap_or(#name)
+                        });
+                    }
+                } else if optional && no_option_type {
+                    bail!(ty => "Optional parameter without Option<T> requires a default");
                 }
+                body.extend(quote_spanned! { span => ; });
+                args.extend(quote_spanned! { span => #arg_name, });
             }
         }
     }
