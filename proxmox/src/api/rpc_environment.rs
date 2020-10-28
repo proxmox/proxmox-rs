@@ -14,11 +14,11 @@ pub trait RpcEnvironment: std::any::Any + AsAny + Send {
     /// The environment type
     fn env_type(&self) -> RpcEnvironmentType;
 
-    /// Set user name
-    fn set_user(&mut self, user: Option<String>);
+    /// Set authentication id
+    fn set_auth_id(&mut self, user: Option<String>);
 
-    /// Get user name
-    fn get_user(&self) -> Option<String>;
+    /// Get authentication id
+    fn get_auth_id(&self) -> Option<String>;
 
     /// Set the client IP, should be re-set if a proxied connection was detected
     fn set_client_ip(&mut self, _client_ip: Option<std::net::SocketAddr>) {

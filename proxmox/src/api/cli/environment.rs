@@ -6,7 +6,7 @@ use crate::api::{RpcEnvironment, RpcEnvironmentType};
 #[derive(Default)]
 pub struct CliEnvironment {
     result_attributes: Value,
-    user: Option<String>,
+    auth_id: Option<String>,
 }
 
 impl CliEnvironment {
@@ -28,11 +28,11 @@ impl RpcEnvironment for CliEnvironment {
         RpcEnvironmentType::CLI
     }
 
-    fn set_user(&mut self, user: Option<String>) {
-        self.user = user;
+    fn set_auth_id(&mut self, auth_id: Option<String>) {
+        self.auth_id = auth_id;
     }
 
-    fn get_user(&self) -> Option<String> {
-        self.user.clone()
+    fn get_auth_id(&self) -> Option<String> {
+        self.auth_id.clone()
     }
 }
