@@ -287,15 +287,15 @@ impl proxmox::api::RpcEnvironment for RpcEnv {
         panic!("env_type called");
     }
 
-    /// Set user name
-    fn set_user(&mut self, user: Option<String>) {
+    /// Set authentication id
+    fn set_auth_id(&mut self, user: Option<String>) {
         let _ = user;
-        panic!("set_user called");
+        panic!("set_auth_id called");
     }
 
-    /// Get user name
-    fn get_user(&self) -> Option<String> {
-        panic!("get_user called");
+    /// Get authentication id
+    fn get_auth_id(&self) -> Option<String> {
+        panic!("get_auth_id called");
     }
 }
 
