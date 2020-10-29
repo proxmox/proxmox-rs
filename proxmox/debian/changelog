@@ -1,3 +1,14 @@
+rust-proxmox (0.6.0-1) unstable; urgency=medium
+
+  * fix a case where use of the api attribute macro can generate unused
+    variable warnings
+
+  * RpcEnvironment: rename user to auth_id
+
+  * add proxmox::tools::tfa for totp and u2f implementations
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 29 Oct 2020 15:02:38 +0100
+
 rust-proxmox (0.5.0-1) unstable; urgency=medium
 
   * bump nix dependency to 0.19
