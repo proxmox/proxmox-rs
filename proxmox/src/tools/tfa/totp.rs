@@ -102,12 +102,12 @@ impl TotpBuilder {
     /// Set the duration, in seconds, for which a value is valid.
     ///
     /// Panics if `seconds` is 0.
-    pub fn step(mut self, seconds: usize) -> Self {
+    pub fn period(mut self, seconds: usize) -> Self {
         if seconds == 0 {
-            panic!("zero as 'step' value is invalid");
+            panic!("zero as 'period' value is invalid");
         }
 
-        self.inner.step = seconds;
+        self.inner.period = seconds;
         self
     }
 
@@ -131,7 +131,7 @@ pub struct Totp {
     algorithm: Algorithm,
 
     /// The duration, in seconds, for which a value is valid. Defaults to 30 seconds.
-    step: usize,
+    period: usize,
 
     /// An optional issuer. To help users identify their TOTP settings.
     issuer: Option<String>,
@@ -157,7 +157,7 @@ impl Totp {
             secret: Vec::new(),
             digits: 6,
             algorithm: Algorithm::Sha1,
-            step: 30,
+            period: 30,
             issuer: None,
             account_name: None,
         }
@@ -185,9 +185,9 @@ impl Totp {
         self.algorithm
     }
 
-    /// Get the step duration.
-    pub fn step(&self) -> Duration {
-        Duration::from_secs(self.step as u64)
+    /// Get the period duration.
+    pub fn period(&self) -> Duration {
+        Duration::from_secs(self.period as u64)
     }
 
     /// Get the issuer, if any.
@@ -248,7 +248,7 @@ impl Totp {
     /// range of values.
     fn time_to_counter(&self, time: SystemTime) -> Result<u64, Error> {
         match time.duration_since(SystemTime::UNIX_EPOCH) {
-            Ok(epoch) => Ok(epoch.as_secs() / (self.step as u64)),
+            Ok(epoch) => Ok(epoch.as_secs() / (self.period as u64)),
             Err(_) => bail!("refusing to create otp value for negative time"),
         }
     }
@@ -260,7 +260,7 @@ impl Totp {
 
     /// Verify a time value within a range.
     ///
-    /// This will iterate through `steps` and check if the provided `time + step * step_size`
+    /// This will iterate through `steps` and check if the provided `time + step * period_size`
     /// matches. If a match is found, the matching step will be returned.
     pub fn verify(
         &self,
@@ -308,7 +308,7 @@ impl Totp {
         )?;
         write!(out, "&digits={}", self.digits)?;
         write!(out, "&algorithm={}", self.algorithm)?;
-        write!(out, "&step={}", self.step)?;
+        write!(out, "&period={}", self.period)?;
 
         if let Some(issuer) = issuer {
             write!(out, "&issuer={}", issuer)?;
@@ -380,7 +380,7 @@ impl std::str::FromStr for Totp {
                 }
                 "digits" => totp.digits = value.decode_utf8()?.parse()?,
                 "algorithm" => totp.algorithm = value.decode_utf8()?.parse()?,
-                "step" => totp.step = value.decode_utf8()?.parse()?,
+                "period" => totp.period = value.decode_utf8()?.parse()?,
                 "issuer" => totp.issuer = Some(value.decode_utf8_lossy().into_owned()),
                 _other => bail!("unrecognized otpauth uri parameter: {}", key),
             }
