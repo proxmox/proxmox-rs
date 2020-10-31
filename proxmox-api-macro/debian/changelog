@@ -1,3 +1,13 @@
+rust-proxmox-api-macro (0.2.3-1) unstable; urgency=medium
+
+  * api macro: reuse generated default const for "unwrap_or" instead of adding
+    a closure which returned the default value inline. This allows one to
+    define optional params with a default as non-option type in a API handler
+    signature without getting a warning that the const generated for that
+    default is now unused.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 31 Oct 2020 08:38:18 +0100
+
 rust-proxmox-api-macro (0.2.2-1) unstable; urgency=medium
 
   * api-macro: replace ident hashmap with simple find
