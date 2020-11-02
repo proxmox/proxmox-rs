@@ -78,7 +78,7 @@ struct ClientData {
 /// A registration challenge to be sent to the `u2f.register` function in the browser.
 ///
 /// Part of the U2F API, therefore `camelCase`.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RegistrationChallenge {
     pub challenge: String,
