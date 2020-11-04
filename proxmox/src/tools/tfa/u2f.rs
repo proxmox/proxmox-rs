@@ -115,9 +115,9 @@ pub struct AuthChallenge {
 #[serde(rename_all = "camelCase")]
 pub struct AuthResponse {
     #[serde(with = "bytes_as_base64url_nopad")]
-    key_handle: Vec<u8>,
-    client_data: String,
-    signature_data: String,
+    pub key_handle: Vec<u8>,
+    pub client_data: String,
+    pub signature_data: String,
 }
 
 impl AuthResponse {
