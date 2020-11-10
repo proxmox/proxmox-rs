@@ -12,6 +12,7 @@ use anyhow::Error;
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
+use syn::ext::IdentExt;
 use syn::spanned::Spanned;
 use syn::visit_mut::{self, VisitMut};
 use syn::Ident;
@@ -251,9 +252,10 @@ fn handle_function_signature(
         //
         //     5) Finally, if none of the above conditions are met, we do not know what to do and
         //        bail out with an error.
-        let mut param_name: FieldName = pat.ident.clone().into();
+        let pat_ident = pat.ident.unraw();
+        let mut param_name: FieldName = pat_ident.clone().into();
         let param_type = if let Some((name, optional, schema)) =
-            input_schema.find_obj_property_by_ident(&pat.ident.to_string())
+            input_schema.find_obj_property_by_ident(&pat_ident.to_string())
         {
             if let SchemaItem::Inferred(span) = &schema.item {
                 bail!(*span, "failed to infer type");
@@ -280,7 +282,7 @@ fn handle_function_signature(
             value_param = Some(param_list.len());
             ParameterType::Value
         } else {
-            bail!(&pat.ident => "unexpected parameter");
+            bail!(&pat_ident => "unexpected parameter {:?}", pat_ident.to_string());
         };
 
         param_list.push((param_name, param_type));

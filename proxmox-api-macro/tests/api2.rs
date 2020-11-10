@@ -97,3 +97,39 @@ fn more_async_params_schema_check() {
 
     assert_eq!(TEST_METHOD, API_METHOD_MORE_ASYNC_PARAMS);
 }
+
+#[api(
+    input: {
+        properties: {
+            type: {
+                type: String,
+                description: "The great Foo",
+            },
+        },
+    },
+)]
+/// Returns nothing.
+pub async fn keyword_named_parameters(r#type: String) -> Result<(), Error> {
+    let _ = r#type;
+    Ok(())
+}
+
+#[test]
+fn keyword_named_parameters_check() {
+    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
+        &::proxmox::api::ApiHandler::Async(&api_function_keyword_named_parameters),
+        &::proxmox::api::schema::ObjectSchema::new(
+            "Returns nothing.",
+            &[
+                (
+                    "type",
+                    false,
+                    &::proxmox::api::schema::StringSchema::new("The great Foo").schema(),
+                ),
+            ],
+        ),
+    )
+    .protected(false);
+
+    assert_eq!(TEST_METHOD, API_METHOD_KEYWORD_NAMED_PARAMETERS);
+}
