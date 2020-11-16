@@ -120,13 +120,11 @@ fn keyword_named_parameters_check() {
         &::proxmox::api::ApiHandler::Async(&api_function_keyword_named_parameters),
         &::proxmox::api::schema::ObjectSchema::new(
             "Returns nothing.",
-            &[
-                (
-                    "type",
-                    false,
-                    &::proxmox::api::schema::StringSchema::new("The great Foo").schema(),
-                ),
-            ],
+            &[(
+                "type",
+                false,
+                &::proxmox::api::schema::StringSchema::new("The great Foo").schema(),
+            )],
         ),
     )
     .protected(false);

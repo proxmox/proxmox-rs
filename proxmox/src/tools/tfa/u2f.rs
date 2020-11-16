@@ -45,7 +45,11 @@ pub struct Registration {
     /// Attestation certificate (in DER format) from which we originally copied the `key_handle`.
     /// Not necessary for authentication, unless the hardware tokens should be restricted to
     /// specific provider identities. Optional.
-    #[serde(with = "bytes_as_base64", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        with = "bytes_as_base64",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub certificate: Vec<u8>,
 }
 
