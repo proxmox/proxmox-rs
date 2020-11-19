@@ -1,3 +1,18 @@
+rust-proxmox (0.7.1-1) unstable; urgency=medium
+
+  * fix tracking of subcommand prefix in order to produce correct help output
+    on errors
+
+  * u2f: make certificate optional
+
+  * u2f: make AuthResponse fields pub
+
+  * u2f: impl Deserialize for registration challenge
+
+  * add tools::hex_to_bin_exact
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 19 Nov 2020 08:54:26 +0100
+
 rust-proxmox (0.7.0-1) unstable; urgency=medium
 
   * rename 'step' to 'period' in totp values
