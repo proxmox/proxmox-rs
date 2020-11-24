@@ -101,6 +101,7 @@ pub struct CliCommandMap {
     /// Each command has an unique name. The map associates names with
     /// command definitions.
     pub commands: HashMap<String, CommandLineInterface>,
+    pub aliases: Vec<(Vec<&'static str>, Vec<&'static str>)>,
 }
 
 impl CliCommandMap {
@@ -112,6 +113,11 @@ impl CliCommandMap {
     /// Insert another command.
     pub fn insert<C: Into<CommandLineInterface>>(mut self, name: &'static str, cli: C) -> Self {
         self.commands.insert(name.into(), cli.into());
+        self
+    }
+
+    pub fn alias(mut self, old: &'static[&'static str], new: &'static[&'static str]) -> Self {
+        self.aliases.push((Vec::from(old), Vec::from(new)));
         self
     }
 

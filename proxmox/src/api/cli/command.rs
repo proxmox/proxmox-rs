@@ -156,6 +156,8 @@ fn parse_nested_command<'a>(
 
     // Note: Avoid async recursive function, because current rust compiler cant handle that
     loop {
+        replace_aliases(args, &map.aliases);
+
         if args.is_empty() {
             let mut cmds: Vec<&String> = map.commands.keys().collect();
             cmds.sort();
@@ -172,6 +174,7 @@ fn parse_nested_command<'a>(
             print_nested_usage_error(&prefix, map, &err_msg);
             return Err(format_err!("{}", err_msg));
         }
+
 
         let command = args.remove(0);
 
@@ -228,7 +231,7 @@ fn help_command(
     _info: &ApiMethod,
     _rpcenv: &mut dyn RpcEnvironment,
 ) -> Result<Value, Error> {
-    let command: Vec<String> = param["command"]
+    let mut command: Vec<String> = param["command"]
         .as_array()
         .unwrap_or(&Vec::new())
         .iter()
@@ -239,6 +242,9 @@ fn help_command(
 
     HELP_CONTEXT.with(|ctx| match &*ctx.borrow() {
         Some(def) => {
+            if let CommandLineInterface::Nested(map) = def.as_ref() {
+                replace_aliases(&mut command, &map.aliases);
+            }
             print_help(def, String::from(""), &command, verbose);
         }
         None => {
@@ -257,6 +263,26 @@ fn set_help_context(def: Option<Arc<CommandLineInterface>>) {
 
 pub(crate) fn help_command_def() -> CliCommand {
     CliCommand::new(&API_METHOD_COMMAND_HELP).arg_param(&["command"])
+}
+
+fn replace_aliases(
+    args: &mut Vec<String>,
+    aliases: &Vec<(Vec<&'static str>, Vec<&'static str>)>,
+) {
+    for (old, new) in aliases {
+        if args.len() < old.len() { continue; }
+        if old[..] == args[..old.len()] {
+            let new_args: Vec<String> = new.iter()
+                .map(|s| String::from(*s)).collect();
+            let rest = args.split_off(old.len());
+            args.truncate(0);
+            args.extend(new_args);
+            for arg in rest.iter() {
+                args.push(arg.clone());
+            }
+            return;
+        }
+    }
 }
 
 /// Handle command invocation.
