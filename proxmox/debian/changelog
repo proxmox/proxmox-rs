@@ -1,3 +1,9 @@
+rust-proxmox (0.7.2-1) unstable; urgency=medium
+
+  * implement cli command alias feature
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 24 Nov 2020 13:23:43 +0100
+
 rust-proxmox (0.7.1-1) unstable; urgency=medium
 
   * fix tracking of subcommand prefix in order to produce correct help output
