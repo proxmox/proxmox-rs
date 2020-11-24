@@ -676,7 +676,7 @@ pub fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, 
 
             Ok(array.into())
         }
-        _ => bail!("Got unexpetec schema type."),
+        _ => bail!("Got unexpected schema type."),
     }
 }
 
