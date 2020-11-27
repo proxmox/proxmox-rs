@@ -175,7 +175,6 @@ fn parse_nested_command<'a>(
             return Err(format_err!("{}", err_msg));
         }
 
-
         let command = args.remove(0);
 
         let (_, sub_cmd) = match map.find_command(&command) {
@@ -265,15 +264,13 @@ pub(crate) fn help_command_def() -> CliCommand {
     CliCommand::new(&API_METHOD_COMMAND_HELP).arg_param(&["command"])
 }
 
-fn replace_aliases(
-    args: &mut Vec<String>,
-    aliases: &[(Vec<&'static str>, Vec<&'static str>)],
-) {
+fn replace_aliases(args: &mut Vec<String>, aliases: &[(Vec<&'static str>, Vec<&'static str>)]) {
     for (old, new) in aliases {
-        if args.len() < old.len() { continue; }
+        if args.len() < old.len() {
+            continue;
+        }
         if old[..] == args[..old.len()] {
-            let new_args: Vec<String> = new.iter()
-                .map(|s| String::from(*s)).collect();
+            let new_args: Vec<String> = new.iter().map(|s| String::from(*s)).collect();
             let rest = args.split_off(old.len());
             args.truncate(0);
             args.extend(new_args);

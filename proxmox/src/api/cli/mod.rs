@@ -116,7 +116,7 @@ impl CliCommandMap {
         self
     }
 
-    pub fn alias(mut self, old: &'static[&'static str], new: &'static[&'static str]) -> Self {
+    pub fn alias(mut self, old: &'static [&'static str], new: &'static [&'static str]) -> Self {
         self.aliases.push((Vec::from(old), Vec::from(new)));
         self
     }
