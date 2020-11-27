@@ -192,12 +192,12 @@ impl Totp {
 
     /// Get the issuer, if any.
     pub fn issuer(&self) -> Option<&str> {
-        self.issuer.as_ref().map(|s| s.as_str())
+        self.issuer.as_deref()
     }
 
     /// Get the account name, if any.
     pub fn account_name(&self) -> Option<&str> {
-        self.account_name.as_ref().map(|s| s.as_str())
+        self.account_name.as_deref()
     }
 
     /// Raw signing function.

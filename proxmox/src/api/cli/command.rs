@@ -267,7 +267,7 @@ pub(crate) fn help_command_def() -> CliCommand {
 
 fn replace_aliases(
     args: &mut Vec<String>,
-    aliases: &Vec<(Vec<&'static str>, Vec<&'static str>)>,
+    aliases: &[(Vec<&'static str>, Vec<&'static str>)],
 ) {
     for (old, new) in aliases {
         if args.len() < old.len() { continue; }
