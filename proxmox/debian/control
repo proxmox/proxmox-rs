@@ -1,0 +1,310 @@
+Source: rust-proxmox
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 11),
+ dh-cargo (>= 18),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-base32-0.4+default-dev <!nocheck>,
+ librust-base64-0.12+default-dev <!nocheck>,
+ librust-bytes-0.5+default-dev <!nocheck>,
+ librust-endian-trait-0.6+arrays-dev <!nocheck>,
+ librust-endian-trait-0.6+default-dev <!nocheck>,
+ librust-futures-0.3+default-dev <!nocheck>,
+ librust-http-0.2+default-dev <!nocheck>,
+ librust-hyper-0.13+default-dev <!nocheck>,
+ librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
+ librust-libc-0.2+default-dev <!nocheck>,
+ librust-nix-0.19+default-dev <!nocheck>,
+ librust-openssl-0.10+default-dev <!nocheck>,
+ librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
+ librust-regex-1+default-dev (>= 1.2-~~) <!nocheck>,
+ librust-rustyline-6+default-dev <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
+ librust-serde-derive-1+default-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>,
+ librust-textwrap-0.11+default-dev <!nocheck>,
+ librust-tokio-0.2+default-dev <!nocheck>,
+ librust-tokio-0.2+io-util-dev <!nocheck>,
+ librust-tokio-0.2+sync-dev <!nocheck>,
+ librust-url-2+default-dev (>= 2.1-~~) <!nocheck>,
+ uuid-dev <!nocheck>,
+ uuid-dev <!nocheck>,
+ uuid-dev <!nocheck>,
+ uuid-dev <!nocheck>,
+ uuid-dev <!nocheck>,
+ uuid-dev <!nocheck>,
+ uuid-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.4.1
+Vcs-Git: 
+Vcs-Browser: 
+
+Package: librust-proxmox-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-base64-0.12+default-dev,
+ librust-bytes-0.5+default-dev,
+ librust-endian-trait-0.6+arrays-dev,
+ librust-endian-trait-0.6+default-dev,
+ librust-http-0.2+default-dev,
+ librust-lazy-static-1+default-dev (>= 1.4-~~),
+ librust-libc-0.2+default-dev,
+ librust-nix-0.19+default-dev,
+ librust-percent-encoding-2+default-dev (>= 2.1-~~),
+ librust-regex-1+default-dev (>= 1.2-~~),
+ librust-rustyline-6+default-dev,
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
+ librust-serde-derive-1+default-dev,
+ librust-serde-json-1+default-dev,
+ librust-textwrap-0.11+default-dev,
+ librust-url-2+default-dev (>= 2.1-~~),
+ uuid-dev
+Recommends:
+ librust-proxmox+default-dev (= ${binary:Version})
+Suggests:
+ librust-proxmox+api-macro-dev (= ${binary:Version}),
+ librust-proxmox+base32-dev (= ${binary:Version}),
+ librust-proxmox+cli-dev (= ${binary:Version}),
+ librust-proxmox+examples-dev (= ${binary:Version}),
+ librust-proxmox+futures-dev (= ${binary:Version}),
+ librust-proxmox+hyper-dev (= ${binary:Version}),
+ librust-proxmox+openssl-dev (= ${binary:Version}),
+ librust-proxmox+proxmox-sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox+router-dev (= ${binary:Version}),
+ librust-proxmox+tokio-dev (= ${binary:Version}),
+ librust-proxmox+websocket-dev (= ${binary:Version})
+Provides:
+ librust-proxmox+test-harness-dev (= ${binary:Version}),
+ librust-proxmox-0-dev (= ${binary:Version}),
+ librust-proxmox-0+test-harness-dev (= ${binary:Version}),
+ librust-proxmox-0.8-dev (= ${binary:Version}),
+ librust-proxmox-0.8+test-harness-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+test-harness-dev (= ${binary:Version})
+Description: Proxmox library - Rust source code
+ This package contains the source for the Rust proxmox crate, packaged by
+ debcargo for use with cargo and dh-cargo.
+
+Package: librust-proxmox+api-macro-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0.2+default-dev
+Provides:
+ librust-proxmox+proxmox-api-macro-dev (= ${binary:Version}),
+ librust-proxmox-0+api-macro-dev (= ${binary:Version}),
+ librust-proxmox-0+proxmox-api-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.8+api-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.8+proxmox-api-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+api-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+proxmox-api-macro-dev (= ${binary:Version})
+Description: Proxmox library - feature "api-macro" and 1 more
+ This metapackage enables feature "api-macro" for the Rust proxmox crate, by
+ pulling in any additional dependencies needed by that feature.
+ .
+ Additionally, this package also provides the "proxmox-api-macro" feature.
+
+Package: librust-proxmox+base32-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-base32-0.4+default-dev
+Provides:
+ librust-proxmox+u2f-dev (= ${binary:Version}),
+ librust-proxmox-0+base32-dev (= ${binary:Version}),
+ librust-proxmox-0+u2f-dev (= ${binary:Version}),
+ librust-proxmox-0.8+base32-dev (= ${binary:Version}),
+ librust-proxmox-0.8+u2f-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+base32-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+u2f-dev (= ${binary:Version})
+Description: Proxmox library - feature "base32" and 1 more
+ This metapackage enables feature "base32" for the Rust proxmox crate, by
+ pulling in any additional dependencies needed by that feature.
+ .
+ Additionally, this package also provides the "u2f" feature.
+
+Package: librust-proxmox+cli-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-proxmox+router-dev (= ${binary:Version}),
+ librust-hyper-0.13+default-dev,
+ librust-tokio-0.2+default-dev
+Provides:
+ librust-proxmox-0+cli-dev (= ${binary:Version}),
+ librust-proxmox-0.8+cli-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+cli-dev (= ${binary:Version})
+Description: Proxmox library - feature "cli"
+ This metapackage enables feature "cli" for the Rust proxmox crate, by pulling
+ in any additional dependencies needed by that feature.
+
+Package: librust-proxmox+default-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-proxmox+cli-dev (= ${binary:Version}),
+ librust-proxmox+router-dev (= ${binary:Version}),
+ librust-proxmox+tfa-dev (= ${binary:Version}),
+ librust-proxmox+u2f-dev (= ${binary:Version}),
+ librust-proxmox+websocket-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-0+default-dev (= ${binary:Version}),
+ librust-proxmox-0.8+default-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+default-dev (= ${binary:Version})
+Description: Proxmox library - feature "default"
+ This metapackage enables feature "default" for the Rust proxmox crate, by
+ pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox+examples-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-proxmox+u2f-dev (= ${binary:Version}),
+ librust-tokio-0.2+macros-dev
+Provides:
+ librust-proxmox-0+examples-dev (= ${binary:Version}),
+ librust-proxmox-0.8+examples-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+examples-dev (= ${binary:Version})
+Description: Proxmox library - feature "examples"
+ This metapackage enables feature "examples" for the Rust proxmox crate, by
+ pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox+futures-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-futures-0.3+default-dev
+Provides:
+ librust-proxmox-0+futures-dev (= ${binary:Version}),
+ librust-proxmox-0.8+futures-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+futures-dev (= ${binary:Version})
+Description: Proxmox library - feature "futures"
+ This metapackage enables feature "futures" for the Rust proxmox crate, by
+ pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox+hyper-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-hyper-0.13+default-dev
+Provides:
+ librust-proxmox-0+hyper-dev (= ${binary:Version}),
+ librust-proxmox-0.8+hyper-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+hyper-dev (= ${binary:Version})
+Description: Proxmox library - feature "hyper"
+ This metapackage enables feature "hyper" for the Rust proxmox crate, by pulling
+ in any additional dependencies needed by that feature.
+
+Package: librust-proxmox+openssl-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-openssl-0.10+default-dev
+Provides:
+ librust-proxmox+tfa-dev (= ${binary:Version}),
+ librust-proxmox-0+openssl-dev (= ${binary:Version}),
+ librust-proxmox-0+tfa-dev (= ${binary:Version}),
+ librust-proxmox-0.8+openssl-dev (= ${binary:Version}),
+ librust-proxmox-0.8+tfa-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+openssl-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+tfa-dev (= ${binary:Version})
+Description: Proxmox library - feature "openssl" and 1 more
+ This metapackage enables feature "openssl" for the Rust proxmox crate, by
+ pulling in any additional dependencies needed by that feature.
+ .
+ Additionally, this package also provides the "tfa" feature.
+
+Package: librust-proxmox+proxmox-sortable-macro-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-proxmox-sortable-macro-0.1+default-dev (>= 0.1.1-~~)
+Provides:
+ librust-proxmox+sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-0+proxmox-sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-0+sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.8+proxmox-sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.8+sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+proxmox-sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+sortable-macro-dev (= ${binary:Version})
+Description: Proxmox library - feature "proxmox-sortable-macro" and 1 more
+ This metapackage enables feature "proxmox-sortable-macro" for the Rust proxmox
+ crate, by pulling in any additional dependencies needed by that feature.
+ .
+ Additionally, this package also provides the "sortable-macro" feature.
+
+Package: librust-proxmox+router-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-hyper-0.13+default-dev,
+ librust-tokio-0.2+default-dev
+Provides:
+ librust-proxmox-0+router-dev (= ${binary:Version}),
+ librust-proxmox-0.8+router-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+router-dev (= ${binary:Version})
+Description: Proxmox library - feature "router"
+ This metapackage enables feature "router" for the Rust proxmox crate, by
+ pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox+tokio-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-tokio-0.2+default-dev
+Provides:
+ librust-proxmox-0+tokio-dev (= ${binary:Version}),
+ librust-proxmox-0.8+tokio-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+tokio-dev (= ${binary:Version})
+Description: Proxmox library - feature "tokio"
+ This metapackage enables feature "tokio" for the Rust proxmox crate, by pulling
+ in any additional dependencies needed by that feature.
+
+Package: librust-proxmox+websocket-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-futures-0.3+default-dev,
+ librust-hyper-0.13+default-dev,
+ librust-openssl-0.10+default-dev,
+ librust-tokio-0.2+io-util-dev,
+ librust-tokio-0.2+sync-dev
+Provides:
+ librust-proxmox-0+websocket-dev (= ${binary:Version}),
+ librust-proxmox-0.8+websocket-dev (= ${binary:Version}),
+ librust-proxmox-0.8.0+websocket-dev (= ${binary:Version})
+Description: Proxmox library - feature "websocket"
+ This metapackage enables feature "websocket" for the Rust proxmox crate, by
+ pulling in any additional dependencies needed by that feature.
