@@ -617,9 +617,7 @@ impl PartialEq for ApiStringFormat {
             (ApiStringFormat::Enum(l), ApiStringFormat::Enum(r)) => l == r,
             (ApiStringFormat::Pattern(l), ApiStringFormat::Pattern(r)) => l == r,
             (ApiStringFormat::PropertyString(l), ApiStringFormat::PropertyString(r)) => l == r,
-            (ApiStringFormat::VerifyFn(l), ApiStringFormat::VerifyFn(r)) => {
-                (l as *const fn(&str) -> _ as usize) == (r as *const fn(&str) -> _ as usize)
-            }
+            (ApiStringFormat::VerifyFn(l), ApiStringFormat::VerifyFn(r)) => std::ptr::eq(l, r),
             (_, _) => false,
         }
     }

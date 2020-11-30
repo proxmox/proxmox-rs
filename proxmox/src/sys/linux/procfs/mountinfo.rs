@@ -2,7 +2,6 @@
 
 use std::collections::BTreeMap;
 use std::ffi::{OsStr, OsString};
-use std::iter::FromIterator;
 use std::os::unix::ffi::OsStrExt;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -206,7 +205,7 @@ impl MountInfo {
                 Ok(acc)
             })?;
 
-        let entries = BTreeMap::from_iter(entries.into_iter().map(|entry| (entry.id, entry)));
+        let entries = entries.into_iter().map(|entry| (entry.id, entry)).collect();
 
         Ok(Self { entries })
     }
