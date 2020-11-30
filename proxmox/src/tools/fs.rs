@@ -3,7 +3,7 @@
 use std::ffi::CStr;
 use std::fs::{File, OpenOptions};
 use std::io::{self, BufRead, BufReader, Write};
-use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
+use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -126,14 +126,14 @@ pub fn file_read_firstline<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 pub fn make_tmp_file<P: AsRef<Path>>(
     path: P,
     options: CreateOptions,
-) -> Result<(RawFd, PathBuf), Error> {
+) -> Result<(Fd, PathBuf), Error> {
     let path = path.as_ref();
 
     // use mkstemp here, because it works with different processes, threads, even tokio tasks
     let mut template = path.to_owned();
     template.set_extension("tmp_XXXXXX");
     let (fd, tmp_path) = match unistd::mkstemp(&template) {
-        Ok((fd, path)) => (fd, path),
+        Ok((fd, path)) => (unsafe { Fd::from_raw_fd(fd) }, path),
         Err(err) => bail!("mkstemp {:?} failed: {}", template, err),
     };
 
@@ -143,13 +143,13 @@ pub fn make_tmp_file<P: AsRef<Path>>(
         .perm
         .unwrap_or(stat::Mode::from_bits_truncate(0o644));
 
-    if let Err(err) = stat::fchmod(fd, mode) {
+    if let Err(err) = stat::fchmod(fd.as_raw_fd(), mode) {
         let _ = unistd::unlink(&tmp_path);
         bail!("fchmod {:?} failed: {}", tmp_path, err);
     }
 
     if options.owner.is_some() || options.group.is_some() {
-        if let Err(err) = fchown(fd, options.owner, options.group) {
+        if let Err(err) = fchown(fd.as_raw_fd(), options.owner, options.group) {
             let _ = unistd::unlink(&tmp_path);
             bail!("fchown {:?} failed: {}", tmp_path, err);
         }
@@ -168,7 +168,7 @@ pub fn replace_file<P: AsRef<Path>>(
 ) -> Result<(), Error> {
     let (fd, tmp_path) = make_tmp_file(&path, options)?;
 
-    let mut file = unsafe { File::from_raw_fd(fd) };
+    let mut file = unsafe { File::from_raw_fd(fd.into_raw_fd()) };
 
     if let Err(err) = file.write_all(data) {
         let _ = unistd::unlink(&tmp_path);
