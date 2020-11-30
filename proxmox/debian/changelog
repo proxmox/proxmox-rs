@@ -1,3 +1,13 @@
+rust-proxmox (0.8.0-1) unstable; urgency=medium
+
+  * `make_tmp_file` now returns a guarded `Fd` instead of a `RawFd`
+
+  * introduced `FdRef` and `BorrowedFd` helper types
+
+  * clippy lint and formatting fixups
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 30 Nov 2020 11:14:43 +0100
+
 rust-proxmox (0.7.2-1) unstable; urgency=medium
 
   * implement cli command alias feature
