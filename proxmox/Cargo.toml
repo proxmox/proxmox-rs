@@ -13,14 +13,14 @@ exclude = [ "debian" ]
 
 [[example]]
 name = "u2ftest"
-required-features = [ "tokio", "u2f" ]
+required-features = [ "tokio", "tokio-stream", "u2f" ]
 
 [dependencies]
 # General dependencies
 anyhow = "1.0"
 lazy_static = "1.4"
 libc = "0.2"
-nix = "0.19"
+nix = "0.19.1"
 
 # tools module:
 base32 = { version = "0.4", optional = true }
@@ -36,16 +36,17 @@ serde_json = "1.0"
 # libc, nix, lazy_static
 
 # api module:
-bytes = "0.5"
+bytes = "1.0"
 futures = { version = "0.3", optional = true }
 http = "0.2"
-hyper = { version = "0.13", optional = true }
+hyper = { version = "0.14", features = [ "full" ], optional = true }
 percent-encoding = "2.1"
 openssl =  { version = "0.10", optional = true }
-rustyline = "6"
+rustyline = "7"
 serde_derive = "1.0"
 textwrap = "0.11"
-tokio = { version = "0.2", features = [], optional = true }
+tokio = { version = "1.0", features = [], optional = true }
+tokio-stream = { version = "0.1.1", optional = true }
 url = "2.1"
 #regex, serde, serde_json
 

@@ -9,27 +9,28 @@ Build-Depends: debhelper (>= 11),
  librust-anyhow-1+default-dev <!nocheck>,
  librust-base32-0.4+default-dev <!nocheck>,
  librust-base64-0.12+default-dev <!nocheck>,
- librust-bytes-0.5+default-dev <!nocheck>,
+ librust-bytes-1+default-dev <!nocheck>,
  librust-endian-trait-0.6+arrays-dev <!nocheck>,
  librust-endian-trait-0.6+default-dev <!nocheck>,
  librust-futures-0.3+default-dev <!nocheck>,
  librust-http-0.2+default-dev <!nocheck>,
- librust-hyper-0.13+default-dev <!nocheck>,
+ librust-hyper-0.14+default-dev <!nocheck>,
+ librust-hyper-0.14+full-dev <!nocheck>,
  librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
  librust-libc-0.2+default-dev <!nocheck>,
- librust-nix-0.19+default-dev <!nocheck>,
+ librust-nix-0.19+default-dev (>= 0.19.1-~~) <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.2-~~) <!nocheck>,
- librust-rustyline-6+default-dev <!nocheck>,
+ librust-rustyline-7+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-derive-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
  librust-textwrap-0.11+default-dev <!nocheck>,
- librust-tokio-0.2+default-dev <!nocheck>,
- librust-tokio-0.2+io-util-dev <!nocheck>,
- librust-tokio-0.2+sync-dev <!nocheck>,
+ librust-tokio-1+default-dev <!nocheck>,
+ librust-tokio-1+io-util-dev <!nocheck>,
+ librust-tokio-1+sync-dev <!nocheck>,
  librust-url-2+default-dev (>= 2.1-~~) <!nocheck>,
  uuid-dev <!nocheck>,
  uuid-dev <!nocheck>,
@@ -50,16 +51,16 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-base64-0.12+default-dev,
- librust-bytes-0.5+default-dev,
+ librust-bytes-1+default-dev,
  librust-endian-trait-0.6+arrays-dev,
  librust-endian-trait-0.6+default-dev,
  librust-http-0.2+default-dev,
  librust-lazy-static-1+default-dev (>= 1.4-~~),
  librust-libc-0.2+default-dev,
- librust-nix-0.19+default-dev,
+ librust-nix-0.19+default-dev (>= 0.19.1-~~),
  librust-percent-encoding-2+default-dev (>= 2.1-~~),
  librust-regex-1+default-dev (>= 1.2-~~),
- librust-rustyline-6+default-dev,
+ librust-rustyline-7+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-derive-1+default-dev,
@@ -80,6 +81,7 @@ Suggests:
  librust-proxmox+proxmox-sortable-macro-dev (= ${binary:Version}),
  librust-proxmox+router-dev (= ${binary:Version}),
  librust-proxmox+tokio-dev (= ${binary:Version}),
+ librust-proxmox+tokio-stream-dev (= ${binary:Version}),
  librust-proxmox+websocket-dev (= ${binary:Version})
 Provides:
  librust-proxmox+test-harness-dev (= ${binary:Version}),
@@ -142,8 +144,9 @@ Depends:
  ${misc:Depends},
  librust-proxmox-dev (= ${binary:Version}),
  librust-proxmox+router-dev (= ${binary:Version}),
- librust-hyper-0.13+default-dev,
- librust-tokio-0.2+default-dev
+ librust-hyper-0.14+default-dev,
+ librust-hyper-0.14+full-dev,
+ librust-tokio-1+default-dev
 Provides:
  librust-proxmox-0+cli-dev (= ${binary:Version}),
  librust-proxmox-0.9+cli-dev (= ${binary:Version}),
@@ -178,7 +181,7 @@ Depends:
  ${misc:Depends},
  librust-proxmox-dev (= ${binary:Version}),
  librust-proxmox+u2f-dev (= ${binary:Version}),
- librust-tokio-0.2+macros-dev
+ librust-tokio-1+macros-dev
 Provides:
  librust-proxmox-0+examples-dev (= ${binary:Version}),
  librust-proxmox-0.9+examples-dev (= ${binary:Version}),
@@ -208,7 +211,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-dev (= ${binary:Version}),
- librust-hyper-0.13+default-dev
+ librust-hyper-0.14+default-dev,
+ librust-hyper-0.14+full-dev
 Provides:
  librust-proxmox-0+hyper-dev (= ${binary:Version}),
  librust-proxmox-0.9+hyper-dev (= ${binary:Version}),
@@ -265,8 +269,9 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-dev (= ${binary:Version}),
- librust-hyper-0.13+default-dev,
- librust-tokio-0.2+default-dev
+ librust-hyper-0.14+default-dev,
+ librust-hyper-0.14+full-dev,
+ librust-tokio-1+default-dev
 Provides:
  librust-proxmox-0+router-dev (= ${binary:Version}),
  librust-proxmox-0.9+router-dev (= ${binary:Version}),
@@ -281,7 +286,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-dev (= ${binary:Version}),
- librust-tokio-0.2+default-dev
+ librust-tokio-1+default-dev
 Provides:
  librust-proxmox-0+tokio-dev (= ${binary:Version}),
  librust-proxmox-0.9+tokio-dev (= ${binary:Version}),
@@ -290,6 +295,21 @@ Description: Proxmox library - feature "tokio"
  This metapackage enables feature "tokio" for the Rust proxmox crate, by pulling
  in any additional dependencies needed by that feature.
 
+Package: librust-proxmox+tokio-stream-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-dev (= ${binary:Version}),
+ librust-tokio-stream-0.1+default-dev (>= 0.1.1-~~)
+Provides:
+ librust-proxmox-0+tokio-stream-dev (= ${binary:Version}),
+ librust-proxmox-0.9+tokio-stream-dev (= ${binary:Version}),
+ librust-proxmox-0.9.1+tokio-stream-dev (= ${binary:Version})
+Description: Proxmox library - feature "tokio-stream"
+ This metapackage enables feature "tokio-stream" for the Rust proxmox crate, by
+ pulling in any additional dependencies needed by that feature.
+
 Package: librust-proxmox+websocket-dev
 Architecture: any
 Multi-Arch: same
@@ -297,10 +317,11 @@ Depends:
  ${misc:Depends},
  librust-proxmox-dev (= ${binary:Version}),
  librust-futures-0.3+default-dev,
- librust-hyper-0.13+default-dev,
+ librust-hyper-0.14+default-dev,
+ librust-hyper-0.14+full-dev,
  librust-openssl-0.10+default-dev,
- librust-tokio-0.2+io-util-dev,
- librust-tokio-0.2+sync-dev
+ librust-tokio-1+io-util-dev,
+ librust-tokio-1+sync-dev
 Provides:
  librust-proxmox-0+websocket-dev (= ${binary:Version}),
  librust-proxmox-0.9+websocket-dev (= ${binary:Version}),
