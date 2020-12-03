@@ -40,7 +40,9 @@ impl rustyline::completion::Completer for CliHelper {
     }
 }
 
-impl rustyline::hint::Hinter for CliHelper {}
+impl rustyline::hint::Hinter for CliHelper {
+    type Hint = String;
+}
 impl rustyline::validate::Validator for CliHelper {}
 impl rustyline::highlight::Highlighter for CliHelper {}
 impl rustyline::Helper for CliHelper {}
