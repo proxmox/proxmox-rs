@@ -16,7 +16,7 @@ use hyper::header::{
     SEC_WEBSOCKET_PROTOCOL, SEC_WEBSOCKET_VERSION, UPGRADE,
 };
 use hyper::{Body, Response, StatusCode};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf};
 use tokio::sync::mpsc;
 
 use futures::future::FutureExt;
@@ -528,10 +528,9 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut Context,
-        buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
+        buf: &mut ReadBuf,
+    ) -> Poll<io::Result<()>> {
         let this = Pin::get_mut(self);
-        let mut offset = 0;
 
         loop {
             match &mut this.state {
@@ -569,7 +568,7 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                         this.read_buffer = Some(buffer);
                         this.state = ReaderState::HaveData;
                         if len == 0 {
-                            return Poll::Ready(Ok(0));
+                            return Poll::Ready(Ok(()));
                         }
                     }
                     Err(err) => return Poll::Ready(Err(err)),
@@ -627,14 +626,13 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                     }
 
                     let len = min(
-                        buf.len() - offset,
+                        buf.remaining(),
                         min(header.payload_len, read_buffer.len()),
                     );
 
                     let mut data = read_buffer.remove_data(len);
                     mask_bytes(header.mask, &mut data);
-                    buf[offset..offset + len].copy_from_slice(&data);
-                    offset += len;
+                    buf.put_slice(&data);
 
                     header.payload_len -= len;
 
@@ -649,8 +647,8 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                     };
                     this.read_buffer = Some(read_buffer);
 
-                    if offset > 0 {
-                        return Poll::Ready(Ok(offset));
+                    if len > 0 {
+                        return Poll::Ready(Ok(()));
                     }
                 }
             }
