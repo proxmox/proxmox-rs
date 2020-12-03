@@ -11,7 +11,7 @@ description = "Proxmox library"
 
 exclude = [ "debian" ]
 
-[[examples]]
+[[example]]
 name = "u2ftest"
 required-features = [ "tokio", "u2f" ]
 
