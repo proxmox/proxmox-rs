@@ -1,3 +1,11 @@
+rust-proxmox (0.8.1-1) unstable; urgency=medium
+
+  * trait ReadExt: add read_exact_or_eof and skip_to_end
+
+  * fix example array in Cargo.toml
+
+ -- root <root@elsa>  Sun, 06 Dec 2020 09:07:45 +0100
+
 rust-proxmox (0.8.0-1) unstable; urgency=medium
 
   * `make_tmp_file` now returns a guarded `Fd` instead of a `RawFd`
