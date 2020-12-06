@@ -222,6 +222,19 @@ pub trait ReadExt {
     /// This should only used for types with a defined storage representation, usually
     /// `#[repr(C)]`, otherwise the results may be inconsistent.
     unsafe fn read_host_value_boxed<T>(&mut self) -> io::Result<Box<T>>;
+
+    /// Try to read the exact number of bytes required to fill buf.
+    ///
+    /// This function reads as many bytes as necessary to completely
+    /// fill the specified buffer buf. If this function encounters an
+    /// "end of file" before getting any data, it returns Ok(false).
+    /// If there is some data, but not enough, it return an error of
+    /// the kind ErrorKind::UnexpectedEof. The contents of buf are
+    /// unspecified in this case.
+    fn read_exact_or_eof(&mut self, buf: &mut [u8]) -> io::Result<bool>;
+
+    /// Read until EOF
+    fn skip_to_end(&mut self) -> io::Result<usize>;
 }
 
 impl<R: io::Read> ReadExt for R {
@@ -278,5 +291,41 @@ impl<R: io::Read> ReadExt for R {
             mem::size_of::<T>(),
         ))?;
         Ok(Box::from_raw(ptr))
+    }
+
+    fn read_exact_or_eof(&mut self, mut buf: &mut [u8]) -> io::Result<bool> {
+        let mut read_bytes = 0;
+        loop {
+            match self.read(&mut buf) {
+                Ok(0) => {
+                    if read_bytes == 0 { return Ok(false); }
+                    return Err(io::Error::new(
+                        io::ErrorKind::UnexpectedEof,
+                        "failed to fill whole buffer")
+                    );
+                }
+                Ok(n) =>  {
+                    let tmp = buf;
+                    buf = &mut tmp[n..];
+                    read_bytes += n;
+                    if buf.is_empty() { return Ok(true); }
+                }
+                Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                Err(e) => return Err(e),
+            }
+        }
+    }
+
+    fn skip_to_end(&mut self) -> io::Result<usize> {
+        let mut skipped_bytes = 0;
+        let mut buf = unsafe { vec::uninitialized(32*1024) };
+        loop {
+            match self.read(&mut buf) {
+                Ok(0) => return Ok(skipped_bytes),
+                Ok(n) => skipped_bytes += n,
+                Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                Err(e) => return Err(e),
+            }
+        }
     }
 }
