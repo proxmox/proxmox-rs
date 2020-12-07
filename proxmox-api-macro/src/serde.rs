@@ -143,7 +143,7 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
                     if var.path.is_ident("rename_all") {
                         let rename_all = RenameAll::try_from(&var.lit)?;
                         if this.rename_all.is_some() && this.rename_all != Some(rename_all) {
-                            bail!(var.lit => "multiple conflicting 'rename_all' attributes");
+                            error!(var.lit => "multiple conflicting 'rename_all' attributes");
                         }
                         this.rename_all = Some(rename_all);
                     }
@@ -180,11 +180,11 @@ impl TryFrom<&[syn::Attribute]> for SerdeAttrib {
                             syn::Lit::Str(lit) => {
                                 let rename = FieldName::from(&lit);
                                 if this.rename.is_some() && this.rename.as_ref() != Some(&rename) {
-                                    bail!(lit => "multiple conflicting 'rename' attributes");
+                                    error!(lit => "multiple conflicting 'rename' attributes");
                                 }
                                 this.rename = Some(rename);
                             }
-                            _ => bail!(var.lit => "'rename' value must be a string literal"),
+                            _ => error!(var.lit => "'rename' value must be a string literal"),
                         }
                     }
                 }

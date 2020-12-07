@@ -68,7 +68,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         .unwrap_or(false);
 
     if !attribs.is_empty() {
-        bail!(
+        error!(
             attribs.span(),
             "unexpected api elements: {}",
             util::join_debug(", ", attribs.elements.keys()),
@@ -171,7 +171,7 @@ enum ParameterType<'a> {
     Other(&'a syn::Type, bool, &'a Schema),
 }
 
-fn check_input_type(input: &syn::FnArg) -> Result<(&syn::PatType, &syn::PatIdent), Error> {
+fn check_input_type(input: &syn::FnArg) -> Result<(&syn::PatType, &syn::PatIdent), syn::Error> {
     // `self` types are not supported:
     let pat_type = match input {
         syn::FnArg::Receiver(r) => bail!(r => "methods taking a 'self' are not supported"),
@@ -204,7 +204,13 @@ fn handle_function_signature(
     let mut param_list = Vec::<(FieldName, ParameterType)>::new();
 
     for input in sig.inputs.iter() {
-        let (pat_type, pat) = check_input_type(input)?;
+        let (pat_type, pat) = match check_input_type(input) {
+            Ok(input) => input,
+            Err(err) => {
+                crate::add_error(err);
+                continue;
+            }
+        };
 
         // For any named type which exists on the function signature...
         if let Some((_ident, optional, ref mut schema)) =
@@ -214,10 +220,10 @@ fn handle_function_signature(
             let is_option = util::infer_type(schema, &*pat_type.ty)?;
             let has_default = schema.find_schema_property("default").is_some();
             if !is_option && *optional && !has_default {
-                bail!(pat_type => "optional types need a default or be an Option<T>");
+                error!(pat_type => "optional types need a default or be an Option<T>");
             }
             if has_default && !*optional {
-                bail!(pat_type => "non-optional parameter cannot have a default");
+                error!(pat_type => "non-optional parameter cannot have a default");
             }
         } else {
             continue;
@@ -225,7 +231,10 @@ fn handle_function_signature(
     }
 
     for input in sig.inputs.iter() {
-        let (pat_type, pat) = check_input_type(input)?;
+        let (pat_type, pat) = match check_input_type(input) {
+            Ok(input) => input,
+            Err(_err) => continue, // we already produced errors above,
+        };
 
         // Here's the deal: we need to distinguish between parameters we need to extract before
         // calling the function, a general "Value" parameter covering all the remaining json
@@ -265,24 +274,28 @@ fn handle_function_signature(
             ParameterType::Other(&pat_type.ty, *optional, schema)
         } else if is_api_method_type(&pat_type.ty) {
             if api_method_param.is_some() {
-                bail!(pat_type => "multiple ApiMethod parameters found");
+                error!(pat_type => "multiple ApiMethod parameters found");
+                continue;
             }
             api_method_param = Some(param_list.len());
             ParameterType::ApiMethod
         } else if is_rpc_env_type(&pat_type.ty) {
             if rpc_env_param.is_some() {
-                bail!(pat_type => "multiple RpcEnvironment parameters found");
+                error!(pat_type => "multiple RpcEnvironment parameters found");
+                continue;
             }
             rpc_env_param = Some(param_list.len());
             ParameterType::RpcEnv
         } else if is_value_type(&pat_type.ty) {
             if value_param.is_some() {
-                bail!(pat_type => "multiple additional Value parameters found");
+                error!(pat_type => "multiple additional Value parameters found");
+                continue;
             }
             value_param = Some(param_list.len());
             ParameterType::Value
         } else {
-            bail!(&pat_ident => "unexpected parameter {:?}", pat_ident.to_string());
+            error!(&pat_ident => "unexpected parameter {:?}", pat_ident.to_string());
+            continue;
         };
 
         param_list.push((param_name, param_type));
@@ -437,7 +450,13 @@ fn create_wrapper_function(
                         });
                     }
                 } else if optional && no_option_type {
-                    bail!(ty => "Optional parameter without Option<T> requires a default");
+                    // FIXME: we should not be able to reach this without having produced another
+                    // error above already anyway?
+                    error!(ty => "Optional parameter without Option<T> requires a default");
+                    // we produced an error so just write something that will compile
+                    body.extend(quote_spanned! { span =>
+                        .unwrap_or_else(|| unreachable!())
+                    });
                 }
                 body.extend(quote_spanned! { span => ; });
                 args.extend(quote_spanned! { span => #arg_name, });

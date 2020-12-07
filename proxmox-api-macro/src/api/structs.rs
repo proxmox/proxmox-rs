@@ -135,7 +135,7 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
             schema_fields.insert(field.0.as_str().to_string(), field);
         }
     } else {
-        bail!(schema.span, "structs need an object schema");
+        error!(schema.span, "structs need an object schema");
     }
 
     let mut new_fields: Vec<(FieldName, bool, Schema)> = Vec::new();
@@ -182,7 +182,7 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
     // now error out about all the fields not found in the struct:
     if !schema_fields.is_empty() {
         let bad_fields = util::join(", ", schema_fields.keys());
-        bail!(
+        error!(
             schema.span,
             "struct does not contain the following fields: {}",
             bad_fields
@@ -220,7 +220,7 @@ fn handle_regular_field(
         if derived {
             field_def.1 = true;
         } else if !field_def.1 {
-            bail!(&field.ty => "non-optional Option type?");
+            error!(&field.ty => "non-optional Option type?");
         }
     }
 
