@@ -18,7 +18,7 @@ use syn::visit_mut::{self, VisitMut};
 use syn::Ident;
 
 use super::{Schema, SchemaItem};
-use crate::util::{self, FieldName, JSONObject, JSONValue};
+use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
 
 /// Parse `input`, `returns` and `protected` attributes out of an function annotated
 /// with an `#[api]` attribute and produce a `const ApiMethod` named after the function.
@@ -29,7 +29,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         Some(input) => input.into_object("input schema definition")?.try_into()?,
         None => Schema {
             span: Span::call_site(),
-            description: None,
+            description: Maybe::None,
             item: SchemaItem::Object(Default::default()),
             properties: Vec::new(),
         },

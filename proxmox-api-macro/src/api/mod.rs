@@ -17,7 +17,7 @@ use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
 use syn::{ExprPath, Ident};
 
-use crate::util::{FieldName, JSONObject, JSONValue};
+use crate::util::{FieldName, JSONObject, JSONValue, Maybe};
 
 mod enums;
 mod method;
@@ -70,7 +70,7 @@ pub struct Schema {
     span: Span,
 
     /// Common in all schema entry types:
-    pub description: Option<syn::LitStr>,
+    pub description: Maybe<syn::LitStr>,
 
     /// The specific schema type (Object, String, ...)
     pub item: SchemaItem,
@@ -105,10 +105,11 @@ impl TryFrom<JSONObject> for Schema {
     type Error = syn::Error;
 
     fn try_from(mut obj: JSONObject) -> Result<Self, syn::Error> {
-        let description = obj
-            .remove("description")
-            .map(|v| v.try_into())
-            .transpose()?;
+        let description = Maybe::explicit(
+            obj.remove("description")
+                .map(|v| v.try_into())
+                .transpose()?,
+        );
 
         Ok(Self {
             span: obj.brace_token.span,
@@ -126,7 +127,7 @@ impl Schema {
     fn blank(span: Span) -> Self {
         Self {
             span,
-            description: None,
+            description: Maybe::None,
             item: SchemaItem::Inferred(span),
             properties: Vec::new(),
         }
@@ -135,7 +136,7 @@ impl Schema {
     fn empty_object(span: Span) -> Self {
         Self {
             span,
-            description: None,
+            description: Maybe::None,
             item: SchemaItem::Object(SchemaObject::new()),
             properties: Vec::new(),
         }
@@ -279,35 +280,36 @@ impl SchemaItem {
     fn to_inner_schema(
         &self,
         ts: &mut TokenStream,
-        description: Option<&syn::LitStr>,
+        description: Maybe<&syn::LitStr>,
         span: Span,
         properties: &[(Ident, syn::Expr)],
     ) -> Result<bool, Error> {
-        let description = description.ok_or_else(|| format_err!(span, "missing description"));
+        let check_description =
+            move || description.ok_or_else(|| format_err!(span, "missing description"));
 
         match self {
             SchemaItem::Null => {
-                let description = description?;
+                let description = check_description()?;
                 ts.extend(quote! { ::proxmox::api::schema::NullSchema::new(#description) });
             }
             SchemaItem::Boolean => {
-                let description = description?;
+                let description = check_description()?;
                 ts.extend(quote! { ::proxmox::api::schema::BooleanSchema::new(#description) });
             }
             SchemaItem::Integer => {
-                let description = description?;
+                let description = check_description()?;
                 ts.extend(quote! { ::proxmox::api::schema::IntegerSchema::new(#description) });
             }
             SchemaItem::Number => {
-                let description = description?;
+                let description = check_description()?;
                 ts.extend(quote! { ::proxmox::api::schema::NumberSchema::new(#description) });
             }
             SchemaItem::String => {
-                let description = description?;
+                let description = check_description()?;
                 ts.extend(quote! { ::proxmox::api::schema::StringSchema::new(#description) });
             }
             SchemaItem::Object(obj) => {
-                let description = description?;
+                let description = check_description()?;
                 let mut elems = TokenStream::new();
                 obj.to_schema_inner(&mut elems)?;
                 ts.extend(
@@ -315,7 +317,7 @@ impl SchemaItem {
                 );
             }
             SchemaItem::Array(array) => {
-                let description = description?;
+                let description = check_description()?;
                 let mut items = TokenStream::new();
                 array.to_schema(&mut items)?;
                 ts.extend(quote! {
@@ -324,15 +326,23 @@ impl SchemaItem {
             }
             SchemaItem::ExternType(path) => {
                 if !properties.is_empty() {
-                    bail!(&properties[0].0 => "additional properties not allowed on external type");
+                    error!(&properties[0].0 => "additional properties not allowed on external type");
                 }
+                if let Maybe::Explicit(description) = description {
+                    error!(description => "description not allowed on external type");
+                }
+
                 ts.extend(quote_spanned! { path.span() => #path::API_SCHEMA });
                 return Ok(true);
             }
             SchemaItem::ExternSchema(path) => {
                 if !properties.is_empty() {
-                    bail!(&properties[0].0 => "additional properties not allowed on schema ref");
+                    error!(&properties[0].0 => "additional properties not allowed on schema ref");
                 }
+                if let Maybe::Explicit(description) = description {
+                    error!(description => "description not allowed on external type");
+                }
+
                 ts.extend(quote_spanned! { path.span() => #path });
                 return Ok(true);
             }
@@ -354,7 +364,7 @@ impl SchemaItem {
     fn to_schema(
         &self,
         ts: &mut TokenStream,
-        description: Option<&syn::LitStr>,
+        description: Maybe<&syn::LitStr>,
         span: Span,
         properties: &[(Ident, syn::Expr)],
         typed: bool,

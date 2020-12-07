@@ -442,14 +442,15 @@ pub fn derive_descriptions(
 
     if let Some(first) = parts.next() {
         if input_schema.description.is_none() {
-            input_schema.description = Some(syn::LitStr::new(first.trim(), doc_span));
+            input_schema.description = Maybe::Derived(syn::LitStr::new(first.trim(), doc_span));
         }
     }
 
     if let Some(second) = parts.next() {
         if let Some(ref mut returns_schema) = returns_schema {
             if returns_schema.description.is_none() {
-                returns_schema.description = Some(syn::LitStr::new(second.trim(), doc_span));
+                returns_schema.description =
+                    Maybe::Derived(syn::LitStr::new(second.trim(), doc_span));
             }
         }
 
@@ -573,4 +574,52 @@ where
         sep = separator;
     }
     text
+}
+
+/// Helper to distinguish between explicitly set or derived data.
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum Maybe<T> {
+    Explicit(T),
+    Derived(T),
+    None,
+}
+
+impl<T> Maybe<T> {
+    pub fn as_ref(&self) -> Maybe<&T> {
+        match self {
+            Maybe::Explicit(t) => Maybe::Explicit(t),
+            Maybe::Derived(t) => Maybe::Derived(t),
+            Maybe::None => Maybe::None,
+        }
+    }
+
+    pub fn explicit(t: Option<T>) -> Self {
+        match t {
+            Some(t) => Maybe::Explicit(t),
+            None => Maybe::None,
+        }
+    }
+
+    pub fn ok_or_else<E, F>(self, other: F) -> Result<T, E>
+    where
+        F: FnOnce() -> E,
+    {
+        match self {
+            Maybe::Explicit(t) | Maybe::Derived(t) => Ok(t),
+            Maybe::None => Err(other()),
+        }
+    }
+
+    pub fn is_none(&self) -> bool {
+        matches!(self, Maybe::None)
+    }
+}
+
+impl<T> Into<Option<T>> for Maybe<T> {
+    fn into(self) -> Option<T> {
+        match self {
+            Maybe::Explicit(t) | Maybe::Derived(t) => Some(t),
+            Maybe::None => None,
+        }
+    }
 }

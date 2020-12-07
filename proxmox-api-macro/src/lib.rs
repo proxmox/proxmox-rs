@@ -3,6 +3,8 @@
 extern crate proc_macro;
 extern crate proc_macro2;
 
+use std::cell::RefCell;
+
 use anyhow::Error;
 
 use proc_macro::TokenStream as TokenStream_1;
@@ -14,6 +16,11 @@ use proc_macro2::TokenStream;
 macro_rules! format_err {
     ($span:expr => $($msg:tt)*) => { syn::Error::new_spanned($span, format!($($msg)*)) };
     ($span:expr, $($msg:tt)*) => { syn::Error::new($span, format!($($msg)*)) };
+}
+
+/// Produce a compile error which does not immediately abort.
+macro_rules! error {
+    ($($msg:tt)*) => {{ crate::add_error(format_err!($($msg)*)); }}
 }
 
 /// Our `bail` macro replacement to enforce the inclusion of a `Span`.
@@ -30,7 +37,7 @@ mod util;
 
 /// Handle errors by appending a `compile_error!()` macro invocation to the original token stream.
 fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
-    match data {
+    let mut data = match data {
         Ok(output) => output,
         Err(err) => match err.downcast::<syn::Error>() {
             Ok(err) => {
@@ -39,12 +46,15 @@ fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> Toke
             }
             Err(err) => panic!("error in api/router macro: {}", err),
         },
-    }
+    };
+    data.extend(take_non_fatal_errors());
+    data
 }
 
 /// TODO!
 #[proc_macro]
 pub fn router(item: TokenStream_1) -> TokenStream_1 {
+    let _error_guard = init_local_error();
     let item: TokenStream = item.into();
     handle_error(item.clone(), router_do(item)).into()
 }
@@ -221,6 +231,48 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
 */
 #[proc_macro_attribute]
 pub fn api(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
+    let _error_guard = init_local_error();
     let item: TokenStream = item.into();
     handle_error(item.clone(), api::api(attr.into(), item)).into()
+}
+
+thread_local!(static NON_FATAL_ERRORS: RefCell<Option<TokenStream>> = RefCell::new(None));
+
+/// The local error TLS must be freed at the end of a macro as any leftover `TokenStream` (even an
+/// empty one) will just panic between different runs as the multiple source files are handled by
+/// the same compiler thread.
+struct LocalErrorGuard;
+
+impl Drop for LocalErrorGuard {
+    fn drop(&mut self) {
+        NON_FATAL_ERRORS.with(|errors| {
+            *errors.borrow_mut() = None;
+        });
+    }
+}
+
+fn init_local_error() -> LocalErrorGuard {
+    NON_FATAL_ERRORS.with(|errors| {
+        *errors.borrow_mut() = Some(TokenStream::new());
+    });
+    LocalErrorGuard
+}
+
+pub(crate) fn add_error(err: syn::Error) {
+    NON_FATAL_ERRORS.with(|errors| {
+        errors
+            .borrow_mut()
+            .as_mut()
+            .expect("missing call to init_local_error")
+            .extend(err.to_compile_error())
+    });
+}
+
+pub(crate) fn take_non_fatal_errors() -> TokenStream {
+    NON_FATAL_ERRORS.with(|errors| {
+        errors
+            .borrow_mut()
+            .take()
+            .expect("missing call to init_local_mut")
+    })
 }

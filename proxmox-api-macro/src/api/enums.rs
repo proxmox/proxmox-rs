@@ -7,7 +7,7 @@ use quote::quote_spanned;
 
 use super::Schema;
 use crate::serde;
-use crate::util::{self, FieldName, JSONObject, JSONValue};
+use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
 
 /// Enums, provided they're simple enums, simply get an enum string schema attached to them.
 pub fn handle_enum(
@@ -30,7 +30,7 @@ pub fn handle_enum(
 
         if schema.description.is_none() {
             let (comment, span) = util::get_doc_comments(&enum_ty.attrs)?;
-            schema.description = Some(syn::LitStr::new(comment.trim(), span));
+            schema.description = Maybe::Derived(syn::LitStr::new(comment.trim(), span));
         }
 
         let mut ts = TokenStream::new();
