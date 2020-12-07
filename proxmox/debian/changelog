@@ -4,7 +4,7 @@ rust-proxmox (0.8.1-1) unstable; urgency=medium
 
   * fix example array in Cargo.toml
 
- -- root <root@elsa>  Sun, 06 Dec 2020 09:07:45 +0100
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 06 Dec 2020 09:07:45 +0100
 
 rust-proxmox (0.8.0-1) unstable; urgency=medium
 
