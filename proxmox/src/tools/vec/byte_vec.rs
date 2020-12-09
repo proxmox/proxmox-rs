@@ -32,7 +32,7 @@
 /// file.append_to_vec(&mut data, 1024)?;
 /// ```
 ///
-/// [`ReadExt`]: crate::io::ReadExt
+/// [`ReadExt`]: crate::tools::io::ReadExt
 pub trait ByteVecExt {
     /// Grow a vector without initializing its elements. The difference to simply using `reserve`
     /// is that it also updates the actual length, making the newly allocated data part of the
@@ -70,7 +70,7 @@ pub trait ByteVecExt {
     /// the previously contained content. Since we cannot track this state through the type system,
     /// this method is marked as an unsafe API for good measure.
     ///
-    /// [`ReadExt`]: crate::io::ReadExt
+    /// [`ReadExt`]: crate::tools::io::ReadExt
     unsafe fn grow_uninitialized(&mut self, more: usize) -> &mut [u8];
 
     /// Resize a vector to a specific size without initializing its data. This is a shortcut for:
