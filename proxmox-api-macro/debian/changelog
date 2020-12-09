@@ -1,3 +1,20 @@
+rust-proxmox-api-macro (0.2.4-1) unstable; urgency=medium
+
+  * support raw parameter name identifiers (eg. `r#type`)
+
+  * correctly produce errors when using a `description` with external
+    schema/type references, as those descriptions will never be used. This
+    distinguishes between explicitly set descriptions and doc comments. The
+    latter is still allowed since forbidding those doesn't make any sense as
+    they're part of the crate documentation.
+
+  * Change a lot of errors to not be "fatal", so they still generate code, to
+    avoid getting additional errors about the method & variable names not
+    existing. This should generally improve error output a lot for the cases
+    where this can actually be done.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 09 Dec 2020 10:40:30 +0100
+
 rust-proxmox-api-macro (0.2.3-1) unstable; urgency=medium
 
   * api macro: reuse generated default const for "unwrap_or" instead of adding
