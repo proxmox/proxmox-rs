@@ -43,7 +43,8 @@ pub mod router;
 #[cfg(feature = "router")]
 #[doc(inline)]
 pub use router::{
-    ApiFuture, ApiHandler, ApiMethod, ApiResponseFuture, Router, SubRoute, SubdirMap,
+    ApiFuture, ApiHandler, ApiMethod, ApiResponseFuture, ParameterSchema, Router, SubRoute,
+    SubdirMap,
 };
 
 #[cfg(feature = "cli")]
