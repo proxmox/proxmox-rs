@@ -48,3 +48,5 @@ pub use router::{
 
 #[cfg(feature = "cli")]
 pub mod cli;
+
+pub mod de;
