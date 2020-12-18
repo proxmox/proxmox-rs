@@ -17,7 +17,7 @@ use syn::spanned::Spanned;
 use syn::visit_mut::{self, VisitMut};
 use syn::Ident;
 
-use super::{Schema, SchemaItem};
+use super::{ObjectEntry, Schema, SchemaItem};
 use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
 
 /// A return type in a schema can have an `optional` flag. Other than that it is just a regular
@@ -218,7 +218,12 @@ enum ParameterType<'a> {
     Value,
     ApiMethod,
     RpcEnv,
-    Other(&'a syn::Type, bool, &'a Schema),
+    Normal(NormalParameter<'a>),
+}
+
+struct NormalParameter<'a> {
+    ty: &'a syn::Type,
+    entry: &'a ObjectEntry,
 }
 
 fn check_input_type(input: &syn::FnArg) -> Result<(&syn::PatType, &syn::PatIdent), syn::Error> {
@@ -318,7 +323,10 @@ fn handle_function_signature(
                 }
                 param_name = entry.name.clone();
                 // Found an explicit parameter: extract it:
-                ParameterType::Other(&pat_type.ty, entry.optional, &entry.schema)
+                ParameterType::Normal(NormalParameter {
+                    ty: &pat_type.ty,
+                    entry: &entry,
+                })
             } else if is_api_method_type(&pat_type.ty) {
                 if api_method_param.is_some() {
                     error!(pat_type => "multiple ApiMethod parameters found");
@@ -449,7 +457,7 @@ fn create_wrapper_function(
             ParameterType::Value => args.extend(quote_spanned! { span => input_params, }),
             ParameterType::ApiMethod => args.extend(quote_spanned! { span => api_method_param, }),
             ParameterType::RpcEnv => args.extend(quote_spanned! { span => rpc_env_param, }),
-            ParameterType::Other(ty, optional, schema) => {
+            ParameterType::Normal(param) => {
                 let name_str = syn::LitStr::new(name.as_str(), span);
                 let arg_name =
                     Ident::new(&format!("input_arg_{}", name.as_ident().to_string()), span);
@@ -462,8 +470,8 @@ fn create_wrapper_function(
                         .map(::serde_json::from_value)
                         .transpose()?
                 });
-                let default_value = schema.find_schema_property("default");
-                if !optional {
+                let default_value = param.entry.schema.find_schema_property("default");
+                if !param.entry.optional {
                     // Non-optional types need to be extracted out of the option though (unless
                     // they have a default):
                     //
@@ -477,7 +485,7 @@ fn create_wrapper_function(
                         ))?
                     });
                 }
-                let no_option_type = util::is_option_type(ty).is_none();
+                let no_option_type = util::is_option_type(param.ty).is_none();
 
                 if let Some(def) = &default_value {
                     let name_uc = name.as_ident().to_string().to_uppercase();
@@ -486,20 +494,20 @@ fn create_wrapper_function(
                         span,
                     );
                     // strip possible Option<> from this type:
-                    let ty = util::is_option_type(ty).unwrap_or(ty);
+                    let ty = util::is_option_type(param.ty).unwrap_or(param.ty);
                     default_consts.extend(quote_spanned! { span =>
                         pub const #name: #ty = #def;
                     });
-                    if optional && no_option_type {
+                    if param.entry.optional && no_option_type {
                         // Optional parameter without an Option<T> type requires a default:
                         body.extend(quote_spanned! { span =>
                             .unwrap_or(#name)
                         });
                     }
-                } else if optional && no_option_type {
+                } else if param.entry.optional && no_option_type {
                     // FIXME: we should not be able to reach this without having produced another
                     // error above already anyway?
-                    error!(ty => "Optional parameter without Option<T> requires a default");
+                    error!(param.ty => "Optional parameter without Option<T> requires a default");
                     // we produced an error so just write something that will compile
                     body.extend(quote_spanned! { span =>
                         .unwrap_or_else(|| unreachable!())
