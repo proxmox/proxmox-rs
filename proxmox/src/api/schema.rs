@@ -397,6 +397,13 @@ impl ArraySchema {
     }
 }
 
+/// Property entry in an object schema:
+///
+/// - `name`: The name of the property
+/// - `optional`: Set when the property is optional
+/// - `schema`: Property type schema
+pub type SchemaPropertyEntry = (&'static str, bool, &'static Schema);
+
 /// Lookup table to Schema properties
 ///
 /// Stores a sorted list of `(name, optional, schema)` tuples:
@@ -409,7 +416,7 @@ impl ArraySchema {
 /// a binary search to find items.
 ///
 /// This is a workaround unless RUST can const_fn `Hash::new()`
-pub type SchemaPropertyMap = &'static [(&'static str, bool, &'static Schema)];
+pub type SchemaPropertyMap = &'static [SchemaPropertyEntry];
 
 /// Data type to describe objects (maps).
 #[derive(Debug)]
@@ -462,6 +469,126 @@ impl ObjectSchema {
     }
 }
 
+/// Combines multiple *object* schemas into one.
+///
+/// Note that these are limited to object schemas. Other schemas will produce errors.
+///
+/// Technically this could also contain an `additional_properties` flag, however, in the JSON
+/// Schema[1], this is not supported, so here we simply assume additional properties to be allowed.
+#[derive(Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+pub struct AllOfSchema {
+    pub description: &'static str,
+
+    /// The parameter is checked against all of the schemas in the list. Note that all schemas must
+    /// be object schemas.
+    pub list: &'static [&'static Schema],
+}
+
+impl AllOfSchema {
+    pub const fn new(description: &'static str, list: &'static [&'static Schema]) -> Self {
+        Self { description, list }
+    }
+
+    pub const fn schema(self) -> Schema {
+        Schema::AllOf(self)
+    }
+
+    pub fn lookup(&self, key: &str) -> Option<(bool, &Schema)> {
+        for entry in self.list {
+            match entry {
+                Schema::Object(s) => {
+                    if let Some(v) = s.lookup(key) {
+                        return Some(v);
+                    }
+                }
+                _ => panic!("non-object-schema in `AllOfSchema`"),
+            }
+        }
+
+        None
+    }
+}
+
+/// Beside [`ObjectSchema`] we also have an [`AllOfSchema`] which also represents objects.
+pub trait ObjectSchemaType {
+    type PropertyIter: Iterator<Item = &'static SchemaPropertyEntry>;
+
+    fn description(&self) -> &'static str;
+    fn lookup(&self, key: &str) -> Option<(bool, &Schema)>;
+    fn properties(&self) -> Self::PropertyIter;
+    fn additional_properties(&self) -> bool;
+}
+
+impl ObjectSchemaType for ObjectSchema {
+    type PropertyIter = std::slice::Iter<'static, SchemaPropertyEntry>;
+
+    fn description(&self) -> &'static str {
+        self.description
+    }
+
+    fn lookup(&self, key: &str) -> Option<(bool, &Schema)> {
+        ObjectSchema::lookup(self, key)
+    }
+
+    fn properties(&self) -> Self::PropertyIter {
+        self.properties.into_iter()
+    }
+
+    fn additional_properties(&self) -> bool {
+        self.additional_properties
+    }
+}
+
+impl ObjectSchemaType for AllOfSchema {
+    type PropertyIter = AllOfProperties;
+
+    fn description(&self) -> &'static str {
+        self.description
+    }
+
+    fn lookup(&self, key: &str) -> Option<(bool, &Schema)> {
+        AllOfSchema::lookup(self, key)
+    }
+
+    fn properties(&self) -> Self::PropertyIter {
+        AllOfProperties {
+            schemas: self.list.into_iter(),
+            properties: None,
+        }
+    }
+
+    fn additional_properties(&self) -> bool {
+        true
+    }
+}
+
+#[doc(hidden)]
+pub struct AllOfProperties {
+    schemas: std::slice::Iter<'static, &'static Schema>,
+    properties: Option<std::slice::Iter<'static, SchemaPropertyEntry>>,
+}
+
+impl Iterator for AllOfProperties {
+    type Item = &'static SchemaPropertyEntry;
+
+    fn next(&mut self) -> Option<&'static SchemaPropertyEntry> {
+        loop {
+            match self.properties.as_mut().and_then(Iterator::next) {
+                Some(item) => return Some(item),
+                None => match self.schemas.next()? {
+                    Schema::Object(o) => self.properties = Some(o.properties()),
+                    _ => {
+                        // this case is actually illegal
+                        self.properties = None;
+                        continue;
+                    }
+                },
+            }
+        }
+    }
+}
+
 /// Schemas are used to describe complex data types.
 ///
 /// All schema types implement constant builder methods, and a final
@@ -501,6 +628,7 @@ pub enum Schema {
     String(StringSchema),
     Object(ObjectSchema),
     Array(ArraySchema),
+    AllOf(AllOfSchema),
 }
 
 /// A string enum entry. An enum entry must have a value and a description.
@@ -818,21 +946,18 @@ pub fn parse_query_string(
 /// Verify JSON value with `schema`.
 pub fn verify_json(data: &Value, schema: &Schema) -> Result<(), Error> {
     match schema {
-        Schema::Object(object_schema) => {
-            verify_json_object(data, &object_schema)?;
-        }
-        Schema::Array(array_schema) => {
-            verify_json_array(data, &array_schema)?;
-        }
         Schema::Null => {
             if !data.is_null() {
                 bail!("Expected Null, but value is not Null.");
             }
         }
+        Schema::Object(object_schema) => verify_json_object(data, object_schema)?,
+        Schema::Array(array_schema) => verify_json_array(data, &array_schema)?,
         Schema::Boolean(boolean_schema) => verify_json_boolean(data, &boolean_schema)?,
         Schema::Integer(integer_schema) => verify_json_integer(data, &integer_schema)?,
         Schema::Number(number_schema) => verify_json_number(data, &number_schema)?,
         Schema::String(string_schema) => verify_json_string(data, &string_schema)?,
+        Schema::AllOf(all_of_schema) => verify_json_object(data, all_of_schema)?,
     }
     Ok(())
 }
@@ -890,14 +1015,20 @@ pub fn verify_json_array(data: &Value, schema: &ArraySchema) -> Result<(), Error
 }
 
 /// Verify JSON value using an `ObjectSchema`.
-pub fn verify_json_object(data: &Value, schema: &ObjectSchema) -> Result<(), Error> {
+pub fn verify_json_object<I>(
+    data: &Value,
+    schema: &dyn ObjectSchemaType<PropertyIter = I>,
+) -> Result<(), Error>
+where
+    I: Iterator<Item = &'static SchemaPropertyEntry>,
+{
     let map = match data {
         Value::Object(ref map) => map,
         Value::Array(_) => bail!("Expected object - got array."),
         _ => bail!("Expected object - got scalar value."),
     };
 
-    let additional_properties = schema.additional_properties;
+    let additional_properties = schema.additional_properties();
 
     for (key, value) in map {
         if let Some((_optional, prop_schema)) = schema.lookup(&key) {
@@ -917,7 +1048,7 @@ pub fn verify_json_object(data: &Value, schema: &ObjectSchema) -> Result<(), Err
         }
     }
 
-    for (name, optional, _prop_schema) in schema.properties {
+    for (name, optional, _prop_schema) in schema.properties() {
         if !(*optional) && data[name] == Value::Null {
             bail!(
                 "property '{}': property is missing and it is not optional.",

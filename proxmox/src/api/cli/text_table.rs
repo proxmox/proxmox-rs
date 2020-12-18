@@ -56,24 +56,25 @@ fn data_to_text(data: &Value, schema: &Schema) -> Result<String, Error> {
             // makes no sense to display Null columns
             bail!("internal error");
         }
-        Schema::Boolean(_boolean_schema) => match data.as_bool() {
+        Schema::Boolean(_) => match data.as_bool() {
             Some(value) => Ok(String::from(if value { "1" } else { "0" })),
             None => bail!("got unexpected data (expected bool)."),
         },
-        Schema::Integer(_integer_schema) => match data.as_i64() {
+        Schema::Integer(_) => match data.as_i64() {
             Some(value) => Ok(format!("{}", value)),
             None => bail!("got unexpected data (expected integer)."),
         },
-        Schema::Number(_number_schema) => match data.as_f64() {
+        Schema::Number(_) => match data.as_f64() {
             Some(value) => Ok(format!("{}", value)),
             None => bail!("got unexpected data (expected number)."),
         },
-        Schema::String(_string_schema) => match data.as_str() {
+        Schema::String(_) => match data.as_str() {
             Some(value) => Ok(value.to_string()),
             None => bail!("got unexpected data (expected string)."),
         },
-        Schema::Object(_object_schema) => Ok(data.to_string()),
-        Schema::Array(_array_schema) => Ok(data.to_string()),
+        Schema::Object(_) => Ok(data.to_string()),
+        Schema::Array(_) => Ok(data.to_string()),
+        Schema::AllOf(_) => Ok(data.to_string()),
     }
 }
 
@@ -325,14 +326,14 @@ struct TableColumn {
     right_align: bool,
 }
 
-fn format_table<W: Write>(
+fn format_table<W: Write, I: Iterator<Item = &'static SchemaPropertyEntry>>(
     output: W,
     list: &mut Vec<Value>,
-    schema: &ObjectSchema,
+    schema: &dyn ObjectSchemaType<PropertyIter = I>,
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
     let properties_to_print = if options.column_config.is_empty() {
-        extract_properties_to_print(schema)
+        extract_properties_to_print(schema.properties())
     } else {
         options
             .column_config
@@ -579,14 +580,14 @@ fn render_table<W: Write>(
     Ok(())
 }
 
-fn format_object<W: Write>(
+fn format_object<W: Write, I: Iterator<Item = &'static SchemaPropertyEntry>>(
     output: W,
     data: &Value,
-    schema: &ObjectSchema,
+    schema: &dyn ObjectSchemaType<PropertyIter = I>,
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
     let properties_to_print = if options.column_config.is_empty() {
-        extract_properties_to_print(schema)
+        extract_properties_to_print(schema.properties())
     } else {
         options
             .column_config
@@ -702,19 +703,23 @@ fn format_object<W: Write>(
     render_table(output, &tabledata, &column_names, options)
 }
 
-fn extract_properties_to_print(schema: &ObjectSchema) -> Vec<String> {
+fn extract_properties_to_print<I>(properties: I) -> Vec<String>
+where
+    I: Iterator<Item = &'static SchemaPropertyEntry>,
+{
     let mut result = Vec::new();
+    let mut opt_properties = Vec::new();
 
-    for (name, optional, _prop_schema) in schema.properties {
-        if !*optional {
-            result.push(name.to_string());
-        }
-    }
-    for (name, optional, _prop_schema) in schema.properties {
+    for (name, optional, _prop_schema) in properties {
         if *optional {
+            opt_properties.push(name.to_string());
+        } else {
             result.push(name.to_string());
         }
     }
+
+    result.extend(opt_properties);
+
     result
 }
 
@@ -759,10 +764,16 @@ pub fn value_to_text<W: Write>(
                 Schema::Object(object_schema) => {
                     format_table(output, list, object_schema, options)?;
                 }
+                Schema::AllOf(all_of_schema) => {
+                    format_table(output, list, all_of_schema, options)?;
+                }
                 _ => {
                     unimplemented!();
                 }
             }
+        }
+        Schema::AllOf(all_of_schema) => {
+            format_object(output, data, all_of_schema, options)?;
         }
     }
     Ok(())

@@ -96,6 +96,7 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
         },
         Schema::Object(_) => String::from("<object>"),
         Schema::Array(_) => String::from("<array>"),
+        Schema::AllOf(_) => String::from("<object>"),
     }
 }
 
@@ -115,6 +116,7 @@ pub fn get_property_description(
         Schema::Integer(ref schema) => (schema.description, schema.default.map(|v| v.to_string())),
         Schema::Number(ref schema) => (schema.description, schema.default.map(|v| v.to_string())),
         Schema::Object(ref schema) => (schema.description, None),
+        Schema::AllOf(ref schema) => (schema.description, None),
         Schema::Array(ref schema) => (schema.description, None),
     };
 
@@ -156,13 +158,16 @@ pub fn get_property_description(
     }
 }
 
-fn dump_api_parameters(param: &ObjectSchema) -> String {
-    let mut res = wrap_text("", "", param.description, 80);
+fn dump_api_parameters<I>(param: &dyn ObjectSchemaType<PropertyIter = I>) -> String
+where
+    I: Iterator<Item = &'static SchemaPropertyEntry>,
+{
+    let mut res = wrap_text("", "", param.description(), 80);
 
     let mut required_list: Vec<String> = Vec::new();
     let mut optional_list: Vec<String> = Vec::new();
 
-    for (prop, optional, schema) in param.properties {
+    for (prop, optional, schema) in param.properties() {
         let param_descr = get_property_description(
             prop,
             &schema,
@@ -236,6 +241,9 @@ fn dump_api_return_schema(returns: &ReturnType) -> String {
         }
         Schema::Object(obj_schema) => {
             res.push_str(&dump_api_parameters(obj_schema));
+        }
+        Schema::AllOf(all_of_schema) => {
+            res.push_str(&dump_api_parameters(all_of_schema));
         }
     }
 

@@ -310,7 +310,7 @@ impl SectionConfig {
                 if section_id.chars().any(|c| c.is_control()) {
                     bail!("detected unexpected control character in section ID.");
                 }
-                if let Err(err) = verify_json_object(section_config, &plugin.properties) {
+                if let Err(err) = verify_json_object(section_config, plugin.properties) {
                     bail!("verify section '{}' failed - {}", section_id, err);
                 }
 
