@@ -82,7 +82,8 @@ fn create_ticket_schema_check() {
             ],
         ),
     )
-    .returns(
+    .returns(::proxmox::api::router::ReturnType::new(
+        false,
         &::proxmox::api::schema::ObjectSchema::new(
             "A ticket.",
             &[
@@ -107,7 +108,7 @@ fn create_ticket_schema_check() {
             ],
         )
         .schema(),
-    )
+    ))
     .access(Some("Only root can access this."), &Permission::Superuser)
     .protected(true);
     assert_eq!(TEST_METHOD, API_METHOD_CREATE_TICKET);
@@ -184,7 +185,8 @@ fn create_ticket_direct_schema_check() {
             ],
         ),
     )
-    .returns(
+    .returns(::proxmox::api::router::ReturnType::new(
+        false,
         &::proxmox::api::schema::ObjectSchema::new(
             "A ticket.",
             &[
@@ -209,7 +211,7 @@ fn create_ticket_direct_schema_check() {
             ],
         )
         .schema(),
-    )
+    ))
     .access(None, &Permission::World)
     .protected(true);
     assert_eq!(TEST_METHOD, API_METHOD_CREATE_TICKET_DIRECT);

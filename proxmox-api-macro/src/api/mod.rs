@@ -15,7 +15,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
-use syn::{ExprPath, Ident};
+use syn::{Expr, ExprPath, Ident};
 
 use crate::util::{FieldName, JSONObject, JSONValue, Maybe};
 
@@ -217,7 +217,7 @@ pub enum SchemaItem {
     Object(SchemaObject),
     Array(SchemaArray),
     ExternType(ExprPath),
-    ExternSchema(ExprPath),
+    ExternSchema(Expr),
     Inferred(Span),
 }
 
@@ -225,7 +225,7 @@ impl SchemaItem {
     /// If there's a `type` specified, parse it as that type. Otherwise check for keys which
     /// uniqueply identify the type, such as "properties" for type `Object`.
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
-        if let Some(ext) = obj.remove("schema").map(ExprPath::try_from).transpose()? {
+        if let Some(ext) = obj.remove("schema").map(Expr::try_from).transpose()? {
             return Ok(SchemaItem::ExternSchema(ext));
         }
 

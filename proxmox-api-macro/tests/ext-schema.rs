@@ -120,7 +120,7 @@ pub fn get_some_text() -> Result<String, Error> {
     returns: {
         properties: {
             "text": {
-                schema: API_RETURN_SCHEMA_GET_SOME_TEXT
+                schema: *API_METHOD_GET_SOME_TEXT.returns.schema
             },
         },
     },

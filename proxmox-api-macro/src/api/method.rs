@@ -20,6 +20,66 @@ use syn::Ident;
 use super::{Schema, SchemaItem};
 use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
 
+/// A return type in a schema can have an `optional` flag. Other than that it is just a regular
+/// schema.
+pub struct ReturnType {
+    /// If optional, we store `Some(span)`, otherwise `None`.
+    optional: Option<Span>,
+
+    schema: Schema,
+}
+
+impl ReturnType {
+    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
+        let optional = match self.optional {
+            Some(span) => quote_spanned! { span => true },
+            None => quote! { false },
+        };
+
+        let mut out = TokenStream::new();
+        self.schema.to_schema(&mut out)?;
+
+        ts.extend(quote! {
+            ::proxmox::api::router::ReturnType::new( #optional , &#out )
+        });
+        Ok(())
+    }
+}
+
+impl TryFrom<JSONValue> for ReturnType {
+    type Error = syn::Error;
+
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        Self::try_from(value.into_object("a return type definition")?)
+    }
+}
+
+/// To go from a `JSONObject` to a `ReturnType` we first extract the `optional` flag, then forward
+/// to the `Schema` parser.
+impl TryFrom<JSONObject> for ReturnType {
+    type Error = syn::Error;
+
+    fn try_from(mut obj: JSONObject) -> Result<Self, syn::Error> {
+        let optional = match obj.remove("optional") {
+            Some(value) => {
+                let span = value.span();
+                let is_optional: bool = value.try_into()?;
+                if is_optional {
+                    Some(span)
+                } else {
+                    None
+                }
+            }
+            None => None,
+        };
+
+        Ok(Self {
+            optional,
+            schema: obj.try_into()?,
+        })
+    }
+}
+
 /// Parse `input`, `returns` and `protected` attributes out of an function annotated
 /// with an `#[api]` attribute and produce a `const ApiMethod` named after the function.
 ///
@@ -35,7 +95,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         },
     };
 
-    let mut returns_schema: Option<Schema> = attribs
+    let mut return_type: Option<ReturnType> = attribs
         .remove("returns")
         .map(|ret| ret.into_object("return schema definition")?.try_into())
         .transpose()?;
@@ -78,7 +138,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     let (doc_comment, doc_span) = util::get_doc_comments(&func.attrs)?;
     util::derive_descriptions(
         &mut input_schema,
-        &mut returns_schema,
+        return_type.as_mut().map(|rs| &mut rs.schema),
         &doc_comment,
         doc_span,
     )?;
@@ -89,7 +149,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     let is_async = func.sig.asyncness.is_some();
     let api_func_name = handle_function_signature(
         &mut input_schema,
-        &mut returns_schema,
+        &mut return_type,
         &mut func,
         &mut wrapper_ts,
         &mut default_consts,
@@ -110,10 +170,6 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         &format!("API_METHOD_{}", func_name.to_string().to_uppercase()),
         func.sig.ident.span(),
     );
-    let return_schema_name = Ident::new(
-        &format!("API_RETURN_SCHEMA_{}", func_name.to_string().to_uppercase()),
-        func.sig.ident.span(),
-    );
     let input_schema_name = Ident::new(
         &format!(
             "API_PARAMETER_SCHEMA_{}",
@@ -122,15 +178,11 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         func.sig.ident.span(),
     );
 
-    let mut returns_schema_definition = TokenStream::new();
     let mut returns_schema_setter = TokenStream::new();
-    if let Some(schema) = returns_schema {
+    if let Some(return_type) = return_type {
         let mut inner = TokenStream::new();
-        schema.to_schema(&mut inner)?;
-        returns_schema_definition = quote_spanned! { func.sig.span() =>
-            pub const #return_schema_name: ::proxmox::api::schema::Schema = #inner;
-        };
-        returns_schema_setter = quote! { .returns(&#return_schema_name) };
+        return_type.to_schema(&mut inner)?;
+        returns_schema_setter = quote! { .returns(#inner) };
     }
 
     let api_handler = if is_async {
@@ -140,8 +192,6 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     };
 
     Ok(quote_spanned! { func.sig.span() =>
-        #returns_schema_definition
-
         pub const #input_schema_name: ::proxmox::api::schema::ObjectSchema =
             #input_schema;
 
@@ -189,7 +239,7 @@ fn check_input_type(input: &syn::FnArg) -> Result<(&syn::PatType, &syn::PatIdent
 
 fn handle_function_signature(
     input_schema: &mut Schema,
-    returns_schema: &mut Option<Schema>,
+    return_type: &mut Option<ReturnType>,
     func: &mut syn::ItemFn,
     wrapper_ts: &mut TokenStream,
     default_consts: &mut TokenStream,
@@ -322,7 +372,7 @@ fn handle_function_signature(
 
     create_wrapper_function(
         input_schema,
-        returns_schema,
+        return_type,
         param_list,
         func,
         wrapper_ts,
@@ -379,7 +429,7 @@ fn is_value_type(ty: &syn::Type) -> bool {
 
 fn create_wrapper_function(
     _input_schema: &Schema,
-    _returns_schema: &Option<Schema>,
+    _returns_schema: &Option<ReturnType>,
     param_list: Vec<(FieldName, ParameterType)>,
     func: &syn::ItemFn,
     wrapper_ts: &mut TokenStream,

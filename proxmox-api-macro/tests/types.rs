@@ -144,7 +144,7 @@ fn selection_test() {
             selection: { type: Selection },
         }
     },
-    returns: { type: Boolean },
+    returns: { optional: true, type: Boolean },
 )]
 /// Check a string.
 ///
@@ -167,7 +167,10 @@ fn string_check_schema_test() {
             ],
         ),
     )
-    .returns(&::proxmox::api::schema::BooleanSchema::new("Whether the string was \"ok\".").schema())
+    .returns(::proxmox::api::router::ReturnType::new(
+        true,
+        &::proxmox::api::schema::BooleanSchema::new("Whether the string was \"ok\".").schema(),
+    ))
     .protected(false);
 
     assert_eq!(TEST_METHOD, API_METHOD_STRING_CHECK);

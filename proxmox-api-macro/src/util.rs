@@ -428,7 +428,7 @@ pub fn get_doc_comments(attributes: &[syn::Attribute]) -> Result<(String, Span),
 
 pub fn derive_descriptions(
     input_schema: &mut Schema,
-    returns_schema: &mut Option<Schema>,
+    returns_schema: Option<&mut Schema>,
     doc_comment: &str,
     doc_span: Span,
 ) -> Result<(), Error> {
@@ -447,7 +447,7 @@ pub fn derive_descriptions(
     }
 
     if let Some(second) = parts.next() {
-        if let Some(ref mut returns_schema) = returns_schema {
+        if let Some(returns_schema) = returns_schema {
             if returns_schema.description.is_none() {
                 returns_schema.description =
                     Maybe::Derived(syn::LitStr::new(second.trim(), doc_span));

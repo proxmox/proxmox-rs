@@ -41,7 +41,7 @@ pub fn handle_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<Token
 fn get_struct_description(schema: &mut Schema, stru: &syn::ItemStruct) -> Result<(), Error> {
     if schema.description.is_none() {
         let (doc_comment, doc_span) = util::get_doc_comments(&stru.attrs)?;
-        util::derive_descriptions(schema, &mut None, &doc_comment, doc_span)?;
+        util::derive_descriptions(schema, None, &doc_comment, doc_span)?;
     }
 
     Ok(())
@@ -184,8 +184,7 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
         let bad_fields = util::join(", ", schema_fields.keys());
         error!(
             schema.span,
-            "struct does not contain the following fields: {}",
-            bad_fields
+            "struct does not contain the following fields: {}", bad_fields
         );
     }
 
@@ -211,7 +210,7 @@ fn handle_regular_field(
 
     if schema.description.is_none() {
         let (doc_comment, doc_span) = util::get_doc_comments(&field.attrs)?;
-        util::derive_descriptions(schema, &mut None, &doc_comment, doc_span)?;
+        util::derive_descriptions(schema, None, &doc_comment, doc_span)?;
     }
 
     util::infer_type(schema, &field.ty)?;
