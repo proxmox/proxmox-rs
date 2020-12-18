@@ -162,8 +162,20 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
                 }
             };
 
+            if attrs.flatten {
+                if let Some(field) = schema_fields.remove(&name) {
+                    error!(
+                        field.0.span(),
+                        "flattened field should not appear in schema, \
+                         its name does not appear in serialized data",
+                    );
+                }
+            }
+
             match schema_fields.remove(&name) {
-                Some(field_def) => handle_regular_field(field_def, field, false)?,
+                Some(field_def) => {
+                    handle_regular_field(field_def, field, false)?;
+                }
                 None => {
                     let mut field_def = (
                         FieldName::new(name.clone(), span),
