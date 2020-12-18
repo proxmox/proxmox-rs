@@ -19,7 +19,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
 
 use super::Schema;
-use crate::api::{self, SchemaItem};
+use crate::api::{self, ObjectEntry, SchemaItem};
 use crate::serde;
 use crate::util::{self, FieldName, JSONObject, Maybe};
 
@@ -126,19 +126,19 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
     //
     // NOTE: We remove references we're "done with" and in the end fail with a list of extraneous
     // fields if there are any.
-    let mut schema_fields: HashMap<String, &mut (FieldName, bool, Schema)> = HashMap::new();
+    let mut schema_fields: HashMap<String, &mut ObjectEntry> = HashMap::new();
 
     // We also keep a reference to the SchemaObject around since we derive missing fields
     // automatically.
     if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
         for field in obj.properties_mut() {
-            schema_fields.insert(field.0.as_str().to_string(), field);
+            schema_fields.insert(field.name.as_str().to_string(), field);
         }
     } else {
         error!(schema.span, "structs need an object schema");
     }
 
-    let mut new_fields: Vec<(FieldName, bool, Schema)> = Vec::new();
+    let mut new_fields: Vec<ObjectEntry> = Vec::new();
 
     let container_attrs = serde::ContainerAttrib::try_from(&stru.attrs[..])?;
 
@@ -170,19 +170,19 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
                     if attrs.flatten {
                         to_remove.push(name.clone());
 
-                        let name = &field_def.0;
-                        let optional = &field_def.1;
-                        let schema = &field_def.2;
-                        if schema.description.is_explicit() {
+                        if field_def.schema.description.is_explicit() {
                             error!(
-                                name.span(),
+                                field_def.name.span(),
                                 "flattened field should not have a description, \
                                  it does not appear in serialized data as a field",
                             );
                         }
 
-                        if *optional {
-                            error!(name.span(), "optional flattened fields are not supported");
+                        if field_def.optional {
+                            error!(
+                                field_def.name.span(),
+                                "optional flattened fields are not supported"
+                            );
                         }
                     }
 
@@ -190,12 +190,12 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
 
                     if attrs.flatten {
                         all_of_schemas.extend(quote::quote! {&});
-                        field_def.2.to_schema(&mut all_of_schemas)?;
+                        field_def.schema.to_schema(&mut all_of_schemas)?;
                         all_of_schemas.extend(quote::quote! {,});
                     }
                 }
                 None => {
-                    let mut field_def = (
+                    let mut field_def = ObjectEntry::new(
                         FieldName::new(name.clone(), span),
                         false,
                         Schema::blank(span),
@@ -204,7 +204,7 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
 
                     if attrs.flatten {
                         all_of_schemas.extend(quote::quote! {&});
-                        field_def.2.to_schema(&mut all_of_schemas)?;
+                        field_def.schema.to_schema(&mut all_of_schemas)?;
                         all_of_schemas.extend(quote::quote! {,});
                         to_remove.push(name.clone());
                     } else {
@@ -309,11 +309,11 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
 ///
 /// For each field we derive the description from doc-attributes if available.
 fn handle_regular_field(
-    field_def: &mut (FieldName, bool, Schema),
+    field_def: &mut ObjectEntry,
     field: &syn::Field,
     derived: bool, // whether this field was missing in the schema
 ) -> Result<(), Error> {
-    let schema: &mut Schema = &mut field_def.2;
+    let schema: &mut Schema = &mut field_def.schema;
 
     if schema.description.is_none() {
         let (doc_comment, doc_span) = util::get_doc_comments(&field.attrs)?;
@@ -324,8 +324,8 @@ fn handle_regular_field(
 
     if is_option_type(&field.ty) {
         if derived {
-            field_def.1 = true;
-        } else if !field_def.1 {
+            field_def.optional = true;
+        } else if !field_def.optional {
             error!(&field.ty => "non-optional Option type?");
         }
     }

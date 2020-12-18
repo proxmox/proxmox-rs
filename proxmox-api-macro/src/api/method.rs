@@ -263,16 +263,14 @@ fn handle_function_signature(
         };
 
         // For any named type which exists on the function signature...
-        if let Some((_ident, optional, ref mut schema)) =
-            input_schema.find_obj_property_by_ident_mut(&pat.ident.to_string())
-        {
+        if let Some(entry) = input_schema.find_obj_property_by_ident_mut(&pat.ident.to_string()) {
             // try to infer the type in the schema if it is not specified explicitly:
-            let is_option = util::infer_type(schema, &*pat_type.ty)?;
-            let has_default = schema.find_schema_property("default").is_some();
-            if !is_option && *optional && !has_default {
+            let is_option = util::infer_type(&mut entry.schema, &*pat_type.ty)?;
+            let has_default = entry.schema.find_schema_property("default").is_some();
+            if !is_option && entry.optional && !has_default {
                 error!(pat_type => "optional types need a default or be an Option<T>");
             }
-            if has_default && !*optional {
+            if has_default && !entry.optional {
                 error!(pat_type => "non-optional parameter cannot have a default");
             }
         } else {
@@ -313,40 +311,39 @@ fn handle_function_signature(
         //        bail out with an error.
         let pat_ident = pat.ident.unraw();
         let mut param_name: FieldName = pat_ident.clone().into();
-        let param_type = if let Some((name, optional, schema)) =
-            input_schema.find_obj_property_by_ident(&pat_ident.to_string())
-        {
-            if let SchemaItem::Inferred(span) = &schema.item {
-                bail!(*span, "failed to infer type");
-            }
-            param_name = name.clone();
-            // Found an explicit parameter: extract it:
-            ParameterType::Other(&pat_type.ty, *optional, schema)
-        } else if is_api_method_type(&pat_type.ty) {
-            if api_method_param.is_some() {
-                error!(pat_type => "multiple ApiMethod parameters found");
+        let param_type =
+            if let Some(entry) = input_schema.find_obj_property_by_ident(&pat_ident.to_string()) {
+                if let SchemaItem::Inferred(span) = &entry.schema.item {
+                    bail!(*span, "failed to infer type");
+                }
+                param_name = entry.name.clone();
+                // Found an explicit parameter: extract it:
+                ParameterType::Other(&pat_type.ty, entry.optional, &entry.schema)
+            } else if is_api_method_type(&pat_type.ty) {
+                if api_method_param.is_some() {
+                    error!(pat_type => "multiple ApiMethod parameters found");
+                    continue;
+                }
+                api_method_param = Some(param_list.len());
+                ParameterType::ApiMethod
+            } else if is_rpc_env_type(&pat_type.ty) {
+                if rpc_env_param.is_some() {
+                    error!(pat_type => "multiple RpcEnvironment parameters found");
+                    continue;
+                }
+                rpc_env_param = Some(param_list.len());
+                ParameterType::RpcEnv
+            } else if is_value_type(&pat_type.ty) {
+                if value_param.is_some() {
+                    error!(pat_type => "multiple additional Value parameters found");
+                    continue;
+                }
+                value_param = Some(param_list.len());
+                ParameterType::Value
+            } else {
+                error!(&pat_ident => "unexpected parameter {:?}", pat_ident.to_string());
                 continue;
-            }
-            api_method_param = Some(param_list.len());
-            ParameterType::ApiMethod
-        } else if is_rpc_env_type(&pat_type.ty) {
-            if rpc_env_param.is_some() {
-                error!(pat_type => "multiple RpcEnvironment parameters found");
-                continue;
-            }
-            rpc_env_param = Some(param_list.len());
-            ParameterType::RpcEnv
-        } else if is_value_type(&pat_type.ty) {
-            if value_param.is_some() {
-                error!(pat_type => "multiple additional Value parameters found");
-                continue;
-            }
-            value_param = Some(param_list.len());
-            ParameterType::Value
-        } else {
-            error!(&pat_ident => "unexpected parameter {:?}", pat_ident.to_string());
-            continue;
-        };
+            };
 
         param_list.push((param_name, param_type));
     }
@@ -594,7 +591,7 @@ impl<'a> DefaultParameters<'a> {
     fn get_default(&self, param_tokens: TokenStream) -> Result<syn::Expr, syn::Error> {
         let param_name: syn::LitStr = syn::parse2(param_tokens)?;
         match self.0.find_obj_property_by_ident(&param_name.value()) {
-            Some((_ident, _optional, schema)) => match schema.find_schema_property("default") {
+            Some(entry) => match entry.schema.find_schema_property("default") {
                 Some(def) => Ok(def.clone()),
                 None => bail!(param_name => "no default found in schema"),
             },

@@ -176,15 +176,12 @@ impl Schema {
         }
     }
 
-    fn find_obj_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, Schema)> {
+    fn find_obj_property_by_ident(&self, key: &str) -> Option<&ObjectEntry> {
         self.as_object()
             .and_then(|obj| obj.find_property_by_ident(key))
     }
 
-    fn find_obj_property_by_ident_mut(
-        &mut self,
-        key: &str,
-    ) -> Option<&mut (FieldName, bool, Schema)> {
+    fn find_obj_property_by_ident_mut(&mut self, key: &str) -> Option<&mut ObjectEntry> {
         self.as_object_mut()
             .and_then(|obj| obj.find_property_by_ident_mut(key))
     }
@@ -384,10 +381,26 @@ impl SchemaItem {
     }
 }
 
+pub struct ObjectEntry {
+    pub name: FieldName,
+    pub optional: bool,
+    pub schema: Schema,
+}
+
+impl ObjectEntry {
+    pub fn new(name: FieldName, optional: bool, schema: Schema) -> Self {
+        Self {
+            name,
+            optional,
+            schema,
+        }
+    }
+}
+
 #[derive(Default)]
 /// Contains a sorted list of properties:
 pub struct SchemaObject {
-    properties_: Vec<(FieldName, bool, Schema)>,
+    properties_: Vec<ObjectEntry>,
 }
 
 impl SchemaObject {
@@ -403,12 +416,12 @@ impl SchemaObject {
     }
 
     #[inline]
-    fn properties_mut(&mut self) -> &mut [(FieldName, bool, Schema)] {
+    fn properties_mut(&mut self) -> &mut [ObjectEntry] {
         &mut self.properties_
     }
 
     fn sort_properties(&mut self) {
-        self.properties_.sort_by(|a, b| (a.0).cmp(&b.0));
+        self.properties_.sort_by(|a, b| (a.name).cmp(&b.name));
     }
 
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
@@ -432,7 +445,7 @@ impl SchemaObject {
                             .transpose()?
                             .unwrap_or(false);
 
-                        properties.push((key, optional, schema.try_into()?));
+                        properties.push(ObjectEntry::new(key, optional, schema.try_into()?));
 
                         Ok(properties)
                     },
@@ -444,30 +457,32 @@ impl SchemaObject {
 
     fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
         for element in self.properties_.iter() {
-            let key = element.0.as_str();
-            let optional = element.1;
+            let key = element.name.as_str();
+            let optional = element.optional;
             let mut schema = TokenStream::new();
-            element.2.to_schema(&mut schema)?;
+            element.schema.to_schema(&mut schema)?;
             ts.extend(quote! { (#key, #optional, &#schema), });
         }
         Ok(())
     }
 
-    fn find_property_by_ident(&self, key: &str) -> Option<&(FieldName, bool, Schema)> {
-        self.properties_.iter().find(|p| p.0.as_ident_str() == key)
+    fn find_property_by_ident(&self, key: &str) -> Option<&ObjectEntry> {
+        self.properties_
+            .iter()
+            .find(|p| p.name.as_ident_str() == key)
     }
 
-    fn find_property_by_ident_mut(&mut self, key: &str) -> Option<&mut (FieldName, bool, Schema)> {
+    fn find_property_by_ident_mut(&mut self, key: &str) -> Option<&mut ObjectEntry> {
         self.properties_
             .iter_mut()
-            .find(|p| p.0.as_ident_str() == key)
+            .find(|p| p.name.as_ident_str() == key)
     }
 
     fn remove_property_by_ident(&mut self, key: &str) -> bool {
         match self
             .properties_
             .iter()
-            .position(|(name, _, _)| name.as_ident_str() == key)
+            .position(|entry| entry.name.as_ident_str() == key)
         {
             Some(index) => {
                 self.properties_.remove(index);
@@ -477,7 +492,7 @@ impl SchemaObject {
         }
     }
 
-    fn extend_properties(&mut self, new_fields: Vec<(FieldName, bool, Schema)>) {
+    fn extend_properties(&mut self, new_fields: Vec<ObjectEntry>) {
         self.properties_.extend(new_fields);
         self.sort_properties();
     }
