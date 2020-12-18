@@ -142,6 +142,17 @@ impl Schema {
         }
     }
 
+    /// Create the token stream for a reference schema (`ExternType` or `ExternSchema`).
+    fn to_schema_reference(&self) -> Option<TokenStream> {
+        match &self.item {
+            SchemaItem::ExternType(path) => {
+                Some(quote_spanned! { path.span() => &#path::API_SCHEMA })
+            }
+            SchemaItem::ExternSchema(path) => Some(quote_spanned! { path.span() => &#path }),
+            _ => None,
+        }
+    }
+
     fn to_typed_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
         self.item.to_schema(
             ts,
@@ -323,7 +334,8 @@ impl SchemaItem {
             }
             SchemaItem::ExternType(path) => {
                 if !properties.is_empty() {
-                    error!(&properties[0].0 => "additional properties not allowed on external type");
+                    error!(&properties[0].0 =>
+                        "additional properties not allowed on external type");
                 }
                 if let Maybe::Explicit(description) = description {
                     error!(description => "description not allowed on external type");
@@ -385,6 +397,10 @@ pub struct ObjectEntry {
     pub name: FieldName,
     pub optional: bool,
     pub schema: Schema,
+
+    /// This is only valid for methods. Methods should reset this to false after dealing with it,
+    /// as encountering this during schema serialization will always cause an error.
+    pub flatten: Option<Span>,
 }
 
 impl ObjectEntry {
@@ -393,7 +409,13 @@ impl ObjectEntry {
             name,
             optional,
             schema,
+            flatten: None,
         }
+    }
+
+    pub fn with_flatten(mut self, flatten: Option<Span>) -> Self {
+        self.flatten = flatten;
+        self
     }
 }
 
@@ -418,6 +440,24 @@ impl SchemaObject {
     #[inline]
     fn properties_mut(&mut self) -> &mut [ObjectEntry] {
         &mut self.properties_
+    }
+
+    fn drain_filter<F>(&mut self, mut func: F) -> Vec<ObjectEntry>
+    where
+        F: FnMut(&ObjectEntry) -> bool,
+    {
+        let mut out = Vec::new();
+
+        let mut i = 0;
+        while i != self.properties_.len() {
+            if !func(&self.properties_[i]) {
+                out.push(self.properties_.remove(i));
+            } else {
+                i += 1;
+            }
+        }
+
+        out
     }
 
     fn sort_properties(&mut self) {
@@ -445,7 +485,19 @@ impl SchemaObject {
                             .transpose()?
                             .unwrap_or(false);
 
-                        properties.push(ObjectEntry::new(key, optional, schema.try_into()?));
+                        let flatten: Option<Span> = schema
+                            .remove_entry("flatten")
+                            .map(|(field, value)| -> Result<(Span, bool), syn::Error> {
+                                let v: syn::LitBool = value.try_into()?;
+                                Ok((field.span(), v.value))
+                            })
+                            .transpose()?
+                            .and_then(|(span, value)| if value { Some(span) } else { None });
+
+                        properties.push(
+                            ObjectEntry::new(key, optional, schema.try_into()?)
+                                .with_flatten(flatten),
+                        );
 
                         Ok(properties)
                     },
@@ -457,6 +509,14 @@ impl SchemaObject {
 
     fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
         for element in self.properties_.iter() {
+            if let Some(span) = element.flatten {
+                error!(
+                    span,
+                    "`flatten` attribute is only available on method parameters, \
+                     use #[serde(flatten)] in structs"
+                );
+            }
+
             let key = element.name.as_str();
             let optional = element.optional;
             let mut schema = TokenStream::new();

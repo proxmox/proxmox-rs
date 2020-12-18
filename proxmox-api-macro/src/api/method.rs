@@ -85,7 +85,7 @@ impl TryFrom<JSONObject> for ReturnType {
 ///
 /// See the top level macro documentation for a complete example.
 pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<TokenStream, Error> {
-    let mut input_schema: Schema = match attribs.remove("input") {
+    let input_schema: Schema = match attribs.remove("input") {
         Some(input) => input.into_object("input schema definition")?.try_into()?,
         None => Schema {
             span: Span::call_site(),
@@ -93,6 +93,19 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
             item: SchemaItem::Object(Default::default()),
             properties: Vec::new(),
         },
+    };
+
+    let mut input_schema = if input_schema.as_object().is_some() {
+        input_schema
+    } else {
+        error!(
+            input_schema.span,
+            "method input schema must be an object schema"
+        );
+        let mut schema = Schema::empty_object(input_schema.span);
+        schema.description = input_schema.description;
+        schema.properties = input_schema.properties;
+        schema
     };
 
     let mut return_type: Option<ReturnType> = attribs
@@ -158,25 +171,15 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     // input schema is done, let's give the method body a chance to extract default parameters:
     DefaultParameters(&input_schema).visit_item_fn_mut(&mut func);
 
-    let input_schema = {
-        let mut ts = TokenStream::new();
-        input_schema.to_typed_schema(&mut ts)?;
-        ts
-    };
-
     let vis = &func.vis;
     let func_name = &func.sig.ident;
     let api_method_name = Ident::new(
         &format!("API_METHOD_{}", func_name.to_string().to_uppercase()),
         func.sig.ident.span(),
     );
-    let input_schema_name = Ident::new(
-        &format!(
-            "API_PARAMETER_SCHEMA_{}",
-            func_name.to_string().to_uppercase()
-        ),
-        func.sig.ident.span(),
-    );
+
+    let (input_schema_code, input_schema_parameter) =
+        serialize_input_schema(input_schema, &func.sig.ident, func.sig.span())?;
 
     let mut returns_schema_setter = TokenStream::new();
     if let Some(return_type) = return_type {
@@ -192,13 +195,12 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     };
 
     Ok(quote_spanned! { func.sig.span() =>
-        pub const #input_schema_name: ::proxmox::api::schema::ObjectSchema =
-            #input_schema;
+        #input_schema_code
 
         #vis const #api_method_name: ::proxmox::api::ApiMethod =
-            ::proxmox::api::ApiMethod::new(
+            ::proxmox::api::ApiMethod::new_full(
                 &#api_handler,
-                &#input_schema_name,
+                #input_schema_parameter,
             )
             #returns_schema_setter
             #access_setter
@@ -538,67 +540,219 @@ fn extract_normal_parameter(
     let name_str = syn::LitStr::new(name.as_str(), span);
     let arg_name = Ident::new(&format!("input_arg_{}", name.as_ident().to_string()), span);
 
+    let default_value = param.entry.schema.find_schema_property("default");
+
     // Optional parameters are expected to be Option<> types in the real function
     // signature, so we can just keep the returned Option from `input_map.remove()`.
-    body.extend(quote_spanned! { span =>
-        let #arg_name = input_map
-            .remove(#name_str)
-            .map(::serde_json::from_value)
-            .transpose()?
-    });
+    match param.entry.flatten {
+        None => {
+            // regular parameter, we just remove it and call `from_value`.
 
-    let default_value = param.entry.schema.find_schema_property("default");
-    if !param.entry.optional {
-        // Non-optional types need to be extracted out of the option though (unless
-        // they have a default):
-        //
-        // Whether the parameter is optional should have been verified by the schema
-        // verifier already, so here we just use anyhow::bail! instead of building a
-        // proper http error!
-        body.extend(quote_spanned! { span =>
-            .ok_or_else(|| ::anyhow::format_err!(
-                "missing non-optional parameter: {}",
-                #name_str,
-            ))?
-        });
-    }
-
-    let no_option_type = util::is_option_type(param.ty).is_none();
-
-    if let Some(def) = &default_value {
-        let name_uc = name.as_ident().to_string().to_uppercase();
-        let name = Ident::new(
-            &format!("API_METHOD_{}_PARAM_DEFAULT_{}", func_uc, name_uc),
-            span,
-        );
-
-        // strip possible Option<> from this type:
-        let ty = util::is_option_type(param.ty).unwrap_or(param.ty);
-        default_consts.extend(quote_spanned! { span =>
-            pub const #name: #ty = #def;
-        });
-
-        if param.entry.optional && no_option_type {
-            // Optional parameter without an Option<T> type requires a default:
             body.extend(quote_spanned! { span =>
-                .unwrap_or(#name)
+                let #arg_name = input_map
+                    .remove(#name_str)
+                    .map(::serde_json::from_value)
+                    .transpose()?
             });
-        }
-    } else if param.entry.optional && no_option_type {
-        // FIXME: we should not be able to reach this without having produced another
-        // error above already anyway?
-        error!(param.ty => "Optional parameter without Option<T> requires a default");
 
-        // we produced an error so just write something that will compile
-        body.extend(quote_spanned! { span =>
-            .unwrap_or_else(|| unreachable!())
-        });
+            if !param.entry.optional {
+                // Non-optional types need to be extracted out of the option though (unless
+                // they have a default):
+                //
+                // Whether the parameter is optional should have been verified by the schema
+                // verifier already, so here we just use anyhow::bail! instead of building a
+                // proper http error!
+                body.extend(quote_spanned! { span =>
+                    .ok_or_else(|| ::anyhow::format_err!(
+                        "missing non-optional parameter: {}",
+                        #name_str,
+                    ))?
+                });
+            }
+
+            let no_option_type = util::is_option_type(param.ty).is_none();
+
+            if let Some(def) = &default_value {
+                let name_uc = name.as_ident().to_string().to_uppercase();
+                let name = Ident::new(
+                    &format!("API_METHOD_{}_PARAM_DEFAULT_{}", func_uc, name_uc),
+                    span,
+                );
+
+                // strip possible Option<> from this type:
+                let ty = util::is_option_type(param.ty).unwrap_or(param.ty);
+                default_consts.extend(quote_spanned! { span =>
+                    pub const #name: #ty = #def;
+                });
+
+                if param.entry.optional && no_option_type {
+                    // Optional parameter without an Option<T> type requires a default:
+                    body.extend(quote_spanned! { span =>
+                        .unwrap_or(#name)
+                    });
+                }
+            } else if param.entry.optional && no_option_type {
+                // FIXME: we should not be able to reach this without having produced another
+                // error above already anyway?
+                error!(param.ty => "Optional parameter without Option<T> requires a default");
+
+                // we produced an error so just write something that will compile
+                body.extend(quote_spanned! { span =>
+                    .unwrap_or_else(|| unreachable!())
+                });
+            }
+
+            body.extend(quote_spanned! { span => ; });
+        }
+        Some(flatten_span) => {
+            // Flattened parameter, we need ot use our special partial-object deserializer.
+            // Also note that we do not support simply nesting schemas. We need a referenced type.
+            // Otherwise the expanded code here gets ugly and we'd need to make sure we pull out
+            // nested schemas into named variables first... No thanks.
+
+            if default_value.is_some() {
+                error!(
+                    default_value =>
+                    "flattened parameter cannot have a default as it cannot be optional",
+                );
+            }
+
+            if let Some(schema_ref) = param.entry.schema.to_schema_reference() {
+                let ty = param.ty;
+                body.extend(quote_spanned! { span =>
+                    let #arg_name = <#ty as ::serde::Deserialize>::deserialize(
+                        ::proxmox::api::de::ExtractValueDeserializer::try_new(
+                            input_map,
+                            #schema_ref,
+                        )
+                        .ok_or_else(|| ::anyhow::format_err!(
+                            "flattened parameter {:?} has invalid schema",
+                            #name_str,
+                        ))?,
+                    )?;
+                });
+            } else {
+                error!(
+                    flatten_span,
+                    "flattened parameter schema must be a schema reference"
+                );
+                body.extend(quote_spanned! { span => let #arg_name = unreachable!(); });
+            }
+        }
     }
 
-    body.extend(quote_spanned! { span => ; });
     args.extend(quote_spanned! { span => #arg_name, });
 
     Ok(())
+}
+
+/// Returns a tuple containing the schema code first and the `ParameterSchema` parameter for the
+/// `ApiMethod` second.
+fn serialize_input_schema(
+    mut input_schema: Schema,
+    func_name: &Ident,
+    func_sig_span: Span,
+) -> Result<(TokenStream, TokenStream), Error> {
+    let input_schema_name = Ident::new(
+        &format!(
+            "API_PARAMETER_SCHEMA_{}",
+            func_name.to_string().to_uppercase()
+        ),
+        func_name.span(),
+    );
+
+    let (flattened, has_params) = match &mut input_schema.item {
+        SchemaItem::Object(obj) => {
+            let flattened = obj.drain_filter(|entry| entry.flatten.is_none());
+            (flattened, !obj.is_empty())
+        }
+        _ => (Vec::new(), true),
+    };
+
+    if flattened.is_empty() {
+        let mut ts = TokenStream::new();
+        input_schema.to_typed_schema(&mut ts)?;
+        return Ok((
+            quote_spanned! { func_sig_span =>
+                pub const #input_schema_name: ::proxmox::api::schema::ObjectSchema = #ts;
+            },
+            quote_spanned! { func_sig_span =>
+                ::proxmox::api::router::ParameterSchema::Object(&#input_schema_name)
+            },
+        ));
+    }
+
+    let mut all_of_schemas = TokenStream::new();
+    for entry in flattened {
+        if entry.optional {
+            error!(
+                entry.schema.span,
+                "optional flattened parameters are not supported"
+            );
+        }
+
+        all_of_schemas.extend(quote::quote! {&});
+        entry.schema.to_schema(&mut all_of_schemas)?;
+        all_of_schemas.extend(quote::quote! {,});
+    }
+
+    let description = match input_schema.description.take().ok() {
+        Some(description) => description,
+        None => {
+            error!(input_schema.span, "missing description on api type struct");
+            syn::LitStr::new("<missing description>", input_schema.span)
+        }
+    };
+    // and replace it with a "dummy"
+    input_schema.description = Maybe::Derived(syn::LitStr::new(
+        &format!("<INNER: {}>", description.value()),
+        description.span(),
+    ));
+
+    let (inner_schema, inner_schema_ref) = if has_params {
+        // regular parameters go into the "inner" schema to merge into the AllOfSchema
+        let inner_schema_name = Ident::new(
+            &format!(
+                "API_REGULAR_PARAMETER_SCHEMA_{}",
+                func_name.to_string().to_uppercase()
+            ),
+            func_name.span(),
+        );
+
+        let obj_schema = {
+            let mut ts = TokenStream::new();
+            input_schema.to_schema(&mut ts)?;
+            ts
+        };
+
+        (
+            quote_spanned!(func_sig_span =>
+                const #inner_schema_name: ::proxmox::api::schema::Schema = #obj_schema;
+            ),
+            quote_spanned!(func_sig_span => &#inner_schema_name,),
+        )
+    } else {
+        // otherwise it stays empty
+        (TokenStream::new(), TokenStream::new())
+    };
+
+    Ok((
+        quote_spanned! { func_sig_span =>
+            #inner_schema
+
+            pub const #input_schema_name: ::proxmox::api::schema::AllOfSchema =
+                ::proxmox::api::schema::AllOfSchema::new(
+                    #description,
+                    &[
+                        #inner_schema_ref
+                        #all_of_schemas
+                    ],
+                );
+        },
+        quote_spanned! { func_sig_span =>
+            ::proxmox::api::router::ParameterSchema::AllOf(&#input_schema_name)
+        },
+    ))
 }
 
 struct DefaultParameters<'a>(&'a Schema);
