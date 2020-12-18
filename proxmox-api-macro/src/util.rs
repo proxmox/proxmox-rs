@@ -584,6 +584,12 @@ pub enum Maybe<T> {
     None,
 }
 
+impl<T> Default for Maybe<T> {
+    fn default() -> Self {
+        Maybe::None
+    }
+}
+
 impl<T> Maybe<T> {
     pub fn as_ref(&self) -> Maybe<&T> {
         match self {
@@ -600,6 +606,13 @@ impl<T> Maybe<T> {
         }
     }
 
+    pub fn ok(self) -> Option<T> {
+        match self {
+            Maybe::Explicit(v) | Maybe::Derived(v) => Some(v),
+            Maybe::None => None,
+        }
+    }
+
     pub fn ok_or_else<E, F>(self, other: F) -> Result<T, E>
     where
         F: FnOnce() -> E,
@@ -612,6 +625,14 @@ impl<T> Maybe<T> {
 
     pub fn is_none(&self) -> bool {
         matches!(self, Maybe::None)
+    }
+
+    pub fn is_explicit(&self) -> bool {
+        matches!(self, Maybe::Explicit(_))
+    }
+
+    pub fn take(&mut self) -> Self {
+        std::mem::take(self)
     }
 }
 
