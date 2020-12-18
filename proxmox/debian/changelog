@@ -6,6 +6,14 @@ rust-proxmox (0.9.0-1) UNRELEASED; urgency=medium
   * Added an `AllOfSchema` (`Schema::AllOf`) where multiple object schemas can
     be combined like with JSONSchema/openapi's `allOf` property.
 
+  * `ApiMethod.parameters` is now a `ParameterSchema` instead of simply an
+    `ObjectSchema`.
+
+  * There's now an `ObjectSchemaType` trait implemented by `ObjectSchema`,
+    `AllOfSchema` as well as `ParameterSchema` for simplicity. Some of the
+    verifiers/parsers now use the trait to cope with both types with minimal
+    changes.
+
  -- Proxmox Support Team <support@proxmox.com>  Fri, 11 Dec 2020 14:55:29 +0100
 
 rust-proxmox (0.8.1-1) unstable; urgency=medium
