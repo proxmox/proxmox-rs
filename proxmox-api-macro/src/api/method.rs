@@ -458,63 +458,15 @@ fn create_wrapper_function(
             ParameterType::ApiMethod => args.extend(quote_spanned! { span => api_method_param, }),
             ParameterType::RpcEnv => args.extend(quote_spanned! { span => rpc_env_param, }),
             ParameterType::Normal(param) => {
-                let name_str = syn::LitStr::new(name.as_str(), span);
-                let arg_name =
-                    Ident::new(&format!("input_arg_{}", name.as_ident().to_string()), span);
-
-                // Optional parameters are expected to be Option<> types in the real function
-                // signature, so we can just keep the returned Option from `input_map.remove()`.
-                body.extend(quote_spanned! { span =>
-                    let #arg_name = input_map
-                        .remove(#name_str)
-                        .map(::serde_json::from_value)
-                        .transpose()?
-                });
-                let default_value = param.entry.schema.find_schema_property("default");
-                if !param.entry.optional {
-                    // Non-optional types need to be extracted out of the option though (unless
-                    // they have a default):
-                    //
-                    // Whether the parameter is optional should have been verified by the schema
-                    // verifier already, so here we just use anyhow::bail! instead of building a
-                    // proper http error!
-                    body.extend(quote_spanned! { span =>
-                        .ok_or_else(|| ::anyhow::format_err!(
-                            "missing non-optional parameter: {}",
-                            #name_str,
-                        ))?
-                    });
-                }
-                let no_option_type = util::is_option_type(param.ty).is_none();
-
-                if let Some(def) = &default_value {
-                    let name_uc = name.as_ident().to_string().to_uppercase();
-                    let name = Ident::new(
-                        &format!("API_METHOD_{}_PARAM_DEFAULT_{}", func_uc, name_uc),
-                        span,
-                    );
-                    // strip possible Option<> from this type:
-                    let ty = util::is_option_type(param.ty).unwrap_or(param.ty);
-                    default_consts.extend(quote_spanned! { span =>
-                        pub const #name: #ty = #def;
-                    });
-                    if param.entry.optional && no_option_type {
-                        // Optional parameter without an Option<T> type requires a default:
-                        body.extend(quote_spanned! { span =>
-                            .unwrap_or(#name)
-                        });
-                    }
-                } else if param.entry.optional && no_option_type {
-                    // FIXME: we should not be able to reach this without having produced another
-                    // error above already anyway?
-                    error!(param.ty => "Optional parameter without Option<T> requires a default");
-                    // we produced an error so just write something that will compile
-                    body.extend(quote_spanned! { span =>
-                        .unwrap_or_else(|| unreachable!())
-                    });
-                }
-                body.extend(quote_spanned! { span => ; });
-                args.extend(quote_spanned! { span => #arg_name, });
+                extract_normal_parameter(
+                    param,
+                    &mut body,
+                    &mut args,
+                    &func_uc,
+                    name,
+                    span,
+                    default_consts,
+                )?;
             }
         }
     }
@@ -571,6 +523,82 @@ fn create_wrapper_function(
     }
 
     Ok(api_func_name)
+}
+
+fn extract_normal_parameter(
+    param: NormalParameter,
+    body: &mut TokenStream,
+    args: &mut TokenStream,
+    func_uc: &str,
+    name: FieldName,
+    name_span: Span,
+    default_consts: &mut TokenStream,
+) -> Result<(), Error> {
+    let span = name_span; // renamed during refactorization
+    let name_str = syn::LitStr::new(name.as_str(), span);
+    let arg_name = Ident::new(&format!("input_arg_{}", name.as_ident().to_string()), span);
+
+    // Optional parameters are expected to be Option<> types in the real function
+    // signature, so we can just keep the returned Option from `input_map.remove()`.
+    body.extend(quote_spanned! { span =>
+        let #arg_name = input_map
+            .remove(#name_str)
+            .map(::serde_json::from_value)
+            .transpose()?
+    });
+
+    let default_value = param.entry.schema.find_schema_property("default");
+    if !param.entry.optional {
+        // Non-optional types need to be extracted out of the option though (unless
+        // they have a default):
+        //
+        // Whether the parameter is optional should have been verified by the schema
+        // verifier already, so here we just use anyhow::bail! instead of building a
+        // proper http error!
+        body.extend(quote_spanned! { span =>
+            .ok_or_else(|| ::anyhow::format_err!(
+                "missing non-optional parameter: {}",
+                #name_str,
+            ))?
+        });
+    }
+
+    let no_option_type = util::is_option_type(param.ty).is_none();
+
+    if let Some(def) = &default_value {
+        let name_uc = name.as_ident().to_string().to_uppercase();
+        let name = Ident::new(
+            &format!("API_METHOD_{}_PARAM_DEFAULT_{}", func_uc, name_uc),
+            span,
+        );
+
+        // strip possible Option<> from this type:
+        let ty = util::is_option_type(param.ty).unwrap_or(param.ty);
+        default_consts.extend(quote_spanned! { span =>
+            pub const #name: #ty = #def;
+        });
+
+        if param.entry.optional && no_option_type {
+            // Optional parameter without an Option<T> type requires a default:
+            body.extend(quote_spanned! { span =>
+                .unwrap_or(#name)
+            });
+        }
+    } else if param.entry.optional && no_option_type {
+        // FIXME: we should not be able to reach this without having produced another
+        // error above already anyway?
+        error!(param.ty => "Optional parameter without Option<T> requires a default");
+
+        // we produced an error so just write something that will compile
+        body.extend(quote_spanned! { span =>
+            .unwrap_or_else(|| unreachable!())
+        });
+    }
+
+    body.extend(quote_spanned! { span => ; });
+    args.extend(quote_spanned! { span => #arg_name, });
+
+    Ok(())
 }
 
 struct DefaultParameters<'a>(&'a Schema);
