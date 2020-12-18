@@ -10,7 +10,7 @@ use hyper::Body;
 use percent_encoding::percent_decode_str;
 use serde_json::Value;
 
-use crate::api::schema::{self, ObjectSchema, Schema};
+use crate::api::schema::{self, AllOfSchema, ObjectSchema, Schema};
 use crate::api::RpcEnvironment;
 
 use super::Permission;
@@ -36,10 +36,11 @@ use super::Permission;
 ///    &ObjectSchema::new("Hello World Example", &[])
 /// );
 /// ```
-pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<Value, Error>
-              + Send
-              + Sync
-              + 'static);
+pub type ApiHandlerFn =
+    &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<Value, Error>
+                  + Send
+                  + Sync
+                  + 'static);
 
 /// Asynchronous API handlers
 ///
@@ -67,7 +68,11 @@ pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironm
 ///    &ObjectSchema::new("Hello World Example (async)", &[])
 /// );
 /// ```
-pub type ApiAsyncHandlerFn = &'static (dyn for<'a> Fn(Value, &'static ApiMethod, &'a mut dyn RpcEnvironment) -> ApiFuture<'a>
+pub type ApiAsyncHandlerFn = &'static (dyn for<'a> Fn(
+    Value,
+    &'static ApiMethod,
+    &'a mut dyn RpcEnvironment,
+) -> ApiFuture<'a>
               + Send
               + Sync);
 
@@ -425,6 +430,59 @@ impl ReturnType {
     }
 }
 
+/// Parameters are objects, but we have two types of object schemas, the regular one and the
+/// `AllOf` schema.
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+pub enum ParameterSchema {
+    Object(&'static ObjectSchema),
+    AllOf(&'static AllOfSchema),
+}
+
+impl schema::ObjectSchemaType for ParameterSchema {
+    type PropertyIter = Box<dyn Iterator<Item = &'static schema::SchemaPropertyEntry>>;
+
+    fn description(&self) -> &'static str {
+        match self {
+            ParameterSchema::Object(o) => o.description(),
+            ParameterSchema::AllOf(o) => o.description(),
+        }
+    }
+
+    fn lookup(&self, key: &str) -> Option<(bool, &Schema)> {
+        match self {
+            ParameterSchema::Object(o) => o.lookup(key),
+            ParameterSchema::AllOf(o) => o.lookup(key),
+        }
+    }
+
+    fn properties(&self) -> Self::PropertyIter {
+        match self {
+            ParameterSchema::Object(o) => Box::new(o.properties()),
+            ParameterSchema::AllOf(o) => Box::new(o.properties()),
+        }
+    }
+
+    fn additional_properties(&self) -> bool {
+        match self {
+            ParameterSchema::Object(o) => o.additional_properties(),
+            ParameterSchema::AllOf(o) => o.additional_properties(),
+        }
+    }
+}
+
+impl From<&'static ObjectSchema> for ParameterSchema {
+    fn from(schema: &'static ObjectSchema) -> Self {
+        ParameterSchema::Object(schema)
+    }
+}
+
+impl From<&'static AllOfSchema> for ParameterSchema {
+    fn from(schema: &'static AllOfSchema) -> Self {
+        ParameterSchema::AllOf(schema)
+    }
+}
+
 /// This struct defines a synchronous API call which returns the result as json `Value`
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ApiMethod {
@@ -435,7 +493,7 @@ pub struct ApiMethod {
     /// should do a tzset afterwards
     pub reload_timezone: bool,
     /// Parameter type Schema
-    pub parameters: &'static schema::ObjectSchema,
+    pub parameters: ParameterSchema,
     /// Return type Schema
     pub returns: ReturnType,
     /// Handler function
@@ -456,7 +514,7 @@ impl std::fmt::Debug for ApiMethod {
 }
 
 impl ApiMethod {
-    pub const fn new(handler: &'static ApiHandler, parameters: &'static ObjectSchema) -> Self {
+    pub const fn new_full(handler: &'static ApiHandler, parameters: ParameterSchema) -> Self {
         Self {
             parameters,
             handler,
@@ -470,9 +528,13 @@ impl ApiMethod {
         }
     }
 
+    pub const fn new(handler: &'static ApiHandler, parameters: &'static ObjectSchema) -> Self {
+        Self::new_full(handler, ParameterSchema::Object(parameters))
+    }
+
     pub const fn new_dummy(parameters: &'static ObjectSchema) -> Self {
         Self {
-            parameters,
+            parameters: ParameterSchema::Object(parameters),
             handler: &DUMMY_HANDLER,
             returns: ReturnType::new(false, &NULL_SCHEMA),
             protected: false,

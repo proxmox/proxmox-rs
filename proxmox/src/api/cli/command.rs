@@ -32,7 +32,7 @@ fn parse_arguments(prefix: &str, cli_cmd: &CliCommand, args: Vec<String>) -> Res
         &args,
         cli_cmd.arg_param,
         &cli_cmd.fixed_param,
-        &cli_cmd.info.parameters,
+        cli_cmd.info.parameters,
     ) {
         Ok((p, r)) => (p, r),
         Err(err) => {

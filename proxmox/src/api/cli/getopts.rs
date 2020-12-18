@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use anyhow::*;
 use serde_json::Value;
 
+use crate::api::router::ParameterSchema;
 use crate::api::schema::*;
 
 #[derive(Debug)]
@@ -57,7 +58,7 @@ fn parse_argument(arg: &str) -> RawArgument {
 /// Returns parsed data and the remaining arguments as two separate array
 pub(crate) fn parse_argument_list<T: AsRef<str>>(
     args: &[T],
-    schema: &ObjectSchema,
+    schema: ParameterSchema,
     errors: &mut ParameterError,
 ) -> (Vec<(String, String)>, Vec<String>) {
     let mut data: Vec<(String, String)> = vec![];
@@ -149,7 +150,7 @@ pub fn parse_arguments<T: AsRef<str>>(
     args: &[T],
     arg_param: &[&str],
     fixed_param: &HashMap<&'static str, String>,
-    schema: &ObjectSchema,
+    schema: ParameterSchema,
 ) -> Result<(Value, Vec<String>), ParameterError> {
     let mut errors = ParameterError::new();
 
@@ -229,7 +230,12 @@ fn test_boolean_arg() {
     variants.push((vec!["--enable", "false"], false));
 
     for (args, expect) in variants {
-        let res = parse_arguments(&args, &vec![], &HashMap::new(), &PARAMETERS);
+        let res = parse_arguments(
+            &args,
+            &vec![],
+            &HashMap::new(),
+            ParameterSchema::from(&PARAMETERS),
+        );
         assert!(res.is_ok());
         if let Ok((options, remaining)) = res {
             assert!(options["enable"] == expect);
@@ -249,7 +255,12 @@ fn test_argument_paramenter() {
     );
 
     let args = vec!["-enable", "local"];
-    let res = parse_arguments(&args, &vec!["storage"], &HashMap::new(), &PARAMETERS);
+    let res = parse_arguments(
+        &args,
+        &vec!["storage"],
+        &HashMap::new(),
+        ParameterSchema::from(&PARAMETERS),
+    );
     assert!(res.is_ok());
     if let Ok((options, remaining)) = res {
         assert!(options["enable"] == true);

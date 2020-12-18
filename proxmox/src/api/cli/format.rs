@@ -110,7 +110,7 @@ pub fn generate_usage_str(
 
     let mut options = String::new();
 
-    for (prop, optional, param_schema) in schema.properties {
+    for (prop, optional, param_schema) in schema.properties() {
         if done_hash.contains(prop) {
             continue;
         }
@@ -150,11 +150,18 @@ pub fn generate_usage_str(
         DocumentationFormat::Long => format!("{}{}{}{}\n", indent, prefix, args, option_indicator),
         DocumentationFormat::Full => format!(
             "{}{}{}{}\n\n{}\n\n",
-            indent, prefix, args, option_indicator, schema.description
+            indent,
+            prefix,
+            args,
+            option_indicator,
+            schema.description()
         ),
         DocumentationFormat::ReST => format!(
             "``{}{}{}``\n\n{}\n\n",
-            prefix, args, option_indicator, schema.description
+            prefix,
+            args,
+            option_indicator,
+            schema.description()
         ),
     };
 

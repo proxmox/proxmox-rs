@@ -1,10 +1,11 @@
 use super::*;
 
+use crate::api::router::ParameterSchema;
 use crate::api::schema::*;
 
 fn record_done_argument(
     done: &mut HashMap<String, String>,
-    parameters: &ObjectSchema,
+    parameters: ParameterSchema,
     key: &str,
     value: &str,
 ) {
@@ -119,11 +120,11 @@ fn get_simple_completion(
         let mut errors = ParameterError::new(); // we simply ignore any parsing errors here
         let (data, _remaining) = getopts::parse_argument_list(
             &args[0..args.len() - 1],
-            &cli_cmd.info.parameters,
+            cli_cmd.info.parameters,
             &mut errors,
         );
         for (key, value) in &data {
-            record_done_argument(done, &cli_cmd.info.parameters, key, value);
+            record_done_argument(done, cli_cmd.info.parameters, key, value);
         }
     }
 
@@ -148,7 +149,7 @@ fn get_simple_completion(
     }
 
     let mut completions = Vec::new();
-    for (name, _optional, _schema) in cli_cmd.info.parameters.properties {
+    for (name, _optional, _schema) in cli_cmd.info.parameters.properties() {
         if done.contains_key(*name) {
             continue;
         }
@@ -210,7 +211,7 @@ fn get_nested_completion(def: &CommandLineInterface, args: &[String]) -> Vec<Str
         CommandLineInterface::Simple(cli_cmd) => {
             let mut done: HashMap<String, String> = HashMap::new();
             cli_cmd.fixed_param.iter().for_each(|(key, value)| {
-                record_done_argument(&mut done, &cli_cmd.info.parameters, &key, &value);
+                record_done_argument(&mut done, cli_cmd.info.parameters, &key, &value);
             });
             get_simple_completion(cli_cmd, &mut done, &cli_cmd.arg_param, args)
         }

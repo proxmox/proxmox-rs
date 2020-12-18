@@ -10,6 +10,7 @@ use anyhow::{bail, format_err, Error};
 use serde_json::{json, Value};
 use url::form_urlencoded;
 
+use super::router::ParameterSchema;
 use crate::api::const_regex::ConstRegexPattern;
 
 /// Error type for schema validation
@@ -764,7 +765,7 @@ pub fn parse_boolean(value_str: &str) -> Result<bool, Error> {
 }
 
 /// Parse a complex property string (`ApiStringFormat::PropertyString`)
-pub fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, Error> {
+pub fn parse_property_string(value_str: &str, schema: &'static Schema) -> Result<Value, Error> {
     match schema {
         Schema::Object(object_schema) => {
             let mut param_list: Vec<(String, String)> = vec![];
@@ -783,7 +784,7 @@ pub fn parse_property_string(value_str: &str, schema: &Schema) -> Result<Value, 
                 }
             }
 
-            parse_parameter_strings(&param_list, &object_schema, true).map_err(Error::from)
+            parse_parameter_strings(&param_list, object_schema, true).map_err(Error::from)
         }
         Schema::Array(array_schema) => {
             let mut array: Vec<Value> = vec![];
@@ -839,16 +840,24 @@ pub fn parse_simple_value(value_str: &str, schema: &Schema) -> Result<Value, Err
 ///
 /// - `test_required`: is set, checks if all required properties are
 ///   present.
-pub fn parse_parameter_strings(
+pub fn parse_parameter_strings<T: Into<ParameterSchema>>(
     data: &[(String, String)],
-    schema: &ObjectSchema,
+    schema: T,
+    test_required: bool,
+) -> Result<Value, ParameterError> {
+    do_parse_parameter_strings(data, schema.into(), test_required)
+}
+
+fn do_parse_parameter_strings(
+    data: &[(String, String)],
+    schema: ParameterSchema,
     test_required: bool,
 ) -> Result<Value, ParameterError> {
     let mut params = json!({});
 
     let mut errors = ParameterError::new();
 
-    let additional_properties = schema.additional_properties;
+    let additional_properties = schema.additional_properties();
 
     for (key, value) in data {
         if let Some((_optional, prop_schema)) = schema.lookup(&key) {
@@ -911,7 +920,7 @@ pub fn parse_parameter_strings(
     }
 
     if test_required && errors.is_empty() {
-        for (name, optional, _prop_schema) in schema.properties {
+        for (name, optional, _prop_schema) in schema.properties() {
             if !(*optional) && params[name] == Value::Null {
                 errors.push(format_err!(
                     "parameter '{}': parameter is missing and it is not optional.",
@@ -931,16 +940,16 @@ pub fn parse_parameter_strings(
 /// Parse a `form_urlencoded` query string and verify with object schema
 /// - `test_required`: is set, checks if all required properties are
 ///   present.
-pub fn parse_query_string(
+pub fn parse_query_string<T: Into<ParameterSchema>>(
     query: &str,
-    schema: &ObjectSchema,
+    schema: T,
     test_required: bool,
 ) -> Result<Value, ParameterError> {
     let param_list: Vec<(String, String)> = form_urlencoded::parse(query.as_bytes())
         .into_owned()
         .collect();
 
-    parse_parameter_strings(&param_list, schema, test_required)
+    parse_parameter_strings(&param_list, schema.into(), test_required)
 }
 
 /// Verify JSON value with `schema`.

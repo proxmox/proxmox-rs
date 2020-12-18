@@ -256,7 +256,7 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
     match def {
         None => None,
         Some(api_method) => {
-            let param_descr = dump_api_parameters(api_method.parameters);
+            let param_descr = dump_api_parameters(&api_method.parameters);
 
             let return_descr = dump_api_return_schema(&api_method.returns);
 
