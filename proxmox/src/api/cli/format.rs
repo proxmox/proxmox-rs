@@ -5,6 +5,7 @@ use serde_json::Value;
 use std::collections::HashSet;
 
 use crate::api::format::*;
+use crate::api::router::ReturnType;
 use crate::api::schema::*;
 
 use super::{value_to_text, TableFormatOptions};
@@ -32,16 +33,20 @@ pub fn format_and_print_result(result: &Value, output_format: &str) {
 /// formatted tables with borders.
 pub fn format_and_print_result_full(
     result: &mut Value,
-    schema: &Schema,
+    return_type: &ReturnType,
     output_format: &str,
     options: &TableFormatOptions,
 ) {
+    if return_type.optional && result.is_null() {
+        return;
+    }
+
     if output_format == "json-pretty" {
         println!("{}", serde_json::to_string_pretty(&result).unwrap());
     } else if output_format == "json" {
         println!("{}", serde_json::to_string(&result).unwrap());
     } else if output_format == "text" {
-        if let Err(err) = value_to_text(std::io::stdout(), result, schema, options) {
+        if let Err(err) = value_to_text(std::io::stdout(), result, &return_type.schema, options) {
             eprintln!("unable to format result: {}", err);
         }
     } else {

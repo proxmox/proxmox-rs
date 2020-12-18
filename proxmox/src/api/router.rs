@@ -398,6 +398,33 @@ pub struct ApiAccess {
     pub permission: &'static Permission,
 }
 
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+pub struct ReturnType {
+    /// A return type may be optional, meaning the method may return null or some fixed data.
+    ///
+    /// If true, the return type in pseudo openapi terms would be `"oneOf": [ "null", "T" ]`.
+    pub optional: bool,
+
+    /// The method's return type.
+    pub schema: &'static schema::Schema,
+}
+
+impl std::fmt::Debug for ReturnType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.optional {
+            write!(f, "optional {:?}", self.schema)
+        } else {
+            write!(f, "{:?}", self.schema)
+        }
+    }
+}
+
+impl ReturnType {
+    pub const fn new(optional: bool, schema: &'static Schema) -> Self {
+        Self { optional, schema }
+    }
+}
+
 /// This struct defines a synchronous API call which returns the result as json `Value`
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ApiMethod {
@@ -410,7 +437,7 @@ pub struct ApiMethod {
     /// Parameter type Schema
     pub parameters: &'static schema::ObjectSchema,
     /// Return type Schema
-    pub returns: &'static schema::Schema,
+    pub returns: ReturnType,
     /// Handler function
     pub handler: &'static ApiHandler,
     /// Access Permissions
@@ -433,7 +460,7 @@ impl ApiMethod {
         Self {
             parameters,
             handler,
-            returns: &NULL_SCHEMA,
+            returns: ReturnType::new(false, &NULL_SCHEMA),
             protected: false,
             reload_timezone: false,
             access: ApiAccess {
@@ -447,7 +474,7 @@ impl ApiMethod {
         Self {
             parameters,
             handler: &DUMMY_HANDLER,
-            returns: &NULL_SCHEMA,
+            returns: ReturnType::new(false, &NULL_SCHEMA),
             protected: false,
             reload_timezone: false,
             access: ApiAccess {
@@ -457,8 +484,8 @@ impl ApiMethod {
         }
     }
 
-    pub const fn returns(mut self, schema: &'static Schema) -> Self {
-        self.returns = schema;
+    pub const fn returns(mut self, returns: ReturnType) -> Self {
+        self.returns = returns;
 
         self
     }

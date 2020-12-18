@@ -4,6 +4,7 @@ use anyhow::Error;
 
 use std::io::Write;
 
+use crate::api::router::ReturnType;
 use crate::api::schema::*;
 use crate::api::{ApiHandler, ApiMethod};
 
@@ -197,8 +198,14 @@ fn dump_api_parameters(param: &ObjectSchema) -> String {
     res
 }
 
-fn dump_api_return_schema(schema: &Schema) -> String {
-    let mut res = String::from("*Returns*: ");
+fn dump_api_return_schema(returns: &ReturnType) -> String {
+    let schema = &returns.schema;
+
+    let mut res = if returns.optional {
+        "*Returns* (optionally): ".to_string()
+    } else {
+        "*Returns*: ".to_string()
+    };
 
     let type_text = get_schema_type_text(schema, ParameterDisplayStyle::Config);
     res.push_str(&format!("**{}**\n\n", type_text));
@@ -243,7 +250,7 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
         Some(api_method) => {
             let param_descr = dump_api_parameters(api_method.parameters);
 
-            let return_descr = dump_api_return_schema(api_method.returns);
+            let return_descr = dump_api_return_schema(&api_method.returns);
 
             let mut method = method;
 
