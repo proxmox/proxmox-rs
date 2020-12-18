@@ -298,17 +298,21 @@ impl<R: io::Read> ReadExt for R {
         loop {
             match self.read(&mut buf) {
                 Ok(0) => {
-                    if read_bytes == 0 { return Ok(false); }
+                    if read_bytes == 0 {
+                        return Ok(false);
+                    }
                     return Err(io::Error::new(
                         io::ErrorKind::UnexpectedEof,
-                        "failed to fill whole buffer")
-                    );
+                        "failed to fill whole buffer",
+                    ));
                 }
-                Ok(n) =>  {
+                Ok(n) => {
                     let tmp = buf;
                     buf = &mut tmp[n..];
                     read_bytes += n;
-                    if buf.is_empty() { return Ok(true); }
+                    if buf.is_empty() {
+                        return Ok(true);
+                    }
                 }
                 Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => {}
                 Err(e) => return Err(e),
@@ -318,7 +322,7 @@ impl<R: io::Read> ReadExt for R {
 
     fn skip_to_end(&mut self) -> io::Result<usize> {
         let mut skipped_bytes = 0;
-        let mut buf = unsafe { vec::uninitialized(32*1024) };
+        let mut buf = unsafe { vec::uninitialized(32 * 1024) };
         loop {
             match self.read(&mut buf) {
                 Ok(0) => return Ok(skipped_bytes),
