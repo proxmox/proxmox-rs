@@ -1,3 +1,13 @@
+rust-proxmox (0.9.0-1) UNRELEASED; urgency=medium
+
+  * `ApiMethod.returns` is now a `router::ReturnType` rather than a direct
+    `&Schema` reference and can be marked as `optional`.
+
+  * Added an `AllOfSchema` (`Schema::AllOf`) where multiple object schemas can
+    be combined like with JSONSchema/openapi's `allOf` property.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 11 Dec 2020 14:55:29 +0100
+
 rust-proxmox (0.8.1-1) unstable; urgency=medium
 
   * trait ReadExt: add read_exact_or_eof and skip_to_end
