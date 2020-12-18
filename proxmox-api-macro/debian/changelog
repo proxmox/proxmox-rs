@@ -1,3 +1,13 @@
+rust-proxmox-api-macro (0.3.0-1) UNRELEASED; urgency=medium
+
+  * removed `pub const API_RETURN_SCHEMA_*` generation
+    This could already be accessed via the public `API_METHOD_FOO.returns`.
+
+  * Note that a previous `schema: API_RETURN_SCHEMA_FOO` must now dereference
+    the schema via: `schema: *API_METHOD_FOO.returns.schema`.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 11 Dec 2020 14:56:02 +0100
+
 rust-proxmox-api-macro (0.2.4-1) unstable; urgency=medium
 
   * support raw parameter name identifiers (eg. `r#type`)
