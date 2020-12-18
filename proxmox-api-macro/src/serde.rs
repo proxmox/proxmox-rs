@@ -159,12 +159,15 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
 #[derive(Default)]
 pub struct SerdeAttrib {
     pub rename: Option<FieldName>,
+    pub flatten: bool,
 }
 
 impl TryFrom<&[syn::Attribute]> for SerdeAttrib {
     type Error = syn::Error;
 
     fn try_from(attributes: &[syn::Attribute]) -> Result<Self, syn::Error> {
+        use syn::{Meta, NestedMeta};
+
         let mut this: Self = Default::default();
 
         for attrib in attributes {
@@ -174,8 +177,8 @@ impl TryFrom<&[syn::Attribute]> for SerdeAttrib {
 
             let args: AttrArgs = syn::parse2(attrib.tokens.clone())?;
             for arg in args.args {
-                if let syn::NestedMeta::Meta(syn::Meta::NameValue(var)) = arg {
-                    if var.path.is_ident("rename") {
+                match arg {
+                    NestedMeta::Meta(Meta::NameValue(var)) if var.path.is_ident("rename") => {
                         match var.lit {
                             syn::Lit::Str(lit) => {
                                 let rename = FieldName::from(&lit);
@@ -187,6 +190,10 @@ impl TryFrom<&[syn::Attribute]> for SerdeAttrib {
                             _ => error!(var.lit => "'rename' value must be a string literal"),
                         }
                     }
+                    NestedMeta::Meta(Meta::Path(path)) if path.is_ident("flatten") => {
+                        this.flatten = true;
+                    }
+                    _ => continue,
                 }
             }
         }
