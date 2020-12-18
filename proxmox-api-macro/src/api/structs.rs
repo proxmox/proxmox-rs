@@ -21,7 +21,7 @@ use quote::quote_spanned;
 use super::Schema;
 use crate::api::{self, SchemaItem};
 use crate::serde;
-use crate::util::{self, FieldName, JSONObject};
+use crate::util::{self, FieldName, JSONObject, Maybe};
 
 pub fn handle_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<TokenStream, Error> {
     match &stru.fields {
@@ -142,6 +142,9 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
 
     let container_attrs = serde::ContainerAttrib::try_from(&stru.attrs[..])?;
 
+    let mut all_of_schemas = TokenStream::new();
+    let mut to_remove = Vec::new();
+
     if let syn::Fields::Named(ref fields) = &stru.fields {
         for field in &fields.named {
             let attrs = serde::SerdeAttrib::try_from(&field.attrs[..])?;
@@ -162,19 +165,34 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
                 }
             };
 
-            if attrs.flatten {
-                if let Some(field) = schema_fields.remove(&name) {
-                    error!(
-                        field.0.span(),
-                        "flattened field should not appear in schema, \
-                         its name does not appear in serialized data",
-                    );
-                }
-            }
-
             match schema_fields.remove(&name) {
                 Some(field_def) => {
+                    if attrs.flatten {
+                        to_remove.push(name.clone());
+
+                        let name = &field_def.0;
+                        let optional = &field_def.1;
+                        let schema = &field_def.2;
+                        if schema.description.is_explicit() {
+                            error!(
+                                name.span(),
+                                "flattened field should not have a description, \
+                                 it does not appear in serialized data as a field",
+                            );
+                        }
+
+                        if *optional {
+                            error!(name.span(), "optional flattened fields are not supported");
+                        }
+                    }
+
                     handle_regular_field(field_def, field, false)?;
+
+                    if attrs.flatten {
+                        all_of_schemas.extend(quote::quote! {&});
+                        field_def.2.to_schema(&mut all_of_schemas)?;
+                        all_of_schemas.extend(quote::quote! {,});
+                    }
                 }
                 None => {
                     let mut field_def = (
@@ -183,7 +201,15 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
                         Schema::blank(span),
                     );
                     handle_regular_field(&mut field_def, field, true)?;
-                    new_fields.push(field_def);
+
+                    if attrs.flatten {
+                        all_of_schemas.extend(quote::quote! {&});
+                        field_def.2.to_schema(&mut all_of_schemas)?;
+                        all_of_schemas.extend(quote::quote! {,});
+                        to_remove.push(name.clone());
+                    } else {
+                        new_fields.push(field_def);
+                    }
                 }
             }
         }
@@ -200,14 +226,83 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
         );
     }
 
-    // add the fields we derived:
     if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
+        // remove flattened fields
+        for field in to_remove {
+            if !obj.remove_property_by_ident(&field) {
+                error!(
+                    schema.span,
+                    "internal error: failed to remove property {:?} from object schema", field,
+                );
+            }
+        }
+
+        // add derived fields
         obj.extend_properties(new_fields);
     } else {
         panic!("handle_regular_struct with non-object schema");
     }
 
-    finish_schema(schema, &stru, &stru.ident)
+    if all_of_schemas.is_empty() {
+        finish_schema(schema, &stru, &stru.ident)
+    } else {
+        let name = &stru.ident;
+
+        // take out the inner object schema's description
+        let description = match schema.description.take().ok() {
+            Some(description) => description,
+            None => {
+                error!(schema.span, "missing description on api type struct");
+                syn::LitStr::new("<missing description>", schema.span)
+            }
+        };
+        // and replace it with a "dummy"
+        schema.description = Maybe::Derived(syn::LitStr::new(
+            &format!("<INNER: {}>", description.value()),
+            description.span(),
+        ));
+
+        // now check if it even has any fields
+        let has_fields = match &schema.item {
+            api::SchemaItem::Object(obj) => !obj.is_empty(),
+            _ => panic!("object schema is not an object schema?"),
+        };
+
+        let (inner_schema, inner_schema_ref) = if has_fields {
+            // if it does, we need to create an "inner" schema to merge into the AllOf schema
+            let obj_schema = {
+                let mut ts = TokenStream::new();
+                schema.to_schema(&mut ts)?;
+                ts
+            };
+
+            (
+                quote_spanned!(name.span() =>
+                    const INNER_API_SCHEMA: ::proxmox::api::schema::Schema = #obj_schema;
+                ),
+                quote_spanned!(name.span() => &Self::INNER_API_SCHEMA,),
+            )
+        } else {
+            // otherwise it stays empty
+            (TokenStream::new(), TokenStream::new())
+        };
+
+        Ok(quote_spanned!(name.span() =>
+            #stru
+            impl #name {
+                #inner_schema
+                pub const API_SCHEMA: ::proxmox::api::schema::Schema =
+                    ::proxmox::api::schema::AllOfSchema::new(
+                        #description,
+                        &[
+                            #inner_schema_ref
+                            #all_of_schemas
+                        ],
+                    )
+                    .schema();
+            }
+        ))
+    }
 }
 
 /// Field handling:

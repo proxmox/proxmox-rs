@@ -398,6 +398,11 @@ impl SchemaObject {
     }
 
     #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.properties_.is_empty()
+    }
+
+    #[inline]
     fn properties_mut(&mut self) -> &mut [(FieldName, bool, Schema)] {
         &mut self.properties_
     }
@@ -456,6 +461,20 @@ impl SchemaObject {
         self.properties_
             .iter_mut()
             .find(|p| p.0.as_ident_str() == key)
+    }
+
+    fn remove_property_by_ident(&mut self, key: &str) -> bool {
+        match self
+            .properties_
+            .iter()
+            .position(|(name, _, _)| name.as_ident_str() == key)
+        {
+            Some(index) => {
+                self.properties_.remove(index);
+                true
+            }
+            None => false,
+        }
     }
 
     fn extend_properties(&mut self, new_fields: Vec<(FieldName, bool, Schema)>) {
