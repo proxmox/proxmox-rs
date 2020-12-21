@@ -20,6 +20,7 @@ pub mod serde;
 pub mod time;
 pub mod uuid;
 pub mod vec;
+pub mod future;
 
 #[cfg(feature = "websocket")]
 pub mod websocket;
