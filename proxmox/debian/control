@@ -87,8 +87,8 @@ Provides:
  librust-proxmox-0+test-harness-dev (= ${binary:Version}),
  librust-proxmox-0.9-dev (= ${binary:Version}),
  librust-proxmox-0.9+test-harness-dev (= ${binary:Version}),
- librust-proxmox-0.9.0-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+test-harness-dev (= ${binary:Version})
+ librust-proxmox-0.9.1-dev (= ${binary:Version}),
+ librust-proxmox-0.9.1+test-harness-dev (= ${binary:Version})
 Description: Proxmox library - Rust source code
  This package contains the source for the Rust proxmox crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -106,8 +106,8 @@ Provides:
  librust-proxmox-0+proxmox-api-macro-dev (= ${binary:Version}),
  librust-proxmox-0.9+api-macro-dev (= ${binary:Version}),
  librust-proxmox-0.9+proxmox-api-macro-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+api-macro-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+proxmox-api-macro-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+api-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.9.1+proxmox-api-macro-dev (= ${binary:Version})
 Description: Proxmox library - feature "api-macro" and 1 more
  This metapackage enables feature "api-macro" for the Rust proxmox crate, by
  pulling in any additional dependencies needed by that feature.
@@ -127,8 +127,8 @@ Provides:
  librust-proxmox-0+u2f-dev (= ${binary:Version}),
  librust-proxmox-0.9+base32-dev (= ${binary:Version}),
  librust-proxmox-0.9+u2f-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+base32-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+u2f-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+base32-dev (= ${binary:Version}),
+ librust-proxmox-0.9.1+u2f-dev (= ${binary:Version})
 Description: Proxmox library - feature "base32" and 1 more
  This metapackage enables feature "base32" for the Rust proxmox crate, by
  pulling in any additional dependencies needed by that feature.
@@ -147,7 +147,7 @@ Depends:
 Provides:
  librust-proxmox-0+cli-dev (= ${binary:Version}),
  librust-proxmox-0.9+cli-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+cli-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+cli-dev (= ${binary:Version})
 Description: Proxmox library - feature "cli"
  This metapackage enables feature "cli" for the Rust proxmox crate, by pulling
  in any additional dependencies needed by that feature.
@@ -166,7 +166,7 @@ Depends:
 Provides:
  librust-proxmox-0+default-dev (= ${binary:Version}),
  librust-proxmox-0.9+default-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+default-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+default-dev (= ${binary:Version})
 Description: Proxmox library - feature "default"
  This metapackage enables feature "default" for the Rust proxmox crate, by
  pulling in any additional dependencies needed by that feature.
@@ -182,7 +182,7 @@ Depends:
 Provides:
  librust-proxmox-0+examples-dev (= ${binary:Version}),
  librust-proxmox-0.9+examples-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+examples-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+examples-dev (= ${binary:Version})
 Description: Proxmox library - feature "examples"
  This metapackage enables feature "examples" for the Rust proxmox crate, by
  pulling in any additional dependencies needed by that feature.
@@ -197,7 +197,7 @@ Depends:
 Provides:
  librust-proxmox-0+futures-dev (= ${binary:Version}),
  librust-proxmox-0.9+futures-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+futures-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+futures-dev (= ${binary:Version})
 Description: Proxmox library - feature "futures"
  This metapackage enables feature "futures" for the Rust proxmox crate, by
  pulling in any additional dependencies needed by that feature.
@@ -212,7 +212,7 @@ Depends:
 Provides:
  librust-proxmox-0+hyper-dev (= ${binary:Version}),
  librust-proxmox-0.9+hyper-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+hyper-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+hyper-dev (= ${binary:Version})
 Description: Proxmox library - feature "hyper"
  This metapackage enables feature "hyper" for the Rust proxmox crate, by pulling
  in any additional dependencies needed by that feature.
@@ -230,8 +230,8 @@ Provides:
  librust-proxmox-0+tfa-dev (= ${binary:Version}),
  librust-proxmox-0.9+openssl-dev (= ${binary:Version}),
  librust-proxmox-0.9+tfa-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+openssl-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+tfa-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+openssl-dev (= ${binary:Version}),
+ librust-proxmox-0.9.1+tfa-dev (= ${binary:Version})
 Description: Proxmox library - feature "openssl" and 1 more
  This metapackage enables feature "openssl" for the Rust proxmox crate, by
  pulling in any additional dependencies needed by that feature.
@@ -251,8 +251,8 @@ Provides:
  librust-proxmox-0+sortable-macro-dev (= ${binary:Version}),
  librust-proxmox-0.9+proxmox-sortable-macro-dev (= ${binary:Version}),
  librust-proxmox-0.9+sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+proxmox-sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+sortable-macro-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+proxmox-sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.9.1+sortable-macro-dev (= ${binary:Version})
 Description: Proxmox library - feature "proxmox-sortable-macro" and 1 more
  This metapackage enables feature "proxmox-sortable-macro" for the Rust proxmox
  crate, by pulling in any additional dependencies needed by that feature.
@@ -270,7 +270,7 @@ Depends:
 Provides:
  librust-proxmox-0+router-dev (= ${binary:Version}),
  librust-proxmox-0.9+router-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+router-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+router-dev (= ${binary:Version})
 Description: Proxmox library - feature "router"
  This metapackage enables feature "router" for the Rust proxmox crate, by
  pulling in any additional dependencies needed by that feature.
@@ -285,7 +285,7 @@ Depends:
 Provides:
  librust-proxmox-0+tokio-dev (= ${binary:Version}),
  librust-proxmox-0.9+tokio-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+tokio-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+tokio-dev (= ${binary:Version})
 Description: Proxmox library - feature "tokio"
  This metapackage enables feature "tokio" for the Rust proxmox crate, by pulling
  in any additional dependencies needed by that feature.
@@ -304,7 +304,7 @@ Depends:
 Provides:
  librust-proxmox-0+websocket-dev (= ${binary:Version}),
  librust-proxmox-0.9+websocket-dev (= ${binary:Version}),
- librust-proxmox-0.9.0+websocket-dev (= ${binary:Version})
+ librust-proxmox-0.9.1+websocket-dev (= ${binary:Version})
 Description: Proxmox library - feature "websocket"
  This metapackage enables feature "websocket" for the Rust proxmox crate, by
  pulling in any additional dependencies needed by that feature.

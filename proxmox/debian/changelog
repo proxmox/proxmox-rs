@@ -10,7 +10,7 @@ rust-proxmox (0.9.0-2) unstable; urgency=medium
 
  -- Proxmox Support Team <support@proxmox.com>  Tue, 22 Dec 2020 08:05:44 +0100
 
-rust-proxmox (0.9.0-1) UNRELEASED; urgency=medium
+rust-proxmox (0.9.0-1) unstable; urgency=medium
 
   * `ApiMethod.returns` is now a `router::ReturnType` rather than a direct
     `&Schema` reference and can be marked as `optional`.

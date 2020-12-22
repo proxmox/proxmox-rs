@@ -1,4 +1,4 @@
-rust-proxmox-api-macro (0.3.0-1) UNRELEASED; urgency=medium
+rust-proxmox-api-macro (0.3.0-1) unstable; urgency=medium
 
   * removed `pub const API_RETURN_SCHEMA_*` generation
     This could already be accessed via the public `API_METHOD_FOO.returns`.
