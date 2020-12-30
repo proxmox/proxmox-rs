@@ -270,7 +270,7 @@ pub fn parse_rfc3339(input_str: &str) -> Result<i64, Error> {
 
         let hours = check_max(digit(20)? * 10 + digit(21)?, 23)?;
         expect(22, b':')?;
-        let mins = check_max(digit(23)? * 10 + digit(24)?, 23)?;
+        let mins = check_max(digit(23)? * 10 + digit(24)?, 59)?;
 
         let offset = (hours * 3600 + mins * 60) as i64;
 
@@ -384,4 +384,17 @@ fn test_gmtime_range() {
     assert_eq!(upper, res);
 
     gmtime(upper + 1).expect_err("gmtime should fail for years not fitting into i32");
+}
+
+#[test]
+fn test_timezones() {
+    let input = "2020-12-30T00:00:00+06:30";
+    let epoch = 1609263000;
+    let expected_utc = "2020-12-29T17:30:00Z";
+
+    let parsed = parse_rfc3339(input).expect("parsing failed");
+    assert_eq!(parsed, epoch);
+
+    let res = epoch_to_rfc3339_utc(parsed).expect("converting to RFC failed");
+    assert_eq!(expected_utc, res);
 }
