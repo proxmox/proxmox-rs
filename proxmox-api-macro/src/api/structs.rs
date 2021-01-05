@@ -246,63 +246,73 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
     if all_of_schemas.is_empty() {
         finish_schema(schema, &stru, &stru.ident)
     } else {
-        let name = &stru.ident;
-
-        // take out the inner object schema's description
-        let description = match schema.description.take().ok() {
-            Some(description) => description,
-            None => {
-                error!(schema.span, "missing description on api type struct");
-                syn::LitStr::new("<missing description>", schema.span)
-            }
-        };
-        // and replace it with a "dummy"
-        schema.description = Maybe::Derived(syn::LitStr::new(
-            &format!("<INNER: {}>", description.value()),
-            description.span(),
-        ));
-
-        // now check if it even has any fields
-        let has_fields = match &schema.item {
-            api::SchemaItem::Object(obj) => !obj.is_empty(),
-            _ => panic!("object schema is not an object schema?"),
-        };
-
-        let (inner_schema, inner_schema_ref) = if has_fields {
-            // if it does, we need to create an "inner" schema to merge into the AllOf schema
-            let obj_schema = {
-                let mut ts = TokenStream::new();
-                schema.to_schema(&mut ts)?;
-                ts
-            };
-
-            (
-                quote_spanned!(name.span() =>
-                    const INNER_API_SCHEMA: ::proxmox::api::schema::Schema = #obj_schema;
-                ),
-                quote_spanned!(name.span() => &Self::INNER_API_SCHEMA,),
-            )
-        } else {
-            // otherwise it stays empty
-            (TokenStream::new(), TokenStream::new())
-        };
-
-        Ok(quote_spanned!(name.span() =>
-            #stru
-            impl #name {
-                #inner_schema
-                pub const API_SCHEMA: ::proxmox::api::schema::Schema =
-                    ::proxmox::api::schema::AllOfSchema::new(
-                        #description,
-                        &[
-                            #inner_schema_ref
-                            #all_of_schemas
-                        ],
-                    )
-                    .schema();
-            }
-        ))
+        finish_all_of_struct(stru, schema, all_of_schemas)
     }
+}
+
+/// If we have flattened fields the struct schema is not the "final" schema, but part of an AllOf
+/// schema containing it and all the flattened field schemas.
+fn finish_all_of_struct(
+    stru: syn::ItemStruct,
+    mut schema: Schema,
+    all_of_schemas: TokenStream,
+) -> Result<TokenStream, Error> {
+    let name = &stru.ident;
+
+    // take out the inner object schema's description
+    let description = match schema.description.take().ok() {
+        Some(description) => description,
+        None => {
+            error!(schema.span, "missing description on api type struct");
+            syn::LitStr::new("<missing description>", schema.span)
+        }
+    };
+    // and replace it with a "dummy"
+    schema.description = Maybe::Derived(syn::LitStr::new(
+        &format!("<INNER: {}>", description.value()),
+        description.span(),
+    ));
+
+    // now check if it even has any fields
+    let has_fields = match &schema.item {
+        api::SchemaItem::Object(obj) => !obj.is_empty(),
+        _ => panic!("object schema is not an object schema?"),
+    };
+
+    let (inner_schema, inner_schema_ref) = if has_fields {
+        // if it does, we need to create an "inner" schema to merge into the AllOf schema
+        let obj_schema = {
+            let mut ts = TokenStream::new();
+            schema.to_schema(&mut ts)?;
+            ts
+        };
+
+        (
+            quote_spanned!(name.span() =>
+                const INNER_API_SCHEMA: ::proxmox::api::schema::Schema = #obj_schema;
+            ),
+            quote_spanned!(name.span() => &Self::INNER_API_SCHEMA,),
+        )
+    } else {
+        // otherwise it stays empty
+        (TokenStream::new(), TokenStream::new())
+    };
+
+    Ok(quote_spanned!(name.span() =>
+        #stru
+        impl #name {
+            #inner_schema
+            pub const API_SCHEMA: ::proxmox::api::schema::Schema =
+                ::proxmox::api::schema::AllOfSchema::new(
+                    #description,
+                    &[
+                        #inner_schema_ref
+                        #all_of_schemas
+                    ],
+                )
+                .schema();
+        }
+    ))
 }
 
 /// Field handling:
