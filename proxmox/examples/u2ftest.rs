@@ -52,7 +52,7 @@ use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Request, Response, Server};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tokio::stream::StreamExt;
+use futures::stream::TryStreamExt;
 
 use proxmox::tools::tfa::u2f;
 
@@ -65,7 +65,7 @@ fn main() {
 }
 
 #[cfg(feature = "examples")]
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Error> {
     do_main().await
 }
