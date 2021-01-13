@@ -1,6 +1,5 @@
 use super::*;
 
-use crate::api::router::ParameterSchema;
 use crate::api::schema::*;
 
 fn record_done_argument(

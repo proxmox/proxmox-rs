@@ -10,7 +10,7 @@ use hyper::Body;
 use percent_encoding::percent_decode_str;
 use serde_json::Value;
 
-use crate::api::schema::{self, AllOfSchema, ObjectSchema, Schema};
+use crate::api::schema::{self, ObjectSchema, ParameterSchema, Schema};
 use crate::api::RpcEnvironment;
 
 use super::Permission;
@@ -427,59 +427,6 @@ impl std::fmt::Debug for ReturnType {
 impl ReturnType {
     pub const fn new(optional: bool, schema: &'static Schema) -> Self {
         Self { optional, schema }
-    }
-}
-
-/// Parameters are objects, but we have two types of object schemas, the regular one and the
-/// `AllOf` schema.
-#[derive(Clone, Copy, Debug)]
-#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
-pub enum ParameterSchema {
-    Object(&'static ObjectSchema),
-    AllOf(&'static AllOfSchema),
-}
-
-impl schema::ObjectSchemaType for ParameterSchema {
-    type PropertyIter = Box<dyn Iterator<Item = &'static schema::SchemaPropertyEntry>>;
-
-    fn description(&self) -> &'static str {
-        match self {
-            ParameterSchema::Object(o) => o.description(),
-            ParameterSchema::AllOf(o) => o.description(),
-        }
-    }
-
-    fn lookup(&self, key: &str) -> Option<(bool, &Schema)> {
-        match self {
-            ParameterSchema::Object(o) => o.lookup(key),
-            ParameterSchema::AllOf(o) => o.lookup(key),
-        }
-    }
-
-    fn properties(&self) -> Self::PropertyIter {
-        match self {
-            ParameterSchema::Object(o) => Box::new(o.properties()),
-            ParameterSchema::AllOf(o) => Box::new(o.properties()),
-        }
-    }
-
-    fn additional_properties(&self) -> bool {
-        match self {
-            ParameterSchema::Object(o) => o.additional_properties(),
-            ParameterSchema::AllOf(o) => o.additional_properties(),
-        }
-    }
-}
-
-impl From<&'static ObjectSchema> for ParameterSchema {
-    fn from(schema: &'static ObjectSchema) -> Self {
-        ParameterSchema::Object(schema)
-    }
-}
-
-impl From<&'static AllOfSchema> for ParameterSchema {
-    fn from(schema: &'static AllOfSchema) -> Self {
-        ParameterSchema::AllOf(schema)
     }
 }
 

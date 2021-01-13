@@ -19,7 +19,7 @@ syn = { version = "1.0", features = [ "full", "visit-mut" ] }
 
 [dev-dependencies]
 futures = "0.3"
-proxmox = { path = "../proxmox", features = [ "test-harness" ] }
+proxmox = { version = "0.9.1", path = "../proxmox", features = [ "test-harness" ] }
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"

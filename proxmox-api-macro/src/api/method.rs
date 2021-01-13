@@ -677,7 +677,7 @@ fn serialize_input_schema(
                 pub const #input_schema_name: ::proxmox::api::schema::ObjectSchema = #ts;
             },
             quote_spanned! { func_sig_span =>
-                ::proxmox::api::router::ParameterSchema::Object(&#input_schema_name)
+                ::proxmox::api::schema::ParameterSchema::Object(&#input_schema_name)
             },
         ));
     }
@@ -750,7 +750,7 @@ fn serialize_input_schema(
                 );
         },
         quote_spanned! { func_sig_span =>
-            ::proxmox::api::router::ParameterSchema::AllOf(&#input_schema_name)
+            ::proxmox::api::schema::ParameterSchema::AllOf(&#input_schema_name)
         },
     ))
 }

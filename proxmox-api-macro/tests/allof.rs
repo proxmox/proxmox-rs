@@ -136,7 +136,7 @@ pub fn hello(it: IndexText, nv: NameValue) -> Result<(NameValue, IndexText), Err
 fn hello_schema_check() {
     const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new_full(
         &::proxmox::api::ApiHandler::Sync(&api_function_hello),
-        ::proxmox::api::router::ParameterSchema::AllOf(&::proxmox::api::schema::AllOfSchema::new(
+        ::proxmox::api::schema::ParameterSchema::AllOf(&::proxmox::api::schema::AllOfSchema::new(
             "Hello method.",
             &[&IndexText::API_SCHEMA, &NameValue::API_SCHEMA],
         )),
@@ -176,7 +176,7 @@ fn with_extra_schema_check() {
 
     const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new_full(
         &::proxmox::api::ApiHandler::Sync(&api_function_with_extra),
-        ::proxmox::api::router::ParameterSchema::AllOf(&::proxmox::api::schema::AllOfSchema::new(
+        ::proxmox::api::schema::ParameterSchema::AllOf(&::proxmox::api::schema::AllOfSchema::new(
             "Extra method.",
             &[
                 &INNER_SCHEMA,

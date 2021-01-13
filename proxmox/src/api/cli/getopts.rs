@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use anyhow::*;
 use serde_json::Value;
 
-use crate::api::router::ParameterSchema;
 use crate::api::schema::*;
 
 #[derive(Debug)]
