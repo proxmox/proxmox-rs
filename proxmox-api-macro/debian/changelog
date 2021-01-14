@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (0.3.1-1) unstable; urgency=medium
+
+  * adapt to ParameterSchema move from router:: to schema::
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 14 Jan 2021 15:38:42 +0100
+
 rust-proxmox-api-macro (0.3.0-1) unstable; urgency=medium
 
   * removed `pub const API_RETURN_SCHEMA_*` generation
