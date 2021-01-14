@@ -1,3 +1,17 @@
+rust-proxmox (0.10.0-1) unstable; urgency=medium
+
+  * time: fix parsing non-full-hour TZ offsets
+
+  * update to rustyline 7
+
+  * update to tokio 1.0
+
+  * tokio 1.0: drop TimeoutFutureExt
+
+  * move ParameterSchema from router to schema
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 14 Jan 2021 15:31:27 +0100
+
 rust-proxmox (0.9.1-1) unstable; urgency=medium
 
   * add tools::future with TimeoutFutureExt
