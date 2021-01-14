@@ -11,6 +11,9 @@ deb: $(foreach c,$(CRATES), $c-deb)
 	echo $(foreach c,$(CRATES), $c-deb)
 	lintian build/*.deb
 
+.PHONY: autopkgtest
+autopkgtest: $(foreach c,$(CRATES), $c-autopkgtest)
+
 .PHONY: dinstall
 dinstall:
 	$(MAKE) clean
@@ -19,6 +22,10 @@ dinstall:
 
 %-deb:
 	./build.sh $*
+	touch $@
+
+%-autopkgtest:
+	autopkgtest build/$* build/*.deb -- null
 	touch $@
 
 .PHONY: check
@@ -44,7 +51,7 @@ doc:
 .PHONY: clean
 clean:
 	cargo clean
-	rm -rf build *-deb
+	rm -rf build *-deb *-autopkgtest
 
 .PHONY: update
 update:
