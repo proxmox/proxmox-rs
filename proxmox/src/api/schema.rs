@@ -532,7 +532,7 @@ impl ObjectSchemaType for ObjectSchema {
     }
 
     fn properties(&self) -> Self::PropertyIter {
-        self.properties.into_iter()
+        self.properties.iter()
     }
 
     fn additional_properties(&self) -> bool {
@@ -553,7 +553,7 @@ impl ObjectSchemaType for AllOfSchema {
 
     fn properties(&self) -> Self::PropertyIter {
         AllOfProperties {
-            schemas: self.list.into_iter(),
+            schemas: self.list.iter(),
             properties: None,
         }
     }
