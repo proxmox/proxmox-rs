@@ -37,7 +37,7 @@ pub use as_any::AsAny;
 #[macro_export]
 macro_rules! offsetof {
     ($ty:ty, $field:ident) => {
-        unsafe { &(*(0 as *const $ty)).$field as *const _ as usize }
+        unsafe { &(*(std::ptr::null::<$ty>())).$field as *const _ as usize }
     };
 }
 
