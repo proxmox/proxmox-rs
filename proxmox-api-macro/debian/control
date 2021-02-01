@@ -14,8 +14,8 @@ Build-Depends: debhelper (>= 11),
  librust-syn-1+visit-mut-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.4.1
-Vcs-Git: 
-Vcs-Browser: 
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 
 Package: librust-proxmox-api-macro-dev
 Architecture: any

@@ -1,11 +1,10 @@
 overlay = "."
 crate_src_path = ".."
+maintainer = "Proxmox Support Team <support@proxmox.com>"
 
 [source]
-# TODO: update once public
-vcs_git = ""
-vcs_browser = ""
-maintainer = "Proxmox Support Team <support@proxmox.com>"
+vcs_git = "git://git.proxmox.com/git/proxmox.git"
+vcs_browser = "https://git.proxmox.com/?p=proxmox.git"
 
 [packages.lib]
 depends = [ "uuid-dev" ]
