@@ -555,6 +555,7 @@ impl ObjectSchemaType for AllOfSchema {
         AllOfProperties {
             schemas: self.list.iter(),
             properties: None,
+            nested: None,
         }
     }
 
@@ -567,6 +568,7 @@ impl ObjectSchemaType for AllOfSchema {
 pub struct AllOfProperties {
     schemas: std::slice::Iter<'static, &'static Schema>,
     properties: Option<std::slice::Iter<'static, SchemaPropertyEntry>>,
+    nested: Option<Box<AllOfProperties>>,
 }
 
 impl Iterator for AllOfProperties {
@@ -574,12 +576,17 @@ impl Iterator for AllOfProperties {
 
     fn next(&mut self) -> Option<&'static SchemaPropertyEntry> {
         loop {
+            match self.nested.as_mut().and_then(Iterator::next) {
+                Some(item) => return Some(item),
+                None => self.nested = None,
+            }
+
             match self.properties.as_mut().and_then(Iterator::next) {
                 Some(item) => return Some(item),
                 None => match self.schemas.next()? {
+                    Schema::AllOf(o) => self.nested = Some(Box::new(o.properties())),
                     Schema::Object(o) => self.properties = Some(o.properties()),
                     _ => {
-                        // this case is actually illegal
                         self.properties = None;
                         continue;
                     }
