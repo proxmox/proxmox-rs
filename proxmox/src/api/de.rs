@@ -5,7 +5,7 @@ use std::fmt;
 use serde::de::{self, IntoDeserializer, Visitor};
 use serde_json::Value;
 
-use crate::api::schema::{ObjectSchema, ObjectSchemaType, Schema};
+use crate::api::schema::{ObjectSchemaType, Schema};
 
 pub struct Error {
     inner: anyhow::Error,
@@ -43,7 +43,7 @@ impl From<serde_json::Error> for Error {
 
 pub struct ExtractValueDeserializer<'o> {
     object: &'o mut serde_json::Map<String, Value>,
-    schema: &'static ObjectSchema,
+    schema: &'static Schema,
 }
 
 impl<'o> ExtractValueDeserializer<'o> {
@@ -52,7 +52,7 @@ impl<'o> ExtractValueDeserializer<'o> {
         schema: &'static Schema,
     ) -> Option<Self> {
         match schema {
-            Schema::Object(schema) => Some(Self { object, schema }),
+            Schema::Object(_) | Schema::AllOf(_) => Some(Self { object, schema }),
             _ => None,
         }
     }
@@ -95,10 +95,23 @@ impl<'de> de::Deserializer<'de> for ExtractValueDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_map(MapAccess::<'de>::new(
-            self.object,
-            self.schema.properties().map(|(name, _, _)| *name),
-        ))
+        use serde::de::Error;
+
+        match self.schema {
+            Schema::Object(schema) => visitor.visit_map(MapAccess::<'de>::new(
+                self.object,
+                schema.properties().map(|(name, _, _)| *name),
+            )),
+            Schema::AllOf(schema) => visitor.visit_map(MapAccess::<'de>::new(
+                self.object,
+                schema.properties().map(|(name, _, _)| *name),
+            )),
+
+            // The following should be caught by ExtractValueDeserializer::new()!
+            _ => Err(Error::custom(
+                "ExtractValueDeserializer used with invalid schema",
+            )),
+        }
     }
 
     fn deserialize_struct<V>(
@@ -110,10 +123,23 @@ impl<'de> de::Deserializer<'de> for ExtractValueDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_map(MapAccess::<'de>::new(
-            self.object,
-            self.schema.properties().map(|(name, _, _)| *name),
-        ))
+        use serde::de::Error;
+
+        match self.schema {
+            Schema::Object(schema) => visitor.visit_map(MapAccess::<'de>::new(
+                self.object,
+                schema.properties().map(|(name, _, _)| *name),
+            )),
+            Schema::AllOf(schema) => visitor.visit_map(MapAccess::<'de>::new(
+                self.object,
+                schema.properties().map(|(name, _, _)| *name),
+            )),
+
+            // The following should be caught by ExtractValueDeserializer::new()!
+            _ => Err(Error::custom(
+                "ExtractValueDeserializer used with invalid schema",
+            )),
+        }
     }
 
     deserialize_non_object!(deserialize_i8);
@@ -211,7 +237,7 @@ where
 fn test_extraction() {
     use serde::Deserialize;
 
-    use crate::api::schema::StringSchema;
+    use crate::api::schema::{ObjectSchema, StringSchema};
 
     #[derive(Deserialize)]
     struct Foo {
