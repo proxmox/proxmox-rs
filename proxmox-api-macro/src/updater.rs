@@ -109,7 +109,10 @@ fn derive_named_struct_updatable(
             .expect("unnamed field in named struct?");
 
         let field_name_string = field_name.to_string();
-        let build_err = format!("failed to build value for field '{}': {{}}", field_name_string);
+        let build_err = format!(
+            "failed to build value for field '{}': {{}}",
+            field_name_string
+        );
         if util::is_option_type(&field.ty).is_some() {
             delete.extend(quote! {
                 #field_name_string => { self.#field_name = None; }
@@ -130,8 +133,10 @@ fn derive_named_struct_updatable(
         }
 
         if attrs.fixed {
-            let error =
-                format!("field '{}' must not be set when updating existing data", field_name);
+            let error = format!(
+                "field '{}' must not be set when updating existing data",
+                field_name
+            );
             apply.extend(quote! {
                 if from.#field_name.is_some() {
                     ::anyhow::bail!(#error);
@@ -274,13 +279,11 @@ where
 fn meta_iter(
     attributes: impl IntoIterator<Item = syn::Attribute>,
 ) -> impl Iterator<Item = syn::Meta> {
-    attributes
-        .into_iter()
-        .filter_map(|attr| {
-            if attr.style != syn::AttrStyle::Outer {
-                return None;
-            }
+    attributes.into_iter().filter_map(|attr| {
+        if attr.style != syn::AttrStyle::Outer {
+            return None;
+        }
 
-            attr.parse_meta().ok()
-        })
+        attr.parse_meta().ok()
+    })
 }
