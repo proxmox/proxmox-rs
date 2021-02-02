@@ -474,7 +474,7 @@ impl ObjectSchema {
 /// Note that these are limited to object schemas. Other schemas will produce errors.
 ///
 /// Technically this could also contain an `additional_properties` flag, however, in the JSON
-/// Schema[1], this is not supported, so here we simply assume additional properties to be allowed.
+/// Schema, this is not supported, so here we simply assume additional properties to be allowed.
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct AllOfSchema {
