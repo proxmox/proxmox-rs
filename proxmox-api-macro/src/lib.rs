@@ -229,6 +229,87 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     declarations. If it contains a `schema` key, this is expected to be the path to an existing
     schema. (Hence `type: Foo` is the same as `schema: Foo::API_SCHEMA`.)
 
+    # Deriving an `Updater`:
+
+    An "Updater" struct can be generated automatically for a type. This affects the `Updatable`
+    trait implementation generated, as it will set the associated
+    `type Updater = TheDerivedUpdater`.
+
+    In order to do this, simply add `#[derive(Updater)]` to the `#[api]`-macro using api type.
+    This is only supported for `struct`s with named fields and will generate a new `struct` whose
+    name is suffixed with `Updater` containing the `Updater` types of each field as a member.
+
+    Additionally the `#[updater(fixed)]` option is available to make it illegal for an updater to
+    modify a field (generating an error if it is set), while still allowing it to be used to create
+    a new object via the `build_from()` method.
+
+    ```ignore
+    #[api]
+    /// An example of a simple struct type.
+    #[derive(Updater)]
+    pub struct MyType {
+        /// A string.
+        one: String,
+
+        /// An optional string.
+        /// Note that using `Option::is_empty` for the serde attribute only works for types which
+        /// use an `Option` as their `Updater`. For a `String` this works. Otherwise we'd have to
+        /// use `Updater::is_empty` instead.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        opt: Option<String>,
+    }
+    ```
+
+    The above will automatically generate the following:
+    ```ignore
+    #[api]
+    /// An example of a simple struct type.
+    pub struct MyTypeUpdater {
+        one: Option<String>, // really <String as Updatable>::Updater
+
+        #[serde(skip_serializing_if = "Option::is_none")]
+        opt: Option<String>, // really <Option<String> as Updatable>::Updater
+    }
+
+    impl Updater for MyTypeUpdater {
+        fn is_empty(&self) -> bool {
+            self.one.is_empty() && self.opt.is_empty()
+        }
+    }
+
+    impl Updatable for MyType {
+        type Updater = MyTypeUpdater;
+
+        fn update_from<T>(&mut self, from: MyTypeUpdater, delete: &[T]) -> Result<(), Error>
+        where
+            T: AsRef<str>,
+        {
+            for delete in delete {
+                match delete.as_ref() {
+                    "opt" => { self.opt = None; }
+                    _ => (),
+                }
+            }
+
+            self.one.update_from(from.one)?;
+            self.opt.update_from(from.opt)?;
+
+            Ok(())
+        }
+
+        fn try_build_from(from: MyTypeUpdater) -> Result<Self, Error> {
+            Ok(Self {
+                // This amounts to `from.one.ok_or_else("cannot build from None value")?`
+                one: Updatable::try_build_from(from.one)
+                    .map_err(|err| format_err!("failed to build value for field 'one': {}", err))?,
+                // This amounts to `from.opt`
+                opt: Updatable::try_build_from(from.opt)
+                    .map_err(|err| format_err!("failed to build value for field 'opt': {}", err))?,
+            })
+        }
+    }
+
+    ```
 */
 #[proc_macro_attribute]
 pub fn api(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
@@ -238,12 +319,13 @@ pub fn api(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 }
 
 /// This is a dummy derive macro actually handled by `#[api]`!
+#[doc(hidden)]
 #[proc_macro_derive(Updater, attributes(updater, updatable, serde))]
 pub fn derive_updater(_item: TokenStream_1) -> TokenStream_1 {
     TokenStream_1::new()
 }
 
-/// Create the default `Updatable` implementation from an `Option`.
+/// Create the default `Updatable` implementation from an `Option<Self>`.
 #[proc_macro_derive(Updatable, attributes(updatable, serde))]
 pub fn derive_updatable(item: TokenStream_1) -> TokenStream_1 {
     let _error_guard = init_local_error();

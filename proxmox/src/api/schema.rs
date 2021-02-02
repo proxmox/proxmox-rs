@@ -1507,6 +1507,9 @@ fn test_verify_complex_array() {
 }
 
 /// API types are "updatable" in order to support derived "Updater" structs more easily.
+///
+/// By default, any API type is "updatable" by an `Option<Self>`. For types which do not use the
+/// `#[api]` macro, this will need to be explicitly created (or derived via `#[derive(Updatable)]`.
 pub trait Updatable: Sized {
     type Updater: Updater;
     /// This should always be true for the "default" updaters which are just `Option<T>` types.
@@ -1518,6 +1521,13 @@ pub trait Updatable: Sized {
         T: AsRef<str>;
     fn try_build_from(from: Self::Updater) -> Result<Self, Error>;
 }
+
+#[cfg(feature = "api-macro")]
+pub use proxmox_api_macro::Updatable;
+
+#[cfg(feature = "api-macro")]
+#[doc(hidden)]
+pub use proxmox_api_macro::Updater;
 
 macro_rules! basic_updatable {
     ($($ty:ty)*) => {
@@ -1572,7 +1582,14 @@ where
     }
 }
 
-/// A helper type for "Updater" structs.
+/// A helper type for "Updater" structs. This trait is *not* implemented for an api "base" type
+/// when deriving an `Updater` for it, though the generated *updater* type does implement this
+/// trait!
+///
+/// This trait is mostly to figure out if an updater is empty (iow. it should not be applied).
+/// In that, it is useful when a type which should have an updater also has optional fields which
+/// should not be serialized. Instead of `#[serde(skip_serializing_if = "Option::is_none")]`, this
+/// trait's `is_empty` needs to be used via `#[serde(skip_serializing_if = "Updater::is_empty")]`.
 pub trait Updater {
     /// Check if the updater is "none" or "empty".
     fn is_empty(&self) -> bool;
