@@ -2,7 +2,8 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 
-use proc_macro2::{Ident, Span};
+use proc_macro2::{Ident, Span, TokenStream};
+use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
@@ -481,19 +482,19 @@ pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<bool, syn::Erro
     match ty {
         syn::Type::Path(path) if path.qself.is_none() => {
             if path.path.is_ident("String") {
-                schema.item = SchemaItem::String;
+                schema.item = SchemaItem::String(ty.span());
             } else if path.path.is_ident("bool") {
-                schema.item = SchemaItem::Boolean;
-            } else if let Some(ty) = api::INTTYPES.iter().find(|i| path.path.is_ident(i.name)) {
-                schema.item = SchemaItem::Integer;
-                if let Some(min) = ty.minimum {
+                schema.item = SchemaItem::Boolean(ty.span());
+            } else if let Some(info) = api::INTTYPES.iter().find(|i| path.path.is_ident(i.name)) {
+                schema.item = SchemaItem::Integer(ty.span());
+                if let Some(min) = info.minimum {
                     schema.add_default_property("minimum", syn::Expr::Verbatim(min.parse()?));
                 }
-                if let Some(max) = ty.maximum {
+                if let Some(max) = info.maximum {
                     schema.add_default_property("maximum", syn::Expr::Verbatim(max.parse()?));
                 }
             } else if api::NUMBERNAMES.iter().any(|n| path.path.is_ident(n)) {
-                schema.item = SchemaItem::Number;
+                schema.item = SchemaItem::Number(ty.span());
             } else {
                 bail!(ty => "cannot infer parameter type from this rust type");
             }
@@ -531,10 +532,43 @@ pub fn is_option_type(ty: &syn::Type) -> Option<&syn::Type> {
     None
 }
 
+pub fn make_ident_path(ident: Ident) -> syn::Path {
+    syn::Path {
+        leading_colon: None,
+        segments: {
+            let mut s = Punctuated::new();
+            s.push(syn::PathSegment {
+                ident,
+                arguments: syn::PathArguments::None,
+            });
+            s
+        },
+    }
+}
+
+pub fn make_path(span: Span, leading_colon: bool, path: &[&str]) -> syn::Path {
+    syn::Path {
+        leading_colon: if leading_colon {
+            Some(syn::token::Colon2 {
+                spans: [span, span],
+            })
+        } else {
+            None
+        },
+        segments: path
+            .into_iter()
+            .map(|entry| syn::PathSegment {
+                ident: Ident::new(entry, span),
+                arguments: syn::PathArguments::None,
+            })
+            .collect(),
+    }
+}
+
 /// Helper to do basically what `parse_macro_input!` does, except the macro expects a
 /// `TokenStream_1`, and we always have a `TokenStream` from `proc_macro2`.
 pub struct AttrArgs {
-    _paren_token: syn::token::Paren,
+    pub paren_token: syn::token::Paren,
     pub args: Punctuated<syn::NestedMeta, Token![,]>,
 }
 
@@ -542,9 +576,16 @@ impl Parse for AttrArgs {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let content;
         Ok(Self {
-            _paren_token: syn::parenthesized!(content in input),
+            paren_token: syn::parenthesized!(content in input),
             args: Punctuated::parse_terminated(&content)?,
         })
+    }
+}
+
+impl ToTokens for AttrArgs {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.paren_token
+            .surround(tokens, |inner| self.args.to_tokens(inner));
     }
 }
 
@@ -643,4 +684,130 @@ impl<T> Into<Option<T>> for Maybe<T> {
             Maybe::None => None,
         }
     }
+}
+
+/// Helper to iterate over all the `#[derive(...)]` types found in an attribute list.
+pub fn derived_items(attributes: &[syn::Attribute]) -> DerivedItems {
+    DerivedItems {
+        attributes: attributes.into_iter(),
+        current: None,
+    }
+}
+
+/// Iterator over the types found in `#[derive(...)]` attributes.
+pub struct DerivedItems<'a> {
+    current: Option<<Punctuated<syn::NestedMeta, Token![,]> as IntoIterator>::IntoIter>,
+    attributes: std::slice::Iter<'a, syn::Attribute>,
+}
+
+impl<'a> Iterator for DerivedItems<'a> {
+    type Item = syn::Path;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if let Some(current) = &mut self.current {
+                loop {
+                    match current.next() {
+                        Some(syn::NestedMeta::Meta(syn::Meta::Path(path))) => return Some(path),
+                        Some(_) => continue,
+                        None => {
+                            self.current = None;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            let attr = self.attributes.next()?;
+            if attr.style != syn::AttrStyle::Outer {
+                continue;
+            }
+
+            match attr.parse_meta() {
+                Ok(syn::Meta::List(list)) if list.path.is_ident("derive") => {
+                    self.current = Some(list.nested.into_iter());
+                    continue;
+                }
+                // ignore anything that isn't a `derive(...)` attribute
+                Ok(_) => continue,
+                // ignore parse errors
+                Err(_) => continue,
+            }
+        }
+    }
+}
+
+/// Helper to iterate over all the `#[derive(...)]` types found in an attribute list.
+pub fn retain_derived_items<F>(attributes: &mut Vec<syn::Attribute>, mut func: F)
+where
+    F: FnMut(&syn::Path) -> bool,
+{
+    use syn::punctuated::Pair;
+
+    let capacity = attributes.len();
+    for mut attr in std::mem::replace(attributes, Vec::with_capacity(capacity)) {
+        if attr.style != syn::AttrStyle::Outer {
+            attributes.push(attr);
+            continue;
+        }
+
+        if !attr.path.is_ident("derive") {
+            attributes.push(attr);
+            continue;
+        }
+
+        let mut args: AttrArgs = match syn::parse2(attr.tokens.clone()) {
+            Ok(args) => args,
+            Err(_) => {
+                // if we can't parse it, we don't care
+                attributes.push(attr);
+                continue;
+            }
+        };
+
+        for arg in std::mem::take(&mut args.args).into_pairs() {
+            match arg {
+                Pair::Punctuated(item, punct) => {
+                    if let syn::NestedMeta::Meta(syn::Meta::Path(path)) = &item {
+                        if !func(path) {
+                            continue;
+                        }
+                    }
+                    args.args.push_value(item);
+                    args.args.push_punct(punct);
+                }
+                Pair::End(item) => {
+                    if let syn::NestedMeta::Meta(syn::Meta::Path(path)) = &item {
+                        if !func(path) {
+                            continue;
+                        }
+                    }
+                    args.args.push_value(item);
+                }
+            }
+        }
+
+        if !args.args.is_empty() {
+            attr.tokens = args.into_token_stream();
+            attributes.push(attr);
+        }
+    }
+}
+
+pub fn make_attribute(span: Span, path: syn::Path, tokens: TokenStream) -> syn::Attribute {
+    syn::Attribute {
+        pound_token: syn::token::Pound { spans: [span] },
+        style: syn::AttrStyle::Outer,
+        bracket_token: syn::token::Bracket { span },
+        path,
+        tokens,
+    }
+}
+
+pub fn make_derive_attribute(span: Span, content: TokenStream) -> syn::Attribute {
+    make_attribute(
+        span,
+        make_ident_path(Ident::new("derive", span)),
+        quote::quote! { (#content) },
+    )
 }

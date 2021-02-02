@@ -23,3 +23,8 @@ proxmox = { version = "0.10.0", path = "../proxmox", features = [ "test-harness"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
+
+# [features]
+# # Used to quickly filter out the serde derive noise when using `cargo expand` for debugging!
+# # Add this in case you need it, but don't commit it (to avoid debcargo picking this up)!
+# noserde = []

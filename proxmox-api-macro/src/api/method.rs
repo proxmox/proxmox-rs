@@ -17,7 +17,7 @@ use syn::spanned::Spanned;
 use syn::visit_mut::{self, VisitMut};
 use syn::Ident;
 
-use super::{ObjectEntry, Schema, SchemaItem};
+use super::{ObjectEntry, Schema, SchemaItem, SchemaObject};
 use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
 
 /// A return type in a schema can have an `optional` flag. Other than that it is just a regular
@@ -90,7 +90,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         None => Schema {
             span: Span::call_site(),
             description: Maybe::None,
-            item: SchemaItem::Object(Default::default()),
+            item: SchemaItem::Object(SchemaObject::new(Span::call_site())),
             properties: Vec::new(),
         },
     };
@@ -274,10 +274,10 @@ fn handle_function_signature(
             // try to infer the type in the schema if it is not specified explicitly:
             let is_option = util::infer_type(&mut entry.schema, &*pat_type.ty)?;
             let has_default = entry.schema.find_schema_property("default").is_some();
-            if !is_option && entry.optional && !has_default {
+            if !is_option && entry.optional.expect_bool() && !has_default {
                 error!(pat_type => "optional types need a default or be an Option<T>");
             }
-            if has_default && !entry.optional {
+            if has_default && !entry.optional.expect_bool() {
                 error!(pat_type => "non-optional parameter cannot have a default");
             }
         } else {
@@ -555,7 +555,7 @@ fn extract_normal_parameter(
                     .transpose()?
             });
 
-            if !param.entry.optional {
+            if !param.entry.optional.expect_bool() {
                 // Non-optional types need to be extracted out of the option though (unless
                 // they have a default):
                 //
@@ -585,13 +585,13 @@ fn extract_normal_parameter(
                     pub const #name: #ty = #def;
                 });
 
-                if param.entry.optional && no_option_type {
+                if param.entry.optional.expect_bool() && no_option_type {
                     // Optional parameter without an Option<T> type requires a default:
                     body.extend(quote_spanned! { span =>
                         .unwrap_or(#name)
                     });
                 }
-            } else if param.entry.optional && no_option_type {
+            } else if param.entry.optional.expect_bool() && no_option_type {
                 // FIXME: we should not be able to reach this without having produced another
                 // error above already anyway?
                 error!(param.ty => "Optional parameter without Option<T> requires a default");
@@ -684,10 +684,12 @@ fn serialize_input_schema(
 
     let mut all_of_schemas = TokenStream::new();
     for entry in flattened {
-        if entry.optional {
+        if entry.optional.expect_bool() {
+            // openapi & json schema don't exactly have a proper way to represent
+            // this, so we simply refuse:
             error!(
                 entry.schema.span,
-                "optional flattened parameters are not supported"
+                "optional flattened parameters are not supported (by JSONSchema)"
             );
         }
 

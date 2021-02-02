@@ -113,7 +113,10 @@ fn handle_newtype_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
     finish_schema(schema, &stru, &stru.ident)
 }
 
-fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<TokenStream, Error> {
+fn handle_regular_struct(
+    attribs: JSONObject,
+    mut stru: syn::ItemStruct,
+) -> Result<TokenStream, Error> {
     let mut schema: Schema = if attribs.is_empty() {
         Schema::empty_object(Span::call_site())
     } else {
@@ -130,7 +133,7 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
 
     // We also keep a reference to the SchemaObject around since we derive missing fields
     // automatically.
-    if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
+    if let SchemaItem::Object(obj) = &mut schema.item {
         for field in obj.properties_mut() {
             schema_fields.insert(field.name.as_str().to_string(), field);
         }
@@ -178,10 +181,12 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
                             );
                         }
 
-                        if field_def.optional {
+                        if field_def.optional.expect_bool() {
+                            // openapi & json schema don't exactly have a proper way to represent
+                            // this, so we simply refuse:
                             error!(
                                 field_def.name.span(),
-                                "optional flattened fields are not supported"
+                                "optional flattened fields are not supported (by JSONSchema)"
                             );
                         }
                     }
@@ -226,10 +231,14 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
         );
     }
 
-    if let api::SchemaItem::Object(ref mut obj) = &mut schema.item {
+    {
+        let obj = schema.item.check_object_mut()?;
         // remove flattened fields
         for field in to_remove {
-            if !obj.remove_property_by_ident(&field) {
+            //if !obj.remove_property_by_ident(&field)
+            if let Some(item) = obj.find_property_by_ident_mut(&field) {
+                item.flatten_in_struct = true;
+            } else {
                 error!(
                     schema.span,
                     "internal error: failed to remove property {:?} from object schema", field,
@@ -239,22 +248,41 @@ fn handle_regular_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<T
 
         // add derived fields
         obj.extend_properties(new_fields);
-    } else {
-        panic!("handle_regular_struct with non-object schema");
     }
 
-    if all_of_schemas.is_empty() {
-        finish_schema(schema, &stru, &stru.ident)
+    let updater = {
+        let mut derive = false;
+        util::retain_derived_items(&mut stru.attrs, |path| {
+            if path.is_ident("Updater") {
+                derive = true;
+                true // FIXME: remove retain again?
+            } else {
+                true
+            }
+        });
+        if derive {
+            derive_updater(stru.clone(), schema.clone(), &mut stru)?
+        } else {
+            TokenStream::new()
+        }
+    };
+
+    let mut output = if all_of_schemas.is_empty() {
+        finish_schema(schema, &stru, &stru.ident)?
     } else {
-        finish_all_of_struct(stru, schema, all_of_schemas)
-    }
+        finish_all_of_struct(schema, &stru, all_of_schemas)?
+    };
+
+    output.extend(updater);
+
+    Ok(output)
 }
 
 /// If we have flattened fields the struct schema is not the "final" schema, but part of an AllOf
 /// schema containing it and all the flattened field schemas.
 fn finish_all_of_struct(
-    stru: syn::ItemStruct,
     mut schema: Schema,
+    stru: &syn::ItemStruct,
     all_of_schemas: TokenStream,
 ) -> Result<TokenStream, Error> {
     let name = &stru.ident;
@@ -274,12 +302,12 @@ fn finish_all_of_struct(
     ));
 
     // now check if it even has any fields
-    let has_fields = match &schema.item {
-        api::SchemaItem::Object(obj) => !obj.is_empty(),
+    let has_non_flattened_fields = match &schema.item {
+        api::SchemaItem::Object(obj) => obj.has_non_flattened_fields(),
         _ => panic!("object schema is not an object schema?"),
     };
 
-    let (inner_schema, inner_schema_ref) = if has_fields {
+    let (inner_schema, inner_schema_ref) = if has_non_flattened_fields {
         // if it does, we need to create an "inner" schema to merge into the AllOf schema
         let obj_schema = {
             let mut ts = TokenStream::new();
@@ -332,10 +360,10 @@ fn handle_regular_field(
 
     util::infer_type(schema, &field.ty)?;
 
-    if is_option_type(&field.ty) {
+    if util::is_option_type(&field.ty).is_some() {
         if derived {
-            field_def.optional = true;
-        } else if !field_def.optional {
+            field_def.optional = true.into();
+        } else if !field_def.optional.expect_bool() {
             error!(&field.ty => "non-optional Option type?");
         }
     }
@@ -343,21 +371,103 @@ fn handle_regular_field(
     Ok(())
 }
 
-/// Note that we cannot handle renamed imports at all here...
-fn is_option_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(p) = ty {
-        if p.qself.is_some() {
-            return false;
-        }
-        let segs = &p.path.segments;
-        match segs.len() {
-            1 => return segs.last().unwrap().ident == "Option",
-            2 => {
-                return segs.first().unwrap().ident == "std"
-                    && segs.last().unwrap().ident == "Option"
+/// To derive an `Updater` we make all fields optional and use the `Updater` derive macro with
+/// a `target` parameter.
+fn derive_updater(
+    mut stru: syn::ItemStruct,
+    mut schema: Schema,
+    original_struct: &mut syn::ItemStruct,
+) -> Result<TokenStream, Error> {
+    stru.ident = Ident::new(&format!("{}Updater", stru.ident), stru.ident.span());
+
+    if !util::derived_items(&original_struct.attrs).any(|p| p.is_ident("Default")) {
+        original_struct.attrs.push(util::make_derive_attribute(
+            Span::call_site(),
+            quote::quote! { Default },
+        ));
+    }
+
+    original_struct.attrs.push(util::make_derive_attribute(
+        Span::call_site(),
+        quote::quote! { Updatable },
+    ));
+
+    let updater_name = &stru.ident;
+    let updater_name_str = syn::LitStr::new(&updater_name.to_string(), updater_name.span());
+    original_struct.attrs.push(util::make_attribute(
+        Span::call_site(),
+        util::make_path(Span::call_site(), false, &["updatable"]),
+        quote::quote! { (updater = #updater_name_str) },
+    ));
+
+    let mut all_of_schemas = TokenStream::new();
+    let mut is_empty_impl = TokenStream::new();
+
+    if let syn::Fields::Named(fields) = &mut stru.fields {
+        for field in &mut fields.named {
+            let field_name = field.ident.as_ref().expect("unnamed field in FieldsNamed");
+            let field_name_string = field_name.to_string();
+
+            let field_schema = match schema.find_obj_property_by_ident_mut(&field_name_string) {
+                Some(obj) => obj,
+                None => {
+                    error!(
+                        field_name.span(),
+                        "failed to find schema entry for {:?}", field_name_string,
+                    );
+                    continue;
+                }
+            };
+
+            field_schema.optional = field.ty.clone().into();
+
+            let span = Span::call_site();
+            let updater = syn::TypePath {
+                qself: Some(syn::QSelf {
+                    lt_token: syn::token::Lt { spans: [span] },
+                    ty: Box::new(field.ty.clone()),
+                    position: 4, // 'Updater' is the 4th item in the 'segments' below
+                    as_token: Some(syn::token::As { span }),
+                    gt_token: syn::token::Gt { spans: [span] },
+                }),
+                path: util::make_path(
+                    span,
+                    true,
+                    &["proxmox", "api", "schema", "Updatable", "Updater"],
+                ),
+            };
+            field.ty = syn::Type::Path(updater);
+
+            if field_schema.flatten_in_struct {
+                let updater_ty = &field.ty;
+                all_of_schemas.extend(quote::quote! {&#updater_ty::API_SCHEMA,});
             }
-            _ => return false,
+
+            if !is_empty_impl.is_empty() {
+                is_empty_impl.extend(quote::quote! { && });
+            }
+            is_empty_impl.extend(quote::quote! {
+                self.#field_name.is_empty()
+            });
         }
     }
-    false
+
+    let mut output = if all_of_schemas.is_empty() {
+        finish_schema(schema, &stru, &stru.ident)?
+    } else {
+        finish_all_of_struct(schema, &stru, all_of_schemas)?
+    };
+
+    if !is_empty_impl.is_empty() {
+        output = quote::quote!(
+            #output
+            impl ::proxmox::api::schema::Updater for #updater_name {
+                fn is_empty(&self) -> bool {
+                    #is_empty_impl
+                }
+            }
+        );
+    }
+
+    Ok(output)
 }

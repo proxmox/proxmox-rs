@@ -12,7 +12,7 @@ use std::convert::{TryFrom, TryInto};
 use anyhow::Error;
 
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
 use syn::{Expr, ExprPath, Ident};
@@ -66,6 +66,7 @@ pub const NUMBERNAMES: &[&str] = &["Number", "f32", "f64"];
 ///     ObjectSchema::new("text", &[ ... ]).foo(bar)
 /// }
 /// ```
+#[derive(Clone)]
 pub struct Schema {
     span: Span,
 
@@ -137,7 +138,7 @@ impl Schema {
         Self {
             span,
             description: Maybe::None,
-            item: SchemaItem::Object(SchemaObject::new()),
+            item: SchemaItem::Object(SchemaObject::new(span)),
             properties: Vec::new(),
         }
     }
@@ -216,12 +217,13 @@ impl Schema {
     }
 }
 
+#[derive(Clone)]
 pub enum SchemaItem {
-    Null,
-    Boolean,
-    Integer,
-    Number,
-    String,
+    Null(Span),
+    Boolean(Span),
+    Integer(Span),
+    Number(Span),
+    String(Span),
     Object(SchemaObject),
     Array(SchemaArray),
     ExternType(ExprPath),
@@ -230,6 +232,21 @@ pub enum SchemaItem {
 }
 
 impl SchemaItem {
+    pub fn span(&self) -> Span {
+        match self {
+            SchemaItem::Null(span) => *span,
+            SchemaItem::Boolean(span) => *span,
+            SchemaItem::Integer(span) => *span,
+            SchemaItem::Number(span) => *span,
+            SchemaItem::String(span) => *span,
+            SchemaItem::Object(inner) => inner.span,
+            SchemaItem::Array(inner) => inner.span,
+            SchemaItem::ExternType(inner) => inner.span(),
+            SchemaItem::ExternSchema(inner) => inner.span(),
+            SchemaItem::Inferred(span) => *span,
+        }
+    }
+
     /// If there's a `type` specified, parse it as that type. Otherwise check for keys which
     /// uniqueply identify the type, such as "properties" for type `Object`.
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
@@ -267,15 +284,15 @@ impl SchemaItem {
             .ident;
 
         if name == "Null" {
-            Ok(SchemaItem::Null)
+            Ok(SchemaItem::Null(ty.span()))
         } else if name == "Boolean" || name == "bool" {
-            Ok(SchemaItem::Boolean)
+            Ok(SchemaItem::Boolean(ty.span()))
         } else if INTTYPES.iter().any(|n| name == n.name) {
-            Ok(SchemaItem::Integer)
+            Ok(SchemaItem::Integer(ty.span()))
         } else if NUMBERNAMES.iter().any(|n| name == n) {
-            Ok(SchemaItem::Number)
+            Ok(SchemaItem::Number(ty.span()))
         } else if name == "String" {
-            Ok(SchemaItem::String)
+            Ok(SchemaItem::String(ty.span()))
         } else if name == "Object" {
             Ok(SchemaItem::Object(SchemaObject::try_extract_from(obj)?))
         } else if name == "Array" {
@@ -296,39 +313,49 @@ impl SchemaItem {
             move || description.ok_or_else(|| format_err!(span, "missing description"));
 
         match self {
-            SchemaItem::Null => {
+            SchemaItem::Null(span) => {
                 let description = check_description()?;
-                ts.extend(quote! { ::proxmox::api::schema::NullSchema::new(#description) });
+                ts.extend(quote_spanned! { *span =>
+                    ::proxmox::api::schema::NullSchema::new(#description)
+                });
             }
-            SchemaItem::Boolean => {
+            SchemaItem::Boolean(span) => {
                 let description = check_description()?;
-                ts.extend(quote! { ::proxmox::api::schema::BooleanSchema::new(#description) });
+                ts.extend(quote_spanned! { *span =>
+                    ::proxmox::api::schema::BooleanSchema::new(#description)
+                });
             }
-            SchemaItem::Integer => {
+            SchemaItem::Integer(span) => {
                 let description = check_description()?;
-                ts.extend(quote! { ::proxmox::api::schema::IntegerSchema::new(#description) });
+                ts.extend(quote_spanned! { *span =>
+                    ::proxmox::api::schema::IntegerSchema::new(#description)
+                });
             }
-            SchemaItem::Number => {
+            SchemaItem::Number(span) => {
                 let description = check_description()?;
-                ts.extend(quote! { ::proxmox::api::schema::NumberSchema::new(#description) });
+                ts.extend(quote_spanned! { *span =>
+                    ::proxmox::api::schema::NumberSchema::new(#description)
+                });
             }
-            SchemaItem::String => {
+            SchemaItem::String(span) => {
                 let description = check_description()?;
-                ts.extend(quote! { ::proxmox::api::schema::StringSchema::new(#description) });
+                ts.extend(quote_spanned! { *span =>
+                    ::proxmox::api::schema::StringSchema::new(#description)
+                });
             }
             SchemaItem::Object(obj) => {
                 let description = check_description()?;
                 let mut elems = TokenStream::new();
                 obj.to_schema_inner(&mut elems)?;
-                ts.extend(
-                    quote! { ::proxmox::api::schema::ObjectSchema::new(#description, &[#elems]) },
-                );
+                ts.extend(quote_spanned! { obj.span =>
+                    ::proxmox::api::schema::ObjectSchema::new(#description, &[#elems])
+                });
             }
             SchemaItem::Array(array) => {
                 let description = check_description()?;
                 let mut items = TokenStream::new();
                 array.to_schema(&mut items)?;
-                ts.extend(quote! {
+                ts.extend(quote_spanned! { array.span =>
                     ::proxmox::api::schema::ArraySchema::new(#description, &#items)
                 });
             }
@@ -391,25 +418,84 @@ impl SchemaItem {
         }
         Ok(())
     }
+
+    pub fn check_object_mut(&mut self) -> Result<&mut SchemaObject, syn::Error> {
+        match self {
+            SchemaItem::Object(obj) => Ok(obj),
+            _ => bail!(self.span(), "expected object schema, found something else"),
+        }
+    }
 }
 
+#[derive(Clone)]
+pub enum OptionType {
+    /// All regular api types just have simple boolean expressions for whether the fields in an
+    /// object struct are optional. The only exception is updaters where this depends on the
+    /// updater type.
+    Bool(bool),
+
+    /// An updater type uses its "base" type's field's updaters to determine whether the field is
+    /// supposed to be an option.
+    Updater(syn::Type),
+}
+
+impl OptionType {
+    pub fn expect_bool(&self) -> bool {
+        match self {
+            OptionType::Bool(b) => *b,
+            _ => panic!(
+                "internal error: unexpected Updater dependent 'optional' value in macro context"
+            ),
+        }
+    }
+}
+
+impl From<bool> for OptionType {
+    fn from(b: bool) -> Self {
+        OptionType::Bool(b)
+    }
+}
+
+impl From<syn::Type> for OptionType {
+    fn from(ty: syn::Type) -> Self {
+        OptionType::Updater(ty)
+    }
+}
+
+impl ToTokens for OptionType {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            OptionType::Bool(b) => b.to_tokens(tokens),
+            OptionType::Updater(ty) => tokens.extend(quote! {
+                <#ty as ::proxmox::api::schema::Updatable>::UPDATER_IS_OPTION
+            }),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct ObjectEntry {
     pub name: FieldName,
-    pub optional: bool,
+    pub optional: OptionType,
     pub schema: Schema,
 
     /// This is only valid for methods. Methods should reset this to false after dealing with it,
     /// as encountering this during schema serialization will always cause an error.
     pub flatten: Option<Span>,
+
+    /// This is used for structs. We mark flattened fields because we need them to be "skipped"
+    /// when serializing inner the object schema.
+    pub flatten_in_struct: bool,
 }
 
 impl ObjectEntry {
     pub fn new(name: FieldName, optional: bool, schema: Schema) -> Self {
         Self {
             name,
-            optional,
+            optional: optional.into(),
             schema,
             flatten: None,
+            flatten_in_struct: false,
         }
     }
 
@@ -419,22 +505,37 @@ impl ObjectEntry {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone)]
 /// Contains a sorted list of properties:
 pub struct SchemaObject {
+    span: Span,
     properties_: Vec<ObjectEntry>,
 }
 
 impl SchemaObject {
-    pub fn new() -> Self {
+    pub fn new(span: Span) -> Self {
         Self {
+            span,
             properties_: Vec::new(),
         }
     }
 
+    /// Check whether ther are any kind of fields defined in the struct, regardless of whether
+    /// they're flattened or not.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.properties_.is_empty()
+    }
+
+    /// Check whether this object has any fields which aren't being flattened.
+    #[inline]
+    pub fn has_non_flattened_fields(&self) -> bool {
+        // be explicit about how to treat an empty list:
+        if self.properties_.is_empty() {
+            return false;
+        }
+
+        self.properties_.iter().any(|prop| !prop.flatten_in_struct)
     }
 
     #[inline]
@@ -466,6 +567,7 @@ impl SchemaObject {
 
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
         let mut this = Self {
+            span: obj.span(),
             properties_: obj
                 .remove_required_element("properties")?
                 .into_object("object field definition")?
@@ -509,6 +611,10 @@ impl SchemaObject {
 
     fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
         for element in self.properties_.iter() {
+            if element.flatten_in_struct {
+                continue;
+            }
+
             if let Some(span) = element.flatten {
                 error!(
                     span,
@@ -518,7 +624,7 @@ impl SchemaObject {
             }
 
             let key = element.name.as_str();
-            let optional = element.optional;
+            let optional = &element.optional;
             let mut schema = TokenStream::new();
             element.schema.to_schema(&mut schema)?;
             ts.extend(quote! { (#key, #optional, &#schema), });
@@ -538,33 +644,22 @@ impl SchemaObject {
             .find(|p| p.name.as_ident_str() == key)
     }
 
-    fn remove_property_by_ident(&mut self, key: &str) -> bool {
-        match self
-            .properties_
-            .iter()
-            .position(|entry| entry.name.as_ident_str() == key)
-        {
-            Some(index) => {
-                self.properties_.remove(index);
-                true
-            }
-            None => false,
-        }
-    }
-
     fn extend_properties(&mut self, new_fields: Vec<ObjectEntry>) {
         self.properties_.extend(new_fields);
         self.sort_properties();
     }
 }
 
+#[derive(Clone)]
 pub struct SchemaArray {
+    span: Span,
     item: Box<Schema>,
 }
 
 impl SchemaArray {
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
         Ok(Self {
+            span: obj.span(),
             item: Box::new(obj.remove_required_element("items")?.try_into()?),
         })
     }

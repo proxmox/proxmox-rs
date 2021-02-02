@@ -33,6 +33,7 @@ macro_rules! bail {
 
 mod api;
 mod serde;
+mod updater;
 mod util;
 
 /// Handle errors by appending a `compile_error!()` macro invocation to the original token stream.
@@ -234,6 +235,20 @@ pub fn api(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     let _error_guard = init_local_error();
     let item: TokenStream = item.into();
     handle_error(item.clone(), api::api(attr.into(), item)).into()
+}
+
+/// This is a dummy derive macro actually handled by `#[api]`!
+#[proc_macro_derive(Updater, attributes(updater, updatable, serde))]
+pub fn derive_updater(_item: TokenStream_1) -> TokenStream_1 {
+    TokenStream_1::new()
+}
+
+/// Create the default `Updatable` implementation from an `Option`.
+#[proc_macro_derive(Updatable, attributes(updatable, serde))]
+pub fn derive_updatable(item: TokenStream_1) -> TokenStream_1 {
+    let _error_guard = init_local_error();
+    let item: TokenStream = item.into();
+    handle_error(item.clone(), updater::updatable(item).map_err(Error::from)).into()
 }
 
 thread_local!(static NON_FATAL_ERRORS: RefCell<Option<TokenStream>> = RefCell::new(None));
