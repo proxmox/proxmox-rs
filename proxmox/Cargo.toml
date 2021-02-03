@@ -1,7 +1,7 @@
 [package]
 name = "proxmox"
 edition = "2018"
-version = "0.10.0"
+version = "0.10.1"
 authors = [
     "Dietmar Maurer <dietmar@proxmox.com>",
     "Wolfgang Bumiller <w.bumiller@proxmox.com>",

@@ -1,3 +1,11 @@
+rust-proxmox (0.10.1-1) unstable; urgency=medium
+
+  * cli: improve completion of array arguments
+
+  * clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 03 Feb 2021 08:31:05 +0100
+
 rust-proxmox (0.10.0-1) unstable; urgency=medium
 
   * time: fix parsing non-full-hour TZ offsets
