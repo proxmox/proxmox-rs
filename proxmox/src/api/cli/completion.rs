@@ -84,13 +84,21 @@ fn get_simple_completion(
     if !arg_param.is_empty() {
         let prop_name = arg_param[0];
         if let Some((optional, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
-            if optional && args[0].starts_with('-') {
-                // argument parameter is optional, and arg looks like an option,
-                // so assume its empty and complete the rest
+
+            let is_array_param = if let Schema::Array(_) = schema { true } else { false };
+
+            if (optional || is_array_param) && args[0].starts_with('-') {
+                // argument parameter is optional (or array) , and arg
+                // looks like an option, so assume its empty and
+                // complete the rest
             } else {
                 record_done_argument(done, cli_cmd.info.parameters, prop_name, &args[0]);
                 if args.len() > 1 {
-                    return get_simple_completion(cli_cmd, done, &arg_param[1..], &args[1..]);
+                    if is_array_param {
+                        return get_simple_completion(cli_cmd, done, &arg_param[..], &args[1..]);
+                    } else {
+                        return get_simple_completion(cli_cmd, done, &arg_param[1..], &args[1..]);
+                    }
                 }
 
                 if args.len() == 1 {
