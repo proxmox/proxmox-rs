@@ -2,8 +2,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use proxmox::api::schema::Updater;
-use proxmox_api_macro::{api, Updatable, Updater};
+use proxmox::api::api;
+use proxmox::api::schema::{Updatable, Updater};
 
 #[api]
 /// An example of a simple struct type.
