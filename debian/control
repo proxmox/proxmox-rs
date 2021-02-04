@@ -1,0 +1,62 @@
+Source: rust-proxmox-acme-rs
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 11),
+ dh-cargo (>= 18),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-base64-0.12+default-dev <!nocheck>,
+ librust-openssl-0.10+default-dev (>= 0.10.29-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.4.1
+Vcs-Git: 
+Vcs-Browser: 
+
+Package: librust-proxmox-acme-rs-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-base64-0.12+default-dev,
+ librust-openssl-0.10+default-dev (>= 0.10.29-~~),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
+ librust-serde-json-1+default-dev
+Suggests:
+ librust-proxmox-acme-rs+client-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-acme-rs+default-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0+default-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1.0+default-dev (= ${binary:Version})
+Description: ACME client library - Rust source code
+ This package contains the source for the Rust proxmox-acme-rs crate, packaged
+ by debcargo for use with cargo and dh-cargo.
+
+Package: librust-proxmox-acme-rs+client-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-acme-rs-dev (= ${binary:Version}),
+ librust-curl-0.4+default-dev (>= 0.4.33-~~)
+Provides:
+ librust-proxmox-acme-rs+curl-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0+client-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0+curl-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1+client-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1+curl-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1.0+client-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1.0+curl-dev (= ${binary:Version})
+Description: ACME client library - feature "client" and 1 more
+ This metapackage enables feature "client" for the Rust proxmox-acme-rs crate,
+ by pulling in any additional dependencies needed by that feature.
+ .
+ Additionally, this package also provides the "curl" feature.

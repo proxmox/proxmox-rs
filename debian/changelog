@@ -1,0 +1,5 @@
+rust-proxmox-acme-rs (0.1.0-1) pve; urgency=medium
+
+  * initial release
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 09 Mar 2021 13:01:56 +0100
