@@ -60,12 +60,17 @@ pub fn generate_usage_str(
     cli_cmd: &CliCommand,
     format: DocumentationFormat,
     indent: &str,
+    skip_options: &'static [&'static str],
 ) -> String {
     let arg_param = cli_cmd.arg_param;
     let fixed_param = &cli_cmd.fixed_param;
     let schema = cli_cmd.info.parameters;
 
     let mut done_hash = HashSet::<&str>::new();
+    for option in skip_options {
+        done_hash.insert(option);
+    }
+
     let mut args = String::new();
 
     for positional_arg in arg_param {
@@ -178,7 +183,7 @@ pub fn generate_usage_str(
 
 /// Print command usage for simple commands to ``stderr``.
 pub fn print_simple_usage_error(prefix: &str, cli_cmd: &CliCommand, err_msg: &str) {
-    let usage = generate_usage_str(prefix, cli_cmd, DocumentationFormat::Long, "");
+    let usage = generate_usage_str(prefix, cli_cmd, DocumentationFormat::Long, "", &[]);
     eprint!("Error: {}\nUsage: {}", err_msg, usage);
 }
 
@@ -197,6 +202,8 @@ pub fn generate_nested_usage(
     let mut cmds: Vec<&String> = def.commands.keys().collect();
     cmds.sort();
 
+    let skip_options =  def.usage_skip_options;
+
     let mut usage = String::new();
 
     for cmd in cmds {
@@ -211,7 +218,7 @@ pub fn generate_nested_usage(
                 if !usage.is_empty() && format == DocumentationFormat::ReST {
                     usage.push_str("----\n\n");
                 }
-                usage.push_str(&generate_usage_str(&new_prefix, cli_cmd, format, ""));
+                usage.push_str(&generate_usage_str(&new_prefix, cli_cmd, format, "", skip_options));
             }
             CommandLineInterface::Nested(map) => {
                 usage.push_str(&generate_nested_usage(&new_prefix, map, format));
@@ -268,7 +275,7 @@ pub fn print_help(
         CommandLineInterface::Simple(cli_cmd) => {
             println!(
                 "Usage: {}",
-                generate_usage_str(&prefix, cli_cmd, format, "")
+                generate_usage_str(&prefix, cli_cmd, format, "", &[])
             );
         }
     }

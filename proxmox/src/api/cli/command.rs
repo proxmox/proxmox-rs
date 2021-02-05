@@ -356,7 +356,7 @@ fn prepare_cli_command(def: &CommandLineInterface) -> (String, Vec<String>) {
         if args[0] == "printdoc" {
             let usage = match def {
                 CommandLineInterface::Simple(cli_cmd) => {
-                    generate_usage_str(&prefix, &cli_cmd, DocumentationFormat::ReST, "")
+                    generate_usage_str(&prefix, &cli_cmd, DocumentationFormat::ReST, "", &[])
                 }
                 CommandLineInterface::Nested(map) => {
                     generate_nested_usage(&prefix, &map, DocumentationFormat::ReST)

@@ -102,6 +102,8 @@ pub struct CliCommandMap {
     /// command definitions.
     pub commands: HashMap<String, CommandLineInterface>,
     pub aliases: Vec<(Vec<&'static str>, Vec<&'static str>)>,
+    /// List of options to suppress in generate_usage
+    pub usage_skip_options: &'static [&'static str],
 }
 
 impl CliCommandMap {
@@ -120,6 +122,13 @@ impl CliCommandMap {
         self.aliases.push((Vec::from(old), Vec::from(new)));
         self
     }
+
+    pub fn usage_skip_options(mut self, list: &'static [&'static str]) -> Self {
+        self.usage_skip_options = list;
+        self
+    }
+
+
 
     /// Insert the help command.
     pub fn insert_help(mut self) -> Self {
