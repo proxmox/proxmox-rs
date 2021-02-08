@@ -1,6 +1,6 @@
 //! Module to generate and format API Documenation
 
-use anyhow::Error;
+use anyhow::{bail, Error};
 
 use std::io::Write;
 
@@ -158,7 +158,27 @@ pub fn get_property_description(
     }
 }
 
-fn dump_api_parameters<I>(param: &dyn ObjectSchemaType<PropertyIter = I>) -> String
+/// Generate ReST Documentaion for enumeration.
+pub fn dump_enum_properties(schema: &Schema) -> Result<String, Error> {
+
+    let mut res = String::new();
+
+    if let Schema::String(StringSchema {
+        format: Some(ApiStringFormat::Enum(variants)), ..
+    }) = schema {
+        for item in variants.iter() {
+            res.push_str(&format!(":``{}``: ", item.value));
+            let descr = wrap_text("", "  ", item.description, 80);
+            res.push_str(&descr);
+            res.push('\n');
+        }
+        return Ok(res);
+    }
+
+    bail!("dump_enum_properties failed - not an enum");
+}
+
+pub fn dump_api_parameters<I>(param: &dyn ObjectSchemaType<PropertyIter = I>) -> String
 where
     I: Iterator<Item = &'static SchemaPropertyEntry>,
 {
