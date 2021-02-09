@@ -128,13 +128,15 @@ pub fn get_property_description(
     if format == DocumentationFormat::ReST {
         let mut text = match style {
             ParameterDisplayStyle::Config => {
-                format!(":``{} {}{}``:  ", name, type_text, default_text)
+                // reST definition list format
+                format!("``{}`` : ``{}{}``\n  ", name, type_text, default_text)
             }
             ParameterDisplayStyle::Arg => {
-                format!(":``--{} {}{}``:  ", name, type_text, default_text)
+                // reST option list format
+                format!("``--{}`` ``{}{}``\n  ", name, type_text, default_text)
             }
             ParameterDisplayStyle::Fixed => {
-                format!(":``<{}> {}{}``:  ", name, type_text, default_text)
+                format!("``<{}>`` : ``{}{}``\n  ", name, type_text, default_text)
             }
         };
 
