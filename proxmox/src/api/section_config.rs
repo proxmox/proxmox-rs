@@ -51,6 +51,18 @@ impl SectionConfigPlugin {
         }
     }
 
+    pub fn type_name(&self) -> &str {
+        &self.type_name
+    }
+
+    pub fn id_property(&self) -> Option<&str> {
+        self.id_property.as_deref()
+    }
+
+    pub fn properties(&self) -> &ObjectSchema {
+        self.properties
+    }
+
     pub fn get_id_schema(&self) -> Option<&Schema> {
         match &self.id_property {
             Some(id_prop) => {
@@ -269,6 +281,11 @@ impl SectionConfig {
     /// Register a plugin, which defines the `Schema` for a section type.
     pub fn register_plugin(&mut self, plugin: SectionConfigPlugin) {
         self.plugins.insert(plugin.type_name.clone(), plugin);
+    }
+
+    /// Access plugin config
+    pub fn plugins(&self) -> &HashMap<String, SectionConfigPlugin> {
+        &self.plugins
     }
 
     /// Write the configuration data to a String.
