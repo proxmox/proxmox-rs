@@ -259,6 +259,8 @@ pub struct StringSchema {
     pub max_length: Option<usize>,
     /// Optional microformat.
     pub format: Option<&'static ApiStringFormat>,
+    /// A text representation of the format/type (used to generate documentation).
+    pub type_text: Option<&'static str>,
 }
 
 impl StringSchema {
@@ -269,6 +271,7 @@ impl StringSchema {
             min_length: None,
             max_length: None,
             format: None,
+            type_text: None,
         }
     }
 
@@ -279,6 +282,11 @@ impl StringSchema {
 
     pub const fn format(mut self, format: &'static ApiStringFormat) -> Self {
         self.format = Some(format);
+        self
+    }
+
+    pub const fn type_text(mut self, type_text: &'static str) -> Self {
+        self.type_text = Some(type_text);
         self
     }
 

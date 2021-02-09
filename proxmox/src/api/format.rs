@@ -80,7 +80,13 @@ fn test_wrap_text() {
 pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> String {
     match schema {
         Schema::Null => String::from("<null>"), // should not happen
-        Schema::String(_) => String::from("<string>"),
+        Schema::String(string_schema) => {
+            if let Some(type_text) = string_schema.type_text {
+                String::from(type_text)
+            } else {
+                String::from("<string>")
+            }
+        }
         Schema::Boolean(_) => String::from("<boolean>"),
         Schema::Integer(integer_schema) => match (integer_schema.minimum, integer_schema.maximum) {
             (Some(min), Some(max)) => format!("<integer> ({} - {})", min, max),
