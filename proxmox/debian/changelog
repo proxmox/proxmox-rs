@@ -1,3 +1,13 @@
+rust-proxmox (0.10.3-1) unstable; urgency=medium
+
+  * api: implement schema doc generator for PropertyStrings
+
+  * api: improve reST formating
+
+  * api: add dump_enum_properties(), make dump_api_parameter pub
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 10 Feb 2021 10:13:04 +0100
+
 rust-proxmox (0.10.2-1) unstable; urgency=medium
 
   * CliCommandMap: add usage_skip_options to suppress options in
