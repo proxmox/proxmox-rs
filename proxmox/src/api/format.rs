@@ -9,11 +9,12 @@ use crate::api::schema::*;
 use crate::api::{ApiHandler, ApiMethod};
 
 /// Enumerate different styles to display parameters/properties.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum ParameterDisplayStyle {
     /// Used for properties in configuration files: ``key:``
     Config,
-    //SonfigSub,
+    ///  Used for PropertyStings properties in configuration files
+    ConfigSub,
     /// Used for command line options: ``--key``
     Arg,
     /// Used for command line options passed as arguments: ``<key>``
@@ -81,10 +82,22 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
     match schema {
         Schema::Null => String::from("<null>"), // should not happen
         Schema::String(string_schema) => {
-            if let Some(type_text) = string_schema.type_text {
-                String::from(type_text)
-            } else {
-                String::from("<string>")
+            match string_schema {
+                StringSchema { type_text: Some(type_text), .. } => {
+                    String::from(*type_text)
+                }
+                StringSchema { format: Some(ApiStringFormat::Enum(variants)), .. } => {
+                    let list: Vec<String> = variants.iter().map(|e| String::from(e.value)).collect();
+                    list.join("|")
+                }
+                // displaying regex add more confision than it helps
+                //StringSchema { format: Some(ApiStringFormat::Pattern(const_regex)), .. } => {
+                //    format!("/{}/", const_regex.regex_string)
+                //}
+                StringSchema { format: Some(ApiStringFormat::PropertyString(sub_schema)), .. } => {
+                    get_property_string_type_text(sub_schema)
+                }
+                _ => String::from("<string>")
             }
         }
         Schema::Boolean(_) => String::from("<boolean>"),
@@ -98,7 +111,7 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
             (Some(min), Some(max)) => format!("<number> ({} - {})", min, max),
             (Some(min), None) => format!("<number> ({} - N)", min),
             (None, Some(max)) => format!("<number> (-N - {})", max),
-            _ => String::from("<integer>"),
+            _ => String::from("<number>"),
         },
         Schema::Object(_) => String::from("<object>"),
         Schema::Array(_) => String::from("<array>"),
@@ -137,6 +150,10 @@ pub fn get_property_description(
                 // reST definition list format
                 format!("``{}`` : ``{}{}``\n  ", name, type_text, default_text)
             }
+            ParameterDisplayStyle::ConfigSub => {
+                // reST definition list format
+                format!("``{}`` = ``{}{}``\n  ", name, type_text, default_text)
+            }
             ParameterDisplayStyle::Arg => {
                 // reST option list format
                 format!("``--{}`` ``{}{}``\n  ", name, type_text, default_text)
@@ -153,6 +170,7 @@ pub fn get_property_description(
     } else {
         let display_name = match style {
             ParameterDisplayStyle::Config => format!("{}:", name),
+            ParameterDisplayStyle::ConfigSub => format!("{}=", name),
             ParameterDisplayStyle::Arg => format!("--{}", name),
             ParameterDisplayStyle::Fixed => format!("<{}>", name),
         };
@@ -163,6 +181,101 @@ pub fn get_property_description(
         text.push_str(&wrap_text(indent, indent, descr, 80));
 
         text
+    }
+}
+
+fn get_simply_type_text(
+    schema: &Schema,
+    list_enums: bool,
+) -> String {
+
+    match schema {
+        Schema::Null => String::from("<null>"), // should not happen
+        Schema::Boolean(_) => String::from("<1|0>"),
+        Schema::Integer(_) => String::from("<integer>"),
+        Schema::Number(_) => String::from("<number>"),
+        Schema::String(string_schema) => {
+            match string_schema {
+                StringSchema { type_text: Some(type_text), .. } => {
+                    String::from(*type_text)
+                }
+                StringSchema { format: Some(ApiStringFormat::Enum(variants)), .. } => {
+                    if list_enums && variants.len() <= 3 {
+                        let list: Vec<String> = variants.iter().map(|e| String::from(e.value)).collect();
+                        list.join("|")
+                    } else {
+                        String::from("<enum>")
+                    }
+                }
+                _ => String::from("<string>"),
+            }
+        }
+        _ => panic!("get_simply_type_text: expected simply type"),
+    }
+}
+
+fn get_object_type_text(object_schema: &ObjectSchema) -> String {
+
+    let mut parts = Vec::new();
+
+    let mut add_part = |name, optional, schema| {
+        let tt = get_simply_type_text(schema, false);
+        let text = if parts.is_empty() {
+            format!("{}={}", name, tt)
+        } else {
+            format!(",{}={}", name, tt)
+        };
+        if optional {
+            parts.push(format!("[{}]", text));
+        } else {
+            parts.push(text);
+        }
+    };
+
+    // add default key first
+    if let Some(ref default_key) = object_schema.default_key {
+        let (optional, schema) =  object_schema.lookup(default_key).unwrap();
+        add_part(default_key, optional, schema);
+    }
+
+    // add required keys
+    for (name, optional, schema) in object_schema.properties {
+        if *optional { continue; }
+        if let Some(ref default_key) = object_schema.default_key {
+            if name == default_key { continue; }
+        }
+        add_part(name, *optional, schema);
+    }
+
+    // add options keys
+    for (name, optional, schema) in object_schema.properties {
+        if !*optional { continue; }
+        if let Some(ref default_key) = object_schema.default_key {
+            if name == default_key { continue; }
+        }
+        add_part(name, *optional, schema);
+    }
+
+    let mut type_text = String::new();
+    type_text.push('[');
+    type_text.push_str(&parts.join(" "));
+    type_text.push(']');
+    type_text
+}
+
+fn get_property_string_type_text(
+    schema: &Schema,
+) -> String {
+
+    match schema {
+        Schema::Object(object_schema) => {
+            get_object_type_text(object_schema)
+        }
+        Schema::Array(array_schema) => {
+            let item_type = get_simply_type_text(array_schema.items, true);
+            format!("[{}, ...]", item_type)
+        }
+        _ => panic!("get_property_string_type_text: expected array or object"),
     }
 }
 
@@ -186,23 +299,56 @@ pub fn dump_enum_properties(schema: &Schema) -> Result<String, Error> {
     bail!("dump_enum_properties failed - not an enum");
 }
 
-pub fn dump_api_parameters<I>(param: &dyn ObjectSchemaType<PropertyIter = I>) -> String
-where
-    I: Iterator<Item = &'static SchemaPropertyEntry>,
+/// Generate ReST Documentaion for objects
+pub fn dump_api_parameters<I>(
+    param: &dyn ObjectSchemaType<PropertyIter = I>,
+    indent: &str,
+    style: ParameterDisplayStyle,
+    skip: &[&str],
+) -> String
+    where I: Iterator<Item = &'static SchemaPropertyEntry>,
 {
-    let mut res = wrap_text("", "", param.description(), 80);
+    let mut res = wrap_text(indent, indent, param.description(), 80);
+
+    let next_indent = format!("  {}", indent);
 
     let mut required_list: Vec<String> = Vec::new();
     let mut optional_list: Vec<String> = Vec::new();
 
     for (prop, optional, schema) in param.properties() {
-        let param_descr = get_property_description(
+
+        if skip.iter().find(|n| n == &prop).is_some() { continue; }
+
+        let mut param_descr = get_property_description(
             prop,
             &schema,
-            ParameterDisplayStyle::Config,
+            style,
             DocumentationFormat::ReST,
         );
 
+        if !indent.is_empty() {
+            param_descr = format!("{}{}", indent, param_descr); // indent first line
+            param_descr = param_descr.replace("\n", &format!("\n{}", indent)); // indent rest
+        }
+
+        if style == ParameterDisplayStyle::Config {
+            match schema {
+                Schema::String(StringSchema { format: Some(ApiStringFormat::PropertyString(sub_schema)), .. }) => {
+                    match sub_schema {
+                        Schema::Object(object_schema) => {
+                            let sub_text = dump_api_parameters(
+                                object_schema, &next_indent, ParameterDisplayStyle::ConfigSub, &[]);
+                            param_descr.push_str(&sub_text);
+                        }
+                        Schema::Array(_) => {
+                            // do nothing - description should explain the list type
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+                _ => { /* do nothing */ }
+            }
+        }
         if *optional {
             optional_list.push(param_descr);
         } else {
@@ -211,7 +357,9 @@ where
     }
 
     if !required_list.is_empty() {
-        res.push_str("\n*Required properties:*\n\n");
+        if style != ParameterDisplayStyle::ConfigSub {
+            res.push_str("\n*Required properties:*\n\n");
+        }
 
         for text in required_list {
             res.push_str(&text);
@@ -220,7 +368,9 @@ where
     }
 
     if !optional_list.is_empty() {
-        res.push_str("\n*Optional properties:*\n\n");
+        if style != ParameterDisplayStyle::ConfigSub {
+            res.push_str("\n*Optional properties:*\n\n");
+        }
 
         for text in optional_list {
             res.push_str(&text);
@@ -231,7 +381,10 @@ where
     res
 }
 
-fn dump_api_return_schema(returns: &ReturnType) -> String {
+fn dump_api_return_schema(
+    returns: &ReturnType,
+    style: ParameterDisplayStyle,
+) -> String {
     let schema = &returns.schema;
 
     let mut res = if returns.optional {
@@ -240,7 +393,7 @@ fn dump_api_return_schema(returns: &ReturnType) -> String {
         "*Returns*: ".to_string()
     };
 
-    let type_text = get_schema_type_text(schema, ParameterDisplayStyle::Config);
+    let type_text = get_schema_type_text(schema, style);
     res.push_str(&format!("**{}**\n\n", type_text));
 
     match schema {
@@ -268,10 +421,10 @@ fn dump_api_return_schema(returns: &ReturnType) -> String {
             res.push_str(&description);
         }
         Schema::Object(obj_schema) => {
-            res.push_str(&dump_api_parameters(obj_schema));
+            res.push_str(&dump_api_parameters(obj_schema, "", style, &[]));
         }
         Schema::AllOf(all_of_schema) => {
-            res.push_str(&dump_api_parameters(all_of_schema));
+            res.push_str(&dump_api_parameters(all_of_schema, "", style, &[]));
         }
     }
 
@@ -281,12 +434,13 @@ fn dump_api_return_schema(returns: &ReturnType) -> String {
 }
 
 fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> Option<String> {
+    let style = ParameterDisplayStyle::Config;
     match def {
         None => None,
         Some(api_method) => {
-            let param_descr = dump_api_parameters(&api_method.parameters);
+            let param_descr = dump_api_parameters(&api_method.parameters, "", style, &[]);
 
-            let return_descr = dump_api_return_schema(&api_method.returns);
+            let return_descr = dump_api_return_schema(&api_method.returns, style);
 
             let mut method = method;
 
