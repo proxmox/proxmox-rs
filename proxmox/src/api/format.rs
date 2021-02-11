@@ -299,8 +299,8 @@ pub fn dump_enum_properties(schema: &Schema) -> Result<String, Error> {
     bail!("dump_enum_properties failed - not an enum");
 }
 
-/// Generate ReST Documentaion for objects
-pub fn dump_api_parameters<I>(
+/// Generate ReST Documentaion for object properties
+pub fn dump_properties<I>(
     param: &dyn ObjectSchemaType<PropertyIter = I>,
     indent: &str,
     style: ParameterDisplayStyle,
@@ -308,8 +308,7 @@ pub fn dump_api_parameters<I>(
 ) -> String
     where I: Iterator<Item = &'static SchemaPropertyEntry>,
 {
-    let mut res = wrap_text(indent, indent, param.description(), 80);
-
+    let mut res = String::new();
     let next_indent = format!("  {}", indent);
 
     let mut required_list: Vec<String> = Vec::new();
@@ -336,7 +335,7 @@ pub fn dump_api_parameters<I>(
                 Schema::String(StringSchema { format: Some(ApiStringFormat::PropertyString(sub_schema)), .. }) => {
                     match sub_schema {
                         Schema::Object(object_schema) => {
-                            let sub_text = dump_api_parameters(
+                            let sub_text = dump_properties(
                                 object_schema, &next_indent, ParameterDisplayStyle::ConfigSub, &[]);
                             param_descr.push_str(&sub_text);
                         }
@@ -421,10 +420,14 @@ fn dump_api_return_schema(
             res.push_str(&description);
         }
         Schema::Object(obj_schema) => {
-            res.push_str(&dump_api_parameters(obj_schema, "", style, &[]));
+            let description = wrap_text("", "", obj_schema.description, 80);
+            res.push_str(&description);
+            res.push_str(&dump_properties(obj_schema, "", style, &[]));
         }
         Schema::AllOf(all_of_schema) => {
-            res.push_str(&dump_api_parameters(all_of_schema, "", style, &[]));
+            let description = wrap_text("", "", all_of_schema.description, 80);
+            res.push_str(&description);
+            res.push_str(&dump_properties(all_of_schema, "", style, &[]));
         }
     }
 
@@ -438,7 +441,9 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
     match def {
         None => None,
         Some(api_method) => {
-            let param_descr = dump_api_parameters(&api_method.parameters, "", style, &[]);
+
+            let description = wrap_text("", "", &api_method.parameters.description(), 80);
+            let param_descr = dump_properties(&api_method.parameters, "", style, &[]);
 
             let return_descr = dump_api_return_schema(&api_method.returns, style);
 
@@ -450,8 +455,8 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
             }
 
             let res = format!(
-                "**{} {}**\n\n{}\n\n{}",
-                method, path, param_descr, return_descr
+                "**{} {}**\n\n{}{}\n\n{}",
+                method, path, description, param_descr, return_descr
             );
             Some(res)
         }
