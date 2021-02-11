@@ -4,9 +4,13 @@ use anyhow::{bail, Error};
 
 use std::io::Write;
 
-use crate::api::router::ReturnType;
-use crate::api::schema::*;
-use crate::api::{ApiHandler, ApiMethod};
+use crate::api::{
+    ApiHandler,
+    ApiMethod,
+    router::ReturnType,
+    section_config::SectionConfig,
+    schema::*,
+};
 
 /// Enumerate different styles to display parameters/properties.
 #[derive(Copy, Clone, PartialEq)]
@@ -513,4 +517,31 @@ pub fn dump_api(
     }
 
     Ok(())
+}
+
+/// Generate ReST Documentaion for ``SectionConfig``
+pub fn dump_section_config(config: &SectionConfig) -> String {
+
+    let mut res = String::new();
+
+    let plugin_count = config.plugins().len();
+
+    for plugin in config.plugins().values() {
+
+        let name = plugin.type_name();
+        let properties = plugin.properties();
+        let skip = match plugin.id_property() {
+            Some(id) => vec![id],
+            None => Vec::new(),
+        };
+
+        if plugin_count > 1 {
+            let description = wrap_text("", "", &properties.description, 80);
+            res.push_str(&format!("\n**Section type** \'``{}``\':  {}\n\n", name, description));
+        }
+
+        res.push_str(&dump_properties(properties, "", ParameterDisplayStyle::Config, &skip));
+    }
+
+    res
 }
