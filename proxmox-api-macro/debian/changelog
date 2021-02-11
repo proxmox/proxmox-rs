@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (0.3.2-1) unstable; urgency=medium
+
+  * added Updater derive macros
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 10 Feb 2021 10:09:13 +0100
+
 rust-proxmox-api-macro (0.3.1-1) unstable; urgency=medium
 
   * adapt to ParameterSchema move from router:: to schema::

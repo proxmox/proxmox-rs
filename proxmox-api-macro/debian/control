@@ -10,6 +10,7 @@ Build-Depends: debhelper (>= 11),
  librust-proc-macro2-1+default-dev <!nocheck>,
  librust-quote-1+default-dev <!nocheck>,
  librust-syn-1+default-dev <!nocheck>,
+ librust-syn-1+extra-traits-dev <!nocheck>,
  librust-syn-1+full-dev <!nocheck>,
  librust-syn-1+visit-mut-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -26,6 +27,7 @@ Depends:
  librust-proc-macro2-1+default-dev,
  librust-quote-1+default-dev,
  librust-syn-1+default-dev,
+ librust-syn-1+extra-traits-dev,
  librust-syn-1+full-dev,
  librust-syn-1+visit-mut-dev
 Provides:
@@ -34,8 +36,8 @@ Provides:
  librust-proxmox-api-macro-0+default-dev (= ${binary:Version}),
  librust-proxmox-api-macro-0.3-dev (= ${binary:Version}),
  librust-proxmox-api-macro-0.3+default-dev (= ${binary:Version}),
- librust-proxmox-api-macro-0.3.1-dev (= ${binary:Version}),
- librust-proxmox-api-macro-0.3.1+default-dev (= ${binary:Version})
+ librust-proxmox-api-macro-0.3.2-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-0.3.2+default-dev (= ${binary:Version})
 Description: Proxmox API macro - Rust source code
  This package contains the source for the Rust proxmox-api-macro crate, packaged
  by debcargo for use with cargo and dh-cargo.
