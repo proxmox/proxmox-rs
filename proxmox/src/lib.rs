@@ -8,6 +8,9 @@ pub mod api;
 pub mod sys;
 pub mod tools;
 
+#[cfg(test)]
+pub mod test;
+
 /// An identity (nop) macro. Used by the `#[sortable]` proc macro.
 #[cfg(feature = "sortable-macro")]
 #[macro_export]
