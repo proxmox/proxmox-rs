@@ -1,3 +1,9 @@
+rust-proxmox (0.10.6-1) unstable; urgency=medium
+
+  * make get_property_string_type_text public
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 21 Feb 2021 15:45:54 +0100
+
 rust-proxmox (0.10.5-1) unstable; urgency=medium
 
   * implement dump_section_config
