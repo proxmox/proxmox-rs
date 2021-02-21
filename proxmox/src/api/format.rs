@@ -267,7 +267,7 @@ fn get_object_type_text(object_schema: &ObjectSchema) -> String {
     type_text
 }
 
-fn get_property_string_type_text(
+pub fn get_property_string_type_text(
     schema: &Schema,
 ) -> String {
 
