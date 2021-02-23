@@ -128,8 +128,6 @@ impl CliCommandMap {
         self
     }
 
-
-
     /// Insert the help command.
     pub fn insert_help(mut self) -> Self {
         self.commands

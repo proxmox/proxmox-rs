@@ -202,7 +202,7 @@ pub fn generate_nested_usage(
     let mut cmds: Vec<&String> = def.commands.keys().collect();
     cmds.sort();
 
-    let skip_options =  def.usage_skip_options;
+    let skip_options = def.usage_skip_options;
 
     let mut usage = String::new();
 
@@ -218,7 +218,13 @@ pub fn generate_nested_usage(
                 if !usage.is_empty() && format == DocumentationFormat::ReST {
                     usage.push_str("----\n\n");
                 }
-                usage.push_str(&generate_usage_str(&new_prefix, cli_cmd, format, "", skip_options));
+                usage.push_str(&generate_usage_str(
+                    &new_prefix,
+                    cli_cmd,
+                    format,
+                    "",
+                    skip_options,
+                ));
             }
             CommandLineInterface::Nested(map) => {
                 usage.push_str(&generate_nested_usage(&new_prefix, map, format));

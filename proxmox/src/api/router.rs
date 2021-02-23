@@ -36,11 +36,10 @@ use super::Permission;
 ///    &ObjectSchema::new("Hello World Example", &[])
 /// );
 /// ```
-pub type ApiHandlerFn =
-    &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<Value, Error>
-                  + Send
-                  + Sync
-                  + 'static);
+pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<Value, Error>
+              + Send
+              + Sync
+              + 'static);
 
 /// Asynchronous API handlers
 ///
@@ -68,11 +67,7 @@ pub type ApiHandlerFn =
 ///    &ObjectSchema::new("Hello World Example (async)", &[])
 /// );
 /// ```
-pub type ApiAsyncHandlerFn = &'static (dyn for<'a> Fn(
-    Value,
-    &'static ApiMethod,
-    &'a mut dyn RpcEnvironment,
-) -> ApiFuture<'a>
+pub type ApiAsyncHandlerFn = &'static (dyn for<'a> Fn(Value, &'static ApiMethod, &'a mut dyn RpcEnvironment) -> ApiFuture<'a>
               + Send
               + Sync);
 

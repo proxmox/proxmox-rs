@@ -5,11 +5,7 @@ use anyhow::{bail, Error};
 use std::io::Write;
 
 use crate::api::{
-    ApiHandler,
-    ApiMethod,
-    router::ReturnType,
-    section_config::SectionConfig,
-    schema::*,
+    router::ReturnType, schema::*, section_config::SectionConfig, ApiHandler, ApiMethod,
 };
 
 /// Enumerate different styles to display parameters/properties.
@@ -87,21 +83,27 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
         Schema::Null => String::from("<null>"), // should not happen
         Schema::String(string_schema) => {
             match string_schema {
-                StringSchema { type_text: Some(type_text), .. } => {
-                    String::from(*type_text)
-                }
-                StringSchema { format: Some(ApiStringFormat::Enum(variants)), .. } => {
-                    let list: Vec<String> = variants.iter().map(|e| String::from(e.value)).collect();
+                StringSchema {
+                    type_text: Some(type_text),
+                    ..
+                } => String::from(*type_text),
+                StringSchema {
+                    format: Some(ApiStringFormat::Enum(variants)),
+                    ..
+                } => {
+                    let list: Vec<String> =
+                        variants.iter().map(|e| String::from(e.value)).collect();
                     list.join("|")
                 }
                 // displaying regex add more confision than it helps
                 //StringSchema { format: Some(ApiStringFormat::Pattern(const_regex)), .. } => {
                 //    format!("/{}/", const_regex.regex_string)
                 //}
-                StringSchema { format: Some(ApiStringFormat::PropertyString(sub_schema)), .. } => {
-                    get_property_string_type_text(sub_schema)
-                }
-                _ => String::from("<string>")
+                StringSchema {
+                    format: Some(ApiStringFormat::PropertyString(sub_schema)),
+                    ..
+                } => get_property_string_type_text(sub_schema),
+                _ => String::from("<string>"),
             }
         }
         Schema::Boolean(_) => String::from("<boolean>"),
@@ -188,38 +190,36 @@ pub fn get_property_description(
     }
 }
 
-fn get_simply_type_text(
-    schema: &Schema,
-    list_enums: bool,
-) -> String {
-
+fn get_simply_type_text(schema: &Schema, list_enums: bool) -> String {
     match schema {
         Schema::Null => String::from("<null>"), // should not happen
         Schema::Boolean(_) => String::from("<1|0>"),
         Schema::Integer(_) => String::from("<integer>"),
         Schema::Number(_) => String::from("<number>"),
-        Schema::String(string_schema) => {
-            match string_schema {
-                StringSchema { type_text: Some(type_text), .. } => {
-                    String::from(*type_text)
+        Schema::String(string_schema) => match string_schema {
+            StringSchema {
+                type_text: Some(type_text),
+                ..
+            } => String::from(*type_text),
+            StringSchema {
+                format: Some(ApiStringFormat::Enum(variants)),
+                ..
+            } => {
+                if list_enums && variants.len() <= 3 {
+                    let list: Vec<String> =
+                        variants.iter().map(|e| String::from(e.value)).collect();
+                    list.join("|")
+                } else {
+                    String::from("<enum>")
                 }
-                StringSchema { format: Some(ApiStringFormat::Enum(variants)), .. } => {
-                    if list_enums && variants.len() <= 3 {
-                        let list: Vec<String> = variants.iter().map(|e| String::from(e.value)).collect();
-                        list.join("|")
-                    } else {
-                        String::from("<enum>")
-                    }
-                }
-                _ => String::from("<string>"),
             }
-        }
+            _ => String::from("<string>"),
+        },
         _ => panic!("get_simply_type_text: expected simply type"),
     }
 }
 
 fn get_object_type_text(object_schema: &ObjectSchema) -> String {
-
     let mut parts = Vec::new();
 
     let mut add_part = |name, optional, schema| {
@@ -238,24 +238,32 @@ fn get_object_type_text(object_schema: &ObjectSchema) -> String {
 
     // add default key first
     if let Some(ref default_key) = object_schema.default_key {
-        let (optional, schema) =  object_schema.lookup(default_key).unwrap();
+        let (optional, schema) = object_schema.lookup(default_key).unwrap();
         add_part(default_key, optional, schema);
     }
 
     // add required keys
     for (name, optional, schema) in object_schema.properties {
-        if *optional { continue; }
+        if *optional {
+            continue;
+        }
         if let Some(ref default_key) = object_schema.default_key {
-            if name == default_key { continue; }
+            if name == default_key {
+                continue;
+            }
         }
         add_part(name, *optional, schema);
     }
 
     // add options keys
     for (name, optional, schema) in object_schema.properties {
-        if !*optional { continue; }
+        if !*optional {
+            continue;
+        }
         if let Some(ref default_key) = object_schema.default_key {
-            if name == default_key { continue; }
+            if name == default_key {
+                continue;
+            }
         }
         add_part(name, *optional, schema);
     }
@@ -267,14 +275,9 @@ fn get_object_type_text(object_schema: &ObjectSchema) -> String {
     type_text
 }
 
-pub fn get_property_string_type_text(
-    schema: &Schema,
-) -> String {
-
+pub fn get_property_string_type_text(schema: &Schema) -> String {
     match schema {
-        Schema::Object(object_schema) => {
-            get_object_type_text(object_schema)
-        }
+        Schema::Object(object_schema) => get_object_type_text(object_schema),
         Schema::Array(array_schema) => {
             let item_type = get_simply_type_text(array_schema.items, true);
             format!("[{}, ...]", item_type)
@@ -285,12 +288,13 @@ pub fn get_property_string_type_text(
 
 /// Generate ReST Documentaion for enumeration.
 pub fn dump_enum_properties(schema: &Schema) -> Result<String, Error> {
-
     let mut res = String::new();
 
     if let Schema::String(StringSchema {
-        format: Some(ApiStringFormat::Enum(variants)), ..
-    }) = schema {
+        format: Some(ApiStringFormat::Enum(variants)),
+        ..
+    }) = schema
+    {
         for item in variants.iter() {
             res.push_str(&format!(":``{}``: ", item.value));
             let descr = wrap_text("", "  ", item.description, 80);
@@ -310,7 +314,8 @@ pub fn dump_properties<I>(
     style: ParameterDisplayStyle,
     skip: &[&str],
 ) -> String
-    where I: Iterator<Item = &'static SchemaPropertyEntry>,
+where
+    I: Iterator<Item = &'static SchemaPropertyEntry>,
 {
     let mut res = String::new();
     let next_indent = format!("  {}", indent);
@@ -319,15 +324,12 @@ pub fn dump_properties<I>(
     let mut optional_list: Vec<String> = Vec::new();
 
     for (prop, optional, schema) in param.properties() {
+        if skip.iter().find(|n| n == &prop).is_some() {
+            continue;
+        }
 
-        if skip.iter().find(|n| n == &prop).is_some() { continue; }
-
-        let mut param_descr = get_property_description(
-            prop,
-            &schema,
-            style,
-            DocumentationFormat::ReST,
-        );
+        let mut param_descr =
+            get_property_description(prop, &schema, style, DocumentationFormat::ReST);
 
         if !indent.is_empty() {
             param_descr = format!("{}{}", indent, param_descr); // indent first line
@@ -336,11 +338,18 @@ pub fn dump_properties<I>(
 
         if style == ParameterDisplayStyle::Config {
             match schema {
-                Schema::String(StringSchema { format: Some(ApiStringFormat::PropertyString(sub_schema)), .. }) => {
+                Schema::String(StringSchema {
+                    format: Some(ApiStringFormat::PropertyString(sub_schema)),
+                    ..
+                }) => {
                     match sub_schema {
                         Schema::Object(object_schema) => {
                             let sub_text = dump_properties(
-                                object_schema, &next_indent, ParameterDisplayStyle::ConfigSub, &[]);
+                                object_schema,
+                                &next_indent,
+                                ParameterDisplayStyle::ConfigSub,
+                                &[],
+                            );
                             param_descr.push_str(&sub_text);
                         }
                         Schema::Array(_) => {
@@ -384,10 +393,7 @@ pub fn dump_properties<I>(
     res
 }
 
-fn dump_api_return_schema(
-    returns: &ReturnType,
-    style: ParameterDisplayStyle,
-) -> String {
+fn dump_api_return_schema(returns: &ReturnType, style: ParameterDisplayStyle) -> String {
     let schema = &returns.schema;
 
     let mut res = if returns.optional {
@@ -445,7 +451,6 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
     match def {
         None => None,
         Some(api_method) => {
-
             let description = wrap_text("", "", &api_method.parameters.description(), 80);
             let param_descr = dump_properties(&api_method.parameters, "", style, &[]);
 
@@ -521,13 +526,11 @@ pub fn dump_api(
 
 /// Generate ReST Documentaion for ``SectionConfig``
 pub fn dump_section_config(config: &SectionConfig) -> String {
-
     let mut res = String::new();
 
     let plugin_count = config.plugins().len();
 
     for plugin in config.plugins().values() {
-
         let name = plugin.type_name();
         let properties = plugin.properties();
         let skip = match plugin.id_property() {
@@ -537,10 +540,18 @@ pub fn dump_section_config(config: &SectionConfig) -> String {
 
         if plugin_count > 1 {
             let description = wrap_text("", "", &properties.description, 80);
-            res.push_str(&format!("\n**Section type** \'``{}``\':  {}\n\n", name, description));
+            res.push_str(&format!(
+                "\n**Section type** \'``{}``\':  {}\n\n",
+                name, description
+            ));
         }
 
-        res.push_str(&dump_properties(properties, "", ParameterDisplayStyle::Config, &skip));
+        res.push_str(&dump_properties(
+            properties,
+            "",
+            ParameterDisplayStyle::Config,
+            &skip,
+        ));
     }
 
     res

@@ -84,8 +84,11 @@ fn get_simple_completion(
     if !arg_param.is_empty() {
         let prop_name = arg_param[0];
         if let Some((optional, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
-
-            let is_array_param = if let Schema::Array(_) = schema { true } else { false };
+            let is_array_param = if let Schema::Array(_) = schema {
+                true
+            } else {
+                false
+            };
 
             if (optional || is_array_param) && args[0].starts_with('-') {
                 // argument parameter is optional (or array) , and arg
