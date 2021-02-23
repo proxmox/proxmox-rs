@@ -9,9 +9,7 @@ pub struct AsyncBlockingReader<R> {
 
 impl<W> AsyncBlockingReader<W> {
     pub fn new(inner: W) -> Self {
-        Self {
-            inner
-        }
+        Self { inner }
     }
 
     pub fn inner(&self) -> &W {
@@ -26,10 +24,7 @@ pub struct AsyncBlockingWriter<W> {
 
 impl<W> AsyncBlockingWriter<W> {
     pub fn new(inner: W) -> Self {
-        Self {
-            inner,
-            seek_pos: 0,
-        }
+        Self { inner, seek_pos: 0 }
     }
 
     pub fn inner(&self) -> &W {
@@ -85,10 +80,7 @@ impl<R: std::io::Seek + Unpin> AsyncSeek for AsyncBlockingWriter<R> {
         Ok(())
     }
 
-    fn poll_complete(
-        self: Pin<&mut Self>,
-        _cx: &mut Context<'_>,
-    ) -> Poll<std::io::Result<u64>> {
+    fn poll_complete(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<u64>> {
         let this = Pin::get_mut(self);
         Poll::Ready(Ok(this.seek_pos))
     }

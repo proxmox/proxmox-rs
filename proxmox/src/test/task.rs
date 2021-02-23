@@ -12,7 +12,7 @@ where
     unsafe {
         match Pin::new_unchecked(&mut fut).poll(&mut cx) {
             Poll::Pending => Err(crate::sys::error::io_err_other(
-                    "got Poll::Pending synchronous context",
+                "got Poll::Pending synchronous context",
             )),
             Poll::Ready(r) => r,
         }
@@ -20,7 +20,7 @@ where
 }
 
 const WAKER_VTABLE: std::task::RawWakerVTable =
-std::task::RawWakerVTable::new(forbid_clone, forbid_wake, forbid_wake, ignore_drop);
+    std::task::RawWakerVTable::new(forbid_clone, forbid_wake, forbid_wake, ignore_drop);
 
 unsafe fn forbid_clone(_: *const ()) -> std::task::RawWaker {
     panic!("tried to clone waker for synchronous task");
