@@ -11,10 +11,6 @@ description = "Proxmox library"
 
 exclude = [ "debian" ]
 
-[[example]]
-name = "u2ftest"
-required-features = [ "tokio", "tokio-stream", "u2f" ]
-
 [dependencies]
 # General dependencies
 anyhow = "1.0"
