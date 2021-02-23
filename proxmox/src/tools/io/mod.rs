@@ -160,8 +160,8 @@ where
 mod test {
     use std::io::Cursor;
 
-    use crate::tools::io::{sparse_copy, sparse_copy_async};
     use crate::test::io::{AsyncBlockingReader, AsyncBlockingWriter};
+    use crate::tools::io::{sparse_copy, sparse_copy_async};
 
     const LEN: usize = 10000;
 
@@ -202,7 +202,6 @@ mod test {
             assert_eq!(result_data.get_ref()[i], 1);
         }
     }
-
 
     #[test]
     fn test_sparse_copy_async() {

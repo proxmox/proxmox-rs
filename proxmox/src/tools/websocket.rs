@@ -625,10 +625,7 @@ impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> 
                         }
                     }
 
-                    let len = min(
-                        buf.remaining(),
-                        min(header.payload_len, read_buffer.len()),
-                    );
+                    let len = min(buf.remaining(), min(header.payload_len, read_buffer.len()));
 
                     let mut data = read_buffer.remove_data(len);
                     mask_bytes(header.mask, &mut data);
