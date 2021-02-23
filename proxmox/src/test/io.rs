@@ -45,13 +45,13 @@ impl<R: std::io::Read + Unpin> AsyncRead for AsyncBlockingReader<R> {
     ) -> Poll<std::io::Result<()>> {
         let this = Pin::get_mut(self);
         let mut read_buf = buf.initialize_unfilled();
-        match this.inner.read(&mut read_buf) {
+        Poll::Ready(match this.inner.read(&mut read_buf) {
             Ok(len) => {
                 buf.advance(len);
-                Poll::Ready(Ok(()))
+                Ok(())
             }
-            Err(err) => Poll::Ready(Err(err)),
-        }
+            Err(err) => Err(err),
+        })
     }
 }
 
@@ -62,10 +62,10 @@ impl<R: std::io::Write + Unpin> AsyncWrite for AsyncBlockingWriter<R> {
         buf: &[u8],
     ) -> Poll<std::io::Result<usize>> {
         let this = Pin::get_mut(self);
-        match this.inner.write(buf) {
-            Ok(len) => Poll::Ready(Ok(len)),
-            Err(err) => Poll::Ready(Err(err)),
-        }
+        Poll::Ready(match this.inner.write(buf) {
+            Ok(len) => Ok(len),
+            Err(err) => Err(err),
+        })
     }
 
     fn poll_flush(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
