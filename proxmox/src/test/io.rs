@@ -69,7 +69,8 @@ impl<R: std::io::Write + Unpin> AsyncWrite for AsyncBlockingWriter<R> {
     }
 
     fn poll_flush(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
-        Poll::Ready(Ok(()))
+        let this = Pin::get_mut(self);
+        Poll::Ready(this.inner.flush())
     }
 
     fn poll_shutdown(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
