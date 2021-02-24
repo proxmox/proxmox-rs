@@ -9,9 +9,10 @@ use proxmox::api::schema::{Updatable, Updater};
 /// An example of a simple struct type.
 #[cfg_attr(not(feature = "noserde"), derive(Deserialize, Serialize))]
 #[derive(Debug, PartialEq, Updater)]
+#[serde(rename_all = "kebab-case")]
 pub struct Simple {
     /// A test string.
-    one: String,
+    one_field: String,
 
     /// An optional auto-derived value for testing:
     #[serde(skip_serializing_if = "Option::is_empty")]
@@ -191,7 +192,7 @@ mod test_creatable {
                 "id": "Id1",
                 "name": "The Name",
                 "extra": "Extra Info",
-                "one": "Part of Simple",
+                "one-field": "Part of Simple",
                 "info2": "More Info 2",
             }),
             &API_METHOD_CREATE_THING,
@@ -209,7 +210,7 @@ mod test_creatable {
                 complex: Complex {
                     extra: "Extra Info".to_string(),
                     simple: Simple {
-                        one: "Part of Simple".to_string(),
+                        one_field: "Part of Simple".to_string(),
                         opt: None,
                     },
                 },
@@ -245,7 +246,7 @@ mod test_creatable {
                 complex: Complex {
                     extra: "Extra Info".to_string(),
                     simple: Simple {
-                        one: "Part of Simple".to_string(),
+                        one_field: "Part of Simple".to_string(),
                         opt: None,
                     },
                 },
@@ -270,7 +271,7 @@ mod test_creatable {
                 complex: Complex {
                     extra: "Partial flatten update".to_string(),
                     simple: Simple {
-                        one: "Part of Simple".to_string(),
+                        one_field: "Part of Simple".to_string(),
                         opt: None,
                     },
                 },
@@ -295,7 +296,7 @@ mod test_creatable {
                 complex: Complex {
                     extra: "Partial flatten update".to_string(),
                     simple: Simple {
-                        one: "Part of Simple".to_string(),
+                        one_field: "Part of Simple".to_string(),
                         opt: Some("Deeply nested optional update.".to_string()),
                     },
                 },
@@ -320,7 +321,7 @@ mod test_creatable {
                 complex: Complex {
                     extra: "Partial flatten update".to_string(),
                     simple: Simple {
-                        one: "Part of Simple".to_string(),
+                        one_field: "Part of Simple".to_string(),
                         opt: None,
                     },
                 },

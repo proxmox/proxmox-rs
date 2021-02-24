@@ -1,7 +1,10 @@
+use std::convert::TryFrom;
+
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 
+use crate::serde;
 use crate::util;
 
 pub(crate) fn updatable(item: TokenStream) -> Result<TokenStream, syn::Error> {
@@ -90,6 +93,7 @@ fn derive_named_struct_updatable(
 ) -> Result<TokenStream, syn::Error> {
     no_generics(generics);
 
+    let serde_container_attrs = serde::ContainerAttrib::try_from(&attrs[..])?;
     let args = UpdatableArgs::from_attributes(attrs);
     let updater = match args.updater {
         Some(updater) => updater,
@@ -101,32 +105,41 @@ fn derive_named_struct_updatable(
     let mut build = TokenStream::new();
 
     for field in fields.named {
+        let serde_attrs = serde::SerdeAttrib::try_from(&field.attrs[..])?;
         let attrs = UpdaterFieldArgs::from_attributes(field.attrs);
 
-        let field_name = field
+        let field_ident = field
             .ident
             .as_ref()
             .expect("unnamed field in named struct?");
 
-        let field_name_string = field_name.to_string();
+        let field_name_string = if let Some(renamed) = serde_attrs.rename {
+            renamed.into_str()
+        } else if let Some(rename_all) = serde_container_attrs.rename_all {
+            let name = rename_all.apply_to_field(&field_ident.to_string());
+            name
+        } else {
+            field_ident.to_string()
+        };
+
         let build_err = format!(
             "failed to build value for field '{}': {{}}",
             field_name_string
         );
         if util::is_option_type(&field.ty).is_some() {
             delete.extend(quote! {
-                #field_name_string => { self.#field_name = None; }
+                #field_name_string => { self.#field_ident = None; }
             });
             build.extend(quote! {
-                #field_name: ::proxmox::api::schema::Updatable::try_build_from(
-                    from.#field_name
+                #field_ident: ::proxmox::api::schema::Updatable::try_build_from(
+                    from.#field_ident
                 )
                 .map_err(|err| ::anyhow::format_err!(#build_err, err))?,
             });
         } else {
             build.extend(quote! {
-                #field_name: ::proxmox::api::schema::Updatable::try_build_from(
-                    from.#field_name
+                #field_ident: ::proxmox::api::schema::Updatable::try_build_from(
+                    from.#field_ident
                 )
                 .map_err(|err| ::anyhow::format_err!(#build_err, err))?,
             });
@@ -135,18 +148,18 @@ fn derive_named_struct_updatable(
         if attrs.fixed {
             let error = format!(
                 "field '{}' must not be set when updating existing data",
-                field_name
+                field_ident
             );
             apply.extend(quote! {
-                if from.#field_name.is_some() {
+                if from.#field_ident.is_some() {
                     ::anyhow::bail!(#error);
                 }
             });
         } else {
             apply.extend(quote! {
                 ::proxmox::api::schema::Updatable::update_from(
-                    &mut self.#field_name,
-                    from.#field_name,
+                    &mut self.#field_ident,
+                    from.#field_ident,
                     delete,
                 )?;
             });
