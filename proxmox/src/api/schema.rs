@@ -525,17 +525,13 @@ impl AllOfSchema {
 
 /// Beside [`ObjectSchema`] we also have an [`AllOfSchema`] which also represents objects.
 pub trait ObjectSchemaType {
-    type PropertyIter: Iterator<Item = &'static SchemaPropertyEntry>;
-
     fn description(&self) -> &'static str;
     fn lookup(&self, key: &str) -> Option<(bool, &Schema)>;
-    fn properties(&self) -> Self::PropertyIter;
+    fn properties(&self) -> ObjectPropertyIterator;
     fn additional_properties(&self) -> bool;
 }
 
 impl ObjectSchemaType for ObjectSchema {
-    type PropertyIter = std::slice::Iter<'static, SchemaPropertyEntry>;
-
     fn description(&self) -> &'static str {
         self.description
     }
@@ -544,8 +540,12 @@ impl ObjectSchemaType for ObjectSchema {
         ObjectSchema::lookup(self, key)
     }
 
-    fn properties(&self) -> Self::PropertyIter {
-        self.properties.iter()
+    fn properties(&self) -> ObjectPropertyIterator {
+        ObjectPropertyIterator {
+            schemas: [].iter(),
+            properties: Some(self.properties.iter()),
+            nested: None,
+        }
     }
 
     fn additional_properties(&self) -> bool {
@@ -554,8 +554,6 @@ impl ObjectSchemaType for ObjectSchema {
 }
 
 impl ObjectSchemaType for AllOfSchema {
-    type PropertyIter = AllOfProperties;
-
     fn description(&self) -> &'static str {
         self.description
     }
@@ -564,8 +562,8 @@ impl ObjectSchemaType for AllOfSchema {
         AllOfSchema::lookup(self, key)
     }
 
-    fn properties(&self) -> Self::PropertyIter {
-        AllOfProperties {
+    fn properties(&self) -> ObjectPropertyIterator {
+        ObjectPropertyIterator {
             schemas: self.list.iter(),
             properties: None,
             nested: None,
@@ -578,13 +576,13 @@ impl ObjectSchemaType for AllOfSchema {
 }
 
 #[doc(hidden)]
-pub struct AllOfProperties {
+pub struct ObjectPropertyIterator {
     schemas: std::slice::Iter<'static, &'static Schema>,
     properties: Option<std::slice::Iter<'static, SchemaPropertyEntry>>,
-    nested: Option<Box<AllOfProperties>>,
+    nested: Option<Box<ObjectPropertyIterator>>,
 }
 
-impl Iterator for AllOfProperties {
+impl Iterator for ObjectPropertyIterator {
     type Item = &'static SchemaPropertyEntry;
 
     fn next(&mut self) -> Option<&'static SchemaPropertyEntry> {
@@ -598,7 +596,7 @@ impl Iterator for AllOfProperties {
                 Some(item) => return Some(item),
                 None => match self.schemas.next()? {
                     Schema::AllOf(o) => self.nested = Some(Box::new(o.properties())),
-                    Schema::Object(o) => self.properties = Some(o.properties()),
+                    Schema::Object(o) => self.properties = Some(o.properties.iter()),
                     _ => {
                         self.properties = None;
                         continue;
@@ -781,8 +779,6 @@ pub enum ParameterSchema {
 }
 
 impl ObjectSchemaType for ParameterSchema {
-    type PropertyIter = Box<dyn Iterator<Item = &'static SchemaPropertyEntry>>;
-
     fn description(&self) -> &'static str {
         match self {
             ParameterSchema::Object(o) => o.description(),
@@ -797,10 +793,10 @@ impl ObjectSchemaType for ParameterSchema {
         }
     }
 
-    fn properties(&self) -> Self::PropertyIter {
+    fn properties(&self) -> ObjectPropertyIterator {
         match self {
-            ParameterSchema::Object(o) => Box::new(o.properties()),
-            ParameterSchema::AllOf(o) => Box::new(o.properties()),
+            ParameterSchema::Object(o) => o.properties(),
+            ParameterSchema::AllOf(o) => o.properties(),
         }
     }
 
@@ -1106,13 +1102,10 @@ pub fn verify_json_array(data: &Value, schema: &ArraySchema) -> Result<(), Error
 }
 
 /// Verify JSON value using an `ObjectSchema`.
-pub fn verify_json_object<I>(
+pub fn verify_json_object(
     data: &Value,
-    schema: &dyn ObjectSchemaType<PropertyIter = I>,
-) -> Result<(), Error>
-where
-    I: Iterator<Item = &'static SchemaPropertyEntry>,
-{
+    schema: &dyn ObjectSchemaType,
+) -> Result<(), Error> {
     let map = match data {
         Value::Object(ref map) => map,
         Value::Array(_) => bail!("Expected object - got array."),

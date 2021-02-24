@@ -326,10 +326,10 @@ struct TableColumn {
     right_align: bool,
 }
 
-fn format_table<W: Write, I: Iterator<Item = &'static SchemaPropertyEntry>>(
+fn format_table<W: Write>(
     output: W,
     list: &mut Vec<Value>,
-    schema: &dyn ObjectSchemaType<PropertyIter = I>,
+    schema: &dyn ObjectSchemaType,
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
     let properties_to_print = if options.column_config.is_empty() {
@@ -580,10 +580,10 @@ fn render_table<W: Write>(
     Ok(())
 }
 
-fn format_object<W: Write, I: Iterator<Item = &'static SchemaPropertyEntry>>(
+fn format_object<W: Write>(
     output: W,
     data: &Value,
-    schema: &dyn ObjectSchemaType<PropertyIter = I>,
+    schema: &dyn ObjectSchemaType,
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
     let properties_to_print = if options.column_config.is_empty() {

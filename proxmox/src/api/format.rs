@@ -308,15 +308,12 @@ pub fn dump_enum_properties(schema: &Schema) -> Result<String, Error> {
 }
 
 /// Generate ReST Documentaion for object properties
-pub fn dump_properties<I>(
-    param: &dyn ObjectSchemaType<PropertyIter = I>,
+pub fn dump_properties(
+    param: &dyn ObjectSchemaType,
     indent: &str,
     style: ParameterDisplayStyle,
     skip: &[&str],
-) -> String
-where
-    I: Iterator<Item = &'static SchemaPropertyEntry>,
-{
+) -> String {
     let mut res = String::new();
     let next_indent = format!("  {}", indent);
 
@@ -539,7 +536,7 @@ pub fn dump_section_config(config: &SectionConfig) -> String {
         };
 
         if plugin_count > 1 {
-            let description = wrap_text("", "", &properties.description, 80);
+            let description = wrap_text("", "", properties.description(), 80);
             res.push_str(&format!(
                 "\n**Section type** \'``{}``\':  {}\n\n",
                 name, description
