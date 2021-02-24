@@ -34,7 +34,7 @@ use crate::try_block;
 /// Associates a section type name with a `Schema`.
 pub struct SectionConfigPlugin {
     type_name: String,
-    properties: &'static ObjectSchema,
+    properties: &'static (dyn ObjectSchemaType + 'static),
     id_property: Option<String>,
 }
 
@@ -42,7 +42,7 @@ impl SectionConfigPlugin {
     pub fn new(
         type_name: String,
         id_property: Option<String>,
-        properties: &'static ObjectSchema,
+        properties: &'static (dyn ObjectSchemaType + 'static),
     ) -> Self {
         Self {
             type_name,
@@ -59,7 +59,7 @@ impl SectionConfigPlugin {
         self.id_property.as_deref()
     }
 
-    pub fn properties(&self) -> &ObjectSchema {
+    pub fn properties(&self) -> &(dyn ObjectSchemaType + 'static) {
         self.properties
     }
 
@@ -361,10 +361,10 @@ impl SectionConfig {
         let mut state = ParseState::BeforeHeader;
 
         let test_required_properties = |value: &Value,
-                                        schema: &ObjectSchema,
+                                        schema: &dyn ObjectSchemaType,
                                         id_property: &Option<String>|
          -> Result<(), Error> {
-            for (name, optional, _prop_schema) in schema.properties {
+            for (name, optional, _prop_schema) in schema.properties() {
                 if let Some(id_property) = id_property {
                     if name == id_property {
                         // the id_property is the section header, skip for requirement check
@@ -423,7 +423,7 @@ impl SectionConfig {
                                 // finish section
                                 test_required_properties(
                                     config,
-                                    &plugin.properties,
+                                    plugin.properties,
                                     &plugin.id_property,
                                 )?;
                                 if let Some(id_property) = &plugin.id_property {
@@ -478,7 +478,7 @@ impl SectionConfig {
                 if let ParseState::InsideSection(plugin, ref mut section_id, ref mut config) = state
                 {
                     // finish section
-                    test_required_properties(&config, &plugin.properties, &plugin.id_property)?;
+                    test_required_properties(&config, plugin.properties, &plugin.id_property)?;
                     if let Some(id_property) = &plugin.id_property {
                         config[id_property] = Value::from(section_id.clone());
                     }
@@ -829,4 +829,59 @@ group: mygroup
     println!("RES: {:?}", res);
     let raw = config.write(filename, &res.unwrap());
     println!("CONFIG:\n{}", raw.unwrap());
+}
+
+#[test]
+fn test_section_config_with_all_of_schema() {
+    let filename = "storage.cfg";
+
+    const PART1: Schema = ObjectSchema::new(
+        "properties 1",
+        &[
+            (
+                "content",
+                true,
+                &StringSchema::new("Storage content types.").schema(),
+            ),
+        ],
+    )
+    .schema();
+
+    const PART2: Schema = ObjectSchema::new(
+        "properties 2",
+        &[
+            (
+                "thinpool",
+                false,
+                &StringSchema::new("LVM thin pool name.").schema(),
+            ),
+        ],
+    )
+    .schema();
+
+    const PROPERTIES: AllOfSchema = AllOfSchema::new("properties", &[&PART1, &PART2]);
+
+    let plugin = SectionConfigPlugin::new("lvmthin".to_string(), None, &PROPERTIES);
+
+    const ID_SCHEMA: Schema = StringSchema::new("Storage ID schema.")
+        .min_length(3)
+        .schema();
+    let mut config = SectionConfig::new(&ID_SCHEMA);
+    config.register_plugin(plugin);
+
+    let raw = r"lvmthin: local-lvm
+	content rootdir,images
+	thinpool data
+
+lvmthin: local-lvm2
+	content rootdir,images
+	thinpool data
+";
+
+    let res = config.parse(filename, &raw);
+    println!("RES: {:?}", res);
+    let created = config.write(filename, &res.unwrap()).expect("failed to write config");
+    println!("CONFIG:\n{}", raw);
+
+    assert_eq!(raw, created);
 }
