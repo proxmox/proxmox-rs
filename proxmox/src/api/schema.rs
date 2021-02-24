@@ -505,6 +505,11 @@ impl AllOfSchema {
     pub fn lookup(&self, key: &str) -> Option<(bool, &Schema)> {
         for entry in self.list {
             match entry {
+                Schema::AllOf(s) => {
+                    if let Some(v) = s.lookup(key) {
+                        return Some(v);
+                    }
+                }
                 Schema::Object(s) => {
                     if let Some(v) = s.lookup(key) {
                         return Some(v);
