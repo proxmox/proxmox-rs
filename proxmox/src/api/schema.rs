@@ -838,26 +838,36 @@ pub fn parse_boolean(value_str: &str) -> Result<bool, Error> {
 
 /// Parse a complex property string (`ApiStringFormat::PropertyString`)
 pub fn parse_property_string(value_str: &str, schema: &'static Schema) -> Result<Value, Error> {
+    // helper for object/allof schemas:
+    fn parse_object<T: Into<ParameterSchema>>(
+        value_str: &str,
+        schema: T,
+        default_key: Option<&'static str>,
+    ) -> Result<Value, Error> {
+        let mut param_list: Vec<(String, String)> = vec![];
+        let key_val_list: Vec<&str> = value_str
+            .split(|c: char| c == ',' || c == ';')
+            .filter(|s| !s.is_empty())
+            .collect();
+        for key_val in key_val_list {
+            let kv: Vec<&str> = key_val.splitn(2, '=').collect();
+            if kv.len() == 2 {
+                param_list.push((kv[0].trim().into(), kv[1].trim().into()));
+            } else if let Some(key) = default_key {
+                param_list.push((key.into(), kv[0].trim().into()));
+            } else {
+                bail!("Value without key, but schema does not define a default key.");
+            }
+        }
+
+        parse_parameter_strings(&param_list, schema, true).map_err(Error::from)
+    }
+
     match schema {
         Schema::Object(object_schema) => {
-            let mut param_list: Vec<(String, String)> = vec![];
-            let key_val_list: Vec<&str> = value_str
-                .split(|c: char| c == ',' || c == ';')
-                .filter(|s| !s.is_empty())
-                .collect();
-            for key_val in key_val_list {
-                let kv: Vec<&str> = key_val.splitn(2, '=').collect();
-                if kv.len() == 2 {
-                    param_list.push((kv[0].trim().into(), kv[1].trim().into()));
-                } else if let Some(key) = object_schema.default_key {
-                    param_list.push((key.into(), kv[0].trim().into()));
-                } else {
-                    bail!("Value without key, but schema does not define a default key.");
-                }
-            }
-
-            parse_parameter_strings(&param_list, object_schema, true).map_err(Error::from)
+            parse_object(value_str, object_schema, object_schema.default_key)
         }
+        Schema::AllOf(all_of_schema) => parse_object(value_str, all_of_schema, None),
         Schema::Array(array_schema) => {
             let mut array: Vec<Value> = vec![];
             let list: Vec<&str> = value_str
