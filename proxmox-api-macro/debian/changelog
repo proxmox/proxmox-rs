@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (0.3.3-1) unstable; urgency=medium
+
+  * updater: take serde renames into account
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 24 Feb 2021 09:36:24 +0100
+
 rust-proxmox-api-macro (0.3.2-1) unstable; urgency=medium
 
   * added Updater derive macros
