@@ -837,25 +837,21 @@ fn test_section_config_with_all_of_schema() {
 
     const PART1: Schema = ObjectSchema::new(
         "properties 1",
-        &[
-            (
-                "content",
-                true,
-                &StringSchema::new("Storage content types.").schema(),
-            ),
-        ],
+        &[(
+            "content",
+            true,
+            &StringSchema::new("Storage content types.").schema(),
+        )],
     )
     .schema();
 
     const PART2: Schema = ObjectSchema::new(
         "properties 2",
-        &[
-            (
-                "thinpool",
-                false,
-                &StringSchema::new("LVM thin pool name.").schema(),
-            ),
-        ],
+        &[(
+            "thinpool",
+            false,
+            &StringSchema::new("LVM thin pool name.").schema(),
+        )],
     )
     .schema();
 
@@ -880,7 +876,9 @@ lvmthin: local-lvm2
 
     let res = config.parse(filename, &raw);
     println!("RES: {:?}", res);
-    let created = config.write(filename, &res.unwrap()).expect("failed to write config");
+    let created = config
+        .write(filename, &res.unwrap())
+        .expect("failed to write config");
     println!("CONFIG:\n{}", raw);
 
     assert_eq!(raw, created);
