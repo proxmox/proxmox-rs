@@ -1,3 +1,13 @@
+rust-proxmox (0.11.0-1) unstable; urgency=medium
+
+  * fix some issues with nested AllOfSchemas
+
+  * remove associated type PropertyIter from ObjectSchemaType trait
+
+  * support AllOf schemas in SectionConfig
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 25 Feb 2021 09:18:18 +0100
+
 rust-proxmox (0.10.7-1) unstable; urgency=medium
 
   * add test submodule
