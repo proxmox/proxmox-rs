@@ -34,7 +34,7 @@ use crate::try_block;
 /// Associates a section type name with a `Schema`.
 pub struct SectionConfigPlugin {
     type_name: String,
-    properties: &'static (dyn ObjectSchemaType + 'static),
+    properties: &'static (dyn ObjectSchemaType + Send + Sync + 'static),
     id_property: Option<String>,
 }
 
@@ -42,7 +42,7 @@ impl SectionConfigPlugin {
     pub fn new(
         type_name: String,
         id_property: Option<String>,
-        properties: &'static (dyn ObjectSchemaType + 'static),
+        properties: &'static (dyn ObjectSchemaType + Send + Sync + 'static),
     ) -> Self {
         Self {
             type_name,
@@ -59,7 +59,7 @@ impl SectionConfigPlugin {
         self.id_property.as_deref()
     }
 
-    pub fn properties(&self) -> &(dyn ObjectSchemaType + 'static) {
+    pub fn properties(&self) -> &(dyn ObjectSchemaType + Send + Sync + 'static) {
         self.properties
     }
 
@@ -361,7 +361,7 @@ impl SectionConfig {
         let mut state = ParseState::BeforeHeader;
 
         let test_required_properties = |value: &Value,
-                                        schema: &dyn ObjectSchemaType,
+                                        schema: &(dyn ObjectSchemaType + Send + Sync),
                                         id_property: &Option<String>|
          -> Result<(), Error> {
             for (name, optional, _prop_schema) in schema.properties() {
