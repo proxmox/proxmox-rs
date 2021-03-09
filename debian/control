@@ -34,8 +34,8 @@ Provides:
  librust-proxmox-acme-rs-0+default-dev (= ${binary:Version}),
  librust-proxmox-acme-rs-0.1-dev (= ${binary:Version}),
  librust-proxmox-acme-rs-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-acme-rs-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-acme-rs-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-acme-rs-0.1.1-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1.1+default-dev (= ${binary:Version})
 Description: ACME client library - Rust source code
  This package contains the source for the Rust proxmox-acme-rs crate, packaged
  by debcargo for use with cargo and dh-cargo.
@@ -53,8 +53,8 @@ Provides:
  librust-proxmox-acme-rs-0+curl-dev (= ${binary:Version}),
  librust-proxmox-acme-rs-0.1+client-dev (= ${binary:Version}),
  librust-proxmox-acme-rs-0.1+curl-dev (= ${binary:Version}),
- librust-proxmox-acme-rs-0.1.0+client-dev (= ${binary:Version}),
- librust-proxmox-acme-rs-0.1.0+curl-dev (= ${binary:Version})
+ librust-proxmox-acme-rs-0.1.1+client-dev (= ${binary:Version}),
+ librust-proxmox-acme-rs-0.1.1+curl-dev (= ${binary:Version})
 Description: ACME client library - feature "client" and 1 more
  This metapackage enables feature "client" for the Rust proxmox-acme-rs crate,
  by pulling in any additional dependencies needed by that feature.

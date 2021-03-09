@@ -1,3 +1,9 @@
+rust-proxmox-acme-rs (0.1.1-1) pve; urgency=medium
+
+  * make AccountData fields public
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 09 Mar 2021 13:22:55 +0100
+
 rust-proxmox-acme-rs (0.1.0-1) pve; urgency=medium
 
   * initial release
