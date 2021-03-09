@@ -161,22 +161,22 @@ pub struct AccountData {
         skip_serializing_if = "AccountStatus::is_new",
         default = "AccountStatus::new"
     )]
-    status: AccountStatus,
+    pub status: AccountStatus,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    orders: Option<String>,
+    pub orders: Option<String>,
 
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    contact: Vec<String>,
+    pub contact: Vec<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    terms_of_service_agreed: Option<bool>,
+    pub terms_of_service_agreed: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    external_account_binding: Option<Value>,
+    pub external_account_binding: Option<Value>,
 
     #[serde(default = "default_true", skip_serializing_if = "is_false")]
-    only_return_existing: bool,
+    pub only_return_existing: bool,
 }
 
 #[inline]
