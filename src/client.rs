@@ -154,6 +154,7 @@ impl Inner {
         let body = if !request.content_type.is_empty() {
             let mut headers = easy::List::new();
             headers.append(&format!("Content-Type: {}", request.content_type))?;
+            headers.append(&format!("Content-Length: {}", request.body.len()))?;
             self.easy
                 .http_headers(headers)
                 .map_err(|err| format_err!("curl error: {}", err))?;
