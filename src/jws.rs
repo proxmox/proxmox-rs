@@ -79,8 +79,8 @@ impl Jws {
             },
         };
 
-        let digest: MessageDigest = match &pubkey {
-            PublicKey::Rsa(_) => Self::prepare_rsa(key, &mut protected)?,
+        let (digest, ec_order_bytes): (MessageDigest, usize) = match &pubkey {
+            PublicKey::Rsa(_) => (Self::prepare_rsa(key, &mut protected)?, 0),
             PublicKey::Ec(_) => Self::prepare_ec(key, &mut protected)?,
         };
 
@@ -91,7 +91,7 @@ impl Jws {
             let payload = payload.as_bytes();
             match &pubkey {
                 PublicKey::Rsa(_) => Self::sign_rsa(key, digest, prot, payload),
-                PublicKey::Ec(_) => Self::sign_ec(key, digest, prot, payload),
+                PublicKey::Ec(_) => Self::sign_ec(key, digest, ec_order_bytes, prot, payload),
             }?
         };
 
@@ -112,13 +112,18 @@ impl Jws {
         Ok(MessageDigest::sha256())
     }
 
-    fn prepare_ec<P>(_key: &PKeyRef<P>, protected: &mut Protected) -> Result<MessageDigest, Error>
+    /// Returns the digest and the size of the two signature components 'r' and 's'.
+    fn prepare_ec<P>(
+        _key: &PKeyRef<P>,
+        protected: &mut Protected,
+    ) -> Result<(MessageDigest, usize), Error>
     where
         P: HasPrivate,
     {
         // Note: if we support >256 bit keys we'll want to also support using ES512 here probably
         protected.alg = "ES256";
-        Ok(MessageDigest::sha256())
+        //  'r' and 's' are each 256 bit numbers:
+        Ok((MessageDigest::sha256(), 32))
     }
 
     fn sign_rsa<P>(
@@ -141,6 +146,7 @@ impl Jws {
     fn sign_ec<P>(
         key: &PKeyRef<P>,
         digest: MessageDigest,
+        ec_order_bytes: usize,
         protected: &[u8],
         payload: &[u8],
     ) -> Result<Vec<u8>, Error>
@@ -156,7 +162,9 @@ impl Jws {
         let r = sig.r().to_vec();
         let s = sig.s().to_vec();
         let mut out = Vec::with_capacity(r.len() + s.len());
+        out.extend(std::iter::repeat(0u8).take(ec_order_bytes - r.len()));
         out.extend(r);
+        out.extend(std::iter::repeat(0u8).take(ec_order_bytes - s.len()));
         out.extend(s);
         Ok(out)
     }
