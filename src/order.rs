@@ -45,6 +45,7 @@ pub struct OrderData {
     pub status: Status,
 
     /// This order's expiration date as RFC3339 formatted time string.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub expires: Option<String>,
 
     /// List of identifiers to order for the certificate.
