@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::convert::TryFrom;
 
 use openssl::pkey::{PKey, Private};
@@ -177,6 +178,9 @@ pub struct AccountData {
 
     #[serde(default = "default_true", skip_serializing_if = "is_false")]
     pub only_return_existing: bool,
+
+    #[serde(flatten, default, skip_serializing_if = "HashMap::is_empty")]
+    pub extra: HashMap<String, Value>,
 }
 
 #[inline]
@@ -263,6 +267,7 @@ impl AccountCreator {
             },
             external_account_binding: None,
             only_return_existing: false,
+            extra: HashMap::new(),
         };
 
         let url = directory.new_account_url();
