@@ -5,11 +5,12 @@ use openssl::pkey::{PKey, Private};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::authorization::{Authorization, GetAuthorization};
 use crate::b64u;
 use crate::directory::Directory;
 use crate::jws::Jws;
 use crate::key::PublicKey;
-use crate::order::{NewOrder, OrderData};
+use crate::order::{NewOrder, Order, OrderData};
 use crate::request::Request;
 use crate::Error;
 
@@ -117,6 +118,31 @@ impl Account {
         })
     }
 
+    /// Prepare a JSON POST request.
+    fn post_request_raw_payload(
+        &self,
+        url: &str,
+        nonce: &str,
+        payload: String,
+    ) -> Result<Request, Error> {
+        let key = PKey::private_key_from_pem(self.private_key.as_bytes())?;
+        let body = serde_json::to_string(&Jws::new_full(
+            &key,
+            Some(self.location.clone()),
+            url.to_owned(),
+            nonce.to_owned(),
+            payload,
+        )?)?;
+
+        Ok(Request {
+            url: url.to_owned(),
+            method: "POST",
+            content_type: crate::request::JSON_CONTENT_TYPE,
+            body,
+            expected: 200,
+        })
+    }
+
     /// Get the "key authorization" for a token.
     pub fn key_authorization(&self, token: &str) -> Result<String, Error> {
         let key = PKey::private_key_from_pem(self.private_key.as_bytes())?;
@@ -130,6 +156,67 @@ impl Account {
         let key_authorization = self.key_authorization(token)?;
         let digest = openssl::sha::sha256(key_authorization.as_bytes());
         Ok(b64u::encode(&digest))
+    }
+
+    /// Prepare a request to update account data.
+    ///
+    /// This is a rather low level interface. You should know what you're doing.
+    pub fn update_account_request<T: Serialize>(
+        &self,
+        nonce: &str,
+        data: &T,
+    ) -> Result<Request, Error> {
+        self.post_request(&self.location, nonce, data)
+    }
+
+    /// Prepare a request to deactivate this account.
+    ///
+    /// This is a rather low level interface. You should know what you're doing.
+    pub fn deactivate_account_request<T: Serialize>(&self, nonce: &str) -> Result<Request, Error> {
+        self.post_request_raw_payload(
+            &self.location,
+            nonce,
+            r#"{"status":"deactivated"}"#.to_string(),
+        )
+    }
+
+    /// Prepare a request to query an Authorization for an Order.
+    ///
+    /// Returns `Ok(None)` if `auth_index` is out of out of range. You can query the number of
+    /// authorizations from via [`Order::authorization_len`] or by manually inspecting its
+    /// `.data.authorization` vector.
+    pub fn get_authorization(
+        &self,
+        order: &Order,
+        auth_index: usize,
+        nonce: &str,
+    ) -> Result<Option<GetAuthorization>, Error> {
+        match order.authorization(auth_index) {
+            None => Ok(None),
+            Some(url) => Ok(Some(GetAuthorization::new(self.get_request(url, nonce)?))),
+        }
+    }
+
+    /// Prepare a request to validate a Challenge from an Authorization.
+    ///
+    /// Returns `Ok(None)` if `challenge_index` is out of out of range. You can query the number of
+    /// challenges from via [`Authorization::challenge_len`] or by manually inspecting its
+    /// `.challenges` vector.
+    ///
+    /// This returns a raw `Request` since validation takes some time and the `Authorization`
+    /// object has to be re-queried and its `status` inspected.
+    pub fn validate_challenge(
+        &self,
+        authorization: &Authorization,
+        challenge_index: usize,
+        nonce: &str,
+    ) -> Result<Option<Request>, Error> {
+        match authorization.challenges.get(challenge_index) {
+            None => Ok(None),
+            Some(challenge) => self
+                .post_request_raw_payload(&challenge.url, nonce, "{}".to_string())
+                .map(Some),
+        }
     }
 }
 

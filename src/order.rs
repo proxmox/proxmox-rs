@@ -100,6 +100,18 @@ pub struct Order {
     pub data: OrderData,
 }
 
+impl Order {
+    /// Get an authorization URL (or `None` if the index is out of range).
+    pub fn authorization(&self, index: usize) -> Option<&str> {
+        Some(&self.data.authorizations.get(index)?)
+    }
+
+    /// Get the number of authorizations in this object.
+    pub fn authorization_len(&self) -> usize {
+        self.data.authorizations.len()
+    }
+}
+
 /// Represents a new in-flight order creation.
 ///
 /// This is created via [`Account::new_order`].
