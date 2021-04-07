@@ -1570,7 +1570,7 @@ macro_rules! basic_updatable {
         )*
     };
 }
-basic_updatable! { bool u8 u16 u32 u64 i8 i16 i32 i64 String }
+basic_updatable! { bool u8 u16 u32 u64 i8 i16 i32 i64 usize isize f32 f64 String char }
 
 impl<T> Updatable for Option<T>
 where
