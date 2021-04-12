@@ -9,6 +9,7 @@ pub mod authorization;
 pub mod directory;
 pub mod error;
 pub mod order;
+pub mod util;
 
 pub use account::Account;
 pub use authorization::{Authorization, Challenge};

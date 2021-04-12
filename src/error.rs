@@ -44,7 +44,11 @@ pub enum Error {
     BadOrderData(String),
 
     /// An openssl error occurred during a crypto operation.
-    Ssl(SslErrorStack),
+    RawSsl(SslErrorStack),
+
+    /// An openssl error occurred during a crypto operation.
+    /// With some textual context.
+    Ssl(&'static str, SslErrorStack),
 
     /// An otherwise uncaught serde error happened.
     Json(serde_json::Error),
@@ -61,6 +65,9 @@ pub enum Error {
     /// If built with the `client` feature, this is where client specific errors which are not from
     /// errors forwarded from `curl` end up.
     Client(String),
+
+    /// A non-openssl error occurred while building data for the CSR.
+    Csr(String),
 }
 
 impl Error {
@@ -98,18 +105,22 @@ impl fmt::Display for Error {
             Error::BadOrderData(err) => {
                 write!(f, "bad response to new-order query or creation: {}", err)
             }
-            Error::Ssl(err) => fmt::Display::fmt(err, f),
+            Error::RawSsl(err) => fmt::Display::fmt(err, f),
+            Error::Ssl(context, err) => {
+                write!(f, "{}: {}", context, err)
+            }
             Error::Json(err) => fmt::Display::fmt(err, f),
             Error::Custom(err) => fmt::Display::fmt(err, f),
             Error::HttpClient(err) => fmt::Display::fmt(err, f),
             Error::Client(err) => fmt::Display::fmt(err, f),
+            Error::Csr(err) => fmt::Display::fmt(err, f),
         }
     }
 }
 
 impl From<SslErrorStack> for Error {
     fn from(e: SslErrorStack) -> Self {
-        Error::Ssl(e)
+        Error::RawSsl(e)
     }
 }
 
