@@ -29,6 +29,12 @@ impl Status {
     pub fn is_new(&self) -> bool {
         *self == Status::New
     }
+
+    /// Convenience method to check if the status is 'pending'.
+    #[inline]
+    pub fn is_pending(self) -> bool {
+        self == Status::Pending
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]

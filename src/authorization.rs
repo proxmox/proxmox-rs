@@ -18,6 +18,14 @@ pub enum Status {
     Valid,
 }
 
+impl Status {
+    /// Convenience method to check if the status is 'pending'.
+    #[inline]
+    pub fn is_pending(self) -> bool {
+        self == Status::Pending
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Authorization {
@@ -41,6 +49,14 @@ pub enum ChallengeStatus {
     Processing,
     Valid,
     Invalid,
+}
+
+impl ChallengeStatus {
+    /// Convenience method to check if the status is 'pending'.
+    #[inline]
+    pub fn is_pending(self) -> bool {
+        self == ChallengeStatus::Pending
+    }
 }
 
 #[derive(Deserialize, Serialize)]
