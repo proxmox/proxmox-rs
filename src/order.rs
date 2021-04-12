@@ -35,6 +35,12 @@ impl Status {
     pub fn is_pending(self) -> bool {
         self == Status::Pending
     }
+
+    /// Convenience method to check if the status is 'valid'.
+    #[inline]
+    pub fn is_valid(self) -> bool {
+        self == Status::Valid
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]

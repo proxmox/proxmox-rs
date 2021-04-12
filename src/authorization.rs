@@ -24,6 +24,12 @@ impl Status {
     pub fn is_pending(self) -> bool {
         self == Status::Pending
     }
+
+    /// Convenience method to check if the status is 'valid'.
+    #[inline]
+    pub fn is_valid(self) -> bool {
+        self == Status::Valid
+    }
 }
 
 #[derive(Deserialize, Serialize)]
@@ -56,6 +62,12 @@ impl ChallengeStatus {
     #[inline]
     pub fn is_pending(self) -> bool {
         self == ChallengeStatus::Pending
+    }
+
+    /// Convenience method to check if the status is 'valid'.
+    #[inline]
+    pub fn is_valid(self) -> bool {
+        self == ChallengeStatus::Valid
     }
 }
 
