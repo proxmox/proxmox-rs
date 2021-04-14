@@ -389,7 +389,7 @@ fn derive_updater(
 
     original_struct.attrs.push(util::make_derive_attribute(
         Span::call_site(),
-        quote::quote! { Updatable },
+        quote::quote! { ::proxmox::api::schema::Updatable },
     ));
 
     let updater_name = &stru.ident;
