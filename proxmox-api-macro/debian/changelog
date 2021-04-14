@@ -1,3 +1,10 @@
+rust-proxmox-api-macro (0.3.4-1) unstable; urgency=medium
+
+  * fix path in generated Updatable derive entry to not require explicit
+    imports of the trait
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Apr 2021 11:59:04 +0200
+
 rust-proxmox-api-macro (0.3.3-1) unstable; urgency=medium
 
   * updater: take serde renames into account
