@@ -218,6 +218,49 @@ impl Account {
                 .map(Some),
         }
     }
+
+    /// Prepare a request to revoke a certificate.
+    ///
+    /// The certificate can be either PEM or DER formatted.
+    ///
+    /// Note that this uses the account's key for authorization.
+    ///
+    /// Revocation using a certificate's private key is not yet implemented.
+    pub fn revoke_certificate(
+        &self,
+        certificate: &[u8],
+        reason: Option<u32>,
+    ) -> Result<CertificateRevocation, Error> {
+        let cert = if certificate.starts_with(b"-----BEGIN CERTIFICATE-----") {
+            b64u::encode(&openssl::x509::X509::from_pem(certificate)?.to_der()?)
+        } else {
+            b64u::encode(certificate)
+        };
+
+        let data = match reason {
+            Some(reason) => serde_json::json!({ "certificate": cert, "reason": reason }),
+            None => serde_json::json!({ "certificate": cert }),
+        };
+
+        Ok(CertificateRevocation {
+            account: self,
+            data,
+        })
+    }
+}
+
+/// Certificate revocation involves converting the certificate to base64url encoded DER and then
+/// embedding it in a json structure. Since we also need a nonce and possibly retry the request if
+/// a `BadNonce` error happens, this caches the converted data for efficiency.
+pub struct CertificateRevocation<'a> {
+    account: &'a Account,
+    data: Value,
+}
+
+impl CertificateRevocation<'_> {
+    pub fn request(&self, directory: &Directory, nonce: &str) -> Result<Request, Error> {
+        self.account.post_request(&directory.data.revoke_cert, nonce, &self.data)
+    }
 }
 
 #[derive(Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]

@@ -548,16 +548,7 @@ impl Client {
         // TODO: This can also work without an account.
         let account = Self::need_account(&self.account)?;
 
-        let cert = if certificate.starts_with(b"-----BEGIN CERTIFICATE-----") {
-            b64u::encode(&openssl::x509::X509::from_pem(certificate)?.to_der()?)
-        } else {
-            b64u::encode(certificate)
-        };
-
-        let data = match reason {
-            Some(reason) => serde_json::json!({ "certificate": cert, "reason": reason }),
-            None => serde_json::json!({ "certificate": cert }),
-        };
+        let revocation = account.revoke_certificate(certificate, reason)?;
 
         let mut retry = retry();
         loop {
@@ -566,7 +557,7 @@ impl Client {
             let directory =
                 Self::get_directory(&mut self.inner, &mut self.directory, &self.directory_url)?;
             let nonce = Self::nonce(&mut self.inner, directory)?;
-            let request = account.post_request(&directory.data.revoke_cert, nonce, &data)?;
+            let request = revocation.request(&directory, nonce)?;
             match self.inner.run_request(request) {
                 Ok(_response) => return Ok(()),
                 Err(err) if err.is_bad_nonce() => continue,
