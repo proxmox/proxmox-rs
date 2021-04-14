@@ -180,3 +180,38 @@ pub mod bytes_as_base64url_nopad {
         })
     }
 }
+
+/// Serialize `String` as base64url encoded string without padding.
+///
+/// Usage example:
+/// ```
+/// use serde::{Deserialize, Serialize};
+///
+/// # #[derive(Debug)]
+/// #[derive(Deserialize, PartialEq, Serialize)]
+/// struct Foo {
+///     #[serde(with = "proxmox::tools::serde::string_as_base64url_nopad")]
+///     data: String,
+/// }
+///
+/// let obj = Foo { data: "FOO".to_string() };
+/// let json = serde_json::to_string(&obj).unwrap();
+/// assert_eq!(json, r#"{"data":"Rk9P"}"#);
+///
+/// let deserialized: Foo = serde_json::from_str(&json).unwrap();
+/// assert_eq!(obj, deserialized);
+/// ```
+pub mod string_as_base64url_nopad {
+    use serde::Deserializer;
+
+    pub use super::bytes_as_base64::serialize;
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<String, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+        let bytes = super::bytes_as_base64::deserialize::<'de, D>(deserializer)?;
+        String::from_utf8(bytes).map_err(|err| Error::custom(err.to_string()))
+    }
+}
