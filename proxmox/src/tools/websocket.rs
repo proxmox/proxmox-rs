@@ -16,7 +16,7 @@ use hyper::header::{
     SEC_WEBSOCKET_PROTOCOL, SEC_WEBSOCKET_VERSION, UPGRADE,
 };
 use hyper::{Body, Response, StatusCode};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf};
+use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt, ReadBuf};
 use tokio::sync::mpsc;
 
 use futures::future::FutureExt;
@@ -485,7 +485,7 @@ pub struct WebSocketReader<R: AsyncRead> {
     state: ReaderState<R>,
 }
 
-impl<R: AsyncReadExt> WebSocketReader<R> {
+impl<R: AsyncRead> WebSocketReader<R> {
     /// Creates a new WebSocketReader with the given CallBack for control frames
     /// and a default buffer size of 4096.
     pub fn new(
@@ -524,7 +524,7 @@ enum ReaderState<R> {
 
 unsafe impl<R: Sync> Sync for ReaderState<R> {}
 
-impl<R: AsyncReadExt + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
+impl<R: AsyncRead + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut Context,
