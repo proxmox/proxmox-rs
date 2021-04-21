@@ -219,20 +219,40 @@ impl CreateOptions {
         }
     }
 
-    pub fn perm(mut self, perm: stat::Mode) -> Self {
+    pub const fn perm(mut self, perm: stat::Mode) -> Self {
         self.perm = Some(perm);
         self
     }
 
-    pub fn owner(mut self, owner: Uid) -> Self {
+    pub const fn owner(mut self, owner: Uid) -> Self {
         self.owner = Some(owner);
         self
     }
 
-    pub fn group(mut self, group: Gid) -> Self {
+    pub const fn group(mut self, group: Gid) -> Self {
         self.group = Some(group);
         self
     }
+
+    /// Convenience shortcut around having to import `Uid` from nix.
+    pub const fn owner_root(self) -> Self {
+        self.owner(nix::unistd::ROOT)
+    }
+
+    // TODO: once 'nix' has `const fn` constructors for Uid and Gid we can enable these:
+
+    /*
+    /// Convenience shortcut around having to import `Gid` from nix.
+    pub const fn group_root(self) -> Self {
+        // nix hasn't constified these yet, but it's just an alias to gid_t:
+        self.group(Gid::from_raw(0))
+    }
+
+    /// Convenience shortcut to set both owner and group to 0.
+    pub const fn root_only(self) -> Self {
+        self.owner_root().group_root()
+    }
+    */
 }
 
 /// Creates directory at the provided path with specified ownership.
