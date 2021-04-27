@@ -162,40 +162,48 @@ pub struct SerdeAttrib {
     pub flatten: bool,
 }
 
+impl SerdeAttrib {
+    pub fn parse_attribute(&mut self, attrib: &syn::Attribute) -> Result<(), syn::Error> {
+        use syn::{Meta, NestedMeta};
+
+        if !attrib.path.is_ident("serde") {
+            return Ok(());
+        }
+
+        let args: AttrArgs = syn::parse2(attrib.tokens.clone())?;
+        for arg in args.args {
+            match arg {
+                NestedMeta::Meta(Meta::NameValue(var)) if var.path.is_ident("rename") => {
+                    match var.lit {
+                        syn::Lit::Str(lit) => {
+                            let rename = FieldName::from(&lit);
+                            if self.rename.is_some() && self.rename.as_ref() != Some(&rename) {
+                                error!(lit => "multiple conflicting 'rename' attributes");
+                            }
+                            self.rename = Some(rename);
+                        }
+                        _ => error!(var.lit => "'rename' value must be a string literal"),
+                    }
+                }
+                NestedMeta::Meta(Meta::Path(path)) if path.is_ident("flatten") => {
+                    self.flatten = true;
+                }
+                _ => continue,
+            }
+        }
+
+        Ok(())
+    }
+}
+
 impl TryFrom<&[syn::Attribute]> for SerdeAttrib {
     type Error = syn::Error;
 
     fn try_from(attributes: &[syn::Attribute]) -> Result<Self, syn::Error> {
-        use syn::{Meta, NestedMeta};
-
         let mut this: Self = Default::default();
 
         for attrib in attributes {
-            if !attrib.path.is_ident("serde") {
-                continue;
-            }
-
-            let args: AttrArgs = syn::parse2(attrib.tokens.clone())?;
-            for arg in args.args {
-                match arg {
-                    NestedMeta::Meta(Meta::NameValue(var)) if var.path.is_ident("rename") => {
-                        match var.lit {
-                            syn::Lit::Str(lit) => {
-                                let rename = FieldName::from(&lit);
-                                if this.rename.is_some() && this.rename.as_ref() != Some(&rename) {
-                                    error!(lit => "multiple conflicting 'rename' attributes");
-                                }
-                                this.rename = Some(rename);
-                            }
-                            _ => error!(var.lit => "'rename' value must be a string literal"),
-                        }
-                    }
-                    NestedMeta::Meta(Meta::Path(path)) if path.is_ident("flatten") => {
-                        this.flatten = true;
-                    }
-                    _ => continue,
-                }
-            }
+            this.parse_attribute(attrib)?;
         }
 
         Ok(this)
