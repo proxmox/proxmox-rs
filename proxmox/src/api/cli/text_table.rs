@@ -25,6 +25,18 @@ pub fn get_output_format(param: &Value) -> String {
     output_format.unwrap_or_else(|| String::from("text"))
 }
 
+/// Helper to get output format from parameters or environment
+/// and removing from parameters
+pub fn extract_output_format(param: &mut Value) -> String {
+    let output_format = get_output_format(param);
+
+    if let Some(param) = param.as_object_mut() {
+        param.remove("output-format");
+    }
+
+    output_format
+}
+
 /// Helper to get TableFormatOptions with default from environment
 pub fn default_table_format_options() -> TableFormatOptions {
     let no_border = std::env::var(ENV_VAR_PROXMOX_OUTPUT_NO_BORDER)
