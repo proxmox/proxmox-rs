@@ -1,3 +1,16 @@
+//! ACME protocol helper.
+//!
+//! This is supposed to implement the low level parts of the ACME protocol, providing an [`Account`]
+//! and some other helper types which allow interacting with an ACME server by implementing methods
+//! which create [`Request`]s the user can then combine with a nonce and send to the the ACME
+//! server using whatever http client they choose.
+//!
+//! This is a rather low level crate, and while it provides an optional synchronous client using
+//! curl (for simplicity), users should have basic understanding of the ACME API in order to
+//! implement a client using this.
+//!
+//! The [`Account`] helper supports RSA and ECC keys and provides most of the API methods.
+
 mod b64u;
 mod json;
 mod jws;
