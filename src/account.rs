@@ -216,9 +216,8 @@ impl Account {
 
     /// Prepare a request to validate a Challenge from an Authorization.
     ///
-    /// Returns `Ok(None)` if `challenge_index` is out of out of range. You can query the number of
-    /// challenges from via [`Authorization::challenge_len`] or by manually inspecting its
-    /// `.challenges` vector.
+    /// Returns `Ok(None)` if `challenge_index` is out of out of range. The challenge count is
+    /// available by inspecting the [`Authorization::challenges`] vector.
     ///
     /// This returns a raw `Request` since validation takes some time and the `Authorization`
     /// object has to be re-queried and its `status` inspected.
@@ -367,11 +366,12 @@ fn is_false(b: &bool) -> bool {
 /// Helper to create an account.
 ///
 /// This is used to generate a private key and set the contact info for the account. Afterwards the
-/// creation request can be created via the [`request`] method, giving it a nonce and a directory.
-/// This can be repeated, if necessary, like when the nonce fails.
+/// creation request can be created via the [`request`](AccountCreator::request()) method, giving
+/// it a nonce and a directory.  This can be repeated, if necessary, like when the nonce fails.
 ///
-/// When the server sends a succesful response, it should be passed to the [`response`] method to
-/// finish the creation of an [`Account`] which can then be persisted.
+/// When the server sends a succesful response, it should be passed to the
+/// [`response`](AccountCreator::response()) method to finish the creation of an [`Account`] which
+/// can then be persisted.
 #[derive(Default)]
 #[must_use = "when creating an account you must pass the response to AccountCreator::response()!"]
 pub struct AccountCreator {
@@ -431,7 +431,7 @@ impl AccountCreator {
     /// Changes to the user data made after this will have no effect on the account generated with
     /// the resulting request.
     /// Changing the private key between using the request and passing the response to
-    /// [`response()`] will render the account unusable!
+    /// [`response`](AccountCreator::response()) will render the account unusable!
     pub fn request(&self, directory: &Directory, nonce: &str) -> Result<Request, Error> {
         let key = self.key.as_deref().ok_or_else(|| Error::MissingKey)?;
 
@@ -467,8 +467,9 @@ impl AccountCreator {
         })
     }
 
-    /// After issuing the request from [`request()`], the response's `Location` header and body
-    /// must be passed to this for verification and to create an account which is to be persisted!
+    /// After issuing the request from [`request()`](AccountCreator::request()), the response's
+    /// `Location` header and body must be passed to this for verification and to create an account
+    /// which is to be persisted!
     pub fn response(self, location_header: String, response_body: &[u8]) -> Result<Account, Error> {
         let private_key = self
             .key

@@ -43,9 +43,13 @@ impl Status {
     }
 }
 
+/// An identifier used for a certificate request.
+///
+/// Currently only supports DNS name identifiers.
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "type", content = "value", rename_all = "lowercase")]
 pub enum Identifier {
+    /// A DNS identifier is used to request a domain name to be added to a certificate.
     Dns(String),
 }
 
@@ -126,7 +130,7 @@ impl Order {
 
 /// Represents a new in-flight order creation.
 ///
-/// This is created via [`Account::new_order`].
+/// This is created via [`Account::new_order`](crate::Account::new_order()).
 pub struct NewOrder {
     //order: OrderData,
     pub request: Option<Request>,
