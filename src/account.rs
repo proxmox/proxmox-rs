@@ -1,3 +1,8 @@
+//! ACME Account management and creation. The [`Account`] type also contains most of the ACME API
+//! entry point helpers.
+
+#![deny(missing_docs)]
+
 use std::collections::HashMap;
 use std::convert::TryFrom;
 
@@ -14,6 +19,12 @@ use crate::order::{NewOrder, Order, OrderData};
 use crate::request::Request;
 use crate::Error;
 
+/// An ACME Account.
+///
+/// This contains the location URL, the account data and the private key for an account.
+/// This can directly be serialized via serde to persist the account.
+///
+/// In order to register a new account with an ACME provider, see the [`Account::creator`] method.
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
@@ -28,6 +39,7 @@ pub struct Account {
 }
 
 impl Account {
+    /// Rebuild an account from its components.
     pub fn from_parts(location: String, private_key: String, data: AccountData) -> Self {
         Self {
             location,
@@ -36,10 +48,15 @@ impl Account {
         }
     }
 
+    /// Builds an [`AccountCreator`]. This handles creation of the private key and account data as
+    /// well as handling the response sent by the server for the registration request.
     pub fn creator() -> AccountCreator {
         AccountCreator::default()
     }
 
+    /// Place a new order. This will build a [`NewOrder`] representing an in flight order creation
+    /// request.
+    ///
     /// The returned `NewOrder`'s `request` option is *guaranteed* to be `Some(Request)`.
     pub fn new_order(
         &self,
@@ -73,7 +90,7 @@ impl Account {
         Ok(NewOrder::new(request))
     }
 
-    /// Prepare a "POST-as-GET" request to fetch data.
+    /// Prepare a "POST-as-GET" request to fetch data. Low level helper.
     pub fn get_request(&self, url: &str, nonce: &str) -> Result<Request, Error> {
         let key = PKey::private_key_from_pem(self.private_key.as_bytes())?;
         let body = serde_json::to_string(&Jws::new_full(
@@ -93,7 +110,7 @@ impl Account {
         })
     }
 
-    /// Prepare a JSON POST request.
+    /// Prepare a JSON POST request. Low level helper.
     pub fn post_request<T: Serialize>(
         &self,
         url: &str,
@@ -258,18 +275,28 @@ pub struct CertificateRevocation<'a> {
 }
 
 impl CertificateRevocation<'_> {
+    /// Create the revocation request using the specified nonce for the given directory.
     pub fn request(&self, directory: &Directory, nonce: &str) -> Result<Request, Error> {
         self.account.post_request(&directory.data.revoke_cert, nonce, &self.data)
     }
 }
 
+/// Status of an ACME account.
 #[derive(Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum AccountStatus {
+    /// This is not part of the ACME API, but a temporary marker for us until the ACME provider
+    /// tells us the account's real status.
     #[serde(rename = "<invalid>")]
     New,
+
+    /// Means the account is valid and can be used.
     Valid,
+
+    /// The account has been deactivated by its user and cannot be used anymore.
     Deactivated,
+
+    /// The account has been revoked by the server and cannot be used anymore.
     Revoked,
 }
 
@@ -285,30 +312,44 @@ impl AccountStatus {
     }
 }
 
+/// ACME Account data. This is the part of the account returned from and possibly sent to the ACME
+/// provider. Some fields may be uptdated by the user via a request to the account location, others
+/// may not be changed.
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountData {
+    /// The current account status.
     #[serde(
         skip_serializing_if = "AccountStatus::is_new",
         default = "AccountStatus::new"
     )]
     pub status: AccountStatus,
 
+    /// URLs to currently pending orders.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub orders: Option<String>,
 
+    /// The acccount's contact info.
+    ///
+    /// This usually contains a `"mailto:<email address>"` entry but may also contain some other
+    /// data if the server accepts it.
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub contact: Vec<String>,
 
+    /// Indicated whether the user agreed to the ACME provider's terms of service.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub terms_of_service_agreed: Option<bool>,
 
+    /// External account information. This is currently not directly supported in any way and only
+    /// stored to completeness.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub external_account_binding: Option<Value>,
 
+    /// This is only used by the client when querying an account.
     #[serde(default = "default_true", skip_serializing_if = "is_false")]
     pub only_return_existing: bool,
 
+    /// Stores unknown fields if there are any.
     #[serde(flatten, default, skip_serializing_if = "HashMap::is_empty")]
     pub extra: HashMap<String, Value>,
 }
@@ -323,6 +364,14 @@ fn is_false(b: &bool) -> bool {
     !*b
 }
 
+/// Helper to create an account.
+///
+/// This is used to generate a private key and set the contact info for the account. Afterwards the
+/// creation request can be created via the [`request`] method, giving it a nonce and a directory.
+/// This can be repeated, if necessary, like when the nonce fails.
+///
+/// When the server sends a succesful response, it should be passed to the [`response`] method to
+/// finish the creation of an [`Account`] which can then be persisted.
 #[derive(Default)]
 #[must_use = "when creating an account you must pass the response to AccountCreator::response()!"]
 pub struct AccountCreator {
