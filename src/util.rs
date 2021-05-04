@@ -1,3 +1,7 @@
+//! Certificate utility methods for convenience (such as CSR generation).
+
+#![deny(missing_docs)]
+
 use std::collections::HashMap;
 
 use openssl::hash::MessageDigest;
@@ -8,6 +12,7 @@ use openssl::x509::{X509Extension, X509Name, X509Req};
 
 use crate::Error;
 
+/// A certificate signing request.
 pub struct Csr {
     /// DER encoded certificate request.
     pub data: Vec<u8>,
