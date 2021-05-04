@@ -9,6 +9,9 @@
 #[cfg(feature = "api-macro")]
 pub use proxmox_api_macro::{api, router};
 
+#[macro_use]
+mod api_type_macros;
+
 #[doc(hidden)]
 pub mod const_regex;
 #[doc(hidden)]
