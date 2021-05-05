@@ -2,7 +2,7 @@
 ///
 /// This is meant to be used with an API-type tuple struct containing a single `String` like this:
 ///
-/// ```no_run
+/// ```ignore
 /// # use proxmox::api::api;
 /// # use proxmox::api::schema::ApiStringFormat;
 /// # const PROXMOX_SAFE_ID_FORMAT: ApiStringFormat = ApiStringFormat::Enum(&[]);
