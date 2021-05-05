@@ -1,7 +1,5 @@
 //! Authorization and Challenge data.
 
-#![deny(missing_docs)]
-
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
@@ -11,7 +9,7 @@ use crate::order::Identifier;
 use crate::request::Request;
 use crate::Error;
 
-/// Authorization states.
+/// Status of an [`Authorization`].
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {

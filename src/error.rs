@@ -1,8 +1,13 @@
+//! The `Error` type and some ACME error constants for reference.
+
 use std::fmt;
 
 use openssl::error::ErrorStack as SslErrorStack;
 
+/// The ACME error string for a "bad nonce" error.
 pub const BAD_NONCE: &str = "urn:ietf:params:acme:error:badNonce";
+
+/// The ACME error string for a "user action required" error.
 pub const USER_ACTION_REQUIRED: &str = "urn:ietf:params:acme:error:userActionRequired";
 
 /// Error types returned by this crate.
@@ -71,6 +76,7 @@ pub enum Error {
 }
 
 impl Error {
+    /// Create an `Error` from a custom text.
     pub fn custom<T: std::fmt::Display>(s: T) -> Self {
         Error::Custom(s.to_string())
     }

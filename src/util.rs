@@ -1,7 +1,5 @@
 //! Certificate utility methods for convenience (such as CSR generation).
 
-#![deny(missing_docs)]
-
 use std::collections::HashMap;
 
 use openssl::hash::MessageDigest;

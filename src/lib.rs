@@ -11,6 +11,8 @@
 //!
 //! The [`Account`] helper supports RSA and ECC keys and provides most of the API methods.
 
+#![deny(missing_docs)]
+
 mod b64u;
 mod json;
 mod jws;
@@ -24,12 +26,27 @@ pub mod error;
 pub mod order;
 pub mod util;
 
+#[doc(inline)]
 pub use account::Account;
+
+#[doc(inline)]
 pub use authorization::{Authorization, Challenge};
+
+#[doc(inline)]
 pub use directory::Directory;
+
+#[doc(inline)]
 pub use error::Error;
-pub use order::{NewOrder, Order};
-pub use request::{ErrorResponse, Request};
+
+#[doc(inline)]
+pub use order::Order;
+
+#[doc(inline)]
+pub use request::Request;
+
+// we don't inline these:
+pub use order::NewOrder;
+pub use request::ErrorResponse;
 
 /// Header name for nonces.
 pub const REPLAY_NONCE: &str = "Replay-Nonce";

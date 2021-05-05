@@ -1,8 +1,6 @@
 //! ACME Account management and creation. The [`Account`] type also contains most of the ACME API
 //! entry point helpers.
 
-#![deny(missing_docs)]
-
 use std::collections::HashMap;
 use std::convert::TryFrom;
 

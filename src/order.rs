@@ -1,9 +1,12 @@
+//! ACME Orders data and identifiers.
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::request::Request;
 use crate::Error;
 
+/// Status of an [`Order`].
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {
@@ -11,10 +14,22 @@ pub enum Status {
     /// the Acme RFC does not require the server to ignore unknown parts of the `Order` object.
     New,
 
+    /// Authorization failed and it is now invalid.
     Invalid,
+
+    /// The authorization is pending and the user should look through its challenges.
+    ///
+    /// This is the initial state of a new authorization.
     Pending,
+
+    /// The ACME provider is processing an authorization validation.
     Processing,
+
+    /// The requirements for the order have been met and it may be finalized.
     Ready,
+
+    /// The certificate has been issued and can be downloaded from the URL provided in the
+    /// [`Order`]'s `certificate` field.
     Valid,
 }
 
@@ -26,7 +41,7 @@ impl Default for Status {
 
 impl Status {
     /// Serde helper
-    pub fn is_new(&self) -> bool {
+    fn is_new(&self) -> bool {
         *self == Status::New
     }
 
@@ -53,6 +68,9 @@ pub enum Identifier {
     Dns(String),
 }
 
+/// This contains the order data sent to and received from the ACME server.
+///
+/// This is typically filled with a set of domains and then issued as a new-order request via [`Account::new_order`](crate::Account::new_order).
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderData {
@@ -96,16 +114,20 @@ pub struct OrderData {
 }
 
 impl OrderData {
+    /// Initialize an empty order object.
     pub fn new() -> Self {
         Default::default()
     }
 
+    /// Builder-style method to add a domain identifier to the data.
     pub fn domain(mut self, domain: String) -> Self {
         self.identifiers.push(Identifier::Dns(domain));
         self
     }
 }
 
+/// Represents an order for a new certificate. This combines the order's own location (URL) with
+/// the [`OrderData`] received from the ACME server.
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Order {
@@ -133,6 +155,9 @@ impl Order {
 /// This is created via [`Account::new_order`](crate::Account::new_order()).
 pub struct NewOrder {
     //order: OrderData,
+
+    /// The request to execute to place the order. When creating a [`NewOrder`] via
+    /// [`Account::new_order`](crate::Account::new_order) this is guaranteed to be `Some`.
     pub request: Option<Request>,
 }
 
