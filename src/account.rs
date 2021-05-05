@@ -185,8 +185,6 @@ impl Account {
     }
 
     /// Prepare a request to deactivate this account.
-    ///
-    /// This is a rather low level interface. You should know what you're doing.
     pub fn deactivate_account_request<T: Serialize>(&self, nonce: &str) -> Result<Request, Error> {
         self.post_request_raw_payload(
             &self.location,
