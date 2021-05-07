@@ -12,6 +12,7 @@ pub const USER_ACTION_REQUIRED: &str = "urn:ietf:params:acme:error:userActionReq
 
 /// Error types returned by this crate.
 #[derive(Debug)]
+#[must_use = "unused errors have no effect"]
 pub enum Error {
     /// A `badNonce` API response. The request should be retried with the new nonce received along
     /// with this response.
