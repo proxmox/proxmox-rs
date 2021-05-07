@@ -41,8 +41,8 @@ impl Account {
     pub fn from_parts(location: String, private_key: String, data: AccountData) -> Self {
         Self {
             location,
-            private_key,
             data,
+            private_key,
         }
     }
 
