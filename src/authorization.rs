@@ -10,7 +10,7 @@ use crate::request::Request;
 use crate::Error;
 
 /// Status of an [`Authorization`].
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {
     /// The authorization was deactivated by the client.
@@ -70,7 +70,7 @@ pub struct Authorization {
 }
 
 /// The state of a challenge.
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ChallengeStatus {
     /// The challenge is pending and has not been validated yet.

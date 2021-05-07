@@ -7,7 +7,7 @@ use crate::request::Request;
 use crate::Error;
 
 /// Status of an [`Order`].
-#[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Status {
     /// Invalid, used as a place holder for when sending objects as contrary to account creation,
