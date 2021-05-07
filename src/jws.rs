@@ -80,8 +80,8 @@ impl Jws {
         };
 
         let (digest, ec_order_bytes): (MessageDigest, usize) = match &pubkey {
-            PublicKey::Rsa(_) => (Self::prepare_rsa(key, &mut protected)?, 0),
-            PublicKey::Ec(_) => Self::prepare_ec(key, &mut protected)?,
+            PublicKey::Rsa(_) => (Self::prepare_rsa(key, &mut protected), 0),
+            PublicKey::Ec(_) => Self::prepare_ec(key, &mut protected),
         };
 
         let protected_data = b64u::encode(serde_json::to_string(&protected)?.as_bytes());
@@ -104,26 +104,23 @@ impl Jws {
         })
     }
 
-    fn prepare_rsa<P>(_key: &PKeyRef<P>, protected: &mut Protected) -> Result<MessageDigest, Error>
+    fn prepare_rsa<P>(_key: &PKeyRef<P>, protected: &mut Protected) -> MessageDigest
     where
         P: HasPrivate,
     {
         protected.alg = "RS256";
-        Ok(MessageDigest::sha256())
+        MessageDigest::sha256()
     }
 
     /// Returns the digest and the size of the two signature components 'r' and 's'.
-    fn prepare_ec<P>(
-        _key: &PKeyRef<P>,
-        protected: &mut Protected,
-    ) -> Result<(MessageDigest, usize), Error>
+    fn prepare_ec<P>(_key: &PKeyRef<P>, protected: &mut Protected) -> (MessageDigest, usize)
     where
         P: HasPrivate,
     {
         // Note: if we support >256 bit keys we'll want to also support using ES512 here probably
         protected.alg = "ES256";
         //  'r' and 's' are each 256 bit numbers:
-        Ok((MessageDigest::sha256(), 32))
+        (MessageDigest::sha256(), 32)
     }
 
     fn sign_rsa<P>(

@@ -29,7 +29,7 @@ impl Csr {
         attributes: &HashMap<String, &str>,
     ) -> Result<Self, Error> {
         if identifiers.is_empty() {
-            return Err(Error::Csr(format!("cannot generate empty CSR")));
+            return Err(Error::Csr("cannot generate empty CSR".to_string()));
         }
 
         let private_key = Rsa::generate(4096)
@@ -78,7 +78,7 @@ impl Csr {
             Some(&context),
             Nid::SUBJECT_ALT_NAME,
             &identifiers
-                .into_iter()
+                .iter()
                 .try_fold(String::new(), |mut acc, dns| {
                     if !acc.is_empty() {
                         acc.push(',');

@@ -429,7 +429,7 @@ impl AccountCreator {
     /// Changing the private key between using the request and passing the response to
     /// [`response`](AccountCreator::response()) will render the account unusable!
     pub fn request(&self, directory: &Directory, nonce: &str) -> Result<Request, Error> {
-        let key = self.key.as_deref().ok_or_else(|| Error::MissingKey)?;
+        let key = self.key.as_deref().ok_or(Error::MissingKey)?;
 
         let data = AccountData {
             orders: None,
@@ -472,7 +472,7 @@ impl AccountCreator {
             .ok_or(Error::MissingKey)?
             .private_key_to_pem_pkcs8()?;
         let private_key = String::from_utf8(private_key).map_err(|_| {
-            Error::Custom(format!("PEM key contained illegal non-utf-8 characters"))
+            Error::Custom("PEM key contained illegal non-utf-8 characters".to_string())
         })?;
 
         Ok(Account {
