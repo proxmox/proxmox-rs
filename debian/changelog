@@ -1,3 +1,16 @@
+rust-proxmox-acme-rs (0.2.2-1) pve; urgency=medium
+
+  * improve crate documentation
+
+  * mark `Error` as 'must_use'
+
+  * make status types `Copy`
+
+  * add Client::directory_url() to get the URL without querying the whole
+    directory
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 07 May 2021 13:53:08 +0200
+
 rust-proxmox-acme-rs (0.2.1-1) pve; urgency=medium
 
   * make revocation workflow accessible without client
