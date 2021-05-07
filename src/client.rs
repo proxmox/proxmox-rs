@@ -266,6 +266,14 @@ impl Client {
         }
     }
 
+    /// Get the directory URL without querying the `Directory` structure.
+    ///
+    /// The difference to [`get_directory`](Client::get_directory()) is that this does not
+    /// attempt to fetch the directory data from the ACME server.
+    pub fn directory_url(&self) -> &str {
+        &self.directory_url
+    }
+
     /// Set the account this client should use.
     pub fn set_account(&mut self, account: Account) {
         self.account = Some(account);
