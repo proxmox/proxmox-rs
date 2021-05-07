@@ -155,7 +155,6 @@ impl Order {
 /// This is created via [`Account::new_order`](crate::Account::new_order()).
 pub struct NewOrder {
     //order: OrderData,
-
     /// The request to execute to place the order. When creating a [`NewOrder`] via
     /// [`Account::new_order`](crate::Account::new_order) this is guaranteed to be `Some`.
     pub request: Option<Request>,

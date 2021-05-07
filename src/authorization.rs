@@ -138,7 +138,6 @@ fn is_false(b: &bool) -> bool {
 /// This is created via [`Account::get_authorization`](crate::Account::get_authorization()).
 pub struct GetAuthorization {
     //order: OrderData,
-
     /// The request to send to the ACME provider. This is wrapped in an option in order to allow
     /// moving it out instead of copying the contents.
     ///

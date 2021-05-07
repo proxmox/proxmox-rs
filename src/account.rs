@@ -272,7 +272,8 @@ pub struct CertificateRevocation<'a> {
 impl CertificateRevocation<'_> {
     /// Create the revocation request using the specified nonce for the given directory.
     pub fn request(&self, directory: &Directory, nonce: &str) -> Result<Request, Error> {
-        self.account.post_request(&directory.data.revoke_cert, nonce, &self.data)
+        self.account
+            .post_request(&directory.data.revoke_cert, nonce, &self.data)
     }
 }
 
