@@ -1,3 +1,5 @@
+//! A blocking higher-level ACME client implementation using 'curl'.
+
 use std::convert::TryFrom;
 
 use curl::easy;
@@ -19,8 +21,13 @@ macro_rules! bail {
 
 /// Low level HTTP response structure.
 pub struct HttpResponse {
+    /// The raw HTTP response body as a byte vector.
     pub body: Vec<u8>,
+
+    /// The http status code.
     pub status: u16,
+
+    /// The headers relevant to the ACME protocol.
     pub headers: Headers,
 }
 
@@ -60,6 +67,8 @@ impl HttpResponse {
 /// always be moved out of the response into the `Client` whenever a new nonce is received.
 #[derive(Default)]
 pub struct Headers {
+    /// The 'Location' header usually encodes the URL where an account or order can be queried from
+    /// after they were created.
     pub location: Option<String>,
     nonce: Option<String>,
 }
@@ -372,6 +381,10 @@ impl Client {
         self.register_account(account)
     }
 
+    /// Register an ACME account.
+    ///
+    /// This uses an [`AccountCreator`](crate::account::AccountCreator) since it may need to build
+    /// the request multiple times in case the we get a `BadNonce` error.
     pub fn register_account(
         &mut self,
         account: crate::account::AccountCreator,
