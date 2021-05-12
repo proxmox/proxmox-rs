@@ -16,23 +16,10 @@ pub fn sendmail(
     mailfrom: Option<&str>,
     author: Option<&str>,
 ) -> Result<(), Error> {
-    let mail_regex = regex::Regex::new(r"^[a-zA-Z\.0-9-]+@[a-zA-Z\.0-9-]+$").unwrap();
-
     if mailto.is_empty() {
         bail!("At least one recipient has to be specified!")
     }
-
-    for recipient in mailto {
-        if !mail_regex.is_match(recipient) {
-            bail!("'{}' is not a valid email address", recipient)
-        }
-    }
-
     let mailfrom = mailfrom.unwrap_or("root");
-    if !mailfrom.eq("root") && !mail_regex.is_match(mailfrom) {
-        bail!("'{}' is not a valid email address", mailfrom)
-    }
-
     let recipients = mailto.join(",");
     let author = author.unwrap_or("Proxmox Backup Server");
 
@@ -44,7 +31,7 @@ pub fn sendmail(
         .arg("-f")
         .arg(mailfrom)
         .arg("--")
-        .arg(&recipients)
+        .args(mailto)
         .stdin(Stdio::piped())
         .spawn()
     {
