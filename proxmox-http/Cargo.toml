@@ -18,11 +18,13 @@ futures = { version = "0.3", optional = true }
 hyper = { version = "0.14", features = [ "full" ], optional = true }
 openssl =  { version = "0.10", optional = true }
 tokio = { version = "1.0", features = [], optional = true }
+tokio-openssl = { version = "0.6.1", optional = true }
 
 proxmox = { path = "../proxmox", optional = true, version = "0.11.3", default-features = false }
 
 [features]
 default = []
 
-client = []
+client = [ "http-helpers" ]
+http-helpers = [ "hyper", "tokio/io-util", "tokio-openssl" ]
 websocket = [ "base64", "futures", "hyper", "openssl", "proxmox/tokio", "tokio/io-util", "tokio/sync" ]
