@@ -27,5 +27,5 @@ proxmox = { path = "../proxmox", optional = true, version = "0.11.3", default-fe
 default = []
 
 client = [ "http-helpers" ]
-http-helpers = [ "http", "hyper", "tokio/io-util", "tokio-openssl" ]
+http-helpers = [ "base64", "http", "hyper", "tokio/io-util", "tokio-openssl", "proxmox" ]
 websocket = [ "base64", "futures", "hyper", "openssl", "proxmox/tokio", "tokio/io-util", "tokio/sync" ]
