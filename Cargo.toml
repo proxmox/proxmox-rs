@@ -2,6 +2,7 @@
 members = [
     "proxmox",
     "proxmox-api-macro",
+    "proxmox-http",
     "proxmox-sortable-macro",
 ]
 exclude = [

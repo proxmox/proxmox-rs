@@ -1,6 +1,6 @@
 # Shortcut for common operations:
 
-CRATES=proxmox proxmox-api-macro proxmox-sortable-macro
+CRATES=proxmox proxmox-api-macro proxmox-http proxmox-sortable-macro
 
 # By default we just run checks:
 .PHONY: all

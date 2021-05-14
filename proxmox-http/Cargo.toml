@@ -1,0 +1,20 @@
+[package]
+name = "proxmox-http"
+edition = "2018"
+version = "0.1.0"
+authors = [
+    "Dietmar Maurer <dietmar@proxmox.com>",
+    "Wolfgang Bumiller <w.bumiller@proxmox.com>",
+]
+license = "AGPL-3"
+description = "Proxmox HTTP library"
+
+exclude = [ "debian" ]
+
+[dependencies]
+
+[features]
+default = []
+
+client = []
+websocket = []
