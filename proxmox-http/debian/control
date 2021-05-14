@@ -118,18 +118,12 @@ Depends:
  librust-tokio-1+io-util-dev,
  librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~)
 Provides:
- librust-proxmox-http+simple-client-dev (= ${binary:Version}),
  librust-proxmox-http-0+http-helpers-dev (= ${binary:Version}),
- librust-proxmox-http-0+simple-client-dev (= ${binary:Version}),
  librust-proxmox-http-0.1+http-helpers-dev (= ${binary:Version}),
- librust-proxmox-http-0.1+simple-client-dev (= ${binary:Version}),
- librust-proxmox-http-0.1.0+http-helpers-dev (= ${binary:Version}),
- librust-proxmox-http-0.1.0+simple-client-dev (= ${binary:Version})
-Description: Proxmox HTTP library - feature "http-helpers" and 1 more
+ librust-proxmox-http-0.1.0+http-helpers-dev (= ${binary:Version})
+Description: Proxmox HTTP library - feature "http-helpers"
  This metapackage enables feature "http-helpers" for the Rust proxmox-http
  crate, by pulling in any additional dependencies needed by that feature.
- .
- Additionally, this package also provides the "simple-client" feature.
 
 Package: librust-proxmox-http+hyper-dev
 Architecture: any
