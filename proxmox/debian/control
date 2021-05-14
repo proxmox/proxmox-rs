@@ -267,6 +267,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-dev (= ${binary:Version}),
+ librust-futures-0.3+default-dev,
  librust-hyper-0.14+default-dev,
  librust-hyper-0.14+full-dev,
  librust-tokio-1+default-dev
