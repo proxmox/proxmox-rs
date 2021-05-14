@@ -1,16 +1,13 @@
-use anyhow::{Error, format_err, bail};
+use anyhow::{bail, format_err, Error};
 use std::collections::HashMap;
 
-use hyper::Body;
-use hyper::client::{Client, HttpConnector};
-use http::{Request, Response, HeaderValue};
-use openssl::ssl::{SslConnector, SslMethod};
 use futures::*;
+use http::{HeaderValue, Request, Response};
+use hyper::client::{Client, HttpConnector};
+use hyper::Body;
+use openssl::ssl::{SslConnector, SslMethod};
 
-use crate::http::{
-    ProxyConfig,
-    client::HttpsConnector,
-};
+use crate::http::{client::HttpsConnector, ProxyConfig};
 
 /// Options for a SimpleHttp client.
 #[derive(Default)]
@@ -27,7 +24,7 @@ impl SimpleHttpOptions {
     fn get_proxy_authorization(&self) -> Option<String> {
         if let Some(ref proxy_config) = self.proxy_config {
             if !proxy_config.force_connect {
-               return proxy_config.authorization.clone();
+                return proxy_config.authorization.clone();
             }
         }
 
@@ -55,7 +52,11 @@ impl SimpleHttp {
 
     pub fn with_ssl_connector(ssl_connector: SslConnector, options: SimpleHttpOptions) -> Self {
         let connector = HttpConnector::new();
-        let mut https = HttpsConnector::with_connector(connector, ssl_connector, options.tcp_keepalive.unwrap_or(7200));
+        let mut https = HttpsConnector::with_connector(
+            connector,
+            ssl_connector,
+            options.tcp_keepalive.unwrap_or(7200),
+        );
         if let Some(ref proxy_config) = options.proxy_config {
             https.set_proxy(proxy_config.clone());
         }
@@ -71,12 +72,10 @@ impl SimpleHttp {
     fn add_proxy_headers(&self, request: &mut Request<Body>) -> Result<(), Error> {
         if request.uri().scheme() != Some(&http::uri::Scheme::HTTPS) {
             if let Some(ref authorization) = self.options.get_proxy_authorization() {
-                request
-                    .headers_mut()
-                    .insert(
-                        http::header::PROXY_AUTHORIZATION,
-                        HeaderValue::from_str(authorization)?,
-                    );
+                request.headers_mut().insert(
+                    http::header::PROXY_AUTHORIZATION,
+                    HeaderValue::from_str(authorization)?,
+                );
             }
         }
         Ok(())
@@ -89,13 +88,13 @@ impl SimpleHttp {
             HeaderValue::from_str(Self::DEFAULT_USER_AGENT_STRING)?
         };
 
-        request.headers_mut().insert(hyper::header::USER_AGENT, user_agent);
+        request
+            .headers_mut()
+            .insert(hyper::header::USER_AGENT, user_agent);
 
         self.add_proxy_headers(&mut request)?;
 
-        self.client.request(request)
-            .map_err(Error::from)
-            .await
+        self.client.request(request).map_err(Error::from).await
     }
 
     pub async fn post(
@@ -104,7 +103,6 @@ impl SimpleHttp {
         body: Option<String>,
         content_type: Option<&str>,
     ) -> Result<Response<Body>, Error> {
-
         let body = if let Some(body) = body {
             Body::from(body)
         } else {
@@ -126,10 +124,7 @@ impl SimpleHttp {
         uri: &str,
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<String, Error> {
-
-        let mut request = Request::builder()
-            .method("GET")
-            .uri(uri);
+        let mut request = Request::builder().method("GET").uri(uri);
 
         if let Some(hs) = extra_headers {
             for (h, v) in hs.iter() {

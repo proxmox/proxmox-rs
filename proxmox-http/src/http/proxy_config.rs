@@ -1,4 +1,4 @@
-use anyhow::{Error, format_err, bail};
+use anyhow::{bail, format_err, Error};
 
 use http::Uri;
 
@@ -16,7 +16,6 @@ pub struct ProxyConfig {
 impl ProxyConfig {
     /// Parse proxy config from ALL_PROXY environment var
     pub fn from_proxy_env() -> Result<Option<ProxyConfig>, Error> {
-
         // We only support/use ALL_PROXY environment
 
         match std::env::var_os("ALL_PROXY") {
@@ -70,7 +69,8 @@ impl ProxyConfig {
                 authorization,
                 force_connect: false,
             })
-        }).map_err(|err| format_err!("parse_proxy_url failed: {}", err))
+        })
+        .map_err(|err| format_err!("parse_proxy_url failed: {}", err))
     }
 
     /// Assemble canonical proxy string (including scheme and port)
@@ -78,7 +78,7 @@ impl ProxyConfig {
         let authority = helpers::build_authority(&self.host, self.port)?;
         Ok(match self.authorization {
             None => format!("http://{}", authority),
-            Some(ref authorization) => format!("http://{}@{}", authorization, authority)
+            Some(ref authorization) => format!("http://{}@{}", authorization, authority),
         })
     }
 }

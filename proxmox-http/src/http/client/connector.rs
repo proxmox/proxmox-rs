@@ -1,4 +1,4 @@
-use anyhow::{Error, format_err, bail};
+use anyhow::{bail, format_err, Error};
 use std::os::unix::io::AsRawFd;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -8,11 +8,7 @@ use futures::*;
 use http::Uri;
 use hyper::client::HttpConnector;
 use openssl::ssl::SslConnector;
-use tokio::io::{
-    AsyncRead,
-    AsyncReadExt,
-    AsyncWriteExt,
-};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio_openssl::SslStream;
 
@@ -29,7 +25,11 @@ pub struct HttpsConnector {
 }
 
 impl HttpsConnector {
-    pub fn with_connector(mut connector: HttpConnector, ssl_connector: SslConnector, tcp_keepalive: u32) -> Self {
+    pub fn with_connector(
+        mut connector: HttpConnector,
+        ssl_connector: SslConnector,
+        tcp_keepalive: u32,
+    ) -> Self {
         connector.enforce_http(false);
         Self {
             connector,
@@ -61,21 +61,27 @@ impl HttpsConnector {
         Ok(())
     }
 
-    async fn parse_connect_response<R: AsyncRead +  Unpin>(
-        stream: &mut R,
-    ) -> Result<(), Error> {
-
+    async fn parse_connect_response<R: AsyncRead + Unpin>(stream: &mut R) -> Result<(), Error> {
         let mut data: Vec<u8> = Vec::new();
         let mut buffer = [0u8; 256];
         const END_MARK: &[u8; 4] = b"\r\n\r\n";
 
         'outer: loop {
             let n = stream.read(&mut buffer[..]).await?;
-            if n == 0 { break; }
-            let search_start = if data.len() > END_MARK.len() { data.len() - END_MARK.len() + 1 } else { 0 };
+            if n == 0 {
+                break;
+            }
+            let search_start = if data.len() > END_MARK.len() {
+                data.len() - END_MARK.len() + 1
+            } else {
+                0
+            };
             data.extend(&buffer[..n]);
             if data.len() >= END_MARK.len() {
-                if let Some(pos) = data[search_start..].windows(END_MARK.len()).position(|w| w == END_MARK) {
+                if let Some(pos) = data[search_start..]
+                    .windows(END_MARK.len())
+                    .position(|w| w == END_MARK)
+                {
                     let response = String::from_utf8_lossy(&data);
                     let status_line = match response.split("\r\n").next() {
                         Some(status) => status,
@@ -89,7 +95,8 @@ impl HttpsConnector {
                     break 'outer;
                 }
             }
-            if data.len() > 1024*32 { // max 32K (random chosen limit)
+            if data.len() > 1024 * 32 {
+                // max 32K (random chosen limit)
                 bail!("too many bytes");
             }
         }
@@ -101,12 +108,11 @@ impl hyper::service::Service<Uri> for HttpsConnector {
     type Response = MaybeTlsStream<TcpStream>;
     type Error = Error;
     #[allow(clippy::type_complexity)]
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static>>;
+    type Future =
+        Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static>>;
 
     fn poll_ready(&mut self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.connector
-            .poll_ready(ctx)
-            .map_err(|err| err.into())
+        self.connector.poll_ready(ctx).map_err(|err| err.into())
     }
 
     fn call(&mut self, dst: Uri) -> Self::Future {
@@ -123,7 +129,6 @@ impl hyper::service::Service<Uri> for HttpsConnector {
         let keepalive = self.tcp_keepalive;
 
         if let Some(ref proxy) = self.proxy {
-
             let use_connect = is_https || proxy.force_connect;
 
             let proxy_authority = match helpers::build_authority(&proxy.host, proxy.port) {
@@ -145,17 +150,16 @@ impl hyper::service::Service<Uri> for HttpsConnector {
 
             if use_connect {
                 async move {
-
-                    let mut tcp_stream = connector
-                        .call(proxy_uri)
-                        .await
-                        .map_err(|err| format_err!("error connecting to {} - {}", proxy_authority, err))?;
+                    let mut tcp_stream = connector.call(proxy_uri).await.map_err(|err| {
+                        format_err!("error connecting to {} - {}", proxy_authority, err)
+                    })?;
 
                     let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
 
                     let mut connect_request = format!("CONNECT {0}:{1} HTTP/1.1\r\n", host, port);
                     if let Some(authorization) = authorization {
-                        connect_request.push_str(&format!("Proxy-Authorization: {}\r\n", authorization));
+                        connect_request
+                            .push_str(&format!("Proxy-Authorization: {}\r\n", authorization));
                     }
                     connect_request.push_str(&format!("Host: {0}:{1}\r\n\r\n", host, port));
 
@@ -169,18 +173,19 @@ impl hyper::service::Service<Uri> for HttpsConnector {
                     } else {
                         Ok(MaybeTlsStream::Normal(tcp_stream))
                     }
-                }.boxed()
+                }
+                .boxed()
             } else {
-               async move {
-                   let tcp_stream = connector
-                       .call(proxy_uri)
-                       .await
-                       .map_err(|err| format_err!("error connecting to {} - {}", proxy_authority, err))?;
+                async move {
+                    let tcp_stream = connector.call(proxy_uri).await.map_err(|err| {
+                        format_err!("error connecting to {} - {}", proxy_authority, err)
+                    })?;
 
-                   let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
+                    let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
 
-                   Ok(MaybeTlsStream::Proxied(tcp_stream))
-               }.boxed()
+                    Ok(MaybeTlsStream::Proxied(tcp_stream))
+                }
+                .boxed()
             }
         } else {
             async move {
@@ -197,7 +202,8 @@ impl hyper::service::Service<Uri> for HttpsConnector {
                 } else {
                     Ok(MaybeTlsStream::Normal(tcp_stream))
                 }
-            }.boxed()
+            }
+            .boxed()
         }
     }
 }
