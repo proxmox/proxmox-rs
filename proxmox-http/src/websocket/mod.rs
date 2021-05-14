@@ -202,8 +202,7 @@ pub fn create_frame(
         0b00000000
     };
 
-    let mut buf = Vec::new();
-    buf.push(first_byte);
+    let mut buf = vec![first_byte];
 
     if len < 126 {
         buf.push(mask_bit | (len as u8));
