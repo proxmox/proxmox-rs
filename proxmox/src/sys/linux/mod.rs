@@ -6,6 +6,7 @@ pub mod magic;
 pub mod pid;
 pub mod procfs;
 pub mod pty;
+pub mod socket;
 pub mod tty;
 
 /// Get pseudo random data (/dev/urandom)
