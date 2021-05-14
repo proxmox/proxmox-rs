@@ -22,8 +22,8 @@ use tokio::sync::mpsc;
 use futures::future::FutureExt;
 use futures::ready;
 
-use crate::sys::error::io_err_other;
-use crate::tools::byte_buffer::ByteBuffer;
+use proxmox::sys::error::io_err_other;
+use proxmox::tools::byte_buffer::ByteBuffer;
 
 // see RFC6455 section 7.4.1
 #[derive(Debug, Clone, Copy)]
@@ -146,7 +146,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut [u8]) {
 ///
 /// A normal Frame
 /// ```
-/// # use proxmox::tools::websocket::*;
+/// # use proxmox_http::websocket::*;
 /// # use std::io;
 /// # fn main() -> Result<(), WebSocketError> {
 /// let data = vec![0,1,2,3,4];
@@ -159,7 +159,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut [u8]) {
 ///
 /// A masked Frame
 /// ```
-/// # use proxmox::tools::websocket::*;
+/// # use proxmox_http::websocket::*;
 /// # use std::io;
 /// # fn main() -> Result<(), WebSocketError> {
 /// let data = vec![0,1,2,3,4];
@@ -172,7 +172,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut [u8]) {
 ///
 /// A ping Frame
 /// ```
-/// # use proxmox::tools::websocket::*;
+/// # use proxmox_http::websocket::*;
 /// # use std::io;
 /// # fn main() -> Result<(), WebSocketError> {
 /// let data = vec![0,1,2,3,4];
@@ -233,7 +233,7 @@ pub fn create_frame(
 ///
 /// Example usage:
 /// ```
-/// # use proxmox::tools::websocket::*;
+/// # use proxmox_http::websocket::*;
 /// # use std::io;
 /// # use tokio::io::{AsyncWrite, AsyncWriteExt};
 /// async fn code<I: AsyncWrite + Unpin>(writer: I) -> io::Result<()> {
@@ -352,7 +352,7 @@ impl FrameHeader {
     ///
     /// Example:
     /// ```
-    /// # use proxmox::tools::websocket::*;
+    /// # use proxmox_http::websocket::*;
     /// # use std::io;
     /// # fn main() -> Result<(), WebSocketError> {
     /// let frame = create_frame(None, &[0,1,2,3], OpCode::Ping)?;

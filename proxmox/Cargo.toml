@@ -50,7 +50,7 @@ proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = 
 proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.1" }
 
 [features]
-default = [ "cli", "router", "tfa", "u2f", "websocket" ]
+default = [ "cli", "router", "tfa", "u2f" ]
 sortable-macro = ["proxmox-sortable-macro"]
 
 # api:
@@ -58,7 +58,6 @@ api-macro = ["proxmox-api-macro"]
 test-harness = []
 cli = [ "router", "hyper", "tokio" ]
 router = [ "futures", "hyper", "tokio" ]
-websocket = [ "futures", "hyper", "openssl", "tokio/sync", "tokio/io-util", "openssl" ]
 tfa = [ "openssl" ]
 u2f = [ "base32" ]
 

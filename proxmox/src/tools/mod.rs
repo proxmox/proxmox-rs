@@ -21,9 +21,6 @@ pub mod time;
 pub mod uuid;
 pub mod vec;
 
-#[cfg(feature = "websocket")]
-pub mod websocket;
-
 #[cfg(feature = "tfa")]
 pub mod tfa;
 

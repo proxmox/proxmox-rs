@@ -28,10 +28,7 @@ Build-Depends: debhelper (>= 11),
  librust-serde-json-1+default-dev <!nocheck>,
  librust-textwrap-0.11+default-dev <!nocheck>,
  librust-tokio-1+default-dev <!nocheck>,
- librust-tokio-1+io-util-dev <!nocheck>,
- librust-tokio-1+sync-dev <!nocheck>,
  librust-url-2+default-dev (>= 2.1-~~) <!nocheck>,
- uuid-dev <!nocheck>,
  uuid-dev <!nocheck>,
  uuid-dev <!nocheck>,
  uuid-dev <!nocheck>,
@@ -79,8 +76,7 @@ Suggests:
  librust-proxmox+proxmox-sortable-macro-dev (= ${binary:Version}),
  librust-proxmox+router-dev (= ${binary:Version}),
  librust-proxmox+tokio-dev (= ${binary:Version}),
- librust-proxmox+tokio-stream-dev (= ${binary:Version}),
- librust-proxmox+websocket-dev (= ${binary:Version})
+ librust-proxmox+tokio-stream-dev (= ${binary:Version})
 Provides:
  librust-proxmox+test-harness-dev (= ${binary:Version}),
  librust-proxmox-0-dev (= ${binary:Version}),
@@ -162,8 +158,7 @@ Depends:
  librust-proxmox+cli-dev (= ${binary:Version}),
  librust-proxmox+router-dev (= ${binary:Version}),
  librust-proxmox+tfa-dev (= ${binary:Version}),
- librust-proxmox+u2f-dev (= ${binary:Version}),
- librust-proxmox+websocket-dev (= ${binary:Version})
+ librust-proxmox+u2f-dev (= ${binary:Version})
 Provides:
  librust-proxmox-0+default-dev (= ${binary:Version}),
  librust-proxmox-0.11+default-dev (= ${binary:Version}),
@@ -307,24 +302,4 @@ Provides:
  librust-proxmox-0.11.4+tokio-stream-dev (= ${binary:Version})
 Description: Proxmox library - feature "tokio-stream"
  This metapackage enables feature "tokio-stream" for the Rust proxmox crate, by
- pulling in any additional dependencies needed by that feature.
-
-Package: librust-proxmox+websocket-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-dev (= ${binary:Version}),
- librust-futures-0.3+default-dev,
- librust-hyper-0.14+default-dev,
- librust-hyper-0.14+full-dev,
- librust-openssl-0.10+default-dev,
- librust-tokio-1+io-util-dev,
- librust-tokio-1+sync-dev
-Provides:
- librust-proxmox-0+websocket-dev (= ${binary:Version}),
- librust-proxmox-0.11+websocket-dev (= ${binary:Version}),
- librust-proxmox-0.11.4+websocket-dev (= ${binary:Version})
-Description: Proxmox library - feature "websocket"
- This metapackage enables feature "websocket" for the Rust proxmox crate, by
  pulling in any additional dependencies needed by that feature.
