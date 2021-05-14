@@ -1,5 +1,5 @@
 #[cfg(feature = "websocket")]
 pub mod websocket;
 
-#[cfg(feature = "http-helpers")]
+#[cfg(any(feature = "http-helpers", feature = "client"))]
 pub mod http;

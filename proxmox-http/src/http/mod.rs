@@ -5,3 +5,6 @@ pub mod helpers;
 
 mod proxy_config;
 pub use proxy_config::ProxyConfig;
+
+#[cfg(feature = "client")]
+pub mod client;
