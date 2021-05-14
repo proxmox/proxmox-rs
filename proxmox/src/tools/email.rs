@@ -113,19 +113,6 @@ mod test {
     use crate::tools::email::sendmail;
 
     #[test]
-    fn send_email_to_root_localhost() {
-        let result = sendmail(
-            &["root@localhost"],
-            "Subject1",
-            Some("TEXT"),
-            Some("<b>HTML</b>"),
-            Some("root@localhost"),
-            Some("test1"),
-        );
-        assert!(result.is_ok());
-    }
-
-    #[test]
     fn email_without_recipients() {
         let result = sendmail(
             &[],
@@ -136,18 +123,5 @@ mod test {
             Some("test1"),
         );
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn email_with_non_existant_recipient() {
-        let result = sendmail(
-            &["some-nonexistant-proxmox-user"],
-            "Subject3",
-            None,
-            Some("<b>HTML</b>"),
-            None,
-            Some("test1"),
-        );
-        assert!(result.is_ok());
     }
 }
