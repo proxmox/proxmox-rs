@@ -20,7 +20,7 @@ impl ProxyConfig {
         // We only support/use ALL_PROXY environment
 
         match std::env::var_os("ALL_PROXY") {
-            None => return Ok(None),
+            None => Ok(None),
             Some(all_proxy) => {
                 let all_proxy = match all_proxy.to_str() {
                     Some(s) => String::from(s),

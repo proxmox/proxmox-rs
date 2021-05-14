@@ -155,3 +155,9 @@ impl SimpleHttp {
             .map_err(|err| format_err!("Error converting HTTP result data: {}", err))
     }
 }
+
+impl Default for SimpleHttp {
+    fn default() -> Self {
+        Self::new()
+    }
+}
