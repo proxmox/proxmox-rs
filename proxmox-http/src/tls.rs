@@ -1,3 +1,5 @@
+//! Client side TLS connection handling for `hyper`.
+
 use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};

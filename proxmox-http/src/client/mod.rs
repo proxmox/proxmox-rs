@@ -1,3 +1,7 @@
+//! Simple TLS capable HTTP client implementation.
+//!
+//! Contains a lightweight wrapper around `hyper` with support for TLS connections.
+
 mod connector;
 pub use connector::HttpsConnector;
 

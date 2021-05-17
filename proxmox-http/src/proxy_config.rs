@@ -1,3 +1,7 @@
+//! HTTP proxy configuration.
+//!
+//! This can be used with the [`SimpleClient`](crate::client::SimpleClient).
+
 use anyhow::{bail, format_err, Error};
 
 use http::Uri;
