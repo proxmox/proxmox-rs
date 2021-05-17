@@ -1,6 +1,6 @@
 //! HTTP proxy configuration.
 //!
-//! This can be used with the [`SimpleClient`](crate::client::SimpleClient).
+//! This can be used with the [`SimpleHttp`](crate::client::SimpleHttp).
 
 use anyhow::{bail, format_err, Error};
 
@@ -38,7 +38,7 @@ impl ProxyConfig {
         }
     }
 
-    /// Parse proxy configuration string [http://]<host>[:port]
+    /// Parse proxy configuration string `[http://]<host>[:port]`
     ///
     /// Default port is 1080 (like curl)
     pub fn parse_proxy_url(http_proxy: &str) -> Result<ProxyConfig, Error> {
