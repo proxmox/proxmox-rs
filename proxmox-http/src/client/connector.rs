@@ -135,7 +135,7 @@ impl hyper::service::Service<Uri> for HttpsConnector {
 
             let proxy_authority = match build_authority(&proxy.host, proxy.port) {
                 Ok(authority) => authority,
-                Err(err) => return futures::future::err(err).boxed(),
+                Err(err) => return futures::future::err(err.into()).boxed(),
             };
 
             let proxy_uri = match Uri::builder()

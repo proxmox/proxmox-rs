@@ -1,9 +1,10 @@
-use anyhow::Error;
+//! URI Related helpers, such as `build_authority`
 
-use http::uri::Authority;
+use http::uri::{Authority, InvalidUri};
 
-// Build a http::uri::Authority ("host:port"), use '[..]' around IPv6 addresses
-pub fn build_authority(host: &str, port: u16) -> Result<Authority, Error> {
+// Build an [`Authority`](http::uri::Authority) from a combination of `host` and `port`, ensuring that
+// IPv6 addresses are enclosed in brackets.
+pub fn build_authority(host: &str, port: u16) -> Result<Authority, InvalidUri> {
     let bytes = host.as_bytes();
     let len = bytes.len();
     let authority =
