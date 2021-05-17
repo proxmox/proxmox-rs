@@ -671,13 +671,6 @@ impl WebSocket {
             .ok_or_else(|| format_err!("missing websocket key"))?
             .to_str()?;
 
-        let ws_proto = headers
-            .get(SEC_WEBSOCKET_PROTOCOL)
-            .ok_or_else(|| format_err!("missing websocket key"))?
-            .to_str()?;
-
-        let text = ws_proto == "text";
-
         if protocols != "websocket" {
             bail!("invalid protocol name");
         }
@@ -693,13 +686,19 @@ impl WebSocket {
         sha1.update(data.as_bytes());
         let response_key = base64::encode(sha1.finish());
 
-        let response = Response::builder()
+        let mut response = Response::builder()
             .status(StatusCode::SWITCHING_PROTOCOLS)
             .header(UPGRADE, HeaderValue::from_static("websocket"))
             .header(CONNECTION, HeaderValue::from_static("Upgrade"))
-            .header(SEC_WEBSOCKET_ACCEPT, response_key)
-            .header(SEC_WEBSOCKET_PROTOCOL, ws_proto)
-            .body(Body::empty())?;
+            .header(SEC_WEBSOCKET_ACCEPT, response_key);
+
+        // We currently do not support any subprotocols and we always send binary frames,
+        // but for backwards compatibilty we need to reply the requested protocols
+        if let Some(ws_proto) = headers.get(SEC_WEBSOCKET_PROTOCOL) {
+            response = response.header(SEC_WEBSOCKET_PROTOCOL, ws_proto)
+        }
+
+        let response = response.body(Body::empty())?;
 
         Ok((Self, response))
     }
