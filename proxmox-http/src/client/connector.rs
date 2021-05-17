@@ -14,7 +14,9 @@ use tokio_openssl::SslStream;
 
 use proxmox::sys::linux::socket::set_tcp_keepalive;
 
-use crate::http::{helpers, MaybeTlsStream, ProxyConfig};
+use crate::tls::MaybeTlsStream;
+use crate::proxy_config::ProxyConfig;
+use crate::uri::build_authority;
 
 #[derive(Clone)]
 pub struct HttpsConnector {
@@ -131,7 +133,7 @@ impl hyper::service::Service<Uri> for HttpsConnector {
         if let Some(ref proxy) = self.proxy {
             let use_connect = is_https || proxy.force_connect;
 
-            let proxy_authority = match helpers::build_authority(&proxy.host, proxy.port) {
+            let proxy_authority = match build_authority(&proxy.host, proxy.port) {
                 Ok(authority) => authority,
                 Err(err) => return futures::future::err(err).boxed(),
             };

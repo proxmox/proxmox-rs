@@ -2,7 +2,7 @@ use anyhow::{bail, format_err, Error};
 
 use http::Uri;
 
-use crate::http::helpers;
+use crate::uri::build_authority;
 
 /// HTTP Proxy Configuration
 #[derive(Clone)]
@@ -75,7 +75,7 @@ impl ProxyConfig {
 
     /// Assemble canonical proxy string (including scheme and port)
     pub fn to_proxy_string(&self) -> Result<String, Error> {
-        let authority = helpers::build_authority(&self.host, self.port)?;
+        let authority = build_authority(&self.host, self.port)?;
         Ok(match self.authorization {
             None => format!("http://{}", authority),
             Some(ref authorization) => format!("http://{}@{}", authorization, authority),

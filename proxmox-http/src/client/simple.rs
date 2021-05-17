@@ -7,7 +7,8 @@ use hyper::client::{Client, HttpConnector};
 use hyper::Body;
 use openssl::ssl::{SslConnector, SslMethod};
 
-use crate::http::{client::HttpsConnector, ProxyConfig};
+use crate::client::HttpsConnector;
+use crate::proxy_config::ProxyConfig;
 
 /// Options for a SimpleHttp client.
 #[derive(Default)]
