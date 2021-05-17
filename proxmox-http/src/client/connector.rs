@@ -14,8 +14,8 @@ use tokio_openssl::SslStream;
 
 use proxmox::sys::linux::socket::set_tcp_keepalive;
 
-use crate::tls::MaybeTlsStream;
 use crate::proxy_config::ProxyConfig;
+use crate::tls::MaybeTlsStream;
 use crate::uri::build_authority;
 
 #[derive(Clone)]
