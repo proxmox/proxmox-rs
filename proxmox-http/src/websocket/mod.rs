@@ -243,7 +243,6 @@ pub fn create_frame(
 /// ```
 pub struct WebSocketWriter<W: AsyncWrite + Unpin> {
     writer: W,
-    text: bool,
     mask: Option<[u8; 4]>,
     frame: Option<(Vec<u8>, usize, usize)>,
 }
@@ -251,10 +250,9 @@ pub struct WebSocketWriter<W: AsyncWrite + Unpin> {
 impl<W: AsyncWrite + Unpin> WebSocketWriter<W> {
     /// Creates a new WebSocketWriter which will use the given mask (if any),
     /// and mark the frames as either 'Text' or 'Binary'
-    pub fn new(mask: Option<[u8; 4]>, text: bool, writer: W) -> WebSocketWriter<W> {
+    pub fn new(mask: Option<[u8; 4]>, writer: W) -> WebSocketWriter<W> {
         WebSocketWriter {
             writer,
-            text,
             mask,
             frame: None,
         }
@@ -275,11 +273,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
     fn poll_write(self: Pin<&mut Self>, cx: &mut Context, buf: &[u8]) -> Poll<io::Result<usize>> {
         let this = Pin::get_mut(self);
 
-        let frametype = if this.text {
-            OpCode::Text
-        } else {
-            OpCode::Binary
-        };
+        let frametype = OpCode::Binary;
 
         if this.frame.is_none() {
             // create frame buf
@@ -656,9 +650,7 @@ impl<R: AsyncRead + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
 pub const MAGIC_WEBSOCKET_GUID: &str = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 /// Provides methods for connecting a WebSocket endpoint with another
-pub struct WebSocket {
-    text: bool,
-}
+pub struct WebSocket;
 
 impl WebSocket {
     /// Returns a new WebSocket instance and the generates the correct
@@ -709,7 +701,7 @@ impl WebSocket {
             .header(SEC_WEBSOCKET_PROTOCOL, ws_proto)
             .body(Body::empty())?;
 
-        Ok((Self { text }, response))
+        Ok((Self, response))
     }
 
     async fn handle_channel_message<W>(
@@ -798,7 +790,7 @@ impl WebSocket {
 
         let (tx, mut rx) = mpsc::unbounded_channel();
         let mut wsreader = WebSocketReader::new(usreader, tx);
-        let mut wswriter = WebSocketWriter::new(None, self.text, uswriter);
+        let mut wswriter = WebSocketWriter::new(None, uswriter);
 
         let ws_future = tokio::io::copy(&mut wsreader, &mut dswriter);
         let term_future = Self::copy_to_websocket(&mut dsreader, &mut wswriter, &mut rx);
