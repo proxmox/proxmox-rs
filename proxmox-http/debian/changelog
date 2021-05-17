@@ -1,3 +1,9 @@
+rust-proxmox-http (0.2.0-1) unstable; urgency=medium
+
+  * complete reorganization
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 17 May 2021 11:16:25 +0200
+
 rust-proxmox-http (0.1.0-1) unstable; urgency=medium
 
   * refactor code from proxmox-backup and proxmox into own HTTP crate
