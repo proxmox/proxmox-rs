@@ -692,6 +692,8 @@ impl WebSocket {
             .header(CONNECTION, HeaderValue::from_static("Upgrade"))
             .header(SEC_WEBSOCKET_ACCEPT, response_key);
 
+        // FIXME: remove compat in PBS 3.x
+        //
         // We currently do not support any subprotocols and we always send binary frames,
         // but for backwards compatibilty we need to reply the requested protocols
         if let Some(ws_proto) = headers.get(SEC_WEBSOCKET_PROTOCOL) {
