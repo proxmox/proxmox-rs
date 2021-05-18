@@ -1,3 +1,11 @@
+rust-proxmox-http (0.2.1-1) unstable; urgency=medium
+
+  * websocket: remove code for 'text' frames
+
+  * websocket: remove subprotocol handling
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 18 May 2021 10:30:47 +0200
+
 rust-proxmox-http (0.2.0-1) unstable; urgency=medium
 
   * complete reorganization
