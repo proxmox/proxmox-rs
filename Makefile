@@ -40,5 +40,7 @@ upload: deb
 	cd build; \
 	    dcmd --deb rust-proxmox-acme-rs_*.changes \
 	    | grep -v '.changes$$' \
-	    | tar -cf- -T- \
-	    | ssh -X repoman@repo.proxmox.com upload --product devel --dist buster
+	    | tar -cf "rust-proxmox-acme-rs-debs.tar" -T-; \
+	    cat "rust-proxmox-acme-rs-debs.tar" | ssh -X repoman@repo.proxmox.com upload --product devel --dist buster; \
+	    cat "rust-proxmox-acme-rs-debs.tar" | ssh -X repoman@repo.proxmox.com upload --product devel --dist bullseye; \
+	    rm -f rust-proxmox-acme-rs-debs.tar
