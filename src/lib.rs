@@ -1,7 +1,8 @@
+use std::path::Path;
+
 use anyhow::{format_err, Error};
 use serde::{Deserialize, Serialize};
 use url::Url;
-use nix::unistd::Uid;
 
 mod http_client;
 pub use http_client::http_client;
@@ -112,13 +113,13 @@ impl OpenIdAuthenticator {
         })
     }
 
-    pub fn authorize_url(&self, realm: &str, state_owner: Uid) -> Result<Url, Error> {
+    pub fn authorize_url(&self, state_dir: &str, realm: &str) -> Result<Url, Error> {
 
         let private_auth_state = PrivateAuthState::new();
         let public_auth_state = private_auth_state.public_state_string(realm.to_string())?;
         let nonce = private_auth_state.nonce.clone();
 
-        store_auth_state(realm, &private_auth_state, state_owner)?;
+        store_auth_state(Path::new(state_dir), realm, &private_auth_state)?;
 
          // Generate the authorization URL to which we'll redirect the user.
         let (authorize_url, _csrf_state, _nonce) = self.client
@@ -138,10 +139,10 @@ impl OpenIdAuthenticator {
     }
 
     pub fn verify_public_auth_state(
+        state_dir: &str,
         state: &str,
-        state_owner: Uid,
     ) -> Result<(String, PrivateAuthState), Error> {
-        verify_public_auth_state(state, state_owner)
+        verify_public_auth_state(Path::new(state_dir), state)
     }
 
     pub fn verify_authorization_code(
