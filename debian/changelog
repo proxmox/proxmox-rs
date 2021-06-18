@@ -1,0 +1,5 @@
+rust-proxmox-openid (0.1.0-1) devel; urgency=medium
+
+  * initial release
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 18 Jun 2021 16:05:49 +0200

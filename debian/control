@@ -1,0 +1,54 @@
+Source: rust-proxmox-openid
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 24),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-curl-0.4+default-dev (>= 0.4.33-~~) <!nocheck>,
+ librust-http-0.2+default-dev <!nocheck>,
+ librust-nix-0.19+default-dev (>= 0.19.1-~~) <!nocheck>,
+ librust-openidconnect-2+curl-dev <!nocheck>,
+ librust-proxmox-0.11+api-macro-dev (>= 0.11.5-~~) <!nocheck>,
+ librust-proxmox-0.11+default-dev (>= 0.11.5-~~) <!nocheck>,
+ librust-proxmox-0.11+sortable-macro-dev (>= 0.11.5-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>,
+ librust-url-2+default-dev (>= 2.1-~~) <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.5.1
+Vcs-Git: 
+Vcs-Browser: 
+Rules-Requires-Root: no
+
+Package: librust-proxmox-openid-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-curl-0.4+default-dev (>= 0.4.33-~~),
+ librust-http-0.2+default-dev,
+ librust-nix-0.19+default-dev (>= 0.19.1-~~),
+ librust-openidconnect-2+curl-dev,
+ librust-proxmox-0.11+api-macro-dev (>= 0.11.5-~~),
+ librust-proxmox-0.11+default-dev (>= 0.11.5-~~),
+ librust-proxmox-0.11+sortable-macro-dev (>= 0.11.5-~~),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
+ librust-serde-json-1+default-dev,
+ librust-url-2+default-dev (>= 2.1-~~)
+Provides:
+ librust-proxmox-openid+default-dev (= ${binary:Version}),
+ librust-proxmox-openid-0-dev (= ${binary:Version}),
+ librust-proxmox-openid-0+default-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.1-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.1.0+default-dev (= ${binary:Version})
+Description: Rust crate "proxmox-openid" - Rust source code
+ This package contains the source for the Rust proxmox-openid crate, packaged by
+ debcargo for use with cargo and dh-cargo.
