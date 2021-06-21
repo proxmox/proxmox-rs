@@ -2,7 +2,6 @@ use std::path::Path;
 
 use anyhow::{format_err, Error};
 use serde::{Deserialize, Serialize};
-use url::Url;
 
 mod http_client;
 pub use http_client::http_client;
@@ -115,7 +114,7 @@ impl OpenIdAuthenticator {
         })
     }
 
-    pub fn authorize_url(&self, state_dir: &str, realm: &str) -> Result<Url, Error> {
+    pub fn authorize_url(&self, state_dir: &str, realm: &str) -> Result<String, Error> {
 
         let private_auth_state = PrivateAuthState::new();
         let public_auth_state = private_auth_state.public_state_string(realm.to_string())?;
@@ -137,7 +136,7 @@ impl OpenIdAuthenticator {
             .set_pkce_challenge(private_auth_state.pkce_challenge())
             .url();
 
-        Ok(authorize_url.into())
+        Ok(authorize_url.to_string())
     }
 
     pub fn verify_public_auth_state(
