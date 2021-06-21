@@ -35,9 +35,11 @@ use openidconnect::{
     Scope,
 };
 
+#[derive(Debug, Deserialize, Serialize)]
 pub struct OpenIdConfig {
     pub issuer_url: String,
     pub client_id: String,
+    #[serde(skip_serializing_if="Option::is_none")]
     pub client_key: Option<String>,
 }
 
