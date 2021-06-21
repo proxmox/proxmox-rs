@@ -1,3 +1,9 @@
+rust-proxmox-openid (0.2.0-1) devel; urgency=medium
+
+  * implement Deserialize/Serialize for OpenIdConfig
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 21 Jun 2021 13:37:24 +0200
+
 rust-proxmox-openid (0.1.0-1) devel; urgency=medium
 
   * initial release
