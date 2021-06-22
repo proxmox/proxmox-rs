@@ -1,3 +1,9 @@
+rust-proxmox-openid (0.3.0-1) unstable; urgency=medium
+
+  * return authorize_url() as string
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 22 Jun 2021 09:23:33 +0200
+
 rust-proxmox-openid (0.2.0-1) devel; urgency=medium
 
   * implement Deserialize/Serialize for OpenIdConfig
