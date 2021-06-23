@@ -1,0 +1,5 @@
+rust-proxmox-apt (0.1.0-1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 18 Feb 2021 10:20:44 +0100
