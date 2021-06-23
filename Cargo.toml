@@ -1,0 +1,23 @@
+[package]
+name = "proxmox-apt"
+version = "0.1.0"
+authors = [
+    "Fabian Ebner <f.ebner@proxmox.com>",
+    "Proxmox Support Team <support@proxmox.com>",
+]
+edition = "2018"
+license = "AGPL-3"
+description = "Proxmox library for APT"
+homepage = "https://www.proxmox.com"
+
+exclude = [ "debian" ]
+
+[lib]
+name = "proxmox_apt"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0"
+openssl = "0.10"
+proxmox = { version = "0.11.5", features = [ "api-macro" ] }
+serde = { version = "1.0", features = ["derive"] }

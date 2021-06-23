@@ -1,0 +1,4 @@
+Cargo.lock
+target/
+tests/sources.list.d.actual
+tests/sources.list.d.digest

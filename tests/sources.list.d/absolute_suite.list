@@ -1,0 +1,4 @@
+# From Debian Administrator's Handbook
+deb http://packages.falcot.com/ updates/
+
+deb http://user.name@packages.falcot.com:80/ internal/
