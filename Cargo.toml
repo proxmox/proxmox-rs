@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-apt"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     "Fabian Ebner <f.ebner@proxmox.com>",
     "Proxmox Support Team <support@proxmox.com>",

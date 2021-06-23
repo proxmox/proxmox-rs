@@ -1,3 +1,11 @@
+rust-proxmox-apt (0.2.0-1) unstable; urgency=medium
+
+  * Add functions to check repositories.
+
+  * Add handling of standard Proxmox repositories.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 23 Jun 2021 14:57:52 +0200
+
 rust-proxmox-apt (0.1.0-1) unstable; urgency=medium
 
   * Initial release.
