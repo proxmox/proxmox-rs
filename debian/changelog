@@ -1,3 +1,9 @@
+rust-proxmox-openid (0.4.0-1) unstable; urgency=medium
+
+  *  set "default-features = false" for proxmox crate
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 23 Jun 2021 11:17:22 +0200
+
 rust-proxmox-openid (0.3.0-1) unstable; urgency=medium
 
   * return authorize_url() as string
