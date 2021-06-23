@@ -9,7 +9,9 @@ pub use repository::{
 };
 
 mod file;
-pub use file::{APTRepositoryFile, APTRepositoryFileError};
+pub use file::{APTRepositoryFile, APTRepositoryFileError, APTRepositoryInfo};
+
+mod release;
 
 const APT_SOURCES_LIST_FILENAME: &str = "/etc/apt/sources.list";
 const APT_SOURCES_LIST_DIRECTORY: &str = "/etc/apt/sources.list.d/";
@@ -35,6 +37,23 @@ fn common_digest(files: &[APTRepositoryFile]) -> [u8; 32] {
     }
 
     openssl::sha::sha256(&common_raw[..])
+}
+
+/// Provides additional information about the repositories.
+///
+/// The kind of information can be:
+/// `warnings` for bad suites.
+/// `ignore-pre-upgrade-warning` when the next stable suite is configured.
+/// `badge` for official URIs.
+pub fn check_repositories(files: &[APTRepositoryFile]) -> Result<Vec<APTRepositoryInfo>, Error> {
+    let mut infos = vec![];
+
+    for file in files.iter() {
+        infos.append(&mut file.check_suites()?);
+        infos.append(&mut file.check_uris());
+    }
+
+    Ok(infos)
 }
 
 /// Returns all APT repositories configured in `/etc/apt/sources.list` and

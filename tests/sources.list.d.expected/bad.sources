@@ -1,0 +1,30 @@
+Types: deb
+URIs: http://ftp.at.debian.org/debian
+Suites: sid
+Components: main contrib
+
+Types: deb
+URIs: http://ftp.at.debian.org/debian
+Suites: lenny-backports
+Components: contrib
+
+Types: deb
+URIs: http://security.debian.org:80
+Suites: stretch/updates
+Components: main contrib
+
+Types: deb
+URIs: http://ftp.at.debian.org:80/debian
+Suites: stable
+Components: main
+
+Types: deb
+URIs: http://ftp.at.debian.org/debian
+Suites: bookworm
+Components: main
+
+Types: deb
+URIs: http://ftp.at.debian.org/debian
+Suites: testing
+Components: main
+

@@ -2,10 +2,13 @@ use std::convert::TryFrom;
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
 
-use anyhow::{format_err, Error};
+use anyhow::{bail, format_err, Error};
 use serde::{Deserialize, Serialize};
 
-use crate::repositories::repository::{APTRepository, APTRepositoryFileType};
+use crate::repositories::release::{get_current_release_codename, DEBIAN_SUITES};
+use crate::repositories::repository::{
+    APTRepository, APTRepositoryFileType, APTRepositoryPackageType,
+};
 
 use proxmox::api::api;
 
@@ -83,6 +86,29 @@ impl std::error::Error for APTRepositoryFileError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         None
     }
+}
+
+#[api]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+/// Additional information for a repository.
+pub struct APTRepositoryInfo {
+    /// Path to the defining file.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub path: String,
+
+    /// Index of the associated respository within the file (starting from 0).
+    pub index: usize,
+
+    /// The property from which the info originates (e.g. "Suites")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub property: Option<String>,
+
+    /// Info kind (e.g. "warning")
+    pub kind: String,
+
+    /// Info message
+    pub message: String,
 }
 
 impl APTRepositoryFile {
@@ -270,5 +296,94 @@ impl APTRepositoryFile {
         }
 
         Ok(())
+    }
+
+    /// Checks if old or unstable suites are configured and also that the
+    /// `stable` keyword is not used.
+    pub fn check_suites(&self) -> Result<Vec<APTRepositoryInfo>, Error> {
+        let mut infos = vec![];
+
+        for (n, repo) in self.repositories.iter().enumerate() {
+            if !repo
+                .types
+                .iter()
+                .any(|package_type| *package_type == APTRepositoryPackageType::Deb)
+            {
+                continue;
+            }
+
+            let mut add_info = |kind, message| {
+                infos.push(APTRepositoryInfo {
+                    path: self.path.clone(),
+                    index: n,
+                    property: Some("Suites".to_string()),
+                    kind,
+                    message,
+                })
+            };
+
+            let current_suite = get_current_release_codename()?;
+
+            let current_index = match DEBIAN_SUITES
+                .iter()
+                .position(|&suite| suite == current_suite)
+            {
+                Some(index) => index,
+                None => bail!("unknown release {}", current_suite),
+            };
+
+            for (n, suite) in DEBIAN_SUITES.iter().enumerate() {
+                if repo.has_suite_variant(suite) {
+                    if n < current_index {
+                        add_info(
+                            "warning".to_string(),
+                            format!("old suite '{}' configured!", suite),
+                        );
+                    }
+
+                    if n == current_index + 1 {
+                        add_info(
+                            "ignore-pre-upgrade-warning".to_string(),
+                            format!("suite '{}' should not be used in production!", suite),
+                        );
+                    }
+
+                    if n > current_index + 1 {
+                        add_info(
+                            "warning".to_string(),
+                            format!("suite '{}' should not be used in production!", suite),
+                        );
+                    }
+                }
+            }
+
+            if repo.has_suite_variant("stable") {
+                add_info(
+                    "warning".to_string(),
+                    "use the name of the stable distribution instead of 'stable'!".to_string(),
+                );
+            }
+        }
+
+        Ok(infos)
+    }
+
+    /// Checks for official URIs.
+    pub fn check_uris(&self) -> Vec<APTRepositoryInfo> {
+        let mut infos = vec![];
+
+        for (n, repo) in self.repositories.iter().enumerate() {
+            if repo.has_official_uri() {
+                infos.push(APTRepositoryInfo {
+                    path: self.path.clone(),
+                    index: n,
+                    kind: "badge".to_string(),
+                    property: Some("URIs".to_string()),
+                    message: "official host name".to_string(),
+                });
+            }
+        }
+
+        infos
     }
 }

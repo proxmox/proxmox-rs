@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{bail, format_err, Error};
 
-use proxmox_apt::repositories::APTRepositoryFile;
+use proxmox_apt::repositories::{check_repositories, APTRepositoryFile, APTRepositoryInfo};
 
 #[test]
 fn test_parse_write() -> Result<(), Error> {
@@ -157,6 +157,110 @@ fn test_empty_write() -> Result<(), Error> {
     file.write()?;
 
     assert!(!file.exists());
+
+    Ok(())
+}
+
+#[test]
+fn test_check_repositories() -> Result<(), Error> {
+    let test_dir = std::env::current_dir()?.join("tests");
+    let read_dir = test_dir.join("sources.list.d");
+
+    let absolute_suite_list = read_dir.join("absolute_suite.list");
+    let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
+    file.parse()?;
+
+    let infos = check_repositories(&vec![file])?;
+
+    assert_eq!(infos.is_empty(), true);
+    let pve_list = read_dir.join("pve.list");
+    let mut file = APTRepositoryFile::new(&pve_list)?.unwrap();
+    file.parse()?;
+
+    let path_string = pve_list.into_os_string().into_string().unwrap();
+
+    let mut expected_infos = vec![];
+    for n in 0..=5 {
+        expected_infos.push(APTRepositoryInfo {
+            path: path_string.clone(),
+            index: n,
+            property: Some("URIs".to_string()),
+            kind: "badge".to_string(),
+            message: "official host name".to_string(),
+        });
+    }
+    expected_infos.sort();
+
+    let mut infos = check_repositories(&vec![file])?;
+    infos.sort();
+
+    assert_eq!(infos, expected_infos);
+
+    let bad_sources = read_dir.join("bad.sources");
+    let mut file = APTRepositoryFile::new(&bad_sources)?.unwrap();
+    file.parse()?;
+
+    let path_string = bad_sources.into_os_string().into_string().unwrap();
+
+    let mut expected_infos = vec![
+        APTRepositoryInfo {
+            path: path_string.clone(),
+            index: 0,
+            property: Some("Suites".to_string()),
+            kind: "warning".to_string(),
+            message: "suite 'sid' should not be used in production!".to_string(),
+        },
+        APTRepositoryInfo {
+            path: path_string.clone(),
+            index: 1,
+            property: Some("Suites".to_string()),
+            kind: "warning".to_string(),
+            message: "old suite 'lenny' configured!".to_string(),
+        },
+        APTRepositoryInfo {
+            path: path_string.clone(),
+            index: 2,
+            property: Some("Suites".to_string()),
+            kind: "warning".to_string(),
+            message: "old suite 'stretch' configured!".to_string(),
+        },
+        APTRepositoryInfo {
+            path: path_string.clone(),
+            index: 3,
+            property: Some("Suites".to_string()),
+            kind: "warning".to_string(),
+            message: "use the name of the stable distribution instead of 'stable'!".to_string(),
+        },
+        APTRepositoryInfo {
+            path: path_string.clone(),
+            index: 4,
+            property: Some("Suites".to_string()),
+            kind: "ignore-pre-upgrade-warning".to_string(),
+            message: "suite 'bookworm' should not be used in production!".to_string(),
+        },
+        APTRepositoryInfo {
+            path: path_string.clone(),
+            index: 5,
+            property: Some("Suites".to_string()),
+            kind: "warning".to_string(),
+            message: "suite 'testing' should not be used in production!".to_string(),
+        },
+    ];
+    for n in 0..=5 {
+        expected_infos.push(APTRepositoryInfo {
+            path: path_string.clone(),
+            index: n,
+            property: Some("URIs".to_string()),
+            kind: "badge".to_string(),
+            message: "official host name".to_string(),
+        });
+    }
+    expected_infos.sort();
+
+    let mut infos = check_repositories(&vec![file])?;
+    infos.sort();
+
+    assert_eq!(infos, expected_infos);
 
     Ok(())
 }

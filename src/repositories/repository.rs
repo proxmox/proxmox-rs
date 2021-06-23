@@ -266,6 +266,30 @@ impl APTRepository {
         Ok(())
     }
 
+    /// Check if a variant of the given suite is configured in this repository
+    pub fn has_suite_variant(&self, base_suite: &str) -> bool {
+        self.suites
+            .iter()
+            .any(|suite| suite_variant(suite).0 == base_suite)
+    }
+
+    /// Checks if an official host is configured in the repository.
+    pub fn has_official_uri(&self) -> bool {
+        for uri in self.uris.iter() {
+            if let Some(host) = host_from_uri(uri) {
+                if host == "proxmox.com"
+                    || host.ends_with(".proxmox.com")
+                    || host == "debian.org"
+                    || host.ends_with(".debian.org")
+                {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
     /// Writes a repository in the corresponding format followed by a blank.
     ///
     /// Expects that `basic_check()` for the repository was successful.
@@ -275,6 +299,40 @@ impl APTRepository {
             APTRepositoryFileType::Sources => write_stanza(self, w),
         }
     }
+}
+
+/// Get the host part from a given URI.
+fn host_from_uri(uri: &str) -> Option<&str> {
+    let host = uri.strip_prefix("http")?;
+    let host = host.strip_prefix("s").unwrap_or(host);
+    let mut host = host.strip_prefix("://")?;
+
+    if let Some(end) = host.find('/') {
+        host = &host[..end];
+    }
+
+    if let Some(begin) = host.find('@') {
+        host = &host[(begin + 1)..];
+    }
+
+    if let Some(end) = host.find(':') {
+        host = &host[..end];
+    }
+
+    Some(host)
+}
+
+/// Splits the suite into its base part and variant.
+fn suite_variant(suite: &str) -> (&str, &str) {
+    let variants = ["-backports-sloppy", "-backports", "-updates", "/updates"];
+
+    for variant in variants.iter() {
+        if let Some(base) = suite.strip_suffix(variant) {
+            return (base, variant);
+        }
+    }
+
+    (suite, "")
 }
 
 /// Writes a repository in one-line format followed by a blank line.
