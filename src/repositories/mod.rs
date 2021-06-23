@@ -12,6 +12,10 @@ mod file;
 pub use file::{APTRepositoryFile, APTRepositoryFileError, APTRepositoryInfo};
 
 mod release;
+use release::get_current_release_codename;
+
+mod standard;
+pub use standard::{APTRepositoryHandle, APTStandardRepository};
 
 const APT_SOURCES_LIST_FILENAME: &str = "/etc/apt/sources.list";
 const APT_SOURCES_LIST_DIRECTORY: &str = "/etc/apt/sources.list.d/";
@@ -54,6 +58,85 @@ pub fn check_repositories(files: &[APTRepositoryFile]) -> Result<Vec<APTReposito
     }
 
     Ok(infos)
+}
+
+/// Get the repository associated to the handle and the path where its usually configured.
+pub fn get_standard_repository(
+    handle: APTRepositoryHandle,
+    product: &str,
+) -> Result<(APTRepository, String), Error> {
+    let suite = get_current_release_codename()?;
+
+    let repo = handle.to_repository(product, &suite);
+    let path = handle.path(product);
+
+    Ok((repo, path))
+}
+
+/// Return handles for standard Proxmox repositories and whether their status, where
+/// None means not configured, and Some(bool) indicates enabled or disabled
+pub fn standard_repositories(
+    product: &str,
+    files: &[APTRepositoryFile],
+) -> Vec<APTStandardRepository> {
+    let mut result = vec![
+        APTStandardRepository {
+            handle: APTRepositoryHandle::Enterprise,
+            status: None,
+            name: APTRepositoryHandle::Enterprise.name(product),
+        },
+        APTStandardRepository {
+            handle: APTRepositoryHandle::NoSubscription,
+            status: None,
+            name: APTRepositoryHandle::NoSubscription.name(product),
+        },
+        APTStandardRepository {
+            handle: APTRepositoryHandle::Test,
+            status: None,
+            name: APTRepositoryHandle::Test.name(product),
+        },
+    ];
+
+    if product == "pve" {
+        result.append(&mut vec![
+            APTStandardRepository {
+                handle: APTRepositoryHandle::CephPacific,
+                status: None,
+                name: APTRepositoryHandle::CephPacific.name(product),
+            },
+            APTStandardRepository {
+                handle: APTRepositoryHandle::CephPacificTest,
+                status: None,
+                name: APTRepositoryHandle::CephPacificTest.name(product),
+            },
+            APTStandardRepository {
+                handle: APTRepositoryHandle::CephOctopus,
+                status: None,
+                name: APTRepositoryHandle::CephOctopus.name(product),
+            },
+            APTStandardRepository {
+                handle: APTRepositoryHandle::CephOctopusTest,
+                status: None,
+                name: APTRepositoryHandle::CephOctopusTest.name(product),
+            },
+        ]);
+    }
+
+    for file in files.iter() {
+        for repo in file.repositories.iter() {
+            for entry in result.iter_mut() {
+                if entry.status == Some(true) {
+                    continue;
+                }
+
+                if repo.is_referenced_repository(entry.handle, product) {
+                    entry.status = Some(repo.enabled);
+                }
+            }
+        }
+    }
+
+    result
 }
 
 /// Returns all APT repositories configured in `/etc/apt/sources.list` and

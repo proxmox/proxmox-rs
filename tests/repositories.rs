@@ -2,7 +2,10 @@ use std::path::PathBuf;
 
 use anyhow::{bail, format_err, Error};
 
-use proxmox_apt::repositories::{check_repositories, APTRepositoryFile, APTRepositoryInfo};
+use proxmox_apt::repositories::{
+    check_repositories, standard_repositories, APTRepositoryFile, APTRepositoryHandle,
+    APTRepositoryInfo, APTStandardRepository,
+};
 
 #[test]
 fn test_parse_write() -> Result<(), Error> {
@@ -261,6 +264,83 @@ fn test_check_repositories() -> Result<(), Error> {
     infos.sort();
 
     assert_eq!(infos, expected_infos);
+
+    Ok(())
+}
+#[test]
+fn test_standard_repositories() -> Result<(), Error> {
+    let test_dir = std::env::current_dir()?.join("tests");
+    let read_dir = test_dir.join("sources.list.d");
+
+    let mut expected = vec![
+        APTStandardRepository {
+            handle: APTRepositoryHandle::Enterprise,
+            status: None,
+            name: APTRepositoryHandle::Enterprise.name("pve"),
+        },
+        APTStandardRepository {
+            handle: APTRepositoryHandle::NoSubscription,
+            status: None,
+            name: APTRepositoryHandle::NoSubscription.name("pve"),
+        },
+        APTStandardRepository {
+            handle: APTRepositoryHandle::Test,
+            status: None,
+            name: APTRepositoryHandle::Test.name("pve"),
+        },
+        APTStandardRepository {
+            handle: APTRepositoryHandle::CephPacific,
+            status: None,
+            name: APTRepositoryHandle::CephPacific.name("pve"),
+        },
+        APTStandardRepository {
+            handle: APTRepositoryHandle::CephPacificTest,
+            status: None,
+            name: APTRepositoryHandle::CephPacificTest.name("pve"),
+        },
+        APTStandardRepository {
+            handle: APTRepositoryHandle::CephOctopus,
+            status: None,
+            name: APTRepositoryHandle::CephOctopus.name("pve"),
+        },
+        APTStandardRepository {
+            handle: APTRepositoryHandle::CephOctopusTest,
+            status: None,
+            name: APTRepositoryHandle::CephOctopusTest.name("pve"),
+        },
+    ];
+
+    let absolute_suite_list = read_dir.join("absolute_suite.list");
+    let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
+    file.parse()?;
+
+    let std_repos = standard_repositories("pve", &vec![file]);
+
+    assert_eq!(std_repos, expected);
+
+    let pve_list = read_dir.join("pve.list");
+    let mut file = APTRepositoryFile::new(&pve_list)?.unwrap();
+    file.parse()?;
+
+    let file_vec = vec![file];
+
+    let std_repos = standard_repositories("pbs", &file_vec);
+
+    expected[0].name = APTRepositoryHandle::Enterprise.name("pbs");
+    expected[1].name = APTRepositoryHandle::NoSubscription.name("pbs");
+    expected[2].name = APTRepositoryHandle::Test.name("pbs");
+
+    assert_eq!(&std_repos, &expected[0..=2]);
+
+    expected[0].status = Some(false);
+    expected[1].status = Some(true);
+    expected[0].name = APTRepositoryHandle::Enterprise.name("pve");
+    expected[1].name = APTRepositoryHandle::NoSubscription.name("pve");
+    expected[2].name = APTRepositoryHandle::Test.name("pve");
+
+    let std_repos = standard_repositories("pve", &file_vec);
+
+    assert_eq!(std_repos, expected);
 
     Ok(())
 }

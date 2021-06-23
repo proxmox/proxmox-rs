@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 
 use proxmox::api::api;
 
+use crate::repositories::standard::APTRepositoryHandle;
+
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -264,6 +266,18 @@ impl APTRepository {
         }
 
         Ok(())
+    }
+
+    /// Checks if the repository is the one referenced by the handle.
+    pub fn is_referenced_repository(&self, handle: APTRepositoryHandle, product: &str) -> bool {
+        let (package_type, uri, component) = handle.info(product);
+
+        self.types.contains(&package_type)
+            && self
+                .uris
+                .iter()
+                .any(|self_uri| self_uri.trim_end_matches('/') == uri)
+            && self.components.contains(&component)
     }
 
     /// Check if a variant of the given suite is configured in this repository
