@@ -1,3 +1,9 @@
+rust-proxmox-openid (0.6.0-1) unstable; urgency=medium
+
+  * use one lock file per realm
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 25 Jun 2021 11:09:08 +0200
+
 rust-proxmox-openid (0.5.0-1) unstable; urgency=medium
 
   * avoid unused features "sortable-macro" and "api-macro"
