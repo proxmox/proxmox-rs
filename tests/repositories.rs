@@ -171,6 +171,11 @@ fn test_check_repositories() -> Result<(), Error> {
     let test_dir = std::env::current_dir()?.join("tests");
     let read_dir = test_dir.join("sources.list.d");
 
+    proxmox_apt::config::init(APTConfig::new(
+        Some(&test_dir.into_os_string().into_string().unwrap()),
+        None,
+    ));
+
     let absolute_suite_list = read_dir.join("absolute_suite.list");
     let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
     file.parse()?;
@@ -184,14 +189,18 @@ fn test_check_repositories() -> Result<(), Error> {
 
     let path_string = pve_list.into_os_string().into_string().unwrap();
 
+    let origins = [
+        "Debian", "Debian", "Proxmox", "Proxmox", "Proxmox", "Debian",
+    ];
+
     let mut expected_infos = vec![];
     for n in 0..=5 {
         expected_infos.push(APTRepositoryInfo {
             path: path_string.clone(),
             index: n,
-            property: Some("URIs".to_string()),
-            kind: "badge".to_string(),
-            message: "official host name".to_string(),
+            property: None,
+            kind: "origin".to_string(),
+            message: origins[n].to_string(),
         });
     }
     expected_infos.sort();
@@ -255,9 +264,9 @@ fn test_check_repositories() -> Result<(), Error> {
         expected_infos.push(APTRepositoryInfo {
             path: path_string.clone(),
             index: n,
-            property: Some("URIs".to_string()),
-            kind: "badge".to_string(),
-            message: "official host name".to_string(),
+            property: None,
+            kind: "origin".to_string(),
+            message: "Debian".to_string(),
         });
     }
     expected_infos.sort();

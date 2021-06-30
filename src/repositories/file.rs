@@ -373,13 +373,22 @@ impl APTRepositoryFile {
         let mut infos = vec![];
 
         for (n, repo) in self.repositories.iter().enumerate() {
-            if repo.has_official_uri() {
+            let mut origin = match repo.get_cached_origin() {
+                Ok(option) => option,
+                Err(_) => None,
+            };
+
+            if origin.is_none() {
+                origin = repo.origin_from_uris();
+            }
+
+            if let Some(origin) = origin {
                 infos.push(APTRepositoryInfo {
                     path: self.path.clone(),
                     index: n,
-                    kind: "badge".to_string(),
-                    property: Some("URIs".to_string()),
-                    message: "official host name".to_string(),
+                    kind: "origin".to_string(),
+                    property: None,
+                    message: origin,
                 });
             }
         }

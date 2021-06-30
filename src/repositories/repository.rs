@@ -288,21 +288,23 @@ impl APTRepository {
             .any(|suite| suite_variant(suite).0 == base_suite)
     }
 
-    /// Checks if an official host is configured in the repository.
-    pub fn has_official_uri(&self) -> bool {
+    /// Guess the origin from the repository's URIs.
+    ///
+    /// Intended to be used as a fallback for get_cached_origin.
+    pub fn origin_from_uris(&self) -> Option<String> {
         for uri in self.uris.iter() {
             if let Some(host) = host_from_uri(uri) {
-                if host == "proxmox.com"
-                    || host.ends_with(".proxmox.com")
-                    || host == "debian.org"
-                    || host.ends_with(".debian.org")
-                {
-                    return true;
+                if host == "proxmox.com" || host.ends_with(".proxmox.com") {
+                    return Some("Proxmox".to_string());
+                }
+
+                if host == "debian.org" || host.ends_with(".debian.org") {
+                    return Some("Debian".to_string());
                 }
             }
         }
 
-        false
+        None
     }
 
     /// Get the `Origin:` value from a cached InRelease file.
