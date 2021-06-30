@@ -108,11 +108,13 @@ impl APTRepositoryHandle {
                 Proxmox subscription users."
             }
             APTRepositoryHandle::NoSubscription => {
-                "This is the recommended repository for testing and non-production use."
+                "This is the recommended repository for testing and non-production use. \
+                Its packages are not as heavily tested and validated as the production ready \
+                enterprise repository. You don’t need a subscription key to access this repository."
             }
             APTRepositoryHandle::Test => {
-                "This repository contains the latest packages and is primarily used by developers \
-                to test new features."
+                "This repository contains the latest packages and is primarily used for test labs \
+                and by developers to test new features."
             }
             APTRepositoryHandle::CephPacific => {
                 "This repository holds the main Proxmox Ceph Pacific packages."
