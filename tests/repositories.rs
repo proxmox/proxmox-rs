@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::{bail, format_err, Error};
 
+use proxmox_apt::config::APTConfig;
+
 use proxmox_apt::repositories::{
     check_repositories, standard_repositories, APTRepositoryFile, APTRepositoryHandle,
     APTRepositoryInfo, APTStandardRepository,
@@ -267,6 +269,39 @@ fn test_check_repositories() -> Result<(), Error> {
 
     Ok(())
 }
+
+#[test]
+fn test_get_cached_origin() -> Result<(), Error> {
+    let test_dir = std::env::current_dir()?.join("tests");
+    let read_dir = test_dir.join("sources.list.d");
+
+    proxmox_apt::config::init(APTConfig::new(
+        Some(&test_dir.into_os_string().into_string().unwrap()),
+        None,
+    ));
+
+    let pve_list = read_dir.join("pve.list");
+    let mut file = APTRepositoryFile::new(&pve_list)?.unwrap();
+    file.parse()?;
+
+    let origins = [
+        Some("Debian".to_string()),
+        Some("Debian".to_string()),
+        Some("Proxmox".to_string()),
+        None, // no cache file exists
+        None, // no cache file exists
+        Some("Debian".to_string()),
+    ];
+
+    assert_eq!(file.repositories.len(), origins.len());
+
+    for (n, repo) in file.repositories.iter().enumerate() {
+        assert_eq!(repo.get_cached_origin()?, origins[n]);
+    }
+
+    Ok(())
+}
+
 #[test]
 fn test_standard_repositories() -> Result<(), Error> {
     let test_dir = std::env::current_dir()?.join("tests");

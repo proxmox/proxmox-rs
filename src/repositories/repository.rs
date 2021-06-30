@@ -1,8 +1,9 @@
 use std::convert::TryFrom;
 use std::fmt::Display;
-use std::io::Write;
+use std::io::{BufRead, BufReader, Write};
+use std::path::PathBuf;
 
-use anyhow::{bail, Error};
+use anyhow::{bail, format_err, Error};
 use serde::{Deserialize, Serialize};
 
 use proxmox::api::api;
@@ -304,6 +305,38 @@ impl APTRepository {
         false
     }
 
+    /// Get the `Origin:` value from a cached InRelease file.
+    pub fn get_cached_origin(&self) -> Result<Option<String>, Error> {
+        for uri in self.uris.iter() {
+            for suite in self.suites.iter() {
+                let file = in_release_filename(uri, suite);
+
+                if !file.exists() {
+                    continue;
+                }
+
+                let raw = std::fs::read(&file)
+                    .map_err(|err| format_err!("unable to read {:?} - {}", file, err))?;
+                let reader = BufReader::new(&*raw);
+
+                for line in reader.lines() {
+                    let line =
+                        line.map_err(|err| format_err!("unable to read {:?} - {}", file, err))?;
+
+                    if let Some(value) = line.strip_prefix("Origin:") {
+                        return Ok(Some(
+                            value
+                                .trim_matches(|c| char::is_ascii_whitespace(&c))
+                                .to_string(),
+                        ));
+                    }
+                }
+            }
+        }
+
+        Ok(None)
+    }
+
     /// Writes a repository in the corresponding format followed by a blank.
     ///
     /// Expects that `basic_check()` for the repository was successful.
@@ -313,6 +346,55 @@ impl APTRepository {
             APTRepositoryFileType::Sources => write_stanza(self, w),
         }
     }
+}
+
+/// Get the path to the cached InRelease file.
+fn in_release_filename(uri: &str, suite: &str) -> PathBuf {
+    let mut path = PathBuf::from(&crate::config::get().dir_state);
+    path.push(&crate::config::get().dir_state_lists);
+
+    let filename = uri_to_filename(uri);
+
+    path.push(format!(
+        "{}_dists_{}_InRelease",
+        filename,
+        suite.replace('/', "_"), // e.g. for buster/updates
+    ));
+
+    path
+}
+
+/// See APT's URItoFileName in contrib/strutl.cc
+fn uri_to_filename(uri: &str) -> String {
+    let mut filename = uri;
+
+    if let Some(begin) = filename.find("://") {
+        filename = &filename[(begin + 3)..];
+    }
+
+    if uri.starts_with("http://") || uri.starts_with("https://") {
+        if let Some(begin) = filename.find('@') {
+            filename = &filename[(begin + 1)..];
+        }
+    }
+
+    // APT seems to only strip one final slash, so do the same
+    filename = filename.strip_suffix('/').unwrap_or(filename);
+
+    let encode_chars = "\\|{}[]<>\"^~_=!@#$%^&*";
+
+    let mut encoded = String::with_capacity(filename.len());
+
+    for b in filename.as_bytes().iter() {
+        if *b <= 0x20 || *b >= 0x7F || encode_chars.contains(*b as char) {
+            let hex = proxmox::tools::bin_to_hex(&[*b]);
+            encoded = format!("{}%{}", encoded, hex);
+        } else {
+            encoded.push(*b as char);
+        }
+    }
+
+    encoded.replace('/', "_")
 }
 
 /// Get the host part from a given URI.
@@ -422,4 +504,10 @@ fn write_stanza(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> {
     writeln!(w)?;
 
     Ok(())
+}
+
+#[test]
+fn test_uri_to_filename() {
+    let filename = uri_to_filename("https://some_host/some/path");
+    assert_eq!(filename, "some%5fhost_some_path".to_string());
 }
