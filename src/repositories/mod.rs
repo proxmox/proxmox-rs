@@ -80,45 +80,17 @@ pub fn standard_repositories(
     files: &[APTRepositoryFile],
 ) -> Vec<APTStandardRepository> {
     let mut result = vec![
-        APTStandardRepository {
-            handle: APTRepositoryHandle::Enterprise,
-            status: None,
-            name: APTRepositoryHandle::Enterprise.name(),
-        },
-        APTStandardRepository {
-            handle: APTRepositoryHandle::NoSubscription,
-            status: None,
-            name: APTRepositoryHandle::NoSubscription.name(),
-        },
-        APTStandardRepository {
-            handle: APTRepositoryHandle::Test,
-            status: None,
-            name: APTRepositoryHandle::Test.name(),
-        },
+        APTStandardRepository::from(APTRepositoryHandle::Enterprise),
+        APTStandardRepository::from(APTRepositoryHandle::NoSubscription),
+        APTStandardRepository::from(APTRepositoryHandle::Test),
     ];
 
     if product == "pve" {
         result.append(&mut vec![
-            APTStandardRepository {
-                handle: APTRepositoryHandle::CephPacific,
-                status: None,
-                name: APTRepositoryHandle::CephPacific.name(),
-            },
-            APTStandardRepository {
-                handle: APTRepositoryHandle::CephPacificTest,
-                status: None,
-                name: APTRepositoryHandle::CephPacificTest.name(),
-            },
-            APTStandardRepository {
-                handle: APTRepositoryHandle::CephOctopus,
-                status: None,
-                name: APTRepositoryHandle::CephOctopus.name(),
-            },
-            APTStandardRepository {
-                handle: APTRepositoryHandle::CephOctopusTest,
-                status: None,
-                name: APTRepositoryHandle::CephOctopusTest.name(),
-            },
+            APTStandardRepository::from(APTRepositoryHandle::CephPacific),
+            APTStandardRepository::from(APTRepositoryHandle::CephPacificTest),
+            APTStandardRepository::from(APTRepositoryHandle::CephOctopus),
+            APTStandardRepository::from(APTRepositoryHandle::CephOctopusTest),
         ]);
     }
 

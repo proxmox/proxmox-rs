@@ -29,8 +29,11 @@ pub struct APTStandardRepository {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<bool>,
 
-    /// Full name of the repository.
+    /// Display name of the repository.
     pub name: String,
+
+    /// Description of the repository.
+    pub description: String,
 }
 
 #[api]
@@ -52,6 +55,17 @@ pub enum APTRepositoryHandle {
     CephOctopus,
     /// Ceph Octoput test repository.
     CephOctopusTest,
+}
+
+impl From<APTRepositoryHandle> for APTStandardRepository {
+    fn from(handle: APTRepositoryHandle) -> Self {
+        APTStandardRepository {
+            handle,
+            status: None,
+            name: handle.name(),
+            description: handle.description(),
+        }
+    }
 }
 
 impl TryFrom<&str> for APTRepositoryHandle {
@@ -86,16 +100,48 @@ impl Display for APTRepositoryHandle {
 }
 
 impl APTRepositoryHandle {
-    /// Get the full name of the repository.
+    /// Get the description for the repository.
+    pub fn description(self) -> String {
+        match self {
+            APTRepositoryHandle::Enterprise => {
+                "This is the default, stable, and recommended repository, available for all \
+                Proxmox subscription users."
+            }
+            APTRepositoryHandle::NoSubscription => {
+                "This is the recommended repository for testing and non-production use."
+            }
+            APTRepositoryHandle::Test => {
+                "This repository contains the latest packages and is primarily used by developers \
+                to test new features."
+            }
+            APTRepositoryHandle::CephPacific => {
+                "This repository holds the main Proxmox Ceph Pacific packages."
+            }
+            APTRepositoryHandle::CephPacificTest => {
+                "This repository contains the Ceph Pacific packages before they are moved to the \
+                main repository."
+            }
+            APTRepositoryHandle::CephOctopus => {
+                "This repository holds the main Proxmox Ceph Octopus packages."
+            }
+            APTRepositoryHandle::CephOctopusTest => {
+                "This repository contains the Ceph Octopus packages before they are moved to the \
+                main repository."
+            }
+        }
+        .to_string()
+    }
+
+    /// Get the display name of the repository.
     pub fn name(self) -> String {
         match self {
-            APTRepositoryHandle::Enterprise => "Enterprise Repository",
-            APTRepositoryHandle::NoSubscription => "No-Subscription Repository",
-            APTRepositoryHandle::Test => "Test Repository",
-            APTRepositoryHandle::CephPacific => "Ceph Pacific Repository",
-            APTRepositoryHandle::CephPacificTest => "Ceph Pacific Test Repository",
-            APTRepositoryHandle::CephOctopus => "Ceph Octopus Repository",
-            APTRepositoryHandle::CephOctopusTest => "Ceph Octopus Test Repository",
+            APTRepositoryHandle::Enterprise => "Enterprise",
+            APTRepositoryHandle::NoSubscription => "No-Subscription",
+            APTRepositoryHandle::Test => "Test",
+            APTRepositoryHandle::CephPacific => "Ceph Pacific",
+            APTRepositoryHandle::CephPacificTest => "Ceph Pacific Test",
+            APTRepositoryHandle::CephOctopus => "Ceph Octopus",
+            APTRepositoryHandle::CephOctopusTest => "Ceph Octopus Test",
         }
         .to_string()
     }
