@@ -87,20 +87,17 @@ impl Display for APTRepositoryHandle {
 
 impl APTRepositoryHandle {
     /// Get the full name of the repository.
-    pub fn name(self, product: &str) -> String {
+    pub fn name(self) -> String {
         match self {
-            APTRepositoryHandle::Enterprise => {
-                format!("{} Enterprise Repository", product.to_uppercase())
-            }
-            APTRepositoryHandle::NoSubscription => {
-                format!("{} No-Subscription Repository", product.to_uppercase())
-            }
-            APTRepositoryHandle::Test => format!("{} Test Repository", product.to_uppercase()),
-            APTRepositoryHandle::CephPacific => "PVE Ceph Pacific Repository".to_string(),
-            APTRepositoryHandle::CephPacificTest => "PVE Ceph Pacific Test Repository".to_string(),
-            APTRepositoryHandle::CephOctopus => "PVE Ceph Octopus Repository".to_string(),
-            APTRepositoryHandle::CephOctopusTest => "PVE Ceph Octopus Test Repository".to_string(),
+            APTRepositoryHandle::Enterprise => "Enterprise Repository",
+            APTRepositoryHandle::NoSubscription => "No-Subscription Repository",
+            APTRepositoryHandle::Test => "Test Repository",
+            APTRepositoryHandle::CephPacific => "Ceph Pacific Repository",
+            APTRepositoryHandle::CephPacificTest => "Ceph Pacific Test Repository",
+            APTRepositoryHandle::CephOctopus => "Ceph Octopus Repository",
+            APTRepositoryHandle::CephOctopusTest => "Ceph Octopus Test Repository",
         }
+        .to_string()
     }
 
     /// Get the standard file path for the repository referenced by the handle.

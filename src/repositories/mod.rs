@@ -83,17 +83,17 @@ pub fn standard_repositories(
         APTStandardRepository {
             handle: APTRepositoryHandle::Enterprise,
             status: None,
-            name: APTRepositoryHandle::Enterprise.name(product),
+            name: APTRepositoryHandle::Enterprise.name(),
         },
         APTStandardRepository {
             handle: APTRepositoryHandle::NoSubscription,
             status: None,
-            name: APTRepositoryHandle::NoSubscription.name(product),
+            name: APTRepositoryHandle::NoSubscription.name(),
         },
         APTStandardRepository {
             handle: APTRepositoryHandle::Test,
             status: None,
-            name: APTRepositoryHandle::Test.name(product),
+            name: APTRepositoryHandle::Test.name(),
         },
     ];
 
@@ -102,22 +102,22 @@ pub fn standard_repositories(
             APTStandardRepository {
                 handle: APTRepositoryHandle::CephPacific,
                 status: None,
-                name: APTRepositoryHandle::CephPacific.name(product),
+                name: APTRepositoryHandle::CephPacific.name(),
             },
             APTStandardRepository {
                 handle: APTRepositoryHandle::CephPacificTest,
                 status: None,
-                name: APTRepositoryHandle::CephPacificTest.name(product),
+                name: APTRepositoryHandle::CephPacificTest.name(),
             },
             APTStandardRepository {
                 handle: APTRepositoryHandle::CephOctopus,
                 status: None,
-                name: APTRepositoryHandle::CephOctopus.name(product),
+                name: APTRepositoryHandle::CephOctopus.name(),
             },
             APTStandardRepository {
                 handle: APTRepositoryHandle::CephOctopusTest,
                 status: None,
-                name: APTRepositoryHandle::CephOctopusTest.name(product),
+                name: APTRepositoryHandle::CephOctopusTest.name(),
             },
         ]);
     }

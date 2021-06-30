@@ -320,37 +320,37 @@ fn test_standard_repositories() -> Result<(), Error> {
         APTStandardRepository {
             handle: APTRepositoryHandle::Enterprise,
             status: None,
-            name: APTRepositoryHandle::Enterprise.name("pve"),
+            name: APTRepositoryHandle::Enterprise.name(),
         },
         APTStandardRepository {
             handle: APTRepositoryHandle::NoSubscription,
             status: None,
-            name: APTRepositoryHandle::NoSubscription.name("pve"),
+            name: APTRepositoryHandle::NoSubscription.name(),
         },
         APTStandardRepository {
             handle: APTRepositoryHandle::Test,
             status: None,
-            name: APTRepositoryHandle::Test.name("pve"),
+            name: APTRepositoryHandle::Test.name(),
         },
         APTStandardRepository {
             handle: APTRepositoryHandle::CephPacific,
             status: None,
-            name: APTRepositoryHandle::CephPacific.name("pve"),
+            name: APTRepositoryHandle::CephPacific.name(),
         },
         APTStandardRepository {
             handle: APTRepositoryHandle::CephPacificTest,
             status: None,
-            name: APTRepositoryHandle::CephPacificTest.name("pve"),
+            name: APTRepositoryHandle::CephPacificTest.name(),
         },
         APTStandardRepository {
             handle: APTRepositoryHandle::CephOctopus,
             status: None,
-            name: APTRepositoryHandle::CephOctopus.name("pve"),
+            name: APTRepositoryHandle::CephOctopus.name(),
         },
         APTStandardRepository {
             handle: APTRepositoryHandle::CephOctopusTest,
             status: None,
-            name: APTRepositoryHandle::CephOctopusTest.name("pve"),
+            name: APTRepositoryHandle::CephOctopusTest.name(),
         },
     ];
 
@@ -370,17 +370,10 @@ fn test_standard_repositories() -> Result<(), Error> {
 
     let std_repos = standard_repositories("pbs", &file_vec);
 
-    expected[0].name = APTRepositoryHandle::Enterprise.name("pbs");
-    expected[1].name = APTRepositoryHandle::NoSubscription.name("pbs");
-    expected[2].name = APTRepositoryHandle::Test.name("pbs");
-
     assert_eq!(&std_repos, &expected[0..=2]);
 
     expected[0].status = Some(false);
     expected[1].status = Some(true);
-    expected[0].name = APTRepositoryHandle::Enterprise.name("pve");
-    expected[1].name = APTRepositoryHandle::NoSubscription.name("pve");
-    expected[2].name = APTRepositoryHandle::Test.name("pve");
 
     let std_repos = standard_repositories("pve", &file_vec);
 
