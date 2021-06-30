@@ -160,13 +160,6 @@ impl OpenIdAuthenticator {
             .request(http_client)
             .map_err(|err| format_err!("Failed to contact token endpoint: {}", err))?;
 
-        println!(
-            "OpenId returned access token:\n{}\n",
-            token_response.access_token().secret()
-        );
-
-        println!("OpenId returned scopes: {:?}", token_response.scopes());
-
         let id_token_verifier: CoreIdTokenVerifier = self.client.id_token_verifier();
         let id_token_claims: &CoreIdTokenClaims = token_response
             .extra_fields()
@@ -175,9 +168,6 @@ impl OpenIdAuthenticator {
             .claims(&id_token_verifier, &private_auth_state.nonce)
             .map_err(|err| format_err!("Failed to verify ID token: {}", err))?;
 
-        println!("Google returned ID token: {:?}", id_token_claims);
-
         Ok(id_token_claims.clone())
     }
-
 }
