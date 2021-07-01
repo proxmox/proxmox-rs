@@ -1,3 +1,11 @@
+rust-proxmox-apt (0.4.0-1) unstable; urgency=medium
+
+  * support quote-word parsing for one-line format
+
+  * avoid backtick unicode symbol in string
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 01 Jul 2021 18:33:12 +0200
+
 rust-proxmox-apt (0.3.1-1) unstable; urgency=medium
 
   * standard repos: allow conversion from handle and improve information
