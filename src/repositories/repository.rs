@@ -433,6 +433,41 @@ fn suite_variant(suite: &str) -> (&str, &str) {
     (suite, "")
 }
 
+/// Strips existing double quotes from the string first, and then adds double quotes at
+/// the beginning and end if there is an ASCII whitespace in the `string`, which is not
+/// escaped by `[]`.
+fn quote_for_one_line(string: &str) -> String {
+    let mut add_quotes = false;
+    let mut wait_for_bracket = false;
+
+    // easier to just quote the whole string, so ignore pre-existing quotes
+    // currently, parsing removes them anyways, but being on the safe side is rather cheap
+    let string = string.replace('"', "");
+
+    for c in string.chars() {
+        if wait_for_bracket {
+            if c == ']' {
+                wait_for_bracket = false;
+            }
+            continue;
+        }
+
+        if char::is_ascii_whitespace(&c) {
+            add_quotes = true;
+            break;
+        }
+
+        if c == '[' {
+            wait_for_bracket = true;
+        }
+    }
+
+    match add_quotes {
+        true => format!("\"{}\"", string),
+        false => string,
+    }
+}
+
 /// Writes a repository in one-line format followed by a blank line.
 ///
 /// Expects that `repo.file_type == APTRepositoryFileType::List`.
@@ -457,15 +492,26 @@ fn write_one_line(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> 
 
     if !repo.options.is_empty() {
         write!(w, "[ ")?;
-        repo.options
-            .iter()
-            .try_for_each(|option| write!(w, "{}={} ", option.key, option.values.join(",")))?;
+
+        for option in repo.options.iter() {
+            let option = quote_for_one_line(&format!("{}={}", option.key, option.values.join(",")));
+            write!(w, "{} ", option)?;
+        }
+
         write!(w, "] ")?;
     };
 
-    write!(w, "{} ", repo.uris[0])?;
-    write!(w, "{} ", repo.suites[0])?;
-    writeln!(w, "{}", repo.components.join(" "))?;
+    write!(w, "{} ", quote_for_one_line(&repo.uris[0]))?;
+    write!(w, "{} ", quote_for_one_line(&repo.suites[0]))?;
+    writeln!(
+        w,
+        "{}",
+        repo.components
+            .iter()
+            .map(|comp| quote_for_one_line(comp))
+            .collect::<Vec<String>>()
+            .join(" ")
+    )?;
 
     writeln!(w)?;
 

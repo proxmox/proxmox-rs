@@ -1,13 +1,84 @@
 use std::convert::TryInto;
 use std::io::BufRead;
-use std::iter::{Iterator, Peekable};
-use std::str::SplitAsciiWhitespace;
+use std::iter::Iterator;
 
 use anyhow::{bail, format_err, Error};
 
 use crate::repositories::{APTRepository, APTRepositoryFileType, APTRepositoryOption};
 
 use super::APTRepositoryParser;
+
+// TODO convert %-escape characters. Also adapt printing back accordingly,
+// because at least '%' needs to be re-escaped when printing.
+/// See APT's ParseQuoteWord in contrib/strutl.cc
+///
+/// Doesn't split on whitespace when between `[]` or `""` and strips `"` from the word.
+///
+/// Currently, %-escaped characters are not interpreted, but passed along as is.
+struct SplitQuoteWord {
+    rest: String,
+    position: usize,
+}
+
+impl SplitQuoteWord {
+    pub fn new(string: String) -> Self {
+        Self {
+            rest: string,
+            position: 0,
+        }
+    }
+}
+
+impl Iterator for SplitQuoteWord {
+    type Item = Result<String, Error>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let rest = &self.rest[self.position..];
+
+        let mut start = None;
+        let mut wait_for = None;
+
+        for (n, c) in rest.chars().enumerate() {
+            self.position += 1;
+
+            if let Some(wait_for_char) = wait_for {
+                if wait_for_char == c {
+                    wait_for = None;
+                }
+                continue;
+            }
+
+            if char::is_ascii_whitespace(&c) {
+                if let Some(start) = start {
+                    return Some(Ok(rest[start..n].replace('"', "")));
+                }
+                continue;
+            }
+
+            if start == None {
+                start = Some(n);
+            }
+
+            if c == '"' {
+                wait_for = Some('"');
+            }
+
+            if c == '[' {
+                wait_for = Some(']');
+            }
+        }
+
+        if let Some(wait_for) = wait_for {
+            return Some(Err(format_err!("missing terminating '{}'", wait_for)));
+        }
+
+        if let Some(start) = start {
+            return Some(Ok(rest[start..].replace('"', "")));
+        }
+
+        None
+    }
+}
 
 pub struct APTListFileParser<R: BufRead> {
     input: R,
@@ -31,24 +102,18 @@ impl<R: BufRead> APTListFileParser<R> {
     /// Errors when options are invalid or not closed by `']'`.
     fn parse_options(
         options: &mut Vec<APTRepositoryOption>,
-        tokens: &mut Peekable<SplitAsciiWhitespace>,
+        tokens: &mut SplitQuoteWord,
     ) -> Result<(), Error> {
-        let mut option = match tokens.peek() {
-            Some(token) => {
-                match token.strip_prefix('[') {
-                    Some(option) => option,
-                    None => return Ok(()), // doesn't look like options
-                }
-            }
-            None => return Ok(()),
-        };
-
-        tokens.next(); // avoid reading the beginning twice
-
         let mut finished = false;
+
         loop {
+            let mut option = match tokens.next() {
+                Some(token) => token?,
+                None => bail!("options not closed by ']'"),
+            };
+
             if let Some(stripped) = option.strip_suffix(']') {
-                option = stripped;
+                option = stripped.to_string();
                 if option.is_empty() {
                     break;
                 }
@@ -82,11 +147,6 @@ impl<R: BufRead> APTListFileParser<R> {
 
             if finished {
                 break;
-            }
-
-            option = match tokens.next() {
-                Some(option) => option,
-                None => bail!("options not closed by ']'"),
             }
         }
 
@@ -122,24 +182,43 @@ impl<R: BufRead> APTListFileParser<R> {
             line = line_start;
         }
 
-        let mut tokens = line.split_ascii_whitespace().peekable();
-
-        match tokens.next() {
-            Some(package_type) => {
+        // e.g. quoted "deb" is not accepted by APT, so no need for quote word parsing here
+        line = match line.split_once(|c| char::is_ascii_whitespace(&c)) {
+            Some((package_type, rest)) => {
                 repo.types.push(package_type.try_into()?);
+                rest
             }
             None => return Ok(None), // empty line
+        };
+
+        line = line.trim_start_matches(|c| char::is_ascii_whitespace(&c));
+
+        let has_options = match line.strip_prefix('[') {
+            Some(rest) => {
+                // avoid the start of the options to be interpreted as the start of a quote word
+                line = rest;
+                true
+            }
+            None => false,
+        };
+
+        let mut tokens = SplitQuoteWord::new(line.to_string());
+
+        if has_options {
+            Self::parse_options(&mut repo.options, &mut tokens)?;
         }
 
-        Self::parse_options(&mut repo.options, &mut tokens)?;
-
         // the rest of the line is just '<uri> <suite> [<components>...]'
-        let mut tokens = tokens.map(str::to_string);
         repo.uris
-            .push(tokens.next().ok_or_else(|| format_err!("missing URI"))?);
-        repo.suites
-            .push(tokens.next().ok_or_else(|| format_err!("missing suite"))?);
-        repo.components.extend(tokens);
+            .push(tokens.next().ok_or_else(|| format_err!("missing URI"))??);
+        repo.suites.push(
+            tokens
+                .next()
+                .ok_or_else(|| format_err!("missing suite"))??,
+        );
+        for token in tokens {
+            repo.components.push(token?);
+        }
 
         repo.comment = std::mem::take(&mut self.comment);
 
