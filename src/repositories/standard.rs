@@ -110,7 +110,7 @@ impl APTRepositoryHandle {
             APTRepositoryHandle::NoSubscription => {
                 "This is the recommended repository for testing and non-production use. \
                 Its packages are not as heavily tested and validated as the production ready \
-                enterprise repository. You don’t need a subscription key to access this repository."
+                enterprise repository. You don't need a subscription key to access this repository."
             }
             APTRepositoryHandle::Test => {
                 "This repository contains the latest packages and is primarily used for test labs \
