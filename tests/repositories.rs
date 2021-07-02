@@ -11,8 +11,15 @@ use proxmox_apt::repositories::{
 
 #[test]
 fn test_parse_write() -> Result<(), Error> {
+    test_parse_write_dir("sources.list.d")?;
+    test_parse_write_dir("sources.list.d.expected")?; // check if it's idempotent
+
+    Ok(())
+}
+
+fn test_parse_write_dir(read_dir: &str) -> Result<(), Error> {
     let test_dir = std::env::current_dir()?.join("tests");
-    let read_dir = test_dir.join("sources.list.d");
+    let read_dir = test_dir.join(read_dir);
     let write_dir = test_dir.join("sources.list.d.actual");
     let expected_dir = test_dir.join("sources.list.d.expected");
 
