@@ -304,11 +304,7 @@ impl APTRepositoryFile {
         let mut infos = vec![];
 
         for (n, repo) in self.repositories.iter().enumerate() {
-            if !repo
-                .types
-                .iter()
-                .any(|package_type| *package_type == APTRepositoryPackageType::Deb)
-            {
+            if !repo.types.contains(&APTRepositoryPackageType::Deb) {
                 continue;
             }
 
