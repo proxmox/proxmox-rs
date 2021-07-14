@@ -126,14 +126,14 @@ pub fn file_read_firstline<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 pub fn make_tmp_file<P: AsRef<Path>>(
     path: P,
     options: CreateOptions,
-) -> Result<(Fd, PathBuf), Error> {
+) -> Result<(File, PathBuf), Error> {
     let path = path.as_ref();
 
     // use mkstemp here, because it works with different processes, threads, even tokio tasks
     let mut template = path.to_owned();
     template.set_extension("tmp_XXXXXX");
-    let (fd, tmp_path) = match unistd::mkstemp(&template) {
-        Ok((fd, path)) => (unsafe { Fd::from_raw_fd(fd) }, path),
+    let (file, tmp_path) = match unistd::mkstemp(&template) {
+        Ok((fd, path)) => (unsafe { File::from_raw_fd(fd) }, path),
         Err(err) => bail!("mkstemp {:?} failed: {}", template, err),
     };
 
@@ -143,19 +143,19 @@ pub fn make_tmp_file<P: AsRef<Path>>(
         .perm
         .unwrap_or(stat::Mode::from_bits_truncate(0o644));
 
-    if let Err(err) = stat::fchmod(fd.as_raw_fd(), mode) {
+    if let Err(err) = stat::fchmod(file.as_raw_fd(), mode) {
         let _ = unistd::unlink(&tmp_path);
         bail!("fchmod {:?} failed: {}", tmp_path, err);
     }
 
     if options.owner.is_some() || options.group.is_some() {
-        if let Err(err) = fchown(fd.as_raw_fd(), options.owner, options.group) {
+        if let Err(err) = fchown(file.as_raw_fd(), options.owner, options.group) {
             let _ = unistd::unlink(&tmp_path);
             bail!("fchown {:?} failed: {}", tmp_path, err);
         }
     }
 
-    Ok((fd, tmp_path))
+    Ok((file, tmp_path))
 }
 
 /// Atomically replace a file.
