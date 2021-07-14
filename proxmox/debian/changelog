@@ -1,3 +1,9 @@
+rust-proxmox (0.11.6-1) unstable; urgency=medium
+
+  * make_tmp_file: return File instead of Fd
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Jul 2021 12:31:34 +0200
+
 rust-proxmox (0.11.5-1) unstable; urgency=medium
 
   * takeover socket helper from proxmox_backup
