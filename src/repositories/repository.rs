@@ -271,14 +271,17 @@ impl APTRepository {
 
     /// Checks if the repository is the one referenced by the handle.
     pub fn is_referenced_repository(&self, handle: APTRepositoryHandle, product: &str) -> bool {
-        let (package_type, uri, component) = handle.info(product);
+        let (package_type, handle_uris, component) = handle.info(product);
 
-        self.types.contains(&package_type)
-            && self
-                .uris
-                .iter()
-                .any(|self_uri| self_uri.trim_end_matches('/') == uri)
-            && self.components.contains(&component)
+        let mut found_uri = false;
+
+        for uri in self.uris.iter() {
+            let uri = uri.trim_end_matches('/');
+
+            found_uri = found_uri || handle_uris.iter().any(|handle_uri| handle_uri == uri);
+        }
+
+        self.types.contains(&package_type) && found_uri && self.components.contains(&component)
     }
 
     /// Check if a variant of the given suite is configured in this repository

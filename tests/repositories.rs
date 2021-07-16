@@ -358,5 +358,19 @@ fn test_standard_repositories() -> Result<(), Error> {
 
     assert_eq!(std_repos, expected);
 
+    let pve_alt_list = read_dir.join("pve-alt.list");
+    let mut file = APTRepositoryFile::new(&pve_alt_list)?.unwrap();
+    file.parse()?;
+
+    let file_vec = vec![file];
+
+    expected[0].status = Some(true);
+    expected[1].status = Some(true);
+    expected[2].status = Some(false);
+
+    let std_repos = standard_repositories("pve", &file_vec);
+
+    assert_eq!(std_repos, expected);
+
     Ok(())
 }

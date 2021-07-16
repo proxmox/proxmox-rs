@@ -163,42 +163,62 @@ impl APTRepositoryHandle {
         }
     }
 
-    /// Get package type, URI and the component associated with the handle.
-    pub fn info(self, product: &str) -> (APTRepositoryPackageType, String, String) {
+    /// Get package type, possible URIs and the component associated with the handle.
+    ///
+    /// The first URI is the preferred one.
+    pub fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String) {
         match self {
             APTRepositoryHandle::Enterprise => (
                 APTRepositoryPackageType::Deb,
-                format!("https://enterprise.proxmox.com/debian/{}", product),
+                match product {
+                    "pve" => vec![
+                        "https://enterprise.proxmox.com/debian/pve".to_string(),
+                        "https://enterprise.proxmox.com/debian".to_string(),
+                    ],
+                    _ => vec![format!("https://enterprise.proxmox.com/debian/{}", product)],
+                },
                 format!("{}-enterprise", product),
             ),
             APTRepositoryHandle::NoSubscription => (
                 APTRepositoryPackageType::Deb,
-                format!("http://download.proxmox.com/debian/{}", product),
+                match product {
+                    "pve" => vec![
+                        "http://download.proxmox.com/debian/pve".to_string(),
+                        "http://download.proxmox.com/debian".to_string(),
+                    ],
+                    _ => vec![format!("http://download.proxmox.com/debian/{}", product)],
+                },
                 format!("{}-no-subscription", product),
             ),
             APTRepositoryHandle::Test => (
                 APTRepositoryPackageType::Deb,
-                format!("http://download.proxmox.com/debian/{}", product),
+                match product {
+                    "pve" => vec![
+                        "http://download.proxmox.com/debian/pve".to_string(),
+                        "http://download.proxmox.com/debian".to_string(),
+                    ],
+                    _ => vec![format!("http://download.proxmox.com/debian/{}", product)],
+                },
                 format!("{}test", product),
             ),
             APTRepositoryHandle::CephPacific => (
                 APTRepositoryPackageType::Deb,
-                "http://download.proxmox.com/debian/ceph-pacific".to_string(),
+                vec!["http://download.proxmox.com/debian/ceph-pacific".to_string()],
                 "main".to_string(),
             ),
             APTRepositoryHandle::CephPacificTest => (
                 APTRepositoryPackageType::Deb,
-                "http://download.proxmox.com/debian/ceph-pacific".to_string(),
+                vec!["http://download.proxmox.com/debian/ceph-pacific".to_string()],
                 "test".to_string(),
             ),
             APTRepositoryHandle::CephOctopus => (
                 APTRepositoryPackageType::Deb,
-                "http://download.proxmox.com/debian/ceph-octopus".to_string(),
+                vec!["http://download.proxmox.com/debian/ceph-octopus".to_string()],
                 "main".to_string(),
             ),
             APTRepositoryHandle::CephOctopusTest => (
                 APTRepositoryPackageType::Deb,
-                "http://download.proxmox.com/debian/ceph-octopus".to_string(),
+                vec!["http://download.proxmox.com/debian/ceph-octopus".to_string()],
                 "test".to_string(),
             ),
         }
@@ -209,11 +229,11 @@ impl APTRepositoryHandle {
     /// An URI in the result is not '/'-terminated (under the assumption that no valid
     /// product name is).
     pub fn to_repository(self, product: &str, suite: &str) -> APTRepository {
-        let (package_type, uri, component) = self.info(product);
+        let (package_type, uris, component) = self.info(product);
 
         APTRepository {
             types: vec![package_type],
-            uris: vec![uri],
+            uris: vec![uris.into_iter().next().unwrap()],
             suites: vec![suite.to_string()],
             components: vec![component],
             options: vec![],
