@@ -1,16 +1,17 @@
 Source: rust-proxmox-http
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 11),
- dh-cargo (>= 18),
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 24),
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.4.1
+Standards-Version: 4.5.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Rules-Requires-Root: no
 
 Package: librust-proxmox-http-dev
 Architecture: any
@@ -114,7 +115,7 @@ Depends:
  librust-http-0.2+default-dev,
  librust-hyper-0.14+default-dev,
  librust-hyper-0.14+full-dev,
- librust-proxmox-0.11-dev (>= 0.11.3-~~),
+ librust-proxmox-0.12-dev,
  librust-tokio-1+io-util-dev,
  librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~)
 Provides:
@@ -162,7 +163,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
- librust-proxmox-0.11-dev (>= 0.11.3-~~)
+ librust-proxmox-0.12-dev
 Provides:
  librust-proxmox-http-0+proxmox-dev (= ${binary:Version}),
  librust-proxmox-http-0.2+proxmox-dev (= ${binary:Version}),
@@ -212,7 +213,7 @@ Depends:
  librust-hyper-0.14+default-dev,
  librust-hyper-0.14+full-dev,
  librust-openssl-0.10+default-dev,
- librust-proxmox-0.11+tokio-dev (>= 0.11.3-~~),
+ librust-proxmox-0.12+tokio-dev,
  librust-tokio-1+io-util-dev,
  librust-tokio-1+sync-dev
 Provides:

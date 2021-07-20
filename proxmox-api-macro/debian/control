@@ -1,8 +1,8 @@
 Source: rust-proxmox-api-macro
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 11),
- dh-cargo (>= 18),
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 24),
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
@@ -14,9 +14,10 @@ Build-Depends: debhelper (>= 11),
  librust-syn-1+full-dev <!nocheck>,
  librust-syn-1+visit-mut-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.4.1
+Standards-Version: 4.5.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Rules-Requires-Root: no
 
 Package: librust-proxmox-api-macro-dev
 Architecture: any
