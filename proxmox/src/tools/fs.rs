@@ -1,7 +1,7 @@
 //! File related utilities such as `replace_file`.
 
 use std::ffi::CStr;
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 use std::path::{Path, PathBuf};
@@ -592,12 +592,17 @@ pub fn open_file_locked<P: AsRef<Path>>(
     path: P,
     timeout: Duration,
     exclusive: bool,
+    options: CreateOptions,
 ) -> Result<File, Error> {
     let path = path.as_ref();
-    let mut file = match OpenOptions::new().create(true).append(true).open(path) {
-        Ok(file) => file,
-        Err(err) => bail!("Unable to open lock {:?} - {}", path, err),
-    };
+
+    let mut file = atomic_open_or_create_file(
+        path,
+        OFlag::O_RDWR | OFlag::O_CLOEXEC | OFlag::O_APPEND,
+        &[],
+        options,
+    )?;
+
     match lock_file(&mut file, exclusive, Some(timeout)) {
         Ok(_) => Ok(file),
         Err(err) => bail!("Unable to acquire lock {:?} - {}", path, err),
