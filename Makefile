@@ -26,12 +26,12 @@ build:
 	rm -rf $(BUILDDIR) $(BUILDDIR_TMP); mkdir $(BUILDDIR_TMP)
 	rm -f debian/control
 	debcargo package \
-	--config debian/debcargo.toml \
-	--changelog-ready \
-	--no-overlay-write-back \
-	--directory $(BUILDDIR_TMP) \
-	$(PACKAGE) \
-	$(shell dpkg-parsechangelog -l debian/changelog -SVersion | sed -e 's/-.*//')
+	  --config debian/debcargo.toml \
+	  --changelog-ready \
+	  --no-overlay-write-back \
+	  --directory $(BUILDDIR_TMP) \
+	  $(PACKAGE) \
+	  $(shell dpkg-parsechangelog -l debian/changelog -SVersion | sed -e 's/-.*//')
 	cp $(BUILDDIR_TMP)/debian/control debian/control
 	rm -f $(BUILDDIR_TMP)/Cargo.lock
 	find $(BUILDDIR_TMP)/debian -name "*.hint" -delete
