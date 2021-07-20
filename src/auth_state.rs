@@ -27,7 +27,8 @@ fn load_auth_state_locked(
     let lock = open_file_locked(
         lock_path,
         std::time::Duration::new(10, 0),
-        true
+        true,
+        CreateOptions::new()
     )?;
 
     let mut path = state_dir.to_owned();
