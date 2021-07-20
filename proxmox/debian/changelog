@@ -1,3 +1,11 @@
+rust-proxmox (0.12.0-1) unstable; urgency=medium
+
+  * open_file_locked: add options parameter (CreateOptions)
+
+  * new helper atomic_open_or_create_file()
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 20 Jul 2021 10:24:34 +0200
+
 rust-proxmox (0.11.6-1) unstable; urgency=medium
 
   * make_tmp_file: return File instead of Fd
