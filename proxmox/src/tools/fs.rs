@@ -12,9 +12,10 @@ use nix::errno::Errno;
 use nix::fcntl::OFlag;
 use nix::sys::stat;
 use nix::unistd::{self, Gid, Uid};
+use nix::NixPath;
 use serde_json::Value;
 
-use crate::sys::error::SysResult;
+use crate::sys::error::{SysError, SysResult};
 use crate::sys::timer;
 use crate::tools::fd::Fd;
 use crate::try_block;
@@ -185,6 +186,97 @@ pub fn replace_file<P: AsRef<Path>>(
     }
 
     Ok(())
+}
+
+/// Like open(2), but allows setting initial data, perm, owner and group
+///
+/// Since we need to initialize the file, we also need a solid slow
+/// path where we create the file. In order to avoid races, we create
+/// it in a temporary location and rotate it in place.
+pub fn atomic_open_or_create_file<P: AsRef<Path>>(
+    path: P,
+    mut oflag: OFlag,
+    initial_data: &[u8],
+    options: CreateOptions,
+) -> Result<File, Error> {
+    let path = path.as_ref();
+
+    if oflag.contains(OFlag::O_TMPFILE) {
+        bail!("open {:?} failed - unsupported OFlag O_TMPFILE", path);
+    }
+
+    oflag.remove(OFlag::O_CREAT); // we want to handle CREAT ourselfes
+
+    // Note: 'mode' is ignored, because oflag does not contain O_CREAT or O_TMPFILE
+    match nix::fcntl::open(path, oflag, stat::Mode::empty()) {
+        Ok(fd) => return Ok(unsafe { File::from_raw_fd(fd) }),
+        Err(err) => {
+           if err.not_found() {
+               // fall thrue -  try to create the file
+           } else {
+               bail!("open {:?} failed - {}", path, err);
+           }
+        }
+    }
+
+    let (mut file, temp_file_name) = make_tmp_file(path, options)?;
+
+    if !initial_data.is_empty() {
+        file.write_all(initial_data).map_err(|err| {
+            let _ = nix::unistd::unlink(&temp_file_name);
+            format_err!(
+                "writing initial data to {:?} failed - {}",
+                temp_file_name,
+                err,
+            )
+        })?;
+    }
+
+    // rotate the file into place, but use `RENAME_NOREPLACE`, so in case 2 processes race against
+    // the initialization, the first one wins!
+    let rename_result = temp_file_name.with_nix_path(|c_file_name| {
+        path.with_nix_path(|new_path| unsafe {
+            let rc = libc::renameat2(
+                libc::AT_FDCWD,
+                c_file_name.as_ptr(),
+                libc::AT_FDCWD,
+                new_path.as_ptr(),
+                libc::RENAME_NOREPLACE,
+            );
+            nix::errno::Errno::result(rc)
+        })
+    });
+
+    match rename_result {
+        Ok(Ok(Ok(_))) => Ok(file),
+        Ok(Ok(Err(err))) => {
+            // if another process has already raced ahead and created
+            // the file, let's just open theirs instead:
+            let _ = nix::unistd::unlink(&temp_file_name);
+
+            if err.already_exists() {
+                match nix::fcntl::open(path, oflag, stat::Mode::empty()) {
+                    Ok(fd) => Ok(unsafe { File::from_raw_fd(fd) }),
+                    Err(err) => bail!("open {:?} failed - {}", path, err),
+                }
+            } else {
+                bail!(
+                    "failed to move file at {:?} into place at {:?} - {}",
+                    temp_file_name,
+                    path,
+                    err
+                );
+            }
+        }
+        Ok(Err(err)) => {
+            let _ = nix::unistd::unlink(&temp_file_name);
+            bail!("with_nix_path {:?} failed - {}", path, err);
+        }
+        Err(err) => {
+            let _ = nix::unistd::unlink(&temp_file_name);
+            bail!("with_nix_path {:?} failed - {}", temp_file_name, err);
+        }
+    }
 }
 
 /// Change ownership of an open file handle
