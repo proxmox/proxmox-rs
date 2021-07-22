@@ -236,14 +236,22 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
     // the initialization, the first one wins!
     let rename_result = temp_file_name.with_nix_path(|c_file_name| {
         path.with_nix_path(|new_path| unsafe {
-            let rc = libc::renameat2(
+            // This also works on file systems which don't support hardlinks (eg. vfat)
+            match Errno::result(libc::renameat2(
                 libc::AT_FDCWD,
                 c_file_name.as_ptr(),
                 libc::AT_FDCWD,
                 new_path.as_ptr(),
                 libc::RENAME_NOREPLACE,
-            );
-            nix::errno::Errno::result(rc)
+            )) {
+                Err(nix::Error::Sys(Errno::EINVAL)) => (), // dumb file system, try `link`+`unlink`
+                other => return other,
+            };
+            // but some file systems don't support `RENAME_NOREPLACE`
+            // so we just use `link` + `unlink` instead
+            let result = Errno::result(libc::link(c_file_name.as_ptr(), new_path.as_ptr()));
+            let _ = libc::unlink(c_file_name.as_ptr());
+            result
         })
     });
 
