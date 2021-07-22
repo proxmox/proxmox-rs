@@ -1,4 +1,11 @@
-rust-proxmox (0.12.0-1) unstable; urgency=medium
+rust-proxmox (0.12.1-1) stable; urgency=medium
+
+  * fs: fallback to link if renameat2 is not supported in atomic file creation
+    helper
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 Jul 2021 09:47:45 +0200
+
+rust-proxmox (0.12.0-1) stable; urgency=medium
 
   * open_file_locked: add options parameter (CreateOptions)
 
@@ -6,13 +13,13 @@ rust-proxmox (0.12.0-1) unstable; urgency=medium
 
  -- Proxmox Support Team <support@proxmox.com>  Tue, 20 Jul 2021 10:24:34 +0200
 
-rust-proxmox (0.11.6-1) unstable; urgency=medium
+rust-proxmox (0.11.6-1) stable; urgency=medium
 
   * make_tmp_file: return File instead of Fd
 
  -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Jul 2021 12:31:34 +0200
 
-rust-proxmox (0.11.5-1) unstable; urgency=medium
+rust-proxmox (0.11.5-1) stable; urgency=medium
 
   * takeover socket helper from proxmox_backup
 
