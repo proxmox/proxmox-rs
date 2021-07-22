@@ -211,11 +211,11 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
     match nix::fcntl::open(path, oflag, stat::Mode::empty()) {
         Ok(fd) => return Ok(unsafe { File::from_raw_fd(fd) }),
         Err(err) => {
-           if err.not_found() {
-               // fall thrue -  try to create the file
-           } else {
-               bail!("open {:?} failed - {}", path, err);
-           }
+            if err.not_found() {
+                // fall thrue -  try to create the file
+            } else {
+                bail!("open {:?} failed - {}", path, err);
+            }
         }
     }
 
