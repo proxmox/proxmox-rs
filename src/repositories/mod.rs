@@ -49,11 +49,14 @@ fn common_digest(files: &[APTRepositoryFile]) -> [u8; 32] {
 /// `warnings` for bad suites.
 /// `ignore-pre-upgrade-warning` when the next stable suite is configured.
 /// `badge` for official URIs.
-pub fn check_repositories(files: &[APTRepositoryFile]) -> Result<Vec<APTRepositoryInfo>, Error> {
+pub fn check_repositories(
+    files: &[APTRepositoryFile],
+    current_suite: &str,
+) -> Result<Vec<APTRepositoryInfo>, Error> {
     let mut infos = vec![];
 
     for file in files.iter() {
-        infos.append(&mut file.check_suites()?);
+        infos.append(&mut file.check_suites(current_suite)?);
         infos.append(&mut file.check_uris());
     }
 

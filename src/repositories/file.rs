@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, format_err, Error};
 use serde::{Deserialize, Serialize};
 
-use crate::repositories::release::{get_current_release_codename, DEBIAN_SUITES};
+use crate::repositories::release::DEBIAN_SUITES;
 use crate::repositories::repository::{
     APTRepository, APTRepositoryFileType, APTRepositoryPackageType,
 };
@@ -300,7 +300,7 @@ impl APTRepositoryFile {
 
     /// Checks if old or unstable suites are configured and also that the
     /// `stable` keyword is not used.
-    pub fn check_suites(&self) -> Result<Vec<APTRepositoryInfo>, Error> {
+    pub fn check_suites(&self, current_suite: &str) -> Result<Vec<APTRepositoryInfo>, Error> {
         let mut infos = vec![];
 
         for (n, repo) in self.repositories.iter().enumerate() {
@@ -317,8 +317,6 @@ impl APTRepositoryFile {
                     message,
                 })
             };
-
-            let current_suite = get_current_release_codename()?;
 
             let current_index = match DEBIAN_SUITES
                 .iter()

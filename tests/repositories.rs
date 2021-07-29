@@ -187,7 +187,7 @@ fn test_check_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let infos = check_repositories(&vec![file])?;
+    let infos = check_repositories(&vec![file], "bullseye")?;
 
     assert_eq!(infos.is_empty(), true);
     let pve_list = read_dir.join("pve.list");
@@ -212,7 +212,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&vec![file])?;
+    let mut infos = check_repositories(&vec![file], "bullseye")?;
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -278,7 +278,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&vec![file])?;
+    let mut infos = check_repositories(&vec![file], "bullseye")?;
     infos.sort();
 
     assert_eq!(infos, expected_infos);
