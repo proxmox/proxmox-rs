@@ -12,7 +12,7 @@ mod file;
 pub use file::{APTRepositoryFile, APTRepositoryFileError, APTRepositoryInfo};
 
 mod release;
-use release::get_current_release_codename;
+pub use release::get_current_release_codename;
 
 mod standard;
 pub use standard::{APTRepositoryHandle, APTStandardRepository};
@@ -60,24 +60,24 @@ pub fn check_repositories(files: &[APTRepositoryFile]) -> Result<Vec<APTReposito
     Ok(infos)
 }
 
-/// Get the repository associated to the handle and the path where its usually configured.
+/// Get the repository associated to the handle and the path where it is usually configured.
 pub fn get_standard_repository(
     handle: APTRepositoryHandle,
     product: &str,
-) -> Result<(APTRepository, String), Error> {
-    let suite = get_current_release_codename()?;
-
+    suite: &str,
+) -> (APTRepository, String) {
     let repo = handle.to_repository(product, &suite);
     let path = handle.path(product);
 
-    Ok((repo, path))
+    (repo, path)
 }
 
-/// Return handles for standard Proxmox repositories and whether their status, where
-/// None means not configured, and Some(bool) indicates enabled or disabled
+/// Return handles for standard Proxmox repositories and their status, where
+/// `None` means not configured, and `Some(bool)` indicates enabled or disabled.
 pub fn standard_repositories(
-    product: &str,
     files: &[APTRepositoryFile],
+    product: &str,
+    suite: &str,
 ) -> Vec<APTStandardRepository> {
     let mut result = vec![
         APTStandardRepository::from(APTRepositoryHandle::Enterprise),
@@ -101,7 +101,7 @@ pub fn standard_repositories(
                     continue;
                 }
 
-                if repo.is_referenced_repository(entry.handle, product) {
+                if repo.is_referenced_repository(entry.handle, product, suite) {
                     entry.status = Some(repo.enabled);
                 }
             }

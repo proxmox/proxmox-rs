@@ -5,8 +5,8 @@ use anyhow::{bail, format_err, Error};
 use proxmox_apt::config::APTConfig;
 
 use proxmox_apt::repositories::{
-    check_repositories, standard_repositories, APTRepositoryFile, APTRepositoryHandle,
-    APTRepositoryInfo, APTStandardRepository,
+    check_repositories, get_current_release_codename, standard_repositories, APTRepositoryFile,
+    APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository,
 };
 
 #[test]
@@ -337,7 +337,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let std_repos = standard_repositories("pve", &vec![file]);
+    let std_repos = standard_repositories(&vec![file], "pve", "bullseye");
 
     assert_eq!(std_repos, expected);
 
@@ -347,14 +347,14 @@ fn test_standard_repositories() -> Result<(), Error> {
 
     let file_vec = vec![file];
 
-    let std_repos = standard_repositories("pbs", &file_vec);
+    let std_repos = standard_repositories(&file_vec, "pbs", "bullseye");
 
     assert_eq!(&std_repos, &expected[0..=2]);
 
     expected[0].status = Some(false);
     expected[1].status = Some(true);
 
-    let std_repos = standard_repositories("pve", &file_vec);
+    let std_repos = standard_repositories(&file_vec, "pve", "bullseye");
 
     assert_eq!(std_repos, expected);
 
@@ -368,9 +368,18 @@ fn test_standard_repositories() -> Result<(), Error> {
     expected[1].status = Some(true);
     expected[2].status = Some(false);
 
-    let std_repos = standard_repositories("pve", &file_vec);
+    let std_repos = standard_repositories(&file_vec, "pve", "bullseye");
 
     assert_eq!(std_repos, expected);
+
+    Ok(())
+}
+
+#[test]
+fn test_get_current_release_codename() -> Result<(), Error> {
+    let codename = get_current_release_codename()?;
+
+    assert_eq!(&codename, "bullseye");
 
     Ok(())
 }
