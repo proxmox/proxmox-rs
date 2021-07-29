@@ -433,16 +433,12 @@ fn host_from_uri(uri: &str) -> Option<&str> {
 }
 
 /// Splits the suite into its base part and variant.
+/// Does not expect the base part to contain either `-` or `/`.
 fn suite_variant(suite: &str) -> (&str, &str) {
-    let variants = ["-backports-sloppy", "-backports", "-updates", "/updates"];
-
-    for variant in variants.iter() {
-        if let Some(base) = suite.strip_suffix(variant) {
-            return (base, variant);
-        }
+    match suite.find(&['-', '/'][..]) {
+        Some(n) => (&suite[0..n], &suite[n..]),
+        None => (suite, ""),
     }
-
-    (suite, "")
 }
 
 /// Strips existing double quotes from the string first, and then adds double quotes at
