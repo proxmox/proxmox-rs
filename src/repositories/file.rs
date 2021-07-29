@@ -1,11 +1,11 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{format_err, Error};
 use serde::{Deserialize, Serialize};
 
-use crate::repositories::release::DEBIAN_SUITES;
+use crate::repositories::release::DebianCodename;
 use crate::repositories::repository::{
     APTRepository, APTRepositoryFileType, APTRepositoryPackageType,
 };
@@ -300,7 +300,7 @@ impl APTRepositoryFile {
 
     /// Checks if old or unstable suites are configured and also that the
     /// `stable` keyword is not used.
-    pub fn check_suites(&self, current_suite: &str) -> Result<Vec<APTRepositoryInfo>, Error> {
+    pub fn check_suites(&self, current_codename: DebianCodename) -> Vec<APTRepositoryInfo> {
         let mut infos = vec![];
 
         for (n, repo) in self.repositories.iter().enumerate() {
@@ -308,60 +308,55 @@ impl APTRepositoryFile {
                 continue;
             }
 
-            let mut add_info = |kind, message| {
+            let mut add_info = |kind: &str, message| {
                 infos.push(APTRepositoryInfo {
                     path: self.path.clone(),
                     index: n,
                     property: Some("Suites".to_string()),
-                    kind,
+                    kind: kind.to_string(),
                     message,
                 })
             };
 
-            let current_index = match DEBIAN_SUITES
-                .iter()
-                .position(|&suite| suite == current_suite)
-            {
-                Some(index) => index,
-                None => bail!("unknown release {}", current_suite),
-            };
+            let message_old = |suite| format!("old suite '{}' configured!", suite);
+            let message_new =
+                |suite| format!("suite '{}' should not be used in production!", suite);
+            let message_stable = "use the name of the stable distribution instead of 'stable'!";
 
             for suite in repo.suites.iter() {
                 let base_suite = suite_variant(suite).0;
 
-                if base_suite == "stable" {
-                    add_info(
-                        "warning".to_string(),
-                        "use the name of the stable distribution instead of 'stable'!".to_string(),
-                    );
+                match base_suite {
+                    "oldoldstable" | "oldstable" => {
+                        add_info("warning", message_old(base_suite));
+                    }
+                    "testing" | "unstable" | "experimental" | "sid" => {
+                        add_info("warning", message_new(base_suite));
+                    }
+                    "stable" => {
+                        add_info("warning", message_stable.to_string());
+                    }
+                    _ => (),
+                };
+
+                let codename: DebianCodename = match base_suite.try_into() {
+                    Ok(codename) => codename,
+                    Err(_) => continue,
+                };
+
+                if codename < current_codename {
+                    add_info("warning", message_old(base_suite));
                 }
 
-                if let Some(n) = DEBIAN_SUITES.iter().position(|&suite| suite == base_suite) {
-                    if n < current_index {
-                        add_info(
-                            "warning".to_string(),
-                            format!("old suite '{}' configured!", base_suite),
-                        );
-                    }
-
-                    if n == current_index + 1 {
-                        add_info(
-                            "ignore-pre-upgrade-warning".to_string(),
-                            format!("suite '{}' should not be used in production!", base_suite),
-                        );
-                    }
-
-                    if n > current_index + 1 {
-                        add_info(
-                            "warning".to_string(),
-                            format!("suite '{}' should not be used in production!", base_suite),
-                        );
-                    }
+                if Some(codename) == current_codename.next() {
+                    add_info("ignore-pre-upgrade-warning", message_new(base_suite));
+                } else if codename > current_codename {
+                    add_info("warning", message_new(base_suite));
                 }
             }
         }
 
-        Ok(infos)
+        infos
     }
 
     /// Checks for official URIs.

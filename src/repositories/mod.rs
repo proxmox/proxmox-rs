@@ -12,7 +12,7 @@ mod file;
 pub use file::{APTRepositoryFile, APTRepositoryFileError, APTRepositoryInfo};
 
 mod release;
-pub use release::get_current_release_codename;
+pub use release::{get_current_release_codename, DebianCodename};
 
 mod standard;
 pub use standard::{APTRepositoryHandle, APTStandardRepository};
@@ -51,25 +51,25 @@ fn common_digest(files: &[APTRepositoryFile]) -> [u8; 32] {
 /// `badge` for official URIs.
 pub fn check_repositories(
     files: &[APTRepositoryFile],
-    current_suite: &str,
-) -> Result<Vec<APTRepositoryInfo>, Error> {
+    current_suite: DebianCodename,
+) -> Vec<APTRepositoryInfo> {
     let mut infos = vec![];
 
     for file in files.iter() {
-        infos.append(&mut file.check_suites(current_suite)?);
+        infos.append(&mut file.check_suites(current_suite));
         infos.append(&mut file.check_uris());
     }
 
-    Ok(infos)
+    infos
 }
 
 /// Get the repository associated to the handle and the path where it is usually configured.
 pub fn get_standard_repository(
     handle: APTRepositoryHandle,
     product: &str,
-    suite: &str,
+    suite: DebianCodename,
 ) -> (APTRepository, String) {
-    let repo = handle.to_repository(product, &suite);
+    let repo = handle.to_repository(product, &suite.to_string());
     let path = handle.path(product);
 
     (repo, path)
@@ -80,7 +80,7 @@ pub fn get_standard_repository(
 pub fn standard_repositories(
     files: &[APTRepositoryFile],
     product: &str,
-    suite: &str,
+    suite: DebianCodename,
 ) -> Vec<APTStandardRepository> {
     let mut result = vec![
         APTStandardRepository::from(APTRepositoryHandle::Enterprise),
@@ -104,7 +104,7 @@ pub fn standard_repositories(
                     continue;
                 }
 
-                if repo.is_referenced_repository(entry.handle, product, suite) {
+                if repo.is_referenced_repository(entry.handle, product, &suite.to_string()) {
                     entry.status = Some(repo.enabled);
                 }
             }

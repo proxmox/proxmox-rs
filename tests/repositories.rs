@@ -6,7 +6,7 @@ use proxmox_apt::config::APTConfig;
 
 use proxmox_apt::repositories::{
     check_repositories, get_current_release_codename, standard_repositories, APTRepositoryFile,
-    APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository,
+    APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository, DebianCodename,
 };
 
 #[test]
@@ -187,7 +187,7 @@ fn test_check_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let infos = check_repositories(&vec![file], "bullseye")?;
+    let infos = check_repositories(&vec![file], DebianCodename::Bullseye);
 
     assert_eq!(infos.is_empty(), true);
     let pve_list = read_dir.join("pve.list");
@@ -212,7 +212,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&vec![file], "bullseye")?;
+    let mut infos = check_repositories(&vec![file], DebianCodename::Bullseye);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -278,7 +278,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&vec![file], "bullseye")?;
+    let mut infos = check_repositories(&vec![file], DebianCodename::Bullseye);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -337,7 +337,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let std_repos = standard_repositories(&vec![file], "pve", "bullseye");
+    let std_repos = standard_repositories(&vec![file], "pve", DebianCodename::Bullseye);
 
     assert_eq!(std_repos, expected);
 
@@ -347,14 +347,14 @@ fn test_standard_repositories() -> Result<(), Error> {
 
     let file_vec = vec![file];
 
-    let std_repos = standard_repositories(&file_vec, "pbs", "bullseye");
+    let std_repos = standard_repositories(&file_vec, "pbs", DebianCodename::Bullseye);
 
     assert_eq!(&std_repos, &expected[0..=2]);
 
     expected[0].status = Some(false);
     expected[1].status = Some(true);
 
-    let std_repos = standard_repositories(&file_vec, "pve", "bullseye");
+    let std_repos = standard_repositories(&file_vec, "pve", DebianCodename::Bullseye);
 
     assert_eq!(std_repos, expected);
 
@@ -368,7 +368,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     expected[1].status = Some(true);
     expected[2].status = Some(false);
 
-    let std_repos = standard_repositories(&file_vec, "pve", "bullseye");
+    let std_repos = standard_repositories(&file_vec, "pve", DebianCodename::Bullseye);
 
     assert_eq!(std_repos, expected);
 
@@ -379,7 +379,7 @@ fn test_standard_repositories() -> Result<(), Error> {
 fn test_get_current_release_codename() -> Result<(), Error> {
     let codename = get_current_release_codename()?;
 
-    assert_eq!(&codename, "bullseye");
+    assert!(codename == DebianCodename::Bullseye);
 
     Ok(())
 }
