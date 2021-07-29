@@ -34,10 +34,10 @@ Provides:
  librust-proxmox-apt+default-dev (= ${binary:Version}),
  librust-proxmox-apt-0-dev (= ${binary:Version}),
  librust-proxmox-apt-0+default-dev (= ${binary:Version}),
- librust-proxmox-apt-0.5-dev (= ${binary:Version}),
- librust-proxmox-apt-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-apt-0.5.1-dev (= ${binary:Version}),
- librust-proxmox-apt-0.5.1+default-dev (= ${binary:Version})
+ librust-proxmox-apt-0.6-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.6+default-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.6.0-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.6.0+default-dev (= ${binary:Version})
 Description: Proxmox library for APT - Rust source code
  This package contains the source for the Rust proxmox-apt crate, packaged by
  debcargo for use with cargo and dh-cargo.
