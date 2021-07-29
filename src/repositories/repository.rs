@@ -293,13 +293,6 @@ impl APTRepository {
             && self.components.contains(&component)
     }
 
-    /// Check if a variant of the given suite is configured in this repository
-    pub fn has_suite_variant(&self, base_suite: &str) -> bool {
-        self.suites
-            .iter()
-            .any(|suite| suite_variant(suite).0 == base_suite)
-    }
-
     /// Guess the origin from the repository's URIs.
     ///
     /// Intended to be used as a fallback for get_cached_origin.
@@ -430,15 +423,6 @@ fn host_from_uri(uri: &str) -> Option<&str> {
     }
 
     Some(host)
-}
-
-/// Splits the suite into its base part and variant.
-/// Does not expect the base part to contain either `-` or `/`.
-fn suite_variant(suite: &str) -> (&str, &str) {
-    match suite.find(&['-', '/'][..]) {
-        Some(n) => (&suite[0..n], &suite[n..]),
-        None => (suite, ""),
-    }
 }
 
 /// Strips existing double quotes from the string first, and then adds double quotes at

@@ -326,36 +326,38 @@ impl APTRepositoryFile {
                 None => bail!("unknown release {}", current_suite),
             };
 
-            for (n, suite) in DEBIAN_SUITES.iter().enumerate() {
-                if repo.has_suite_variant(suite) {
+            for suite in repo.suites.iter() {
+                let base_suite = suite_variant(suite).0;
+
+                if base_suite == "stable" {
+                    add_info(
+                        "warning".to_string(),
+                        "use the name of the stable distribution instead of 'stable'!".to_string(),
+                    );
+                }
+
+                if let Some(n) = DEBIAN_SUITES.iter().position(|&suite| suite == base_suite) {
                     if n < current_index {
                         add_info(
                             "warning".to_string(),
-                            format!("old suite '{}' configured!", suite),
+                            format!("old suite '{}' configured!", base_suite),
                         );
                     }
 
                     if n == current_index + 1 {
                         add_info(
                             "ignore-pre-upgrade-warning".to_string(),
-                            format!("suite '{}' should not be used in production!", suite),
+                            format!("suite '{}' should not be used in production!", base_suite),
                         );
                     }
 
                     if n > current_index + 1 {
                         add_info(
                             "warning".to_string(),
-                            format!("suite '{}' should not be used in production!", suite),
+                            format!("suite '{}' should not be used in production!", base_suite),
                         );
                     }
                 }
-            }
-
-            if repo.has_suite_variant("stable") {
-                add_info(
-                    "warning".to_string(),
-                    "use the name of the stable distribution instead of 'stable'!".to_string(),
-                );
             }
         }
 
@@ -388,5 +390,14 @@ impl APTRepositoryFile {
         }
 
         infos
+    }
+}
+
+/// Splits the suite into its base part and variant.
+/// Does not expect the base part to contain either `-` or `/`.
+fn suite_variant(suite: &str) -> (&str, &str) {
+    match suite.find(&['-', '/'][..]) {
+        Some(n) => (&suite[0..n], &suite[n..]),
+        None => (suite, ""),
     }
 }
