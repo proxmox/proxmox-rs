@@ -496,7 +496,12 @@ pub fn infer_type(schema: &mut Schema, ty: &syn::Type) -> Result<bool, syn::Erro
             } else if api::NUMBERNAMES.iter().any(|n| path.path.is_ident(n)) {
                 schema.item = SchemaItem::Number(ty.span());
             } else {
-                bail!(ty => "cannot infer parameter type from this rust type");
+                // bail!(ty => "cannot infer parameter type from this rust type");
+                schema.item = SchemaItem::ExternType(syn::ExprPath {
+                    attrs: Vec::new(),
+                    qself: path.qself.clone(),
+                    path: path.path.clone(),
+                });
             }
         }
         _ => (),
