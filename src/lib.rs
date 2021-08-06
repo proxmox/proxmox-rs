@@ -2,6 +2,7 @@ use std::path::Path;
 
 use anyhow::{format_err, Error};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 mod http_client;
 pub use http_client::http_client;
@@ -39,7 +40,7 @@ use openidconnect::{
 
 /// Stores Additional Claims into a serde_json::Value;
 #[derive(Debug, Deserialize, Serialize)]
-pub struct GenericClaims(serde_json::Value);
+pub struct GenericClaims(Value);
 impl AdditionalClaims for GenericClaims {}
 
 pub type GenericUserInfoClaims = UserInfoClaims<GenericClaims, CoreGenderClaim>;
@@ -195,5 +196,30 @@ impl OpenIdAuthenticator {
             .map_err(|err| format_err!("Failed to contact userinfo endpoint: {}", err))?;
 
         Ok((id_token_claims.clone(), userinfo_claims))
+    }
+
+    /// Like verify_authorization_code(), but returns claims as serde_json::Value
+    pub fn verify_authorization_code_simple(
+        &self,
+        code: &str,
+        private_auth_state: &PrivateAuthState,
+    ) -> Result<Value, Error> {
+
+        let (id_token_claims, userinfo_claims) = self.verify_authorization_code(&code, &private_auth_state)?;
+
+        let mut data = serde_json::to_value(id_token_claims)?;
+
+        let data2 = serde_json::to_value(userinfo_claims)?;
+
+        if let Some(map) = data2.as_object() {
+            for (key, value) in map {
+                if data[key] != Value::Null {
+                    continue; // already set
+                }
+                data[key] = value.clone();
+            }
+        }
+
+        Ok(data)
     }
 }
