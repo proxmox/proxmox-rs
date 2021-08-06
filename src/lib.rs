@@ -36,6 +36,7 @@ use openidconnect::{
     Scope,
     UserInfoClaims,
     AdditionalClaims,
+    AuthenticationContextClass,
 };
 
 /// Stores Additional Claims into a serde_json::Value;
@@ -55,6 +56,8 @@ pub struct OpenIdConfig {
     pub scopes: Option<Vec<String>>,
     #[serde(skip_serializing_if="Option::is_none")]
     pub prompt: Option<String>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub acr_values: Option<Vec<String>>,
 }
 
 pub struct OpenIdAuthenticator {
@@ -172,6 +175,12 @@ impl OpenIdAuthenticator {
         if let Some(ref scopes) = self.config.scopes {
             for scope in scopes.clone() {
                 request = request.add_scope(Scope::new(scope));
+            }
+        }
+
+        if let Some(ref acr_values) = self.config.acr_values {
+            for acr in acr_values.clone() {
+                request = request.add_auth_context_value(AuthenticationContextClass::new(acr));
             }
         }
 
