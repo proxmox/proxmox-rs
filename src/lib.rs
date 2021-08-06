@@ -20,6 +20,7 @@ use openidconnect::{
         CoreAuthenticationFlow,
         CoreAuthDisplay,
         CoreAuthPrompt,
+        CoreGenderClaim,
     },
     PkceCodeChallenge,
     PkceCodeVerifier,
@@ -32,9 +33,18 @@ use openidconnect::{
     OAuth2TokenResponse,
     RedirectUrl,
     Scope,
+    UserInfoClaims,
+    AdditionalClaims,
 };
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+/// Stores Additional Claims into a serde_json::Value;
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GenericClaims(serde_json::Value);
+impl AdditionalClaims for GenericClaims {}
+
+pub type GenericUserInfoClaims = UserInfoClaims<GenericClaims, CoreGenderClaim>;
+
+    #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct OpenIdConfig {
     pub issuer_url: String,
     pub client_id: String,
@@ -161,7 +171,7 @@ impl OpenIdAuthenticator {
         &self,
         code: &str,
         private_auth_state: &PrivateAuthState,
-    ) -> Result<CoreIdTokenClaims, Error> {
+    ) -> Result<(CoreIdTokenClaims, GenericUserInfoClaims), Error> {
 
         let code = AuthorizationCode::new(code.to_string());
         // Exchange the code with a token.
@@ -179,6 +189,11 @@ impl OpenIdAuthenticator {
             .claims(&id_token_verifier, &private_auth_state.nonce)
             .map_err(|err| format_err!("Failed to verify ID token: {}", err))?;
 
-        Ok(id_token_claims.clone())
+        let userinfo_claims: GenericUserInfoClaims = self.client
+            .user_info(token_response.access_token().to_owned(), None)?
+            .request(http_client)
+            .map_err(|err| format_err!("Failed to contact userinfo endpoint: {}", err))?;
+
+        Ok((id_token_claims.clone(), userinfo_claims))
     }
 }
