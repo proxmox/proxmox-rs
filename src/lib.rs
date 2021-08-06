@@ -34,16 +34,19 @@ use openidconnect::{
     Scope,
 };
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct OpenIdConfig {
     pub issuer_url: String,
     pub client_id: String,
     #[serde(skip_serializing_if="Option::is_none")]
     pub client_key: Option<String>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub scopes: Option<Vec<String>>,
 }
 
 pub struct OpenIdAuthenticator {
     client: CoreClient,
+    config: OpenIdConfig,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -111,6 +114,7 @@ impl OpenIdAuthenticator {
 
         Ok(Self {
             client,
+            config: config.clone(),
         })
     }
 
@@ -123,18 +127,25 @@ impl OpenIdAuthenticator {
         store_auth_state(Path::new(state_dir), realm, &private_auth_state)?;
 
          // Generate the authorization URL to which we'll redirect the user.
-        let (authorize_url, _csrf_state, _nonce) = self.client
+        let mut request = self.client
             .authorize_url(
                 CoreAuthenticationFlow::AuthorizationCode,
                 || CsrfToken::new(public_auth_state),
                 || nonce,
             )
-            .set_display(CoreAuthDisplay::Page)
-            .add_prompt(CoreAuthPrompt::Login)
-            .add_scope(Scope::new("email".to_string()))
-            .add_scope(Scope::new("profile".to_string()))
-            .set_pkce_challenge(private_auth_state.pkce_challenge())
-            .url();
+            .set_pkce_challenge(private_auth_state.pkce_challenge());
+
+        request = request.set_display(CoreAuthDisplay::Page);
+
+        request = request.add_prompt(CoreAuthPrompt::Login);
+
+        if let Some(ref scopes) = self.config.scopes {
+            for scope in scopes.clone() {
+                request = request.add_scope(Scope::new(scope));
+            }
+        }
+
+        let (authorize_url, _csrf_state, _nonce) = request.url();
 
         Ok(authorize_url.to_string())
     }
