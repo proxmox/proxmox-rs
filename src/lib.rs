@@ -45,7 +45,7 @@ impl AdditionalClaims for GenericClaims {}
 
 pub type GenericUserInfoClaims = UserInfoClaims<GenericClaims, CoreGenderClaim>;
 
-    #[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct OpenIdConfig {
     pub issuer_url: String,
     pub client_id: String,
@@ -53,6 +53,8 @@ pub struct OpenIdConfig {
     pub client_key: Option<String>,
     #[serde(skip_serializing_if="Option::is_none")]
     pub scopes: Option<Vec<String>>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub prompt: Option<String>,
 }
 
 pub struct OpenIdAuthenticator {
@@ -148,7 +150,24 @@ impl OpenIdAuthenticator {
 
         request = request.set_display(CoreAuthDisplay::Page);
 
-        request = request.add_prompt(CoreAuthPrompt::Login);
+        match self.config.prompt.as_deref() {
+            None => { /* nothing */ },
+            Some("none") => {
+                request = request.add_prompt(CoreAuthPrompt::None);
+            }
+            Some("login") => {
+                request = request.add_prompt(CoreAuthPrompt::Login);
+            }
+            Some("consent") => {
+                request = request.add_prompt(CoreAuthPrompt::Consent);
+            }
+            Some("select_account") => {
+                request = request.add_prompt(CoreAuthPrompt::SelectAccount);
+            }
+            Some(extension) => {
+                request = request.add_prompt(CoreAuthPrompt::Extension(extension.into()));
+            }
+        }
 
         if let Some(ref scopes) = self.config.scopes {
             for scope in scopes.clone() {
