@@ -38,7 +38,7 @@ pub struct Complex {
     },
 )]
 /// One of the baaaad cases.
-#[derive(Updater)]
+#[derive(Default, Updater)]
 #[serde(rename_all = "kebab-case")]
 pub struct SuperComplex {
     /// An extra field not part of the flattened struct.

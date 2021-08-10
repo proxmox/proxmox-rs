@@ -498,9 +498,8 @@ fn handle_updater_field(
         }
     };
 
-    field_schema.optional = field.ty.clone().into();
-
     let span = Span::call_site();
+    field_schema.optional = field.ty.clone().into();
     let updater = syn::TypePath {
         qself: Some(syn::QSelf {
             lt_token: syn::token::Lt { spans: [span] },
@@ -515,6 +514,16 @@ fn handle_updater_field(
             &["proxmox", "api", "schema", "Updatable", "Updater"],
         ),
     };
+
+    // we also need to update the schema to point to the updater's schema for `type: Foo` entries
+    if let SchemaItem::ExternType(path) = &mut field_schema.schema.item {
+        *path = syn::ExprPath {
+            attrs: Vec::new(),
+            qself: updater.qself.clone(),
+            path: updater.path.clone(),
+        };
+    }
+
     field.ty = syn::Type::Path(updater);
 
     if field_schema.flatten_in_struct {
