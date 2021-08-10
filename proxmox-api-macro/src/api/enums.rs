@@ -82,5 +82,11 @@ pub fn handle_enum(
                 .format(&::proxmox::api::schema::ApiStringFormat::Enum(&[#variants]))
                 .schema();
         }
+
+        #[automatically_derived]
+        impl ::proxmox::api::schema::Updatable for #name {
+            type Updater = Option<Self>;
+            const UPDATER_IS_OPTION: bool = true;
+        }
     })
 }

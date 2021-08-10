@@ -18,6 +18,7 @@ use anyhow::Error;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
 
+use super::attributes::UpdaterFieldAttributes;
 use super::Schema;
 use crate::api::{self, ObjectEntry, SchemaItem};
 use crate::serde;
@@ -58,7 +59,16 @@ fn handle_unit_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<Toke
 
     get_struct_description(&mut schema, &stru)?;
 
-    finish_schema(schema, &stru, &stru.ident)
+    let name = &stru.ident;
+    let mut schema = finish_schema(schema, &stru, name)?;
+    schema.extend(quote_spanned! { name.span() =>
+        impl ::proxmox::api::schema::Updatable for #name {
+            type Updater = Option<Self>;
+            const UPDATER_IS_OPTION: bool = true;
+        }
+    });
+
+    Ok(schema)
 }
 
 fn finish_schema(
@@ -261,7 +271,16 @@ fn handle_regular_struct(
             }
         });
         if derive {
-            derive_updater(stru.clone(), schema.clone(), &mut stru)?
+            let updater = derive_updater(stru.clone(), schema.clone(), &mut stru)?;
+
+            // make sure we don't leave #[updater] attributes on the original struct:
+            if let syn::Fields::Named(fields) = &mut stru.fields {
+                for field in &mut fields.named {
+                    let _ = UpdaterFieldAttributes::from_attributes(&mut field.attrs);
+                }
+            }
+
+            updater
         } else {
             TokenStream::new()
         }
@@ -381,7 +400,7 @@ fn derive_updater(
     stru.ident = Ident::new(&format!("{}Updater", stru.ident), stru.ident.span());
 
     if !util::derived_items(&original_struct.attrs).any(|p| p.is_ident("Default")) {
-        original_struct.attrs.push(util::make_derive_attribute(
+        stru.attrs.push(util::make_derive_attribute(
             Span::call_site(),
             quote::quote! { Default },
         ));
@@ -404,51 +423,20 @@ fn derive_updater(
     let mut is_empty_impl = TokenStream::new();
 
     if let syn::Fields::Named(fields) = &mut stru.fields {
-        for field in &mut fields.named {
-            let field_name = field.ident.as_ref().expect("unnamed field in FieldsNamed");
-            let field_name_string = field_name.to_string();
-
-            let field_schema = match schema.find_obj_property_by_ident_mut(&field_name_string) {
-                Some(obj) => obj,
-                None => {
-                    error!(
-                        field_name.span(),
-                        "failed to find schema entry for {:?}", field_name_string,
-                    );
-                    continue;
+        for mut field in std::mem::take(&mut fields.named) {
+            match handle_updater_field(
+                &mut field,
+                &mut schema,
+                &mut all_of_schemas,
+                &mut is_empty_impl,
+            ) {
+                Ok(FieldAction::Keep) => fields.named.push(field),
+                Ok(FieldAction::Skip) => (),
+                Err(err) => {
+                    crate::add_error(err);
+                    fields.named.push(field);
                 }
-            };
-
-            field_schema.optional = field.ty.clone().into();
-
-            let span = Span::call_site();
-            let updater = syn::TypePath {
-                qself: Some(syn::QSelf {
-                    lt_token: syn::token::Lt { spans: [span] },
-                    ty: Box::new(field.ty.clone()),
-                    position: 4, // 'Updater' is the 4th item in the 'segments' below
-                    as_token: Some(syn::token::As { span }),
-                    gt_token: syn::token::Gt { spans: [span] },
-                }),
-                path: util::make_path(
-                    span,
-                    true,
-                    &["proxmox", "api", "schema", "Updatable", "Updater"],
-                ),
-            };
-            field.ty = syn::Type::Path(updater);
-
-            if field_schema.flatten_in_struct {
-                let updater_ty = &field.ty;
-                all_of_schemas.extend(quote::quote! {&#updater_ty::API_SCHEMA,});
             }
-
-            if !is_empty_impl.is_empty() {
-                is_empty_impl.extend(quote::quote! { && });
-            }
-            is_empty_impl.extend(quote::quote! {
-                self.#field_name.is_empty()
-            });
         }
     }
 
@@ -470,4 +458,76 @@ fn derive_updater(
     }
 
     Ok(output)
+}
+
+enum FieldAction {
+    Keep,
+    Skip,
+}
+
+fn handle_updater_field(
+    field: &mut syn::Field,
+    schema: &mut Schema,
+    all_of_schemas: &mut TokenStream,
+    is_empty_impl: &mut TokenStream,
+) -> Result<FieldAction, syn::Error> {
+    let updater_attrs = UpdaterFieldAttributes::from_attributes(&mut field.attrs);
+
+    let field_name = field.ident.as_ref().expect("unnamed field in FieldsNamed");
+    let field_name_string = field_name.to_string();
+
+    if updater_attrs.skip() {
+        if !schema.remove_obj_property_by_ident(&field_name_string) {
+            bail!(
+                field_name.span(),
+                "failed to find schema entry for {:?}",
+                field_name_string,
+            );
+        }
+        return Ok(FieldAction::Skip);
+    }
+
+    let field_schema = match schema.find_obj_property_by_ident_mut(&field_name_string) {
+        Some(obj) => obj,
+        None => {
+            bail!(
+                field_name.span(),
+                "failed to find schema entry for {:?}",
+                field_name_string,
+            );
+        }
+    };
+
+    field_schema.optional = field.ty.clone().into();
+
+    let span = Span::call_site();
+    let updater = syn::TypePath {
+        qself: Some(syn::QSelf {
+            lt_token: syn::token::Lt { spans: [span] },
+            ty: Box::new(field.ty.clone()),
+            position: 4, // 'Updater' is the 4th item in the 'segments' below
+            as_token: Some(syn::token::As { span }),
+            gt_token: syn::token::Gt { spans: [span] },
+        }),
+        path: util::make_path(
+            span,
+            true,
+            &["proxmox", "api", "schema", "Updatable", "Updater"],
+        ),
+    };
+    field.ty = syn::Type::Path(updater);
+
+    if field_schema.flatten_in_struct {
+        let updater_ty = &field.ty;
+        all_of_schemas.extend(quote::quote! {&#updater_ty::API_SCHEMA,});
+    }
+
+    if !is_empty_impl.is_empty() {
+        is_empty_impl.extend(quote::quote! { && });
+    }
+    is_empty_impl.extend(quote::quote! {
+        self.#field_name.is_empty()
+    });
+
+    Ok(FieldAction::Keep)
 }

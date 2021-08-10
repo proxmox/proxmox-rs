@@ -19,6 +19,7 @@ use syn::{Expr, ExprPath, Ident};
 
 use crate::util::{FieldName, JSONObject, JSONValue, Maybe};
 
+mod attributes;
 mod enums;
 mod method;
 mod structs;
@@ -196,6 +197,12 @@ impl Schema {
     fn find_obj_property_by_ident_mut(&mut self, key: &str) -> Option<&mut ObjectEntry> {
         self.as_object_mut()
             .and_then(|obj| obj.find_property_by_ident_mut(key))
+    }
+
+    fn remove_obj_property_by_ident(&mut self, key: &str) -> bool {
+        self.as_object_mut()
+            .expect("tried to remove object property on non-object schema")
+            .remove_property_by_ident(key)
     }
 
     // FIXME: Should we turn the property list into a map? We used to have no need to find keys in
@@ -642,6 +649,20 @@ impl SchemaObject {
         self.properties_
             .iter_mut()
             .find(|p| p.name.as_ident_str() == key)
+    }
+
+    fn remove_property_by_ident(&mut self, key: &str) -> bool {
+        match self
+            .properties_
+            .iter()
+            .position(|p| p.name.as_ident_str() == key)
+        {
+            Some(idx) => {
+                self.properties_.remove(idx);
+                true
+            }
+            None => false,
+        }
     }
 
     fn extend_properties(&mut self, new_fields: Vec<ObjectEntry>) {

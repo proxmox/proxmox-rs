@@ -376,7 +376,7 @@ impl IntoIterator for JSONObject {
 /// An element in a json style map.
 struct JSONMapEntry {
     pub key: FieldName,
-    pub colon_token: Token![:],
+    _colon_token: Token![:],
     pub value: JSONValue,
 }
 
@@ -384,7 +384,7 @@ impl Parse for JSONMapEntry {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(Self {
             key: input.parse()?,
-            colon_token: input.parse()?,
+            _colon_token: input.parse()?,
             value: input.parse()?,
         })
     }
@@ -816,3 +816,116 @@ pub fn make_derive_attribute(span: Span, content: TokenStream) -> syn::Attribute
         quote::quote! { (#content) },
     )
 }
+
+/// Extract (remove) an attribute from a list an run a callback on its parameters.
+pub fn extract_attributes(
+    attributes: &mut Vec<syn::Attribute>,
+    attr_name: &str,
+    mut func_matching: impl FnMut(syn::NestedMeta) -> Result<(), syn::Error>,
+) {
+    for attr in std::mem::take(attributes) {
+        if attr.style != syn::AttrStyle::Outer {
+            attributes.push(attr);
+            continue;
+        }
+
+        let meta = match attr.parse_meta() {
+            Ok(meta) => meta,
+            Err(err) => {
+                crate::add_error(err);
+                attributes.push(attr);
+                continue;
+            }
+        };
+
+        let list = match meta {
+            syn::Meta::List(list) if list.path.is_ident(attr_name) => list,
+            _ => {
+                attributes.push(attr);
+                continue;
+            }
+        };
+
+        for entry in list.nested {
+            match func_matching(entry) {
+                Ok(()) => (),
+                Err(err) => crate::add_error(err),
+            }
+        }
+    }
+}
+
+/// Helper to create an error about some duplicate attribute.
+pub fn duplicate<T>(prev: &Option<T>, attr: &syn::Path) {
+    if prev.is_some() {
+        error!(attr => "duplicate attribute: '{:?}'", attr)
+    }
+}
+
+/// Set a boolean attribute to a value, producing a "duplication" error if it has already been set.
+pub fn set_bool(b: &mut Option<syn::LitBool>, attr: &syn::Path, value: bool) {
+    duplicate(&*b, attr);
+    *b = Some(syn::LitBool::new(value, attr.span()));
+}
+
+pub fn default_false(o: Option<&syn::LitBool>) -> bool {
+    o.as_ref().map(|b| b.value).unwrap_or(false)
+}
+
+/*
+/// Parse the contents of a `LitStr`, preserving its span.
+pub fn parse_lit_str<T: Parse>(s: &syn::LitStr) -> syn::parse::Result<T> {
+    parse_str(&s.value(), s.span())
+}
+
+/// Parse a literal string, giving the entire output the specified span.
+pub fn parse_str<T: Parse>(s: &str, span: Span) -> syn::parse::Result<T> {
+    syn::parse2(respan_tokens(syn::parse_str(s)?, span))
+}
+
+/// Apply a `Span` to an entire `TokenStream`.
+pub fn respan_tokens(stream: TokenStream, span: Span) -> TokenStream {
+    stream
+        .into_iter()
+        .map(|token| respan(token, span))
+        .collect()
+}
+
+/// Apply a `Span` to a `TokenTree`, recursively if it is a `Group`.
+pub fn respan(mut token: TokenTree, span: Span) -> TokenTree {
+    use proc_macro2::Group;
+
+    match &mut token {
+        TokenTree::Group(g) => {
+            *g = Group::new(g.delimiter(), respan_tokens(g.stream(), span));
+        }
+        other => other.set_span(span),
+    }
+
+    token
+}
+
+/// Parse a string attribute into a value, producing a duplication error if it has already been
+/// set.
+pub fn parse_str_value_to_option<T: Parse>(target: &mut Option<T>, nv: &syn::MetaNameValue) {
+    duplicate(&*target, &nv.path);
+    match &nv.lit {
+        syn::Lit::Str(s) => match parse_lit_str(s) {
+            Ok(value) => *target = Some(value),
+            Err(err) => crate::add_error(err),
+        },
+        other => error!(other => "bad value for '{:?}' attribute", nv.path),
+    }
+}
+
+pub fn parse_str_value<T: Parse>(nv: &syn::MetaNameValue) -> Result<T, syn::Error> {
+    match &nv.lit {
+        syn::Lit::Str(s) => super::parse_lit_str(s),
+        other => bail!(other => "bad value for '{:?}' attribute", nv.path),
+    }
+}
+
+pub fn default_true(o: Option<&syn::LitBool>) -> bool {
+    o.as_ref().map(|b| b.value).unwrap_or(true)
+}
+*/

@@ -1531,11 +1531,6 @@ pub trait Updatable: Sized {
     /// This should always be true for the "default" updaters which are just `Option<T>` types.
     /// Types which are not wrapped in `Option` must set this to `false`.
     const UPDATER_IS_OPTION: bool;
-
-    fn update_from<T>(&mut self, from: Self::Updater, delete: &[T]) -> Result<(), Error>
-    where
-        T: AsRef<str>;
-    fn try_build_from(from: Self::Updater) -> Result<Self, Error>;
 }
 
 #[cfg(feature = "api-macro")]
@@ -1549,23 +1544,8 @@ macro_rules! basic_updatable {
     ($($ty:ty)*) => {
         $(
             impl Updatable for $ty {
-                type Updater = Option<$ty>;
+                type Updater = Option<Self>;
                 const UPDATER_IS_OPTION: bool = true;
-
-                fn update_from<T: AsRef<str>>(
-                    &mut self,
-                    from: Option<$ty>,
-                    _delete: &[T],
-                ) -> Result<(), Error> {
-                    if let Some(val) = from {
-                        *self = val;
-                    }
-                    Ok(())
-                }
-
-                fn try_build_from(from: Option<$ty>) -> Result<Self, Error> {
-                    from.ok_or_else(|| format_err!("cannot build from None value"))
-                }
             }
         )*
     };
@@ -1578,24 +1558,6 @@ where
 {
     type Updater = T::Updater;
     const UPDATER_IS_OPTION: bool = true;
-
-    fn update_from<S: AsRef<str>>(&mut self, from: T::Updater, delete: &[S]) -> Result<(), Error> {
-        match self {
-            Some(val) => val.update_from(from, delete),
-            None => {
-                *self = Self::try_build_from(from)?;
-                Ok(())
-            }
-        }
-    }
-
-    fn try_build_from(from: T::Updater) -> Result<Self, Error> {
-        if from.is_empty() {
-            Ok(None)
-        } else {
-            T::try_build_from(from).map(Some)
-        }
-    }
 }
 
 /// A helper type for "Updater" structs. This trait is *not* implemented for an api "base" type
