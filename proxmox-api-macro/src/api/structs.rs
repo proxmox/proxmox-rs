@@ -84,8 +84,10 @@ fn finish_schema(
 
     Ok(quote_spanned! { name.span() =>
         #stru
-        impl #name {
-            pub const API_SCHEMA: ::proxmox::api::schema::Schema = #schema;
+
+        #[automatically_derived]
+        impl ::proxmox::api::schema::ApiType for #name {
+            const API_SCHEMA: ::proxmox::api::schema::Schema = #schema;
         }
     })
 }
@@ -347,9 +349,14 @@ fn finish_all_of_struct(
 
     Ok(quote_spanned!(name.span() =>
         #stru
+
         impl #name {
             #inner_schema
-            pub const API_SCHEMA: ::proxmox::api::schema::Schema =
+        }
+
+        #[automatically_derived]
+        impl ::proxmox::api::schema::ApiType for #name {
+            const API_SCHEMA: ::proxmox::api::schema::Schema =
                 ::proxmox::api::schema::AllOfSchema::new(
                     #description,
                     &[
@@ -528,7 +535,7 @@ fn handle_updater_field(
 
     if field_schema.flatten_in_struct {
         let updater_ty = &field.ty;
-        all_of_schemas.extend(quote::quote! {&#updater_ty::API_SCHEMA,});
+        all_of_schemas.extend(quote::quote! {&<#updater_ty as ::proxmox::api::schema::ApiType>::API_SCHEMA,});
     }
 
     if !is_empty_impl.is_empty() {

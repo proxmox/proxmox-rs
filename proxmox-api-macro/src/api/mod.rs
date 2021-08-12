@@ -148,7 +148,7 @@ impl Schema {
     fn to_schema_reference(&self) -> Option<TokenStream> {
         match &self.item {
             SchemaItem::ExternType(path) => {
-                Some(quote_spanned! { path.span() => &#path::API_SCHEMA })
+                Some(quote_spanned! { path.span() => &<#path as ::proxmox::api::schema::ApiType>::API_SCHEMA })
             }
             SchemaItem::ExternSchema(path) => Some(quote_spanned! { path.span() => &#path }),
             _ => None,
@@ -375,7 +375,7 @@ impl SchemaItem {
                     error!(description => "description not allowed on external type");
                 }
 
-                ts.extend(quote_spanned! { path.span() => #path::API_SCHEMA });
+                ts.extend(quote_spanned! { path.span() => <#path as ::proxmox::api::schema::ApiType>::API_SCHEMA });
                 return Ok(true);
             }
             SchemaItem::ExternSchema(path) => {

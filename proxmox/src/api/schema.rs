@@ -1560,6 +1560,14 @@ where
     const UPDATER_IS_OPTION: bool = true;
 }
 
+pub trait ApiType {
+    const API_SCHEMA: Schema;
+}
+
+impl<T: ApiType> ApiType for Option<T> {
+    const API_SCHEMA: Schema = T::API_SCHEMA;
+}
+
 /// A helper type for "Updater" structs. This trait is *not* implemented for an api "base" type
 /// when deriving an `Updater` for it, though the generated *updater* type does implement this
 /// trait!

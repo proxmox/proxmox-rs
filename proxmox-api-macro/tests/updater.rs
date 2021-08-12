@@ -1,5 +1,15 @@
 use proxmox::api::api;
-use proxmox::api::schema::Updater;
+use proxmox::api::schema::{Schema, StringSchema, Updatable, Updater};
+
+#[derive(Updatable)]
+pub struct Custom(String);
+
+impl proxmox::api::schema::ApiType for Custom {
+    const API_SCHEMA: Schema = StringSchema::new("Custom String")
+        .min_length(3)
+        .max_length(64)
+        .schema();
+}
 
 #[api]
 /// An example of a simple struct type.
@@ -38,7 +48,7 @@ pub struct Complex {
     },
 )]
 /// One of the baaaad cases.
-#[derive(Default, Updater)]
+#[derive(Updater)]
 #[serde(rename_all = "kebab-case")]
 pub struct SuperComplex {
     /// An extra field not part of the flattened struct.
@@ -50,4 +60,7 @@ pub struct SuperComplex {
     /// A field which should not appear in the updater.
     #[updater(skip)]
     not_in_updater: String,
+
+    /// A custom type with an Updatable implementation.
+    custom: Custom,
 }
