@@ -7,14 +7,10 @@ pub(crate) fn updater_type(item: TokenStream) -> Result<TokenStream, syn::Error>
     let full_span = item.span();
     Ok(match item {
         syn::Item::Struct(syn::ItemStruct {
-            ident,
-            generics,
-            ..
+            ident, generics, ..
         }) => derive_updater_type(full_span, ident, generics),
         syn::Item::Enum(syn::ItemEnum {
-            ident,
-            generics,
-            ..
+            ident, generics, ..
         }) => derive_updater_type(full_span, ident, generics),
         _ => bail!(item => "`UpdaterType` cannot be derived for this type"),
     })
@@ -28,11 +24,7 @@ fn no_generics(generics: syn::Generics) {
     }
 }
 
-fn derive_updater_type(
-    full_span: Span,
-    ident: Ident,
-    generics: syn::Generics,
-) -> TokenStream {
+fn derive_updater_type(full_span: Span, ident: Ident, generics: syn::Generics) -> TokenStream {
     no_generics(generics);
 
     quote_spanned! { full_span =>

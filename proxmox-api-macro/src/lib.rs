@@ -302,7 +302,11 @@ pub fn derive_updater(_item: TokenStream_1) -> TokenStream_1 {
 pub fn derive_updater_type(item: TokenStream_1) -> TokenStream_1 {
     let _error_guard = init_local_error();
     let item: TokenStream = item.into();
-    handle_error(item.clone(), updater::updater_type(item).map_err(Error::from)).into()
+    handle_error(
+        item.clone(),
+        updater::updater_type(item).map_err(Error::from),
+    )
+    .into()
 }
 
 thread_local!(static NON_FATAL_ERRORS: RefCell<Option<TokenStream>> = RefCell::new(None));

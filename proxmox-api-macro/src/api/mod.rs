@@ -147,9 +147,9 @@ impl Schema {
     /// Create the token stream for a reference schema (`ExternType` or `ExternSchema`).
     fn to_schema_reference(&self) -> Option<TokenStream> {
         match &self.item {
-            SchemaItem::ExternType(path) => {
-                Some(quote_spanned! { path.span() => &<#path as ::proxmox::api::schema::ApiType>::API_SCHEMA })
-            }
+            SchemaItem::ExternType(path) => Some(
+                quote_spanned! { path.span() => &<#path as ::proxmox::api::schema::ApiType>::API_SCHEMA },
+            ),
             SchemaItem::ExternSchema(path) => Some(quote_spanned! { path.span() => &#path }),
             _ => None,
         }
