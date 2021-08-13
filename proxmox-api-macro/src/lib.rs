@@ -231,7 +231,7 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
 
     # Deriving an `Updater`:
 
-    An "Updater" struct can be generated automatically for a type. This affects the `Updatable`
+    An "Updater" struct can be generated automatically for a type. This affects the `UpdaterType`
     trait implementation generated, as it will set the associated
     `type Updater = TheDerivedUpdater`.
 
@@ -265,10 +265,10 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     #[api]
     /// An example of a simple struct type.
     pub struct MyTypeUpdater {
-        one: Option<String>, // really <String as Updatable>::Updater
+        one: Option<String>, // really <String as UpdaterType>::Updater
 
         #[serde(skip_serializing_if = "Option::is_none")]
-        opt: Option<String>, // really <Option<String> as Updatable>::Updater
+        opt: Option<String>, // really <Option<String> as UpdaterType>::Updater
     }
 
     impl Updater for MyTypeUpdater {
@@ -277,36 +277,8 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
         }
     }
 
-    impl Updatable for MyType {
+    impl UpdaterType for MyType {
         type Updater = MyTypeUpdater;
-
-        fn update_from<T>(&mut self, from: MyTypeUpdater, delete: &[T]) -> Result<(), Error>
-        where
-            T: AsRef<str>,
-        {
-            for delete in delete {
-                match delete.as_ref() {
-                    "opt" => { self.opt = None; }
-                    _ => (),
-                }
-            }
-
-            self.one.update_from(from.one)?;
-            self.opt.update_from(from.opt)?;
-
-            Ok(())
-        }
-
-        fn try_build_from(from: MyTypeUpdater) -> Result<Self, Error> {
-            Ok(Self {
-                // This amounts to `from.one.ok_or_else("cannot build from None value")?`
-                one: Updatable::try_build_from(from.one)
-                    .map_err(|err| format_err!("failed to build value for field 'one': {}", err))?,
-                // This amounts to `from.opt`
-                opt: Updatable::try_build_from(from.opt)
-                    .map_err(|err| format_err!("failed to build value for field 'opt': {}", err))?,
-            })
-        }
     }
 
     ```
@@ -320,17 +292,17 @@ pub fn api(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 
 /// This is a dummy derive macro actually handled by `#[api]`!
 #[doc(hidden)]
-#[proc_macro_derive(Updater, attributes(updater, updatable, serde))]
+#[proc_macro_derive(Updater, attributes(updater, serde))]
 pub fn derive_updater(_item: TokenStream_1) -> TokenStream_1 {
     TokenStream_1::new()
 }
 
-/// Create the default `Updatable` implementation from an `Option<Self>`.
-#[proc_macro_derive(Updatable, attributes(updatable, serde))]
-pub fn derive_updatable(item: TokenStream_1) -> TokenStream_1 {
+/// Create the default `UpdaterType` implementation as an `Option<Self>`.
+#[proc_macro_derive(UpdaterType, attributes(updater_type, serde))]
+pub fn derive_updater_type(item: TokenStream_1) -> TokenStream_1 {
     let _error_guard = init_local_error();
     let item: TokenStream = item.into();
-    handle_error(item.clone(), updater::updatable(item).map_err(Error::from)).into()
+    handle_error(item.clone(), updater::updater_type(item).map_err(Error::from)).into()
 }
 
 thread_local!(static NON_FATAL_ERRORS: RefCell<Option<TokenStream>> = RefCell::new(None));

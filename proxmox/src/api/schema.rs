@@ -1525,39 +1525,34 @@ fn test_verify_complex_array() {
 /// API types are "updatable" in order to support derived "Updater" structs more easily.
 ///
 /// By default, any API type is "updatable" by an `Option<Self>`. For types which do not use the
-/// `#[api]` macro, this will need to be explicitly created (or derived via `#[derive(Updatable)]`.
-pub trait Updatable: Sized {
+/// `#[api]` macro, this will need to be explicitly created (or derived via `#[derive(UpdaterType)]`.
+pub trait UpdaterType: Sized {
     type Updater: Updater;
-    /// This should always be true for the "default" updaters which are just `Option<T>` types.
-    /// Types which are not wrapped in `Option` must set this to `false`.
-    const UPDATER_IS_OPTION: bool;
 }
 
 #[cfg(feature = "api-macro")]
-pub use proxmox_api_macro::Updatable;
+pub use proxmox_api_macro::UpdaterType;
 
 #[cfg(feature = "api-macro")]
 #[doc(hidden)]
 pub use proxmox_api_macro::Updater;
 
-macro_rules! basic_updatable {
+macro_rules! basic_updater_type {
     ($($ty:ty)*) => {
         $(
-            impl Updatable for $ty {
+            impl UpdaterType for $ty {
                 type Updater = Option<Self>;
-                const UPDATER_IS_OPTION: bool = true;
             }
         )*
     };
 }
-basic_updatable! { bool u8 u16 u32 u64 i8 i16 i32 i64 usize isize f32 f64 String char }
+basic_updater_type! { bool u8 u16 u32 u64 i8 i16 i32 i64 usize isize f32 f64 String char }
 
-impl<T> Updatable for Option<T>
+impl<T> UpdaterType for Option<T>
 where
-    T: Updatable,
+    T: UpdaterType,
 {
     type Updater = T::Updater;
-    const UPDATER_IS_OPTION: bool = true;
 }
 
 pub trait ApiType {

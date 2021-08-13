@@ -4,7 +4,7 @@ use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use proxmox::api::schema;
+use proxmox::api::schema::{self, ApiType};
 use proxmox_api_macro::api;
 
 pub const NAME_SCHEMA: schema::Schema = schema::StringSchema::new("Name.").schema();

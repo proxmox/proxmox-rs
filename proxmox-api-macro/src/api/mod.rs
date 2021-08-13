@@ -473,9 +473,7 @@ impl ToTokens for OptionType {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             OptionType::Bool(b) => b.to_tokens(tokens),
-            OptionType::Updater(ty) => tokens.extend(quote! {
-                <#ty as ::proxmox::api::schema::Updatable>::UPDATER_IS_OPTION
-            }),
+            OptionType::Updater(_) => tokens.extend(quote! { true }),
         }
     }
 }

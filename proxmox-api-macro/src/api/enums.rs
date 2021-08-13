@@ -85,10 +85,8 @@ pub fn handle_enum(
                 .schema();
         }
 
-        #[automatically_derived]
-        impl ::proxmox::api::schema::Updatable for #name {
+        impl ::proxmox::api::schema::UpdaterType for #name {
             type Updater = Option<Self>;
-            const UPDATER_IS_OPTION: bool = true;
         }
     })
 }

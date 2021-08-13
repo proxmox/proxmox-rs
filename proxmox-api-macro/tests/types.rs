@@ -3,7 +3,7 @@
 
 #![allow(dead_code)]
 
-use proxmox::api::schema::{self, EnumEntry};
+use proxmox::api::schema::{self, ApiType, EnumEntry};
 use proxmox_api_macro::api;
 
 use anyhow::Error;

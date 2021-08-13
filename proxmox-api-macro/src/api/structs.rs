@@ -62,9 +62,8 @@ fn handle_unit_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<Toke
     let name = &stru.ident;
     let mut schema = finish_schema(schema, &stru, name)?;
     schema.extend(quote_spanned! { name.span() =>
-        impl ::proxmox::api::schema::Updatable for #name {
+        impl ::proxmox::api::schema::UpdaterType for #name {
             type Updater = Option<Self>;
-            const UPDATER_IS_OPTION: bool = true;
         }
     });
 
@@ -404,6 +403,7 @@ fn derive_updater(
     mut schema: Schema,
     original_struct: &mut syn::ItemStruct,
 ) -> Result<TokenStream, Error> {
+    let original_name = &original_struct.ident;
     stru.ident = Ident::new(&format!("{}Updater", stru.ident), stru.ident.span());
 
     if !util::derived_items(&original_struct.attrs).any(|p| p.is_ident("Default")) {
@@ -413,19 +413,7 @@ fn derive_updater(
         ));
     }
 
-    original_struct.attrs.push(util::make_derive_attribute(
-        Span::call_site(),
-        quote::quote! { ::proxmox::api::schema::Updatable },
-    ));
-
     let updater_name = &stru.ident;
-    let updater_name_str = syn::LitStr::new(&updater_name.to_string(), updater_name.span());
-    original_struct.attrs.push(util::make_attribute(
-        Span::call_site(),
-        util::make_path(Span::call_site(), false, &["updatable"]),
-        quote::quote! { (updater = #updater_name_str) },
-    ));
-
     let mut all_of_schemas = TokenStream::new();
     let mut is_empty_impl = TokenStream::new();
 
@@ -454,15 +442,21 @@ fn derive_updater(
     };
 
     if !is_empty_impl.is_empty() {
-        output = quote::quote!(
-            #output
+        output.extend(quote::quote!(
+            #[automatically_derived]
             impl ::proxmox::api::schema::Updater for #updater_name {
                 fn is_empty(&self) -> bool {
                     #is_empty_impl
                 }
             }
-        );
+        ));
     }
+
+    output.extend(quote::quote!(
+        impl ::proxmox::api::schema::UpdaterType for #original_name {
+            type Updater = #updater_name;
+        }
+    ));
 
     Ok(output)
 }
@@ -518,7 +512,7 @@ fn handle_updater_field(
         path: util::make_path(
             span,
             true,
-            &["proxmox", "api", "schema", "Updatable", "Updater"],
+            &["proxmox", "api", "schema", "UpdaterType", "Updater"],
         ),
     };
 
@@ -535,7 +529,8 @@ fn handle_updater_field(
 
     if field_schema.flatten_in_struct {
         let updater_ty = &field.ty;
-        all_of_schemas.extend(quote::quote! {&<#updater_ty as ::proxmox::api::schema::ApiType>::API_SCHEMA,});
+        all_of_schemas
+            .extend(quote::quote! {&<#updater_ty as ::proxmox::api::schema::ApiType>::API_SCHEMA,});
     }
 
     if !is_empty_impl.is_empty() {
