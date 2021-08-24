@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-openid"
-version = "0.6.1"
+version = "0.7.0"
 authors = ["Dietmar Maurer <dietmar@proxmox.com>"]
 edition = "2018"
 license = "AGPL-3"
@@ -21,6 +21,6 @@ serde_json = "1.0"
 url = "2.1"
 http = "0.2"
 curl = { version = "0.4.33" }
-proxmox = { version = "0.12.0",  default-features = false }
+proxmox = { version = "0.13.0",  default-features = false }
 nix = "0.19.1"
 openidconnect = { version = "2.0", default-features = false, features = ["curl"] }
