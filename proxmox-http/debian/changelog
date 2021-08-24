@@ -1,3 +1,9 @@
+rust-proxmox-http (0.4.0-1) stable; urgency=medium
+
+  * update proxmox to 0.13.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 24 Aug 2021 15:33:16 +0200
+
 rust-proxmox-http (0.3.0-1) stable; urgency=medium
 
   * update promxox to 0.12.0

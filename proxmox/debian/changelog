@@ -1,3 +1,12 @@
+rust-proxmox (0.13.0-1) stable; urgency=medium
+
+  * introduce ApiType trait with a `const API_SCHEMA: Schema`, all API types
+    should implement this
+
+  * Rename `Updatable` to `UpdaterType` and drop `UPDATER_IS_OPTION` from it
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 24 Aug 2021 15:20:24 +0200
+
 rust-proxmox (0.12.1-1) stable; urgency=medium
 
   * fs: fallback to link if renameat2 is not supported in atomic file creation

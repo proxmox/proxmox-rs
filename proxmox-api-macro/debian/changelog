@@ -1,3 +1,16 @@
+rust-proxmox-api-macro (0.5.0-1) stable; urgency=medium
+
+  * for non structs without Updater types and methods, `type: Foo` can now be
+    omitted for api types
+
+  * Adapt to the changes to Updatable in the proxmox crate
+
+  * Updaters have no try_build_from or update_from method anymore for now
+
+  * #[api] types automatically implement the new ApiType trait
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 24 Aug 2021 15:22:05 +0200
+
 rust-proxmox-api-macro (0.4.0-1) stable; urgency=medium
 
   * update proxmox to 0.12.0
