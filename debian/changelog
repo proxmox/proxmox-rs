@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.7.0-1) stable; urgency=medium
+
+  * update to proxmox 0.13.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 24 Aug 2021 15:38:52 +0200
+
 rust-proxmox-apt (0.6.0-1) stable; urgency=medium
 
   * standard repos: add suite parameter for stricter detection

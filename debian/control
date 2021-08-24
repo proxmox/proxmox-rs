@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 12),
  librust-anyhow-1+default-dev <!nocheck>,
  librust-once-cell-1+default-dev (>= 1.3.1-~~) <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
- librust-proxmox-0.12+api-macro-dev <!nocheck>,
+ librust-proxmox-0.13+api-macro-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -27,17 +27,17 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-once-cell-1+default-dev (>= 1.3.1-~~),
  librust-openssl-0.10+default-dev,
- librust-proxmox-0.12+api-macro-dev,
+ librust-proxmox-0.13+api-macro-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev
 Provides:
  librust-proxmox-apt+default-dev (= ${binary:Version}),
  librust-proxmox-apt-0-dev (= ${binary:Version}),
  librust-proxmox-apt-0+default-dev (= ${binary:Version}),
- librust-proxmox-apt-0.6-dev (= ${binary:Version}),
- librust-proxmox-apt-0.6+default-dev (= ${binary:Version}),
- librust-proxmox-apt-0.6.0-dev (= ${binary:Version}),
- librust-proxmox-apt-0.6.0+default-dev (= ${binary:Version})
+ librust-proxmox-apt-0.7-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.7+default-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.7.0-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.7.0+default-dev (= ${binary:Version})
 Description: Proxmox library for APT - Rust source code
  This package contains the source for the Rust proxmox-apt crate, packaged by
  debcargo for use with cargo and dh-cargo.
