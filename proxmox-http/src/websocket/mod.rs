@@ -236,7 +236,7 @@ pub fn create_frame(
 /// # use std::io;
 /// # use tokio::io::{AsyncWrite, AsyncWriteExt};
 /// async fn code<I: AsyncWrite + Unpin>(writer: I) -> io::Result<()> {
-///     let mut ws = WebSocketWriter::new(None, false, writer);
+///     let mut ws = WebSocketWriter::new(None, writer);
 ///     ws.write(&[1u8,2u8,3u8]).await?;
 ///     Ok(())
 /// }
