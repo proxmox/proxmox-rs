@@ -88,7 +88,7 @@ pub mod bytes_as_base64 {
     }
 }
 
-/// Serialize String as base64 encoded string.
+/// Serialize `String` or `Option<String>` as base64 encoded.
 ///
 /// Usage example:
 /// ```
@@ -111,27 +111,67 @@ pub mod bytes_as_base64 {
 pub mod string_as_base64 {
     use serde::{Deserialize, Deserializer, Serializer};
 
-    pub fn serialize<S>(data: &str, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(&base64::encode(data.as_bytes()))
+    /// Private trait to enable `string_as_base64` for `Option<String>` in addition to `String`.
+    #[doc(hidden)]
+    pub trait StrAsBase64: Sized {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
+        fn de<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error>;
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<String, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
+    fn finish_deserializing<'de, D: Deserializer<'de>>(string: String) -> Result<String, D::Error> {
         use serde::de::Error;
-        let string = String::deserialize(deserializer)?;
+
         let bytes = base64::decode(&string).map_err(|err| {
             let msg = format!("base64 decode: {}", err.to_string());
             Error::custom(msg)
         })?;
+
         String::from_utf8(bytes).map_err(|err| {
             let msg = format!("utf8 decode: {}", err.to_string());
             Error::custom(msg)
         })
+    }
+
+    impl StrAsBase64 for String {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            serializer.serialize_str(&base64::encode(self.as_bytes()))
+        }
+
+        fn de<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+            finish_deserializing::<'de, D>(String::deserialize(deserializer)?)
+        }
+    }
+
+    impl StrAsBase64 for Option<String> {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            match self {
+                Some(s) => StrAsBase64::ser(s, serializer),
+                None => serializer.serialize_none(),
+            }
+        }
+
+        fn de<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+            match Self::deserialize(deserializer)? {
+                Some(s) => Ok(Some(finish_deserializing::<'de, D>(s)?)),
+                None => Ok(None),
+            }
+        }
+    }
+
+    pub fn serialize<S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        T: StrAsBase64,
+    {
+        <T as StrAsBase64>::ser(data, serializer)
+    }
+
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: StrAsBase64,
+    {
+        <T as StrAsBase64>::de::<'de, D>(deserializer)
     }
 }
 
