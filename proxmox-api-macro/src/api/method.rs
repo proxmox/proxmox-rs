@@ -11,7 +11,7 @@ use std::mem;
 use anyhow::Error;
 
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned};
+use quote::{quote, quote_spanned, ToTokens};
 use syn::ext::IdentExt;
 use syn::spanned::Spanned;
 use syn::visit_mut::{self, VisitMut};
@@ -21,15 +21,52 @@ use super::{ObjectEntry, Schema, SchemaItem, SchemaObject};
 use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
 
 /// A return type in a schema can have an `optional` flag. Other than that it is just a regular
+/// schema, but we also want to be able to reference external `ReturnType` values for this.
+pub enum ReturnType {
+    Explicit(ReturnSchema),
+    Extern(syn::Expr),
+}
+
+impl ReturnType {
+    fn as_mut_schema(&mut self) -> Option<&mut Schema> {
+        match self {
+            ReturnType::Explicit(ReturnSchema { ref mut schema, .. }) => Some(schema),
+            _ => None,
+        }
+    }
+}
+
+impl TryFrom<JSONValue> for ReturnType {
+    type Error = syn::Error;
+
+    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
+        Ok(match value {
+            JSONValue::Object(obj) => ReturnType::Explicit(obj.try_into()?),
+            JSONValue::Expr(ext) => ReturnType::Extern(ext),
+        })
+    }
+}
+
+impl ReturnType {
+    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
+        match self {
+            ReturnType::Explicit(exp) => exp.to_schema(ts)?,
+            ReturnType::Extern(exp) => exp.to_tokens(ts),
+        }
+        Ok(())
+    }
+}
+
+/// A return type in a schema can have an `optional` flag. Other than that it is just a regular
 /// schema.
-pub struct ReturnType {
+pub struct ReturnSchema {
     /// If optional, we store `Some(span)`, otherwise `None`.
     optional: Option<Span>,
 
     schema: Schema,
 }
 
-impl ReturnType {
+impl ReturnSchema {
     fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
         let optional = match self.optional {
             Some(span) => quote_spanned! { span => true },
@@ -46,17 +83,9 @@ impl ReturnType {
     }
 }
 
-impl TryFrom<JSONValue> for ReturnType {
-    type Error = syn::Error;
-
-    fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
-        Self::try_from(value.into_object("a return type definition")?)
-    }
-}
-
-/// To go from a `JSONObject` to a `ReturnType` we first extract the `optional` flag, then forward
+/// To go from a `JSONObject` to a `ReturnSchema` we first extract the `optional` flag, then forward
 /// to the `Schema` parser.
-impl TryFrom<JSONObject> for ReturnType {
+impl TryFrom<JSONObject> for ReturnSchema {
     type Error = syn::Error;
 
     fn try_from(mut obj: JSONObject) -> Result<Self, syn::Error> {
@@ -110,7 +139,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
 
     let mut return_type: Option<ReturnType> = attribs
         .remove("returns")
-        .map(|ret| ret.into_object("return schema definition")?.try_into())
+        .map(|ret| ret.try_into())
         .transpose()?;
 
     let access_setter = match attribs.remove("access") {
@@ -151,7 +180,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     let (doc_comment, doc_span) = util::get_doc_comments(&func.attrs)?;
     util::derive_descriptions(
         &mut input_schema,
-        return_type.as_mut().map(|rs| &mut rs.schema),
+        return_type.as_mut().and_then(ReturnType::as_mut_schema),
         &doc_comment,
         doc_span,
     )?;
