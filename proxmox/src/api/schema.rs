@@ -1522,10 +1522,12 @@ fn test_verify_complex_array() {
     }
 }
 
-/// API types are "updatable" in order to support derived "Updater" structs more easily.
+/// API types should define an "updater type" via this trait in order to support derived "Updater"
+/// structs more easily.
 ///
-/// By default, any API type is "updatable" by an `Option<Self>`. For types which do not use the
-/// `#[api]` macro, this will need to be explicitly created (or derived via `#[derive(UpdaterType)]`.
+/// Most trivial types can simply use an `Option<Self>` as updater. For types which do not use the
+/// `#[api]` macro, this will need to be explicitly created (or derived via
+/// `#[derive(UpdaterType)]`.
 pub trait UpdaterType: Sized {
     type Updater: Updater;
 }
