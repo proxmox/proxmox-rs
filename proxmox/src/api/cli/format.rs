@@ -60,7 +60,7 @@ pub fn generate_usage_str(
     cli_cmd: &CliCommand,
     format: DocumentationFormat,
     indent: &str,
-    skip_options: &'static [&'static str],
+    skip_options: &[&str],
 ) -> String {
     let arg_param = cli_cmd.arg_param;
     let fixed_param = &cli_cmd.fixed_param;
