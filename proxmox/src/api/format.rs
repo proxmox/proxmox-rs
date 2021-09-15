@@ -120,7 +120,7 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
             _ => String::from("<number>"),
         },
         Schema::Object(_) => String::from("<object>"),
-        Schema::Array(_) => String::from("<array>"),
+        Schema::Array(schema) => get_schema_type_text(schema.items, _style),
         Schema::AllOf(_) => String::from("<object>"),
     }
 }
