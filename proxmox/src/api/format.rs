@@ -134,20 +134,25 @@ pub fn get_property_description(
 ) -> String {
     let type_text = get_schema_type_text(schema, style);
 
-    let (descr, default) = match schema {
-        Schema::Null => ("null", None),
-        Schema::String(ref schema) => (schema.description, schema.default.map(|v| v.to_owned())),
-        Schema::Boolean(ref schema) => (schema.description, schema.default.map(|v| v.to_string())),
-        Schema::Integer(ref schema) => (schema.description, schema.default.map(|v| v.to_string())),
-        Schema::Number(ref schema) => (schema.description, schema.default.map(|v| v.to_string())),
-        Schema::Object(ref schema) => (schema.description, None),
-        Schema::AllOf(ref schema) => (schema.description, None),
-        Schema::Array(ref schema) => (schema.description, None),
+    let (descr, default, extra) = match schema {
+        Schema::Null => ("null", None, None),
+        Schema::String(ref schema) => (schema.description, schema.default.map(|v| v.to_owned()), None),
+        Schema::Boolean(ref schema) => (schema.description, schema.default.map(|v| v.to_string()), None),
+        Schema::Integer(ref schema) => (schema.description, schema.default.map(|v| v.to_string()), None),
+        Schema::Number(ref schema) => (schema.description, schema.default.map(|v| v.to_string()), None),
+        Schema::Object(ref schema) => (schema.description, None, None),
+        Schema::AllOf(ref schema) => (schema.description, None, None),
+        Schema::Array(ref schema) => (schema.description, None, Some(String::from("Can be specified more than once."))),
     };
 
     let default_text = match default {
         Some(text) => format!("   (default={})", text),
         None => String::new(),
+    };
+
+    let descr = match extra {
+        Some(extra) => format!("{} {}", descr, extra),
+        None => String::from(descr),
     };
 
     if format == DocumentationFormat::ReST {
@@ -169,7 +174,7 @@ pub fn get_property_description(
             }
         };
 
-        text.push_str(&wrap_text("", "  ", descr, 80));
+        text.push_str(&wrap_text("", "  ", &descr, 80));
         text.push('\n');
 
         text
@@ -184,7 +189,7 @@ pub fn get_property_description(
         let mut text = format!(" {:-10} {}{}", display_name, type_text, default_text);
         let indent = "             ";
         text.push('\n');
-        text.push_str(&wrap_text(indent, indent, descr, 80));
+        text.push_str(&wrap_text(indent, indent, &descr, 80));
 
         text
     }
