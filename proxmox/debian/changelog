@@ -1,3 +1,11 @@
+rust-proxmox (0.13.2-1) stable; urgency=medium
+
+  * impl <T: UserInformation> UserInformation for std::sync::Arc<T>
+
+  * generate_usage_str: don't require static lifetimes
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 16 Sep 2021 11:03:02 +0200
+
 rust-proxmox (0.13.1-1) stable; urgency=medium
 
   * fix UpdaterType documentation
