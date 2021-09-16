@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 use std::fmt;
+use std::ops::Deref;
 
 /// Access permission
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
@@ -70,6 +71,18 @@ pub trait UserInformation {
     fn is_superuser(&self, userid: &str) -> bool;
     fn is_group_member(&self, userid: &str, group: &str) -> bool;
     fn lookup_privs(&self, userid: &str, path: &[&str]) -> u64;
+}
+
+impl <T: UserInformation> UserInformation for std::sync::Arc<T> {
+    fn is_superuser(&self, userid: &str) -> bool {
+        self.deref().is_superuser(userid)
+    }
+    fn is_group_member(&self, userid: &str, group: &str) -> bool {
+        self.deref().is_group_member(userid, group)
+    }
+    fn lookup_privs(&self, userid: &str, path: &[&str]) -> u64 {
+        self.deref().lookup_privs(userid, path)
+    }
 }
 
 /// Example implementation to check access permissions
