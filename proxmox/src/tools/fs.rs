@@ -205,6 +205,10 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
         bail!("open {:?} failed - unsupported OFlag O_TMPFILE", path);
     }
 
+    if oflag.contains(OFlag::O_DIRECTORY) {
+        bail!("open {:?} failed - unsupported OFlag O_DIRECTORY", path);
+    }
+
     oflag.remove(OFlag::O_CREAT); // we want to handle CREAT ourselfes
 
     // Note: 'mode' is ignored, because oflag does not contain O_CREAT or O_TMPFILE
