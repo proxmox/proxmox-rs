@@ -209,16 +209,25 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
         bail!("open {:?} failed - unsupported OFlag O_DIRECTORY", path);
     }
 
+    let exclusive = if oflag.contains(OFlag::O_EXCL) {
+        oflag.remove(OFlag::O_EXCL); // we nned to handle that ourselfes
+        true
+    } else {
+        false
+    };
+
     oflag.remove(OFlag::O_CREAT); // we want to handle CREAT ourselfes
 
-    // Note: 'mode' is ignored, because oflag does not contain O_CREAT or O_TMPFILE
-    match nix::fcntl::open(path, oflag, stat::Mode::empty()) {
-        Ok(fd) => return Ok(unsafe { File::from_raw_fd(fd) }),
-        Err(err) => {
-            if err.not_found() {
-                // fall thrue -  try to create the file
-            } else {
-                bail!("open {:?} failed - {}", path, err);
+    if !exclusive {
+        // Note: 'mode' is ignored, because oflag does not contain O_CREAT or O_TMPFILE
+        match nix::fcntl::open(path, oflag, stat::Mode::empty()) {
+            Ok(fd) => return Ok(unsafe { File::from_raw_fd(fd) }),
+            Err(err) => {
+                if err.not_found() {
+                    // fall thrue -  try to create the file
+                } else {
+                    bail!("open {:?} failed - {}", path, err);
+                }
             }
         }
     }
@@ -266,7 +275,7 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
             // the file, let's just open theirs instead:
             let _ = nix::unistd::unlink(&temp_file_name);
 
-            if err.already_exists() {
+            if !exclusive && err.already_exists() {
                 match nix::fcntl::open(path, oflag, stat::Mode::empty()) {
                     Ok(fd) => Ok(unsafe { File::from_raw_fd(fd) }),
                     Err(err) => bail!("open {:?} failed - {}", path, err),
