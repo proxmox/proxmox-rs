@@ -1,3 +1,11 @@
+rust-proxmox (0.13.3-1) unstable; urgency=medium
+
+  * atomic_open_or_create_file: add support for OFlag::O_EXCL
+
+  * atomic_open_or_create_file: catch unsupported flag OFlag::O_DIRECTORY
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Sep 2021 06:42:41 +0200
+
 rust-proxmox (0.13.2-1) stable; urgency=medium
 
   * impl <T: UserInformation> UserInformation for std::sync::Arc<T>
