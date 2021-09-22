@@ -20,6 +20,7 @@ pub mod serde;
 pub mod time;
 pub mod uuid;
 pub mod vec;
+pub mod systemd;
 
 #[cfg(feature = "tfa")]
 pub mod tfa;
