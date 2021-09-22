@@ -1,3 +1,15 @@
+rust-proxmox (0.13.4-1) stable; urgency=medium
+
+  * add UPID api type
+
+  * add systemd escape_unit and unescape_unit
+
+  * schema: add extra info to array parameters
+
+  * schema: print item type-text instead of <array>
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 23 Sep 2021 12:06:08 +0200
+
 rust-proxmox (0.13.3-1) unstable; urgency=medium
 
   * atomic_open_or_create_file: add support for OFlag::O_EXCL
