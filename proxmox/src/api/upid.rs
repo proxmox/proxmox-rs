@@ -54,7 +54,6 @@ pub const PROXMOX_UPID_FORMAT: ApiStringFormat =
 
 pub const UPID_SCHEMA: Schema = StringSchema::new("Unique Process/Task Identifier")
     .min_length("UPID:N:12345678:12345678:12345678:::".len())
-    .max_length(128) // arbitrary
     .format(&PROXMOX_UPID_FORMAT)
     .schema();
 
