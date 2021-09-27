@@ -17,6 +17,7 @@ anyhow = "1.0"
 lazy_static = "1.4"
 libc = "0.2"
 nix = "0.19.1"
+unicode-width ="0.1.8"
 
 # tools module:
 base32 = { version = "0.4", optional = true }

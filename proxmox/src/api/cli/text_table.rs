@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::*;
 use serde_json::Value;
+use unicode_width::UnicodeWidthStr;
 
 use crate::api::schema::*;
 
@@ -472,7 +473,7 @@ fn format_table<W: Write>(
             let lines: Vec<String> = text
                 .lines()
                 .map(|line| {
-                    let width = line.chars().count();
+                    let width = UnicodeWidthStr::width(line);
                     if width > max_width {
                         max_width = width;
                     }
@@ -564,10 +565,11 @@ fn render_table<W: Write>(
                     text.push(' ');
                 }
 
+                let padding = column.width - UnicodeWidthStr::width(line.as_str());
                 if column.right_align {
-                    text.push_str(&format!("{:>width$}", line, width = column.width));
+                    text.push_str(&format!("{:>width$}{}", "", line, width = padding));
                 } else {
-                    text.push_str(&format!("{:<width$}", line, width = column.width));
+                    text.push_str(&format!("{}{:<width$}", line, "", width = padding));
                 }
 
                 if !options.noborder {
