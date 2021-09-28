@@ -104,21 +104,13 @@ pub(crate) fn parse_argument_list<T: AsRef<str>>(
                         } else if can_default {
                             data.push((name, "true".to_string()));
                         } else {
-                            errors.push(format_err!(
-                                "parameter '{}': {}",
-                                name,
-                                "missing boolean value."
-                            ));
+                            errors.push(name.to_string(), format_err!("missing boolean value."));
                         }
                     } else if next_is_argument {
                         pos += 1;
                         data.push((name, args[pos].as_ref().to_string()));
                     } else {
-                        errors.push(format_err!(
-                            "parameter '{}': {}",
-                            name,
-                            "missing parameter value."
-                        ));
+                        errors.push(name.to_string(), format_err!("missing parameter value."));
                     }
                 }
                 Some(v) => {
@@ -182,7 +174,7 @@ pub fn parse_arguments<T: AsRef<str>>(
 
         if remaining.is_empty() {
             if !(is_last_arg_param && last_arg_param_is_optional) {
-                errors.push(format_err!("missing argument '{}'", name));
+                errors.push(name.to_string(), format_err!("missing argument"));
             }
         } else if is_last_arg_param && last_arg_param_is_array {
             for value in remaining {

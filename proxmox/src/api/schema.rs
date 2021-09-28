@@ -19,13 +19,11 @@ use crate::api::const_regex::ConstRegexPattern;
 /// erroneous object property.
 #[derive(Default, Debug)]
 pub struct ParameterError {
-    error_list: Vec<Error>,
+    error_list: Vec<(String, Error)>,
 }
 
 impl std::error::Error for ParameterError {}
 
-// fixme: record parameter names, to make it usefull to display errord
-// on HTML forms.
 impl ParameterError {
     pub fn new() -> Self {
         Self {
@@ -33,12 +31,16 @@ impl ParameterError {
         }
     }
 
-    pub fn push(&mut self, value: Error) {
-        self.error_list.push(value);
+    pub fn push(&mut self, name: String, value: Error) {
+        self.error_list.push((name, value));
     }
 
     pub fn len(&self) -> usize {
         self.error_list.len()
+    }
+
+    pub fn errors(&self) -> &[(String, Error)] {
+        &self.error_list
     }
 
     pub fn is_empty(&self) -> bool {
@@ -54,11 +56,8 @@ impl fmt::Display for ParameterError {
             msg.push_str("parameter verification errors\n\n");
         }
 
-        for item in self.error_list.iter() {
-            let s = item.to_string();
-            msg.reserve(s.len() + 1);
-            msg.push_str(&s);
-            msg.push('\n');
+        for (name, err) in self.error_list.iter() {
+            msg.push_str(&format!("parameter '{}': {}\n", name, err));
         }
 
         write!(f, "{}", msg)
@@ -948,15 +947,10 @@ fn do_parse_parameter_strings(
                         Value::Array(ref mut array) => {
                             match parse_simple_value(value, &array_schema.items) {
                                 Ok(res) => array.push(res), // fixme: check_length??
-                                Err(err) => {
-                                    errors.push(format_err!("parameter '{}': {}", key, err))
-                                }
+                                Err(err) => errors.push(key.into(), err),
                             }
                         }
-                        _ => errors.push(format_err!(
-                            "parameter '{}': expected array - type missmatch",
-                            key
-                        )),
+                        _ => errors.push(key.into(), format_err!("expected array - type missmatch")),
                     }
                 }
                 _ => match parse_simple_value(value, prop_schema) {
@@ -964,10 +958,10 @@ fn do_parse_parameter_strings(
                         if params[key] == Value::Null {
                             params[key] = res;
                         } else {
-                            errors.push(format_err!("parameter '{}': duplicate parameter.", key));
+                            errors.push(key.into(), format_err!("duplicate parameter."));
                         }
                     }
-                    Err(err) => errors.push(format_err!("parameter '{}': {}", key, err)),
+                    Err(err) => errors.push(key.into(), err),
                 },
             }
         } else if additional_properties {
@@ -984,26 +978,17 @@ fn do_parse_parameter_strings(
                 Value::Array(ref mut array) => {
                     array.push(Value::String(value.to_string()));
                 }
-                _ => errors.push(format_err!(
-                    "parameter '{}': expected array - type missmatch",
-                    key
-                )),
+                _ => errors.push(key.into(), format_err!("expected array - type missmatch")),
             }
         } else {
-            errors.push(format_err!(
-                "parameter '{}': schema does not allow additional properties.",
-                key
-            ));
+            errors.push(key.into(), format_err!("schema does not allow additional properties."));
         }
     }
 
     if test_required && errors.is_empty() {
         for (name, optional, _prop_schema) in schema.properties() {
             if !(*optional) && params[name] == Value::Null {
-                errors.push(format_err!(
-                    "parameter '{}': parameter is missing and it is not optional.",
-                    name
-                ));
+                errors.push(name.to_string(), format_err!("parameter is missing and it is not optional."));
             }
         }
     }
@@ -1112,6 +1097,9 @@ pub fn verify_json_object(
         _ => bail!("Expected object - got scalar value."),
     };
 
+    // fixme: improve error messages from nested objects/arrays
+    let mut errors = ParameterError::new();
+
     let additional_properties = schema.additional_properties();
 
     for (key, value) in map {
@@ -1122,26 +1110,24 @@ pub fn verify_json_object(
                 _ => verify_json(value, prop_schema),
             };
             if let Err(err) = result {
-                bail!("property '{}': {}", key, err);
+                errors.push(key.to_string(), err);
             };
         } else if !additional_properties {
-            bail!(
-                "property '{}': schema does not allow additional properties.",
-                key
-            );
+            errors.push(key.to_string(), format_err!("schema does not allow additional properties."));
         }
     }
 
     for (name, optional, _prop_schema) in schema.properties() {
         if !(*optional) && data[name] == Value::Null {
-            bail!(
-                "property '{}': property is missing and it is not optional.",
-                name
-            );
+            errors.push(name.to_string(), format_err!("property is missing and it is not optional."));
         }
     }
 
-    Ok(())
+    if !errors.is_empty() {
+        Err(errors.into())
+    } else {
+        Ok(())
+    }
 }
 
 #[test]
