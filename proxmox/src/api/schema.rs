@@ -46,6 +46,17 @@ impl ParameterError {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    pub fn add_errors(&mut self, prefix: &str, err: Error) {
+        if let Some(param_err) = err.downcast_ref::<ParameterError>() {
+            for (sub_key, sub_err) in param_err.errors().iter() {
+                self.push(format!("{}/{}", prefix, sub_key), format_err!("{}", sub_err));
+            }
+        } else {
+            self.push(prefix.to_string(), err);
+        }
+    }
+
 }
 
 impl fmt::Display for ParameterError {
@@ -1079,8 +1090,13 @@ pub fn verify_json_array(data: &Value, schema: &ArraySchema) -> Result<(), Error
 
     schema.check_length(list.len())?;
 
-    for item in list {
-        verify_json(item, &schema.items)?;
+    for (i, item) in list.iter().enumerate() {
+        let result = verify_json(item, &schema.items);
+        if let Err(err) = result {
+            let mut errors = ParameterError::new();
+            errors.add_errors(&format!("[{}]", i), err);
+            return Err(errors.into());
+        }
     }
 
     Ok(())
@@ -1097,7 +1113,6 @@ pub fn verify_json_object(
         _ => bail!("Expected object - got scalar value."),
     };
 
-    // fixme: improve error messages from nested objects/arrays
     let mut errors = ParameterError::new();
 
     let additional_properties = schema.additional_properties();
@@ -1110,7 +1125,7 @@ pub fn verify_json_object(
                 _ => verify_json(value, prop_schema),
             };
             if let Err(err) = result {
-                errors.push(key.to_string(), err);
+                errors.add_errors(key, err);
             };
         } else if !additional_properties {
             errors.push(key.to_string(), format_err!("schema does not allow additional properties."));
