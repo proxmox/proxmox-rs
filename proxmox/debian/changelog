@@ -1,3 +1,13 @@
+rust-proxmox (0.13.5-1) stable; urgency=medium
+
+  * ParameterError: record parameter names
+
+  * cli/text_table: calculate correct column width for unicode characters
+
+  * upid: remove arbitrary 128 max length for UPID
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 28 Sep 2021 08:31:39 +0200
+
 rust-proxmox (0.13.4-1) stable; urgency=medium
 
   * add UPID api type
