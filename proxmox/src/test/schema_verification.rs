@@ -14,6 +14,10 @@ static SIMPLE_OBJECT_SCHEMA: Schema =  ObjectSchema::new(
     ]
 ).schema();
 
+static SIMPLE_PROPERTY_STRING_SCHEMA: Schema = StringSchema::new("simple property string")
+    .format(&ApiStringFormat::PropertyString(&SIMPLE_OBJECT_SCHEMA))
+    .schema();
+
 static SIMPLE_ARRAY_SCHEMA: Schema = ArraySchema::new("String list.", &STRING_SCHEMA).schema();
 
 static NESTED_OBJECT_SCHEMA: Schema =  ObjectSchema::new(
@@ -24,6 +28,14 @@ static NESTED_OBJECT_SCHEMA: Schema =  ObjectSchema::new(
         ("prop1", false, &STRING_SCHEMA),
     ]
 ).schema();
+
+static NESTED_PROPERTY_SCHEMA: Schema =  ObjectSchema::new(
+    "object with property strings",
+    &[
+        ("ps1", false, &SIMPLE_PROPERTY_STRING_SCHEMA),
+    ]
+).schema();
+
 
 fn compare_error(
     expected: &[(&str, &str)],
@@ -125,6 +137,53 @@ fn verify_nested_object2() -> Result<(), Error> {
             ("prop1", "Expected string value."),
             ("prop4", "schema does not allow additional properties."),
         ],
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn verify_nested_property1() -> Result<(), Error> {
+
+    let value = json!({"ps1": "abc"});
+
+    test_verify(
+        &NESTED_PROPERTY_SCHEMA,
+        &value,
+        &[
+            ("ps1", "Value without key, but schema does not define a default key."),
+        ],
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn verify_nested_property2() -> Result<(), Error> {
+    let value = json!({"ps1": "abc=1"});
+
+    test_verify(
+        &NESTED_PROPERTY_SCHEMA,
+        &value,
+        &[
+            ("ps1/abc", "schema does not allow additional properties."),
+        ],
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn verify_nested_property3() -> Result<(), Error> {
+    let value = json!({"ps1": ""});
+
+    test_verify(
+        &NESTED_PROPERTY_SCHEMA,
+        &value,
+        &[
+            ("ps1/prop1", "parameter is missing and it is not optional."),
+            ("ps1/prop3", "parameter is missing and it is not optional."),
+         ],
     )?;
 
     Ok(())
