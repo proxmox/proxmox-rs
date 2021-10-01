@@ -1,0 +1,32 @@
+Source: rust-proxmox-borrow
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 24),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.5.1
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Rules-Requires-Root: no
+
+# FIXME (packages."(name)".section) debcargo auto-generated summaries are very long, consider overriding
+
+Package: librust-proxmox-borrow-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends}
+Provides:
+ librust-proxmox-borrow+default-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1+default-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1.0-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1.0.0+default-dev (= ${binary:Version})
+Description: Contains the Tied type to tie a value with a lifetime to the value it borrows from - Rust source code
+ This package contains the source for the Rust proxmox-borrow crate, packaged by
+ debcargo for use with cargo and dh-cargo.

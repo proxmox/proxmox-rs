@@ -1,0 +1,11 @@
+[package]
+name = "proxmox-borrow"
+version = "1.0.0"
+authors = ["Proxmox Support Team <support@proxmox.com>"]
+edition = "2018"
+license = "AGPL-3"
+description = "contains the Tied type to tie a value with a lifetime to the value it borrows from"
+
+exclude = [ "debian" ]
+
+[dependencies]

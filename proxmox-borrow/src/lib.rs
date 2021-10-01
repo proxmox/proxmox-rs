@@ -32,7 +32,7 @@ use std::mem::ManuallyDrop;
 /// //}
 ///
 /// // Instead we use:
-/// use proxmox::tools::borrow::Tied;
+/// use proxmox_borrow::Tied;
 /// struct Usage {
 ///     tied: Tied<Owner, Borrow<'static>>,
 /// }
