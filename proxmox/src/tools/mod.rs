@@ -22,9 +22,6 @@ pub mod uuid;
 pub mod vec;
 pub mod systemd;
 
-#[cfg(feature = "tfa")]
-pub mod tfa;
-
 #[doc(inline)]
 pub use uuid::Uuid;
 

@@ -1,6 +1,7 @@
 //! U2F implementation.
 
 use std::mem::MaybeUninit;
+use std::io;
 
 use anyhow::{bail, format_err, Error};
 use openssl::ec::{EcGroup, EcKey, EcPoint};
@@ -9,8 +10,6 @@ use openssl::pkey::Public;
 use openssl::sha;
 use openssl::x509::X509;
 use serde::{Deserialize, Serialize};
-
-use crate::tools::serde::{bytes_as_base64, bytes_as_base64url_nopad};
 
 const CHALLENGE_LEN: usize = 32;
 const U2F_VERSION: &str = "U2F_V2";
@@ -318,10 +317,19 @@ fn decode(data: &str) -> Result<Vec<u8>, Error> {
 /// produce a challenge, which is just a bunch of random data
 fn challenge() -> Result<String, Error> {
     let mut data = MaybeUninit::<[u8; CHALLENGE_LEN]>::uninit();
-    Ok(encode(&unsafe {
-        crate::sys::linux::fill_with_random_data(&mut *data.as_mut_ptr())?;
+    let data = unsafe {
+        let buf: &mut [u8; CHALLENGE_LEN] = &mut *data.as_mut_ptr();
+        let rc = libc::getrandom(buf.as_mut_ptr() as *mut libc::c_void, buf.len(), 0);
+        if rc == -1 {
+            return Err(io::Error::last_os_error().into());
+        }
+        if rc as usize != buf.len() {
+            // `CHALLENGE_LEN` is small, so short reads cannot happen (see `getrandom(2)`)
+            bail!("short getrandom call");
+        }
         data.assume_init()
-    }))
+    };
+    Ok(encode(&data))
 }
 
 /// Used while parsing the binary registration response. The slices point directly into the
@@ -546,5 +554,39 @@ mod test {
             res.is_some(),
             "test authentication signature fails verification"
         );
+    }
+}
+
+pub mod bytes_as_base64 {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(data: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&base64::encode(&data))
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+        use serde::de::Error;
+        String::deserialize(deserializer).and_then(|string| {
+            base64::decode(&string).map_err(|err| Error::custom(err.to_string()))
+        })
+    }
+}
+
+pub mod bytes_as_base64url_nopad {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(data: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&base64::encode_config(
+            data.as_ref(),
+            base64::URL_SAFE_NO_PAD,
+        ))
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+        use serde::de::Error;
+        String::deserialize(deserializer).and_then(|string| {
+            base64::decode_config(&string, base64::URL_SAFE_NO_PAD)
+                .map_err(|err| Error::custom(err.to_string()))
+        })
     }
 }

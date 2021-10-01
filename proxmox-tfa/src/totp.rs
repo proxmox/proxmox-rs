@@ -1,4 +1,4 @@
-//! Implementation of TOTP, U2F and other mechanisms.
+//! TOTP implementation.
 
 use std::convert::TryFrom;
 use std::fmt;
@@ -172,7 +172,7 @@ impl Totp {
 
     /// Create a new OTP secret key builder using a secret specified in hexadecimal bytes.
     pub fn builder_from_hex(secret: &str) -> Result<TotpBuilder, Error> {
-        crate::tools::hex_to_bin(secret).map(|secret| Self::builder().secret(secret))
+        Ok(Self::builder().secret(hex::decode(secret)?))
     }
 
     /// Get the secret key in binary form.
@@ -394,7 +394,7 @@ impl std::str::FromStr for Totp {
     }
 }
 
-crate::forward_deserialize_to_from_str!(Totp);
+serde_plain::derive_deserialize_from_fromstr!(Totp, "valid TOTP url");
 
 impl Serialize for Totp {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

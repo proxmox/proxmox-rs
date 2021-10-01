@@ -1,0 +1,25 @@
+[package]
+name = "proxmox-tfa"
+version = "1.0.0"
+authors = ["Proxmox Support Team <support@proxmox.com>"]
+edition = "2018"
+license = "AGPL-3"
+description = "tfa implementation for totp and u2f"
+
+exclude = [ "debian" ]
+
+[dependencies]
+anyhow = "1.0"
+base32 = "0.4"
+base64 = "0.12"
+hex = "0.4"
+openssl = "0.10"
+percent-encoding = "2.1"
+serde = "1.0"
+serde_plain = "1.0"
+serde_json = { version = "1.0", optional = true }
+libc = { version = "0.2", optional = true }
+
+[features]
+default = []
+u2f = [ "libc", "serde_json", "serde/derive" ]
