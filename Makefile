@@ -5,7 +5,8 @@ CRATES = \
 	 proxmox-api-macro \
 	 proxmox-http \
 	 proxmox-sortable-macro \
-	 proxmox-tfa
+	 proxmox-tfa \
+	 proxmox-uuid
 
 # By default we just run checks:
 .PHONY: all

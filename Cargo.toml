@@ -5,6 +5,7 @@ members = [
     "proxmox-http",
     "proxmox-sortable-macro",
     "proxmox-tfa",
+    "proxmox-uuid",
 ]
 exclude = [
     "build",

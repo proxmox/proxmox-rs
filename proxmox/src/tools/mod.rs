@@ -18,12 +18,8 @@ pub mod mmap;
 pub mod parse;
 pub mod serde;
 pub mod time;
-pub mod uuid;
 pub mod vec;
 pub mod systemd;
-
-#[doc(inline)]
-pub use uuid::Uuid;
 
 #[doc(inline)]
 pub use as_any::AsAny;
