@@ -206,7 +206,7 @@ pub fn create_frame(
 
     if len < 126 {
         buf.push(mask_bit | (len as u8));
-    } else if len < std::u16::MAX as usize {
+    } else if len < u16::MAX as usize {
         buf.push(mask_bit | 126);
         buf.extend_from_slice(&(len as u16).to_be_bytes());
     } else {
