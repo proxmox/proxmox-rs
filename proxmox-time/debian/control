@@ -1,0 +1,34 @@
+Source: rust-proxmox-time
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 24),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-libc-0.2+default-dev <!nocheck>,
+ librust-libc-0.2+extra-traits-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.5.1
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Rules-Requires-Root: no
+
+Package: librust-proxmox-time-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-libc-0.2+default-dev,
+ librust-libc-0.2+extra-traits-dev
+Provides:
+ librust-proxmox-time+default-dev (= ${binary:Version}),
+ librust-proxmox-time-1-dev (= ${binary:Version}),
+ librust-proxmox-time-1+default-dev (= ${binary:Version}),
+ librust-proxmox-time-1.0-dev (= ${binary:Version}),
+ librust-proxmox-time-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-time-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-time-1.0.0+default-dev (= ${binary:Version})
+Description: Time utilities and TmEditor - Rust source code
+ This package contains the source for the Rust proxmox-time crate, packaged by
+ debcargo for use with cargo and dh-cargo.

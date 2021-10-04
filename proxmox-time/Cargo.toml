@@ -1,0 +1,12 @@
+[package]
+name = "proxmox-time"
+version = "1.0.0"
+authors = ["Proxmox Support Team <support@proxmox.com>"]
+edition = "2018"
+license = "AGPL-3"
+description = "time utilities and TmEditor"
+
+exclude = [ "debian" ]
+
+[dependencies]
+libc = { version = "0.2", features = [ "extra_traits" ] }

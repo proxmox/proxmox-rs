@@ -7,6 +7,7 @@ CRATES = \
 	 proxmox-http \
 	 proxmox-sortable-macro \
 	 proxmox-tfa \
+	 proxmox-time \
 	 proxmox-uuid
 
 # By default we just run checks:

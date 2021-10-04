@@ -16,7 +16,6 @@ pub mod io;
 pub mod mmap;
 pub mod parse;
 pub mod serde;
-pub mod time;
 pub mod vec;
 pub mod systemd;
 
