@@ -13,11 +13,11 @@
 //!
 //! This module provides some helpers for this kind of code. Many of these are supposed to stay on
 //! a lower level, with I/O helpers for types implementing [`Read`](std::io::Read) being available
-//! in the [`tools::io`](crate::tools::io) module.
+//! in this module.
 //!
 //! Examples:
 //! ```no_run
-//! use proxmox::tools::vec::{self, ByteVecExt};
+//! use proxmox_io::vec::{self, ByteVecExt};
 //!
 //! # let size = 64usize;
 //! # let more = 64usize;
@@ -32,7 +32,7 @@
 //! ```
 
 mod byte_vec;
-pub use byte_vec::*;
+pub use byte_vec::ByteVecExt;
 
 /// Create an uninitialized byte vector of a specific size.
 ///

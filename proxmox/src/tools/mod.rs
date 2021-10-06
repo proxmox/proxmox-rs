@@ -6,16 +6,13 @@ use anyhow::*;
 use lazy_static::lazy_static;
 
 pub mod as_any;
-pub mod byte_buffer;
 pub mod common_regex;
 pub mod email;
 pub mod fd;
 pub mod fs;
-pub mod io;
 pub mod mmap;
 pub mod parse;
 pub mod serde;
-pub mod vec;
 pub mod systemd;
 
 #[doc(inline)]

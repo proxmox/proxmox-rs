@@ -3,7 +3,7 @@
 //! Example:
 //! ```
 //! # use std::io::Read;
-//! use proxmox::tools::vec::{self, ByteVecExt};
+//! use proxmox_io::vec::{self, ByteVecExt};
 //!
 //! fn append_1024_to_vec<T: Read>(mut input: T, buffer: &mut Vec<u8>) -> std::io::Result<()> {
 //!     input.read_exact(unsafe { buffer.grow_uninitialized(1024) })
@@ -14,8 +14,8 @@
 /// Example:
 /// ```
 /// # use std::io::Read;
-/// # use proxmox::tools::io::{self, ReadExt};
-/// use proxmox::tools::vec::{self, ByteVecExt};
+/// # use proxmox_io::ReadExt;
+/// use proxmox_io::vec::{self, ByteVecExt};
 ///
 /// # fn code(mut file: std::fs::File, mut data: Vec<u8>) -> std::io::Result<()> {
 /// file.read_exact(unsafe {
@@ -32,7 +32,7 @@
 /// file.append_to_vec(&mut data, 1024)?;
 /// ```
 ///
-/// [`ReadExt`]: crate::tools::io::ReadExt
+/// [`ReadExt`]: crate::ReadExt
 pub trait ByteVecExt {
     /// Grow a vector without initializing its elements. The difference to simply using `reserve`
     /// is that it also updates the actual length, making the newly allocated data part of the
@@ -50,7 +50,7 @@ pub trait ByteVecExt {
     /// This returns a mutable slice to the newly allocated space, so it can be used inline:
     /// ```
     /// # use std::io::Read;
-    /// # use proxmox::tools::vec::ByteVecExt;
+    /// # use proxmox_io::vec::ByteVecExt;
     /// # fn test(mut file: std::fs::File, buffer: &mut Vec<u8>) -> std::io::Result<()> {
     /// file.read_exact(unsafe { buffer.grow_uninitialized(1024) })?;
     /// # Ok(())
@@ -70,7 +70,7 @@ pub trait ByteVecExt {
     /// the previously contained content. Since we cannot track this state through the type system,
     /// this method is marked as an unsafe API for good measure.
     ///
-    /// [`ReadExt`]: crate::tools::io::ReadExt
+    /// [`ReadExt`]: crate::ReadExt
     unsafe fn grow_uninitialized(&mut self, more: usize) -> &mut [u8];
 
     /// Resize a vector to a specific size without initializing its data. This is a shortcut for:

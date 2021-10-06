@@ -11,7 +11,7 @@ use endian_trait::Endian;
 /// Examples:
 /// ```no_run
 /// # use endian_trait::Endian;
-/// # use proxmox::tools::io::WriteExt;
+/// # use proxmox_io::WriteExt;
 ///
 /// #[derive(Endian)]
 /// #[repr(C)]
@@ -47,7 +47,7 @@ pub trait WriteExt {
     ///
     /// ```no_run
     /// # use endian_trait::Endian;
-    /// use proxmox::tools::io::WriteExt;
+    /// use proxmox_io::WriteExt;
     ///
     /// #[derive(Endian)]
     /// #[repr(C, packed)]
@@ -90,7 +90,7 @@ pub trait WriteExt {
     ///
     /// ```no_run
     /// # use endian_trait::Endian;
-    /// use proxmox::tools::io::WriteExt;
+    /// use proxmox_io::WriteExt;
     ///
     /// #[derive(Endian)]
     /// #[repr(C, packed)]
@@ -133,7 +133,7 @@ pub trait WriteExt {
     ///
     /// ```no_run
     /// # use endian_trait::Endian;
-    /// use proxmox::tools::io::WriteExt;
+    /// use proxmox_io::WriteExt;
     ///
     /// #[derive(Endian)]
     /// #[repr(C, packed)]

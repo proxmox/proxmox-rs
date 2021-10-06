@@ -5,6 +5,7 @@ CRATES = \
 	 proxmox-api-macro \
 	 proxmox-borrow \
 	 proxmox-http \
+	 proxmox-io \
 	 proxmox-lang \
 	 proxmox-sortable-macro \
 	 proxmox-tfa \

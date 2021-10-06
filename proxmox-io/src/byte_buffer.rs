@@ -5,7 +5,7 @@
 //! Example:
 //! ```
 //! # use std::io::Read;
-//! # use proxmox::tools::byte_buffer::ByteBuffer;
+//! # use proxmox_io::ByteBuffer;
 //! fn code<T: Read + ?Sized>(input: &mut T) -> std::io::Result<Box<[u8]>> {
 //!     let mut buffer = ByteBuffer::new();
 //!     let amount = buffer.read_from(input)?;
@@ -18,7 +18,7 @@
 
 use std::io::{Read, Result};
 
-use crate::tools::vec;
+use crate::vec;
 
 #[cfg(feature = "tokio")]
 use tokio::io::{AsyncRead, AsyncReadExt};
@@ -66,7 +66,7 @@ impl ByteBuffer {
     ///
     /// Example:
     /// ```
-    /// # use proxmox::tools::byte_buffer::ByteBuffer;
+    /// # use proxmox_io::ByteBuffer;
     /// let mut buf = ByteBuffer::new();
     /// buf.get_free_mut_slice()[..1].copy_from_slice(&[1u8]);
     /// buf.add_size(1);
@@ -74,7 +74,7 @@ impl ByteBuffer {
     ///
     /// This code will panic:
     /// ```should_panic
-    /// # use proxmox::tools::byte_buffer::ByteBuffer;
+    /// # use proxmox_io::ByteBuffer;
     /// let mut buf = ByteBuffer::with_capacity(128);
     /// buf.add_size(256);
     /// ```
@@ -101,7 +101,7 @@ impl ByteBuffer {
     ///
     /// Example:
     /// ```
-    /// # use proxmox::tools::byte_buffer::ByteBuffer;
+    /// # use proxmox_io::ByteBuffer;
     /// let mut buf = ByteBuffer::new();
     /// buf.get_free_mut_slice()[..2].copy_from_slice(&[1u8, 2u8]);
     /// buf.add_size(2);
@@ -126,7 +126,7 @@ impl ByteBuffer {
     ///
     /// Example:
     /// ```
-    /// # use proxmox::tools::byte_buffer::ByteBuffer;
+    /// # use proxmox_io::ByteBuffer;
     /// let mut buf = ByteBuffer::new();
     /// buf.get_free_mut_slice()[..2].copy_from_slice(&[1u8, 2u8]);
     /// buf.add_size(2);
@@ -155,7 +155,7 @@ impl ByteBuffer {
     /// Example:
     /// ```
     /// # use std::io;
-    /// # use proxmox::tools::byte_buffer::ByteBuffer;
+    /// # use proxmox_io::ByteBuffer;
     /// fn code<R: io::Read>(mut reader: R) -> io::Result<()> {
     ///     let mut buf = ByteBuffer::new();
     ///     let res = buf.read_from(&mut reader)?;
@@ -201,7 +201,7 @@ impl std::ops::DerefMut for ByteBuffer {
 
 #[cfg(test)]
 mod test {
-    use crate::tools::byte_buffer::ByteBuffer;
+    use super::ByteBuffer;
 
     #[test]
     fn test1() {

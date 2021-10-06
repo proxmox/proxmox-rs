@@ -5,7 +5,7 @@ use std::mem;
 
 use endian_trait::Endian;
 
-use crate::tools::vec::{self, ByteVecExt};
+use crate::vec::{self, ByteVecExt};
 
 /// Adds some additional related functionality for types implementing [`Read`](std::io::Read).
 ///
@@ -14,7 +14,7 @@ use crate::tools::vec::{self, ByteVecExt};
 ///
 /// Examples:
 /// ```no_run
-/// use proxmox::tools::io::ReadExt;
+/// use proxmox_io::ReadExt;
 ///
 /// # fn code() -> std::io::Result<()> {
 /// let mut file = std::fs::File::open("some.data")?;
@@ -33,7 +33,7 @@ use crate::tools::vec::{self, ByteVecExt};
 ///
 /// ```no_run
 /// # use endian_trait::Endian;
-/// # use proxmox::tools::io::ReadExt;
+/// # use proxmox_io::ReadExt;
 ///
 /// #[derive(Endian)]
 /// #[repr(C)]
@@ -63,7 +63,7 @@ pub trait ReadExt {
     ///
     /// With this trait, we just use:
     /// ```no_run
-    /// use proxmox::tools::io::ReadExt;
+    /// use proxmox_io::ReadExt;
     /// # fn code(mut reader: std::fs::File, len: usize) -> std::io::Result<()> {
     /// let data = reader.read_exact_allocated(len)?;
     /// # Ok(())
@@ -87,7 +87,7 @@ pub trait ReadExt {
     ///
     /// ```no_run
     /// # use endian_trait::Endian;
-    /// use proxmox::tools::io::ReadExt;
+    /// use proxmox_io::ReadExt;
     ///
     /// #[derive(Endian)]
     /// #[repr(C, packed)]
@@ -124,7 +124,7 @@ pub trait ReadExt {
     ///
     /// ```no_run
     /// # use endian_trait::Endian;
-    /// use proxmox::tools::io::ReadExt;
+    /// use proxmox_io::ReadExt;
     ///
     /// #[derive(Endian)]
     /// #[repr(C, packed)]
@@ -161,7 +161,7 @@ pub trait ReadExt {
     ///
     /// ```no_run
     /// # use endian_trait::Endian;
-    /// use proxmox::tools::io::ReadExt;
+    /// use proxmox_io::ReadExt;
     ///
     /// #[derive(Endian)]
     /// #[repr(C, packed)]
@@ -194,8 +194,8 @@ pub trait ReadExt {
     /// immediately on all values.
     ///
     /// ```
-    /// # use proxmox::tools::vec;
-    /// use proxmox::tools::io::ReadExt;
+    /// # use proxmox_io::vec;
+    /// use proxmox_io::ReadExt;
     ///
     /// #[repr(C)]
     /// struct Data {
@@ -204,7 +204,7 @@ pub trait ReadExt {
     /// }
     ///
     /// # let mut input = [0u8; 4096];
-    /// # use proxmox::tools::io::WriteExt;
+    /// # use proxmox_io::WriteExt;
     /// # let mut writer = &mut input[..];
     /// # unsafe { writer.write_host_value(32u64).unwrap() };
     /// # let mut file = &input[..];
