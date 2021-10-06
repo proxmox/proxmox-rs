@@ -8,7 +8,6 @@ use lazy_static::lazy_static;
 pub mod as_any;
 pub mod byte_buffer;
 pub mod common_regex;
-pub mod constnamedbitmap;
 pub mod email;
 pub mod fd;
 pub mod fs;
@@ -21,65 +20,6 @@ pub mod systemd;
 
 #[doc(inline)]
 pub use as_any::AsAny;
-
-/// Evaluates to the offset (in bytes) of a given member within a struct
-#[macro_export]
-macro_rules! offsetof {
-    ($ty:ty, $field:ident) => {
-        unsafe { &(*(std::ptr::null::<$ty>())).$field as *const _ as usize }
-    };
-}
-
-/// Statically assert the size of a type at compile time.
-///
-/// This should compile:
-/// ```
-/// # use proxmox::static_assert_size;
-/// #[repr(C)]
-/// struct Stuff {
-///     value: [u8; 32]
-/// }
-/// static_assert_size!(Stuff, 32);
-/// ```
-///
-/// This should fail to compile:
-/// ```compile_fail
-/// # use proxmox::static_assert_size;
-/// #[repr(C)]
-/// struct Stuff {
-///     value: [u8; 32]
-/// }
-/// static_assert_size!(Stuff, 128);
-/// ```
-#[macro_export]
-macro_rules! static_assert_size {
-    ($ty:ty, $size:expr) => {
-        const _: fn() -> () = || {
-            let _ = ::std::mem::transmute::<[u8; $size], $ty>;
-        };
-    };
-}
-
-/// Macro to write error-handling blocks (like perl eval {})
-///
-/// #### Example:
-/// ```
-/// # use proxmox::try_block;
-/// # use anyhow::*;
-/// # let some_condition = false;
-/// let result = try_block!({
-///     if (some_condition) {
-///         bail!("some error");
-///     }
-///     Ok(())
-/// })
-/// .map_err(|e| format_err!("my try block returned an error - {}", e));
-/// ```
-
-#[macro_export]
-macro_rules! try_block {
-    { $($token:tt)* } => {{ (|| -> Result<_,_> { $($token)* })() }}
-}
 
 const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 

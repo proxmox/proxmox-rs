@@ -4,6 +4,7 @@ members = [
     "proxmox-api-macro",
     "proxmox-borrow",
     "proxmox-http",
+    "proxmox-lang",
     "proxmox-sortable-macro",
     "proxmox-tfa",
     "proxmox-time",

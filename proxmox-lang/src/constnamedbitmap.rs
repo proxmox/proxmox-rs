@@ -4,7 +4,7 @@
 ///
 /// Example:
 /// ```
-/// # use proxmox::constnamedbitmap;
+/// # use proxmox_lang::constnamedbitmap;
 ///
 /// constnamedbitmap! {
 ///     /// A list of privileges
