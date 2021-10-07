@@ -18,18 +18,18 @@
 //!     ...
 //! ```
 
-use anyhow::*;
-
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::VecDeque;
 
+use anyhow::{bail, format_err, Error};
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use serde_json::{json, Value};
 
-use super::schema::*;
-use crate::try_block;
+use proxmox_lang::try_block;
+use proxmox_schema::format::{dump_properties, wrap_text, ParameterDisplayStyle};
+use proxmox_schema::*;
 
 /// Associates a section type name with a `Schema`.
 pub struct SectionConfigPlugin {
@@ -180,7 +180,7 @@ impl SectionConfigData {
         let mut list: Vec<Value> = vec![];
 
         let digest: Value = match digest {
-            Some(v) => crate::tools::digest_to_hex(v).into(),
+            Some(v) => hex::encode(v).into(),
             None => Value::Null,
         };
 
@@ -294,62 +294,64 @@ impl SectionConfig {
     /// plugins. Please note that `filename` is only used to improve
     /// error messages.
     pub fn write(&self, filename: &str, config: &SectionConfigData) -> Result<String, Error> {
-        try_block!({
-            let mut list = VecDeque::new();
+        self.write_do(config)
+            .map_err(|e: Error| format_err!("writing '{}' failed: {}", filename, e))
+    }
 
-            let mut done = HashSet::new();
+    fn write_do(&self, config: &SectionConfigData) -> Result<String, Error> {
+        let mut list = VecDeque::new();
 
-            for section_id in &config.order {
-                if config.sections.get(section_id) == None {
-                    continue;
-                };
-                list.push_back(section_id);
-                done.insert(section_id);
+        let mut done = HashSet::new();
+
+        for section_id in &config.order {
+            if config.sections.get(section_id) == None {
+                continue;
+            };
+            list.push_back(section_id);
+            done.insert(section_id);
+        }
+
+        for section_id in config.sections.keys() {
+            if done.contains(section_id) {
+                continue;
+            };
+            list.push_back(section_id);
+        }
+
+        let mut raw = String::new();
+
+        for section_id in list {
+            let (type_name, section_config) = config.sections.get(section_id).unwrap();
+            let plugin = self.plugins.get(type_name).unwrap();
+
+            let id_schema = plugin.get_id_schema().unwrap_or(self.id_schema);
+            if let Err(err) = parse_simple_value(&section_id, &id_schema) {
+                bail!("syntax error in section identifier: {}", err.to_string());
+            }
+            if section_id.chars().any(|c| c.is_control()) {
+                bail!("detected unexpected control character in section ID.");
+            }
+            if let Err(err) = verify_json_object(section_config, plugin.properties) {
+                bail!("verify section '{}' failed - {}", section_id, err);
             }
 
-            for section_id in config.sections.keys() {
-                if done.contains(section_id) {
-                    continue;
-                };
-                list.push_back(section_id);
+            if !raw.is_empty() {
+                raw += "\n"
             }
 
-            let mut raw = String::new();
+            raw += &(self.format_section_header)(type_name, section_id, section_config)?;
 
-            for section_id in list {
-                let (type_name, section_config) = config.sections.get(section_id).unwrap();
-                let plugin = self.plugins.get(type_name).unwrap();
-
-                let id_schema = plugin.get_id_schema().unwrap_or(self.id_schema);
-                if let Err(err) = parse_simple_value(&section_id, &id_schema) {
-                    bail!("syntax error in section identifier: {}", err.to_string());
-                }
-                if section_id.chars().any(|c| c.is_control()) {
-                    bail!("detected unexpected control character in section ID.");
-                }
-                if let Err(err) = verify_json_object(section_config, plugin.properties) {
-                    bail!("verify section '{}' failed - {}", section_id, err);
-                }
-
-                if !raw.is_empty() {
-                    raw += "\n"
-                }
-
-                raw += &(self.format_section_header)(type_name, section_id, section_config)?;
-
-                for (key, value) in section_config.as_object().unwrap() {
-                    if let Some(id_property) = &plugin.id_property {
-                        if id_property == key {
-                            continue; // skip writing out id properties, they are in the section header
-                        }
+            for (key, value) in section_config.as_object().unwrap() {
+                if let Some(id_property) = &plugin.id_property {
+                    if id_property == key {
+                        continue; // skip writing out id properties, they are in the section header
                     }
-                    raw += &(self.format_section_content)(type_name, section_id, key, value)?;
                 }
+                raw += &(self.format_section_content)(type_name, section_id, key, value)?;
             }
+        }
 
-            Ok(raw)
-        })
-        .map_err(|e: Error| format_err!("writing '{}' failed: {}", filename, e))
+        Ok(raw)
     }
 
     /// Parse configuration data.

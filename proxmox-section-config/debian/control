@@ -1,0 +1,42 @@
+Source: rust-proxmox-section-config
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 24),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-hex-0.4+default-dev <!nocheck>,
+ librust-proxmox-lang-1+default-dev <!nocheck>,
+ librust-proxmox-schema-1+default-dev <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.5.1
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Rules-Requires-Root: no
+
+Package: librust-proxmox-section-config-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-hex-0.4+default-dev,
+ librust-proxmox-lang-1+default-dev,
+ librust-proxmox-schema-1+default-dev,
+ librust-serde-1+default-dev,
+ librust-serde-json-1+default-dev
+Provides:
+ librust-proxmox-section-config+default-dev (= ${binary:Version}),
+ librust-proxmox-section-config-1-dev (= ${binary:Version}),
+ librust-proxmox-section-config-1+default-dev (= ${binary:Version}),
+ librust-proxmox-section-config-1.0-dev (= ${binary:Version}),
+ librust-proxmox-section-config-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-section-config-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-section-config-1.0.0+default-dev (= ${binary:Version})
+Description: Proxmox schema based section config format parsing - Rust source code
+ This package contains the source for the Rust proxmox-section-config crate,
+ packaged by debcargo for use with cargo and dh-cargo.
