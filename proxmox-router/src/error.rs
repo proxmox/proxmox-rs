@@ -28,8 +28,8 @@ impl fmt::Display for HttpError {
 #[macro_export]
 macro_rules! http_err {
     ($status:ident, $($fmt:tt)+) => {{
-        ::anyhow::Error::from($crate::api::error::HttpError::new(
-            $crate::api::error::StatusCode::$status,
+        ::anyhow::Error::from($crate::HttpError::new(
+            $crate::error::StatusCode::$status,
             format!($($fmt)+)
         ))
     }};

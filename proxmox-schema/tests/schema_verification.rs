@@ -1,7 +1,7 @@
 use anyhow::{bail, Error};
 use serde_json::{json, Value};
 
-use crate::api::schema::*;
+use proxmox_schema::*;
 
 static STRING_SCHEMA: Schema = StringSchema::new("A test string").schema();
 
@@ -46,7 +46,7 @@ fn compare_error(
         None => bail!("unable to downcast error: {}", err),
     };
 
-    let result = crate::try_block!({
+    let result = (move || {
         let errors = err.errors();
 
         if errors.len() != expected.len() {
@@ -64,7 +64,7 @@ fn compare_error(
         }
 
         Ok(())
-    });
+    })();
 
     if result.is_err() {
         println!("GOT: {:?}", err);

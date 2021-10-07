@@ -3,8 +3,9 @@
 
 #![allow(dead_code)]
 
-use proxmox::api::schema::{self, ApiType, EnumEntry};
 use proxmox_api_macro::api;
+use proxmox_schema as schema;
+use proxmox_schema::{ApiType, EnumEntry};
 
 use anyhow::Error;
 use serde::Deserialize;
@@ -23,13 +24,12 @@ pub struct OkString(String);
 
 #[test]
 fn ok_string() {
-    const TEST_SCHEMA: ::proxmox::api::schema::Schema =
-        ::proxmox::api::schema::StringSchema::new("A string")
-            .format(&schema::ApiStringFormat::Enum(&[
-                EnumEntry::new("ok", "Ok"),
-                EnumEntry::new("not-ok", "Not OK"),
-            ]))
-            .schema();
+    const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::StringSchema::new("A string")
+        .format(&schema::ApiStringFormat::Enum(&[
+            EnumEntry::new("ok", "Ok"),
+            EnumEntry::new("not-ok", "Not OK"),
+        ]))
+        .schema();
     assert_eq!(TEST_SCHEMA, OkString::API_SCHEMA);
 }
 
@@ -45,26 +45,23 @@ pub struct TestStruct {
 
 #[test]
 fn test_struct() {
-    pub const TEST_SCHEMA: ::proxmox::api::schema::Schema =
-        ::proxmox::api::schema::ObjectSchema::new(
-            "An example of a simple struct type.",
-            &[
-                (
-                    "another",
-                    true,
-                    &::proxmox::api::schema::StringSchema::new(
-                        "An optional auto-derived value for testing:",
-                    )
+    pub const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::ObjectSchema::new(
+        "An example of a simple struct type.",
+        &[
+            (
+                "another",
+                true,
+                &::proxmox_schema::StringSchema::new("An optional auto-derived value for testing:")
                     .schema(),
-                ),
-                (
-                    "test_string",
-                    false,
-                    &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
-                ),
-            ],
-        )
-        .schema();
+            ),
+            (
+                "test_string",
+                false,
+                &::proxmox_schema::StringSchema::new("A test string.").schema(),
+            ),
+        ],
+    )
+    .schema();
 
     assert_eq!(TEST_SCHEMA, TestStruct::API_SCHEMA);
 }
@@ -84,21 +81,19 @@ pub struct RenamedStruct {
 
 #[test]
 fn renamed_struct() {
-    const TEST_SCHEMA: ::proxmox::api::schema::Schema = ::proxmox::api::schema::ObjectSchema::new(
+    const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::ObjectSchema::new(
         "An example of a struct with renamed fields.",
         &[
             (
                 "SomeOther",
                 true,
-                &::proxmox::api::schema::StringSchema::new(
-                    "An optional auto-derived value for testing:",
-                )
-                .schema(),
+                &::proxmox_schema::StringSchema::new("An optional auto-derived value for testing:")
+                    .schema(),
             ),
             (
                 "test-string",
                 false,
-                &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
+                &::proxmox_schema::StringSchema::new("A test string.").schema(),
             ),
         ],
     )
@@ -123,10 +118,10 @@ pub enum Selection {
 
 #[test]
 fn selection_test() {
-    const TEST_SCHEMA: ::proxmox::api::schema::Schema = ::proxmox::api::schema::StringSchema::new(
+    const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::StringSchema::new(
         "A selection of either \'onekind\', \'another-kind\' or \'selection-number-three\'.",
     )
-    .format(&::proxmox::api::schema::ApiStringFormat::Enum(&[
+    .format(&::proxmox_schema::ApiStringFormat::Enum(&[
         EnumEntry::new("onekind", "The first kind."),
         EnumEntry::new("another-kind", "Some other kind."),
         EnumEntry::new("selection-number-three", "And yet another."),
@@ -157,9 +152,9 @@ pub fn string_check(arg: Value, selection: Selection) -> Result<bool, Error> {
 
 #[test]
 fn string_check_schema_test() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Sync(&api_function_string_check),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Sync(&api_function_string_check),
+        &::proxmox_schema::ObjectSchema::new(
             "Check a string.",
             &[
                 ("arg", false, &OkString::API_SCHEMA),
@@ -167,9 +162,9 @@ fn string_check_schema_test() {
             ],
         ),
     )
-    .returns(::proxmox::api::router::ReturnType::new(
+    .returns(::proxmox_schema::ReturnType::new(
         true,
-        &::proxmox::api::schema::BooleanSchema::new("Whether the string was \"ok\".").schema(),
+        &::proxmox_schema::BooleanSchema::new("Whether the string was \"ok\".").schema(),
     ))
     .protected(false);
 

@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
-use proxmox::api::api;
-use proxmox::api::schema::{ApiType, Updater, UpdaterType};
+use proxmox_schema::{api, ApiType, Updater, UpdaterType};
 
 // Helpers for type checks:
 struct AssertTypeEq<T>(T);
@@ -41,23 +40,22 @@ pub struct Simple {
 
 #[test]
 fn test_simple() {
-    pub const TEST_SCHEMA: ::proxmox::api::schema::Schema =
-        ::proxmox::api::schema::ObjectSchema::new(
-            "An example of a simple struct type.",
-            &[
-                (
-                    "one-field",
-                    true,
-                    &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
-                ),
-                (
-                    "opt",
-                    true,
-                    &::proxmox::api::schema::StringSchema::new("Another test value.").schema(),
-                ),
-            ],
-        )
-        .schema();
+    pub const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::ObjectSchema::new(
+        "An example of a simple struct type.",
+        &[
+            (
+                "one-field",
+                true,
+                &::proxmox_schema::StringSchema::new("A test string.").schema(),
+            ),
+            (
+                "opt",
+                true,
+                &::proxmox_schema::StringSchema::new("Another test value.").schema(),
+            ),
+        ],
+    )
+    .schema();
 
     assert_eq!(TEST_SCHEMA, SimpleUpdater::API_SCHEMA);
 }
@@ -103,25 +101,24 @@ pub struct SuperComplex {
 }
 #[test]
 fn test_super_complex() {
-    pub const TEST_SCHEMA: ::proxmox::api::schema::Schema =
-        ::proxmox::api::schema::ObjectSchema::new(
-            "One of the baaaad cases.",
-            &[
-                ("custom", true, &<Option<Custom> as ApiType>::API_SCHEMA),
-                (
-                    "extra",
-                    true,
-                    &::proxmox::api::schema::StringSchema::new("An extra field.").schema(),
-                ),
-                (
-                    "simple",
-                    true,
-                    //&<<Simple as UpdaterType>::Updater as ApiType>::API_SCHEMA,
-                    &SimpleUpdater::API_SCHEMA,
-                ),
-            ],
-        )
-        .schema();
+    pub const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::ObjectSchema::new(
+        "One of the baaaad cases.",
+        &[
+            ("custom", true, &<Option<Custom> as ApiType>::API_SCHEMA),
+            (
+                "extra",
+                true,
+                &::proxmox_schema::StringSchema::new("An extra field.").schema(),
+            ),
+            (
+                "simple",
+                true,
+                //&<<Simple as UpdaterType>::Updater as ApiType>::API_SCHEMA,
+                &SimpleUpdater::API_SCHEMA,
+            ),
+        ],
+    )
+    .schema();
 
     assert_eq!(TEST_SCHEMA, SuperComplexUpdater::API_SCHEMA);
 }

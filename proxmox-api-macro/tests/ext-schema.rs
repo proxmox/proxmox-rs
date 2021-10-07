@@ -1,8 +1,9 @@
 //! This should test the usage of "external" schemas. If a property is declared with a path instead
 //! of an object, we expect the path to lead to a schema.
 
-use proxmox::api::{schema, RpcEnvironment};
 use proxmox_api_macro::api;
+use proxmox_router::RpcEnvironment;
+use proxmox_schema as schema;
 
 use anyhow::Error;
 use serde_json::{json, Value};
@@ -27,9 +28,9 @@ pub fn get_archive(archive_name: String) {
 
 #[test]
 fn get_archive_schema_check() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Sync(&api_function_get_archive),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Sync(&api_function_get_archive),
+        &::proxmox_schema::ObjectSchema::new(
             "Get an archive.",
             &[("archive-name", false, &NAME_SCHEMA)],
         ),
@@ -56,9 +57,9 @@ pub fn get_archive_2(param: Value, rpcenv: &mut dyn RpcEnvironment) -> Result<Va
 
 #[test]
 fn get_archive_2_schema_check() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Sync(&api_function_get_archive_2),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Sync(&api_function_get_archive_2),
+        &::proxmox_schema::ObjectSchema::new(
             "Get an archive.",
             &[("archive-name", false, &NAME_SCHEMA)],
         ),
@@ -88,14 +89,14 @@ pub fn get_data(param: Value) -> Result<(), Error> {
 
 #[test]
 fn get_data_schema_test() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Sync(&api_function_get_data),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Sync(&api_function_get_data),
+        &::proxmox_schema::ObjectSchema::new(
             "Get data.",
             &[(
                 "data",
                 false,
-                &::proxmox::api::schema::ArraySchema::new("The data", &NAME_SCHEMA).schema(),
+                &::proxmox_schema::ArraySchema::new("The data", &NAME_SCHEMA).schema(),
             )],
         ),
     )

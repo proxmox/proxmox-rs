@@ -3,7 +3,7 @@ use proxmox_api_macro::api;
 use anyhow::Error;
 use serde_json::{json, Value};
 
-use proxmox::api::Permission;
+use proxmox_router::Permission;
 
 #[api(
     input: {
@@ -59,15 +59,15 @@ pub fn create_ticket(param: Value) -> Result<Value, Error> {
 
 #[test]
 fn create_ticket_schema_check() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Sync(&api_function_create_ticket),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Sync(&api_function_create_ticket),
+        &::proxmox_schema::ObjectSchema::new(
             "Create or verify authentication ticket.",
             &[
                 (
                     "password",
                     false,
-                    &::proxmox::api::schema::StringSchema::new(
+                    &::proxmox_schema::StringSchema::new(
                         "The secret password or a valid ticket.",
                     )
                     .schema(),
@@ -75,22 +75,22 @@ fn create_ticket_schema_check() {
                 (
                     "username",
                     false,
-                    &::proxmox::api::schema::StringSchema::new("User name")
+                    &::proxmox_schema::StringSchema::new("User name")
                         .max_length(64)
                         .schema(),
                 ),
             ],
         ),
     )
-    .returns(::proxmox::api::router::ReturnType::new(
+    .returns(::proxmox_schema::ReturnType::new(
         false,
-        &::proxmox::api::schema::ObjectSchema::new(
+        &::proxmox_schema::ObjectSchema::new(
             "A ticket.",
             &[
                 (
                     "CSRFPreventionToken",
                     false,
-                    &::proxmox::api::schema::StringSchema::new(
+                    &::proxmox_schema::StringSchema::new(
                         "Cross Site Request Forgerty Prevention Token.",
                     )
                     .schema(),
@@ -98,12 +98,12 @@ fn create_ticket_schema_check() {
                 (
                     "ticket",
                     false,
-                    &::proxmox::api::schema::StringSchema::new("Auth ticket.").schema(),
+                    &::proxmox_schema::StringSchema::new("Auth ticket.").schema(),
                 ),
                 (
                     "username",
                     false,
-                    &::proxmox::api::schema::StringSchema::new("User name.").schema(),
+                    &::proxmox_schema::StringSchema::new("User name.").schema(),
                 ),
             ],
         )
@@ -162,15 +162,15 @@ pub fn create_ticket_direct(username: String, password: String) -> Result<&'stat
 
 #[test]
 fn create_ticket_direct_schema_check() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Sync(&api_function_create_ticket_direct),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Sync(&api_function_create_ticket_direct),
+        &::proxmox_schema::ObjectSchema::new(
             "Create or verify authentication ticket.",
             &[
                 (
                     "password",
                     false,
-                    &::proxmox::api::schema::StringSchema::new(
+                    &::proxmox_schema::StringSchema::new(
                         "The secret password or a valid ticket.",
                     )
                     .schema(),
@@ -178,22 +178,22 @@ fn create_ticket_direct_schema_check() {
                 (
                     "username",
                     false,
-                    &::proxmox::api::schema::StringSchema::new("User name")
+                    &::proxmox_schema::StringSchema::new("User name")
                         .max_length(64)
                         .schema(),
                 ),
             ],
         ),
     )
-    .returns(::proxmox::api::router::ReturnType::new(
+    .returns(::proxmox_schema::ReturnType::new(
         false,
-        &::proxmox::api::schema::ObjectSchema::new(
+        &::proxmox_schema::ObjectSchema::new(
             "A ticket.",
             &[
                 (
                     "CSRFPreventionToken",
                     false,
-                    &::proxmox::api::schema::StringSchema::new(
+                    &::proxmox_schema::StringSchema::new(
                         "Cross Site Request Forgerty Prevention Token.",
                     )
                     .schema(),
@@ -201,12 +201,12 @@ fn create_ticket_direct_schema_check() {
                 (
                     "ticket",
                     false,
-                    &::proxmox::api::schema::StringSchema::new("Auth ticket.").schema(),
+                    &::proxmox_schema::StringSchema::new("Auth ticket.").schema(),
                 ),
                 (
                     "username",
                     false,
-                    &::proxmox::api::schema::StringSchema::new("User name.").schema(),
+                    &::proxmox_schema::StringSchema::new("User name.").schema(),
                 ),
             ],
         )
@@ -258,14 +258,14 @@ pub fn func_with_option(verbose: Option<bool>) -> Result<(), Error> {
 
 #[test]
 fn func_with_option_schema_check() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Sync(&api_function_func_with_option),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Sync(&api_function_func_with_option),
+        &::proxmox_schema::ObjectSchema::new(
             "Optional parameter",
             &[(
                 "verbose",
                 true,
-                &::proxmox::api::schema::BooleanSchema::new("Verbose output.").schema(),
+                &::proxmox_schema::BooleanSchema::new("Verbose output.").schema(),
             )],
         ),
     )
@@ -275,7 +275,7 @@ fn func_with_option_schema_check() {
 }
 
 struct RpcEnv;
-impl proxmox::api::RpcEnvironment for RpcEnv {
+impl proxmox_router::RpcEnvironment for RpcEnv {
     fn result_attrib_mut(&mut self) -> &mut Value {
         panic!("result_attrib_mut called");
     }
@@ -285,7 +285,7 @@ impl proxmox::api::RpcEnvironment for RpcEnv {
     }
 
     /// The environment type
-    fn env_type(&self) -> proxmox::api::RpcEnvironmentType {
+    fn env_type(&self) -> proxmox_router::RpcEnvironmentType {
         panic!("env_type called");
     }
 

@@ -34,14 +34,14 @@ pub async fn number(num: u32) -> Result<u32, Error> {
 
 #[test]
 fn number_schema_check() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Async(&api_function_number),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Async(&api_function_number),
+        &::proxmox_schema::ObjectSchema::new(
             "Return the number...",
             &[(
                 "num",
                 false,
-                &::proxmox::api::schema::IntegerSchema::new("The version to upgrade to")
+                &::proxmox_schema::IntegerSchema::new("The version to upgrade to")
                     .minimum(0)
                     .maximum(0xffffffff)
                     .schema(),
@@ -75,20 +75,20 @@ pub async fn more_async_params(param: Value) -> Result<(), Error> {
 
 #[test]
 fn more_async_params_schema_check() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Async(&api_function_more_async_params),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Async(&api_function_more_async_params),
+        &::proxmox_schema::ObjectSchema::new(
             "Return the number...",
             &[
                 (
                     "bar",
                     false,
-                    &::proxmox::api::schema::StringSchema::new("The great Bar").schema(),
+                    &::proxmox_schema::StringSchema::new("The great Bar").schema(),
                 ),
                 (
                     "foo",
                     false,
-                    &::proxmox::api::schema::StringSchema::new("The great Foo").schema(),
+                    &::proxmox_schema::StringSchema::new("The great Foo").schema(),
                 ),
             ],
         ),
@@ -116,14 +116,14 @@ pub async fn keyword_named_parameters(r#type: String) -> Result<(), Error> {
 
 #[test]
 fn keyword_named_parameters_check() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new(
-        &::proxmox::api::ApiHandler::Async(&api_function_keyword_named_parameters),
-        &::proxmox::api::schema::ObjectSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new(
+        &::proxmox_router::ApiHandler::Async(&api_function_keyword_named_parameters),
+        &::proxmox_schema::ObjectSchema::new(
             "Returns nothing.",
             &[(
                 "type",
                 false,
-                &::proxmox::api::schema::StringSchema::new("The great Foo").schema(),
+                &::proxmox_schema::StringSchema::new("The great Foo").schema(),
             )],
         ),
     )

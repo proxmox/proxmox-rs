@@ -12,6 +12,10 @@
 //! - Ability to create interactive commands (using ``rustyline``)
 //! - Supports complex/nested commands
 
+use std::collections::HashMap;
+
+use crate::ApiMethod;
+
 mod environment;
 pub use environment::*;
 
@@ -35,10 +39,6 @@ pub use command::*;
 
 mod readline;
 pub use readline::*;
-
-use std::collections::HashMap;
-
-use crate::api::ApiMethod;
 
 /// Completion function for single parameters.
 ///

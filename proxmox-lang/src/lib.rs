@@ -90,3 +90,22 @@ macro_rules! offsetof {
         unsafe { &(*(std::ptr::null::<$ty>())).$field as *const _ as usize }
     };
 }
+
+/// Shortcut for generating an `&'static CStr`.
+///
+/// This takes a *string* (*not* a *byte-string*), appends a terminating zero, and calls
+/// `CStr::from_bytes_with_nul_unchecked`.
+///
+/// Shortcut for:
+/// ```no_run
+/// let bytes = concat!("THE TEXT", "\0");
+/// unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(bytes.as_bytes()) }
+/// # ;
+/// ```
+#[macro_export]
+macro_rules! c_str {
+    ($data:expr) => {{
+        let bytes = concat!($data, "\0");
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(bytes.as_bytes()) }
+    }};
+}

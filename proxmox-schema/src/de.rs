@@ -5,21 +5,21 @@ use std::fmt;
 use serde::de::{self, IntoDeserializer, Visitor};
 use serde_json::Value;
 
-use crate::api::schema::{ObjectSchemaType, Schema};
+use crate::{ObjectSchemaType, Schema};
 
 pub struct Error {
-    inner: anyhow::Error,
+    msg: String,
 }
 
 impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(&self.inner, f)
+        fmt::Debug::fmt(&self.msg, f)
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&self.inner, f)
+        fmt::Display::fmt(&self.msg, f)
     }
 }
 
@@ -28,15 +28,15 @@ impl std::error::Error for Error {}
 impl serde::de::Error for Error {
     fn custom<T: fmt::Display>(msg: T) -> Self {
         Self {
-            inner: anyhow::format_err!("{}", msg),
+            msg: msg.to_string(),
         }
     }
 }
 
 impl From<serde_json::Error> for Error {
-    fn from(inner: serde_json::Error) -> Self {
+    fn from(error: serde_json::Error) -> Self {
         Error {
-            inner: inner.into(),
+            msg: error.to_string(),
         }
     }
 }
@@ -237,7 +237,7 @@ where
 fn test_extraction() {
     use serde::Deserialize;
 
-    use crate::api::schema::{ObjectSchema, StringSchema};
+    use crate::{ObjectSchema, StringSchema};
 
     #[derive(Deserialize)]
     struct Foo {

@@ -8,9 +8,8 @@ use std::fmt;
 
 use anyhow::{bail, format_err, Error};
 use serde_json::{json, Value};
-use url::form_urlencoded;
 
-use crate::api::const_regex::ConstRegexPattern;
+use crate::ConstRegexPattern;
 
 /// Error type for schema validation
 ///
@@ -50,13 +49,15 @@ impl ParameterError {
     pub fn add_errors(&mut self, prefix: &str, err: Error) {
         if let Some(param_err) = err.downcast_ref::<ParameterError>() {
             for (sub_key, sub_err) in param_err.errors().iter() {
-                self.push(format!("{}/{}", prefix, sub_key), format_err!("{}", sub_err));
+                self.push(
+                    format!("{}/{}", prefix, sub_key),
+                    format_err!("{}", sub_err),
+                );
             }
         } else {
             self.push(prefix.to_string(), err);
         }
     }
-
 }
 
 impl fmt::Display for ParameterError {
@@ -623,8 +624,8 @@ impl Iterator for ObjectPropertyIterator {
 /// `schema()` method to convert them into a `Schema`.
 ///
 /// ```
-/// # use proxmox::api::{*, schema::*};
-/// #
+/// use proxmox_schema::{Schema, BooleanSchema, IntegerSchema, ObjectSchema};
+///
 /// const SIMPLE_OBJECT: Schema = ObjectSchema::new(
 ///     "A very simple object with 2 properties",
 ///     &[ // this arrays needs to be storted by name!
@@ -684,7 +685,8 @@ impl EnumEntry {
 /// Simple list all possible values.
 ///
 /// ```
-/// # use proxmox::api::{*, schema::*};
+/// use proxmox_schema::{ApiStringFormat, EnumEntry};
+///
 /// const format: ApiStringFormat = ApiStringFormat::Enum(&[
 ///     EnumEntry::new("vm", "A guest VM run via qemu"),
 ///     EnumEntry::new("ct", "A guest container run via lxc"),
@@ -696,8 +698,8 @@ impl EnumEntry {
 /// Use a regular expression to describe valid strings.
 ///
 /// ```
-/// # use proxmox::api::{*, schema::*};
-/// # use proxmox::const_regex;
+/// use proxmox_schema::{const_regex, ApiStringFormat};
+///
 /// const_regex! {
 ///     pub SHA256_HEX_REGEX = r"^[a-f0-9]{64}$";
 /// }
@@ -721,8 +723,9 @@ impl EnumEntry {
 /// with simple properties (no nesting).
 ///
 /// ```
-/// # use proxmox::api::{*, schema::*};
-/// #
+/// use proxmox_schema::{ApiStringFormat, ArraySchema, IntegerSchema, Schema, StringSchema};
+/// use proxmox_schema::{parse_simple_value, parse_property_string};
+///
 /// const PRODUCT_LIST_SCHEMA: Schema =
 ///             ArraySchema::new("Product List.", &IntegerSchema::new("Product ID").schema())
 ///                 .min_length(1)
@@ -961,7 +964,9 @@ fn do_parse_parameter_strings(
                                 Err(err) => errors.push(key.into(), err),
                             }
                         }
-                        _ => errors.push(key.into(), format_err!("expected array - type missmatch")),
+                        _ => {
+                            errors.push(key.into(), format_err!("expected array - type missmatch"))
+                        }
                     }
                 }
                 _ => match parse_simple_value(value, prop_schema) {
@@ -992,14 +997,20 @@ fn do_parse_parameter_strings(
                 _ => errors.push(key.into(), format_err!("expected array - type missmatch")),
             }
         } else {
-            errors.push(key.into(), format_err!("schema does not allow additional properties."));
+            errors.push(
+                key.into(),
+                format_err!("schema does not allow additional properties."),
+            );
         }
     }
 
     if test_required && errors.is_empty() {
         for (name, optional, _prop_schema) in schema.properties() {
             if !(*optional) && params[name] == Value::Null {
-                errors.push(name.to_string(), format_err!("parameter is missing and it is not optional."));
+                errors.push(
+                    name.to_string(),
+                    format_err!("parameter is missing and it is not optional."),
+                );
             }
         }
     }
@@ -1009,21 +1020,6 @@ fn do_parse_parameter_strings(
     } else {
         Ok(params)
     }
-}
-
-/// Parse a `form_urlencoded` query string and verify with object schema
-/// - `test_required`: is set, checks if all required properties are
-///   present.
-pub fn parse_query_string<T: Into<ParameterSchema>>(
-    query: &str,
-    schema: T,
-    test_required: bool,
-) -> Result<Value, ParameterError> {
-    let param_list: Vec<(String, String)> = form_urlencoded::parse(query.as_bytes())
-        .into_owned()
-        .collect();
-
-    parse_parameter_strings(&param_list, schema.into(), test_required)
 }
 
 /// Verify JSON value with `schema`.
@@ -1103,10 +1099,7 @@ pub fn verify_json_array(data: &Value, schema: &ArraySchema) -> Result<(), Error
 }
 
 /// Verify JSON value using an `ObjectSchema`.
-pub fn verify_json_object(
-    data: &Value,
-    schema: &dyn ObjectSchemaType,
-) -> Result<(), Error> {
+pub fn verify_json_object(data: &Value, schema: &dyn ObjectSchemaType) -> Result<(), Error> {
     let map = match data {
         Value::Object(ref map) => map,
         Value::Array(_) => bail!("Expected object - got array."),
@@ -1128,13 +1121,19 @@ pub fn verify_json_object(
                 errors.add_errors(key, err);
             };
         } else if !additional_properties {
-            errors.push(key.to_string(), format_err!("schema does not allow additional properties."));
+            errors.push(
+                key.to_string(),
+                format_err!("schema does not allow additional properties."),
+            );
         }
     }
 
     for (name, optional, _prop_schema) in schema.properties() {
         if !(*optional) && data[name] == Value::Null {
-            errors.push(name.to_string(), format_err!("property is missing and it is not optional."));
+            errors.push(
+                name.to_string(),
+                format_err!("property is missing and it is not optional."),
+            );
         }
     }
 

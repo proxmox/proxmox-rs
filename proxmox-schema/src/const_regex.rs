@@ -30,8 +30,8 @@ impl std::ops::Deref for ConstRegexPattern {
 /// Macro to generate a ConstRegexPattern
 ///
 /// ```
-/// # use proxmox::const_regex;
-/// #
+/// use proxmox_schema::const_regex;
+///
 /// const_regex!{
 ///    FILE_EXTENSION_REGEX = r".*\.([a-zA-Z]+)$";
 ///    pub SHA256_HEX_REGEX = r"^[a-f0-9]{64}$";
@@ -43,11 +43,11 @@ macro_rules! const_regex {
         $(#[$attr:meta])*
         $vis:vis $name:ident = $regex:expr;
     )+) =>  { $(
-        $(#[$attr])* $vis const $name: $crate::api::const_regex::ConstRegexPattern =
-            $crate::api::const_regex::ConstRegexPattern {
+        $(#[$attr])* $vis const $name: $crate::ConstRegexPattern =
+            $crate::ConstRegexPattern {
                 regex_string: $regex,
                 regex_obj: (|| ->   &'static ::regex::Regex {
-                    ::lazy_static::lazy_static! {
+                    $crate::semver_exempt::lazy_static! {
                         static ref SCHEMA: ::regex::Regex = ::regex::Regex::new($regex).unwrap();
                     }
                     &SCHEMA

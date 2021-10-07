@@ -1,10 +1,11 @@
 use std::io::Write;
 
-use anyhow::*;
+use anyhow::{bail, Error};
 use serde_json::Value;
 use unicode_width::UnicodeWidthStr;
 
-use crate::api::schema::*;
+use proxmox_lang::c_str;
+use proxmox_schema::{ObjectSchemaType, Schema, SchemaPropertyEntry};
 
 /// allows to configure the default output fromat using environment vars
 pub const ENV_VAR_PROXMOX_OUTPUT_FORMAT: &str = "PROXMOX_OUTPUT_FORMAT";
@@ -201,6 +202,21 @@ impl ColumnConfig {
     }
 }
 
+/// Get the current size of the terminal (for stdout).
+/// # Safety
+///
+/// uses unsafe call to tty_ioctl, see man tty_ioctl(2).
+fn stdout_terminal_size() -> (usize, usize) {
+    let mut winsize = libc::winsize {
+        ws_row: 0,
+        ws_col: 0,
+        ws_xpixel: 0,
+        ws_ypixel: 0,
+    };
+    unsafe { libc::ioctl(libc::STDOUT_FILENO, libc::TIOCGWINSZ, &mut winsize) };
+    (winsize.ws_row as usize, winsize.ws_col as usize)
+}
+
 /// Table formatter configuration
 #[derive(Default)]
 pub struct TableFormatOptions {
@@ -232,13 +248,13 @@ impl TableFormatOptions {
         let is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) == 1 };
 
         if is_tty {
-            let (_rows, columns) = crate::sys::linux::tty::stdout_terminal_size();
+            let (_rows, columns) = stdout_terminal_size();
             if columns > 0 {
                 me.columns = Some(columns);
             }
         }
 
-        let empty_cstr = crate::c_str!("");
+        let empty_cstr = c_str!("");
 
         use std::ffi::CStr;
         let encoding = unsafe {
@@ -246,7 +262,7 @@ impl TableFormatOptions {
             CStr::from_ptr(libc::nl_langinfo(libc::CODESET))
         };
 
-        if encoding != crate::c_str!("UTF-8") {
+        if encoding != c_str!("UTF-8") {
             me.ascii_delimiters = true;
         }
 

@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use anyhow::*;
+use anyhow::format_err;
 use serde_json::Value;
 
-use crate::api::schema::*;
+use proxmox_schema::*;
 
 #[derive(Debug)]
 enum RawArgument {
@@ -237,6 +237,8 @@ fn test_boolean_arg() {
 
 #[test]
 fn test_argument_paramenter() {
+    use proxmox_schema::*;
+
     const PARAMETERS: ObjectSchema = ObjectSchema::new(
         "Parameters:",
         &[

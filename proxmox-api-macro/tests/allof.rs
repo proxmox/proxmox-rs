@@ -4,8 +4,9 @@ use anyhow::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use proxmox::api::schema::{self, ApiType};
 use proxmox_api_macro::api;
+use proxmox_schema as schema;
+use proxmox_schema::ApiType;
 
 pub const NAME_SCHEMA: schema::Schema = schema::StringSchema::new("Name.").schema();
 pub const VALUE_SCHEMA: schema::Schema = schema::IntegerSchema::new("Value.").schema();
@@ -56,17 +57,16 @@ pub struct Nvit {
 
 #[test]
 fn test_nvit() {
-    const TEST_NAME_VALUE_SCHEMA: ::proxmox::api::schema::Schema =
-        ::proxmox::api::schema::ObjectSchema::new(
-            "Name and value.",
-            &[
-                ("name", false, &NAME_SCHEMA),
-                ("value", false, &VALUE_SCHEMA),
-            ],
-        )
-        .schema();
+    const TEST_NAME_VALUE_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::ObjectSchema::new(
+        "Name and value.",
+        &[
+            ("name", false, &NAME_SCHEMA),
+            ("value", false, &VALUE_SCHEMA),
+        ],
+    )
+    .schema();
 
-    const TEST_SCHEMA: ::proxmox::api::schema::Schema = ::proxmox::api::schema::AllOfSchema::new(
+    const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::AllOfSchema::new(
         "Name, value, index and text.",
         &[&TEST_NAME_VALUE_SCHEMA, &IndexText::API_SCHEMA],
     )
@@ -96,17 +96,17 @@ struct WithExtra {
 
 #[test]
 fn test_extra() {
-    const INNER_SCHEMA: ::proxmox::api::schema::Schema = ::proxmox::api::schema::ObjectSchema::new(
+    const INNER_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::ObjectSchema::new(
         "<INNER: Extra Schema>",
         &[(
             "extra",
             false,
-            &::proxmox::api::schema::StringSchema::new("Extra field.").schema(),
+            &::proxmox_schema::StringSchema::new("Extra field.").schema(),
         )],
     )
     .schema();
 
-    const TEST_SCHEMA: ::proxmox::api::schema::Schema = ::proxmox::api::schema::AllOfSchema::new(
+    const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::AllOfSchema::new(
         "Extra Schema",
         &[
             &INNER_SCHEMA,
@@ -134,9 +134,9 @@ pub fn hello(it: IndexText, nv: NameValue) -> Result<(NameValue, IndexText), Err
 
 #[test]
 fn hello_schema_check() {
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new_full(
-        &::proxmox::api::ApiHandler::Sync(&api_function_hello),
-        ::proxmox::api::schema::ParameterSchema::AllOf(&::proxmox::api::schema::AllOfSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new_full(
+        &::proxmox_router::ApiHandler::Sync(&api_function_hello),
+        ::proxmox_schema::ParameterSchema::AllOf(&::proxmox_schema::AllOfSchema::new(
             "Hello method.",
             &[&IndexText::API_SCHEMA, &NameValue::API_SCHEMA],
         )),
@@ -164,19 +164,19 @@ pub fn with_extra(
 
 #[test]
 fn with_extra_schema_check() {
-    const INNER_SCHEMA: ::proxmox::api::schema::Schema = ::proxmox::api::schema::ObjectSchema::new(
+    const INNER_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::ObjectSchema::new(
         "<INNER: Extra method.>",
         &[(
             "extra",
             false,
-            &::proxmox::api::schema::StringSchema::new("An extra field.").schema(),
+            &::proxmox_schema::StringSchema::new("An extra field.").schema(),
         )],
     )
     .schema();
 
-    const TEST_METHOD: ::proxmox::api::ApiMethod = ::proxmox::api::ApiMethod::new_full(
-        &::proxmox::api::ApiHandler::Sync(&api_function_with_extra),
-        ::proxmox::api::schema::ParameterSchema::AllOf(&::proxmox::api::schema::AllOfSchema::new(
+    const TEST_METHOD: ::proxmox_router::ApiMethod = ::proxmox_router::ApiMethod::new_full(
+        &::proxmox_router::ApiHandler::Sync(&api_function_with_extra),
+        ::proxmox_schema::ParameterSchema::AllOf(&::proxmox_schema::AllOfSchema::new(
             "Extra method.",
             &[
                 &INNER_SCHEMA,
@@ -189,7 +189,7 @@ fn with_extra_schema_check() {
 }
 
 struct RpcEnv;
-impl proxmox::api::RpcEnvironment for RpcEnv {
+impl proxmox_router::RpcEnvironment for RpcEnv {
     fn result_attrib_mut(&mut self) -> &mut Value {
         panic!("result_attrib_mut called");
     }
@@ -199,7 +199,7 @@ impl proxmox::api::RpcEnvironment for RpcEnv {
     }
 
     /// The environment type
-    fn env_type(&self) -> proxmox::api::RpcEnvironmentType {
+    fn env_type(&self) -> proxmox_router::RpcEnvironmentType {
         panic!("env_type called");
     }
 

@@ -1,6 +1,20 @@
 use anyhow::bail;
+use serde_json::Value;
+use url::form_urlencoded;
 
-use crate::api::schema::*;
+use proxmox_schema::*;
+
+fn parse_query_string<T: Into<ParameterSchema>>(
+    query: &str,
+    schema: T,
+    test_required: bool,
+) -> Result<Value, ParameterError> {
+    let param_list: Vec<(String, String)> = form_urlencoded::parse(query.as_bytes())
+        .into_owned()
+        .collect();
+
+    parse_parameter_strings(&param_list, schema.into(), test_required)
+}
 
 #[test]
 fn test_schema1() {

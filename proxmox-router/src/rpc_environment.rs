@@ -1,9 +1,20 @@
-use crate::tools::AsAny;
+use std::any::Any;
 
 use serde_json::Value;
 
+/// Helper to get around `RpcEnvironment: Sized`
+pub trait AsAny {
+    fn as_any(&self) -> &(dyn Any + Send);
+}
+
+impl<T: Any + Send> AsAny for T {
+    fn as_any(&self) -> &(dyn Any + Send) {
+        self
+    }
+}
+
 /// Abstract Interface for API methods to interact with the environment
-pub trait RpcEnvironment: std::any::Any + AsAny + Send {
+pub trait RpcEnvironment: Any + AsAny + Send {
     /// Use this to pass additional result data. It is up to the environment
     /// how the data is used.
     fn result_attrib_mut(&mut self) -> &mut Value;

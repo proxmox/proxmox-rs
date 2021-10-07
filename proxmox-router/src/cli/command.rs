@@ -3,15 +3,16 @@ use serde_json::Value;
 use std::cell::RefCell;
 use std::sync::Arc;
 
-use crate::api::format::*;
-use crate::api::schema::*;
-use crate::api::*;
+use proxmox_schema::*;
+use proxmox_schema::format::DocumentationFormat;
 
 use super::environment::CliEnvironment;
-
-use super::format::*;
 use super::getopts;
-use super::{completion::*, CliCommand, CliCommandMap, CommandLineInterface};
+use super::{
+    generate_nested_usage, generate_usage_str, print_help, print_nested_usage_error,
+    print_simple_usage_error, CliCommand, CliCommandMap, CommandLineInterface,
+};
+use crate::{ApiFuture, ApiHandler, ApiMethod, RpcEnvironment};
 
 /// Schema definition for ``--output-format`` parameter.
 ///
@@ -349,7 +350,7 @@ fn prepare_cli_command(def: &CommandLineInterface) -> (String, Vec<String>) {
 
     if !args.is_empty() {
         if args[0] == "bashcomplete" {
-            print_bash_completion(&def);
+            def.print_bash_completion();
             std::process::exit(0);
         }
 

@@ -65,7 +65,7 @@ pub fn handle_enum(
         };
 
         variants.extend(quote_spanned! { variant.ident.span() =>
-            ::proxmox::api::schema::EnumEntry {
+            ::proxmox_schema::EnumEntry {
                 value: #variant_string,
                 description: #comment,
             },
@@ -78,14 +78,14 @@ pub fn handle_enum(
         #enum_ty
 
         #[automatically_derived]
-        impl ::proxmox::api::schema::ApiType for #name {
-            const API_SCHEMA: ::proxmox::api::schema::Schema =
+        impl ::proxmox_schema::ApiType for #name {
+            const API_SCHEMA: ::proxmox_schema::Schema =
                 #schema
-                .format(&::proxmox::api::schema::ApiStringFormat::Enum(&[#variants]))
+                .format(&::proxmox_schema::ApiStringFormat::Enum(&[#variants]))
                 .schema();
         }
 
-        impl ::proxmox::api::schema::UpdaterType for #name {
+        impl ::proxmox_schema::UpdaterType for #name {
             type Updater = Option<Self>;
         }
     })

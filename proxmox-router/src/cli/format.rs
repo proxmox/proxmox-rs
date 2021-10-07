@@ -1,12 +1,13 @@
 #![allow(clippy::match_bool)] // just no...
 
-use serde_json::Value;
-
 use std::collections::HashSet;
 
-use crate::api::format::*;
-use crate::api::router::ReturnType;
-use crate::api::schema::*;
+use serde_json::Value;
+
+use proxmox_schema::*;
+use proxmox_schema::format::{
+    get_property_description, get_schema_type_text, DocumentationFormat, ParameterDisplayStyle,
+};
 
 use super::{value_to_text, TableFormatOptions};
 use super::{CliCommand, CliCommandMap, CommandLineInterface};

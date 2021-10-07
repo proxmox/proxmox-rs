@@ -5,7 +5,6 @@ use std::fmt;
 use anyhow::*;
 use lazy_static::lazy_static;
 
-pub mod as_any;
 pub mod common_regex;
 pub mod email;
 pub mod fd;
@@ -14,9 +13,6 @@ pub mod mmap;
 pub mod parse;
 pub mod serde;
 pub mod systemd;
-
-#[doc(inline)]
-pub use as_any::AsAny;
 
 const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 

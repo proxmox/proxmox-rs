@@ -2,11 +2,10 @@
 ///
 /// This is meant to be used with an API-type tuple struct containing a single `String` like this:
 ///
-/// ```ignore
-/// # use proxmox::api::api;
-/// # use proxmox::api::schema::ApiStringFormat;
+/// ```
+/// # use proxmox_schema::{api_string_type, ApiStringFormat};
+/// # use proxmox_api_macro::api;
 /// # const PROXMOX_SAFE_ID_FORMAT: ApiStringFormat = ApiStringFormat::Enum(&[]);
-/// use proxmox::api_string_type;
 /// use serde::{Deserialize, Serialize};
 ///
 /// api_string_type! {
@@ -92,11 +91,12 @@ macro_rules! api_string_type {
             }
 
             /// Create an instance directly from a `String`, validating it using the API schema's
-            /// [`check_constraints`](::proxmox::api::schema::StringSchema::check_constraints())
+            /// [`check_constraints`](::proxmox_schema::StringSchema::check_constraints())
             /// method.
             pub fn from_string(inner: String) -> Result<Self, ::anyhow::Error> {
+                use $crate::ApiType;
                 match &Self::API_SCHEMA {
-                    ::proxmox::api::schema::Schema::String(s) => s.check_constraints(&inner)?,
+                    $crate::Schema::String(s) => s.check_constraints(&inner)?,
                     _ => unreachable!(),
                 }
                 Ok(Self(inner))

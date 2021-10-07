@@ -148,7 +148,7 @@ impl Schema {
     fn to_schema_reference(&self) -> Option<TokenStream> {
         match &self.item {
             SchemaItem::ExternType(path) => Some(
-                quote_spanned! { path.span() => &<#path as ::proxmox::api::schema::ApiType>::API_SCHEMA },
+                quote_spanned! { path.span() => &<#path as ::proxmox_schema::ApiType>::API_SCHEMA },
             ),
             SchemaItem::ExternSchema(path) => Some(quote_spanned! { path.span() => &#path }),
             _ => None,
@@ -323,31 +323,31 @@ impl SchemaItem {
             SchemaItem::Null(span) => {
                 let description = check_description()?;
                 ts.extend(quote_spanned! { *span =>
-                    ::proxmox::api::schema::NullSchema::new(#description)
+                    ::proxmox_schema::NullSchema::new(#description)
                 });
             }
             SchemaItem::Boolean(span) => {
                 let description = check_description()?;
                 ts.extend(quote_spanned! { *span =>
-                    ::proxmox::api::schema::BooleanSchema::new(#description)
+                    ::proxmox_schema::BooleanSchema::new(#description)
                 });
             }
             SchemaItem::Integer(span) => {
                 let description = check_description()?;
                 ts.extend(quote_spanned! { *span =>
-                    ::proxmox::api::schema::IntegerSchema::new(#description)
+                    ::proxmox_schema::IntegerSchema::new(#description)
                 });
             }
             SchemaItem::Number(span) => {
                 let description = check_description()?;
                 ts.extend(quote_spanned! { *span =>
-                    ::proxmox::api::schema::NumberSchema::new(#description)
+                    ::proxmox_schema::NumberSchema::new(#description)
                 });
             }
             SchemaItem::String(span) => {
                 let description = check_description()?;
                 ts.extend(quote_spanned! { *span =>
-                    ::proxmox::api::schema::StringSchema::new(#description)
+                    ::proxmox_schema::StringSchema::new(#description)
                 });
             }
             SchemaItem::Object(obj) => {
@@ -355,7 +355,7 @@ impl SchemaItem {
                 let mut elems = TokenStream::new();
                 obj.to_schema_inner(&mut elems)?;
                 ts.extend(quote_spanned! { obj.span =>
-                    ::proxmox::api::schema::ObjectSchema::new(#description, &[#elems])
+                    ::proxmox_schema::ObjectSchema::new(#description, &[#elems])
                 });
             }
             SchemaItem::Array(array) => {
@@ -363,7 +363,7 @@ impl SchemaItem {
                 let mut items = TokenStream::new();
                 array.to_schema(&mut items)?;
                 ts.extend(quote_spanned! { array.span =>
-                    ::proxmox::api::schema::ArraySchema::new(#description, &#items)
+                    ::proxmox_schema::ArraySchema::new(#description, &#items)
                 });
             }
             SchemaItem::ExternType(path) => {
@@ -375,7 +375,7 @@ impl SchemaItem {
                     error!(description => "description not allowed on external type");
                 }
 
-                ts.extend(quote_spanned! { path.span() => <#path as ::proxmox::api::schema::ApiType>::API_SCHEMA });
+                ts.extend(quote_spanned! { path.span() => <#path as ::proxmox_schema::ApiType>::API_SCHEMA });
                 return Ok(true);
             }
             SchemaItem::ExternSchema(path) => {

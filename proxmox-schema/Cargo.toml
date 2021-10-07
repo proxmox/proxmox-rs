@@ -1,0 +1,37 @@
+[package]
+name = "proxmox-schema"
+version = "1.0.0"
+authors = ["Proxmox Support Team <support@proxmox.com>"]
+edition = "2018"
+license = "AGPL-3"
+description = "proxmox api schema and validation"
+
+exclude = [ "debian" ]
+
+[dependencies]
+anyhow = "1.0"
+lazy_static = "1.4"
+regex = "1.2"
+serde = "1.0"
+serde_json = "1.0"
+textwrap = "0.11"
+
+# the upid type needs this for 'getpid'
+libc = { version = "0.2", optional = true }
+nix = { version = "0.19", optional = true }
+
+proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = "1.0.0" }
+
+[dev-dependencies]
+url = "2.1"
+serde = { version = "1.0", features = [ "derive" ] }
+proxmox-api-macro = { path = "../proxmox-api-macro", version = "1.0.0" }
+
+[features]
+default = []
+
+api-macro = ["proxmox-api-macro"]
+upid-api-impl = [ "libc", "nix" ]
+
+# Testing only
+test-harness = []

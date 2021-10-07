@@ -4,7 +4,6 @@
 #[macro_use]
 pub mod serde_macros;
 
-pub mod api;
 pub mod sys;
 pub mod tools;
 

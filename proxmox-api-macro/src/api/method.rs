@@ -77,7 +77,7 @@ impl ReturnSchema {
         self.schema.to_schema(&mut out)?;
 
         ts.extend(quote! {
-            ::proxmox::api::router::ReturnType::new( #optional , &#out )
+            ::proxmox_schema::ReturnType::new( #optional , &#out )
         });
         Ok(())
     }
@@ -218,16 +218,16 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
     }
 
     let api_handler = if is_async {
-        quote! { ::proxmox::api::ApiHandler::Async(&#api_func_name) }
+        quote! { ::proxmox_router::ApiHandler::Async(&#api_func_name) }
     } else {
-        quote! { ::proxmox::api::ApiHandler::Sync(&#api_func_name) }
+        quote! { ::proxmox_router::ApiHandler::Sync(&#api_func_name) }
     };
 
     Ok(quote_spanned! { func.sig.span() =>
         #input_schema_code
 
-        #vis const #api_method_name: ::proxmox::api::ApiMethod =
-            ::proxmox::api::ApiMethod::new_full(
+        #vis const #api_method_name: ::proxmox_router::ApiMethod =
+            ::proxmox_router::ApiMethod::new_full(
                 &#api_handler,
                 #input_schema_parameter,
             )
@@ -525,13 +525,13 @@ fn create_wrapper_function(
         wrapper_ts.extend(quote! {
             fn #api_func_name<'a>(
                 mut input_params: ::serde_json::Value,
-                api_method_param: &'static ::proxmox::api::ApiMethod,
-                rpc_env_param: &'a mut dyn ::proxmox::api::RpcEnvironment,
-            ) -> ::proxmox::api::ApiFuture<'a> {
+                api_method_param: &'static ::proxmox_router::ApiMethod,
+                rpc_env_param: &'a mut dyn ::proxmox_router::RpcEnvironment,
+            ) -> ::proxmox_router::ApiFuture<'a> {
                 //async fn func<'a>(
                 //    mut input_params: ::serde_json::Value,
-                //    api_method_param: &'static ::proxmox::api::ApiMethod,
-                //    rpc_env_param: &'a mut dyn ::proxmox::api::RpcEnvironment,
+                //    api_method_param: &'static ::proxmox_router::ApiMethod,
+                //    rpc_env_param: &'a mut dyn ::proxmox_router::RpcEnvironment,
                 //) -> ::std::result::Result<::serde_json::Value, ::anyhow::Error> {
                 //    #body
                 //}
@@ -545,8 +545,8 @@ fn create_wrapper_function(
         wrapper_ts.extend(quote! {
             fn #api_func_name(
                 mut input_params: ::serde_json::Value,
-                api_method_param: &::proxmox::api::ApiMethod,
-                rpc_env_param: &mut dyn ::proxmox::api::RpcEnvironment,
+                api_method_param: &::proxmox_router::ApiMethod,
+                rpc_env_param: &mut dyn ::proxmox_router::RpcEnvironment,
             ) -> ::std::result::Result<::serde_json::Value, ::anyhow::Error> {
                 #body
             }
@@ -650,7 +650,7 @@ fn extract_normal_parameter(
                 let ty = param.ty;
                 body.extend(quote_spanned! { span =>
                     let #arg_name = <#ty as ::serde::Deserialize>::deserialize(
-                        ::proxmox::api::de::ExtractValueDeserializer::try_new(
+                        ::proxmox_schema::de::ExtractValueDeserializer::try_new(
                             input_map,
                             #schema_ref,
                         )
@@ -703,10 +703,10 @@ fn serialize_input_schema(
         input_schema.to_typed_schema(&mut ts)?;
         return Ok((
             quote_spanned! { func_sig_span =>
-                pub const #input_schema_name: ::proxmox::api::schema::ObjectSchema = #ts;
+                pub const #input_schema_name: ::proxmox_schema::ObjectSchema = #ts;
             },
             quote_spanned! { func_sig_span =>
-                ::proxmox::api::schema::ParameterSchema::Object(&#input_schema_name)
+                ::proxmox_schema::ParameterSchema::Object(&#input_schema_name)
             },
         ));
     }
@@ -758,7 +758,7 @@ fn serialize_input_schema(
 
         (
             quote_spanned!(func_sig_span =>
-                const #inner_schema_name: ::proxmox::api::schema::Schema = #obj_schema;
+                const #inner_schema_name: ::proxmox_schema::Schema = #obj_schema;
             ),
             quote_spanned!(func_sig_span => &#inner_schema_name,),
         )
@@ -771,8 +771,8 @@ fn serialize_input_schema(
         quote_spanned! { func_sig_span =>
             #inner_schema
 
-            pub const #input_schema_name: ::proxmox::api::schema::AllOfSchema =
-                ::proxmox::api::schema::AllOfSchema::new(
+            pub const #input_schema_name: ::proxmox_schema::AllOfSchema =
+                ::proxmox_schema::AllOfSchema::new(
                     #description,
                     &[
                         #inner_schema_ref
@@ -781,7 +781,7 @@ fn serialize_input_schema(
                 );
         },
         quote_spanned! { func_sig_span =>
-            ::proxmox::api::schema::ParameterSchema::AllOf(&#input_schema_name)
+            ::proxmox_schema::ParameterSchema::AllOf(&#input_schema_name)
         },
     ))
 }

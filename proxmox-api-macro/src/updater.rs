@@ -28,7 +28,7 @@ fn derive_updater_type(full_span: Span, ident: Ident, generics: syn::Generics) -
     no_generics(generics);
 
     quote_spanned! { full_span =>
-        impl ::proxmox::api::schema::UpdaterType for #ident {
+        impl ::proxmox_schema::UpdaterType for #ident {
             type Updater = Option<Self>;
         }
     }

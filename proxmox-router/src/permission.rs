@@ -197,9 +197,9 @@ fn check_api_permission_tail(
 
 #[cfg(test)]
 mod test {
-
-    use crate::api::permission::*;
     use serde_json::{json, Value};
+
+    use crate::permission::*;
 
     struct MockedUserInfo {
         privs: Value,

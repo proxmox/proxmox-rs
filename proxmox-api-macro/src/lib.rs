@@ -69,7 +69,7 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
 
     ```
     # use proxmox_api_macro::api;
-    # use proxmox::api::{ApiMethod, RpcEnvironment};
+    # use proxmox_router::{ApiMethod, RpcEnvironment};
 
     use anyhow::Error;
     use serde_json::Value;
@@ -178,19 +178,19 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     ```no_run
     # struct RenamedStruct;
     impl RenamedStruct {
-        pub const API_SCHEMA: &'static ::proxmox::api::schema::Schema =
-            &::proxmox::api::schema::ObjectSchema::new(
+        pub const API_SCHEMA: &'static ::proxmox_schema::Schema =
+            &::proxmox_schema::ObjectSchema::new(
                 "An example of a struct with renamed fields.",
                 &[
                     (
                         "test-string",
                         false,
-                        &::proxmox::api::schema::StringSchema::new("A test string.").schema(),
+                        &::proxmox_schema::StringSchema::new("A test string.").schema(),
                     ),
                     (
                         "SomeOther",
                         true,
-                        &::proxmox::api::schema::StringSchema::new(
+                        &::proxmox_schema::StringSchema::new(
                             "An optional auto-derived value for testing:",
                         )
                         .schema(),

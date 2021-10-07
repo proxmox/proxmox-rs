@@ -10,13 +10,10 @@ use hyper::Body;
 use percent_encoding::percent_decode_str;
 use serde_json::Value;
 
-use crate::api::schema::{ObjectSchema, ParameterSchema, Schema};
-use crate::api::RpcEnvironment;
+use proxmox_schema::{ObjectSchema, ParameterSchema, ReturnType, Schema};
 
 use super::Permission;
-
-/// Deprecated reexport:
-pub use super::schema::ReturnType;
+use crate::RpcEnvironment;
 
 /// A synchronous API handler gets a json Value as input and returns a json Value as output.
 ///
@@ -24,8 +21,9 @@ pub use super::schema::ReturnType;
 /// ```
 /// # use anyhow::*;
 /// # use serde_json::{json, Value};
-/// # use proxmox::api::{*, schema::*};
-/// #
+/// use proxmox_router::{ApiHandler, ApiMethod, RpcEnvironment};
+/// use proxmox_schema::ObjectSchema;
+///
 /// fn hello(
 ///    param: Value,
 ///    info: &ApiMethod,
@@ -48,21 +46,21 @@ pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironm
 ///
 /// Returns a future Value.
 /// ```
-/// # use anyhow::*;
 /// # use serde_json::{json, Value};
-/// # use proxmox::api::{*, schema::*};
 /// #
-/// use futures::*;
+/// use proxmox_router::{ApiFuture, ApiHandler, ApiMethod, RpcEnvironment};
+/// use proxmox_schema::ObjectSchema;
+///
 ///
 /// fn hello_future<'a>(
 ///    param: Value,
 ///    info: &ApiMethod,
 ///    rpcenv: &'a mut dyn RpcEnvironment,
 /// ) -> ApiFuture<'a> {
-///    async move {
+///    Box::pin(async move {
 ///        let data = json!("hello world!");
 ///        Ok(data)
-///    }.boxed()
+///    })
 /// }
 ///
 /// const API_METHOD_HELLO_FUTURE: ApiMethod = ApiMethod::new(
@@ -81,12 +79,12 @@ pub type ApiFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, anyhow::Error
 /// They get low level access to request and response data. Use this
 /// to implement custom upload/download functions.
 /// ```
-/// # use anyhow::*;
 /// # use serde_json::{json, Value};
-/// # use proxmox::api::{*, schema::*};
 /// #
-/// use futures::*;
 /// use hyper::{Body, Response, http::request::Parts};
+///
+/// use proxmox_router::{ApiHandler, ApiMethod, ApiResponseFuture, RpcEnvironment};
+/// use proxmox_schema::ObjectSchema;
 ///
 /// fn low_level_hello(
 ///    parts: Parts,
@@ -95,12 +93,12 @@ pub type ApiFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, anyhow::Error
 ///    info: &ApiMethod,
 ///    rpcenv: Box<dyn RpcEnvironment>,
 /// ) -> ApiResponseFuture {
-///    async move {
+///    Box::pin(async move {
 ///        let response = http::Response::builder()
 ///            .status(200)
 ///            .body(Body::from("Hello world!"))?;
 ///        Ok(response)
-///    }.boxed()
+///    })
 /// }
 ///
 /// const API_METHOD_LOW_LEVEL_HELLO: ApiMethod = ApiMethod::new(
@@ -189,17 +187,17 @@ pub enum SubRoute {
 #[macro_export]
 macro_rules! list_subdirs_api_method {
     ($map:expr) => {
-        $crate::api::ApiMethod::new(
-            &$crate::api::ApiHandler::Sync( & |_, _, _| {
+        $crate::ApiMethod::new(
+            &$crate::ApiHandler::Sync( & |_, _, _| {
                 let index = ::serde_json::json!(
                     $map.iter().map(|s| ::serde_json::json!({ "subdir": s.0}))
                         .collect::<Vec<::serde_json::Value>>()
                 );
                 Ok(index)
             }),
-            &$crate::api::schema::ObjectSchema::new("Directory index.", &[])
+            &$crate::ListSubdirsObjectSchema::new("Directory index.", &[])
                 .additional_properties(true)
-        ).access(None, &$crate::api::Permission::Anybody)
+        ).access(None, &$crate::Permission::Anybody)
     }
 }
 
@@ -217,10 +215,10 @@ macro_rules! list_subdirs_api_method {
 /// all `const fn(mut self, ..)` methods to configure them.
 ///
 ///```
-/// # use anyhow::*;
 /// # use serde_json::{json, Value};
-/// # use proxmox::api::{*, schema::*};
-/// #
+/// use proxmox_router::{ApiHandler, ApiMethod, Router};
+/// use proxmox_schema::ObjectSchema;
+/// 
 /// const API_METHOD_HELLO: ApiMethod = ApiMethod::new(
 ///    &ApiHandler::Sync(&|_, _, _| {
 ///         Ok(json!("Hello world!"))

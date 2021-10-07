@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use crate::api::{RpcEnvironment, RpcEnvironmentType};
+use crate::{RpcEnvironment, RpcEnvironmentType};
 
 /// `RpcEnvironmet` implementation for command line tools
 #[derive(Default)]

@@ -40,7 +40,7 @@ pub fn test_default_macro(value: Option<isize>) -> Result<isize, Error> {
 }
 
 struct RpcEnv;
-impl proxmox::api::RpcEnvironment for RpcEnv {
+impl proxmox_router::RpcEnvironment for RpcEnv {
     fn result_attrib_mut(&mut self) -> &mut Value {
         panic!("result_attrib_mut called");
     }
@@ -50,7 +50,7 @@ impl proxmox::api::RpcEnvironment for RpcEnv {
     }
 
     /// The environment type
-    fn env_type(&self) -> proxmox::api::RpcEnvironmentType {
+    fn env_type(&self) -> proxmox_router::RpcEnvironmentType {
         panic!("env_type called");
     }
 

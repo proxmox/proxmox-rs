@@ -34,7 +34,7 @@ impl rustyline::completion::Completer for CliHelper {
     ) -> rustyline::Result<(usize, Vec<Self::Candidate>)> {
         let line = &line[..pos];
 
-        let (start, completions) = super::get_completions(&*self.cmd_def, line, false);
+        let (start, completions) = self.cmd_def.get_completions(line, false);
 
         Ok((start, completions))
     }

@@ -7,6 +7,8 @@ CRATES = \
 	 proxmox-http \
 	 proxmox-io \
 	 proxmox-lang \
+	 proxmox-router \
+	 proxmox-schema \
 	 proxmox-sortable-macro \
 	 proxmox-tfa \
 	 proxmox-time \
