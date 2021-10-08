@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-apt"
-version = "0.7.0"
+version = "0.8.0"
 authors = [
     "Fabian Ebner <f.ebner@proxmox.com>",
     "Proxmox Support Team <support@proxmox.com>",
@@ -18,7 +18,9 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = "1.0"
+hex = "0.4.3"
 once_cell = "1.3.1"
 openssl = "0.10"
-proxmox = { version = "0.13.0", default-features = false, features = [ "api-macro" ] }
 serde = { version = "1.0", features = ["derive"] }
+
+proxmox-schema = { version = "1", features = [ "api-macro" ] }

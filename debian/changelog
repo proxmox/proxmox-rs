@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.8.0-1) stable; urgency=medium
+
+  * update to proxox-schema crate
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 08 Oct 2021 11:55:47 +0200
+
 rust-proxmox-apt (0.7.0-1) stable; urgency=medium
 
   * update to proxmox 0.13.0

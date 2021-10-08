@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use anyhow::{bail, format_err, Error};
 use serde::{Deserialize, Serialize};
 
-use proxmox::api::api;
+use proxmox_schema::api;
 
 use crate::repositories::standard::APTRepositoryHandle;
 
@@ -394,7 +394,10 @@ fn uri_to_filename(uri: &str) -> String {
 
     for b in filename.as_bytes().iter() {
         if *b <= 0x20 || *b >= 0x7F || encode_chars.contains(*b as char) {
-            let hex = proxmox::tools::bin_to_hex(&[*b]);
+            let mut hex = [0u8; 2];
+            // unwrap: we're hex-encoding a single byte into a 2-byte slice
+            hex::encode_to_slice(&[*b], &mut hex).unwrap();
+            let hex = unsafe { std::str::from_utf8_unchecked(&hex) };
             encoded = format!("{}%{}", encoded, hex);
         } else {
             encoded.push(*b as char);

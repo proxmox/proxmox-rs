@@ -10,7 +10,7 @@ use crate::repositories::repository::{
     APTRepository, APTRepositoryFileType, APTRepositoryPackageType,
 };
 
-use proxmox::api::api;
+use proxmox_schema::api;
 
 mod list_parser;
 use list_parser::APTListFileParser;
