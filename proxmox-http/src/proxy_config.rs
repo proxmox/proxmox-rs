@@ -42,39 +42,41 @@ impl ProxyConfig {
     ///
     /// Default port is 1080 (like curl)
     pub fn parse_proxy_url(http_proxy: &str) -> Result<ProxyConfig, Error> {
-        proxmox::try_block!({
-            let proxy_uri: Uri = http_proxy.parse()?;
-            let proxy_authority = match proxy_uri.authority() {
-                Some(authority) => authority,
-                None => bail!("missing proxy authority"),
-            };
-            let host = proxy_authority.host().to_owned();
-            let port = match proxy_uri.port() {
-                Some(port) => port.as_u16(),
-                None => 1080, // CURL default port
-            };
+        Self::parse_proxy_url_do(http_proxy)
+            .map_err(|err| format_err!("parse_proxy_url failed: {}", err))
+    }
 
-            match proxy_uri.scheme_str() {
-                Some("http") => { /* Ok */ }
-                Some(scheme) => bail!("unsupported proxy scheme '{}'", scheme),
-                None => { /* assume HTTP */ }
-            }
+    fn parse_proxy_url_do(http_proxy: &str) -> Result<ProxyConfig, Error> {
+        let proxy_uri: Uri = http_proxy.parse()?;
+        let proxy_authority = match proxy_uri.authority() {
+            Some(authority) => authority,
+            None => bail!("missing proxy authority"),
+        };
+        let host = proxy_authority.host().to_owned();
+        let port = match proxy_uri.port() {
+            Some(port) => port.as_u16(),
+            None => 1080, // CURL default port
+        };
 
-            let authority_vec: Vec<&str> = proxy_authority.as_str().rsplitn(2, '@').collect();
-            let authorization = if authority_vec.len() == 2 {
-                Some(authority_vec[1].to_string())
-            } else {
-                None
-            };
+        match proxy_uri.scheme_str() {
+            Some("http") => { /* Ok */ }
+            Some(scheme) => bail!("unsupported proxy scheme '{}'", scheme),
+            None => { /* assume HTTP */ }
+        }
 
-            Ok(ProxyConfig {
-                host,
-                port,
-                authorization,
-                force_connect: false,
-            })
+        let authority_vec: Vec<&str> = proxy_authority.as_str().rsplitn(2, '@').collect();
+        let authorization = if authority_vec.len() == 2 {
+            Some(authority_vec[1].to_string())
+        } else {
+            None
+        };
+
+        Ok(ProxyConfig {
+            host,
+            port,
+            authorization,
+            force_connect: false,
         })
-        .map_err(|err| format_err!("parse_proxy_url failed: {}", err))
     }
 
     /// Assemble canonical proxy string (including scheme and port)

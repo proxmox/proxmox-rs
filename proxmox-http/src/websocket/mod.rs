@@ -23,7 +23,7 @@ use futures::future::FutureExt;
 use futures::ready;
 
 use proxmox::sys::error::io_err_other;
-use proxmox::tools::byte_buffer::ByteBuffer;
+use proxmox_io::ByteBuffer;
 
 // see RFC6455 section 7.4.1
 #[derive(Debug, Clone, Copy)]
