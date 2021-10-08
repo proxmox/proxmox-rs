@@ -71,7 +71,7 @@ impl PrivateAuthState {
             csrf_token,
             nonce,
             pkce_verifier,
-            ctime: proxmox::tools::time::epoch_i64(),
+            ctime: proxmox_time::epoch_i64(),
         }
     }
 

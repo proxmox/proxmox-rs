@@ -4,7 +4,6 @@ use anyhow::{bail, Error};
 use serde_json::{json, Value};
 
 use proxmox::tools::{
-    time::epoch_i64,
     fs::{
         replace_file,
         open_file_locked,
@@ -12,6 +11,7 @@ use proxmox::tools::{
         CreateOptions,
     },
 };
+use proxmox_time::epoch_i64;
 
 use super::{PublicAuthState, PrivateAuthState};
 
