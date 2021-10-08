@@ -2,6 +2,8 @@
 
 use anyhow::*;
 
+use proxmox_io::vec;
+
 pub mod magic;
 pub mod pid;
 pub mod procfs;
@@ -11,7 +13,7 @@ pub mod tty;
 
 /// Get pseudo random data (/dev/urandom)
 pub fn random_data(size: usize) -> Result<Vec<u8>, Error> {
-    let mut buffer = crate::tools::vec::undefined(size);
+    let mut buffer = vec::undefined(size);
     fill_with_random_data(&mut buffer)?;
 
     Ok(buffer)

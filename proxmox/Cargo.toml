@@ -1,13 +1,13 @@
 [package]
 name = "proxmox"
 edition = "2018"
-version = "0.13.5"
+version = "0.14.0"
 authors = [
     "Dietmar Maurer <dietmar@proxmox.com>",
     "Wolfgang Bumiller <w.bumiller@proxmox.com>",
 ]
 license = "AGPL-3"
-description = "Proxmox library"
+description = "Generic Proxmox library"
 
 exclude = [ "debian" ]
 
@@ -29,6 +29,14 @@ tokio = { version = "1.0", features = [], optional = true }
 
 # Macro crates:
 proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.1" }
+
+proxmox-io = { path = "../proxmox-io", version = "1.0.0" }
+proxmox-lang = { path = "../proxmox-lang", version = "1.0.0" }
+proxmox-schema = { path = "../proxmox-schema", version = "1.0.0" }
+proxmox-time = { path = "../proxmox-time", version = "1.0.0" }
+
+[dev-dependencies]
+tokio = "1.0"
 
 [features]
 default = []

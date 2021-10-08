@@ -1,9 +1,9 @@
 //! Email related utilities.
 
-use crate::tools::time::epoch_i64;
-use anyhow::{bail, Error};
 use std::io::Write;
 use std::process::{Command, Stdio};
+
+use anyhow::{bail, Error};
 
 /// Sends multi-part mail with text and/or html to a list of recipients
 ///
@@ -23,7 +23,7 @@ pub fn sendmail(
     let recipients = mailto.join(",");
     let author = author.unwrap_or("Proxmox Backup Server");
 
-    let now = epoch_i64();
+    let now = proxmox_time::epoch_i64();
 
     let mut sendmail_process = match Command::new("/usr/sbin/sendmail")
         .arg("-B")
@@ -62,8 +62,8 @@ pub fn sendmail(
     }
     body.push_str(&format!("From: {} <{}>\n", author, mailfrom));
     body.push_str(&format!("To: {}\n", &recipients));
-    let localtime = crate::tools::time::localtime(now)?;
-    let rfc2822_date = crate::tools::time::strftime("%a, %d %b %Y %T %z", &localtime)?;
+    let localtime = proxmox_time::localtime(now)?;
+    let rfc2822_date = proxmox_time::strftime("%a, %d %b %Y %T %z", &localtime)?;
     body.push_str(&format!("Date: {}\n", rfc2822_date));
     if is_multipart {
         body.push('\n');

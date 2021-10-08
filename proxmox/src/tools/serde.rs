@@ -29,7 +29,7 @@ pub mod epoch_as_rfc3339 {
         S: Serializer,
     {
         use serde::ser::Error;
-        let s = crate::tools::time::epoch_to_rfc3339(*epoch)
+        let s = proxmox_time::epoch_to_rfc3339(*epoch)
             .map_err(|err| Error::custom(err.to_string()))?;
 
         serializer.serialize_str(&s)
@@ -41,7 +41,7 @@ pub mod epoch_as_rfc3339 {
     {
         use serde::de::Error;
         String::deserialize(deserializer).and_then(|string| {
-            crate::tools::time::parse_rfc3339(&string).map_err(|err| Error::custom(err.to_string()))
+            proxmox_time::parse_rfc3339(&string).map_err(|err| Error::custom(err.to_string()))
         })
     }
 }

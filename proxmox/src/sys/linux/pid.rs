@@ -11,10 +11,12 @@ use nix::sys::stat::Mode;
 use nix::unistd::Pid;
 use nix::NixPath;
 
+use proxmox_lang::c_str;
+
 use crate::sys::error::{io_err_other, SysResult};
 use crate::sys::linux::procfs::{MountInfo, PidStat};
 use crate::tools::fd::Fd;
-use crate::{c_result, c_str, c_try};
+use crate::{c_result, c_try};
 
 /// asm-generic pidfd_open syscall number
 #[allow(non_upper_case_globals)]

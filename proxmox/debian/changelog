@@ -1,3 +1,18 @@
+rust-proxmox (0.14.0-1) stable; urgency=medium
+
+  * remove several modules moved into their own crates:
+    - borrow
+    - io
+    - lang
+    - router
+    - schema
+    - section-config
+    - tfa
+    - time
+    - uuid
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 08 Oct 2021 08:37:11 +0200
+
 rust-proxmox (0.13.5-1) stable; urgency=medium
 
   * ParameterError: record parameter names

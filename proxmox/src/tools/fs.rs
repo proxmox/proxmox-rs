@@ -15,10 +15,11 @@ use nix::unistd::{self, Gid, Uid};
 use nix::NixPath;
 use serde_json::Value;
 
+use proxmox_lang::try_block;
+
 use crate::sys::error::{SysError, SysResult};
 use crate::sys::timer;
 use crate::tools::fd::Fd;
-use crate::try_block;
 
 /// Read the entire contents of a file into a bytes vector
 ///

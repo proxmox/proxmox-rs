@@ -6,9 +6,11 @@ use anyhow::*;
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 
+use proxmox_lang::try_block;
+
+use crate::c_try;
 use crate::sys::error::SysError;
 use crate::tools::fd::Fd;
-use crate::{c_try, try_block};
 
 /// Get the current size of the terminal (for stdout).
 /// # Safety
