@@ -72,22 +72,21 @@ macro_rules! static_assert_size {
 /// #[repr(C)]
 /// struct Stuff {
 ///     first: u32,
-///     second: u32,
+///     second: u16,
+///     third: u16,
+///     fourth: u32,
 /// }
 ///
+/// assert_eq!(offsetof!(Stuff, first), 0);
 /// assert_eq!(offsetof!(Stuff, second), 4);
+/// assert_eq!(offsetof!(Stuff, third), 6);
+/// assert_eq!(offsetof!(Stuff, fourth), 8);
 ///
 /// ```
-// FIXME: With 1.56 we get `const transmute` which may help making this usable `const fn` as we can
-// avoid dereferencing the raw pointer by transmuting `0usize` into a proper reference instead.
-//
-// So with 1.56, do this instead:
-//
-//     unsafe { &(std::mem::transmute::<_, &$ty>(0usize).$field) as *const _ as usize }
 #[macro_export]
 macro_rules! offsetof {
     ($ty:ty, $field:ident) => {
-        unsafe { &(*(std::ptr::null::<$ty>())).$field as *const _ as usize }
+        unsafe { &(std::mem::transmute::<_, &$ty>(0usize).$field) as *const _ as usize }
     };
 }
 
