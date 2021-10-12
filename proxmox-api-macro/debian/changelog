@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (1.0.1-1) stable; urgency=medium
+
+  * stop adding automatically_derived to derived output to please new rustc
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 12 Oct 2021 14:49:35 +0200
+
 rust-proxmox-api-macro (1.0.0-1) stable; urgency=medium
 
   * schema was split out of proxmox into a new proxmox-schema crate
