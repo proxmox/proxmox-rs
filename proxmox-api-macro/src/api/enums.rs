@@ -77,7 +77,6 @@ pub fn handle_enum(
     Ok(quote_spanned! { name.span() =>
         #enum_ty
 
-        #[automatically_derived]
         impl ::proxmox_schema::ApiType for #name {
             const API_SCHEMA: ::proxmox_schema::Schema =
                 #schema

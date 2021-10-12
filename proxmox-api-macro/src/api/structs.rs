@@ -84,7 +84,6 @@ fn finish_schema(
     Ok(quote_spanned! { name.span() =>
         #stru
 
-        #[automatically_derived]
         impl ::proxmox_schema::ApiType for #name {
             const API_SCHEMA: ::proxmox_schema::Schema = #schema;
         }
@@ -353,7 +352,6 @@ fn finish_all_of_struct(
             #inner_schema
         }
 
-        #[automatically_derived]
         impl ::proxmox_schema::ApiType for #name {
             const API_SCHEMA: ::proxmox_schema::Schema =
                 ::proxmox_schema::AllOfSchema::new(
@@ -443,7 +441,6 @@ fn derive_updater(
 
     if !is_empty_impl.is_empty() {
         output.extend(quote::quote!(
-            #[automatically_derived]
             impl ::proxmox_schema::Updater for #updater_name {
                 fn is_empty(&self) -> bool {
                     #is_empty_impl
