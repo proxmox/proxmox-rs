@@ -108,3 +108,31 @@ macro_rules! c_str {
         unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(bytes.as_bytes()) }
     }};
 }
+
+/*
+// With rust 1.56 we can enable the `c_str!()` macro for const fns:
+
+#[doc(hidden)]
+#[allow(unconditional_panic)]
+pub const fn illegal_c_string() {
+    [][0]
+}
+
+/// Assert that a static byte slice is a valid C string (has no zeros except at the very end),
+/// and return it as a `&'static CStr`.
+pub const fn checked_c_str(bytes: &'static [u8]) -> &'static std::ffi::CStr {
+    let mut i = 0;
+    while i < bytes.len() - 1 {
+        if bytes[i] == 0 {
+            illegal_c_string();
+        }
+        i += 1;
+    }
+    unsafe { std::mem::transmute::<_, &'static std::ffi::CStr>(bytes) }
+}
+
+#[macro_export]
+macro_rules! c_str {
+    ($data:expr) => { $crate::checked_c_str(concat!($data, "\0")) };
+}
+*/
