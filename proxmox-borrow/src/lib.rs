@@ -45,9 +45,9 @@ use std::mem::ManuallyDrop;
 /// usage.tied.i_am_a_borrow();
 /// ```
 pub struct Tied<T, U: ?Sized> {
-    // FIXME: ManuallyDrop::take() is nightly-only so we need an Option for inner for now...
     /// The contained "value" of which we want to borrow something.
-    inner: Option<Box<T>>,
+    inner: ManuallyDrop<Box<T>>,
+
     /// The thing borrowing from `inner`. This is what the `Tied` value ultimately dereferences to.
     borrow: ManuallyDrop<Box<U>>,
 }
@@ -57,8 +57,7 @@ impl<T, U: ?Sized> Drop for Tied<T, U> {
         unsafe {
             // let's be explicit about order here!
             ManuallyDrop::drop(&mut self.borrow);
-            let _ = self.inner.take();
-            //ManuallyDrop::drop(&mut self.inner);
+            ManuallyDrop::drop(&mut self.inner);
         }
     }
 }
@@ -74,17 +73,18 @@ impl<T, U: ?Sized> Tied<T, U> {
         let mut value = Box::new(value);
         let borrow = producer(&mut *value);
         Self {
-            inner: Some(value),
+            inner: ManuallyDrop::new(value),
             borrow: ManuallyDrop::new(borrow),
         }
     }
 
     pub fn into_boxed_inner(mut self) -> Box<T> {
-        unsafe {
+        let inner = unsafe {
             ManuallyDrop::drop(&mut self.borrow);
-            //ManuallyDrop::take(&mut self.inner)
-        }
-        self.inner.take().unwrap()
+            ManuallyDrop::take(&mut self.inner)
+        };
+        std::mem::forget(self);
+        inner
     }
 
     pub fn into_inner(self) -> T {
