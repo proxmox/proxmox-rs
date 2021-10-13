@@ -31,6 +31,9 @@ pub use text_table::*;
 mod completion;
 pub use completion::*;
 
+mod completion_helpers;
+pub use completion_helpers::*;
+
 mod getopts;
 pub use getopts::*;
 
