@@ -25,8 +25,8 @@ Provides:
  librust-proxmox-borrow-1+default-dev (= ${binary:Version}),
  librust-proxmox-borrow-1.0-dev (= ${binary:Version}),
  librust-proxmox-borrow-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-borrow-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-borrow-1.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-borrow-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1.0.1+default-dev (= ${binary:Version})
 Description: Contains the Tied type to tie a value with a lifetime to the value it borrows from - Rust source code
  This package contains the source for the Rust proxmox-borrow crate, packaged by
  debcargo for use with cargo and dh-cargo.

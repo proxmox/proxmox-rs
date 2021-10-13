@@ -1,3 +1,9 @@
+rust-proxmox-borrow (1.0.1-1) stable; urgency=medium
+
+  * update to new std features, fixup (currently unused) into_boxed_inner
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 13 Oct 2021 10:39:36 +0200
+
 rust-proxmox-borrow (1.0.0-1) stable; urgency=medium
 
   * initial split out of `librust-proxmox-dev`
