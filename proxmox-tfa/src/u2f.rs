@@ -557,7 +557,7 @@ mod test {
     }
 }
 
-pub mod bytes_as_base64 {
+mod bytes_as_base64 {
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(data: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
@@ -572,7 +572,7 @@ pub mod bytes_as_base64 {
     }
 }
 
-pub mod bytes_as_base64url_nopad {
+mod bytes_as_base64url_nopad {
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(data: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
