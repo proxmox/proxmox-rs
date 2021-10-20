@@ -62,7 +62,7 @@ fn replace_auth_state(
     let options = CreateOptions::new().perm(mode);
     let raw = serde_json::to_string_pretty(data)?;
 
-    replace_file(path, raw.as_bytes(), options)?;
+    replace_file(path, raw.as_bytes(), options, false)?;
 
     Ok(())
 }
