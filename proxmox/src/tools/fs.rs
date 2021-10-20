@@ -163,10 +163,15 @@ pub fn make_tmp_file<P: AsRef<Path>>(
 /// Atomically replace a file.
 ///
 /// This first creates a temporary file and then rotates it in place.
+///
+/// `fsync`: use `fsync(2)` sycall to synchronize a file's in-core
+/// state with storage device. This makes sure the is consistent even
+/// aftert a power loss.
 pub fn replace_file<P: AsRef<Path>>(
     path: P,
     data: &[u8],
     options: CreateOptions,
+    fsync: bool,
 ) -> Result<(), Error> {
     let (fd, tmp_path) = make_tmp_file(&path, options)?;
 
@@ -175,6 +180,11 @@ pub fn replace_file<P: AsRef<Path>>(
     if let Err(err) = file.write_all(data) {
         let _ = unistd::unlink(&tmp_path);
         bail!("write failed: {}", err);
+    }
+
+    if fsync {
+        // make sure data is on disk
+        nix::unistd::fsync(file.as_raw_fd())?;
     }
 
     if let Err(err) = std::fs::rename(&tmp_path, &path) {
@@ -194,11 +204,16 @@ pub fn replace_file<P: AsRef<Path>>(
 /// Since we need to initialize the file, we also need a solid slow
 /// path where we create the file. In order to avoid races, we create
 /// it in a temporary location and rotate it in place.
+///
+/// `fsync`: use `fsync(2)` sycall to synchronize the `initial_data`
+/// to the storage device. This options has no effect it the `initial_data`
+/// is empty or the file already exists.
 pub fn atomic_open_or_create_file<P: AsRef<Path>>(
     path: P,
     mut oflag: OFlag,
     initial_data: &[u8],
     options: CreateOptions,
+    fsync: bool,
 ) -> Result<File, Error> {
     let path = path.as_ref();
 
@@ -244,6 +259,10 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
                 err,
             )
         })?;
+        if fsync {
+            // make sure the initial_data is on disk
+            nix::unistd::fsync(file.as_raw_fd())?;
+        }
     }
 
     // rotate the file into place, but use `RENAME_NOREPLACE`, so in case 2 processes race against
@@ -623,6 +642,7 @@ pub fn open_file_locked<P: AsRef<Path>>(
         OFlag::O_RDWR | OFlag::O_CLOEXEC | OFlag::O_APPEND,
         &[],
         options,
+        false,
     )?;
 
     match lock_file(&mut file, exclusive, Some(timeout)) {
