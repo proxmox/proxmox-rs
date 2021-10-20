@@ -5,3 +5,6 @@ maintainer = "Proxmox Support Team <support@proxmox.com>"
 [source]
 vcs_git = "git://git.proxmox.com/git/proxmox.git"
 vcs_browser = "https://git.proxmox.com/?p=proxmox.git"
+
+[packages.lib]
+depends = [ "uuid-dev" ]
