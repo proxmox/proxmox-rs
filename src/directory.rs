@@ -36,7 +36,8 @@ pub struct DirectoryData {
 
     /// Metadata object, for additional information which aren't directly part of the API
     /// itself, such as the terms of service.
-    pub meta: Meta,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub meta: Option<Meta>,
 }
 
 /// The directory's "meta" object.
@@ -57,7 +58,10 @@ impl Directory {
 
     /// Get the ToS URL.
     pub fn terms_of_service_url(&self) -> Option<&str> {
-        self.data.meta.terms_of_service.as_deref()
+        match &self.data.meta {
+            Some(meta) => meta.terms_of_service.as_deref(),
+            None => None,
+        }
     }
 
     /// Get the "newNonce" URL. Use `HEAD` requests on this to get a new nonce.
@@ -76,7 +80,7 @@ impl Directory {
     /// Access to the in the Acme spec defined metadata structure.
     /// Currently only contains the ToS URL already exposed via the `terms_of_service_url()`
     /// method.
-    pub fn meta(&self) -> &Meta {
-        &self.data.meta
+    pub fn meta(&self) -> Option<&Meta> {
+        self.data.meta.as_ref()
     }
 }
