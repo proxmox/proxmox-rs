@@ -1,3 +1,11 @@
+rust-proxmox-openid (0.8.1-1) unstable; urgency=medium
+
+  * add fsync parameter to replace_file
+
+  * Depend on proxmox 0.15.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 21 Oct 2021 07:14:52 +0200
+
 rust-proxmox-openid (0.8.0-1) unstable; urgency=medium
 
   * update to proxmox crate split
