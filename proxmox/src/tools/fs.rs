@@ -184,7 +184,10 @@ pub fn replace_file<P: AsRef<Path>>(
 
     if fsync {
         // make sure data is on disk
-        nix::unistd::fsync(file.as_raw_fd())?;
+        if let Err(err) = nix::unistd::fsync(file.as_raw_fd()) {
+            let _ = unistd::unlink(&tmp_path);
+            bail!("fsync failed: {}", err);
+        }
     }
 
     if let Err(err) = std::fs::rename(&tmp_path, &path) {
@@ -261,7 +264,14 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
         })?;
         if fsync {
             // make sure the initial_data is on disk
-            nix::unistd::fsync(file.as_raw_fd())?;
+            if let Err(err) = nix::unistd::fsync(file.as_raw_fd()) {
+                let _ = nix::unistd::unlink(&temp_file_name);
+                bail!(
+                    "fsync of initial data to {:?} failed - {}",
+                    temp_file_name,
+                    err,
+                )
+            }
         }
     }
 
