@@ -1179,6 +1179,11 @@ where
     type Updater = T::Updater;
 }
 
+// this will replace the whole Vec
+impl<T> UpdaterType for Vec<T> {
+    type Updater = Option<Self>;
+}
+
 pub trait ApiType {
     const API_SCHEMA: Schema;
 }
