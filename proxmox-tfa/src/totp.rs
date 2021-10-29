@@ -180,6 +180,11 @@ impl Totp {
         &self.secret
     }
 
+    /// Get the requested number of decimal digits.
+    pub fn digits(&self) -> u8 {
+        self.digits
+    }
+
     /// Get the used algorithm.
     pub fn algorithm(&self) -> Algorithm {
         self.algorithm
