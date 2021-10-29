@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-tfa"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Proxmox Support Team <support@proxmox.com>"]
 edition = "2018"
 license = "AGPL-3"
