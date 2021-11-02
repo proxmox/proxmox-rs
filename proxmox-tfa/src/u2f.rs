@@ -104,7 +104,7 @@ pub struct RegistrationResponse {
 /// include the registered keys.
 ///
 /// Part of the U2F API, therefore `camelCase`.
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthChallenge {
     pub challenge: String,
