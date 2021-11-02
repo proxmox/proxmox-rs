@@ -1,3 +1,10 @@
+rust-proxmox-tfa (1.2.0-1) stable; urgency=medium
+
+  * make u2f::AuthChallenge Clone + Debug
+  * add version field to u2f::AuthChallenge
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 02 Nov 2021 12:53:54 +0100
+
 rust-proxmox-tfa (1.1.0-1) stable; urgency=medium
 
   * add Totp::digits getter

@@ -41,10 +41,10 @@ Provides:
  librust-proxmox-tfa+default-dev (= ${binary:Version}),
  librust-proxmox-tfa-1-dev (= ${binary:Version}),
  librust-proxmox-tfa-1+default-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1+default-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1.0-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.2-dev (= ${binary:Version}),
+ librust-proxmox-tfa-1.2+default-dev (= ${binary:Version}),
+ librust-proxmox-tfa-1.2.0-dev (= ${binary:Version}),
+ librust-proxmox-tfa-1.2.0+default-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - Rust source code
  This package contains the source for the Rust proxmox-tfa crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -58,8 +58,8 @@ Depends:
  librust-libc-0.2+default-dev
 Provides:
  librust-proxmox-tfa-1+libc-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1+libc-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1.0+libc-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.2+libc-dev (= ${binary:Version}),
+ librust-proxmox-tfa-1.2.0+libc-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "libc"
  This metapackage enables feature "libc" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
@@ -73,8 +73,8 @@ Depends:
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-tfa-1+serde-json-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1+serde-json-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1.0+serde-json-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.2+serde-json-dev (= ${binary:Version}),
+ librust-proxmox-tfa-1.2.0+serde-json-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "serde_json"
  This metapackage enables feature "serde_json" for the Rust proxmox-tfa crate,
  by pulling in any additional dependencies needed by that feature.
@@ -90,8 +90,8 @@ Depends:
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-tfa-1+u2f-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1+u2f-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.1.0+u2f-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.2+u2f-dev (= ${binary:Version}),
+ librust-proxmox-tfa-1.2.0+u2f-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "u2f"
  This metapackage enables feature "u2f" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
