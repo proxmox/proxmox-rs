@@ -1,14 +1,14 @@
 use anyhow::{bail, format_err, Error};
 use std::os::unix::io::AsRawFd;
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll};
 
 use futures::*;
 use http::Uri;
 use hyper::client::HttpConnector;
 use openssl::ssl::SslConnector;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio_openssl::SslStream;
 
@@ -18,12 +18,16 @@ use crate::proxy_config::ProxyConfig;
 use crate::tls::MaybeTlsStream;
 use crate::uri::build_authority;
 
+use super::{RateLimiter, RateLimitedStream};
+
 #[derive(Clone)]
 pub struct HttpsConnector {
     connector: HttpConnector,
     ssl_connector: Arc<SslConnector>,
     proxy: Option<ProxyConfig>,
     tcp_keepalive: u32,
+    read_limiter: Option<Arc<Mutex<RateLimiter>>>,
+    write_limiter: Option<Arc<Mutex<RateLimiter>>>,
 }
 
 impl HttpsConnector {
@@ -38,6 +42,8 @@ impl HttpsConnector {
             ssl_connector: Arc::new(ssl_connector),
             proxy: None,
             tcp_keepalive,
+            read_limiter: None,
+            write_limiter: None,
         }
     }
 
@@ -45,13 +51,21 @@ impl HttpsConnector {
         self.proxy = Some(proxy);
     }
 
-    async fn secure_stream(
-        tcp_stream: TcpStream,
+    pub fn set_read_limiter(&mut self, limiter: Option<Arc<Mutex<RateLimiter>>>) {
+        self.read_limiter = limiter;
+    }
+
+    pub fn set_write_limiter(&mut self, limiter: Option<Arc<Mutex<RateLimiter>>>) {
+        self.write_limiter = limiter;
+    }
+
+    async fn secure_stream<S: AsyncRead + AsyncWrite + Unpin>(
+        tcp_stream: S,
         ssl_connector: &SslConnector,
         host: &str,
-    ) -> Result<MaybeTlsStream<TcpStream>, Error> {
+    ) -> Result<MaybeTlsStream<S>, Error> {
         let config = ssl_connector.configure()?;
-        let mut conn: SslStream<TcpStream> = SslStream::new(config.into_ssl(host)?, tcp_stream)?;
+        let mut conn: SslStream<S> = SslStream::new(config.into_ssl(host)?, tcp_stream)?;
         Pin::new(&mut conn).connect().await?;
         Ok(MaybeTlsStream::Secured(conn))
     }
@@ -107,7 +121,7 @@ impl HttpsConnector {
 }
 
 impl hyper::service::Service<Uri> for HttpsConnector {
-    type Response = MaybeTlsStream<TcpStream>;
+    type Response = MaybeTlsStream<RateLimitedStream<TcpStream>>;
     type Error = Error;
     #[allow(clippy::type_complexity)]
     type Future =
@@ -129,6 +143,9 @@ impl hyper::service::Service<Uri> for HttpsConnector {
         };
         let port = dst.port_u16().unwrap_or(if is_https { 443 } else { 80 });
         let keepalive = self.tcp_keepalive;
+        let read_limiter = self.read_limiter.clone();
+        let write_limiter = self.write_limiter.clone();
+
 
         if let Some(ref proxy) = self.proxy {
             let use_connect = is_https || proxy.force_connect;
@@ -152,11 +169,17 @@ impl hyper::service::Service<Uri> for HttpsConnector {
 
             if use_connect {
                 async move {
-                    let mut tcp_stream = connector.call(proxy_uri).await.map_err(|err| {
+                    let tcp_stream = connector.call(proxy_uri).await.map_err(|err| {
                         format_err!("error connecting to {} - {}", proxy_authority, err)
                     })?;
 
                     let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
+
+                    let mut tcp_stream = RateLimitedStream::with_limiter(
+                        tcp_stream,
+                        read_limiter,
+                        write_limiter,
+                    );
 
                     let mut connect_request = format!("CONNECT {0}:{1} HTTP/1.1\r\n", host, port);
                     if let Some(authorization) = authorization {
@@ -185,6 +208,12 @@ impl hyper::service::Service<Uri> for HttpsConnector {
 
                     let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
 
+                    let tcp_stream = RateLimitedStream::with_limiter(
+                        tcp_stream,
+                        read_limiter,
+                        write_limiter,
+                    );
+
                     Ok(MaybeTlsStream::Proxied(tcp_stream))
                 }
                 .boxed()
@@ -198,6 +227,12 @@ impl hyper::service::Service<Uri> for HttpsConnector {
                     .map_err(|err| format_err!("error connecting to {} - {}", dst_str, err))?;
 
                 let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
+
+                let tcp_stream = RateLimitedStream::with_limiter(
+                    tcp_stream,
+                    read_limiter,
+                    write_limiter,
+                );
 
                 if is_https {
                     Self::secure_stream(tcp_stream, &ssl_connector, &host).await

@@ -7,6 +7,7 @@ use std::io::IoSlice;
 use futures::Future;
 use tokio::io::{ReadBuf, AsyncRead, AsyncWrite};
 use tokio::time::Sleep;
+use hyper::client::connect::{Connection, Connected};
 
 use std::task::{Context, Poll};
 
@@ -173,4 +174,11 @@ impl <S: AsyncRead + Unpin> AsyncRead for RateLimitedStream<S> {
         result
     }
 
+}
+
+// we need this for the hyper http client
+impl<S: Connection + AsyncRead + AsyncWrite + Unpin> Connection for RateLimitedStream<S> {
+    fn connected(&self) -> Connected {
+        self.stream.connected()
+    }
 }
