@@ -1,7 +1,7 @@
 //! U2F implementation.
 
-use std::mem::MaybeUninit;
 use std::io;
+use std::mem::MaybeUninit;
 
 use anyhow::{bail, format_err, Error};
 use openssl::ec::{EcGroup, EcKey, EcPoint};
@@ -109,6 +109,7 @@ pub struct RegistrationResponse {
 pub struct AuthChallenge {
     pub challenge: String,
     pub app_id: String,
+    pub version: String,
 }
 
 /// The response we get from a successful call to the `u2f.sign` function in the browser.
@@ -224,6 +225,7 @@ impl U2f {
         Ok(AuthChallenge {
             challenge: challenge()?,
             app_id: self.app_id.clone(),
+            version: U2F_VERSION.to_owned(),
         })
     }
 
