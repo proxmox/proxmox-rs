@@ -19,6 +19,8 @@ pub struct RateLimitedStream<S> {
     read_delay: Option<Pin<Box<Sleep>>>,
     write_limiter: Option<Arc<Mutex<RateLimiter>>>,
     write_delay: Option<Pin<Box<Sleep>>>,
+    update_limiter_cb: Option<Box<dyn Fn() -> (Option<Arc<Mutex<RateLimiter>>>, Option<Arc<Mutex<RateLimiter>>>) + Send>>,
+    last_limiter_update: Instant,
     stream: S,
 }
 
@@ -43,7 +45,42 @@ impl <S> RateLimitedStream<S> {
             read_delay: None,
             write_limiter,
             write_delay: None,
+            update_limiter_cb: None,
+            last_limiter_update: Instant::now(),
             stream,
+        }
+    }
+
+    /// Creates a new instance with limiter update callback.
+    ///
+    /// The fuction is called every minute to update/change the used limiters.
+    ///
+    /// Note: This function is called within an async context, so it
+    /// should be fast and must not block.
+    pub fn with_limiter_update_cb<F: Fn() -> (Option<Arc<Mutex<RateLimiter>>>, Option<Arc<Mutex<RateLimiter>>>) + Send + 'static>(
+        stream: S,
+        update_limiter_cb: F,
+    ) -> Self {
+        let (read_limiter, write_limiter) = update_limiter_cb();
+        Self {
+            read_limiter,
+            read_delay: None,
+            write_limiter,
+            write_delay: None,
+            update_limiter_cb: Some(Box::new(update_limiter_cb)),
+            last_limiter_update: Instant::now(),
+            stream,
+        }
+    }
+
+    fn update_limiters(&mut self) {
+        if let Some(ref update_limiter_cb) = self.update_limiter_cb {
+            if self.last_limiter_update.elapsed().as_secs() >= 5 {
+                self.last_limiter_update = Instant::now();
+                let (read_limiter, write_limiter) = update_limiter_cb();
+                self.read_limiter = read_limiter;
+                self.write_limiter = write_limiter;
+            }
         }
     }
 }
@@ -90,6 +127,8 @@ impl <S: AsyncWrite + Unpin> AsyncWrite for RateLimitedStream<S> {
 
         this.write_delay = None;
 
+        this.update_limiters();
+
         let result = Pin::new(&mut this.stream).poll_write(ctx, buf);
 
         if let Some(ref limiter) = this.write_limiter {
@@ -117,6 +156,8 @@ impl <S: AsyncWrite + Unpin> AsyncWrite for RateLimitedStream<S> {
         if !is_ready { return Poll::Pending; }
 
         this.write_delay = None;
+
+        this.update_limiters();
 
         let result = Pin::new(&mut this.stream).poll_write_vectored(ctx, bufs);
 
@@ -160,6 +201,8 @@ impl <S: AsyncRead + Unpin> AsyncRead for RateLimitedStream<S> {
         if !is_ready { return Poll::Pending; }
 
         this.read_delay = None;
+
+        this.update_limiters();
 
         let filled_len = buf.filled().len();
         let result = Pin::new(&mut this.stream).poll_read(ctx, buf);
