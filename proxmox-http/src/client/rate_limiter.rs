@@ -36,7 +36,7 @@ impl RateLimiter {
 
     /// Returns the average rate (since `start_time`)
     pub fn average_rate(&self, current_time: Instant) -> f64 {
-        let time_diff = (current_time - self.start_time).as_secs_f64();
+        let time_diff = current_time.saturating_duration_since(self.start_time).as_secs_f64();
         if time_diff <= 0.0 {
             0.0
         } else {
@@ -45,12 +45,15 @@ impl RateLimiter {
     }
 
     fn refill_bucket(&mut self, current_time: Instant) {
-        let time_diff = (current_time - self.last_update).as_nanos();
+        let time_diff = match current_time.checked_duration_since(self.last_update) {
+            Some(duration) => duration.as_nanos(),
+            None => {
+                //log::error!("update_time: got negative time diff");
+                return;
+            }
+        };
 
-        if time_diff <= 0 {
-            //log::error!("update_time: got negative time diff");
-            return;
-        }
+        if time_diff == 0 { return; }
 
         self.last_update = current_time;
 
