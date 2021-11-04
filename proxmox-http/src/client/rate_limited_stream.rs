@@ -24,6 +24,12 @@ pub struct RateLimitedStream<S> {
     stream: S,
 }
 
+impl RateLimitedStream<tokio::net::TcpStream> {
+    pub fn peer_addr(&self) -> std::io::Result<std::net::SocketAddr> {
+        self.stream.peer_addr()
+    }
+}
+
 impl <S> RateLimitedStream<S> {
 
     /// Creates a new instance with reads and writes limited to the same `rate`.
