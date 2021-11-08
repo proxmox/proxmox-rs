@@ -34,6 +34,17 @@ impl RateLimiter {
         }
     }
 
+    /// Update rate and bucket size
+    pub fn update_rate(&mut self, rate: u64, bucket_size: u64) {
+        self.rate = rate;
+
+        if bucket_size < self.bucket_size && self.consumed_tokens > bucket_size {
+            self.consumed_tokens = bucket_size; // start again
+        }
+
+        self.bucket_size = bucket_size;
+    }
+
     /// Returns the average rate (since `start_time`)
     pub fn average_rate(&self, current_time: Instant) -> f64 {
         let time_diff = current_time.saturating_duration_since(self.start_time).as_secs_f64();
