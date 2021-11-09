@@ -91,6 +91,7 @@ impl Headers {
 struct Inner {
     easy: easy::Easy,
     nonce: Option<String>,
+    proxy: Option<String>,
 }
 
 impl Inner {
@@ -98,6 +99,7 @@ impl Inner {
         Self {
             easy: easy::Easy::new(),
             nonce: None,
+            proxy: None,
         }
     }
 
@@ -119,6 +121,10 @@ impl Inner {
         }
 
         self.easy.url(url)?;
+
+        if let Some(p) = &self.proxy {
+            self.easy.proxy(&p)?;
+        }
 
         {
             let mut transfer = self.easy.transfer();
@@ -154,6 +160,10 @@ impl Inner {
             status,
             headers,
         })
+    }
+
+    pub fn set_proxy(&mut self, proxy: String) {
+            self.proxy = Some(proxy);
     }
 
     /// Low-level API to run an n API request. This automatically updates the current nonce!
@@ -585,6 +595,11 @@ impl Client {
                 Err(err) => return Err(err.into()),
             }
         }
+    }
+
+    /// Set a proxy
+    pub fn set_proxy(&mut self, proxy: String) {
+        self.inner.set_proxy(proxy)
     }
 }
 
