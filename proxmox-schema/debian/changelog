@@ -1,3 +1,9 @@
+rust-proxmox-schema (1.0.1-1) unstable; urgency=medium
+
+  * updater: impl UpdaterType for Vec
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 10 Nov 2021 09:54:20 +0100
+
 rust-proxmox-schema (1.0.0-1) stable; urgency=medium
 
   * initial split out of `librust-proxmox-dev`
