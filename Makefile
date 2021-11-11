@@ -9,6 +9,7 @@ CRATES = \
 	 proxmox-lang \
 	 proxmox-router \
 	 proxmox-schema \
+	 proxmox-shared-memory \
 	 proxmox-section-config \
 	 proxmox-sortable-macro \
 	 proxmox-tfa \
