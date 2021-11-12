@@ -31,7 +31,7 @@ pub trait Init: Sized {
     fn initialize(this: &mut MaybeUninit<Self>);
 
     /// Check if the data has the correct format
-    fn check_type_magic(this: &MaybeUninit<Self>) -> bool { true }
+    fn check_type_magic(this: &MaybeUninit<Self>) -> Result<(), Error> { Ok(()) }
 }
 
 /// Memory mapped shared memory region
@@ -65,8 +65,9 @@ fn mmap_file<T: Init>(file: &mut File, initialize: bool) -> Result<Mmap<T>, Erro
         Init::initialize(&mut mmap[0]);
     }
 
-    if !Init::check_type_magic(&mut mmap[0]) {
-        bail!("detected wrong types in mmaped files");
+    match Init::check_type_magic(&mut mmap[0]) {
+        Ok(()) => (),
+        Err(err) => bail!("detected wrong types in mmaped files: {}", err),
     }
 
     Ok(unsafe { std::mem::transmute(mmap) })
@@ -188,6 +189,18 @@ impl <T: Sized + Init> SharedMemory<T> {
 
 }
 
+/// Helper to initialize nested data
+pub unsafe fn initialize_subtype<T: Init>(this: &mut T) {
+    let data: &mut MaybeUninit<T> = std::mem::transmute(this);
+    Init::initialize(data);
+}
+
+/// Helper to call 'check_type_magic' for nested data
+pub unsafe fn check_subtype<T: Init>(this: &T) -> Result<(), Error> {
+    let data: &MaybeUninit<T> = std::mem::transmute(this);
+    Init::check_type_magic(data)
+}
+
 #[cfg(test)]
 mod test {
 
@@ -221,15 +234,17 @@ mod test {
 
     impl Init for SingleMutexData {
         fn initialize(this: &mut MaybeUninit<Self>) {
-            let me = unsafe { &mut *this.as_mut_ptr() };
-            let data: &mut MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&mut me.data) };
-            Init::initialize(data);
+            unsafe {
+                let me = &mut *this.as_mut_ptr();
+                initialize_subtype(&mut me.data);
+            }
         }
 
-        fn check_type_magic(this: &MaybeUninit<Self>) -> bool {
-            let me = unsafe { & *this.as_ptr() };
-            let data: &MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&me.data) };
-            Init::check_type_magic(data)
+        fn check_type_magic(this: &MaybeUninit<Self>) -> Result<(), Error> {
+            unsafe {
+                let me = &*this.as_ptr();
+                check_subtype(&me.data)
+            }
         }
     }
 
@@ -262,20 +277,20 @@ mod test {
 
     impl Init for MultiMutexData {
         fn initialize(this: &mut MaybeUninit<Self>) {
-            let me = unsafe { &mut *this.as_mut_ptr() };
-
-            let block1: &mut MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&mut me.block1) };
-            Init::initialize(block1);
-
-            let block2: &mut MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&mut me.block2) };
-            Init::initialize(block2);
+            unsafe {
+                let me = &mut *this.as_mut_ptr();
+                initialize_subtype(&mut me.block1);
+                initialize_subtype(&mut me.block2);
+            }
         }
 
-        fn check_type_magic(this: &MaybeUninit<Self>) -> bool {
-            let me = unsafe { & *this.as_ptr() };
-            let block1: &MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&me.block1) };
-            let block2: &MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&me.block2) };
-            Init::check_type_magic(block1) && Init::check_type_magic(block2)
+        fn check_type_magic(this: &MaybeUninit<Self>) -> Result<(), Error> {
+            unsafe {
+                let me = &*this.as_ptr();
+                check_subtype(&me.block1)?;
+                check_subtype(&me.block2)?;
+                Ok(())
+            }
         }
     }
 
@@ -293,7 +308,9 @@ mod test {
         println!("BLOCK2 {:?}", *guard);
         guard.count += 2;
 
-        unimplemented!();
+        //unimplemented!();
+
+        Ok(())
     }
 
 }

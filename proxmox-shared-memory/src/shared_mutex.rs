@@ -3,6 +3,8 @@ use std::mem::MaybeUninit;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
+use anyhow::{bail, Error};
+
 use crate::Init;
 use crate::raw_shared_mutex::RawSharedMutex;
 
@@ -36,9 +38,12 @@ impl <T: Init> Init for SharedMutex<T> {
         Init::initialize(u);
     }
 
-    fn check_type_magic(this: &MaybeUninit<Self>) -> bool {
+    fn check_type_magic(this: &MaybeUninit<Self>) -> Result<(), Error> {
         let me = unsafe { & *this.as_ptr() };
-        me.magic == PROXMOX_SHARED_MUTEX_MAGIC_1_0
+        if me.magic != PROXMOX_SHARED_MUTEX_MAGIC_1_0 {
+            bail!("SharedMutex: wrong magic number");
+        }
+        Ok(())
     }
 }
 
