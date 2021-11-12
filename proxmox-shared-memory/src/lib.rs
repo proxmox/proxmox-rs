@@ -100,9 +100,11 @@ impl <T: Sized + Init> SharedMemory<T> {
             .ok_or_else(|| format_err!("bad path {:?}", path))?
             .to_owned();
 
-        let statfs = nix::sys::statfs::statfs(&dir_name)?;
-        if statfs.filesystem_type() != nix::sys::statfs::TMPFS_MAGIC {
-            bail!("path {:?} is not on tmpfs", dir_name);
+        if !cfg!(test) {
+            let statfs = nix::sys::statfs::statfs(&dir_name)?;
+            if statfs.filesystem_type() != nix::sys::statfs::TMPFS_MAGIC {
+                bail!("path {:?} is not on tmpfs", dir_name);
+            }
         }
 
         let oflag = OFlag::O_RDWR | OFlag::O_CLOEXEC;
@@ -116,7 +118,7 @@ impl <T: Sized + Init> SharedMemory<T> {
             }
             Err(err) => {
                 if err.not_found() {
-                    // fall thrue -  try to create the file
+                    // fall true -  try to create the file
                 } else {
                     bail!("open {:?} failed - {}", path, err);
                 }
@@ -206,7 +208,9 @@ mod test {
 
     use super::*;
 
+    use std::sync::Arc;
     use std::sync::atomic::AtomicU64;
+    use std::thread::spawn;
 
     #[derive(Debug)]
     #[repr(C)]
@@ -251,17 +255,34 @@ mod test {
     #[test]
     fn test_shared_memory_mutex() -> Result<(), Error> {
 
-        create_path("/run/proxmox-shmem", None, None);
+        create_path("../target/testdata/", None, None);
 
         let shared: SharedMemory<SingleMutexData> =
-            SharedMemory::open(Path::new("/run/proxmox-shmem/test.shm"), CreateOptions::new())?;
+            SharedMemory::open(Path::new("../target/testdata/test1.shm"), CreateOptions::new())?;
 
-        let mut guard = shared.data().data.lock();
-        println!("DATA {:?}", *guard);
-        guard.count += 1;
-        println!("DATA {:?}", *guard);
+        let shared = Arc::new(shared);
 
-        //unimplemented!();
+        let start = shared.data().data.lock().count;
+
+        let mut threads: Vec<_> = (0..100)
+            .map(|_| {
+                let shared = shared.clone();
+                spawn(move || {
+                    let mut guard = shared.data().data.lock();
+                    println!("DATA {:?}", *guard);
+                    guard.count += 1;
+                    println!("DATA {:?}", *guard);
+                })
+            })
+            .collect();
+
+        for thread in threads {
+            thread.join().unwrap();
+        }
+
+        let end = shared.data().data.lock().count;
+
+        assert_eq!(end-start, 100);
 
         Ok(())
     }
@@ -297,18 +318,39 @@ mod test {
     #[test]
     fn test_shared_memory_multi_mutex() -> Result<(), Error> {
 
+        create_path("../target/testdata/", None, None);
+
         let shared: SharedMemory<MultiMutexData> =
-            SharedMemory::open(Path::new("/run/proxmox-shmem/test3.shm"), CreateOptions::new())?;
+            SharedMemory::open(Path::new("../target/testdata/test2.shm"), CreateOptions::new())?;
 
-        let mut guard = shared.data().block1.lock();
-        println!("BLOCK1 {:?}", *guard);
-        guard.count += 1;
+                let shared = Arc::new(shared);
 
-        let mut guard = shared.data().block2.lock();
-        println!("BLOCK2 {:?}", *guard);
-        guard.count += 2;
+        let start1 = shared.data().block1.lock().count;
+        let start2 = shared.data().block2.lock().count;
 
-        //unimplemented!();
+        let mut threads: Vec<_> = (0..100)
+            .map(|_| {
+                let shared = shared.clone();
+                spawn(move || {
+                    let mut guard = shared.data().block1.lock();
+                    println!("BLOCK1 {:?}", *guard);
+                    guard.count += 1;
+                    let mut guard = shared.data().block2.lock();
+                    println!("BLOCK2 {:?}", *guard);
+                    guard.count += 2;
+                })
+            })
+            .collect();
+
+        for thread in threads {
+            thread.join().unwrap();
+        }
+
+        let end1 = shared.data().block1.lock().count;
+        assert_eq!(end1-start1, 100);
+
+        let end2 = shared.data().block2.lock().count;
+        assert_eq!(end2-start2, 200);
 
         Ok(())
     }
