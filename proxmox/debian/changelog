@@ -1,3 +1,9 @@
+rust-proxmox (0.15.2-1) stable; urgency=medium
+
+  *  impl proxmox::tools::fs::CreateOptions::apply_to()
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 12 Nov 2021 17:37:33 +0100
+
 rust-proxmox (0.15.1-1) unstable; urgency=medium
 
   * fix error handling if the previously introduced fsyncs fail
