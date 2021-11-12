@@ -134,30 +134,18 @@ pub fn make_tmp_file<P: AsRef<Path>>(
     // use mkstemp here, because it works with different processes, threads, even tokio tasks
     let mut template = path.to_owned();
     template.set_extension("tmp_XXXXXX");
-    let (file, tmp_path) = match unistd::mkstemp(&template) {
+    let (mut file, tmp_path) = match unistd::mkstemp(&template) {
         Ok((fd, path)) => (unsafe { File::from_raw_fd(fd) }, path),
         Err(err) => bail!("mkstemp {:?} failed: {}", template, err),
     };
 
-    // clippy bug?: from_bits_truncate is actually a const fn...
-    #[allow(clippy::or_fun_call)]
-    let mode: stat::Mode = options
-        .perm
-        .unwrap_or(stat::Mode::from_bits_truncate(0o644));
-
-    if let Err(err) = stat::fchmod(file.as_raw_fd(), mode) {
-        let _ = unistd::unlink(&tmp_path);
-        bail!("fchmod {:?} failed: {}", tmp_path, err);
-    }
-
-    if options.owner.is_some() || options.group.is_some() {
-        if let Err(err) = fchown(file.as_raw_fd(), options.owner, options.group) {
+    match options.apply_to(&mut file, &tmp_path) {
+        Ok(()) => Ok((file, tmp_path)),
+        Err(err) => {
             let _ = unistd::unlink(&tmp_path);
-            bail!("fchown {:?} failed: {}", tmp_path, err);
+            Err(err)
         }
     }
-
-    Ok((file, tmp_path))
 }
 
 /// Atomically replace a file.
@@ -380,6 +368,25 @@ impl CreateOptions {
     /// Convenience shortcut around having to import `Uid` from nix.
     pub const fn owner_root(self) -> Self {
         self.owner(nix::unistd::ROOT)
+    }
+
+    pub fn apply_to(&self, file: &mut File, path: &Path) -> Result<(), Error> {
+
+        // clippy bug?: from_bits_truncate is actually a const fn...
+        #[allow(clippy::or_fun_call)]
+        let mode: stat::Mode = self.perm
+            .unwrap_or(stat::Mode::from_bits_truncate(0o644));
+
+        if let Err(err) = stat::fchmod(file.as_raw_fd(), mode) {
+            bail!("fchmod {:?} failed: {}", path, err);
+        }
+
+        if self.owner.is_some() || self.group.is_some() {
+            if let Err(err) = fchown(file.as_raw_fd(), self.owner, self.group) {
+                bail!("fchown {:?} failed: {}", path, err);
+            }
+        }
+        Ok(())
     }
 
     // TODO: once 'nix' has `const fn` constructors for Uid and Gid we can enable these:
