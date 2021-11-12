@@ -9,6 +9,7 @@ use crate::raw_shared_mutex::RawSharedMutex;
 #[derive(Debug)]
 #[repr(C)]
 pub struct SharedMutex<T: ?Sized> {
+    magic: [u8; 8],
     inner: RawSharedMutex,
     data: UnsafeCell<T>,
 }
@@ -16,11 +17,16 @@ pub struct SharedMutex<T: ?Sized> {
 unsafe impl<T: ?Sized + Send> Send for SharedMutex<T> {}
 unsafe impl<T: ?Sized + Send> Sync for SharedMutex<T> {}
 
+// openssl::sha::sha256(b"Proxmox SharedMutex v1.0")[0..8];
+pub const PROXMOX_SHARED_MUTEX_MAGIC_1_0: [u8; 8] = [124, 229, 154, 62, 248, 0, 154, 55];
+
 impl <T: Init> Init for SharedMutex<T> {
 
     fn initialize(this: &mut MaybeUninit<SharedMutex<T>>) {
 
         let me = unsafe { &mut *this.as_mut_ptr() };
+
+        me.magic = PROXMOX_SHARED_MUTEX_MAGIC_1_0;
 
         me.inner = RawSharedMutex::uninitialized();
         println!("INITIALIZE MUTEX");
@@ -29,14 +35,10 @@ impl <T: Init> Init for SharedMutex<T> {
         let u: &mut MaybeUninit<T> =  unsafe { std::mem::transmute(me.data.get_mut()) };
         Init::initialize(u);
     }
-}
 
-impl <T: Default> Default for SharedMutex<T> {
-    fn default() -> Self {
-        Self {
-            inner: RawSharedMutex::uninitialized(),
-            data: UnsafeCell::new(T::default()),
-        }
+    fn check_type_magic(this: &MaybeUninit<Self>) -> bool {
+        let me = unsafe { & *this.as_ptr() };
+        me.magic == PROXMOX_SHARED_MUTEX_MAGIC_1_0
     }
 }
 

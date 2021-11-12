@@ -29,6 +29,9 @@ pub trait Init: Sized {
     /// after mapping into shared memory. The caller makes sure that
     /// no other process run this at the same time.
     fn initialize(this: &mut MaybeUninit<Self>);
+
+    /// Check if the data has the correct format
+    fn check_type_magic(this: &MaybeUninit<Self>) -> bool { true }
 }
 
 /// Memory mapped shared memory region
@@ -60,6 +63,10 @@ fn mmap_file<T: Init>(file: &mut File, initialize: bool) -> Result<Mmap<T>, Erro
 
     if initialize {
         Init::initialize(&mut mmap[0]);
+    }
+
+    if !Init::check_type_magic(&mut mmap[0]) {
+        bail!("detected wrong types in mmaped files");
     }
 
     Ok(unsafe { std::mem::transmute(mmap) })
@@ -209,7 +216,7 @@ mod test {
 
     struct SingleMutexData {
         data: SharedMutex<TestData>,
-        padding: [u8; 4096 - 64],
+        padding: [u8; 4096 - 64 - 8],
     }
 
     impl Init for SingleMutexData {
@@ -217,6 +224,12 @@ mod test {
             let me = unsafe { &mut *this.as_mut_ptr() };
             let data: &mut MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&mut me.data) };
             Init::initialize(data);
+        }
+
+        fn check_type_magic(this: &MaybeUninit<Self>) -> bool {
+            let me = unsafe { & *this.as_ptr() };
+            let data: &MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&me.data) };
+            Init::check_type_magic(data)
         }
     }
 
@@ -244,7 +257,7 @@ mod test {
         acount: AtomicU64,
         block1: SharedMutex<TestData>,
         block2: SharedMutex<TestData>,
-        padding: [u8; 4096 - 136],
+        padding: [u8; 4096 - 136 - 16],
     }
 
     impl Init for MultiMutexData {
@@ -256,6 +269,13 @@ mod test {
 
             let block2: &mut MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&mut me.block2) };
             Init::initialize(block2);
+        }
+
+        fn check_type_magic(this: &MaybeUninit<Self>) -> bool {
+            let me = unsafe { & *this.as_ptr() };
+            let block1: &MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&me.block1) };
+            let block2: &MaybeUninit<SharedMutex<TestData>> =  unsafe { std::mem::transmute(&me.block2) };
+            Init::check_type_magic(block1) && Init::check_type_magic(block2)
         }
     }
 
