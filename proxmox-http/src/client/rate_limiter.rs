@@ -24,6 +24,7 @@ pub trait ShareableRateLimit: Send + Sync {
 }
 
 /// Token bucket based rate limiter
+#[repr(C)] // So that we can use it in shared memory
 pub struct RateLimiter {
     rate: u64, // tokens/second
     start_time: Instant,
