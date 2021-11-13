@@ -11,15 +11,17 @@ use hyper::client::connect::{Connection, Connected};
 
 use std::task::{Context, Poll};
 
-use super::{RateLimit, RateLimiter};
+use super::{ShareableRateLimit, RateLimiter};
+
+type SharedRateLimit = Arc<dyn ShareableRateLimit>;
 
 /// A rate limited stream using [RateLimiter]
 pub struct RateLimitedStream<S> {
-    read_limiter: Option<Arc<Mutex<RateLimiter>>>,
+    read_limiter: Option<SharedRateLimit>,
     read_delay: Option<Pin<Box<Sleep>>>,
-    write_limiter: Option<Arc<Mutex<RateLimiter>>>,
+    write_limiter: Option<SharedRateLimit>,
     write_delay: Option<Pin<Box<Sleep>>>,
-    update_limiter_cb: Option<Box<dyn Fn() -> (Option<Arc<Mutex<RateLimiter>>>, Option<Arc<Mutex<RateLimiter>>>) + Send>>,
+    update_limiter_cb: Option<Box<dyn Fn() -> (Option<SharedRateLimit>, Option<SharedRateLimit>) + Send>>,
     last_limiter_update: Instant,
     stream: S,
 }
@@ -35,18 +37,20 @@ impl <S> RateLimitedStream<S> {
     /// Creates a new instance with reads and writes limited to the same `rate`.
     pub fn new(stream: S, rate: u64, bucket_size: u64) -> Self {
         let now = Instant::now();
-        let read_limiter = Arc::new(Mutex::new(RateLimiter::with_start_time(rate, bucket_size, now)));
-        let write_limiter = Arc::new(Mutex::new(RateLimiter::with_start_time(rate, bucket_size, now)));
+        let read_limiter = RateLimiter::with_start_time(rate, bucket_size, now);
+        let read_limiter: SharedRateLimit = Arc::new(Mutex::new(read_limiter));
+        let write_limiter = RateLimiter::with_start_time(rate, bucket_size, now);
+        let write_limiter: SharedRateLimit = Arc::new(Mutex::new(write_limiter));
         Self::with_limiter(stream, Some(read_limiter), Some(write_limiter))
     }
 
     /// Creates a new instance with specified [RateLimiters] for reads and writes.
     pub fn with_limiter(
         stream: S,
-        read_limiter: Option<Arc<Mutex<RateLimiter>>>,
-        write_limiter: Option<Arc<Mutex<RateLimiter>>>,
+        read_limiter: Option<SharedRateLimit>,
+        write_limiter: Option<SharedRateLimit>,
     ) -> Self {
-        Self {
+       Self {
             read_limiter,
             read_delay: None,
             write_limiter,
@@ -63,7 +67,7 @@ impl <S> RateLimitedStream<S> {
     ///
     /// Note: This function is called within an async context, so it
     /// should be fast and must not block.
-    pub fn with_limiter_update_cb<F: Fn() -> (Option<Arc<Mutex<RateLimiter>>>, Option<Arc<Mutex<RateLimiter>>>) + Send + 'static>(
+    pub fn with_limiter_update_cb<F: Fn() -> (Option<SharedRateLimit>, Option<SharedRateLimit>) + Send + 'static>(
         stream: S,
         update_limiter_cb: F,
     ) -> Self {
@@ -92,15 +96,14 @@ impl <S> RateLimitedStream<S> {
 }
 
 fn register_traffic(
-    limiter: &Mutex<RateLimiter>,
+    limiter: &(dyn ShareableRateLimit),
     count: usize,
 ) -> Option<Pin<Box<Sleep>>>{
 
     const MIN_DELAY: Duration = Duration::from_millis(10);
 
     let now = Instant::now();
-    let delay = limiter.lock().unwrap()
-        .register_traffic(now, count as u64);
+    let delay = limiter.register_traffic(now, count as u64);
     if delay >= MIN_DELAY {
         let sleep = tokio::time::sleep(delay);
         Some(Box::pin(sleep))
@@ -137,9 +140,9 @@ impl <S: AsyncWrite + Unpin> AsyncWrite for RateLimitedStream<S> {
 
         let result = Pin::new(&mut this.stream).poll_write(ctx, buf);
 
-        if let Some(ref limiter) = this.write_limiter {
+        if let Some(ref mut limiter) = this.write_limiter {
             if let Poll::Ready(Ok(count)) = result {
-                this.write_delay = register_traffic(limiter, count);
+                this.write_delay = register_traffic(limiter.as_ref(), count);
             }
         }
 
@@ -169,7 +172,7 @@ impl <S: AsyncWrite + Unpin> AsyncWrite for RateLimitedStream<S> {
 
         if let Some(ref limiter) = this.write_limiter {
             if let Poll::Ready(Ok(count)) = result {
-                this.write_delay = register_traffic(limiter, count);
+                this.write_delay = register_traffic(limiter.as_ref(), count);
             }
         }
 
@@ -216,7 +219,7 @@ impl <S: AsyncRead + Unpin> AsyncRead for RateLimitedStream<S> {
         if let Some(ref read_limiter) = this.read_limiter {
             if let Poll::Ready(Ok(())) = &result {
                 let count = buf.filled().len() - filled_len;
-                this.read_delay = register_traffic(read_limiter, count);
+                this.read_delay = register_traffic(read_limiter.as_ref(), count);
             }
         }
 

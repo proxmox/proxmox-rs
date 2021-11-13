@@ -1,7 +1,7 @@
 use anyhow::{bail, format_err, Error};
 use std::os::unix::io::AsRawFd;
 use std::pin::Pin;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use futures::*;
@@ -18,7 +18,9 @@ use crate::proxy_config::ProxyConfig;
 use crate::tls::MaybeTlsStream;
 use crate::uri::build_authority;
 
-use super::{RateLimiter, RateLimitedStream};
+use super::{RateLimitedStream, ShareableRateLimit};
+
+type SharedRateLimit = Arc<dyn ShareableRateLimit>;
 
 #[derive(Clone)]
 pub struct HttpsConnector {
@@ -26,8 +28,8 @@ pub struct HttpsConnector {
     ssl_connector: Arc<SslConnector>,
     proxy: Option<ProxyConfig>,
     tcp_keepalive: u32,
-    read_limiter: Option<Arc<Mutex<RateLimiter>>>,
-    write_limiter: Option<Arc<Mutex<RateLimiter>>>,
+    read_limiter: Option<SharedRateLimit>,
+    write_limiter: Option<SharedRateLimit>,
 }
 
 impl HttpsConnector {
@@ -51,11 +53,11 @@ impl HttpsConnector {
         self.proxy = Some(proxy);
     }
 
-    pub fn set_read_limiter(&mut self, limiter: Option<Arc<Mutex<RateLimiter>>>) {
+    pub fn set_read_limiter(&mut self, limiter: Option<SharedRateLimit>) {
         self.read_limiter = limiter;
     }
 
-    pub fn set_write_limiter(&mut self, limiter: Option<Arc<Mutex<RateLimiter>>>) {
+    pub fn set_write_limiter(&mut self, limiter: Option<SharedRateLimit>) {
         self.write_limiter = limiter;
     }
 

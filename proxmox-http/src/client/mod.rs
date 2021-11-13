@@ -3,7 +3,7 @@
 //! Contains a lightweight wrapper around `hyper` with support for TLS connections.
 
 mod rate_limiter;
-pub use rate_limiter::{RateLimit, RateLimiter};
+pub use rate_limiter::{RateLimit, RateLimiter, ShareableRateLimit};
 
 mod rate_limited_stream;
 pub use rate_limited_stream::RateLimitedStream;

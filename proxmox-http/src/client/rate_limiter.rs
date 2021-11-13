@@ -14,6 +14,15 @@ pub trait RateLimit {
     fn register_traffic(&mut self, current_time: Instant, data_len: u64) -> Duration;
 }
 
+/// Like [RateLimit], but does not require self to be mutable.
+///
+/// This is useful for types providing internal mutability (Mutex).
+pub trait ShareableRateLimit: Send + Sync {
+    fn update_rate(&self, rate: u64, bucket_size: u64);
+    fn average_rate(&self, current_time: Instant) -> f64;
+    fn register_traffic(&self, current_time: Instant, data_len: u64) -> Duration;
+}
+
 /// Token bucket based rate limiter
 pub struct RateLimiter {
     rate: u64, // tokens/second
@@ -98,5 +107,20 @@ impl RateLimit for RateLimiter {
             return Self::NO_DELAY;
         }
         Duration::from_nanos((self.consumed_tokens - self.bucket_size).saturating_mul(1_000_000_000)/ self.rate)
+    }
+}
+
+impl <R: RateLimit + Send> ShareableRateLimit for std::sync::Mutex<R> {
+
+    fn update_rate(&self, rate: u64, bucket_size: u64) {
+        self.lock().unwrap().update_rate(rate, bucket_size);
+    }
+
+    fn average_rate(&self, current_time: Instant) -> f64 {
+        self.lock().unwrap().average_rate(current_time)
+    }
+
+    fn register_traffic(&self, current_time: Instant, data_len: u64) -> Duration {
+        self.lock().unwrap().register_traffic(current_time, data_len)
     }
 }
