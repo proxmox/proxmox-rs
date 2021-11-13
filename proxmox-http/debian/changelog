@@ -1,3 +1,11 @@
+rust-proxmox-http (0.5.3-1) stable; urgency=medium
+
+  * use SharedRateLimit trait object for RateLimitedStream
+
+  * define a RateLimit trait
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 13 Nov 2021 17:28:38 +0100
+
 rust-proxmox-http (0.5.2-1) stable; urgency=medium
 
   * Implement a rate limiting stream (AsyncRead, AsyncWrite)
