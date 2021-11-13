@@ -11,7 +11,7 @@ use hyper::client::connect::{Connection, Connected};
 
 use std::task::{Context, Poll};
 
-use super::RateLimiter;
+use super::{RateLimit, RateLimiter};
 
 /// A rate limited stream using [RateLimiter]
 pub struct RateLimitedStream<S> {
