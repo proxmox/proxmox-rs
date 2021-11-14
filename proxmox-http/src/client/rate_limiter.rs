@@ -6,8 +6,8 @@ pub trait RateLimit {
     /// Update rate and bucket size
     fn update_rate(&mut self, rate: u64, bucket_size: u64);
 
-    /// Returns the average rate (since `start_time`)
-    fn average_rate(&self, current_time: Instant) -> f64;
+    /// Returns the overall traffic (since started)
+    fn traffic(&self) -> u64;
 
     /// Register traffic, returning a proposed delay to reach the
     /// expected rate.
@@ -19,17 +19,19 @@ pub trait RateLimit {
 /// This is useful for types providing internal mutability (Mutex).
 pub trait ShareableRateLimit: Send + Sync {
     fn update_rate(&self, rate: u64, bucket_size: u64);
-    fn average_rate(&self, current_time: Instant) -> f64;
+    fn traffic(&self) -> u64;
     fn register_traffic(&self, current_time: Instant, data_len: u64) -> Duration;
 }
 
 /// Token bucket based rate limiter
-#[repr(C)] // So that we can use it in shared memory
+///
+/// IMPORTANT: We use this struct in shared memory, so please do not
+/// change/modify the layout (do not add fields)
+#[repr(C)] 
 pub struct RateLimiter {
     rate: u64, // tokens/second
-    start_time: Instant,
+    bucket_size: u64, // TBF bucket size
     traffic: u64, // overall traffic
-    bucket_size: u64,
     last_update: Instant,
     consumed_tokens: u64,
 }
@@ -48,7 +50,6 @@ impl RateLimiter {
     pub fn with_start_time(rate: u64, bucket_size: u64, start_time: Instant) -> Self {
         Self {
             rate,
-            start_time,
             traffic: 0,
             bucket_size,
             last_update: start_time,
@@ -89,13 +90,8 @@ impl RateLimit for RateLimiter {
         self.bucket_size = bucket_size;
     }
 
-    fn average_rate(&self, current_time: Instant) -> f64 {
-        let time_diff = current_time.saturating_duration_since(self.start_time).as_secs_f64();
-        if time_diff <= 0.0 {
-            0.0
-        } else {
-            (self.traffic as f64) / time_diff
-        }
+    fn traffic(&self) -> u64 {
+        self.traffic
     }
 
     fn register_traffic(&mut self, current_time: Instant, data_len: u64) -> Duration {
@@ -117,8 +113,8 @@ impl <R: RateLimit + Send> ShareableRateLimit for std::sync::Mutex<R> {
         self.lock().unwrap().update_rate(rate, bucket_size);
     }
 
-    fn average_rate(&self, current_time: Instant) -> f64 {
-        self.lock().unwrap().average_rate(current_time)
+    fn traffic(&self) -> u64 {
+        self.lock().unwrap().traffic()
     }
 
     fn register_traffic(&self, current_time: Instant, data_len: u64) -> Duration {
