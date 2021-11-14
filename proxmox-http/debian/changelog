@@ -1,3 +1,9 @@
+rust-proxmox-http (0.5.4-1) stable; urgency=medium
+
+  * RateLimit - remove average_rate
+
+ --  Proxmox Support Team <support@proxmox.com>  Sun, 14 Nov 2021 08:17:59 +0100
+
 rust-proxmox-http (0.5.3-1) stable; urgency=medium
 
   * use SharedRateLimit trait object for RateLimitedStream
