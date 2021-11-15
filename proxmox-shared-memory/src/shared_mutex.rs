@@ -31,7 +31,6 @@ impl <T: Init> Init for SharedMutex<T> {
         me.magic = PROXMOX_SHARED_MUTEX_MAGIC_1_0;
 
         me.inner = RawSharedMutex::uninitialized();
-        println!("INITIALIZE MUTEX");
         unsafe { me.inner.init(); }
 
         let u: &mut MaybeUninit<T> =  unsafe { std::mem::transmute(me.data.get_mut()) };
