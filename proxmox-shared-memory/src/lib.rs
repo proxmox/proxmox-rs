@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::os::unix::io::AsRawFd;
 use std::mem::MaybeUninit;
 use std::fs::File;
@@ -12,7 +12,7 @@ use nix::sys::mman::{MapFlags, ProtFlags};
 use nix::sys::stat::Mode;
 use nix::errno::Errno;
 
-use proxmox::tools::fs::{create_path, CreateOptions};
+use proxmox::tools::fs::CreateOptions;
 use proxmox::tools::mmap::Mmap;
 use proxmox::sys::error::SysError;
 
@@ -31,7 +31,7 @@ pub trait Init: Sized {
     fn initialize(this: &mut MaybeUninit<Self>);
 
     /// Check if the data has the correct format
-    fn check_type_magic(this: &MaybeUninit<Self>) -> Result<(), Error> { Ok(()) }
+    fn check_type_magic(_this: &MaybeUninit<Self>) -> Result<(), Error> { Ok(()) }
 }
 
 /// Memory mapped shared memory region
@@ -211,6 +211,7 @@ mod test {
     use std::sync::Arc;
     use std::sync::atomic::AtomicU64;
     use std::thread::spawn;
+    use proxmox::tools::fs::create_path;
 
     #[derive(Debug)]
     #[repr(C)]
@@ -233,7 +234,7 @@ mod test {
 
     struct SingleMutexData {
         data: SharedMutex<TestData>,
-        padding: [u8; 4096 - 64 - 8],
+        _padding: [u8; 4096 - 64 - 8],
     }
 
     impl Init for SingleMutexData {
@@ -255,7 +256,7 @@ mod test {
     #[test]
     fn test_shared_memory_mutex() -> Result<(), Error> {
 
-        create_path("../target/testdata/", None, None);
+        create_path("../target/testdata/", None, None)?;
 
         let shared: SharedMemory<SingleMutexData> =
             SharedMemory::open(Path::new("../target/testdata/test1.shm"), CreateOptions::new())?;
@@ -264,7 +265,7 @@ mod test {
 
         let start = shared.data().data.lock().count;
 
-        let mut threads: Vec<_> = (0..100)
+        let threads: Vec<_> = (0..100)
             .map(|_| {
                 let shared = shared.clone();
                 spawn(move || {
@@ -318,7 +319,7 @@ mod test {
     #[test]
     fn test_shared_memory_multi_mutex() -> Result<(), Error> {
 
-        create_path("../target/testdata/", None, None);
+        create_path("../target/testdata/", None, None)?;
 
         let shared: SharedMemory<MultiMutexData> =
             SharedMemory::open(Path::new("../target/testdata/test2.shm"), CreateOptions::new())?;
@@ -328,7 +329,7 @@ mod test {
         let start1 = shared.data().block1.lock().count;
         let start2 = shared.data().block2.lock().count;
 
-        let mut threads: Vec<_> = (0..100)
+        let threads: Vec<_> = (0..100)
             .map(|_| {
                 let shared = shared.clone();
                 spawn(move || {
