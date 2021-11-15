@@ -1,3 +1,9 @@
+rust-proxmox-http (0.5.5-1) unstable; urgency=medium
+
+  * implement RateLimiterVec
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 15 Nov 2021 11:02:06 +0100
+
 rust-proxmox-http (0.5.4-1) stable; urgency=medium
 
   * RateLimit - remove average_rate
