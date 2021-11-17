@@ -5,6 +5,15 @@ use std::io;
 mod tm_editor;
 pub use tm_editor::*;
 
+mod parse_time;
+pub use parse_time::*;
+
+mod time;
+pub use time::*;
+
+mod daily_duration;
+pub use daily_duration::*;
+
 #[derive(Debug)]
 pub struct Error {
     msg: String,

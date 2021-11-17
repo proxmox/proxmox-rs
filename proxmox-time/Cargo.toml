@@ -9,4 +9,8 @@ description = "time utilities and TmEditor"
 exclude = [ "debian" ]
 
 [dependencies]
+anyhow = "1.0"
+bitflags = "1.2.1"
+lazy_static = "1.4"
 libc = { version = "0.2", features = [ "extra_traits" ] }
+nom = "5.1"
