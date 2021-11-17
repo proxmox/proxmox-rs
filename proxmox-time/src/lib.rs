@@ -1,6 +1,6 @@
 use std::ffi::{CStr, CString};
-use std::fmt;
-use std::io;
+
+use anyhow::{bail, format_err, Error};
 
 mod tm_editor;
 pub use tm_editor::*;
@@ -13,57 +13,6 @@ pub use time::*;
 
 mod daily_duration;
 pub use daily_duration::*;
-
-#[derive(Debug)]
-pub struct Error {
-    msg: String,
-    cause: Option<io::Error>,
-}
-
-impl Error {
-    const fn new(msg: String) -> Self {
-        Self {
-            msg,
-            cause: None,
-        }
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self.cause {
-            Some(cause) => write!(f, "{}: {}", self.msg, cause),
-            None => f.write_str(&self.msg),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
-
-/// Bail with io::Error::last_os_error called before any formatting is done.
-macro_rules! io_bail {
-    ($($msg:tt)+) => {
-        {
-            let cause = std::io::Error::last_os_error(); // this must happen first
-            let msg = format!($($msg)+);
-            return Err(Error { cause: Some(cause), msg });
-        }
-    }
-}
-
-/// Format a textual error.
-macro_rules! format_err {
-    ($($msg:tt)+) => {
-        Error::new(format!($($msg)+))
-    }
-}
-
-/// Bail with just a textual error.
-macro_rules! bail {
-    ($($msg:tt)+) => {
-        return Err(format_err!($($msg)+));
-    }
-}
 
 /// Safe bindings to libc timelocal
 ///
@@ -88,7 +37,7 @@ pub fn timegm(t: &mut libc::tm) -> Result<i64, Error> {
 
     let epoch = unsafe { libc::timegm(t) };
     if epoch == -1 {
-        io_bail!("libc::timegm failed for {:?}", t);
+        bail!("libc::timegm failed for {:?}", t);
     }
     Ok(epoch)
 }
@@ -115,7 +64,7 @@ pub fn localtime(epoch: i64) -> Result<libc::tm, Error> {
 
     unsafe {
         if libc::localtime_r(&epoch, &mut result).is_null() {
-            io_bail!("libc::localtime failed for '{}'", epoch);
+            bail!("libc::localtime failed for '{}'", epoch);
         }
     }
 
@@ -128,7 +77,7 @@ pub fn gmtime(epoch: i64) -> Result<libc::tm, Error> {
 
     unsafe {
         if libc::gmtime_r(&epoch, &mut result).is_null() {
-            io_bail!("libc::gmtime failed for '{}'", epoch);
+            bail!("libc::gmtime failed for '{}'", epoch);
         }
     }
 
@@ -197,12 +146,12 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
         )
     };
     if res == !0 { // -1,, it's unsigned
-        io_bail!("strftime failed");
+        bail!("strftime failed");
     }
     let len = res as usize;
 
     if len == 0 {
-        return Err(Error::new(format!("strftime: result len is 0 (string too large)")));
+        bail!("strftime: result len is 0 (string too large)");
     };
 
     let c_str = CStr::from_bytes_with_nul(&buf[..len + 1])
@@ -269,9 +218,8 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 /// Parse RFC3339 into Unix epoch
 pub fn parse_rfc3339(input_str: &str) -> Result<i64, Error> {
     parse_rfc3339_do(input_str)
-        .map_err(|mut err| {
-            err.msg = format!("failed to parse rfc3339 timestamp ({:?}) - {}", input_str, err);
-            err
+        .map_err(|err| {
+            format_err!("failed to parse rfc3339 timestamp ({:?}) - {}", input_str, err)
         })
 }
 
