@@ -1,3 +1,9 @@
+rust-proxmox-tfa (1.3.0-1) stable; urgency=medium
+
+  * add tfa API entry points and optional api-type/schema generation
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 17 Nov 2021 09:27:33 +0100
+
 rust-proxmox-tfa (1.2.0-1) stable; urgency=medium
 
   * make u2f::AuthChallenge Clone + Debug
