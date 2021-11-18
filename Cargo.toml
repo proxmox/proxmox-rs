@@ -19,7 +19,7 @@ anyhow = "1.0"
 curl = { version = "0.4.33" }
 http = "0.2"
 nix = "0.19.1"
-openidconnect = { version = "2.0", default-features = false, features = ["curl"] }
+openidconnect = { version = "2.1", default-features = false, features = ["curl"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 url = "2.1"
