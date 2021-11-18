@@ -3,14 +3,30 @@
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "api-types")]
-use proxmox_schema::{api, Updater};
+use proxmox_schema::{api, Updater, UpdaterType};
 
-use webauthn_rs::crypto::COSEKey;
-use webauthn_rs::proto::{Credential, CredentialID};
+use url::Url;
+
+use webauthn_rs::proto::{COSEKey, Credential, CredentialID, UserVerificationPolicy};
 
 use super::IsExpired;
 
-#[cfg_attr(feature = "api-types", api)]
+#[derive(Clone, Deserialize, Serialize)]
+/// Origin URL for WebauthnConfig
+pub struct OriginUrl(Url);
+
+#[cfg(feature = "api-types")]
+impl UpdaterType for OriginUrl {
+    type Updater = Option<Self>;
+}
+
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        rp: { type: String },
+        origin: { type: String },
+        id: { type: String },
+    }
+))]
 #[cfg_attr(feature = "api-types", derive(Updater))]
 /// Server side webauthn server configuration.
 #[derive(Clone, Deserialize, Serialize)]
@@ -25,7 +41,7 @@ pub struct WebauthnConfig {
     /// users type in their browsers to access the web interface.
     ///
     /// Changing this *may* break existing credentials.
-    pub origin: String,
+    pub origin: OriginUrl,
 
     /// Relying part ID. Must be the domain name without protocol, port or location.
     ///
@@ -38,16 +54,16 @@ pub struct WebauthnConfig {
 /// Note that we may consider changing this so `get_origin` returns the `Host:` header provided by
 /// the connecting client.
 impl webauthn_rs::WebauthnConfig for WebauthnConfig {
-    fn get_relying_party_name(&self) -> String {
-        self.rp.clone()
+    fn get_relying_party_name(&self) -> &str {
+        &self.rp
     }
 
-    fn get_origin(&self) -> &String {
-        &self.origin
+    fn get_origin(&self) -> &Url {
+        &self.origin.0
     }
 
-    fn get_relying_party_id(&self) -> String {
-        self.id.clone()
+    fn get_relying_party_id(&self) -> &str {
+        &self.id
     }
 }
 
@@ -132,6 +148,7 @@ pub struct WebauthnCredential {
     pub counter: u32,
 }
 
+/// ignores verified and registration_policy fields for now
 impl From<Credential> for WebauthnCredential {
     fn from(cred: Credential) -> Self {
         Self {
@@ -142,12 +159,15 @@ impl From<Credential> for WebauthnCredential {
     }
 }
 
+/// always sets verified to false and registration_policy to Discouraged for now
 impl From<WebauthnCredential> for Credential {
     fn from(val: WebauthnCredential) -> Self {
         Credential {
             cred_id: val.cred_id,
             cred: val.cred,
             counter: val.counter,
+            verified: false,
+            registration_policy: UserVerificationPolicy::Discouraged,
         }
     }
 }

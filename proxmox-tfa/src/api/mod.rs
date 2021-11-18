@@ -421,7 +421,7 @@ impl TfaUserData {
     fn webauthn_registration_challenge<A: OpenUserChallengeData>(
         &mut self,
         access: A,
-        mut webauthn: Webauthn<WebauthnConfig>,
+        webauthn: Webauthn<WebauthnConfig>,
         userid: &str,
         description: String,
     ) -> Result<String, Error> {
@@ -436,6 +436,7 @@ impl TfaUserData {
             userid.to_owned(),
             Some(cred_ids),
             Some(UserVerificationPolicy::Discouraged),
+            None,
         )?;
 
         let challenge_string = challenge.public_key.challenge.to_string();
@@ -587,7 +588,7 @@ impl TfaUserData {
         &mut self,
         access: A,
         userid: &str,
-        mut webauthn: Webauthn<WebauthnConfig>,
+        webauthn: Webauthn<WebauthnConfig>,
     ) -> Result<Option<webauthn_rs::proto::RequestChallengeResponse>, Error> {
         if self.webauthn.is_empty() {
             return Ok(None);
@@ -602,8 +603,8 @@ impl TfaUserData {
             return Ok(None);
         }
 
-        let (challenge, state) = webauthn
-            .generate_challenge_authenticate(creds, Some(UserVerificationPolicy::Discouraged))?;
+        let (challenge, state) = webauthn.generate_challenge_authenticate(creds)?;
+
         let challenge_string = challenge.public_key.challenge.to_string();
         let mut data = access.open(userid)?;
         data.get_mut()
@@ -699,7 +700,7 @@ impl TfaUserData {
         &mut self,
         access: A,
         userid: &str,
-        mut webauthn: Webauthn<WebauthnConfig>,
+        webauthn: Webauthn<WebauthnConfig>,
         mut response: Value,
     ) -> Result<(), Error> {
         let expire_before = proxmox_time::epoch_i64() - CHALLENGE_TIMEOUT_SECS;
@@ -738,10 +739,9 @@ impl TfaUserData {
         data.save()
             .map_err(|err| format_err!("failed to save challenge file: {}", err))?;
 
-        match webauthn.authenticate_credential(response, challenge.state)? {
-            Some((_cred, _counter)) => Ok(()),
-            None => bail!("webauthn authentication failed"),
-        }
+        webauthn.authenticate_credential(&response, &challenge.state)?;
+
+        Ok(())
     }
 
     /// Verify a recovery key.
@@ -1010,8 +1010,8 @@ impl TfaUserChallenges {
             bail!("no such challenge");
         }
 
-        let credential =
-            webauthn.register_credential(response, reg.state, |id| -> Result<bool, ()> {
+        let (credential, _authenticator) =
+            webauthn.register_credential(&response, &reg.state, |id| -> Result<bool, ()> {
                 Ok(existing_registrations
                     .iter()
                     .any(|cred| cred.entry.cred_id == *id))
