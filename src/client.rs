@@ -123,7 +123,7 @@ impl Inner {
         self.easy.url(url)?;
 
         if let Some(p) = &self.proxy {
-            self.easy.proxy(&p)?;
+            self.easy.proxy(p)?;
         }
 
         {
@@ -163,7 +163,7 @@ impl Inner {
     }
 
     pub fn set_proxy(&mut self, proxy: String) {
-            self.proxy = Some(proxy);
+        self.proxy = Some(proxy);
     }
 
     /// Low-level API to run an n API request. This automatically updates the current nonce!
@@ -410,7 +410,7 @@ impl Client {
             match self.run_request(request) {
                 Ok(response) => break response,
                 Err(err) if err.is_bad_nonce() => continue,
-                Err(err) => return Err(err.into()),
+                Err(err) => return Err(err),
             }
         };
 
@@ -439,11 +439,11 @@ impl Client {
             let directory =
                 Self::get_directory(&mut self.inner, &mut self.directory, &self.directory_url)?;
             let nonce = Self::nonce(&mut self.inner, directory)?;
-            let request = account.post_request(&account.location, &nonce, data)?;
+            let request = account.post_request(&account.location, nonce, data)?;
             let response = match self.inner.run_request(request) {
                 Ok(response) => response,
                 Err(err) if err.is_bad_nonce() => continue,
-                Err(err) => return Err(err.into()),
+                Err(err) => return Err(err),
             };
 
             break response;
@@ -477,7 +477,7 @@ impl Client {
             let mut response = match self.inner.run_request(new_order.request.take().unwrap()) {
                 Ok(response) => response,
                 Err(err) if err.is_bad_nonce() => continue,
-                Err(err) => return Err(err.into()),
+                Err(err) => return Err(err),
             };
 
             return new_order.response(response.location_required()?, response.bytes().as_ref());
@@ -486,12 +486,12 @@ impl Client {
 
     /// Assuming the provided URL is an 'Authorization' URL, get and deserialize it.
     pub fn get_authorization(&mut self, url: &str) -> Result<Authorization, Error> {
-        Ok(self.post_as_get(url)?.json()?)
+        self.post_as_get(url)?.json()
     }
 
     /// Assuming the provided URL is an 'Order' URL, get and deserialize it.
     pub fn get_order(&mut self, url: &str) -> Result<OrderData, Error> {
-        Ok(self.post_as_get(url)?.json()?)
+        self.post_as_get(url)?.json()
     }
 
     /// Low level "POST-as-GET" request.
@@ -509,7 +509,7 @@ impl Client {
             match self.inner.run_request(request) {
                 Ok(response) => return Ok(response),
                 Err(err) if err.is_bad_nonce() => continue,
-                Err(err) => return Err(err.into()),
+                Err(err) => return Err(err),
             }
         }
     }
@@ -529,14 +529,14 @@ impl Client {
             match self.inner.run_request(request) {
                 Ok(response) => return Ok(response),
                 Err(err) if err.is_bad_nonce() => continue,
-                Err(err) => return Err(err.into()),
+                Err(err) => return Err(err),
             }
         }
     }
 
     /// Request challenge validation. Afterwards, the challenge should be polled.
     pub fn request_challenge_validation(&mut self, url: &str) -> Result<Challenge, Error> {
-        Ok(self.post(url, &serde_json::json!({}))?.json()?)
+        self.post(url, &serde_json::json!({}))?.json()
     }
 
     /// Shortcut to `account().ok_or_else(...).key_authorization()`.
@@ -588,11 +588,11 @@ impl Client {
             let directory =
                 Self::get_directory(&mut self.inner, &mut self.directory, &self.directory_url)?;
             let nonce = Self::nonce(&mut self.inner, directory)?;
-            let request = revocation.request(&directory, nonce)?;
+            let request = revocation.request(directory, nonce)?;
             match self.inner.run_request(request) {
                 Ok(_response) => return Ok(()),
                 Err(err) if err.is_bad_nonce() => continue,
-                Err(err) => return Err(err.into()),
+                Err(err) => return Err(err),
             }
         }
     }

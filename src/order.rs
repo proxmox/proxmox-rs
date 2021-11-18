@@ -141,7 +141,7 @@ pub struct Order {
 impl Order {
     /// Get an authorization URL (or `None` if the index is out of range).
     pub fn authorization(&self, index: usize) -> Option<&str> {
-        Some(&self.data.authorizations.get(index)?)
+        Some(self.data.authorizations.get(index)?)
     }
 
     /// Get the number of authorizations in this object.
