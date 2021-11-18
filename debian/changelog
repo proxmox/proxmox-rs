@@ -1,3 +1,9 @@
+rust-proxmox-acme-rs (0.3.2) pve; urgency=medium
+
+  * rebuild with base64 0.13
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 18 Nov 2021 12:49:25 +0100
+
 rust-proxmox-acme-rs (0.3.1) pve; urgency=medium
 
   * add proxy support
