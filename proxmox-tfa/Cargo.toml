@@ -11,7 +11,7 @@ exclude = [ "debian" ]
 [dependencies]
 anyhow = "1.0"
 base32 = "0.4"
-base64 = "0.12"
+base64 = "0.13"
 hex = "0.4"
 openssl = "0.10"
 percent-encoding = "2.1"

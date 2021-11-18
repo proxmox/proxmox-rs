@@ -10,7 +10,7 @@ exclude = [ "debian" ]
 
 [dependencies]
 anyhow = "1.0"
-base64 = "0.12"
+base64 = "0.13"
 libc = "0.2.107"
 log = "0.4"
 nix = "0.19.1"

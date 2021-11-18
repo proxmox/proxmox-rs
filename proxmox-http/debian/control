@@ -50,7 +50,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
- librust-base64-0.12+default-dev
+ librust-base64-0.13+default-dev
 Provides:
  librust-proxmox-http-0+base64-dev (= ${binary:Version}),
  librust-proxmox-http-0.5+base64-dev (= ${binary:Version}),
@@ -112,7 +112,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
- librust-base64-0.12+default-dev,
+ librust-base64-0.13+default-dev,
  librust-http-0.2+default-dev,
  librust-hyper-0.14+default-dev,
  librust-hyper-0.14+full-dev,
@@ -224,7 +224,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
- librust-base64-0.12+default-dev,
+ librust-base64-0.13+default-dev,
  librust-futures-0.3+default-dev,
  librust-hyper-0.14+default-dev,
  librust-hyper-0.14+full-dev,
