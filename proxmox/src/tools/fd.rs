@@ -7,6 +7,7 @@ use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use nix::NixPath;
+use nix::fcntl::{fcntl, FdFlag, F_GETFD, F_SETFD};
 
 /// Guard a raw file descriptor with a drop handler. This is mostly useful when access to an owned
 /// `RawFd` is required without the corresponding handler object (such as when only the file
@@ -193,4 +194,12 @@ impl<'a, T: ?Sized + AsRawFd> From<&'a T> for BorrowedFd<'a> {
     fn from(fd: &'a T) -> Self {
         Self::new(fd)
     }
+}
+
+/// Change the `O_CLOEXEC` flag of an existing file descriptor.
+pub fn fd_change_cloexec(fd: RawFd, on: bool) -> Result<(), anyhow::Error> {
+    let mut flags = unsafe { FdFlag::from_bits_unchecked(fcntl(fd, F_GETFD)?) };
+    flags.set(FdFlag::FD_CLOEXEC, on);
+    fcntl(fd, F_SETFD(flags))?;
+    Ok(())
 }
