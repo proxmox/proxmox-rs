@@ -1,3 +1,9 @@
+rust-proxmox-openid (0.9.1-1) unstable; urgency=medium
+
+  * rebuild with openidconnect 0.2.1
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 18 Nov 2021 12:54:24 +0100
+
 rust-proxmox-openid (0.9.0-1) unstable; urgency=medium
 
   * allow to configure used scopes
