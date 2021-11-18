@@ -1,3 +1,11 @@
+rust-proxmox-tfa (1.3.1-1) stable; urgency=medium
+
+  * rebuild with base64 0.13
+
+  * bump webauthn-rs to 0.3
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 18 Nov 2021 12:59:59 +0100
+
 rust-proxmox-tfa (1.3.0-1) stable; urgency=medium
 
   * add tfa API entry points and optional api-type/schema generation

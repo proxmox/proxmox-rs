@@ -8,12 +8,13 @@ Build-Depends: debhelper (>= 12),
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-base32-0.4+default-dev <!nocheck>,
- librust-base64-0.12+default-dev <!nocheck>,
+ librust-base64-0.13+default-dev <!nocheck>,
  librust-hex-0.4+default-dev <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
- librust-serde-plain-1+default-dev <!nocheck>
+ librust-serde-plain-1+default-dev <!nocheck>,
+ librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.5.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -27,12 +28,13 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-base32-0.4+default-dev,
- librust-base64-0.12+default-dev,
+ librust-base64-0.13+default-dev,
  librust-hex-0.4+default-dev,
  librust-openssl-0.10+default-dev,
  librust-percent-encoding-2+default-dev (>= 2.1-~~),
  librust-serde-1+default-dev,
- librust-serde-plain-1+default-dev
+ librust-serde-plain-1+default-dev,
+ librust-url-2+default-dev (>= 2.2-~~)
 Suggests:
  librust-proxmox-tfa+api-dev (= ${binary:Version}),
  librust-proxmox-tfa+api-types-dev (= ${binary:Version}),
@@ -48,8 +50,8 @@ Provides:
  librust-proxmox-tfa-1+default-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+default-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+default-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.3.1-dev (= ${binary:Version}),
+ librust-proxmox-tfa-1.3.1+default-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - Rust source code
  This package contains the source for the Rust proxmox-tfa crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -63,11 +65,11 @@ Depends:
  librust-proxmox-tfa+u2f-dev (= ${binary:Version}),
  librust-proxmox-time-1+default-dev,
  librust-proxmox-uuid-1+default-dev,
- librust-webauthn-rs-0.2+default-dev (>= 0.2.5-~~)
+ librust-webauthn-rs-0.3+default-dev
 Provides:
  librust-proxmox-tfa-1+api-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+api-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+api-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.3.1+api-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "api"
  This metapackage enables feature "api" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
@@ -86,8 +88,8 @@ Provides:
  librust-proxmox-tfa-1+proxmox-schema-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+api-types-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+proxmox-schema-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+api-types-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+proxmox-schema-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.3.1+api-types-dev (= ${binary:Version}),
+ librust-proxmox-tfa-1.3.1+proxmox-schema-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "api-types" and 1 more
  This metapackage enables feature "api-types" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
@@ -104,7 +106,7 @@ Depends:
 Provides:
  librust-proxmox-tfa-1+libc-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+libc-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+libc-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.3.1+libc-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "libc"
  This metapackage enables feature "libc" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
@@ -119,7 +121,7 @@ Depends:
 Provides:
  librust-proxmox-tfa-1+proxmox-time-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+proxmox-time-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+proxmox-time-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.3.1+proxmox-time-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "proxmox-time"
  This metapackage enables feature "proxmox-time" for the Rust proxmox-tfa crate,
  by pulling in any additional dependencies needed by that feature.
@@ -134,7 +136,7 @@ Depends:
 Provides:
  librust-proxmox-tfa-1+proxmox-uuid-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+proxmox-uuid-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+proxmox-uuid-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.3.1+proxmox-uuid-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "proxmox-uuid"
  This metapackage enables feature "proxmox-uuid" for the Rust proxmox-tfa crate,
  by pulling in any additional dependencies needed by that feature.
@@ -149,7 +151,7 @@ Depends:
 Provides:
  librust-proxmox-tfa-1+serde-json-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+serde-json-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+serde-json-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.3.1+serde-json-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "serde_json"
  This metapackage enables feature "serde_json" for the Rust proxmox-tfa crate,
  by pulling in any additional dependencies needed by that feature.
@@ -166,7 +168,7 @@ Depends:
 Provides:
  librust-proxmox-tfa-1+u2f-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+u2f-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+u2f-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.3.1+u2f-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "u2f"
  This metapackage enables feature "u2f" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
@@ -177,11 +179,11 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-tfa-dev (= ${binary:Version}),
- librust-webauthn-rs-0.2+default-dev (>= 0.2.5-~~)
+ librust-webauthn-rs-0.3+default-dev
 Provides:
  librust-proxmox-tfa-1+webauthn-rs-dev (= ${binary:Version}),
  librust-proxmox-tfa-1.3+webauthn-rs-dev (= ${binary:Version}),
- librust-proxmox-tfa-1.3.0+webauthn-rs-dev (= ${binary:Version})
+ librust-proxmox-tfa-1.3.1+webauthn-rs-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "webauthn-rs"
  This metapackage enables feature "webauthn-rs" for the Rust proxmox-tfa crate,
  by pulling in any additional dependencies needed by that feature.
