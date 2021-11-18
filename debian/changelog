@@ -1,3 +1,17 @@
+rust-proxmox-openid (0.9.0-1) unstable; urgency=medium
+
+  * allow to configure used scopes
+
+  * allow to configure prompt behaviour
+
+  * allow to configure acr values
+
+  * new helper verify_authorization_code_simple()
+
+  * also return data from UserInfo endpoint
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 18 Nov 2021 09:36:29 +0100
+
 rust-proxmox-openid (0.8.1-1) unstable; urgency=medium
 
   * add fsync parameter to replace_file
