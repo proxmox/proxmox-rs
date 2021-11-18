@@ -60,8 +60,8 @@ Provides:
  librust-proxmox-0+default-dev (= ${binary:Version}),
  librust-proxmox-0.15-dev (= ${binary:Version}),
  librust-proxmox-0.15+default-dev (= ${binary:Version}),
- librust-proxmox-0.15.2-dev (= ${binary:Version}),
- librust-proxmox-0.15.2+default-dev (= ${binary:Version})
+ librust-proxmox-0.15.3-dev (= ${binary:Version}),
+ librust-proxmox-0.15.3+default-dev (= ${binary:Version})
 Description: Generic Proxmox library - Rust source code
  This package contains the source for the Rust proxmox crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -79,8 +79,8 @@ Provides:
  librust-proxmox-0+sortable-macro-dev (= ${binary:Version}),
  librust-proxmox-0.15+proxmox-sortable-macro-dev (= ${binary:Version}),
  librust-proxmox-0.15+sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-0.15.2+proxmox-sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-0.15.2+sortable-macro-dev (= ${binary:Version})
+ librust-proxmox-0.15.3+proxmox-sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-0.15.3+sortable-macro-dev (= ${binary:Version})
 Description: Generic Proxmox library - feature "proxmox-sortable-macro" and 1 more
  This metapackage enables feature "proxmox-sortable-macro" for the Rust proxmox
  crate, by pulling in any additional dependencies needed by that feature.
@@ -97,7 +97,7 @@ Depends:
 Provides:
  librust-proxmox-0+tokio-dev (= ${binary:Version}),
  librust-proxmox-0.15+tokio-dev (= ${binary:Version}),
- librust-proxmox-0.15.2+tokio-dev (= ${binary:Version})
+ librust-proxmox-0.15.3+tokio-dev (= ${binary:Version})
 Description: Generic Proxmox library - feature "tokio"
  This metapackage enables feature "tokio" for the Rust proxmox crate, by pulling
  in any additional dependencies needed by that feature.

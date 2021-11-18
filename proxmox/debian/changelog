@@ -1,3 +1,9 @@
+rust-proxmox (0.15.3-1) unstable; urgency=medium
+
+  * proxmox: add fd_change_cloexec
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 18 Nov 2021 13:08:10 +0100
+
 rust-proxmox (0.15.2-1) stable; urgency=medium
 
   *  impl proxmox::tools::fs::CreateOptions::apply_to()
