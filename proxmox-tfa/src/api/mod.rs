@@ -293,7 +293,6 @@ pub type TfaUsers = HashMap<String, TfaUserData>;
 #[derive(Clone, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 #[serde(rename_all = "kebab-case")]
-#[serde(bound(deserialize = "", serialize = ""))]
 pub struct TfaUserData {
     /// Totp keys for a user.
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
