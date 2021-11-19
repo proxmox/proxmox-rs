@@ -1,5 +1,7 @@
 rust-proxmox-async (0.1.0) stable; urgency=medium
 
+  * imported pbs-tools/src/zip.rs
+
   * imported pbs-tools/src/compression.rs
 
   * imported pbs-tools/src/tokio/tokio_writer_adapter.rs
@@ -14,4 +16,4 @@ rust-proxmox-async (0.1.0) stable; urgency=medium
 
   * initial release
 
- -- root <root@elsa>  Fri, 19 Nov 2021 15:43:44 +0100
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 19 Nov 2021 15:43:44 +0100
