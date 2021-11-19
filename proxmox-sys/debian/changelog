@@ -1,4 +1,4 @@
-rust-proxmox-sys (0.1.0) unstable; urgency=medium
+rust-proxmox-sys (0.1.0) stable; urgency=medium
 
   * imported pbs-tools/src/crypt.rs
 
@@ -6,7 +6,9 @@ rust-proxmox-sys (0.1.0) unstable; urgency=medium
 
   * imported pbs-tools/src/logrotate.rs (with various cleanups)
 
+  * imported pbs-tools/src/task.rs (as worker_task_context.rs)
+
   * initial release
 
- -- Proxmox Support Team <support@proxmox.com>  Fri, 19 Nov 2021 07:19:19 +0100
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 19 Nov 2021 09:44:01 +0100
 

@@ -12,6 +12,7 @@ exclude = [ "debian" ]
 anyhow = "1.0"
 base64 = "0.12"
 libc = "0.2.107"
+log = "0.4"
 nix = "0.19.1"
 zstd = { version = "0.6", features = [ "bindgen" ] }
 
