@@ -10,7 +10,6 @@ use anyhow::{bail, format_err, Error};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use webauthn_rs::proto::Credential as WebauthnCredential;
 use webauthn_rs::{proto::UserVerificationPolicy, Webauthn};
 
 use crate::totp::Totp;
@@ -29,7 +28,7 @@ pub mod methods;
 
 pub use recovery::RecoveryState;
 pub use u2f::U2fConfig;
-pub use webauthn::WebauthnConfig;
+pub use webauthn::{WebauthnConfig, WebauthnCredential};
 
 #[cfg(feature = "api-types")]
 pub use webauthn::WebauthnConfigUpdater;
@@ -594,7 +593,10 @@ impl TfaUserData {
             return Ok(None);
         }
 
-        let creds: Vec<_> = self.enabled_webauthn_entries().map(Clone::clone).collect();
+        let creds: Vec<_> = self
+            .enabled_webauthn_entries()
+            .map(|cred| cred.clone().into())
+            .collect();
 
         if creds.is_empty() {
             return Ok(None);
@@ -1015,6 +1017,6 @@ impl TfaUserChallenges {
                     .any(|cred| cred.entry.cred_id == *id))
             })?;
 
-        Ok(TfaEntry::new(reg.description, credential))
+        Ok(TfaEntry::new(reg.description, credential.into()))
     }
 }

@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "api-types")]
 use proxmox_schema::{api, Updater};
 
+use webauthn_rs::crypto::COSEKey;
+use webauthn_rs::proto::{Credential, CredentialID};
+
 use super::IsExpired;
 
 #[cfg_attr(feature = "api-types", api)]
@@ -115,5 +118,36 @@ impl WebauthnAuthChallenge {
 impl IsExpired for WebauthnAuthChallenge {
     fn is_expired(&self, at_epoch: i64) -> bool {
         self.created < at_epoch
+    }
+}
+
+/// A webauthn credential
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WebauthnCredential {
+    /// The ID of this credential.
+    pub cred_id: CredentialID,
+    /// The public key of this credential
+    pub cred: COSEKey,
+    /// The counter for this credential
+    pub counter: u32,
+}
+
+impl From<Credential> for WebauthnCredential {
+    fn from(cred: Credential) -> Self {
+        Self {
+            cred_id: cred.cred_id,
+            cred: cred.cred,
+            counter: cred.counter,
+        }
+    }
+}
+
+impl From<WebauthnCredential> for Credential {
+    fn from(val: WebauthnCredential) -> Self {
+        Credential {
+            cred_id: val.cred_id,
+            cred: val.cred,
+            counter: val.counter,
+        }
     }
 }
