@@ -12,6 +12,7 @@ CRATES = \
 	 proxmox-shared-memory \
 	 proxmox-section-config \
 	 proxmox-sortable-macro \
+	 proxmox-sys \
 	 proxmox-tfa \
 	 proxmox-time \
 	 proxmox-uuid

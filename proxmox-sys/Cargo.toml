@@ -1,0 +1,17 @@
+[package]
+name = "proxmox-sys"
+version = "0.1.0"
+authors = ["Proxmox Support Team <support@proxmox.com>"]
+edition = "2018"
+license = "AGPL-3"
+description = "System tools (using nix)."
+
+exclude = [ "debian" ]
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.12"
+libc = "0.2.107"
+nix = "0.19.1"
+
+proxmox = { path = "../proxmox", version = "0.15", default-features = false }
