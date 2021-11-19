@@ -1,5 +1,7 @@
 rust-proxmox-async (0.1.0) stable; urgency=medium
 
+  * imported pbs-tools/src/tokio/tokio_writer_adapter.rs
+
   * imported pbs-tools/src/stream.rs
 
   * imported pbs-tools/src/broadcast_future.rs
