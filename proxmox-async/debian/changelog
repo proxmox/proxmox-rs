@@ -1,3 +1,21 @@
+rust-proxmox-async (0.2.0) stable; urgency=medium
+
+  * improve dev docs
+
+  * move AsyncChannelWriter to src/io
+
+  * move TokioWriterAdapter to blocking
+
+  * remove duplicate src/stream/wrapped_reader_stream.rs
+
+  * split stream.rs into separate files
+
+  * split blocking.rs into separate files
+
+  * add copyright file
+
+ -- root <root@elsa>  Sat, 20 Nov 2021 16:54:58 +0100
+
 rust-proxmox-async (0.1.0) stable; urgency=medium
 
   * imported pbs-tools/src/zip.rs
