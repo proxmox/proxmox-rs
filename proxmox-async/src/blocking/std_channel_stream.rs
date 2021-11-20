@@ -6,7 +6,7 @@ use futures::stream::Stream;
 
 use crate::runtime::block_in_place;
 
-/// Wrapper struct to convert a channel Receiver into a Stream
+/// Wrapper struct to convert a sync channel [Receiver] into a [Stream]
 pub struct StdChannelStream<T>(pub Receiver<T>);
 
 impl<T> Stream for StdChannelStream<T> {

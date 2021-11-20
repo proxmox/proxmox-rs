@@ -2,9 +2,9 @@ use std::io::Write;
 
 use tokio::task::block_in_place;
 
-/// Wrapper around a writer which implements Write
+/// Wrapper around [Write] which adds [block_in_place]
 ///
-/// wraps each write with a 'block_in_place' so that
+/// wraps each write with a [block_in_place] so that
 /// any (blocking) writer can be safely used in async context in a
 /// tokio runtime
 pub struct TokioWriterAdapter<W: Write>(W);

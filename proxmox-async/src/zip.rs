@@ -2,7 +2,7 @@
 //!
 //! Provides an interface to create a ZIP File from ZipEntries
 //! for a more detailed description of the ZIP format, see:
-//! https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+//! <https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT>
 
 use std::convert::TryInto;
 use std::ffi::OsString;

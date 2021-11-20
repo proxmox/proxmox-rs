@@ -6,7 +6,7 @@ use futures::stream::Stream;
 
 use crate::runtime::block_in_place;
 
-/// Wrapper struct to convert a Reader into a Stream
+/// Wrapper struct to convert sync [Read] into a [Stream]
 pub struct WrappedReaderStream<R: Read + Unpin> {
     reader: R,
     buffer: Vec<u8>,

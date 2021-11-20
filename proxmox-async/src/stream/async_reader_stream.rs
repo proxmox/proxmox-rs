@@ -8,7 +8,7 @@ use tokio::io::{AsyncRead, ReadBuf};
 use futures::ready;
 use futures::stream::Stream;
 
-/// Wrapper struct to convert an AsyncReader into a Stream
+/// Wrapper struct to convert an [AsyncRead] into a [Stream]
 pub struct AsyncReaderStream<R: AsyncRead + Unpin> {
     reader: R,
     buffer: Vec<u8>,
