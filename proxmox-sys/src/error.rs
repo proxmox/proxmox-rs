@@ -150,7 +150,7 @@ macro_rules! other_error {
 
             #[inline]
             fn into_io_result(self) -> io::Result<T> {
-                self.map_err($crate::sys::error::io_err_other)
+                self.map_err($crate::error::io_err_other)
             }
         }
     };

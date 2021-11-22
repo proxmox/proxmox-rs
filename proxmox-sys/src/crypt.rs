@@ -53,7 +53,7 @@ pub fn crypt(password: &[u8], salt: &[u8]) -> Result<String, Error> {
 
 pub fn encrypt_pw(password: &str) -> Result<String, Error> {
 
-    let salt = proxmox::sys::linux::random_data(8)?;
+    let salt = crate::linux::random_data(8)?;
     let salt = format!("$5${}$", base64::encode_config(&salt, base64::CRYPT));
 
     crypt(password.as_bytes(), salt.as_bytes())

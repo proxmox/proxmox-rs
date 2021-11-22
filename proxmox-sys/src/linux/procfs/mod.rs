@@ -12,8 +12,7 @@ use anyhow::*;
 use lazy_static::lazy_static;
 use nix::unistd::Pid;
 
-use crate::tools::fs::file_read_firstline;
-use crate::tools::parse::hex_nibble;
+use crate::fs::file_read_firstline;
 
 pub mod mountinfo;
 #[doc(inline)]
@@ -568,6 +567,17 @@ pub fn read_proc_net_dev() -> Result<Vec<ProcFsNetDev>, Error> {
     }
 
     Ok(result)
+}
+
+// Parse a hexadecimal digit into a byte.
+#[inline]
+fn hex_nibble(c: u8) -> Result<u8, Error> {
+    Ok(match c {
+        b'0'..=b'9' => c - b'0',
+        b'a'..=b'f' => c - b'a' + 0xa,
+        b'A'..=b'F' => c - b'A' + 0xa,
+        _ => bail!("not a hex digit: {}", c as char),
+    })
 }
 
 fn hexstr_to_ipv4addr<T: AsRef<[u8]>>(hex: T) -> Result<Ipv4Addr, Error> {

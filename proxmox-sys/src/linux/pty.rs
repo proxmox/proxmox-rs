@@ -11,7 +11,7 @@ use nix::sys::stat::Mode;
 use nix::unistd::{dup2, setsid};
 use nix::{ioctl_write_int_bad, ioctl_write_ptr_bad, Result};
 
-use crate::tools::fd::Fd;
+use crate::fd::Fd;
 
 ioctl_write_int_bad!(set_controlling_tty, libc::TIOCSCTTY);
 ioctl_write_ptr_bad!(set_size, libc::TIOCSWINSZ, nix::pty::Winsize);

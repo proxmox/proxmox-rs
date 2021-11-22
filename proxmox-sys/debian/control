@@ -41,8 +41,8 @@ Provides:
  librust-proxmox-sys-0+default-dev (= ${binary:Version}),
  librust-proxmox-sys-0.1-dev (= ${binary:Version}),
  librust-proxmox-sys-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-sys-0.1.1-dev (= ${binary:Version}),
- librust-proxmox-sys-0.1.1+default-dev (= ${binary:Version})
+ librust-proxmox-sys-0.1.2-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.1.2+default-dev (= ${binary:Version})
 Description: System tools (using nix) - Rust source code
  This package contains the source for the Rust proxmox-sys crate, packaged by
  debcargo for use with cargo and dh-cargo.

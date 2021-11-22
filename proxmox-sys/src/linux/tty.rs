@@ -9,8 +9,8 @@ use nix::sys::stat::Mode;
 use proxmox_lang::try_block;
 
 use crate::c_try;
-use crate::sys::error::SysError;
-use crate::tools::fd::Fd;
+use crate::error::SysError;
+use crate::fd::Fd;
 
 /// Get the current size of the terminal (for stdout).
 /// # Safety

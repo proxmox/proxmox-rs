@@ -7,7 +7,7 @@ use std::{io, mem, ptr};
 
 use nix::sys::mman;
 
-use crate::sys::error::{io_err_other, SysError};
+use crate::error::{io_err_other, SysError};
 
 pub struct Mmap<T> {
     data: *mut T,

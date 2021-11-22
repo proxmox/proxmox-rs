@@ -6,7 +6,7 @@ use std::io::Read;
 use anyhow::{bail, Error};
 use nix::unistd;
 
-use proxmox::tools::fs::{CreateOptions, make_tmp_file};
+use crate::fs::{CreateOptions, make_tmp_file};
 
 /// Used for rotating log files and iterating over them
 pub struct LogRotate {
