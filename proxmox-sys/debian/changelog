@@ -1,3 +1,9 @@
+rust-proxmox-sys (0.1.2) unstable; urgency=medium
+
+  * fix test for wrong logrotate path
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 22 Nov 2021 10:30:38 +0100
+
 rust-proxmox-sys (0.1.1) stable; urgency=medium
 
   * rebuild with base64 0.13
