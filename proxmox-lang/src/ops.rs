@@ -4,7 +4,7 @@
 ///
 /// Will be removed with crate version 2.0.
 #[derive(Clone, Copy, Debug, PartialEq)]
-#[deprecated(since = "1.1", note = "use std::ops::ControlFlow")]
+#[deprecated(since = "1.1.0", note = "use std::ops::ControlFlow")]
 pub enum ControlFlow<B, C = ()> {
     Continue(C),
     Break(B),
@@ -12,6 +12,6 @@ pub enum ControlFlow<B, C = ()> {
 
 #[allow(deprecated)]
 impl<B> ControlFlow<B> {
-    #[deprecated(since = "1.1", note = "use std::ops::ControlFlow")]
+    #[deprecated(since = "1.1.0", note = "use std::ops::ControlFlow")]
     pub const CONTINUE: ControlFlow<B, ()> = ControlFlow::Continue(());
 }
