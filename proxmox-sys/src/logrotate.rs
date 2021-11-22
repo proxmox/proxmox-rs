@@ -29,7 +29,7 @@ impl LogRotate {
         max_files: Option<usize>,
         options: Option<CreateOptions>,
     ) -> Result<Self, Error> {
-        if path.as_ref().file_name().is_some() {
+        if path.as_ref().file_name().is_none() {
             bail!("logrotate path does not contain a file name");
         }
         Ok(Self {
