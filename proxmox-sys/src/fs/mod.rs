@@ -9,6 +9,8 @@ use nix::unistd::{Gid, Uid};
 use nix::sys::stat;
 use nix::errno::Errno;
 
+pub mod acl;
+
 mod file;
 pub use file::*;
 
