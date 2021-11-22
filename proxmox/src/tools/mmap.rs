@@ -1,6 +1,7 @@
 //! Memory mapping helpers.
 
 use std::convert::TryFrom;
+use std::mem::MaybeUninit;
 use std::os::unix::io::RawFd;
 use std::{io, mem, ptr};
 
@@ -85,5 +86,22 @@ impl<'a, T> IntoIterator for &'a Mmap<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         <&'a [T] as IntoIterator>::into_iter(self)
+    }
+}
+
+impl<T> Mmap<MaybeUninit<T>> {
+    /// Converts to `Mmap<T>`.
+    ///
+    /// # Safety
+    ///
+    /// It is up to the caller to ensure this is safe, see
+    /// [`MaybeUninit::assume_init`](std::mem::MaybeUninit::assume_init).
+    pub unsafe fn assume_init(self) -> Mmap<T> {
+        let out = Mmap {
+            data: self.data as *mut T,
+            len: self.len,
+        };
+        std::mem::forget(self);
+        out
     }
 }
