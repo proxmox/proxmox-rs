@@ -15,6 +15,9 @@ pub use file::*;
 mod dir;
 pub use dir::*;
 
+mod read_dir;
+pub use read_dir::*;
+
 /// Change ownership of an open file handle
 pub fn fchown(fd: RawFd, owner: Option<Uid>, group: Option<Gid>) -> Result<(), Error> {
     // According to the POSIX specification, -1 is used to indicate that owner and group
