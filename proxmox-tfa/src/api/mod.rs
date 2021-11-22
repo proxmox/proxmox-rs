@@ -76,8 +76,12 @@ pub struct TfaConfig {
 
 /// Helper to get a u2f instance from a u2f config, or `None` if there isn't one configured.
 fn get_u2f(u2f: &Option<U2fConfig>) -> Option<u2f::U2f> {
-    u2f.as_ref()
-        .map(|cfg| u2f::U2f::new(cfg.appid.clone(), cfg.appid.clone()))
+    u2f.as_ref().map(|cfg| {
+        u2f::U2f::new(
+            cfg.appid.clone(),
+            cfg.origin.clone().unwrap_or_else(|| cfg.appid.clone()),
+        )
+    })
 }
 
 /// Helper to get a u2f instance from a u2f config.
