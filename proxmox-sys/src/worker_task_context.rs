@@ -56,6 +56,7 @@ impl<T: WorkerTaskContext + ?Sized> WorkerTaskContext for std::sync::Arc<T> {
     }
 }
 
+/// Log an error to a [WorkerTaskContext]
 #[macro_export]
 macro_rules! task_error {
     ($task:expr, $($fmt:tt)+) => {{
@@ -63,6 +64,7 @@ macro_rules! task_error {
     }};
 }
 
+/// Log a warning to a [WorkerTaskContext]
 #[macro_export]
 macro_rules! task_warn {
     ($task:expr, $($fmt:tt)+) => {{
@@ -70,6 +72,7 @@ macro_rules! task_warn {
     }};
 }
 
+/// Log a message to a [WorkerTaskContext]
 #[macro_export]
 macro_rules! task_log {
     ($task:expr, $($fmt:tt)+) => {{
@@ -77,6 +80,7 @@ macro_rules! task_log {
     }};
 }
 
+/// Log a debug message to a [WorkerTaskContext]
 #[macro_export]
 macro_rules! task_debug {
     ($task:expr, $($fmt:tt)+) => {{
@@ -84,6 +88,7 @@ macro_rules! task_debug {
     }};
 }
 
+/// Log a trace message to a [WorkerTaskContext]
 #[macro_export]
 macro_rules! task_trace {
     ($task:expr, $($fmt:tt)+) => {{

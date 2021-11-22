@@ -1,3 +1,5 @@
+//! Rust bindings for libcrypt
+
 use std::ffi::CStr;
 
 use anyhow::{bail, Error};
@@ -18,6 +20,7 @@ struct crypt_data {
     internal: [libc::c_char; CRYPT_DATA_INTERNAL_SIZE],
 }
 
+/// Encrypt a pasword - see man crypt(3)
 pub fn crypt(password: &[u8], salt: &[u8]) -> Result<String, Error> {
     #[link(name = "crypt")]
     extern "C" {
@@ -51,6 +54,7 @@ pub fn crypt(password: &[u8], salt: &[u8]) -> Result<String, Error> {
     Ok(String::from(res.to_str()?))
 }
 
+/// Encrypt a pasword using sha256 hashing method
 pub fn encrypt_pw(password: &str) -> Result<String, Error> {
 
     let salt = crate::linux::random_data(8)?;
@@ -59,6 +63,7 @@ pub fn encrypt_pw(password: &str) -> Result<String, Error> {
     crypt(password.as_bytes(), salt.as_bytes())
 }
 
+/// Verify if an encrypted password matches
 pub fn verify_crypt_pw(password: &str, enc_password: &str) -> Result<(), Error> {
     let verify = crypt(password.as_bytes(), enc_password.as_bytes())?;
     if verify != enc_password {

@@ -39,7 +39,7 @@ pub fn fchown(fd: RawFd, owner: Option<Uid>, group: Option<Gid>) -> Result<(), E
     Ok(())
 }
 
-// FIXME: Consider using derive-builder!
+/// Define permissions, owner and group when creating files/dirs
 #[derive(Clone, Default)]
 pub struct CreateOptions {
     perm: Option<stat::Mode>,

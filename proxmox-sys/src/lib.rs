@@ -8,4 +8,6 @@ pub mod logrotate;
 pub mod macros;
 pub mod mmap;
 pub mod process_locker;
-pub mod worker_task_context;
+
+mod worker_task_context;
+pub use worker_task_context::*;

@@ -1,3 +1,5 @@
+//! Log rotation helper
+
 use std::path::{Path, PathBuf};
 use std::fs::{File, rename};
 use std::os::unix::io::{FromRawFd, IntoRawFd};

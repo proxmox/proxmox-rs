@@ -16,6 +16,7 @@ nix::ioctl_write_ptr!(fs_ioc_fssetxattr, b'X', 32, FSXAttr);
 
 #[repr(C)]
 #[derive(Debug)]
+/// Rust bindings for struct fsxattr (fsgetxattr, fssetxattr)
 pub struct FSXAttr {
     pub fsx_xflags: u32,
     pub fsx_extsize: u32,
