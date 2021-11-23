@@ -3,13 +3,11 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, Error};
 use serde_json::{json, Value};
 
-use proxmox::tools::{
-    fs::{
-        replace_file,
-        open_file_locked,
-        file_get_json,
-        CreateOptions,
-    },
+use proxmox_sys::fs::{
+    replace_file,
+    open_file_locked,
+    file_get_json,
+    CreateOptions,
 };
 use proxmox_time::epoch_i64;
 

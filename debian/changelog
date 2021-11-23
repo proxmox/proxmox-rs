@@ -1,3 +1,9 @@
+rust-proxmox-openid (0.9.2-1) stable; urgency=medium
+
+  * depend on proxmox-sys 0.2
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 Nov 2021 12:35:41 +0100
+
 rust-proxmox-openid (0.9.1-1) unstable; urgency=medium
 
   * rebuild with openidconnect 0.2.1
