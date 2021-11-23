@@ -60,7 +60,7 @@ impl<T: WorkerTaskContext + ?Sized> WorkerTaskContext for std::sync::Arc<T> {
 #[macro_export]
 macro_rules! task_error {
     ($task:expr, $($fmt:tt)+) => {{
-        $crate::worker_task_context::WorkerTaskContext::log(&*$task, log::Level::Error, &format_args!($($fmt)+))
+        $crate::WorkerTaskContext::log(&*$task, log::Level::Error, &format_args!($($fmt)+))
     }};
 }
 
@@ -68,7 +68,7 @@ macro_rules! task_error {
 #[macro_export]
 macro_rules! task_warn {
     ($task:expr, $($fmt:tt)+) => {{
-        $crate::worker_task_context::WorkerTaskContext::log(&*$task, log::Level::Warn, &format_args!($($fmt)+))
+        $crate::WorkerTaskContext::log(&*$task, log::Level::Warn, &format_args!($($fmt)+))
     }};
 }
 
@@ -76,7 +76,7 @@ macro_rules! task_warn {
 #[macro_export]
 macro_rules! task_log {
     ($task:expr, $($fmt:tt)+) => {{
-        $crate::worker_task_context::WorkerTaskContext::log(&*$task, log::Level::Info, &format_args!($($fmt)+))
+        $crate::WorkerTaskContext::log(&*$task, log::Level::Info, &format_args!($($fmt)+))
     }};
 }
 
@@ -84,7 +84,7 @@ macro_rules! task_log {
 #[macro_export]
 macro_rules! task_debug {
     ($task:expr, $($fmt:tt)+) => {{
-        $crate::worker_task_context::WorkerTaskContext::log(&*$task, log::Level::Debug, &format_args!($($fmt)+))
+        $crate::WorkerTaskContext::log(&*$task, log::Level::Debug, &format_args!($($fmt)+))
     }};
 }
 
@@ -92,6 +92,6 @@ macro_rules! task_debug {
 #[macro_export]
 macro_rules! task_trace {
     ($task:expr, $($fmt:tt)+) => {{
-        $crate::worker_task_context::WorkerTaskContext::log(&*$task, log::Level::Trace, &format_args!($($fmt)+))
+        $crate::WorkerTaskContext::log(&*$task, log::Level::Trace, &format_args!($($fmt)+))
     }};
 }
