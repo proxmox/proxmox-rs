@@ -1,3 +1,15 @@
+rust-proxmox-sys (0.2.0) unstable; urgency=medium
+
+  * moved code from proxmox crate
+
+  * imported code from proxmox-backup/pbs-tools
+    - pbs-tools/src/command.rs
+    - pbs-tools/src/acl.rs
+    - pbs-tool/src/xattr.rs
+    - pbs-tools/src/fs.rs
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 Nov 2021 11:30:42 +0100
+
 rust-proxmox-sys (0.1.2) unstable; urgency=medium
 
   * fix test for wrong logrotate path
@@ -23,4 +35,3 @@ rust-proxmox-sys (0.1.0) stable; urgency=medium
   * initial release
 
  -- Proxmox Support Team <support@proxmox.com>  Fri, 19 Nov 2021 09:44:01 +0100
-
