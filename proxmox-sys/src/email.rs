@@ -110,7 +110,7 @@ pub fn sendmail(
 
 #[cfg(test)]
 mod test {
-    use crate::tools::email::sendmail;
+    use crate::email::sendmail;
 
     #[test]
     fn email_without_recipients() {

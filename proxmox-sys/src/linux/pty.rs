@@ -23,7 +23,7 @@ ioctl_write_ptr_bad!(set_size, libc::TIOCSWINSZ, nix::pty::Winsize);
 ///
 /// Example:
 /// ```
-/// # use proxmox::sys::linux::pty::*;
+/// # use proxmox_sys::linux::pty::*;
 /// # use std::process::Command;
 /// # use nix::Result;
 /// fn fork() -> Result<u64> {

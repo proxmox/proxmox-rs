@@ -36,7 +36,7 @@ pub fn io_err_other<E: ToString>(e: E) -> io::Error {
 /// # use anyhow::{bail, Error};
 /// use nix::{dir::Dir, fcntl::OFlag, sys::stat::Mode};
 ///
-/// use proxmox::sys::error::SysError;
+/// use proxmox_sys::error::SysError;
 ///
 /// # fn test() -> Result<(), Error> {
 ///
@@ -116,7 +116,7 @@ impl SysError for nix::Error {
 /// # use std::os::unix::io::RawFd;
 /// # use anyhow::{bail, Error};
 ///
-/// use proxmox::sys::error::SysResult;
+/// use proxmox_sys::error::SysResult;
 ///
 /// struct MyReader(RawFd);
 ///

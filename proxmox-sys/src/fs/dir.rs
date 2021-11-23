@@ -37,7 +37,7 @@ pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(),
 /// ```no_run
 /// # use nix::sys::stat::Mode;
 /// # use nix::unistd::{Gid, Uid};
-/// # use proxmox::tools::fs::{create_path, CreateOptions};
+/// # use proxmox_sys::fs::{create_path, CreateOptions};
 /// # fn code() -> Result<(), anyhow::Error> {
 /// create_path(
 ///     "/var/lib/mytool/wwwdata",
@@ -160,8 +160,8 @@ fn test_create_path() {
         Some(CreateOptions::new().perm(stat::Mode::from_bits_truncate(0o755))),
         Some(
             CreateOptions::new()
-                .owner(Uid::effective())
-                .group(Gid::effective()),
+                .owner(nix::unistd::Uid::effective())
+                .group(nix::unistd::Gid::effective()),
         ),
     )
     .expect("expected create_path to work");
