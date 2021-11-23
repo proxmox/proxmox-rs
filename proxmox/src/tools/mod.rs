@@ -8,7 +8,6 @@ use lazy_static::lazy_static;
 use proxmox_io::vec;
 
 pub mod common_regex;
-pub mod email;
 pub mod serde;
 pub mod systemd;
 
