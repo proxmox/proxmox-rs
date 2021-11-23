@@ -9,7 +9,6 @@ use proxmox_io::vec;
 
 pub mod common_regex;
 pub mod serde;
-pub mod systemd;
 
 const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 
