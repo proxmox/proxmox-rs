@@ -12,7 +12,7 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio_openssl::SslStream;
 
-use proxmox::sys::linux::socket::set_tcp_keepalive;
+use proxmox_sys::linux::socket::set_tcp_keepalive;
 
 use crate::proxy_config::ProxyConfig;
 use crate::tls::MaybeTlsStream;

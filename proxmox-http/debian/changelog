@@ -1,3 +1,9 @@
+rust-proxmox-http (0.6.0-1) unstable; urgency=medium
+
+  * rebuild using proxmox-sys 0.2.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 Nov 2021 12:14:54 +0100
+
 rust-proxmox-http (0.5.6-1) unstable; urgency=medium
 
   * rebuild with base64 0.13

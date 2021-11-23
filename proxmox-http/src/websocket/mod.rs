@@ -22,7 +22,7 @@ use tokio::sync::mpsc;
 use futures::future::FutureExt;
 use futures::ready;
 
-use proxmox::sys::error::io_err_other;
+use proxmox_sys::error::io_err_other;
 use proxmox_io::ByteBuffer;
 
 // see RFC6455 section 7.4.1

@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-shared-memory"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Dietmar Maurer <dietmar@proxmox.com>"]
 edition = "2018"
 license = "AGPL-3"
@@ -13,4 +13,4 @@ anyhow = "1.0"
 libc = "0.2.107"
 nix = "0.19.1"
 
-proxmox = { path = "../proxmox", version = "0.15", default-features = false }
+proxmox-sys = { path = "../proxmox-sys", version = "0.2.0" }

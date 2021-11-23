@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-async"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Proxmox Support Team <support@proxmox.com>"]
 edition = "2018"
 license = "AGPL-3"
@@ -20,7 +20,7 @@ pin-utils = "0.1.0"
 tokio = { version = "1.0", features = ["fs", "rt", "rt-multi-thread", "sync"] }
 walkdir = "2"
 
-proxmox = { path = "../proxmox", version = "0.15", default-features = false, features = [ "tokio" ] }
+proxmox-sys = { path = "../proxmox-sys", version = "0.2.0" }
 proxmox-io = { path = "../proxmox-io", version = "1", features = [ "tokio" ] }
 proxmox-time = { path = "../proxmox-time", version = "1" }
 

@@ -11,8 +11,8 @@ use tokio::sync::mpsc::Sender;
 use futures::ready;
 use futures::future::FutureExt;
 
-use proxmox::io_format_err;
-use proxmox::sys::error::io_err_other;
+use proxmox_sys::io_format_err;
+use proxmox_sys::error::io_err_other;
 use proxmox_io::ByteBuffer;
 
 /// Wrapper around tokio::sync::mpsc::Sender, which implements Write

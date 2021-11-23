@@ -12,9 +12,9 @@ use nix::sys::mman::{MapFlags, ProtFlags};
 use nix::sys::stat::Mode;
 use nix::errno::Errno;
 
-use proxmox::tools::fs::CreateOptions;
-use proxmox::tools::mmap::Mmap;
-use proxmox::sys::error::SysError;
+use proxmox_sys::fs::CreateOptions;
+use proxmox_sys::mmap::Mmap;
+use proxmox_sys::error::SysError;
 
 mod raw_shared_mutex;
 
@@ -211,7 +211,7 @@ mod test {
     use std::sync::Arc;
     use std::sync::atomic::AtomicU64;
     use std::thread::spawn;
-    use proxmox::tools::fs::create_path;
+    use proxmox_sys::fs::create_path;
 
     #[derive(Debug)]
     #[repr(C)]

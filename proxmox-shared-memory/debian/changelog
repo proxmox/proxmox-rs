@@ -1,3 +1,9 @@
+rust-proxmox-shared-memory (0.2.0-1) unstable; urgency=medium
+
+  * rebuild using proxmox-sys 0.2.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 Nov 2021 12:16:36 +0100
+
 rust-proxmox-shared-memory (0.1.1-1) unstable; urgency=medium
 
   * depend on libc 0.2.107

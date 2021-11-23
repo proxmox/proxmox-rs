@@ -9,7 +9,7 @@ use futures::ready;
 use futures::stream::Stream;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
-use proxmox::io_format_err;
+use proxmox_sys::io_format_err;
 use proxmox_io::ByteBuffer;
 
 const BUFFER_SIZE: usize = 8192;

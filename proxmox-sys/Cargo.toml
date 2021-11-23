@@ -19,8 +19,6 @@ regex = "1.2"
 serde_json = "1.0"
 zstd = { version = "0.6", features = [ "bindgen" ] }
 
-proxmox = { path = "../proxmox", version = "0.15", default-features = false }
-
 # Macro crates:
 proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.1" }
 

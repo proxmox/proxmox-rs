@@ -1,3 +1,9 @@
+rust-proxmox (0.16.0-1) unstable; urgency=medium
+
+  * moved most code to proxmox-sys
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 Nov 2021 11:32:39 +0100
+
 rust-proxmox (0.15.4-1) stable; urgency=medium
 
   * rebuild with base64 0.13

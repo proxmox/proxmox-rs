@@ -27,8 +27,8 @@ Suggests:
  librust-proxmox-http+http-helpers-dev (= ${binary:Version}),
  librust-proxmox-http+hyper-dev (= ${binary:Version}),
  librust-proxmox-http+openssl-dev (= ${binary:Version}),
- librust-proxmox-http+proxmox-dev (= ${binary:Version}),
  librust-proxmox-http+proxmox-io-dev (= ${binary:Version}),
+ librust-proxmox-http+proxmox-sys-dev (= ${binary:Version}),
  librust-proxmox-http+tokio-dev (= ${binary:Version}),
  librust-proxmox-http+tokio-openssl-dev (= ${binary:Version}),
  librust-proxmox-http+websocket-dev (= ${binary:Version})
@@ -36,10 +36,10 @@ Provides:
  librust-proxmox-http+default-dev (= ${binary:Version}),
  librust-proxmox-http-0-dev (= ${binary:Version}),
  librust-proxmox-http-0+default-dev (= ${binary:Version}),
- librust-proxmox-http-0.5-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+default-dev (= ${binary:Version})
+ librust-proxmox-http-0.6-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6+default-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+default-dev (= ${binary:Version})
 Description: Proxmox HTTP library - Rust source code
  This package contains the source for the Rust proxmox-http crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -53,8 +53,8 @@ Depends:
  librust-base64-0.13+default-dev
 Provides:
  librust-proxmox-http-0+base64-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+base64-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+base64-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+base64-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+base64-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "base64"
  This metapackage enables feature "base64" for the Rust proxmox-http crate, by
  pulling in any additional dependencies needed by that feature.
@@ -70,8 +70,8 @@ Depends:
  librust-openssl-0.10+default-dev
 Provides:
  librust-proxmox-http-0+client-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+client-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+client-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+client-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+client-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "client"
  This metapackage enables feature "client" for the Rust proxmox-http crate, by
  pulling in any additional dependencies needed by that feature.
@@ -85,8 +85,8 @@ Depends:
  librust-futures-0.3+default-dev
 Provides:
  librust-proxmox-http-0+futures-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+futures-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+futures-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+futures-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+futures-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "futures"
  This metapackage enables feature "futures" for the Rust proxmox-http crate, by
  pulling in any additional dependencies needed by that feature.
@@ -100,8 +100,8 @@ Depends:
  librust-http-0.2+default-dev
 Provides:
  librust-proxmox-http-0+http-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+http-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+http-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+http-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+http-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "http"
  This metapackage enables feature "http" for the Rust proxmox-http crate, by
  pulling in any additional dependencies needed by that feature.
@@ -116,13 +116,13 @@ Depends:
  librust-http-0.2+default-dev,
  librust-hyper-0.14+default-dev,
  librust-hyper-0.14+full-dev,
- librust-proxmox-0.15-dev,
+ librust-proxmox-sys-0.2+default-dev,
  librust-tokio-1+io-util-dev,
  librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~)
 Provides:
  librust-proxmox-http-0+http-helpers-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+http-helpers-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+http-helpers-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+http-helpers-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+http-helpers-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "http-helpers"
  This metapackage enables feature "http-helpers" for the Rust proxmox-http
  crate, by pulling in any additional dependencies needed by that feature.
@@ -137,8 +137,8 @@ Depends:
  librust-hyper-0.14+full-dev
 Provides:
  librust-proxmox-http-0+hyper-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+hyper-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+hyper-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+hyper-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+hyper-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "hyper"
  This metapackage enables feature "hyper" for the Rust proxmox-http crate, by
  pulling in any additional dependencies needed by that feature.
@@ -152,25 +152,10 @@ Depends:
  librust-openssl-0.10+default-dev
 Provides:
  librust-proxmox-http-0+openssl-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+openssl-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+openssl-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+openssl-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+openssl-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "openssl"
  This metapackage enables feature "openssl" for the Rust proxmox-http crate, by
- pulling in any additional dependencies needed by that feature.
-
-Package: librust-proxmox-http+proxmox-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-http-dev (= ${binary:Version}),
- librust-proxmox-0.15-dev
-Provides:
- librust-proxmox-http-0+proxmox-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+proxmox-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+proxmox-dev (= ${binary:Version})
-Description: Proxmox HTTP library - feature "proxmox"
- This metapackage enables feature "proxmox" for the Rust proxmox-http crate, by
  pulling in any additional dependencies needed by that feature.
 
 Package: librust-proxmox-http+proxmox-io-dev
@@ -182,10 +167,25 @@ Depends:
  librust-proxmox-io-1+default-dev
 Provides:
  librust-proxmox-http-0+proxmox-io-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+proxmox-io-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+proxmox-io-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+proxmox-io-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+proxmox-io-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "proxmox-io"
  This metapackage enables feature "proxmox-io" for the Rust proxmox-http crate,
+ by pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox-http+proxmox-sys-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-http-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.2+default-dev
+Provides:
+ librust-proxmox-http-0+proxmox-sys-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6+proxmox-sys-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+proxmox-sys-dev (= ${binary:Version})
+Description: Proxmox HTTP library - feature "proxmox-sys"
+ This metapackage enables feature "proxmox-sys" for the Rust proxmox-http crate,
  by pulling in any additional dependencies needed by that feature.
 
 Package: librust-proxmox-http+tokio-dev
@@ -197,8 +197,8 @@ Depends:
  librust-tokio-1+default-dev
 Provides:
  librust-proxmox-http-0+tokio-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+tokio-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+tokio-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+tokio-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+tokio-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "tokio"
  This metapackage enables feature "tokio" for the Rust proxmox-http crate, by
  pulling in any additional dependencies needed by that feature.
@@ -212,8 +212,8 @@ Depends:
  librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~)
 Provides:
  librust-proxmox-http-0+tokio-openssl-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+tokio-openssl-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+tokio-openssl-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+tokio-openssl-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+tokio-openssl-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "tokio-openssl"
  This metapackage enables feature "tokio-openssl" for the Rust proxmox-http
  crate, by pulling in any additional dependencies needed by that feature.
@@ -230,12 +230,13 @@ Depends:
  librust-hyper-0.14+full-dev,
  librust-openssl-0.10+default-dev,
  librust-proxmox-io-1+tokio-dev,
+ librust-proxmox-sys-0.2+default-dev,
  librust-tokio-1+io-util-dev,
  librust-tokio-1+sync-dev
 Provides:
  librust-proxmox-http-0+websocket-dev (= ${binary:Version}),
- librust-proxmox-http-0.5+websocket-dev (= ${binary:Version}),
- librust-proxmox-http-0.5.6+websocket-dev (= ${binary:Version})
+ librust-proxmox-http-0.6+websocket-dev (= ${binary:Version}),
+ librust-proxmox-http-0.6.0+websocket-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "websocket"
  This metapackage enables feature "websocket" for the Rust proxmox-http crate,
  by pulling in any additional dependencies needed by that feature.
