@@ -4,18 +4,17 @@ extern crate proc_macro2;
 use std::iter::FromIterator;
 use std::mem;
 
-use anyhow::Error;
-
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::visit_mut::VisitMut;
+use syn::Error;
 
 macro_rules! format_err {
-    ($span:expr => $($msg:tt)*) => { syn::Error::new_spanned($span, format!($($msg)*)) };
-    ($span:expr, $($msg:tt)*) => { syn::Error::new($span, format!($($msg)*)) };
+    ($span:expr => $($msg:tt)*) => { Error::new_spanned($span, format!($($msg)*)) };
+    ($span:expr, $($msg:tt)*) => { Error::new($span, format!($($msg)*)) };
 }
 
 //macro_rules! bail {
@@ -26,13 +25,10 @@ macro_rules! format_err {
 fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> TokenStream {
     match data {
         Ok(output) => output,
-        Err(err) => match err.downcast::<syn::Error>() {
-            Ok(err) => {
-                item.extend(err.to_compile_error());
-                item
-            }
-            Err(err) => panic!("error in sortable macro: {}", err),
-        },
+        Err(err) => {
+            item.extend(err.to_compile_error());
+            item
+        }
     }
 }
 
