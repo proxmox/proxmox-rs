@@ -7,7 +7,6 @@ use anyhow::{bail, Error};
 use proxmox_io::vec;
 
 pub mod common_regex;
-pub mod serde;
 
 const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
 

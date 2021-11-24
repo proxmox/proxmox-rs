@@ -10,6 +10,7 @@ CRATES = \
 	 proxmox-lang \
 	 proxmox-router \
 	 proxmox-schema \
+	 proxmox-serde \
 	 proxmox-shared-memory \
 	 proxmox-section-config \
 	 proxmox-sortable-macro \

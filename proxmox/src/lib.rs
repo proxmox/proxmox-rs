@@ -1,9 +1,6 @@
 //! Proxmox "tools" package containing some generic tools along with the schema, API and CLI
 //! helpers.
 
-#[macro_use]
-pub mod serde_macros;
-
 pub mod tools;
 
 /// An identity (nop) macro. Used by the `#[sortable]` proc macro.

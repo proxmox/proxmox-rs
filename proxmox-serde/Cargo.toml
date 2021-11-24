@@ -1,0 +1,17 @@
+[package]
+name = "proxmox-serde"
+version = "0.1.0"
+authors = ["Proxmox Support Team <support@proxmox.com>"]
+edition = "2018"
+license = "AGPL-3"
+description = "Serde formatting tools"
+
+exclude = [ "debian" ]
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.13"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+proxmox-time = { path = "../proxmox-time", version = "1.0.0" }

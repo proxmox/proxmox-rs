@@ -1,0 +1,8 @@
+rust-proxmox-serde (0.1.0) stable; urgency=medium
+
+  * imported code from proxmox/src/tools/serde.rs
+
+  * initial release
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 24 Nov 2021 07:42:44 +0100
+

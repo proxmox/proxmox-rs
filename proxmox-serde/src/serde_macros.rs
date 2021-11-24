@@ -5,7 +5,7 @@
 /// ```
 /// # use std::str::FromStr;
 /// # use anyhow::bail;
-/// # use proxmox::forward_deserialize_to_from_str;
+/// # use proxmox_serde::forward_deserialize_to_from_str;
 /// struct AsciiAlnum(String);
 ///
 /// impl FromStr for AsciiAlnum {
@@ -56,7 +56,7 @@ macro_rules! forward_deserialize_to_from_str {
 ///
 /// ```
 /// # use std::fmt;
-/// # use proxmox::forward_serialize_to_display;
+/// # use proxmox_serde::forward_serialize_to_display;
 /// struct DoubleAngleBracketed(String);
 ///
 /// impl fmt::Display for DoubleAngleBracketed {

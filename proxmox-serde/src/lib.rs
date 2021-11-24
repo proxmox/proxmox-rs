@@ -1,17 +1,18 @@
 //! Serialization helpers for serde
 
+#[macro_use]
+pub mod serde_macros;
+
 /// Serialize Unix epoch (i64) as RFC3339.
 ///
 /// Usage example:
 /// ```
-/// # use proxmox::tools;
-///
 /// use serde::{Deserialize, Serialize};
 ///
 /// # #[derive(Debug)]
 /// #[derive(Deserialize, PartialEq, Serialize)]
 /// struct Foo {
-///     #[serde(with = "proxmox::tools::serde::epoch_as_rfc3339")]
+///     #[serde(with = "proxmox_serde::epoch_as_rfc3339")]
 ///     date: i64,
 /// }
 ///
@@ -55,7 +56,7 @@ pub mod epoch_as_rfc3339 {
 /// # #[derive(Debug)]
 /// #[derive(Deserialize, PartialEq, Serialize)]
 /// struct Foo {
-///     #[serde(with = "proxmox::tools::serde::bytes_as_base64")]
+///     #[serde(with = "proxmox_serde::bytes_as_base64")]
 ///     data: Vec<u8>,
 /// }
 ///
@@ -97,7 +98,7 @@ pub mod bytes_as_base64 {
 /// # #[derive(Debug)]
 /// #[derive(Deserialize, PartialEq, Serialize)]
 /// struct Foo {
-///     #[serde(with = "proxmox::tools::serde::string_as_base64")]
+///     #[serde(with = "proxmox_serde::string_as_base64")]
 ///     data: String,
 /// }
 ///
@@ -184,7 +185,7 @@ pub mod string_as_base64 {
 /// # #[derive(Debug)]
 /// #[derive(Deserialize, PartialEq, Serialize)]
 /// struct Foo {
-///     #[serde(with = "proxmox::tools::serde::bytes_as_base64url_nopad")]
+///     #[serde(with = "proxmox_serde::bytes_as_base64url_nopad")]
 ///     data: Vec<u8>,
 /// }
 ///
@@ -230,7 +231,7 @@ pub mod bytes_as_base64url_nopad {
 /// # #[derive(Debug)]
 /// #[derive(Deserialize, PartialEq, Serialize)]
 /// struct Foo {
-///     #[serde(with = "proxmox::tools::serde::string_as_base64url_nopad")]
+///     #[serde(with = "proxmox_serde::string_as_base64url_nopad")]
 ///     data: String,
 /// }
 ///
