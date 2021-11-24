@@ -1,7 +1,6 @@
 # Shortcut for common operations:
 
 CRATES = \
-	 proxmox \
 	 proxmox-api-macro \
 	 proxmox-async \
 	 proxmox-borrow \

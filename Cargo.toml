@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "proxmox",
     "proxmox-api-macro",
     "proxmox-async",
     "proxmox-borrow",
