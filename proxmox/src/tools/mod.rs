@@ -3,7 +3,6 @@
 use std::fmt;
 
 use anyhow::{bail, Error};
-use lazy_static::lazy_static;
 
 use proxmox_io::vec;
 
