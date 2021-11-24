@@ -13,3 +13,19 @@ pub mod systemd;
 
 mod worker_task_context;
 pub use worker_task_context::*;
+
+/// Returns the hosts node name (UTS node name)
+pub fn nodename() -> &'static str {
+    lazy_static::lazy_static! {
+        static ref NODENAME: String = {
+            nix::sys::utsname::uname()
+                .nodename()
+                .split('.')
+                .next()
+                .unwrap()
+                .to_owned()
+        };
+    }
+
+    &NODENAME
+}

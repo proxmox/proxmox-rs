@@ -129,19 +129,3 @@ fn test_hex() {
     hex_to_bin_exact("abca01239fa", &mut out).expect_err("parsed invalid hex string");
     hex_to_bin_exact("abca0x239f", &mut out).expect_err("parsed invalid hex string");
 }
-
-/// Returns the hosts node name (UTS node name)
-pub fn nodename() -> &'static str {
-    lazy_static! {
-        static ref NODENAME: String = {
-            nix::sys::utsname::uname()
-                .nodename()
-                .split('.')
-                .next()
-                .unwrap()
-                .to_owned()
-        };
-    }
-
-    &NODENAME
-}
