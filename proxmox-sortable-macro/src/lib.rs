@@ -12,7 +12,6 @@ use quote::quote;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::visit_mut::VisitMut;
-use syn::Ident;
 
 macro_rules! format_err {
     ($span:expr => $($msg:tt)*) => { syn::Error::new_spanned($span, format!($($msg)*)) };
@@ -47,20 +46,16 @@ pub fn sortable(_attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
 struct SortedData;
 
 impl VisitMut for SortedData {
-    fn visit_expr_macro_mut(&mut self, i: &mut syn::ExprMacro) {
-        if i.mac.path.is_ident("sorted") {
-            let span = i.mac.path.span();
-            i.mac.path.segments = Punctuated::new();
-            i.mac.path.segments.push(syn::PathSegment {
-                ident: Ident::new("identity", span),
-                arguments: Default::default(),
-            });
-
-            let tokens = mem::replace(&mut i.mac.tokens, TokenStream::new());
-            i.mac.tokens = handle_error(tokens.clone(), sort_data(tokens));
+    fn visit_expr_mut(&mut self, expr: &mut syn::Expr) {
+        match expr {
+            syn::Expr::Macro(i) => {
+                if i.mac.path.is_ident("sorted") {
+                    let tokens = mem::replace(&mut i.mac.tokens, TokenStream::new());
+                    *expr = syn::Expr::Verbatim(handle_error(tokens.clone(), sort_data(tokens)));
+                }
+            }
+            _ => syn::visit_mut::visit_expr_mut(self, expr),
         }
-        // and recurse:
-        self.visit_macro_mut(&mut i.mac)
     }
 }
 

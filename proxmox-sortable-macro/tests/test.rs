@@ -1,13 +1,5 @@
 use proxmox_sortable_macro::sortable;
 
-// The way #[sorted] works we require an 'identity' macro due to the inability of the syntax tree
-// visitor to change the type of a syntax tree element.
-//
-// Iow.: it replaces `sorted!([3, 2, 1])` with `identity!([1, 2, 3])`.
-macro_rules! identity {
-    ($($x:tt)*) => { $($x)* }
-}
-
 // In a normal project we would use this Cargo.toml line:
 //
 // [dependencies]
