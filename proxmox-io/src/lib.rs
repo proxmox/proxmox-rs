@@ -15,6 +15,9 @@ pub use sparse_copy::{buffer_is_zero, sparse_copy, SparseCopyResult};
 #[cfg(feature = "tokio")]
 pub use sparse_copy::sparse_copy_async;
 
+mod std_channel_writer;
+pub use std_channel_writer::StdChannelWriter;
+
 mod byte_buffer;
 pub use byte_buffer::ByteBuffer;
 
