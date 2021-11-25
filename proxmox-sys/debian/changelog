@@ -1,3 +1,9 @@
+rust-proxmox-sys (0.2.1) stable; urgency=medium
+
+  * proxmox-sys: import pipe() function from pbs-toos/src/io.rs
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 25 Nov 2021 12:11:19 +0100
+
 rust-proxmox-sys (0.2.0) unstable; urgency=medium
 
   * moved code from proxmox crate
