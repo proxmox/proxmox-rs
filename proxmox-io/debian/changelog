@@ -1,3 +1,9 @@
+rust-proxmox-io (1.0.1-1) stable; urgency=medium
+
+  * imported pbs-tools/src/sync/std_channel_writer.rs
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 25 Nov 2021 12:14:27 +0100
+
 rust-proxmox-io (1.0.0-1) stable; urgency=medium
 
   * initial split out of `librust-proxmox-dev`
