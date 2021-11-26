@@ -1,6 +1,6 @@
 //! Webauthn configuration and challenge data.
 
-use anyhow::Error;
+use anyhow::{format_err, Error};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use webauthn_rs::proto::{COSEKey, Credential, CredentialID, UserVerificationPolicy};
@@ -50,7 +50,7 @@ impl Into<String> for OriginUrl {
 #[cfg_attr(feature = "api-types", api(
     properties: {
         rp: { type: String },
-        origin: { type: String },
+        origin: { type: String, optional: true },
         id: { type: String },
     }
 ))]
@@ -68,7 +68,8 @@ pub struct WebauthnConfig {
     /// users type in their browsers to access the web interface.
     ///
     /// Changing this *may* break existing credentials.
-    pub origin: OriginUrl,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub origin: Option<OriginUrl>,
 
     /// Relying party ID. Must be the domain name without protocol, port or location.
     ///
@@ -78,31 +79,49 @@ pub struct WebauthnConfig {
 
 impl WebauthnConfig {
     pub fn digest(&self) -> [u8; 32] {
-        let data = format!(
-            "rp={:?}\norigin={:?}\nid={:?}\n",
-            self.rp,
-            self.origin.0.as_str(),
-            self.id,
-        );
+        let mut data = format!("rp={:?}\nid={:?}\n", self.rp, self.id,);
+        if let Some(origin) = &self.origin {
+            data.push_str(&format!("origin={:?}\n", origin.as_str()));
+        }
         openssl::sha::sha256(data.as_bytes())
     }
+
+    /// Instantiate a usable webauthn configuration instance.
+    pub(super) fn instantiate<'a, 'this: 'a, 'origin: 'a>(
+        &'this self,
+        origin: Option<&'origin Url>,
+    ) -> Result<WebauthnConfigInstance<'a>, Error> {
+        Ok(WebauthnConfigInstance {
+            origin: origin
+                .or_else(|| self.origin.as_ref().map(|u| &u.0))
+                .ok_or_else(|| format_err!("missing webauthn origin"))?,
+            rp: &self.rp,
+            id: &self.id,
+        })
+    }
+}
+
+pub(super) struct WebauthnConfigInstance<'a> {
+    rp: &'a str,
+    origin: &'a Url,
+    id: &'a str,
 }
 
 /// For now we just implement this on the configuration this way.
 ///
 /// Note that we may consider changing this so `get_origin` returns the `Host:` header provided by
 /// the connecting client.
-impl webauthn_rs::WebauthnConfig for WebauthnConfig {
+impl<'a> webauthn_rs::WebauthnConfig for WebauthnConfigInstance<'a> {
     fn get_relying_party_name(&self) -> &str {
-        &self.rp
+        self.rp
     }
 
     fn get_origin(&self) -> &Url {
-        &self.origin.0
+        self.origin
     }
 
     fn get_relying_party_id(&self) -> &str {
-        &self.id
+        self.id
     }
 }
 

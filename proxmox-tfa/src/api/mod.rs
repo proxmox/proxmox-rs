@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use anyhow::{bail, format_err, Error};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use url::Url;
 
 use webauthn_rs::{proto::UserVerificationPolicy, Webauthn};
 
@@ -28,6 +29,7 @@ pub mod methods;
 
 pub use recovery::RecoveryState;
 pub use u2f::U2fConfig;
+use webauthn::WebauthnConfigInstance;
 pub use webauthn::{WebauthnConfig, WebauthnCredential};
 
 #[cfg(feature = "api-types")]
@@ -93,15 +95,22 @@ fn check_u2f(u2f: &Option<U2fConfig>) -> Result<u2f::U2f, Error> {
 
 /// Helper to get a `Webauthn` instance from a `WebauthnConfig`, or `None` if there isn't one
 /// configured.
-fn get_webauthn(waconfig: &Option<WebauthnConfig>) -> Option<Webauthn<WebauthnConfig>> {
-    waconfig.clone().map(Webauthn::new)
+fn get_webauthn<'a, 'config: 'a, 'origin: 'a>(
+    waconfig: &'config Option<WebauthnConfig>,
+    origin: Option<&'origin Url>,
+) -> Option<Result<Webauthn<WebauthnConfigInstance<'a>>, Error>> {
+    Some(waconfig.as_ref()?.instantiate(origin).map(Webauthn::new))
 }
 
 /// Helper to get a u2f instance from a u2f config.
 ///
 /// This is outside of `TfaConfig` to not borrow its `&self`.
-fn check_webauthn(waconfig: &Option<WebauthnConfig>) -> Result<Webauthn<WebauthnConfig>, Error> {
-    get_webauthn(waconfig).ok_or_else(|| format_err!("no webauthn configuration available"))
+fn check_webauthn<'a, 'config: 'a, 'origin: 'a>(
+    waconfig: &'config Option<WebauthnConfig>,
+    origin: Option<&'origin Url>,
+) -> Result<Webauthn<WebauthnConfigInstance<'a>>, Error> {
+    get_webauthn(waconfig, origin)
+        .ok_or_else(|| format_err!("no webauthn configuration available"))?
 }
 
 impl TfaConfig {
@@ -142,8 +151,9 @@ impl TfaConfig {
         access: A,
         user: &str,
         description: String,
+        origin: Option<&Url>,
     ) -> Result<String, Error> {
-        let webauthn = check_webauthn(&self.webauthn)?;
+        let webauthn = check_webauthn(&self.webauthn, origin)?;
 
         self.users
             .entry(user.to_owned())
@@ -158,8 +168,9 @@ impl TfaConfig {
         userid: &str,
         challenge: &str,
         response: &str,
+        origin: Option<&Url>,
     ) -> Result<String, Error> {
-        let webauthn = check_webauthn(&self.webauthn)?;
+        let webauthn = check_webauthn(&self.webauthn, origin)?;
 
         let response: webauthn_rs::proto::RegisterPublicKeyCredential =
             serde_json::from_str(response)
@@ -208,12 +219,13 @@ impl TfaConfig {
         &mut self,
         access: A,
         userid: &str,
+        origin: Option<&Url>,
     ) -> Result<Option<TfaChallenge>, Error> {
         match self.users.get_mut(userid) {
             Some(udata) => udata.challenge(
                 access,
                 userid,
-                get_webauthn(&self.webauthn),
+                get_webauthn(&self.webauthn, origin),
                 get_u2f(&self.u2f).as_ref(),
             ),
             None => Ok(None),
@@ -227,6 +239,7 @@ impl TfaConfig {
         userid: &str,
         challenge: &TfaChallenge,
         response: TfaResponse,
+        origin: Option<&Url>,
     ) -> Result<NeedsSaving, Error> {
         match self.users.get_mut(userid) {
             Some(user) => match response {
@@ -239,7 +252,7 @@ impl TfaConfig {
                     None => bail!("no u2f factor available for user '{}'", userid),
                 },
                 TfaResponse::Webauthn(value) => {
-                    let webauthn = check_webauthn(&self.webauthn)?;
+                    let webauthn = check_webauthn(&self.webauthn, origin)?;
                     user.verify_webauthn(access.clone(), userid, webauthn, value)
                 }
                 TfaResponse::Recovery(value) => {
@@ -424,7 +437,7 @@ impl TfaUserData {
     fn webauthn_registration_challenge<A: OpenUserChallengeData>(
         &mut self,
         access: A,
-        webauthn: Webauthn<WebauthnConfig>,
+        webauthn: Webauthn<WebauthnConfigInstance>,
         userid: &str,
         description: String,
     ) -> Result<String, Error> {
@@ -463,7 +476,7 @@ impl TfaUserData {
     fn webauthn_registration_finish<A: OpenUserChallengeData>(
         &mut self,
         access: A,
-        webauthn: Webauthn<WebauthnConfig>,
+        webauthn: Webauthn<WebauthnConfigInstance>,
         userid: &str,
         challenge: &str,
         response: webauthn_rs::proto::RegisterPublicKeyCredential,
@@ -555,11 +568,11 @@ impl TfaUserData {
     }
 
     /// Generate a generic TFA challenge. See the [`TfaChallenge`] description for details.
-    pub fn challenge<A: OpenUserChallengeData>(
+    fn challenge<A: OpenUserChallengeData>(
         &mut self,
         access: A,
         userid: &str,
-        webauthn: Option<Webauthn<WebauthnConfig>>,
+        webauthn: Option<Result<Webauthn<WebauthnConfigInstance>, Error>>,
         u2f: Option<&u2f::U2f>,
     ) -> Result<Option<TfaChallenge>, Error> {
         if self.is_empty() {
@@ -570,7 +583,7 @@ impl TfaUserData {
             totp: self.totp.iter().any(|e| e.info.enable),
             recovery: RecoveryState::from(&self.recovery),
             webauthn: match webauthn {
-                Some(webauthn) => self.webauthn_challenge(access.clone(), userid, webauthn)?,
+                Some(webauthn) => self.webauthn_challenge(access.clone(), userid, webauthn?)?,
                 None => None,
             },
             u2f: match u2f {
@@ -591,7 +604,7 @@ impl TfaUserData {
         &mut self,
         access: A,
         userid: &str,
-        webauthn: Webauthn<WebauthnConfig>,
+        webauthn: Webauthn<WebauthnConfigInstance>,
     ) -> Result<Option<webauthn_rs::proto::RequestChallengeResponse>, Error> {
         if self.webauthn.is_empty() {
             return Ok(None);
@@ -703,7 +716,7 @@ impl TfaUserData {
         &mut self,
         access: A,
         userid: &str,
-        webauthn: Webauthn<WebauthnConfig>,
+        webauthn: Webauthn<WebauthnConfigInstance>,
         mut response: Value,
     ) -> Result<(), Error> {
         let expire_before = proxmox_time::epoch_i64() - CHALLENGE_TIMEOUT_SECS;
@@ -995,7 +1008,7 @@ impl TfaUserChallenges {
     /// `webauthn_registration_challenge`. The response should come directly from the client.
     fn webauthn_registration_finish(
         &mut self,
-        webauthn: Webauthn<WebauthnConfig>,
+        webauthn: Webauthn<WebauthnConfigInstance>,
         challenge: &str,
         response: webauthn_rs::proto::RegisterPublicKeyCredential,
         existing_registrations: &[TfaEntry<WebauthnCredential>],

@@ -317,6 +317,7 @@ pub fn add_tfa_entry<A: OpenUserChallengeData>(
     value: Option<String>,
     challenge: Option<String>,
     r#type: TfaType,
+    origin: Option<&url::Url>,
 ) -> Result<TfaUpdateInfo, Error> {
     match r#type {
         TfaType::Totp => {
@@ -331,7 +332,15 @@ pub fn add_tfa_entry<A: OpenUserChallengeData>(
                 bail!("'totp' parameter is invalid for 'webauthn' entries");
             }
 
-            add_webauthn(config, access, userid, description, challenge, value)
+            add_webauthn(
+                config,
+                access,
+                userid,
+                description,
+                challenge,
+                value,
+                origin,
+            )
         }
         TfaType::U2f => {
             if totp.is_some() {
@@ -436,10 +445,16 @@ fn add_webauthn<A: OpenUserChallengeData>(
     description: Option<String>,
     challenge: Option<String>,
     value: Option<String>,
+    origin: Option<&url::Url>,
 ) -> Result<TfaUpdateInfo, Error> {
     match challenge {
         None => config
-            .webauthn_registration_challenge(access, &userid, need_description(description)?)
+            .webauthn_registration_challenge(
+                access,
+                &userid,
+                need_description(description)?,
+                origin,
+            )
             .map(|c| TfaUpdateInfo {
                 challenge: Some(c),
                 ..Default::default()
@@ -449,7 +464,7 @@ fn add_webauthn<A: OpenUserChallengeData>(
                 format_err!("missing 'value' parameter (webauthn challenge response missing)")
             })?;
             config
-                .webauthn_registration_finish(access, &userid, &challenge, &value)
+                .webauthn_registration_finish(access, &userid, &challenge, &value, origin)
                 .map(TfaUpdateInfo::id)
         }
     }
