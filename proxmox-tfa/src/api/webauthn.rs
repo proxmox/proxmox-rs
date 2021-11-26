@@ -1,13 +1,12 @@
 //! Webauthn configuration and challenge data.
 
+use anyhow::Error;
 use serde::{Deserialize, Serialize};
+use url::Url;
+use webauthn_rs::proto::{COSEKey, Credential, CredentialID, UserVerificationPolicy};
 
 #[cfg(feature = "api-types")]
 use proxmox_schema::{api, Updater, UpdaterType};
-
-use url::Url;
-
-use webauthn_rs::proto::{COSEKey, Credential, CredentialID, UserVerificationPolicy};
 
 use super::IsExpired;
 
@@ -18,6 +17,34 @@ pub struct OriginUrl(Url);
 #[cfg(feature = "api-types")]
 impl UpdaterType for OriginUrl {
     type Updater = Option<Self>;
+}
+
+impl std::str::FromStr for OriginUrl {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Error> {
+        Ok(Self(s.parse()?))
+    }
+}
+
+impl std::ops::Deref for OriginUrl {
+    type Target = Url;
+
+    fn deref(&self) -> &Url {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for OriginUrl {
+    fn deref_mut(&mut self) -> &mut Url {
+        &mut self.0
+    }
+}
+
+impl Into<String> for OriginUrl {
+    fn into(self) -> String {
+        self.0.into()
+    }
 }
 
 #[cfg_attr(feature = "api-types", api(
