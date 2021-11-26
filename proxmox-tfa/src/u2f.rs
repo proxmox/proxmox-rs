@@ -579,7 +579,7 @@ mod bytes_as_base64url_nopad {
 
     pub fn serialize<S: Serializer>(data: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&base64::encode_config(
-            data.as_ref(),
+            data,
             base64::URL_SAFE_NO_PAD,
         ))
     }

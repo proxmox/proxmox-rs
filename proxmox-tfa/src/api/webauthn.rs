@@ -41,9 +41,9 @@ impl std::ops::DerefMut for OriginUrl {
     }
 }
 
-impl Into<String> for OriginUrl {
-    fn into(self) -> String {
-        self.0.into()
+impl From<OriginUrl> for String {
+    fn from(url: OriginUrl) -> String {
+        url.0.into()
     }
 }
 

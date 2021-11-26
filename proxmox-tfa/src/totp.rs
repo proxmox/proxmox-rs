@@ -20,9 +20,9 @@ pub enum Algorithm {
     Sha512,
 }
 
-impl Into<MessageDigest> for Algorithm {
-    fn into(self) -> MessageDigest {
-        match self {
+impl From<Algorithm> for MessageDigest {
+    fn from(algo: Algorithm) -> MessageDigest {
+        match algo {
             Algorithm::Sha1 => MessageDigest::sha1(),
             Algorithm::Sha256 => MessageDigest::sha256(),
             Algorithm::Sha512 => MessageDigest::sha512(),
@@ -343,7 +343,7 @@ impl std::str::FromStr for Totp {
         // FIXME: Also split on "%3A" / "%3a"
         let mut account = account.splitn(2, |&b| b == b':');
         let first_part = percent_decode(
-            &account
+            account
                 .next()
                 .ok_or_else(|| anyhow!("missing account in otpauth uri"))?,
         )
@@ -364,13 +364,13 @@ impl std::str::FromStr for Totp {
         for parts in uri.split(|&b| b == b'&') {
             let mut parts = parts.splitn(2, |&b| b == b'=');
             let key = percent_decode(
-                &parts
+                parts
                     .next()
                     .ok_or_else(|| anyhow!("bad key in otpauth uri"))?,
             )
             .decode_utf8()?;
             let value = percent_decode(
-                &parts
+                parts
                     .next()
                     .ok_or_else(|| anyhow!("bad value in otpauth uri"))?,
             );
@@ -467,6 +467,8 @@ impl PartialEq<&str> for TotpValue {
             return false;
         }
 
+        // I don't trust that `.parse()` never starts accepting `0x` prefixes so:
+        #[allow(clippy::from_str_radix_10)]
         match u32::from_str_radix(*other, 10) {
             Ok(value) => self.value() == value,
             Err(_) => false,

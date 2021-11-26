@@ -11,7 +11,7 @@ use serde::Deserialize;
 pub struct FoldSeqVisitor<T, Out, F, Init>
 where
     Init: FnOnce(Option<usize>) -> Out,
-    F: Fn(&mut Out, T) -> (),
+    F: Fn(&mut Out, T),
 {
     init: Option<Init>,
     closure: F,
@@ -22,7 +22,7 @@ where
 impl<T, Out, F, Init> FoldSeqVisitor<T, Out, F, Init>
 where
     Init: FnOnce(Option<usize>) -> Out,
-    F: Fn(&mut Out, T) -> (),
+    F: Fn(&mut Out, T),
 {
     pub fn new(expecting: &'static str, init: Init, closure: F) -> Self {
         Self {
@@ -37,7 +37,7 @@ where
 impl<'de, T, Out, F, Init> serde::de::Visitor<'de> for FoldSeqVisitor<T, Out, F, Init>
 where
     Init: FnOnce(Option<usize>) -> Out,
-    F: Fn(&mut Out, T) -> (),
+    F: Fn(&mut Out, T),
     T: Deserialize<'de>,
 {
     type Value = Out;
@@ -104,7 +104,7 @@ pub fn fold<'de, T, Out, Init, Fold>(
 ) -> FoldSeqVisitor<T, Out, Fold, Init>
 where
     Init: FnOnce(Option<usize>) -> Out,
-    Fold: Fn(&mut Out, T) -> (),
+    Fold: Fn(&mut Out, T),
     T: Deserialize<'de>,
 {
     FoldSeqVisitor::new(expected, init, fold)

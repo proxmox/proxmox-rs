@@ -142,7 +142,7 @@ pub fn get_tfa_entry(config: &TfaConfig, userid: &str, id: &str) -> Option<Typed
     Some(
         match {
             // scope to prevent the temporary iter from borrowing across the whole match
-            let entry = tfa_id_iter(&user_data).find(|(_ty, _index, entry_id)| id == *entry_id);
+            let entry = tfa_id_iter(user_data).find(|(_ty, _index, entry_id)| id == *entry_id);
             entry.map(|(ty, index, _)| (ty, index))
         } {
             Some((TfaType::Recovery, _)) => match user_data.recovery() {
@@ -155,21 +155,20 @@ pub fn get_tfa_entry(config: &TfaConfig, userid: &str, id: &str) -> Option<Typed
             Some((TfaType::Totp, index)) => {
                 TypedTfaInfo {
                     ty: TfaType::Totp,
-                    // `into_iter().nth()` to *move* out of it
-                    info: user_data.totp.iter().nth(index).unwrap().info.clone(),
+                    info: user_data.totp.get(index).unwrap().info.clone(),
                 }
             }
             Some((TfaType::Webauthn, index)) => TypedTfaInfo {
                 ty: TfaType::Webauthn,
-                info: user_data.webauthn.iter().nth(index).unwrap().info.clone(),
+                info: user_data.webauthn.get(index).unwrap().info.clone(),
             },
             Some((TfaType::U2f, index)) => TypedTfaInfo {
                 ty: TfaType::U2f,
-                info: user_data.u2f.iter().nth(index).unwrap().info.clone(),
+                info: user_data.u2f.get(index).unwrap().info.clone(),
             },
             Some((TfaType::Yubico, index)) => TypedTfaInfo {
                 ty: TfaType::Yubico,
-                info: user_data.yubico.iter().nth(index).unwrap().info.clone(),
+                info: user_data.yubico.get(index).unwrap().info.clone(),
             },
             None => return None,
         },
@@ -195,7 +194,7 @@ pub fn delete_tfa(config: &mut TfaConfig, userid: &str, id: &str) -> Result<bool
 
     match {
         // scope to prevent the temporary iter from borrowing across the whole match
-        let entry = tfa_id_iter(&user_data).find(|(_, _, entry_id)| id == *entry_id);
+        let entry = tfa_id_iter(user_data).find(|(_, _, entry_id)| id == *entry_id);
         entry.map(|(ty, index, _)| (ty, index))
     } {
         Some((TfaType::Recovery, _)) => user_data.recovery = None,
@@ -308,6 +307,7 @@ fn need_description(description: Option<String>) -> Result<String, Error> {
 /// Permissions for accessing `userid` must have been verified by the caller.
 ///
 /// The caller must have already verified the user's password!
+#[allow(clippy::too_many_arguments)]
 pub fn add_tfa_entry<A: OpenUserChallengeData>(
     config: &mut TfaConfig,
     access: A,
@@ -354,7 +354,7 @@ pub fn add_tfa_entry<A: OpenUserChallengeData>(
                 bail!("generating recovery tokens does not allow additional parameters");
             }
 
-            let recovery = config.add_recovery(&userid)?;
+            let recovery = config.add_recovery(userid)?;
 
             Ok(TfaUpdateInfo {
                 id: Some("recovery".to_string()),
@@ -451,7 +451,7 @@ fn add_webauthn<A: OpenUserChallengeData>(
         None => config
             .webauthn_registration_challenge(
                 access,
-                &userid,
+                userid,
                 need_description(description)?,
                 origin,
             )
@@ -464,7 +464,7 @@ fn add_webauthn<A: OpenUserChallengeData>(
                 format_err!("missing 'value' parameter (webauthn challenge response missing)")
             })?;
             config
-                .webauthn_registration_finish(access, &userid, &challenge, &value, origin)
+                .webauthn_registration_finish(access, userid, &challenge, &value, origin)
                 .map(TfaUpdateInfo::id)
         }
     }

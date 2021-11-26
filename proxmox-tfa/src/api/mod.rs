@@ -247,13 +247,13 @@ impl TfaConfig {
                 TfaResponse::U2f(value) => match &challenge.u2f {
                     Some(challenge) => {
                         let u2f = check_u2f(&self.u2f)?;
-                        user.verify_u2f(access.clone(), userid, u2f, &challenge.challenge, value)
+                        user.verify_u2f(access, userid, u2f, &challenge.challenge, value)
                     }
                     None => bail!("no u2f factor available for user '{}'", userid),
                 },
                 TfaResponse::Webauthn(value) => {
                     let webauthn = check_webauthn(&self.webauthn, origin)?;
-                    user.verify_webauthn(access.clone(), userid, webauthn, value)
+                    user.verify_webauthn(access, userid, webauthn, value)
                 }
                 TfaResponse::Recovery(value) => {
                     user.verify_recovery(&value)?;
@@ -587,7 +587,7 @@ impl TfaUserData {
                 None => None,
             },
             u2f: match u2f {
-                Some(u2f) => self.u2f_challenge(access.clone(), userid, u2f)?,
+                Some(u2f) => self.u2f_challenge(access, userid, u2f)?,
                 None => None,
             },
             yubico: self.yubico.iter().any(|e| e.info.enable),

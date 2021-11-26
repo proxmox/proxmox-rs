@@ -12,7 +12,7 @@ fn getrandom(mut buffer: &mut [u8]) -> Result<(), io::Error> {
             libc::getrandom(
                 buffer.as_mut_ptr() as *mut libc::c_void,
                 buffer.len() as libc::size_t,
-                0 as libc::c_uint,
+                0,
             )
         };
 
@@ -49,7 +49,7 @@ impl Recovery {
         getrandom(&mut secret)?;
 
         let mut this = Self {
-            secret: hex::encode(&secret).to_string(),
+            secret: hex::encode(&secret),
             entries: Vec::with_capacity(10),
             created: proxmox_time::epoch_i64(),
         };
