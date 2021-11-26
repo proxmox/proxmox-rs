@@ -1,3 +1,9 @@
+rust-proxmox-sortable-macro (0.1.2-1) proxmox-rust; urgency=medium
+
+  * remove the need for an 'identity' macro
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 26 Nov 2021 14:10:37 +0100
+
 rust-proxmox-sortable-macro (0.1.1-1) proxmox-rust; urgency=medium
 
   * replace failure with anyhow crate
