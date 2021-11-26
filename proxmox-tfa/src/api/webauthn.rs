@@ -49,6 +49,18 @@ pub struct WebauthnConfig {
     pub id: String,
 }
 
+impl WebauthnConfig {
+    pub fn digest(&self) -> [u8; 32] {
+        let data = format!(
+            "rp={:?}\norigin={:?}\nid={:?}\n",
+            self.rp,
+            self.origin.0.as_str(),
+            self.id,
+        );
+        openssl::sha::sha256(data.as_bytes())
+    }
+}
+
 /// For now we just implement this on the configuration this way.
 ///
 /// Note that we may consider changing this so `get_origin` returns the `Host:` header provided by
