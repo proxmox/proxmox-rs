@@ -1,3 +1,15 @@
+rust-proxmox-tfa (2.0.0-1) stable; urgency=medium
+
+  * add Webauthn::digest
+
+  * let OriginUrl deref to its inner Url and add FromStr/TryFrom/Into<String>
+    impls
+
+  * make configured webauthn origin optional, allow users to pass an
+    origin-override
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 Nov 2021 16:19:16 +0100
+
 rust-proxmox-tfa (1.3.2-1) stable; urgency=medium
 
   * fix instantiation of u2f context, use origin instead of always replacing
