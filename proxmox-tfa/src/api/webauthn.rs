@@ -43,7 +43,7 @@ pub struct WebauthnConfig {
     /// Changing this *may* break existing credentials.
     pub origin: OriginUrl,
 
-    /// Relying part ID. Must be the domain name without protocol, port or location.
+    /// Relying party ID. Must be the domain name without protocol, port or location.
     ///
     /// Changing this *will* break existing credentials.
     pub id: String,
