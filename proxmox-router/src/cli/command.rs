@@ -1,4 +1,4 @@
-use anyhow::*;
+use anyhow::{format_err, Error};
 use serde_json::Value;
 use std::cell::RefCell;
 use std::sync::Arc;

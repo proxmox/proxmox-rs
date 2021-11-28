@@ -8,7 +8,7 @@ use std::str::FromStr;
 use std::sync::RwLock;
 use std::time::Instant;
 
-use anyhow::*;
+use anyhow::{bail, format_err, Error};
 use lazy_static::lazy_static;
 use nix::unistd::Pid;
 
