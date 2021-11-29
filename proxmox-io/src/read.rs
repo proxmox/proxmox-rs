@@ -296,7 +296,7 @@ impl<R: io::Read> ReadExt for R {
     fn read_exact_or_eof(&mut self, mut buf: &mut [u8]) -> io::Result<bool> {
         let mut read_bytes = 0;
         loop {
-            match self.read(&mut buf) {
+            match self.read(buf) {
                 Ok(0) => {
                     if read_bytes == 0 {
                         return Ok(false);
