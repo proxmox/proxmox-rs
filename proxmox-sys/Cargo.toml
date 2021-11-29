@@ -20,7 +20,7 @@ serde_json = "1.0"
 zstd = { version = "0.6", features = [ "bindgen" ] }
 
 # Macro crates:
-proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.1" }
+proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.2" }
 
 proxmox-io = { path = "../proxmox-io", version = "1.0.0" }
 proxmox-lang = { path = "../proxmox-lang", version = "1.0.0" }
