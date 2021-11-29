@@ -14,9 +14,9 @@ macro_rules! io_format_err {
 /// This is effectively `return Err(::std::io::Error::last_os_error().into());`.
 #[macro_export]
 macro_rules! io_bail_last {
-    () => {
+    () => {{
         return Err(::std::io::Error::last_os_error().into());
-    };
+    }};
 }
 
 /// Like anyhow's `bail` but producing a `std::io::Error`.
