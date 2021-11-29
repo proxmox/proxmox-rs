@@ -388,6 +388,7 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::identity_op)]
     fn test_compute_next_event() -> Result<(), Error> {
 
         let test_value = |v: &'static str, last: i64, expect: i64| -> Result<i64, Error> {

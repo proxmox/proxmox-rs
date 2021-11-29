@@ -1,3 +1,5 @@
+#![allow(clippy::manual_range_contains)]
+
 use std::ffi::{CStr, CString};
 
 use anyhow::{bail, format_err, Error};
