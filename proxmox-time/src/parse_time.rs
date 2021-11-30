@@ -191,12 +191,16 @@ fn parse_date_time_comp(max: usize) -> impl Fn(&str) -> IResult<&str, DateTimeVa
             if value > end {
                 return Err(parse_error(i, "range start is bigger than end"));
             }
-            return Ok((i, DateTimeValue::Range(value, end)))
+            if let Some(time) = i.strip_prefix('/') {
+                let (time, repeat) = parse_time_comp(max)(time)?;
+                return Ok((time, DateTimeValue::Repeated(value, repeat, Some(end))));
+            }
+            return Ok((i, DateTimeValue::Range(value, end)));
         }
 
         if let Some(time) = i.strip_prefix('/') {
             let (time, repeat) = parse_time_comp(max)(time)?;
-            Ok((time, DateTimeValue::Repeated(value, repeat)))
+            Ok((time, DateTimeValue::Repeated(value, repeat, None)))
         } else {
             Ok((i, DateTimeValue::Single(value)))
         }
@@ -209,7 +213,7 @@ fn parse_date_time_comp_list(start: u32, max: usize) -> impl Fn(&str) -> IResult
             if let Some(time) = rest.strip_prefix('/') {
                 let (n, repeat) = parse_time_comp(max)(time)?;
                 if repeat > 0 {
-                    return Ok((n, vec![DateTimeValue::Repeated(start, repeat)]));
+                    return Ok((n, vec![DateTimeValue::Repeated(start, repeat, None)]));
                 }
             }
             return Ok((rest, Vec::new()));

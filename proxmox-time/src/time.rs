@@ -25,7 +25,7 @@ bitflags!{
 pub(crate) enum DateTimeValue {
     Single(u32),
     Range(u32, u32),
-    Repeated(u32, u32),
+    Repeated(u32, u32, Option<u32>),
 }
 
 impl DateTimeValue {
@@ -34,11 +34,16 @@ impl DateTimeValue {
         match self {
             DateTimeValue::Single(v) => *v == value,
             DateTimeValue::Range(start, end) => value >= *start && value <= *end,
-            DateTimeValue::Repeated(start, repetition) => {
+            DateTimeValue::Repeated(start, repetition, opt_end) => {
                 if value >= *start {
                     if *repetition > 0 {
                         let offset = value - start;
-                        offset % repetition == 0
+                        let res = offset % repetition == 0;
+                        if let Some(end) = opt_end {
+                            res && value <= *end
+                        } else {
+                            res
+                        }
                     } else {
                         *start == value
                     }
@@ -78,11 +83,18 @@ impl DateTimeValue {
                         }
                     }
                 }
-                DateTimeValue::Repeated(start, repetition) => {
+                DateTimeValue::Repeated(start, repetition, opt_end) => {
                     if value < *start {
                         set_next(*start);
                     } else if *repetition > 0 {
-                        set_next(start + ((value - start + repetition) / repetition) * repetition);
+                        let n = start + ((value - start + repetition) / repetition) * repetition;
+                        if let Some(end) = opt_end {
+                            if n <= *end {
+                                set_next(n);
+                            }
+                        } else {
+                            set_next(n);
+                        }
                     }
                 }
             }
@@ -454,6 +466,11 @@ mod test {
         test_value("fri", THURSDAY_00_00, THURSDAY_00_00 + 1*DAY)?;
         test_value("sat", THURSDAY_00_00, THURSDAY_00_00 + 2*DAY)?;
         test_value("sun", THURSDAY_00_00, THURSDAY_00_00 + 3*DAY)?;
+
+        // test repeated ranges
+        test_value("4..10/2:0", THURSDAY_00_00, THURSDAY_00_00 + 4*HOUR)?;
+        test_value("4..10/2:0", THURSDAY_00_00 + 5*HOUR, THURSDAY_00_00 + 6*HOUR)?;
+        test_value("4..10/2:0", THURSDAY_00_00 + 11*HOUR, THURSDAY_00_00 + 1*DAY + 4*HOUR)?;
 
         // test multiple values for a single field
         // and test that the order does not matter
