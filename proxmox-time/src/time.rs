@@ -451,6 +451,10 @@ mod test {
         const JUL_31_2020: i64 = 1596153600; // Friday, 2020-07-31 00:00:00
         const DEC_31_2020: i64 = 1609372800; // Thursday, 2020-12-31 00:00:00
 
+        // minute only syntax
+        test_value("0", THURSDAY_00_00, THURSDAY_00_00 + HOUR)?;
+        test_value("*", THURSDAY_00_00, THURSDAY_00_00 + MIN)?;
+
         test_value("*:0", THURSDAY_00_00, THURSDAY_00_00 + HOUR)?;
         test_value("*:*", THURSDAY_00_00, THURSDAY_00_00 + MIN)?;
         test_value("*:*:*", THURSDAY_00_00, THURSDAY_00_00 + 1)?;

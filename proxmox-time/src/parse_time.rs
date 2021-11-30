@@ -10,7 +10,7 @@ use nom::{
     error::{context, ParseError, VerboseError},
     bytes::complete::{tag, take_while1},
     combinator::{map_res, all_consuming, opt, recognize},
-    sequence::{pair, preceded, tuple},
+    sequence::{pair, preceded, terminated, tuple},
     character::complete::{alpha1, space0, digit1},
     multi::separated_nonempty_list,
 };
@@ -225,17 +225,16 @@ fn parse_date_time_comp_list(start: u32, max: usize) -> impl Fn(&str) -> IResult
 
 fn parse_time_spec(i: &str) -> IResult<&str, TimeSpec> {
 
-    let (i, (hour, minute, opt_second)) = tuple((
-        parse_date_time_comp_list(0, 24),
-        preceded(tag(":"), parse_date_time_comp_list(0, 60)),
+    let (i, (opt_hour, minute, opt_second)) = tuple((
+        opt(terminated(parse_date_time_comp_list(0, 24), tag(":"))),
+        parse_date_time_comp_list(0, 60),
         opt(preceded(tag(":"), parse_date_time_comp_list(0, 60))),
     ))(i)?;
 
-    if let Some(second) = opt_second {
-        Ok((i, TimeSpec { hour, minute, second }))
-    } else {
-        Ok((i, TimeSpec { hour, minute, second: vec![DateTimeValue::Single(0)] }))
-    }
+    let hour = opt_hour.unwrap_or_else(Vec::new);
+    let second = opt_second.unwrap_or_else(|| vec![DateTimeValue::Single(0)]);
+
+    Ok((i, TimeSpec { hour, minute, second }))
 }
 
 fn parse_date_spec(i: &str) -> IResult<&str, DateSpec> {
