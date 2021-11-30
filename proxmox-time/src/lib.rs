@@ -15,6 +15,9 @@ pub use time::*;
 
 pub(crate) mod parse_helpers;
 
+mod week_days;
+pub use week_days::*;
+
 mod daily_duration;
 pub use daily_duration::*;
 

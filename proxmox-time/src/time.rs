@@ -1,25 +1,11 @@
 use std::convert::TryInto;
 
 use anyhow::Error;
-use bitflags::bitflags;
 
 use crate::TmEditor;
+use crate::WeekDays;
 
 use crate::{parse_calendar_event, parse_time_span};
-
-bitflags!{
-    /// Defines one or more days of a week.
-    #[derive(Default)]
-    pub struct WeekDays: u8 {
-        const MONDAY = 1;
-        const TUESDAY = 2;
-        const WEDNESDAY = 4;
-        const THURSDAY = 8;
-        const FRIDAY = 16;
-        const SATURDAY = 32;
-        const SUNDAY = 64;
-    }
-}
 
 #[derive(Debug, Clone)]
 pub(crate) enum DateTimeValue {
