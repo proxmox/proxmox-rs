@@ -1,33 +1,10 @@
-use std::convert::TryInto;
-
 use anyhow::Error;
 
 use crate::date_time_value::DateTimeValue;
 use crate::TmEditor;
 use crate::WeekDays;
 
-use crate::{parse_calendar_event, parse_time_span};
-
-/// Calendar events may be used to refer to one or more points in time in a
-/// single expression. They are designed after the systemd.time Calendar Events
-/// specification, but are not guaranteed to be 100% compatible.
-#[derive(Default, Clone, Debug)]
-pub struct CalendarEvent {
-    /// the days in a week this event should trigger
-    pub(crate) days: WeekDays,
-    /// the second(s) this event should trigger
-    pub(crate) second: Vec<DateTimeValue>, // todo: support float values
-    /// the minute(s) this event should trigger
-    pub(crate) minute: Vec<DateTimeValue>,
-    /// the hour(s) this event should trigger
-    pub(crate) hour: Vec<DateTimeValue>,
-    /// the day(s) in a month this event should trigger
-    pub(crate) day: Vec<DateTimeValue>,
-    /// the month(s) in a year this event should trigger
-    pub(crate) month: Vec<DateTimeValue>,
-    /// the years(s) this event should trigger
-    pub(crate) year: Vec<DateTimeValue>,
-}
+use crate::{compute_next_event, parse_calendar_event, parse_time_span};
 
 /// A time spans defines a time duration
 #[derive(Default, Clone, Debug)]
@@ -146,141 +123,6 @@ impl std::fmt::Display for TimeSpan {
 pub fn verify_time_span(i: &str) -> Result<(), Error> {
     parse_time_span(i)?;
     Ok(())
-}
-
-/// Verify the format of the [CalendarEvent]
-pub fn verify_calendar_event(i: &str) -> Result<(), Error> {
-    parse_calendar_event(i)?;
-    Ok(())
-}
-
-/// Compute the next event
-pub fn compute_next_event(
-    event: &CalendarEvent,
-    last: i64,
-    utc: bool,
-) -> Result<Option<i64>, Error> {
-
-    let last = last + 1; // at least one second later
-
-    let all_days = event.days.is_empty() || event.days.is_all();
-
-    let mut t = TmEditor::with_epoch(last, utc)?;
-
-    let mut count = 0;
-
-    loop {
-        // cancel after 1000 loops
-        if count > 1000 {
-            return Ok(None);
-        } else {
-            count += 1;
-        }
-
-        if !event.year.is_empty() {
-            let year: u32 = t.year().try_into()?;
-            if !DateTimeValue::list_contains(&event.year, year) {
-                if let Some(n) = DateTimeValue::find_next(&event.year, year) {
-                    t.add_years((n - year).try_into()?)?;
-                    continue;
-                } else {
-                    // if we have no valid year, we cannot find a correct timestamp
-                    return Ok(None);
-                }
-            }
-        }
-
-        if !event.month.is_empty() {
-            let month: u32 = t.month().try_into()?;
-            if !DateTimeValue::list_contains(&event.month, month) {
-                if let Some(n) = DateTimeValue::find_next(&event.month, month) {
-                    t.add_months((n - month).try_into()?)?;
-                } else {
-                    // if we could not find valid month, retry next year
-                    t.add_years(1)?;
-                }
-                continue;
-            }
-        }
-
-        if !event.day.is_empty() {
-            let day: u32 = t.day().try_into()?;
-            if !DateTimeValue::list_contains(&event.day, day) {
-                if let Some(n) = DateTimeValue::find_next(&event.day, day) {
-                    t.add_days((n - day).try_into()?)?;
-                } else {
-                    // if we could not find valid mday, retry next month
-                    t.add_months(1)?;
-                }
-                continue;
-            }
-        }
-
-        if !all_days { // match day first
-            let day_num: u32 = t.day_num().try_into()?;
-            let day = WeekDays::from_bits(1<<day_num).unwrap();
-            if !event.days.contains(day) {
-                if let Some(n) = ((day_num+1)..7)
-                    .find(|d| event.days.contains(WeekDays::from_bits(1<<d).unwrap()))
-                {
-                    // try next day
-                    t.add_days((n - day_num).try_into()?)?;
-                } else {
-                    // try next week
-                    t.add_days((7 - day_num).try_into()?)?;
-                }
-                continue;
-            }
-        }
-
-        // this day
-        if !event.hour.is_empty() {
-            let hour = t.hour().try_into()?;
-            if !DateTimeValue::list_contains(&event.hour, hour) {
-                if let Some(n) = DateTimeValue::find_next(&event.hour, hour) {
-                    // test next hour
-                    t.set_time(n.try_into()?, 0, 0)?;
-                } else {
-                    // test next day
-                    t.add_days(1)?;
-                }
-                continue;
-            }
-        }
-
-        // this hour
-        if !event.minute.is_empty() {
-            let minute = t.min().try_into()?;
-            if !DateTimeValue::list_contains(&event.minute, minute) {
-                if let Some(n) = DateTimeValue::find_next(&event.minute, minute) {
-                    // test next minute
-                    t.set_min_sec(n.try_into()?, 0)?;
-                } else {
-                    // test next hour
-                    t.set_time(t.hour() + 1, 0, 0)?;
-                }
-                continue;
-            }
-        }
-
-        // this minute
-        if !event.second.is_empty() {
-            let second = t.sec().try_into()?;
-            if !DateTimeValue::list_contains(&event.second, second) {
-                if let Some(n) = DateTimeValue::find_next(&event.second, second) {
-                    // test next second
-                    t.set_sec(n.try_into()?)?;
-                } else {
-                    // test next min
-                    t.set_min_sec(t.min() + 1, 0)?;
-                }
-                continue;
-            }
-        }
-
-        let next = t.into_epoch()?;
-        return Ok(Some(next))
-    }
 }
 
 #[cfg(test)]

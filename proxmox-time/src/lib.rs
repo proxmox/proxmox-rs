@@ -17,6 +17,9 @@ pub(crate) mod parse_helpers;
 
 pub(crate) mod date_time_value;
 
+mod calendar_event;
+pub use calendar_event::*;
+
 mod week_days;
 pub use week_days::*;
 
