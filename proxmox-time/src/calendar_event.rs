@@ -163,9 +163,17 @@ impl CalendarEvent {
     }
 }
 
+impl std::str::FromStr for CalendarEvent {
+    type Err = Error;
+
+    fn from_str(i: &str) -> Result<Self, Self::Err> {
+        parse_complete_line("calendar event", i, parse_calendar_event_incomplete)
+    }
+}
+
 /// Verify the format of the [CalendarEvent]
 pub fn verify_calendar_event(i: &str) -> Result<(), Error> {
-    parse_calendar_event(i)?;
+    let _: CalendarEvent = i.parse()?;
     Ok(())
 }
 
@@ -180,8 +188,9 @@ pub fn compute_next_event(
 }
 
 /// Parse a [CalendarEvent]
+#[deprecated="use std::str::FromStr trait instead"]
 pub fn parse_calendar_event(i: &str) -> Result<CalendarEvent, Error> {
-    parse_complete_line("calendar event", i, parse_calendar_event_incomplete)
+    i.parse()
 }
 
 fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> {

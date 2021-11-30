@@ -3,7 +3,7 @@ use anyhow::bail;
 use super::*;
 
 fn test_event(v: &'static str) -> Result<(), Error> {
-    match parse_calendar_event(v) {
+    match v.parse::<CalendarEvent>() {
         Ok(event) => println!("CalendarEvent '{}' => {:?}", v, event),
         Err(err) => bail!("parsing '{}' failed - {}", v, err),
     }
@@ -18,7 +18,7 @@ const fn make_test_time(mday: i32, hour: i32, min: i32) -> i64 {
 #[test]
 fn test_compute_next_event() -> Result<(), Error> {
     let test_value = |v: &'static str, last: i64, expect: i64| -> Result<i64, Error> {
-        let event = match parse_calendar_event(v) {
+        let event: CalendarEvent = match v.parse() {
             Ok(event) => event,
             Err(err) => bail!("parsing '{}' failed - {}", v, err),
         };
@@ -44,7 +44,7 @@ fn test_compute_next_event() -> Result<(), Error> {
     };
 
     let test_never = |v: &'static str, last: i64| -> Result<(), Error> {
-        let event = match parse_calendar_event(v) {
+        let event: CalendarEvent = match v.parse() {
             Ok(event) => event,
             Err(err) => bail!("parsing '{}' failed - {}", v, err),
         };
