@@ -498,15 +498,20 @@ fn handle_updater_field(
 
     let span = Span::call_site();
     field_schema.optional = field.ty.clone().into();
-    let updater = syn::TypePath {
-        qself: Some(syn::QSelf {
-            lt_token: syn::token::Lt { spans: [span] },
-            ty: Box::new(field.ty.clone()),
-            position: 2, // 'Updater' is item index 2 in the 'segments' below
-            as_token: Some(syn::token::As { span }),
-            gt_token: syn::token::Gt { spans: [span] },
-        }),
-        path: util::make_path(span, true, &["proxmox_schema", "UpdaterType", "Updater"]),
+    let updater = match updater_attrs.ty() {
+        Some(ty) => ty.clone(),
+        None => {
+            syn::TypePath {
+                qself: Some(syn::QSelf {
+                    lt_token: syn::token::Lt { spans: [span] },
+                    ty: Box::new(field.ty.clone()),
+                    position: 2, // 'Updater' is item index 2 in the 'segments' below
+                    as_token: Some(syn::token::As { span }),
+                    gt_token: syn::token::Gt { spans: [span] },
+                }),
+                path: util::make_path(span, true, &["proxmox_schema", "UpdaterType", "Updater"]),
+            }
+        }
     };
 
     // we also need to update the schema to point to the updater's schema for `type: Foo` entries

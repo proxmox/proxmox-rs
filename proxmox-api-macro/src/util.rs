@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream, TokenTree};
 use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
@@ -872,7 +872,6 @@ pub fn default_false(o: Option<&syn::LitBool>) -> bool {
     o.as_ref().map(|b| b.value).unwrap_or(false)
 }
 
-/*
 /// Parse the contents of a `LitStr`, preserving its span.
 pub fn parse_lit_str<T: Parse>(s: &syn::LitStr) -> syn::parse::Result<T> {
     parse_str(&s.value(), s.span())
@@ -918,6 +917,7 @@ pub fn parse_str_value_to_option<T: Parse>(target: &mut Option<T>, nv: &syn::Met
     }
 }
 
+/*
 pub fn parse_str_value<T: Parse>(nv: &syn::MetaNameValue) -> Result<T, syn::Error> {
     match &nv.lit {
         syn::Lit::Str(s) => super::parse_lit_str(s),

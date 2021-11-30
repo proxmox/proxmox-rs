@@ -1,13 +1,13 @@
 use syn::{Meta, NestedMeta};
 
-use crate::util::{self, default_false, set_bool};
+use crate::util::{self, default_false, parse_str_value_to_option, set_bool};
 
 #[derive(Default)]
 pub struct UpdaterFieldAttributes {
     /// Skip this field in the updater.
     skip: Option<syn::LitBool>,
     // /// Change the type for the updater.
-    // ty: Option<syn::Type>,
+    ty: Option<syn::TypePath>,
 }
 
 impl UpdaterFieldAttributes {
@@ -31,9 +31,9 @@ impl UpdaterFieldAttributes {
             Meta::Path(ref path) if path.is_ident("skip") => {
                 set_bool(&mut self.skip, path, true);
             }
-            // Meta::NameValue(ref nv) if nv.path.is_ident("type") => {
-            //     parse_str_value_to_option(&mut self.ty, nv)
-            // }
+            Meta::NameValue(ref nv) if nv.path.is_ident("type") => {
+                parse_str_value_to_option(&mut self.ty, nv)
+            }
             Meta::NameValue(m) => bail!(&m => "invalid updater attribute: {:?}", m.path),
             Meta::List(m) => bail!(&m => "invalid updater attribute: {:?}", m.path),
             Meta::Path(m) => bail!(&m => "invalid updater attribute: {:?}", m),
@@ -46,7 +46,7 @@ impl UpdaterFieldAttributes {
         default_false(self.skip.as_ref())
     }
 
-    //pub fn ty(&self) -> Option<&syn::Type> {
-    //    self.ty.as_ref()
-    //}
+    pub fn ty(&self) -> Option<&syn::TypePath> {
+        self.ty.as_ref()
+    }
 }
