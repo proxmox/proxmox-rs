@@ -7,9 +7,6 @@ use anyhow::{bail, format_err, Error};
 mod tm_editor;
 pub use tm_editor::*;
 
-mod time;
-pub use time::*;
-
 pub(crate) mod parse_helpers;
 
 pub(crate) mod date_time_value;
@@ -25,6 +22,9 @@ pub use week_days::*;
 
 mod daily_duration;
 pub use daily_duration::*;
+
+#[cfg(test)]
+mod test;
 
 /// Safe bindings to libc timelocal
 ///
