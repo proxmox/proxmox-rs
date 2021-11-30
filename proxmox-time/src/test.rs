@@ -225,7 +225,7 @@ fn test_calendar_event_weekday() -> Result<(), Error> {
 #[test]
 fn test_time_span_parser() -> Result<(), Error> {
     let test_value = |ts_str: &str, expect: f64| -> Result<(), Error> {
-        let ts = parse_time_span(ts_str)?;
+        let ts: TimeSpan = ts_str.parse()?;
         assert_eq!(f64::from(ts), expect, "{}", ts_str);
         Ok(())
     };

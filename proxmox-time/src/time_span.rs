@@ -198,9 +198,18 @@ fn parse_time_unit(i: &str) -> IResult<&str, &str> {
     }
 }
 
+impl std::str::FromStr for TimeSpan {
+    type Err = Error;
+
+    fn from_str(i: &str) -> Result<Self, Self::Err> {
+        parse_complete_line("calendar event", i, parse_time_span_incomplete)
+    }
+}
+
 /// Parse a [TimeSpan]
+#[deprecated="Use std::str::FromStr trait instead."]
 pub fn parse_time_span(i: &str) -> Result<TimeSpan, Error> {
-    parse_complete_line("time span", i, parse_time_span_incomplete)
+    i.parse()
 }
 
 fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpan> {
@@ -259,7 +268,7 @@ fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpan> {
 
 /// Verify the format of the [TimeSpan]
 pub fn verify_time_span(i: &str) -> Result<(), Error> {
-    parse_time_span(i)?;
+    let _: TimeSpan = i.parse()?;
     Ok(())
 }
 
