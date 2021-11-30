@@ -7,9 +7,6 @@ use anyhow::{bail, format_err, Error};
 mod tm_editor;
 pub use tm_editor::*;
 
-mod parse_time;
-pub use parse_time::*;
-
 mod time;
 pub use time::*;
 
@@ -19,6 +16,9 @@ pub(crate) mod date_time_value;
 
 mod calendar_event;
 pub use calendar_event::*;
+
+mod time_span;
+pub use time_span::*;
 
 mod week_days;
 pub use week_days::*;
