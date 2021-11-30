@@ -443,7 +443,7 @@ pub enum OptionType {
 
     /// An updater type uses its "base" type's field's updaters to determine whether the field is
     /// supposed to be an option.
-    Updater(syn::Type),
+    Updater(Box<syn::Type>),
 }
 
 impl OptionType {
@@ -465,7 +465,7 @@ impl From<bool> for OptionType {
 
 impl From<syn::Type> for OptionType {
     fn from(ty: syn::Type) -> Self {
-        OptionType::Updater(ty)
+        OptionType::Updater(Box::new(ty))
     }
 }
 

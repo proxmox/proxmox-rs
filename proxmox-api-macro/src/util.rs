@@ -561,7 +561,7 @@ pub fn make_path(span: Span, leading_colon: bool, path: &[&str]) -> syn::Path {
             None
         },
         segments: path
-            .into_iter()
+            .iter()
             .map(|entry| syn::PathSegment {
                 ident: Ident::new(entry, span),
                 arguments: syn::PathArguments::None,
@@ -682,9 +682,9 @@ impl<T> Maybe<T> {
     }
 }
 
-impl<T> Into<Option<T>> for Maybe<T> {
-    fn into(self) -> Option<T> {
-        match self {
+impl<T> From<Maybe<T>> for Option<T> {
+    fn from(maybe: Maybe<T>) -> Option<T> {
+        match maybe {
             Maybe::Explicit(t) | Maybe::Derived(t) => Some(t),
             Maybe::None => None,
         }
@@ -694,7 +694,7 @@ impl<T> Into<Option<T>> for Maybe<T> {
 /// Helper to iterate over all the `#[derive(...)]` types found in an attribute list.
 pub fn derived_items(attributes: &[syn::Attribute]) -> DerivedItems {
     DerivedItems {
-        attributes: attributes.into_iter(),
+        attributes: attributes.iter(),
         current: None,
     }
 }

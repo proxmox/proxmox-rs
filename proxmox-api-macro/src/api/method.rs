@@ -356,7 +356,7 @@ fn handle_function_signature(
                 // Found an explicit parameter: extract it:
                 ParameterType::Normal(NormalParameter {
                     ty: &pat_type.ty,
-                    entry: &entry,
+                    entry,
                 })
             } else if is_api_method_type(&pat_type.ty) {
                 if api_method_param.is_some() {
@@ -567,7 +567,7 @@ fn extract_normal_parameter(
 ) -> Result<(), Error> {
     let span = name_span; // renamed during refactorization
     let name_str = syn::LitStr::new(name.as_str(), span);
-    let arg_name = Ident::new(&format!("input_arg_{}", name.as_ident().to_string()), span);
+    let arg_name = Ident::new(&format!("input_arg_{}", name.as_ident()), span);
 
     let default_value = param.entry.schema.find_schema_property("default");
 

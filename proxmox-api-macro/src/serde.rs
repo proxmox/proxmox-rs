@@ -8,6 +8,7 @@ use std::convert::TryFrom;
 use crate::util::{AttrArgs, FieldName};
 
 /// Serde name types.
+#[allow(clippy::enum_variant_names)]
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RenameAll {
     LowerCase,
