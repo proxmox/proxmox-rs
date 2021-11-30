@@ -145,8 +145,7 @@ extern "C" {
 
 /// Safe bindings to libc strftime
 pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
-    let format = CString::new(format)
-        .map_err(|err| format_err!("{}", err))?;
+    let format = CString::new(format).map_err(|err| format_err!("{}", err))?;
     let mut buf = vec![0u8; 8192];
 
     let res = unsafe {
@@ -157,7 +156,8 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
             t as *const libc::tm,
         )
     };
-    if res == !0 { // -1,, it's unsigned
+    if res == !0 {
+        // -1,, it's unsigned
         bail!("strftime failed");
     }
     let len = res as usize;
@@ -166,8 +166,7 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
         bail!("strftime: result len is 0 (string too large)");
     };
 
-    let c_str = CStr::from_bytes_with_nul(&buf[..len + 1])
-        .map_err(|err| format_err!("{}", err))?;
+    let c_str = CStr::from_bytes_with_nul(&buf[..len + 1]).map_err(|err| format_err!("{}", err))?;
     let str_slice: &str = c_str.to_str().unwrap();
     Ok(str_slice.to_owned())
 }
@@ -229,10 +228,13 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 
 /// Parse RFC3339 into Unix epoch
 pub fn parse_rfc3339(input_str: &str) -> Result<i64, Error> {
-    parse_rfc3339_do(input_str)
-        .map_err(|err| {
-            format_err!("failed to parse rfc3339 timestamp ({:?}) - {}", input_str, err)
-        })
+    parse_rfc3339_do(input_str).map_err(|err| {
+        format_err!(
+            "failed to parse rfc3339 timestamp ({:?}) - {}",
+            input_str,
+            err
+        )
+    })
 }
 
 fn parse_rfc3339_do(input_str: &str) -> Result<i64, Error> {
