@@ -2,10 +2,15 @@ use std::cmp::{Ordering, PartialOrd};
 use std::convert::{TryFrom, TryInto};
 
 use anyhow::Error;
+use nom::{
+    bytes::complete::tag,
+    character::complete::space0,
+    error::context,
+    multi::separated_nonempty_list,
+};
 
-use crate::{TmEditor, WeekDays};
-
-pub use super::parse_time::parse_daily_duration;
+use crate::parse_helpers::{parse_complete_line, parse_error, parse_hm_time, IResult};
+use crate::{parse_weekdays_range, TmEditor, WeekDays};
 
 /// Time of Day (hour with minute)
 #[derive(Default, PartialEq, Clone, Debug)]
@@ -77,6 +82,49 @@ impl DailyDuration {
             _ => false,
         }
     }
+}
+
+/// Parse a [DailyDuration]
+pub fn parse_daily_duration(i: &str) -> Result<DailyDuration, Error> {
+    parse_complete_line("daily duration", i, parse_daily_duration_incomplete)
+}
+
+fn parse_daily_duration_incomplete(mut i: &str) -> IResult<&str, DailyDuration> {
+    let mut duration = DailyDuration::default();
+
+    if i.starts_with(|c: char| char::is_ascii_alphabetic(&c)) {
+        let (n, range_list) = context(
+            "weekday range list",
+            separated_nonempty_list(tag(","), parse_weekdays_range),
+        )(i)?;
+
+        i = space0(n)?.0;
+
+        for range in range_list {
+            duration.days.insert(range);
+        }
+    }
+
+    let (i, start) = parse_hm_time(i)?;
+
+    let i = space0(i)?.0;
+
+    let (i, _) = tag("-")(i)?;
+
+    let i = space0(i)?.0;
+
+    let end_time_start = i;
+
+    let (i, end) = parse_hm_time(i)?;
+
+    if start > end {
+        return Err(parse_error(end_time_start, "end time before start time"));
+    }
+
+    duration.start = start;
+    duration.end = end;
+
+    Ok((i, duration))
 }
 
 #[cfg(test)]
