@@ -23,7 +23,7 @@ fn test_compute_next_event() -> Result<(), Error> {
             Err(err) => bail!("parsing '{}' failed - {}", v, err),
         };
 
-        match compute_next_event(&event, last, true) {
+        match event.compute_next_event(last, true) {
             Ok(Some(next)) => {
                 if next == expect {
                     println!("next {:?} => {}", event, next);
@@ -49,7 +49,7 @@ fn test_compute_next_event() -> Result<(), Error> {
             Err(err) => bail!("parsing '{}' failed - {}", v, err),
         };
 
-        match compute_next_event(&event, last, true)? {
+        match event.compute_next_event(last, true)? {
             None => Ok(()),
             Some(next) => bail!(
                 "compute next for '{}' succeeded, but expected fail - result {}",
