@@ -19,6 +19,8 @@ use crate::{parse_weekdays_range, TmEditor, WeekDays};
 /// specification, but are not guaranteed to be 100% compatible.
 #[derive(Default, Clone, Debug)]
 pub struct CalendarEvent {
+    /// if true, the event is calculated in utc and the local timezone otherwise
+    utc: bool,
     /// the days in a week this event should trigger
     pub(crate) days: WeekDays,
     /// the second(s) this event should trigger
@@ -38,12 +40,12 @@ pub struct CalendarEvent {
 impl CalendarEvent {
     /// Computes the next timestamp after `last`. If `utc` is false, the local
     /// timezone will be used for the calculation.
-    pub fn compute_next_event(&self, last: i64, utc: bool) -> Result<Option<i64>, Error> {
+    pub fn compute_next_event(&self, last: i64) -> Result<Option<i64>, Error> {
         let last = last + 1; // at least one second later
 
         let all_days = self.days.is_empty() || self.days.is_all();
 
-        let mut t = TmEditor::with_epoch(last, utc)?;
+        let mut t = TmEditor::with_epoch(last, self.utc)?;
 
         let mut count = 0;
 
@@ -184,7 +186,12 @@ pub fn compute_next_event(
     last: i64,
     utc: bool,
 ) -> Result<Option<i64>, Error> {
-    event.compute_next_event(last, utc)
+    if event.utc != utc {
+        let mut event = event.clone();
+        event.utc = utc;
+        return event.compute_next_event(last);
+    }
+    event.compute_next_event(last)
 }
 
 /// Parse a [CalendarEvent]
@@ -199,6 +206,10 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
     let mut has_datespec = false;
 
     let mut event = CalendarEvent::default();
+    if let Some(n) = i.strip_suffix("UTC") {
+        event.utc = true;
+        i = n.trim_end_matches(' ');
+    }
 
     if i.starts_with(|c: char| char::is_ascii_alphabetic(&c)) {
         match i {
@@ -206,6 +217,7 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
                 return Ok((
                     "",
                     CalendarEvent {
+                        utc: event.utc,
                         second: vec![DateTimeValue::Single(0)],
                         ..Default::default()
                     },
@@ -215,6 +227,7 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
                 return Ok((
                     "",
                     CalendarEvent {
+                        utc: event.utc,
                         minute: vec![DateTimeValue::Single(0)],
                         second: vec![DateTimeValue::Single(0)],
                         ..Default::default()
@@ -225,6 +238,7 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
                 return Ok((
                     "",
                     CalendarEvent {
+                        utc: event.utc,
                         hour: vec![DateTimeValue::Single(0)],
                         minute: vec![DateTimeValue::Single(0)],
                         second: vec![DateTimeValue::Single(0)],
@@ -236,6 +250,7 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
                 return Ok((
                     "",
                     CalendarEvent {
+                        utc: event.utc,
                         hour: vec![DateTimeValue::Single(0)],
                         minute: vec![DateTimeValue::Single(0)],
                         second: vec![DateTimeValue::Single(0)],
@@ -248,6 +263,7 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
                 return Ok((
                     "",
                     CalendarEvent {
+                        utc: event.utc,
                         hour: vec![DateTimeValue::Single(0)],
                         minute: vec![DateTimeValue::Single(0)],
                         second: vec![DateTimeValue::Single(0)],
@@ -260,6 +276,7 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
                 return Ok((
                     "",
                     CalendarEvent {
+                        utc: event.utc,
                         hour: vec![DateTimeValue::Single(0)],
                         minute: vec![DateTimeValue::Single(0)],
                         second: vec![DateTimeValue::Single(0)],
@@ -273,6 +290,7 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
                 return Ok((
                     "",
                     CalendarEvent {
+                        utc: event.utc,
                         hour: vec![DateTimeValue::Single(0)],
                         minute: vec![DateTimeValue::Single(0)],
                         second: vec![DateTimeValue::Single(0)],
@@ -291,6 +309,7 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
                 return Ok((
                     "",
                     CalendarEvent {
+                        utc: event.utc,
                         hour: vec![DateTimeValue::Single(0)],
                         minute: vec![DateTimeValue::Single(0)],
                         second: vec![DateTimeValue::Single(0)],
