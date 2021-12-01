@@ -1,4 +1,18 @@
-rust-proxmox-time (1.1.0-1) unstable; urgency=medium
+rust-proxmox-time (1.1.1-1) stable; urgency=medium
+
+  * time-span: implement FromStr
+
+  * calendar_events: implement FromStr
+
+  * calendar-events: make compute_next_event a method
+
+  * calendar-events: make hour optional
+
+  * calendar-events: implement repeated ranges
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 01 Dec 2021 07:16:36 +0100
+
+rust-proxmox-time (1.1.0-1) stable; urgency=medium
 
   * proxmox-time: remove custom error type
 

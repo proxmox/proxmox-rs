@@ -35,8 +35,8 @@ Provides:
  librust-proxmox-time-1+default-dev (= ${binary:Version}),
  librust-proxmox-time-1.1-dev (= ${binary:Version}),
  librust-proxmox-time-1.1+default-dev (= ${binary:Version}),
- librust-proxmox-time-1.1.0-dev (= ${binary:Version}),
- librust-proxmox-time-1.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-time-1.1.1-dev (= ${binary:Version}),
+ librust-proxmox-time-1.1.1+default-dev (= ${binary:Version})
 Description: Time utilities and TmEditor - Rust source code
  This package contains the source for the Rust proxmox-time crate, packaged by
  debcargo for use with cargo and dh-cargo.
