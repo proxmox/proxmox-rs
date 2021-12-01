@@ -12,5 +12,10 @@ exclude = [ "debian" ]
 anyhow = "1.0"
 bitflags = "1.2.1"
 lazy_static = "1.4"
-libc = { version = "0.2", features = [ "extra_traits" ] }
 nom = "5.1"
+
+[target.'cfg(not(target_arch="wasm32"))'.dependencies]
+libc = { version = "0.2", features = [ "extra_traits" ] }
+
+[target.'cfg(target_arch="wasm32")'.dependencies]
+js-sys = "0.3.55"

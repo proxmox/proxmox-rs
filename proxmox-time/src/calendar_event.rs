@@ -12,7 +12,7 @@ use nom::{
 
 use crate::date_time_value::DateTimeValue;
 use crate::parse_helpers::{parse_complete_line, parse_error, parse_time_comp, IResult};
-use crate::{parse_weekdays_range, TmEditor, WeekDays};
+use crate::{parse_weekdays_range, WeekDays};
 
 /// Calendar events may be used to refer to one or more points in time in a
 /// single expression. They are designed after the systemd.time Calendar Events
@@ -37,6 +37,7 @@ pub struct CalendarEvent {
     pub(crate) year: Vec<DateTimeValue>,
 }
 
+#[cfg(not(target_arch="wasm32"))]
 impl CalendarEvent {
     /// Computes the next timestamp after `last`. If `utc` is false, the local
     /// timezone will be used for the calculation.
@@ -45,7 +46,7 @@ impl CalendarEvent {
 
         let all_days = self.days.is_empty() || self.days.is_all();
 
-        let mut t = TmEditor::with_epoch(last, self.utc)?;
+        let mut t = crate::TmEditor::with_epoch(last, self.utc)?;
 
         let mut count = 0;
 
@@ -181,6 +182,7 @@ pub fn verify_calendar_event(i: &str) -> Result<(), Error> {
 
 /// Compute the next event. Use [CalendarEvent::compute_next_event] instead.
 #[deprecated="use method 'compute_next_event' of CalendarEvent instead"]
+#[cfg(not(target_arch="wasm32"))]
 pub fn compute_next_event(
     event: &CalendarEvent,
     last: i64,

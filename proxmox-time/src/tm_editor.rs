@@ -1,5 +1,6 @@
-use super::{gmtime, localtime, timegm, timelocal};
-use super::Error;
+use anyhow::Error;
+
+use crate::{gmtime, localtime, timegm, timelocal};
 
 /// Safely Manipulate Date and Time
 pub struct TmEditor {
