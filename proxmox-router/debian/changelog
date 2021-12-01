@@ -1,3 +1,9 @@
+rust-proxmox-router (1.1.1-1) unstable; urgency=medium
+
+  * avoid anyhow wildcard imports
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 1 Dec 2021 13:17:44 +0100
+
 rust-proxmox-router (1.1.0-1) unstable; urgency=medium
 
   * add filename completions helper (moved from pbs-tools)
