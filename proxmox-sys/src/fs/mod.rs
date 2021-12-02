@@ -7,7 +7,6 @@ use anyhow::{bail, Error};
 use std::os::unix::io::{AsRawFd, RawFd};
 use nix::unistd::{Gid, Uid};
 use nix::sys::stat;
-use nix::errno::Errno;
 
 pub mod acl;
 
@@ -27,16 +26,7 @@ pub mod xattr;
 
 /// Change ownership of an open file handle
 pub fn fchown(fd: RawFd, owner: Option<Uid>, group: Option<Gid>) -> Result<(), Error> {
-    // According to the POSIX specification, -1 is used to indicate that owner and group
-    // are not to be changed.  Since uid_t and gid_t are unsigned types, we have to wrap
-    // around to get -1 (copied fron nix crate).
-    let uid = owner.map(Into::into).unwrap_or(!(0 as libc::uid_t));
-    let gid = group.map(Into::into).unwrap_or(!(0 as libc::gid_t));
-
-    let res = unsafe { libc::fchown(fd, uid, gid) };
-    Errno::result(res)?;
-
-    Ok(())
+    nix::unistd::fchown(fd, owner, group).map_err(|err| err.into())
 }
 
 /// Define permissions, owner and group when creating files/dirs
