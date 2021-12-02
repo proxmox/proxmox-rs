@@ -1,5 +1,7 @@
 use anyhow::{bail, Error};
 
+#[allow(clippy::manual_range_contains)]
+
 fn parse_hex_digit(d: u8) -> Result<u8, Error> {
     if d >= b'0' && d <= b'9' {
         return Ok(d - b'0');
