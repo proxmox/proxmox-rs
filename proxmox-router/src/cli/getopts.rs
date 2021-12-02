@@ -74,13 +74,11 @@ pub(crate) fn parse_argument_list<T: AsRef<str>>(
                 None => {
                     let mut want_bool = false;
                     let mut can_default = false;
-                    if let Some((_optional, param_schema)) = schema.lookup(&name) {
-                        if let Schema::Boolean(boolean_schema) = param_schema {
-                            want_bool = true;
-                            match boolean_schema.default {
-                                Some(false) | None => can_default = true,
-                                Some(true) => (),
-                            }
+                    if let Some((_optional, Schema::Boolean(boolean_schema))) = schema.lookup(&name) {
+                        want_bool = true;
+                        match boolean_schema.default {
+                            Some(false) | None => can_default = true,
+                            Some(true) => (),
                         }
                     }
 

@@ -126,28 +126,25 @@ pub fn dump_properties(
         }
 
         if style == ParameterDisplayStyle::Config {
-            match schema {
-                Schema::String(StringSchema {
-                    format: Some(ApiStringFormat::PropertyString(sub_schema)),
-                    ..
-                }) => {
-                    match sub_schema {
-                        Schema::Object(object_schema) => {
-                            let sub_text = dump_properties(
-                                object_schema,
-                                &next_indent,
-                                ParameterDisplayStyle::ConfigSub,
-                                &[],
-                            );
-                            param_descr.push_str(&sub_text);
-                        }
-                        Schema::Array(_) => {
-                            // do nothing - description should explain the list type
-                        }
-                        _ => unreachable!(),
+            if let Schema::String(StringSchema {
+                                format: Some(ApiStringFormat::PropertyString(sub_schema)),
+                                ..
+                            }) = schema {
+                match sub_schema {
+                    Schema::Object(object_schema) => {
+                        let sub_text = dump_properties(
+                            object_schema,
+                            &next_indent,
+                            ParameterDisplayStyle::ConfigSub,
+                            &[],
+                        );
+                        param_descr.push_str(&sub_text);
                     }
+                    Schema::Array(_) => {
+                        // do nothing - description should explain the list type
+                    }
+                    _ => unreachable!(),
                 }
-                _ => { /* do nothing */ }
             }
         }
         if *optional {

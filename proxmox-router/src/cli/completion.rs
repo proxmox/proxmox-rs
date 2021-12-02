@@ -41,18 +41,16 @@ fn get_property_completion(
 
     match schema {
         Schema::String(StringSchema {
-            format: Some(format),
+            format: Some(ApiStringFormat::Enum(variants)),
             ..
         }) => {
-            if let ApiStringFormat::Enum(variants) = format {
-                let mut completions = Vec::new();
-                for variant in variants.iter() {
-                    if variant.value.starts_with(arg) {
-                        completions.push(variant.value.to_string());
-                    }
+            let mut completions = Vec::new();
+            for variant in variants.iter() {
+                if variant.value.starts_with(arg) {
+                    completions.push(variant.value.to_string());
                 }
-                return completions;
             }
+            return completions;
         }
         Schema::Boolean(BooleanSchema { .. }) => {
             let mut completions = Vec::new();

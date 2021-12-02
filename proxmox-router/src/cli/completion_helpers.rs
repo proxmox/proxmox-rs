@@ -27,28 +27,26 @@ pub fn complete_file_name(arg: &str, _param: &HashMap<String, String>) -> Vec<St
             Err(_) => return result,
         };
 
-    for item in dir.iter() {
-        if let Ok(entry) = item {
-            if let Ok(name) = entry.file_name().to_str() {
-                if name == "." || name == ".." {
+    for entry in dir.iter().flatten() {
+        if let Ok(name) = entry.file_name().to_str() {
+            if name == "." || name == ".." {
+                continue;
+            }
+            let mut newpath = dirname.clone();
+            newpath.push(name);
+
+            if let Ok(stat) = fstatat(libc::AT_FDCWD, &newpath, AtFlags::empty())
+            {
+                if (stat.st_mode & libc::S_IFMT) == libc::S_IFDIR {
+                    newpath.push("");
+                    if let Some(newpath) = newpath.to_str() {
+                        result.push(newpath.to_owned());
+                    }
                     continue;
                 }
-                let mut newpath = dirname.clone();
-                newpath.push(name);
-
-                if let Ok(stat) = fstatat(libc::AT_FDCWD, &newpath, AtFlags::empty())
-                {
-                    if (stat.st_mode & libc::S_IFMT) == libc::S_IFDIR {
-                        newpath.push("");
-                        if let Some(newpath) = newpath.to_str() {
-                            result.push(newpath.to_owned());
-                        }
-                        continue;
-                    }
-                }
-                if let Some(newpath) = newpath.to_str() {
-                    result.push(newpath.to_owned());
-                }
+            }
+            if let Some(newpath) = newpath.to_str() {
+                result.push(newpath.to_owned());
             }
         }
     }

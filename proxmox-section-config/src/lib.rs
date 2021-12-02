@@ -463,12 +463,10 @@ impl SectionConfig {
                                     } else {
                                         config[key].as_array_mut().unwrap().push(value);
                                     }
+                                } else if config[&key] == Value::Null {
+                                    config[key] = value;
                                 } else {
-                                    if config[&key] == Value::Null {
-                                        config[key] = value;
-                                    } else {
-                                        bail!("duplicate property '{}'", key);
-                                    }
+                                    bail!("duplicate property '{}'", key);
                                 }
                             } else {
                                 bail!("syntax error (expected section properties)");
