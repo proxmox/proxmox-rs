@@ -391,11 +391,7 @@ fn format_table<W: Write>(
             Some(tup) => tup,
             None => bail!("property {} does not exist in schema.", sortkey),
         };
-        let numeric_sort = match sort_prop_schema {
-            Schema::Integer(_) => true,
-            Schema::Number(_) => true,
-            _ => false,
-        };
+        let numeric_sort = matches!(sort_prop_schema, Schema::Integer(_) | Schema::Number(_));
         sortinfo.push((sortkey, sort_order, numeric_sort));
     }
 
@@ -454,12 +450,7 @@ fn format_table<W: Write>(
             None => bail!("property {} does not exist in schema.", name),
         };
 
-        let is_numeric = match prop_schema {
-            Schema::Integer(_) => true,
-            Schema::Number(_) => true,
-            Schema::Boolean(_) => true,
-            _ => false,
-        };
+        let is_numeric = matches!(prop_schema, Schema::Integer(_) | Schema::Number(_) | Schema::Boolean(_));
 
         let (header, right_align, renderer) = options.lookup_column_info(name);
 
@@ -658,12 +649,7 @@ fn format_object<W: Write>(
             None => bail!("property {} does not exist in schema.", name),
         };
 
-        let is_numeric = match prop_schema {
-            Schema::Integer(_) => true,
-            Schema::Number(_) => true,
-            Schema::Boolean(_) => true,
-            _ => false,
-        };
+        let is_numeric = matches!(prop_schema, Schema::Integer(_) | Schema::Number(_) | Schema::Boolean(_));
 
         let (header, right_align, renderer) = options.lookup_column_info(name);
 
