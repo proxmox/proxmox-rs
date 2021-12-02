@@ -20,7 +20,7 @@ rust-proxmox-async (0.2.0) stable; urgency=medium
 
   * add copyright file
 
- -- root <root@elsa>  Sat, 20 Nov 2021 16:54:58 +0100
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 20 Nov 2021 16:54:58 +0100
 
 rust-proxmox-async (0.1.0) stable; urgency=medium
 
