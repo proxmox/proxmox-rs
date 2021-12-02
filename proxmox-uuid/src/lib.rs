@@ -3,12 +3,15 @@
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt;
 
-#[link(name = "uuid")]
-extern "C" {
-    fn uuid_generate(out: *mut [u8; 16]);
-    fn uuid_unparse_lower(input: *const [u8; 16], out: *mut u8);
-    fn uuid_unparse_upper(input: *const [u8; 16], out: *mut u8);
-}
+#[cfg(not(target_arch="wasm32"))]
+mod lib_uuid_bindings;
+#[cfg(not(target_arch="wasm32"))]
+use lib_uuid_bindings::*;
+
+#[cfg(target_arch="wasm32")]
+mod wasm;
+#[cfg(target_arch="wasm32")]
+pub use wasm::*;
 
 /// An error parsing a uuid from a string.
 #[derive(Debug, Clone, Copy)]
@@ -177,49 +180,11 @@ impl fmt::Display for Uuid {
     }
 }
 
-impl fmt::LowerHex for Uuid {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut buf = [0u8; 37];
-        unsafe {
-            uuid_unparse_lower(self.as_bytes(), buf.as_mut_ptr());
-        }
-        write!(f, "{}", unsafe {
-            std::str::from_utf8_unchecked(&buf[..36])
-        })
-    }
-}
-
-impl fmt::UpperHex for Uuid {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut buf = [0u8; 37];
-        unsafe {
-            uuid_unparse_upper(self.as_bytes(), buf.as_mut_ptr());
-        }
-        write!(f, "{}", unsafe {
-            std::str::from_utf8_unchecked(&buf[..36])
-        })
-    }
-}
-
 impl std::str::FromStr for Uuid {
     type Err = UuidError;
 
     fn from_str(src: &str) -> Result<Self, UuidError> {
         Self::parse_str(src)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl serde::Serialize for Uuid {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut buf = [0u8; 37];
-        unsafe {
-            uuid_unparse_lower(self.as_bytes(), buf.as_mut_ptr());
-        }
-        serializer.serialize_str(unsafe { std::str::from_utf8_unchecked(&buf[..36]) })
     }
 }
 
