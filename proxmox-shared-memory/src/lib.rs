@@ -65,7 +65,7 @@ fn mmap_file<T: Init>(file: &mut File, initialize: bool) -> Result<Mmap<T>, Erro
         Init::initialize(&mut mmap[0]);
     }
 
-    match Init::check_type_magic(&mut mmap[0]) {
+    match Init::check_type_magic(&mmap[0]) {
         Ok(()) => (),
         Err(err) => bail!("detected wrong types in mmaped files: {}", err),
     }
@@ -164,20 +164,20 @@ impl <T: Sized + Init> SharedMemory<T> {
         drop(file); // no longer required
 
         match res {
-            Ok(_rc) => return Ok(mmap),
+            Ok(_rc) => Ok(mmap),
             // if someone else was faster, open the existing file:
-            Err(nix::Error::Sys(Errno::EEXIST)) =>  {
+            Err(nix::Error::Sys(Errno::EEXIST)) => {
                 // if opening fails again now, we'll just error...
                 match nix::fcntl::open(path, oflag, Mode::empty()) {
                     Ok(fd) => {
                         let mut file = unsafe { File::from_raw_fd(fd) };
                         let mmap = mmap_file(&mut file, false)?;
-                        return Ok(mmap);
+                        Ok(mmap)
                     }
                     Err(err) => bail!("open {:?} failed - {}", path, err),
-                };
+                }
             }
-            Err(err) =>  return Err(err.into()),
+            Err(err) =>  Err(err.into()),
         }
     }
 

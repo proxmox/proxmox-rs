@@ -278,9 +278,7 @@ impl TableFormatOptions {
         let key = key.into();
         match self.sortkeys {
             None => {
-                let mut list = Vec::new();
-                list.push((key, sort_desc));
-                self.sortkeys = Some(list);
+                self.sortkeys = Some(vec![(key, sort_desc)]);
             }
             Some(ref mut list) => {
                 list.push((key, sort_desc));
@@ -379,9 +377,7 @@ fn format_table<W: Write>(
     let sortkeys = if let Some(ref sortkeys) = options.sortkeys {
         sortkeys.clone()
     } else {
-        let mut keys = Vec::new();
-        keys.push((properties_to_print[0].clone(), false)); // leftmost, ASC
-        keys
+        vec![(properties_to_print[0].clone(), false)] // leftmost, ASC
     };
 
     let mut sortinfo = Vec::new();
@@ -712,9 +708,7 @@ fn format_object<W: Write>(
         right_align: all_right_aligned,
     };
 
-    let mut tabledata: Vec<TableColumn> = Vec::new();
-    tabledata.push(name_column);
-    tabledata.push(value_column);
+    let tabledata = vec![name_column, value_column];
 
     render_table(output, &tabledata, &column_names, options)
 }

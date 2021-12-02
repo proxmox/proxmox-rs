@@ -342,7 +342,7 @@ impl StringSchema {
                     }
                 }
                 ApiStringFormat::Enum(variants) => {
-                    if variants.iter().find(|&e| e.value == value).is_none() {
+                    if !variants.iter().any(|e| e.value == value) {
                         bail!("value '{}' is not defined in the enumeration.", value);
                     }
                 }

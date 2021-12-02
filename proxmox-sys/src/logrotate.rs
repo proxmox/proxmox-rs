@@ -36,7 +36,7 @@ impl LogRotate {
         }
         Ok(Self {
             base_path: path.as_ref().to_path_buf(),
-            options: options.unwrap_or(CreateOptions::new()),
+            options: options.unwrap_or_default(),
             compress,
             max_files,
         })
@@ -58,7 +58,7 @@ impl LogRotate {
         }
     }
 
-    fn compress(source_path: &PathBuf, target_path: &PathBuf, options: &CreateOptions) -> Result<(), Error> {
+    fn compress(source_path: &Path, target_path: &Path, options: &CreateOptions) -> Result<(), Error> {
         let mut source = File::open(source_path)?;
         let (fd, tmp_path) = make_tmp_file(target_path, options.clone())?;
         let target = unsafe { File::from_raw_fd(fd.into_raw_fd()) };

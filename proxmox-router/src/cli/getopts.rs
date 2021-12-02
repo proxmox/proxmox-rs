@@ -223,14 +223,14 @@ fn test_boolean_arg() {
     for (args, expect) in variants {
         let res = parse_arguments(
             &args,
-            &vec![],
+            &[],
             &HashMap::new(),
             ParameterSchema::from(&PARAMETERS),
         );
         assert!(res.is_ok());
         if let Ok((options, remaining)) = res {
             assert!(options["enable"] == expect);
-            assert!(remaining.len() == 0);
+            assert!(remaining.is_empty());
         }
     }
 }
@@ -258,6 +258,6 @@ fn test_argument_paramenter() {
     if let Ok((options, remaining)) = res {
         assert!(options["enable"] == true);
         assert!(options["storage"] == "local");
-        assert!(remaining.len() == 0);
+        assert!(remaining.is_empty());
     }
 }

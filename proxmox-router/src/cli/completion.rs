@@ -257,7 +257,7 @@ impl CommandLineInterface {
     /// ``stdout``.
     pub fn print_bash_completion(&self) {
         let comp_point: usize = match std::env::var("COMP_POINT") {
-            Ok(val) => match usize::from_str_radix(&val, 10) {
+            Ok(val) => match val.parse::<usize>() {
                 Ok(i) => i,
                 Err(_) => return,
             },

@@ -102,7 +102,7 @@ fn sort_data(data: TokenStream) -> Result<TokenStream, Error> {
     });
 
     if let Some(err) = err {
-        return Err(err.into());
+        return Err(err);
     }
 
     array.elems = Punctuated::from_iter(fields);

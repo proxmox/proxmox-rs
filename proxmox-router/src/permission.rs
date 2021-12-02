@@ -216,7 +216,7 @@ mod test {
                 return groups.contains(&Value::from(group));
             }
 
-            return false;
+            false
         }
 
         fn lookup_privs(&self, userid: &str, path: &[&str]) -> u64 {
@@ -227,7 +227,7 @@ mod test {
                 }
             }
 
-            return 0;
+            0
         }
     }
 

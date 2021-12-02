@@ -28,7 +28,7 @@ pub fn fill_with_random_data(buffer: &mut [u8]) -> Result<(), Error> {
         libc::getrandom(
             buffer.as_mut_ptr() as *mut libc::c_void,
             buffer.len() as libc::size_t,
-            0 as libc::c_uint,
+            0_u32,
         )
     };
 
