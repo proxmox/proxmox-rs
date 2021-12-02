@@ -476,7 +476,7 @@ fn format_table<W: Write>(
         let mut cells = Vec::new();
         for entry in list.iter() {
             let result = if let Some(renderer) = renderer {
-                (renderer)(&entry[name], &entry)
+                (renderer)(&entry[name], entry)
             } else {
                 data_to_text(&entry[name], prop_schema)
             };
@@ -691,7 +691,7 @@ fn format_object<W: Write>(
         });
 
         let result = if let Some(renderer) = renderer {
-            (renderer)(&data[name], &data)
+            (renderer)(&data[name], data)
         } else {
             data_to_text(&data[name], prop_schema)
         };

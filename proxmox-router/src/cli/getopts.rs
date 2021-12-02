@@ -152,7 +152,7 @@ pub fn parse_arguments<T: AsRef<str>>(
 
     for i in 0..arg_param.len() {
         let name = arg_param[i];
-        if let Some((optional, param_schema)) = schema.lookup(&name) {
+        if let Some((optional, param_schema)) = schema.lookup(name) {
             if i == arg_param.len() - 1 {
                 last_arg_param_is_optional = optional;
                 if let Schema::Array(_) = param_schema {
@@ -250,7 +250,7 @@ fn test_argument_paramenter() {
     let args = vec!["-enable", "local"];
     let res = parse_arguments(
         &args,
-        &vec!["storage"],
+        &["storage"],
         &HashMap::new(),
         ParameterSchema::from(&PARAMETERS),
     );

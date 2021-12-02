@@ -67,7 +67,7 @@ fn get_property_completion(
         }
         Schema::Array(ArraySchema { items, .. }) => {
             if let Schema::String(_) = items {
-                return get_property_completion(&items, name, completion_functions, arg, param);
+                return get_property_completion(items, name, completion_functions, arg, param);
             }
         }
         _ => {}
@@ -101,7 +101,7 @@ fn get_simple_completion(
                 record_done_argument(done, cli_cmd.info.parameters, prop_name, &args[0]);
                 if args.len() > 1 {
                     if is_array_param {
-                        return get_simple_completion(cli_cmd, done, &arg_param[..], &args[1..]);
+                        return get_simple_completion(cli_cmd, done, arg_param, &args[1..]);
                     } else {
                         return get_simple_completion(cli_cmd, done, &arg_param[1..], &args[1..]);
                     }
@@ -153,7 +153,7 @@ fn get_simple_completion(
                     schema,
                     prop_name,
                     &cli_cmd.completion_functions,
-                    &prefix,
+                    prefix,
                     done,
                 );
             }
@@ -223,9 +223,9 @@ impl CommandLineInterface {
             CommandLineInterface::Simple(cli_cmd) => {
                 let mut done: HashMap<String, String> = HashMap::new();
                 cli_cmd.fixed_param.iter().for_each(|(key, value)| {
-                    record_done_argument(&mut done, cli_cmd.info.parameters, &key, &value);
+                    record_done_argument(&mut done, cli_cmd.info.parameters, key, value);
                 });
-                get_simple_completion(cli_cmd, &mut done, &cli_cmd.arg_param, args)
+                get_simple_completion(cli_cmd, &mut done, cli_cmd.arg_param, args)
             }
             CommandLineInterface::Nested(map) => {
                 if args.is_empty() {

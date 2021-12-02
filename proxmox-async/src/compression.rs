@@ -80,7 +80,7 @@ impl<T> DeflateEncoder<T> {
         let old_out = self.compressor.total_out();
         let res = self
             .compressor
-            .compress(&inbuf[..], self.buffer.get_free_mut_slice(), flush)?;
+            .compress(inbuf, self.buffer.get_free_mut_slice(), flush)?;
         let new_in = (self.compressor.total_in() - old_in) as usize;
         let new_out = (self.compressor.total_out() - old_out) as usize;
         self.buffer.add_size(new_out);

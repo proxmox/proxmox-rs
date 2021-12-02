@@ -113,12 +113,12 @@ pub fn dump_properties(
     let mut optional_list: Vec<String> = Vec::new();
 
     for (prop, optional, schema) in param.properties() {
-        if skip.iter().find(|n| n == &prop).is_some() {
+        if skip.iter().any(|n| n == prop) {
             continue;
         }
 
         let mut param_descr =
-            get_property_description(prop, &schema, style, DocumentationFormat::ReST);
+            get_property_description(prop, schema, style, DocumentationFormat::ReST);
 
         if !indent.is_empty() {
             param_descr = format!("{}{}", indent, param_descr); // indent first line

@@ -61,7 +61,7 @@ async fn handle_simple_command_future(
     let params = parse_arguments(prefix, cli_cmd, args)?;
 
     match cli_cmd.info.handler {
-        ApiHandler::Sync(handler) => match (handler)(params, &cli_cmd.info, &mut rpcenv) {
+        ApiHandler::Sync(handler) => match (handler)(params, cli_cmd.info, &mut rpcenv) {
             Ok(value) => {
                 if value != Value::Null {
                     println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
@@ -73,7 +73,7 @@ async fn handle_simple_command_future(
             }
         },
         ApiHandler::Async(handler) => {
-            let future = (handler)(params, &cli_cmd.info, &mut rpcenv);
+            let future = (handler)(params, cli_cmd.info, &mut rpcenv);
 
             match future.await {
                 Ok(value) => {
@@ -107,7 +107,7 @@ fn handle_simple_command(
     let params = parse_arguments(prefix, cli_cmd, args)?;
 
     match cli_cmd.info.handler {
-        ApiHandler::Sync(handler) => match (handler)(params, &cli_cmd.info, &mut rpcenv) {
+        ApiHandler::Sync(handler) => match (handler)(params, cli_cmd.info, &mut rpcenv) {
             Ok(value) => {
                 if value != Value::Null {
                     println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
@@ -119,7 +119,7 @@ fn handle_simple_command(
             }
         },
         ApiHandler::Async(handler) => {
-            let future = (handler)(params, &cli_cmd.info, &mut rpcenv);
+            let future = (handler)(params, cli_cmd.info, &mut rpcenv);
             if let Some(run) = run {
                 match (run)(future) {
                     Ok(value) => {
@@ -172,7 +172,7 @@ fn parse_nested_command<'a>(
             });
 
             let err_msg = format!("no command specified.\nPossible commands: {}", list);
-            print_nested_usage_error(&prefix, map, &err_msg);
+            print_nested_usage_error(prefix, map, &err_msg);
             return Err(format_err!("{}", err_msg));
         }
 
@@ -182,7 +182,7 @@ fn parse_nested_command<'a>(
             Some(cmd) => cmd,
             None => {
                 let err_msg = format!("no such command '{}'", command);
-                print_nested_usage_error(&prefix, map, &err_msg);
+                print_nested_usage_error(prefix, map, &err_msg);
                 return Err(format_err!("{}", err_msg));
             }
         };
@@ -192,7 +192,7 @@ fn parse_nested_command<'a>(
         match sub_cmd {
             CommandLineInterface::Simple(cli_cmd) => {
                 //return handle_simple_command(&prefix, cli_cmd, args).await;
-                return Ok(&cli_cmd);
+                return Ok(cli_cmd);
             }
             CommandLineInterface::Nested(new_map) => map = new_map,
         }
@@ -297,12 +297,12 @@ pub async fn handle_command_future(
 
     let result = match &*def {
         CommandLineInterface::Simple(ref cli_cmd) => {
-            handle_simple_command_future(&prefix, &cli_cmd, args, rpcenv).await
+            handle_simple_command_future(prefix, cli_cmd, args, rpcenv).await
         }
         CommandLineInterface::Nested(ref map) => {
             let mut prefix = prefix.to_string();
-            let cli_cmd = parse_nested_command(&mut prefix, &map, &mut args)?;
-            handle_simple_command_future(&prefix, &cli_cmd, args, rpcenv).await
+            let cli_cmd = parse_nested_command(&mut prefix, map, &mut args)?;
+            handle_simple_command_future(&prefix, cli_cmd, args, rpcenv).await
         }
     };
 
@@ -326,12 +326,12 @@ pub fn handle_command(
 
     let result = match &*def {
         CommandLineInterface::Simple(ref cli_cmd) => {
-            handle_simple_command(&prefix, &cli_cmd, args, rpcenv, run)
+            handle_simple_command(prefix, cli_cmd, args, rpcenv, run)
         }
         CommandLineInterface::Nested(ref map) => {
             let mut prefix = prefix.to_string();
-            let cli_cmd = parse_nested_command(&mut prefix, &map, &mut args)?;
-            handle_simple_command(&prefix, &cli_cmd, args, rpcenv, run)
+            let cli_cmd = parse_nested_command(&mut prefix, map, &mut args)?;
+            handle_simple_command(&prefix, cli_cmd, args, rpcenv, run)
         }
     };
 
@@ -357,10 +357,10 @@ fn prepare_cli_command(def: &CommandLineInterface) -> (String, Vec<String>) {
         if args[0] == "printdoc" {
             let usage = match def {
                 CommandLineInterface::Simple(cli_cmd) => {
-                    generate_usage_str(&prefix, &cli_cmd, DocumentationFormat::ReST, "", &[])
+                    generate_usage_str(&prefix, cli_cmd, DocumentationFormat::ReST, "", &[])
                 }
                 CommandLineInterface::Nested(map) => {
-                    generate_nested_usage(&prefix, &map, DocumentationFormat::ReST)
+                    generate_nested_usage(&prefix, map, DocumentationFormat::ReST)
                 }
             };
             println!("{}", usage);

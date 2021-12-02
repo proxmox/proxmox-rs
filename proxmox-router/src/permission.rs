@@ -96,7 +96,7 @@ pub fn check_api_permission(
     param: &HashMap<String, String>,
     info: &dyn UserInformation,
 ) -> bool {
-    if let Some(ref userid) = userid {
+    if let Some(userid) = userid {
         if info.is_superuser(userid) {
             return true;
         }
@@ -120,7 +120,7 @@ fn check_api_permission_tail(
         }
         Permission::Superuser => match userid {
             None => return false,
-            Some(ref userid) => return info.is_superuser(userid),
+            Some(userid) => return info.is_superuser(userid),
         },
         Permission::User(expected_userid) => match userid {
             None => return false,
@@ -133,7 +133,7 @@ fn check_api_permission_tail(
         },
         Permission::Group(expected_group) => match userid {
             None => return false,
-            Some(ref userid) => return info.is_group_member(userid, expected_group),
+            Some(userid) => return info.is_group_member(userid, expected_group),
         },
         Permission::WithParam(param_name, subtest) => {
             return check_api_permission(

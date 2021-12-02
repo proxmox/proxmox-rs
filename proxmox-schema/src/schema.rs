@@ -885,7 +885,7 @@ pub fn parse_property_string(value_str: &str, schema: &'static Schema) -> Result
                 .collect();
 
             for value in list {
-                match parse_simple_value(value.trim(), &array_schema.items) {
+                match parse_simple_value(value.trim(), array_schema.items) {
                     Ok(res) => array.push(res),
                     Err(err) => bail!("unable to parse array element: {}", err),
                 }
@@ -951,7 +951,7 @@ fn do_parse_parameter_strings(
     let additional_properties = schema.additional_properties();
 
     for (key, value) in data {
-        if let Some((_optional, prop_schema)) = schema.lookup(&key) {
+        if let Some((_optional, prop_schema)) = schema.lookup(key) {
             match prop_schema {
                 Schema::Array(array_schema) => {
                     if params[key] == Value::Null {
@@ -959,7 +959,7 @@ fn do_parse_parameter_strings(
                     }
                     match params[key] {
                         Value::Array(ref mut array) => {
-                            match parse_simple_value(value, &array_schema.items) {
+                            match parse_simple_value(value, array_schema.items) {
                                 Ok(res) => array.push(res), // fixme: check_length??
                                 Err(err) => errors.push(key.into(), err),
                             }
@@ -1031,11 +1031,11 @@ pub fn verify_json(data: &Value, schema: &Schema) -> Result<(), Error> {
             }
         }
         Schema::Object(object_schema) => verify_json_object(data, object_schema)?,
-        Schema::Array(array_schema) => verify_json_array(data, &array_schema)?,
-        Schema::Boolean(boolean_schema) => verify_json_boolean(data, &boolean_schema)?,
-        Schema::Integer(integer_schema) => verify_json_integer(data, &integer_schema)?,
-        Schema::Number(number_schema) => verify_json_number(data, &number_schema)?,
-        Schema::String(string_schema) => verify_json_string(data, &string_schema)?,
+        Schema::Array(array_schema) => verify_json_array(data, array_schema)?,
+        Schema::Boolean(boolean_schema) => verify_json_boolean(data, boolean_schema)?,
+        Schema::Integer(integer_schema) => verify_json_integer(data, integer_schema)?,
+        Schema::Number(number_schema) => verify_json_number(data, number_schema)?,
+        Schema::String(string_schema) => verify_json_string(data, string_schema)?,
         Schema::AllOf(all_of_schema) => verify_json_object(data, all_of_schema)?,
     }
     Ok(())
@@ -1087,7 +1087,7 @@ pub fn verify_json_array(data: &Value, schema: &ArraySchema) -> Result<(), Error
     schema.check_length(list.len())?;
 
     for (i, item) in list.iter().enumerate() {
-        let result = verify_json(item, &schema.items);
+        let result = verify_json(item, schema.items);
         if let Err(err) = result {
             let mut errors = ParameterError::new();
             errors.add_errors(&format!("[{}]", i), err);
@@ -1111,7 +1111,7 @@ pub fn verify_json_object(data: &Value, schema: &dyn ObjectSchemaType) -> Result
     let additional_properties = schema.additional_properties();
 
     for (key, value) in map {
-        if let Some((_optional, prop_schema)) = schema.lookup(&key) {
+        if let Some((_optional, prop_schema)) = schema.lookup(key) {
             let result = match prop_schema {
                 Schema::Object(object_schema) => verify_json_object(value, object_schema),
                 Schema::Array(array_schema) => verify_json_array(value, array_schema),

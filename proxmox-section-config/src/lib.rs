@@ -66,7 +66,7 @@ impl SectionConfigPlugin {
     pub fn get_id_schema(&self) -> Option<&Schema> {
         match &self.id_property {
             Some(id_prop) => {
-                if let Some((_, schema)) = self.properties.lookup(&id_prop) {
+                if let Some((_, schema)) = self.properties.lookup(id_prop) {
                     Some(schema)
                 } else {
                     None
@@ -325,7 +325,7 @@ impl SectionConfig {
             let plugin = self.plugins.get(type_name).unwrap();
 
             let id_schema = plugin.get_id_schema().unwrap_or(self.id_schema);
-            if let Err(err) = parse_simple_value(&section_id, &id_schema) {
+            if let Err(err) = parse_simple_value(section_id, id_schema) {
                 bail!("syntax error in section identifier: {}", err.to_string());
             }
             if section_id.chars().any(|c| c.is_control()) {
@@ -402,7 +402,7 @@ impl SectionConfig {
                                 (self.parse_section_header)(line)
                             {
                                 //println!("OKLINE: type: {} ID: {}", section_type, section_id);
-                                if let Some(ref plugin) = self.plugins.get(&section_type) {
+                                if let Some(plugin) = self.plugins.get(&section_type) {
                                     let id_schema =
                                         plugin.get_id_schema().unwrap_or(self.id_schema);
                                     if let Err(err) = parse_simple_value(&section_id, id_schema) {
@@ -480,12 +480,12 @@ impl SectionConfig {
                 if let ParseState::InsideSection(plugin, ref mut section_id, ref mut config) = state
                 {
                     // finish section
-                    test_required_properties(&config, plugin.properties, &plugin.id_property)?;
+                    test_required_properties(config, plugin.properties, &plugin.id_property)?;
                     if let Some(id_property) = &plugin.id_property {
                         config[id_property] = Value::from(section_id.clone());
                     }
-                    result.set_data(&section_id, &plugin.type_name, config)?;
-                    result.record_order(&section_id);
+                    result.set_data(section_id, &plugin.type_name, config)?;
+                    result.record_order(section_id);
                 }
 
                 Ok(())
@@ -756,7 +756,7 @@ lvmthin: local-lvm2
         content rootdir,images
 ";
 
-    let res = config.parse(filename, &raw);
+    let res = config.parse(filename, raw);
     println!("RES: {:?}", res);
     let raw = config.write(filename, &res.unwrap());
     println!("CONFIG:\n{}", raw.unwrap());
@@ -827,7 +827,7 @@ group: mygroup
         comment a very important group
 ";
 
-    let res = config.parse(filename, &raw);
+    let res = config.parse(filename, raw);
     println!("RES: {:?}", res);
     let raw = config.write(filename, &res.unwrap());
     println!("CONFIG:\n{}", raw.unwrap());
@@ -876,7 +876,7 @@ lvmthin: local-lvm2
 	thinpool data
 ";
 
-    let res = config.parse(filename, &raw);
+    let res = config.parse(filename, raw);
     println!("RES: {:?}", res);
     let created = config
         .write(filename, &res.unwrap())

@@ -14,7 +14,7 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
     match def {
         None => None,
         Some(api_method) => {
-            let description = wrap_text("", "", &api_method.parameters.description(), 80);
+            let description = wrap_text("", "", api_method.parameters.description(), 80);
             let param_descr = dump_properties(&api_method.parameters, "", style, &[]);
 
             let return_descr = dump_api_return_schema(&api_method.returns, style);

@@ -60,14 +60,14 @@ pub enum RpcEnvironmentType {
 impl core::ops::Index<&str> for &dyn RpcEnvironment {
     type Output = Value;
     fn index(&self, index: &str) -> &Value {
-        &self.result_attrib().index(index)
+        self.result_attrib().index(index)
     }
 }
 
 impl core::ops::Index<&str> for &mut dyn RpcEnvironment {
     type Output = Value;
     fn index(&self, index: &str) -> &Value {
-        &self.result_attrib().index(index)
+        self.result_attrib().index(index)
     }
 }
 

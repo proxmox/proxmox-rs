@@ -47,7 +47,7 @@ pub fn format_and_print_result_full(
     } else if output_format == "json" {
         println!("{}", serde_json::to_string(&result).unwrap());
     } else if output_format == "text" {
-        if let Err(err) = value_to_text(std::io::stdout(), result, &return_type.schema, options) {
+        if let Err(err) = value_to_text(std::io::stdout(), result, return_type.schema, options) {
             eprintln!("unable to format result: {}", err);
         }
     } else {
