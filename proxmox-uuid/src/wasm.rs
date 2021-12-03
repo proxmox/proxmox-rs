@@ -1,3 +1,7 @@
+use std::fmt;
+
+use crate::Uuid;
+
 pub fn uuid_generate(out: *mut [u8; 16]) {
 
     // TODO: implement soemthing better than this
