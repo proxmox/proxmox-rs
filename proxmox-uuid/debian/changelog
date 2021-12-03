@@ -1,3 +1,9 @@
+rust-proxmox-uuid (1.0.1-1) unstable; urgency=medium
+
+  * implement uuid on target wasm32
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 03 Dec 2021 09:19:27 +0100
+
 rust-proxmox-uuid (1.0.0-1) stable; urgency=medium
 
   * initial split out of `librust-proxmox-dev`
