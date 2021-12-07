@@ -609,13 +609,12 @@ impl<R: AsyncRead + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
                                 ReaderState::HaveData
                             };
                             this.read_buffer = Some(read_buffer);
-                            continue;
                         } else {
                             this.header = Some(header);
                             this.read_buffer = Some(read_buffer);
                             this.state = ReaderState::NoData;
-                            continue;
                         }
+                        continue;
                     }
 
                     let len = min(buf.remaining(), min(header.payload_len, read_buffer.len()));

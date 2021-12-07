@@ -83,8 +83,8 @@ impl SimpleHttp {
     }
 
     pub async fn request(&self, mut request: Request<Body>) -> Result<Response<Body>, Error> {
-        let user_agent = if let Some(ref user_agent) = self.options.user_agent {
-            HeaderValue::from_str(&user_agent)?
+        let user_agent = if let Some(user_agent) = &self.options.user_agent {
+            HeaderValue::from_str(user_agent)?
         } else {
             HeaderValue::from_str(Self::DEFAULT_USER_AGENT_STRING)?
         };
