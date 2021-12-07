@@ -1,12 +1,12 @@
 use std::cell::UnsafeCell;
-use std::mem::MaybeUninit;
 use std::marker::PhantomData;
+use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 
 use anyhow::{bail, Error};
 
-use crate::Init;
 use crate::raw_shared_mutex::RawSharedMutex;
+use crate::Init;
 
 #[derive(Debug)]
 #[repr(C)]
@@ -22,23 +22,23 @@ unsafe impl<T: ?Sized + Send> Sync for SharedMutex<T> {}
 // openssl::sha::sha256(b"Proxmox SharedMutex v1.0")[0..8];
 pub const PROXMOX_SHARED_MUTEX_MAGIC_1_0: [u8; 8] = [124, 229, 154, 62, 248, 0, 154, 55];
 
-impl <T: Init> Init for SharedMutex<T> {
-
+impl<T: Init> Init for SharedMutex<T> {
     fn initialize(this: &mut MaybeUninit<SharedMutex<T>>) {
-
         let me = unsafe { &mut *this.as_mut_ptr() };
 
         me.magic = PROXMOX_SHARED_MUTEX_MAGIC_1_0;
 
         me.inner = RawSharedMutex::uninitialized();
-        unsafe { me.inner.init(); }
+        unsafe {
+            me.inner.init();
+        }
 
-        let u: &mut MaybeUninit<T> =  unsafe { std::mem::transmute(me.data.get_mut()) };
+        let u: &mut MaybeUninit<T> = unsafe { std::mem::transmute(me.data.get_mut()) };
         Init::initialize(u);
     }
 
     fn check_type_magic(this: &MaybeUninit<Self>) -> Result<(), Error> {
-        let me = unsafe { & *this.as_ptr() };
+        let me = unsafe { &*this.as_ptr() };
         if me.magic != PROXMOX_SHARED_MUTEX_MAGIC_1_0 {
             bail!("SharedMutex: wrong magic number");
         }
@@ -47,9 +47,7 @@ impl <T: Init> Init for SharedMutex<T> {
 }
 
 impl<T> SharedMutex<T> {
-
     pub fn lock(&self) -> SharedMutexGuard<'_, T> {
-
         unsafe {
             self.inner.lock();
             SharedMutexGuard::new(self)
@@ -69,7 +67,6 @@ impl<T> SharedMutex<T> {
     pub fn unlock(guard: SharedMutexGuard<'_, T>) {
         drop(guard);
     }
-
 }
 
 pub struct SharedMutexGuard<'a, T: ?Sized + 'a> {

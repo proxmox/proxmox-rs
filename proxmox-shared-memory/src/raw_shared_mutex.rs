@@ -10,22 +10,32 @@ unsafe impl Send for RawSharedMutex {}
 unsafe impl Sync for RawSharedMutex {}
 
 impl RawSharedMutex {
-
     pub const fn uninitialized() -> Self {
-        Self { inner: UnsafeCell::new(libc::PTHREAD_MUTEX_INITIALIZER) }
+        Self {
+            inner: UnsafeCell::new(libc::PTHREAD_MUTEX_INITIALIZER),
+        }
     }
 
     #[inline]
     pub unsafe fn init(&mut self) {
-       let mut attr = MaybeUninit::<libc::pthread_mutexattr_t>::uninit();
+        let mut attr = MaybeUninit::<libc::pthread_mutexattr_t>::uninit();
         cvt_nz(libc::pthread_mutexattr_init(attr.as_mut_ptr())).unwrap();
         let attr = PthreadMutexAttr(&mut attr);
-        cvt_nz(libc::pthread_mutexattr_settype(attr.0.as_mut_ptr(), libc::PTHREAD_MUTEX_NORMAL))
-            .unwrap();
-        cvt_nz(libc::pthread_mutexattr_setpshared(attr.0.as_mut_ptr(), libc::PTHREAD_PROCESS_SHARED))
-            .unwrap();
-        cvt_nz(libc::pthread_mutexattr_setrobust(attr.0.as_mut_ptr(), libc::PTHREAD_MUTEX_ROBUST))
-            .unwrap();
+        cvt_nz(libc::pthread_mutexattr_settype(
+            attr.0.as_mut_ptr(),
+            libc::PTHREAD_MUTEX_NORMAL,
+        ))
+        .unwrap();
+        cvt_nz(libc::pthread_mutexattr_setpshared(
+            attr.0.as_mut_ptr(),
+            libc::PTHREAD_PROCESS_SHARED,
+        ))
+        .unwrap();
+        cvt_nz(libc::pthread_mutexattr_setrobust(
+            attr.0.as_mut_ptr(),
+            libc::PTHREAD_MUTEX_ROBUST,
+        ))
+        .unwrap();
         cvt_nz(libc::pthread_mutex_init(self.inner.get(), attr.0.as_ptr())).unwrap();
     }
 
@@ -35,7 +45,7 @@ impl RawSharedMutex {
         if r == libc::EOWNERDEAD {
             r = libc::pthread_mutex_consistent(self.inner.get());
         }
-       
+
         debug_assert_eq!(r, 0);
     }
 
@@ -55,7 +65,6 @@ impl RawSharedMutex {
         r == 0
     }
 }
-
 
 // Note: copied from rust std::sys::unix::cvt_nz
 fn cvt_nz(error: libc::c_int) -> std::io::Result<()> {

@@ -1,20 +1,20 @@
-use std::path::Path;
-use std::os::unix::io::AsRawFd;
-use std::mem::MaybeUninit;
-use std::fs::File;
-use std::os::unix::ffi::OsStrExt;
-use std::os::unix::io::FromRawFd;
 use std::ffi::{CStr, CString};
+use std::fs::File;
+use std::mem::MaybeUninit;
+use std::os::unix::ffi::OsStrExt;
+use std::os::unix::io::AsRawFd;
+use std::os::unix::io::FromRawFd;
+use std::path::Path;
 
 use anyhow::{bail, format_err, Error};
+use nix::errno::Errno;
 use nix::fcntl::OFlag;
 use nix::sys::mman::{MapFlags, ProtFlags};
 use nix::sys::stat::Mode;
-use nix::errno::Errno;
 
+use proxmox_sys::error::SysError;
 use proxmox_sys::fs::CreateOptions;
 use proxmox_sys::mmap::Mmap;
-use proxmox_sys::error::SysError;
 
 mod raw_shared_mutex;
 
@@ -31,7 +31,9 @@ pub trait Init: Sized {
     fn initialize(this: &mut MaybeUninit<Self>);
 
     /// Check if the data has the correct format
-    fn check_type_magic(_this: &MaybeUninit<Self>) -> Result<(), Error> { Ok(()) }
+    fn check_type_magic(_this: &MaybeUninit<Self>) -> Result<(), Error> {
+        Ok(())
+    }
 }
 
 /// Memory mapped shared memory region
@@ -45,7 +47,7 @@ pub struct SharedMemory<T> {
     mmap: Mmap<T>,
 }
 
-const fn up_to_page_size(n: usize) ->  usize {
+const fn up_to_page_size(n: usize) -> usize {
     // FIXME: use sysconf(_SC_PAGE_SIZE)
     (n + 4095) & !4095
 }
@@ -55,7 +57,8 @@ fn mmap_file<T: Init>(file: &mut File, initialize: bool) -> Result<Mmap<T>, Erro
     let mut mmap: Mmap<MaybeUninit<T>> = unsafe {
         Mmap::map_fd(
             file.as_raw_fd(),
-            0, 1,
+            0,
+            1,
             ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
             MapFlags::MAP_SHARED | MapFlags::MAP_NORESERVE | MapFlags::MAP_POPULATE,
         )?
@@ -73,15 +76,17 @@ fn mmap_file<T: Init>(file: &mut File, initialize: bool) -> Result<Mmap<T>, Erro
     Ok(unsafe { std::mem::transmute(mmap) })
 }
 
-impl <T: Sized + Init> SharedMemory<T> {
-
+impl<T: Sized + Init> SharedMemory<T> {
     pub fn open(path: &Path, options: CreateOptions) -> Result<Self, Error> {
-
         let size = std::mem::size_of::<T>();
         let up_size = up_to_page_size(size);
 
         if size != up_size {
-            bail!("SharedMemory::open {:?} failed - data size {} is not a multiple of 4096", path, size);
+            bail!(
+                "SharedMemory::open {:?} failed - data size {} is not a multiple of 4096",
+                path,
+                size
+            );
         }
 
         let mmap = Self::open_shmem(path, options)?;
@@ -89,10 +94,7 @@ impl <T: Sized + Init> SharedMemory<T> {
         Ok(Self { mmap })
     }
 
-    pub fn open_shmem<P: AsRef<Path>>(
-        path: P,
-        options: CreateOptions,
-    ) -> Result<Mmap<T>, Error> {
+    pub fn open_shmem<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<Mmap<T>, Error> {
         let path = path.as_ref();
 
         let dir_name = path
@@ -177,7 +179,7 @@ impl <T: Sized + Init> SharedMemory<T> {
                     Err(err) => bail!("open {:?} failed - {}", path, err),
                 }
             }
-            Err(err) =>  Err(err.into()),
+            Err(err) => Err(err.into()),
         }
     }
 
@@ -188,7 +190,6 @@ impl <T: Sized + Init> SharedMemory<T> {
     pub fn data_mut(&mut self) -> &mut T {
         &mut self.mmap[0]
     }
-
 }
 
 /// Helper to initialize nested data
@@ -217,10 +218,10 @@ mod test {
 
     use super::*;
 
-    use std::sync::Arc;
-    use std::sync::atomic::AtomicU64;
-    use std::thread::spawn;
     use proxmox_sys::fs::create_path;
+    use std::sync::atomic::AtomicU64;
+    use std::sync::Arc;
+    use std::thread::spawn;
 
     #[derive(Debug)]
     #[repr(C)]
@@ -231,7 +232,6 @@ mod test {
     }
 
     impl Init for TestData {
-
         fn initialize(this: &mut MaybeUninit<Self>) {
             this.write(Self {
                 count: 0,
@@ -264,11 +264,12 @@ mod test {
 
     #[test]
     fn test_shared_memory_mutex() -> Result<(), Error> {
-
         create_path("../target/testdata/", None, None)?;
 
-        let shared: SharedMemory<SingleMutexData> =
-            SharedMemory::open(Path::new("../target/testdata/test1.shm"), CreateOptions::new())?;
+        let shared: SharedMemory<SingleMutexData> = SharedMemory::open(
+            Path::new("../target/testdata/test1.shm"),
+            CreateOptions::new(),
+        )?;
 
         let shared = Arc::new(shared);
 
@@ -292,7 +293,7 @@ mod test {
 
         let end = shared.data().data.lock().count;
 
-        assert_eq!(end-start, 100);
+        assert_eq!(end - start, 100);
 
         Ok(())
     }
@@ -327,13 +328,14 @@ mod test {
 
     #[test]
     fn test_shared_memory_multi_mutex() -> Result<(), Error> {
-
         create_path("../target/testdata/", None, None)?;
 
-        let shared: SharedMemory<MultiMutexData> =
-            SharedMemory::open(Path::new("../target/testdata/test2.shm"), CreateOptions::new())?;
+        let shared: SharedMemory<MultiMutexData> = SharedMemory::open(
+            Path::new("../target/testdata/test2.shm"),
+            CreateOptions::new(),
+        )?;
 
-                let shared = Arc::new(shared);
+        let shared = Arc::new(shared);
 
         let start1 = shared.data().block1.lock().count;
         let start2 = shared.data().block2.lock().count;
@@ -357,12 +359,11 @@ mod test {
         }
 
         let end1 = shared.data().block1.lock().count;
-        assert_eq!(end1-start1, 100);
+        assert_eq!(end1 - start1, 100);
 
         let end2 = shared.data().block2.lock().count;
-        assert_eq!(end2-start2, 200);
+        assert_eq!(end2 - start2, 200);
 
         Ok(())
     }
-
 }
