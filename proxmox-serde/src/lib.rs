@@ -30,8 +30,8 @@ pub mod epoch_as_rfc3339 {
         S: Serializer,
     {
         use serde::ser::Error;
-        let s = proxmox_time::epoch_to_rfc3339(*epoch)
-            .map_err(|err| Error::custom(err.to_string()))?;
+        let s =
+            proxmox_time::epoch_to_rfc3339(*epoch).map_err(|err| Error::custom(err.to_string()))?;
 
         serializer.serialize_str(&s)
     }
