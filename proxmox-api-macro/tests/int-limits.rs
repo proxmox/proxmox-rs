@@ -1,7 +1,7 @@
 //! Test the automatic addition of integer limits.
 
-use proxmox_schema::ApiType;
 use proxmox_api_macro::api;
+use proxmox_schema::ApiType;
 
 /// An i16: -32768 to 32767.
 #[api]

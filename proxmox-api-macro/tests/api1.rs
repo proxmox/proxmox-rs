@@ -67,10 +67,8 @@ fn create_ticket_schema_check() {
                 (
                     "password",
                     false,
-                    &::proxmox_schema::StringSchema::new(
-                        "The secret password or a valid ticket.",
-                    )
-                    .schema(),
+                    &::proxmox_schema::StringSchema::new("The secret password or a valid ticket.")
+                        .schema(),
                 ),
                 (
                     "username",
@@ -170,10 +168,8 @@ fn create_ticket_direct_schema_check() {
                 (
                     "password",
                     false,
-                    &::proxmox_schema::StringSchema::new(
-                        "The secret password or a valid ticket.",
-                    )
-                    .schema(),
+                    &::proxmox_schema::StringSchema::new("The secret password or a valid ticket.")
+                        .schema(),
                 ),
                 (
                     "username",
