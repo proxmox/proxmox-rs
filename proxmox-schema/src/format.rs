@@ -127,9 +127,10 @@ pub fn dump_properties(
 
         if style == ParameterDisplayStyle::Config {
             if let Schema::String(StringSchema {
-                                format: Some(ApiStringFormat::PropertyString(sub_schema)),
-                                ..
-                            }) = schema {
+                format: Some(ApiStringFormat::PropertyString(sub_schema)),
+                ..
+            }) = schema
+            {
                 match sub_schema {
                     Schema::Object(object_schema) => {
                         let sub_text = dump_properties(

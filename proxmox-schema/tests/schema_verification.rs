@@ -5,14 +5,15 @@ use proxmox_schema::*;
 
 static STRING_SCHEMA: Schema = StringSchema::new("A test string").schema();
 
-static SIMPLE_OBJECT_SCHEMA: Schema =  ObjectSchema::new(
+static SIMPLE_OBJECT_SCHEMA: Schema = ObjectSchema::new(
     "simple object schema",
     &[
         ("prop1", false, &STRING_SCHEMA),
         ("prop2", true, &STRING_SCHEMA),
         ("prop3", false, &STRING_SCHEMA),
-    ]
-).schema();
+    ],
+)
+.schema();
 
 static SIMPLE_PROPERTY_STRING_SCHEMA: Schema = StringSchema::new("simple property string")
     .format(&ApiStringFormat::PropertyString(&SIMPLE_OBJECT_SCHEMA))
@@ -20,27 +21,23 @@ static SIMPLE_PROPERTY_STRING_SCHEMA: Schema = StringSchema::new("simple propert
 
 static SIMPLE_ARRAY_SCHEMA: Schema = ArraySchema::new("String list.", &STRING_SCHEMA).schema();
 
-static NESTED_OBJECT_SCHEMA: Schema =  ObjectSchema::new(
+static NESTED_OBJECT_SCHEMA: Schema = ObjectSchema::new(
     "nested object schema",
     &[
         ("arr1", false, &SIMPLE_ARRAY_SCHEMA),
         ("obj1", false, &SIMPLE_OBJECT_SCHEMA),
         ("prop1", false, &STRING_SCHEMA),
-    ]
-).schema();
+    ],
+)
+.schema();
 
-static NESTED_PROPERTY_SCHEMA: Schema =  ObjectSchema::new(
+static NESTED_PROPERTY_SCHEMA: Schema = ObjectSchema::new(
     "object with property strings",
-    &[
-        ("ps1", false, &SIMPLE_PROPERTY_STRING_SCHEMA),
-    ]
-).schema();
+    &[("ps1", false, &SIMPLE_PROPERTY_STRING_SCHEMA)],
+)
+.schema();
 
-
-fn compare_error(
-    expected: &[(&str, &str)],
-    err: Error,
-) -> Result<(), Error> {
+fn compare_error(expected: &[(&str, &str)], err: Error) -> Result<(), Error> {
     let err = match err.downcast_ref::<ParameterError>() {
         Some(err) => err,
         None => bail!("unable to downcast error: {}", err),
@@ -50,17 +47,30 @@ fn compare_error(
         let errors = err.errors();
 
         if errors.len() != expected.len() {
-            bail!("error list has different length: {} != {}", expected.len(), errors.len());
+            bail!(
+                "error list has different length: {} != {}",
+                expected.len(),
+                errors.len()
+            );
         }
 
         for i in 0..expected.len() {
             if expected[i].0 != errors[i].0 {
-                bail!("error {} path differs: '{}' != '{}'", i, expected[i].0, errors[i].0);
+                bail!(
+                    "error {} path differs: '{}' != '{}'",
+                    i,
+                    expected[i].0,
+                    errors[i].0
+                );
             }
             if expected[i].1 != errors[i].1.to_string() {
-                bail!("error {} message differs: '{}' != '{}'", i, expected[i].1, errors[i].1);
+                bail!(
+                    "error {} message differs: '{}' != '{}'",
+                    i,
+                    expected[i].1,
+                    errors[i].1
+                );
             }
-
         }
 
         Ok(())
@@ -87,7 +97,6 @@ fn test_verify(
 
 #[test]
 fn verify_simple_object() -> Result<(), Error> {
-
     let simple_value = json!({"prop1": 1, "prop4": "abc"});
 
     test_verify(
@@ -105,7 +114,6 @@ fn verify_simple_object() -> Result<(), Error> {
 
 #[test]
 fn verify_nested_object1() -> Result<(), Error> {
-
     let nested_value = json!({"prop1": 1, "prop4": "abc"});
 
     test_verify(
@@ -124,7 +132,6 @@ fn verify_nested_object1() -> Result<(), Error> {
 
 #[test]
 fn verify_nested_object2() -> Result<(), Error> {
-
     let nested_value = json!({"prop1": 1, "prop4": "abc", "obj1": {}, "arr1": ["abc", 0]});
 
     test_verify(
@@ -144,15 +151,15 @@ fn verify_nested_object2() -> Result<(), Error> {
 
 #[test]
 fn verify_nested_property1() -> Result<(), Error> {
-
     let value = json!({"ps1": "abc"});
 
     test_verify(
         &NESTED_PROPERTY_SCHEMA,
         &value,
-        &[
-            ("ps1", "Value without key, but schema does not define a default key."),
-        ],
+        &[(
+            "ps1",
+            "Value without key, but schema does not define a default key.",
+        )],
     )?;
 
     Ok(())
@@ -165,9 +172,7 @@ fn verify_nested_property2() -> Result<(), Error> {
     test_verify(
         &NESTED_PROPERTY_SCHEMA,
         &value,
-        &[
-            ("ps1/abc", "schema does not allow additional properties."),
-        ],
+        &[("ps1/abc", "schema does not allow additional properties.")],
     )?;
 
     Ok(())
@@ -183,7 +188,7 @@ fn verify_nested_property3() -> Result<(), Error> {
         &[
             ("ps1/prop1", "parameter is missing and it is not optional."),
             ("ps1/prop3", "parameter is missing and it is not optional."),
-         ],
+        ],
     )?;
 
     Ok(())
