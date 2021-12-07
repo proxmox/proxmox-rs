@@ -31,9 +31,9 @@ pub fn gettid() -> Tid {
 /// of...!
 pub struct Signal(c_int);
 
-impl Into<c_int> for Signal {
-    fn into(self) -> c_int {
-        self.0
+impl From<Signal> for c_int {
+    fn from(this: Signal) -> c_int {
+        this.0
     }
 }
 

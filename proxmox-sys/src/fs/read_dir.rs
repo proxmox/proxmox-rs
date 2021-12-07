@@ -22,9 +22,9 @@ pub struct ReadDirEntry {
     parent_fd: RawFd,
 }
 
-impl Into<dir::Entry> for ReadDirEntry {
-    fn into(self) -> dir::Entry {
-        self.entry
+impl From<ReadDirEntry> for dir::Entry {
+    fn from(this: ReadDirEntry) -> dir::Entry {
+        this.entry
     }
 }
 
@@ -67,11 +67,18 @@ impl BorrowMut<dir::Entry> for ReadDirEntry {
 }
 
 impl ReadDirEntry {
+    /// Get the parent directory's file descriptor.
     #[inline]
     pub fn parent_fd(&self) -> RawFd {
         self.parent_fd
     }
 
+    /// Get the file name as a `&str`.
+    ///
+    /// # Safety
+    ///
+    /// It is up to the user to ensure that the file name is valid utf-8 *before* calling this
+    /// method.
     pub unsafe fn file_name_utf8_unchecked(&self) -> &str {
         std::str::from_utf8_unchecked(self.file_name().to_bytes())
     }

@@ -135,9 +135,8 @@ pub fn fgetxattr(fd: RawFd, name: &CStr) -> Result<Vec<u8>, nix::errno::Errno> {
 
 /// Set an extended attribute on a file descriptor.
 pub fn fsetxattr(fd: RawFd, name: &CStr, data: &[u8]) -> Result<(), nix::errno::Errno> {
-    let flags = 0 as libc::c_int;
     let result = unsafe {
-        libc::fsetxattr(fd, name.as_ptr(), data.as_ptr() as *const libc::c_void, data.len(), flags)
+        libc::fsetxattr(fd, name.as_ptr(), data.as_ptr() as *const libc::c_void, data.len(), 0)
     };
     if result < 0 {
         return Err(Errno::last());
