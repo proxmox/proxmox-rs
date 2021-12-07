@@ -152,12 +152,10 @@ pub fn get_tfa_entry(config: &TfaConfig, userid: &str, id: &str) -> Option<Typed
                 },
                 None => return None,
             },
-            Some((TfaType::Totp, index)) => {
-                TypedTfaInfo {
-                    ty: TfaType::Totp,
-                    info: user_data.totp.get(index).unwrap().info.clone(),
-                }
-            }
+            Some((TfaType::Totp, index)) => TypedTfaInfo {
+                ty: TfaType::Totp,
+                info: user_data.totp.get(index).unwrap().info.clone(),
+            },
             Some((TfaType::Webauthn, index)) => TypedTfaInfo {
                 ty: TfaType::Webauthn,
                 info: user_data.webauthn.get(index).unwrap().info.clone(),
@@ -449,12 +447,7 @@ fn add_webauthn<A: OpenUserChallengeData>(
 ) -> Result<TfaUpdateInfo, Error> {
     match challenge {
         None => config
-            .webauthn_registration_challenge(
-                access,
-                userid,
-                need_description(description)?,
-                origin,
-            )
+            .webauthn_registration_challenge(access, userid, need_description(description)?, origin)
             .map(|c| TfaUpdateInfo {
                 challenge: Some(c),
                 ..Default::default()
