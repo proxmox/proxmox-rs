@@ -1,4 +1,3 @@
-
 use std::borrow::Borrow;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 
@@ -107,4 +106,3 @@ impl AsRawFd for FdRef {
         unsafe { *(self as *const Self as *const RawFd) }
     }
 }
-

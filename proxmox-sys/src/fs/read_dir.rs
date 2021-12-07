@@ -97,8 +97,11 @@ impl Iterator for ReadDir {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|res| {
-            res.map(|entry| ReadDirEntry { entry, parent_fd: self.dir_fd })
-                .map_err(Error::from)
+            res.map(|entry| ReadDirEntry {
+                entry,
+                parent_fd: self.dir_fd,
+            })
+            .map_err(Error::from)
         })
     }
 }
@@ -156,7 +159,6 @@ where
     }
     Ok(())
 }
-
 
 /// Helper trait to provide a combinators for directory entry iterators.
 pub trait FileIterOps<T, E>
@@ -255,7 +257,7 @@ where
                     }
                     // file did not match regex or isn't valid utf-8
                     continue;
-                },
+                }
                 Err(_) => return Some(item),
             }
         }
@@ -288,24 +290,34 @@ fn do_lock_dir_noblock(
     would_block_msg: &str,
     exclusive: bool,
 ) -> Result<DirLockGuard, Error> {
-    let mut handle = Dir::open(path, OFlag::O_RDONLY, Mode::empty())
-        .map_err(|err| {
-            format_err!("unable to open {} directory {:?} for locking - {}", what, path, err)
-        })?;
+    let mut handle = Dir::open(path, OFlag::O_RDONLY, Mode::empty()).map_err(|err| {
+        format_err!(
+            "unable to open {} directory {:?} for locking - {}",
+            what,
+            path,
+            err
+        )
+    })?;
 
     // acquire in non-blocking mode, no point in waiting here since other
     // backups could still take a very long time
-    crate::fs::lock_file(&mut handle, exclusive, Some(std::time::Duration::from_nanos(0)))
-        .map_err(|err| {
-            format_err!(
-                "unable to acquire lock on {} directory {:?} - {}", what, path,
-                if err.would_block() {
-                    String::from(would_block_msg)
-                } else {
-                    err.to_string()
-                }
-            )
-        })?;
+    crate::fs::lock_file(
+        &mut handle,
+        exclusive,
+        Some(std::time::Duration::from_nanos(0)),
+    )
+    .map_err(|err| {
+        format_err!(
+            "unable to acquire lock on {} directory {:?} - {}",
+            what,
+            path,
+            if err.would_block() {
+                String::from(would_block_msg)
+            } else {
+                err.to_string()
+            }
+        )
+    })?;
 
     Ok(handle)
 }

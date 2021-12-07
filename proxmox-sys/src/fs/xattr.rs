@@ -81,23 +81,21 @@ pub fn flistxattr(fd: RawFd) -> Result<ListXAttr, nix::errno::Errno> {
     // it gets dynamically increased until big enough.
     let mut size = 256;
     let mut buffer = vec::undefined(size);
-    let mut bytes = unsafe {
-        libc::flistxattr(fd, buffer.as_mut_ptr() as *mut libc::c_char, buffer.len())
-    };
+    let mut bytes =
+        unsafe { libc::flistxattr(fd, buffer.as_mut_ptr() as *mut libc::c_char, buffer.len()) };
     while bytes < 0 {
         let err = Errno::last();
         match err {
             Errno::ERANGE => {
                 // Buffer was not big enough to fit the list, retry with double the size
                 size = size.checked_mul(2).ok_or(Errno::ENOMEM)?;
-            },
+            }
             _ => return Err(err),
         }
         // Retry to read the list with new buffer
         buffer.resize(size, 0);
-        bytes = unsafe {
-            libc::flistxattr(fd, buffer.as_mut_ptr() as *mut libc::c_char, buffer.len())
-        };
+        bytes =
+            unsafe { libc::flistxattr(fd, buffer.as_mut_ptr() as *mut libc::c_char, buffer.len()) };
     }
     buffer.truncate(bytes as usize);
 
@@ -112,7 +110,12 @@ pub fn fgetxattr(fd: RawFd, name: &CStr) -> Result<Vec<u8>, nix::errno::Errno> {
     let mut size = 256;
     let mut buffer = vec::undefined(size);
     let mut bytes = unsafe {
-        libc::fgetxattr(fd, name.as_ptr(), buffer.as_mut_ptr() as *mut core::ffi::c_void, buffer.len())
+        libc::fgetxattr(
+            fd,
+            name.as_ptr(),
+            buffer.as_mut_ptr() as *mut core::ffi::c_void,
+            buffer.len(),
+        )
     };
     while bytes < 0 {
         let err = Errno::last();
@@ -120,12 +123,17 @@ pub fn fgetxattr(fd: RawFd, name: &CStr) -> Result<Vec<u8>, nix::errno::Errno> {
             Errno::ERANGE => {
                 // Buffer was not big enough to fit the value, retry with double the size
                 size = size.checked_mul(2).ok_or(Errno::ENOMEM)?;
-            },
+            }
             _ => return Err(err),
         }
         buffer.resize(size, 0);
         bytes = unsafe {
-            libc::fgetxattr(fd, name.as_ptr() as *const libc::c_char, buffer.as_mut_ptr() as *mut core::ffi::c_void, buffer.len())
+            libc::fgetxattr(
+                fd,
+                name.as_ptr() as *const libc::c_char,
+                buffer.as_mut_ptr() as *mut core::ffi::c_void,
+                buffer.len(),
+            )
         };
     }
     buffer.resize(bytes as usize, 0);
@@ -136,7 +144,13 @@ pub fn fgetxattr(fd: RawFd, name: &CStr) -> Result<Vec<u8>, nix::errno::Errno> {
 /// Set an extended attribute on a file descriptor.
 pub fn fsetxattr(fd: RawFd, name: &CStr, data: &[u8]) -> Result<(), nix::errno::Errno> {
     let result = unsafe {
-        libc::fsetxattr(fd, name.as_ptr(), data.as_ptr() as *const libc::c_void, data.len(), 0)
+        libc::fsetxattr(
+            fd,
+            name.as_ptr(),
+            data.as_ptr() as *const libc::c_void,
+            data.len(),
+            0,
+        )
     };
     if result < 0 {
         return Err(Errno::last());
@@ -156,7 +170,7 @@ pub fn is_security_capability(name: &CStr) -> bool {
 
 pub fn is_acl(name: &CStr) -> bool {
     name.to_bytes() == xattr_acl_access().to_bytes()
-    || name.to_bytes() == xattr_acl_default().to_bytes()
+        || name.to_bytes() == xattr_acl_default().to_bytes()
 }
 
 /// Check if the passed name buffer starts with a valid xattr namespace prefix
@@ -203,7 +217,10 @@ mod tests {
         assert!(fsetxattr(fd, c_str!("user.empty"), b"").is_ok());
 
         if nix::unistd::Uid::current() != nix::unistd::ROOT {
-            assert_eq!(fsetxattr(fd, c_str!("trusted.attribute0"), b"value0"), Err(Errno::EPERM));
+            assert_eq!(
+                fsetxattr(fd, c_str!("trusted.attribute0"), b"value0"),
+                Err(Errno::EPERM)
+            );
         }
 
         let v0 = fgetxattr(fd, c_str!("user.attribute0")).unwrap();
@@ -211,7 +228,10 @@ mod tests {
 
         assert_eq!(v0, b"value0".as_ref());
         assert_eq!(v1, b"".as_ref());
-        assert_eq!(fgetxattr(fd, c_str!("user.attribute1")), Err(Errno::ENODATA));
+        assert_eq!(
+            fgetxattr(fd, c_str!("user.attribute1")),
+            Err(Errno::ENODATA)
+        );
 
         std::fs::remove_file(&path).unwrap();
     }
