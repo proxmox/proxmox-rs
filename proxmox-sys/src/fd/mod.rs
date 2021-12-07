@@ -1,7 +1,7 @@
 //! Raw file descriptor related structures.
 
-mod fd;
-pub use fd::*;
+mod fd_impl;
+pub use fd_impl::*;
 
 mod raw_fd_num;
 pub use raw_fd_num::*;
