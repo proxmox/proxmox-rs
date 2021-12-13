@@ -19,7 +19,7 @@ use crate::RpcEnvironment;
 ///
 /// Most API handler are synchronous. Use this to define such handler:
 /// ```
-/// # use anyhow::*;
+/// # use anyhow::Error;
 /// # use serde_json::{json, Value};
 /// use proxmox_router::{ApiHandler, ApiMethod, RpcEnvironment};
 /// use proxmox_schema::ObjectSchema;

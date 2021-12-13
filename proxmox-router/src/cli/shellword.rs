@@ -1,4 +1,4 @@
-use anyhow::*;
+use anyhow::{bail, Error};
 
 /// Shell quote type
 pub use rustyline::completion::Quote;
