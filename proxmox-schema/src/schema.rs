@@ -101,6 +101,14 @@ impl BooleanSchema {
     pub const fn schema(self) -> Schema {
         Schema::Boolean(self)
     }
+
+    /// Verify JSON value using a `BooleanSchema`.
+    pub fn verify_json(&self, data: &Value) -> Result<(), Error> {
+        if !data.is_boolean() {
+            bail!("Expected boolean value.");
+        }
+        Ok(())
+    }
 }
 
 /// Data type to describe integer values.
@@ -168,6 +176,15 @@ impl IntegerSchema {
 
         Ok(())
     }
+
+    /// Verify JSON value using an `IntegerSchema`.
+    pub fn verify_json(&self, data: &Value) -> Result<(), Error> {
+        if let Some(value) = data.as_i64() {
+            self.check_constraints(value as isize)
+        } else {
+            bail!("Expected integer value.");
+        }
+    }
 }
 
 /// Data type to describe (JSON like) number value
@@ -233,6 +250,15 @@ impl NumberSchema {
         }
 
         Ok(())
+    }
+
+    /// Verify JSON value using an `NumberSchema`.
+    pub fn verify_json(&self, data: &Value) -> Result<(), Error> {
+        if let Some(value) = data.as_f64() {
+            self.check_constraints(value)
+        } else {
+            bail!("Expected number value.");
+        }
     }
 }
 
@@ -347,7 +373,7 @@ impl StringSchema {
                     }
                 }
                 ApiStringFormat::PropertyString(subschema) => {
-                    parse_property_string(value, subschema)?;
+                    subschema.parse_property_string(value)?;
                 }
                 ApiStringFormat::VerifyFn(verify_fn) => {
                     verify_fn(value)?;
@@ -356,6 +382,15 @@ impl StringSchema {
         }
 
         Ok(())
+    }
+
+    /// Verify JSON value using this `StringSchema`.
+    pub fn verify_json(&self, data: &Value) -> Result<(), Error> {
+        if let Some(value) = data.as_str() {
+            self.check_constraints(value)
+        } else {
+            bail!("Expected string value.");
+        }
     }
 }
 
@@ -409,6 +444,28 @@ impl ArraySchema {
         if let Some(max_length) = self.max_length {
             if length > max_length {
                 bail!("array may only contain {} elements", max_length);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Verify JSON value using an `ArraySchema`.
+    pub fn verify_json(&self, data: &Value) -> Result<(), Error> {
+        let list = match data {
+            Value::Array(ref list) => list,
+            Value::Object(_) => bail!("Expected array - got object."),
+            _ => bail!("Expected array - got scalar value."),
+        };
+
+        self.check_length(list.len())?;
+
+        for (i, item) in list.iter().enumerate() {
+            let result = self.items.verify_json(item);
+            if let Err(err) = result {
+                let mut errors = ParameterError::new();
+                errors.add_errors(&format!("[{}]", i), err);
+                return Err(errors.into());
             }
         }
 
@@ -486,6 +543,18 @@ impl ObjectSchema {
             None
         }
     }
+
+    /// Parse key/value pairs and verify with object schema
+    ///
+    /// - `test_required`: is set, checks if all required properties are
+    ///   present.
+    pub fn parse_parameter_strings(
+        &'static self,
+        data: &[(String, String)],
+        test_required: bool,
+    ) -> Result<Value, ParameterError> {
+        ParameterSchema::from(self).parse_parameter_strings(data, test_required)
+    }
 }
 
 /// Combines multiple *object* schemas into one.
@@ -532,6 +601,18 @@ impl AllOfSchema {
 
         None
     }
+
+    /// Parse key/value pairs and verify with object schema
+    ///
+    /// - `test_required`: is set, checks if all required properties are
+    ///   present.
+    pub fn parse_parameter_strings(
+        &'static self,
+        data: &[(String, String)],
+        test_required: bool,
+    ) -> Result<Value, ParameterError> {
+        ParameterSchema::from(self).parse_parameter_strings(data, test_required)
+    }
 }
 
 /// Beside [`ObjectSchema`] we also have an [`AllOfSchema`] which also represents objects.
@@ -540,6 +621,47 @@ pub trait ObjectSchemaType {
     fn lookup(&self, key: &str) -> Option<(bool, &Schema)>;
     fn properties(&self) -> ObjectPropertyIterator;
     fn additional_properties(&self) -> bool;
+
+    /// Verify JSON value using an object schema.
+    fn verify_json(&self, data: &Value) -> Result<(), Error> {
+        let map = match data {
+            Value::Object(ref map) => map,
+            Value::Array(_) => bail!("Expected object - got array."),
+            _ => bail!("Expected object - got scalar value."),
+        };
+
+        let mut errors = ParameterError::new();
+
+        let additional_properties = self.additional_properties();
+
+        for (key, value) in map {
+            if let Some((_optional, prop_schema)) = self.lookup(key) {
+                if let Err(err) = prop_schema.verify_json(value) {
+                    errors.add_errors(key, err);
+                };
+            } else if !additional_properties {
+                errors.push(
+                    key.to_string(),
+                    format_err!("schema does not allow additional properties."),
+                );
+            }
+        }
+
+        for (name, optional, _prop_schema) in self.properties() {
+            if !(*optional) && data[name] == Value::Null {
+                errors.push(
+                    name.to_string(),
+                    format_err!("property is missing and it is not optional."),
+                );
+            }
+        }
+
+        if !errors.is_empty() {
+            Err(errors.into())
+        } else {
+            Ok(())
+        }
+    }
 }
 
 impl ObjectSchemaType for ObjectSchema {
@@ -658,6 +780,109 @@ pub enum Schema {
     Object(ObjectSchema),
     Array(ArraySchema),
     AllOf(AllOfSchema),
+}
+
+impl Schema {
+    /// Verify JSON value with `schema`.
+    pub fn verify_json(&self, data: &Value) -> Result<(), Error> {
+        match self {
+            Schema::Null => {
+                if !data.is_null() {
+                    bail!("Expected Null, but value is not Null.");
+                }
+            }
+            Schema::Object(s) => s.verify_json(data)?,
+            Schema::Array(s) => s.verify_json(data)?,
+            Schema::Boolean(s) => s.verify_json(data)?,
+            Schema::Integer(s) => s.verify_json(data)?,
+            Schema::Number(s) => s.verify_json(data)?,
+            Schema::String(s) => s.verify_json(data)?,
+            Schema::AllOf(s) => s.verify_json(data)?,
+        }
+        Ok(())
+    }
+
+    /// Parse a simple value (no arrays and no objects)
+    pub fn parse_simple_value(&self, value_str: &str) -> Result<Value, Error> {
+        let value = match self {
+            Schema::Null => {
+                bail!("internal error - found Null schema.");
+            }
+            Schema::Boolean(_boolean_schema) => {
+                let res = parse_boolean(value_str)?;
+                Value::Bool(res)
+            }
+            Schema::Integer(integer_schema) => {
+                let res: isize = value_str.parse()?;
+                integer_schema.check_constraints(res)?;
+                Value::Number(res.into())
+            }
+            Schema::Number(number_schema) => {
+                let res: f64 = value_str.parse()?;
+                number_schema.check_constraints(res)?;
+                Value::Number(serde_json::Number::from_f64(res).unwrap())
+            }
+            Schema::String(string_schema) => {
+                string_schema.check_constraints(value_str)?;
+                Value::String(value_str.into())
+            }
+            _ => bail!("unable to parse complex (sub) objects."),
+        };
+        Ok(value)
+    }
+
+    /// Parse a complex property string (`ApiStringFormat::PropertyString`)
+    pub fn parse_property_string(&'static self, value_str: &str) -> Result<Value, Error> {
+        // helper for object/allof schemas:
+        fn parse_object<T: Into<ParameterSchema>>(
+            value_str: &str,
+            schema: T,
+            default_key: Option<&'static str>,
+        ) -> Result<Value, Error> {
+            let mut param_list: Vec<(String, String)> = vec![];
+            let key_val_list: Vec<&str> = value_str
+                .split(|c: char| c == ',' || c == ';')
+                .filter(|s| !s.is_empty())
+                .collect();
+            for key_val in key_val_list {
+                let kv: Vec<&str> = key_val.splitn(2, '=').collect();
+                if kv.len() == 2 {
+                    param_list.push((kv[0].trim().into(), kv[1].trim().into()));
+                } else if let Some(key) = default_key {
+                    param_list.push((key.into(), kv[0].trim().into()));
+                } else {
+                    bail!("Value without key, but schema does not define a default key.");
+                }
+            }
+
+            schema.into().parse_parameter_strings(&param_list, true).map_err(Error::from)
+        }
+
+        match self {
+            Schema::Object(object_schema) => {
+                parse_object(value_str, object_schema, object_schema.default_key)
+            }
+            Schema::AllOf(all_of_schema) => parse_object(value_str, all_of_schema, None),
+            Schema::Array(array_schema) => {
+                let mut array: Vec<Value> = vec![];
+                let list: Vec<&str> = value_str
+                    .split(|c: char| c == ',' || c == ';' || char::is_ascii_whitespace(&c))
+                    .filter(|s| !s.is_empty())
+                    .collect();
+
+                for value in list {
+                    match array_schema.items.parse_simple_value(value.trim()) {
+                        Ok(res) => array.push(res),
+                        Err(err) => bail!("unable to parse array element: {}", err),
+                    }
+                }
+                array_schema.check_length(array.len())?;
+
+                Ok(array.into())
+            }
+            _ => bail!("Got unexpected schema type."),
+        }
+    }
 }
 
 /// A string enum entry. An enum entry must have a value and a description.
@@ -791,6 +1016,20 @@ pub enum ParameterSchema {
     AllOf(&'static AllOfSchema),
 }
 
+impl ParameterSchema {
+    /// Parse key/value pairs and verify with object schema
+    ///
+    /// - `test_required`: is set, checks if all required properties are
+    ///   present.
+    pub fn parse_parameter_strings(
+        self,
+        data: &[(String, String)],
+        test_required: bool,
+    ) -> Result<Value, ParameterError> {
+        do_parse_parameter_strings(self, data, test_required)
+    }
+}
+
 impl ObjectSchemaType for ParameterSchema {
     fn description(&self) -> &'static str {
         match self {
@@ -846,102 +1085,33 @@ pub fn parse_boolean(value_str: &str) -> Result<bool, Error> {
 }
 
 /// Parse a complex property string (`ApiStringFormat::PropertyString`)
+#[deprecated(note = "this is now a method of Schema")]
 pub fn parse_property_string(value_str: &str, schema: &'static Schema) -> Result<Value, Error> {
-    // helper for object/allof schemas:
-    fn parse_object<T: Into<ParameterSchema>>(
-        value_str: &str,
-        schema: T,
-        default_key: Option<&'static str>,
-    ) -> Result<Value, Error> {
-        let mut param_list: Vec<(String, String)> = vec![];
-        let key_val_list: Vec<&str> = value_str
-            .split(|c: char| c == ',' || c == ';')
-            .filter(|s| !s.is_empty())
-            .collect();
-        for key_val in key_val_list {
-            let kv: Vec<&str> = key_val.splitn(2, '=').collect();
-            if kv.len() == 2 {
-                param_list.push((kv[0].trim().into(), kv[1].trim().into()));
-            } else if let Some(key) = default_key {
-                param_list.push((key.into(), kv[0].trim().into()));
-            } else {
-                bail!("Value without key, but schema does not define a default key.");
-            }
-        }
-
-        parse_parameter_strings(&param_list, schema, true).map_err(Error::from)
-    }
-
-    match schema {
-        Schema::Object(object_schema) => {
-            parse_object(value_str, object_schema, object_schema.default_key)
-        }
-        Schema::AllOf(all_of_schema) => parse_object(value_str, all_of_schema, None),
-        Schema::Array(array_schema) => {
-            let mut array: Vec<Value> = vec![];
-            let list: Vec<&str> = value_str
-                .split(|c: char| c == ',' || c == ';' || char::is_ascii_whitespace(&c))
-                .filter(|s| !s.is_empty())
-                .collect();
-
-            for value in list {
-                match parse_simple_value(value.trim(), array_schema.items) {
-                    Ok(res) => array.push(res),
-                    Err(err) => bail!("unable to parse array element: {}", err),
-                }
-            }
-            array_schema.check_length(array.len())?;
-
-            Ok(array.into())
-        }
-        _ => bail!("Got unexpected schema type."),
-    }
+    schema.parse_property_string(value_str)
 }
 
 /// Parse a simple value (no arrays and no objects)
+#[deprecated(note = "this is now a method of Schema")]
 pub fn parse_simple_value(value_str: &str, schema: &Schema) -> Result<Value, Error> {
-    let value = match schema {
-        Schema::Null => {
-            bail!("internal error - found Null schema.");
-        }
-        Schema::Boolean(_boolean_schema) => {
-            let res = parse_boolean(value_str)?;
-            Value::Bool(res)
-        }
-        Schema::Integer(integer_schema) => {
-            let res: isize = value_str.parse()?;
-            integer_schema.check_constraints(res)?;
-            Value::Number(res.into())
-        }
-        Schema::Number(number_schema) => {
-            let res: f64 = value_str.parse()?;
-            number_schema.check_constraints(res)?;
-            Value::Number(serde_json::Number::from_f64(res).unwrap())
-        }
-        Schema::String(string_schema) => {
-            string_schema.check_constraints(value_str)?;
-            Value::String(value_str.into())
-        }
-        _ => bail!("unable to parse complex (sub) objects."),
-    };
-    Ok(value)
+    schema.parse_simple_value(value_str)
 }
 
 /// Parse key/value pairs and verify with object schema
 ///
 /// - `test_required`: is set, checks if all required properties are
 ///   present.
+#[deprecated(note = "this is now a method of parameter schema types")]
 pub fn parse_parameter_strings<T: Into<ParameterSchema>>(
     data: &[(String, String)],
     schema: T,
     test_required: bool,
 ) -> Result<Value, ParameterError> {
-    do_parse_parameter_strings(data, schema.into(), test_required)
+    do_parse_parameter_strings(schema.into(), data, test_required)
 }
 
 fn do_parse_parameter_strings(
-    data: &[(String, String)],
     schema: ParameterSchema,
+    data: &[(String, String)],
     test_required: bool,
 ) -> Result<Value, ParameterError> {
     let mut params = json!({});
@@ -959,7 +1129,7 @@ fn do_parse_parameter_strings(
                     }
                     match params[key] {
                         Value::Array(ref mut array) => {
-                            match parse_simple_value(value, array_schema.items) {
+                            match array_schema.items.parse_simple_value(value) {
                                 Ok(res) => array.push(res), // fixme: check_length??
                                 Err(err) => errors.push(key.into(), err),
                             }
@@ -969,7 +1139,7 @@ fn do_parse_parameter_strings(
                         }
                     }
                 }
-                _ => match parse_simple_value(value, prop_schema) {
+                _ => match prop_schema.parse_simple_value(value) {
                     Ok(res) => {
                         if params[key] == Value::Null {
                             params[key] = res;
@@ -1023,125 +1193,45 @@ fn do_parse_parameter_strings(
 }
 
 /// Verify JSON value with `schema`.
+#[deprecated(note = "use the method schema.verify_json() instead")]
 pub fn verify_json(data: &Value, schema: &Schema) -> Result<(), Error> {
-    match schema {
-        Schema::Null => {
-            if !data.is_null() {
-                bail!("Expected Null, but value is not Null.");
-            }
-        }
-        Schema::Object(object_schema) => verify_json_object(data, object_schema)?,
-        Schema::Array(array_schema) => verify_json_array(data, array_schema)?,
-        Schema::Boolean(boolean_schema) => verify_json_boolean(data, boolean_schema)?,
-        Schema::Integer(integer_schema) => verify_json_integer(data, integer_schema)?,
-        Schema::Number(number_schema) => verify_json_number(data, number_schema)?,
-        Schema::String(string_schema) => verify_json_string(data, string_schema)?,
-        Schema::AllOf(all_of_schema) => verify_json_object(data, all_of_schema)?,
-    }
-    Ok(())
+    schema.verify_json(data)
 }
 
 /// Verify JSON value using a `StringSchema`.
+#[deprecated(note = "use the method string_schema.verify_json() instead")]
 pub fn verify_json_string(data: &Value, schema: &StringSchema) -> Result<(), Error> {
-    if let Some(value) = data.as_str() {
-        schema.check_constraints(value)
-    } else {
-        bail!("Expected string value.");
-    }
+    schema.verify_json(data)
 }
 
 /// Verify JSON value using a `BooleanSchema`.
-pub fn verify_json_boolean(data: &Value, _schema: &BooleanSchema) -> Result<(), Error> {
-    if !data.is_boolean() {
-        bail!("Expected boolean value.");
-    }
-    Ok(())
+#[deprecated(note = "use the method boolean_schema.verify_json() instead")]
+pub fn verify_json_boolean(data: &Value, schema: &BooleanSchema) -> Result<(), Error> {
+    schema.verify_json(data)
 }
 
 /// Verify JSON value using an `IntegerSchema`.
+#[deprecated(note = "use the method integer_schema.verify_json() instead")]
 pub fn verify_json_integer(data: &Value, schema: &IntegerSchema) -> Result<(), Error> {
-    if let Some(value) = data.as_i64() {
-        schema.check_constraints(value as isize)
-    } else {
-        bail!("Expected integer value.");
-    }
+    schema.verify_json(data)
 }
 
 /// Verify JSON value using an `NumberSchema`.
+#[deprecated(note = "use the method number_schema.verify_json() instead")]
 pub fn verify_json_number(data: &Value, schema: &NumberSchema) -> Result<(), Error> {
-    if let Some(value) = data.as_f64() {
-        schema.check_constraints(value)
-    } else {
-        bail!("Expected number value.");
-    }
+    schema.verify_json(data)
 }
 
 /// Verify JSON value using an `ArraySchema`.
+#[deprecated(note = "use the method array_schema.verify_json() instead")]
 pub fn verify_json_array(data: &Value, schema: &ArraySchema) -> Result<(), Error> {
-    let list = match data {
-        Value::Array(ref list) => list,
-        Value::Object(_) => bail!("Expected array - got object."),
-        _ => bail!("Expected array - got scalar value."),
-    };
-
-    schema.check_length(list.len())?;
-
-    for (i, item) in list.iter().enumerate() {
-        let result = verify_json(item, schema.items);
-        if let Err(err) = result {
-            let mut errors = ParameterError::new();
-            errors.add_errors(&format!("[{}]", i), err);
-            return Err(errors.into());
-        }
-    }
-
-    Ok(())
+    schema.verify_json(data)
 }
 
 /// Verify JSON value using an `ObjectSchema`.
+#[deprecated(note = "use the verify_json() method via the ObjectSchemaType trait instead")]
 pub fn verify_json_object(data: &Value, schema: &dyn ObjectSchemaType) -> Result<(), Error> {
-    let map = match data {
-        Value::Object(ref map) => map,
-        Value::Array(_) => bail!("Expected object - got array."),
-        _ => bail!("Expected object - got scalar value."),
-    };
-
-    let mut errors = ParameterError::new();
-
-    let additional_properties = schema.additional_properties();
-
-    for (key, value) in map {
-        if let Some((_optional, prop_schema)) = schema.lookup(key) {
-            let result = match prop_schema {
-                Schema::Object(object_schema) => verify_json_object(value, object_schema),
-                Schema::Array(array_schema) => verify_json_array(value, array_schema),
-                _ => verify_json(value, prop_schema),
-            };
-            if let Err(err) = result {
-                errors.add_errors(key, err);
-            };
-        } else if !additional_properties {
-            errors.push(
-                key.to_string(),
-                format_err!("schema does not allow additional properties."),
-            );
-        }
-    }
-
-    for (name, optional, _prop_schema) in schema.properties() {
-        if !(*optional) && data[name] == Value::Null {
-            errors.push(
-                name.to_string(),
-                format_err!("property is missing and it is not optional."),
-            );
-        }
-    }
-
-    if !errors.is_empty() {
-        Err(errors.into())
-    } else {
-        Ok(())
-    }
+    schema.verify_json(data)
 }
 
 /// API types should define an "updater type" via this trait in order to support derived "Updater"
