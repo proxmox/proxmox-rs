@@ -6,6 +6,8 @@
 //! possible to use schema definitions to derive configuration file
 //! parsers.
 
+#![deny(unsafe_op_in_unsafe_fn)]
+
 #[cfg(feature = "api-macro")]
 pub use proxmox_api_macro::api;
 
