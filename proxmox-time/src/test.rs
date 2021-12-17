@@ -1,4 +1,4 @@
-use anyhow::bail;
+use anyhow::{bail, Error};
 
 use super::*;
 
