@@ -13,7 +13,7 @@ fn parse_query_string<T: Into<ParameterSchema>>(
         .into_owned()
         .collect();
 
-    parse_parameter_strings(&param_list, schema.into(), test_required)
+    schema.into().parse_parameter_strings(&param_list, test_required)
 }
 
 #[test]

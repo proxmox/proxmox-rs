@@ -88,7 +88,7 @@ fn test_verify(
     data: &Value,
     expected_errors: &[(&str, &str)],
 ) -> Result<(), Error> {
-    match verify_json(data, schema) {
+    match schema.verify_json(data) {
         Ok(_) => bail!("expected errors, but got Ok()"),
         Err(err) => compare_error(expected_errors, err)?,
     }
