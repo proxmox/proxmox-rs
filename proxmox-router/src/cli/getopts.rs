@@ -192,7 +192,7 @@ pub fn parse_arguments<T: AsRef<str>>(
         data.push((name.to_string(), value.to_string()));
     }
 
-    let options = parse_parameter_strings(&data, schema, true)?;
+    let options = schema.parse_parameter_strings(&data, true)?;
 
     Ok((options, remaining))
 }

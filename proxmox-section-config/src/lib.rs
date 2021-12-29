@@ -325,13 +325,13 @@ impl SectionConfig {
             let plugin = self.plugins.get(type_name).unwrap();
 
             let id_schema = plugin.get_id_schema().unwrap_or(self.id_schema);
-            if let Err(err) = parse_simple_value(section_id, id_schema) {
+            if let Err(err) = id_schema.parse_simple_value(section_id) {
                 bail!("syntax error in section identifier: {}", err.to_string());
             }
             if section_id.chars().any(|c| c.is_control()) {
                 bail!("detected unexpected control character in section ID.");
             }
-            if let Err(err) = verify_json_object(section_config, plugin.properties) {
+            if let Err(err) = plugin.properties.verify_json(section_config) {
                 bail!("verify section '{}' failed - {}", section_id, err);
             }
 
@@ -405,7 +405,7 @@ impl SectionConfig {
                                 if let Some(plugin) = self.plugins.get(&section_type) {
                                     let id_schema =
                                         plugin.get_id_schema().unwrap_or(self.id_schema);
-                                    if let Err(err) = parse_simple_value(&section_id, id_schema) {
+                                    if let Err(err) = id_schema.parse_simple_value(&section_id) {
                                         bail!(
                                             "syntax error in section identifier: {}",
                                             err.to_string()
@@ -449,7 +449,7 @@ impl SectionConfig {
                                     None => bail!("unknown property '{}'", key),
                                 };
 
-                                let value = match parse_simple_value(&value, prop_schema) {
+                                let value = match prop_schema.parse_simple_value(&value) {
                                     Ok(value) => value,
                                     Err(err) => {
                                         bail!("property '{}': {}", key, err.to_string());
