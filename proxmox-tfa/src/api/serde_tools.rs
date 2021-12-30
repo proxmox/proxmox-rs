@@ -1,6 +1,7 @@
 //! Submodule for generic serde helpers.
 //!
 //! FIXME: This should appear in `proxmox-serde`.
+//! FIXME: doc test below is disabled since serde-tools is not public (yet)!
 
 use std::fmt;
 use std::marker::PhantomData;
@@ -67,7 +68,7 @@ where
 /// implementation details.
 ///
 /// Example:
-/// ```
+/// ```ignore
 /// # use serde::Deserialize;
 ///
 /// #[derive(Deserialize)]
