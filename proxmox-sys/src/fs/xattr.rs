@@ -195,46 +195,8 @@ mod tests {
     use super::*;
 
     use std::ffi::CString;
-    use std::fs::OpenOptions;
-    use std::os::unix::io::AsRawFd;
-
-    use nix::errno::Errno;
 
     use proxmox_lang::c_str;
-
-    #[test]
-    fn test_fsetxattr_fgetxattr() {
-        let path = "./test-xattrs.txt";
-        let file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .open(&path)
-            .unwrap();
-
-        let fd = file.as_raw_fd();
-
-        assert!(fsetxattr(fd, c_str!("user.attribute0"), b"value0").is_ok());
-        assert!(fsetxattr(fd, c_str!("user.empty"), b"").is_ok());
-
-        if nix::unistd::Uid::current() != nix::unistd::ROOT {
-            assert_eq!(
-                fsetxattr(fd, c_str!("trusted.attribute0"), b"value0"),
-                Err(Errno::EPERM)
-            );
-        }
-
-        let v0 = fgetxattr(fd, c_str!("user.attribute0")).unwrap();
-        let v1 = fgetxattr(fd, c_str!("user.empty")).unwrap();
-
-        assert_eq!(v0, b"value0".as_ref());
-        assert_eq!(v1, b"".as_ref());
-        assert_eq!(
-            fgetxattr(fd, c_str!("user.attribute1")),
-            Err(Errno::ENODATA)
-        );
-
-        std::fs::remove_file(&path).unwrap();
-    }
 
     #[test]
     fn test_is_valid_xattr_name() {
