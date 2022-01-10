@@ -34,6 +34,9 @@ const VERSION_MADE_BY: u16 = 0x032d;
 const ZIP64_EOCD_RECORD: u32 = 0x06064B50;
 const ZIP64_EOCD_LOCATOR: u32 = 0x07064B50;
 
+const LFH_GENERAL_PURPOSE_FLAGS: u16 = 1 << 3; // we place crc32 in the data descriptor
+const LFH_GPF_EFS_BIT: u16 = 1 << 11; // EFS, marks filename & comment as UTF-8
+
 // bits for time:
 // 0-4: day of the month (1-31)
 // 5-8: month: (1 = jan, etc.)
@@ -200,6 +203,7 @@ pub struct ZipEntry {
     compressed_size: u64,
     offset: u64,
     is_file: bool,
+    is_utf8_filename: bool,
 }
 
 impl ZipEntry {
@@ -220,8 +224,11 @@ impl ZipEntry {
             relpath.push(""); // adds trailing slash
         }
 
+        let filename: OsString = relpath.into();
+        let is_utf8_filename = filename.to_str().is_some();
+
         Self {
-            filename: relpath.into(),
+            filename,
             crc32: 0,
             mtime,
             mode,
@@ -229,6 +236,15 @@ impl ZipEntry {
             compressed_size: 0,
             offset: 0,
             is_file,
+            is_utf8_filename,
+        }
+    }
+
+    fn get_general_purpose_flags(&self) -> u16 {
+        if self.is_utf8_filename {
+            LFH_GENERAL_PURPOSE_FLAGS | LFH_GPF_EFS_BIT
+        } else {
+            LFH_GENERAL_PURPOSE_FLAGS
         }
     }
 
@@ -249,7 +265,7 @@ impl ZipEntry {
             LocalFileHeader {
                 signature: LOCAL_FH_SIG,
                 version_needed: 0x2d,
-                flags: 1 << 3,
+                flags: self.get_general_purpose_flags(),
                 compression: 0x8,
                 time,
                 date,
@@ -332,7 +348,7 @@ impl ZipEntry {
                 signature: CENTRAL_DIRECTORY_FH_SIG,
                 version_made_by: VERSION_MADE_BY,
                 version_needed: VERSION_NEEDED,
-                flags: 1 << 3,
+                flags: self.get_general_purpose_flags(),
                 compression: 0x8,
                 time,
                 date,
