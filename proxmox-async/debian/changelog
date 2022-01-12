@@ -1,3 +1,9 @@
+rust-proxmox-async (0.3.1) unstable; urgency=medium
+
+  * fix #3618: proxmox-async: zip: add conditional EFS flag to zip files
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 12 Jan 2022 15:46:48 +0100
+
 rust-proxmox-async (0.3.0) unstable; urgency=medium
 
   * rebuild using proxmox-sys 0.2.0
