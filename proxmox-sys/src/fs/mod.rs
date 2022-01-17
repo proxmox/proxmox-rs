@@ -102,3 +102,40 @@ impl CreateOptions {
     */
 }
 
+/// Information about a mounted file system from statfs64 syscall
+pub struct FileSystemInformation {
+    /// total bytes available
+    pub total: u64,
+    /// bytes used
+    pub used: u64,
+    /// bytes available to an unprivileged user
+    pub available: u64,
+    /// total number of inodes
+    pub total_inodes: u64,
+    /// free number of inodes
+    pub free_inodes: u64,
+    /// the type of the filesystem (see statfs64(2))
+    pub fs_type: i64,
+    /// the filesystem id
+    pub fs_id: libc::fsid_t,
+}
+
+/// Get file system information from path
+pub fn fs_info<P: ?Sized + nix::NixPath>(path: &P) -> nix::Result<FileSystemInformation> {
+    let mut stat: libc::statfs64 = unsafe { std::mem::zeroed() };
+
+    let res = path.with_nix_path(|cstr| unsafe { libc::statfs64(cstr.as_ptr(), &mut stat) })?;
+    nix::errno::Errno::result(res)?;
+
+    let bsize = stat.f_bsize as u64;
+
+    Ok(FileSystemInformation {
+        total: stat.f_blocks * bsize,
+        used: (stat.f_blocks - stat.f_bfree) * bsize,
+        available: stat.f_bavail * bsize,
+        total_inodes: stat.f_files,
+        free_inodes: stat.f_ffree,
+        fs_type: stat.f_type,
+        fs_id: stat.f_fsid,
+    })
+}
