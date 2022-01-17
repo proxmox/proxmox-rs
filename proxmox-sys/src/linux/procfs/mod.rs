@@ -11,6 +11,7 @@ use std::time::Instant;
 use anyhow::{bail, format_err, Error};
 use lazy_static::lazy_static;
 use nix::unistd::Pid;
+use serde::Serialize;
 
 use crate::fs::file_read_firstline;
 
@@ -184,7 +185,7 @@ pub fn read_proc_uptime_ticks() -> Result<(u64, u64), Error> {
     Ok((up as u64, idle as u64))
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 /// The CPU fields from `/proc/stat` with their native time value. Multiply
 /// with CLOCK_TICKS to get the real value.
 pub struct ProcFsStat {
@@ -407,7 +408,7 @@ fn test_read_proc_stat() {
     assert_eq!(stat.iowait_percent, 0.0);
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ProcFsMemInfo {
     pub memtotal: u64,
     pub memfree: u64,
@@ -539,7 +540,7 @@ pub fn read_memory_usage() -> Result<ProcFsMemUsage, Error> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct ProcFsNetDev {
     pub device: String,
     pub receive: u64,
