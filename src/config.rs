@@ -24,12 +24,12 @@ impl APTConfig {
 ///
 /// Initializes with default values if init() wasn't called before.
 pub fn get() -> &'static APTConfig {
-    &GLOBAL_CONFIG.get_or_init(|| APTConfig::new(None, None))
+    GLOBAL_CONFIG.get_or_init(|| APTConfig::new(None, None))
 }
 
 /// Initialize the configuration.
 ///
 /// Only has an effect if no init() or get() has been called yet.
 pub fn init(config: APTConfig) -> &'static APTConfig {
-    &GLOBAL_CONFIG.get_or_init(|| config)
+    GLOBAL_CONFIG.get_or_init(|| config)
 }

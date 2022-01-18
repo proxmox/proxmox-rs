@@ -409,7 +409,7 @@ fn uri_to_filename(uri: &str) -> String {
 /// Get the host part from a given URI.
 fn host_from_uri(uri: &str) -> Option<&str> {
     let host = uri.strip_prefix("http")?;
-    let host = host.strip_prefix("s").unwrap_or(host);
+    let host = host.strip_prefix('s').unwrap_or(host);
     let mut host = host.strip_prefix("://")?;
 
     if let Some(end) = host.find('/') {
