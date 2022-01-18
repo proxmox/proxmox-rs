@@ -5,7 +5,7 @@ authors = [
     "Fabian Ebner <f.ebner@proxmox.com>",
     "Proxmox Support Team <support@proxmox.com>",
 ]
-edition = "2018"
+edition = "2021"
 license = "AGPL-3"
 description = "Proxmox library for APT"
 homepage = "https://www.proxmox.com"
