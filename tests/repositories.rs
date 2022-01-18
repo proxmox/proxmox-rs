@@ -283,6 +283,37 @@ fn test_check_repositories() -> Result<(), Error> {
 
     assert_eq!(infos, expected_infos);
 
+    let bad_security = read_dir.join("bad-security.list");
+    let mut file = APTRepositoryFile::new(&bad_security)?.unwrap();
+    file.parse()?;
+
+    let path_string = bad_security.into_os_string().into_string().unwrap();
+
+    let mut expected_infos = vec![];
+    for n in 0..=1 {
+        expected_infos.push(APTRepositoryInfo {
+            path: path_string.clone(),
+            index: n,
+            property: Some("Suites".to_string()),
+            kind: "warning".to_string(),
+            message: "expected suite 'bullseye-security'".to_string(),
+        });
+    }
+    for n in 0..=1 {
+        expected_infos.push(APTRepositoryInfo {
+            path: path_string.clone(),
+            index: n,
+            property: None,
+            kind: "origin".to_string(),
+            message: "Debian".to_string(),
+        });
+    }
+    expected_infos.sort();
+
+    let mut infos = check_repositories(&vec![file], DebianCodename::Bullseye);
+    infos.sort();
+
+    assert_eq!(infos, expected_infos);
     Ok(())
 }
 

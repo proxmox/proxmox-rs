@@ -297,8 +297,8 @@ impl APTRepositoryFile {
         Ok(())
     }
 
-    /// Checks if old or unstable suites are configured and also that the
-    /// `stable` keyword is not used.
+    /// Checks if old or unstable suites are configured and that the Debian security repository
+    /// has the correct suite. Also checks that the `stable` keyword is not used.
     pub fn check_suites(&self, current_codename: DebianCodename) -> Vec<APTRepositoryInfo> {
         let mut infos = vec![];
 
@@ -306,6 +306,22 @@ impl APTRepositoryFile {
             if !repo.types.contains(&APTRepositoryPackageType::Deb) {
                 continue;
             }
+
+            let is_security_repo = repo.uris.iter().any(|uri| {
+                let uri = uri.trim_end_matches('/');
+                let uri = uri.strip_suffix("debian-security").unwrap_or(uri);
+                let uri = uri.trim_end_matches('/');
+                matches!(
+                    uri,
+                    "http://security.debian.org" | "https://security.debian.org",
+                )
+            });
+
+            let require_suffix = match is_security_repo {
+                true if current_codename >= DebianCodename::Bullseye => Some("-security"),
+                true => Some("/updates"),
+                false => None,
+            };
 
             let mut add_info = |kind: &str, message| {
                 infos.push(APTRepositoryInfo {
@@ -323,7 +339,7 @@ impl APTRepositoryFile {
             let message_stable = "use the name of the stable distribution instead of 'stable'!";
 
             for suite in repo.suites.iter() {
-                let base_suite = suite_variant(suite).0;
+                let (base_suite, suffix) = suite_variant(suite);
 
                 match base_suite {
                     "oldoldstable" | "oldstable" => {
@@ -351,6 +367,15 @@ impl APTRepositoryFile {
                     add_info("ignore-pre-upgrade-warning", message_new(base_suite));
                 } else if codename > current_codename {
                     add_info("warning", message_new(base_suite));
+                }
+
+                if let Some(require_suffix) = require_suffix {
+                    if suffix != require_suffix {
+                        add_info(
+                            "warning",
+                            format!("expected suite '{}{}'", current_codename, require_suffix),
+                        );
+                    }
                 }
             }
         }
