@@ -3,7 +3,7 @@
 use std::cell::RefCell;
 use std::future::Future;
 use std::sync::{Arc, Weak, Mutex};
-use std::task::{Context, Poll, RawWaker, Waker};
+use std::task::{Context, Poll, Waker};
 use std::thread::{self, Thread};
 
 use lazy_static::lazy_static;
@@ -156,12 +156,22 @@ pub fn main<F: Future>(fut: F) -> F::Output {
     block_on(fut)
 }
 
+struct ThreadWaker(Thread);
+
+impl std::task::Wake for ThreadWaker {
+    fn wake(self: Arc<Self>) {
+        self.0.unpark();
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        self.0.unpark();
+    }
+}
+
 fn block_on_local_future<F: Future>(fut: F) -> F::Output {
     pin_mut!(fut);
 
-    let waker = Arc::new(thread::current());
-    let waker = thread_waker_clone(Arc::into_raw(waker) as *const ());
-    let waker = unsafe { Waker::from_raw(waker) };
+    let waker = Waker::from(Arc::new(ThreadWaker(thread::current())));
     let mut context = Context::from_waker(&waker);
     loop {
         match fut.as_mut().poll(&mut context) {
@@ -169,35 +179,4 @@ fn block_on_local_future<F: Future>(fut: F) -> F::Output {
             Poll::Pending => thread::park(),
         }
     }
-}
-
-const THREAD_WAKER_VTABLE: std::task::RawWakerVTable = std::task::RawWakerVTable::new(
-    thread_waker_clone,
-    thread_waker_wake,
-    thread_waker_wake_by_ref,
-    thread_waker_drop,
-);
-
-fn thread_waker_clone(this: *const ()) -> RawWaker {
-    let this = unsafe { Arc::from_raw(this as *const Thread) };
-    let cloned = Arc::clone(&this);
-    let _ = Arc::into_raw(this);
-
-    RawWaker::new(Arc::into_raw(cloned) as *const (), &THREAD_WAKER_VTABLE)
-}
-
-fn thread_waker_wake(this: *const ()) {
-    let this = unsafe { Arc::from_raw(this as *const Thread) };
-    this.unpark();
-}
-
-fn thread_waker_wake_by_ref(this: *const ()) {
-    let this = unsafe { Arc::from_raw(this as *const Thread) };
-    this.unpark();
-    let _ = Arc::into_raw(this);
-}
-
-fn thread_waker_drop(this: *const ()) {
-    let this = unsafe { Arc::from_raw(this as *const Thread) };
-    drop(this);
 }
