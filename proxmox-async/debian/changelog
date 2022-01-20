@@ -1,3 +1,9 @@
+rust-proxmox-async (0.3.2) unstable; urgency=medium
+
+  * replace RawWaker with the Wake trait from std, fixes a refcount leak
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jan 2022 10:08:25 +0100
+
 rust-proxmox-async (0.3.1) unstable; urgency=medium
 
   * fix #3618: proxmox-async: zip: add conditional EFS flag to zip files
