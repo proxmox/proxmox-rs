@@ -2,7 +2,7 @@
 
 use std::cell::RefCell;
 use std::future::Future;
-use std::sync::{Arc, Weak, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 use std::task::{Context, Poll, Waker};
 use std::thread::{self, Thread};
 
@@ -15,8 +15,7 @@ thread_local! {
 }
 
 fn is_in_tokio() -> bool {
-    tokio::runtime::Handle::try_current()
-        .is_ok()
+    tokio::runtime::Handle::try_current().is_ok()
 }
 
 fn is_blocking() -> bool {
@@ -59,16 +58,19 @@ extern "C" {
 /// This makes sure that tokio's worker threads are marked for us so that we know whether we
 /// can/need to use `block_in_place` in our `block_on` helper.
 pub fn get_runtime_with_builder<F: Fn() -> runtime::Builder>(get_builder: F) -> Arc<Runtime> {
-
     let mut guard = RUNTIME.lock().unwrap();
 
-    if let Some(rt) = guard.upgrade() { return rt; }
+    if let Some(rt) = guard.upgrade() {
+        return rt;
+    }
 
     let mut builder = get_builder();
     builder.on_thread_stop(|| {
         // avoid openssl bug: https://github.com/openssl/openssl/issues/6214
         // call OPENSSL_thread_stop to avoid race with openssl cleanup handlers
-        unsafe { OPENSSL_thread_stop(); }
+        unsafe {
+            OPENSSL_thread_stop();
+        }
     });
 
     let runtime = builder.build().expect("failed to spawn tokio runtime");
@@ -83,14 +85,12 @@ pub fn get_runtime_with_builder<F: Fn() -> runtime::Builder>(get_builder: F) -> 
 ///
 /// This calls get_runtime_with_builder() using the tokio default threaded scheduler
 pub fn get_runtime() -> Arc<Runtime> {
-
     get_runtime_with_builder(|| {
         let mut builder = runtime::Builder::new_multi_thread();
         builder.enable_all();
         builder
     })
 }
-
 
 /// Block on a synchronous piece of code.
 pub fn block_in_place<R>(fut: impl FnOnce() -> R) -> R {
