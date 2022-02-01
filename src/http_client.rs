@@ -19,23 +19,23 @@ use openidconnect::{
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// Non-ureq HTTP error.
-    #[error("HTTP error")]
+    #[error("HTTP error - {0}")]
     Http(#[from] http::Error),
 
     /// IO error
-    #[error("IO error")]
+    #[error("IO error - {0}")]
     IO(#[from] std::io::Error),
 
     /// Error returned by ureq crate.
     // boxed due to https://github.com/algesten/ureq/issues/296
-    #[error("ureq request failed")]
+    #[error("ureq request failed - {0}")]
     Ureq(#[from] Box<ureq::Error>),
 
-    #[error("TLS error: {0}")]
+    #[error("TLS error - {0}")]
     Tls(#[from] native_tls::Error),
 
     /// Other error.
-    #[error("Other error: {}", _0)]
+    #[error("Other error: {0}")]
     Other(String),
 }
 
