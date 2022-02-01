@@ -17,6 +17,7 @@ Build-Depends: debhelper (>= 12),
  librust-serde-json-1+default-dev <!nocheck>,
  librust-thiserror-1+default-dev <!nocheck>,
  librust-ureq-2+default-dev (>= 2.4-~~) <!nocheck>,
+ librust-ureq-2+gzip-dev (>= 2.4-~~) <!nocheck>,
  librust-ureq-2+native-tls-dev (>= 2.4-~~) <!nocheck>,
  librust-url-2+default-dev (>= 2.1-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -41,6 +42,7 @@ Depends:
  librust-serde-json-1+default-dev,
  librust-thiserror-1+default-dev,
  librust-ureq-2+default-dev (>= 2.4-~~),
+ librust-ureq-2+gzip-dev (>= 2.4-~~),
  librust-ureq-2+native-tls-dev (>= 2.4-~~),
  librust-url-2+default-dev (>= 2.1-~~)
 Provides:
