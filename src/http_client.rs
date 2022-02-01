@@ -1,6 +1,3 @@
-use std::io::Read;
-
-use curl::easy::Easy;
 use http::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use http::method::Method;
 use http::status::StatusCode;
@@ -10,83 +7,73 @@ use openidconnect::{
     HttpResponse,
 };
 
-/// Synchronous Curl HTTP client.
+// Copied from OAuth2 create, because we want to use ureq with
+// native-tls. But current OAuth2 crate pulls in rustls, so we cannot
+// use their 'ureq' feature.
+
 ///
-/// Copied fron OAuth2 create, added fix https://github.com/ramosbugs/oauth2-rs/pull/147
-pub fn http_client(request: HttpRequest) -> Result<HttpResponse,  openidconnect::curl::Error> {
+/// Error type returned by failed ureq HTTP requests.
+///
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    /// Non-ureq HTTP error.
+    #[error("HTTP error")]
+    Http(#[from] http::Error),
+    /// IO error
+    #[error("IO error")]
+    IO(#[from] std::io::Error),
+    /// Other error.
+    #[error("Other error: {}", _0)]
+    Other(String),
+    /// Error returned by ureq crate.
+    // boxed due to https://github.com/algesten/ureq/issues/296
+    #[error("ureq request failed")]
+    Ureq(#[from] Box<ureq::Error>),
+}
 
-    use  openidconnect::curl::Error;
-        
-    let mut easy = Easy::new();
-    easy.url(&request.url.to_string()[..])
-        .map_err(Error::Curl)?;
+///
+/// Synchronous HTTP client for ureq.
+///
+pub fn http_client(request: HttpRequest) -> Result<HttpResponse, Error> {
+   let mut req = if let Method::POST = request.method {
+        ureq::post(&request.url.to_string())
+    } else {
+        ureq::get(&request.url.to_string())
+    };
 
-    let mut headers = curl::easy::List::new();
-    request
-        .headers
-        .iter()
-        .map(|(name, value)| {
-            headers
-                .append(&format!(
-                    "{}: {}",
-                    name,
-                    value.to_str().map_err(|_| Error::Other(format!(
+    for (name, value) in request.headers {
+        if let Some(name) = name {
+            req = req.set(
+                &name.to_string(),
+                value.to_str().map_err(|_| {
+                     Error::Other(format!(
                         "invalid {} header value {:?}",
                         name,
                         value.as_bytes()
-                    )))?
-                ))
-                .map_err(Error::Curl)
-        })
-        .collect::<Result<_, _>>()?;
+                    ))
+                })?,
+            );
+        }
+    }
 
-    easy.http_headers(headers).map_err(Error::Curl)?;
-
-    if let Method::POST = request.method {
-        easy.post(true).map_err(Error::Curl)?;
-        easy.post_field_size(request.body.len() as u64)
-            .map_err(Error::Curl)?;
+    let response = if let Method::POST = request.method {
+        req.send(&*request.body)
     } else {
-        assert_eq!(request.method, Method::GET);
+        req.call()
     }
+    .map_err(Box::new)?;
 
-    let mut form_slice = &request.body[..];
-    let mut data = Vec::new();
-    {
-        let mut transfer = easy.transfer();
+    let status_code = StatusCode::from_u16(response.status())
+        .map_err(|err| Error::Http(err.into()))?;
 
-        transfer
-            .read_function(|buf| Ok(form_slice.read(buf).unwrap_or(0)))
-            .map_err(Error::Curl)?;
-
-        transfer
-            .write_function(|new_data| {
-                data.extend_from_slice(new_data);
-                Ok(new_data.len())
-            })
-            .map_err(Error::Curl)?;
-
-        transfer.perform().map_err(Error::Curl)?;
-    }
-
-    let status_code = easy.response_code().map_err(Error::Curl)? as u16;
+    let content_type = HeaderValue::from_str(response.content_type())
+        .map_err(|err| Error::Http(err.into()))?;
 
     Ok(HttpResponse {
-        status_code: StatusCode::from_u16(status_code).map_err(|err| Error::Http(err.into()))?,
-        headers: easy
-            .content_type()
-            .map_err(Error::Curl)?
-            .map(|content_type| {
-                Ok(vec![(
-                    CONTENT_TYPE,
-                    HeaderValue::from_str(content_type).map_err(|err| Error::Http(err.into()))?,
-                )]
-                .into_iter()
-                .collect::<HeaderMap>())
-            })
-            .transpose()?
-            .unwrap_or_else(HeaderMap::new),
-        body: data,
+        status_code,
+        headers: vec![(CONTENT_TYPE, content_type)]
+            .into_iter()
+            .collect::<HeaderMap>(),
+        body: response.into_string()?.as_bytes().into(),
     })
 }
-

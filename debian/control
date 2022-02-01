@@ -2,20 +2,22 @@ Source: rust-proxmox-openid
 Section: rust
 Priority: optional
 Build-Depends: debhelper (>= 12),
- dh-cargo (>= 24),
+ dh-cargo (>= 25),
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-curl-0.4+default-dev (>= 0.4.33-~~) <!nocheck>,
  librust-http-0.2+default-dev <!nocheck>,
  librust-nix-0.19+default-dev (>= 0.19.1-~~) <!nocheck>,
- librust-openidconnect-2+curl-dev (>= 2.1-~~) <!nocheck>,
+ librust-openidconnect-2-dev (>= 2.2-~~) <!nocheck>,
  librust-proxmox-sys-0.2+default-dev <!nocheck>,
  librust-proxmox-time-1+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
+ librust-thiserror-1+default-dev <!nocheck>,
+ librust-ureq-2+default-dev (>= 2.4-~~) <!nocheck>,
+ librust-ureq-2+native-tls-dev (>= 2.4-~~) <!nocheck>,
  librust-url-2+default-dev (>= 2.1-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.5.1
@@ -29,15 +31,17 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-curl-0.4+default-dev (>= 0.4.33-~~),
  librust-http-0.2+default-dev,
  librust-nix-0.19+default-dev (>= 0.19.1-~~),
- librust-openidconnect-2+curl-dev (>= 2.1-~~),
+ librust-openidconnect-2-dev (>= 2.2-~~),
  librust-proxmox-sys-0.2+default-dev,
  librust-proxmox-time-1+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev,
+ librust-thiserror-1+default-dev,
+ librust-ureq-2+default-dev (>= 2.4-~~),
+ librust-ureq-2+native-tls-dev (>= 2.4-~~),
  librust-url-2+default-dev (>= 2.1-~~)
 Provides:
  librust-proxmox-openid+default-dev (= ${binary:Version}),
