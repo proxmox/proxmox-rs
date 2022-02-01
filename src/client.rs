@@ -1,8 +1,8 @@
 //! A blocking higher-level ACME client implementation using 'curl'.
 
-use std::convert::TryFrom;
+use std::io::Read;
+use std::sync::Arc;
 
-use curl::easy;
 use serde::{Deserialize, Serialize};
 
 use crate::b64u;
@@ -73,113 +73,102 @@ pub struct Headers {
     nonce: Option<String>,
 }
 
-impl Headers {
-    fn read_header(&mut self, header: &[u8]) {
-        let (name, value) = match parse_header(header) {
-            Some(h) => h,
-            None => return,
-        };
-
-        if name.eq_ignore_ascii_case(crate::REPLAY_NONCE) {
-            self.nonce = Some(value.to_owned());
-        } else if name.eq_ignore_ascii_case(crate::LOCATION) {
-            self.location = Some(value.to_owned());
-        }
-    }
-}
-
 struct Inner {
-    easy: easy::Easy,
+    agent: Option<ureq::Agent>,
     nonce: Option<String>,
     proxy: Option<String>,
 }
 
 impl Inner {
-    pub fn new() -> Self {
+    fn agent(&mut self) -> Result<&mut ureq::Agent, Error> {
+        if self.agent.is_none() {
+            let connector = Arc::new(
+                native_tls::TlsConnector::new()
+                    .map_err(|err| format_err!("failed to create tls connector: {}", err))?,
+            );
+
+            let mut builder = ureq::AgentBuilder::new().tls_connector(connector);
+
+            if let Some(proxy) = self.proxy.as_deref() {
+                builder = builder.proxy(
+                    ureq::Proxy::new(proxy)
+                        .map_err(|err| format_err!("failed to set proxy: {}", err))?,
+                );
+            }
+
+            self.agent = Some(builder.build());
+        }
+
+        Ok(self.agent.as_mut().unwrap())
+    }
+
+    fn new() -> Self {
         Self {
-            easy: easy::Easy::new(),
+            agent: None,
             nonce: None,
             proxy: None,
         }
     }
 
-    pub fn execute(
+    fn execute(
         &mut self,
         method: &[u8],
         url: &str,
-        request_body: Option<&[u8]>,
+        request_body: Option<(&str, &[u8])>, // content-type and body
     ) -> Result<HttpResponse, Error> {
-        let mut body = Vec::new();
-        let mut headers = Headers::default();
-        let mut upload;
-
-        match method {
-            b"POST" => self.easy.post(true)?,
-            b"GET" => self.easy.get(true)?,
-            b"HEAD" => self.easy.nobody(true)?,
+        let agent = self.agent()?;
+        let req = match method {
+            b"POST" => agent.post(url),
+            b"GET" => agent.get(url),
+            b"HEAD" => agent.head(url),
             other => bail!("invalid http method: {:?}", other),
+        };
+
+        let response = if let Some((content_type, body)) = request_body {
+            req.set("Content-Type", content_type)
+                .set("Content-Length", &body.len().to_string())
+                .send_bytes(body)
+        } else {
+            req.call()
+        }
+        .map_err(|err| format_err!("http request failed: {}", err))?;
+
+        let mut headers = Headers::default();
+        if let Some(value) = response.header(crate::LOCATION) {
+            headers.location = Some(value.to_owned());
         }
 
-        self.easy.url(url)?;
-
-        if let Some(p) = &self.proxy {
-            self.easy.proxy(p)?;
+        if let Some(value) = response.header(crate::REPLAY_NONCE) {
+            headers.nonce = Some(value.to_owned());
         }
 
-        {
-            let mut transfer = self.easy.transfer();
+        let status = response.status();
 
-            transfer.write_function(|data| {
-                body.extend(data);
-                Ok(data.len())
-            })?;
+        let mut body = Vec::new();
+        response
+            .into_reader()
+            .take(16 * 1024 * 1024) // arbitrary limit
+            .read_to_end(&mut body)
+            .map_err(|err| format_err!("failed to read response body: {}", err))?;
 
-            transfer.header_function(|data| {
-                headers.read_header(data);
-                true
-            })?;
-
-            if let Some(body) = request_body {
-                upload = body;
-                transfer.read_function(|dest| {
-                    let len = upload.len().min(dest.len());
-                    dest[..len].copy_from_slice(&upload[..len]);
-                    upload = &upload[len..];
-                    Ok(len)
-                })?;
-            }
-
-            transfer.perform()?;
-        }
-
-        let status = self.easy.response_code()?;
-        let status =
-            u16::try_from(status).map_err(|_| format_err!("invalid status code: {}", status))?;
         Ok(HttpResponse {
-            body,
             status,
             headers,
+            body,
         })
     }
 
     pub fn set_proxy(&mut self, proxy: String) {
         self.proxy = Some(proxy);
+        self.agent = None;
     }
 
-    /// Low-level API to run an n API request. This automatically updates the current nonce!
+    /// Low-level API to run an API request. This automatically updates the current nonce!
     fn run_request(&mut self, request: Request) -> Result<HttpResponse, Error> {
-        self.easy.reset();
-
-        let body = if !request.content_type.is_empty() {
-            let mut headers = easy::List::new();
-            headers.append(&format!("Content-Type: {}", request.content_type))?;
-            headers.append(&format!("Content-Length: {}", request.body.len()))?;
-            self.easy
-                .http_headers(headers)
-                .map_err(|err| format_err!("curl error: {}", err))?;
-            Some(request.body.as_bytes())
-        } else {
+        let body = if request.body.is_empty() {
             None
+        } else {
+            Some((request.content_type, request.body.as_bytes()))
         };
 
         let mut response = self
@@ -601,18 +590,6 @@ impl Client {
     pub fn set_proxy(&mut self, proxy: String) {
         self.inner.set_proxy(proxy)
     }
-}
-
-fn parse_header(data: &[u8]) -> Option<(&str, &str)> {
-    let colon = data.iter().position(|&b| b == b':')?;
-
-    let name = std::str::from_utf8(&data[..colon]).ok()?;
-
-    let value = &data[(colon + 1)..];
-    let value_start = value.iter().position(|&b| !b.is_ascii_whitespace())?;
-    let value = std::str::from_utf8(&value[value_start..]).ok()?;
-
-    Some((name.trim(), value.trim()))
 }
 
 /// bad nonce retry count helper

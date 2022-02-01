@@ -63,13 +63,13 @@ pub enum Error {
     /// acme errors.
     Custom(String),
 
-    /// If built with the `client` feature, this is where general curl/network errors end up.
-    /// This is usually a `curl::Error`, however in order to provide an API which is not
+    /// If built with the `client` feature, this is where general ureq/network errors end up.
+    /// This is usually a `ureq::Error`, however in order to provide an API which is not
     /// feature-dependent, this variant is always present and contains a boxed `dyn Error`.
     HttpClient(Box<dyn std::error::Error + Send + Sync + 'static>),
 
     /// If built with the `client` feature, this is where client specific errors which are not from
-    /// errors forwarded from `curl` end up.
+    /// errors forwarded from `ureq` end up.
     Client(String),
 
     /// A non-openssl error occurred while building data for the CSR.
@@ -140,12 +140,5 @@ impl From<serde_json::Error> for Error {
 impl From<crate::request::ErrorResponse> for Error {
     fn from(e: crate::request::ErrorResponse) -> Self {
         Error::Api(e)
-    }
-}
-
-#[cfg(feature = "client")]
-impl From<curl::Error> for Error {
-    fn from(e: curl::Error) -> Self {
-        Error::HttpClient(Box::new(e))
     }
 }
