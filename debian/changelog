@@ -1,3 +1,11 @@
+rust-proxmox-acme-rs (0.4.0) pve; urgency=medium
+
+  * switch from curl to ureq with native-tls
+
+  * bump edition to 2021
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 01 Feb 2022 10:19:29 +0100
+
 rust-proxmox-acme-rs (0.3.2) pve; urgency=medium
 
   * rebuild with base64 0.13
