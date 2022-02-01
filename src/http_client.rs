@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use http::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use http::method::Method;
 use http::status::StatusCode;
@@ -19,26 +21,39 @@ pub enum Error {
     /// Non-ureq HTTP error.
     #[error("HTTP error")]
     Http(#[from] http::Error),
+
     /// IO error
     #[error("IO error")]
     IO(#[from] std::io::Error),
-    /// Other error.
-    #[error("Other error: {}", _0)]
-    Other(String),
+
     /// Error returned by ureq crate.
     // boxed due to https://github.com/algesten/ureq/issues/296
     #[error("ureq request failed")]
     Ureq(#[from] Box<ureq::Error>),
+
+    #[error("TLS error: {0}")]
+    Tls(#[from] native_tls::Error),
+
+    /// Other error.
+    #[error("Other error: {}", _0)]
+    Other(String),
+}
+
+fn ureq_agent() -> Result<ureq::Agent, Error> {
+    Ok(ureq::AgentBuilder::new()
+        .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
+        .build())
 }
 
 ///
 /// Synchronous HTTP client for ureq.
 ///
 pub fn http_client(request: HttpRequest) -> Result<HttpResponse, Error> {
-   let mut req = if let Method::POST = request.method {
-        ureq::post(&request.url.to_string())
+    let agent = ureq_agent()?;
+    let mut req = if let Method::POST = request.method {
+        agent.post(&request.url.to_string())
     } else {
-        ureq::get(&request.url.to_string())
+        agent.get(&request.url.to_string())
     };
 
     for (name, value) in request.headers {
