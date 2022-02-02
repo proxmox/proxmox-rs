@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -14,10 +15,10 @@ pub use influxdb::{influxdb_http, influxdb_udp, test_influxdb_http, test_influxd
 /// Structured data for the metric server.
 pub struct MetricsData {
     /// The category of measurements.
-    pub measurement: String,
+    pub measurement: Cow<'static, str>,
 
     /// A list of to attach to the measurements.
-    pub tags: HashMap<String, String>,
+    pub tags: HashMap<Cow<'static, str>, Cow<'static, str>>,
 
     /// The actual values to send. Only plain (not-nested) objects are supported at the moment.
     pub values: Value,
@@ -27,24 +28,43 @@ pub struct MetricsData {
 }
 
 impl MetricsData {
-    /// Convenient helper to create from references.
-    pub fn new<V: Serialize>(
-        measurement: &str,
-        tags: &[(&str, &str)],
-        ctime: i64,
-        values: V,
-    ) -> Result<Self, Error> {
-        let mut new_tags = HashMap::new();
-        for (key, value) in tags {
-            new_tags.insert(key.to_string(), value.to_string());
-        }
-
+    /// Create a new metrics data entry.
+    ///
+    /// ```
+    /// # use proxmox_metrics::MetricsData;
+    /// # fn test(
+    /// #     ctime: i64,
+    /// #     stat: &'static str,
+    /// #     nodename: String,
+    /// # ) -> Result<(), anyhow::Error> {
+    /// let data = MetricsData::new("memory", ctime, stat)?
+    ///     .tag("object", "host")
+    ///     .tag("host", nodename);
+    /// #     Ok(())
+    /// # }
+    /// # test(0, "foo", "nodename".to_string()).unwrap();
+    /// ```
+    pub fn new<S, V>(measurement: S, ctime: i64, values: V) -> Result<Self, Error>
+    where
+        S: Into<Cow<'static, str>>,
+        V: Serialize,
+    {
         Ok(Self {
-            measurement: measurement.to_string(),
-            tags: new_tags,
             values: serde_json::to_value(values)?,
+            measurement: measurement.into(),
+            tags: HashMap::new(),
             ctime,
         })
+    }
+
+    /// Add a tag.
+    pub fn tag<K, V>(mut self, key: K, value: V) -> Self
+    where
+        K: Into<Cow<'static, str>>,
+        V: Into<Cow<'static, str>>,
+    {
+        self.tags.insert(key.into(), value.into());
+        self
     }
 }
 
