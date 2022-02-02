@@ -36,8 +36,7 @@ pub async fn test_influxdb_http(
     this.test_connection().await
 }
 
-/// Returns a [Metrics] handle that connects and sends data to the
-/// given influxdb server at the given https url
+/// Get a [`Metrics`] handle for an influxdb server accessed via HTTPS.
 pub fn influxdb_http(
     uri: &str,
     organization: &str,

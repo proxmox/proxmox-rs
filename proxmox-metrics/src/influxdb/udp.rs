@@ -22,8 +22,7 @@ pub async fn test_influxdb_udp(address: &str) -> Result<(), Error> {
     Ok(())
 }
 
-/// Returns a [`Metrics`] handle that connects and sends data to the
-/// given influxdb server at the given udp address/port
+/// Get a [`Metrics`] handle for an influxdb server accessed via UDP.
 ///
 /// `address` must be in the format of `ip_or_hostname:port`
 pub fn influxdb_udp(address: &str, mtu: Option<u16>) -> Metrics {

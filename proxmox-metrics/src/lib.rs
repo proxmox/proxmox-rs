@@ -11,20 +11,23 @@ mod influxdb;
 pub use influxdb::{influxdb_http, influxdb_udp, test_influxdb_http, test_influxdb_udp};
 
 #[derive(Clone)]
-/// Structured data for the metric server
+/// Structured data for the metric server.
 pub struct MetricsData {
-    /// The category of measurements
+    /// The category of measurements.
     pub measurement: String,
-    /// A list of to attach to the measurements
+
+    /// A list of to attach to the measurements.
     pub tags: HashMap<String, String>,
+
     /// The actual values to send. Only plain (not-nested) objects are supported at the moment.
     pub values: Value,
-    /// The time of the measurement
+
+    /// The time of the measurement.
     pub ctime: i64,
 }
 
 impl MetricsData {
-    /// Convenient helper to create from references
+    /// Convenient helper to create from references.
     pub fn new<V: Serialize>(
         measurement: &str,
         tags: &[(&str, &str)],
@@ -45,7 +48,7 @@ impl MetricsData {
     }
 }
 
-/// Helper to send a list of [MetricsData] to a list of [Metrics]
+/// Helper to send a list of [`MetricsData`] to a list of [`Metrics`].
 pub async fn send_data_to_channels(
     values: &[Arc<MetricsData>],
     connections: &[Metrics],
@@ -65,7 +68,7 @@ pub async fn send_data_to_channels(
 
 /// Represents connection to the metric server which can be used to send data
 ///
-/// You can send [MetricsData] by using [`Self::send_data()`], and to flush and
+/// You can send [`MetricsData`] by using [`Self::send_data()`], and to flush and
 /// finish the connection use [`Self::join`].
 ///
 /// If dropped, it will abort the connection and not flush out buffered data.
