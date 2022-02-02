@@ -276,7 +276,7 @@ impl Client {
 
     /// Get the directory URL without querying the `Directory` structure.
     ///
-    /// The difference to [`get_directory`](Client::get_directory()) is that this does not
+    /// The difference to [`directory`](Client::directory()) is that this does not
     /// attempt to fetch the directory data from the ACME server.
     pub fn directory_url(&self) -> &str {
         &self.directory_url
