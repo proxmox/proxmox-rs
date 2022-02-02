@@ -4,9 +4,9 @@ use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use tokio::io::{AsyncRead, ReadBuf};
 use futures::ready;
 use futures::stream::Stream;
+use tokio::io::{AsyncRead, ReadBuf};
 
 /// Wrapper struct to convert an [AsyncRead] into a [Stream]
 pub struct AsyncReaderStream<R: AsyncRead + Unpin> {
@@ -14,17 +14,20 @@ pub struct AsyncReaderStream<R: AsyncRead + Unpin> {
     buffer: Vec<u8>,
 }
 
-impl <R: AsyncRead + Unpin> AsyncReaderStream<R> {
-
+impl<R: AsyncRead + Unpin> AsyncReaderStream<R> {
     pub fn new(reader: R) -> Self {
-        let mut buffer = Vec::with_capacity(64*1024);
-        unsafe { buffer.set_len(buffer.capacity()); }
+        let mut buffer = Vec::with_capacity(64 * 1024);
+        unsafe {
+            buffer.set_len(buffer.capacity());
+        }
         Self { reader, buffer }
     }
 
     pub fn with_buffer_size(reader: R, buffer_size: usize) -> Self {
         let mut buffer = Vec::with_capacity(buffer_size);
-        unsafe { buffer.set_len(buffer.capacity()); }
+        unsafe {
+            buffer.set_len(buffer.capacity());
+        }
         Self { reader, buffer }
     }
 }

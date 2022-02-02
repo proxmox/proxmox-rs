@@ -625,8 +625,8 @@ pub async fn zip_directory<W>(target: W, source: &Path) -> Result<(), Error>
 where
     W: AsyncWrite + Unpin + Send,
 {
-    use walkdir::WalkDir;
     use std::os::unix::fs::MetadataExt;
+    use walkdir::WalkDir;
 
     let base_path = source.parent().unwrap_or_else(|| Path::new("/"));
     let mut encoder = ZipEncoder::new(target);
@@ -640,28 +640,22 @@ where
                 if let Err(err) = async move {
                     let entry_path_no_base = entry.path().strip_prefix(base_path)?;
                     let metadata = entry.metadata()?;
-                    let mtime = match metadata.modified().unwrap_or_else(|_| SystemTime::now()).duration_since(SystemTime::UNIX_EPOCH) {
+                    let mtime = match metadata
+                        .modified()
+                        .unwrap_or_else(|_| SystemTime::now())
+                        .duration_since(SystemTime::UNIX_EPOCH)
+                    {
                         Ok(dur) => dur.as_secs() as i64,
-                        Err(time_error) => -(time_error.duration().as_secs() as i64)
+                        Err(time_error) => -(time_error.duration().as_secs() as i64),
                     };
                     let mode = metadata.mode() as u16;
 
                     if entry.file_type().is_file() {
                         let file = tokio::fs::File::open(entry.path()).await?;
-                        let ze = ZipEntry::new(
-                            &entry_path_no_base,
-                            mtime,
-                            mode,
-                            true,
-                        );
+                        let ze = ZipEntry::new(&entry_path_no_base, mtime, mode, true);
                         encoder.add_entry(ze, Some(file)).await?;
                     } else if entry.file_type().is_dir() {
-                        let ze = ZipEntry::new(
-                            &entry_path_no_base,
-                            mtime,
-                            mode,
-                            false,
-                        );
+                        let ze = ZipEntry::new(&entry_path_no_base, mtime, mode, false);
                         let content: Option<tokio::fs::File> = None;
                         encoder.add_entry(ze, content).await?;
                     }

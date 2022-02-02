@@ -1,19 +1,19 @@
 //! Wrappers between async readers and streams.
 
-use std::io;
 use std::future::Future;
+use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use anyhow::{Error, Result};
-use tokio::io::{AsyncWrite};
-use tokio::sync::mpsc::Sender;
-use futures::ready;
 use futures::future::FutureExt;
+use futures::ready;
+use tokio::io::AsyncWrite;
+use tokio::sync::mpsc::Sender;
 
-use proxmox_sys::io_format_err;
-use proxmox_sys::error::io_err_other;
 use proxmox_io::ByteBuffer;
+use proxmox_sys::error::io_err_other;
+use proxmox_sys::io_format_err;
 
 /// Wrapper around tokio::sync::mpsc::Sender, which implements Write
 pub struct AsyncChannelWriter {

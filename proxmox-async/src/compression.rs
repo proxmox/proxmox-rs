@@ -9,8 +9,8 @@ use futures::ready;
 use futures::stream::Stream;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
-use proxmox_sys::io_format_err;
 use proxmox_io::ByteBuffer;
+use proxmox_sys::io_format_err;
 
 const BUFFER_SIZE: usize = 8192;
 
@@ -98,7 +98,8 @@ impl DeflateEncoder<Vec<u8>> {
         let mut buffer = Vec::with_capacity(size_hint);
         reader.read_to_end(&mut buffer).await?;
         self.inner.reserve(size_hint); // should be enough since we want smalller files
-        self.compressor.compress_vec(&buffer[..], &mut self.inner, FlushCompress::Finish)?;
+        self.compressor
+            .compress_vec(&buffer[..], &mut self.inner, FlushCompress::Finish)?;
         Ok(())
     }
 }
@@ -144,7 +145,7 @@ impl<T: AsyncWrite + Unpin> DeflateEncoder<T> {
 impl<T, O> Stream for DeflateEncoder<T>
 where
     T: Stream<Item = Result<O, io::Error>> + Unpin,
-    O: Into<Bytes>
+    O: Into<Bytes>,
 {
     type Item = Result<Bytes, io::Error>;
 

@@ -12,11 +12,12 @@ pub struct WrappedReaderStream<R: Read + Unpin> {
     buffer: Vec<u8>,
 }
 
-impl <R: Read + Unpin> WrappedReaderStream<R> {
-
+impl<R: Read + Unpin> WrappedReaderStream<R> {
     pub fn new(reader: R) -> Self {
-        let mut buffer = Vec::with_capacity(64*1024);
-        unsafe { buffer.set_len(buffer.capacity()); }
+        let mut buffer = Vec::with_capacity(64 * 1024);
+        unsafe {
+            buffer.set_len(buffer.capacity());
+        }
         Self { reader, buffer }
     }
 }
@@ -49,9 +50,7 @@ mod test {
 
     #[test]
     fn test_wrapped_stream_reader() -> Result<(), Error> {
-        crate::runtime::main(async {
-            run_wrapped_stream_reader_test().await
-        })
+        crate::runtime::main(async { run_wrapped_stream_reader_test().await })
     }
 
     struct DummyReader(usize);
