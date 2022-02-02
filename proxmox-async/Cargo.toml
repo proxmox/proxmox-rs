@@ -17,7 +17,7 @@ flate2 = "1.0"
 futures = "0.3"
 lazy_static = "1.4"
 pin-utils = "0.1.0"
-tokio = { version = "1.0", features = ["fs", "rt", "rt-multi-thread", "sync"] }
+tokio = { version = "1.0", features = ["fs", "net", "rt", "rt-multi-thread", "sync"] }
 walkdir = "2"
 
 proxmox-sys = { path = "../proxmox-sys", version = "0.2.0" }
