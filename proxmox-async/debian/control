@@ -21,6 +21,7 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-time-1+default-dev <!nocheck>,
  librust-tokio-1+default-dev <!nocheck>,
  librust-tokio-1+fs-dev <!nocheck>,
+ librust-tokio-1+net-dev <!nocheck>,
  librust-tokio-1+rt-dev <!nocheck>,
  librust-tokio-1+rt-multi-thread-dev <!nocheck>,
  librust-tokio-1+sync-dev <!nocheck>,
@@ -53,6 +54,7 @@ Depends:
  librust-proxmox-time-1+default-dev,
  librust-tokio-1+default-dev,
  librust-tokio-1+fs-dev,
+ librust-tokio-1+net-dev,
  librust-tokio-1+rt-dev,
  librust-tokio-1+rt-multi-thread-dev,
  librust-tokio-1+sync-dev,
@@ -65,8 +67,8 @@ Provides:
  librust-proxmox-async-0+default-dev (= ${binary:Version}),
  librust-proxmox-async-0.3-dev (= ${binary:Version}),
  librust-proxmox-async-0.3+default-dev (= ${binary:Version}),
- librust-proxmox-async-0.3.2-dev (= ${binary:Version}),
- librust-proxmox-async-0.3.2+default-dev (= ${binary:Version})
+ librust-proxmox-async-0.3.3-dev (= ${binary:Version}),
+ librust-proxmox-async-0.3.3+default-dev (= ${binary:Version})
 Description: Proxmox async/tokio helpers - Rust source code
  This package contains the source for the Rust proxmox-async crate, packaged by
  debcargo for use with cargo and dh-cargo.

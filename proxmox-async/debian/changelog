@@ -1,3 +1,9 @@
+rust-proxmox-async (0.3.3) unstable; urgency=medium
+
+  * add net::udp::connect() helper
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 02 Feb 2022 12:57:41 +0100
+
 rust-proxmox-async (0.3.2) unstable; urgency=medium
 
   * replace RawWaker with the Wake trait from std, fixes a refcount leak
