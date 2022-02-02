@@ -16,7 +16,7 @@ pub trait RateLimit {
     fn register_traffic(&mut self, current_time: Instant, data_len: u64) -> Duration;
 }
 
-/// Like [RateLimit], but does not require self to be mutable.
+/// Like [`RateLimit`], but does not require self to be mutable.
 ///
 /// This is useful for types providing internal mutability (Mutex).
 pub trait ShareableRateLimit: Send + Sync {

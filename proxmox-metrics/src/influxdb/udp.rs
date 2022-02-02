@@ -22,10 +22,10 @@ pub async fn test_influxdb_udp(address: &str) -> Result<(), Error> {
     Ok(())
 }
 
-/// Returns a [Metrics] handle that connects and sends data to the
+/// Returns a [`Metrics`] handle that connects and sends data to the
 /// given influxdb server at the given udp address/port
 ///
-/// `address` must be in the format of 'ip_or_hostname:port'
+/// `address` must be in the format of `ip_or_hostname:port`
 pub fn influxdb_udp(address: &str, mtu: Option<u16>) -> Metrics {
     let (tx, rx) = mpsc::channel(1024);
 

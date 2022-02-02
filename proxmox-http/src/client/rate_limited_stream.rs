@@ -44,7 +44,7 @@ impl <S> RateLimitedStream<S> {
         Self::with_limiter(stream, Some(read_limiter), Some(write_limiter))
     }
 
-    /// Creates a new instance with specified [RateLimiters] for reads and writes.
+    /// Creates a new instance with specified [`RateLimiter`s](RateLimiter) for reads and writes.
     pub fn with_limiter(
         stream: S,
         read_limiter: Option<SharedRateLimit>,
