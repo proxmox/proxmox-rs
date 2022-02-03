@@ -57,7 +57,7 @@ pub fn influxdb_http(
         rx,
     )?;
 
-    let join_handle = Some(tokio::spawn(async { this.finish().await }));
+    let join_handle = Some(tokio::spawn(this.finish()));
 
     Ok(Metrics {
         join_handle,
