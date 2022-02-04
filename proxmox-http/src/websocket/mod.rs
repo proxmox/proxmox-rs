@@ -114,7 +114,7 @@ fn mask_bytes(mask: Option<[u8; 4]>, data: &mut [u8]) {
 
     if data.len() < 32 {
         for i in 0..data.len() {
-            data[i] ^= mask[i % 4];
+            data[i] ^= mask[i & 3];
         }
         return;
     }
