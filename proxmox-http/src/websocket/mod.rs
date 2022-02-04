@@ -249,8 +249,7 @@ pub struct WebSocketWriter<W: AsyncWrite + Unpin> {
 }
 
 impl<W: AsyncWrite + Unpin> WebSocketWriter<W> {
-    /// Creates a new WebSocketWriter which will use the given mask (if any),
-    /// and mark the frames as either 'Text' or 'Binary'
+    /// Create a new WebSocketWriter which will use the given mask, if any, creating Binary frames
     pub fn new(mask: Option<[u8; 4]>, writer: W) -> WebSocketWriter<W> {
         WebSocketWriter {
             writer,
