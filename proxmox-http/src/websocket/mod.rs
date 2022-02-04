@@ -273,11 +273,9 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
     fn poll_write(self: Pin<&mut Self>, cx: &mut Context, buf: &[u8]) -> Poll<io::Result<usize>> {
         let this = Pin::get_mut(self);
 
-        let frametype = OpCode::Binary;
-
         if this.frame.is_none() {
             // create frame buf
-            let frame = match create_frame(this.mask, buf, frametype) {
+            let frame = match create_frame(this.mask, buf, OpCode::Binary) {
                 Ok(f) => f,
                 Err(e) => {
                     return Poll::Ready(Err(io_err_other(e)));
