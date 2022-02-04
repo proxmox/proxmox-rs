@@ -22,8 +22,8 @@ use tokio::sync::mpsc;
 use futures::future::FutureExt;
 use futures::ready;
 
-use proxmox_sys::error::io_err_other;
 use proxmox_io::ByteBuffer;
+use proxmox_sys::error::io_err_other;
 
 // see RFC6455 section 7.4.1
 #[derive(Debug, Clone, Copy)]
@@ -705,9 +705,7 @@ impl WebSocket {
 
         let response = response.body(Body::empty())?;
 
-        let mask = None;
-
-        Ok((Self { mask }, response))
+        Ok((Self { mask: None }, response))
     }
 
     pub async fn handle_channel_message<W>(
@@ -720,11 +718,15 @@ impl WebSocket {
     {
         match result {
             Ok((OpCode::Ping, msg)) => {
-                writer.send_control_frame(self.mask, OpCode::Pong, &msg).await?;
+                writer
+                    .send_control_frame(self.mask, OpCode::Pong, &msg)
+                    .await?;
                 Ok(OpCode::Pong)
             }
             Ok((OpCode::Close, msg)) => {
-                writer.send_control_frame(self.mask, OpCode::Close, &msg).await?;
+                writer
+                    .send_control_frame(self.mask, OpCode::Close, &msg)
+                    .await?;
                 Ok(OpCode::Close)
             }
             Ok((opcode, _)) => {
@@ -750,7 +752,7 @@ impl WebSocket {
         R: AsyncRead + Unpin + Send,
         W: AsyncWrite + Unpin + Send,
     {
-        let mut buf = ByteBuffer::with_capacity(16*1024);
+        let mut buf = ByteBuffer::with_capacity(16 * 1024);
         let mut eof = false;
         loop {
             if !buf.is_full() {
@@ -804,7 +806,7 @@ impl WebSocket {
         let ws_future = tokio::io::copy(&mut wsreader, &mut dswriter);
         let term_future = self.copy_to_websocket(&mut dsreader, &mut wswriter, &mut rx);
 
-        let res = select! {
+        select! {
             res = ws_future.fuse() => match res {
                 Ok(_) => Ok(()),
                 Err(err) => Err(Error::from(err)),
@@ -812,14 +814,14 @@ impl WebSocket {
             res = term_future.fuse() => match res {
                 Ok(sent_close) if !sent_close => {
                     // status code 1000 => 0x03E8
-                    wswriter.send_control_frame(self.mask, OpCode::Close, &WebSocketErrorKind::Normal.to_be_bytes()).await?;
+                    wswriter
+                        .send_control_frame(self.mask, OpCode::Close, &WebSocketErrorKind::Normal.to_be_bytes())
+                        .await?;
                     Ok(())
                 }
                 Ok(_) => Ok(()),
                 Err(err) => Err(err),
             }
-        };
-
-        res
+        }
     }
 }
