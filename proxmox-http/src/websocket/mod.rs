@@ -224,11 +224,12 @@ pub fn create_frame(
     Ok(buf)
 }
 
-/// Wraps a writer that implements AsyncWrite
+/// Wrap (encapsulate) an `AsyncWrite`er into a WebSocket transparently
 ///
-/// Can be used to send websocket frames to any writer that implements
-/// AsyncWrite. Every write to it gets encoded as a seperate websocket frame,
-/// without fragmentation.
+/// Send websocket frames to anything accepting AsyncWrite.
+///
+/// Note: Every write to it gets encoded as a seperate websocket frame, without any fragmentation
+/// being enforced.
 ///
 /// Example usage:
 /// ```
@@ -463,14 +464,14 @@ impl FrameHeader {
 
 type WebSocketReadResult = Result<(OpCode, Box<[u8]>), WebSocketError>;
 
-/// Wraps a reader that implements AsyncRead and implements it itself.
+/// Wraps a `AsyncRead`er for decoding WebSocket frames returning the inner payload.
 ///
-/// On read, reads the underlying reader and tries to decode the frames and
-/// simply returns the data stream.
-/// When it encounters a control frame, sends it via the given sender
-/// to a channel
+/// Polls the underlying reader, decodes the web socket frames while returning the inner data
+/// stream via `AsyncRead` itself.
 ///
-/// Has an internal Buffer for storing incomplete headers.
+/// Any control frame encountered will get relayed to the 'sender' channel
+///
+/// Incomplete headers get buffered internally.
 pub struct WebSocketReader<R: AsyncRead> {
     reader: Option<R>,
     sender: mpsc::UnboundedSender<WebSocketReadResult>,
@@ -649,14 +650,14 @@ impl<R: AsyncRead + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
 /// Global Identifier for WebSockets, see RFC6455
 pub const MAGIC_WEBSOCKET_GUID: &str = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-/// Provides methods for connecting a WebSocket endpoint with another
+/// Provides methods for connecting one WebSocket endpoint with another
 pub struct WebSocket {
     pub mask: Option<[u8; 4]>,
 }
 
 impl WebSocket {
-    /// Returns a new WebSocket instance and the generates the correct
-    /// WebSocket response from request headers
+    /// Returns a new WebSocket instance and the correct WebSocket response derived from the
+    /// upgrade request's headers
     pub fn new(headers: HeaderMap<HeaderValue>) -> Result<(Self, Response<Body>), Error> {
         let protocols = headers
             .get(UPGRADE)
@@ -696,8 +697,8 @@ impl WebSocket {
 
         // FIXME: remove compat in PBS 3.x
         //
-        // We currently do not support any subprotocols and we always send binary frames,
-        // but for backwards compatibilty we need to reply the requested protocols
+        // We currently do not support any subprotocols and we always send binary frames, but for
+        // backwards compatibility we need to reply the requested protocols
         if let Some(ws_proto) = headers.get(SEC_WEBSOCKET_PROTOCOL) {
             response = response.header(SEC_WEBSOCKET_PROTOCOL, ws_proto)
         }
@@ -783,11 +784,11 @@ impl WebSocket {
         }
     }
 
-    /// Takes two endpoints and connects them via a websocket, where the
-    /// 'upstream' endpoint sends and receives WebSocket frames, while
-    /// 'downstream' only expects and sends raw data.
-    /// This method takes care of copying the data between endpoints, and
-    /// sending correct responses for control frames (e.g. a Pont to a Ping).
+    /// Takes two endpoints and connects them via a websocket, where the 'upstream' endpoint sends
+    /// and receives WebSocket frames, while 'downstream' only expects and sends raw data.
+    ///
+    /// This method takes care of copying the data between endpoints, and sending correct responses
+    /// for control frames (e.g. a Pont to a Ping).
     pub async fn serve_connection<S, L>(&self, upstream: S, downstream: L) -> Result<(), Error>
     where
         S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
