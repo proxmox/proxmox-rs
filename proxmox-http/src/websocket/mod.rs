@@ -467,7 +467,8 @@ type WebSocketReadResult = Result<(OpCode, Box<[u8]>), WebSocketError>;
 ///
 /// On read, reads the underlying reader and tries to decode the frames and
 /// simply returns the data stream.
-/// When it encounters a control frame, calls the given callback.
+/// When it encounters a control frame, sends it via the given sender
+/// to a channel
 ///
 /// Has an internal Buffer for storing incomplete headers.
 pub struct WebSocketReader<R: AsyncRead> {
@@ -479,7 +480,7 @@ pub struct WebSocketReader<R: AsyncRead> {
 }
 
 impl<R: AsyncRead> WebSocketReader<R> {
-    /// Creates a new WebSocketReader with the given CallBack for control frames
+    /// Creates a new WebSocketReader with the given sender for control frames
     /// and a default buffer size of 4096.
     pub fn new(
         reader: R,
