@@ -351,7 +351,7 @@ pub struct RegistrationResponseData<'a> {
 impl<'a> RegistrationResponseData<'a> {
     /// Parse the binary registration data into its parts and extract the certificate's public key.
     ///
-    /// See https://fidoalliance.org/specs/fido-u2f-v1.2-ps-20170411/fido-u2f-raw-message-formats-v1.2-ps-20170411.html
+    /// See <https://fidoalliance.org/specs/fido-u2f-v1.2-ps-20170411/fido-u2f-raw-message-formats-v1.2-ps-20170411.html>
     pub fn from_raw(data: &'a [u8]) -> Result<Self, Error> {
         // [ 0x05 | 65b pubkey | 1b keyhandle len | keyhandle | certificate (1 DER obj) | signature ]
 
