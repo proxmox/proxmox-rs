@@ -31,7 +31,7 @@ use proxmox_router::Permission;
             },
             "CSRFPreventionToken": {
                 type: String,
-                description: "Cross Site Request Forgerty Prevention Token.",
+                description: "Cross Site Request Forgery Prevention Token.",
             },
         },
     },
@@ -89,7 +89,7 @@ fn create_ticket_schema_check() {
                     "CSRFPreventionToken",
                     false,
                     &::proxmox_schema::StringSchema::new(
-                        "Cross Site Request Forgerty Prevention Token.",
+                        "Cross Site Request Forgery Prevention Token.",
                     )
                     .schema(),
                 ),
@@ -138,7 +138,7 @@ fn create_ticket_schema_check() {
             },
             "CSRFPreventionToken": {
                 type: String,
-                description: "Cross Site Request Forgerty Prevention Token.",
+                description: "Cross Site Request Forgery Prevention Token.",
             },
         },
     },
@@ -190,7 +190,7 @@ fn create_ticket_direct_schema_check() {
                     "CSRFPreventionToken",
                     false,
                     &::proxmox_schema::StringSchema::new(
-                        "Cross Site Request Forgerty Prevention Token.",
+                        "Cross Site Request Forgery Prevention Token.",
                     )
                     .schema(),
                 ),

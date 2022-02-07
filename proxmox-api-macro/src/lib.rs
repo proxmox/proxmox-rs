@@ -103,7 +103,7 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
                 },
                 "CSRFPreventionToken": {
                     type: String,
-                    description: "Cross Site Request Forgerty Prevention Token.",
+                    description: "Cross Site Request Forgery Prevention Token.",
                 },
             },
         },
