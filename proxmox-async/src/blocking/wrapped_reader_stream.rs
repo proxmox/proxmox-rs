@@ -16,7 +16,10 @@ pub struct WrappedReaderStream<R: Read + Unpin> {
 
 impl<R: Read + Unpin> WrappedReaderStream<R> {
     pub fn new(reader: R) -> Self {
-        Self { reader, buffer: vec::undefined(64 * 1024) }
+        Self {
+            reader,
+            buffer: vec::undefined(64 * 1024),
+        }
     }
 }
 

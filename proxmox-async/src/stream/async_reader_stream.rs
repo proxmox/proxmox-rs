@@ -22,7 +22,10 @@ impl<R: AsyncRead + Unpin> AsyncReaderStream<R> {
     }
 
     pub fn with_buffer_size(reader: R, buffer_size: usize) -> Self {
-        Self { reader, buffer: vec::undefined(buffer_size) }
+        Self {
+            reader,
+            buffer: vec::undefined(buffer_size),
+        }
     }
 }
 
