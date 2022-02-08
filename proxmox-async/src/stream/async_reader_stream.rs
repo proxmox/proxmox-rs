@@ -8,6 +8,8 @@ use futures::ready;
 use futures::stream::Stream;
 use tokio::io::{AsyncRead, ReadBuf};
 
+use proxmox_io::vec;
+
 /// Wrapper struct to convert an [AsyncRead] into a [Stream]
 pub struct AsyncReaderStream<R: AsyncRead + Unpin> {
     reader: R,
@@ -16,19 +18,11 @@ pub struct AsyncReaderStream<R: AsyncRead + Unpin> {
 
 impl<R: AsyncRead + Unpin> AsyncReaderStream<R> {
     pub fn new(reader: R) -> Self {
-        let mut buffer = Vec::with_capacity(64 * 1024);
-        unsafe {
-            buffer.set_len(buffer.capacity());
-        }
-        Self { reader, buffer }
+        Self::with_buffer_size(reader, 64 * 1024)
     }
 
     pub fn with_buffer_size(reader: R, buffer_size: usize) -> Self {
-        let mut buffer = Vec::with_capacity(buffer_size);
-        unsafe {
-            buffer.set_len(buffer.capacity());
-        }
-        Self { reader, buffer }
+        Self { reader, buffer: vec::undefined(buffer_size) }
     }
 }
 
