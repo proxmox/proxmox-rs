@@ -4,6 +4,8 @@ use std::task::{Context, Poll};
 
 use futures::stream::Stream;
 
+use proxmox_io::vec;
+
 use crate::runtime::block_in_place;
 
 /// Wrapper struct to convert sync [Read] into a [Stream]
@@ -14,11 +16,7 @@ pub struct WrappedReaderStream<R: Read + Unpin> {
 
 impl<R: Read + Unpin> WrappedReaderStream<R> {
     pub fn new(reader: R) -> Self {
-        let mut buffer = Vec::with_capacity(64 * 1024);
-        unsafe {
-            buffer.set_len(buffer.capacity());
-        }
-        Self { reader, buffer }
+        Self { reader, buffer: vec::undefined(64 * 1024) }
     }
 }
 
