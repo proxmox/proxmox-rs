@@ -856,24 +856,24 @@ const fn is_default_tfa_enable(v: &bool) -> bool {
 pub struct TfaChallenge {
     /// True if the user has TOTP devices.
     #[serde(skip_serializing_if = "bool_is_false", default)]
-    totp: bool,
+    pub totp: bool,
 
     /// Whether there are recovery keys available.
     #[serde(skip_serializing_if = "RecoveryState::is_unavailable", default)]
-    recovery: RecoveryState,
+    pub recovery: RecoveryState,
 
     /// If the user has any u2f tokens registered, this will contain the U2F challenge data.
     #[serde(skip_serializing_if = "Option::is_none")]
-    u2f: Option<U2fChallenge>,
+    pub u2f: Option<U2fChallenge>,
 
     /// If the user has any webauthn credentials registered, this will contain the corresponding
     /// challenge data.
     #[serde(skip_serializing_if = "Option::is_none", skip_deserializing)]
-    webauthn: Option<webauthn_rs::proto::RequestChallengeResponse>,
+    pub webauthn: Option<webauthn_rs::proto::RequestChallengeResponse>,
 
     /// True if the user has yubico keys configured.
     #[serde(skip_serializing_if = "bool_is_false", default)]
-    yubico: bool,
+    pub yubico: bool,
 }
 
 fn bool_is_false(v: &bool) -> bool {
