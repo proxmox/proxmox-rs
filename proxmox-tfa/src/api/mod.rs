@@ -868,7 +868,7 @@ pub struct TfaChallenge {
 
     /// If the user has any webauthn credentials registered, this will contain the corresponding
     /// challenge data.
-    #[serde(skip_serializing_if = "Option::is_none", skip_deserializing)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub webauthn: Option<webauthn_rs::proto::RequestChallengeResponse>,
 
     /// True if the user has yubico keys configured.
