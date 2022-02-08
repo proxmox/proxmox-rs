@@ -525,7 +525,7 @@ fn test_otp() {
     assert_eq!(parsed, hotp);
     assert_eq!(parsed.issuer, None);
     assert_eq!(
-        parsed.account_name.as_ref().map(String::as_str),
+        parsed.account_name.as_deref(),
         Some("My Account")
     );
 
@@ -558,11 +558,11 @@ fn test_otp() {
     let parsed: Totp = uri.parse().expect("failed to parse otp uri");
     assert_eq!(parsed, totp);
     assert_eq!(
-        parsed.issuer.as_ref().map(String::as_str),
+        parsed.issuer.as_deref(),
         Some("An Issuer")
     );
     assert_eq!(
-        parsed.account_name.as_ref().map(String::as_str),
+        parsed.account_name.as_deref(),
         Some("The Account Name")
     );
 }

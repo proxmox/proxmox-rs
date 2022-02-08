@@ -742,7 +742,7 @@ impl WebSocket {
     async fn copy_to_websocket<R, W>(
         &self,
         mut reader: &mut R,
-        mut writer: &mut WebSocketWriter<W>,
+        writer: &mut WebSocketWriter<W>,
         receiver: &mut mpsc::UnboundedReceiver<WebSocketReadResult>,
     ) -> Result<bool, Error>
     where
@@ -757,7 +757,7 @@ impl WebSocket {
                     res = buf.read_from_async(&mut reader).fuse() => res?,
                     res = receiver.recv().fuse() => {
                         let res = res.ok_or_else(|| format_err!("control channel closed"))?;
-                        match self.handle_channel_message(res, &mut writer).await? {
+                        match self.handle_channel_message(res, writer).await? {
                             OpCode::Close => return Ok(true),
                             _ => { continue; },
                         }

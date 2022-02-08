@@ -100,7 +100,7 @@ fn create_test_dir<T: Init>(filename: &str) -> Option<PathBuf> {
 }
 #[test]
 fn test_shared_memory_mutex() -> Result<(), Error> {
-    let path = match create_test_dir::<SingleMutexData>(&"data1.shm") {
+    let path = match create_test_dir::<SingleMutexData>("data1.shm") {
         None => { return Ok(()); }, // no O_TMPFILE support, can't run test
         Some(path) => path,
     };
@@ -136,7 +136,7 @@ fn test_shared_memory_mutex() -> Result<(), Error> {
 
 #[test]
 fn test_shared_memory_multi_mutex() -> Result<(), Error> {
-    let path = match create_test_dir::<SingleMutexData>(&"data2.shm") {
+    let path = match create_test_dir::<SingleMutexData>("data2.shm") {
         None => { return Ok(()); }, // no O_TMPFILE support, can't run test
         Some(path) => path,
     };

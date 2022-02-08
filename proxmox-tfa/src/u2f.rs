@@ -522,7 +522,7 @@ mod test {
         }
 
         let ts: TestChallenge =
-            serde_json::from_str(&data).expect("failed to parse json test data");
+            serde_json::from_str(data).expect("failed to parse json test data");
 
         let context = super::U2f::new(TEST_APPID.to_string(), TEST_APPID.to_string());
         let res = context
@@ -546,7 +546,7 @@ mod test {
         }
 
         let ts: TestChallenge =
-            serde_json::from_str(&data).expect("failed to parse json test data");
+            serde_json::from_str(data).expect("failed to parse json test data");
 
         let context = super::U2f::new(TEST_APPID.to_string(), TEST_APPID.to_string());
         let res = context

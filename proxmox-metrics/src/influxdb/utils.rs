@@ -29,7 +29,7 @@ pub(crate) fn format_influxdb_line(data: &MetricsData) -> Result<String, Error> 
             line.push(',');
         }
         first = false;
-        write!(line, "{}={}", escape_key(key), value.to_string())?;
+        write!(line, "{}={}", escape_key(key), value)?;
     }
 
     // nanosecond precision

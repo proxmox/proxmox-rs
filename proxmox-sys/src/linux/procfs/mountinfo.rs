@@ -312,7 +312,7 @@ fn test_entry() {
     );
     assert_eq!(entry.fs_type, "cgroup");
     assert_eq!(
-        entry.mount_source.as_ref().map(|s| s.as_os_str()),
+        entry.mount_source.as_deref(),
         Some(OsStr::new("cgroup"))
     );
     assert_eq!(entry.super_options, "rw,blkio");
@@ -341,7 +341,7 @@ fn test_entry() {
     );
     assert_eq!(entry.fs_type, "autofs");
     assert_eq!(
-        entry.mount_source.as_ref().map(|s| s.as_os_str()),
+        entry.mount_source.as_deref(),
         Some(OsStr::new("systemd-1"))
     );
     assert_eq!(
