@@ -1,3 +1,11 @@
+rust-proxmox-schema (1.2.0-1) unstable; urgency=medium
+
+  * bump regex to 1.5
+
+  * implement convenience traits for ParameterError
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 11 Feb 2022 14:06:55 +0100
+
 rust-proxmox-schema (1.1.0-1) unstable; urgency=medium
 
   * make parse and verify functions methods of Schema
