@@ -99,7 +99,7 @@ impl SimpleHttp {
     }
 
     pub async fn post(
-        &mut self,
+        &self,
         uri: &str,
         body: Option<String>,
         content_type: Option<&str>,
@@ -121,7 +121,7 @@ impl SimpleHttp {
     }
 
     pub async fn get_string(
-        &mut self,
+        &self,
         uri: &str,
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<String, Error> {
