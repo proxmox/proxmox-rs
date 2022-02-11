@@ -42,20 +42,24 @@ impl ParameterError {
         &self.error_list
     }
 
+    pub fn into_inner(self) -> Vec<(String, Error)> {
+        self.error_list
+    }
+
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     pub fn add_errors(&mut self, prefix: &str, err: Error) {
-        if let Some(param_err) = err.downcast_ref::<ParameterError>() {
-            for (sub_key, sub_err) in param_err.errors().iter() {
-                self.push(
-                    format!("{}/{}", prefix, sub_key),
-                    format_err!("{}", sub_err),
+        match err.downcast::<ParameterError>() {
+            Ok(param_err) => {
+                self.extend(
+                    param_err
+                        .into_iter()
+                        .map(|(key, err)| (format!("{}/{}", prefix, key), err)),
                 );
             }
-        } else {
-            self.push(prefix.to_string(), err);
+            Err(err) => self.push(prefix.to_string(), err),
         }
     }
 }
@@ -73,6 +77,47 @@ impl fmt::Display for ParameterError {
         }
 
         write!(f, "{}", msg)
+    }
+}
+
+impl From<(String, Error)> for ParameterError {
+    fn from(err: (String, Error)) -> Self {
+        let mut this = Self::new();
+        this.push(err.0, err.1);
+        this
+    }
+}
+
+impl<'a> From<(&'a str, Error)> for ParameterError {
+    fn from(err: (&'a str, Error)) -> Self {
+        Self::from((err.0.to_string(), err.1))
+    }
+}
+
+impl std::iter::Extend<(String, Error)> for ParameterError {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = (String, Error)>,
+    {
+        self.error_list.extend(iter);
+    }
+}
+
+impl<'a> std::iter::Extend<(&'a str, Error)> for ParameterError {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = (&'a str, Error)>,
+    {
+        self.extend(iter.into_iter().map(|(s, e)| (s.to_string(), e)));
+    }
+}
+
+impl IntoIterator for ParameterError {
+    type Item = (String, Error);
+    type IntoIter = <Vec<(String, Error)> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.into_inner().into_iter()
     }
 }
 
@@ -463,9 +508,7 @@ impl ArraySchema {
         for (i, item) in list.iter().enumerate() {
             let result = self.items.verify_json(item);
             if let Err(err) = result {
-                let mut errors = ParameterError::new();
-                errors.add_errors(&format!("[{}]", i), err);
-                return Err(errors.into());
+                return Err(ParameterError::from((format!("[{}]", i), err)).into());
             }
         }
 
@@ -855,7 +898,10 @@ impl Schema {
                 }
             }
 
-            schema.into().parse_parameter_strings(&param_list, true).map_err(Error::from)
+            schema
+                .into()
+                .parse_parameter_strings(&param_list, true)
+                .map_err(Error::from)
         }
 
         match self {
