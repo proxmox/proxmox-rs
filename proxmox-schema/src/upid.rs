@@ -279,7 +279,6 @@ mod upid_impl {
     // Copied as this is the only `proxmox-time` dependency in this crate
     // and this crate has MUCH fewer dependencies without it
     fn epoch_i64() -> i64 {
-        use std::convert::TryFrom;
         use std::time::{SystemTime, UNIX_EPOCH};
 
         let now = SystemTime::now();

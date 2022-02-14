@@ -2,7 +2,7 @@
 name = "proxmox-schema"
 version = "1.2.0"
 authors = ["Proxmox Support Team <support@proxmox.com>"]
-edition = "2018"
+edition = "2021"
 license = "AGPL-3"
 description = "proxmox api schema and validation"
 
