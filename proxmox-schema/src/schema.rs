@@ -121,6 +121,28 @@ impl IntoIterator for ParameterError {
     }
 }
 
+impl FromIterator<(String, Error)> for ParameterError {
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = (String, Error)>,
+    {
+        let mut this = Self::new();
+        this.extend(iter);
+        this
+    }
+}
+
+impl FromIterator<(&str, Error)> for ParameterError {
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = (String, Error)>,
+    {
+        let mut this = Self::new();
+        this.extend(iter);
+        this
+    }
+}
+
 /// Data type to describe boolean values
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
