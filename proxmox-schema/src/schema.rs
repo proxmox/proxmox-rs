@@ -132,10 +132,10 @@ impl FromIterator<(String, Error)> for ParameterError {
     }
 }
 
-impl FromIterator<(&str, Error)> for ParameterError {
+impl<'a> FromIterator<(&'a str, Error)> for ParameterError {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = (String, Error)>,
+        T: IntoIterator<Item = (&'a str, Error)>,
     {
         let mut this = Self::new();
         this.extend(iter);
