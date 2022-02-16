@@ -904,19 +904,18 @@ impl Schema {
             schema: T,
             default_key: Option<&'static str>,
         ) -> Result<Value, Error> {
-            let mut param_list: Vec<(String, String)> = vec![];
-            let key_val_list: Vec<&str> = value_str
-                .split(|c: char| c == ',' || c == ';')
-                .filter(|s| !s.is_empty())
-                .collect();
-            for key_val in key_val_list {
-                let kv: Vec<&str> = key_val.splitn(2, '=').collect();
-                if kv.len() == 2 {
-                    param_list.push((kv[0].trim().into(), kv[1].trim().into()));
-                } else if let Some(key) = default_key {
-                    param_list.push((key.into(), kv[0].trim().into()));
-                } else {
-                    bail!("Value without key, but schema does not define a default key.");
+            let mut param_list = Vec::new();
+            for entry in crate::property_string::PropertyIterator::new(value_str) {
+                let (key, value) = entry?;
+                match key {
+                    Some(key) => param_list.push((key.to_string(), value.into_owned())),
+                    None => {
+                        if let Some(key) = default_key {
+                            param_list.push((key.to_string(), value.into_owned()));
+                        } else {
+                            bail!("Value without key, but schema does not define a default key.");
+                        }
+                    }
                 }
             }
 
