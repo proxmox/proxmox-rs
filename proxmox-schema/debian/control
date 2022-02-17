@@ -43,9 +43,9 @@ Provides:
  librust-proxmox-schema-1.2-dev (= ${binary:Version}),
  librust-proxmox-schema-1.2+default-dev (= ${binary:Version}),
  librust-proxmox-schema-1.2+test-harness-dev (= ${binary:Version}),
- librust-proxmox-schema-1.2.0-dev (= ${binary:Version}),
- librust-proxmox-schema-1.2.0+default-dev (= ${binary:Version}),
- librust-proxmox-schema-1.2.0+test-harness-dev (= ${binary:Version})
+ librust-proxmox-schema-1.2.1-dev (= ${binary:Version}),
+ librust-proxmox-schema-1.2.1+default-dev (= ${binary:Version}),
+ librust-proxmox-schema-1.2.1+test-harness-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - Rust source code
  This package contains the source for the Rust proxmox-schema crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -60,7 +60,7 @@ Depends:
 Provides:
  librust-proxmox-schema-1+libc-dev (= ${binary:Version}),
  librust-proxmox-schema-1.2+libc-dev (= ${binary:Version}),
- librust-proxmox-schema-1.2.0+libc-dev (= ${binary:Version})
+ librust-proxmox-schema-1.2.1+libc-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - feature "libc"
  This metapackage enables feature "libc" for the Rust proxmox-schema crate, by
  pulling in any additional dependencies needed by that feature.
@@ -75,7 +75,7 @@ Depends:
 Provides:
  librust-proxmox-schema-1+nix-dev (= ${binary:Version}),
  librust-proxmox-schema-1.2+nix-dev (= ${binary:Version}),
- librust-proxmox-schema-1.2.0+nix-dev (= ${binary:Version})
+ librust-proxmox-schema-1.2.1+nix-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - feature "nix"
  This metapackage enables feature "nix" for the Rust proxmox-schema crate, by
  pulling in any additional dependencies needed by that feature.
@@ -93,8 +93,8 @@ Provides:
  librust-proxmox-schema-1+api-macro-dev (= ${binary:Version}),
  librust-proxmox-schema-1.2+proxmox-api-macro-dev (= ${binary:Version}),
  librust-proxmox-schema-1.2+api-macro-dev (= ${binary:Version}),
- librust-proxmox-schema-1.2.0+proxmox-api-macro-dev (= ${binary:Version}),
- librust-proxmox-schema-1.2.0+api-macro-dev (= ${binary:Version})
+ librust-proxmox-schema-1.2.1+proxmox-api-macro-dev (= ${binary:Version}),
+ librust-proxmox-schema-1.2.1+api-macro-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - feature "proxmox-api-macro" and 1 more
  This metapackage enables feature "proxmox-api-macro" for the Rust proxmox-
  schema crate, by pulling in any additional dependencies needed by that
@@ -113,7 +113,7 @@ Depends:
 Provides:
  librust-proxmox-schema-1+upid-api-impl-dev (= ${binary:Version}),
  librust-proxmox-schema-1.2+upid-api-impl-dev (= ${binary:Version}),
- librust-proxmox-schema-1.2.0+upid-api-impl-dev (= ${binary:Version})
+ librust-proxmox-schema-1.2.1+upid-api-impl-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - feature "upid-api-impl"
  This metapackage enables feature "upid-api-impl" for the Rust proxmox-schema
  crate, by pulling in any additional dependencies needed by that feature.
