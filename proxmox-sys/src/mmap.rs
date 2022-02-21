@@ -9,7 +9,7 @@ use nix::sys::mman;
 
 use proxmox_lang::error::io_err_other;
 
-use crate::error::{SysError};
+use crate::error::SysError;
 
 pub struct Mmap<T> {
     data: *mut T,
