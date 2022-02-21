@@ -11,9 +11,9 @@ use nix::sys::stat::Mode;
 use nix::unistd::Pid;
 use nix::NixPath;
 
-use proxmox_lang::c_str;
+use proxmox_lang::{c_str, error::io_err_other};
 
-use crate::error::{io_err_other, SysResult};
+use crate::error::SysResult;
 use crate::linux::procfs::{MountInfo, PidStat};
 use crate::fd::Fd;
 use crate::{c_result, c_try};

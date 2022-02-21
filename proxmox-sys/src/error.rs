@@ -18,12 +18,7 @@ use std::io;
 use nix::errno::Errno;
 use nix::Error;
 
-/// Helper to convert non-system-errors into an `io::Error` or `io::ErrorKind::Other`.
-///
-/// A more convenient way is to use the `io_format_err!` macro.
-pub fn io_err_other<E: ToString>(e: E) -> io::Error {
-    io::Error::new(std::io::ErrorKind::Other, e.to_string())
-}
+use proxmox_lang::error::io_err_other;
 
 /// This trait should be implemented for error types which can represent system errors. Note that
 /// it is discouraged to try to map non-system errors to with this trait, since users of this trait

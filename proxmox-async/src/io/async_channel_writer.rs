@@ -12,8 +12,7 @@ use tokio::io::AsyncWrite;
 use tokio::sync::mpsc::Sender;
 
 use proxmox_io::ByteBuffer;
-use proxmox_sys::error::io_err_other;
-use proxmox_sys::io_format_err;
+use proxmox_lang::{error::io_err_other, io_format_err};
 
 /// Wrapper around tokio::sync::mpsc::Sender, which implements Write
 pub struct AsyncChannelWriter {

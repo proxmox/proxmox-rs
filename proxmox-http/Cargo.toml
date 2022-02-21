@@ -23,6 +23,7 @@ tokio-openssl = { version = "0.6.1", optional = true }
 
 proxmox-sys = { path = "../proxmox-sys", optional = true, version = "0.2.0" }
 proxmox-io = { path = "../proxmox-io", optional = true, version = "1.0.0" }
+proxmox-lang = { path = "../proxmox-lang", optional = true, version = "1.0.0" }
 
 [features]
 default = []
@@ -36,6 +37,7 @@ websocket = [
     "openssl",
     "proxmox-sys",
     "proxmox-io/tokio",
+    "proxmox-lang",
     "tokio/io-util",
     "tokio/sync",
 ]

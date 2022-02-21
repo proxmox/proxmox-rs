@@ -6,6 +6,7 @@
 
 mod constnamedbitmap;
 
+pub mod error;
 pub mod ops;
 
 /// Macro to write error-handling blocks (like perl eval {})

@@ -20,9 +20,9 @@ pin-utils = "0.1.0"
 tokio = { version = "1.0", features = ["fs", "net", "rt", "rt-multi-thread", "sync"] }
 walkdir = "2"
 
-proxmox-sys = { path = "../proxmox-sys", version = "0.2.0" }
 proxmox-io = { path = "../proxmox-io", version = "1", features = [ "tokio" ] }
 proxmox-time = { path = "../proxmox-time", version = "1" }
+proxmox-lang = { path = "../proxmox-lang", version = "1" }
 
 [dev-dependencies]
 tokio = { version = "1.6", features = [ "macros" ] }
