@@ -22,7 +22,7 @@ walkdir = "2"
 
 proxmox-io = { path = "../proxmox-io", version = "1", features = [ "tokio" ] }
 proxmox-time = { path = "../proxmox-time", version = "1" }
-proxmox-lang = { path = "../proxmox-lang", version = "1" }
+proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
 
 [dev-dependencies]
 tokio = { version = "1.6", features = [ "macros" ] }

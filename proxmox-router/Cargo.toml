@@ -22,7 +22,7 @@ tokio = { version = "1.0", features = [], optional = true }
 rustyline = { version = "7", optional = true }
 libc = { version = "0.2", optional = true }
 
-proxmox-lang = { path = "../proxmox-lang", version = "1.0" }
+proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
 proxmox-schema = { path = "../proxmox-schema", version = "1.1" }
 
 [features]
