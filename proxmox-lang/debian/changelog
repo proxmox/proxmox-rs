@@ -1,3 +1,9 @@
+rust-proxmox-lang (1.1.0-1) stable; urgency=medium
+
+  * add io_err_other, io_format_err, io_bail and io_bail_last macros
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 21 Feb 2022 13:42:44 +0100
+
 rust-proxmox-lang (1.0.0-1) stable; urgency=medium
 
   * initial split out of `librust-proxmox-dev`
