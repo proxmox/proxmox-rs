@@ -4,6 +4,7 @@ CRATES = \
 	 proxmox-api-macro \
 	 proxmox-async \
 	 proxmox-borrow \
+	 proxmox-compression \
 	 proxmox-http \
 	 proxmox-io \
 	 proxmox-lang \

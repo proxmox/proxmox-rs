@@ -437,7 +437,7 @@ where
 /// use anyhow::{Error, Result};
 /// use tokio::fs::File;
 ///
-/// use proxmox_async::zip::{ZipEncoder, ZipEntry};
+/// use proxmox_compression::zip::{ZipEncoder, ZipEntry};
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Error> {

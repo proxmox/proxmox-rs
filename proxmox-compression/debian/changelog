@@ -1,0 +1,5 @@
+rust-proxmox-compression (0.1.0-1) stable; urgency=medium
+
+  * initial split out of `proxmox-async`
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 18 Feb 2022 11:59:30 +0100

@@ -1,22 +1,27 @@
 [package]
-name = "proxmox-async"
-version = "0.3.3"
+name = "proxmox-compression"
+version = "0.1.0"
 authors = ["Proxmox Support Team <support@proxmox.com>"]
 edition = "2018"
 license = "AGPL-3"
-description = "Proxmox async/tokio helpers"
+description = "contains compression utilitites (such as an Zip Encoder for async rust)"
 
 exclude = [ "debian" ]
 
 [dependencies]
 anyhow = "1.0"
+bytes = "1.0"
+crc32fast = "1"
+endian_trait = { version = "0.6" }
+flate2 = "1.0"
 futures = "0.3"
-lazy_static = "1.4"
-pin-utils = "0.1.0"
-tokio = { version = "1.0", features = [ "net", "rt", "rt-multi-thread", "sync"] }
+tokio = { version = "1.6", features = [ "fs", "io-util"] }
+walkdir = "2"
 
+proxmox-time = { path = "../proxmox-time", version = "1" }
 proxmox-io = { path = "../proxmox-io", version = "1", features = [ "tokio" ] }
 proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
 
 [dev-dependencies]
 tokio = { version = "1.6", features = [ "macros" ] }
+
