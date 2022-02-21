@@ -1,3 +1,11 @@
+rust-proxmox-async (0.4.0) unstable; urgency=medium
+
+  * use io error macros from proxmox-lang 1.1 instead of proxmox-sys
+
+  * drop compression code (moved to proxmox-compression)
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 21 Feb 2022 14:17:39 +0100
+
 rust-proxmox-async (0.3.3) unstable; urgency=medium
 
   * add net::udp::connect() helper
