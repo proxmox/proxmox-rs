@@ -18,4 +18,4 @@ http = "0.2"
 hyper = "0.14"
 openssl = "0.10"
 proxmox-http = { path = "../proxmox-http", features = [ "client" ], version = "0.6" }
-proxmox-async = { path = "../proxmox-async", features = [], version = "0.3" }
+proxmox-async = { path = "../proxmox-async", features = [], version = "0.4" }
