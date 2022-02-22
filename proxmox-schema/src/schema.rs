@@ -459,6 +459,14 @@ impl StringSchema {
             bail!("Expected string value.");
         }
     }
+
+    /// Get the [`format`](ApiStringFormat), panics if there is no format.
+    pub const fn unwrap_format(&self) -> &'static ApiStringFormat {
+        match self.format {
+            Some(v) => v,
+            None => panic!("unwrap_format on StringSchema without format"),
+        }
+    }
 }
 
 /// Data type to describe array of values.
@@ -950,6 +958,62 @@ impl Schema {
             _ => bail!("Got unexpected schema type."),
         }
     }
+
+    /// Gets the underlying [`BooleanSchema`], panics on different schemas.
+    pub const fn unwrap_boolean_schema(&self) -> &BooleanSchema {
+        match self {
+            Schema::Boolean(s) => s,
+            _ => panic!("unwrap_boolean_schema on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`IntegerSchema`], panics on different schemas.
+    pub const fn unwrap_integer_schema(&self) -> &IntegerSchema {
+        match self {
+            Schema::Integer(s) => s,
+            _ => panic!("unwrap_integer_schema on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`NumberSchema`], panics on different schemas.
+    pub const fn unwrap_number_schema(&self) -> &NumberSchema {
+        match self {
+            Schema::Number(s) => s,
+            _ => panic!("unwrap_number_schema on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`StringSchema`], panics on different schemas.
+    pub const fn unwrap_string_schema(&self) -> &StringSchema {
+        match self {
+            Schema::String(s) => s,
+            _ => panic!("unwrap_string_schema on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`ObjectSchema`], panics on different schemas.
+    pub const fn unwrap_object_schema(&self) -> &ObjectSchema {
+        match self {
+            Schema::Object(s) => s,
+            _ => panic!("unwrap_object_schema on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`ArraySchema`], panics on different schemas.
+    pub const fn unwrap_array_schema(&self) -> &ArraySchema {
+        match self {
+            Schema::Array(s) => s,
+            _ => panic!("unwrap_array_schema on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`AllOfSchema`], panics on different schemas.
+    pub const fn unwrap_all_of_schema(&self) -> &AllOfSchema {
+        match self {
+            Schema::AllOf(s) => s,
+            _ => panic!("unwrap_all_of_schema on different schema"),
+        }
+    }
 }
 
 /// A string enum entry. An enum entry must have a value and a description.
@@ -1045,6 +1109,32 @@ pub enum ApiStringFormat {
     PropertyString(&'static Schema),
     /// Use a verification function.
     VerifyFn(fn(&str) -> Result<(), Error>),
+}
+
+impl ApiStringFormat {
+    /// Gets the underlying [`&[EnumEntry]`](EnumEntry) list, panics on different formats.
+    pub const fn unwrap_enum_format(&self) -> &'static [EnumEntry] {
+        match self {
+            ApiStringFormat::Enum(v) => v,
+            _ => panic!("unwrap_enum_format on a different ApiStringFormat"),
+        }
+    }
+
+    /// Gets the underlying [`&ConstRegexPattern`](ConstRegexPattern), panics on different formats.
+    pub const fn unwrap_pattern_format(&self) -> &'static ConstRegexPattern {
+        match self {
+            ApiStringFormat::Pattern(v) => v,
+            _ => panic!("unwrap_pattern_format on a different ApiStringFormat"),
+        }
+    }
+
+    /// Gets the underlying property [`&Schema`](Schema), panics on different formats.
+    pub const fn unwrap_property_string_format(&self) -> &'static Schema {
+        match self {
+            ApiStringFormat::PropertyString(v) => v,
+            _ => panic!("unwrap_property_string_format on a different ApiStringFormat"),
+        }
+    }
 }
 
 impl std::fmt::Debug for ApiStringFormat {
