@@ -1,3 +1,9 @@
+rust-proxmox-metrics (0.1.1-1) unstable; urgency=medium
+
+  * bump proxmox-async dependency to 0.4
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 22 Feb 2022 09:00:16 +0100
+
 rust-proxmox-metrics (0.1.0-1) unstable; urgency=medium
 
   * initial package
