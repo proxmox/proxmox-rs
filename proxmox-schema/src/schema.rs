@@ -21,6 +21,32 @@ pub struct ParameterError {
     error_list: Vec<(String, Error)>,
 }
 
+/// Like anyhow's `format_err` but producing a `ParameterError`.
+#[macro_export]
+macro_rules! param_format_err {
+    ($field:expr, $err:expr) => {
+        $crate::ParameterError::from(($field, $err))
+    };
+
+    ($field:expr, $($msg:tt)+) => {
+        $crate::ParameterError::from(($field, ::anyhow::format_err!($($msg)+)))
+    };
+}
+
+/// Like anyhow's `bail` but enclosing a `ParameterError`, so
+/// a `downcast` can extract it later. This is useful for
+/// API calls that need to do parameter checking manually.
+#[macro_export]
+macro_rules! param_bail {
+    ($field:expr, $err:expr) => {{
+        return Err($crate::param_format_err!($field, $err).into());
+    }};
+
+    ($field:expr, $($msg:tt)+) => {{
+        return Err($crate::param_format_err!($field, $($msg)+).into());
+    }};
+}
+
 impl std::error::Error for ParameterError {}
 
 impl ParameterError {
@@ -538,7 +564,7 @@ impl ArraySchema {
         for (i, item) in list.iter().enumerate() {
             let result = self.items.verify_json(item);
             if let Err(err) = result {
-                return Err(ParameterError::from((format!("[{}]", i), err)).into());
+                param_bail!(format!("[{}]", i), err);
             }
         }
 
