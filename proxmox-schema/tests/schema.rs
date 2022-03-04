@@ -395,16 +395,3 @@ fn test_verify_complex_array() {
         assert!(res.is_err());
     }
 }
-
-#[test]
-fn test_parameter_error_macro() {
-    fn _bail_with_format() -> Result<(), anyhow::Error> {
-        let baz = "baz";
-        param_bail!("foo", "bar: {}", baz);
-    }
-
-    fn _bail_with_err() -> Result<(), anyhow::Error> {
-        let err = anyhow::format_err!("bar");
-        param_bail!("foo", err);
-    }
-}
