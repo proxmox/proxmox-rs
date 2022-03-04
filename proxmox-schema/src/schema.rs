@@ -1134,8 +1134,11 @@ pub enum ApiStringFormat {
     /// Use a schema to describe complex types encoded as string.
     PropertyString(&'static Schema),
     /// Use a verification function.
-    VerifyFn(fn(&str) -> Result<(), Error>),
+    VerifyFn(ApiStringVerifyFn),
 }
+
+/// Type of a verification function for [`StringSchema`]s.
+pub type ApiStringVerifyFn = fn(&str) -> Result<(), Error>;
 
 impl ApiStringFormat {
     /// Gets the underlying [`&[EnumEntry]`](EnumEntry) list, panics on different formats.
@@ -1457,6 +1460,7 @@ impl<T> UpdaterType for Vec<T> {
     type Updater = Option<Self>;
 }
 
+/// Trait signifying that a type contains an API schema.
 pub trait ApiType {
     const API_SCHEMA: Schema;
 }
@@ -1490,6 +1494,7 @@ impl<T> Updater for Option<T> {
     }
 }
 
+/// Return type schema. Return types may be any schema and additionally be optional.
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
 pub struct ReturnType {
     /// A return type may be optional, meaning the method may return null or some fixed data.
