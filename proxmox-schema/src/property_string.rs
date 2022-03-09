@@ -166,4 +166,5 @@ fn iterate_over_property_string() {
     assert!(iter.next().is_none());
 
     assert!(PropertyIterator::new(r#"key="open \\ value"#).next().unwrap().is_err());
+    assert!(PropertyIterator::new(r#"key="open \\ value\""#).next().unwrap().is_err());
 }
