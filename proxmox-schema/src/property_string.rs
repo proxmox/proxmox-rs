@@ -109,7 +109,11 @@ fn parse_quoted_string<'s>(data: &'_ mut &'s str) -> Result<Cow<'s, str>, Error>
     out.extend_from_slice(&data[1..i]);
     i += 1;
     let mut was_backslash = true;
-    while i != data.len() {
+    loop {
+        if i == data.len() {
+            bail!("unexpected end of string");
+        }
+
         match (data[i], mem::replace(&mut was_backslash, false)) {
             (b'"', false) => {
                 i += 1;
@@ -160,4 +164,6 @@ fn iterate_over_property_string() {
         (None, Cow::Borrowed(r#"and " and '\'"#))
     );
     assert!(iter.next().is_none());
+
+    assert!(PropertyIterator::new(r#"key="open \\ value"#).next().unwrap().is_err());
 }
