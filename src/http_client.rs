@@ -1,13 +1,11 @@
+use std::env;
 use std::sync::Arc;
 
 use http::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use http::method::Method;
 use http::status::StatusCode;
 
-use openidconnect::{
-    HttpRequest,
-    HttpResponse,
-};
+use openidconnect::{HttpRequest, HttpResponse};
 
 // Copied from OAuth2 create, because we want to use ureq with
 // native-tls. But current OAuth2 crate pulls in rustls, so we cannot
@@ -40,13 +38,12 @@ pub enum Error {
 }
 
 fn ureq_agent() -> Result<ureq::Agent, Error> {
-    let mut agent = 
+    let mut agent =
         ureq::AgentBuilder::new().tls_connector(Arc::new(native_tls::TlsConnector::new()?));
-    if let Ok(val) = std::env::var("all_proxy").or_else(|_| std::env::var("ALL_PROXY")) {
+    if let Ok(val) = env::var("all_proxy").or_else(|_| env::var("ALL_PROXY")) {
         let proxy = ureq::Proxy::new(val).map_err(Box::new)?;
         agent = agent.proxy(proxy);
     }
-
 
     Ok(agent.build())
 }
@@ -67,7 +64,7 @@ pub fn http_client(request: HttpRequest) -> Result<HttpResponse, Error> {
             req = req.set(
                 &name.to_string(),
                 value.to_str().map_err(|_| {
-                     Error::Other(format!(
+                    Error::Other(format!(
                         "invalid {} header value {:?}",
                         name,
                         value.as_bytes()
@@ -84,11 +81,11 @@ pub fn http_client(request: HttpRequest) -> Result<HttpResponse, Error> {
     }
     .map_err(Box::new)?;
 
-    let status_code = StatusCode::from_u16(response.status())
-        .map_err(|err| Error::Http(err.into()))?;
+    let status_code =
+        StatusCode::from_u16(response.status()).map_err(|err| Error::Http(err.into()))?;
 
-    let content_type = HeaderValue::from_str(response.content_type())
-        .map_err(|err| Error::Http(err.into()))?;
+    let content_type =
+        HeaderValue::from_str(response.content_type()).map_err(|err| Error::Http(err.into()))?;
 
     Ok(HttpResponse {
         status_code,
