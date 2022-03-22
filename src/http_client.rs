@@ -40,9 +40,15 @@ pub enum Error {
 }
 
 fn ureq_agent() -> Result<ureq::Agent, Error> {
-    Ok(ureq::AgentBuilder::new()
-        .tls_connector(Arc::new(native_tls::TlsConnector::new()?))
-        .build())
+    let mut agent = 
+        ureq::AgentBuilder::new().tls_connector(Arc::new(native_tls::TlsConnector::new()?));
+    if let Ok(val) = std::env::var("all_proxy").or_else(|_| std::env::var("ALL_PROXY")) {
+        let proxy = ureq::Proxy::new(val).map_err(Box::new)?;
+        agent = agent.proxy(proxy);
+    }
+
+
+    Ok(agent.build())
 }
 
 ///
