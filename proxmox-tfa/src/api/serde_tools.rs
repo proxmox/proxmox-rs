@@ -17,7 +17,7 @@ where
     init: Option<Init>,
     closure: F,
     expecting: &'static str,
-    _ty: PhantomData<T>,
+    _ty: PhantomData<fn(T)>,
 }
 
 impl<T, Out, F, Init> FoldSeqVisitor<T, Out, F, Init>
