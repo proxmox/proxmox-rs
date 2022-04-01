@@ -75,7 +75,10 @@ pub fn http_client(request: HttpRequest) -> Result<HttpResponse, Error> {
     }
 
     let response = if let Method::POST = request.method {
-        req.send(&*request.body)
+        // send_bytes makes sure that Content-Length is set. This is important, because some
+        // endpoints don't accept `Transfer-Encoding: chunked`, which would otherwise be set.
+        // see https://docs.rs/ureq/2.4.0/ureq/index.html#content-length-and-transfer-encoding
+        req.send_bytes(request.body.as_slice())
     } else {
         req.call()
     }
