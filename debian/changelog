@@ -1,3 +1,11 @@
+rust-proxmox-openid (0.9.5-1) stable; urgency=medium
+
+  * avoid chunked transfer-encoding when submitting to the provider's token
+    endpoint, as some providers like Microsoft's Azure are quite inflexible
+    and cannot cope with such basic HTTP requests.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 01 Apr 2022 15:56:07 +0200
+
 rust-proxmox-openid (0.9.4-1) stable; urgency=medium
 
   * re-add HTTP proxy support via the ALL_PROXY environment variable. This got
