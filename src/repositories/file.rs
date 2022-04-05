@@ -50,8 +50,9 @@ trait APTRepositoryParser {
 #[serde(rename_all = "kebab-case")]
 /// Represents an abstract APT repository file.
 pub struct APTRepositoryFile {
-    /// The path to the file.
-    pub path: String,
+    /// The path to the file. If None, `contents` must be set directly.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
 
     /// The type of the file.
     pub file_type: APTRepositoryFileType,
@@ -186,7 +187,7 @@ impl APTRepositoryFile {
         }
 
         Ok(Some(Self {
-            path: path_string,
+            path: Some(path_string),
             file_type,
             repositories: vec![],
             digest: None,
@@ -198,7 +199,7 @@ impl APTRepositoryFile {
         Self {
             file_type: content_type,
             content: Some(content),
-            path: "-".to_string(),
+            path: None,
             repositories: vec![],
             digest: None,
         }
@@ -206,17 +207,16 @@ impl APTRepositoryFile {
 
     /// Check if the file exists.
     pub fn exists(&self) -> bool {
-        if self.path != "-" {
-            PathBuf::from(&self.path).exists()
+        if let Some(path) = &self.path {
+            PathBuf::from(path).exists()
         } else {
             false
         }
     }
 
     pub fn read_with_digest(&self) -> Result<(Vec<u8>, [u8; 32]), APTRepositoryFileError> {
-        if self.path != "-" {
-            let content =
-                std::fs::read(&self.path).map_err(|err| self.err(format_err!("{}", err)))?;
+        if let Some(path) = &self.path {
+            let content = std::fs::read(path).map_err(|err| self.err(format_err!("{}", err)))?;
             let digest = openssl::sha::sha256(&content);
 
             Ok((content, digest))
@@ -234,7 +234,7 @@ impl APTRepositoryFile {
     /// Create an `APTRepositoryFileError`.
     pub fn err(&self, error: Error) -> APTRepositoryFileError {
         APTRepositoryFileError {
-            path: self.path.clone(),
+            path: self.path.clone().unwrap_or_default(),
             error: error.to_string(),
         }
     }
@@ -272,11 +272,14 @@ impl APTRepositoryFile {
     /// If a digest is provided, checks that the current content of the file still
     /// produces the same one.
     pub fn write(&self) -> Result<(), APTRepositoryFileError> {
-        if self.path == "-" {
-            return Err(self.err(format_err!(
-                "Cannot write to APT repository file without path."
-            )));
-        }
+        let path = match &self.path {
+            Some(path) => path,
+            None => {
+                return Err(self.err(format_err!(
+                    "Cannot write to APT repository file without path."
+                )));
+            }
+        };
 
         if let Some(digest) = self.digest {
             if !self.exists() {
@@ -290,7 +293,7 @@ impl APTRepositoryFile {
         }
 
         if self.repositories.is_empty() {
-            return std::fs::remove_file(&self.path)
+            return std::fs::remove_file(&path)
                 .map_err(|err| self.err(format_err!("unable to remove file - {}", err)));
         }
 
@@ -304,7 +307,7 @@ impl APTRepositoryFile {
                 .map_err(|err| self.err(format_err!("writing repository {} - {}", n + 1, err)))?;
         }
 
-        let path = PathBuf::from(&self.path);
+        let path = PathBuf::from(&path);
         let dir = match path.parent() {
             Some(dir) => dir,
             None => return Err(self.err(format_err!("invalid path"))),
@@ -336,6 +339,11 @@ impl APTRepositoryFile {
     pub fn check_suites(&self, current_codename: DebianCodename) -> Vec<APTRepositoryInfo> {
         let mut infos = vec![];
 
+        let path = match &self.path {
+            Some(path) => path.clone(),
+            None => return vec![],
+        };
+
         for (n, repo) in self.repositories.iter().enumerate() {
             if !repo.types.contains(&APTRepositoryPackageType::Deb) {
                 continue;
@@ -359,7 +367,7 @@ impl APTRepositoryFile {
 
             let mut add_info = |kind: &str, message| {
                 infos.push(APTRepositoryInfo {
-                    path: self.path.clone(),
+                    path: path.clone(),
                     index: n,
                     property: Some("Suites".to_string()),
                     kind: kind.to_string(),
@@ -421,6 +429,11 @@ impl APTRepositoryFile {
     pub fn check_uris(&self) -> Vec<APTRepositoryInfo> {
         let mut infos = vec![];
 
+        let path = match &self.path {
+            Some(path) => path,
+            None => return vec![],
+        };
+
         for (n, repo) in self.repositories.iter().enumerate() {
             let mut origin = match repo.get_cached_origin() {
                 Ok(option) => option,
@@ -433,7 +446,7 @@ impl APTRepositoryFile {
 
             if let Some(origin) = origin {
                 infos.push(APTRepositoryInfo {
-                    path: self.path.clone(),
+                    path: path.clone(),
                     index: n,
                     kind: "origin".to_string(),
                     property: None,

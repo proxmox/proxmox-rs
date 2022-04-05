@@ -49,9 +49,13 @@ fn test_parse_write_dir(read_dir: &str) -> Result<(), Error> {
     assert!(errors.is_empty());
 
     for file in files.iter_mut() {
-        let path = PathBuf::from(&file.path);
+        let path = match &file.path {
+            Some(path) => path,
+            None => continue,
+        };
+        let path = PathBuf::from(path);
         let new_path = write_dir.join(path.file_name().unwrap());
-        file.path = new_path.into_os_string().into_string().unwrap();
+        file.path = Some(new_path.into_os_string().into_string().unwrap());
         file.digest = None;
         file.write()?;
     }
@@ -104,7 +108,7 @@ fn test_digest() -> Result<(), Error> {
     file.parse()?;
 
     let new_path = write_dir.join(path.file_name().unwrap());
-    file.path = new_path.clone().into_os_string().into_string().unwrap();
+    file.path = Some(new_path.clone().into_os_string().into_string().unwrap());
 
     let old_digest = file.digest.unwrap();
 
@@ -156,7 +160,7 @@ fn test_empty_write() -> Result<(), Error> {
     file.parse()?;
 
     let new_path = write_dir.join(path.file_name().unwrap());
-    file.path = new_path.clone().into_os_string().into_string().unwrap();
+    file.path = Some(new_path.clone().into_os_string().into_string().unwrap());
 
     file.digest = None;
 
