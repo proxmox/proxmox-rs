@@ -100,7 +100,7 @@ impl FileReferenceType {
             .ok_or_else(|| format_err!("Doesn't start with component '{component}'"))?;
 
         let parse_binary_dir = |file_name: &str, arch: &str| {
-            if let Some((dir, _rest)) = file_name.split_once("/") {
+            if let Some((dir, _rest)) = file_name.split_once('/') {
                 if dir == "Packages.diff" {
                     // TODO re-evaluate?
                     Ok(FileReferenceType::PDiff)
@@ -121,12 +121,12 @@ impl FileReferenceType {
             }
         };
 
-        if let Some((dir, rest)) = rest.split_once("/") {
+        if let Some((dir, rest)) = rest.split_once('/') {
             // reference into another subdir
             match dir {
                 "source" => {
                     // Sources or compat-Release
-                    if let Some((dir, _rest)) = rest.split_once("/") {
+                    if let Some((dir, _rest)) = rest.split_once('/') {
                         if dir == "Sources.diff" {
                             Ok(FileReferenceType::PDiff)
                         } else {
@@ -152,7 +152,7 @@ impl FileReferenceType {
                 }
                 "debian-installer" => {
                     // another layer, then like regular repo but pointing at udebs
-                    if let Some((dir, rest)) = rest.split_once("/") {
+                    if let Some((dir, rest)) = rest.split_once('/') {
                         if let Some(arch) = dir.strip_prefix("binary-") {
                             // Packages or compat-Release
                             return parse_binary_dir(rest, arch);
@@ -163,7 +163,7 @@ impl FileReferenceType {
                     Ok(FileReferenceType::Unknown)
                 }
                 "i18n" => {
-                    if let Some((dir, _rest)) = rest.split_once("/") {
+                    if let Some((dir, _rest)) = rest.split_once('/') {
                         if dir.starts_with("Translation") && dir.ends_with(".diff") {
                             Ok(FileReferenceType::PDiff)
                         } else {
@@ -197,7 +197,7 @@ impl FileReferenceType {
             } else {
                 (rest, false)
             };
-            let (arch, comp) = match rest.split_once(".") {
+            let (arch, comp) = match rest.split_once('.') {
                 Some((arch, comp_str)) => (
                     arch.to_owned(),
                     FileReferenceType::match_compression(comp_str)?,
@@ -230,10 +230,7 @@ impl FileReferenceType {
     }
 
     pub fn is_package_index(&self) -> bool {
-        match self {
-            FileReferenceType::Packages(_, _) => true,
-            _ => false,
-        }
+        matches!(self, FileReferenceType::Packages(_, _))
     }
 }
 
@@ -252,7 +249,7 @@ impl FileReference {
             Some(_) => {
                 let (base, _ext) = self
                     .path
-                    .rsplit_once(".")
+                    .rsplit_once('.')
                     .ok_or_else(|| format_err!("compressed file without file extension"))?;
                 Ok(base.to_owned())
             }
