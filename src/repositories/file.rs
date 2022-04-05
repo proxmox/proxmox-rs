@@ -59,6 +59,9 @@ pub struct APTRepositoryFile {
     /// List of repositories in the file.
     pub repositories: Vec<APTRepository>,
 
+    /// The file content, if already parsed.
+    pub content: Option<String>,
+
     /// Digest of the original contents.
     pub digest: Option<[u8; 32]>,
 }
@@ -187,20 +190,45 @@ impl APTRepositoryFile {
             file_type,
             repositories: vec![],
             digest: None,
+            content: None,
         }))
+    }
+
+    pub fn with_content(content: String, content_type: APTRepositoryFileType) -> Self {
+        Self {
+            file_type: content_type,
+            content: Some(content),
+            path: "-".to_string(),
+            repositories: vec![],
+            digest: None,
+        }
     }
 
     /// Check if the file exists.
     pub fn exists(&self) -> bool {
-        PathBuf::from(&self.path).exists()
+        if self.path != "-" {
+            PathBuf::from(&self.path).exists()
+        } else {
+            false
+        }
     }
 
     pub fn read_with_digest(&self) -> Result<(Vec<u8>, [u8; 32]), APTRepositoryFileError> {
-        let content = std::fs::read(&self.path).map_err(|err| self.err(format_err!("{}", err)))?;
+        if self.path != "-" {
+            let content =
+                std::fs::read(&self.path).map_err(|err| self.err(format_err!("{}", err)))?;
+            let digest = openssl::sha::sha256(&content);
 
-        let digest = openssl::sha::sha256(&content);
-
-        Ok((content, digest))
+            Ok((content, digest))
+        } else if let Some(ref content) = self.content {
+            let content = content.as_bytes();
+            let digest = openssl::sha::sha256(content);
+            Ok((content.to_vec(), digest))
+        } else {
+            Err(self.err(format_err!(
+                "Neither 'path' nor 'content' set, cannot read APT repository info."
+            )))
+        }
     }
 
     /// Create an `APTRepositoryFileError`.
@@ -244,6 +272,12 @@ impl APTRepositoryFile {
     /// If a digest is provided, checks that the current content of the file still
     /// produces the same one.
     pub fn write(&self) -> Result<(), APTRepositoryFileError> {
+        if self.path == "-" {
+            return Err(self.err(format_err!(
+                "Cannot write to APT repository file without path."
+            )));
+        }
+
         if let Some(digest) = self.digest {
             if !self.exists() {
                 return Err(self.err(format_err!("digest specified, but file does not exist")));
