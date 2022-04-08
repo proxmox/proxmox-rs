@@ -15,6 +15,7 @@ hyper = { version = "0.14", features = [ "full" ] }
 nix = "0.19.1"
 percent-encoding = "2.1"
 serde_json = "1.0"
+serde = "1.0"
 unicode-width ="0.1.8"
 
 # cli:
@@ -24,6 +25,7 @@ libc = { version = "0.2", optional = true }
 
 proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
 proxmox-schema = { path = "../proxmox-schema", version = "1.1" }
+proxmox-async = { path = "../proxmox-async", version = "0.4" }
 
 [features]
 default = [ "cli" ]
