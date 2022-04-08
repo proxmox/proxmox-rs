@@ -236,6 +236,22 @@ pub fn basic_function() -> Result<(), Error> {
 }
 
 #[api(
+    streaming: true,
+)]
+/// streaming async call
+pub async fn streaming_async_call() -> Result<(), Error> {
+    Ok(())
+}
+
+#[api(
+    streaming: true,
+)]
+/// streaming sync call
+pub fn streaming_sync_call() -> Result<(), Error> {
+    Ok(())
+}
+
+#[api(
     input: {
         properties: {
             verbose: {

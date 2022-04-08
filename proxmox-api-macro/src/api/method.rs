@@ -169,6 +169,12 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         .transpose()?
         .unwrap_or(false);
 
+    let streaming: bool = attribs
+        .remove("streaming")
+        .map(TryFrom::try_from)
+        .transpose()?
+        .unwrap_or(false);
+
     if !attribs.is_empty() {
         error!(
             attribs.span(),
@@ -195,6 +201,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         &mut func,
         &mut wrapper_ts,
         &mut default_consts,
+        streaming,
     )?;
 
     // input schema is done, let's give the method body a chance to extract default parameters:
@@ -217,10 +224,11 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         returns_schema_setter = quote! { .returns(#inner) };
     }
 
-    let api_handler = if is_async {
-        quote! { ::proxmox_router::ApiHandler::Async(&#api_func_name) }
-    } else {
-        quote! { ::proxmox_router::ApiHandler::Sync(&#api_func_name) }
+    let api_handler = match (streaming, is_async) {
+        (true, true) => quote! { ::proxmox_router::ApiHandler::StreamingAsync(&#api_func_name) },
+        (true, false) => quote! { ::proxmox_router::ApiHandler::StreamingSync(&#api_func_name) },
+        (false, true) => quote! { ::proxmox_router::ApiHandler::Async(&#api_func_name) },
+        (false, false) => quote! { ::proxmox_router::ApiHandler::Sync(&#api_func_name) },
     };
 
     Ok(quote_spanned! { func.sig.span() =>
@@ -279,6 +287,7 @@ fn handle_function_signature(
     func: &mut syn::ItemFn,
     wrapper_ts: &mut TokenStream,
     default_consts: &mut TokenStream,
+    streaming: bool,
 ) -> Result<Ident, Error> {
     let sig = &func.sig;
     let is_async = sig.asyncness.is_some();
@@ -414,6 +423,7 @@ fn handle_function_signature(
         wrapper_ts,
         default_consts,
         is_async,
+        streaming,
     )
 }
 
@@ -471,6 +481,7 @@ fn create_wrapper_function(
     wrapper_ts: &mut TokenStream,
     default_consts: &mut TokenStream,
     is_async: bool,
+    streaming: bool,
 ) -> Result<Ident, Error> {
     let api_func_name = Ident::new(
         &format!("api_function_{}", &func.sig.ident),
@@ -512,45 +523,83 @@ fn create_wrapper_function(
         _ => Some(quote!(?)),
     };
 
-    let body = quote! {
-        if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
-            #body
-            Ok(::serde_json::to_value(#func_name(#args) #await_keyword #question_mark)?)
-        } else {
-            ::anyhow::bail!("api function wrapper called with a non-object json value");
+    let body = if streaming {
+        quote! {
+            if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
+                #body
+                let res = #func_name(#args) #await_keyword #question_mark;
+                let res: ::std::boxed::Box<dyn ::proxmox_router::SerializableReturn + Send> = ::std::boxed::Box::new(res);
+                Ok(res)
+            } else {
+                ::anyhow::bail!("api function wrapper called with a non-object json value");
+            }
+        }
+    } else {
+        quote! {
+            if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
+                #body
+                Ok(::serde_json::to_value(#func_name(#args) #await_keyword #question_mark)?)
+            } else {
+                ::anyhow::bail!("api function wrapper called with a non-object json value");
+            }
         }
     };
 
-    if is_async {
-        wrapper_ts.extend(quote! {
-            fn #api_func_name<'a>(
-                mut input_params: ::serde_json::Value,
-                api_method_param: &'static ::proxmox_router::ApiMethod,
-                rpc_env_param: &'a mut dyn ::proxmox_router::RpcEnvironment,
-            ) -> ::proxmox_router::ApiFuture<'a> {
-                //async fn func<'a>(
-                //    mut input_params: ::serde_json::Value,
-                //    api_method_param: &'static ::proxmox_router::ApiMethod,
-                //    rpc_env_param: &'a mut dyn ::proxmox_router::RpcEnvironment,
-                //) -> ::std::result::Result<::serde_json::Value, ::anyhow::Error> {
-                //    #body
-                //}
-                //::std::boxed::Box::pin(async move {
-                //    func(input_params, api_method_param, rpc_env_param).await
-                //})
-                ::std::boxed::Box::pin(async move { #body })
-            }
-        });
-    } else {
-        wrapper_ts.extend(quote! {
-            fn #api_func_name(
-                mut input_params: ::serde_json::Value,
-                api_method_param: &::proxmox_router::ApiMethod,
-                rpc_env_param: &mut dyn ::proxmox_router::RpcEnvironment,
-            ) -> ::std::result::Result<::serde_json::Value, ::anyhow::Error> {
-                #body
-            }
-        });
+    match (streaming, is_async) {
+        (true, true) => {
+            wrapper_ts.extend(quote! {
+                fn #api_func_name<'a>(
+                    mut input_params: ::serde_json::Value,
+                    api_method_param: &'static ::proxmox_router::ApiMethod,
+                    rpc_env_param: &'a mut dyn ::proxmox_router::RpcEnvironment,
+                ) -> ::proxmox_router::StreamingApiFuture<'a> {
+                    ::std::boxed::Box::pin(async move { #body })
+                }
+            });
+        }
+        (true, false) => {
+            wrapper_ts.extend(quote! {
+                fn #api_func_name(
+                    mut input_params: ::serde_json::Value,
+                    api_method_param: &::proxmox_router::ApiMethod,
+                    rpc_env_param: &mut dyn ::proxmox_router::RpcEnvironment,
+                ) -> ::std::result::Result<::std::boxed::Box<dyn ::proxmox_router::SerializableReturn + Send>, ::anyhow::Error> {
+                    #body
+                }
+            });
+        }
+        (false, true) => {
+            wrapper_ts.extend(quote! {
+                fn #api_func_name<'a>(
+                    mut input_params: ::serde_json::Value,
+                    api_method_param: &'static ::proxmox_router::ApiMethod,
+                    rpc_env_param: &'a mut dyn ::proxmox_router::RpcEnvironment,
+                ) -> ::proxmox_router::ApiFuture<'a> {
+                    //async fn func<'a>(
+                    //    mut input_params: ::serde_json::Value,
+                    //    api_method_param: &'static ::proxmox_router::ApiMethod,
+                    //    rpc_env_param: &'a mut dyn ::proxmox_router::RpcEnvironment,
+                    //) -> ::std::result::Result<::serde_json::Value, ::anyhow::Error> {
+                    //    #body
+                    //}
+                    //::std::boxed::Box::pin(async move {
+                    //    func(input_params, api_method_param, rpc_env_param).await
+                    //})
+                    ::std::boxed::Box::pin(async move { #body })
+                }
+            });
+        }
+        (false, false) => {
+            wrapper_ts.extend(quote! {
+                fn #api_func_name(
+                    mut input_params: ::serde_json::Value,
+                    api_method_param: &::proxmox_router::ApiMethod,
+                    rpc_env_param: &mut dyn ::proxmox_router::RpcEnvironment,
+                ) -> ::std::result::Result<::serde_json::Value, ::anyhow::Error> {
+                    #body
+                }
+            });
+        }
     }
 
     Ok(api_func_name)
