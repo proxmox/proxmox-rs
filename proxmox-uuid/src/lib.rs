@@ -3,14 +3,14 @@
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt;
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 mod lib_uuid_bindings;
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 use lib_uuid_bindings::*;
 
-#[cfg(target_arch="wasm32")]
+#[cfg(target_arch = "wasm32")]
 mod wasm;
-#[cfg(target_arch="wasm32")]
+#[cfg(target_arch = "wasm32")]
 pub use wasm::*;
 
 /// An error parsing a uuid from a string.

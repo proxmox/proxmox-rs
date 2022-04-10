@@ -3,7 +3,6 @@ use std::fmt;
 use crate::Uuid;
 
 pub fn uuid_generate(out: *mut [u8; 16]) {
-
     // TODO: implement soemthing better than this
 
     let time = js_sys::Date::now() as u64;
@@ -28,12 +27,14 @@ pub fn uuid_generate(out: *mut [u8; 16]) {
     bytes3[0..8].copy_from_slice(&time.to_le_bytes());
     bytes3[8..16].copy_from_slice(&time.to_le_bytes());
 
-    if out.is_null() { return; }
+    if out.is_null() {
+        return;
+    }
 
     let out = unsafe { out.as_mut().unwrap() };
 
     for i in 0..16 {
-        let v = bytes1[i] ^  bytes2[i]  ^ bytes3[i];
+        let v = bytes1[i] ^ bytes2[i] ^ bytes3[i];
         out[i] = v;
     }
 }
@@ -42,12 +43,10 @@ pub fn uuid_generate(out: *mut [u8; 16]) {
 // adopted types to our needs
 
 const UPPER: [u8; 16] = [
-    b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'A', b'B',
-    b'C', b'D', b'E', b'F',
+    b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'A', b'B', b'C', b'D', b'E', b'F',
 ];
 const LOWER: [u8; 16] = [
-    b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a', b'b',
-    b'c', b'd', b'e', b'f',
+    b'0', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'a', b'b', b'c', b'd', b'e', b'f',
 ];
 /// The segments of a UUID's [u8; 16] corresponding to each group.
 const BYTE_POSITIONS: [usize; 6] = [0, 4, 6, 8, 10, 16];
@@ -55,10 +54,7 @@ const BYTE_POSITIONS: [usize; 6] = [0, 4, 6, 8, 10, 16];
 /// group.
 const HYPHEN_POSITIONS: [usize; 4] = [8, 13, 18, 23];
 
-pub fn uuid_encode(
-    uuid: &[u8; 16],
-    upper: bool,
-) -> String {
+pub fn uuid_encode(uuid: &[u8; 16], upper: bool) -> String {
     let mut buffer = [0u8; 36];
 
     let hex = if upper { &UPPER } else { &LOWER };
