@@ -76,7 +76,10 @@ impl Drop for ACL {
     fn drop(&mut self) {
         let ret = unsafe { acl_free(self.ptr) };
         if ret != 0 {
-            panic!("invalid pointer encountered while dropping ACL - {}", Errno::last());
+            panic!(
+                "invalid pointer encountered while dropping ACL - {}",
+                Errno::last()
+            );
         }
     }
 }
@@ -97,7 +100,7 @@ impl ACL {
         if ptr.is_null() {
             return Err(Errno::last());
         }
- 
+
         Ok(ACL { ptr })
     }
 
@@ -146,9 +149,12 @@ impl ACL {
         }
     }
 
-    pub fn add_entry_full(&mut self, tag: ACLTag, qualifier: Option<u64>, permissions: u64)
-        -> Result<(), nix::errno::Errno>
-    {
+    pub fn add_entry_full(
+        &mut self,
+        tag: ACLTag,
+        qualifier: Option<u64>,
+        permissions: u64,
+    ) -> Result<(), nix::errno::Errno> {
         let mut entry = self.create_entry()?;
         entry.set_tag_type(tag)?;
         if let Some(qualifier) = qualifier {
@@ -240,7 +246,10 @@ impl<'a> ACLEntry<'a> {
         let result = unsafe { *(qualifier as *const u32) as u64 };
         let ret = unsafe { acl_free(qualifier) };
         if ret != 0 {
-            panic!("invalid pointer encountered while dropping ACL qualifier - {}", Errno::last());
+            panic!(
+                "invalid pointer encountered while dropping ACL qualifier - {}",
+                Errno::last()
+            );
         }
 
         Ok(result)
@@ -272,7 +281,10 @@ impl<'a> Iterator for &'a mut ACLEntriesIterator {
         let res = unsafe { acl_get_entry(self.acl.ptr, self.current, &mut entry_ptr) };
         self.current = ACL_NEXT_ENTRY;
         if res == 1 {
-            return Some(ACLEntry { ptr: entry_ptr, _phantom: PhantomData });
+            return Some(ACLEntry {
+                ptr: entry_ptr,
+                _phantom: PhantomData,
+            });
         }
 
         None
@@ -312,10 +324,15 @@ impl ACLXAttrBuffer {
     /// Add ACL entry to buffer.
     pub fn add_entry(&mut self, tag: ACLTag, qualifier: Option<u64>, permissions: u64) {
         self.buffer.extend_from_slice(&(tag as u16).to_le_bytes());
-        self.buffer.extend_from_slice(&(permissions as u16).to_le_bytes());
+        self.buffer
+            .extend_from_slice(&(permissions as u16).to_le_bytes());
         match qualifier {
-            Some(qualifier) => self.buffer.extend_from_slice(&(qualifier as u32).to_le_bytes()),
-            None => self.buffer.extend_from_slice(&ACL_UNDEFINED_ID.to_le_bytes()),
+            Some(qualifier) => self
+                .buffer
+                .extend_from_slice(&(qualifier as u32).to_le_bytes()),
+            None => self
+                .buffer
+                .extend_from_slice(&ACL_UNDEFINED_ID.to_le_bytes()),
         }
     }
 
@@ -325,7 +342,9 @@ impl ACLXAttrBuffer {
     }
 
     /// The buffer always contains at least the version, it is never empty
-    pub const fn is_empty(&self) -> bool { false }
+    pub const fn is_empty(&self) -> bool {
+        false
+    }
 
     /// Borrow raw buffer as mut slice.
     pub fn as_mut_slice(&mut self) -> &mut [u8] {

@@ -311,10 +311,7 @@ fn test_entry() {
         }]
     );
     assert_eq!(entry.fs_type, "cgroup");
-    assert_eq!(
-        entry.mount_source.as_deref(),
-        Some(OsStr::new("cgroup"))
-    );
+    assert_eq!(entry.mount_source.as_deref(), Some(OsStr::new("cgroup")));
     assert_eq!(entry.super_options, "rw,blkio");
 
     let l2 = b"49 28 0:44 / /proxmox/debian rw,relatime shared:27 - autofs systemd-1 \
@@ -340,10 +337,7 @@ fn test_entry() {
         }]
     );
     assert_eq!(entry.fs_type, "autofs");
-    assert_eq!(
-        entry.mount_source.as_deref(),
-        Some(OsStr::new("systemd-1"))
-    );
+    assert_eq!(entry.mount_source.as_deref(), Some(OsStr::new("systemd-1")));
     assert_eq!(
         entry.super_options,
         "rw,fd=26,pgrp=1,timeout=0,minproto=5,maxproto=5,direct,pipe_ino=27726"

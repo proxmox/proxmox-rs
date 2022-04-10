@@ -1,12 +1,12 @@
-//! File system related utilities 
+//! File system related utilities
 use std::fs::File;
 use std::path::Path;
 
 use anyhow::{bail, Error};
 
-use std::os::unix::io::{AsRawFd, RawFd};
-use nix::unistd::{Gid, Uid};
 use nix::sys::stat;
+use nix::unistd::{Gid, Uid};
+use std::os::unix::io::{AsRawFd, RawFd};
 
 pub mod acl;
 
@@ -68,11 +68,9 @@ impl CreateOptions {
     }
 
     pub fn apply_to(&self, file: &mut File, path: &Path) -> Result<(), Error> {
-
         // clippy bug?: from_bits_truncate is actually a const fn...
         #[allow(clippy::or_fun_call)]
-        let mode: stat::Mode = self.perm
-            .unwrap_or(stat::Mode::from_bits_truncate(0o644));
+        let mode: stat::Mode = self.perm.unwrap_or(stat::Mode::from_bits_truncate(0o644));
 
         if let Err(err) = stat::fchmod(file.as_raw_fd(), mode) {
             bail!("fchmod {:?} failed: {}", path, err);

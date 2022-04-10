@@ -52,4 +52,3 @@ impl std::ops::Deref for RawFdNum {
         self.as_fd_ref()
     }
 }
-

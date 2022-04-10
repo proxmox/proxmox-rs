@@ -56,7 +56,6 @@ pub fn crypt(password: &[u8], salt: &[u8]) -> Result<String, Error> {
 
 /// Encrypt a pasword using sha256 hashing method
 pub fn encrypt_pw(password: &str) -> Result<String, Error> {
-
     let salt = crate::linux::random_data(8)?;
     let salt = format!("$5${}$", base64::encode_config(&salt, base64::CRYPT));
 

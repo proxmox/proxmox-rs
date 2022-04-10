@@ -1,14 +1,14 @@
 //! Log rotation helper
 
-use std::path::{Path, PathBuf};
-use std::fs::{File, rename};
-use std::os::unix::io::{FromRawFd, IntoRawFd};
+use std::fs::{rename, File};
 use std::io::Read;
+use std::os::unix::io::{FromRawFd, IntoRawFd};
+use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Error};
 use nix::unistd;
 
-use crate::fs::{CreateOptions, make_tmp_file};
+use crate::fs::{make_tmp_file, CreateOptions};
 
 /// Used for rotating log files and iterating over them
 pub struct LogRotate {
@@ -47,7 +47,7 @@ impl LogRotate {
         LogRotateFileNames {
             base_path: self.base_path.clone(),
             count: 0,
-            compress: self.compress
+            compress: self.compress,
         }
     }
 
@@ -58,7 +58,11 @@ impl LogRotate {
         }
     }
 
-    fn compress(source_path: &Path, target_path: &Path, options: &CreateOptions) -> Result<(), Error> {
+    fn compress(
+        source_path: &Path,
+        target_path: &Path,
+        options: &CreateOptions,
+    ) -> Result<(), Error> {
         let mut source = File::open(source_path)?;
         let (fd, tmp_path) = make_tmp_file(target_path, options.clone())?;
         let target = unsafe { File::from_raw_fd(fd.into_raw_fd()) };
@@ -114,14 +118,14 @@ impl LogRotate {
 
         filenames.push(PathBuf::from(next_filename));
 
-        for i in (0..count-1).rev() {
+        for i in (0..count - 1).rev() {
             if self.compress
                 && filenames[i].extension() != Some(std::ffi::OsStr::new("zst"))
-                && filenames[i+1].extension() == Some(std::ffi::OsStr::new("zst"))
+                && filenames[i + 1].extension() == Some(std::ffi::OsStr::new("zst"))
             {
-                Self::compress(&filenames[i], &filenames[i+1], &self.options)?;
+                Self::compress(&filenames[i], &filenames[i + 1], &self.options)?;
             } else {
-                rename(&filenames[i], &filenames[i+1])?;
+                rename(&filenames[i], &filenames[i + 1])?;
             }
         }
 
@@ -137,15 +141,11 @@ impl LogRotate {
     }
 
     /// Conditional rotate if file bigger than 'max_size'
-    pub fn rotate(
-        &mut self,
-        max_size: u64,
-    ) -> Result<bool, Error> {
-
+    pub fn rotate(&mut self, max_size: u64) -> Result<bool, Error> {
         let metadata = match self.base_path.metadata() {
             Ok(metadata) => metadata,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(false),
-            Err(err) =>  bail!("unable to open {:?} - {}", self.base_path, err),
+            Err(err) => bail!("unable to open {:?} - {}", self.base_path, err),
         };
 
         if metadata.len() > max_size {

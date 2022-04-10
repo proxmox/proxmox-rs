@@ -1,6 +1,6 @@
 //! Helpers to run a [Command] and check status code
 
-use std::process::{Output, Command};
+use std::process::{Command, Output};
 
 use anyhow::{bail, format_err, Error};
 

@@ -4,7 +4,6 @@ use anyhow::{bail, Error};
 ///
 /// A worker task is a long running task, which usually logs output into a separate file.
 pub trait WorkerTaskContext: Send + Sync {
-
     /// Test if there was a request to abort the task.
     fn abort_requested(&self) -> bool;
 
@@ -18,7 +17,6 @@ pub trait WorkerTaskContext: Send + Sync {
 
     /// Test if there was a request to shutdown the server.
     fn shutdown_requested(&self) -> bool;
-
 
     /// This should fail with a reasonable error message if there was
     /// a request to shutdown the server.

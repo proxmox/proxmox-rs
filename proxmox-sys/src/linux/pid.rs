@@ -14,8 +14,8 @@ use nix::NixPath;
 use proxmox_lang::{c_str, error::io_err_other};
 
 use crate::error::SysResult;
-use crate::linux::procfs::{MountInfo, PidStat};
 use crate::fd::Fd;
+use crate::linux::procfs::{MountInfo, PidStat};
 use crate::{c_result, c_try};
 
 /// asm-generic pidfd_open syscall number

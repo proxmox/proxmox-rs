@@ -316,7 +316,6 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
     }
 }
 
-
 // /usr/include/linux/fs.h: #define BLKGETSIZE64 _IOR(0x12,114,size_t)
 // return device size in bytes (u64 *arg)
 nix::ioctl_read!(blkgetsize64, 0x12, 114, u64);

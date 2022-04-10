@@ -1,11 +1,11 @@
-use std::path::PathBuf;
 use std::fs::OpenOptions;
 use std::os::unix::io::AsRawFd;
+use std::path::PathBuf;
 
 use nix::errno::Errno;
 
 use proxmox_lang::c_str;
-use proxmox_sys::fs::xattr::{fgetxattr,fsetxattr};
+use proxmox_sys::fs::xattr::{fgetxattr, fsetxattr};
 
 #[test]
 fn test_fsetxattr_fgetxattr() {
@@ -17,7 +17,6 @@ fn test_fsetxattr_fgetxattr() {
         .create(true)
         .open(&path)
         .unwrap();
-
 
     let fd = file.as_raw_fd();
 
