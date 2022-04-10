@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 use nix::dir::Dir;
 use nix::fcntl::{AtFlags, OFlag};
@@ -21,11 +21,10 @@ pub fn complete_file_name(arg: &str, _param: &HashMap<String, String>) -> Vec<St
         }
     }
 
-    let mut dir =
-        match Dir::openat(libc::AT_FDCWD, &dirname, OFlag::O_DIRECTORY, Mode::empty()) {
-            Ok(d) => d,
-            Err(_) => return result,
-        };
+    let mut dir = match Dir::openat(libc::AT_FDCWD, &dirname, OFlag::O_DIRECTORY, Mode::empty()) {
+        Ok(d) => d,
+        Err(_) => return result,
+    };
 
     for entry in dir.iter().flatten() {
         if let Ok(name) = entry.file_name().to_str() {
@@ -35,8 +34,7 @@ pub fn complete_file_name(arg: &str, _param: &HashMap<String, String>) -> Vec<St
             let mut newpath = dirname.clone();
             newpath.push(name);
 
-            if let Ok(stat) = fstatat(libc::AT_FDCWD, &newpath, AtFlags::empty())
-            {
+            if let Ok(stat) = fstatat(libc::AT_FDCWD, &newpath, AtFlags::empty()) {
                 if (stat.st_mode & libc::S_IFMT) == libc::S_IFDIR {
                     newpath.push("");
                     if let Some(newpath) = newpath.to_str() {

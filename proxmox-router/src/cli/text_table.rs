@@ -446,7 +446,10 @@ fn format_table<W: Write>(
             None => bail!("property {} does not exist in schema.", name),
         };
 
-        let is_numeric = matches!(prop_schema, Schema::Integer(_) | Schema::Number(_) | Schema::Boolean(_));
+        let is_numeric = matches!(
+            prop_schema,
+            Schema::Integer(_) | Schema::Number(_) | Schema::Boolean(_)
+        );
 
         let (header, right_align, renderer) = options.lookup_column_info(name);
 
@@ -645,7 +648,10 @@ fn format_object<W: Write>(
             None => bail!("property {} does not exist in schema.", name),
         };
 
-        let is_numeric = matches!(prop_schema, Schema::Integer(_) | Schema::Number(_) | Schema::Boolean(_));
+        let is_numeric = matches!(
+            prop_schema,
+            Schema::Integer(_) | Schema::Number(_) | Schema::Boolean(_)
+        );
 
         let (header, right_align, renderer) = options.lookup_column_info(name);
 

@@ -4,10 +4,10 @@ use std::collections::HashSet;
 
 use serde_json::Value;
 
-use proxmox_schema::*;
 use proxmox_schema::format::{
     get_property_description, get_schema_type_text, DocumentationFormat, ParameterDisplayStyle,
 };
+use proxmox_schema::*;
 
 use super::{value_to_text, TableFormatOptions};
 use super::{CliCommand, CliCommandMap, CommandLineInterface};

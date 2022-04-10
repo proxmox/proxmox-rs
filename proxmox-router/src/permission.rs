@@ -73,7 +73,7 @@ pub trait UserInformation {
     fn lookup_privs(&self, userid: &str, path: &[&str]) -> u64;
 }
 
-impl <T: UserInformation> UserInformation for std::sync::Arc<T> {
+impl<T: UserInformation> UserInformation for std::sync::Arc<T> {
     fn is_superuser(&self, userid: &str) -> bool {
         self.deref().is_superuser(userid)
     }

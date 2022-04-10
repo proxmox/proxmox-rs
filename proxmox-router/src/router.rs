@@ -218,7 +218,7 @@ macro_rules! list_subdirs_api_method {
 /// # use serde_json::{json, Value};
 /// use proxmox_router::{ApiHandler, ApiMethod, Router};
 /// use proxmox_schema::ObjectSchema;
-/// 
+///
 /// const API_METHOD_HELLO: ApiMethod = ApiMethod::new(
 ///    &ApiHandler::Sync(&|_, _, _| {
 ///         Ok(json!("Hello world!"))

@@ -86,7 +86,7 @@ fn get_simple_completion(
         let prop_name = arg_param[0];
         if let Some((optional, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
             let is_array_param = matches!(schema, Schema::Array(_));
-            
+
             if (optional || is_array_param) && args[0].starts_with('-') {
                 // argument parameter is optional (or array) , and arg
                 // looks like an option, so assume its empty and

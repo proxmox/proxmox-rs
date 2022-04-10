@@ -3,8 +3,8 @@ use serde_json::Value;
 use std::cell::RefCell;
 use std::sync::Arc;
 
-use proxmox_schema::*;
 use proxmox_schema::format::DocumentationFormat;
+use proxmox_schema::*;
 
 use super::environment::CliEnvironment;
 use super::getopts;
