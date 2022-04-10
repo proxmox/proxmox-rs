@@ -10,42 +10,48 @@ use std::os::unix::io::RawFd;
 use std::path::Path;
 use std::ptr;
 
-use libc::{c_char, c_int, c_uint, c_void};
+use libc::{c_char, c_int, c_void};
 use nix::errno::Errno;
 use nix::NixPath;
 
-// from: acl/include/acl.h
-pub const ACL_UNDEFINED_ID: u32 = 0xffffffff;
-// acl_perm_t values
-pub type ACLPerm = c_uint;
-pub const ACL_READ: ACLPerm     = 0x04;
-pub const ACL_WRITE: ACLPerm    = 0x02;
-pub const ACL_EXECUTE: ACLPerm  = 0x01;
+#[rustfmt::skip]
+mod constants {
+    use libc::{c_int, c_uint};
 
-// acl_tag_t values
-pub type ACLTag = c_int;
-pub const ACL_UNDEFINED_TAG: ACLTag = 0x00;
-pub const ACL_USER_OBJ: ACLTag      = 0x01;
-pub const ACL_USER: ACLTag          = 0x02;
-pub const ACL_GROUP_OBJ: ACLTag     = 0x04;
-pub const ACL_GROUP: ACLTag         = 0x08;
-pub const ACL_MASK: ACLTag          = 0x10;
-pub const ACL_OTHER: ACLTag         = 0x20;
+    // from: acl/include/acl.h
+    pub const ACL_UNDEFINED_ID: u32 = 0xffffffff;
+    // acl_perm_t values
+    pub type ACLPerm = c_uint;
+    pub const ACL_READ: ACLPerm     = 0x04;
+    pub const ACL_WRITE: ACLPerm    = 0x02;
+    pub const ACL_EXECUTE: ACLPerm  = 0x01;
 
-// acl_type_t values
-pub type ACLType = c_uint;
-pub const ACL_TYPE_ACCESS: ACLType  = 0x8000;
-pub const ACL_TYPE_DEFAULT: ACLType = 0x4000;
+    // acl_tag_t values
+    pub type ACLTag = c_int;
+    pub const ACL_UNDEFINED_TAG: ACLTag = 0x00;
+    pub const ACL_USER_OBJ: ACLTag      = 0x01;
+    pub const ACL_USER: ACLTag          = 0x02;
+    pub const ACL_GROUP_OBJ: ACLTag     = 0x04;
+    pub const ACL_GROUP: ACLTag         = 0x08;
+    pub const ACL_MASK: ACLTag          = 0x10;
+    pub const ACL_OTHER: ACLTag         = 0x20;
 
-// acl entry constants
-pub const ACL_FIRST_ENTRY: c_int = 0;
-pub const ACL_NEXT_ENTRY: c_int  = 1;
+    // acl_type_t values
+    pub type ACLType = c_uint;
+    pub const ACL_TYPE_ACCESS: ACLType  = 0x8000;
+    pub const ACL_TYPE_DEFAULT: ACLType = 0x4000;
 
-// acl to extended attribute names constants
-// from: acl/include/acl_ea.h
-pub const ACL_EA_ACCESS: &str = "system.posix_acl_access";
-pub const ACL_EA_DEFAULT: &str = "system.posix_acl_default";
-pub const ACL_EA_VERSION: u32 = 0x0002;
+    // acl entry constants
+    pub const ACL_FIRST_ENTRY: c_int = 0;
+    pub const ACL_NEXT_ENTRY: c_int  = 1;
+
+    // acl to extended attribute names constants
+    // from: acl/include/acl_ea.h
+    pub const ACL_EA_ACCESS: &str = "system.posix_acl_access";
+    pub const ACL_EA_DEFAULT: &str = "system.posix_acl_default";
+    pub const ACL_EA_VERSION: u32 = 0x0002;
+}
+pub use constants::*;
 
 #[link(name = "acl")]
 extern "C" {
