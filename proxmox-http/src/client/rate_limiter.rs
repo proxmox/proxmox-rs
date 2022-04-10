@@ -1,5 +1,5 @@
-use std::time::{Duration, Instant};
 use std::convert::TryInto;
+use std::time::{Duration, Instant};
 
 use anyhow::{bail, Error};
 
@@ -36,7 +36,6 @@ struct TbfState {
 }
 
 impl TbfState {
-
     const NO_DELAY: Duration = Duration::from_millis(0);
 
     fn refill_bucket(&mut self, rate: u64, current_time: Instant) {
@@ -45,12 +44,15 @@ impl TbfState {
             None => return,
         };
 
-        if time_diff == 0 { return; }
+        if time_diff == 0 {
+            return;
+        }
 
         self.last_update = current_time;
 
         let allowed_traffic = ((time_diff.saturating_mul(rate as u128)) / 1_000_000_000)
-            .try_into().unwrap_or(u64::MAX);
+            .try_into()
+            .unwrap_or(u64::MAX);
 
         self.consumed_tokens = self.consumed_tokens.saturating_sub(allowed_traffic);
     }
@@ -70,7 +72,9 @@ impl TbfState {
         if self.consumed_tokens <= bucket_size {
             return Self::NO_DELAY;
         }
-        Duration::from_nanos((self.consumed_tokens - bucket_size).saturating_mul(1_000_000_000)/rate)
+        Duration::from_nanos(
+            (self.consumed_tokens - bucket_size).saturating_mul(1_000_000_000) / rate,
+        )
     }
 }
 
@@ -80,13 +84,12 @@ impl TbfState {
 /// change/modify the layout (do not add fields)
 #[repr(C)]
 pub struct RateLimiter {
-    rate: u64, // tokens/second
+    rate: u64,        // tokens/second
     bucket_size: u64, // TBF bucket size
     state: TbfState,
 }
 
 impl RateLimiter {
-
     /// Creates a new instance, using [Instant::now] as start time.
     pub fn new(rate: u64, bucket_size: u64) -> Self {
         let start_time = Instant::now();
@@ -109,7 +112,6 @@ impl RateLimiter {
 }
 
 impl RateLimit for RateLimiter {
-
     fn update_rate(&mut self, rate: u64, bucket_size: u64) {
         self.rate = rate;
 
@@ -125,12 +127,12 @@ impl RateLimit for RateLimiter {
     }
 
     fn register_traffic(&mut self, current_time: Instant, data_len: u64) -> Duration {
-        self.state.register_traffic(self.rate, self.bucket_size, current_time, data_len)
+        self.state
+            .register_traffic(self.rate, self.bucket_size, current_time, data_len)
     }
 }
 
-impl <R: RateLimit + Send> ShareableRateLimit for std::sync::Mutex<R> {
-
+impl<R: RateLimit + Send> ShareableRateLimit for std::sync::Mutex<R> {
     fn update_rate(&self, rate: u64, bucket_size: u64) {
         self.lock().unwrap().update_rate(rate, bucket_size);
     }
@@ -140,22 +142,22 @@ impl <R: RateLimit + Send> ShareableRateLimit for std::sync::Mutex<R> {
     }
 
     fn register_traffic(&self, current_time: Instant, data_len: u64) -> Duration {
-        self.lock().unwrap().register_traffic(current_time, data_len)
+        self.lock()
+            .unwrap()
+            .register_traffic(current_time, data_len)
     }
 }
-
 
 /// Array of rate limiters.
 ///
 /// A group of rate limiters with same configuration.
 pub struct RateLimiterVec {
-    rate: u64, // tokens/second
+    rate: u64,        // tokens/second
     bucket_size: u64, // TBF bucket size
     state: Vec<TbfState>,
 }
 
 impl RateLimiterVec {
-
     /// Creates a new instance, using [Instant::now] as start time.
     pub fn new(group_size: usize, rate: u64, bucket_size: u64) -> Self {
         let start_time = Instant::now();
@@ -163,7 +165,12 @@ impl RateLimiterVec {
     }
 
     /// Creates a new instance with specified `rate`, `bucket_size` and `start_time`.
-    pub fn with_start_time(group_size: usize, rate: u64, bucket_size: u64, start_time: Instant) -> Self {
+    pub fn with_start_time(
+        group_size: usize,
+        rate: u64,
+        bucket_size: u64,
+        start_time: Instant,
+    ) -> Self {
         let state = TbfState {
             traffic: 0,
             last_update: start_time,
@@ -191,7 +198,12 @@ impl RateLimiterVec {
     }
 
     /// Register traffic at the specified index
-    pub fn register_traffic(&mut self, index: usize, current_time: Instant, data_len: u64) -> Result<Duration, Error> {
+    pub fn register_traffic(
+        &mut self,
+        index: usize,
+        current_time: Instant,
+        data_len: u64,
+    ) -> Result<Duration, Error> {
         if index >= self.state.len() {
             bail!("RateLimiterVec::register_traffic - index out of range");
         }

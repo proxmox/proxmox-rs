@@ -148,7 +148,6 @@ impl hyper::service::Service<Uri> for HttpsConnector {
         let read_limiter = self.read_limiter.clone();
         let write_limiter = self.write_limiter.clone();
 
-
         if let Some(ref proxy) = self.proxy {
             let use_connect = is_https || proxy.force_connect;
 
@@ -177,11 +176,8 @@ impl hyper::service::Service<Uri> for HttpsConnector {
 
                     let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
 
-                    let mut tcp_stream = RateLimitedStream::with_limiter(
-                        tcp_stream,
-                        read_limiter,
-                        write_limiter,
-                    );
+                    let mut tcp_stream =
+                        RateLimitedStream::with_limiter(tcp_stream, read_limiter, write_limiter);
 
                     let mut connect_request = format!("CONNECT {0}:{1} HTTP/1.1\r\n", host, port);
                     if let Some(authorization) = authorization {
@@ -210,11 +206,8 @@ impl hyper::service::Service<Uri> for HttpsConnector {
 
                     let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
 
-                    let tcp_stream = RateLimitedStream::with_limiter(
-                        tcp_stream,
-                        read_limiter,
-                        write_limiter,
-                    );
+                    let tcp_stream =
+                        RateLimitedStream::with_limiter(tcp_stream, read_limiter, write_limiter);
 
                     Ok(MaybeTlsStream::Proxied(tcp_stream))
                 }
@@ -230,11 +223,8 @@ impl hyper::service::Service<Uri> for HttpsConnector {
 
                 let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
 
-                let tcp_stream = RateLimitedStream::with_limiter(
-                    tcp_stream,
-                    read_limiter,
-                    write_limiter,
-                );
+                let tcp_stream =
+                    RateLimitedStream::with_limiter(tcp_stream, read_limiter, write_limiter);
 
                 if is_https {
                     Self::secure_stream(tcp_stream, &ssl_connector, &host).await

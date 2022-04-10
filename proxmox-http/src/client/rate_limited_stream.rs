@@ -1,17 +1,17 @@
-use std::pin::Pin;
+use std::io::IoSlice;
 use std::marker::Unpin;
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use std::io::IoSlice;
 
 use futures::Future;
-use tokio::io::{ReadBuf, AsyncRead, AsyncWrite};
+use hyper::client::connect::{Connected, Connection};
+use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::time::Sleep;
-use hyper::client::connect::{Connection, Connected};
 
 use std::task::{Context, Poll};
 
-use super::{ShareableRateLimit, RateLimiter};
+use super::{RateLimiter, ShareableRateLimit};
 
 type SharedRateLimit = Arc<dyn ShareableRateLimit>;
 
@@ -21,7 +21,8 @@ pub struct RateLimitedStream<S> {
     read_delay: Option<Pin<Box<Sleep>>>,
     write_limiter: Option<SharedRateLimit>,
     write_delay: Option<Pin<Box<Sleep>>>,
-    update_limiter_cb: Option<Box<dyn Fn() -> (Option<SharedRateLimit>, Option<SharedRateLimit>) + Send>>,
+    update_limiter_cb:
+        Option<Box<dyn Fn() -> (Option<SharedRateLimit>, Option<SharedRateLimit>) + Send>>,
     last_limiter_update: Instant,
     stream: S,
 }
@@ -32,8 +33,7 @@ impl RateLimitedStream<tokio::net::TcpStream> {
     }
 }
 
-impl <S> RateLimitedStream<S> {
-
+impl<S> RateLimitedStream<S> {
     /// Creates a new instance with reads and writes limited to the same `rate`.
     pub fn new(stream: S, rate: u64, bucket_size: u64) -> Self {
         let now = Instant::now();
@@ -50,7 +50,7 @@ impl <S> RateLimitedStream<S> {
         read_limiter: Option<SharedRateLimit>,
         write_limiter: Option<SharedRateLimit>,
     ) -> Self {
-       Self {
+        Self {
             read_limiter,
             read_delay: None,
             write_limiter,
@@ -67,7 +67,9 @@ impl <S> RateLimitedStream<S> {
     ///
     /// Note: This function is called within an async context, so it
     /// should be fast and must not block.
-    pub fn with_limiter_update_cb<F: Fn() -> (Option<SharedRateLimit>, Option<SharedRateLimit>) + Send + 'static>(
+    pub fn with_limiter_update_cb<
+        F: Fn() -> (Option<SharedRateLimit>, Option<SharedRateLimit>) + Send + 'static,
+    >(
         stream: S,
         update_limiter_cb: F,
     ) -> Self {
@@ -95,11 +97,7 @@ impl <S> RateLimitedStream<S> {
     }
 }
 
-fn register_traffic(
-    limiter: &(dyn ShareableRateLimit),
-    count: usize,
-) -> Option<Pin<Box<Sleep>>>{
-
+fn register_traffic(limiter: &(dyn ShareableRateLimit), count: usize) -> Option<Pin<Box<Sleep>>> {
     const MIN_DELAY: Duration = Duration::from_millis(10);
 
     let now = Instant::now();
@@ -114,25 +112,24 @@ fn register_traffic(
 
 fn delay_is_ready(delay: &mut Option<Pin<Box<Sleep>>>, ctx: &mut Context<'_>) -> bool {
     match delay {
-        Some(ref mut future) => {
-            future.as_mut().poll(ctx).is_ready()
-        }
+        Some(ref mut future) => future.as_mut().poll(ctx).is_ready(),
         None => true,
     }
 }
 
-impl <S: AsyncWrite + Unpin> AsyncWrite for RateLimitedStream<S> {
-
+impl<S: AsyncWrite + Unpin> AsyncWrite for RateLimitedStream<S> {
     fn poll_write(
         self: Pin<&mut Self>,
         ctx: &mut Context<'_>,
-        buf: &[u8]
+        buf: &[u8],
     ) -> Poll<Result<usize, std::io::Error>> {
         let this = self.get_mut();
 
         let is_ready = delay_is_ready(&mut this.write_delay, ctx);
 
-        if !is_ready { return Poll::Pending; }
+        if !is_ready {
+            return Poll::Pending;
+        }
 
         this.write_delay = None;
 
@@ -156,13 +153,15 @@ impl <S: AsyncWrite + Unpin> AsyncWrite for RateLimitedStream<S> {
     fn poll_write_vectored(
         self: Pin<&mut Self>,
         ctx: &mut Context<'_>,
-        bufs: &[IoSlice<'_>]
+        bufs: &[IoSlice<'_>],
     ) -> Poll<Result<usize, std::io::Error>> {
         let this = self.get_mut();
 
         let is_ready = delay_is_ready(&mut this.write_delay, ctx);
 
-        if !is_ready { return Poll::Pending; }
+        if !is_ready {
+            return Poll::Pending;
+        }
 
         this.write_delay = None;
 
@@ -179,25 +178,21 @@ impl <S: AsyncWrite + Unpin> AsyncWrite for RateLimitedStream<S> {
         result
     }
 
-    fn poll_flush(
-        self: Pin<&mut Self>,
-        ctx: &mut Context<'_>
-    ) -> Poll<Result<(), std::io::Error>> {
+    fn poll_flush(self: Pin<&mut Self>, ctx: &mut Context<'_>) -> Poll<Result<(), std::io::Error>> {
         let this = self.get_mut();
         Pin::new(&mut this.stream).poll_flush(ctx)
     }
 
     fn poll_shutdown(
         self: Pin<&mut Self>,
-        ctx: &mut Context<'_>
+        ctx: &mut Context<'_>,
     ) -> Poll<Result<(), std::io::Error>> {
         let this = self.get_mut();
         Pin::new(&mut this.stream).poll_shutdown(ctx)
     }
 }
 
-impl <S: AsyncRead + Unpin> AsyncRead for RateLimitedStream<S> {
-
+impl<S: AsyncRead + Unpin> AsyncRead for RateLimitedStream<S> {
     fn poll_read(
         self: Pin<&mut Self>,
         ctx: &mut Context<'_>,
@@ -207,7 +202,9 @@ impl <S: AsyncRead + Unpin> AsyncRead for RateLimitedStream<S> {
 
         let is_ready = delay_is_ready(&mut this.read_delay, ctx);
 
-        if !is_ready { return Poll::Pending; }
+        if !is_ready {
+            return Poll::Pending;
+        }
 
         this.read_delay = None;
 
@@ -225,7 +222,6 @@ impl <S: AsyncRead + Unpin> AsyncRead for RateLimitedStream<S> {
 
         result
     }
-
 }
 
 // we need this for the hyper http client
