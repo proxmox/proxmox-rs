@@ -524,10 +524,7 @@ fn test_otp() {
     let parsed: Totp = uri.parse().expect("failed to parse otp uri");
     assert_eq!(parsed, hotp);
     assert_eq!(parsed.issuer, None);
-    assert_eq!(
-        parsed.account_name.as_deref(),
-        Some("My Account")
-    );
+    assert_eq!(parsed.account_name.as_deref(), Some("My Account"));
 
     const SECRET_2: &str = "a60b1b20679b1a64e21a";
     const EXPECTED: &str = "7757717";
@@ -557,12 +554,6 @@ fn test_otp() {
     let uri = totp.to_uri().expect("failed to create otpauth uri");
     let parsed: Totp = uri.parse().expect("failed to parse otp uri");
     assert_eq!(parsed, totp);
-    assert_eq!(
-        parsed.issuer.as_deref(),
-        Some("An Issuer")
-    );
-    assert_eq!(
-        parsed.account_name.as_deref(),
-        Some("The Account Name")
-    );
+    assert_eq!(parsed.issuer.as_deref(), Some("An Issuer"));
+    assert_eq!(parsed.account_name.as_deref(), Some("The Account Name"));
 }

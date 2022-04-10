@@ -521,8 +521,7 @@ mod test {
             response: super::RegistrationResponse,
         }
 
-        let ts: TestChallenge =
-            serde_json::from_str(data).expect("failed to parse json test data");
+        let ts: TestChallenge = serde_json::from_str(data).expect("failed to parse json test data");
 
         let context = super::U2f::new(TEST_APPID.to_string(), TEST_APPID.to_string());
         let res = context
@@ -545,8 +544,7 @@ mod test {
             response: super::AuthResponse,
         }
 
-        let ts: TestChallenge =
-            serde_json::from_str(data).expect("failed to parse json test data");
+        let ts: TestChallenge = serde_json::from_str(data).expect("failed to parse json test data");
 
         let context = super::U2f::new(TEST_APPID.to_string(), TEST_APPID.to_string());
         let res = context
