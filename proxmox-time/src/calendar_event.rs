@@ -37,7 +37,7 @@ pub struct CalendarEvent {
     pub(crate) year: Vec<DateTimeValue>,
 }
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 impl CalendarEvent {
     /// Computes the next timestamp after `last`. If `utc` is false, the local
     /// timezone will be used for the calculation.
@@ -181,8 +181,8 @@ pub fn verify_calendar_event(i: &str) -> Result<(), Error> {
 }
 
 /// Compute the next event. Use [CalendarEvent::compute_next_event] instead.
-#[deprecated="use method 'compute_next_event' of CalendarEvent instead"]
-#[cfg(not(target_arch="wasm32"))]
+#[deprecated = "use method 'compute_next_event' of CalendarEvent instead"]
+#[cfg(not(target_arch = "wasm32"))]
 pub fn compute_next_event(
     event: &CalendarEvent,
     last: i64,
@@ -197,7 +197,7 @@ pub fn compute_next_event(
 }
 
 /// Parse a [CalendarEvent]
-#[deprecated="use std::str::FromStr trait instead"]
+#[deprecated = "use std::str::FromStr trait instead"]
 pub fn parse_calendar_event(i: &str) -> Result<CalendarEvent, Error> {
     i.parse()
 }

@@ -1,8 +1,8 @@
 #![allow(clippy::manual_range_contains)]
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 mod tm_editor;
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 pub use tm_editor::*;
 
 pub(crate) mod parse_helpers;
@@ -21,14 +21,14 @@ pub use week_days::*;
 mod daily_duration;
 pub use daily_duration::*;
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 mod posix;
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 pub use posix::*;
 
-#[cfg(target_arch="wasm32")]
+#[cfg(target_arch = "wasm32")]
 mod wasm;
-#[cfg(target_arch="wasm32")]
+#[cfg(target_arch = "wasm32")]
 pub use wasm::*;
 
 #[cfg(test)]

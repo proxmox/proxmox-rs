@@ -1,10 +1,5 @@
 use bitflags::bitflags;
-use nom::{
-    bytes::complete::tag,
-    character::complete::alpha1,
-    combinator::opt,
-    sequence::pair,
-};
+use nom::{bytes::complete::tag, character::complete::alpha1, combinator::opt, sequence::pair};
 
 use crate::parse_helpers::{parse_error, IResult};
 

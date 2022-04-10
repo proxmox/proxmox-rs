@@ -10,18 +10,18 @@ pub fn epoch_f64() -> f64 {
     js_sys::Date::now() / 1000.0
 }
 
-
 /// Convert Unix epoch into RFC3339 local time with TZ
 pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
     let js_date = js_sys::Date::new_0();
     js_date.set_time((epoch as f64) * 1000.0);
-    js_date.to_iso_string().as_string()
+    js_date
+        .to_iso_string()
+        .as_string()
         .ok_or_else(|| format_err!("to_iso_string did not return a string"))
 }
 
 /// Parse RFC3339 into Unix epoch
 pub fn parse_rfc3339(input_str: &str) -> Result<i64, Error> {
-
     // TOTO: This should parse olny RFC3339, but currently also parse
     // other formats
     let time_milli = js_sys::Date::parse(input_str);

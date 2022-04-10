@@ -207,7 +207,7 @@ impl std::str::FromStr for TimeSpan {
 }
 
 /// Parse a [TimeSpan]
-#[deprecated="Use std::str::FromStr trait instead."]
+#[deprecated = "Use std::str::FromStr trait instead."]
 pub fn parse_time_span(i: &str) -> Result<TimeSpan, Error> {
     i.parse()
 }
@@ -271,4 +271,3 @@ pub fn verify_time_span(i: &str) -> Result<(), Error> {
     let _: TimeSpan = i.parse()?;
     Ok(())
 }
-

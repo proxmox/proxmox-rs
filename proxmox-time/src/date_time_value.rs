@@ -40,7 +40,9 @@ impl DateTimeValue {
         let mut next: Option<u32> = None;
         let mut set_next = |v: u32| {
             if let Some(n) = next {
-                if v < n { next = Some(v); }
+                if v < n {
+                    next = Some(v);
+                }
             } else {
                 next = Some(v);
             }
@@ -48,7 +50,9 @@ impl DateTimeValue {
         for spec in list {
             match spec {
                 DateTimeValue::Single(v) => {
-                    if *v > value { set_next(*v); }
+                    if *v > value {
+                        set_next(*v);
+                    }
                 }
                 DateTimeValue::Range(start, end) => {
                     if value < *start {

@@ -3,18 +3,15 @@ use std::convert::{TryFrom, TryInto};
 
 use anyhow::Error;
 use nom::{
-    bytes::complete::tag,
-    character::complete::space0,
-    error::context,
+    bytes::complete::tag, character::complete::space0, error::context,
     multi::separated_nonempty_list,
 };
 
 use crate::parse_helpers::{parse_complete_line, parse_error, parse_hm_time, IResult};
 use crate::{parse_weekdays_range, WeekDays};
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 use crate::TmEditor;
-
 
 /// Time of Day (hour with minute)
 #[derive(Default, PartialEq, Clone, Debug)]
@@ -42,7 +39,7 @@ pub struct DailyDuration {
     pub end: HmTime,
 }
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 impl DailyDuration {
     /// Test it time is within this frame
     pub fn time_match(&self, epoch: i64, utc: bool) -> Result<bool, Error> {
