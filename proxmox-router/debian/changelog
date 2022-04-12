@@ -1,3 +1,11 @@
+rust-proxmox-router (1.2.0-1) unstable; urgency=medium
+
+  * add `SerializableReturn` trait
+
+  * add streaming api handler variants
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 12 Apr 2022 14:23:25 +0200
+
 rust-proxmox-router (1.1.1-1) unstable; urgency=medium
 
   * avoid anyhow wildcard imports
