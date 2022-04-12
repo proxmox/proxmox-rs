@@ -60,65 +60,30 @@ async fn handle_simple_command_future(
 ) -> Result<(), Error> {
     let params = parse_arguments(prefix, cli_cmd, args)?;
 
-    match cli_cmd.info.handler {
-        ApiHandler::Sync(handler) => match (handler)(params, cli_cmd.info, &mut rpcenv) {
-            Ok(value) => {
-                if value != Value::Null {
-                    println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
-                }
-            }
-            Err(err) => {
-                eprintln!("Error: {}", err);
-                return Err(err);
-            }
-        },
-        ApiHandler::StreamingSync(handler) => match (handler)(params, cli_cmd.info, &mut rpcenv) {
-            Ok(value) => {
-                let value = value.to_value()?;
-                if value != Value::Null {
-                    println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
-                }
-            }
-            Err(err) => {
-                eprintln!("Error: {}", err);
-                return Err(err);
-            }
-        },
-        ApiHandler::Async(handler) => {
-            let future = (handler)(params, cli_cmd.info, &mut rpcenv);
-
-            match future.await {
-                Ok(value) => {
-                    if value != Value::Null {
-                        println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
-                    }
-                }
-                Err(err) => {
-                    eprintln!("Error: {}", err);
-                    return Err(err);
-                }
-            }
-        }
-        ApiHandler::StreamingAsync(handler) => {
-            let future = (handler)(params, cli_cmd.info, &mut rpcenv);
-
-            match future.await {
-                Ok(value) => {
-                    let value = value.to_value()?;
-                    if value != Value::Null {
-                        println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
-                    }
-                }
-                Err(err) => {
-                    eprintln!("Error: {}", err);
-                    return Err(err);
-                }
-            }
-        }
+    let result = match cli_cmd.info.handler {
+        ApiHandler::Sync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv),
+        ApiHandler::StreamingSync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
+            .and_then(|r| r.to_value().map_err(Error::from)),
+        ApiHandler::Async(handler) => (handler)(params, cli_cmd.info, &mut rpcenv).await,
+        ApiHandler::StreamingAsync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
+            .await
+            .and_then(|r| r.to_value().map_err(Error::from)),
         ApiHandler::AsyncHttp(_) => {
             let err_msg = "CliHandler does not support ApiHandler::AsyncHttp - internal error";
             print_simple_usage_error(prefix, cli_cmd, err_msg);
             return Err(format_err!("{}", err_msg));
+        }
+    };
+
+    match result {
+        Ok(value) => {
+            if value != Value::Null {
+                println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
+            }
+        }
+        Err(err) => {
+            eprintln!("Error: {}", err);
+            return Err(err);
         }
     }
 
@@ -134,50 +99,21 @@ fn handle_simple_command(
 ) -> Result<(), Error> {
     let params = parse_arguments(prefix, cli_cmd, args)?;
 
-    match cli_cmd.info.handler {
-        ApiHandler::Sync(handler) => match (handler)(params, cli_cmd.info, &mut rpcenv) {
-            Ok(value) => {
-                if value != Value::Null {
-                    println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
-                }
+    let result = match cli_cmd.info.handler {
+        ApiHandler::Sync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv),
+        ApiHandler::StreamingSync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
+            .and_then(|r| r.to_value().map_err(Error::from)),
+        ApiHandler::Async(handler) => match run {
+            Some(run) => {
+                let future = (handler)(params, cli_cmd.info, &mut rpcenv);
+                (run)(future)
             }
-            Err(err) => {
-                eprintln!("Error: {}", err);
-                return Err(err);
-            }
-        },
-        ApiHandler::StreamingSync(handler) => match (handler)(params, cli_cmd.info, &mut rpcenv) {
-            Ok(value) => {
-                let value = value.to_value()?;
-                if value != Value::Null {
-                    println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
-                }
-            }
-            Err(err) => {
-                eprintln!("Error: {}", err);
-                return Err(err);
-            }
-        },
-        ApiHandler::Async(handler) => {
-            let future = (handler)(params, cli_cmd.info, &mut rpcenv);
-            if let Some(run) = run {
-                match (run)(future) {
-                    Ok(value) => {
-                        if value != Value::Null {
-                            println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
-                        }
-                    }
-                    Err(err) => {
-                        eprintln!("Error: {}", err);
-                        return Err(err);
-                    }
-                }
-            } else {
+            None => {
                 let err_msg = "CliHandler does not support ApiHandler::Async - internal error";
                 print_simple_usage_error(prefix, cli_cmd, err_msg);
                 return Err(format_err!("{}", err_msg));
             }
-        }
+        },
         ApiHandler::StreamingAsync(_handler) => {
             let err_msg = "CliHandler does not support ApiHandler::StreamingAsync - internal error";
             print_simple_usage_error(prefix, cli_cmd, err_msg);
@@ -187,6 +123,18 @@ fn handle_simple_command(
             let err_msg = "CliHandler does not support ApiHandler::AsyncHttp - internal error";
             print_simple_usage_error(prefix, cli_cmd, err_msg);
             return Err(format_err!("{}", err_msg));
+        }
+    };
+
+    match result {
+        Ok(value) => {
+            if value != Value::Null {
+                println!("Result: {}", serde_json::to_string_pretty(&value).unwrap());
+            }
+        }
+        Err(err) => {
+            eprintln!("Error: {}", err);
+            return Err(err);
         }
     }
 
