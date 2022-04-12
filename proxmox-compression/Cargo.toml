@@ -18,6 +18,7 @@ futures = "0.3"
 tokio = { version = "1.6", features = [ "fs", "io-util"] }
 walkdir = "2"
 tar = "0.4"
+zstd = { version = "0.6", features = []}
 
 proxmox-time = { path = "../proxmox-time", version = "1" }
 proxmox-io = { path = "../proxmox-io", version = "1", features = [ "tokio" ] }
