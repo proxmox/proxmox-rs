@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (1.0.2-1) stable; urgency=medium
+
+  * support streaming api handlers
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 12 Apr 2022 14:26:46 +0200
+
 rust-proxmox-api-macro (1.0.1-1) stable; urgency=medium
 
   * stop adding automatically_derived to derived output to please new rustc
