@@ -439,8 +439,8 @@ where
 ///
 /// use proxmox_compression::zip::{ZipEncoder, ZipEntry};
 ///
-/// #[tokio::main]
-/// async fn main() -> Result<(), Error> {
+/// //#[tokio::main]
+/// async fn main_() -> Result<(), Error> {
 ///     let target = File::open("foo.zip").await?;
 ///     let mut source = File::open("foo.txt").await?;
 ///
