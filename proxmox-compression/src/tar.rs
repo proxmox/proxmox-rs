@@ -43,16 +43,10 @@ pub struct Builder<W: AsyncWrite + Unpin> {
 impl<W: AsyncWrite + Unpin> Builder<W> {
     /// Takes an AsyncWriter as target
     pub fn new(inner: W) -> Builder<W> {
-        Builder {
-            inner,
-        }
+        Builder { inner }
     }
 
-    async fn add<R: AsyncRead + Unpin>(
-        &mut self,
-        header: &Header,
-        mut data: R,
-    ) -> io::Result<()> {
+    async fn add<R: AsyncRead + Unpin>(&mut self, header: &Header, mut data: R) -> io::Result<()> {
         append_data(&mut self.inner, header, &mut data).await
     }
 
