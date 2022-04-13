@@ -16,10 +16,12 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-io-1+tokio-dev <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~) <!nocheck>,
  librust-proxmox-time-1+default-dev <!nocheck>,
+ librust-tar-0.4+default-dev <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+fs-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+io-util-dev (>= 1.6-~~) <!nocheck>,
- librust-walkdir-2+default-dev <!nocheck>
+ librust-walkdir-2+default-dev <!nocheck>,
+ librust-zstd-0.6+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.5.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -41,18 +43,20 @@ Depends:
  librust-proxmox-io-1+tokio-dev,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~),
  librust-proxmox-time-1+default-dev,
+ librust-tar-0.4+default-dev,
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+fs-dev (>= 1.6-~~),
  librust-tokio-1+io-util-dev (>= 1.6-~~),
- librust-walkdir-2+default-dev
+ librust-walkdir-2+default-dev,
+ librust-zstd-0.6+default-dev
 Provides:
  librust-proxmox-compression+default-dev (= ${binary:Version}),
  librust-proxmox-compression-0-dev (= ${binary:Version}),
  librust-proxmox-compression-0+default-dev (= ${binary:Version}),
  librust-proxmox-compression-0.1-dev (= ${binary:Version}),
  librust-proxmox-compression-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-compression-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-compression-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-compression-0.1.1-dev (= ${binary:Version}),
+ librust-proxmox-compression-0.1.1+default-dev (= ${binary:Version})
 Description: Contains compression utilitites (such as an Zip Encoder for async rust) - Rust source code
  This package contains the source for the Rust proxmox-compression crate,
  packaged by debcargo for use with cargo and dh-cargo.

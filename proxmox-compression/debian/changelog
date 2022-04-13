@@ -1,3 +1,9 @@
+rust-proxmox-compression (0.1.1-1) stable; urgency=medium
+
+  * add tar encoder and zstd support
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 13 Apr 2022 09:33:26 +0200
+
 rust-proxmox-compression (0.1.0-1) stable; urgency=medium
 
   * initial split out of `proxmox-async`
