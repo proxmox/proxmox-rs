@@ -20,12 +20,12 @@ textwrap = "0.11"
 libc = { version = "0.2", optional = true }
 nix = { version = "0.19", optional = true }
 
-proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = "1.0.0" }
+proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = "1.0.2" }
 
 [dev-dependencies]
 url = "2.1"
 serde = { version = "1.0", features = [ "derive" ] }
-proxmox-api-macro = { path = "../proxmox-api-macro", version = "1.0.0" }
+proxmox-api-macro = { path = "../proxmox-api-macro", version = "1.0.2" }
 
 [features]
 default = []
