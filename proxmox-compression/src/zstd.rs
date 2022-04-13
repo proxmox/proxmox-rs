@@ -32,7 +32,11 @@ pub struct ZstdEncoder<'a, T> {
     state: EncoderState,
 }
 
-impl<'a, T> ZstdEncoder<'a, T> {
+impl<'a, T, O> ZstdEncoder<'a, T>
+where
+    T: Stream<Item = Result<O, Error>> + Unpin,
+    O: Into<Bytes>,
+{
     /// Returns a new [ZstdEncoder] with default level 3
     pub fn new(inner: T) -> Result<Self, io::Error> {
         Self::with_quality(inner, 3)
@@ -48,7 +52,9 @@ impl<'a, T> ZstdEncoder<'a, T> {
             state: EncoderState::Reading,
         })
     }
+}
 
+impl<'a, T> ZstdEncoder<'a, T> {
     /// Returns the wrapped [Stream]
     pub fn into_inner(self) -> T {
         self.inner
