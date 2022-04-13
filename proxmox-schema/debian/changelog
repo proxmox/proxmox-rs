@@ -1,3 +1,11 @@
+rust-proxmox-schema (1.3.1-1) unstable; urgency=medium
+
+  * don't accept unterminated quoted strings in property strings
+
+  * bump api macro to 1.0.2 for the 'streaming' attribute
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 13 Apr 2022 08:18:08 +0200
+
 rust-proxmox-schema (1.3.0-1) unstable; urgency=medium
 
   * add `unwrap_*_schema/format` const fn methods
