@@ -51,12 +51,11 @@ impl<W: AsyncWrite + Unpin> Builder<W> {
     }
 
     /// Adds a new entry to this archive with the specified path.
-    pub async fn add_entry<P: AsRef<Path>, R: AsyncRead + Unpin>(
-        &mut self,
-        header: &mut Header,
-        path: P,
-        data: R,
-    ) -> io::Result<()> {
+    pub async fn add_entry<P, R>(&mut self, header: &mut Header, path: P, data: R) -> io::Result<()>
+    where
+        P: AsRef<Path>,
+        R: AsyncRead + Unpin,
+    {
         append_path_header(&mut self.inner, header, path.as_ref()).await?;
         header.set_cksum();
         self.add(&header, data).await
@@ -97,11 +96,11 @@ impl<W: AsyncWrite + Unpin> Builder<W> {
     }
 }
 
-async fn append_data<W: AsyncWrite + Unpin, R: AsyncRead + Unpin>(
-    mut dst: &mut W,
-    header: &Header,
-    mut data: &mut R,
-) -> io::Result<()> {
+async fn append_data<W, R>(mut dst: &mut W, header: &Header, mut data: &mut R) -> io::Result<()>
+where
+    W: AsyncWrite + Unpin,
+    R: AsyncRead + Unpin,
+{
     dst.write_all(header.as_bytes()).await?;
     let len = tokio::io::copy(&mut data, &mut dst).await?;
 
@@ -130,11 +129,10 @@ fn get_gnu_header(size: u64, entry_type: EntryType) -> Header {
 }
 
 // tries to set the path in header, or add a gnu header with 'LongName'
-async fn append_path_header<W: AsyncWrite + Unpin>(
-    dst: &mut W,
-    header: &mut Header,
-    path: &Path,
-) -> io::Result<()> {
+async fn append_path_header<W>(dst: &mut W, header: &mut Header, path: &Path) -> io::Result<()>
+where
+    W: AsyncWrite + Unpin,
+{
     let mut relpath = PathBuf::new();
     let components = path.components();
     for comp in components {
