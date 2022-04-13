@@ -124,7 +124,7 @@ async fn append_data<W: AsyncWrite + Unpin, R: AsyncRead + Unpin>(
 fn get_gnu_header(size: u64, entry_type: EntryType) -> Header {
     let mut header = Header::new_gnu();
     let name = b"././@LongLink";
-    header.as_gnu_mut().unwrap().name[..name.len()].clone_from_slice(&name[..]);
+    header.as_gnu_mut().unwrap().name[..name.len()].copy_from_slice(&name[..]);
     header.set_mode(0o644);
     header.set_uid(0);
     header.set_gid(0);
