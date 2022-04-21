@@ -69,24 +69,3 @@ impl core::ops::IndexMut<&str> for dyn RpcEnvironment {
         self.result_attrib_mut().index_mut(index)
     }
 }
-
-// deprecated Index variants:
-impl core::ops::Index<&str> for &dyn RpcEnvironment {
-    type Output = Value;
-    fn index(&self, index: &str) -> &Value {
-        self.result_attrib().index(index)
-    }
-}
-
-impl core::ops::Index<&str> for &mut dyn RpcEnvironment {
-    type Output = Value;
-    fn index(&self, index: &str) -> &Value {
-        self.result_attrib().index(index)
-    }
-}
-
-impl core::ops::IndexMut<&str> for &mut dyn RpcEnvironment {
-    fn index_mut(&mut self, index: &str) -> &mut Value {
-        self.result_attrib_mut().index_mut(index)
-    }
-}
