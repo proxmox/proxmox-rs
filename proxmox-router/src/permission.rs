@@ -23,9 +23,8 @@ pub enum Permission {
     Group(&'static str),
     /// Use a parameter value as userid to run sub-permission tests.
     WithParam(&'static str, &'static Permission),
-    /// Check privilege/role on the specified path. The boolean
-    /// attribute specifies if you want to allow partial matches (u64
-    /// interpreted as bitmask).
+    /// Check privilege/role on the specified path. The boolean attribute specifies if you want to
+    /// allow partial matches (u64 interpreted as bitmask).
     Privilege(&'static [&'static str], u64, bool),
     /// Allow access if all sub-permissions match
     And(&'static [&'static Permission]),
