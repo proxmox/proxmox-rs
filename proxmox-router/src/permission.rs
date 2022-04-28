@@ -145,17 +145,22 @@ fn check_api_permission_tail(
         Permission::Privilege(path, expected_privs, partial) => {
             // replace uri vars
             let mut new_path: Vec<&str> = Vec::new();
-            for comp in path.iter() {
-                if comp.starts_with('{') && comp.ends_with('}') {
-                    let param_name = unsafe { comp.get_unchecked(1..comp.len() - 1) };
-                    match param.get(param_name) {
-                        None => return false,
-                        Some(value) => {
-                            new_path.push(value);
+            for outer in path.iter() {
+                // we can have a whole priv path as one component, e.g., for Namespaces
+                for comp in outer.split('/') {
+                    if comp.starts_with('{') && comp.ends_with('}') {
+                        let param_name = unsafe { comp.get_unchecked(1..comp.len() - 1) };
+                        match param.get(param_name) {
+                            None => return false,
+                            Some(value) => {
+                                for subcomp in value.split('/') {
+                                    new_path.push(subcomp);
+                                }
+                            }
                         }
+                    } else {
+                        new_path.push(comp);
                     }
-                } else {
-                    new_path.push(comp);
                 }
             }
             match userid {
@@ -244,6 +249,9 @@ mod test {
                 "/datastore/foo": {
                     "user1": 0b01,
                 },
+                "/datastore/foo/bar/baz": {
+                    "user1": 0b01,
+                },
             }),
             groups: json!({
                 "user1": [
@@ -258,6 +266,7 @@ mod test {
         let mut param = HashMap::new();
         param.insert("user".to_string(), "user1".to_string());
         param.insert("datastore".to_string(), "foo".to_string());
+        param.insert("ns".to_string(), "bar/baz".to_string());
 
         let test_check = |perm: &Permission, userid: Option<&str>, should_succeed: bool| {
             println!("{:?} on {:?}: {}", userid, perm, should_succeed);
@@ -400,6 +409,38 @@ mod test {
         );
         test_check(
             &Permission::Privilege(&["datastore", "{datastore}"], 0b01, true),
+            None,
+            false,
+        );
+        // namespace test where {ns} is a combined variable that needs to be split
+        test_check(
+            &Permission::Privilege(&["datastore", "{datastore}", "{ns}"], 0b01, true),
+            Some("user1"),
+            true,
+        );
+        test_check(
+            &Permission::Privilege(&["datastore", "{datastore}", "{ns}"], 0b01, true),
+            Some("user2"),
+            false,
+        );
+        test_check(
+            &Permission::Privilege(&["datastore", "{datastore}", "{ns}"], 0b01, true),
+            None,
+            false,
+        );
+        // like above but now even the path itself is combined
+        test_check(
+            &Permission::Privilege(&["datastore", "{datastore}/{ns}"], 0b01, true),
+            Some("user1"),
+            true,
+        );
+        test_check(
+            &Permission::Privilege(&["datastore", "{datastore}/{ns}"], 0b01, true),
+            Some("user2"),
+            false,
+        );
+        test_check(
+            &Permission::Privilege(&["datastore", "{datastore}/{ns}"], 0b01, true),
             None,
             false,
         );
