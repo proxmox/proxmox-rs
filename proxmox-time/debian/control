@@ -2,12 +2,13 @@ Source: rust-proxmox-time
 Section: rust
 Priority: optional
 Build-Depends: debhelper (>= 12),
- dh-cargo (>= 24),
+ dh-cargo (>= 25),
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-bitflags-1+default-dev (>= 1.2.1-~~) <!nocheck>,
+ librust-js-sys-0.3+default-dev (>= 0.3.55-~~) <!nocheck>,
  librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
  librust-libc-0.2+default-dev <!nocheck>,
  librust-libc-0.2+extra-traits-dev <!nocheck>,
@@ -25,6 +26,7 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-bitflags-1+default-dev (>= 1.2.1-~~),
+ librust-js-sys-0.3+default-dev (>= 0.3.55-~~),
  librust-lazy-static-1+default-dev (>= 1.4-~~),
  librust-libc-0.2+default-dev,
  librust-libc-0.2+extra-traits-dev,

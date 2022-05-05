@@ -2,7 +2,7 @@ Source: rust-proxmox-sys
 Section: rust
 Priority: optional
 Build-Depends: debhelper (>= 12),
- dh-cargo (>= 24),
+ dh-cargo (>= 25),
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
@@ -14,12 +14,15 @@ Build-Depends: debhelper (>= 12),
  librust-nix-0.19+default-dev (>= 0.19.1-~~) <!nocheck>,
  librust-proxmox-borrow-1+default-dev <!nocheck>,
  librust-proxmox-io-1+default-dev <!nocheck>,
- librust-proxmox-lang-1+default-dev <!nocheck>,
+ librust-proxmox-lang-1+default-dev (>= 1.1-~~) <!nocheck>,
  librust-proxmox-time-1+default-dev <!nocheck>,
  librust-regex-1+default-dev (>= 1.2-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
  librust-zstd-0.6+bindgen-dev <!nocheck>,
  librust-zstd-0.6+default-dev <!nocheck>,
+ libacl1-dev <!nocheck>,
  uuid-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.5.1
@@ -40,12 +43,15 @@ Depends:
  librust-nix-0.19+default-dev (>= 0.19.1-~~),
  librust-proxmox-borrow-1+default-dev,
  librust-proxmox-io-1+default-dev,
- librust-proxmox-lang-1+default-dev,
+ librust-proxmox-lang-1+default-dev (>= 1.1-~~),
  librust-proxmox-time-1+default-dev,
  librust-regex-1+default-dev (>= 1.2-~~),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev,
  librust-zstd-0.6+bindgen-dev,
  librust-zstd-0.6+default-dev,
+ libacl1-dev,
  uuid-dev
 Suggests:
  librust-proxmox-sys+proxmox-sortable-macro-dev (= ${binary:Version})
