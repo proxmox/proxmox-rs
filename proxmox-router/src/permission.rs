@@ -86,9 +86,8 @@ impl<T: UserInformation> UserInformation for std::sync::Arc<T> {
 
 /// Example implementation to check access permissions
 ///
-/// This implementation supports URI variables in Privilege path
-/// components, i.e. '{storage}'. We replace this with actual
-/// parameter values before calling lookup_privs().
+/// This implementation supports URI variables in Privilege path components, i.e. '{storage}'.
+/// We replace this with actual parameter values before calling lookup_privs().
 pub fn check_api_permission(
     perm: &Permission,
     userid: Option<&str>,
