@@ -1,8 +1,8 @@
 //! Data types to decscribe data types.
 //!
-//! This is loosly based on JSON Schema, but uses static RUST data
-//! types. This way we can build completely static API
-//! definitions included with the programs read-only text segment.
+//! This is loosly based on JSON Schema, but uses static rust data types. This way we can build
+//! completely static API definitions that can be included within the programs read-only text
+//! segment.
 
 use std::fmt;
 
