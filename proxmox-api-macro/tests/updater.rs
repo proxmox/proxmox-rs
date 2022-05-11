@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use serde::{Deserialize, Serialize};
+
 use proxmox_schema::{api, ApiType, Updater, UpdaterType};
 
 // Helpers for type checks:
@@ -121,4 +123,35 @@ fn test_super_complex() {
     .schema();
 
     assert_eq!(TEST_SCHEMA, SuperComplexUpdater::API_SCHEMA);
+}
+
+#[api]
+/// A simple string wrapper.
+#[derive(Default, Deserialize, Serialize, Updater)]
+struct MyType(String);
+
+impl proxmox_schema::UpdaterType for MyType {
+    type Updater = Option<Self>;
+}
+
+impl MyType {
+    fn should_skip(&self) -> bool {
+        self.0 == "skipme"
+    }
+}
+
+#[api(
+    properties: {
+        more: { type: MyType },
+    },
+)]
+/// A struct where we replace serde attributes.
+#[derive(Deserialize, Serialize, Updater)]
+pub struct WithSerde {
+    /// Simple string.
+    data: String,
+
+    #[serde(skip_serializing_if = "MyType::should_skip", default)]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    more: MyType,
 }

@@ -514,6 +514,8 @@ fn handle_updater_field(
         }
     };
 
+    updater_attrs.replace_serde_attributes(&mut field.attrs);
+
     // we also need to update the schema to point to the updater's schema for `type: Foo` entries
     if let SchemaItem::ExternType(path) = &mut field_schema.schema.item {
         *path = syn::ExprPath {

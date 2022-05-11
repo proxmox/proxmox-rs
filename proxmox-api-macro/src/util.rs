@@ -817,11 +817,11 @@ pub fn make_derive_attribute(span: Span, content: TokenStream) -> syn::Attribute
     )
 }
 
-/// Extract (remove) an attribute from a list an run a callback on its parameters.
+/// Extract (remove) an attribute from a list and run a callback on its parameters.
 pub fn extract_attributes(
     attributes: &mut Vec<syn::Attribute>,
     attr_name: &str,
-    mut func_matching: impl FnMut(syn::NestedMeta) -> Result<(), syn::Error>,
+    mut func_matching: impl FnMut(&syn::Attribute, syn::NestedMeta) -> Result<(), syn::Error>,
 ) {
     for attr in std::mem::take(attributes) {
         if attr.style != syn::AttrStyle::Outer {
@@ -847,7 +847,7 @@ pub fn extract_attributes(
         };
 
         for entry in list.nested {
-            match func_matching(entry) {
+            match func_matching(&attr, entry) {
                 Ok(()) => (),
                 Err(err) => crate::add_error(err),
             }
