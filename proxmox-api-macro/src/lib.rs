@@ -239,9 +239,13 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     This is only supported for `struct`s with named fields and will generate a new `struct` whose
     name is suffixed with `Updater` containing the `Updater` types of each field as a member.
 
-    Additionally the `#[updater(fixed)]` option is available to make it illegal for an updater to
-    modify a field (generating an error if it is set), while still allowing it to be used to create
-    a new object via the `build_from()` method.
+    For the updater, the following additional attributes can be used:
+
+    - `#[updater(skip)]`: skip the field entirely in the updater
+    - `#[updater(type = "DifferentType")]`: use `DifferentType` instead of `Option<OriginalType>`
+      for the updater field.
+    - `#[updater(serde(<content>))]`: *replace* the `#[serde]` attributes in the generated updater
+      with `<content`>. This can be used to have different `skip_serializing_if` serde attributes.
 
     ```ignore
     #[api]
