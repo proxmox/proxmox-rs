@@ -5,7 +5,7 @@ use anyhow::{bail, Error};
 use crate::*;
 
 /// Enumerate different styles to display parameters/properties.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ParameterDisplayStyle {
     /// Used for properties in configuration files: ``key:``
     Config,
@@ -18,7 +18,7 @@ pub enum ParameterDisplayStyle {
 }
 
 /// CLI usage information format.
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum DocumentationFormat {
     /// Text, command line only (one line).
     Short,
@@ -122,7 +122,7 @@ pub fn dump_properties(
 
         if !indent.is_empty() {
             param_descr = format!("{}{}", indent, param_descr); // indent first line
-            param_descr = param_descr.replace("\n", &format!("\n{}", indent)); // indent rest
+            param_descr = param_descr.replace('\n', &format!("\n{}", indent)); // indent rest
         }
 
         if style == ParameterDisplayStyle::Config {
@@ -398,7 +398,10 @@ pub fn dump_enum_properties(schema: &Schema) -> Result<String, Error> {
     }) = schema
     {
         for item in variants.iter() {
-            res.push_str(&format!(":``{}``: ", item.value));
+            use std::fmt::Write;
+
+            let _ = write!(res, ":``{}``: ", item.value);
+            //res.push_str(&format!(":``{}``: ", item.value));
             let descr = wrap_text("", "  ", item.description, 80);
             res.push_str(&descr);
             res.push('\n');
@@ -410,6 +413,8 @@ pub fn dump_enum_properties(schema: &Schema) -> Result<String, Error> {
 }
 
 pub fn dump_api_return_schema(returns: &ReturnType, style: ParameterDisplayStyle) -> String {
+    use std::fmt::Write;
+
     let schema = &returns.schema;
 
     let mut res = if returns.optional {
@@ -419,7 +424,8 @@ pub fn dump_api_return_schema(returns: &ReturnType, style: ParameterDisplayStyle
     };
 
     let type_text = get_schema_type_text(schema, style);
-    res.push_str(&format!("**{}**\n\n", type_text));
+    //res.push_str(&format!("**{}**\n\n", type_text));
+    let _ = write!(res, "**{}**\n\n", type_text);
 
     match schema {
         Schema::Null => {

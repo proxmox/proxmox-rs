@@ -92,6 +92,8 @@ impl ParameterError {
 
 impl fmt::Display for ParameterError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::fmt::Write;
+
         let mut msg = String::new();
 
         if !self.is_empty() {
@@ -99,7 +101,7 @@ impl fmt::Display for ParameterError {
         }
 
         for (name, err) in self.error_list.iter() {
-            msg.push_str(&format!("parameter '{}': {}\n", name, err));
+            let _ = writeln!(msg, "parameter '{}': {}", name, err);
         }
 
         write!(f, "{}", msg)
