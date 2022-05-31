@@ -32,10 +32,11 @@ pub struct ZstdEncoder<'a, T> {
     state: EncoderState,
 }
 
-impl<'a, T, O> ZstdEncoder<'a, T>
+impl<'a, T, O, E> ZstdEncoder<'a, T>
 where
-    T: Stream<Item = Result<O, Error>> + Unpin,
+    T: Stream<Item = Result<O, E>> + Unpin,
     O: Into<Bytes>,
+    E: Into<Error>,
 {
     /// Returns a new [ZstdEncoder] with default level 3
     pub fn new(inner: T) -> Result<Self, io::Error> {
@@ -79,10 +80,11 @@ impl<'a, T> ZstdEncoder<'a, T> {
     }
 }
 
-impl<'a, T, O> Stream for ZstdEncoder<'a, T>
+impl<'a, T, O, E> Stream for ZstdEncoder<'a, T>
 where
-    T: Stream<Item = Result<O, Error>> + Unpin,
+    T: Stream<Item = Result<O, E>> + Unpin,
     O: Into<Bytes>,
+    E: Into<Error>,
 {
     type Item = Result<Bytes, Error>;
 
@@ -93,7 +95,10 @@ where
             match this.state {
                 EncoderState::Reading => {
                     if let Some(res) = ready!(Pin::new(&mut this.inner).poll_next(cx)) {
-                        let buf = res?;
+                        let buf = match res {
+                            Ok(buf) => buf,
+                            Err(err) => return Poll::Ready(Some(Err(err.into()))),
+                        };
                         this.input_buffer = buf.into();
                         this.state = EncoderState::Writing;
                     } else {
