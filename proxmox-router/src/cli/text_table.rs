@@ -355,7 +355,7 @@ struct TableColumn {
 
 fn format_table<W: Write>(
     output: W,
-    list: &mut Vec<Value>,
+    list: &mut [Value],
     schema: &dyn ObjectSchemaType,
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
@@ -526,13 +526,15 @@ fn render_table<W: Write>(
 
     let mut header = String::new();
     for (i, name) in column_names.iter().enumerate() {
+        use std::fmt::Write;
+
         let column = &tabledata[i];
         header.push(borders.column_separator);
         header.push(' ');
         if column.right_align {
-            header.push_str(&format!("{:>width$}", name, width = column.width));
+            let _ = write!(header, "{:>width$}", name, width = column.width);
         } else {
-            header.push_str(&format!("{:<width$}", name, width = column.width));
+            let _ = write!(header, "{:<width$}", name, width = column.width);
         }
         header.push(' ');
     }
@@ -558,6 +560,8 @@ fn render_table<W: Write>(
             let mut text = String::new();
             let empty_string = String::new();
             for (i, _name) in column_names.iter().enumerate() {
+                use std::fmt::Write;
+
                 let column = &tabledata[i];
                 let lines = &column.cells[pos].lines;
                 let line = lines.get(line_nr).unwrap_or(&empty_string);
@@ -573,9 +577,9 @@ fn render_table<W: Write>(
 
                 let padding = column.width - UnicodeWidthStr::width(line.as_str());
                 if column.right_align {
-                    text.push_str(&format!("{:>width$}{}", "", line, width = padding));
+                    let _ = write!(text, "{:>width$}{}", "", line, width = padding);
                 } else {
-                    text.push_str(&format!("{}{:<width$}", line, "", width = padding));
+                    let _ = write!(text, "{}{:<width$}", line, "", width = padding);
                 }
 
                 if !options.noborder {

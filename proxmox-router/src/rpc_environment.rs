@@ -47,7 +47,7 @@ pub trait RpcEnvironment: Any + AsAny + Send {
 /// We use this to enumerate the different environment types. Some methods
 /// needs to do different things when started from the command line interface,
 /// or when executed from a privileged server running as root.
-#[derive(PartialEq, Copy, Clone)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RpcEnvironmentType {
     /// Command started from command line
     CLI,

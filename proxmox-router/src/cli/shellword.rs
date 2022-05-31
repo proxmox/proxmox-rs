@@ -3,7 +3,7 @@ use anyhow::{bail, Error};
 /// Shell quote type
 pub use rustyline::completion::Quote;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 enum ParseMode {
     Space,
     DoubleQuote,
