@@ -12,7 +12,7 @@ exclude = [ "debian" ]
 anyhow = "1.0"
 http = "0.2"
 hyper = { version = "0.14", features = [ "full" ] }
-nix = "0.19.1"
+nix = "0.24.1"
 percent-encoding = "2.1"
 serde_json = "1.0"
 serde = "1.0"
