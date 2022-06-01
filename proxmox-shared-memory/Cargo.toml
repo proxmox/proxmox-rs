@@ -11,6 +11,6 @@ exclude = [ "debian" ]
 [dependencies]
 anyhow = "1.0"
 libc = "0.2.107"
-nix = "0.19.1"
+nix = "0.24.1"
 
 proxmox-sys = { path = "../proxmox-sys", version = "0.2.0" }

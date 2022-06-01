@@ -168,7 +168,7 @@ impl<T: Sized + Init> SharedMemory<T> {
         match res {
             Ok(_rc) => Ok(mmap),
             // if someone else was faster, open the existing file:
-            Err(nix::Error::Sys(Errno::EEXIST)) => {
+            Err(Errno::EEXIST) => {
                 // if opening fails again now, we'll just error...
                 match nix::fcntl::open(path, oflag, Mode::empty()) {
                     Ok(fd) => {
