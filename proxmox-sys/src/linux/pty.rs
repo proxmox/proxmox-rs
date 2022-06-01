@@ -4,7 +4,6 @@
 
 use std::os::unix::io::{AsRawFd, RawFd};
 
-use nix::errno::Errno::EINVAL;
 use nix::fcntl::OFlag;
 use nix::pty::{grantpt, posix_openpt, ptsname_r, unlockpt, PtyMaster};
 use nix::sys::stat::Mode;
@@ -109,19 +108,13 @@ impl PTY {
 
 impl std::io::Read for PTY {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        match nix::unistd::read(self.primary.as_raw_fd(), buf) {
-            Ok(val) => Ok(val),
-            Err(err) => Err(err.as_errno().unwrap_or(EINVAL).into()),
-        }
+        Ok(nix::unistd::read(self.primary.as_raw_fd(), buf)?)
     }
 }
 
 impl std::io::Write for PTY {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        match nix::unistd::write(self.primary.as_raw_fd(), buf) {
-            Ok(size) => Ok(size),
-            Err(err) => Err(err.as_errno().unwrap_or(EINVAL).into()),
-        }
+        Ok(nix::unistd::write(self.primary.as_raw_fd(), buf)?)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {

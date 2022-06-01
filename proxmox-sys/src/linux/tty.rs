@@ -9,7 +9,6 @@ use nix::sys::stat::Mode;
 use proxmox_lang::try_block;
 
 use crate::c_try;
-use crate::error::SysError;
 use crate::fd::Fd;
 
 /// Get the current size of the terminal (for stdout).
@@ -86,8 +85,8 @@ impl TtyOutput {
                 Mode::empty(),
             ) {
                 Ok(fd) => Ok(Some(TtyOutput::DevTty(fd))),
-                Err(nix::Error::Sys(nix::errno::Errno::ENXIO)) => Ok(None),
-                Err(err) => Err(err.into_io_error()),
+                Err(nix::errno::Errno::ENXIO) => Ok(None),
+                Err(err) => Err(err.into()),
             }
         }
     }

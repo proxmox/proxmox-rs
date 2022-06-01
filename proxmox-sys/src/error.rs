@@ -16,7 +16,6 @@
 use std::io;
 
 use nix::errno::Errno;
-use nix::Error;
 
 use proxmox_lang::error::io_err_other;
 
@@ -91,14 +90,16 @@ impl SysError for io::Error {
 impl SysError for nix::Error {
     #[inline]
     fn is_errno(&self, value: Errno) -> bool {
-        *self == Error::Sys(value)
+        *self == value
     }
 
     #[inline]
     fn into_io_error(self) -> io::Error {
         match self {
-            Error::Sys(raw) => io::Error::from_raw_os_error(raw as _),
-            other => io::Error::new(io::ErrorKind::Other, other.to_string()),
+            Errno::UnknownErrno => {
+                io::Error::new(io::ErrorKind::Other, "unknown error".to_string())
+            }
+            other => io::Error::from_raw_os_error(other as _),
         }
     }
 }

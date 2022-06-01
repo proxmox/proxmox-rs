@@ -134,7 +134,7 @@ fn create_path_at_do(
                     .unwrap_or(stat::Mode::from_bits_truncate(0o755));
 
                 created = match stat::mkdirat(at.as_raw_fd(), path, mode) {
-                    Err(nix::Error::Sys(Errno::EEXIST)) => false,
+                    Err(Errno::EEXIST) => false,
                     Err(e) => return Err(e.into()),
                     Ok(_) => true,
                 };

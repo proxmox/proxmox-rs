@@ -273,7 +273,7 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
                 new_path.as_ptr(),
                 libc::RENAME_NOREPLACE,
             )) {
-                Err(nix::Error::Sys(Errno::EINVAL)) => (), // dumb file system, try `link`+`unlink`
+                Err(Errno::EINVAL) => (), // dumb file system, try `link`+`unlink`
                 other => return other,
             };
             // but some file systems don't support `RENAME_NOREPLACE`

@@ -1,3 +1,5 @@
+use std::os::unix::ffi::OsStrExt;
+
 pub mod command;
 pub mod crypt;
 pub mod email;
@@ -34,12 +36,17 @@ use fd::Fd;
 pub fn nodename() -> &'static str {
     lazy_static::lazy_static! {
         static ref NODENAME: String = {
-            nix::sys::utsname::uname()
-                .nodename()
-                .split('.')
-                .next()
-                .unwrap()
-                .to_owned()
+            std::str::from_utf8(
+                nix::sys::utsname::uname()
+                    .expect("failed to get nodename")
+                    .nodename()
+                    .as_bytes(),
+            )
+            .expect("non utf-8 nodename not supported")
+            .split('.')
+            .next()
+            .unwrap()
+            .to_owned()
         };
     }
 
