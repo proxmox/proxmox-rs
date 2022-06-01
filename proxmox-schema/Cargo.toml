@@ -18,7 +18,7 @@ textwrap = "0.11"
 
 # the upid type needs this for 'getpid'
 libc = { version = "0.2", optional = true }
-nix = { version = "0.19", optional = true }
+nix = { version = "0.24.1", optional = true }
 
 proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = "1.0.3" }
 

@@ -209,6 +209,7 @@ fn unescape_id(text: &str) -> Result<String, Error> {
 
 #[cfg(feature = "upid-api-impl")]
 mod upid_impl {
+    use std::os::unix::ffi::OsStrExt;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     use anyhow::{bail, format_err, Error};
@@ -246,8 +247,8 @@ mod upid_impl {
                 worker_type: worker_type.to_owned(),
                 worker_id,
                 auth_id,
-                node: nix::sys::utsname::uname()
-                    .nodename()
+                node: std::str::from_utf8(nix::sys::utsname::uname()?.nodename().as_bytes())
+                    .map_err(|_| format_err!("non-utf8 nodename not supported"))?
                     .split('.')
                     .next()
                     .ok_or_else(|| format_err!("failed to get nodename from uname()"))?
