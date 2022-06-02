@@ -7,6 +7,7 @@ pub mod error;
 pub mod fd;
 pub mod fs;
 pub mod linux;
+#[cfg(feature = "logrotate")]
 pub mod logrotate;
 pub mod macros;
 pub mod mmap;

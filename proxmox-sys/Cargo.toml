@@ -18,7 +18,7 @@ nix = "0.24.1"
 regex = "1.2"
 serde_json = "1.0"
 serde = { version = "1.0", features = [ "derive" ] }
-zstd = { version = "0.6", features = [ "bindgen" ] }
+zstd = { version = "0.6", features = [ "bindgen" ], optional = true}
 
 # Macro crates:
 proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.2" }
@@ -31,3 +31,4 @@ proxmox-time = { path = "../proxmox-time", version = "1.0.0" }
 [features]
 default = []
 sortable-macro = ["proxmox-sortable-macro"]
+logrotate = ["zstd"]
