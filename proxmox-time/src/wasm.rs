@@ -10,21 +10,14 @@ pub fn epoch_f64() -> f64 {
     js_sys::Date::now() / 1000.0
 }
 
-/// Convert Unix epoch into RFC3339 UTC string
-pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
+/// Convert Unix epoch into RFC3339 local time with TZ
+pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
     let js_date = js_sys::Date::new_0();
     js_date.set_time((epoch as f64) * 1000.0);
     js_date
         .to_iso_string()
         .as_string()
         .ok_or_else(|| format_err!("to_iso_string did not return a string"))
-}
-
-/// Convert Unix epoch into RFC3339 local time with TZ
-pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
-    // Note: JS does not provide this, so we need to implement this ourselves.
-    // for now, we simply return UTC instead
-    epoch_to_rfc3339_utc(epoch)
 }
 
 /// Parse RFC3339 into Unix epoch
