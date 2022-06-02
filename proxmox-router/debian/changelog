@@ -1,3 +1,11 @@
+rust-proxmox-router (1.2.3-1) unstable; urgency=medium
+
+  * update to nix 0.24
+
+  * update to rustyline 9
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 2 Jun 2022 12:18:22 +0200
+
 rust-proxmox-router (1.2.2-1) unstable; urgency=medium
 
   * router: drop Index impls for references
