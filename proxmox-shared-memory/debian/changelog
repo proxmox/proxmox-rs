@@ -1,3 +1,9 @@
+rust-proxmox-shared-memory (0.2.1-1) unstable; urgency=medium
+
+  * rebuild for nix 0.24 transition
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 2 Jun 2022 12:13:00 +0200
+
 rust-proxmox-shared-memory (0.2.0-1) unstable; urgency=medium
 
   * rebuild using proxmox-sys 0.2.0
