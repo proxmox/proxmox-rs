@@ -401,7 +401,6 @@ pub fn dump_enum_properties(schema: &Schema) -> Result<String, Error> {
             use std::fmt::Write;
 
             let _ = write!(res, ":``{}``: ", item.value);
-            //res.push_str(&format!(":``{}``: ", item.value));
             let descr = wrap_text("", "  ", item.description, 80);
             res.push_str(&descr);
             res.push('\n');
@@ -424,7 +423,6 @@ pub fn dump_api_return_schema(returns: &ReturnType, style: ParameterDisplayStyle
     };
 
     let type_text = get_schema_type_text(schema, style);
-    //res.push_str(&format!("**{}**\n\n", type_text));
     let _ = write!(res, "**{}**\n\n", type_text);
 
     match schema {
