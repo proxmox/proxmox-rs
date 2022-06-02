@@ -20,7 +20,7 @@ unicode-width ="0.1.8"
 
 # cli:
 tokio = { version = "1.0", features = [], optional = true }
-rustyline = { version = "7", optional = true }
+rustyline = { version = "9", optional = true }
 libc = { version = "0.2", optional = true }
 
 proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
