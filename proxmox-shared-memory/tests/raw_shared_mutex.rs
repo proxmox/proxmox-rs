@@ -88,7 +88,7 @@ fn create_test_dir<T: Init>(filename: &str) -> Option<PathBuf> {
     let oflag = OFlag::O_RDWR | OFlag::O_CLOEXEC;
 
     // check for O_TMPFILE support
-    if let Err(nix::Error::Sys(nix::errno::Errno::EOPNOTSUPP)) = nix::fcntl::open(
+    if let Err(nix::errno::Errno::EOPNOTSUPP) = nix::fcntl::open(
         path.parent().unwrap(),
         oflag | OFlag::O_TMPFILE,
         Mode::empty(),
