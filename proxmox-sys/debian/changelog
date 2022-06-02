@@ -1,3 +1,17 @@
+rust-proxmox-sys (0.3.0) stable; urgency=medium
+
+  * feature-gate "logrotate" (and zstd)
+
+  * bump nix to 0.24
+
+  * move io error helpers to proxmox-lang
+
+  * add FileSystemInformation struct and helper
+
+  * use nix::unistd::fchown instead of re-implementing it
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 2 Jun 2022 12:08:34 +0200
+
 rust-proxmox-sys (0.2.2) stable; urgency=medium
 
   * update sortable-macro to 0.1.2, drop requirement for the identity macro
