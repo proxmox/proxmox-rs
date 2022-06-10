@@ -69,11 +69,12 @@ impl MetricsData {
 }
 
 /// Helper to send a list of [`MetricsData`] to a list of [`Metrics`].
-pub async fn send_data_to_channels(
+pub async fn send_data_to_channels<'a, I: IntoIterator<Item = &'a Metrics>>(
     values: &[Arc<MetricsData>],
-    connections: &[Metrics],
+    connections: I,
 ) -> Vec<Result<(), Error>> {
-    let mut futures = Vec::with_capacity(connections.len());
+    let connections = connections.into_iter();
+    let mut futures = Vec::with_capacity(connections.size_hint().0);
     for connection in connections {
         futures.push(async move {
             for data in values {
