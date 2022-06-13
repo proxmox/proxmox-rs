@@ -1,3 +1,9 @@
+rust-proxmox-metrics (0.2.0-1) unstable; urgency=medium
+
+  * send_data_to_channels now takes an IntoIterator instead of a slice
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 13 Jun 2022 09:55:34 +0200
+
 rust-proxmox-metrics (0.1.1-1) unstable; urgency=medium
 
   * bump proxmox-async dependency to 0.4
