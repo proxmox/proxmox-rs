@@ -10,7 +10,7 @@ exclude = [ "debian" ]
 
 [dependencies]
 anyhow = "1.0"
-env_logger = "0.9"
+env_logger = { version = "0.9", optional = true }
 http = "0.2"
 hyper = { version = "0.14", features = [ "full" ] }
 nix = "0.24.1"
@@ -30,5 +30,5 @@ proxmox-async = { path = "../proxmox-async", version = "0.4.1" }
 
 [features]
 default = [ "cli" ]
-cli = [ "libc", "rustyline", "tokio" ]
+cli = [ "env_logger", "libc", "rustyline", "tokio" ]
 test-harness = [ "proxmox-schema/test-harness" ]
