@@ -1,3 +1,13 @@
+rust-proxmox-http (0.6.3-1) unstable; urgency=medium
+
+  * add json_object_to_query helper
+
+  * add HttpClient trait (and implement for SimpleHttp client)
+
+  * move TLS helper to client feature
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Jun 2022 10:43:15 +0200
+
 rust-proxmox-http (0.6.2-1) unstable; urgency=medium
 
   * rebuild with proxmox-sys 0.3.0
