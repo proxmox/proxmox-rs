@@ -1,0 +1,30 @@
+[package]
+name = "proxmox-subscription"
+version = "0.1.0"
+authors = ["Proxmox Support Team <support@proxmox.com>"]
+edition = "2018"
+license = "AGPL-3"
+description = "Proxmox subscription utilitites"
+
+exclude = [ "debian" ]
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.13"
+hex = "0.4"
+lazy_static = "1.4"
+openssl = "0.10"
+regex = "1.5"
+serde = "1.0"
+serde_json = "1.0"
+
+proxmox-http = { path = "../proxmox-http", version = "0.6.3", default_features = false, features = ["client-trait", "http-helpers"] }
+proxmox-serde = { path = "../proxmox-serde", version = "0.1.1", features = ["serde_json"]}
+proxmox-sys = "0.3"
+proxmox-time = "1.1"
+
+proxmox-schema = { path = "../proxmox-schema", version = "1.3.3", features = ["api-macro"], optional = true }
+
+[features]
+default = []
+api-types = ["proxmox-schema"]

@@ -14,6 +14,7 @@ CRATES = \
 	 proxmox-shared-memory \
 	 proxmox-section-config \
 	 proxmox-sortable-macro \
+	 proxmox-subscription \
 	 proxmox-sys \
 	 proxmox-tfa \
 	 proxmox-time \

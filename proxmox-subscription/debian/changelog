@@ -1,0 +1,7 @@
+rust-proxmox-subscription (0.1.0-1) unstable; urgency=medium
+
+  * initial package
+
+  * extend subscription code to handle signed SubscriptionInfo
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 20 Jun 2022 16:26:02 +0200
