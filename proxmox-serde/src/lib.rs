@@ -3,6 +3,9 @@
 #[macro_use]
 pub mod serde_macros;
 
+#[cfg(feature = "serde_json")]
+pub mod json;
+
 /// Serialize Unix epoch (i64) as RFC3339.
 ///
 /// Usage example:
