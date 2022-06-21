@@ -1,3 +1,9 @@
+rust-proxmox-serde (0.1.1) stable; urgency=medium
+
+  * add to_canonical_json/write_canonical_json
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Jun 2022 10:28:08 +0200
+
 rust-proxmox-serde (0.1.0) stable; urgency=medium
 
   * imported code from proxmox/src/tools/serde.rs

@@ -11,7 +11,6 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-time-1+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
- librust-serde-json-1+default-dev <!nocheck>,
  uuid-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.5.1
@@ -29,16 +28,32 @@ Depends:
  librust-proxmox-time-1+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
- librust-serde-json-1+default-dev,
  uuid-dev
+Suggests:
+ librust-proxmox-serde+serde-json-dev (= ${binary:Version})
 Provides:
  librust-proxmox-serde+default-dev (= ${binary:Version}),
  librust-proxmox-serde-0-dev (= ${binary:Version}),
  librust-proxmox-serde-0+default-dev (= ${binary:Version}),
  librust-proxmox-serde-0.1-dev (= ${binary:Version}),
  librust-proxmox-serde-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-serde-0.1.1-dev (= ${binary:Version}),
+ librust-proxmox-serde-0.1.1+default-dev (= ${binary:Version})
 Description: Serde formatting tools - Rust source code
  This package contains the source for the Rust proxmox-serde crate, packaged by
  debcargo for use with cargo and dh-cargo.
+
+Package: librust-proxmox-serde+serde-json-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-serde-dev (= ${binary:Version}),
+ librust-serde-json-1+default-dev
+Provides:
+ librust-proxmox-serde-0+serde-json-dev (= ${binary:Version}),
+ librust-proxmox-serde-0.1+serde-json-dev (= ${binary:Version}),
+ librust-proxmox-serde-0.1.1+serde-json-dev (= ${binary:Version})
+Description: Serde formatting tools - feature "serde_json"
+ This metapackage enables feature "serde_json" for the Rust proxmox-serde crate,
+ by pulling in any additional dependencies needed by that feature.
