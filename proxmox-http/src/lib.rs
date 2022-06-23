@@ -13,3 +13,8 @@ pub use proxy_config::ProxyConfig;
 
 #[cfg(feature = "client")]
 pub mod client;
+
+#[cfg(feature = "client-trait")]
+mod client_trait;
+#[cfg(feature = "client-trait")]
+pub use client_trait::HttpClient;

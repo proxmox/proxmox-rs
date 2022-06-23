@@ -31,6 +31,7 @@ proxmox-lang = { path = "../proxmox-lang", optional = true, version = "1.1" }
 default = []
 
 client = [ "futures", "http-helpers", "hyper/full", "openssl", "tokio/io-util", "tokio-openssl" ]
+client-trait = [ "http" ]
 http-helpers = [ "base64", "http", "proxmox-sys", "serde_json", "url" ]
 websocket = [
     "base64",
