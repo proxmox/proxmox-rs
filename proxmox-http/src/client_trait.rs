@@ -7,7 +7,7 @@ pub trait HttpClient<T> {
     fn post(
         &self,
         uri: &str,
-        body: Option<String>,
+        body: Option<&str>,
         content_type: Option<&str>,
     ) -> Result<Response<T>, Error>;
 }

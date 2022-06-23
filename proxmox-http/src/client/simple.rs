@@ -146,14 +146,79 @@ impl SimpleHttp {
     }
 
     pub async fn response_body_string(res: Response<Body>) -> Result<String, Error> {
-        let buf = hyper::body::to_bytes(res).await?;
-        String::from_utf8(buf.to_vec())
-            .map_err(|err| format_err!("Error converting HTTP result data: {}", err))
+        Self::convert_body_to_string(Ok(res))
+            .await
+            .map(|res| res.into_body())
+    }
+
+    async fn convert_body_to_string(
+        response: Result<Response<Body>, Error>,
+    ) -> Result<Response<String>, Error> {
+        match response {
+            Ok(res) => {
+                let (parts, body) = res.into_parts();
+
+                let buf = hyper::body::to_bytes(body).await?;
+                let new_body = String::from_utf8(buf.to_vec())
+                    .map_err(|err| format_err!("Error converting HTTP result data: {}", err))?;
+
+                Ok(Response::from_parts(parts, new_body))
+            }
+            Err(err) => Err(err),
+        }
     }
 }
 
 impl Default for SimpleHttp {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
+impl crate::HttpClient<Body> for SimpleHttp {
+    fn get(&self, uri: &str) -> Result<Response<Body>, Error> {
+        let req = Request::builder()
+            .method("GET")
+            .uri(uri)
+            .body(Body::empty())?;
+        proxmox_async::runtime::block_on(self.request(req))
+    }
+
+    fn post(
+        &self,
+        uri: &str,
+        body: Option<&str>,
+        content_type: Option<&str>,
+    ) -> Result<Response<Body>, Error> {
+        proxmox_async::runtime::block_on(self.post(uri, body.map(|s| s.to_owned()), content_type))
+    }
+}
+
+#[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
+impl crate::HttpClient<String> for SimpleHttp {
+    fn get(&self, uri: &str) -> Result<Response<String>, Error> {
+        let req = Request::builder()
+            .method("GET")
+            .uri(uri)
+            .body(Body::empty())?;
+        proxmox_async::runtime::block_on(async move {
+            Self::convert_body_to_string(self.request(req).await).await
+        })
+    }
+
+    fn post(
+        &self,
+        uri: &str,
+        body: Option<&str>,
+        content_type: Option<&str>,
+    ) -> Result<Response<String>, Error> {
+        proxmox_async::runtime::block_on(async move {
+            Self::convert_body_to_string(
+                self.post(uri, body.map(|s| s.to_owned()), content_type)
+                    .await,
+            )
+            .await
+        })
     }
 }

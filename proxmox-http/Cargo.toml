@@ -23,6 +23,7 @@ tokio = { version = "1.0", features = [], optional = true }
 tokio-openssl = { version = "0.6.1", optional = true }
 url = { version = "2", optional = true }
 
+proxmox-async = { path = "../proxmox-async", optional = true, version = "0.4.1" }
 proxmox-sys = { path = "../proxmox-sys", optional = true, version = "0.3.0" }
 proxmox-io = { path = "../proxmox-io", optional = true, version = "1.0.0" }
 proxmox-lang = { path = "../proxmox-lang", optional = true, version = "1.1" }
