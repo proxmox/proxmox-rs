@@ -4,9 +4,6 @@
 pub mod websocket;
 
 #[cfg(feature = "http-helpers")]
-pub mod tls;
-
-#[cfg(feature = "http-helpers")]
 pub mod uri;
 
 #[cfg(feature = "http-helpers")]

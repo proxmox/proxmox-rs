@@ -16,7 +16,7 @@ anyhow = "1.0"
 base64 = { version = "0.13", optional = true }
 futures = { version = "0.3", optional = true }
 http = { version = "0.2", optional = true }
-hyper = { version = "0.14", features = [ "full" ], optional = true }
+hyper = { version = "0.14", default_features = false, optional = true }
 openssl =  { version = "0.10", optional = true }
 serde_json = { version = "1.0", optional = true }
 tokio = { version = "1.0", features = [], optional = true }
@@ -30,8 +30,8 @@ proxmox-lang = { path = "../proxmox-lang", optional = true, version = "1.1" }
 [features]
 default = []
 
-client = [ "futures", "http-helpers", "openssl" ]
-http-helpers = [ "base64", "http", "hyper", "serde_json", "tokio/io-util", "tokio-openssl", "proxmox-sys", "url" ]
+client = [ "futures", "http-helpers", "hyper/full", "openssl", "tokio/io-util", "tokio-openssl" ]
+http-helpers = [ "base64", "http", "proxmox-sys", "serde_json", "url" ]
 websocket = [
     "base64",
     "futures",
