@@ -1,8 +1,6 @@
 use anyhow::{bail, format_err, Error};
-use openssl::{
-    hash::{hash, DigestBytes, MessageDigest},
-    pkey::Public,
-};
+use openssl::hash::{hash, DigestBytes, MessageDigest};
+use proxmox_time::TmEditor;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "api-types")]
@@ -14,6 +12,7 @@ pub(crate) const SHARED_KEY_DATA: &str = "kjfdlskfhiuewhfk947368";
 
 /// How long the local key is valid for in between remote checks
 pub(crate) const SUBSCRIPTION_MAX_LOCAL_KEY_AGE: i64 = 15 * 24 * 3600;
+pub(crate) const SUBSCRIPTION_MAX_LOCAL_SIGNED_KEY_AGE: i64 = 365 * 24 * 3600;
 pub(crate) const SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE: i64 = 5 * 24 * 3600;
 
 // Aliases are needed for PVE compat!
@@ -116,26 +115,10 @@ impl SubscriptionInfo {
 
     /// Whether a signature exists - *this does not check the signature's validity!*
     ///
-    /// Use [SubscriptionInfo::verify()] to verify the signature.
+    /// Use [SubscriptionInfo::check_signature()] to verify the
+    /// signature.
     pub fn is_signed(&self) -> bool {
         self.signature.is_some()
-    }
-
-    /// Verify signature, if `self` is signed. Returns `false` if `self` is unsigned, `true` if signature is valid for `key`.
-    pub fn verify(&self, key: &openssl::pkey::PKey<Public>) -> Result<bool, Error> {
-        if self.signature.is_none() {
-            return Ok(false);
-        }
-        let (signed, signature) = self.signed_data()?;
-        let signature = match signature {
-            None => bail!("Failed to extract signature value."),
-            Some(sig) => sig,
-        };
-
-        match key.verify(&signed, &signature) {
-            Ok(()) => Ok(true),
-            Err(err) => Err(format_err!("Signature verification failed - {err}")),
-        }
     }
 
     /// Checks whether a [SubscriptionInfo]'s `checktime` matches the age criteria:
@@ -152,7 +135,9 @@ impl SubscriptionInfo {
         let now = proxmox_time::epoch_i64();
         let age = now - self.checktime.unwrap_or(0);
 
-        let cutoff = if recheck {
+        let cutoff = if self.is_signed() {
+            SUBSCRIPTION_MAX_LOCAL_SIGNED_KEY_AGE
+        } else if recheck {
             SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE
         } else {
             SUBSCRIPTION_MAX_LOCAL_KEY_AGE + SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE
@@ -168,6 +153,24 @@ impl SubscriptionInfo {
                 self.status = SubscriptionStatus::INVALID;
                 self.message = Some("subscription information too old".to_string());
                 self.signature = None;
+            }
+        }
+
+        if self.is_signed() && self.status == SubscriptionStatus::ACTIVE {
+            if let Some(next_due) = self.nextduedate.as_ref() {
+                match parse_next_due(next_due.as_str()) {
+                    Ok(next_due) if now > next_due => {
+                        self.status = SubscriptionStatus::INVALID;
+                        self.message = Some("subscription information too old".to_string());
+                        self.signature = None;
+                    }
+                    Ok(_) => {}
+                    Err(err) => {
+                        self.status = SubscriptionStatus::INVALID;
+                        self.message = Some(format!("Failed parsing 'nextduedate' - {err}"));
+                        self.signature = None;
+                    }
+                }
             }
         }
     }
@@ -196,6 +199,30 @@ impl SubscriptionInfo {
             (Some(_), Ok(_)) => {}
         }
     }
+
+    /// Check a [SubscriptionInfo]'s signature, if one is available.
+    ///
+    /// `status` is set to [SubscriptionStatus::INVALID] and `message` to a human-readable error
+    /// message in case a signature is available but not valid for the given `key`.
+    pub fn check_signature(&mut self, key: &openssl::pkey::PKey<openssl::pkey::Public>) {
+        let verify = |info: &SubscriptionInfo| -> Result<(), Error> {
+            let (signed, signature) = info.signed_data()?;
+            let signature = match signature {
+                None => bail!("Failed to extract signature value."),
+                Some(sig) => sig,
+            };
+
+            key.verify(&signed, &signature)
+                .map_err(|err| format_err!("Signature verification failed - {err}"))
+        };
+
+        if self.is_signed() {
+            if let Err(err) = verify(&self) {
+                self.status = SubscriptionStatus::INVALID;
+                self.message = Some(format!("Signature validation failed - {err}"));
+            }
+        }
+    }
 }
 
 /// Shortcut for md5 sums.
@@ -212,4 +239,31 @@ pub fn get_hardware_address() -> Result<String, Error> {
     let digest = md5sum(&contents).map_err(|e| format_err!("Error digesting host key - {}", e))?;
 
     Ok(hex::encode(&digest).to_uppercase())
+}
+
+fn parse_next_due(value: &str) -> Result<i64, Error> {
+    let mut components = value.split("-");
+    let year = components
+        .next()
+        .ok_or_else(|| format_err!("missing year component."))?
+        .parse::<i32>()?;
+    let month = components
+        .next()
+        .ok_or_else(|| format_err!("missing month component."))?
+        .parse::<i32>()?;
+    let day = components
+        .next()
+        .ok_or_else(|| format_err!("missing day component."))?
+        .parse::<i32>()?;
+
+    if components.next().is_some() {
+        bail!("cannot parse 'nextduedate' value '{value}'");
+    }
+
+    let mut tm = TmEditor::new(true);
+    tm.set_year(year)?;
+    tm.set_mon(month)?;
+    tm.set_mday(day)?;
+
+    tm.into_epoch()
 }
