@@ -2,7 +2,7 @@ use std::borrow::{Borrow, BorrowMut};
 use std::ops::{Deref, DerefMut};
 use std::os::unix::io::{AsRawFd, RawFd};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{format_err, Error};
 use nix::dir;
 use nix::dir::Dir;
 use nix::fcntl::OFlag;
@@ -148,7 +148,7 @@ where
         let entry = entry?;
         let file_type = match entry.file_type() {
             Some(file_type) => file_type,
-            None => bail!("unable to detect file type"),
+            None => get_file_type(entry.parent_fd(), entry.file_name())?,
         };
 
         callback(
@@ -320,4 +320,34 @@ fn do_lock_dir_noblock(
     })?;
 
     Ok(handle)
+}
+
+/// extracts [`nix::dir::Type`] from a [`nix::sys::stat::FileStat`] if possible
+pub fn file_type_from_file_stat(stat: &nix::sys::stat::FileStat) -> Option<nix::dir::Type> {
+    use nix::dir::Type;
+
+    // mask out all unnecessary bits
+    Some(match stat.st_mode & libc::S_IFMT {
+        libc::S_IFSOCK => Type::Socket,
+        libc::S_IFLNK => Type::Symlink,
+        libc::S_IFREG => Type::File,
+        libc::S_IFBLK => Type::BlockDevice,
+        libc::S_IFDIR => Type::Directory,
+        libc::S_IFCHR => Type::CharacterDevice,
+        libc::S_IFIFO => Type::Fifo,
+        _ => return None,
+    })
+}
+
+/// Returns the file type of the `path` in the `parent_fd`
+///
+/// calls [`nix::sys::stat::fstatat`] to determine it
+pub fn get_file_type<P: ?Sized + nix::NixPath>(
+    parent_fd: RawFd,
+    path: &P,
+) -> Result<nix::dir::Type, Error> {
+    let stat = nix::sys::stat::fstatat(parent_fd, path, nix::fcntl::AtFlags::AT_SYMLINK_NOFOLLOW)?;
+    let file_type =
+        file_type_from_file_stat(&stat).ok_or_else(|| format_err!("unable to detect file type"))?;
+    Ok(file_type)
 }
