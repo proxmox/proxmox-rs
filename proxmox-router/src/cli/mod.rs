@@ -51,13 +51,15 @@ pub type CompletionFunction = fn(&str, &HashMap<String, String>) -> Vec<String>;
 
 /// Initialize default logger for CLI binaries
 pub fn init_cli_logger(env_var_name: &str, default_log_level: &str) {
-    env_logger::Builder::from_env(env_logger::Env::new().filter_or(env_var_name, default_log_level))
-        .write_style(env_logger::WriteStyle::Never)
-        .format_level(false)
-        .format_module_path(false)
-        .format_target(false)
-        .format_timestamp(None)
-        .init();
+    env_logger::Builder::from_env(
+        env_logger::Env::new().filter_or(env_var_name, default_log_level),
+    )
+    .write_style(env_logger::WriteStyle::Never)
+    .format_level(false)
+    .format_module_path(false)
+    .format_target(false)
+    .format_timestamp(None)
+    .init();
 }
 
 /// Define a simple CLI command.
