@@ -1,3 +1,9 @@
+rust-proxmox-sys (0.3.1) stable; urgency=medium
+
+  * partially fix #2915: scandir: stat if file_type from readdir is unknown
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 29 Jun 2022 09:40:15 +0200
+
 rust-proxmox-sys (0.3.0) stable; urgency=medium
 
   * feature-gate "logrotate" (and zstd)
