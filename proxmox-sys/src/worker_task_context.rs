@@ -34,23 +34,23 @@ pub trait WorkerTaskContext: Send + Sync {
 /// Convenience implementation:
 impl<T: WorkerTaskContext + ?Sized> WorkerTaskContext for std::sync::Arc<T> {
     fn abort_requested(&self) -> bool {
-        <T as WorkerTaskContext>::abort_requested(&*self)
+        <T as WorkerTaskContext>::abort_requested(self)
     }
 
     fn check_abort(&self) -> Result<(), Error> {
-        <T as WorkerTaskContext>::check_abort(&*self)
+        <T as WorkerTaskContext>::check_abort(self)
     }
 
     fn shutdown_requested(&self) -> bool {
-        <T as WorkerTaskContext>::shutdown_requested(&*self)
+        <T as WorkerTaskContext>::shutdown_requested(self)
     }
 
     fn fail_on_shutdown(&self) -> Result<(), Error> {
-        <T as WorkerTaskContext>::fail_on_shutdown(&*self)
+        <T as WorkerTaskContext>::fail_on_shutdown(self)
     }
 
     fn log(&self, level: log::Level, message: &std::fmt::Arguments) {
-        <T as WorkerTaskContext>::log(&*self, level, message)
+        <T as WorkerTaskContext>::log(self, level, message)
     }
 }
 

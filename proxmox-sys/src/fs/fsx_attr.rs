@@ -15,7 +15,7 @@ nix::ioctl_read!(fs_ioc_fsgetxattr, b'X', 31, FSXAttr);
 nix::ioctl_write_ptr!(fs_ioc_fssetxattr, b'X', 32, FSXAttr);
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 /// Rust bindings for struct fsxattr (fsgetxattr, fssetxattr)
 pub struct FSXAttr {
     pub fsx_xflags: u32,
@@ -24,17 +24,4 @@ pub struct FSXAttr {
     pub fsx_projid: u32,
     pub fsx_cowextsize: u32,
     pub fsx_pad: [u8; 8],
-}
-
-impl Default for FSXAttr {
-    fn default() -> Self {
-        FSXAttr {
-            fsx_xflags: 0u32,
-            fsx_extsize: 0u32,
-            fsx_nextents: 0u32,
-            fsx_projid: 0u32,
-            fsx_cowextsize: 0u32,
-            fsx_pad: [0u8; 8],
-        }
-    }
 }
