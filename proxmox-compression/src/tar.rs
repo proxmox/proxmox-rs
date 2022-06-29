@@ -58,7 +58,7 @@ impl<W: AsyncWrite + Unpin> Builder<W> {
     {
         append_path_header(&mut self.inner, header, path.as_ref()).await?;
         header.set_cksum();
-        self.add(&header, data).await
+        self.add(header, data).await
     }
 
     /// Adds a new link (symbolic or hard) entry to this archive with the specified path and target.
@@ -82,7 +82,7 @@ impl<W: AsyncWrite + Unpin> Builder<W> {
             append_data(&mut self.inner, &extension, &mut ext_data).await?;
         }
         header.set_cksum();
-        self.add(&header, tokio::io::empty()).await
+        self.add(header, tokio::io::empty()).await
     }
 
     /// Finish the archive and flush the underlying writer
