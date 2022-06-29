@@ -3,7 +3,7 @@
 /// Modeled after the nightly `std::ops::ControlFlow`.
 ///
 /// Will be removed with crate version 2.0.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[deprecated(since = "1.1.0", note = "use std::ops::ControlFlow")]
 pub enum ControlFlow<B, C = ()> {
     Continue(C),
