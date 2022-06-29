@@ -184,6 +184,7 @@ impl RateLimiterVec {
         }
     }
 
+    #[allow(clippy::len_without_is_empty)]
     /// Return the number of TBF entries (group_size)
     pub fn len(&self) -> usize {
         self.state.len()

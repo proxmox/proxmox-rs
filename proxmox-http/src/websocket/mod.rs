@@ -82,7 +82,7 @@ impl std::fmt::Display for WebSocketError {
 impl std::error::Error for WebSocketError {}
 
 #[repr(u8)]
-#[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, PartialOrd, Copy, Clone)]
 /// Represents an OpCode of a websocket frame
 pub enum OpCode {
     /// A fragmented frame
