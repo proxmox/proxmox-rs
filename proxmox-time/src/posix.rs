@@ -175,6 +175,8 @@ pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
 
 /// Convert Unix epoch into RFC3339 local time with TZ
 pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
+    use std::fmt::Write as _;
+
     let localtime = localtime(epoch)?;
 
     let year = localtime.tm_year + 1900;
@@ -199,7 +201,7 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 
     let mut s = strftime("%10FT%T", &localtime)?;
     s.push(prefix);
-    s.push_str(&format!("{:02}:{:02}", hours, mins));
+    let _ = write!(s, "{:02}:{:02}", hours, mins);
 
     Ok(s)
 }

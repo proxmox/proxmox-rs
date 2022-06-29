@@ -427,7 +427,7 @@ fn parse_time_spec(i: &str) -> IResult<&str, TimeSpec> {
         opt(preceded(tag(":"), parse_date_time_comp_list(0, 60))),
     ))(i)?;
 
-    let hour = opt_hour.unwrap_or_else(Vec::new);
+    let hour = opt_hour.unwrap_or_default();
     let second = opt_second.unwrap_or_else(|| vec![DateTimeValue::Single(0)]);
 
     Ok((

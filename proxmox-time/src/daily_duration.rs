@@ -14,7 +14,7 @@ use crate::{parse_weekdays_range, WeekDays};
 use crate::TmEditor;
 
 /// Time of Day (hour with minute)
-#[derive(Default, PartialEq, Clone, Debug)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct HmTime {
     pub hour: u32,
     pub minute: u32,
