@@ -283,7 +283,7 @@ fn check_input_type(input: &syn::FnArg) -> Result<(&syn::PatType, &syn::PatIdent
 
 fn handle_function_signature(
     input_schema: &mut Schema,
-    return_type: &mut Option<ReturnType>,
+    _return_type: &mut Option<ReturnType>,
     func: &mut syn::ItemFn,
     wrapper_ts: &mut TokenStream,
     default_consts: &mut TokenStream,
@@ -416,8 +416,8 @@ fn handle_function_signature(
     */
 
     create_wrapper_function(
-        input_schema,
-        return_type,
+        //input_schema,
+        //return_type,
         param_list,
         func,
         wrapper_ts,
@@ -474,8 +474,8 @@ fn is_value_type(ty: &syn::Type) -> bool {
 }
 
 fn create_wrapper_function(
-    _input_schema: &Schema,
-    _returns_schema: &Option<ReturnType>,
+    //_input_schema: &Schema,
+    //_returns_schema: &Option<ReturnType>,
     param_list: Vec<(FieldName, ParameterType)>,
     func: &syn::ItemFn,
     wrapper_ts: &mut TokenStream,
