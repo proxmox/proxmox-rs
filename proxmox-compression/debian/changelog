@@ -1,3 +1,13 @@
+rust-proxmox-compression (0.1.2-1) stable; urgency=medium
+
+  * make ZstdEncoder more generic over the error type
+
+  * add `tar_directory` function
+
+  * clippy cleanups
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 05 Jul 2022 13:44:11 +0200
+
 rust-proxmox-compression (0.1.1-1) stable; urgency=medium
 
   * add tar encoder and zstd support

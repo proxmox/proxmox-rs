@@ -12,6 +12,7 @@ Build-Depends: debhelper (>= 12),
  librust-endian-trait-0.6+default-dev <!nocheck>,
  librust-flate2-1+default-dev <!nocheck>,
  librust-futures-0.3+default-dev <!nocheck>,
+ librust-libc-0.2+default-dev <!nocheck>,
  librust-proxmox-io-1+default-dev <!nocheck>,
  librust-proxmox-io-1+tokio-dev <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~) <!nocheck>,
@@ -39,6 +40,7 @@ Depends:
  librust-endian-trait-0.6+default-dev,
  librust-flate2-1+default-dev,
  librust-futures-0.3+default-dev,
+ librust-libc-0.2+default-dev,
  librust-proxmox-io-1+default-dev,
  librust-proxmox-io-1+tokio-dev,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~),
@@ -55,8 +57,8 @@ Provides:
  librust-proxmox-compression-0+default-dev (= ${binary:Version}),
  librust-proxmox-compression-0.1-dev (= ${binary:Version}),
  librust-proxmox-compression-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-compression-0.1.1-dev (= ${binary:Version}),
- librust-proxmox-compression-0.1.1+default-dev (= ${binary:Version})
+ librust-proxmox-compression-0.1.2-dev (= ${binary:Version}),
+ librust-proxmox-compression-0.1.2+default-dev (= ${binary:Version})
 Description: Contains compression utilitites (such as an Zip Encoder for async rust) - Rust source code
  This package contains the source for the Rust proxmox-compression crate,
  packaged by debcargo for use with cargo and dh-cargo.
