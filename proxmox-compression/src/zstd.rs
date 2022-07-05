@@ -95,10 +95,7 @@ where
             match this.state {
                 EncoderState::Reading => {
                     if let Some(res) = ready!(Pin::new(&mut this.inner).poll_next(cx)) {
-                        let buf = match res {
-                            Ok(buf) => buf,
-                            Err(err) => return Poll::Ready(Some(Err(err.into()))),
-                        };
+                        let buf = res.map_err(Into::into)?;
                         this.input_buffer = buf.into();
                         this.state = EncoderState::Writing;
                     } else {
