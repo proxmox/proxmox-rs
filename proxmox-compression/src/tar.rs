@@ -178,102 +178,103 @@ where
     let mut hardlinks: HashMap<u64, HashMap<u64, PathBuf>> = HashMap::new(); // dev -> inode -> first path
 
     for entry in WalkDir::new(&source).into_iter() {
-        match entry {
-            Ok(entry) => {
-                let entry_path = entry.path().to_owned();
-                let encoder = &mut encoder;
-                let hardlinks = &mut hardlinks;
-
-                if let Err(err) = async move {
-                    let entry_path_no_base = entry.path().strip_prefix(base_path)?;
-                    let metadata = entry.metadata()?;
-                    let mut header = Header::new_gnu();
-                    header.set_mode(metadata.mode());
-                    header.set_mtime(metadata.mtime() as u64);
-                    header.set_uid(metadata.uid() as u64);
-                    header.set_gid(metadata.gid() as u64);
-                    header.set_size(0);
-                    let dev = metadata.dev();
-
-                    let file_type = entry.file_type();
-
-                    if file_type.is_file() {
-                        if metadata.nlink() > 1 {
-                            let ino = metadata.ino();
-                            if let Some(map) = hardlinks.get_mut(&dev) {
-                                if let Some(target) = map.get(&ino) {
-                                    header.set_entry_type(tar::EntryType::Link);
-                                    encoder
-                                        .add_link(&mut header, entry_path_no_base, target)
-                                        .await?;
-                                    return Ok(());
-                                } else {
-                                    map.insert(ino, entry_path_no_base.to_path_buf());
-                                }
-                            } else {
-                                let mut map = HashMap::new();
-                                map.insert(ino, entry_path_no_base.to_path_buf());
-                                hardlinks.insert(dev, map);
-                            }
-                        }
-                        let file = tokio::fs::File::open(entry.path()).await?;
-                        header.set_size(metadata.size());
-                        header.set_cksum();
-                        encoder
-                            .add_entry(&mut header, entry_path_no_base, file)
-                            .await?;
-                    } else if file_type.is_dir() {
-                        header.set_entry_type(EntryType::Directory);
-                        header.set_cksum();
-                        encoder
-                            .add_entry(&mut header, entry_path_no_base, tokio::io::empty())
-                            .await?;
-                    } else if file_type.is_symlink() {
-                        let target = std::fs::read_link(entry.path())?;
-                        header.set_entry_type(EntryType::Symlink);
-                        encoder
-                            .add_link(&mut header, entry_path_no_base, target)
-                            .await?;
-                    } else if file_type.is_block_device() {
-                        header.set_entry_type(EntryType::Block);
-                        header.set_device_major(unsafe { libc::major(dev) })?;
-                        header.set_device_minor(unsafe { libc::minor(dev) })?;
-                        header.set_cksum();
-                        encoder
-                            .add_entry(&mut header, entry_path_no_base, tokio::io::empty())
-                            .await?;
-                    } else if file_type.is_char_device() {
-                        header.set_entry_type(EntryType::Char);
-                        header.set_device_major(unsafe { libc::major(dev) })?;
-                        header.set_device_minor(unsafe { libc::minor(dev) })?;
-                        header.set_cksum();
-                        encoder
-                            .add_entry(&mut header, entry_path_no_base, tokio::io::empty())
-                            .await?;
-                    } else if file_type.is_fifo() {
-                        header.set_entry_type(EntryType::Fifo);
-                        header.set_device_major(0)?;
-                        header.set_device_minor(0)?;
-                        header.set_cksum();
-                        encoder
-                            .add_entry(&mut header, entry_path_no_base, tokio::io::empty())
-                            .await?;
-                    }
-                    // ignore other file_types
-                    Ok::<_, Error>(())
-                }
-                .await
-                {
-                    eprintln!(
-                        "zip: error encoding file or directory '{}': {}",
-                        entry_path.display(),
-                        err
-                    );
-                }
-            }
+        let entry = match entry {
+            Ok(entry) => entry,
             Err(err) => {
                 eprintln!("zip: error reading directory entry: {}", err);
+                continue;
             }
+        };
+
+        let entry_path = entry.path().to_owned();
+        let encoder = &mut encoder;
+        let hardlinks = &mut hardlinks;
+
+        if let Err(err) = async move {
+            let entry_path_no_base = entry.path().strip_prefix(base_path)?;
+            let metadata = entry.metadata()?;
+            let mut header = Header::new_gnu();
+            header.set_mode(metadata.mode());
+            header.set_mtime(metadata.mtime() as u64);
+            header.set_uid(metadata.uid() as u64);
+            header.set_gid(metadata.gid() as u64);
+            header.set_size(0);
+            let dev = metadata.dev();
+
+            let file_type = entry.file_type();
+
+            if file_type.is_file() {
+                if metadata.nlink() > 1 {
+                    let ino = metadata.ino();
+                    if let Some(map) = hardlinks.get_mut(&dev) {
+                        if let Some(target) = map.get(&ino) {
+                            header.set_entry_type(tar::EntryType::Link);
+                            encoder
+                                .add_link(&mut header, entry_path_no_base, target)
+                                .await?;
+                            return Ok(());
+                        } else {
+                            map.insert(ino, entry_path_no_base.to_path_buf());
+                        }
+                    } else {
+                        let mut map = HashMap::new();
+                        map.insert(ino, entry_path_no_base.to_path_buf());
+                        hardlinks.insert(dev, map);
+                    }
+                }
+                let file = tokio::fs::File::open(entry.path()).await?;
+                header.set_size(metadata.size());
+                header.set_cksum();
+                encoder
+                    .add_entry(&mut header, entry_path_no_base, file)
+                    .await?;
+            } else if file_type.is_dir() {
+                header.set_entry_type(EntryType::Directory);
+                header.set_cksum();
+                encoder
+                    .add_entry(&mut header, entry_path_no_base, tokio::io::empty())
+                    .await?;
+            } else if file_type.is_symlink() {
+                let target = std::fs::read_link(entry.path())?;
+                header.set_entry_type(EntryType::Symlink);
+                encoder
+                    .add_link(&mut header, entry_path_no_base, target)
+                    .await?;
+            } else if file_type.is_block_device() {
+                header.set_entry_type(EntryType::Block);
+                header.set_device_major(unsafe { libc::major(dev) })?;
+                header.set_device_minor(unsafe { libc::minor(dev) })?;
+                header.set_cksum();
+                encoder
+                    .add_entry(&mut header, entry_path_no_base, tokio::io::empty())
+                    .await?;
+            } else if file_type.is_char_device() {
+                header.set_entry_type(EntryType::Char);
+                header.set_device_major(unsafe { libc::major(dev) })?;
+                header.set_device_minor(unsafe { libc::minor(dev) })?;
+                header.set_cksum();
+                encoder
+                    .add_entry(&mut header, entry_path_no_base, tokio::io::empty())
+                    .await?;
+            } else if file_type.is_fifo() {
+                header.set_entry_type(EntryType::Fifo);
+                header.set_device_major(0)?;
+                header.set_device_minor(0)?;
+                header.set_cksum();
+                encoder
+                    .add_entry(&mut header, entry_path_no_base, tokio::io::empty())
+                    .await?;
+            }
+            // ignore other file_types
+            Ok::<_, Error>(())
+        }
+        .await
+        {
+            eprintln!(
+                "zip: error encoding file or directory '{}': {}",
+                entry_path.display(),
+                err
+            );
         }
     }
     Ok(())
