@@ -666,8 +666,7 @@ where
                 encoder.add_entry(ze, content).await?;
             }
             // ignore other file types
-            let ok: Result<(), Error> = Ok(());
-            ok
+            Ok::<(), Error>(())
         }
         .await
         {
