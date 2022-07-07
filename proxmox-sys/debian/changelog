@@ -1,3 +1,11 @@
+rust-proxmox-sys (0.3.2) stable; urgency=medium
+
+  * make systemd::escape_unit() more flexible
+
+  * add systemd::unescape_unit_path
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 Jul 2022 11:48:09 +0200
+
 rust-proxmox-sys (0.3.1) stable; urgency=medium
 
   * partially fix #2915: scandir: stat if file_type from readdir is unknown

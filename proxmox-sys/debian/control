@@ -58,8 +58,8 @@ Provides:
  librust-proxmox-sys-0+default-dev (= ${binary:Version}),
  librust-proxmox-sys-0.3-dev (= ${binary:Version}),
  librust-proxmox-sys-0.3+default-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.1-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.1+default-dev (= ${binary:Version})
+ librust-proxmox-sys-0.3.2-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.3.2+default-dev (= ${binary:Version})
 Description: System tools (using nix) - Rust source code
  This package contains the source for the Rust proxmox-sys crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -77,8 +77,8 @@ Provides:
  librust-proxmox-sys-0+sortable-macro-dev (= ${binary:Version}),
  librust-proxmox-sys-0.3+proxmox-sortable-macro-dev (= ${binary:Version}),
  librust-proxmox-sys-0.3+sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.1+proxmox-sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.1+sortable-macro-dev (= ${binary:Version})
+ librust-proxmox-sys-0.3.2+proxmox-sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.3.2+sortable-macro-dev (= ${binary:Version})
 Description: System tools (using nix) - feature "proxmox-sortable-macro" and 1 more
  This metapackage enables feature "proxmox-sortable-macro" for the Rust proxmox-
  sys crate, by pulling in any additional dependencies needed by that
@@ -100,8 +100,8 @@ Provides:
  librust-proxmox-sys-0+logrotate-dev (= ${binary:Version}),
  librust-proxmox-sys-0.3+zstd-dev (= ${binary:Version}),
  librust-proxmox-sys-0.3+logrotate-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.1+zstd-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.1+logrotate-dev (= ${binary:Version})
+ librust-proxmox-sys-0.3.2+zstd-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.3.2+logrotate-dev (= ${binary:Version})
 Description: System tools (using nix) - feature "zstd" and 1 more
  This metapackage enables feature "zstd" for the Rust proxmox-sys crate, by
  pulling in any additional dependencies needed by that feature.
