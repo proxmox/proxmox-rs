@@ -1,3 +1,7 @@
+use std::ffi::OsString;
+use std::os::unix::ffi::OsStringExt;
+use std::path::PathBuf;
+
 use anyhow::{bail, Error};
 
 #[allow(clippy::manual_range_contains)]
@@ -16,15 +20,20 @@ fn parse_hex_digit(d: u8) -> Result<u8, Error> {
 }
 
 /// Escape strings for usage in systemd unit names
-pub fn escape_unit(mut unit: &str, is_path: bool) -> String {
+pub fn escape_unit<P: AsRef<[u8]>>(unit: P, is_path: bool) -> String {
+    escape_unit_bytes(unit.as_ref(), is_path)
+}
+
+fn escape_unit_bytes(mut unit: &[u8], is_path: bool) -> String {
     if is_path {
-        unit = unit.trim_matches('/');
+        while !unit.is_empty() && unit[0] == b'/' {
+            unit = &unit[1..];
+        }
+
         if unit.is_empty() {
             return String::from("-");
         }
     }
-
-    let unit = unit.as_bytes();
 
     let mut escaped = String::new();
 
@@ -50,6 +59,16 @@ pub fn escape_unit(mut unit: &str, is_path: bool) -> String {
 
 /// Unescape strings used in systemd unit names
 pub fn unescape_unit(text: &str) -> Result<String, Error> {
+    Ok(String::from_utf8(unescape_unit_do(text)?)?)
+}
+
+/// Unescape strings used in systemd unit names
+pub fn unescape_unit_path(text: &str) -> Result<PathBuf, Error> {
+    Ok(OsString::from_vec(unescape_unit_do(text)?).into())
+}
+
+/// Unescape strings used in systemd unit names
+fn unescape_unit_do(text: &str) -> Result<Vec<u8>, Error> {
     let mut i = text.as_bytes();
 
     let mut data: Vec<u8> = Vec::new();
@@ -79,7 +98,5 @@ pub fn unescape_unit(text: &str) -> Result<String, Error> {
         }
     }
 
-    let text = String::from_utf8(data)?;
-
-    Ok(text)
+    Ok(data)
 }
