@@ -164,7 +164,12 @@ pub fn update_apt_auth<P: AsRef<Path>>(
 #[test]
 fn test_pve_compat() {
     // generated with PVE::Subscription::write_subscription() based on a real test subscription
-    let content = "pve4t-123456789a\nNx5qaBSAwkhF/o39/zPAeA\neyJrZXkiOiJwdmU0dC0xMjM0NTY3ODlhIiwibmV4dGR1ZWRhdGUiOiIwMDAwLTAwLTAwIiwic3Rh\ndHVzIjoiQWN0aXZlIiwidmFsaWRkaXJlY3RvcnkiOiI4MzAwMDAwMDAxMjM0NTY3ODlBQkNERUYw\nMDAwMDA0MiIsImNoZWNrdGltZSI6MTYwMDAwMDAwMCwicHJvZHVjdG5hbWUiOiJQcm94bW94IFZF\nIEZyZWUgVHJpYWwgU3Vic2NyaXB0aW9uIDEyIE1vbnRocyAoNCBDUFVzKSIsInJlZ2RhdGUiOiIy\nMDIyLTA0LTA3IDAwOjAwOjAwIn0=";
+    let content = "\
+        pve4t-123456789a\nNx5qaBSAwkhF/o39/zPAeA\neyJrZXkiOiJwdmU0dC0xMjM0NTY3ODlhIiwibmV4dGR1ZWRhd\
+        GUiOiIwMDAwLTAwLTAwIiwic3Rh\ndHVzIjoiQWN0aXZlIiwidmFsaWRkaXJlY3RvcnkiOiI4MzAwMDAwMDAxMjM0NT\
+        Y3ODlBQkNERUYw\nMDAwMDA0MiIsImNoZWNrdGltZSI6MTYwMDAwMDAwMCwicHJvZHVjdG5hbWUiOiJQcm94bW94IFZ\
+        F\nIEZyZWUgVHJpYWwgU3Vic2NyaXB0aW9uIDEyIE1vbnRocyAoNCBDUFVzKSIsInJlZ2RhdGUiOiIy\nMDIyLTA0LT\
+        A3IDAwOjAwOjAwIn0=";
 
     let expected = SubscriptionInfo {
         status: SubscriptionStatus::Active,
@@ -190,7 +195,12 @@ fn test_pve_compat() {
 
 #[test]
 fn test_pbs_compat() {
-    let content = "pbst-123456789a\n//6dnM9V6nNmSh2GbQfZDA==\neyJzdGF0dXMiOiJhY3RpdmUiLCJzZXJ2ZXJpZCI6IjgzMDAwMDAwMDEyMzQ1Njc4OUFCQ0RFRjAwMDAwMDQyIiwiY2hlY2t0aW1lIjoxNjAwMDAwMDAwLCJrZXkiOiJwYnN0LTEyMzQ1Njc4OWEiLCJwcm9kdWN0bmFtZSI6IlByb3htb3ggQmFja3VwIFNlcnZlciBUZXN0IFN1YnNjcmlwdGlvbiAtMSB5ZWFyIiwicmVnZGF0ZSI6IjIwMjAtMDktMTkgMDA6MDA6MDAiLCJuZXh0ZHVlZGF0ZSI6IjIwMjEtMDktMTkiLCJ1cmwiOiJodHRwczovL3d3dy5wcm94bW94LmNvbS9lbi9wcm94bW94LWJhY2t1cC1zZXJ2ZXIvcHJpY2luZyJ9\n";
+    let content = "\
+        pbst-123456789a\n//6dnM9V6nNmSh2GbQfZDA==\neyJzdGF0dXMiOiJhY3RpdmUiLCJzZXJ2ZXJpZCI6IjgzMDAw\
+        MDAwMDEyMzQ1Njc4OUFCQ0RFRjAwMDAwMDQyIiwiY2hlY2t0aW1lIjoxNjAwMDAwMDAwLCJrZXkiOiJwYnN0LTEyMzQ\
+        1Njc4OWEiLCJwcm9kdWN0bmFtZSI6IlByb3htb3ggQmFja3VwIFNlcnZlciBUZXN0IFN1YnNjcmlwdGlvbiAtMSB5ZW\
+        FyIiwicmVnZGF0ZSI6IjIwMjAtMDktMTkgMDA6MDA6MDAiLCJuZXh0ZHVlZGF0ZSI6IjIwMjEtMDktMTkiLCJ1cmwiO\
+        iJodHRwczovL3d3dy5wcm94bW94LmNvbS9lbi9wcm94bW94LWJhY2t1cC1zZXJ2ZXIvcHJpY2luZyJ9\n";
 
     let expected = SubscriptionInfo {
         key: Some("pbst-123456789a".to_string()),
