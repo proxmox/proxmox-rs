@@ -17,7 +17,7 @@ pub(crate) const SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE: i64 = 5 * 24 * 3600;
 
 // Aliases are needed for PVE compat!
 #[cfg_attr(feature = "api-types", api())]
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 /// Subscription status
 pub enum SubscriptionStatus {
@@ -59,7 +59,7 @@ impl std::fmt::Display for SubscriptionStatus {
     },
 ))]
 #[cfg_attr(feature = "api-types", derive(Updater))]
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 /// Proxmox subscription information
 pub struct SubscriptionInfo {
