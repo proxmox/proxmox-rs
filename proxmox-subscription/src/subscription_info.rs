@@ -102,8 +102,7 @@ impl SubscriptionInfo {
             .as_object_mut()
             .ok_or_else(|| format_err!("subscription info not a JSON object"))?
             .remove("signature")
-            .map(|v| v.as_str().map(|v| v.to_owned()))
-            .flatten();
+            .and_then(|v| v.as_str().map(|v| v.to_owned()));
 
         if self.is_signed() && signature.is_none() {
             bail!("Failed to extract signature value!");
@@ -188,7 +187,7 @@ impl SubscriptionInfo {
             }
             (None, _) => {
                 self.status = SubscriptionStatus::Invalid;
-                self.message = Some(format!("Missing server ID."));
+                self.message = Some("Missing server ID.".to_string());
                 self.signature = None;
             }
             (Some(contained), Ok(expected)) if &expected != contained => {
@@ -217,7 +216,7 @@ impl SubscriptionInfo {
         };
 
         if self.is_signed() {
-            if let Err(err) = verify(&self) {
+            if let Err(err) = verify(self) {
                 self.status = SubscriptionStatus::Invalid;
                 self.message = Some(format!("Signature validation failed - {err}"));
             }
@@ -242,7 +241,7 @@ pub fn get_hardware_address() -> Result<String, Error> {
 }
 
 fn parse_next_due(value: &str) -> Result<i64, Error> {
-    let mut components = value.split("-");
+    let mut components = value.split('-');
     let year = components
         .next()
         .ok_or_else(|| format_err!("missing year component."))?
