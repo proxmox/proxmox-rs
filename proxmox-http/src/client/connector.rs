@@ -184,8 +184,8 @@ impl hyper::service::Service<Uri> for HttpsConnector {
                     if let Some(authorization) = authorization {
                         let _ = write!(
                             connect_request,
-                            "Proxy-Authorization: {}\r\n",
-                            authorization
+                            "Proxy-Authorization: Basic {}\r\n",
+                            base64::encode(authorization)
                         );
                     }
                     let _ = write!(connect_request, "Host: {0}:{1}\r\n\r\n", host, port);
