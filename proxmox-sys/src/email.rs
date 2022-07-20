@@ -16,6 +16,8 @@ pub fn sendmail(
     mailfrom: Option<&str>,
     author: Option<&str>,
 ) -> Result<(), Error> {
+    use std::fmt::Write as _;
+
     if mailto.is_empty() {
         bail!("At least one recipient has to be specified!")
     }
@@ -47,28 +49,25 @@ pub fn sendmail(
     let boundary = format!("----_=_NextPart_001_{}", now);
     if is_multipart {
         body.push_str("Content-Type: multipart/alternative;\n");
-        body.push_str(&format!("\tboundary=\"{}\"\n", boundary));
+        let _ = writeln!(body, "\tboundary=\"{}\"", boundary);
         body.push_str("MIME-Version: 1.0\n");
     } else if !subject.is_ascii() {
         body.push_str("MIME-Version: 1.0\n");
     }
     if !subject.is_ascii() {
-        body.push_str(&format!(
-            "Subject: =?utf-8?B?{}?=\n",
-            base64::encode(subject)
-        ));
+        let _ = writeln!(body, "Subject: =?utf-8?B?{}?=", base64::encode(subject));
     } else {
-        body.push_str(&format!("Subject: {}\n", subject));
+        let _ = writeln!(body, "Subject: {}", subject);
     }
-    body.push_str(&format!("From: {} <{}>\n", author, mailfrom));
-    body.push_str(&format!("To: {}\n", &recipients));
+    let _ = writeln!(body, "From: {} <{}>", author, mailfrom);
+    let _ = writeln!(body, "To: {}", &recipients);
     let localtime = proxmox_time::localtime(now)?;
     let rfc2822_date = proxmox_time::strftime("%a, %d %b %Y %T %z", &localtime)?;
-    body.push_str(&format!("Date: {}\n", rfc2822_date));
+    let _ = writeln!(body, "Date: {}", rfc2822_date);
     if is_multipart {
         body.push('\n');
         body.push_str("This is a multi-part message in MIME format.\n");
-        body.push_str(&format!("\n--{}\n", boundary));
+        let _ = write!(body, "\n--{}\n", boundary);
     }
     if let Some(text) = text {
         body.push_str("Content-Type: text/plain;\n");
@@ -77,7 +76,7 @@ pub fn sendmail(
         body.push('\n');
         body.push_str(text);
         if is_multipart {
-            body.push_str(&format!("\n--{}\n", boundary));
+            let _ = write!(body, "\n--{}\n", boundary);
         }
     }
     if let Some(html) = html {
@@ -87,7 +86,7 @@ pub fn sendmail(
         body.push('\n');
         body.push_str(html);
         if is_multipart {
-            body.push_str(&format!("\n--{}--", boundary));
+            let _ = write!(body, "\n--{}--", boundary);
         }
     }
 
