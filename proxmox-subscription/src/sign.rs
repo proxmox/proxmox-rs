@@ -90,7 +90,8 @@ impl SignedResponse {
 #[derive(Serialize, Deserialize)]
 /// A sign request for offline keys
 pub struct SignRequest {
-    /// Subscription key of `proxmox-offline-mirror` instance issuing this request (must be [crate::SubscriptionStatus::ACTIVE]).
+    /// Subscription key of `proxmox-offline-mirror` instance issuing this request (must be
+    /// [crate::SubscriptionStatus::Active]).
     pub mirror_key: ServerBlob,
     /// Offline keys that should be signed by server.
     pub blobs: Vec<ServerBlob>,

@@ -161,7 +161,8 @@ fn test_parse_register_response() -> Result<(), Error> {
     Ok(())
 }
 
-/// Queries the WHMCS server to register/update the subscription key information, parsing the response into a [SubscriptionInfo].
+/// Queries the WHMCS server to register/update the subscription key information, parsing the
+/// response into a [SubscriptionInfo].
 pub fn check_subscription<C: HttpClient<String>>(
     key: String,
     server_id: String,

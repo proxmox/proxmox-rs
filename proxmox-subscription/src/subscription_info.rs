@@ -128,7 +128,7 @@ impl SubscriptionInfo {
     /// - If `recheck` is set to `true`, unsigned instances are only treated as valid for 5 days
     ///  (this mode is used to decide whether to refresh the subscription information)
     ///
-    /// If the criteria are not met, `status` is set to [SubscriptionStatus::INVALID] and `message`
+    /// If the criteria are not met, `status` is set to [SubscriptionStatus::Invalid] and `message`
     /// to a human-readable error message.
     pub fn check_age(&mut self, recheck: bool) {
         let now = proxmox_time::epoch_i64();
@@ -176,7 +176,7 @@ impl SubscriptionInfo {
 
     /// Check that server ID contained in [SubscriptionInfo] matches that of current system.
     ///
-    /// `status` is set to [SubscriptionStatus::INVALID] and `message` to a human-readable
+    /// `status` is set to [SubscriptionStatus::Invalid] and `message` to a human-readable
     ///  message in case it does not.
     pub fn check_server_id(&mut self) {
         match (self.serverid.as_ref(), get_hardware_address()) {
@@ -201,7 +201,7 @@ impl SubscriptionInfo {
 
     /// Check a [SubscriptionInfo]'s signature, if one is available.
     ///
-    /// `status` is set to [SubscriptionStatus::INVALID] and `message` to a human-readable error
+    /// `status` is set to [SubscriptionStatus::Invalid] and `message` to a human-readable error
     /// message in case a signature is available but not valid for the given `key`.
     pub fn check_signature(&mut self, key: &openssl::pkey::PKey<openssl::pkey::Public>) {
         let verify = |info: &SubscriptionInfo| -> Result<(), Error> {
