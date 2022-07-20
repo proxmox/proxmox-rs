@@ -49,11 +49,11 @@ fn register_subscription<C: HttpClient<String>>(
 
 fn parse_status(value: &str) -> SubscriptionStatus {
     match value.to_lowercase().as_str() {
-        "active" => SubscriptionStatus::ACTIVE,
-        "new" => SubscriptionStatus::NEW,
-        "notfound" => SubscriptionStatus::NOTFOUND,
-        "invalid" => SubscriptionStatus::INVALID,
-        _ => SubscriptionStatus::INVALID,
+        "active" => SubscriptionStatus::Active,
+        "new" => SubscriptionStatus::New,
+        "notfound" => SubscriptionStatus::NotFound,
+        "invalid" => SubscriptionStatus::Invalid,
+        _ => SubscriptionStatus::Invalid,
     }
 }
 
@@ -67,7 +67,7 @@ fn parse_register_response(
 ) -> Result<SubscriptionInfo, Error> {
     let mut info = SubscriptionInfo {
         key: Some(key),
-        status: SubscriptionStatus::NOTFOUND,
+        status: SubscriptionStatus::NotFound,
         checktime: Some(checktime),
         url: Some(product_url),
         ..Default::default()
@@ -97,7 +97,7 @@ fn parse_register_response(
         }
     }
 
-    if let SubscriptionStatus::ACTIVE = info.status {
+    if let SubscriptionStatus::Active = info.status {
         let response_raw = format!("{}{}", SHARED_KEY_DATA, challenge);
         let expected = hex::encode(md5sum(response_raw.as_bytes())?);
 
@@ -148,7 +148,7 @@ fn test_parse_register_response() -> Result<(), Error> {
         SubscriptionInfo {
             key: Some(key),
             serverid: Some(server_id),
-            status: SubscriptionStatus::ACTIVE,
+            status: SubscriptionStatus::Active,
             checktime: Some(checktime),
             url: Some("https://www.proxmox.com/en/proxmox-backup-server/pricing".into()),
             message: None,

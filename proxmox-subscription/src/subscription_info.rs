@@ -24,29 +24,29 @@ pub enum SubscriptionStatus {
     // FIXME: remove?
     /// newly set subscription, not yet checked
     #[serde(alias = "New")]
-    NEW,
+    New,
     /// no subscription set
     #[serde(alias = "Notfound")]
-    NOTFOUND,
+    NotFound,
     /// subscription set and active
     #[serde(alias = "Active")]
-    ACTIVE,
+    Active,
     /// subscription set but invalid for this server
     #[serde(alias = "Invalid")]
-    INVALID,
+    Invalid,
 }
 impl Default for SubscriptionStatus {
     fn default() -> Self {
-        SubscriptionStatus::NOTFOUND
+        SubscriptionStatus::NotFound
     }
 }
 impl std::fmt::Display for SubscriptionStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SubscriptionStatus::NEW => write!(f, "New"),
-            SubscriptionStatus::NOTFOUND => write!(f, "NotFound"),
-            SubscriptionStatus::ACTIVE => write!(f, "Active"),
-            SubscriptionStatus::INVALID => write!(f, "Invalid"),
+            SubscriptionStatus::New => write!(f, "New"),
+            SubscriptionStatus::NotFound => write!(f, "NotFound"),
+            SubscriptionStatus::Active => write!(f, "Active"),
+            SubscriptionStatus::Invalid => write!(f, "Invalid"),
         }
     }
 }
@@ -145,28 +145,28 @@ impl SubscriptionInfo {
 
         // allow some delta for DST changes or time syncs, 1.5h
         if age < -5400 {
-            self.status = SubscriptionStatus::INVALID;
+            self.status = SubscriptionStatus::Invalid;
             self.message = Some("last check date too far in the future".to_string());
             self.signature = None;
         } else if age > cutoff {
-            if let SubscriptionStatus::ACTIVE = self.status {
-                self.status = SubscriptionStatus::INVALID;
+            if let SubscriptionStatus::Active = self.status {
+                self.status = SubscriptionStatus::Invalid;
                 self.message = Some("subscription information too old".to_string());
                 self.signature = None;
             }
         }
 
-        if self.is_signed() && self.status == SubscriptionStatus::ACTIVE {
+        if self.is_signed() && self.status == SubscriptionStatus::Active {
             if let Some(next_due) = self.nextduedate.as_ref() {
                 match parse_next_due(next_due.as_str()) {
                     Ok(next_due) if now > next_due => {
-                        self.status = SubscriptionStatus::INVALID;
+                        self.status = SubscriptionStatus::Invalid;
                         self.message = Some("subscription information too old".to_string());
                         self.signature = None;
                     }
                     Ok(_) => {}
                     Err(err) => {
-                        self.status = SubscriptionStatus::INVALID;
+                        self.status = SubscriptionStatus::Invalid;
                         self.message = Some(format!("Failed parsing 'nextduedate' - {err}"));
                         self.signature = None;
                     }
@@ -182,17 +182,17 @@ impl SubscriptionInfo {
     pub fn check_server_id(&mut self) {
         match (self.serverid.as_ref(), get_hardware_address()) {
             (_, Err(err)) => {
-                self.status = SubscriptionStatus::INVALID;
+                self.status = SubscriptionStatus::Invalid;
                 self.message = Some(format!("Failed to obtain server ID - {err}."));
                 self.signature = None;
             }
             (None, _) => {
-                self.status = SubscriptionStatus::INVALID;
+                self.status = SubscriptionStatus::Invalid;
                 self.message = Some(format!("Missing server ID."));
                 self.signature = None;
             }
             (Some(contained), Ok(expected)) if &expected != contained => {
-                self.status = SubscriptionStatus::INVALID;
+                self.status = SubscriptionStatus::Invalid;
                 self.message = Some("Server ID mismatch.".to_string());
                 self.signature = None;
             }
@@ -218,7 +218,7 @@ impl SubscriptionInfo {
 
         if self.is_signed() {
             if let Err(err) = verify(&self) {
-                self.status = SubscriptionStatus::INVALID;
+                self.status = SubscriptionStatus::Invalid;
                 self.message = Some(format!("Signature validation failed - {err}"));
             }
         }

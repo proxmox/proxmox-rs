@@ -53,7 +53,7 @@ fn parse_subscription_file(raw: &str) -> Result<Option<SubscriptionInfo>, Error>
     let pbs_csum = calc_csum(&encoded)?;
     if checksum != pbs_csum.as_ref() && checksum != pve_csum.as_ref() {
         return Ok(Some(SubscriptionInfo {
-            status: SubscriptionStatus::INVALID,
+            status: SubscriptionStatus::Invalid,
             message: Some("checksum mismatch".to_string()),
             ..info
         }));
@@ -62,7 +62,7 @@ fn parse_subscription_file(raw: &str) -> Result<Option<SubscriptionInfo>, Error>
     match info.key {
         Some(ref info_key) if info_key != key => {
             return Ok(Some(SubscriptionInfo {
-                status: SubscriptionStatus::INVALID,
+                status: SubscriptionStatus::Invalid,
                 message: Some("subscription key mismatch".to_string()),
                 ..info
             }))
@@ -109,7 +109,7 @@ pub fn write_subscription<P: AsRef<Path>>(
 ) -> Result<(), Error> {
     let raw = if info.key == None || info.checktime == None {
         String::new()
-    } else if let SubscriptionStatus::NEW = info.status {
+    } else if let SubscriptionStatus::New = info.status {
         format!("{}\n", info.key.as_ref().unwrap())
     } else {
         let encoded = base64::encode(serde_json::to_string(&info)?);
@@ -167,7 +167,7 @@ fn test_pve_compat() {
     let content = "pve4t-123456789a\nNx5qaBSAwkhF/o39/zPAeA\neyJrZXkiOiJwdmU0dC0xMjM0NTY3ODlhIiwibmV4dGR1ZWRhdGUiOiIwMDAwLTAwLTAwIiwic3Rh\ndHVzIjoiQWN0aXZlIiwidmFsaWRkaXJlY3RvcnkiOiI4MzAwMDAwMDAxMjM0NTY3ODlBQkNERUYw\nMDAwMDA0MiIsImNoZWNrdGltZSI6MTYwMDAwMDAwMCwicHJvZHVjdG5hbWUiOiJQcm94bW94IFZF\nIEZyZWUgVHJpYWwgU3Vic2NyaXB0aW9uIDEyIE1vbnRocyAoNCBDUFVzKSIsInJlZ2RhdGUiOiIy\nMDIyLTA0LTA3IDAwOjAwOjAwIn0=";
 
     let expected = SubscriptionInfo {
-        status: SubscriptionStatus::ACTIVE,
+        status: SubscriptionStatus::Active,
         serverid: Some("830000000123456789ABCDEF00000042".to_string()),
         checktime: Some(1600000000),
         key: Some("pve4t-123456789a".to_string()),
@@ -195,7 +195,7 @@ fn test_pbs_compat() {
     let expected = SubscriptionInfo {
         key: Some("pbst-123456789a".to_string()),
         serverid: Some("830000000123456789ABCDEF00000042".to_string()),
-        status: SubscriptionStatus::ACTIVE,
+        status: SubscriptionStatus::Active,
         checktime: Some(1600000000),
         url: Some("https://www.proxmox.com/en/proxmox-backup-server/pricing".into()),
         message: None,
