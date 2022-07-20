@@ -170,6 +170,7 @@ impl hyper::service::Service<Uri> for HttpsConnector {
 
             if use_connect {
                 async move {
+                    use std::fmt::Write as _;
                     let tcp_stream = connector.call(proxy_uri).await.map_err(|err| {
                         format_err!("error connecting to {} - {}", proxy_authority, err)
                     })?;
@@ -181,10 +182,13 @@ impl hyper::service::Service<Uri> for HttpsConnector {
 
                     let mut connect_request = format!("CONNECT {0}:{1} HTTP/1.1\r\n", host, port);
                     if let Some(authorization) = authorization {
-                        connect_request
-                            .push_str(&format!("Proxy-Authorization: {}\r\n", authorization));
+                        let _ = write!(
+                            connect_request,
+                            "Proxy-Authorization: {}\r\n",
+                            authorization
+                        );
                     }
-                    connect_request.push_str(&format!("Host: {0}:{1}\r\n\r\n", host, port));
+                    let _ = write!(connect_request, "Host: {0}:{1}\r\n\r\n", host, port);
 
                     tcp_stream.write_all(connect_request.as_bytes()).await?;
                     tcp_stream.flush().await?;

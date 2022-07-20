@@ -15,14 +15,16 @@ use super::{RateLimiter, ShareableRateLimit};
 
 type SharedRateLimit = Arc<dyn ShareableRateLimit>;
 
+pub type RateLimiterCallback =
+    dyn Fn() -> (Option<SharedRateLimit>, Option<SharedRateLimit>) + Send;
+
 /// A rate limited stream using [RateLimiter]
 pub struct RateLimitedStream<S> {
     read_limiter: Option<SharedRateLimit>,
     read_delay: Option<Pin<Box<Sleep>>>,
     write_limiter: Option<SharedRateLimit>,
     write_delay: Option<Pin<Box<Sleep>>>,
-    update_limiter_cb:
-        Option<Box<dyn Fn() -> (Option<SharedRateLimit>, Option<SharedRateLimit>) + Send>>,
+    update_limiter_cb: Option<Box<RateLimiterCallback>>,
     last_limiter_update: Instant,
     stream: S,
 }
