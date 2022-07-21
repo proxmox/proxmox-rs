@@ -13,6 +13,14 @@ pub struct CheckSums {
     pub sha512: Option<[u8; 64]>,
 }
 
+macro_rules! assert_hash_equality {
+    ($l:expr, $r:expr) => {{
+        if $l != $r {
+            bail!("hash mismatch: {} != {}", hex::encode($l), hex::encode($r));
+        }
+    }};
+}
+
 impl CheckSums {
     pub fn is_secure(&self) -> bool {
         self.sha256.is_some() || self.sha512.is_some()
@@ -25,25 +33,11 @@ impl CheckSums {
 
         if let Some(expected) = self.sha512 {
             let digest = openssl::sha::sha512(input);
-            if digest != expected {
-                bail!(
-                    "Hashsum mismatch: {} != {}",
-                    hex::encode(expected),
-                    hex::encode(digest)
-                );
-            }
-
+            assert_hash_equality!(digest, expected);
             Ok(())
         } else if let Some(expected) = self.sha256 {
             let digest = openssl::sha::sha256(input);
-            if digest != expected {
-                bail!(
-                    "Hashsum mismatch: {} != {}",
-                    hex::encode(expected),
-                    hex::encode(digest)
-                );
-            }
-
+            assert_hash_equality!(digest, expected);
             Ok(())
         } else {
             bail!("No trusted checksum found - verification not possible.");
@@ -55,54 +49,22 @@ impl CheckSums {
         match (self.sha512, rhs.sha512) {
             (_, None) => {}
             (None, Some(sha512)) => self.sha512 = Some(sha512),
-            (Some(left), Some(right)) => {
-                if left != right {
-                    bail!(
-                        "sha512 mismatch: {} != {}",
-                        hex::encode(left),
-                        hex::encode(right)
-                    );
-                }
-            }
+            (Some(left), Some(right)) => assert_hash_equality!(left, right),
         };
         match (self.sha256, rhs.sha256) {
             (_, None) => {}
             (None, Some(sha256)) => self.sha256 = Some(sha256),
-            (Some(left), Some(right)) => {
-                if left != right {
-                    bail!(
-                        "sha256 mismatch: {} != {}",
-                        hex::encode(left),
-                        hex::encode(right)
-                    );
-                }
-            }
+            (Some(left), Some(right)) => assert_hash_equality!(left, right),
         };
         match (self.sha1, rhs.sha1) {
             (_, None) => {}
             (None, Some(sha1)) => self.sha1 = Some(sha1),
-            (Some(left), Some(right)) => {
-                if left != right {
-                    bail!(
-                        "sha1 mismatch: {} != {}",
-                        hex::encode(left),
-                        hex::encode(right)
-                    );
-                }
-            }
+            (Some(left), Some(right)) => assert_hash_equality!(left, right),
         };
         match (self.md5, rhs.md5) {
             (_, None) => {}
             (None, Some(md5)) => self.md5 = Some(md5),
-            (Some(left), Some(right)) => {
-                if left != right {
-                    bail!(
-                        "md5 mismatch: {} != {}",
-                        hex::encode(left),
-                        hex::encode(right)
-                    );
-                }
-            }
+            (Some(left), Some(right)) => assert_hash_equality!(left, right),
         };
 
         Ok(())
