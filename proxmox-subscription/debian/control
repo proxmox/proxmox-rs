@@ -51,10 +51,10 @@ Provides:
  librust-proxmox-subscription+default-dev (= ${binary:Version}),
  librust-proxmox-subscription-0-dev (= ${binary:Version}),
  librust-proxmox-subscription-0+default-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.1-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-subscription-0.2-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.2+default-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.2.0-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.2.0+default-dev (= ${binary:Version})
 Description: Proxmox subscription utilitites - Rust source code
  This package contains the source for the Rust proxmox-subscription crate,
  packaged by debcargo for use with cargo and dh-cargo.
@@ -71,10 +71,10 @@ Provides:
  librust-proxmox-subscription+api-types-dev (= ${binary:Version}),
  librust-proxmox-subscription-0+proxmox-schema-dev (= ${binary:Version}),
  librust-proxmox-subscription-0+api-types-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.1+proxmox-schema-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.1+api-types-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.1.0+proxmox-schema-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.1.0+api-types-dev (= ${binary:Version})
+ librust-proxmox-subscription-0.2+proxmox-schema-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.2+api-types-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.2.0+proxmox-schema-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.2.0+api-types-dev (= ${binary:Version})
 Description: Proxmox subscription utilitites - feature "proxmox-schema" and 1 more
  This metapackage enables feature "proxmox-schema" for the Rust proxmox-
  subscription crate, by pulling in any additional dependencies needed by
