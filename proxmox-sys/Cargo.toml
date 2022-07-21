@@ -1,5 +1,6 @@
 [package]
 name = "proxmox-sys"
+# next bump is breaking!
 version = "0.3.2"
 authors = ["Proxmox Support Team <support@proxmox.com>"]
 edition = "2018"
@@ -32,3 +33,6 @@ proxmox-time = { path = "../proxmox-time", version = "1.0.0" }
 default = []
 sortable-macro = ["proxmox-sortable-macro"]
 logrotate = ["zstd"]
+acl = []
+crypt = []
+timer = []

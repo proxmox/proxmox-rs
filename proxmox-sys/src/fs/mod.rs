@@ -8,6 +8,7 @@ use nix::sys::stat;
 use nix::unistd::{Gid, Uid};
 use std::os::unix::io::{AsRawFd, RawFd};
 
+#[cfg(feature = "acl")]
 pub mod acl;
 
 mod file;

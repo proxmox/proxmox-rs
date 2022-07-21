@@ -1,6 +1,7 @@
 use std::os::unix::ffi::OsStrExt;
 
 pub mod command;
+#[cfg(feature = "crypt")]
 pub mod crypt;
 pub mod email;
 pub mod error;
