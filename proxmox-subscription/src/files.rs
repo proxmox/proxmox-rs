@@ -83,14 +83,14 @@ fn parse_subscription_file(raw: &str) -> Result<Option<SubscriptionInfo>, Error>
 /// Legacy variants of this format as used by older versions of PVE/PMG are supported.
 pub fn read_subscription<P: AsRef<Path>>(
     path: P,
-    signature_key: &openssl::pkey::PKey<openssl::pkey::Public>,
+    signature_keys: &[P],
 ) -> Result<Option<SubscriptionInfo>, Error> {
     match proxmox_sys::fs::file_read_optional_string(path)? {
         Some(raw) => {
             let mut info = parse_subscription_file(&raw)?;
             if let Some(info) = info.as_mut() {
                 // these will set `status` to INVALID if checks fail!
-                info.check_signature(signature_key);
+                info.check_signature(signature_keys);
                 info.check_server_id();
                 info.check_age(false);
             };

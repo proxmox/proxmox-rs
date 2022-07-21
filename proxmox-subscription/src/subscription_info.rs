@@ -1,5 +1,8 @@
+use std::path::Path;
+
 use anyhow::{bail, format_err, Error};
 use openssl::hash::{hash, DigestBytes, MessageDigest};
+use proxmox_sys::fs::file_get_contents;
 use proxmox_time::TmEditor;
 use serde::{Deserialize, Serialize};
 
@@ -203,8 +206,12 @@ impl SubscriptionInfo {
     ///
     /// `status` is set to [SubscriptionStatus::Invalid] and `message` to a human-readable error
     /// message in case a signature is available but not valid for the given `key`.
-    pub fn check_signature(&mut self, key: &openssl::pkey::PKey<openssl::pkey::Public>) {
-        let verify = |info: &SubscriptionInfo| -> Result<(), Error> {
+    pub fn check_signature<P: AsRef<Path>>(&mut self, keys: &[P]) {
+        let verify = |info: &SubscriptionInfo, path: &P| -> Result<(), Error> {
+            let raw = file_get_contents(path)?;
+
+            let key = openssl::pkey::PKey::public_key_from_pem(&raw)?;
+
             let (signed, signature) = info.signed_data()?;
             let signature = match signature {
                 None => bail!("Failed to extract signature value."),
@@ -216,9 +223,12 @@ impl SubscriptionInfo {
         };
 
         if self.is_signed() {
-            if let Err(err) = verify(self) {
+            if keys.is_empty() {
                 self.status = SubscriptionStatus::Invalid;
-                self.message = Some(format!("Signature validation failed - {err}"));
+                self.message = Some("Signature exists, but no key available.".to_string());
+            } else if !keys.iter().any(|key| verify(self, key).is_ok()) {
+                self.status = SubscriptionStatus::Invalid;
+                self.message = Some("Signature validation failed".to_string());
             }
         }
     }
