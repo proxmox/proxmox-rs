@@ -1,3 +1,9 @@
+rust-proxmox-http (0.6.4-1) unstable; urgency=medium
+
+  * fix Proxy-Authorization header formatting
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 21 Jul 2022 12:57:26 +0200
+
 rust-proxmox-http (0.6.3-1) unstable; urgency=medium
 
   * add json_object_to_query helper
