@@ -8,6 +8,8 @@ use crate::{
     SubscriptionInfo, SubscriptionStatus,
 };
 
+pub const DEFAULT_SIGNING_KEY: &str = "/usr/share/keyrings/proxmox-offline-signing-key.pub";
+
 fn parse_subscription_file(raw: &str) -> Result<Option<SubscriptionInfo>, Error> {
     let mut cfg = raw.lines();
 
