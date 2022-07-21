@@ -1,0 +1,83 @@
+Source: rust-proxmox-subscription
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-base64-0.13+default-dev <!nocheck>,
+ librust-hex-0.4+default-dev <!nocheck>,
+ librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
+ librust-openssl-0.10+default-dev <!nocheck>,
+ librust-proxmox-http-0.6+client-trait-dev (>= 0.6.3-~~) <!nocheck>,
+ librust-proxmox-http-0.6+http-helpers-dev (>= 0.6.3-~~) <!nocheck>,
+ librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~) <!nocheck>,
+ librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~) <!nocheck>,
+ librust-proxmox-sys-0.3+default-dev <!nocheck>,
+ librust-proxmox-time-1+default-dev (>= 1.1-~~) <!nocheck>,
+ librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.5.1
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Rules-Requires-Root: no
+
+Package: librust-proxmox-subscription-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-base64-0.13+default-dev,
+ librust-hex-0.4+default-dev,
+ librust-lazy-static-1+default-dev (>= 1.4-~~),
+ librust-openssl-0.10+default-dev,
+ librust-proxmox-http-0.6+client-trait-dev (>= 0.6.3-~~),
+ librust-proxmox-http-0.6+http-helpers-dev (>= 0.6.3-~~),
+ librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
+ librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~),
+ librust-proxmox-sys-0.3+default-dev,
+ librust-proxmox-time-1+default-dev (>= 1.1-~~),
+ librust-regex-1+default-dev (>= 1.5-~~),
+ librust-serde-1+default-dev,
+ librust-serde-json-1+default-dev
+Suggests:
+ librust-proxmox-subscription+proxmox-schema-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-subscription+default-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0+default-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.1-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.1.0+default-dev (= ${binary:Version})
+Description: Proxmox subscription utilitites - Rust source code
+ This package contains the source for the Rust proxmox-subscription crate,
+ packaged by debcargo for use with cargo and dh-cargo.
+
+Package: librust-proxmox-subscription+proxmox-schema-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-subscription-dev (= ${binary:Version}),
+ librust-proxmox-schema-1+api-macro-dev (>= 1.3.3-~~),
+ librust-proxmox-schema-1+default-dev (>= 1.3.3-~~)
+Provides:
+ librust-proxmox-subscription+api-types-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0+proxmox-schema-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0+api-types-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.1+proxmox-schema-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.1+api-types-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.1.0+proxmox-schema-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.1.0+api-types-dev (= ${binary:Version})
+Description: Proxmox subscription utilitites - feature "proxmox-schema" and 1 more
+ This metapackage enables feature "proxmox-schema" for the Rust proxmox-
+ subscription crate, by pulling in any additional dependencies needed by
+ that feature.
+ .
+ Additionally, this package also provides the "api-types" feature.
