@@ -2,7 +2,7 @@ Source: rust-proxmox-apt
 Section: rust
 Priority: optional
 Build-Depends: debhelper (>= 12),
- dh-cargo (>= 24),
+ dh-cargo (>= 25),
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
@@ -12,8 +12,10 @@ Build-Depends: debhelper (>= 12),
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-proxmox-schema-1+api-macro-dev <!nocheck>,
  librust-proxmox-schema-1+default-dev <!nocheck>,
+ librust-rfc822-like-0.2+default-dev (>= 0.2.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
- librust-serde-1+derive-dev <!nocheck>
+ librust-serde-1+derive-dev <!nocheck>,
+ librust-serde-json-1+default-dev (>= 1.0.41-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.5.1
 Vcs-Git: git://git.proxmox.com/git/proxmox-apt.git
@@ -32,16 +34,18 @@ Depends:
  librust-openssl-0.10+default-dev,
  librust-proxmox-schema-1+api-macro-dev,
  librust-proxmox-schema-1+default-dev,
+ librust-rfc822-like-0.2+default-dev (>= 0.2.1-~~),
  librust-serde-1+default-dev,
- librust-serde-1+derive-dev
+ librust-serde-1+derive-dev,
+ librust-serde-json-1+default-dev (>= 1.0.41-~~)
 Provides:
  librust-proxmox-apt+default-dev (= ${binary:Version}),
  librust-proxmox-apt-0-dev (= ${binary:Version}),
  librust-proxmox-apt-0+default-dev (= ${binary:Version}),
  librust-proxmox-apt-0.8-dev (= ${binary:Version}),
  librust-proxmox-apt-0.8+default-dev (= ${binary:Version}),
- librust-proxmox-apt-0.8.0-dev (= ${binary:Version}),
- librust-proxmox-apt-0.8.0+default-dev (= ${binary:Version})
+ librust-proxmox-apt-0.8.1-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.8.1+default-dev (= ${binary:Version})
 Description: Proxmox library for APT - Rust source code
  This package contains the source for the Rust proxmox-apt crate, packaged by
  debcargo for use with cargo and dh-cargo.

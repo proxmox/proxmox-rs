@@ -1,3 +1,15 @@
+rust-proxmox-apt (0.8.1-1) stable; urgency=medium
+
+  * upgrade to 2021 edition
+
+  * check suites: add special check for Debian security repository
+
+  * file: add pre-parsed content variant
+
+  * add module for parsing Packages and Release (deb822 like) files
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 21 Jul 2022 12:08:23 +0200
+
 rust-proxmox-apt (0.8.0-1) stable; urgency=medium
 
   * update to proxox-schema crate
