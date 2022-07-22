@@ -12,6 +12,7 @@ use regex::Regex;
 
 use proxmox_borrow::Tied;
 
+#[cfg(feature = "timer")]
 use crate::error::SysError;
 
 pub type DirLockGuard = Dir;
@@ -264,6 +265,7 @@ where
     }
 }
 
+#[cfg(feature = "timer")]
 /// Attempt to acquire a shared flock on the given path, 'what' and
 /// 'would_block_message' are used for error formatting.
 pub fn lock_dir_noblock_shared(
@@ -274,6 +276,7 @@ pub fn lock_dir_noblock_shared(
     do_lock_dir_noblock(path, what, would_block_msg, false)
 }
 
+#[cfg(feature = "timer")]
 /// Attempt to acquire an exclusive flock on the given path, 'what' and
 /// 'would_block_message' are used for error formatting.
 pub fn lock_dir_noblock(
@@ -284,6 +287,7 @@ pub fn lock_dir_noblock(
     do_lock_dir_noblock(path, what, would_block_msg, true)
 }
 
+#[cfg(feature = "timer")]
 fn do_lock_dir_noblock(
     path: &std::path::Path,
     what: &str,

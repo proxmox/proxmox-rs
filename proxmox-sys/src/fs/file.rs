@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
 use std::path::{Path, PathBuf};
+#[cfg(feature = "timer")]
 use std::time::Duration;
 
 use anyhow::{bail, format_err, Error};
@@ -14,8 +15,10 @@ use serde_json::Value;
 
 use proxmox_lang::try_block;
 
-use crate::error::{SysError, SysResult};
-use crate::linux::timer;
+use crate::error::SysError;
+
+#[cfg(feature = "timer")]
+use crate::{error::SysResult, linux::timer};
 
 use crate::fs::CreateOptions;
 
@@ -346,6 +349,7 @@ pub fn image_size(path: &Path) -> Result<u64, Error> {
     }
 }
 
+#[cfg(feature = "timer")]
 /// Create a file lock using fntl. This function allows you to specify
 /// a timeout if you want to avoid infinite blocking.
 ///
@@ -399,6 +403,7 @@ pub fn lock_file<F: AsRawFd>(
     Ok(())
 }
 
+#[cfg(feature = "timer")]
 /// Open or create a lock file (append mode). Then try to
 /// acquire a lock using `lock_file()`.
 pub fn open_file_locked<P: AsRef<Path>>(
