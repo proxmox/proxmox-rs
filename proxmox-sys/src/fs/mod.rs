@@ -85,12 +85,8 @@ impl CreateOptions {
         Ok(())
     }
 
-    // TODO: once 'nix' has `const fn` constructors for Uid and Gid we can enable these:
-
-    /*
     /// Convenience shortcut around having to import `Gid` from nix.
     pub const fn group_root(self) -> Self {
-        // nix hasn't constified these yet, but it's just an alias to gid_t:
         self.group(Gid::from_raw(0))
     }
 
@@ -98,7 +94,6 @@ impl CreateOptions {
     pub const fn root_only(self) -> Self {
         self.owner_root().group_root()
     }
-    */
 }
 
 /// Information about a mounted file system from statfs64 syscall
