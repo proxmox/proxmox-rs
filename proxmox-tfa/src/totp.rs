@@ -469,7 +469,7 @@ impl PartialEq<&str> for TotpValue {
 
         // I don't trust that `.parse()` never starts accepting `0x` prefixes so:
         #[allow(clippy::from_str_radix_10)]
-        match u32::from_str_radix(*other, 10) {
+        match u32::from_str_radix(other, 10) {
             Ok(value) => self.value() == value,
             Err(_) => false,
         }
