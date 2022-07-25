@@ -1,3 +1,14 @@
+rust-proxmox-tfa (2.1.0-1) stable; urgency=medium
+
+  * expose allow_subdomains property for webauthn, defaulting to true
+
+  * include 'webauthn' property when deserializing a `TfaChallenge` object to
+    make it reusable by clients
+
+  * bump edition to 2021
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 25 Jul 2022 13:31:25 +0200
+
 rust-proxmox-tfa (2.0.0-1) stable; urgency=medium
 
   * add Webauthn::digest
