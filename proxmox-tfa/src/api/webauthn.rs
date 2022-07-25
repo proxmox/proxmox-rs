@@ -57,7 +57,7 @@ impl From<OriginUrl> for String {
 #[cfg_attr(feature = "api-types", derive(Updater))]
 /// Server side webauthn server configuration.
 #[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, rename_all = "kebab-case")]
 pub struct WebauthnConfig {
     /// Relying party name. Any text identifier.
     ///
@@ -75,6 +75,15 @@ pub struct WebauthnConfig {
     ///
     /// Changing this *will* break existing credentials.
     pub id: String,
+
+    /// If an `origin` is specified, this specifies whether subdomains should be considered valid
+    /// as well.
+    ///
+    /// May be changed at any time.
+    ///
+    /// Defaults to `true`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_subdomains: Option<bool>,
 }
 
 impl WebauthnConfig {
@@ -97,6 +106,7 @@ impl WebauthnConfig {
                 .ok_or_else(|| format_err!("missing webauthn origin"))?,
             rp: &self.rp,
             id: &self.id,
+            allow_subdomains: self.allow_subdomains.unwrap_or(true),
         })
     }
 }
@@ -105,6 +115,7 @@ pub(super) struct WebauthnConfigInstance<'a> {
     rp: &'a str,
     origin: &'a Url,
     id: &'a str,
+    allow_subdomains: bool,
 }
 
 /// For now we just implement this on the configuration this way.
@@ -122,6 +133,10 @@ impl<'a> webauthn_rs::WebauthnConfig for WebauthnConfigInstance<'a> {
 
     fn get_relying_party_id(&self) -> &str {
         self.id
+    }
+
+    fn allow_subdomains_origin(&self) -> bool {
+        self.allow_subdomains
     }
 }
 
