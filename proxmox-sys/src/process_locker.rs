@@ -152,7 +152,7 @@ impl ProcessLocker {
         data.writers += 1;
 
         let guard = ProcessLockSharedGuard {
-            locker: locker.clone(),
+            locker: Arc::clone(&locker),
             guard_id: data.next_guard_id,
         };
         data.next_guard_id += 1;
