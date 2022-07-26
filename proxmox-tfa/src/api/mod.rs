@@ -102,7 +102,7 @@ fn get_webauthn<'a, 'config: 'a, 'origin: 'a>(
     Some(waconfig.as_ref()?.instantiate(origin).map(Webauthn::new))
 }
 
-/// Helper to get a u2f instance from a u2f config.
+/// Helper to get a `WebauthnConfigInstance` from a `WebauthnConfig`
 ///
 /// This is outside of `TfaConfig` to not borrow its `&self`.
 fn check_webauthn<'a, 'config: 'a, 'origin: 'a>(
