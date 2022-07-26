@@ -166,24 +166,7 @@ impl ProcessLocker {
 
     /// Get oldest shared lock timestamp
     pub fn oldest_shared_lock(locker: Arc<Mutex<Self>>) -> Option<i64> {
-        let mut result = None;
-
-        let data = locker.lock().unwrap();
-
-        for v in data.shared_guard_list.values() {
-            result = match result {
-                None => Some(*v),
-                Some(x) => {
-                    if x < *v {
-                        Some(x)
-                    } else {
-                        Some(*v)
-                    }
-                }
-            };
-        }
-
-        result
+        locker.lock().unwrap().shared_guard_list.values().copied().min()
     }
 
     /// Try to acquire a exclusive lock
