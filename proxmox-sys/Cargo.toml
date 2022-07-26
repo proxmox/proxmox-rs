@@ -3,7 +3,7 @@ name = "proxmox-sys"
 # next bump is breaking!
 version = "0.3.2"
 authors = ["Proxmox Support Team <support@proxmox.com>"]
-edition = "2018"
+edition = "2021"
 license = "AGPL-3"
 description = "System tools (using nix)."
 
