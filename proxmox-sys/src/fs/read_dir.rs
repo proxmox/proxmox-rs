@@ -10,8 +10,6 @@ use nix::sys::stat::Mode;
 
 use regex::Regex;
 
-use proxmox_borrow::Tied;
-
 #[cfg(feature = "timer")]
 use crate::error::SysError;
 
@@ -89,7 +87,7 @@ impl ReadDirEntry {
 // This is simply a wrapper with a shorter type name mapping nix::Error to anyhow::Error.
 /// Wrapper over a pair of `nix::dir::Dir` and `nix::dir::Iter`, returned by `read_subdir()`.
 pub struct ReadDir {
-    iter: Tied<Dir, dyn Iterator<Item = nix::Result<dir::Entry>> + Send>,
+    iter: nix::dir::OwningIter,
     dir_fd: RawFd,
 }
 
@@ -112,10 +110,7 @@ impl Iterator for ReadDir {
 pub fn read_subdir<P: ?Sized + nix::NixPath>(dirfd: RawFd, path: &P) -> nix::Result<ReadDir> {
     let dir = Dir::openat(dirfd, path, OFlag::O_RDONLY, Mode::empty())?;
     let fd = dir.as_raw_fd();
-    let iter = Tied::new(dir, |dir| {
-        Box::new(unsafe { (*dir).iter() })
-            as Box<dyn Iterator<Item = nix::Result<dir::Entry>> + Send>
-    });
+    let iter = dir.into_iter();
     Ok(ReadDir { iter, dir_fd: fd })
 }
 

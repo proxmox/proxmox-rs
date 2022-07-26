@@ -26,7 +26,6 @@ proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, 
 
 proxmox-io = { path = "../proxmox-io", version = "1.0.0" }
 proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
-proxmox-borrow = { path = "../proxmox-borrow", version = "1.0.0" }
 proxmox-time = { path = "../proxmox-time", version = "1.0.0" }
 
 [features]
