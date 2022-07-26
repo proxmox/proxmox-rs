@@ -188,7 +188,7 @@ impl ProcessLocker {
         data.exclusive = true;
 
         Ok(ProcessLockExclusiveGuard {
-            locker: locker.clone(),
+            locker: Arc::clone(&locker),
         })
     }
 }
