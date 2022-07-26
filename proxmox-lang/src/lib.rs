@@ -106,8 +106,7 @@ macro_rules! offsetof {
 #[macro_export]
 macro_rules! c_str {
     ($data:expr) => {{
-        let bytes = concat!($data, "\0");
-        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(bytes.as_bytes()) }
+        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(concat!($data, "\0").as_bytes()) }
     }};
 }
 
