@@ -310,7 +310,7 @@ fn handle_function_signature(
         // For any named type which exists on the function signature...
         if let Some(entry) = input_schema.find_obj_property_by_ident_mut(&pat.ident.to_string()) {
             // try to infer the type in the schema if it is not specified explicitly:
-            let is_option = util::infer_type(&mut entry.schema, &*pat_type.ty)?;
+            let is_option = util::infer_type(&mut entry.schema, &pat_type.ty)?;
             let has_default = entry.schema.find_schema_property("default").is_some();
             if !is_option && entry.optional.expect_bool() && !has_default {
                 error!(pat_type => "optional types need a default or be an Option<T>");
