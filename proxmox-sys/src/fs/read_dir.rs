@@ -321,7 +321,7 @@ fn do_lock_dir_noblock(
     Ok(handle)
 }
 
-/// extracts [`nix::dir::Type`] from a [`nix::sys::stat::FileStat`] if possible
+/// extracts [`nix::dir::Type`] from a [`struct@nix::sys::stat::FileStat`] if possible
 pub fn file_type_from_file_stat(stat: &nix::sys::stat::FileStat) -> Option<nix::dir::Type> {
     use nix::dir::Type;
 
