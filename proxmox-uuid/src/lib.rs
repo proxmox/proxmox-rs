@@ -67,7 +67,7 @@ impl Uuid {
 
     /// Get a reference to the internal 16 byte array.
     pub fn as_bytes(&self) -> &[u8; 16] {
-        &*self.0
+        &self.0
     }
 
     /// Take out the inner boxed 16 byte array.
