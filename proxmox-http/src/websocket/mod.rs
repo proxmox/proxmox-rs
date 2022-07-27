@@ -315,7 +315,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 /// Represents the header of a websocket Frame
 pub struct FrameHeader {
     /// True if the frame is either non-fragmented, or the last fragment
