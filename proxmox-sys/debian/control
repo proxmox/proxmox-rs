@@ -12,7 +12,6 @@ Build-Depends: debhelper (>= 12),
  librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
  librust-log-0.4+default-dev (>= 0.4.17-~~) <!nocheck>,
  librust-nix-0.24+default-dev (>= 0.24.1-~~) <!nocheck>,
- librust-proxmox-borrow-1+default-dev <!nocheck>,
  librust-proxmox-io-1+default-dev <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~) <!nocheck>,
  librust-proxmox-time-1+default-dev <!nocheck>,
@@ -39,7 +38,6 @@ Depends:
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
  librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-nix-0.24+default-dev (>= 0.24.1-~~),
- librust-proxmox-borrow-1+default-dev,
  librust-proxmox-io-1+default-dev,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~),
  librust-proxmox-time-1+default-dev,
@@ -53,13 +51,25 @@ Suggests:
  librust-proxmox-sys+proxmox-sortable-macro-dev (= ${binary:Version}),
  librust-proxmox-sys+zstd-dev (= ${binary:Version})
 Provides:
+ librust-proxmox-sys+acl-dev (= ${binary:Version}),
+ librust-proxmox-sys+crypt-dev (= ${binary:Version}),
  librust-proxmox-sys+default-dev (= ${binary:Version}),
+ librust-proxmox-sys+timer-dev (= ${binary:Version}),
  librust-proxmox-sys-0-dev (= ${binary:Version}),
+ librust-proxmox-sys-0+acl-dev (= ${binary:Version}),
+ librust-proxmox-sys-0+crypt-dev (= ${binary:Version}),
  librust-proxmox-sys-0+default-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3+default-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.2-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.2+default-dev (= ${binary:Version})
+ librust-proxmox-sys-0+timer-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4+acl-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4+crypt-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4+default-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4+timer-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4.0-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4.0+acl-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4.0+crypt-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4.0+default-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4.0+timer-dev (= ${binary:Version})
 Description: System tools (using nix) - Rust source code
  This package contains the source for the Rust proxmox-sys crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -75,10 +85,10 @@ Provides:
  librust-proxmox-sys+sortable-macro-dev (= ${binary:Version}),
  librust-proxmox-sys-0+proxmox-sortable-macro-dev (= ${binary:Version}),
  librust-proxmox-sys-0+sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3+proxmox-sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3+sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.2+proxmox-sortable-macro-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.2+sortable-macro-dev (= ${binary:Version})
+ librust-proxmox-sys-0.4+proxmox-sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4+sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4.0+proxmox-sortable-macro-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4.0+sortable-macro-dev (= ${binary:Version})
 Description: System tools (using nix) - feature "proxmox-sortable-macro" and 1 more
  This metapackage enables feature "proxmox-sortable-macro" for the Rust proxmox-
  sys crate, by pulling in any additional dependencies needed by that
@@ -98,10 +108,10 @@ Provides:
  librust-proxmox-sys+logrotate-dev (= ${binary:Version}),
  librust-proxmox-sys-0+zstd-dev (= ${binary:Version}),
  librust-proxmox-sys-0+logrotate-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3+zstd-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3+logrotate-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.2+zstd-dev (= ${binary:Version}),
- librust-proxmox-sys-0.3.2+logrotate-dev (= ${binary:Version})
+ librust-proxmox-sys-0.4+zstd-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4+logrotate-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4.0+zstd-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.4.0+logrotate-dev (= ${binary:Version})
 Description: System tools (using nix) - feature "zstd" and 1 more
  This metapackage enables feature "zstd" for the Rust proxmox-sys crate, by
  pulling in any additional dependencies needed by that feature.

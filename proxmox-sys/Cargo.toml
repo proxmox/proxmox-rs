@@ -1,6 +1,5 @@
 [package]
 name = "proxmox-sys"
-# next bump is breaking!
 version = "0.4.0"
 authors = ["Proxmox Support Team <support@proxmox.com>"]
 edition = "2021"
