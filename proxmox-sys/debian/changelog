@@ -1,3 +1,18 @@
+rust-proxmox-sys (0.4.0) stable; urgency=medium
+
+  * introduce 'acl', 'crypt' and 'timer' features, to avoid unconditionally
+    linking to libacl, libcrypt and librt respectively
+
+  * file locking requires the 'timer' feature
+
+  * drop dependency on 'proxmox-borrow'
+
+  * bumped edition to 2021
+
+  * 'CreateOptions' now has const 'group_root' and 'root_only' builders
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 28 Jul 2022 12:49:03 +0200
+
 rust-proxmox-sys (0.3.2) stable; urgency=medium
 
   * make systemd::escape_unit() more flexible
