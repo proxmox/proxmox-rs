@@ -1,3 +1,9 @@
+rust-proxmox-http (0.6.5-1) unstable; urgency=medium
+
+  * bump to proxmox-sys 0.4
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 28 Jul 2022 13:31:46 +0200
+
 rust-proxmox-http (0.6.4-1) unstable; urgency=medium
 
   * fix Proxy-Authorization header formatting
