@@ -26,4 +26,4 @@ native-tls = "0.2"
 url = "2.1"
 
 proxmox-time = "1"
-proxmox-sys = "0.3"
+proxmox-sys = { version = "0.4", features = ["timer"] }
