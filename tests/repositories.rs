@@ -362,6 +362,8 @@ fn test_standard_repositories() -> Result<(), Error> {
         APTStandardRepository::from(APTRepositoryHandle::Enterprise),
         APTStandardRepository::from(APTRepositoryHandle::NoSubscription),
         APTStandardRepository::from(APTRepositoryHandle::Test),
+        APTStandardRepository::from(APTRepositoryHandle::CephQuincy),
+        APTStandardRepository::from(APTRepositoryHandle::CephQuincyTest),
         APTStandardRepository::from(APTRepositoryHandle::CephPacific),
         APTStandardRepository::from(APTRepositoryHandle::CephPacificTest),
         APTStandardRepository::from(APTRepositoryHandle::CephOctopus),

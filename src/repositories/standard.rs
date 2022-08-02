@@ -46,6 +46,10 @@ pub enum APTRepositoryHandle {
     NoSubscription,
     /// The test repository.
     Test,
+    /// Ceph Quincy repository.
+    CephQuincy,
+    /// Ceph Quincy test repository.
+    CephQuincyTest,
     /// Ceph Pacific repository.
     CephPacific,
     /// Ceph Pacific test repository.
@@ -75,6 +79,8 @@ impl TryFrom<&str> for APTRepositoryHandle {
             "enterprise" => Ok(APTRepositoryHandle::Enterprise),
             "no-subscription" => Ok(APTRepositoryHandle::NoSubscription),
             "test" => Ok(APTRepositoryHandle::Test),
+            "ceph-quincy" => Ok(APTRepositoryHandle::CephQuincy),
+            "ceph-quincy-test" => Ok(APTRepositoryHandle::CephQuincyTest),
             "ceph-pacific" => Ok(APTRepositoryHandle::CephPacific),
             "ceph-pacific-test" => Ok(APTRepositoryHandle::CephPacificTest),
             "ceph-octopus" => Ok(APTRepositoryHandle::CephOctopus),
@@ -90,6 +96,8 @@ impl Display for APTRepositoryHandle {
             APTRepositoryHandle::Enterprise => write!(f, "enterprise"),
             APTRepositoryHandle::NoSubscription => write!(f, "no-subscription"),
             APTRepositoryHandle::Test => write!(f, "test"),
+            APTRepositoryHandle::CephQuincy => write!(f, "ceph-quincy"),
+            APTRepositoryHandle::CephQuincyTest => write!(f, "ceph-quincy-test"),
             APTRepositoryHandle::CephPacific => write!(f, "ceph-pacific"),
             APTRepositoryHandle::CephPacificTest => write!(f, "ceph-pacific-test"),
             APTRepositoryHandle::CephOctopus => write!(f, "ceph-octopus"),
@@ -115,6 +123,13 @@ impl APTRepositoryHandle {
                 "This repository contains the latest packages and is primarily used for test labs \
                 and by developers to test new features."
             }
+            APTRepositoryHandle::CephQuincy => {
+                "This repository holds the main Proxmox Ceph Quincy packages."
+            }
+            APTRepositoryHandle::CephQuincyTest => {
+                "This repository contains the Ceph Quincy packages before they are moved to the \
+                main repository."
+            }
             APTRepositoryHandle::CephPacific => {
                 "This repository holds the main Proxmox Ceph Pacific packages."
             }
@@ -139,6 +154,8 @@ impl APTRepositoryHandle {
             APTRepositoryHandle::Enterprise => "Enterprise",
             APTRepositoryHandle::NoSubscription => "No-Subscription",
             APTRepositoryHandle::Test => "Test",
+            APTRepositoryHandle::CephQuincy => "Ceph Quincy",
+            APTRepositoryHandle::CephQuincyTest => "Ceph Quincy Test",
             APTRepositoryHandle::CephPacific => "Ceph Pacific",
             APTRepositoryHandle::CephPacificTest => "Ceph Pacific Test",
             APTRepositoryHandle::CephOctopus => "Ceph Octopus",
@@ -155,6 +172,8 @@ impl APTRepositoryHandle {
             }
             APTRepositoryHandle::NoSubscription => "/etc/apt/sources.list".to_string(),
             APTRepositoryHandle::Test => "/etc/apt/sources.list".to_string(),
+            APTRepositoryHandle::CephQuincy => "/etc/apt/sources.list.d/ceph.list".to_string(),
+            APTRepositoryHandle::CephQuincyTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
             APTRepositoryHandle::CephPacific => "/etc/apt/sources.list.d/ceph.list".to_string(),
             APTRepositoryHandle::CephPacificTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
             APTRepositoryHandle::CephOctopus => "/etc/apt/sources.list.d/ceph.list".to_string(),
@@ -199,6 +218,16 @@ impl APTRepositoryHandle {
                     _ => vec![format!("http://download.proxmox.com/debian/{}", product)],
                 },
                 format!("{}test", product),
+            ),
+            APTRepositoryHandle::CephQuincy => (
+                APTRepositoryPackageType::Deb,
+                vec!["http://download.proxmox.com/debian/ceph-quincy".to_string()],
+                "main".to_string(),
+            ),
+            APTRepositoryHandle::CephQuincyTest => (
+                APTRepositoryPackageType::Deb,
+                vec!["http://download.proxmox.com/debian/ceph-quincy".to_string()],
+                "test".to_string(),
             ),
             APTRepositoryHandle::CephPacific => (
                 APTRepositoryPackageType::Deb,
