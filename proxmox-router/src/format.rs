@@ -7,7 +7,9 @@ use anyhow::Error;
 use proxmox_schema::format::*;
 use proxmox_schema::ObjectSchemaType;
 
-use crate::{ApiHandler, ApiMethod};
+#[cfg(feature = "server")]
+use crate::ApiHandler;
+use crate::ApiMethod;
 
 fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> Option<String> {
     let style = ParameterDisplayStyle::Config;
@@ -19,8 +21,12 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
 
             let return_descr = dump_api_return_schema(&api_method.returns, style);
 
+            #[cfg(feature = "server")]
             let mut method = method;
+            #[cfg(not(feature = "server"))]
+            let method = method;
 
+            #[cfg(feature = "server")]
             if let ApiHandler::AsyncHttp(_) = api_method.handler {
                 method = if method == "POST" { "UPLOAD" } else { method };
                 method = if method == "GET" { "DOWNLOAD" } else { method };

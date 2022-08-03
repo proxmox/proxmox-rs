@@ -68,6 +68,7 @@ async fn handle_simple_command_future(
         ApiHandler::StreamingAsync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
             .await
             .and_then(|r| r.to_value().map_err(Error::from)),
+        #[cfg(feature = "server")]
         ApiHandler::AsyncHttp(_) => {
             let err_msg = "CliHandler does not support ApiHandler::AsyncHttp - internal error";
             print_simple_usage_error(prefix, cli_cmd, err_msg);
@@ -119,6 +120,7 @@ fn handle_simple_command(
             print_simple_usage_error(prefix, cli_cmd, err_msg);
             return Err(format_err!("{}", err_msg));
         }
+        #[cfg(feature = "server")]
         ApiHandler::AsyncHttp(_) => {
             let err_msg = "CliHandler does not support ApiHandler::AsyncHttp - internal error";
             print_simple_usage_error(prefix, cli_cmd, err_msg);

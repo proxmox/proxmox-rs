@@ -11,8 +11,8 @@ exclude = [ "debian" ]
 [dependencies]
 anyhow = "1.0"
 env_logger = { version = "0.9", optional = true }
-http = "0.2"
-hyper = { version = "0.14", features = [ "full" ] }
+http = { version = "0.2", optional = true }
+hyper = { version = "0.14", features = [ "full" ], optional = true }
 nix = "0.24.1"
 percent-encoding = "2.1"
 serde_json = "1.0"
@@ -29,6 +29,7 @@ proxmox-schema = { path = "../proxmox-schema", version = "1.1" }
 proxmox-async = { path = "../proxmox-async", version = "0.4.1" }
 
 [features]
-default = [ "cli" ]
+default = [ "cli", "server" ]
 cli = [ "dep:env_logger", "dep:libc", "dep:rustyline", "dep:tokio" ]
+server = [ "dep:http", "dep:hyper" ]
 test-harness = [ "proxmox-schema/test-harness" ]

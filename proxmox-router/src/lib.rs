@@ -7,6 +7,7 @@ pub mod cli;
 
 // this is public so the `http_err!` macro can access `http::StatusCode` through it
 #[doc(hidden)]
+#[cfg(feature = "server")]
 pub mod error;
 
 mod permission;
@@ -15,6 +16,7 @@ mod rpc_environment;
 mod serializable_return;
 
 #[doc(inline)]
+#[cfg(feature = "server")]
 pub use error::HttpError;
 
 pub use permission::*;

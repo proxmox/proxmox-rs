@@ -4,8 +4,11 @@ use std::future::Future;
 use std::pin::Pin;
 
 use anyhow::Error;
+#[cfg(feature = "server")]
 use http::request::Parts;
+#[cfg(feature = "server")]
 use http::{Method, Response};
+#[cfg(feature = "server")]
 use hyper::Body;
 use percent_encoding::percent_decode_str;
 use serde_json::Value;
@@ -176,6 +179,7 @@ pub type StreamingApiFuture<'a> = Pin<
 ///    &ObjectSchema::new("Hello World Example (low level)", &[])
 /// );
 /// ```
+#[cfg(feature = "server")]
 pub type ApiAsyncHttpHandlerFn = &'static (dyn Fn(
     Parts,
     Body,
@@ -188,15 +192,18 @@ pub type ApiAsyncHttpHandlerFn = &'static (dyn Fn(
               + 'static);
 
 /// The output of an asynchronous API handler is a future yielding a `Response`.
+#[cfg(feature = "server")]
 pub type ApiResponseFuture =
     Pin<Box<dyn Future<Output = Result<Response<Body>, anyhow::Error>> + Send>>;
 
 /// Enum for different types of API handler functions.
+#[non_exhaustive]
 pub enum ApiHandler {
     Sync(ApiHandlerFn),
     StreamingSync(StreamingApiHandlerFn),
     Async(ApiAsyncHandlerFn),
     StreamingAsync(StreamingApiAsyncHandlerFn),
+    #[cfg(feature = "server")]
     AsyncHttp(ApiAsyncHttpHandlerFn),
 }
 
@@ -220,6 +227,7 @@ impl PartialEq for ApiHandler {
                 (ApiHandler::StreamingAsync(l), ApiHandler::StreamingAsync(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
+                #[cfg(feature = "server")]
                 (ApiHandler::AsyncHttp(l), ApiHandler::AsyncHttp(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
@@ -431,6 +439,7 @@ impl Router {
     /// - `components`: Path, split into individual components.
     /// - `method`: The HTTP method.
     /// - `uri_param`: Mutable hash map to store parameter from `MatchAll` router.
+    #[cfg(feature = "server")]
     pub fn find_method(
         &self,
         components: &[&str],
