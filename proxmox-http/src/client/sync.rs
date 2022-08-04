@@ -29,24 +29,32 @@ impl Client {
         Ok(builder.build())
     }
 
-    fn exec_request(
-        &self,
-        req: ureq::Request,
-        body: Option<&[u8]>,
-    ) -> Result<Response<Vec<u8>>, Error> {
-        let req = req.set(
+    fn add_user_agent(&self, req: ureq::Request) -> ureq::Request {
+        req.set(
             "User-Agent",
             self.options
                 .user_agent
                 .as_deref()
                 .unwrap_or(DEFAULT_USER_AGENT_STRING),
-        );
+        )
+    }
 
-        let res = match body {
-            Some(body) => req.send_bytes(body),
-            None => req.call(),
-        }?;
+    fn call(&self, req: ureq::Request) -> Result<Response<Vec<u8>>, Error> {
+        let req = self.add_user_agent(req);
 
+        Self::convert_response(req.call()?)
+    }
+
+    fn send<R>(&self, req: ureq::Request, body: R) -> Result<Response<Vec<u8>>, Error>
+    where
+        R: Read,
+    {
+        let req = self.add_user_agent(req);
+
+        Self::convert_response(req.send(body)?)
+    }
+
+    fn convert_response(res: ureq::Response) -> Result<Response<Vec<u8>>, Error> {
         let mut builder = http::response::Builder::new()
             .status(http::status::StatusCode::from_u16(res.status())?);
 
@@ -83,23 +91,28 @@ impl HttpClient<String> for Client {
             }
         }
 
-        self.exec_request(req, None)
-            .and_then(Self::convert_body_to_string)
+        self.call(req).and_then(Self::convert_body_to_string)
     }
 
-    fn post(
+    fn post<R>(
         &self,
         uri: &str,
-        body: Option<&str>,
+        body: Option<R>,
         content_type: Option<&str>,
-    ) -> Result<Response<String>, Error> {
+    ) -> Result<Response<String>, Error>
+    where
+        R: Read,
+    {
         let mut req = self.agent()?.post(uri);
         if let Some(content_type) = content_type {
             req = req.set("Content-Type", content_type);
         }
 
-        self.exec_request(req, body.map(|b| b.as_bytes()))
-            .and_then(Self::convert_body_to_string)
+        match body {
+            Some(body) => self.send(req, body),
+            None => self.call(req),
+        }
+        .and_then(Self::convert_body_to_string)
     }
 
     fn request(&self, request: http::Request<String>) -> Result<Response<String>, Error> {
@@ -114,7 +127,7 @@ impl HttpClient<String> for Client {
             }
         }
 
-        self.exec_request(req, Some(request.body().as_bytes()))
+        self.send(req, request.body().as_bytes())
             .and_then(Self::convert_body_to_string)
     }
 }
@@ -133,21 +146,27 @@ impl HttpClient<Vec<u8>> for Client {
             }
         }
 
-        self.exec_request(req, None)
+        self.call(req)
     }
 
-    fn post(
+    fn post<R>(
         &self,
         uri: &str,
-        body: Option<&str>,
+        body: Option<R>,
         content_type: Option<&str>,
-    ) -> Result<Response<Vec<u8>>, Error> {
+    ) -> Result<Response<Vec<u8>>, Error>
+    where
+        R: Read,
+    {
         let mut req = self.agent()?.post(uri);
         if let Some(content_type) = content_type {
             req = req.set("Content-Type", content_type);
         }
 
-        self.exec_request(req, body.map(|b| b.as_bytes()))
+        match body {
+            Some(body) => self.send(req, body),
+            None => self.call(req),
+        }
     }
 
     fn request(&self, request: http::Request<Vec<u8>>) -> Result<Response<Vec<u8>>, Error> {
@@ -162,6 +181,6 @@ impl HttpClient<Vec<u8>> for Client {
             }
         }
 
-        self.exec_request(req, Some(request.body()))
+        self.send(req, request.body().as_slice())
     }
 }

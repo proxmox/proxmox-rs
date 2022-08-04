@@ -39,7 +39,7 @@ fn register_subscription<C: HttpClient<String>>(
     let query = json_object_to_query(params)?;
     let response = client.post(
         SHOP_URI,
-        Some(&query),
+        Some(&mut query.as_bytes()),
         Some("application/x-www-form-urlencoded"),
     )?;
     let body = response.into_body();

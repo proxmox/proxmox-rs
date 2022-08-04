@@ -1,6 +1,7 @@
 use anyhow::{bail, format_err, Error};
 use std::collections::HashMap;
 
+use std::io::Read;
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
 use std::str::FromStr;
 
@@ -81,14 +82,19 @@ impl Client {
         self.client.request(request).map_err(Error::from).await
     }
 
-    pub async fn post(
+    pub async fn post<R>(
         &self,
         uri: &str,
-        body: Option<String>,
+        body: Option<R>,
         content_type: Option<&str>,
-    ) -> Result<Response<Body>, Error> {
-        let body = if let Some(body) = body {
-            Body::from(body)
+    ) -> Result<Response<Body>, Error>
+    where
+        R: Read,
+    {
+        let body = if let Some(mut body) = body {
+            let mut body_vec = Vec::new();
+            body.read_to_end(&mut body_vec)?;
+            Body::from(body_vec)
         } else {
             Body::empty()
         };
@@ -180,13 +186,16 @@ impl crate::HttpClient<Body> for Client {
         proxmox_async::runtime::block_on(self.request(req))
     }
 
-    fn post(
+    fn post<R>(
         &self,
         uri: &str,
-        body: Option<&str>,
+        body: Option<R>,
         content_type: Option<&str>,
-    ) -> Result<Response<Body>, Error> {
-        proxmox_async::runtime::block_on(self.post(uri, body.map(|s| s.to_owned()), content_type))
+    ) -> Result<Response<Body>, Error>
+    where
+        R: Read,
+    {
+        proxmox_async::runtime::block_on(self.post(uri, body, content_type))
     }
 
     fn request(&self, request: Request<Body>) -> Result<Response<Body>, Error> {
@@ -218,18 +227,17 @@ impl crate::HttpClient<String> for Client {
         })
     }
 
-    fn post(
+    fn post<R>(
         &self,
         uri: &str,
-        body: Option<&str>,
+        body: Option<R>,
         content_type: Option<&str>,
-    ) -> Result<Response<String>, Error> {
+    ) -> Result<Response<String>, Error>
+    where
+        R: Read,
+    {
         proxmox_async::runtime::block_on(async move {
-            Self::convert_body_to_string(
-                self.post(uri, body.map(|s| s.to_owned()), content_type)
-                    .await,
-            )
-            .await
+            Self::convert_body_to_string(self.post(uri, body, content_type).await).await
         })
     }
 
