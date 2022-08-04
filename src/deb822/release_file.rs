@@ -389,11 +389,16 @@ impl TryFrom<ReleaseFileRaw> for ReleaseFile {
             let (component, file_type) = components
                 .iter()
                 .find_map(|component| {
-                    FileReferenceType::parse(component, &file)
-                        .ok()
-                        .map(|file_type| (component.clone(), file_type))
+                    if !file.starts_with(&format!("{component}/")) {
+                        return None;
+                    }
+
+                    Some(
+                        FileReferenceType::parse(component, &file)
+                            .map(|file_type| (component.clone(), file_type)),
+                    )
                 })
-                .ok_or_else(|| format_err!("failed to parse file reference '{file}'"))?;
+                .unwrap_or_else(|| Ok(("UNKNOWN".to_string(), FileReferenceType::Unknown)))?;
 
             Ok((
                 FileReference {
