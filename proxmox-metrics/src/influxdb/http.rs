@@ -6,13 +6,13 @@ use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use proxmox_http::HttpOptions;
 use tokio::sync::mpsc;
 
-use proxmox_http::client::SimpleHttp;
+use proxmox_http::client::Client;
 
 use crate::influxdb::utils;
 use crate::{Metrics, MetricsData};
 
 struct InfluxDbHttp {
-    client: SimpleHttp,
+    client: Client,
     healthuri: http::Uri,
     writeuri: http::Uri,
     token: Option<String>,
@@ -77,11 +77,11 @@ impl InfluxDbHttp {
         channel: mpsc::Receiver<Arc<MetricsData>>,
     ) -> Result<Self, Error> {
         let client = if verify_tls {
-            SimpleHttp::with_options(HttpOptions::default())
+            Client::with_options(HttpOptions::default())
         } else {
             let mut ssl_connector = SslConnector::builder(SslMethod::tls()).unwrap();
             ssl_connector.set_verify(SslVerifyMode::NONE);
-            SimpleHttp::with_ssl_connector(ssl_connector.build(), HttpOptions::default())
+            Client::with_ssl_connector(ssl_connector.build(), HttpOptions::default())
         };
 
         let uri: http::uri::Uri = uri.parse()?;

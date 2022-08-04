@@ -1,7 +1,7 @@
 //! Simple TLS capable HTTP client implementations.
 //!
 //! Feature `client` contains a lightweight wrapper around `hyper` with support for TLS connections
-//! in [`SimpleHttp`](crate::client::SimpleHttp).
+//! in [`Client`](crate::client::Client).
 //!
 //! Feature `client-sync` contains a lightweight wrapper around `ureq` in
 //! [`sync::Client`](crate::client::sync::Client).
@@ -26,7 +26,7 @@ pub use connector::HttpsConnector;
 #[cfg(feature = "client")]
 mod simple;
 #[cfg(feature = "client")]
-pub use simple::SimpleHttp;
+pub use simple::Client;
 
 #[cfg(feature = "client")]
 pub mod tls;

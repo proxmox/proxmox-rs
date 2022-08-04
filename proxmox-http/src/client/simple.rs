@@ -8,7 +8,8 @@ use futures::*;
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
 use http::header::HeaderName;
 use http::{HeaderValue, Request, Response};
-use hyper::client::{Client, HttpConnector};
+use hyper::client::Client as HyperClient;
+use hyper::client::HttpConnector;
 use hyper::Body;
 use openssl::ssl::{SslConnector, SslMethod};
 
@@ -16,12 +17,12 @@ use crate::client::HttpsConnector;
 use crate::HttpOptions;
 
 /// Asyncrounous HTTP client implementation
-pub struct SimpleHttp {
-    client: Client<HttpsConnector, Body>,
+pub struct Client {
+    client: HyperClient<HttpsConnector, Body>,
     options: HttpOptions,
 }
 
-impl SimpleHttp {
+impl Client {
     pub const DEFAULT_USER_AGENT_STRING: &'static str = "proxmox-simple-http-client/0.1";
 
     pub fn new() -> Self {
@@ -43,7 +44,7 @@ impl SimpleHttp {
         if let Some(ref proxy_config) = options.proxy_config {
             https.set_proxy(proxy_config.clone());
         }
-        let client = Client::builder().build(https);
+        let client = HyperClient::builder().build(https);
         Self { client, options }
     }
 
@@ -151,14 +152,14 @@ impl SimpleHttp {
     }
 }
 
-impl Default for SimpleHttp {
+impl Default for Client {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
-impl crate::HttpClient<Body> for SimpleHttp {
+impl crate::HttpClient<Body> for Client {
     fn get(
         &self,
         uri: &str,
@@ -194,7 +195,7 @@ impl crate::HttpClient<Body> for SimpleHttp {
 }
 
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
-impl crate::HttpClient<String> for SimpleHttp {
+impl crate::HttpClient<String> for Client {
     fn get(
         &self,
         uri: &str,
