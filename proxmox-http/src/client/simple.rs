@@ -16,7 +16,7 @@ use openssl::ssl::{SslConnector, SslMethod};
 use crate::client::HttpsConnector;
 use crate::HttpOptions;
 
-/// Asyncrounous HTTP client implementation
+/// Asynchronous HTTP client implementation
 pub struct Client {
     client: HyperClient<HttpsConnector, Body>,
     options: HttpOptions,
