@@ -16,7 +16,7 @@ mod http_options;
 #[cfg(feature = "http-helpers")]
 pub use http_options::HttpOptions;
 
-#[cfg(feature = "client")]
+#[cfg(any(feature = "client", feature = "client-sync"))]
 pub mod client;
 
 #[cfg(feature = "client-trait")]

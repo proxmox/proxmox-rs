@@ -1,6 +1,6 @@
 //! HTTP proxy configuration.
 //!
-//! This can be used with the [`SimpleHttp`](crate::client::SimpleHttp).
+//! This can be used with the async [`SimpleHttp`](crate::client::SimpleHttp) or sync [`Client`](crate::client::sync::Client).
 
 use anyhow::{bail, format_err, Error};
 
