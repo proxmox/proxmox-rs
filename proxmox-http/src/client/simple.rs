@@ -159,11 +159,23 @@ impl Default for SimpleHttp {
 
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
 impl crate::HttpClient<Body> for SimpleHttp {
-    fn get(&self, uri: &str) -> Result<Response<Body>, Error> {
-        let req = Request::builder()
+    fn get(
+        &self,
+        uri: &str,
+        extra_headers: Option<&HashMap<String, String>>,
+    ) -> Result<Response<Body>, Error> {
+        let mut req = Request::builder()
             .method("GET")
             .uri(uri)
             .body(Body::empty())?;
+
+        if let Some(extra_headers) = extra_headers {
+            let headers = req.headers_mut();
+            for (header, value) in extra_headers {
+                headers.insert(HeaderName::from_str(header)?, HeaderValue::from_str(value)?);
+            }
+        }
+
         proxmox_async::runtime::block_on(self.request(req))
     }
 
@@ -175,15 +187,31 @@ impl crate::HttpClient<Body> for SimpleHttp {
     ) -> Result<Response<Body>, Error> {
         proxmox_async::runtime::block_on(self.post(uri, body.map(|s| s.to_owned()), content_type))
     }
+
+    fn request(&self, request: Request<Body>) -> Result<Response<Body>, Error> {
+        proxmox_async::runtime::block_on(async move { self.request(request).await })
+    }
 }
 
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
 impl crate::HttpClient<String> for SimpleHttp {
-    fn get(&self, uri: &str) -> Result<Response<String>, Error> {
-        let req = Request::builder()
+    fn get(
+        &self,
+        uri: &str,
+        extra_headers: Option<&HashMap<String, String>>,
+    ) -> Result<Response<String>, Error> {
+        let mut req = Request::builder()
             .method("GET")
             .uri(uri)
             .body(Body::empty())?;
+
+        if let Some(extra_headers) = extra_headers {
+            let headers = req.headers_mut();
+            for (header, value) in extra_headers {
+                headers.insert(HeaderName::from_str(header)?, HeaderValue::from_str(value)?);
+            }
+        }
+
         proxmox_async::runtime::block_on(async move {
             Self::convert_body_to_string(self.request(req).await).await
         })
@@ -201,6 +229,15 @@ impl crate::HttpClient<String> for SimpleHttp {
                     .await,
             )
             .await
+        })
+    }
+
+    fn request(&self, request: Request<String>) -> Result<Response<String>, Error> {
+        proxmox_async::runtime::block_on(async move {
+            let (parts, body) = request.into_parts();
+            let body = Body::from(body);
+            let request = Request::from_parts(parts, body);
+            Self::convert_body_to_string(self.request(request).await).await
         })
     }
 }
