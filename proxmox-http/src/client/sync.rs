@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::Read;
 
-use anyhow::{format_err, Error};
+use anyhow::Error;
 use http::Response;
 
 use crate::HttpClient;
@@ -39,22 +39,22 @@ impl Client {
         )
     }
 
-    fn call(&self, req: ureq::Request) -> Result<Response<Vec<u8>>, Error> {
+    fn call(&self, req: ureq::Request) -> Result<ureq::Response, Error> {
         let req = self.add_user_agent(req);
 
-        Self::convert_response(req.call()?)
+        req.call().map_err(Into::into)
     }
 
-    fn send<R>(&self, req: ureq::Request, body: R) -> Result<Response<Vec<u8>>, Error>
+    fn send<R>(&self, req: ureq::Request, body: R) -> Result<ureq::Response, Error>
     where
         R: Read,
     {
         let req = self.add_user_agent(req);
 
-        Self::convert_response(req.send(body)?)
+        req.send(body).map_err(Into::into)
     }
 
-    fn convert_response(res: ureq::Response) -> Result<Response<Vec<u8>>, Error> {
+    fn convert_response(res: &ureq::Response) -> Result<http::response::Builder, Error> {
         let mut builder = http::response::Builder::new()
             .status(http::status::StatusCode::from_u16(res.status())?);
 
@@ -63,17 +63,28 @@ impl Client {
                 builder = builder.header(header, value);
             }
         }
-        let mut body = Vec::new();
-        res.into_reader().read_to_end(&mut body)?;
-        builder
-            .body(body)
-            .map_err(|err| format_err!("Failed to convert HTTP response - {err}"))
+
+        Ok(builder)
     }
 
-    fn convert_body_to_string(res: Response<Vec<u8>>) -> Result<Response<String>, Error> {
-        let (parts, body) = res.into_parts();
-        let body = String::from_utf8(body)?;
-        Ok(Response::from_parts(parts, body))
+    fn convert_response_to_string(res: ureq::Response) -> Result<Response<String>, Error> {
+        let builder = Self::convert_response(&res)?;
+        let body = res.into_string()?;
+        builder.body(body).map_err(Into::into)
+    }
+
+    fn convert_response_to_vec(res: ureq::Response) -> Result<Response<Vec<u8>>, Error> {
+        let builder = Self::convert_response(&res)?;
+        let mut body = Vec::new();
+        res.into_reader().read_to_end(&mut body)?;
+        builder.body(body).map_err(Into::into)
+    }
+
+    fn convert_response_to_reader(res: ureq::Response) -> Result<Response<Box<dyn Read>>, Error> {
+        let builder = Self::convert_response(&res)?;
+        let reader = res.into_reader();
+        let boxed: Box<dyn Read> = Box::new(reader);
+        builder.body(boxed).map_err(Into::into)
     }
 }
 
@@ -91,7 +102,7 @@ impl HttpClient<String> for Client {
             }
         }
 
-        self.call(req).and_then(Self::convert_body_to_string)
+        self.call(req).and_then(Self::convert_response_to_string)
     }
 
     fn post<R>(
@@ -112,7 +123,7 @@ impl HttpClient<String> for Client {
             Some(body) => self.send(req, body),
             None => self.call(req),
         }
-        .and_then(Self::convert_body_to_string)
+        .and_then(Self::convert_response_to_string)
     }
 
     fn request(&self, request: http::Request<String>) -> Result<Response<String>, Error> {
@@ -128,7 +139,7 @@ impl HttpClient<String> for Client {
         }
 
         self.send(req, request.body().as_bytes())
-            .and_then(Self::convert_body_to_string)
+            .and_then(Self::convert_response_to_string)
     }
 }
 
@@ -146,7 +157,7 @@ impl HttpClient<Vec<u8>> for Client {
             }
         }
 
-        self.call(req)
+        self.call(req).and_then(Self::convert_response_to_vec)
     }
 
     fn post<R>(
@@ -167,6 +178,7 @@ impl HttpClient<Vec<u8>> for Client {
             Some(body) => self.send(req, body),
             None => self.call(req),
         }
+        .and_then(Self::convert_response_to_vec)
     }
 
     fn request(&self, request: http::Request<Vec<u8>>) -> Result<Response<Vec<u8>>, Error> {
@@ -182,5 +194,64 @@ impl HttpClient<Vec<u8>> for Client {
         }
 
         self.send(req, request.body().as_slice())
+            .and_then(Self::convert_response_to_vec)
+    }
+}
+
+impl HttpClient<Box<dyn Read>> for Client {
+    fn get(
+        &self,
+        uri: &str,
+        extra_headers: Option<&HashMap<String, String>>,
+    ) -> Result<Response<Box<dyn Read>>, Error> {
+        let mut req = self.agent()?.get(uri);
+
+        if let Some(extra_headers) = extra_headers {
+            for (header, value) in extra_headers {
+                req = req.set(header, value);
+            }
+        }
+
+        self.call(req).and_then(Self::convert_response_to_reader)
+    }
+
+    fn post<R>(
+        &self,
+        uri: &str,
+        body: Option<R>,
+        content_type: Option<&str>,
+    ) -> Result<Response<Box<dyn Read>>, Error>
+    where
+        R: Read,
+    {
+        let mut req = self.agent()?.post(uri);
+        if let Some(content_type) = content_type {
+            req = req.set("Content-Type", content_type);
+        }
+
+        match body {
+            Some(body) => self.send(req, body),
+            None => self.call(req),
+        }
+        .and_then(Self::convert_response_to_reader)
+    }
+
+    fn request(
+        &self,
+        mut request: http::Request<Box<dyn Read>>,
+    ) -> Result<Response<Box<dyn Read>>, Error> {
+        let mut req = self
+            .agent()?
+            .request(request.method().as_str(), &request.uri().to_string());
+        let orig_headers = request.headers();
+
+        for header in orig_headers.keys() {
+            for value in orig_headers.get_all(header) {
+                req = req.set(header.as_str(), value.to_str()?);
+            }
+        }
+
+        self.send(req, Box::new(request.body_mut()))
+            .and_then(Self::convert_response_to_reader)
     }
 }
