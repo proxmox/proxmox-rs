@@ -1,57 +1,39 @@
 use anyhow::{bail, format_err, Error};
 use std::collections::HashMap;
 
+#[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
+use std::str::FromStr;
+
 use futures::*;
+#[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
+use http::header::HeaderName;
 use http::{HeaderValue, Request, Response};
 use hyper::client::{Client, HttpConnector};
 use hyper::Body;
 use openssl::ssl::{SslConnector, SslMethod};
 
 use crate::client::HttpsConnector;
-use crate::proxy_config::ProxyConfig;
-
-/// Options for a SimpleHttp client.
-#[derive(Default)]
-pub struct SimpleHttpOptions {
-    /// Proxy configuration
-    pub proxy_config: Option<ProxyConfig>,
-    /// `User-Agent` header value, defaults to `proxmox-simple-http-client/0.1`
-    pub user_agent: Option<String>,
-    /// TCP keepalive time, defaults to 7200
-    pub tcp_keepalive: Option<u32>,
-}
-
-impl SimpleHttpOptions {
-    fn get_proxy_authorization(&self) -> Option<String> {
-        if let Some(ref proxy_config) = self.proxy_config {
-            if !proxy_config.force_connect {
-                return proxy_config.authorization.clone();
-            }
-        }
-
-        None
-    }
-}
+use crate::HttpOptions;
 
 /// Asyncrounous HTTP client implementation
 pub struct SimpleHttp {
     client: Client<HttpsConnector, Body>,
-    options: SimpleHttpOptions,
+    options: HttpOptions,
 }
 
 impl SimpleHttp {
     pub const DEFAULT_USER_AGENT_STRING: &'static str = "proxmox-simple-http-client/0.1";
 
     pub fn new() -> Self {
-        Self::with_options(SimpleHttpOptions::default())
+        Self::with_options(HttpOptions::default())
     }
 
-    pub fn with_options(options: SimpleHttpOptions) -> Self {
+    pub fn with_options(options: HttpOptions) -> Self {
         let ssl_connector = SslConnector::builder(SslMethod::tls()).unwrap().build();
         Self::with_ssl_connector(ssl_connector, options)
     }
 
-    pub fn with_ssl_connector(ssl_connector: SslConnector, options: SimpleHttpOptions) -> Self {
+    pub fn with_ssl_connector(ssl_connector: SslConnector, options: HttpOptions) -> Self {
         let connector = HttpConnector::new();
         let mut https = HttpsConnector::with_connector(
             connector,

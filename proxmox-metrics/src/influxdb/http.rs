@@ -3,9 +3,10 @@ use std::sync::Arc;
 use anyhow::{bail, Error};
 use hyper::Body;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
+use proxmox_http::HttpOptions;
 use tokio::sync::mpsc;
 
-use proxmox_http::client::{SimpleHttp, SimpleHttpOptions};
+use proxmox_http::client::SimpleHttp;
 
 use crate::influxdb::utils;
 use crate::{Metrics, MetricsData};
@@ -76,11 +77,11 @@ impl InfluxDbHttp {
         channel: mpsc::Receiver<Arc<MetricsData>>,
     ) -> Result<Self, Error> {
         let client = if verify_tls {
-            SimpleHttp::with_options(SimpleHttpOptions::default())
+            SimpleHttp::with_options(HttpOptions::default())
         } else {
             let mut ssl_connector = SslConnector::builder(SslMethod::tls()).unwrap();
             ssl_connector.set_verify(SslVerifyMode::NONE);
-            SimpleHttp::with_ssl_connector(ssl_connector.build(), SimpleHttpOptions::default())
+            SimpleHttp::with_ssl_connector(ssl_connector.build(), HttpOptions::default())
         };
 
         let uri: http::uri::Uri = uri.parse()?;

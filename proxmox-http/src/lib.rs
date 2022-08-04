@@ -11,6 +11,11 @@ pub mod proxy_config;
 #[cfg(feature = "http-helpers")]
 pub use proxy_config::ProxyConfig;
 
+#[cfg(feature = "http-helpers")]
+mod http_options;
+#[cfg(feature = "http-helpers")]
+pub use http_options::HttpOptions;
+
 #[cfg(feature = "client")]
 pub mod client;
 
