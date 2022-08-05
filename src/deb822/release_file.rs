@@ -93,6 +93,7 @@ impl FileReferenceType {
             other => bail!("Unexpected file extension '{other}'."),
         }
     }
+
     pub fn parse(component: &str, path: &str) -> Result<FileReferenceType, Error> {
         // everything referenced in a release file should be component-specific
         let rest = path
@@ -440,7 +441,9 @@ fn parse_file_reference(
     components: &[String],
 ) -> Result<(FileReference, Vec<u8>), Error> {
     let mut split = line.split_ascii_whitespace();
-    let checksum = split.next().ok_or_else(|| format_err!("bla"))?;
+    let checksum = split
+        .next()
+        .ok_or_else(|| format_err!("No 'checksum' field in the file reference line."))?;
     if checksum.len() > csum_len * 2 {
         bail!(
             "invalid checksum length: '{}', expected {} bytes",
