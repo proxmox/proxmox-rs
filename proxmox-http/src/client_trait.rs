@@ -15,6 +15,7 @@ pub trait HttpClient<T> {
         uri: &str,
         body: Option<R>,
         content_type: Option<&str>,
+        extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<T>, Error>
     where
         R: Read;

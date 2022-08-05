@@ -67,6 +67,24 @@ impl Client {
         Ok(builder)
     }
 
+    fn add_headers(
+        mut req: ureq::Request,
+        content_type: Option<&str>,
+        extra_headers: Option<&HashMap<String, String>>,
+    ) -> ureq::Request {
+        if let Some(content_type) = content_type {
+            req = req.set("Content-Type", content_type);
+        }
+
+        if let Some(extra_headers) = extra_headers {
+            for (header, value) in extra_headers {
+                req = req.set(header, value);
+            }
+        }
+
+        req
+    }
+
     fn convert_response_to_string(res: ureq::Response) -> Result<Response<String>, Error> {
         let builder = Self::convert_response(&res)?;
         let body = res.into_string()?;
@@ -94,13 +112,8 @@ impl HttpClient<String> for Client {
         uri: &str,
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<String>, Error> {
-        let mut req = self.agent()?.get(uri);
-
-        if let Some(extra_headers) = extra_headers {
-            for (header, value) in extra_headers {
-                req = req.set(header, value);
-            }
-        }
+        let req = self.agent()?.get(uri);
+        let req = Self::add_headers(req, None, extra_headers);
 
         self.call(req).and_then(Self::convert_response_to_string)
     }
@@ -110,14 +123,13 @@ impl HttpClient<String> for Client {
         uri: &str,
         body: Option<R>,
         content_type: Option<&str>,
+        extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<String>, Error>
     where
         R: Read,
     {
-        let mut req = self.agent()?.post(uri);
-        if let Some(content_type) = content_type {
-            req = req.set("Content-Type", content_type);
-        }
+        let req = self.agent()?.post(uri);
+        let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
             Some(body) => self.send(req, body),
@@ -130,6 +142,8 @@ impl HttpClient<String> for Client {
         let mut req = self
             .agent()?
             .request(request.method().as_str(), &request.uri().to_string());
+        req = self.add_user_agent(req);
+
         let orig_headers = request.headers();
 
         for header in orig_headers.keys() {
@@ -149,13 +163,8 @@ impl HttpClient<Vec<u8>> for Client {
         uri: &str,
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<Vec<u8>>, Error> {
-        let mut req = self.agent()?.get(uri);
-
-        if let Some(extra_headers) = extra_headers {
-            for (header, value) in extra_headers {
-                req = req.set(header, value);
-            }
-        }
+        let req = self.agent()?.get(uri);
+        let req = Self::add_headers(req, None, extra_headers);
 
         self.call(req).and_then(Self::convert_response_to_vec)
     }
@@ -165,14 +174,13 @@ impl HttpClient<Vec<u8>> for Client {
         uri: &str,
         body: Option<R>,
         content_type: Option<&str>,
+        extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<Vec<u8>>, Error>
     where
         R: Read,
     {
-        let mut req = self.agent()?.post(uri);
-        if let Some(content_type) = content_type {
-            req = req.set("Content-Type", content_type);
-        }
+        let req = self.agent()?.post(uri);
+        let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
             Some(body) => self.send(req, body),
@@ -185,6 +193,8 @@ impl HttpClient<Vec<u8>> for Client {
         let mut req = self
             .agent()?
             .request(request.method().as_str(), &request.uri().to_string());
+        req = self.add_user_agent(req);
+
         let orig_headers = request.headers();
 
         for header in orig_headers.keys() {
@@ -204,13 +214,8 @@ impl HttpClient<Box<dyn Read>> for Client {
         uri: &str,
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<Box<dyn Read>>, Error> {
-        let mut req = self.agent()?.get(uri);
-
-        if let Some(extra_headers) = extra_headers {
-            for (header, value) in extra_headers {
-                req = req.set(header, value);
-            }
-        }
+        let req = self.agent()?.get(uri);
+        let req = Self::add_headers(req, None, extra_headers);
 
         self.call(req).and_then(Self::convert_response_to_reader)
     }
@@ -220,14 +225,13 @@ impl HttpClient<Box<dyn Read>> for Client {
         uri: &str,
         body: Option<R>,
         content_type: Option<&str>,
+        extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<Box<dyn Read>>, Error>
     where
         R: Read,
     {
-        let mut req = self.agent()?.post(uri);
-        if let Some(content_type) = content_type {
-            req = req.set("Content-Type", content_type);
-        }
+        let req = self.agent()?.post(uri);
+        let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
             Some(body) => self.send(req, body),

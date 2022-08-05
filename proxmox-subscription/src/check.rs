@@ -41,6 +41,7 @@ fn register_subscription<C: HttpClient<String>>(
         SHOP_URI,
         Some(&mut query.as_bytes()),
         Some("application/x-www-form-urlencoded"),
+        None,
     )?;
     let body = response.into_body();
 

@@ -87,6 +87,7 @@ impl Client {
         uri: &str,
         body: Option<R>,
         content_type: Option<&str>,
+        extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<Body>, Error>
     where
         R: Read,
@@ -100,11 +101,18 @@ impl Client {
         };
         let content_type = content_type.unwrap_or("application/json");
 
-        let request = Request::builder()
+        let mut request = Request::builder()
             .method("POST")
             .uri(uri)
-            .header(hyper::header::CONTENT_TYPE, content_type)
-            .body(body)?;
+            .header(hyper::header::CONTENT_TYPE, content_type);
+
+        if let Some(extra_headers) = extra_headers {
+            for (header, value) in extra_headers {
+                request = request.header(header, value);
+            }
+        }
+
+        let request = request.body(body)?;
 
         self.request(request).await
     }
@@ -191,11 +199,12 @@ impl crate::HttpClient<Body> for Client {
         uri: &str,
         body: Option<R>,
         content_type: Option<&str>,
+        extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<Body>, Error>
     where
         R: Read,
     {
-        proxmox_async::runtime::block_on(self.post(uri, body, content_type))
+        proxmox_async::runtime::block_on(self.post(uri, body, content_type, extra_headers))
     }
 
     fn request(&self, request: Request<Body>) -> Result<Response<Body>, Error> {
@@ -232,12 +241,14 @@ impl crate::HttpClient<String> for Client {
         uri: &str,
         body: Option<R>,
         content_type: Option<&str>,
+        extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<String>, Error>
     where
         R: Read,
     {
         proxmox_async::runtime::block_on(async move {
-            Self::convert_body_to_string(self.post(uri, body, content_type).await).await
+            Self::convert_body_to_string(self.post(uri, body, content_type, extra_headers).await)
+                .await
         })
     }
 
