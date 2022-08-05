@@ -1,7 +1,6 @@
 use anyhow::{bail, format_err, Error};
 use std::collections::HashMap;
 
-use std::io::Read;
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
 use std::str::FromStr;
 
@@ -82,23 +81,13 @@ impl Client {
         self.client.request(request).map_err(Error::from).await
     }
 
-    pub async fn post<R>(
+    pub async fn post(
         &self,
         uri: &str,
-        body: Option<R>,
+        body: Option<Body>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<Body>, Error>
-    where
-        R: Read,
-    {
-        let body = if let Some(mut body) = body {
-            let mut body_vec = Vec::new();
-            body.read_to_end(&mut body_vec)?;
-            Body::from(body_vec)
-        } else {
-            Body::empty()
-        };
+    ) -> Result<Response<Body>, Error> {
         let content_type = content_type.unwrap_or("application/json");
 
         let mut request = Request::builder()
@@ -112,7 +101,7 @@ impl Client {
             }
         }
 
-        let request = request.body(body)?;
+        let request = request.body(body.unwrap_or_default())?;
 
         self.request(request).await
     }
@@ -173,7 +162,7 @@ impl Default for Client {
 }
 
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
-impl crate::HttpClient<Body> for Client {
+impl crate::HttpClient<Body, Body> for Client {
     fn get(
         &self,
         uri: &str,
@@ -194,16 +183,13 @@ impl crate::HttpClient<Body> for Client {
         proxmox_async::runtime::block_on(self.request(req))
     }
 
-    fn post<R>(
+    fn post(
         &self,
         uri: &str,
-        body: Option<R>,
+        body: Option<Body>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<Body>, Error>
-    where
-        R: Read,
-    {
+    ) -> Result<Response<Body>, Error> {
         proxmox_async::runtime::block_on(self.post(uri, body, content_type, extra_headers))
     }
 
@@ -213,7 +199,7 @@ impl crate::HttpClient<Body> for Client {
 }
 
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
-impl crate::HttpClient<String> for Client {
+impl crate::HttpClient<String, String> for Client {
     fn get(
         &self,
         uri: &str,
@@ -236,17 +222,15 @@ impl crate::HttpClient<String> for Client {
         })
     }
 
-    fn post<R>(
+    fn post(
         &self,
         uri: &str,
-        body: Option<R>,
+        body: Option<String>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<String>, Error>
-    where
-        R: Read,
-    {
+    ) -> Result<Response<String>, Error> {
         proxmox_async::runtime::block_on(async move {
+            let body = body.map(|s| Body::from(s.into_bytes()));
             Self::convert_body_to_string(self.post(uri, body, content_type, extra_headers).await)
                 .await
         })

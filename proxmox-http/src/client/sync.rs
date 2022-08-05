@@ -106,7 +106,7 @@ impl Client {
     }
 }
 
-impl HttpClient<String> for Client {
+impl HttpClient<String, String> for Client {
     fn get(
         &self,
         uri: &str,
@@ -118,21 +118,18 @@ impl HttpClient<String> for Client {
         self.call(req).and_then(Self::convert_response_to_string)
     }
 
-    fn post<R>(
+    fn post(
         &self,
         uri: &str,
-        body: Option<R>,
+        body: Option<String>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<String>, Error>
-    where
-        R: Read,
-    {
+    ) -> Result<Response<String>, Error> {
         let req = self.agent()?.post(uri);
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
-            Some(body) => self.send(req, body),
+            Some(body) => self.send(req, body.as_bytes()),
             None => self.call(req),
         }
         .and_then(Self::convert_response_to_string)
@@ -157,7 +154,7 @@ impl HttpClient<String> for Client {
     }
 }
 
-impl HttpClient<Vec<u8>> for Client {
+impl HttpClient<&[u8], Vec<u8>> for Client {
     fn get(
         &self,
         uri: &str,
@@ -169,16 +166,13 @@ impl HttpClient<Vec<u8>> for Client {
         self.call(req).and_then(Self::convert_response_to_vec)
     }
 
-    fn post<R>(
+    fn post(
         &self,
         uri: &str,
-        body: Option<R>,
+        body: Option<&[u8]>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<Vec<u8>>, Error>
-    where
-        R: Read,
-    {
+    ) -> Result<Response<Vec<u8>>, Error> {
         let req = self.agent()?.post(uri);
         let req = Self::add_headers(req, content_type, extra_headers);
 
@@ -189,7 +183,7 @@ impl HttpClient<Vec<u8>> for Client {
         .and_then(Self::convert_response_to_vec)
     }
 
-    fn request(&self, request: http::Request<Vec<u8>>) -> Result<Response<Vec<u8>>, Error> {
+    fn request(&self, request: http::Request<&[u8]>) -> Result<Response<Vec<u8>>, Error> {
         let mut req = self
             .agent()?
             .request(request.method().as_str(), &request.uri().to_string());
@@ -203,12 +197,12 @@ impl HttpClient<Vec<u8>> for Client {
             }
         }
 
-        self.send(req, request.body().as_slice())
+        self.send(req, *request.body())
             .and_then(Self::convert_response_to_vec)
     }
 }
 
-impl HttpClient<Box<dyn Read>> for Client {
+impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
     fn get(
         &self,
         uri: &str,
@@ -220,16 +214,13 @@ impl HttpClient<Box<dyn Read>> for Client {
         self.call(req).and_then(Self::convert_response_to_reader)
     }
 
-    fn post<R>(
+    fn post(
         &self,
         uri: &str,
-        body: Option<R>,
+        body: Option<Box<dyn Read>>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<Box<dyn Read>>, Error>
-    where
-        R: Read,
-    {
+    ) -> Result<Response<Box<dyn Read>>, Error> {
         let req = self.agent()?.post(uri);
         let req = Self::add_headers(req, content_type, extra_headers);
 

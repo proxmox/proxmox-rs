@@ -1,24 +1,22 @@
-use std::{collections::HashMap, io::Read};
+use std::collections::HashMap;
 
 use anyhow::Error;
 use http::{Request, Response};
 
-pub trait HttpClient<T> {
+pub trait HttpClient<RequestBody, ResponseBody> {
     fn get(
         &self,
         uri: &str,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<T>, Error>;
+    ) -> Result<Response<ResponseBody>, Error>;
 
-    fn post<R>(
+    fn post(
         &self,
         uri: &str,
-        body: Option<R>,
+        body: Option<RequestBody>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<T>, Error>
-    where
-        R: Read;
+    ) -> Result<Response<ResponseBody>, Error>;
 
-    fn request(&self, request: Request<T>) -> Result<Response<T>, Error>;
+    fn request(&self, request: Request<RequestBody>) -> Result<Response<ResponseBody>, Error>;
 }

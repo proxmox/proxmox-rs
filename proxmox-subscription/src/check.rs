@@ -18,7 +18,7 @@ lazy_static! {
 const SHOP_URI: &str = "https://shop.proxmox.com/modules/servers/licensing/verify.php";
 
 /// (Re)-register a subscription key with the WHMCS server.
-fn register_subscription<C: HttpClient<String>>(
+fn register_subscription<C: HttpClient<String, String>>(
     key: &str,
     server_id: &str,
     checktime: i64,
@@ -39,7 +39,7 @@ fn register_subscription<C: HttpClient<String>>(
     let query = json_object_to_query(params)?;
     let response = client.post(
         SHOP_URI,
-        Some(&mut query.as_bytes()),
+        Some(query),
         Some("application/x-www-form-urlencoded"),
         None,
     )?;
@@ -164,7 +164,7 @@ fn test_parse_register_response() -> Result<(), Error> {
 
 /// Queries the WHMCS server to register/update the subscription key information, parsing the
 /// response into a [SubscriptionInfo].
-pub fn check_subscription<C: HttpClient<String>>(
+pub fn check_subscription<C: HttpClient<String, String>>(
     key: String,
     server_id: String,
     product_url: String,
