@@ -99,27 +99,8 @@ impl FileReferenceType {
             .strip_prefix(&format!("{component}/"))
             .ok_or_else(|| format_err!("Doesn't start with component '{component}'"))?;
 
-        let parse_binary_dir = |file_name: &str, arch: &str| {
-            if let Some((dir, _rest)) = file_name.split_once('/') {
-                if dir == "Packages.diff" {
-                    // TODO re-evaluate?
-                    Ok(FileReferenceType::PDiff)
-                } else {
-                    Ok(FileReferenceType::Unknown)
-                }
-            } else if file_name == "Release" {
-                Ok(FileReferenceType::PseudoRelease(Some(arch.to_owned())))
-            } else {
-                let comp = match file_name.strip_prefix("Packages") {
-                    None => {
-                        bail!("found unexpected non-Packages reference to '{path}'")
-                    }
-                    Some(ext) => FileReferenceType::match_compression(ext)?,
-                };
-                //println!("compression: {comp:?}");
-                Ok(FileReferenceType::Packages(arch.to_owned(), comp))
-            }
-        };
+        let parse_binary_dir =
+            |file_name: &str, arch: &str| parse_binary_dir(file_name, arch, path);
 
         if let Some((dir, rest)) = rest.split_once('/') {
             // reference into another subdir
@@ -301,25 +282,13 @@ impl TryFrom<ReleaseFileRaw> for ReleaseFile {
     fn try_from(value: ReleaseFileRaw) -> Result<Self, Self::Error> {
         let mut parsed = ReleaseFile::default();
 
-        let parse_whitespace_list = |list_str: String| {
-            list_str
-                .split_ascii_whitespace()
-                .map(|arch| arch.to_owned())
-                .collect::<Vec<String>>()
-        };
-
-        let parse_date = |_date_str: String| {
-            // TODO implement
-            0
-        };
-
-        parsed.architectures = parse_whitespace_list(
-            value
+        parsed.architectures = whitespace_split_to_vec(
+            &value
                 .architectures
                 .ok_or_else(|| format_err!("'Architectures' field missing."))?,
         );
-        parsed.components = parse_whitespace_list(
-            value
+        parsed.components = whitespace_split_to_vec(
+            &value
                 .components
                 .ok_or_else(|| format_err!("'Components' field missing."))?,
         );
@@ -327,11 +296,11 @@ impl TryFrom<ReleaseFileRaw> for ReleaseFile {
         parsed.changelogs = value.changelogs;
         parsed.codename = value.codename;
 
-        parsed.date = value.date.map(parse_date);
+        parsed.date = value.date.as_deref().map(parse_date);
         parsed.valid_until = value
             .extra_fields
             .get("Valid-Until")
-            .map(|val| parse_date(val.to_string()));
+            .map(|val| parse_date(&val.to_string()));
 
         parsed.description = value.description;
         parsed.label = value.label;
@@ -362,91 +331,6 @@ impl TryFrom<ReleaseFileRaw> for ReleaseFile {
         }
 
         let mut references_map: HashMap<String, HashMap<String, FileReference>> = HashMap::new();
-
-        let parse_file_reference = |line: &str, csum_len: usize, components: &[String]| {
-            let mut split = line.split_ascii_whitespace();
-            let checksum = split.next().ok_or_else(|| format_err!("bla"))?;
-            if checksum.len() > csum_len * 2 {
-                bail!(
-                    "invalid checksum length: '{}', expected {} bytes",
-                    checksum,
-                    csum_len
-                );
-            }
-
-            let checksum = hex::decode(checksum)?;
-
-            let size = split
-                .next()
-                .ok_or_else(|| format_err!("No 'size' field in file reference line."))?
-                .parse::<usize>()?;
-
-            let file = split
-                .next()
-                .ok_or_else(|| format_err!("No 'path' field in file reference line."))?
-                .to_string();
-
-            let (component, file_type) = components
-                .iter()
-                .find_map(|component| {
-                    if !file.starts_with(&format!("{component}/")) {
-                        return None;
-                    }
-
-                    Some(
-                        FileReferenceType::parse(component, &file)
-                            .map(|file_type| (component.clone(), file_type)),
-                    )
-                })
-                .unwrap_or_else(|| Ok(("UNKNOWN".to_string(), FileReferenceType::Unknown)))?;
-
-            Ok((
-                FileReference {
-                    path: file,
-                    size,
-                    checksums: CheckSums::default(),
-                    component,
-                    file_type,
-                },
-                checksum,
-            ))
-        };
-
-        let merge_references = |base_map: &mut HashMap<String, HashMap<String, FileReference>>,
-                                file_ref: FileReference| {
-            let base = file_ref.basename()?;
-
-            match base_map.get_mut(&base) {
-                None => {
-                    let mut map = HashMap::new();
-                    map.insert(file_ref.path.clone(), file_ref);
-                    base_map.insert(base, map);
-                }
-                Some(entries) => {
-                    match entries.get_mut(&file_ref.path) {
-                        Some(entry) => {
-                            if entry.size != file_ref.size {
-                                bail!(
-                                    "Multiple entries for '{}' with size mismatch: {} / {}",
-                                    entry.path,
-                                    file_ref.size,
-                                    entry.size
-                                );
-                            }
-
-                            entry.checksums.merge(&file_ref.checksums).map_err(|err| {
-                                format_err!("Multiple checksums for '{}' - {err}", entry.path)
-                            })?;
-                        }
-                        None => {
-                            entries.insert(file_ref.path.clone(), file_ref);
-                        }
-                    };
-                }
-            };
-
-            Ok(())
-        };
 
         if let Some(md5) = value.md5_sum {
             for line in md5.lines() {
@@ -541,6 +425,131 @@ impl TryFrom<&[u8]> for ReleaseFile {
         let deserialized = ReleaseFileRaw::deserialize(Deserializer::new(value))?;
         deserialized.try_into()
     }
+}
+
+fn whitespace_split_to_vec(list_str: &str) -> Vec<String> {
+    list_str
+        .split_ascii_whitespace()
+        .map(|arch| arch.to_owned())
+        .collect()
+}
+
+fn parse_file_reference(
+    line: &str,
+    csum_len: usize,
+    components: &[String],
+) -> Result<(FileReference, Vec<u8>), Error> {
+    let mut split = line.split_ascii_whitespace();
+    let checksum = split.next().ok_or_else(|| format_err!("bla"))?;
+    if checksum.len() > csum_len * 2 {
+        bail!(
+            "invalid checksum length: '{}', expected {} bytes",
+            checksum,
+            csum_len
+        );
+    }
+
+    let checksum = hex::decode(checksum)?;
+
+    let size = split
+        .next()
+        .ok_or_else(|| format_err!("No 'size' field in file reference line."))?
+        .parse::<usize>()?;
+
+    let file = split
+        .next()
+        .ok_or_else(|| format_err!("No 'path' field in file reference line."))?
+        .to_string();
+
+    let (component, file_type) = components
+        .iter()
+        .find_map(|component| {
+            if !file.starts_with(&format!("{component}/")) {
+                return None;
+            }
+
+            Some(
+                FileReferenceType::parse(component, &file)
+                    .map(|file_type| (component.clone(), file_type)),
+            )
+        })
+        .unwrap_or_else(|| Ok(("UNKNOWN".to_string(), FileReferenceType::Unknown)))?;
+
+    Ok((
+        FileReference {
+            path: file,
+            size,
+            checksums: CheckSums::default(),
+            component,
+            file_type,
+        },
+        checksum,
+    ))
+}
+
+fn parse_date(_date_str: &str) -> u64 {
+    // TODO implement
+    0
+}
+
+fn parse_binary_dir(file_name: &str, arch: &str, path: &str) -> Result<FileReferenceType, Error> {
+    if let Some((dir, _rest)) = file_name.split_once('/') {
+        if dir == "Packages.diff" {
+            // TODO re-evaluate?
+            Ok(FileReferenceType::PDiff)
+        } else {
+            Ok(FileReferenceType::Unknown)
+        }
+    } else if file_name == "Release" {
+        Ok(FileReferenceType::PseudoRelease(Some(arch.to_owned())))
+    } else {
+        let comp = match file_name.strip_prefix("Packages") {
+            None => {
+                bail!("found unexpected non-Packages reference to '{path}'")
+            }
+            Some(ext) => FileReferenceType::match_compression(ext)?,
+        };
+        //println!("compression: {comp:?}");
+        Ok(FileReferenceType::Packages(arch.to_owned(), comp))
+    }
+}
+
+fn merge_references(
+    base_map: &mut HashMap<String, HashMap<String, FileReference>>,
+    file_ref: FileReference,
+) -> Result<(), Error> {
+    let base = file_ref.basename()?;
+
+    match base_map.get_mut(&base) {
+        None => {
+            let mut map = HashMap::new();
+            map.insert(file_ref.path.clone(), file_ref);
+            base_map.insert(base, map);
+        }
+        Some(entries) => {
+            match entries.get_mut(&file_ref.path) {
+                Some(entry) => {
+                    if entry.size != file_ref.size {
+                        bail!(
+                            "Multiple entries for '{}' with size mismatch: {} / {}",
+                            entry.path,
+                            file_ref.size,
+                            entry.size
+                        );
+                    }
+
+                    entry.checksums.merge(&file_ref.checksums).map_err(|err| {
+                        format_err!("Multiple checksums for '{}' - {err}", entry.path)
+                    })?;
+                }
+                None => {
+                    entries.insert(file_ref.path.clone(), file_ref);
+                }
+            };
+        }
+    };
+
+    Ok(())
 }
 
 #[test]
