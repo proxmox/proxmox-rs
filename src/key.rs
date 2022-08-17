@@ -106,9 +106,8 @@ impl<P: HasPublic> TryFrom<&openssl::ec::EcKey<P>> for EcPublicKey {
         let mut ctx = openssl::bn::BigNumContext::new()?;
         let mut x = openssl::bn::BigNum::new()?;
         let mut y = openssl::bn::BigNum::new()?;
-        let _: () = key
-            .public_key()
-            .affine_coordinates_gfp(group, &mut x, &mut y, &mut ctx)?;
+        key.public_key()
+            .affine_coordinates(group, &mut x, &mut y, &mut ctx)?;
 
         Ok(EcPublicKey {
             crv: "P-256",
@@ -116,4 +115,15 @@ impl<P: HasPublic> TryFrom<&openssl::ec::EcKey<P>> for EcPublicKey {
             y: y.to_vec(),
         })
     }
+}
+
+#[test]
+fn test_key_conversion() -> Result<(), Error> {
+    let key = openssl::ec::EcKey::generate(
+        openssl::ec::EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1)?.as_ref(),
+    )?;
+
+    let _ = EcPublicKey::try_from(&key).expect("failed to jsonify ec key");
+
+    Ok(())
 }
