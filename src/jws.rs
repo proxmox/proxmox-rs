@@ -158,7 +158,7 @@ impl Jws {
             openssl::ecdsa::EcdsaSig::sign(hasher.finish()?.as_ref(), key.ec_key()?.as_ref())?;
         let r = sig.r().to_vec();
         let s = sig.s().to_vec();
-        let mut out = Vec::with_capacity(r.len() + s.len());
+        let mut out = Vec::with_capacity(ec_order_bytes * 2);
         out.extend(std::iter::repeat(0u8).take(ec_order_bytes - r.len()));
         out.extend(r);
         out.extend(std::iter::repeat(0u8).take(ec_order_bytes - s.len()));
