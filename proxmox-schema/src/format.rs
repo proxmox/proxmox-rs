@@ -37,11 +37,11 @@ pub fn wrap_text(
     text: &str,
     columns: usize,
 ) -> String {
-    let wrapper1 = textwrap::Wrapper::new(columns)
+    let wrap_options1 = textwrap::Options::new(columns)
         .initial_indent(initial_indent)
         .subsequent_indent(subsequent_indent);
 
-    let wrapper2 = textwrap::Wrapper::new(columns)
+    let wrap_options2 = textwrap::Options::new(columns)
         .initial_indent(subsequent_indent)
         .subsequent_indent(subsequent_indent);
 
@@ -50,9 +50,9 @@ pub fn wrap_text(
         .filter(|p| !p.is_empty())
         .fold(String::new(), |mut acc, p| {
             if acc.is_empty() {
-                acc.push_str(&wrapper1.wrap(p).join("\n"));
+                acc.push_str(&textwrap::wrap(p, &wrap_options1).join("\n"));
             } else {
-                acc.push_str(&wrapper2.wrap(p).join("\n"));
+                acc.push_str(&textwrap::wrap(p, &wrap_options2).join("\n"));
             }
             acc.push_str("\n\n");
             acc
