@@ -1,3 +1,9 @@
+rust-proxmox-schema (1.3.4-1) unstable; urgency=medium
+
+  * bump textwrap to 0.15
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 19 Aug 2022 12:27:08 +0200
+
 rust-proxmox-schema (1.3.3-1) unstable; urgency=medium
 
   * bump nix to 0.24
