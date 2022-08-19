@@ -8,6 +8,7 @@ CRATES = \
 	 proxmox-http \
 	 proxmox-io \
 	 proxmox-lang \
+	 proxmox-metrics \
 	 proxmox-router \
 	 proxmox-schema \
 	 proxmox-serde \
