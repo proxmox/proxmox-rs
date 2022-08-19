@@ -6,7 +6,7 @@ use nom::{
     bytes::complete::tag,
     character::complete::digit1,
     combinator::{all_consuming, map_res, opt, recognize},
-    error::{ParseError, VerboseError},
+    error::{ContextError, VerboseError},
     sequence::{preceded, tuple},
 };
 

@@ -3,8 +3,7 @@ use std::convert::{TryFrom, TryInto};
 
 use anyhow::Error;
 use nom::{
-    bytes::complete::tag, character::complete::space0, error::context,
-    multi::separated_nonempty_list,
+    bytes::complete::tag, character::complete::space0, error::context, multi::separated_list1,
 };
 
 use crate::parse_helpers::{parse_complete_line, parse_error, parse_hm_time, IResult};
@@ -94,7 +93,7 @@ fn parse_daily_duration_incomplete(mut i: &str) -> IResult<&str, DailyDuration> 
     if i.starts_with(|c: char| char::is_ascii_alphabetic(&c)) {
         let (n, range_list) = context(
             "weekday range list",
-            separated_nonempty_list(tag(","), parse_weekdays_range),
+            separated_list1(tag(","), parse_weekdays_range),
         )(i)?;
 
         i = space0(n)?.0;

@@ -6,7 +6,7 @@ use nom::{
     character::complete::space0,
     combinator::opt,
     error::context,
-    multi::separated_nonempty_list,
+    multi::separated_list1,
     sequence::{preceded, terminated, tuple},
 };
 
@@ -326,7 +326,7 @@ fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> 
 
         let (n, range_list) = context(
             "weekday range list",
-            separated_nonempty_list(tag(","), parse_weekdays_range),
+            separated_list1(tag(","), parse_weekdays_range),
         )(i)?;
 
         has_dayspec = true;
@@ -416,7 +416,7 @@ fn parse_date_time_comp_list(
             return Ok((rest, Vec::new()));
         }
 
-        separated_nonempty_list(tag(","), parse_date_time_comp(max))(i)
+        separated_list1(tag(","), parse_date_time_comp(max))(i)
     }
 }
 
