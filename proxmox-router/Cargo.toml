@@ -30,5 +30,5 @@ proxmox-async = { path = "../proxmox-async", version = "0.4.1" }
 
 [features]
 default = [ "cli" ]
-cli = [ "env_logger", "libc", "rustyline", "tokio" ]
+cli = [ "dep:env_logger", "dep:libc", "dep:rustyline", "dep:tokio" ]
 test-harness = [ "proxmox-schema/test-harness" ]

@@ -29,8 +29,8 @@ proxmox-time = { path = "../proxmox-time", version = "1.0.0" }
 
 [features]
 default = []
-sortable-macro = ["proxmox-sortable-macro"]
-logrotate = ["zstd"]
+sortable-macro = ["dep:proxmox-sortable-macro"]
+logrotate = ["dep:zstd"]
 acl = []
 crypt = []
 timer = []

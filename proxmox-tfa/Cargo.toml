@@ -28,6 +28,6 @@ webauthn-rs = { version = "0.3", optional = true }
 
 [features]
 default = []
-u2f = [ "libc", "serde_json", "serde/derive" ]
-api = [ "u2f", "webauthn-rs", "proxmox-uuid", "proxmox-time" ]
-api-types = [ "proxmox-schema" ]
+u2f = [ "dep:libc", "dep:serde_json", "serde/derive" ]
+api = [ "u2f", "dep:webauthn-rs", "dep:proxmox-uuid", "dep:proxmox-time" ]
+api-types = [ "dep:proxmox-schema" ]

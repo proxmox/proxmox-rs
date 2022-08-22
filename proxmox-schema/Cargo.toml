@@ -30,8 +30,8 @@ proxmox-api-macro = { path = "../proxmox-api-macro", version = "1.0.3" }
 [features]
 default = []
 
-api-macro = ["proxmox-api-macro"]
-upid-api-impl = [ "libc", "nix" ]
+api-macro = ["dep:proxmox-api-macro"]
+upid-api-impl = [ "dep:libc", "dep:nix" ]
 
 # Testing only
 test-harness = []

@@ -31,17 +31,19 @@ proxmox-lang = { path = "../proxmox-lang", optional = true, version = "1.1" }
 [features]
 default = []
 
-client = [ "futures", "http-helpers", "hyper/full", "openssl", "tokio/io-util", "tokio-openssl" ]
-client-trait = [ "http" ]
-http-helpers = [ "base64", "http", "proxmox-sys", "serde_json", "url" ]
+client = [ "dep:futures", "http-helpers", "dep:hyper", "hyper?/full", "dep:openssl", "dep:tokio", "tokio?/io-util", "dep:tokio-openssl" ]
+client-trait = [ "dep:http" ]
+http-helpers = [ "dep:base64", "dep:http", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
 websocket = [
-    "base64",
-    "futures",
-    "hyper",
-    "openssl",
-    "proxmox-sys",
-    "proxmox-io/tokio",
-    "proxmox-lang",
-    "tokio/io-util",
-    "tokio/sync",
+    "dep:base64",
+    "dep:futures",
+    "dep:hyper",
+    "dep:openssl",
+    "dep:proxmox-sys",
+    "dep:proxmox-io",
+    "proxmox-io?/tokio",
+    "dep:proxmox-lang",
+    "dep:tokio",
+    "tokio?/io-util",
+    "tokio?/sync",
 ]
