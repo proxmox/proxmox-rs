@@ -1,3 +1,9 @@
+rust-proxmox-http (0.7.0-1) unstable; urgency=medium
+
+  * WIP
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 22 Aug 2022 13:59:11 +0200
+
 rust-proxmox-http (0.6.5-1) unstable; urgency=medium
 
   * bump to proxmox-sys 0.4

@@ -18,7 +18,7 @@ regex = "1.5"
 serde = "1.0"
 serde_json = "1.0"
 
-proxmox-http = { path = "../proxmox-http", version = "0.6.3", default_features = false, features = ["client-trait", "http-helpers"] }
+proxmox-http = { path = "../proxmox-http", version = "0.7", default_features = false, features = ["client-trait", "http-helpers"] }
 proxmox-serde = { path = "../proxmox-serde", version = "0.1.1", features = ["serde_json"]}
 proxmox-sys = { path = "../proxmox-sys", version = "0.4" }
 proxmox-time = { path = "../proxmox-time", version = "1.1" }
