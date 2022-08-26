@@ -5,3 +5,4 @@ Cargo.lock
 /*.buildinfo
 /*.changes
 /build
+/*-deb
