@@ -48,11 +48,7 @@ Depends:
 Recommends:
  librust-proxmox-router+cli-dev (= ${binary:Version})
 Suggests:
- librust-proxmox-router+env-logger-dev (= ${binary:Version}),
- librust-proxmox-router+libc-dev (= ${binary:Version}),
- librust-proxmox-router+rustyline-dev (= ${binary:Version}),
- librust-proxmox-router+test-harness-dev (= ${binary:Version}),
- librust-proxmox-router+tokio-dev (= ${binary:Version})
+ librust-proxmox-router+test-harness-dev (= ${binary:Version})
 Provides:
  librust-proxmox-router-1-dev (= ${binary:Version}),
  librust-proxmox-router-1.2-dev (= ${binary:Version}),
@@ -67,10 +63,10 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-router-dev (= ${binary:Version}),
- librust-proxmox-router+env-logger-dev (= ${binary:Version}),
- librust-proxmox-router+libc-dev (= ${binary:Version}),
- librust-proxmox-router+rustyline-dev (= ${binary:Version}),
- librust-proxmox-router+tokio-dev (= ${binary:Version})
+ librust-env-logger-0.9+default-dev,
+ librust-libc-0.2+default-dev,
+ librust-rustyline-9+default-dev,
+ librust-tokio-1+default-dev
 Provides:
  librust-proxmox-router+default-dev (= ${binary:Version}),
  librust-proxmox-router-1+cli-dev (= ${binary:Version}),
@@ -84,51 +80,6 @@ Description: Proxmox API Router and CLI utilities - feature "cli" and 1 more
  pulling in any additional dependencies needed by that feature.
  .
  Additionally, this package also provides the "default" feature.
-
-Package: librust-proxmox-router+env-logger-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-router-dev (= ${binary:Version}),
- librust-env-logger-0.9+default-dev
-Provides:
- librust-proxmox-router-1+env-logger-dev (= ${binary:Version}),
- librust-proxmox-router-1.2+env-logger-dev (= ${binary:Version}),
- librust-proxmox-router-1.2.4+env-logger-dev (= ${binary:Version})
-Description: Proxmox API Router and CLI utilities - feature "env_logger"
- This metapackage enables feature "env_logger" for the Rust proxmox-router
- crate, by pulling in any additional dependencies needed by that feature.
-
-Package: librust-proxmox-router+libc-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-router-dev (= ${binary:Version}),
- librust-libc-0.2+default-dev
-Provides:
- librust-proxmox-router-1+libc-dev (= ${binary:Version}),
- librust-proxmox-router-1.2+libc-dev (= ${binary:Version}),
- librust-proxmox-router-1.2.4+libc-dev (= ${binary:Version})
-Description: Proxmox API Router and CLI utilities - feature "libc"
- This metapackage enables feature "libc" for the Rust proxmox-router crate, by
- pulling in any additional dependencies needed by that feature.
-
-Package: librust-proxmox-router+rustyline-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-router-dev (= ${binary:Version}),
- librust-rustyline-9+default-dev
-Provides:
- librust-proxmox-router-1+rustyline-dev (= ${binary:Version}),
- librust-proxmox-router-1.2+rustyline-dev (= ${binary:Version}),
- librust-proxmox-router-1.2.4+rustyline-dev (= ${binary:Version})
-Description: Proxmox API Router and CLI utilities - feature "rustyline"
- This metapackage enables feature "rustyline" for the Rust proxmox-router crate,
- by pulling in any additional dependencies needed by that feature.
 
 Package: librust-proxmox-router+test-harness-dev
 Architecture: any
@@ -144,18 +95,3 @@ Provides:
 Description: Proxmox API Router and CLI utilities - feature "test-harness"
  This metapackage enables feature "test-harness" for the Rust proxmox-router
  crate, by pulling in any additional dependencies needed by that feature.
-
-Package: librust-proxmox-router+tokio-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-router-dev (= ${binary:Version}),
- librust-tokio-1+default-dev
-Provides:
- librust-proxmox-router-1+tokio-dev (= ${binary:Version}),
- librust-proxmox-router-1.2+tokio-dev (= ${binary:Version}),
- librust-proxmox-router-1.2.4+tokio-dev (= ${binary:Version})
-Description: Proxmox API Router and CLI utilities - feature "tokio"
- This metapackage enables feature "tokio" for the Rust proxmox-router crate, by
- pulling in any additional dependencies needed by that feature.
