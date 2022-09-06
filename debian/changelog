@@ -1,3 +1,11 @@
+rust-proxmox-apt (0.9.1-1) stable; urgency=medium
+
+  * release-file: improve invalid file-reference handling
+
+  * add ceph quincy repositories
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 6 Sep 2022 10:33:17 +0200
+
 rust-proxmox-apt (0.9.0-1) stable; urgency=medium
 
   * AptRepositoryFile: make path optional
