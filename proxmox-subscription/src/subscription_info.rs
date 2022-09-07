@@ -49,11 +49,11 @@ impl Default for SubscriptionStatus {
 impl std::fmt::Display for SubscriptionStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            SubscriptionStatus::New => write!(f, "New"),
-            SubscriptionStatus::NotFound => write!(f, "NotFound"),
-            SubscriptionStatus::Active => write!(f, "Active"),
-            SubscriptionStatus::Invalid => write!(f, "Invalid"),
-            SubscriptionStatus::Expired => write!(f, "Expired"),
+            SubscriptionStatus::New => write!(f, "new"),
+            SubscriptionStatus::NotFound => write!(f, "notfound"),
+            SubscriptionStatus::Active => write!(f, "active"),
+            SubscriptionStatus::Invalid => write!(f, "invalid"),
+            SubscriptionStatus::Expired => write!(f, "expired"),
         }
     }
 }
