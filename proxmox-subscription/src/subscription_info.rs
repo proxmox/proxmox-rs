@@ -29,7 +29,7 @@ pub enum SubscriptionStatus {
     #[serde(alias = "New")]
     New,
     /// no subscription set
-    #[serde(alias = "Notfound")]
+    #[serde(alias = "NotFound")]
     NotFound,
     /// subscription set and active
     #[serde(alias = "Active")]
