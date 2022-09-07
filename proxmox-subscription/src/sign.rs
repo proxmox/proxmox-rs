@@ -82,7 +82,7 @@ impl SignedResponse {
 
         match key.verify(&canonical, &self.signature) {
             Ok(()) => Ok(self.blobs),
-            Err(_) => todo!(),
+            Err(err) => bail!("Failed to verify response signature - {err}"),
         }
     }
 }
