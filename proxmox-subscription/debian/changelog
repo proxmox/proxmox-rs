@@ -1,3 +1,17 @@
+rust-proxmox-subscription (0.3.0-1) unstable; urgency=medium
+
+  * update to proxmox-http 0.7
+
+  * add Expired status
+
+  * fix NotFound status alias
+
+  * improve checks upon reading subscription info file
+
+  * forward signature validation errors
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 7 Sep 2022 09:29:15 +0200
+
 rust-proxmox-subscription (0.2.1-1) unstable; urgency=medium
 
   * bump to proxmox-sys 0.4
