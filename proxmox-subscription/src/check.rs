@@ -54,6 +54,7 @@ fn parse_status(value: &str) -> SubscriptionStatus {
         "new" => SubscriptionStatus::New,
         "notfound" => SubscriptionStatus::NotFound,
         "invalid" => SubscriptionStatus::Invalid,
+        "expired" => SubscriptionStatus::Expired,
         _ => SubscriptionStatus::Invalid,
     }
 }

@@ -37,6 +37,9 @@ pub enum SubscriptionStatus {
     /// subscription set but invalid for this server
     #[serde(alias = "Invalid")]
     Invalid,
+    /// subscription set but expired for this server
+    #[serde(alias = "Expired")]
+    Expired,
 }
 impl Default for SubscriptionStatus {
     fn default() -> Self {
@@ -50,6 +53,7 @@ impl std::fmt::Display for SubscriptionStatus {
             SubscriptionStatus::NotFound => write!(f, "NotFound"),
             SubscriptionStatus::Active => write!(f, "Active"),
             SubscriptionStatus::Invalid => write!(f, "Invalid"),
+            SubscriptionStatus::Expired => write!(f, "Expired"),
         }
     }
 }
