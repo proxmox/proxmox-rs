@@ -1,3 +1,9 @@
+rust-proxmox-router (1.3.0-1) unstable; urgency=medium
+
+  * make hyper/http optional via new "server" feature
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 7 Sep 2022 09:15:10 +0200
+
 rust-proxmox-router (1.2.4-1) unstable; urgency=medium
 
   * add init_cli_logger helper
