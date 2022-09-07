@@ -91,10 +91,12 @@ pub fn read_subscription<P: AsRef<Path>>(
         Some(raw) => {
             let mut info = parse_subscription_file(&raw)?;
             if let Some(info) = info.as_mut() {
-                // these will set `status` to INVALID if checks fail!
                 info.check_signature(signature_keys);
-                info.check_server_id();
-                info.check_age(false);
+                if info.status == SubscriptionStatus::Active {
+                    // these will set `status` to INVALID if checks fail!
+                    info.check_server_id();
+                    info.check_age(false);
+                }
             };
 
             Ok(info)
