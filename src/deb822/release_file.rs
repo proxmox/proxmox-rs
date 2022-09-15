@@ -342,7 +342,7 @@ impl TryFrom<ReleaseFileRaw> for ReleaseFile {
         parsed.suite = value.suite;
         parsed.version = value.version;
 
-        parsed.aquire_by_hash = match value.extra_fields.get("Aquire-By-Hash") {
+        parsed.aquire_by_hash = match value.extra_fields.get("Acquire-By-Hash") {
             Some(val) => *val == "yes",
             None => false,
         };
