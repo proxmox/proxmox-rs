@@ -51,6 +51,8 @@ pub type Component = String;
 /// `Packages` and `Sources` will contain further reference to binary or source package files.
 ///  These are handled in `PackagesFile` and `SourcesFile` respectively.
 pub enum FileReferenceType {
+    /// A `Commands` index listing command to package mappings
+    Commands(Architecture, Option<CompressionType>),
     /// A `Contents` index listing contents of binary packages
     Contents(Architecture, Option<CompressionType>),
     /// A `Contents` index listing contents of binary udeb packages
@@ -123,6 +125,20 @@ impl FileReferenceType {
                         Ok(FileReferenceType::Unknown)
                     }
                 }
+                "cnf" => {
+                    if let Some(rest) = rest.strip_prefix("Commands-") {
+                        if let Some((arch, ext)) = rest.rsplit_once('.') {
+                            Ok(FileReferenceType::Commands(
+                                arch.to_owned(),
+                                FileReferenceType::match_compression(ext).ok().flatten(),
+                            ))
+                        } else {
+                            Ok(FileReferenceType::Commands(rest.to_owned(), None))
+                        }
+                    } else {
+                        Ok(FileReferenceType::Unknown)
+                    }
+                },
                 "dep11" => {
                     if let Some((_path, ext)) = rest.rsplit_once('.') {
                         Ok(FileReferenceType::Dep11(
@@ -198,7 +214,8 @@ impl FileReferenceType {
 
     pub fn compression(&self) -> Option<CompressionType> {
         match *self {
-            FileReferenceType::Contents(_, comp)
+            FileReferenceType::Commands(_, comp)
+            | FileReferenceType::Contents(_, comp)
             | FileReferenceType::ContentsUdeb(_, comp)
             | FileReferenceType::Packages(_, comp)
             | FileReferenceType::Sources(comp)
