@@ -228,6 +228,22 @@ impl FileReferenceType {
         }
     }
 
+    pub fn architecture(&self) -> Option<&Architecture> {
+        match self {
+            FileReferenceType::Commands(arch, _)
+            | FileReferenceType::Contents(arch, _)
+            | FileReferenceType::ContentsUdeb(arch, _)
+            | FileReferenceType::Packages(arch, _) => Some(arch),
+            FileReferenceType::PseudoRelease(arch) => arch.as_ref(),
+            FileReferenceType::Unknown
+            | FileReferenceType::PDiff
+            | FileReferenceType::Sources(_)
+            | FileReferenceType::Dep11(_)
+            | FileReferenceType::Translation(_)
+            | FileReferenceType::Ignored => None,
+        }
+    }
+
     pub fn is_package_index(&self) -> bool {
         matches!(self, FileReferenceType::Packages(_, _))
     }
