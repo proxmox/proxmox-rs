@@ -1,3 +1,13 @@
+rust-proxmox-apt (0.9.2-1) stable; urgency=medium
+
+  * release: add Commands file reference type
+
+  * release: add 'architecture' helper
+
+  * release: fix typo in 'Acquire-By-Hash'
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 16 Sep 2022 14:17:10 +0200
+
 rust-proxmox-apt (0.9.1-1) stable; urgency=medium
 
   * release-file: improve invalid file-reference handling
