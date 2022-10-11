@@ -1,0 +1,5 @@
+rust-proxmox-rest-server (0.2.0-1) stable; urgency=medium
+
+  * initial split out of proxmox-backup workspace
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 11 Oct 2022 14:16:40 +0200

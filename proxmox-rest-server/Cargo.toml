@@ -1,12 +1,13 @@
 [package]
 name = "proxmox-rest-server"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Proxmox Support Team <support@proxmox.com>"]
 edition = "2018"
 license = "AGPL-3"
 description = "REST server implementation"
 
-# for example
+exclude = [ "debian" ]
+
 [dev-dependencies]
 proxmox-schema = { version = "1.3.1", features = [ "api-macro" ] }
 tokio = { version = "1.6", features = [ "rt-multi-thread", "signal", "process" ] }
