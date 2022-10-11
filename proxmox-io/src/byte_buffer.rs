@@ -207,8 +207,8 @@ mod test {
     fn test1() {
         let mut buffer = ByteBuffer::new();
         let slice = buffer.get_free_mut_slice();
-        for i in 0..slice.len() {
-            slice[i] = (i % 255) as u8;
+        for (i, value) in slice.iter_mut().enumerate() {
+            *value = (i % 255) as u8;
         }
         buffer.add_size(5);
 

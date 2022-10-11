@@ -161,19 +161,16 @@ mod test {
     fn test_sparse_copy() {
         // test sparse
         let mut test_data = Vec::new();
-        for _ in 0..LEN / 2 {
-            test_data.push(1u8);
-        }
-        for _ in 0..LEN / 2 {
-            test_data.push(0u8);
-        }
+        test_data.resize(LEN / 2, 1u8);
+        test_data.resize(LEN, 0u8);
+
         let mut test_data = Cursor::new(test_data);
         let mut result_data = Cursor::new(vec![0; LEN]);
 
         let result =
             sparse_copy(&mut test_data, &mut result_data).expect("error during sparse copy");
         assert_eq!(result.written, LEN as u64);
-        assert_eq!(result.seeked_last, true);
+        assert!(result.seeked_last);
         for i in 0..LEN {
             if i < LEN / 2 {
                 assert_eq!(result_data.get_ref()[i], 1);
@@ -189,7 +186,7 @@ mod test {
         let result =
             sparse_copy(&mut test_data, &mut result_data).expect("error during sparse copy");
         assert_eq!(result.written, LEN as u64);
-        assert_eq!(result.seeked_last, false);
+        assert!(!result.seeked_last);
         for i in 0..LEN {
             assert_eq!(result_data.get_ref()[i], 1);
         }
@@ -214,12 +211,8 @@ mod test {
         let mut fut = async {
             // test sparse
             let mut test_data = Vec::new();
-            for _ in 0..LEN / 2 {
-                test_data.push(1u8);
-            }
-            for _ in 0..LEN / 2 {
-                test_data.push(0u8);
-            }
+            test_data.resize(LEN / 2, 1u8);
+            test_data.resize(LEN, 0u8);
             let mut test_data = Cursor::new(test_data);
             let mut result_data = Cursor::new(vec![0; LEN]);
 
@@ -228,7 +221,7 @@ mod test {
                 .expect("error during sparse copy");
 
             assert_eq!(result.written, LEN as u64);
-            assert_eq!(result.seeked_last, true);
+            assert!(result.seeked_last);
             for i in 0..LEN {
                 if i < LEN / 2 {
                     assert_eq!(result_data.get_ref()[i], 1);
@@ -246,7 +239,7 @@ mod test {
                 .expect("error during sparse copy");
 
             assert_eq!(result.written, LEN as u64);
-            assert_eq!(result.seeked_last, false);
+            assert!(!result.seeked_last);
             for i in 0..LEN {
                 assert_eq!(result_data.get_ref()[i], 1);
             }

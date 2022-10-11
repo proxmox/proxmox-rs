@@ -16,6 +16,7 @@ const fn make_test_time(mday: i32, hour: i32, min: i32) -> i64 {
 }
 
 #[test]
+#[allow(clippy::identity_op)]
 fn test_compute_next_event() -> Result<(), Error> {
     let test_value = |v: &'static str, last: i64, expect: i64| -> Result<i64, Error> {
         let event: CalendarEvent = match format!("{} UTC", v).parse() {

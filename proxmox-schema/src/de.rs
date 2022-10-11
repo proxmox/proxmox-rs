@@ -234,6 +234,7 @@ where
 }
 
 #[test]
+#[allow(clippy::blacklisted_name)]
 fn test_extraction() {
     use serde::Deserialize;
 
