@@ -138,7 +138,7 @@ impl FileReferenceType {
                     } else {
                         Ok(FileReferenceType::Unknown)
                     }
-                },
+                }
                 "dep11" => {
                     if let Some((_path, ext)) = rest.rsplit_once('.') {
                         Ok(FileReferenceType::Dep11(
