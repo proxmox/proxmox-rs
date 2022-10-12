@@ -160,7 +160,7 @@ fn test_empty_write() -> Result<(), Error> {
     file.parse()?;
 
     let new_path = write_dir.join(path.file_name().unwrap());
-    file.path = Some(new_path.clone().into_os_string().into_string().unwrap());
+    file.path = Some(new_path.into_os_string().into_string().unwrap());
 
     file.digest = None;
 
@@ -191,9 +191,9 @@ fn test_check_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let infos = check_repositories(&vec![file], DebianCodename::Bullseye);
+    let infos = check_repositories(&[file], DebianCodename::Bullseye);
 
-    assert_eq!(infos.is_empty(), true);
+    assert!(infos.is_empty());
     let pve_list = read_dir.join("pve.list");
     let mut file = APTRepositoryFile::new(&pve_list)?.unwrap();
     file.parse()?;
@@ -205,18 +205,18 @@ fn test_check_repositories() -> Result<(), Error> {
     ];
 
     let mut expected_infos = vec![];
-    for n in 0..=5 {
+    for (n, origin) in origins.into_iter().enumerate() {
         expected_infos.push(APTRepositoryInfo {
             path: path_string.clone(),
             index: n,
             property: None,
             kind: "origin".to_string(),
-            message: origins[n].to_string(),
+            message: origin.to_string(),
         });
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&vec![file], DebianCodename::Bullseye);
+    let mut infos = check_repositories(&[file], DebianCodename::Bullseye);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -282,7 +282,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&vec![file], DebianCodename::Bullseye);
+    let mut infos = check_repositories(&[file], DebianCodename::Bullseye);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -314,7 +314,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&vec![file], DebianCodename::Bullseye);
+    let mut infos = check_repositories(&[file], DebianCodename::Bullseye);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -374,7 +374,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let std_repos = standard_repositories(&vec![file], "pve", DebianCodename::Bullseye);
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bullseye);
 
     assert_eq!(std_repos, expected);
 

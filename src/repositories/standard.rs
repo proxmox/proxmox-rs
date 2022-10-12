@@ -17,7 +17,7 @@ use proxmox_schema::api;
         },
     },
 )]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 /// Reference to a standard repository and configuration status.
 pub struct APTStandardRepository {
@@ -36,7 +36,7 @@ pub struct APTStandardRepository {
 }
 
 #[api]
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 /// Handles for Proxmox repositories.
 pub enum APTRepositoryHandle {

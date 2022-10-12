@@ -10,7 +10,7 @@ use proxmox_schema::api;
 use crate::repositories::standard::APTRepositoryHandle;
 
 #[api]
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum APTRepositoryFileType {
     /// One-line-style format
@@ -41,7 +41,7 @@ impl Display for APTRepositoryFileType {
 }
 
 #[api]
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum APTRepositoryPackageType {
     /// Debian package

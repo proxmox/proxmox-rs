@@ -314,39 +314,36 @@ impl TryFrom<ReleaseFileRaw> for ReleaseFile {
     type Error = Error;
 
     fn try_from(value: ReleaseFileRaw) -> Result<Self, Self::Error> {
-        let mut parsed = ReleaseFile::default();
-
-        parsed.architectures = whitespace_split_to_vec(
-            &value
-                .architectures
-                .ok_or_else(|| format_err!("'Architectures' field missing."))?,
-        );
-        parsed.components = whitespace_split_to_vec(
-            &value
-                .components
-                .ok_or_else(|| format_err!("'Components' field missing."))?,
-        );
-
-        parsed.changelogs = value.changelogs;
-        parsed.codename = value.codename;
-
-        parsed.date = value.date.as_deref().map(parse_date);
-        parsed.valid_until = value
-            .extra_fields
-            .get("Valid-Until")
-            .map(|val| parse_date(&val.to_string()));
-
-        parsed.description = value.description;
-        parsed.label = value.label;
-        parsed.origin = value.origin;
-        parsed.suite = value.suite;
-        parsed.version = value.version;
-
-        parsed.aquire_by_hash = match value.extra_fields.get("Acquire-By-Hash") {
-            Some(val) => *val == "yes",
-            None => false,
+        let mut parsed = ReleaseFile {
+            architectures: whitespace_split_to_vec(
+                &value
+                    .architectures
+                    .ok_or_else(|| format_err!("'Architectures' field missing."))?,
+            ),
+            components: whitespace_split_to_vec(
+                &value
+                    .components
+                    .ok_or_else(|| format_err!("'Components' field missing."))?,
+            ),
+            changelogs: value.changelogs,
+            codename: value.codename,
+            date: value.date.as_deref().map(parse_date),
+            valid_until: value
+                .extra_fields
+                .get("Valid-Until")
+                .map(|val| parse_date(&val.to_string())),
+            description: value.description,
+            label: value.label,
+            origin: value.origin,
+            suite: value.suite,
+            files: HashMap::new(),
+            aquire_by_hash: false,
+            version: value.version,
         };
 
+        if let Some(val) = value.extra_fields.get("Acquire-By-Hash") {
+            parsed.aquire_by_hash = *val == "yes";
+        }
         // Fixup bullseye-security release files which have invalid components
         if parsed.label.as_deref() == Some("Debian-Security")
             && parsed.codename.as_deref() == Some("bullseye-security")
@@ -423,7 +420,7 @@ impl TryFrom<ReleaseFileRaw> for ReleaseFile {
         parsed.files =
             references_map
                 .into_iter()
-                .fold(HashMap::new(), |mut map, (base, inner_map)| {
+                .fold(parsed.files, |mut map, (base, inner_map)| {
                     map.insert(base, inner_map.into_values().collect());
                     map
                 });

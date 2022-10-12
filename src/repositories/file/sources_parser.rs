@@ -186,7 +186,7 @@ impl<R: BufRead> APTRepositoryParser for APTSourcesFileParser<R> {
                     break;
                 }
                 Ok(_) => {
-                    if (&lines[old_length..])
+                    if (lines[old_length..])
                         .trim_matches(|c| char::is_ascii_whitespace(&c))
                         .is_empty()
                     {
