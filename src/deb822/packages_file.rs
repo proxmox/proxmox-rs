@@ -57,6 +57,7 @@ pub struct PackageEntry {
     pub size: usize,
     pub installed_size: Option<usize>,
     pub checksums: CheckSums,
+    pub section: String,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -83,6 +84,7 @@ impl TryFrom<PackagesFileRaw> for PackageEntry {
             size: value.size.parse::<usize>()?,
             installed_size,
             checksums: CheckSums::default(),
+            section: value.section,
         };
 
         if let Some(md5) = value.md5_sum {
