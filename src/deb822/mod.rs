@@ -5,6 +5,9 @@ pub use release_file::{CompressionType, FileReference, FileReferenceType, Releas
 mod packages_file;
 pub use packages_file::PackagesFile;
 
+mod sources_file;
+pub use sources_file::SourcesFile;
+
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CheckSums {
     pub md5: Option<[u8; 16]>,
