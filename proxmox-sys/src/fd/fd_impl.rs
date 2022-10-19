@@ -1,5 +1,5 @@
 use std::borrow::Borrow;
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
@@ -97,6 +97,20 @@ impl std::ops::Deref for Fd {
 
     fn deref(&self) -> &FdRef {
         self.as_fd_ref()
+    }
+}
+
+#[allow(deprecated)]
+impl From<OwnedFd> for Fd {
+    fn from(fd: OwnedFd) -> Fd {
+        Fd(fd.into_raw_fd())
+    }
+}
+
+#[allow(deprecated)]
+impl From<Fd> for OwnedFd {
+    fn from(fd: Fd) -> OwnedFd {
+        unsafe { OwnedFd::from_raw_fd(fd.into_raw_fd()) }
     }
 }
 
