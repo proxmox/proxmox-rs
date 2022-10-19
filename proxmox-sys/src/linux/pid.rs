@@ -2,7 +2,7 @@
 
 use std::fs::File;
 use std::io;
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 
 use nix::fcntl::OFlag;
 use nix::sys::signal::Signal;
@@ -152,6 +152,12 @@ impl PidFd {
                 Err(err)
             }
         }
+    }
+}
+
+impl AsFd for PidFd {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        self.fd.as_fd()
     }
 }
 
