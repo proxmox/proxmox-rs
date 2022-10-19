@@ -1,3 +1,11 @@
+rust-proxmox-apt (0.9.3-1) stable; urgency=medium
+
+  * packages file: add section field
+
+  * deb822: source index support
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Oct 2022 16:17:11 +0200
+
 rust-proxmox-apt (0.9.2-1) stable; urgency=medium
 
   * release: add Commands file reference type
