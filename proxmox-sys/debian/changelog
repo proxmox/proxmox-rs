@@ -1,3 +1,11 @@
+rust-proxmox-sys (0.4.1) stable; urgency=medium
+
+  * deprecate most of the 'fd' helper types as they are now covered by std
+
+  * use namespaced dependencies
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Oct 2022 14:19:54 +0200
+
 rust-proxmox-sys (0.4.0) stable; urgency=medium
 
   * introduce 'acl', 'crypt' and 'timer' features, to avoid unconditionally
