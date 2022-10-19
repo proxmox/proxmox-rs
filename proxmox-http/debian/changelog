@@ -1,6 +1,12 @@
 rust-proxmox-http (0.7.0-1) unstable; urgency=medium
 
-  * WIP
+  * refactor and extend HttpClient trait
+
+  * rename SimpleHttp to Client
+
+  * add ureq-based sync client
+
+  * use weak/namespaced features
 
  -- Proxmox Support Team <support@proxmox.com>  Mon, 22 Aug 2022 13:59:11 +0200
 
