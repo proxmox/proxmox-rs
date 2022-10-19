@@ -5,7 +5,7 @@ use std::future::Future;
 use std::io::{Read, Write};
 use std::os::raw::{c_char, c_int, c_uchar};
 use std::os::unix::ffi::OsStrExt;
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::panic::UnwindSafe;
 use std::path::PathBuf;
 
@@ -14,7 +14,7 @@ use futures::future::{self, Either};
 use nix::unistd::{fork, ForkResult};
 
 use proxmox_io::{ReadExt, WriteExt};
-use proxmox_sys::fd::{fd_change_cloexec, Fd};
+use proxmox_sys::fd::fd_change_cloexec;
 use proxmox_sys::fs::CreateOptions;
 
 // Unfortunately FnBox is nightly-only and Box<FnOnce> is unusable, so just use Box<Fn>...
@@ -103,8 +103,7 @@ impl Reloader {
                         // At this point we call pre-exec helpers. We must be certain that if they fail for
                         // whatever reason we can still call `_exit()`, so use catch_unwind.
                         match std::panic::catch_unwind(move || {
-                            let mut pnew =
-                                unsafe { std::fs::File::from_raw_fd(pnew.into_raw_fd()) };
+                            let mut pnew = std::fs::File::from(pnew);
                             let pid = nix::unistd::Pid::this();
                             if let Err(e) = unsafe { pnew.write_host_value(pid.as_raw()) } {
                                 log::error!("failed to send new server PID to parent: {}", e);
@@ -131,7 +130,7 @@ impl Reloader {
                             let fd =
                                 unsafe { sd_journal_stream_fd(ident.as_ptr(), libc::LOG_INFO, 1) };
                             if fd >= 0 && fd != 1 {
-                                let fd = proxmox_sys::fd::Fd(fd); // add drop handler
+                                let fd = unsafe { OwnedFd::from_raw_fd(fd) }; // add drop handler
                                 nix::unistd::dup2(fd.as_raw_fd(), 1)?;
                             } else {
                                 log::error!("failed to update STDOUT journal redirection ({})", fd);
@@ -139,7 +138,7 @@ impl Reloader {
                             let fd =
                                 unsafe { sd_journal_stream_fd(ident.as_ptr(), libc::LOG_ERR, 1) };
                             if fd >= 0 && fd != 2 {
-                                let fd = proxmox_sys::fd::Fd(fd); // add drop handler
+                                let fd = unsafe { OwnedFd::from_raw_fd(fd) }; // add drop handler
                                 nix::unistd::dup2(fd.as_raw_fd(), 2)?;
                             } else {
                                 log::error!("failed to update STDERR journal redirection ({})", fd);
@@ -167,7 +166,7 @@ impl Reloader {
                     child
                 );
                 std::mem::drop(pnew);
-                let mut pold = unsafe { std::fs::File::from_raw_fd(pold.into_raw_fd()) };
+                let mut pold = std::fs::File::from(pold);
                 let child = nix::unistd::Pid::from_raw(match unsafe { pold.read_le_value() } {
                     Ok(v) => v,
                     Err(e) => {
@@ -229,10 +228,12 @@ impl Reloadable for tokio::net::TcpListener {
     // FIXME: We could become "independent" of the TcpListener and its reference to the file
     // descriptor by `dup()`ing it (and check if the listener still exists via kcmp()?)
     fn get_store_func(&self) -> Result<BoxedStoreFunc, Error> {
-        let mut fd_opt = Some(Fd(nix::fcntl::fcntl(
-            self.as_raw_fd(),
-            nix::fcntl::FcntlArg::F_DUPFD_CLOEXEC(0),
-        )?));
+        let mut fd_opt = Some(unsafe {
+            OwnedFd::from_raw_fd(nix::fcntl::fcntl(
+                self.as_raw_fd(),
+                nix::fcntl::FcntlArg::F_DUPFD_CLOEXEC(0),
+            )?)
+        });
         Ok(Box::new(move || {
             let fd = fd_opt.take().unwrap();
             fd_change_cloexec(fd.as_raw_fd(), false)?;

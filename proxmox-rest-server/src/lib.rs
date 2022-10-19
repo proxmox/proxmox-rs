@@ -16,6 +16,7 @@
 //! * generic interface to authenticate user
 
 use std::future::Future;
+use std::os::unix::io::{FromRawFd, OwnedFd};
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -26,7 +27,6 @@ use hyper::{Body, Method, Response};
 use nix::unistd::Pid;
 
 use proxmox_router::UserInformation;
-use proxmox_sys::fd::Fd;
 use proxmox_sys::fs::CreateOptions;
 use proxmox_sys::linux::procfs::PidStat;
 
@@ -175,7 +175,7 @@ pub fn fail_on_shutdown() -> Result<(), Error> {
 
 /// safe wrapper for `nix::sys::socket::socketpair` defaulting to `O_CLOEXEC` and guarding the file
 /// descriptors.
-pub fn socketpair() -> Result<(Fd, Fd), Error> {
+pub fn socketpair() -> Result<(OwnedFd, OwnedFd), Error> {
     use nix::sys::socket;
     let (pa, pb) = socket::socketpair(
         socket::AddressFamily::Unix,
@@ -183,7 +183,7 @@ pub fn socketpair() -> Result<(Fd, Fd), Error> {
         None,
         socket::SockFlag::SOCK_CLOEXEC,
     )?;
-    Ok((Fd(pa), Fd(pb)))
+    Ok(unsafe { (OwnedFd::from_raw_fd(pa), OwnedFd::from_raw_fd(pb)) })
 }
 
 /// Extract a specific cookie from cookie header.
