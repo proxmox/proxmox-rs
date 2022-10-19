@@ -2,7 +2,7 @@
 //!
 //! see [PTY](struct.PTY.html) for an example on how to use it
 
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 
 use nix::fcntl::OFlag;
 use nix::pty::{grantpt, posix_openpt, ptsname_r, unlockpt, PtyMaster};
@@ -123,5 +123,11 @@ impl std::io::Write for PTY {
 impl AsRawFd for PTY {
     fn as_raw_fd(&self) -> RawFd {
         self.primary.as_raw_fd()
+    }
+}
+
+impl AsFd for PTY {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        unsafe { BorrowedFd::borrow_raw(self.as_raw_fd()) }
     }
 }
