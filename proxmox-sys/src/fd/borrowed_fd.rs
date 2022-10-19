@@ -8,6 +8,7 @@ use std::os::unix::io::{AsRawFd, RawFd};
 /// This specifically does not implement `IntoRawFd` or `FromRawFd`, since those would drop life
 /// times.
 #[derive(Debug, Eq, PartialEq)]
+#[deprecated(note = "use std::os::unix::io::BorrowedFd instead")]
 pub struct BorrowedFd<'a> {
     fd: RawFd,
     _borrow: PhantomData<&'a RawFd>,
