@@ -2,7 +2,7 @@
 
 use std::fs::File;
 use std::io;
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
+use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 
 use nix::fcntl::OFlag;
 use nix::sys::signal::Signal;
@@ -14,7 +14,6 @@ use nix::NixPath;
 use proxmox_lang::{c_str, error::io_err_other};
 
 use crate::error::SysResult;
-use crate::fd::Fd;
 use crate::linux::procfs::{MountInfo, PidStat};
 use crate::{c_result, c_try};
 
@@ -41,7 +40,7 @@ unsafe fn pidfd_send_signal(
 
 /// File descriptor refernce to a process.
 pub struct PidFd {
-    fd: Fd,
+    fd: OwnedFd,
     pid: Pid,
 }
 
@@ -53,7 +52,7 @@ impl PidFd {
 
     /// Open a pidfd for the given process id.
     pub fn open(pid: Pid) -> io::Result<Self> {
-        let fd = unsafe { Fd::from_raw_fd(c_try!(pidfd_open(pid.as_raw(), 0)) as RawFd) };
+        let fd = unsafe { OwnedFd::from_raw_fd(c_try!(pidfd_open(pid.as_raw(), 0)) as RawFd) };
         Ok(Self { fd, pid })
     }
 
@@ -85,7 +84,7 @@ impl PidFd {
     /// Open a procfs file from. This is equivalent to opening `/proc/<pid>/<file>` using this
     /// process actual pid. This also works if the file descriptor has been sent over
     pub fn open_file<P: ?Sized + NixPath>(&self, path: &P) -> io::Result<File> {
-        Fd::openat(
+        crate::fd::openat(
             self,
             path,
             OFlag::O_RDONLY | OFlag::O_CLOEXEC,
@@ -124,7 +123,7 @@ impl PidFd {
     /// This will attempt to read the pid number via the file descriptor.
     pub fn try_from_raw_fd(fd: RawFd) -> io::Result<Self> {
         let mut this = Self {
-            fd: unsafe { Fd::from_raw_fd(fd) },
+            fd: unsafe { OwnedFd::from_raw_fd(fd) },
             pid: Pid::from_raw(1),
         };
         // Simple check first: is it a valid pid file descriptor:

@@ -10,8 +10,6 @@ use nix::sys::stat::Mode;
 use nix::unistd::{dup2, setsid};
 use nix::{ioctl_write_int_bad, ioctl_write_ptr_bad, Result};
 
-use crate::fd::Fd;
-
 ioctl_write_int_bad!(set_controlling_tty, libc::TIOCSCTTY);
 ioctl_write_ptr_bad!(set_size, libc::TIOCSWINSZ, nix::pty::Winsize);
 
@@ -64,7 +62,7 @@ pub fn make_controlling_terminal(terminal: &str) -> Result<()> {
         | Mode::S_IWGRP
         | Mode::S_IROTH
         | Mode::S_IWOTH; // 0666
-    let secondary_fd = Fd::open(terminal, OFlag::O_RDWR | OFlag::O_NOCTTY, mode)?;
+    let secondary_fd = crate::fd::open(terminal, OFlag::O_RDWR | OFlag::O_NOCTTY, mode)?;
     let s_raw_fd = secondary_fd.as_raw_fd();
     unsafe { set_controlling_tty(s_raw_fd, 0) }?;
     dup2(s_raw_fd, 0)?;

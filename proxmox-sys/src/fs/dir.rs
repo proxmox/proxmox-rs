@@ -1,5 +1,5 @@
 use std::ffi::CStr;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::io::{AsRawFd, OwnedFd};
 use std::path::Path;
 
 use anyhow::{bail, Error};
@@ -8,7 +8,6 @@ use nix::fcntl::OFlag;
 use nix::sys::stat;
 use nix::unistd;
 
-use crate::fd::Fd;
 use crate::fs::{fchown, CreateOptions};
 
 /// Creates directory at the provided path with specified ownership.
@@ -66,11 +65,11 @@ fn create_path_do(
     use std::path::Component;
 
     let mut iter = path.components().peekable();
-    let at: Fd = match iter.peek() {
+    let at: OwnedFd = match iter.peek() {
         Some(Component::Prefix(_)) => bail!("illegal prefix path component encountered"),
         Some(Component::RootDir) => {
             let _ = iter.next();
-            Fd::open(
+            crate::fd::open(
                 unsafe { CStr::from_bytes_with_nul_unchecked(b"/\0") },
                 OFlag::O_DIRECTORY,
                 stat::Mode::empty(),
@@ -78,11 +77,11 @@ fn create_path_do(
         }
         Some(Component::CurDir) => {
             let _ = iter.next();
-            Fd::cwd()
+            crate::fd::cwd()
         }
         Some(Component::ParentDir) => {
             let _ = iter.next();
-            Fd::open(
+            crate::fd::open(
                 unsafe { CStr::from_bytes_with_nul_unchecked(b"..\0") },
                 OFlag::O_DIRECTORY,
                 stat::Mode::empty(),
@@ -90,7 +89,7 @@ fn create_path_do(
         }
         Some(Component::Normal(_)) => {
             // simply do not advance the iterator, heavy lifting happens in create_path_at_do()
-            Fd::cwd()
+            crate::fd::cwd()
         }
         None => bail!("create_path on empty path?"),
     };
@@ -99,7 +98,7 @@ fn create_path_do(
 }
 
 fn create_path_at_do(
-    mut at: Fd,
+    mut at: OwnedFd,
     mut iter: std::iter::Peekable<std::path::Components>,
     intermediate_opts: Option<CreateOptions>,
     final_opts: Option<CreateOptions>,
@@ -112,7 +111,7 @@ fn create_path_at_do(
             None => return Ok(created),
 
             Some(Component::ParentDir) => {
-                at = Fd::openat(
+                at = crate::fd::openat(
                     &at,
                     unsafe { CStr::from_bytes_with_nul_unchecked(b"..\0") },
                     OFlag::O_DIRECTORY,
@@ -138,7 +137,7 @@ fn create_path_at_do(
                     Err(e) => return Err(e.into()),
                     Ok(_) => true,
                 };
-                at = Fd::openat(&at, path, OFlag::O_DIRECTORY, stat::Mode::empty())?;
+                at = crate::fd::openat(&at, path, OFlag::O_DIRECTORY, stat::Mode::empty())?;
 
                 if let (true, Some(opts)) = (created, opts) {
                     if opts.owner.is_some() || opts.group.is_some() {

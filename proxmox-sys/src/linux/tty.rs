@@ -1,6 +1,6 @@
 use std::io::{self, Read, Write};
 use std::mem::MaybeUninit;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::io::{AsRawFd, OwnedFd};
 
 use anyhow::{bail, format_err, Error};
 use nix::fcntl::OFlag;
@@ -9,7 +9,6 @@ use nix::sys::stat::Mode;
 use proxmox_lang::try_block;
 
 use crate::c_try;
-use crate::fd::Fd;
 
 /// Get the current size of the terminal (for stdout).
 /// # Safety
@@ -44,7 +43,7 @@ pub fn stdin_isatty() -> bool {
 
 pub enum TtyOutput {
     Stdout(std::io::Stdout),
-    DevTty(Fd),
+    DevTty(OwnedFd),
 }
 
 impl Write for TtyOutput {
@@ -79,7 +78,7 @@ impl TtyOutput {
         if unsafe { libc::isatty(stdout.as_raw_fd()) } == 1 {
             Ok(Some(TtyOutput::Stdout(stdout)))
         } else {
-            match Fd::open(
+            match crate::fd::open(
                 "/dev/tty",
                 OFlag::O_WRONLY | OFlag::O_CLOEXEC | OFlag::O_NOCTTY,
                 Mode::empty(),

@@ -9,8 +9,10 @@ use nix::NixPath;
 /// `RawFd` is required without the corresponding handler object (such as when only the file
 /// descriptor number is required in a closure which may be dropped instead of being executed).
 #[derive(Debug)]
+#[deprecated(note = "use std::os::unix::io::OwnedFd instead")]
 pub struct Fd(pub RawFd);
 
+#[allow(deprecated)]
 impl Drop for Fd {
     fn drop(&mut self) {
         // `>= 0` instead of `!= -1` to also handle things like AT_FDCWD
@@ -22,11 +24,14 @@ impl Drop for Fd {
     }
 }
 
+#[allow(deprecated)]
 impl Fd {
+    #[deprecated(note = "use proxmox_sys::fd::cwd instead")]
     pub const fn cwd() -> Self {
         Self(libc::AT_FDCWD)
     }
 
+    #[deprecated(note = "use proxmox_sys::fd::open instead")]
     pub fn open<P>(path: &P, oflag: OFlag, mode: Mode) -> Result<Self, nix::Error>
     where
         P: ?Sized + NixPath,
@@ -34,6 +39,7 @@ impl Fd {
         nix::fcntl::open(path, oflag, mode).map(Self)
     }
 
+    #[deprecated(note = "use proxmox_sys::fd::openat instead")]
     pub fn openat<D, P>(dirfd: &D, path: &P, oflag: OFlag, mode: Mode) -> Result<Self, nix::Error>
     where
         D: AsRawFd,
@@ -48,18 +54,21 @@ impl Fd {
     }
 }
 
+#[allow(deprecated)]
 impl FromRawFd for Fd {
     unsafe fn from_raw_fd(fd: RawFd) -> Self {
         Self(fd)
     }
 }
 
+#[allow(deprecated)]
 impl AsRawFd for Fd {
     fn as_raw_fd(&self) -> RawFd {
         self.0
     }
 }
 
+#[allow(deprecated)]
 impl IntoRawFd for Fd {
     fn into_raw_fd(mut self) -> RawFd {
         let fd = self.0;
@@ -68,18 +77,21 @@ impl IntoRawFd for Fd {
     }
 }
 
+#[allow(deprecated)]
 impl AsRef<FdRef> for Fd {
     fn as_ref(&self) -> &FdRef {
         self.as_fd_ref()
     }
 }
 
+#[allow(deprecated)]
 impl Borrow<FdRef> for Fd {
     fn borrow(&self) -> &FdRef {
         self.as_fd_ref()
     }
 }
 
+#[allow(deprecated)]
 impl std::ops::Deref for Fd {
     type Target = FdRef;
 

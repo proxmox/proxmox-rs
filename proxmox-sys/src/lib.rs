@@ -32,6 +32,7 @@ macro_rules! identity {
 #[cfg(feature = "sortable-macro")]
 pub use proxmox_sortable_macro::sortable;
 
+#[allow(deprecated)]
 use fd::Fd;
 
 /// Returns the hosts node name (UTS node name)
@@ -57,6 +58,7 @@ pub fn nodename() -> &'static str {
 
 /// Safe wrapper for `nix::unistd::pipe2` defaulting to `O_CLOEXEC`
 /// and guarding the file descriptors.
+#[allow(deprecated)]
 pub fn pipe() -> Result<(Fd, Fd), nix::Error> {
     let (pin, pout) = nix::unistd::pipe2(nix::fcntl::OFlag::O_CLOEXEC)?;
     Ok((Fd(pin), Fd(pout)))
