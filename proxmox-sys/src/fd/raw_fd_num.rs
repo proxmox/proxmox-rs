@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use std::borrow::Borrow;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 
@@ -6,6 +8,7 @@ use super::FdRef;
 /// Raw file descriptor by number. Thin wrapper to provide `AsRawFd` which a simple `RawFd` does
 /// not since it's just an `i32`.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[deprecated(note = "use OwnedFd, &OwnedFd, BorrowedFd or just &RawFd instead")]
 pub struct RawFdNum(RawFd);
 
 impl RawFdNum {
