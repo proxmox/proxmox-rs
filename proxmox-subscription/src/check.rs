@@ -55,6 +55,7 @@ fn parse_status(value: &str) -> SubscriptionStatus {
         "notfound" => SubscriptionStatus::NotFound,
         "invalid" => SubscriptionStatus::Invalid,
         "expired" => SubscriptionStatus::Expired,
+        "suspended" => SubscriptionStatus::Suspended,
         _ => SubscriptionStatus::Invalid,
     }
 }
@@ -149,7 +150,7 @@ fn test_parse_register_response() -> Result<(), Error> {
         info,
         SubscriptionInfo {
             key: Some(key),
-            serverid: Some(server_id),
+            serverid: Some(server_id.clone()),
             status: SubscriptionStatus::Active,
             checktime: Some(checktime),
             url: Some("https://www.proxmox.com/en/proxmox-backup-server/pricing".into()),
@@ -160,6 +161,49 @@ fn test_parse_register_response() -> Result<(), Error> {
             signature: None,
         }
     );
+
+    let response = r#"
+<status>Suspended</status>
+<companyname>Test 12345</companyname>
+<serviceid>65977</serviceid>
+<productid>11</productid>
+<productname>Proxmox VE Test Subscription -1 year</productname>
+<regdate>2022-09-20 00:00:00</regdate>
+<nextduedate>2022-09-20</nextduedate>
+<billingcycle>Annually</billingcycle>
+<validdomain>proxmox.com,www.proxmox.com</validdomain>
+<validdirectory>830000000123456789ABCDEF00000042</validdirectory>
+<customfields>Notes=Test Key!</customfields>
+<addons></addons>
+<md5hash>969f4df84fe157ee4f5a2f71950ad154</md5hash>
+"#;
+
+    let key = "pvet-123456789a".to_string();
+    let info = parse_register_response(
+        response,
+        key.to_owned(),
+        server_id.to_owned(),
+        checktime,
+        salt,
+        "https://www.proxmox.com/en/proxmox-ve/pricing".to_string(),
+    )?;
+
+    assert_eq!(
+        info,
+        SubscriptionInfo {
+            key: Some(key),
+            serverid: Some(server_id),
+            status: SubscriptionStatus::Suspended,
+            checktime: Some(checktime),
+            url: Some("https://www.proxmox.com/en/proxmox-ve/pricing".into()),
+            message: None,
+            nextduedate: Some("2022-09-20".into()),
+            regdate: Some("2022-09-20 00:00:00".into()),
+            productname: Some("Proxmox VE Test Subscription -1 year".into()),
+            signature: None,
+        }
+    );
+
     Ok(())
 }
 
