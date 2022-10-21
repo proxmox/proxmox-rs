@@ -31,6 +31,9 @@ use proxmox_lang::try_block;
 use proxmox_schema::format::{dump_properties, wrap_text, ParameterDisplayStyle};
 use proxmox_schema::*;
 
+/// Used for additional properties when the schema allows them.
+const ADDITIONAL_PROPERTY_SCHEMA: Schema = StringSchema::new("Additional property").schema();
+
 /// Associates a section type name with a `Schema`.
 pub struct SectionConfigPlugin {
     type_name: String,
@@ -446,7 +449,10 @@ impl SectionConfig {
                                         (true, items)
                                     }
                                     Some((_optional, ref prop_schema)) => (false, prop_schema),
-                                    None => bail!("unknown property '{}'", key),
+                                    None => match plugin.properties.additional_properties() {
+                                        true => (false, &&ADDITIONAL_PROPERTY_SCHEMA),
+                                        false => bail!("unknown property '{}'", key),
+                                    },
                                 };
 
                                 let value = match prop_schema.parse_simple_value(&value) {
@@ -882,6 +888,77 @@ lvmthin: local-lvm2
     println!("CONFIG:\n{}", raw);
 
     assert_eq!(raw, created);
+}
+
+#[test]
+fn test_section_config_with_additional_properties() {
+    let filename = "user.cfg";
+
+    const ID_SCHEMA: Schema = StringSchema::new("default id schema.")
+        .min_length(3)
+        .schema();
+    let mut config = SectionConfig::new(&ID_SCHEMA);
+    let mut config_with_additional = SectionConfig::new(&ID_SCHEMA);
+
+    const PROPERTIES: [(&str, bool, &proxmox_schema::Schema); 2] = [
+        (
+            "email",
+            false,
+            &StringSchema::new("The e-mail of the user").schema(),
+        ),
+        (
+            "userid",
+            true,
+            &StringSchema::new("The id of the user (name@realm).")
+                .min_length(3)
+                .schema(),
+        ),
+    ];
+
+    const USER_PROPERTIES: ObjectSchema = ObjectSchema {
+        description: "user properties",
+        properties: &PROPERTIES,
+        additional_properties: false,
+        default_key: None,
+    };
+
+    const USER_PROPERTIES_WITH_ADDTIONAL: ObjectSchema = ObjectSchema {
+        description: "user properties with additional",
+        properties: &PROPERTIES,
+        additional_properties: true,
+        default_key: None,
+    };
+
+    let plugin = SectionConfigPlugin::new(
+        "user".to_string(),
+        Some("userid".to_string()),
+        &USER_PROPERTIES,
+    );
+    config.register_plugin(plugin);
+
+    let plugin = SectionConfigPlugin::new(
+        "user".to_string(),
+        Some("userid".to_string()),
+        &USER_PROPERTIES_WITH_ADDTIONAL,
+    );
+    config_with_additional.register_plugin(plugin);
+
+    let raw = r"
+
+user: root@pam
+        email root@example.com
+        shinynewoption somevalue
+";
+
+    let res = config_with_additional.parse(filename, raw);
+    println!("RES: {:?}", res);
+    let written = config_with_additional.write(filename, &res.unwrap());
+    println!("CONFIG:\n{}", written.unwrap());
+
+    assert!(config.parse(filename, raw).is_err());
+    // SectionConfigData doesn't have Clone and it would only be needed here currently.
+    let res = config_with_additional.parse(filename, raw);
+    assert!(config.write(filename, &res.unwrap()).is_err());
 }
 
 /// Generate ReST Documentaion for ``SectionConfig``
