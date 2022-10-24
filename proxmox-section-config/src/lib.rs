@@ -20,7 +20,6 @@
 
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::collections::VecDeque;
 
 use anyhow::{bail, format_err, Error};
 use serde::de::DeserializeOwned;
@@ -102,7 +101,7 @@ enum ParseState<'a> {
 #[derive(Debug)]
 pub struct SectionConfigData {
     pub sections: HashMap<String, (String, Value)>,
-    order: VecDeque<String>,
+    order: Vec<String>,
 }
 
 impl Default for SectionConfigData {
@@ -116,7 +115,7 @@ impl SectionConfigData {
     pub fn new() -> Self {
         Self {
             sections: HashMap::new(),
-            order: VecDeque::new(),
+            order: Vec::new(),
         }
     }
 
@@ -167,7 +166,7 @@ impl SectionConfigData {
     ///
     /// Sections are written in the recorder order.
     pub fn record_order(&mut self, section_id: &str) {
-        self.order.push_back(section_id.to_string());
+        self.order.push(section_id.to_string());
     }
 
     /// API helper to represent configuration data as array.
@@ -302,7 +301,7 @@ impl SectionConfig {
     }
 
     fn write_do(&self, config: &SectionConfigData) -> Result<String, Error> {
-        let mut list = VecDeque::new();
+        let mut list = Vec::new();
 
         let mut done = HashSet::new();
 
@@ -310,7 +309,7 @@ impl SectionConfig {
             if config.sections.get(section_id) == None {
                 continue;
             };
-            list.push_back(section_id);
+            list.push(section_id);
             done.insert(section_id);
         }
 
@@ -318,7 +317,7 @@ impl SectionConfig {
             if done.contains(section_id) {
                 continue;
             };
-            list.push_back(section_id);
+            list.push(section_id);
         }
 
         let mut raw = String::new();
