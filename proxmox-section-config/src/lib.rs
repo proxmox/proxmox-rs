@@ -101,7 +101,7 @@ enum ParseState<'a> {
 #[derive(Debug)]
 pub struct SectionConfigData {
     pub sections: HashMap<String, (String, Value)>,
-    order: Vec<String>,
+    pub order: Vec<String>,
 }
 
 impl Default for SectionConfigData {
