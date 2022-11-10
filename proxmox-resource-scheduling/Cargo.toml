@@ -1,0 +1,20 @@
+[package]
+name = "proxmox-resource-scheduling"
+version = "0.1.0"
+authors = [
+    "Fiona Ebner <f.ebner@proxmox.com>",
+    "Proxmox Support Team <support@proxmox.com>",
+]
+edition = "2021"
+license = "AGPL-3"
+description = "Proxmox library for resource scheduling"
+homepage = "https://www.proxmox.com"
+
+exclude = [ "debian" ]
+
+[lib]
+name = "proxmox_resource_scheduling"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0"
