@@ -1,0 +1,39 @@
+Source: rust-proxmox-resource-scheduling
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.5.1
+Vcs-Git: git://git.proxmox.com/git/proxmox-resource-scheduling.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox-resource-scheduling.git
+Homepage: https://www.proxmox.com
+Rules-Requires-Root: no
+
+Package: librust-proxmox-resource-scheduling-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-lazy-static-1+default-dev (>= 1.4-~~),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev
+Provides:
+ librust-proxmox-resource-scheduling+default-dev (= ${binary:Version}),
+ librust-proxmox-resource-scheduling-0-dev (= ${binary:Version}),
+ librust-proxmox-resource-scheduling-0+default-dev (= ${binary:Version}),
+ librust-proxmox-resource-scheduling-0.1-dev (= ${binary:Version}),
+ librust-proxmox-resource-scheduling-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-resource-scheduling-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-resource-scheduling-0.1.0+default-dev (= ${binary:Version})
+Description: Proxmox library for resource scheduling - Rust source code
+ This package contains the source for the Rust proxmox-resource-scheduling
+ crate, packaged by debcargo for use with cargo and dh-cargo.

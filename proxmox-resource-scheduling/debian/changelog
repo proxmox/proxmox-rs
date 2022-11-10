@@ -1,0 +1,5 @@
+rust-proxmox-resource-scheduling (0.1.0-1) stable; urgency=medium
+
+  * Initial release.
+
+ --  Proxmox Support Team <support@proxmox.com>  Mon, 24 Oct 2022 11:32:11 +0200

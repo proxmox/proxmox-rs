@@ -1,2 +1,7 @@
 Cargo.lock
 target/
+proxmox-resource-scheduling-*/
+*proxmox-resource-scheduling*.buildinfo
+*proxmox-resource-scheduling*.tar.?z
+*proxmox-resource-scheduling*.changes
+*proxmox-resource-scheduling*.deb
