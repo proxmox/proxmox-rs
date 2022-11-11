@@ -168,15 +168,13 @@ pub fn score_alternatives<const N: usize>(
     matrix: &Matrix<N>,
     criteria: &Criteria<N>,
 ) -> Result<Vec<f64>, Error> {
-    let ideal_alternatives = IdealAlternatives::compute(matrix, criteria);
-    let ideal_best = &ideal_alternatives.best;
-    let ideal_worst = &ideal_alternatives.worst;
+    let ideal = IdealAlternatives::compute(matrix, criteria);
 
     let mut scores = vec![];
 
     for alternative in matrix.0.iter() {
-        let distance_to_best = l2_norm(&criteria.weigh(differences(alternative, ideal_best)));
-        let distance_to_worst = l2_norm(&criteria.weigh(differences(alternative, ideal_worst)));
+        let distance_to_best = l2_norm(&criteria.weigh(differences(alternative, &ideal.best)));
+        let distance_to_worst = l2_norm(&criteria.weigh(differences(alternative, &ideal.worst)));
 
         let divisor = distance_to_worst + distance_to_best;
         if divisor == 0.0 {
