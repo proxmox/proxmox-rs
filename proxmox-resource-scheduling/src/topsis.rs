@@ -72,9 +72,9 @@ impl<const N: usize> Criteria<N> {
     }
 
     /// Weigh each value according to the weight of its corresponding criterion.
-    pub fn weigh<'a>(&self, values: &'a mut [f64; N]) -> &'a [f64; N] {
+    pub fn weigh(&self, mut values: [f64; N]) -> [f64; N] {
         for (n, value) in values.iter_mut().enumerate() {
-            *value *= self.0[n].weight
+            *value *= self.0[n].weight;
         }
         values
     }
@@ -175,8 +175,8 @@ pub fn score_alternatives<const N: usize>(
     let mut scores = vec![];
 
     for alternative in matrix.0.iter() {
-        let distance_to_best = l2_norm(criteria.weigh(&mut differences(alternative, ideal_best)));
-        let distance_to_worst = l2_norm(criteria.weigh(&mut differences(alternative, ideal_worst)));
+        let distance_to_best = l2_norm(&criteria.weigh(differences(alternative, ideal_best)));
+        let distance_to_worst = l2_norm(&criteria.weigh(differences(alternative, ideal_worst)));
 
         let divisor = distance_to_worst + distance_to_best;
         if divisor == 0.0 {
