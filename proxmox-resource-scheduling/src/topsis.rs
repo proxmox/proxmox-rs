@@ -10,10 +10,7 @@ fn differences<const N: usize>(xs: &[f64; N], ys: &[f64; N]) -> [f64; N] {
 
 /// Calculate the L^2-norm of the given values.
 fn l2_norm(values: &[f64]) -> f64 {
-    values
-        .iter()
-        .fold(0.0, |sum_of_squares, value| sum_of_squares + value * value)
-        .sqrt()
+    values.into_iter().map(|v| v * v).sum::<f64>().sqrt()
 }
 
 /// A criterion that can be used when scoring with the TOPSIS algorithm.
@@ -54,9 +51,7 @@ impl<const N: usize> Criteria<N> {
     ///
     /// Assumes that the sum of weights can be calculated to a finite, non-zero value.
     pub fn new(mut criteria: [Criterion; N]) -> Result<Self, Error> {
-        let divisor = criteria
-            .iter()
-            .fold(0.0, |sum, criterion| sum + criterion.weight);
+        let divisor: f64 = criteria.iter().map(|c| c.weight).sum();
 
         if divisor == 0.0 {
             bail!("no criterion has a non-zero weight");
