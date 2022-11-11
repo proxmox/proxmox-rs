@@ -17,7 +17,7 @@ fn l2_norm(values: &[f64]) -> f64 {
 }
 
 /// A criterion that can be used when scoring with the TOPSIS algorithm.
-pub struct TopsisCriterion {
+pub struct Criterion {
     /// Name of the criterion.
     name: String,
     /// The relative weight of the criterion. Is non-negative.
@@ -26,8 +26,8 @@ pub struct TopsisCriterion {
     maximize: bool,
 }
 
-impl TopsisCriterion {
-    /// Construct a new `TopsisCriterion`. Use a negative weight if the value for the criterion
+impl Criterion {
+    /// Construct a new `Criterion`. Use a negative weight if the value for the criterion
     /// should be minimized rather than maximized.
     ///
     /// Assumes that `weight` is finite.
@@ -38,7 +38,7 @@ impl TopsisCriterion {
             (false, -weight)
         };
 
-        TopsisCriterion {
+        Criterion {
             name,
             weight,
             maximize,
@@ -46,14 +46,14 @@ impl TopsisCriterion {
     }
 }
 
-/// A normalized array of `TopsisCriterion`.
-pub struct TopsisCriteria<const N_CRITERIA: usize>([TopsisCriterion; N_CRITERIA]);
+/// A normalized array of `Criterion`.
+pub struct Criteria<const N_CRITERIA: usize>([Criterion; N_CRITERIA]);
 
-impl<const N: usize> TopsisCriteria<N> {
+impl<const N: usize> Criteria<N> {
     /// Create a new instance of normalized TOPSIS criteria.
     ///
     /// Assumes that the sum of weights can be calculated to a finite, non-zero value.
-    pub fn new(mut criteria: [TopsisCriterion; N]) -> Result<Self, Error> {
+    pub fn new(mut criteria: [Criterion; N]) -> Result<Self, Error> {
         let divisor = criteria
             .iter()
             .fold(0.0, |sum, criterion| sum + criterion.weight);
@@ -73,7 +73,7 @@ impl<const N: usize> TopsisCriteria<N> {
             }
         }
 
-        Ok(TopsisCriteria(criteria))
+        Ok(Criteria(criteria))
     }
 
     /// Weigh each value according to the weight of its corresponding criterion.
@@ -86,9 +86,9 @@ impl<const N: usize> TopsisCriteria<N> {
 }
 
 /// A normalized matrix used for scoring with the TOPSIS algorithm.
-pub struct TopsisMatrix<const N_CRITERIA: usize>(Vec<[f64; N_CRITERIA]>);
+pub struct Matrix<const N_CRITERIA: usize>(Vec<[f64; N_CRITERIA]>);
 
-impl<const N: usize> TopsisMatrix<N> {
+impl<const N: usize> Matrix<N> {
     /// Values of the matrix for the fixed critierion with index `index`.
     fn fixed_criterion(&self, index: usize) -> Vec<f64> {
         self.0
@@ -105,12 +105,12 @@ impl<const N: usize> TopsisMatrix<N> {
             .collect::<Vec<&mut _>>()
     }
 
-    /// Create a normalized `TopsisMatrix` based on the given values.
+    /// Create a normalized `Matrix` based on the given values.
     ///
     /// Assumes that the sum of squares for each fixed criterion in `matrix` can be calculated to a
     /// finite value.
     pub fn new(matrix: Vec<[f64; N]>) -> Result<Self, Error> {
-        let mut matrix = TopsisMatrix(matrix);
+        let mut matrix = Matrix(matrix);
         for n in 0..N {
             let divisor = l2_norm(&matrix.fixed_criterion(n));
 
@@ -129,17 +129,17 @@ impl<const N: usize> TopsisMatrix<N> {
     }
 }
 
-/// Idealized alternatives from a `TopsisMatrix`. That is, the alternative consisting of the best
+/// Idealized alternatives from a `Matrix`. That is, the alternative consisting of the best
 /// (respectively worst) value among the alternatives in the matrix for each single criterion.
-struct TopsisIdealAlternatives<const N_CRITERIA: usize> {
+struct IdealAlternatives<const N_CRITERIA: usize> {
     best: [f64; N_CRITERIA],
     worst: [f64; N_CRITERIA],
 }
 
-impl<const N: usize> TopsisIdealAlternatives<N> {
+impl<const N: usize> IdealAlternatives<N> {
     /// Compute the idealized alternatives from the given `matrix`. The `criteria` are required to know
     /// if a critierion should be maximized or minimized.
-    fn compute(matrix: &TopsisMatrix<N>, criteria: &TopsisCriteria<N>) -> Self {
+    fn compute(matrix: &Matrix<N>, criteria: &Criteria<N>) -> Self {
         let criteria = &criteria.0;
 
         let mut best = [0.0; N];
@@ -170,10 +170,10 @@ impl<const N: usize> TopsisIdealAlternatives<N> {
 /// alternative. Scores range from 0.0 to 1.0 and a low score indicates closness to the ideal worst
 /// and/or distance to the ideal best alternatives.
 pub fn score_alternatives<const N: usize>(
-    matrix: &TopsisMatrix<N>,
-    criteria: &TopsisCriteria<N>,
+    matrix: &Matrix<N>,
+    criteria: &Criteria<N>,
 ) -> Result<Vec<f64>, Error> {
-    let ideal_alternatives = TopsisIdealAlternatives::compute(matrix, criteria);
+    let ideal_alternatives = IdealAlternatives::compute(matrix, criteria);
     let ideal_best = &ideal_alternatives.best;
     let ideal_worst = &ideal_alternatives.worst;
 
@@ -201,8 +201,8 @@ pub fn score_alternatives<const N: usize>(
 
 /// Similar to `score_alternatives`, but returns the list of indices decreasing by score.
 pub fn rank_alternatives<const N: usize>(
-    matrix: &TopsisMatrix<N>,
-    criteria: &TopsisCriteria<N>,
+    matrix: &Matrix<N>,
+    criteria: &Criteria<N>,
 ) -> Result<Vec<usize>, Error> {
     let scores = score_alternatives(matrix, criteria)?;
 
@@ -243,10 +243,10 @@ macro_rules! criteria_struct {
         }
 
         ::lazy_static::lazy_static! {
-            static ref $criteria_name: $crate::topsis::TopsisCriteria<$count_name> =
-                $crate::topsis::TopsisCriteria::new([
+            static ref $criteria_name: $crate::topsis::Criteria<$count_name> =
+                $crate::topsis::Criteria::new([
                     $(
-                        $crate::topsis::TopsisCriterion::new($crit_name.to_string(), $crit_weight),
+                        $crate::topsis::Criterion::new($crit_name.to_string(), $crit_weight),
                     )*
                 ])
                 .unwrap();

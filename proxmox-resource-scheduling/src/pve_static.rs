@@ -1,7 +1,7 @@
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
 
-use crate::topsis::TopsisMatrix;
+use crate::topsis;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -115,7 +115,7 @@ pub fn score_nodes_to_start_service(
         .collect::<Vec<_>>();
 
     let scores =
-        crate::topsis::score_alternatives(&TopsisMatrix::new(matrix)?, &PVE_HA_TOPSIS_CRITERIA)?;
+        topsis::score_alternatives(&topsis::Matrix::new(matrix)?, &PVE_HA_TOPSIS_CRITERIA)?;
 
     Ok(scores
         .into_iter()
