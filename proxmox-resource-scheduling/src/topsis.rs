@@ -9,7 +9,7 @@ fn differences<const N: usize>(xs: &[f64; N], ys: &[f64; N]) -> [f64; N] {
 }
 
 /// Calculate the L^2-norm of the given values.
-fn l2_norm(values: &[f64]) -> f64 {
+fn l2_norm(values: impl IntoIterator<Item = f64>) -> f64 {
     values.into_iter().map(|v| v * v).sum::<f64>().sqrt()
 }
 
@@ -85,19 +85,15 @@ pub struct Matrix<const N_CRITERIA: usize>(Vec<[f64; N_CRITERIA]>);
 
 impl<const N: usize> Matrix<N> {
     /// Values of the matrix for the fixed critierion with index `index`.
-    fn fixed_criterion(&self, index: usize) -> Vec<f64> {
-        self.0
-            .iter()
-            .map(|alternative| alternative[index])
-            .collect::<Vec<_>>()
+    fn fixed_criterion(&self, index: usize) -> impl Iterator<Item = f64> + Clone + '_ {
+        self.0.iter().map(move |alternative| alternative[index])
     }
 
     /// Mutable values of the matrix for the fixed critierion with index `index`.
-    fn fixed_criterion_mut(&mut self, index: usize) -> Vec<&mut f64> {
+    fn fixed_criterion_mut(&mut self, index: usize) -> impl Iterator<Item = &mut f64> {
         self.0
             .iter_mut()
-            .map(|alternative| &mut alternative[index])
-            .collect::<Vec<&mut _>>()
+            .map(move |alternative| &mut alternative[index])
     }
 
     /// Create a normalized `Matrix` based on the given values.
@@ -107,11 +103,11 @@ impl<const N: usize> Matrix<N> {
     pub fn new(matrix: Vec<[f64; N]>) -> Result<Self, Error> {
         let mut matrix = Matrix(matrix);
         for n in 0..N {
-            let divisor = l2_norm(&matrix.fixed_criterion(n));
+            let divisor = l2_norm(matrix.fixed_criterion(n));
 
             // If every alternative has zero value for the given criterion, keep it like that.
             if divisor != 0.0 {
-                for value in matrix.fixed_criterion_mut(n).into_iter() {
+                for value in matrix.fixed_criterion_mut(n) {
                     *value /= divisor;
                     if !value.is_finite() {
                         bail!("criterion {} got invalid value {}", n, value);
@@ -143,17 +139,14 @@ impl<const N: usize> IdealAlternatives<N> {
         for n in 0..N {
             let fixed_criterion = matrix.fixed_criterion(n);
             let min = fixed_criterion
-                .iter()
+                .clone()
                 .min_by(|a, b| a.total_cmp(b))
                 .unwrap();
-            let max = fixed_criterion
-                .iter()
-                .max_by(|a, b| a.total_cmp(b))
-                .unwrap();
+            let max = fixed_criterion.max_by(|a, b| a.total_cmp(b)).unwrap();
 
             (best[n], worst[n]) = match criteria[n].maximize {
-                true => (*max, *min),
-                false => (*min, *max),
+                true => (max, min),
+                false => (min, max),
             }
         }
 
@@ -173,8 +166,8 @@ pub fn score_alternatives<const N: usize>(
     let mut scores = vec![];
 
     for alternative in matrix.0.iter() {
-        let distance_to_best = l2_norm(&criteria.weigh(differences(alternative, &ideal.best)));
-        let distance_to_worst = l2_norm(&criteria.weigh(differences(alternative, &ideal.worst)));
+        let distance_to_best = l2_norm(criteria.weigh(differences(alternative, &ideal.best)));
+        let distance_to_worst = l2_norm(criteria.weigh(differences(alternative, &ideal.worst)));
 
         let divisor = distance_to_worst + distance_to_best;
         if divisor == 0.0 {
