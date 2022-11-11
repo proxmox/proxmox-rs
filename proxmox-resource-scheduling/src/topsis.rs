@@ -1,11 +1,15 @@
 use anyhow::{bail, Error};
 
 fn differences<const N: usize>(xs: &[f64; N], ys: &[f64; N]) -> [f64; N] {
+    // Uses SSE optimizations
     let mut differences = [0.0; N];
     for n in 0..N {
         differences[n] = xs[n] - ys[n];
     }
     differences
+
+    // while fails to optimize:
+    // std::array:from_fn(|i| xs[i] - ys[i])
 }
 
 /// Calculate the L^2-norm of the given values.
