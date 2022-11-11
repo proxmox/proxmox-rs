@@ -1,2 +1,4 @@
-pub mod pve_static;
+#[macro_use]
 pub mod topsis;
+
+pub mod pve_static;

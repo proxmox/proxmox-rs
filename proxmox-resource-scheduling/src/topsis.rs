@@ -214,3 +214,49 @@ pub fn rank_alternatives<const N: usize>(
     enumerated.sort_by(|(_, a), (_, b)| b.total_cmp(a));
     Ok(enumerated.into_iter().map(|(n, _)| n).collect())
 }
+
+#[macro_export]
+macro_rules! criteria_struct {
+    (@count: $field:ident $($more:ident)*) => {
+        1 + $crate::criteria_struct!(@count: $($more)*)
+    };
+    (@count: ) => { 0 };
+    (
+        $(#[$attr:meta])*
+        struct $name:ident {
+            $(
+                #[criterion($crit_name:literal, $crit_weight:literal)]
+                $(#[$field_attr:meta])*
+                $field:ident : $type:ty,
+            )*
+        }
+        const $count_name:ident;
+        static $criteria_name:ident;
+    ) => {
+        const $count_name: usize = $crate::criteria_struct!(@count: $($field)*);
+
+        $(#[$attr])*
+        struct $name {
+            $(
+                $(#[$field_attr])*
+                $field: $type,
+            )*
+        }
+
+        ::lazy_static::lazy_static! {
+            static ref $criteria_name: $crate::topsis::TopsisCriteria<$count_name> =
+                $crate::topsis::TopsisCriteria::new([
+                    $(
+                        $crate::topsis::TopsisCriterion::new($crit_name.to_string(), $crit_weight),
+                    )*
+                ])
+                .unwrap();
+        }
+
+        impl From<$name> for [f64; $count_name] {
+            fn from(alternative: $name) -> Self {
+                [ $( alternative.$field, )* ]
+            }
+        }
+    };
+}

@@ -1,8 +1,7 @@
 use anyhow::Error;
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
-use crate::topsis::{TopsisCriteria, TopsisCriterion, TopsisMatrix};
+use crate::topsis::TopsisMatrix;
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -48,38 +47,21 @@ impl StaticNodeUsage {
     }
 }
 
-/// A given alternative.
-struct PveTopsisAlternative {
-    average_cpu: f64,
-    highest_cpu: f64,
-    average_memory: f64,
-    highest_memory: f64,
-}
-
-const N_CRITERIA: usize = 4;
-
-// NOTE It is essenital that the order of the criteria definition and the order in the
-// From<PveTopsisAlternative> implementation match up.
-
-lazy_static! {
-    static ref PVE_HA_TOPSIS_CRITERIA: TopsisCriteria<N_CRITERIA> = TopsisCriteria::new([
-        TopsisCriterion::new("average CPU".to_string(), -1.0),
-        TopsisCriterion::new("highest CPU".to_string(), -2.0),
-        TopsisCriterion::new("average memory".to_string(), -5.0),
-        TopsisCriterion::new("highest memory".to_string(), -10.0),
-    ])
-    .unwrap();
-}
-
-impl From<PveTopsisAlternative> for [f64; N_CRITERIA] {
-    fn from(alternative: PveTopsisAlternative) -> Self {
-        [
-            alternative.average_cpu,
-            alternative.highest_cpu,
-            alternative.average_memory,
-            alternative.highest_memory,
-        ]
+criteria_struct! {
+    /// A given alternative.
+    struct PveTopsisAlternative {
+        #[criterion("average CPU", -1.0)]
+        average_cpu: f64,
+        #[criterion("highest CPU", -2.0)]
+        highest_cpu: f64,
+        #[criterion("average memory", -5.0)]
+        average_memory: f64,
+        #[criterion("highest memory", -10.0)]
+        highest_memory: f64,
     }
+
+    const N_CRITERIA;
+    static PVE_HA_TOPSIS_CRITERIA;
 }
 
 /// Scores candidate `nodes` to start a `service` on. Scoring is done according to the static memory
