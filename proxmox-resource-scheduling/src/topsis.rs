@@ -136,35 +136,34 @@ struct TopsisIdealAlternatives<const N_CRITERIA: usize> {
     worst: [f64; N_CRITERIA],
 }
 
-/// Compute the idealized alternatives from the given `matrix`. The `criteria` are required to know
-/// if a critierion should be maximized or minimized.
-fn ideal_alternatives<const N: usize>(
-    matrix: &TopsisMatrix<N>,
-    criteria: &TopsisCriteria<N>,
-) -> TopsisIdealAlternatives<N> {
-    let criteria = &criteria.0;
+impl<const N: usize> TopsisIdealAlternatives<N> {
+    /// Compute the idealized alternatives from the given `matrix`. The `criteria` are required to know
+    /// if a critierion should be maximized or minimized.
+    fn compute(matrix: &TopsisMatrix<N>, criteria: &TopsisCriteria<N>) -> Self {
+        let criteria = &criteria.0;
 
-    let mut best = [0.0; N];
-    let mut worst = [0.0; N];
+        let mut best = [0.0; N];
+        let mut worst = [0.0; N];
 
-    for n in 0..N {
-        let fixed_criterion = matrix.fixed_criterion(n);
-        let min = fixed_criterion
-            .iter()
-            .min_by(|a, b| a.total_cmp(b))
-            .unwrap();
-        let max = fixed_criterion
-            .iter()
-            .max_by(|a, b| a.total_cmp(b))
-            .unwrap();
+        for n in 0..N {
+            let fixed_criterion = matrix.fixed_criterion(n);
+            let min = fixed_criterion
+                .iter()
+                .min_by(|a, b| a.total_cmp(b))
+                .unwrap();
+            let max = fixed_criterion
+                .iter()
+                .max_by(|a, b| a.total_cmp(b))
+                .unwrap();
 
-        (best[n], worst[n]) = match criteria[n].maximize {
-            true => (*max, *min),
-            false => (*min, *max),
+            (best[n], worst[n]) = match criteria[n].maximize {
+                true => (*max, *min),
+                false => (*min, *max),
+            }
         }
-    }
 
-    TopsisIdealAlternatives { best, worst }
+        Self { best, worst }
+    }
 }
 
 /// Scores the alternatives in `matrix` according to their similarity to the ideal worst
@@ -174,7 +173,7 @@ pub fn score_alternatives<const N: usize>(
     matrix: &TopsisMatrix<N>,
     criteria: &TopsisCriteria<N>,
 ) -> Result<Vec<f64>, Error> {
-    let ideal_alternatives = ideal_alternatives(matrix, criteria);
+    let ideal_alternatives = TopsisIdealAlternatives::compute(matrix, criteria);
     let ideal_best = &ideal_alternatives.best;
     let ideal_worst = &ideal_alternatives.worst;
 
