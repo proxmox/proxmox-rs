@@ -49,16 +49,6 @@ impl TopsisCriterion {
 /// A normalized array of `TopsisCriterion`.
 pub struct TopsisCriteria<const N_CRITERIA: usize>([TopsisCriterion; N_CRITERIA]);
 
-/// A normalized matrix used for scoring with the TOPSIS algorithm.
-pub struct TopsisMatrix<const N_CRITERIA: usize>(Vec<[f64; N_CRITERIA]>);
-
-/// Idealized alternatives from a `TopsisMatrix`. That is, the alternative consisting of the best
-/// (respectively worst) value among the alternatives in the matrix for each single criterion.
-struct TopsisIdealAlternatives<const N_CRITERIA: usize> {
-    best: [f64; N_CRITERIA],
-    worst: [f64; N_CRITERIA],
-}
-
 impl<const N: usize> TopsisCriteria<N> {
     /// Create a new instance of normalized TOPSIS criteria.
     ///
@@ -94,6 +84,9 @@ impl<const N: usize> TopsisCriteria<N> {
         values
     }
 }
+
+/// A normalized matrix used for scoring with the TOPSIS algorithm.
+pub struct TopsisMatrix<const N_CRITERIA: usize>(Vec<[f64; N_CRITERIA]>);
 
 impl<const N: usize> TopsisMatrix<N> {
     /// Values of the matrix for the fixed critierion with index `index`.
@@ -134,6 +127,13 @@ impl<const N: usize> TopsisMatrix<N> {
 
         Ok(matrix)
     }
+}
+
+/// Idealized alternatives from a `TopsisMatrix`. That is, the alternative consisting of the best
+/// (respectively worst) value among the alternatives in the matrix for each single criterion.
+struct TopsisIdealAlternatives<const N_CRITERIA: usize> {
+    best: [f64; N_CRITERIA],
+    worst: [f64; N_CRITERIA],
 }
 
 /// Compute the idealized alternatives from the given `matrix`. The `criteria` are required to know

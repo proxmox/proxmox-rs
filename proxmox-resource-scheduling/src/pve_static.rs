@@ -19,14 +19,12 @@ pub struct StaticNodeUsage {
     pub maxmem: usize,
 }
 
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-/// Static usage information of an HA resource.
-pub struct StaticServiceUsage {
-    /// Number of assigned CPUs or CPU limit.
-    pub maxcpu: f64,
-    /// Maximum assigned memory in bytes.
-    pub maxmem: usize,
+impl StaticNodeUsage {
+    /// Add usage of `service` to the node's usage.
+    pub fn add_service_usage(&mut self, service: &StaticServiceUsage) {
+        self.cpu = add_cpu_usage(self.cpu, self.maxcpu as f64, service.maxcpu);
+        self.mem += service.maxmem;
+    }
 }
 
 /// Calculate new CPU usage in percent.
@@ -39,12 +37,14 @@ fn add_cpu_usage(old: f64, max: f64, add: f64) -> f64 {
     }
 }
 
-impl StaticNodeUsage {
-    /// Add usage of `service` to the node's usage.
-    pub fn add_service_usage(&mut self, service: &StaticServiceUsage) {
-        self.cpu = add_cpu_usage(self.cpu, self.maxcpu as f64, service.maxcpu);
-        self.mem += service.maxmem;
-    }
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+/// Static usage information of an HA resource.
+pub struct StaticServiceUsage {
+    /// Number of assigned CPUs or CPU limit.
+    pub maxcpu: f64,
+    /// Maximum assigned memory in bytes.
+    pub maxmem: usize,
 }
 
 criteria_struct! {
