@@ -198,13 +198,9 @@ pub fn rank_alternatives<const N: usize>(
     criteria: &Criteria<N>,
 ) -> Result<Vec<usize>, Error> {
     let scores = score_alternatives(matrix, criteria)?;
-
-    let mut enumerated = scores
-        .into_iter()
-        .enumerate()
-        .collect::<Vec<(usize, f64)>>();
-    enumerated.sort_by(|(_, a), (_, b)| b.total_cmp(a));
-    Ok(enumerated.into_iter().map(|(n, _)| n).collect())
+    let mut indices: Vec<usize> = (0..scores.len()).collect();
+    indices.sort_by(|&a, &b| scores[b].total_cmp(&scores[a]));
+    Ok(indices)
 }
 
 #[macro_export]
