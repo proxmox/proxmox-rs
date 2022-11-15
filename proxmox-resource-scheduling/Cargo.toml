@@ -12,10 +12,6 @@ homepage = "https://www.proxmox.com"
 
 exclude = [ "debian" ]
 
-[lib]
-name = "proxmox_resource_scheduling"
-path = "src/lib.rs"
-
 [dependencies]
 anyhow = "1.0"
 lazy_static = "1.4"
