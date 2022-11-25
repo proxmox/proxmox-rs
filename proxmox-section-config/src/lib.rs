@@ -90,11 +90,14 @@ pub struct SectionConfig {
         fn(type_name: &str, section_id: &str, data: &Value) -> Result<String, Error>,
     format_section_content:
         fn(type_name: &str, section_id: &str, key: &str, value: &Value) -> Result<String, Error>,
+
+    allow_unknown_sections: bool,
 }
 
 enum ParseState<'a> {
     BeforeHeader,
     InsideSection(&'a SectionConfigPlugin, String, Value),
+    InsideUnknownSection(String, String, Value),
 }
 
 /// Interface to manipulate configuration data
@@ -238,6 +241,7 @@ impl SectionConfig {
             parse_section_content: Self::default_parse_section_content,
             format_section_header: Self::default_format_section_header,
             format_section_content: Self::default_format_section_content,
+            allow_unknown_sections: false,
         }
     }
 
@@ -250,6 +254,7 @@ impl SectionConfig {
             parse_section_content: Self::systemd_parse_section_content,
             format_section_header: Self::systemd_format_section_header,
             format_section_content: Self::systemd_format_section_content,
+            allow_unknown_sections: false,
         }
     }
 
@@ -277,7 +282,13 @@ impl SectionConfig {
             parse_section_content,
             format_section_header,
             format_section_content,
+            allow_unknown_sections: false,
         }
+    }
+
+    pub const fn allow_unknown_sections(mut self, allow_unknown_sections: bool) -> Self {
+        self.allow_unknown_sections = allow_unknown_sections;
+        self
     }
 
     /// Register a plugin, which defines the `Schema` for a section type.
@@ -324,32 +335,53 @@ impl SectionConfig {
 
         for section_id in list {
             let (type_name, section_config) = config.sections.get(section_id).unwrap();
-            let plugin = self.plugins.get(type_name).unwrap();
 
-            let id_schema = plugin.get_id_schema().unwrap_or(self.id_schema);
-            if let Err(err) = id_schema.parse_simple_value(section_id) {
-                bail!("syntax error in section identifier: {}", err.to_string());
-            }
-            if section_id.chars().any(|c| c.is_control()) {
-                bail!("detected unexpected control character in section ID.");
-            }
-            if let Err(err) = plugin.properties.verify_json(section_config) {
-                bail!("verify section '{}' failed - {}", section_id, err);
-            }
+            match self.plugins.get(type_name) {
+                Some(plugin) => {
+                    let id_schema = plugin.get_id_schema().unwrap_or(self.id_schema);
+                    if let Err(err) = id_schema.parse_simple_value(section_id) {
+                        bail!("syntax error in section identifier: {}", err.to_string());
+                    }
+                    if section_id.chars().any(|c| c.is_control()) {
+                        bail!("detected unexpected control character in section ID.");
+                    }
+                    if let Err(err) = plugin.properties.verify_json(section_config) {
+                        bail!("verify section '{}' failed - {}", section_id, err);
+                    }
 
-            if !raw.is_empty() {
-                raw += "\n"
-            }
+                    if !raw.is_empty() {
+                        raw += "\n"
+                    }
 
-            raw += &(self.format_section_header)(type_name, section_id, section_config)?;
+                    raw += &(self.format_section_header)(type_name, section_id, section_config)?;
 
-            for (key, value) in section_config.as_object().unwrap() {
-                if let Some(id_property) = &plugin.id_property {
-                    if id_property == key {
-                        continue; // skip writing out id properties, they are in the section header
+                    for (key, value) in section_config.as_object().unwrap() {
+                        if let Some(id_property) = &plugin.id_property {
+                            if id_property == key {
+                                continue; // skip writing out id properties, they are in the section header
+                            }
+                        }
+                        raw += &(self.format_section_content)(type_name, section_id, key, value)?;
                     }
                 }
-                raw += &(self.format_section_content)(type_name, section_id, key, value)?;
+                None if self.allow_unknown_sections => {
+                    if section_id.chars().any(|c| c.is_control()) {
+                        bail!("detected unexpected control character in section ID.");
+                    }
+
+                    if !raw.is_empty() {
+                        raw += "\n"
+                    }
+
+                    raw += &(self.format_section_header)(type_name, section_id, section_config)?;
+
+                    for (key, value) in section_config.as_object().unwrap() {
+                        raw += &(self.format_section_content)(type_name, section_id, key, value)?;
+                    }
+                }
+                None => {
+                    bail!("unknown section type '{type_name}'");
+                }
             }
         }
 
@@ -415,6 +447,12 @@ impl SectionConfig {
                                     }
                                     state =
                                         ParseState::InsideSection(plugin, section_id, json!({}));
+                                } else if self.allow_unknown_sections {
+                                    state = ParseState::InsideUnknownSection(
+                                        section_type,
+                                        section_id,
+                                        json!({}),
+                                    );
                                 } else {
                                     bail!("unknown section type '{}'", section_type);
                                 }
@@ -477,18 +515,48 @@ impl SectionConfig {
                                 bail!("syntax error (expected section properties)");
                             }
                         }
+                        ParseState::InsideUnknownSection(
+                            ref section_type,
+                            ref mut section_id,
+                            ref mut config,
+                        ) => {
+                            if line.trim().is_empty() {
+                                // finish section
+                                result.set_data(section_id, section_type, config.take())?;
+                                result.record_order(section_id);
+
+                                state = ParseState::BeforeHeader;
+                                continue;
+                            }
+                            if let Some((key, value)) = (self.parse_section_content)(line) {
+                                config[key] = json!(value);
+                            } else {
+                                bail!("syntax error (expected section properties)");
+                            }
+                        }
                     }
                 }
 
-                if let ParseState::InsideSection(plugin, ref mut section_id, ref mut config) = state
-                {
-                    // finish section
-                    test_required_properties(config, plugin.properties, &plugin.id_property)?;
-                    if let Some(id_property) = &plugin.id_property {
-                        config[id_property] = Value::from(section_id.clone());
+                match state {
+                    ParseState::BeforeHeader => {}
+                    ParseState::InsideSection(plugin, ref mut section_id, ref mut config) => {
+                        // finish section
+                        test_required_properties(config, plugin.properties, &plugin.id_property)?;
+                        if let Some(id_property) = &plugin.id_property {
+                            config[id_property] = Value::from(section_id.clone());
+                        }
+                        result.set_data(section_id, &plugin.type_name, config)?;
+                        result.record_order(section_id);
                     }
-                    result.set_data(section_id, &plugin.type_name, config)?;
-                    result.record_order(section_id);
+                    ParseState::InsideUnknownSection(
+                        ref section_type,
+                        ref mut section_id,
+                        ref mut config,
+                    ) => {
+                        // finish section
+                        result.set_data(section_id, section_type, config)?;
+                        result.record_order(section_id);
+                    }
                 }
 
                 Ok(())
@@ -958,6 +1026,84 @@ user: root@pam
     // SectionConfigData doesn't have Clone and it would only be needed here currently.
     let res = config_with_additional.parse(filename, raw);
     assert!(config.write(filename, &res.unwrap()).is_err());
+}
+
+#[test]
+fn test_section_config_with_unknown_section_types() {
+    let filename = "user.cfg";
+
+    const ID_SCHEMA: Schema = StringSchema::new("default id schema.")
+        .min_length(3)
+        .schema();
+    let mut config = SectionConfig::new(&ID_SCHEMA).allow_unknown_sections(true);
+
+    const PROPERTIES: [(&str, bool, &proxmox_schema::Schema); 2] = [
+        (
+            "email",
+            false,
+            &StringSchema::new("The e-mail of the user").schema(),
+        ),
+        (
+            "userid",
+            true,
+            &StringSchema::new("The id of the user (name@realm).")
+                .min_length(3)
+                .schema(),
+        ),
+    ];
+
+    const USER_PROPERTIES: ObjectSchema = ObjectSchema {
+        description: "user properties",
+        properties: &PROPERTIES,
+        additional_properties: false,
+        default_key: None,
+    };
+
+    let plugin = SectionConfigPlugin::new(
+        "user".to_string(),
+        Some("userid".to_string()),
+        &USER_PROPERTIES,
+    );
+    config.register_plugin(plugin);
+
+    let raw = r"
+
+user: root@pam
+        email root@example.com
+
+token: asdf@pbs!asdftoken
+        enable true
+        expire 0
+";
+
+    let check = |res: SectionConfigData| {
+        let (_, token_config) = res.sections.get("root@pam").unwrap();
+        assert_eq!(
+            *token_config.get("email").unwrap(),
+            json!("root@example.com")
+        );
+
+        let (token_id, token_config) = res.sections.get("asdf@pbs!asdftoken").unwrap();
+        assert_eq!(token_id, "token");
+        assert_eq!(*token_config.get("enable").unwrap(), json!("true"));
+        assert_eq!(*token_config.get("expire").unwrap(), json!("0"));
+    };
+
+    let res = config.parse(filename, raw).unwrap();
+    println!("RES: {:?}", res);
+    let written = config.write(filename, &res);
+    println!("CONFIG:\n{}", written.as_ref().unwrap());
+
+    check(res);
+
+    let res = config.parse(filename, &written.unwrap()).unwrap();
+    println!("RES second time: {:?}", res);
+
+    check(res);
+
+    let config = config.allow_unknown_sections(false);
+
+    assert!(config.parse(filename, raw).is_err());
 }
 
 /// Generate ReST Documentaion for ``SectionConfig``
