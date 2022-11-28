@@ -35,8 +35,8 @@ Provides:
  librust-proxmox-section-config-1+default-dev (= ${binary:Version}),
  librust-proxmox-section-config-1.0-dev (= ${binary:Version}),
  librust-proxmox-section-config-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-section-config-1.0.1-dev (= ${binary:Version}),
- librust-proxmox-section-config-1.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-section-config-1.0.2-dev (= ${binary:Version}),
+ librust-proxmox-section-config-1.0.2+default-dev (= ${binary:Version})
 Description: Proxmox schema based section config format parsing - Rust source code
  This package contains the source for the Rust proxmox-section-config crate,
  packaged by debcargo for use with cargo and dh-cargo.

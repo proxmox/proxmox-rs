@@ -1,3 +1,10 @@
+rust-proxmox-section-config (1.0.2-1) stable; urgency=medium
+
+  * support allowing unknown section types for future-proof parsing when only
+    interested in a limited subset of section types
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 28 Nov 2022 09:28:17 +0100
+
 rust-proxmox-section-config (1.0.1-1) stable; urgency=medium
 
   * expose 'order' in SectionConfig
