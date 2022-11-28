@@ -7,7 +7,7 @@
 //!
 //! The file syntax is configurable, but defaults to the following syntax:
 //!
-//! ```ignore
+//! ```text
 //! <section1_type>: <section1_id>
 //!     <key1> <value1>
 //!     <key2> <value2>
