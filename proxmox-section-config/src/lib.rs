@@ -1106,6 +1106,92 @@ token: asdf@pbs!asdftoken
     assert!(config.parse(filename, raw).is_err());
 }
 
+#[test]
+fn test_section_config_array() {
+    let filename = "sync.cfg";
+
+    const PROPERTIES: ObjectSchema = ObjectSchema::new(
+        "Dummy sync job properties",
+        &[
+            (
+                "group-filter",
+                true,
+                &ArraySchema::new(
+                    "Group filter array schema",
+                    &StringSchema::new("Group filter entry schema.").schema(),
+                )
+                .schema(),
+            ),
+            (
+                "schedule",
+                true,
+                &StringSchema::new("Remote schema.").schema(),
+            ),
+        ],
+    );
+
+    let plugin = SectionConfigPlugin::new("sync".to_string(), None, &PROPERTIES);
+
+    const ID_SCHEMA: Schema = StringSchema::new("ID schema.").min_length(3).schema();
+
+    let mut config = SectionConfig::new(&ID_SCHEMA);
+    config.register_plugin(plugin);
+
+    let raw = r"
+
+sync: s-4a1011e8-40e2
+        group-filter group:vm/144
+        schedule monthly
+
+sync: s-5b2122f9-51f3
+        group-filter group:vm/100
+        schedule hourly
+        group-filter group:vm/102
+
+sync: s-6c32330a-6204
+        group-filter group:vm/103
+        group-filter group:vm/104
+        group-filter group:vm/105
+";
+
+    let check = |res: SectionConfigData| {
+        let (_, second_section) = res.sections.get("s-5b2122f9-51f3").unwrap();
+        assert_eq!(*second_section.get("schedule").unwrap(), json!("hourly"));
+        assert_eq!(
+            *second_section.get("group-filter").unwrap(),
+            json!(["group:vm/100", "group:vm/102"]),
+        );
+
+        let (_, third_section) = res.sections.get("s-6c32330a-6204").unwrap();
+        assert_eq!(
+            *third_section.get("group-filter").unwrap(),
+            json!(["group:vm/103", "group:vm/104", "group:vm/105"]),
+        );
+        assert!(third_section.get("schedule").is_none());
+    };
+
+    let res = config.parse(filename, raw).unwrap();
+    println!("RES: {:?}", res);
+    let written = config.write(filename, &res).unwrap();
+    println!("CONFIG:\n{}", written);
+
+    check(res);
+
+    let res = config.parse(filename, &written).unwrap();
+    println!("RES (second time): {:?}", res);
+
+    check(res);
+
+    let raw = r"
+
+sync: fail
+        schedule hourly
+        schedule monthly
+";
+
+    assert!(config.parse(filename, raw).is_err());
+}
+
 /// Generate ReST Documentaion for ``SectionConfig``
 pub fn dump_section_config(config: &SectionConfig) -> String {
     let mut res = String::new();
