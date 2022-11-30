@@ -3,10 +3,10 @@ use std::sync::Arc;
 use anyhow::{bail, Error};
 use hyper::Body;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
-use proxmox_http::HttpOptions;
 use tokio::sync::mpsc;
 
 use proxmox_http::client::Client;
+use proxmox_http::HttpOptions;
 
 use crate::influxdb::utils;
 use crate::{Metrics, MetricsData};
