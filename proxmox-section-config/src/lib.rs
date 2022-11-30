@@ -529,7 +529,14 @@ impl SectionConfig {
                                 continue;
                             }
                             if let Some((key, value)) = (self.parse_section_content)(line) {
-                                config[key] = json!(value);
+                                match &mut config[&key] {
+                                    Value::Null => config[key] = json!(value),
+                                    // Assume it's an array schema in order to handle actual array
+                                    // schemas as good as we can.
+                                    Value::String(current) => config[key] = json!([current, value]),
+                                    Value::Array(array) => array.push(json!(value)),
+                                    other => bail!("got unexpected Value {:?}", other),
+                                }
                             } else {
                                 bail!("syntax error (expected section properties)");
                             }
@@ -1137,6 +1144,8 @@ fn test_section_config_array() {
     let mut config = SectionConfig::new(&ID_SCHEMA);
     config.register_plugin(plugin);
 
+    let config_unknown = SectionConfig::new(&ID_SCHEMA).allow_unknown_sections(true);
+
     let raw = r"
 
 sync: s-4a1011e8-40e2
@@ -1181,6 +1190,15 @@ sync: s-6c32330a-6204
     println!("RES (second time): {:?}", res);
 
     check(res);
+
+    let res_unknown = config_unknown.parse(filename, raw).unwrap();
+    println!("RES (unknown): {:?}", res_unknown);
+    let written_unknown = config_unknown.write(filename, &res_unknown).unwrap();
+    println!("CONFIG (unknown):\n{}", written_unknown);
+
+    check(res_unknown);
+
+    assert_eq!(written, written_unknown);
 
     let raw = r"
 
