@@ -11,11 +11,12 @@ Build-Depends: debhelper (>= 12),
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
- librust-textwrap-0.15+default-dev <!nocheck>
+ librust-textwrap-0.16+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-schema
 Rules-Requires-Root: no
 
 Package: librust-proxmox-schema-dev
@@ -28,7 +29,7 @@ Depends:
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev,
- librust-textwrap-0.15+default-dev
+ librust-textwrap-0.16+default-dev
 Suggests:
  librust-proxmox-schema+api-macro-dev (= ${binary:Version}),
  librust-proxmox-schema+upid-api-impl-dev (= ${binary:Version})
