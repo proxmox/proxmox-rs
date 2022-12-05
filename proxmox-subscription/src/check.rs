@@ -76,7 +76,7 @@ fn parse_register_response(
         ..Default::default()
     };
     let mut md5hash = String::new();
-    let is_server_id = |id: &&str| *id == server_id;
+    let is_server_id = |id: &str| *id == server_id;
 
     for caps in ATTR_RE.captures_iter(body) {
         let (key, value) = (&caps[1], &caps[2]);
@@ -90,7 +90,7 @@ fn parse_register_response(
             }
             "message" => info.message = Some(value.into()),
             "validdirectory" => {
-                if value.split(',').find(is_server_id) == None {
+                if !value.split(',').any(is_server_id) {
                     bail!("Server ID does not match");
                 }
                 info.serverid = Some(server_id.to_owned());

@@ -631,7 +631,7 @@ where
     let base_path = source.parent().unwrap_or_else(|| Path::new("/"));
     let mut encoder = ZipEncoder::new(target);
 
-    for entry in WalkDir::new(&source).into_iter() {
+    for entry in WalkDir::new(source).into_iter() {
         let entry = match entry {
             Ok(entry) => entry,
             Err(err) => {
@@ -658,10 +658,10 @@ where
 
             if entry.file_type().is_file() {
                 let file = tokio::fs::File::open(entry.path()).await?;
-                let ze = ZipEntry::new(&entry_path_no_base, mtime, mode, true);
+                let ze = ZipEntry::new(entry_path_no_base, mtime, mode, true);
                 encoder.add_entry(ze, Some(file)).await?;
             } else if entry.file_type().is_dir() {
-                let ze = ZipEntry::new(&entry_path_no_base, mtime, mode, false);
+                let ze = ZipEntry::new(entry_path_no_base, mtime, mode, false);
                 let content: Option<tokio::fs::File> = None;
                 encoder.add_entry(ze, content).await?;
             }

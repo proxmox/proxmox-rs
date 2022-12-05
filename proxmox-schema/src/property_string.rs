@@ -34,7 +34,7 @@ impl<'a> Iterator for PropertyIterator<'a> {
             // value without key and quoted
             None
         } else {
-            let key = match self.data.find(&[',', '=']) {
+            let key = match self.data.find([',', '=']) {
                 Some(pos) if self.data.as_bytes()[pos] == b',' => None,
                 Some(pos) => Some(ascii_split_off(&mut self.data, pos)),
                 None => None,

@@ -169,7 +169,7 @@ pub fn check_process_running_pstart(pid: libc::pid_t, pstart: u64) -> Option<Pid
 
 pub fn read_proc_uptime() -> Result<(f64, f64), Error> {
     let path = "/proc/uptime";
-    let line = file_read_firstline(&path)?;
+    let line = file_read_firstline(path)?;
     let mut values = line.split_whitespace().map(|v| v.parse::<f64>());
 
     match (values.next(), values.next()) {
@@ -421,7 +421,7 @@ pub struct ProcFsMemInfo {
 
 pub fn read_meminfo() -> Result<ProcFsMemInfo, Error> {
     let path = "/proc/meminfo";
-    let file = OpenOptions::new().read(true).open(&path)?;
+    let file = OpenOptions::new().read(true).open(path)?;
 
     let mut meminfo = ProcFsMemInfo {
         memtotal: 0,
@@ -479,7 +479,7 @@ pub fn read_cpuinfo() -> Result<ProcFsCPUInfo, Error> {
     }
 
     let path = "/proc/cpuinfo";
-    let file = OpenOptions::new().read(true).open(&path)?;
+    let file = OpenOptions::new().read(true).open(path)?;
 
     let mut cpuinfo = ProcFsCPUInfo {
         user_hz: *CLOCK_TICKS,
@@ -549,7 +549,7 @@ pub struct ProcFsNetDev {
 
 pub fn read_proc_net_dev() -> Result<Vec<ProcFsNetDev>, Error> {
     let path = "/proc/net/dev";
-    let file = OpenOptions::new().read(true).open(&path)?;
+    let file = OpenOptions::new().read(true).open(path)?;
 
     let mut result = Vec::new();
     for line in BufReader::new(&file).lines().skip(2) {
@@ -607,7 +607,7 @@ pub struct ProcFsNetRoute {
 
 pub fn read_proc_net_route() -> Result<Vec<ProcFsNetRoute>, Error> {
     let path = "/proc/net/route";
-    let file = OpenOptions::new().read(true).open(&path)?;
+    let file = OpenOptions::new().read(true).open(path)?;
 
     let mut result = Vec::new();
     for line in BufReader::new(&file).lines().skip(1) {
@@ -693,7 +693,7 @@ pub struct ProcFsNetIPv6Route {
 
 pub fn read_proc_net_ipv6_route() -> Result<Vec<ProcFsNetIPv6Route>, Error> {
     let path = "/proc/net/ipv6_route";
-    let file = OpenOptions::new().read(true).open(&path)?;
+    let file = OpenOptions::new().read(true).open(path)?;
 
     let mut result = Vec::new();
     for line in BufReader::new(&file).lines() {

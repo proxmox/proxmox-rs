@@ -108,7 +108,7 @@ pub struct SubscriptionInfo {
 impl SubscriptionInfo {
     /// Returns the canonicalized signed data and, if available, signature contained in `self`.
     pub fn signed_data(&self) -> Result<(Vec<u8>, Option<String>), Error> {
-        let mut data = serde_json::to_value(&self)?;
+        let mut data = serde_json::to_value(self)?;
         let signature = data
             .as_object_mut()
             .ok_or_else(|| format_err!("subscription info not a JSON object"))?
@@ -255,7 +255,7 @@ pub fn get_hardware_address() -> Result<String, Error> {
         .map_err(|e| format_err!("Error getting host key - {}", e))?;
     let digest = md5sum(&contents).map_err(|e| format_err!("Error digesting host key - {}", e))?;
 
-    Ok(hex::encode(&digest).to_uppercase())
+    Ok(hex::encode(digest).to_uppercase())
 }
 
 fn parse_next_due(value: &str) -> Result<i64, Error> {

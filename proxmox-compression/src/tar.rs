@@ -177,7 +177,7 @@ where
     let mut encoder = Builder::new(target);
     let mut hardlinks: HashMap<u64, HashMap<u64, PathBuf>> = HashMap::new(); // dev -> inode -> first path
 
-    for entry in WalkDir::new(&source).into_iter() {
+    for entry in WalkDir::new(source).into_iter() {
         let entry = match entry {
             Ok(entry) => entry,
             Err(err) => {

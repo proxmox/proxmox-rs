@@ -317,7 +317,7 @@ impl SectionConfig {
         let mut done = HashSet::new();
 
         for section_id in &config.order {
-            if config.sections.get(section_id) == None {
+            if config.sections.get(section_id).is_none() {
                 continue;
             };
             list.push(section_id);

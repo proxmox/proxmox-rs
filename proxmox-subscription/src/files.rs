@@ -111,7 +111,7 @@ pub fn write_subscription<P: AsRef<Path>>(
     file_opts: CreateOptions,
     info: &SubscriptionInfo,
 ) -> Result<(), Error> {
-    let raw = if info.key == None || info.checktime == None {
+    let raw = if info.key.is_none() || info.checktime.is_none() {
         String::new()
     } else if let SubscriptionStatus::New = info.status {
         format!("{}\n", info.key.as_ref().unwrap())
