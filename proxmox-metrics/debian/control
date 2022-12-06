@@ -20,9 +20,10 @@ Build-Depends: debhelper (>= 12),
  librust-tokio-1+net-dev <!nocheck>,
  librust-tokio-1+sync-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-metrics
 Rules-Requires-Root: no
 
 Package: librust-proxmox-metrics-dev

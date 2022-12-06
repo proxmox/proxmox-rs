@@ -16,9 +16,10 @@ Build-Depends: debhelper (>= 12),
  librust-serde-plain-1+default-dev <!nocheck>,
  librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-tfa
 Rules-Requires-Root: no
 
 Package: librust-proxmox-tfa-dev

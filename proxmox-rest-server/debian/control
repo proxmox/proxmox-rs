@@ -44,9 +44,10 @@ Build-Depends: debhelper (>= 12),
  librust-tower-service-0.3+default-dev <!nocheck>,
  librust-url-2+default-dev (>= 2.1-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-rest-server
 Rules-Requires-Root: no
 
 Package: librust-proxmox-rest-server-dev

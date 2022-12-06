@@ -24,9 +24,10 @@ Build-Depends: debhelper (>= 12),
  librust-walkdir-2+default-dev <!nocheck>,
  librust-zstd-0.6+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-compression
 Rules-Requires-Root: no
 
 Package: librust-proxmox-compression-dev

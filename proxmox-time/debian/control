@@ -14,9 +14,10 @@ Build-Depends: debhelper (>= 12),
  librust-libc-0.2+extra-traits-dev <!nocheck>,
  librust-nom-7+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-time
 Rules-Requires-Root: no
 
 Package: librust-proxmox-time-dev

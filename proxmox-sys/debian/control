@@ -22,9 +22,10 @@ Build-Depends: debhelper (>= 12),
  libacl1-dev <!nocheck>,
  uuid-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-sys
 Rules-Requires-Root: no
 
 Package: librust-proxmox-sys-dev

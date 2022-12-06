@@ -23,9 +23,10 @@ Build-Depends: debhelper (>= 12),
  librust-tokio-1+default-dev <!nocheck>,
  librust-unicode-width-0.1+default-dev (>= 0.1.8-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-router
 Rules-Requires-Root: no
 
 Package: librust-proxmox-router-dev
