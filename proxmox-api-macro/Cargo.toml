@@ -1,12 +1,13 @@
 [package]
 name = "proxmox-api-macro"
-edition = "2018"
+edition.workspace = true
 version = "1.0.3"
-authors = [ "Wolfgang Bumiller <w.bumiller@proxmox.com>" ]
-license = "AGPL-3"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "Proxmox API macro"
 
-exclude = [ "debian" ]
+exclude.workspace = true
 
 [lib]
 proc-macro = true

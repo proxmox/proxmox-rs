@@ -1,15 +1,13 @@
 [package]
 name = "proxmox-http"
-edition = "2018"
+edition.workspace = true
 version = "0.7.0"
-authors = [
-    "Dietmar Maurer <dietmar@proxmox.com>",
-    "Wolfgang Bumiller <w.bumiller@proxmox.com>",
-]
-license = "AGPL-3"
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "Proxmox HTTP library"
 
-exclude = [ "debian" ]
+exclude.workspace = true
 
 [dependencies]
 anyhow = "1.0"

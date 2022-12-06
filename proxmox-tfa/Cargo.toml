@@ -1,12 +1,13 @@
 [package]
 name = "proxmox-tfa"
 version = "2.1.0"
-authors = ["Proxmox Support Team <support@proxmox.com>"]
-edition = "2021"
-license = "AGPL-3"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "tfa implementation for totp and u2f"
 
-exclude = [ "debian" ]
+exclude.workspace = true
 
 [dependencies]
 anyhow = "1.0"

@@ -24,3 +24,9 @@ members = [
 exclude = [
     "build",
 ]
+[workspace.package]
+authors = ["Proxmox Support Team <support@proxmox.com>"]
+edition = "2021"
+license = "AGPL-3"
+repository = "https://git.proxmox.com/?p=proxmox.git"
+exclude = [ "debian" ]

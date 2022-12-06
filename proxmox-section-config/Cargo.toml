@@ -1,12 +1,13 @@
 [package]
 name = "proxmox-section-config"
 version = "1.0.2"
-authors = ["Proxmox Support Team <support@proxmox.com>"]
-edition = "2018"
-license = "AGPL-3"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "proxmox schema based section config format parsing"
 
-exclude = [ "debian" ]
+exclude.workspace = true
 
 [dependencies]
 anyhow = "1.0"

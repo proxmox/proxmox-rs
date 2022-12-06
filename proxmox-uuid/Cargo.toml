@@ -1,12 +1,13 @@
 [package]
 name = "proxmox-uuid"
 version = "1.0.1"
-authors = ["Proxmox Support Team <support@proxmox.com>"]
-edition = "2018"
-license = "AGPL-3"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
 description = "bindings for libuuid with optional serde support"
 
-exclude = [ "debian" ]
+exclude.workspace = true
 
 [dependencies]
 libc = "0.2"
