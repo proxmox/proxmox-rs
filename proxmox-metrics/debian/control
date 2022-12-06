@@ -9,16 +9,16 @@ Build-Depends: debhelper (>= 12),
  librust-anyhow-1+default-dev <!nocheck>,
  librust-futures-0.3+default-dev <!nocheck>,
  librust-http-0.2+default-dev <!nocheck>,
- librust-hyper-0.14+default-dev <!nocheck>,
+ librust-hyper-0.14+default-dev (>= 0.14.5-~~) <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-proxmox-async-0.4+default-dev <!nocheck>,
  librust-proxmox-http-0.7+client-dev <!nocheck>,
  librust-proxmox-http-0.7+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
- librust-tokio-1+default-dev <!nocheck>,
- librust-tokio-1+net-dev <!nocheck>,
- librust-tokio-1+sync-dev <!nocheck>
+ librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
+ librust-tokio-1+net-dev (>= 1.6-~~) <!nocheck>,
+ librust-tokio-1+sync-dev (>= 1.6-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -34,16 +34,16 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-futures-0.3+default-dev,
  librust-http-0.2+default-dev,
- librust-hyper-0.14+default-dev,
+ librust-hyper-0.14+default-dev (>= 0.14.5-~~),
  librust-openssl-0.10+default-dev,
  librust-proxmox-async-0.4+default-dev,
  librust-proxmox-http-0.7+client-dev,
  librust-proxmox-http-0.7+default-dev,
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev,
- librust-tokio-1+default-dev,
- librust-tokio-1+net-dev,
- librust-tokio-1+sync-dev
+ librust-tokio-1+default-dev (>= 1.6-~~),
+ librust-tokio-1+net-dev (>= 1.6-~~),
+ librust-tokio-1+sync-dev (>= 1.6-~~)
 Provides:
  librust-proxmox-metrics+default-dev (= ${binary:Version}),
  librust-proxmox-metrics-0-dev (= ${binary:Version}),

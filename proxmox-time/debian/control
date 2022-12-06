@@ -10,8 +10,8 @@ Build-Depends: debhelper (>= 12),
  librust-bitflags-1+default-dev (>= 1.2.1-~~) <!nocheck>,
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~) <!nocheck>,
  librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
- librust-libc-0.2+default-dev <!nocheck>,
- librust-libc-0.2+extra-traits-dev <!nocheck>,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
+ librust-libc-0.2+extra-traits-dev (>= 0.2.107-~~) <!nocheck>,
  librust-nom-7+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
@@ -29,8 +29,8 @@ Depends:
  librust-bitflags-1+default-dev (>= 1.2.1-~~),
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~),
  librust-lazy-static-1+default-dev (>= 1.4-~~),
- librust-libc-0.2+default-dev,
- librust-libc-0.2+extra-traits-dev,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~),
+ librust-libc-0.2+extra-traits-dev (>= 0.2.107-~~),
  librust-nom-7+default-dev
 Provides:
  librust-proxmox-time+default-dev (= ${binary:Version}),

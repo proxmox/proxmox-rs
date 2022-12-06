@@ -92,7 +92,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-tfa-dev (= ${binary:Version}),
- librust-libc-0.2+default-dev,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~),
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
 Provides:

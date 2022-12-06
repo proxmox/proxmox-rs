@@ -47,11 +47,11 @@ Depends:
  librust-proxmox-http-dev (= ${binary:Version}),
  librust-proxmox-http+http-helpers-dev (= ${binary:Version}),
  librust-futures-0.3+default-dev,
- librust-hyper-0.14+full-dev,
- librust-hyper-0.14-dev,
+ librust-hyper-0.14+default-dev (>= 0.14.5-~~),
+ librust-hyper-0.14+full-dev (>= 0.14.5-~~),
  librust-openssl-0.10+default-dev,
- librust-tokio-1+default-dev,
- librust-tokio-1+io-util-dev,
+ librust-tokio-1+default-dev (>= 1.6-~~),
+ librust-tokio-1+io-util-dev (>= 1.6-~~),
  librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~)
 Provides:
  librust-proxmox-http-0+client-dev (= ${binary:Version}),
@@ -104,7 +104,7 @@ Depends:
  librust-http-0.2+default-dev,
  librust-proxmox-sys-0.4+default-dev,
  librust-serde-json-1+default-dev,
- librust-url-2+default-dev
+ librust-url-2+default-dev (>= 2.2-~~)
 Provides:
  librust-proxmox-http-0+http-helpers-dev (= ${binary:Version}),
  librust-proxmox-http-0.7+http-helpers-dev (= ${binary:Version}),
@@ -136,15 +136,15 @@ Depends:
  librust-proxmox-http-dev (= ${binary:Version}),
  librust-base64-0.13+default-dev,
  librust-futures-0.3+default-dev,
- librust-hyper-0.14-dev,
+ librust-hyper-0.14+default-dev (>= 0.14.5-~~),
  librust-openssl-0.10+default-dev,
  librust-proxmox-io-1+default-dev,
  librust-proxmox-io-1+tokio-dev,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~),
  librust-proxmox-sys-0.4+default-dev,
- librust-tokio-1+default-dev,
- librust-tokio-1+io-util-dev,
- librust-tokio-1+sync-dev
+ librust-tokio-1+default-dev (>= 1.6-~~),
+ librust-tokio-1+io-util-dev (>= 1.6-~~),
+ librust-tokio-1+sync-dev (>= 1.6-~~)
 Provides:
  librust-proxmox-http-0+websocket-dev (= ${binary:Version}),
  librust-proxmox-http-0.7+websocket-dev (= ${binary:Version}),

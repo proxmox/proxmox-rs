@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 12),
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~) <!nocheck>,
- librust-libc-0.2+default-dev <!nocheck>,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
  uuid-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
@@ -22,7 +22,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~),
- librust-libc-0.2+default-dev,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~),
  uuid-dev
 Suggests:
  librust-proxmox-uuid+serde-dev (= ${binary:Version})

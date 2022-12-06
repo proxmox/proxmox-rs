@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 12),
  librust-endian-trait-0.6+default-dev <!nocheck>,
  librust-flate2-1+default-dev <!nocheck>,
  librust-futures-0.3+default-dev <!nocheck>,
- librust-libc-0.2+default-dev <!nocheck>,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
  librust-proxmox-io-1+default-dev <!nocheck>,
  librust-proxmox-io-1+tokio-dev <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~) <!nocheck>,
@@ -22,6 +22,7 @@ Build-Depends: debhelper (>= 12),
  librust-tokio-1+fs-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+io-util-dev (>= 1.6-~~) <!nocheck>,
  librust-walkdir-2+default-dev <!nocheck>,
+ librust-zstd-0.6+bindgen-dev <!nocheck>,
  librust-zstd-0.6+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
@@ -41,7 +42,7 @@ Depends:
  librust-endian-trait-0.6+default-dev,
  librust-flate2-1+default-dev,
  librust-futures-0.3+default-dev,
- librust-libc-0.2+default-dev,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~),
  librust-proxmox-io-1+default-dev,
  librust-proxmox-io-1+tokio-dev,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~),
@@ -51,6 +52,7 @@ Depends:
  librust-tokio-1+fs-dev (>= 1.6-~~),
  librust-tokio-1+io-util-dev (>= 1.6-~~),
  librust-walkdir-2+default-dev,
+ librust-zstd-0.6+bindgen-dev,
  librust-zstd-0.6+default-dev
 Provides:
  librust-proxmox-compression+default-dev (= ${binary:Version}),

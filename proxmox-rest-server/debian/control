@@ -13,9 +13,9 @@ Build-Depends: debhelper (>= 12),
  librust-hyper-0.14+default-dev (>= 0.14.5-~~) <!nocheck>,
  librust-hyper-0.14+full-dev (>= 0.14.5-~~) <!nocheck>,
  librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
- librust-libc-0.2+default-dev <!nocheck>,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
  librust-log-0.4+default-dev (>= 0.4.17-~~) <!nocheck>,
- librust-nix-0.24+default-dev <!nocheck>,
+ librust-nix-0.24+default-dev (>= 0.24.1-~~) <!nocheck>,
  librust-once-cell-1+default-dev (>= 1.3.1-~~) <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
  librust-proxmox-async-0.4+default-dev <!nocheck>,
@@ -42,7 +42,7 @@ Build-Depends: debhelper (>= 12),
  librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~) <!nocheck>,
  librust-tokio-stream-0.1+default-dev <!nocheck>,
  librust-tower-service-0.3+default-dev <!nocheck>,
- librust-url-2+default-dev (>= 2.1-~~) <!nocheck>
+ librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -62,9 +62,9 @@ Depends:
  librust-hyper-0.14+default-dev (>= 0.14.5-~~),
  librust-hyper-0.14+full-dev (>= 0.14.5-~~),
  librust-lazy-static-1+default-dev (>= 1.4-~~),
- librust-libc-0.2+default-dev,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~),
  librust-log-0.4+default-dev (>= 0.4.17-~~),
- librust-nix-0.24+default-dev,
+ librust-nix-0.24+default-dev (>= 0.24.1-~~),
  librust-once-cell-1+default-dev (>= 1.3.1-~~),
  librust-percent-encoding-2+default-dev (>= 2.1-~~),
  librust-proxmox-async-0.4+default-dev,
@@ -91,7 +91,7 @@ Depends:
  librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~),
  librust-tokio-stream-0.1+default-dev,
  librust-tower-service-0.3+default-dev,
- librust-url-2+default-dev (>= 2.1-~~)
+ librust-url-2+default-dev (>= 2.2-~~)
 Provides:
  librust-proxmox-rest-server+default-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0-dev (= ${binary:Version}),

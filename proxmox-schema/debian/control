@@ -70,7 +70,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-schema-dev (= ${binary:Version}),
- librust-libc-0.2+default-dev,
+ librust-libc-0.2+default-dev (>= 0.2.107-~~),
  librust-nix-0.24+default-dev (>= 0.24.1-~~)
 Provides:
  librust-proxmox-schema-1+upid-api-impl-dev (= ${binary:Version}),

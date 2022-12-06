@@ -42,8 +42,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-io-dev (= ${binary:Version}),
- librust-tokio-1+default-dev,
- librust-tokio-1+io-util-dev
+ librust-tokio-1+default-dev (>= 1.6-~~),
+ librust-tokio-1+io-util-dev (>= 1.6-~~)
 Provides:
  librust-proxmox-io-1+tokio-dev (= ${binary:Version}),
  librust-proxmox-io-1.0+tokio-dev (= ${binary:Version}),
