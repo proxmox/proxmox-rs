@@ -10,14 +10,14 @@ description = "Metrics Server export utilitites"
 exclude.workspace = true
 
 [dependencies]
-anyhow = "1.0"
-futures = "0.3"
-http = "0.2"
-hyper = "0.14"
-openssl = "0.10"
-serde = "1.0"
-serde_json = "1.0"
-tokio = { version = "1.0", features = [ "net", "sync" ] }
+anyhow.workspace = true
+futures.workspace = true
+http.workspace = true
+hyper.workspace = true
+openssl.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = [ "net", "sync" ] }
 
 proxmox-async = { path = "../proxmox-async", features = [], version = "0.4" }
 proxmox-http = { path = "../proxmox-http", features = [ "client" ], version = "0.7" }

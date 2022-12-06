@@ -10,22 +10,22 @@ description = "contains compression utilitites (such as an Zip Encoder for async
 exclude.workspace = true
 
 [dependencies]
-anyhow = "1.0"
+anyhow.workspace = true
 bytes = "1.0"
 crc32fast = "1"
-endian_trait = { version = "0.6" }
+endian_trait.workspace = true
 flate2 = "1.0"
-futures = "0.3"
-libc = "0.2"
-tokio = { version = "1.6", features = [ "fs", "io-util"] }
+futures.workspace = true
+libc.workspace = true
+tokio = { workspace = true, features = [ "fs", "io-util"] }
 walkdir = "2"
 tar = "0.4"
-zstd = { version = "0.6", features = []}
+zstd.workspace = true
 
 proxmox-time = { path = "../proxmox-time", version = "1" }
 proxmox-io = { path = "../proxmox-io", version = "1", features = [ "tokio" ] }
 proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
 
 [dev-dependencies]
-tokio = { version = "1.6", features = [ "macros" ] }
+tokio = { workspace = true, features = [ "macros" ] }
 

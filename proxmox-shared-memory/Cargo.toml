@@ -10,8 +10,8 @@ description = "Shared memory helpers and shared mutex implementation"
 exclude.workspace = true
 
 [dependencies]
-anyhow = "1.0"
-libc = "0.2.107"
-nix = "0.24.1"
+anyhow.workspace = true
+libc.workspace = true
+nix.workspace = true
 
 proxmox-sys = { path = "../proxmox-sys", version = "0.4" }

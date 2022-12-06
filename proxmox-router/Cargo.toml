@@ -10,20 +10,20 @@ description = "proxmox API Router and CLI utilities"
 exclude.workspace = true
 
 [dependencies]
-anyhow = "1.0"
+anyhow.workspace = true
 env_logger = { version = "0.9", optional = true }
-http = { version = "0.2", optional = true }
-hyper = { version = "0.14", features = [ "full" ], optional = true }
-nix = "0.24.1"
-percent-encoding = "2.1"
-serde_json = "1.0"
-serde = "1.0"
+http = { workspace = true, optional = true }
+hyper = { workspace = true, features = [ "full" ], optional = true }
+nix.workspace = true
+percent-encoding.workspace = true
+serde_json.workspace = true
+serde.workspace = true
 unicode-width ="0.1.8"
 
 # cli:
-tokio = { version = "1.0", features = [], optional = true }
+tokio = { workspace = true, features = [], optional = true }
 rustyline = { version = "9", optional = true }
-libc = { version = "0.2", optional = true }
+libc = { workspace = true, optional = true }
 
 proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
 proxmox-schema = { path = "../proxmox-schema", version = "1.1" }

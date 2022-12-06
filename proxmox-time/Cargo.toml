@@ -10,13 +10,13 @@ description = "time utilities and TmEditor"
 exclude.workspace = true
 
 [dependencies]
-anyhow = "1.0"
+anyhow.workspace = true
 bitflags = "1.2.1"
-lazy_static = "1.4"
+lazy_static.workspace = true
 nom = "7"
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]
-libc = { version = "0.2", features = [ "extra_traits" ] }
+libc = { workspace = true, features = [ "extra_traits" ] }
 
 [target.'cfg(target_arch="wasm32")'.dependencies]
 js-sys = "0.3.55"

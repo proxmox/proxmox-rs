@@ -10,14 +10,14 @@ description = "Proxmox subscription utilitites"
 exclude.workspace = true
 
 [dependencies]
-anyhow = "1.0"
-base64 = "0.13"
-hex = "0.4"
-lazy_static = "1.4"
-openssl = "0.10"
+anyhow.workspace = true
+base64.workspace = true
+hex.workspace = true
+lazy_static.workspace = true
+openssl.workspace = true
 regex = "1.5"
-serde = "1.0"
-serde_json = "1.0"
+serde.workspace = true
+serde_json.workspace = true
 
 proxmox-http = { path = "../proxmox-http", version = "0.7", default_features = false, features = ["client-trait", "http-helpers"] }
 proxmox-serde = { path = "../proxmox-serde", version = "0.1.1", features = ["serde_json"]}

@@ -10,14 +10,14 @@ description = "Proxmox async/tokio helpers"
 exclude.workspace = true
 
 [dependencies]
-anyhow = "1.0"
-futures = "0.3"
-lazy_static = "1.4"
+anyhow.workspace = true
+futures.workspace = true
+lazy_static.workspace = true
 pin-utils = "0.1.0"
-tokio = { version = "1.0", features = [ "net", "rt", "rt-multi-thread", "sync"] }
+tokio = { workspace = true, features = [ "net", "rt", "rt-multi-thread", "sync"] }
 
 proxmox-io = { path = "../proxmox-io", version = "1", features = [ "tokio" ] }
 proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
 
 [dev-dependencies]
-tokio = { version = "1.6", features = [ "macros" ] }
+tokio = { workspace = true, features = [ "macros" ] }

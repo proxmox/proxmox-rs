@@ -10,16 +10,16 @@ description = "System tools (using nix)."
 exclude.workspace = true
 
 [dependencies]
-anyhow = "1.0"
-base64 = "0.13"
-lazy_static = "1.4"
-libc = "0.2.107"
-log = "0.4.17"
-nix = "0.24.1"
+anyhow.workspace = true
+base64.workspace = true
+lazy_static.workspace = true
+libc.workspace = true
+log.workspace = true
+nix.workspace = true
 regex = "1.2"
-serde_json = "1.0"
-serde = { version = "1.0", features = [ "derive" ] }
-zstd = { version = "0.6", features = [ "bindgen" ], optional = true}
+serde_json.workspace = true
+serde = { workspace = true, features = [ "derive" ] }
+zstd = { workspace = true, optional = true}
 
 # Macro crates:
 proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.2" }
