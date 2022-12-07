@@ -3,6 +3,8 @@
 //! The [`ReadExt`] trait provides additional operations for handling byte buffers for types
 //! implementing [`Read`](std::io::Read).
 
+#![deny(unsafe_op_in_unsafe_fn)]
+
 mod read;
 pub use read::ReadExt;
 

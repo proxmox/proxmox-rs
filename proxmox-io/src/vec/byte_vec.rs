@@ -97,7 +97,9 @@ impl ByteVecExt for Vec<u8> {
         let old_len = self.len();
         self.reserve(more);
         let total = old_len + more;
-        self.set_len(total);
+        unsafe {
+            self.set_len(total);
+        }
         &mut self[old_len..]
     }
 
@@ -105,7 +107,9 @@ impl ByteVecExt for Vec<u8> {
         if new_size <= self.len() {
             self.truncate(new_size);
         } else {
-            self.grow_uninitialized(new_size - self.len());
+            unsafe {
+                self.grow_uninitialized(new_size - self.len());
+            }
         }
     }
 }

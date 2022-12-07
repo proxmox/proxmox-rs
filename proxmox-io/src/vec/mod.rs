@@ -52,8 +52,10 @@ pub use byte_vec::ByteVecExt;
 /// marked as unsafe for good measure.
 #[inline]
 pub unsafe fn uninitialized(len: usize) -> Vec<u8> {
-    let data = std::alloc::alloc(std::alloc::Layout::array::<u8>(len).unwrap());
-    Vec::from_raw_parts(data as *mut u8, len, len)
+    unsafe {
+        let data = std::alloc::alloc(std::alloc::Layout::array::<u8>(len).unwrap());
+        Vec::from_raw_parts(data as *mut u8, len, len)
+    }
 }
 
 /// Shortcut to zero out a slice of bytes.

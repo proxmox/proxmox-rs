@@ -267,30 +267,34 @@ impl<R: io::Read> ReadExt for R {
 
     unsafe fn read_host_value<T: Endian>(&mut self) -> io::Result<T> {
         let mut value = std::mem::MaybeUninit::<T>::uninit();
-        self.read_exact(std::slice::from_raw_parts_mut(
-            value.as_mut_ptr() as *mut u8,
-            mem::size_of::<T>(),
-        ))?;
-        Ok(value.assume_init())
+        unsafe {
+            self.read_exact(std::slice::from_raw_parts_mut(
+                value.as_mut_ptr() as *mut u8,
+                mem::size_of::<T>(),
+            ))?;
+            Ok(value.assume_init())
+        }
     }
 
     unsafe fn read_le_value<T: Endian>(&mut self) -> io::Result<T> {
-        Ok(self.read_host_value::<T>()?.from_le())
+        unsafe { Ok(self.read_host_value::<T>()?.from_le()) }
     }
 
     unsafe fn read_be_value<T: Endian>(&mut self) -> io::Result<T> {
-        Ok(self.read_host_value::<T>()?.from_be())
+        unsafe { Ok(self.read_host_value::<T>()?.from_be()) }
     }
 
     unsafe fn read_host_value_boxed<T>(&mut self) -> io::Result<Box<T>> {
         // FIXME: Change this once #![feature(new_uninit)] lands for Box<T>!
 
-        let ptr = std::alloc::alloc(std::alloc::Layout::new::<T>()) as *mut T;
-        self.read_exact(std::slice::from_raw_parts_mut(
-            ptr as *mut u8,
-            mem::size_of::<T>(),
-        ))?;
-        Ok(Box::from_raw(ptr))
+        unsafe {
+            let ptr = std::alloc::alloc(std::alloc::Layout::new::<T>()) as *mut T;
+            self.read_exact(std::slice::from_raw_parts_mut(
+                ptr as *mut u8,
+                mem::size_of::<T>(),
+            ))?;
+            Ok(Box::from_raw(ptr))
+        }
     }
 
     fn read_exact_or_eof(&mut self, mut buf: &mut [u8]) -> io::Result<bool> {

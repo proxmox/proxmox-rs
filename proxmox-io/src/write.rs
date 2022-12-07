@@ -167,17 +167,19 @@ pub trait WriteExt {
 
 impl<W: io::Write> WriteExt for W {
     unsafe fn write_host_value<T: Endian>(&mut self, value: T) -> io::Result<()> {
-        self.write_all(std::slice::from_raw_parts(
-            &value as *const T as *const u8,
-            std::mem::size_of::<T>(),
-        ))
+        unsafe {
+            self.write_all(std::slice::from_raw_parts(
+                &value as *const T as *const u8,
+                std::mem::size_of::<T>(),
+            ))
+        }
     }
 
     unsafe fn write_le_value<T: Endian>(&mut self, value: T) -> io::Result<()> {
-        self.write_host_value::<T>(value.to_le())
+        unsafe { self.write_host_value::<T>(value.to_le()) }
     }
 
     unsafe fn write_be_value<T: Endian>(&mut self, value: T) -> io::Result<()> {
-        self.write_host_value::<T>(value.to_be())
+        unsafe { self.write_host_value::<T>(value.to_be()) }
     }
 }
