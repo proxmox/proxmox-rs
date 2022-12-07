@@ -23,4 +23,5 @@ pub use std_channel_writer::StdChannelWriter;
 mod byte_buffer;
 pub use byte_buffer::ByteBuffer;
 
+pub mod boxed;
 pub mod vec;
