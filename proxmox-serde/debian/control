@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 12),
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-base64-0.13+default-dev <!nocheck>,
- librust-proxmox-time-1+default-dev <!nocheck>,
+ librust-proxmox-time-1+default-dev (>= 1.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  uuid-dev <!nocheck>
@@ -26,7 +26,7 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-base64-0.13+default-dev,
- librust-proxmox-time-1+default-dev,
+ librust-proxmox-time-1+default-dev (>= 1.1-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  uuid-dev
