@@ -22,11 +22,11 @@ serde = { workspace = true, features = [ "derive" ] }
 zstd = { workspace = true, optional = true}
 
 # Macro crates:
-proxmox-sortable-macro = { path = "../proxmox-sortable-macro", optional = true, version = "0.1.2" }
+proxmox-sortable-macro = { workspace = true, optional = true }
 
-proxmox-io = { path = "../proxmox-io", version = "1.0.0" }
-proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
-proxmox-time = { path = "../proxmox-time", version = "1.0.0" }
+proxmox-io.workspace = true
+proxmox-lang.workspace = true
+proxmox-time.workspace = true
 
 [features]
 default = []

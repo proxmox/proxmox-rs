@@ -14,4 +14,4 @@ anyhow.workspace = true
 libc.workspace = true
 nix.workspace = true
 
-proxmox-sys = { path = "../proxmox-sys", version = "0.4" }
+proxmox-sys.workspace = true

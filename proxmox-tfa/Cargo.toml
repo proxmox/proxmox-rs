@@ -21,11 +21,11 @@ serde_plain = "1.0"
 serde_json = { workspace = true, optional = true }
 libc = { workspace = true, optional = true }
 url.workspace = true
-
-proxmox-schema = { version = "1", path = "../proxmox-schema", features = [ "api-macro" ], optional = true }
-proxmox-time = { version = "1", path = "../proxmox-time", optional = true }
-proxmox-uuid = { version = "1", path = "../proxmox-uuid", optional = true }
 webauthn-rs = { version = "0.3", optional = true }
+
+proxmox-schema = { workspace = true, features = [ "api-macro" ], optional = true }
+proxmox-time = { workspace = true, optional = true }
+proxmox-uuid = { workspace = true, optional = true }
 
 [features]
 default = []

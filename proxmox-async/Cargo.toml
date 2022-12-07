@@ -16,8 +16,8 @@ lazy_static.workspace = true
 pin-utils = "0.1.0"
 tokio = { workspace = true, features = [ "net", "rt", "rt-multi-thread", "sync"] }
 
-proxmox-io = { path = "../proxmox-io", version = "1", features = [ "tokio" ] }
-proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
+proxmox-io = { workspace = true, features = [ "tokio" ] }
+proxmox-lang.workspace = true
 
 [dev-dependencies]
 tokio = { workspace = true, features = [ "macros" ] }

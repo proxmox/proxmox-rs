@@ -22,9 +22,9 @@ walkdir = "2"
 tar = "0.4"
 zstd.workspace = true
 
-proxmox-time = { path = "../proxmox-time", version = "1" }
-proxmox-io = { path = "../proxmox-io", version = "1", features = [ "tokio" ] }
-proxmox-lang = { path = "../proxmox-lang", version = "1.1" }
+proxmox-time.workspace = true
+proxmox-io = { workspace = true, features = [ "tokio" ] }
+proxmox-lang.workspace = true
 
 [dev-dependencies]
 tokio = { workspace = true, features = [ "macros" ] }

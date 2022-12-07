@@ -21,12 +21,12 @@ textwrap = "0.16"
 libc = { workspace = true, optional = true }
 nix = { workspace = true, optional = true }
 
-proxmox-api-macro = { path = "../proxmox-api-macro", optional = true, version = "1.0.3" }
+proxmox-api-macro = { workspace = true, optional = true }
 
 [dev-dependencies]
 url.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
-proxmox-api-macro = { path = "../proxmox-api-macro", version = "1.0.3" }
+proxmox-api-macro.workspace = true
 
 [features]
 default = []
