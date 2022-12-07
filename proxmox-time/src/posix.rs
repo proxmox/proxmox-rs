@@ -79,7 +79,6 @@ pub fn gmtime(epoch: i64) -> Result<libc::tm, Error> {
 /// Note: This panics if the SystemTime::now() returns values not
 /// repesentable as i64 (should never happen).
 pub fn epoch_i64() -> i64 {
-    use std::convert::TryFrom;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     let now = SystemTime::now();
