@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 12),
  librust-anyhow-1+default-dev <!nocheck>,
  librust-hex-0.4+default-dev <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~) <!nocheck>,
- librust-proxmox-schema-1+default-dev (>= 1.3.3-~~) <!nocheck>,
+ librust-proxmox-schema-1+default-dev (>= 1.3.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -27,7 +27,7 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-hex-0.4+default-dev,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~),
- librust-proxmox-schema-1+default-dev (>= 1.3.3-~~),
+ librust-proxmox-schema-1+default-dev (>= 1.3.5-~~),
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev
 Provides:
