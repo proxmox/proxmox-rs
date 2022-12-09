@@ -33,6 +33,6 @@ Adding Crates
       authors.workspace = true
       license.workspace = true
       edition.workspace = true
-  - Add ``exclude = [ "debian" ]``
+      exclude.workspace = true
   - Add a meaningful ``description``
   - Copy ``debian/copyright`` and ``debian/debcargo.toml`` from another subcrate.
