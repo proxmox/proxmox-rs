@@ -27,12 +27,12 @@ Adding Crates
 1) At the top level:
   - Generate the crate: ``cargo new --lib the-name``
   - Sort the crate into ``Cargo.toml``'s ``workspace.members``
-  - Sort the crate into the ``Makefile``'s ``CRATES`` list.
 
 2) In the new crate's ``Cargo.toml``:
-  - Replace the ``author`` line with
-    ``authors = ["Proxmox Support Team <support@proxmox.com>"]``
-  - Add ``license = "AGPL-3"``
+  - In ``[package]`` set:
+      authors.workspace = true
+      license.workspace = true
+      edition.workspace = true
   - Add ``exclude = [ "debian" ]``
   - Add a meaningful ``description``
   - Copy ``debian/copyright`` and ``debian/debcargo.toml`` from another subcrate.

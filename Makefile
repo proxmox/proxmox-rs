@@ -1,26 +1,6 @@
 # Shortcut for common operations:
 
-CRATES = \
-	 proxmox-api-macro \
-	 proxmox-async \
-	 proxmox-borrow \
-	 proxmox-compression \
-	 proxmox-http \
-	 proxmox-io \
-	 proxmox-lang \
-	 proxmox-metrics \
-	 proxmox-rest-server \
-	 proxmox-router \
-	 proxmox-schema \
-	 proxmox-serde \
-	 proxmox-shared-memory \
-	 proxmox-section-config \
-	 proxmox-sortable-macro \
-	 proxmox-subscription \
-	 proxmox-sys \
-	 proxmox-tfa \
-	 proxmox-time \
-	 proxmox-uuid
+CRATES != cargo metadata --format-version=1 | jq -r .workspace_members'[]' | awk '{ print $$1 }'
 
 # By default we just run checks:
 .PHONY: all
