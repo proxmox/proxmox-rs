@@ -11,17 +11,17 @@ exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-base32 = "0.4"
+base32.workspace = true
 base64.workspace = true
 hex.workspace = true
 openssl.workspace = true
 percent-encoding.workspace = true
 serde.workspace = true
-serde_plain = "1.0"
+serde_plain.workspace = true
 serde_json = { workspace = true, optional = true }
 libc = { workspace = true, optional = true }
 url.workspace = true
-webauthn-rs = { version = "0.3", optional = true }
+webauthn-rs = { workspace = true, optional = true }
 
 proxmox-schema = { workspace = true, features = [ "api-macro" ], optional = true }
 proxmox-time = { workspace = true, optional = true }

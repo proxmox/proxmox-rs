@@ -16,22 +16,22 @@ tokio = { workspace = true, features = [ "rt-multi-thread", "signal", "process" 
 [dependencies]
 anyhow.workspace = true
 futures.workspace = true
-handlebars = "3.0"
+handlebars.workspace = true
 http.workspace = true
 hyper = { workspace = true, features = [ "full" ] }
 lazy_static.workspace = true
 libc.workspace = true
 log.workspace = true
 nix.workspace = true
-once_cell = "1.3.1"
+once_cell.workspace = true
 percent-encoding.workspace = true
 regex.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
 serde_json.workspace = true
 tokio = { workspace = true, features = ["signal", "process"] }
 tokio-openssl.workspace = true
-tokio-stream = "0.1.0"
-tower-service = "0.3.0"
+tokio-stream.workspace = true
+tower-service.workspace = true
 url.workspace = true
 
 proxmox-async.workspace = true

@@ -11,15 +11,15 @@ exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-bytes = "1.0"
-crc32fast = "1"
+bytes.workspace = true
+crc32fast.workspace = true
 endian_trait.workspace = true
-flate2 = "1.0"
+flate2.workspace = true
 futures.workspace = true
 libc.workspace = true
+tar.workspace = true
 tokio = { workspace = true, features = [ "fs", "io-util"] }
-walkdir = "2"
-tar = "0.4"
+walkdir.workspace = true
 zstd.workspace = true
 
 proxmox-time.workspace = true
