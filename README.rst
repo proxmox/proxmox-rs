@@ -14,12 +14,11 @@ the dependency needs to point directly to a path or git source.
 Steps for Releases
 ==================
 
-- Cargo.toml updates:
-  - Bump all modified crate versions.
-  - Update all the other crates' Cargo.toml to depend on the new versions if
-    required, then bump their version as well if not already done.
-- Update debian/changelog files in all the crates updated above.
+- Run ./bump.sh <CRATE> [patch|minor|major|<VERSION>]
+-- Fill out changelog
+-- Confirm bump commit
 - Build packages with `make deb`.
+-- Don't forget to commit updated d/control!
 
 Adding Crates
 =============
@@ -36,3 +35,45 @@ Adding Crates
       exclude.workspace = true
   - Add a meaningful ``description``
   - Copy ``debian/copyright`` and ``debian/debcargo.toml`` from another subcrate.
+
+Adding a new Dependency
+=======================
+
+1) At the top level:
+  - Add it to ``[workspace.dependencies]`` specifying the version and any
+    features that should be enabled throughout the workspace
+
+2) In each member's ``Cargo.toml``:
+  - Add it to the desired dependencies section with ``workspace = true`` and no
+    version specified.
+  - If this member requires additional features, add only the extra features to
+    the member dependency.
+
+Updating a Dependency's Version
+===============================
+
+1) At the top level:
+  - Bump the version in ``[workspace.dependencies]`` as desired.
+  - Check for deprecations or breakage throughout the workspace.
+
+Notes on Workspace Inheritance
+==============================
+
+Common metadata (like authors, license, ..) are inherited throughout the
+workspace. If new fields are added that are identical for all crates, they
+should be defined in the top-level ``Cargo.toml`` file's
+``[workspace.package]`` section, and inherited in all members explicitly by
+setting ``FIELD.workspace = true`` in the member's ``[package]`` section.
+
+Dependency information is also inherited throughout the workspace, allowing a
+single dependency specification in the top-level Cargo.toml file to be used by
+all members.
+
+Some restrictions apply:
+- features can only be added in members, never removed (this includes
+  ``default_features = false``!)
+ - the base feature set at the workspace level should be the minimum (possibly
+   empty!) set required by all members
+- workspace dependency specifications cannot include ``optional``
+ - if needed, the ``optional`` flag needs to be set at the member level when
+   using a workspace dependency
