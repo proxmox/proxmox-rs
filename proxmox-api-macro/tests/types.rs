@@ -103,7 +103,7 @@ fn renamed_struct() {
 }
 
 #[api]
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 /// A selection of either 'onekind', 'another-kind' or 'selection-number-three'.
 pub enum Selection {
@@ -111,6 +111,7 @@ pub enum Selection {
     #[serde(rename = "onekind")]
     OneKind,
     /// Some other kind.
+    #[default]
     AnotherKind,
     /// And yet another.
     SelectionNumberThree,
@@ -126,6 +127,7 @@ fn selection_test() {
         EnumEntry::new("another-kind", "Some other kind."),
         EnumEntry::new("selection-number-three", "And yet another."),
     ]))
+    .default("another-kind")
     .schema();
 
     assert_eq!(TEST_SCHEMA, Selection::API_SCHEMA);

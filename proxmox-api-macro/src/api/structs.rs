@@ -404,7 +404,7 @@ fn derive_updater(
     let original_name = &original_struct.ident;
     stru.ident = Ident::new(&format!("{}Updater", stru.ident), stru.ident.span());
 
-    if !util::derived_items(&original_struct.attrs).any(|p| p.is_ident("Default")) {
+    if !util::derives_trait(&original_struct.attrs, "Default") {
         stru.attrs.push(util::make_derive_attribute(
             Span::call_site(),
             quote::quote! { Default },

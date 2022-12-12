@@ -699,6 +699,11 @@ pub fn derived_items(attributes: &[syn::Attribute]) -> DerivedItems {
     }
 }
 
+/// Helper to check if a certain trait is being derived.
+pub fn derives_trait(attributes: &[syn::Attribute], ident: &str) -> bool {
+    derived_items(&attributes).any(|p| p.is_ident(ident))
+}
+
 /// Iterator over the types found in `#[derive(...)]` attributes.
 pub struct DerivedItems<'a> {
     current: Option<<Punctuated<syn::NestedMeta, Token![,]> as IntoIterator>::IntoIter>,
