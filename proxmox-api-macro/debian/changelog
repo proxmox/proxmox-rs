@@ -1,3 +1,11 @@
+rust-proxmox-api-macro (1.0.4-1) stable; urgency=medium
+
+  * support #[default] attribute for types which derive Default
+
+  * documentation updates
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 12 Dec 2022 11:31:34 +0100
+
 rust-proxmox-api-macro (1.0.3-1) stable; urgency=medium
 
   * allow overriding fiel attributes when deriving an updater

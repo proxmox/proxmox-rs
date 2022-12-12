@@ -38,8 +38,8 @@ Provides:
  librust-proxmox-api-macro-1+default-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.0-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.0.3-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.0.3+default-dev (= ${binary:Version})
+ librust-proxmox-api-macro-1.0.4-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-1.0.4+default-dev (= ${binary:Version})
 Description: Proxmox API macro - Rust source code
  This package contains the source for the Rust proxmox-api-macro crate, packaged
  by debcargo for use with cargo and dh-cargo.
