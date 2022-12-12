@@ -24,13 +24,11 @@ serde = { workspace = true, features = [ "derive" ] }
 serde_json.workspace = true
 
 [dev-dependencies.proxmox-schema]
-version = "1.0.0"
-path = "../proxmox-schema"
+workspace = true
 features = [ "test-harness", "api-macro" ]
 
 [dev-dependencies.proxmox-router]
-version = "1.0.0"
-path = "../proxmox-router"
+workspace = true
 features = [ "test-harness" ]
 
 # [features]

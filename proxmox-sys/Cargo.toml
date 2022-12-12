@@ -16,7 +16,7 @@ lazy_static.workspace = true
 libc.workspace = true
 log.workspace = true
 nix.workspace = true
-regex = "1.2"
+regex.workspace = true
 serde_json.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
 zstd = { workspace = true, optional = true}
