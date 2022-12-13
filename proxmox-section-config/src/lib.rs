@@ -1214,10 +1214,13 @@ sync: fail
 pub fn dump_section_config(config: &SectionConfig) -> String {
     let mut res = String::new();
 
+    let mut plugins: Vec<&String> = config.plugins().keys().collect();
+    plugins.sort_unstable();
+
     let plugin_count = config.plugins().len();
 
-    for plugin in config.plugins().values() {
-        let name = plugin.type_name();
+    for name in plugins {
+        let plugin = config.plugins().get(name).unwrap();
         let properties = plugin.properties();
         let skip = match plugin.id_property() {
             Some(id) => vec![id],
