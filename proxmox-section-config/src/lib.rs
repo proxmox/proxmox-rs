@@ -584,7 +584,7 @@ impl SectionConfig {
     }
 
     fn default_format_section_content(
-        type_name: &str,
+        _type_name: &str,
         section_id: &str,
         key: &str,
         value: &Value,
@@ -592,7 +592,7 @@ impl SectionConfig {
         if let Value::Array(array) = value {
             let mut list = String::new();
             for item in array {
-                let line = Self::default_format_section_content(type_name, section_id, key, item)?;
+                let line = Self::default_format_section_content(_type_name, section_id, key, item)?;
                 if !line.is_empty() {
                     list.push_str(&line);
                 }
@@ -698,7 +698,7 @@ impl SectionConfig {
     }
 
     fn systemd_format_section_content(
-        type_name: &str,
+        _type_name: &str,
         section_id: &str,
         key: &str,
         value: &Value,
@@ -706,7 +706,7 @@ impl SectionConfig {
         if let Value::Array(array) = value {
             let mut list = String::new();
             for item in array {
-                let line = Self::systemd_format_section_content(type_name, section_id, key, item)?;
+                let line = Self::systemd_format_section_content(_type_name, section_id, key, item)?;
                 if !line.is_empty() {
                     list.push_str(&line);
                 }
