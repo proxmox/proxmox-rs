@@ -1,3 +1,13 @@
+rust-proxmox-shared-memory (0.2.3-1) stable; urgency=medium
+
+  * move common metadata to workspace
+
+  * use workspace dependencies
+
+  * update nix to 0.26
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 05 Jan 2023 12:13:25 +0100
+
 rust-proxmox-shared-memory (0.2.2-1) unstable; urgency=medium
 
   * bump to proxmox-sys 0.4
