@@ -1,3 +1,9 @@
+rust-proxmox-openid (0.9.8-1) stable; urgency=medium
+
+  * update nix to 0.26
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 05 Jan 2023 12:25:10 +0100
+
 rust-proxmox-openid (0.9.7-1) stable; urgency=medium
 
   * bump proxmox-sys to 0.4
