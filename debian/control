@@ -12,9 +12,10 @@ Build-Depends: debhelper (>= 12),
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.5.1
+Standards-Version: 4.6.1
 Vcs-Git: 
 Vcs-Browser: 
+X-Cargo-Crate: proxmox-acme-rs
 Rules-Requires-Root: no
 
 Package: librust-proxmox-acme-rs-dev
