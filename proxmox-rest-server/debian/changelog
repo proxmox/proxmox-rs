@@ -1,3 +1,15 @@
+rust-proxmox-rest-server (0.2.1-1) stable; urgency=medium
+
+  * update to OwnedFd
+
+  * move common metadata to workspace
+
+  * use workspace dependencies
+
+  * update nix to 0.26
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 05 Jan 2023 12:14:24 +0100
+
 rust-proxmox-rest-server (0.2.0-1) stable; urgency=medium
 
   * initial split out of proxmox-backup workspace
