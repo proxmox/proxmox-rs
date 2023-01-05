@@ -2,9 +2,11 @@
 
 use std::convert::TryFrom;
 use std::mem::MaybeUninit;
+use std::num::NonZeroUsize;
 use std::os::unix::io::RawFd;
-use std::{io, mem, ptr};
+use std::{io, mem};
 
+use anyhow::format_err;
 use nix::sys::mman;
 
 use proxmox_lang::error::io_err_other;
@@ -32,12 +34,14 @@ impl<T> Mmap<T> {
         prot: mman::ProtFlags,
         flags: mman::MapFlags,
     ) -> io::Result<Self> {
-        let byte_len = count * mem::size_of::<T>();
+        let byte_len = NonZeroUsize::new(count * mem::size_of::<T>())
+            .ok_or(io_err_other(format_err!("mapped length must not be zero")))?;
+
         // libc::size_t vs usize
         #[allow(clippy::useless_conversion)]
         let data = mman::mmap(
-            ptr::null_mut(),
-            libc::size_t::try_from(byte_len).map_err(io_err_other)?,
+            None,
+            byte_len,
             prot,
             flags,
             fd,

@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 12),
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
- librust-nix-0.24+default-dev (>= 0.24.1-~~) <!nocheck>,
+ librust-nix-0.26+default-dev (>= 0.26.1-~~) <!nocheck>,
  librust-proxmox-sys-0.4+default-dev (>= 0.4.1-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
@@ -24,7 +24,7 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
- librust-nix-0.24+default-dev (>= 0.24.1-~~),
+ librust-nix-0.26+default-dev (>= 0.26.1-~~),
  librust-proxmox-sys-0.4+default-dev (>= 0.4.1-~~)
 Provides:
  librust-proxmox-shared-memory+default-dev (= ${binary:Version}),
