@@ -1,3 +1,19 @@
+rust-proxmox-sys (0.4.2-1) stable; urgency=medium
+
+  * sys: impl AsFd for PidFd
+
+  * sys: impl AsFd for PTY
+
+  * clippy 1.65 fixes
+
+  * move common metadata to workspace
+
+  * use workspace dependencies
+
+  * update nix to 0.26
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 05 Jan 2023 12:05:38 +0100
+
 rust-proxmox-sys (0.4.1) stable; urgency=medium
 
   * deprecate most of the 'fd' helper types as they are now covered by std
