@@ -1,3 +1,9 @@
+rust-proxmox-openid (0.9.9-1) stable; urgency=medium
+
+  * update openidconnect to 2.4
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 11 Jan 2023 18:41:25 +0100
+
 rust-proxmox-openid (0.9.8-1) stable; urgency=medium
 
   * update nix to 0.26

@@ -54,8 +54,8 @@ Provides:
  librust-proxmox-openid-0+default-dev (= ${binary:Version}),
  librust-proxmox-openid-0.9-dev (= ${binary:Version}),
  librust-proxmox-openid-0.9+default-dev (= ${binary:Version}),
- librust-proxmox-openid-0.9.8-dev (= ${binary:Version}),
- librust-proxmox-openid-0.9.8+default-dev (= ${binary:Version})
+ librust-proxmox-openid-0.9.9-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.9.9+default-dev (= ${binary:Version})
 Description: Rust crate "proxmox-openid" - Rust source code
  This package contains the source for the Rust proxmox-openid crate, packaged by
  debcargo for use with cargo and dh-cargo.
