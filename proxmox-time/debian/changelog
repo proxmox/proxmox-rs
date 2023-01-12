@@ -1,3 +1,13 @@
+rust-proxmox-time (1.1.5-1) stable; urgency=medium
+
+  * re-add epoch_to_rfc3339_utc on wasm target
+
+  * rust edition cleanup
+
+  * clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 12 Jan 2023 14:20:10 +0100
+
 rust-proxmox-time (1.1.4-1) stable; urgency=medium
 
   * Update to nom 7
