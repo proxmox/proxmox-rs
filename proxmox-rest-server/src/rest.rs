@@ -21,11 +21,11 @@ use tokio::time::Instant;
 use tower_service::Service;
 use url::form_urlencoded;
 
-use proxmox_router::http_err;
 use proxmox_router::{
     check_api_permission, ApiHandler, ApiMethod, HttpError, Permission, RpcEnvironment,
     RpcEnvironmentType, UserInformation,
 };
+use proxmox_router::{http_bail, http_err};
 use proxmox_schema::{ObjectSchemaType, ParameterSchema};
 
 use proxmox_async::stream::AsyncReaderStream;
@@ -727,7 +727,7 @@ impl ApiConfig {
             // not Auth required for accessing files!
 
             if method != hyper::Method::GET {
-                bail!("Unsupported HTTP method {}", method);
+                http_bail!(BAD_REQUEST, "invalid http method for path");
             }
 
             if comp_len == 0 {
