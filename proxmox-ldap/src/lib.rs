@@ -1,13 +1,12 @@
 use std::{
+    fmt::{Display, Formatter},
     fs,
     path::{Path, PathBuf},
     time::Duration,
 };
 
 use anyhow::{bail, Error};
-use ldap3::{
-    Ldap, LdapConnAsync, LdapConnSettings, LdapResult, Scope, SearchEntry,
-};
+use ldap3::{Ldap, LdapConnAsync, LdapConnSettings, LdapResult, Scope, SearchEntry};
 use native_tls::{Certificate, TlsConnector, TlsConnectorBuilder};
 use serde::{Deserialize, Serialize};
 
@@ -224,5 +223,79 @@ impl LdapConnection {
         }
 
         bail!("user not found")
+    }
+}
+
+#[allow(dead_code)]
+enum FilterElement<'a> {
+    And(Vec<FilterElement<'a>>),
+    Or(Vec<FilterElement<'a>>),
+    Condition(&'a str, &'a str),
+    Not(Box<FilterElement<'a>>),
+    Verbatim(&'a str),
+}
+
+impl<'a> Display for FilterElement<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        fn write_children(f: &mut Formatter<'_>, children: &[FilterElement]) -> std::fmt::Result {
+            for child in children {
+                write!(f, "{child}")?;
+            }
+
+            Ok(())
+        }
+
+        match self {
+            FilterElement::And(children) => {
+                write!(f, "(&")?;
+                write_children(f, children)?;
+                write!(f, ")")?;
+            }
+            FilterElement::Or(children) => {
+                write!(f, "(|")?;
+                write_children(f, children)?;
+                write!(f, ")")?;
+            }
+            FilterElement::Not(element) => {
+                write!(f, "(!{})", element)?;
+            }
+            FilterElement::Condition(attr, value) => {
+                write!(f, "({attr}={value})")?;
+            }
+            FilterElement::Verbatim(verbatim) => write!(f, "{verbatim}")?,
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FilterElement::*;
+
+    #[test]
+    fn test_filter_elements_to_string() {
+        assert_eq!("(uid=john)", Condition("uid", "john").to_string());
+        assert_eq!(
+            "(!(uid=john))",
+            Not(Box::new(Condition("uid", "john"))).to_string()
+        );
+
+        assert_eq!("(foo=bar)", &Verbatim("(foo=bar)").to_string());
+
+        let filter_string = And(vec![
+            Condition("givenname", "john"),
+            Condition("sn", "doe"),
+            Or(vec![
+                Condition("email", "john@foo"),
+                Condition("email", "john@bar"),
+            ]),
+        ])
+        .to_string();
+
+        assert_eq!(
+            "(&(givenname=john)(sn=doe)(|(email=john@foo)(email=john@bar)))",
+            &filter_string
+        );
     }
 }
