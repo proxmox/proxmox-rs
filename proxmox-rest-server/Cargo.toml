@@ -16,7 +16,7 @@ tokio = { workspace = true, features = [ "rt-multi-thread", "signal", "process" 
 [dependencies]
 anyhow.workspace = true
 futures.workspace = true
-handlebars.workspace = true
+handlebars = { workspace = true, optional = true }
 http.workspace = true
 hyper = { workspace = true, features = [ "full" ] }
 lazy_static.workspace = true
@@ -42,3 +42,7 @@ proxmox-router.workspace = true
 proxmox-schema = { workspace = true, features = [ "api-macro", "upid-api-impl" ] }
 proxmox-time.workspace = true
 proxmox-sys = { workspace = true, features = [ "logrotate", "timer" ] }
+
+[features]
+default = []
+templates = ["dep:handlebars"]

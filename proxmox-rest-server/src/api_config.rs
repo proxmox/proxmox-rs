@@ -1,16 +1,11 @@
 use std::collections::HashMap;
-use std::fs::metadata;
 use std::path::PathBuf;
 use std::pin::Pin;
-use std::sync::{Arc, Mutex, RwLock};
-use std::time::SystemTime;
+use std::sync::{Arc, Mutex};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{format_err, Error};
 use hyper::http::request::Parts;
 use hyper::{Body, Method, Response};
-
-use handlebars::Handlebars;
-use serde::Serialize;
 
 use proxmox_router::{ApiMethod, Router, RpcEnvironmentType, UserInformation};
 use proxmox_sys::fs::{create_path, CreateOptions};
@@ -23,11 +18,12 @@ pub struct ApiConfig {
     router: &'static Router,
     aliases: HashMap<String, PathBuf>,
     env_type: RpcEnvironmentType,
-    templates: RwLock<Handlebars<'static>>,
-    template_files: RwLock<HashMap<String, (SystemTime, PathBuf)>>,
     request_log: Option<Arc<Mutex<FileLogger>>>,
     auth_log: Option<Arc<Mutex<FileLogger>>>,
     adapter: Pin<Box<dyn ServerAdapter + Send + Sync>>,
+
+    #[cfg(feature = "templates")]
+    templates: templates::Templates,
 }
 
 impl ApiConfig {
@@ -50,18 +46,19 @@ impl ApiConfig {
         router: &'static Router,
         env_type: RpcEnvironmentType,
         adapter: impl ServerAdapter + 'static,
-    ) -> Result<Self, Error> {
-        Ok(Self {
+    ) -> Self {
+        Self {
             basedir: basedir.into(),
             router,
             aliases: HashMap::new(),
             env_type,
-            templates: RwLock::new(Handlebars::new()),
-            template_files: RwLock::new(HashMap::new()),
             request_log: None,
             auth_log: None,
             adapter: Box::pin(adapter),
-        })
+
+            #[cfg(feature = "templates")]
+            templates: Default::default(),
+        }
     }
 
     pub(crate) async fn get_index(
@@ -132,67 +129,22 @@ impl ApiConfig {
     /// Register a [Handlebars] template file
     ///
     /// Those templates cane be use with [render_template](Self::render_template) to generate pages.
+    #[cfg(feature = "templates")]
     pub fn register_template<P>(&self, name: &str, path: P) -> Result<(), Error>
     where
         P: Into<PathBuf>,
     {
-        if self.template_files.read().unwrap().contains_key(name) {
-            bail!("template already registered");
-        }
-
-        let path: PathBuf = path.into();
-        let metadata = metadata(&path)?;
-        let mtime = metadata.modified()?;
-
-        self.templates
-            .write()
-            .unwrap()
-            .register_template_file(name, &path)?;
-        self.template_files
-            .write()
-            .unwrap()
-            .insert(name.to_string(), (mtime, path));
-
-        Ok(())
+        self.templates.register(name, path)
     }
 
     /// Checks if the template was modified since the last rendering
     /// if yes, it loads a the new version of the template
+    #[cfg(feature = "templates")]
     pub fn render_template<T>(&self, name: &str, data: &T) -> Result<String, Error>
     where
-        T: Serialize,
+        T: serde::Serialize,
     {
-        let path;
-        let mtime;
-        {
-            let template_files = self.template_files.read().unwrap();
-            let (old_mtime, old_path) = template_files
-                .get(name)
-                .ok_or_else(|| format_err!("template not found"))?;
-
-            mtime = metadata(old_path)?.modified()?;
-            if mtime <= *old_mtime {
-                return self
-                    .templates
-                    .read()
-                    .unwrap()
-                    .render(name, data)
-                    .map_err(|err| format_err!("{}", err));
-            }
-            path = old_path.to_path_buf();
-        }
-
-        {
-            let mut template_files = self.template_files.write().unwrap();
-            let mut templates = self.templates.write().unwrap();
-
-            templates.register_template_file(name, &path)?;
-            template_files.insert(name.to_string(), (mtime, path));
-
-            templates
-                .render(name, data)
-                .map_err(|err| format_err!("{}", err))
-        }
+        self.templates.render(name, data)
     }
 
     /// Enable the access log feature
@@ -280,5 +232,87 @@ impl ApiConfig {
 
     pub(crate) fn get_auth_log(&self) -> Option<&Arc<Mutex<FileLogger>>> {
         self.auth_log.as_ref()
+    }
+}
+
+#[cfg(feature = "templates")]
+mod templates {
+    use std::collections::HashMap;
+    use std::fs::metadata;
+    use std::path::PathBuf;
+    use std::sync::RwLock;
+    use std::time::SystemTime;
+
+    use anyhow::{bail, format_err, Error};
+    use handlebars::Handlebars;
+    use serde::Serialize;
+
+    #[derive(Default)]
+    pub struct Templates {
+        templates: RwLock<Handlebars<'static>>,
+        template_files: RwLock<HashMap<String, (SystemTime, PathBuf)>>,
+    }
+
+    impl Templates {
+        pub fn register<P>(&self, name: &str, path: P) -> Result<(), Error>
+        where
+            P: Into<PathBuf>,
+        {
+            if self.template_files.read().unwrap().contains_key(name) {
+                bail!("template already registered");
+            }
+
+            let path: PathBuf = path.into();
+            let metadata = metadata(&path)?;
+            let mtime = metadata.modified()?;
+
+            self.templates
+                .write()
+                .unwrap()
+                .register_template_file(name, &path)?;
+            self.template_files
+                .write()
+                .unwrap()
+                .insert(name.to_string(), (mtime, path));
+
+            Ok(())
+        }
+
+        pub fn render<T>(&self, name: &str, data: &T) -> Result<String, Error>
+        where
+            T: Serialize,
+        {
+            let path;
+            let mtime;
+            {
+                let template_files = self.template_files.read().unwrap();
+                let (old_mtime, old_path) = template_files
+                    .get(name)
+                    .ok_or_else(|| format_err!("template not found"))?;
+
+                mtime = metadata(old_path)?.modified()?;
+                if mtime <= *old_mtime {
+                    return self
+                        .templates
+                        .read()
+                        .unwrap()
+                        .render(name, data)
+                        .map_err(|err| format_err!("{}", err));
+                }
+                path = old_path.to_path_buf();
+            }
+
+            {
+                let mut template_files = self.template_files.write().unwrap();
+                let mut templates = self.templates.write().unwrap();
+
+                templates.register_template_file(name, &path)?;
+                template_files.insert(name.to_string(), (mtime, path));
+
+                templates
+                    .render(name, data)
+                    .map_err(|err| format_err!("{}", err))
+            }
+        }
     }
 }
