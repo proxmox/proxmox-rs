@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::future::Future;
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
@@ -40,18 +41,14 @@ impl ApiConfig {
     /// (index). Please note that this functions gets a reference to
     /// the [ApiConfig], so it can use [Handlebars] templates
     /// ([render_template](Self::render_template) to generate pages.
-    pub fn new<B: Into<PathBuf>>(
-        basedir: B,
-        env_type: RpcEnvironmentType,
-        adapter: impl ServerAdapter + 'static,
-    ) -> Self {
+    pub fn new<B: Into<PathBuf>>(basedir: B, env_type: RpcEnvironmentType) -> Self {
         Self {
             basedir: basedir.into(),
             aliases: HashMap::new(),
             env_type,
             request_log: None,
             auth_log: None,
-            adapter: Box::pin(adapter),
+            adapter: Box::pin(DummyAdapter),
             handlers: Vec::new(),
 
             #[cfg(feature = "templates")]
@@ -334,5 +331,30 @@ mod templates {
                     .map_err(|err| format_err!("{}", err))
             }
         }
+    }
+}
+
+pub struct DummyAdapter;
+
+impl ServerAdapter for DummyAdapter {
+    fn get_index(
+        &self,
+        _rest_env: RestEnvironment,
+        _parts: Parts,
+    ) -> Pin<Box<dyn Future<Output = Response<Body>> + Send>> {
+        Box::pin(async move {
+            Response::builder()
+                .status(400)
+                .body("no index defined".into())
+                .unwrap()
+        })
+    }
+
+    fn check_auth<'a>(
+        &'a self,
+        _headers: &'a http::HeaderMap,
+        _method: &'a http::Method,
+    ) -> crate::ServerAdapterCheckAuth<'a> {
+        Box::pin(async move { Err(crate::AuthError::NoData) })
     }
 }
