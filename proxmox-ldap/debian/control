@@ -1,0 +1,43 @@
+Source: rust-proxmox-ldap
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-ldap3-0.11+default-dev <!nocheck>,
+ librust-ldap3-0.11+tls-dev <!nocheck>,
+ librust-native-tls-0.2+default-dev <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.6.1
+Vcs-Git: git://git.proxmox.com/git/proxmox-ldap.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox-ldap.git
+X-Cargo-Crate: proxmox-ldap
+Rules-Requires-Root: no
+
+Package: librust-proxmox-ldap-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-ldap3-0.11+default-dev,
+ librust-ldap3-0.11+tls-dev,
+ librust-native-tls-0.2+default-dev,
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev
+Provides:
+ librust-proxmox-ldap+default-dev (= ${binary:Version}),
+ librust-proxmox-ldap-0-dev (= ${binary:Version}),
+ librust-proxmox-ldap-0+default-dev (= ${binary:Version}),
+ librust-proxmox-ldap-0.1-dev (= ${binary:Version}),
+ librust-proxmox-ldap-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-ldap-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-ldap-0.1.0+default-dev (= ${binary:Version})
+Description: Proxmox library for LDAP authentication/synchronization - Rust source code
+ This package contains the source for the Rust proxmox-ldap crate, packaged by
+ debcargo for use with cargo and dh-cargo.
