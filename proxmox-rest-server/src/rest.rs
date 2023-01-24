@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::hash::BuildHasher;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
@@ -32,7 +33,7 @@ use proxmox_async::stream::AsyncReaderStream;
 use proxmox_compression::{DeflateEncoder, Level};
 
 use crate::{
-    formatter::*, normalize_uri_path, ApiConfig, AuthError, CompressionMethod, FileLogger,
+    formatter::*, normalize_path, ApiConfig, AuthError, CompressionMethod, FileLogger,
     RestEnvironment,
 };
 
@@ -42,7 +43,7 @@ extern "C" {
 
 struct AuthStringExtension(String);
 
-struct EmptyUserInformation {}
+pub(crate) struct EmptyUserInformation {}
 
 impl UserInformation for EmptyUserInformation {
     fn is_superuser(&self, _userid: &str) -> bool {
@@ -90,7 +91,7 @@ impl<T: PeerAddress> Service<&T> for RestServer {
             Err(err) => Err(format_err!("unable to get peer address - {}", err)),
             Ok(peer) => Ok(ApiService {
                 peer,
-                api_config: self.api_config.clone(),
+                api_config: Arc::clone(&self.api_config),
             }),
         })
     }
@@ -387,6 +388,14 @@ async fn proxy_protected_request(
     Ok(resp)
 }
 
+fn delay_unauth_time() -> std::time::Instant {
+    std::time::Instant::now() + std::time::Duration::from_millis(3000)
+}
+
+fn access_forbidden_time() -> std::time::Instant {
+    std::time::Instant::now() + std::time::Duration::from_millis(500)
+}
+
 pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHasher + Send>(
     mut rpcenv: Env,
     info: &'static ApiMethod,
@@ -395,7 +404,6 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
     req_body: Body,
     uri_param: HashMap<String, String, S>,
 ) -> Result<Response<Body>, Error> {
-    let delay_unauth_time = std::time::Instant::now() + std::time::Duration::from_millis(3000);
     let compression = extract_compression_method(&parts.headers);
 
     let result = match info.handler {
@@ -438,10 +446,104 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
         Err(err) => {
             if let Some(httperr) = err.downcast_ref::<HttpError>() {
                 if httperr.code == StatusCode::UNAUTHORIZED {
-                    tokio::time::sleep_until(Instant::from_std(delay_unauth_time)).await;
+                    tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
                 }
             }
             formatter.format_error(err)
+        }
+    };
+
+    let resp = match compression {
+        Some(CompressionMethod::Deflate) => {
+            resp.headers_mut().insert(
+                header::CONTENT_ENCODING,
+                CompressionMethod::Deflate.content_encoding(),
+            );
+            resp.map(|body| {
+                Body::wrap_stream(DeflateEncoder::with_quality(
+                    TryStreamExt::map_err(body, |err| {
+                        proxmox_lang::io_format_err!("error during compression: {}", err)
+                    }),
+                    Level::Default,
+                ))
+            })
+        }
+        None => resp,
+    };
+
+    if info.reload_timezone {
+        unsafe {
+            tzset();
+        }
+    }
+
+    Ok(resp)
+}
+
+async fn handle_unformatted_api_request<Env: RpcEnvironment, S: 'static + BuildHasher + Send>(
+    mut rpcenv: Env,
+    info: &'static ApiMethod,
+    parts: Parts,
+    req_body: Body,
+    uri_param: HashMap<String, String, S>,
+) -> Result<Response<Body>, Error> {
+    let compression = extract_compression_method(&parts.headers);
+
+    fn to_json_response<Env: RpcEnvironment>(
+        value: Value,
+        env: &Env,
+    ) -> Result<Response<Body>, Error> {
+        if let Some(attr) = env.result_attrib().as_object() {
+            if !attr.is_empty() {
+                http_bail!(
+                    INTERNAL_SERVER_ERROR,
+                    "result attributes are no longer supported"
+                );
+            }
+        }
+        let value = serde_json::to_string(&value)?;
+        Ok(Response::builder().status(200).body(value.into())?)
+    }
+
+    let result = match info.handler {
+        ApiHandler::AsyncHttp(handler) => {
+            let params = parse_query_parameters(info.parameters, "", &parts, &uri_param)?;
+            (handler)(parts, req_body, params, info, Box::new(rpcenv)).await
+        }
+        ApiHandler::Sync(handler) => {
+            let params =
+                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+            (handler)(params, info, &mut rpcenv).and_then(|v| to_json_response(v, &rpcenv))
+        }
+        ApiHandler::Async(handler) => {
+            let params =
+                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+            (handler)(params, info, &mut rpcenv)
+                .await
+                .and_then(|v| to_json_response(v, &rpcenv))
+        }
+        ApiHandler::StreamingSync(_) => http_bail!(
+            INTERNAL_SERVER_ERROR,
+            "old-style streaming calls not supported"
+        ),
+        ApiHandler::StreamingAsync(_) => http_bail!(
+            INTERNAL_SERVER_ERROR,
+            "old-style streaming calls not supported"
+        ),
+        _ => {
+            bail!("Unknown API handler type");
+        }
+    };
+
+    let mut resp = match result {
+        Ok(resp) => resp,
+        Err(err) => {
+            if let Some(httperr) = err.downcast_ref::<HttpError>() {
+                if httperr.code == StatusCode::UNAUTHORIZED {
+                    tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
+                }
+            }
+            return Err(err);
         }
     };
 
@@ -575,9 +677,13 @@ async fn handle_static_file_download(
     filename: PathBuf,
     compression: Option<CompressionMethod>,
 ) -> Result<Response<Body>, Error> {
-    let metadata = tokio::fs::metadata(filename.clone())
-        .map_err(|err| http_err!(BAD_REQUEST, "File access problems: {}", err))
-        .await?;
+    let metadata = match tokio::fs::metadata(filename.clone()).await {
+        Ok(metadata) => metadata,
+        Err(err) if err.kind() == io::ErrorKind::NotFound => {
+            http_bail!(NOT_FOUND, "no such file: {filename:?}")
+        }
+        Err(err) => http_bail!(BAD_REQUEST, "File access problems: {}", err),
+    };
 
     let (content_type, nocomp) = extension_to_content_type(&filename);
     let compression = if nocomp { None } else { compression };
@@ -609,9 +715,8 @@ impl ApiConfig {
     ) -> Result<Response<Body>, Error> {
         let (parts, body) = req.into_parts();
         let method = parts.method.clone();
-        let (path, components) = normalize_uri_path(parts.uri.path())?;
-
-        let comp_len = components.len();
+        let path = normalize_path(parts.uri.path())?;
+        let components: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
 
         let query = parts.uri.query().unwrap_or_default();
         if path.len() + query.len() > MAX_URI_QUERY_LENGTH {
@@ -626,129 +731,320 @@ impl ApiConfig {
 
         rpcenv.set_client_ip(Some(*peer));
 
-        let delay_unauth_time = std::time::Instant::now() + std::time::Duration::from_millis(3000);
-        let access_forbidden_time =
-            std::time::Instant::now() + std::time::Duration::from_millis(500);
+        if let Some(handler) = self.find_handler(&components) {
+            let relative_path_components = &components[handler.prefix.len()..];
+            return handler
+                .handle_request(ApiRequestData {
+                    parts,
+                    body,
+                    peer,
+                    config: &self,
+                    full_path: &path,
+                    relative_path_components,
+                    rpcenv,
+                })
+                .await;
+        }
 
-        if comp_len >= 1 && components[0] == "api2" {
-            if comp_len >= 2 {
-                let format = components[1];
+        if method != hyper::Method::GET {
+            http_bail!(BAD_REQUEST, "invalid http method for path");
+        }
 
-                let formatter: &dyn OutputFormatter = match format {
-                    "json" => JSON_FORMATTER,
-                    "extjs" => EXTJS_FORMATTER,
-                    _ => bail!("Unsupported output format '{}'.", format),
-                };
-
-                let mut uri_param = HashMap::new();
-                let api_method = self.find_method(&components[2..], method.clone(), &mut uri_param);
-
-                let mut auth_required = true;
-                if let Some(api_method) = api_method {
-                    if let Permission::World = *api_method.access.permission {
-                        auth_required = false; // no auth for endpoints with World permission
-                    }
+        if components.is_empty() {
+            match self.check_auth(&parts.headers, &method).await {
+                Ok((auth_id, _user_info)) => {
+                    rpcenv.set_auth_id(Some(auth_id));
+                    return Ok(self.get_index(rpcenv, parts).await);
                 }
-
-                let mut user_info: Box<dyn UserInformation + Send + Sync> =
-                    Box::new(EmptyUserInformation {});
-
-                if auth_required {
-                    match self.check_auth(&parts.headers, &method).await {
-                        Ok((authid, info)) => {
-                            rpcenv.set_auth_id(Some(authid));
-                            user_info = info;
-                        }
-                        Err(auth_err) => {
-                            let err = match auth_err {
-                                AuthError::Generic(err) => err,
-                                AuthError::NoData => {
-                                    format_err!("no authentication credentials provided.")
-                                }
-                            };
-                            // fixme: log Username??
-                            rpcenv.log_failed_auth(None, &err.to_string());
-
-                            // always delay unauthorized calls by 3 seconds (from start of request)
-                            let err = http_err!(UNAUTHORIZED, "authentication failed - {}", err);
-                            tokio::time::sleep_until(Instant::from_std(delay_unauth_time)).await;
-                            return Ok(formatter.format_error(err));
-                        }
-                    }
+                Err(AuthError::Generic(_)) => {
+                    tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
                 }
-
-                match api_method {
-                    None => {
-                        let err = http_err!(NOT_FOUND, "Path '{}' not found.", path);
-                        return Ok(formatter.format_error(err));
-                    }
-                    Some(api_method) => {
-                        let auth_id = rpcenv.get_auth_id();
-                        let user_info = user_info;
-
-                        if !check_api_permission(
-                            api_method.access.permission,
-                            auth_id.as_deref(),
-                            &uri_param,
-                            user_info.as_ref(),
-                        ) {
-                            let err = http_err!(FORBIDDEN, "permission check failed");
-                            tokio::time::sleep_until(Instant::from_std(access_forbidden_time))
-                                .await;
-                            return Ok(formatter.format_error(err));
-                        }
-
-                        let result =
-                            if api_method.protected && env_type == RpcEnvironmentType::PUBLIC {
-                                proxy_protected_request(api_method, parts, body, peer).await
-                            } else {
-                                handle_api_request(
-                                    rpcenv, api_method, formatter, parts, body, uri_param,
-                                )
-                                .await
-                            };
-
-                        let mut response = match result {
-                            Ok(resp) => resp,
-                            Err(err) => formatter.format_error(err),
-                        };
-
-                        if let Some(auth_id) = auth_id {
-                            response
-                                .extensions_mut()
-                                .insert(AuthStringExtension(auth_id));
-                        }
-
-                        return Ok(response);
-                    }
-                }
+                Err(AuthError::NoData) => {}
             }
+            return Ok(self.get_index(rpcenv, parts).await);
         } else {
-            // not Auth required for accessing files!
+            let filename = self.find_alias(&components);
+            let compression = extract_compression_method(&parts.headers);
+            return handle_static_file_download(filename, compression).await;
+        }
+    }
+}
 
-            if method != hyper::Method::GET {
-                http_bail!(BAD_REQUEST, "invalid http method for path");
-            }
+pub(crate) struct Handler {
+    pub prefix: &'static [&'static str],
+    action: Action,
+}
 
-            if comp_len == 0 {
-                match self.check_auth(&parts.headers, &method).await {
-                    Ok((auth_id, _user_info)) => {
-                        rpcenv.set_auth_id(Some(auth_id));
-                        return Ok(self.get_index(rpcenv, parts).await);
-                    }
-                    Err(AuthError::Generic(_)) => {
-                        tokio::time::sleep_until(Instant::from_std(delay_unauth_time)).await;
-                    }
-                    Err(AuthError::NoData) => {}
-                }
-                return Ok(self.get_index(rpcenv, parts).await);
-            } else {
-                let filename = self.find_alias(&components);
-                let compression = extract_compression_method(&parts.headers);
-                return handle_static_file_download(filename, compression).await;
+impl Handler {
+    async fn handle_request(&self, data: ApiRequestData<'_>) -> Result<Response<Body>, Error> {
+        self.action.handle_request(data).await
+    }
+
+    pub(crate) fn default_api2_handler(router: &'static proxmox_router::Router) -> Self {
+        Self::formatted_router(&["api2"], router)
+    }
+
+    pub(crate) fn formatted_router(
+        prefix: &'static [&'static str],
+        router: &'static proxmox_router::Router,
+    ) -> Self {
+        Self {
+            prefix,
+            action: Action::Formatted(Formatted { router }),
+        }
+    }
+
+    pub(crate) fn unformatted_router(
+        prefix: &'static [&'static str],
+        router: &'static proxmox_router::Router,
+    ) -> Self {
+        Self {
+            prefix,
+            action: Action::Unformatted(Unformatted { router }),
+        }
+    }
+}
+
+pub(crate) enum Action {
+    Formatted(Formatted),
+    Unformatted(Unformatted),
+}
+
+impl Action {
+    async fn handle_request(&self, data: ApiRequestData<'_>) -> Result<Response<Body>, Error> {
+        match self {
+            Action::Formatted(a) => a.handle_request(data).await,
+            Action::Unformatted(a) => a.handle_request(data).await,
+        }
+    }
+}
+
+pub struct ApiRequestData<'a> {
+    parts: Parts,
+    body: Body,
+    peer: &'a std::net::SocketAddr,
+    config: &'a ApiConfig,
+    full_path: &'a str,
+    relative_path_components: &'a [&'a str],
+    rpcenv: RestEnvironment,
+}
+
+pub(crate) struct Formatted {
+    router: &'static proxmox_router::Router,
+}
+
+impl Formatted {
+    pub async fn handle_request(
+        &self,
+        ApiRequestData {
+            parts,
+            body,
+            peer,
+            config,
+            full_path,
+            relative_path_components,
+            mut rpcenv,
+        }: ApiRequestData<'_>,
+    ) -> Result<Response<Body>, Error> {
+        if relative_path_components.is_empty() {
+            http_bail!(NOT_FOUND, "invalid api path '{}'", full_path);
+        }
+
+        let format = relative_path_components[0];
+
+        let formatter: &dyn OutputFormatter = match format {
+            "json" => JSON_FORMATTER,
+            "extjs" => EXTJS_FORMATTER,
+            _ => bail!("Unsupported output format '{}'.", format),
+        };
+
+        let mut uri_param = HashMap::new();
+        let api_method = self.router.find_method(
+            &relative_path_components[1..],
+            parts.method.clone(),
+            &mut uri_param,
+        );
+
+        let mut auth_required = true;
+        if let Some(api_method) = api_method {
+            if let Permission::World = *api_method.access.permission {
+                auth_required = false; // no auth for endpoints with World permission
             }
         }
 
-        Err(http_err!(NOT_FOUND, "Path '{}' not found.", path))
+        let mut user_info: Box<dyn UserInformation + Send + Sync> =
+            Box::new(EmptyUserInformation {});
+
+        if auth_required {
+            match config.check_auth(&parts.headers, &parts.method).await {
+                Ok((authid, info)) => {
+                    rpcenv.set_auth_id(Some(authid));
+                    user_info = info;
+                }
+                Err(auth_err) => {
+                    let err = match auth_err {
+                        AuthError::Generic(err) => err,
+                        AuthError::NoData => {
+                            format_err!("no authentication credentials provided.")
+                        }
+                    };
+                    // fixme: log Username??
+                    rpcenv.log_failed_auth(None, &err.to_string());
+
+                    // always delay unauthorized calls by 3 seconds (from start of request)
+                    let err = http_err!(UNAUTHORIZED, "authentication failed - {}", err);
+                    tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
+                    return Ok(formatter.format_error(err));
+                }
+            }
+        }
+
+        match api_method {
+            None => {
+                let err = http_err!(NOT_FOUND, "Path '{}' not found.", full_path);
+                return Ok(formatter.format_error(err));
+            }
+            Some(api_method) => {
+                let auth_id = rpcenv.get_auth_id();
+                let user_info = user_info;
+
+                if !check_api_permission(
+                    api_method.access.permission,
+                    auth_id.as_deref(),
+                    &uri_param,
+                    user_info.as_ref(),
+                ) {
+                    let err = http_err!(FORBIDDEN, "permission check failed");
+                    tokio::time::sleep_until(Instant::from_std(access_forbidden_time())).await;
+                    return Ok(formatter.format_error(err));
+                }
+
+                let result = if api_method.protected
+                    && rpcenv.env_type == RpcEnvironmentType::PUBLIC
+                {
+                    proxy_protected_request(api_method, parts, body, &peer).await
+                } else {
+                    handle_api_request(rpcenv, api_method, formatter, parts, body, uri_param).await
+                };
+
+                let mut response = match result {
+                    Ok(resp) => resp,
+                    Err(err) => formatter.format_error(err),
+                };
+
+                if let Some(auth_id) = auth_id {
+                    response
+                        .extensions_mut()
+                        .insert(AuthStringExtension(auth_id));
+                }
+
+                return Ok(response);
+            }
+        }
+    }
+}
+
+pub(crate) struct Unformatted {
+    router: &'static proxmox_router::Router,
+}
+
+impl Unformatted {
+    pub async fn handle_request(
+        &self,
+        ApiRequestData {
+            parts,
+            body,
+            peer,
+            config,
+            full_path,
+            relative_path_components,
+            mut rpcenv,
+        }: ApiRequestData<'_>,
+    ) -> Result<Response<Body>, Error> {
+        if relative_path_components.is_empty() {
+            http_bail!(NOT_FOUND, "invalid api path '{}'", full_path);
+        }
+
+        let mut uri_param = HashMap::new();
+        let api_method = self.router.find_method(
+            relative_path_components,
+            parts.method.clone(),
+            &mut uri_param,
+        );
+
+        let mut auth_required = true;
+        if let Some(api_method) = api_method {
+            if let Permission::World = *api_method.access.permission {
+                auth_required = false; // no auth for endpoints with World permission
+            }
+        }
+
+        let user_info: Box<dyn UserInformation + Send + Sync>;
+
+        if auth_required {
+            match config.check_auth(&parts.headers, &parts.method).await {
+                Ok((authid, info)) => {
+                    rpcenv.set_auth_id(Some(authid));
+                    user_info = info;
+                }
+                Err(auth_err) => {
+                    let err = match auth_err {
+                        AuthError::Generic(err) => err,
+                        AuthError::NoData => {
+                            format_err!("no authentication credentials provided.")
+                        }
+                    };
+                    // fixme: log Username??
+                    rpcenv.log_failed_auth(None, &err.to_string());
+
+                    // always delay unauthorized calls by 3 seconds (from start of request)
+                    let err = http_err!(UNAUTHORIZED, "authentication failed - {}", err);
+                    tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
+                    return Err(err);
+                }
+            }
+        } else {
+            user_info = Box::new(EmptyUserInformation {});
+        }
+
+        match api_method {
+            None => http_bail!(NOT_FOUND, "Path '{}' not found.", full_path),
+            Some(api_method) => {
+                let auth_id = rpcenv.get_auth_id();
+                let user_info = user_info;
+
+                if !check_api_permission(
+                    api_method.access.permission,
+                    auth_id.as_deref(),
+                    &uri_param,
+                    user_info.as_ref(),
+                ) {
+                    let err = http_err!(FORBIDDEN, "permission check failed");
+                    tokio::time::sleep_until(Instant::from_std(access_forbidden_time())).await;
+                    return Err(err);
+                }
+
+                let result = if api_method.protected
+                    && rpcenv.env_type == RpcEnvironmentType::PUBLIC
+                {
+                    proxy_protected_request(api_method, parts, body, &peer).await
+                } else {
+                    handle_unformatted_api_request(rpcenv, api_method, parts, body, uri_param).await
+                };
+
+                let mut response = match result {
+                    Ok(resp) => resp,
+                    Err(err) => crate::formatter::error_to_response(err),
+                };
+
+                if let Some(auth_id) = auth_id {
+                    response
+                        .extensions_mut()
+                        .insert(AuthStringExtension(auth_id));
+                }
+
+                return Ok(response);
+            }
+        }
     }
 }

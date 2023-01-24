@@ -9,7 +9,7 @@ use crate::ApiConfig;
 
 /// Encapsulates information about the runtime environment
 pub struct RestEnvironment {
-    env_type: RpcEnvironmentType,
+    pub(crate) env_type: RpcEnvironmentType,
     result_attributes: Value,
     auth_id: Option<String>,
     client_ip: Option<SocketAddr>,

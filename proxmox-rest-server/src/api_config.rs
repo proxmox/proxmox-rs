@@ -5,22 +5,23 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::{format_err, Error};
 use hyper::http::request::Parts;
-use hyper::{Body, Method, Response};
+use hyper::{Body, Response};
 
-use proxmox_router::{ApiMethod, Router, RpcEnvironmentType, UserInformation};
+use proxmox_router::{Router, RpcEnvironmentType, UserInformation};
 use proxmox_sys::fs::{create_path, CreateOptions};
 
+use crate::rest::Handler;
 use crate::{AuthError, CommandSocket, FileLogOptions, FileLogger, RestEnvironment, ServerAdapter};
 
 /// REST server configuration
 pub struct ApiConfig {
     basedir: PathBuf,
-    router: &'static Router,
     aliases: HashMap<String, PathBuf>,
     env_type: RpcEnvironmentType,
     request_log: Option<Arc<Mutex<FileLogger>>>,
     auth_log: Option<Arc<Mutex<FileLogger>>>,
     adapter: Pin<Box<dyn ServerAdapter + Send + Sync>>,
+    handlers: Vec<Handler>,
 
     #[cfg(feature = "templates")]
     templates: templates::Templates,
@@ -30,8 +31,6 @@ impl ApiConfig {
     /// Creates a new instance
     ///
     /// `basedir` - File lookups are relative to this directory.
-    ///
-    /// `router` - The REST API definition.
     ///
     /// `env_type` - The environment type.
     ///
@@ -43,18 +42,17 @@ impl ApiConfig {
     /// ([render_template](Self::render_template) to generate pages.
     pub fn new<B: Into<PathBuf>>(
         basedir: B,
-        router: &'static Router,
         env_type: RpcEnvironmentType,
         adapter: impl ServerAdapter + 'static,
     ) -> Self {
         Self {
             basedir: basedir.into(),
-            router,
             aliases: HashMap::new(),
             env_type,
             request_log: None,
             auth_log: None,
             adapter: Box::pin(adapter),
+            handlers: Vec::new(),
 
             #[cfg(feature = "templates")]
             templates: Default::default(),
@@ -75,15 +73,6 @@ impl ApiConfig {
         method: &hyper::Method,
     ) -> Result<(String, Box<dyn UserInformation + Sync + Send>), AuthError> {
         self.adapter.check_auth(headers, method).await
-    }
-
-    pub(crate) fn find_method(
-        &self,
-        components: &[&str],
-        method: Method,
-        uri_param: &mut HashMap<String, String>,
-    ) -> Option<&'static ApiMethod> {
-        self.router.find_method(components, method, uri_param)
     }
 
     pub(crate) fn find_alias(&self, mut components: &[&str]) -> PathBuf {
@@ -232,6 +221,37 @@ impl ApiConfig {
 
     pub(crate) fn get_auth_log(&self) -> Option<&Arc<Mutex<FileLogger>>> {
         self.auth_log.as_ref()
+    }
+
+    pub(crate) fn find_handler<'a>(&'a self, path_components: &[&str]) -> Option<&'a Handler> {
+        self.handlers
+            .iter()
+            .find(|handler| path_components.strip_prefix(handler.prefix).is_some())
+    }
+
+    pub fn add_default_api2_handler(&mut self, router: &'static Router) -> &mut Self {
+        self.handlers.push(Handler::default_api2_handler(router));
+        self
+    }
+
+    pub fn add_formatted_router(
+        &mut self,
+        prefix: &'static [&'static str],
+        router: &'static Router,
+    ) -> &mut Self {
+        self.handlers
+            .push(Handler::formatted_router(prefix, router));
+        self
+    }
+
+    pub fn add_unformatted_router(
+        &mut self,
+        prefix: &'static [&'static str],
+        router: &'static Router,
+    ) -> &mut Self {
+        self.handlers
+            .push(Handler::unformatted_router(prefix, router));
+        self
     }
 }
 

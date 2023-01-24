@@ -15,6 +15,7 @@
 //!   - worker task management
 //! * generic interface to authenticate user
 
+use std::fmt;
 use std::future::Future;
 use std::os::unix::io::{FromRawFd, OwnedFd};
 use std::pin::Pin;
@@ -222,7 +223,9 @@ pub fn cookie_from_header(headers: &http::HeaderMap, cookie_name: &str) -> Optio
 ///
 /// Do not allow ".", "..", or hidden files ".XXXX"
 /// Also remove empty path components
-pub fn normalize_uri_path(path: &str) -> Result<(String, Vec<&str>), Error> {
+pub fn normalize_path_with_components(
+    path: &str,
+) -> Result<(String, Vec<&str>), IllegalPathComponents> {
     let items = path.split('/');
 
     let mut path = String::new();
@@ -233,7 +236,7 @@ pub fn normalize_uri_path(path: &str) -> Result<(String, Vec<&str>), Error> {
             continue;
         }
         if name.starts_with('.') {
-            bail!("Path contains illegal components.");
+            return Err(IllegalPathComponents);
         }
         path.push('/');
         path.push_str(name);
@@ -241,4 +244,34 @@ pub fn normalize_uri_path(path: &str) -> Result<(String, Vec<&str>), Error> {
     }
 
     Ok((path, components))
+}
+
+#[derive(Debug)]
+pub struct IllegalPathComponents;
+
+impl std::error::Error for IllegalPathComponents {}
+
+impl fmt::Display for IllegalPathComponents {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("path contains illegal components")
+    }
+}
+
+/// Normalize a uri path by stripping empty components.
+/// Components starting with a '.' are illegal.
+pub fn normalize_path(path: &str) -> Result<String, IllegalPathComponents> {
+    let mut output = String::with_capacity(path.len());
+    for item in path.split('/') {
+        if item.is_empty() {
+            continue;
+        }
+
+        if item.starts_with('.') {
+            return Err(IllegalPathComponents);
+        }
+
+        output.push('/');
+        output.push_str(item);
+    }
+    Ok(output)
 }
