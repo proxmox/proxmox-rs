@@ -62,7 +62,7 @@ pub struct SearchParameters {
     pub user_filter: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 /// Single LDAP user search result
 pub struct SearchResult {
     /// The full user's domain
