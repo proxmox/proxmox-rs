@@ -7,6 +7,7 @@ members = [
     "proxmox-http",
     "proxmox-io",
     "proxmox-lang",
+    "proxmox-ldap",
     "proxmox-metrics",
     "proxmox-rest-server",
     "proxmox-router",
