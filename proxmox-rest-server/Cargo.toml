@@ -38,7 +38,6 @@ proxmox-async.workspace = true
 proxmox-compression.workspace = true
 proxmox-io.workspace = true
 proxmox-lang.workspace = true
-proxmox-http = { workspace = true, features = [ "client" ] }
 proxmox-router.workspace = true
 proxmox-schema = { workspace = true, features = [ "api-macro", "upid-api-impl" ] }
 proxmox-time.workspace = true

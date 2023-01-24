@@ -28,8 +28,6 @@ use proxmox_router::{
 };
 use proxmox_schema::{ObjectSchemaType, ParameterSchema};
 
-use proxmox_http::client::RateLimitedStream;
-
 use proxmox_async::stream::AsyncReaderStream;
 use proxmox_compression::{DeflateEncoder, Level};
 
@@ -78,9 +76,7 @@ impl RestServer {
     }
 }
 
-impl Service<&Pin<Box<tokio_openssl::SslStream<RateLimitedStream<tokio::net::TcpStream>>>>>
-    for RestServer
-{
+impl<T: PeerAddress> Service<&T> for RestServer {
     type Response = ApiService;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<ApiService, Error>> + Send>>;
@@ -89,82 +85,45 @@ impl Service<&Pin<Box<tokio_openssl::SslStream<RateLimitedStream<tokio::net::Tcp
         Poll::Ready(Ok(()))
     }
 
-    fn call(
-        &mut self,
-        ctx: &Pin<Box<tokio_openssl::SslStream<RateLimitedStream<tokio::net::TcpStream>>>>,
-    ) -> Self::Future {
-        match ctx.get_ref().peer_addr() {
-            Err(err) => future::err(format_err!("unable to get peer address - {}", err)).boxed(),
-            Ok(peer) => future::ok(ApiService {
+    fn call(&mut self, ctx: &T) -> Self::Future {
+        let result = match ctx.peer_addr() {
+            Err(err) => Err(format_err!("unable to get peer address - {}", err)),
+            Ok(peer) => Ok(ApiService {
                 peer,
                 api_config: self.api_config.clone(),
-            })
-            .boxed(),
-        }
+            }),
+        };
+        Box::pin(async move { result })
     }
 }
 
-impl Service<&Pin<Box<tokio_openssl::SslStream<tokio::net::TcpStream>>>> for RestServer {
-    type Response = ApiService;
-    type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<ApiService, Error>> + Send>>;
+pub trait PeerAddress {
+    fn peer_addr(&self) -> Result<std::net::SocketAddr, Error>;
+}
 
-    fn poll_ready(&mut self, _cx: &mut Context) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(
-        &mut self,
-        ctx: &Pin<Box<tokio_openssl::SslStream<tokio::net::TcpStream>>>,
-    ) -> Self::Future {
-        match ctx.get_ref().peer_addr() {
-            Err(err) => future::err(format_err!("unable to get peer address - {}", err)).boxed(),
-            Ok(peer) => future::ok(ApiService {
-                peer,
-                api_config: self.api_config.clone(),
-            })
-            .boxed(),
-        }
+impl<T: PeerAddress> PeerAddress for tokio_openssl::SslStream<T> {
+    fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
+        self.get_ref().peer_addr()
     }
 }
 
-impl Service<&hyper::server::conn::AddrStream> for RestServer {
-    type Response = ApiService;
-    type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<ApiService, Error>> + Send>>;
-
-    fn poll_ready(&mut self, _cx: &mut Context) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, ctx: &hyper::server::conn::AddrStream) -> Self::Future {
-        let peer = ctx.remote_addr();
-        future::ok(ApiService {
-            peer,
-            api_config: self.api_config.clone(),
-        })
-        .boxed()
+impl PeerAddress for tokio::net::TcpStream {
+    fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
+        Ok(self.peer_addr()?)
     }
 }
 
-impl Service<&tokio::net::UnixStream> for RestServer {
-    type Response = ApiService;
-    type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<ApiService, Error>> + Send>>;
-
-    fn poll_ready(&mut self, _cx: &mut Context) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
+impl PeerAddress for hyper::server::conn::AddrStream {
+    fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
+        Ok(self.remote_addr())
     }
+}
 
-    fn call(&mut self, _ctx: &tokio::net::UnixStream) -> Self::Future {
+impl PeerAddress for tokio::net::UnixStream {
+    fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
         // TODO: Find a way to actually represent the vsock peer in the ApiService struct - for now
         // it doesn't really matter, so just use a fake IP address
-        let fake_peer = "0.0.0.0:807".parse().unwrap();
-        future::ok(ApiService {
-            peer: fake_peer,
-            api_config: self.api_config.clone(),
-        })
-        .boxed()
+        Ok(([0, 0, 0, 0], 807).into())
     }
 }
 
