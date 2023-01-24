@@ -89,22 +89,19 @@ impl ApiConfig {
         self.router.find_method(components, method, uri_param)
     }
 
-    pub(crate) fn find_alias(&self, components: &[&str]) -> PathBuf {
-        let mut prefix = String::new();
+    pub(crate) fn find_alias(&self, mut components: &[&str]) -> PathBuf {
         let mut filename = self.basedir.clone();
-        let comp_len = components.len();
-        if comp_len >= 1 {
-            prefix.push_str(components[0]);
-            if let Some(subdir) = self.aliases.get(&prefix) {
-                filename.push(subdir);
-                components
-                    .iter()
-                    .skip(1)
-                    .for_each(|comp| filename.push(comp));
-            } else {
-                components.iter().for_each(|comp| filename.push(comp));
-            }
+        if components.is_empty() {
+            return filename;
         }
+
+        if let Some(subdir) = self.aliases.get(components[0]) {
+            filename.push(subdir);
+            components = &components[1..];
+        }
+
+        filename.extend(components);
+
         filename
     }
 
