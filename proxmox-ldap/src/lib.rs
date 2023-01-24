@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fmt::{Display, Formatter},
     fs,
     path::{Path, PathBuf},
@@ -6,6 +7,7 @@ use std::{
 };
 
 use anyhow::{bail, Error};
+use ldap3::adapters::{Adapter, EntriesOnly, PagedResults};
 use ldap3::{Ldap, LdapConnAsync, LdapConnSettings, LdapResult, Scope, SearchEntry};
 use native_tls::{Certificate, TlsConnector, TlsConnectorBuilder};
 use serde::{Deserialize, Serialize};
@@ -49,6 +51,26 @@ pub struct LdapConfig {
     pub certificate_store_path: Option<PathBuf>,
 }
 
+#[derive(Serialize, Deserialize)]
+/// Parameters for LDAP user searches
+pub struct SearchParameters {
+    /// Attributes that should be retrieved
+    pub attributes: Vec<String>,
+    /// `objectclass`es of intereset
+    pub user_classes: Vec<String>,
+    /// Custom user filter
+    pub user_filter: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+/// Single LDAP user search result
+pub struct SearchResult {
+    /// The full user's domain
+    pub dn: String,
+    /// Queried user attributes
+    pub attributes: HashMap<String, Vec<String>>,
+}
+
 /// Connection to an LDAP server, can be used to authenticate users.
 pub struct LdapConnection {
     /// Configuration for this connection
@@ -85,6 +107,51 @@ impl LdapConnection {
         let _: Result<(), _> = ldap.unbind().await;
 
         Ok(())
+    }
+
+    /// Query entities matching given search parameters
+    pub async fn search_entities(
+        &self,
+        parameters: &SearchParameters,
+    ) -> Result<Vec<SearchResult>, Error> {
+        let search_filter = Self::assemble_search_filter(parameters);
+
+        let mut ldap = self.create_connection().await?;
+
+        if let Some(bind_dn) = self.config.bind_dn.as_deref() {
+            let password = self.config.bind_password.as_deref().unwrap_or_default();
+            let _: LdapResult = ldap.simple_bind(bind_dn, password).await?.success()?;
+        }
+
+        let adapters: Vec<Box<dyn Adapter<_, _>>> = vec![
+            Box::new(EntriesOnly::new()),
+            Box::new(PagedResults::new(500)),
+        ];
+        let mut search = ldap
+            .streaming_search_with(
+                adapters,
+                &self.config.base_dn,
+                Scope::Subtree,
+                &search_filter,
+                parameters.attributes.clone(),
+            )
+            .await?;
+
+        let mut results = Vec::new();
+
+        while let Some(entry) = search.next().await? {
+            let entry = SearchEntry::construct(entry);
+
+            results.push(SearchResult {
+                dn: entry.dn,
+                attributes: entry.attrs,
+            })
+        }
+        let _res = search.finish().await.success()?;
+
+        let _ = ldap.unbind().await;
+
+        Ok(results)
     }
 
     /// Retrive port from LDAP configuration, otherwise use the correct default
@@ -223,6 +290,28 @@ impl LdapConnection {
         }
 
         bail!("user not found")
+    }
+
+    fn assemble_search_filter(parameters: &SearchParameters) -> String {
+        use FilterElement::*;
+
+        let attr_wildcards = Or(parameters
+            .attributes
+            .iter()
+            .map(|attr| Condition(attr, "*"))
+            .collect());
+        let user_classes = Or(parameters
+            .user_classes
+            .iter()
+            .map(|class| Condition("objectclass".into(), class))
+            .collect());
+
+        if let Some(user_filter) = &parameters.user_filter {
+            And(vec![Verbatim(user_filter), attr_wildcards, user_classes])
+        } else {
+            And(vec![attr_wildcards, user_classes])
+        }
+        .to_string()
     }
 }
 
