@@ -175,7 +175,7 @@ pub fn fail_on_shutdown() -> Result<(), Error> {
 
 /// safe wrapper for `nix::sys::socket::socketpair` defaulting to `O_CLOEXEC` and guarding the file
 /// descriptors.
-pub fn socketpair() -> Result<(OwnedFd, OwnedFd), Error> {
+fn socketpair() -> Result<(OwnedFd, OwnedFd), Error> {
     use nix::sys::socket;
     let (pa, pb) = socket::socketpair(
         socket::AddressFamily::Unix,
