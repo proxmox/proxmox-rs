@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll};
 
 use anyhow::{bail, format_err, Error};
-use futures::future::{self, FutureExt, TryFutureExt};
+use futures::future::{FutureExt, TryFutureExt};
 use futures::stream::TryStreamExt;
 use hyper::body::HttpBody;
 use hyper::header::{self, HeaderMap};
@@ -79,21 +79,20 @@ impl RestServer {
 impl<T: PeerAddress> Service<&T> for RestServer {
     type Response = ApiService;
     type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<ApiService, Error>> + Send>>;
+    type Future = std::future::Ready<Result<ApiService, Error>>;
 
     fn poll_ready(&mut self, _cx: &mut Context) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
 
     fn call(&mut self, ctx: &T) -> Self::Future {
-        let result = match ctx.peer_addr() {
+        std::future::ready(match ctx.peer_addr() {
             Err(err) => Err(format_err!("unable to get peer address - {}", err)),
             Ok(peer) => Ok(ApiService {
                 peer,
                 api_config: self.api_config.clone(),
             }),
-        };
-        Box::pin(async move { result })
+        })
     }
 }
 
