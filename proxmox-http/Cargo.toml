@@ -36,7 +36,6 @@ rate-limited-stream = [
     "dep:tokio",
     "hyper?/client",
     "rate-limiter",
-    "tokio?/net",
     "tokio?/time",
 ]
 client = [
