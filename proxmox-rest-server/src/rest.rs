@@ -101,6 +101,15 @@ pub trait PeerAddress {
     fn peer_addr(&self) -> Result<std::net::SocketAddr, Error>;
 }
 
+// tokio_openssl's SslStream requires the stream to be pinned in order to accept it, and we need to
+// accept before the peer address is requested, so let's just generally implement this for
+// Pin<Box<T>>
+impl<T: PeerAddress> PeerAddress for Pin<Box<T>> {
+    fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
+        T::peer_addr(&*self)
+    }
+}
+
 impl<T: PeerAddress> PeerAddress for tokio_openssl::SslStream<T> {
     fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
         self.get_ref().peer_addr()
