@@ -36,13 +36,18 @@ url.workspace = true
 
 proxmox-async.workspace = true
 proxmox-compression.workspace = true
+proxmox-http = { workspace = true, optional = true }
 proxmox-io.workspace = true
 proxmox-lang.workspace = true
 proxmox-router.workspace = true
 proxmox-schema = { workspace = true, features = [ "api-macro", "upid-api-impl" ] }
-proxmox-time.workspace = true
 proxmox-sys = { workspace = true, features = [ "logrotate", "timer" ] }
+proxmox-time.workspace = true
 
 [features]
 default = []
 templates = ["dep:handlebars"]
+rate-limited-stream = [
+    "dep:proxmox-http",
+    "proxmox-http?/rate-limited-stream",
+]

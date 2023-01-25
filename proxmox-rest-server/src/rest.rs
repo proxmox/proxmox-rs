@@ -136,6 +136,13 @@ impl PeerAddress for tokio::net::UnixStream {
     }
 }
 
+#[cfg(feature = "rate-limited-stream")]
+impl<T: PeerAddress> PeerAddress for proxmox_http::RateLimitedStream<T> {
+    fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
+        self.inner().peer_addr()
+    }
+}
+
 // Helper [Service] containing the peer Address
 //
 // The lower level connection [Service] implementation on
