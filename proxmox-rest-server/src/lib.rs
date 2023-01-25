@@ -50,6 +50,8 @@ pub use api_config::{ApiConfig, AuthError, AuthHandler, IndexHandler};
 mod rest;
 pub use rest::RestServer;
 
+pub mod connection;
+
 mod worker_task;
 pub use worker_task::*;
 
