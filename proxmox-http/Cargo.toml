@@ -30,6 +30,8 @@ proxmox-lang = { workspace = true, optional = true }
 [features]
 default = []
 
+rate-limiter = ["dep:hyper"]
+rate-limited-stream = ["rate-limiter", "dep:tokio", "dep:hyper", "hyper?/client", "tokio?/time", "tokio?/net"]
 client = [ "dep:futures", "http-helpers", "dep:hyper", "hyper?/full", "dep:openssl", "dep:tokio", "tokio?/io-util", "dep:tokio-openssl" ]
 client-sync = [ "client-trait", "http-helpers", "dep:ureq" ]
 client-trait = [ "dep:http" ]

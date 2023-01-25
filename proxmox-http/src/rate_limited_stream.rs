@@ -1,10 +1,10 @@
+use std::future::Future;
 use std::io::IoSlice;
 use std::marker::Unpin;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use futures::Future;
 use hyper::client::connect::{Connected, Connection};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::time::Sleep;

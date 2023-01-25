@@ -9,16 +9,6 @@
 //! Both clients implement [`HttpClient`](crate::HttpClient) if the feature `client-trait` is enabled.
 
 #[cfg(feature = "client")]
-mod rate_limiter;
-#[cfg(feature = "client")]
-pub use rate_limiter::{RateLimit, RateLimiter, RateLimiterVec, ShareableRateLimit};
-
-#[cfg(feature = "client")]
-mod rate_limited_stream;
-#[cfg(feature = "client")]
-pub use rate_limited_stream::RateLimitedStream;
-
-#[cfg(feature = "client")]
 mod connector;
 #[cfg(feature = "client")]
 pub use connector::HttpsConnector;

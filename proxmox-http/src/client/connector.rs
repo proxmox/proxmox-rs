@@ -18,7 +18,7 @@ use crate::proxy_config::ProxyConfig;
 use crate::uri::build_authority;
 
 use super::tls::MaybeTlsStream;
-use super::{RateLimitedStream, ShareableRateLimit};
+use crate::{RateLimitedStream, ShareableRateLimit};
 
 type SharedRateLimit = Arc<dyn ShareableRateLimit>;
 
