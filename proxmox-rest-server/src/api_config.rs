@@ -65,10 +65,26 @@ impl ApiConfig {
         self
     }
 
+    /// Set the authentication handler from a function.
+    pub fn with_auth_handler_func<Func>(self, func: Func) -> Self
+    where
+        Func: for<'a> Fn(&'a HeaderMap, &'a Method) -> CheckAuthFuture<'a> + Send + Sync + 'static,
+    {
+        self.with_auth_handler(AuthHandler::from_fn(func))
+    }
+
     /// Set the index handler.
     pub fn with_index_handler(mut self, index_handler: IndexHandler) -> Self {
         self.index_handler = Some(index_handler);
         self
+    }
+
+    /// Set the index handler from a function.
+    pub fn with_index_handler_func<Func>(self, func: Func) -> Self
+    where
+        Func: Fn(RestEnvironment, Parts) -> IndexFuture + Send + Sync + 'static,
+    {
+        self.with_index_handler(IndexHandler::from_fn(func))
     }
 
     pub(crate) async fn get_index(
@@ -373,13 +389,13 @@ impl IndexHandler {
     where
         B: Clone + Send + Sync + Into<Body> + 'static,
     {
-        Self::from_response_fn(move |_, _| {
+        Self::from_fn(move |_, _| {
             let body = body.clone().into();
             Box::pin(async move { Response::builder().status(200).body(body).unwrap() })
         })
     }
 
-    pub fn from_response_fn<Func>(func: Func) -> Self
+    pub fn from_fn<Func>(func: Func) -> Self
     where
         Func: Fn(RestEnvironment, Parts) -> IndexFuture + Send + Sync + 'static,
     {
