@@ -16,18 +16,12 @@
 //! * generic interface to authenticate user
 
 use std::fmt;
-use std::future::Future;
 use std::os::unix::io::{FromRawFd, OwnedFd};
-use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use anyhow::{bail, format_err, Error};
-use http::request::Parts;
-use http::HeaderMap;
-use hyper::{Body, Method, Response};
 use nix::unistd::Pid;
 
-use proxmox_router::UserInformation;
 use proxmox_sys::fs::CreateOptions;
 use proxmox_sys::linux::procfs::PidStat;
 
@@ -51,7 +45,7 @@ mod file_logger;
 pub use file_logger::{FileLogOptions, FileLogger};
 
 mod api_config;
-pub use api_config::ApiConfig;
+pub use api_config::{ApiConfig, AuthError, AuthHandler, IndexHandler};
 
 mod rest;
 pub use rest::RestServer;
@@ -61,47 +55,6 @@ pub use worker_task::*;
 
 mod h2service;
 pub use h2service::*;
-
-/// Authentication Error
-pub enum AuthError {
-    Generic(Error),
-    NoData,
-}
-
-impl From<Error> for AuthError {
-    fn from(err: Error) -> Self {
-        AuthError::Generic(err)
-    }
-}
-
-/// Result of [`ServerAdapter::check_auth`].
-pub type ServerAdapterCheckAuth<'a> = Pin<
-    Box<
-        dyn Future<Output = Result<(String, Box<dyn UserInformation + Sync + Send>), AuthError>>
-            + Send
-            + 'a,
-    >,
->;
-
-/// User Authentication and index/root page generation methods
-pub trait ServerAdapter: Send + Sync {
-    /// Returns the index/root page
-    fn get_index(
-        &self,
-        rest_env: RestEnvironment,
-        parts: Parts,
-    ) -> Pin<Box<dyn Future<Output = Response<Body>> + Send>>;
-
-    /// Extract user credentials from headers and check them.
-    ///
-    /// If credenthials are valid, returns the username and a
-    /// [UserInformation] object to query additional user data.
-    fn check_auth<'a>(
-        &'a self,
-        headers: &'a HeaderMap,
-        method: &'a Method,
-    ) -> ServerAdapterCheckAuth<'a>;
-}
 
 lazy_static::lazy_static! {
     static ref PID: i32 = unsafe { libc::getpid() };

@@ -5,6 +5,7 @@ use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 
 use anyhow::{format_err, Error};
+use http::{HeaderMap, Method};
 use hyper::http::request::Parts;
 use hyper::{Body, Response};
 
@@ -12,7 +13,7 @@ use proxmox_router::{Router, RpcEnvironmentType, UserInformation};
 use proxmox_sys::fs::{create_path, CreateOptions};
 
 use crate::rest::Handler;
-use crate::{AuthError, CommandSocket, FileLogOptions, FileLogger, RestEnvironment, ServerAdapter};
+use crate::{CommandSocket, FileLogOptions, FileLogger, RestEnvironment};
 
 /// REST server configuration
 pub struct ApiConfig {
@@ -21,8 +22,9 @@ pub struct ApiConfig {
     env_type: RpcEnvironmentType,
     request_log: Option<Arc<Mutex<FileLogger>>>,
     auth_log: Option<Arc<Mutex<FileLogger>>>,
-    adapter: Pin<Box<dyn ServerAdapter + Send + Sync>>,
     handlers: Vec<Handler>,
+    auth_handler: Option<AuthHandler>,
+    index_handler: Option<IndexHandler>,
 
     #[cfg(feature = "templates")]
     templates: templates::Templates,
@@ -48,12 +50,25 @@ impl ApiConfig {
             env_type,
             request_log: None,
             auth_log: None,
-            adapter: Box::pin(DummyAdapter),
             handlers: Vec::new(),
+            auth_handler: None,
+            index_handler: None,
 
             #[cfg(feature = "templates")]
             templates: Default::default(),
         }
+    }
+
+    /// Set the authentication handler.
+    pub fn with_auth_handler(mut self, auth_handler: AuthHandler) -> Self {
+        self.auth_handler = Some(auth_handler);
+        self
+    }
+
+    /// Set the index handler.
+    pub fn with_index_handler(mut self, index_handler: IndexHandler) -> Self {
+        self.index_handler = Some(index_handler);
+        self
     }
 
     pub(crate) async fn get_index(
@@ -61,15 +76,21 @@ impl ApiConfig {
         rest_env: RestEnvironment,
         parts: Parts,
     ) -> Response<Body> {
-        self.adapter.get_index(rest_env, parts).await
+        match self.index_handler.as_ref() {
+            Some(handler) => (handler.func)(rest_env, parts).await,
+            None => Response::builder().status(404).body("".into()).unwrap(),
+        }
     }
 
     pub(crate) async fn check_auth(
         &self,
-        headers: &http::HeaderMap,
-        method: &hyper::Method,
+        headers: &HeaderMap,
+        method: &Method,
     ) -> Result<(String, Box<dyn UserInformation + Sync + Send>), AuthError> {
-        self.adapter.check_auth(headers, method).await
+        match self.auth_handler.as_ref() {
+            Some(handler) => (handler.func)(headers, method).await,
+            None => Err(AuthError::NoData),
+        }
     }
 
     pub(crate) fn find_alias(&self, mut components: &[&str]) -> PathBuf {
@@ -334,27 +355,70 @@ mod templates {
     }
 }
 
-pub struct DummyAdapter;
+pub type IndexFuture = Pin<Box<dyn Future<Output = Response<Body>> + Send>>;
+pub type IndexFunc = Box<dyn Fn(RestEnvironment, Parts) -> IndexFuture + Send + Sync>;
 
-impl ServerAdapter for DummyAdapter {
-    fn get_index(
-        &self,
-        _rest_env: RestEnvironment,
-        _parts: Parts,
-    ) -> Pin<Box<dyn Future<Output = Response<Body>> + Send>> {
-        Box::pin(async move {
-            Response::builder()
-                .status(400)
-                .body("no index defined".into())
-                .unwrap()
+pub struct IndexHandler {
+    func: IndexFunc,
+}
+
+impl From<IndexFunc> for IndexHandler {
+    fn from(func: IndexFunc) -> Self {
+        Self { func }
+    }
+}
+
+impl IndexHandler {
+    pub fn new_static_body<B>(body: B) -> Self
+    where
+        B: Clone + Send + Sync + Into<Body> + 'static,
+    {
+        Self::from_response_fn(move |_, _| {
+            let body = body.clone().into();
+            Box::pin(async move { Response::builder().status(200).body(body).unwrap() })
         })
     }
 
-    fn check_auth<'a>(
-        &'a self,
-        _headers: &'a http::HeaderMap,
-        _method: &'a http::Method,
-    ) -> crate::ServerAdapterCheckAuth<'a> {
-        Box::pin(async move { Err(crate::AuthError::NoData) })
+    pub fn from_response_fn<Func>(func: Func) -> Self
+    where
+        Func: Fn(RestEnvironment, Parts) -> IndexFuture + Send + Sync + 'static,
+    {
+        Self::from(Box::new(func) as IndexFunc)
+    }
+}
+
+pub type CheckAuthOutput = Result<(String, Box<dyn UserInformation + Send + Sync>), AuthError>;
+pub type CheckAuthFuture<'a> = Pin<Box<dyn Future<Output = CheckAuthOutput> + Send + 'a>>;
+pub type CheckAuthFunc =
+    Box<dyn for<'a> Fn(&'a HeaderMap, &'a Method) -> CheckAuthFuture<'a> + Send + Sync>;
+
+pub struct AuthHandler {
+    func: CheckAuthFunc,
+}
+
+impl From<CheckAuthFunc> for AuthHandler {
+    fn from(func: CheckAuthFunc) -> Self {
+        Self { func }
+    }
+}
+
+impl AuthHandler {
+    pub fn from_fn<Func>(func: Func) -> Self
+    where
+        Func: for<'a> Fn(&'a HeaderMap, &'a Method) -> CheckAuthFuture<'a> + Send + Sync + 'static,
+    {
+        Self::from(Box::new(func) as CheckAuthFunc)
+    }
+}
+
+/// Authentication Error
+pub enum AuthError {
+    Generic(Error),
+    NoData,
+}
+
+impl From<Error> for AuthError {
+    fn from(err: Error) -> Self {
+        AuthError::Generic(err)
     }
 }
