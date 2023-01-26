@@ -60,31 +60,31 @@ impl ApiConfig {
     }
 
     /// Set the authentication handler.
-    pub fn with_auth_handler(mut self, auth_handler: AuthHandler) -> Self {
+    pub fn auth_handler(mut self, auth_handler: AuthHandler) -> Self {
         self.auth_handler = Some(auth_handler);
         self
     }
 
     /// Set the authentication handler from a function.
-    pub fn with_auth_handler_func<Func>(self, func: Func) -> Self
+    pub fn auth_handler_func<Func>(self, func: Func) -> Self
     where
         Func: for<'a> Fn(&'a HeaderMap, &'a Method) -> CheckAuthFuture<'a> + Send + Sync + 'static,
     {
-        self.with_auth_handler(AuthHandler::from_fn(func))
+        self.auth_handler(AuthHandler::from_fn(func))
     }
 
     /// Set the index handler.
-    pub fn with_index_handler(mut self, index_handler: IndexHandler) -> Self {
+    pub fn index_handler(mut self, index_handler: IndexHandler) -> Self {
         self.index_handler = Some(index_handler);
         self
     }
 
     /// Set the index handler from a function.
-    pub fn with_index_handler_func<Func>(self, func: Func) -> Self
+    pub fn index_handler_func<Func>(self, func: Func) -> Self
     where
         Func: Fn(RestEnvironment, Parts) -> IndexFuture + Send + Sync + 'static,
     {
-        self.with_index_handler(IndexHandler::from_fn(func))
+        self.index_handler(IndexHandler::from_fn(func))
     }
 
     pub(crate) async fn get_index(
@@ -133,16 +133,17 @@ impl ApiConfig {
     /// ```
     /// use proxmox_rest_server::ApiConfig;
     /// // let mut config = ApiConfig::new(...);
-    /// # fn fake(config: &mut ApiConfig) {
-    /// config.add_alias("extjs", "/usr/share/javascript/extjs");
+    /// # fn fake(config: ApiConfig) {
+    /// config.alias("extjs", "/usr/share/javascript/extjs");
     /// # }
     /// ```
-    pub fn add_alias<S, P>(&mut self, alias: S, path: P)
+    pub fn alias<S, P>(mut self, alias: S, path: P) -> Self
     where
         S: Into<String>,
         P: Into<PathBuf>,
     {
         self.aliases.insert(alias.into(), path.into());
+        self
     }
 
     pub(crate) fn env_type(&self) -> RpcEnvironmentType {
@@ -153,11 +154,12 @@ impl ApiConfig {
     ///
     /// Those templates cane be use with [render_template](Self::render_template) to generate pages.
     #[cfg(feature = "templates")]
-    pub fn register_template<P>(&self, name: &str, path: P) -> Result<(), Error>
+    pub fn register_template<P>(self, name: &str, path: P) -> Result<Self, Error>
     where
         P: Into<PathBuf>,
     {
-        self.templates.register(name, path)
+        self.templates.register(name, path)?;
+        Ok(self)
     }
 
     /// Checks if the template was modified since the last rendering
@@ -176,12 +178,12 @@ impl ApiConfig {
     /// This function also registers a `api-access-log-reopen`
     /// command one the [CommandSocket].
     pub fn enable_access_log<P>(
-        &mut self,
+        mut self,
         path: P,
         dir_opts: Option<CreateOptions>,
         file_opts: Option<CreateOptions>,
         commando_sock: &mut CommandSocket,
-    ) -> Result<(), Error>
+    ) -> Result<Self, Error>
     where
         P: Into<PathBuf>,
     {
@@ -206,7 +208,7 @@ impl ApiConfig {
             Ok(serde_json::Value::Null)
         })?;
 
-        Ok(())
+        Ok(self)
     }
 
     /// Enable the authentication log feature
@@ -215,12 +217,12 @@ impl ApiConfig {
     /// specified file. This function also registers a
     /// `api-auth-log-reopen` command one the [CommandSocket].
     pub fn enable_auth_log<P>(
-        &mut self,
+        mut self,
         path: P,
         dir_opts: Option<CreateOptions>,
         file_opts: Option<CreateOptions>,
         commando_sock: &mut CommandSocket,
-    ) -> Result<(), Error>
+    ) -> Result<Self, Error>
     where
         P: Into<PathBuf>,
     {
@@ -246,7 +248,7 @@ impl ApiConfig {
             Ok(serde_json::Value::Null)
         })?;
 
-        Ok(())
+        Ok(self)
     }
 
     pub(crate) fn get_access_log(&self) -> Option<&Arc<Mutex<FileLogger>>> {
@@ -263,26 +265,26 @@ impl ApiConfig {
             .find(|handler| path_components.strip_prefix(handler.prefix).is_some())
     }
 
-    pub fn add_default_api2_handler(&mut self, router: &'static Router) -> &mut Self {
+    pub fn default_api2_handler(mut self, router: &'static Router) -> Self {
         self.handlers.push(Handler::default_api2_handler(router));
         self
     }
 
-    pub fn add_formatted_router(
-        &mut self,
+    pub fn formatted_router(
+        mut self,
         prefix: &'static [&'static str],
         router: &'static Router,
-    ) -> &mut Self {
+    ) -> Self {
         self.handlers
             .push(Handler::formatted_router(prefix, router));
         self
     }
 
-    pub fn add_unformatted_router(
-        &mut self,
+    pub fn unformatted_router(
+        mut self,
         prefix: &'static [&'static str],
         router: &'static Router,
-    ) -> &mut Self {
+    ) -> Self {
         self.handlers
             .push(Handler::unformatted_router(prefix, router));
         self
