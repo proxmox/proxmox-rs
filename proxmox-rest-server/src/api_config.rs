@@ -146,6 +146,18 @@ impl ApiConfig {
         self
     }
 
+    /// Register multiple path aliases. See `[ApiConfig::alias()]`.
+    pub fn aliases<I, S, P>(mut self, aliases: I) -> Self
+    where
+        I: IntoIterator<Item = (S, P)>,
+        S: Into<String>,
+        P: Into<PathBuf>,
+    {
+        self.aliases
+            .extend(aliases.into_iter().map(|(s, p)| (s.into(), p.into())));
+        self
+    }
+
     pub(crate) fn env_type(&self) -> RpcEnvironmentType {
         self.env_type
     }
