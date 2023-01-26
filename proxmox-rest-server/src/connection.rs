@@ -48,8 +48,12 @@ impl TlsAcceptorBuilder {
         self
     }
 
-    pub fn certificate_paths_pem(mut self, key: PathBuf, cert: PathBuf) -> Self {
-        self.tls = Some(Tls::FilesPem(key, cert));
+    pub fn certificate_paths_pem(
+        mut self,
+        key: impl Into<PathBuf>,
+        cert: impl Into<PathBuf>,
+    ) -> Self {
+        self.tls = Some(Tls::FilesPem(key.into(), cert.into()));
         self
     }
 
