@@ -1,3 +1,9 @@
+rust-proxmox-metrics (0.2.2-1) unstable; urgency=medium
+
+  * update to proxmox-http 0.8
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 30 Jan 2023 11:35:17 +0100
+
 rust-proxmox-metrics (0.2.1-1) unstable; urgency=medium
 
   * update to proxmox-http 0.7
