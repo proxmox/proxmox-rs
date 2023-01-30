@@ -34,13 +34,16 @@ enum Tls {
 /// A builder for an `SslAcceptor` which can be configured either with certificates (or path to PEM
 /// files), or otherwise builds a self-signed certificate on the fly (mostly useful during
 /// development).
+#[derive(Default)]
 pub struct TlsAcceptorBuilder {
     tls: Option<Tls>,
+    cipher_suites: Option<String>,
+    cipher_list: Option<String>,
 }
 
 impl TlsAcceptorBuilder {
     pub fn new() -> Self {
-        Self { tls: None }
+        Self::default()
     }
 
     pub fn certificate(mut self, key: PKey<Private>, cert: X509) -> Self {
@@ -54,6 +57,16 @@ impl TlsAcceptorBuilder {
         cert: impl Into<PathBuf>,
     ) -> Self {
         self.tls = Some(Tls::FilesPem(key.into(), cert.into()));
+        self
+    }
+
+    pub fn cipher_suites(mut self, suites: String) -> Self {
+        self.cipher_suites = Some(suites);
+        self
+    }
+
+    pub fn cipher_list(mut self, list: String) -> Self {
+        self.cipher_list = Some(list);
         self
     }
 
