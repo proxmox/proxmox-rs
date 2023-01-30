@@ -1,3 +1,17 @@
+rust-proxmox-http (0.8.0-1) unstable; urgency=medium
+
+  * make rate limiting 2 separate features instead of part of the client
+    feature:
+    - rate-limiter
+    - rate-limited-stream
+
+  * reduce hyper dependencies from 'full' to only the required features
+
+  * add 'inner' and 'inner_mut' accessors to RateLimitedStream and drop the
+    'peer_addr()' method
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 30 Jan 2023 11:25:22 +0100
+
 rust-proxmox-http (0.7.0-1) unstable; urgency=medium
 
   * refactor and extend HttpClient trait

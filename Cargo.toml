@@ -79,7 +79,7 @@ zstd = { version = "0.6", features = [ "bindgen" ] }
 proxmox-api-macro = { version = "1.0.4", path = "proxmox-api-macro" }
 proxmox-async = { version = "0.4.1", path = "proxmox-async" }
 proxmox-compression = { version = "0.1.1", path = "proxmox-compression" }
-proxmox-http = { version = "0.8.0-alpha.1", path = "proxmox-http" }
+proxmox-http = { version = "0.8.0", path = "proxmox-http" }
 proxmox-io = { version = "1.0.0", path = "proxmox-io" }
 proxmox-lang = { version = "1.1", path = "proxmox-lang" }
 proxmox-router = { version = "1.3.1", path = "proxmox-router" }
