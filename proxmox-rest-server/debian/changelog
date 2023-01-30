@@ -1,3 +1,29 @@
+rust-proxmox-rest-server (0.3.0-1) stable; urgency=medium
+
+  * make socketpair private
+
+  * add PeerAddr trait for connection building
+
+  * make handle_request a method of ApiConfig
+
+  * make handlebars an optional feature
+
+  * turn ApiConfig into a builder
+
+  * drop Router from ApiConfig
+
+  * drop ServerAdapter trait in favor of separate ApiConfig builder methods
+
+  * add rate-limited-stream feature
+
+  * add TlsAcceptorBuilder to build `SslAcceptor` instances
+
+  * add AcceptBuilder to build `hyper::server::accept::Accept` instances
+
+  * TlsAcceptorBuilder can build self-signed certificates if none are provided
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 30 Jan 2023 11:29:28 +0100
+
 rust-proxmox-rest-server (0.2.2-1) stable; urgency=medium
 
   * add handle_worker
