@@ -308,7 +308,7 @@ fn need_description(description: Option<String>) -> Result<String, Error> {
 #[allow(clippy::too_many_arguments)]
 pub fn add_tfa_entry<A: OpenUserChallengeData>(
     config: &mut TfaConfig,
-    access: A,
+    access: &A,
     userid: &str,
     description: Option<String>,
     totp: Option<String>,
@@ -410,9 +410,9 @@ fn add_yubico(
     )))
 }
 
-fn add_u2f<A: OpenUserChallengeData>(
+fn add_u2f<A: ?Sized + OpenUserChallengeData>(
     config: &mut TfaConfig,
-    access: A,
+    access: &A,
     userid: &str,
     description: Option<String>,
     challenge: Option<String>,
@@ -436,9 +436,9 @@ fn add_u2f<A: OpenUserChallengeData>(
     }
 }
 
-fn add_webauthn<A: OpenUserChallengeData>(
+fn add_webauthn<A: ?Sized + OpenUserChallengeData>(
     config: &mut TfaConfig,
-    access: A,
+    access: &A,
     userid: &str,
     description: Option<String>,
     challenge: Option<String>,

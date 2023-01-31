@@ -43,22 +43,18 @@ trait IsExpired {
     fn is_expired(&self, at_epoch: i64) -> bool;
 }
 
-pub trait OpenUserChallengeData: Clone {
-    type Data: UserChallengeAccess;
+pub trait OpenUserChallengeData {
+    fn open(&self, userid: &str) -> Result<Box<dyn UserChallengeAccess>, Error>;
 
-    fn open(&self, userid: &str) -> Result<Self::Data, Error>;
-
-    fn open_no_create(&self, userid: &str) -> Result<Option<Self::Data>, Error>;
+    fn open_no_create(&self, userid: &str) -> Result<Option<Box<dyn UserChallengeAccess>>, Error>;
 
     /// Should return `true` if something was removed, `false` if no data existed for the user.
     fn remove(&self, userid: &str) -> Result<bool, Error>;
 }
 
-pub trait UserChallengeAccess: Sized {
-    //fn open(userid: &str) -> Result<Self, Error>;
-    //fn open_no_create(userid: &str) -> Result<Option<Self>, Error>;
+pub trait UserChallengeAccess {
     fn get_mut(&mut self) -> &mut TfaUserChallenges;
-    fn save(self) -> Result<(), Error>;
+    fn save(&mut self) -> Result<(), Error>;
 }
 
 const CHALLENGE_TIMEOUT_SECS: i64 = 2 * 60;
@@ -115,9 +111,9 @@ fn check_webauthn<'a, 'config: 'a, 'origin: 'a>(
 
 impl TfaConfig {
     // Get a u2f registration challenge.
-    pub fn u2f_registration_challenge<A: OpenUserChallengeData>(
+    pub fn u2f_registration_challenge<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         description: String,
     ) -> Result<String, Error> {
@@ -130,9 +126,9 @@ impl TfaConfig {
     }
 
     /// Finish a u2f registration challenge.
-    pub fn u2f_registration_finish<A: OpenUserChallengeData>(
+    pub fn u2f_registration_finish<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         challenge: &str,
         response: &str,
@@ -146,9 +142,9 @@ impl TfaConfig {
     }
 
     /// Get a webauthn registration challenge.
-    pub fn webauthn_registration_challenge<A: OpenUserChallengeData>(
+    pub fn webauthn_registration_challenge<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         user: &str,
         description: String,
         origin: Option<&Url>,
@@ -162,9 +158,9 @@ impl TfaConfig {
     }
 
     /// Finish a webauthn registration challenge.
-    pub fn webauthn_registration_finish<A: OpenUserChallengeData>(
+    pub fn webauthn_registration_finish<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         challenge: &str,
         response: &str,
@@ -215,9 +211,9 @@ impl TfaConfig {
     }
 
     /// Get a two factor authentication challenge for a user, if the user has TFA set up.
-    pub fn authentication_challenge<A: OpenUserChallengeData>(
+    pub fn authentication_challenge<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         origin: Option<&Url>,
     ) -> Result<Option<TfaChallenge>, Error> {
@@ -233,9 +229,9 @@ impl TfaConfig {
     }
 
     /// Verify a TFA challenge.
-    pub fn verify<A: OpenUserChallengeData>(
+    pub fn verify<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         challenge: &TfaChallenge,
         response: TfaResponse,
@@ -266,9 +262,9 @@ impl TfaConfig {
         Ok(NeedsSaving::No)
     }
 
-    pub fn remove_user<A: OpenUserChallengeData>(
+    pub fn remove_user<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
     ) -> Result<NeedsSaving, Error> {
         let mut save = access.remove(userid)?;
@@ -388,9 +384,9 @@ impl TfaUserData {
     /// challenges in the tfa config file if necessary. The user otherwise has no access to this
     /// information at this point, as the challenge is identified by its actual challenge data
     /// instead.
-    fn u2f_registration_challenge<A: OpenUserChallengeData>(
+    fn u2f_registration_challenge<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         u2f: &u2f::U2f,
         description: String,
@@ -409,9 +405,9 @@ impl TfaUserData {
         Ok(challenge)
     }
 
-    fn u2f_registration_finish<A: OpenUserChallengeData>(
+    fn u2f_registration_finish<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         u2f: &u2f::U2f,
         challenge: &str,
@@ -434,9 +430,9 @@ impl TfaUserData {
     /// challenges in the tfa config file if necessary. The user otherwise has no access to this
     /// information at this point, as the challenge is identified by its actual challenge data
     /// instead.
-    fn webauthn_registration_challenge<A: OpenUserChallengeData>(
+    fn webauthn_registration_challenge<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         webauthn: Webauthn<WebauthnConfigInstance>,
         userid: &str,
         description: String,
@@ -473,9 +469,9 @@ impl TfaUserData {
 
     /// Finish a webauthn registration. The challenge should correspond to an output of
     /// `webauthn_registration_challenge`. The response should come directly from the client.
-    fn webauthn_registration_finish<A: OpenUserChallengeData>(
+    fn webauthn_registration_finish<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         webauthn: Webauthn<WebauthnConfigInstance>,
         userid: &str,
         challenge: &str,
@@ -568,9 +564,9 @@ impl TfaUserData {
     }
 
     /// Generate a generic TFA challenge. See the [`TfaChallenge`] description for details.
-    fn challenge<A: OpenUserChallengeData>(
+    fn challenge<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         webauthn: Option<Result<Webauthn<WebauthnConfigInstance>, Error>>,
         u2f: Option<&u2f::U2f>,
@@ -583,7 +579,7 @@ impl TfaUserData {
             totp: self.totp.iter().any(|e| e.info.enable),
             recovery: RecoveryState::from(&self.recovery),
             webauthn: match webauthn {
-                Some(webauthn) => self.webauthn_challenge(access.clone(), userid, webauthn?)?,
+                Some(webauthn) => self.webauthn_challenge(access, userid, webauthn?)?,
                 None => None,
             },
             u2f: match u2f {
@@ -600,9 +596,9 @@ impl TfaUserData {
     }
 
     /// Generate an optional webauthn challenge.
-    fn webauthn_challenge<A: OpenUserChallengeData>(
+    fn webauthn_challenge<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         webauthn: Webauthn<WebauthnConfigInstance>,
     ) -> Result<Option<webauthn_rs::proto::RequestChallengeResponse>, Error> {
@@ -632,9 +628,9 @@ impl TfaUserData {
     }
 
     /// Generate an optional u2f challenge.
-    fn u2f_challenge<A: OpenUserChallengeData>(
+    fn u2f_challenge<A: ?Sized + OpenUserChallengeData>(
         &self,
-        access: A,
+        access: &A,
         userid: &str,
         u2f: &u2f::U2f,
     ) -> Result<Option<U2fChallenge>, Error> {
@@ -666,9 +662,9 @@ impl TfaUserData {
     }
 
     /// Verify a u2f response.
-    fn verify_u2f<A: OpenUserChallengeData>(
+    fn verify_u2f<A: ?Sized + OpenUserChallengeData>(
         &self,
-        access: A,
+        access: &A,
         userid: &str,
         u2f: u2f::U2f,
         challenge: &crate::u2f::AuthChallenge,
@@ -712,9 +708,9 @@ impl TfaUserData {
     }
 
     /// Verify a webauthn response.
-    fn verify_webauthn<A: OpenUserChallengeData>(
+    fn verify_webauthn<A: ?Sized + OpenUserChallengeData>(
         &mut self,
-        access: A,
+        access: &A,
         userid: &str,
         webauthn: Webauthn<WebauthnConfigInstance>,
         mut response: Value,
