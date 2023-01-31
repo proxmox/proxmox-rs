@@ -611,6 +611,7 @@ fn extension_to_content_type(filename: &Path) -> (&'static str, bool) {
             "mp3" => ("audio/mpeg", true),
             "oga" => ("audio/ogg", true),
             "tgz" => ("application/x-compressed-tar", true),
+            "wasm" => ("application/wasm", true),
             _ => ("application/octet-stream", false),
         };
     }
