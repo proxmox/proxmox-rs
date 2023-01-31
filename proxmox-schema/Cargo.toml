@@ -33,6 +33,7 @@ default = []
 
 api-macro = ["dep:proxmox-api-macro"]
 upid-api-impl = [ "dep:libc", "dep:nix" ]
+api-types = []
 
 # Testing only
 test-harness = []

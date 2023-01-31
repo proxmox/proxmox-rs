@@ -13,6 +13,7 @@ pub use proxmox_api_macro::api;
 
 mod api_type_macros;
 
+#[macro_use]
 mod const_regex;
 pub use const_regex::ConstRegexPattern;
 
@@ -33,3 +34,6 @@ pub mod upid;
 pub mod semver_exempt {
     pub use lazy_static::lazy_static;
 }
+
+#[cfg(feature = "api-types")]
+pub mod api_types;
