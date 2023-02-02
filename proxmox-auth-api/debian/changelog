@@ -1,0 +1,5 @@
+rust-proxmox-auth-api (0.1.0-1) stable; urgency=medium
+
+  * initial packaging
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 02 Feb 2023 11:23:54 +0100
