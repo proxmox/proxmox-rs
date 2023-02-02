@@ -8,6 +8,10 @@ repository.workspace = true
 exclude.workspace = true
 description = "Tickets, API and Realm handling"
 
+[[example]]
+name = "passwd"
+required-features = [ "pam-authenticator" ]
+
 [dependencies]
 anyhow.workspace = true
 
