@@ -106,22 +106,22 @@ pub fn file_get_json<P: AsRef<Path>>(path: P, default: Option<Value>) -> Result<
     .map_err(|err: Error| format_err!("unable to parse json from {:?} - {}", path, err))
 }
 
+/// Read the first line of a file as String in std IO error context
+pub(crate) fn read_firstline<P: AsRef<Path>>(path: P) -> Result<String, std::io::Error> {
+    let file = std::fs::File::open(path)?;
+
+    let mut reader = BufReader::new(file);
+    let mut line = String::new();
+
+    let _ = reader.read_line(&mut line)?;
+
+    Ok(line)
+}
+
 /// Read the first line of a file as String
 pub fn file_read_firstline<P: AsRef<Path>>(path: P) -> Result<String, Error> {
     let path = path.as_ref();
-
-    try_block!({
-        let file = std::fs::File::open(path)?;
-
-        let mut reader = BufReader::new(file);
-
-        let mut line = String::new();
-
-        let _ = reader.read_line(&mut line)?;
-
-        Ok(line)
-    })
-    .map_err(|err: Error| format_err!("unable to read {:?} - {}", path, err))
+    read_firstline(path).map_err(|err| format_err!("unable to read {path:?} - {err}"))
 }
 
 /// Takes a Path and CreateOptions, creates a tmpfile from it and returns

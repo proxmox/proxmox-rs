@@ -13,7 +13,7 @@ use lazy_static::lazy_static;
 use nix::unistd::Pid;
 use serde::Serialize;
 
-use crate::fs::file_read_firstline;
+use crate::fs::{read_firstline, file_read_firstline};
 
 pub mod mountinfo;
 #[doc(inline)]
@@ -455,10 +455,10 @@ pub fn read_meminfo() -> Result<ProcFsMemInfo, Error> {
 
     meminfo.swapused = meminfo.swaptotal - meminfo.swapfree;
 
-    meminfo.memshared = match file_read_firstline("/sys/kernel/mm/ksm/pages_sharing") {
+    meminfo.memshared = match read_firstline("/sys/kernel/mm/ksm/pages_sharing") {
         Ok(spages_line) => spages_line.trim_end().parse::<u64>()? * 4096,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => 0,
-        Err(err) => return Err(err),
+        Err(err) => bail!("unable to get KSM pages_sharing - {err}"),
     };
 
     Ok(meminfo)
