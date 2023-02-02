@@ -455,8 +455,11 @@ pub fn read_meminfo() -> Result<ProcFsMemInfo, Error> {
 
     meminfo.swapused = meminfo.swaptotal - meminfo.swapfree;
 
-    let spages_line = file_read_firstline("/sys/kernel/mm/ksm/pages_sharing")?;
-    meminfo.memshared = spages_line.trim_end().parse::<u64>()? * 4096;
+    meminfo.memshared = match file_read_firstline("/sys/kernel/mm/ksm/pages_sharing") {
+        Ok(spages_line) => spages_line.trim_end().parse::<u64>()? * 4096,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => 0,
+        Err(err) => return Err(err),
+    };
 
     Ok(meminfo)
 }
