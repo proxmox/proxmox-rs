@@ -303,7 +303,7 @@ impl LdapConnection {
         let user_classes = Or(parameters
             .user_classes
             .iter()
-            .map(|class| Condition("objectclass".into(), class))
+            .map(|class| Condition("objectclass", class))
             .collect());
 
         if let Some(user_filter) = &parameters.user_filter {
@@ -346,7 +346,7 @@ impl<'a> Display for FilterElement<'a> {
                 write!(f, ")")?;
             }
             FilterElement::Not(element) => {
-                write!(f, "(!{})", element)?;
+                write!(f, "(!{element})")?;
             }
             FilterElement::Condition(attr, value) => {
                 write!(f, "({attr}={value})")?;
