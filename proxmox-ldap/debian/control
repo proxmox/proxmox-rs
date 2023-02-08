@@ -7,15 +7,14 @@ Build-Depends: debhelper (>= 12),
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-ldap3-0.11+default-dev <!nocheck>,
  librust-ldap3-0.11+tls-dev <!nocheck>,
  librust-native-tls-0.2+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
-Vcs-Git: git://git.proxmox.com/git/proxmox-ldap.git
-Vcs-Browser: https://git.proxmox.com/?p=proxmox-ldap.git
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-ldap
 Rules-Requires-Root: no
 
@@ -25,7 +24,6 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-ldap3-0.11+default-dev,
  librust-ldap3-0.11+tls-dev,
  librust-native-tls-0.2+default-dev,
  librust-serde-1+default-dev,
