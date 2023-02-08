@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Eq, Clone, Copy, Serialize, Deserialize, Debug)]
 /// LDAP connection security
-pub enum LdapConnectionMode {
+pub enum ConnectionMode {
     /// unencrypted connection
     Ldap,
     /// upgrade to TLS via STARTTLS
@@ -25,7 +25,7 @@ pub enum LdapConnectionMode {
 
 #[derive(Clone, Serialize, Deserialize)]
 /// Configuration for LDAP connections
-pub struct LdapConfig {
+pub struct Config {
     /// Array of servers that will be tried in order
     pub servers: Vec<String>,
     /// Port
@@ -39,7 +39,7 @@ pub struct LdapConfig {
     /// LDAP bind password, will be used for user lookup/sync if set
     pub bind_password: Option<String>,
     /// Connection security
-    pub tls_mode: LdapConnectionMode,
+    pub tls_mode: ConnectionMode,
     /// Verify the server's TLS certificate
     pub verify_certificate: bool,
     /// Root certificates that should be trusted, in addition to
@@ -72,12 +72,12 @@ pub struct SearchResult {
 }
 
 /// Connection to an LDAP server, can be used to authenticate users.
-pub struct LdapConnection {
+pub struct Connection {
     /// Configuration for this connection
-    config: LdapConfig,
+    config: Config,
 }
 
-impl LdapConnection {
+impl Connection {
     /// Default port for LDAP/StartTls connections
     const LDAP_DEFAULT_PORT: u16 = 389;
     /// Default port for LDAPS connections
@@ -86,7 +86,7 @@ impl LdapConnection {
     const LDAP_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
 
     /// Create a new LDAP connection.
-    pub fn new(config: LdapConfig) -> Self {
+    pub fn new(config: Config) -> Self {
         Self { config }
     }
 
@@ -157,7 +157,7 @@ impl LdapConnection {
     /// Retrive port from LDAP configuration, otherwise use the correct default
     fn port_from_config(&self) -> u16 {
         self.config.port.unwrap_or_else(|| {
-            if self.config.tls_mode == LdapConnectionMode::Ldaps {
+            if self.config.tls_mode == ConnectionMode::Ldaps {
                 Self::LDAPS_DEFAULT_PORT
             } else {
                 Self::LDAP_DEFAULT_PORT
@@ -167,7 +167,7 @@ impl LdapConnection {
 
     /// Determine correct URL scheme from LDAP config
     fn scheme_from_config(&self) -> &'static str {
-        if self.config.tls_mode == LdapConnectionMode::Ldaps {
+        if self.config.tls_mode == ConnectionMode::Ldaps {
             "ldaps"
         } else {
             "ldap"
@@ -193,7 +193,7 @@ impl LdapConnection {
     }
 
     async fn try_connect(&self, url: &str) -> Result<(LdapConnAsync, Ldap), Error> {
-        let starttls = self.config.tls_mode == LdapConnectionMode::StartTls;
+        let starttls = self.config.tls_mode == ConnectionMode::StartTls;
 
         let mut builder = TlsConnector::builder();
         builder.danger_accept_invalid_certs(!self.config.verify_certificate);
