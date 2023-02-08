@@ -10,7 +10,7 @@ description = "Proxmox library for LDAP authentication/synchronization"
 
 [dependencies]
 anyhow.workspace = true
-ldap3 = { workspace = true, default_features = false, features = ["tls"] }
+ldap3 = { workspace = true, default-features = false, features = ["tls"] }
 serde = { workspace = true, features = ["derive"] }
 native-tls.workspace = true
 

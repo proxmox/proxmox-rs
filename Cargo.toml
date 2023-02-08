@@ -49,7 +49,7 @@ hex = "0.4"
 http = "0.2"
 hyper = "0.14.5"
 lazy_static = "1.4"
-ldap3 = "0.11"
+ldap3 = { version = "0.11", default-features = false }
 libc = "0.2.107"
 log = "0.4.17"
 native-tls = "0.2"
