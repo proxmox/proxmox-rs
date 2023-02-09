@@ -14,6 +14,7 @@ use nix::fcntl::OFlag;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use tokio::signal::unix::SignalKind;
 use tokio::sync::oneshot;
 
 use proxmox_lang::try_block;
@@ -1055,4 +1056,26 @@ pub fn abort_local_worker(upid: UPID) {
     if let Some(worker) = WORKER_TASK_LIST.lock().unwrap().get(&upid.task_id) {
         worker.request_abort();
     }
+}
+
+/// Wait for locally running worker, responding to SIGINT properly
+pub async fn handle_worker(upid_str: &str) -> Result<(), Error> {
+    let upid: UPID = upid_str.parse()?;
+    let mut signal_stream = tokio::signal::unix::signal(SignalKind::interrupt())?;
+    let abort_future = async move {
+        while signal_stream.recv().await.is_some() {
+            println!("got shutdown request (SIGINT)");
+            abort_local_worker(upid.clone());
+        }
+        Ok::<_, Error>(())
+    };
+
+    let result_future = wait_for_local_worker(upid_str);
+
+    futures::select! {
+        result = result_future.fuse() => result?,
+        abort = abort_future.fuse() => abort?,
+    };
+
+    Ok(())
 }
