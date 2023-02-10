@@ -98,8 +98,8 @@ Provides:
  librust-proxmox-rest-server-0+default-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.2-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.2.1-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.2.1+default-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.2.2-dev (= ${binary:Version}),
+ librust-proxmox-rest-server-0.2.2+default-dev (= ${binary:Version})
 Description: REST server implementation - Rust source code
  This package contains the source for the Rust proxmox-rest-server crate,
  packaged by debcargo for use with cargo and dh-cargo.
