@@ -19,6 +19,7 @@ pub use const_regex::ConstRegexPattern;
 
 pub mod de;
 pub mod format;
+pub mod ser;
 
 pub mod property_string;
 

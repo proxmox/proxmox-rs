@@ -88,6 +88,10 @@ impl ParameterError {
             Err(err) => self.push(prefix.to_string(), err),
         }
     }
+
+    pub(crate) fn from_list(error_list: Vec<(String, Error)>) -> Self {
+        Self { error_list }
+    }
 }
 
 impl fmt::Display for ParameterError {
@@ -248,7 +252,7 @@ impl IntegerSchema {
         Schema::Integer(self)
     }
 
-    fn check_constraints(&self, value: isize) -> Result<(), Error> {
+    pub fn check_constraints(&self, value: isize) -> Result<(), Error> {
         if let Some(minimum) = self.minimum {
             if value < minimum {
                 bail!(
@@ -323,7 +327,7 @@ impl NumberSchema {
         Schema::Number(self)
     }
 
-    fn check_constraints(&self, value: f64) -> Result<(), Error> {
+    pub fn check_constraints(&self, value: f64) -> Result<(), Error> {
         if let Some(minimum) = self.minimum {
             if value < minimum {
                 bail!(
@@ -436,7 +440,7 @@ impl StringSchema {
         Schema::String(self)
     }
 
-    fn check_length(&self, length: usize) -> Result<(), Error> {
+    pub(crate) fn check_length(&self, length: usize) -> Result<(), Error> {
         if let Some(min_length) = self.min_length {
             if length < min_length {
                 bail!("value must be at least {} characters long", min_length);
@@ -537,7 +541,7 @@ impl ArraySchema {
         Schema::Array(self)
     }
 
-    fn check_length(&self, length: usize) -> Result<(), Error> {
+    pub(crate) fn check_length(&self, length: usize) -> Result<(), Error> {
         if let Some(min_length) = self.min_length {
             if length < min_length {
                 bail!("array must contain at least {} elements", min_length);
@@ -722,6 +726,7 @@ pub trait ObjectSchemaType {
     fn lookup(&self, key: &str) -> Option<(bool, &Schema)>;
     fn properties(&self) -> ObjectPropertyIterator;
     fn additional_properties(&self) -> bool;
+    fn default_key(&self) -> Option<&'static str>;
 
     /// Verify JSON value using an object schema.
     fn verify_json(&self, data: &Value) -> Result<(), Error> {
@@ -785,6 +790,10 @@ impl ObjectSchemaType for ObjectSchema {
     fn additional_properties(&self) -> bool {
         self.additional_properties
     }
+
+    fn default_key(&self) -> Option<&'static str> {
+        self.default_key
+    }
 }
 
 impl ObjectSchemaType for AllOfSchema {
@@ -806,6 +815,22 @@ impl ObjectSchemaType for AllOfSchema {
 
     fn additional_properties(&self) -> bool {
         true
+    }
+
+    fn default_key(&self) -> Option<&'static str> {
+        for schema in self.list {
+            let default_key = match schema {
+                Schema::Object(schema) => schema.default_key(),
+                Schema::AllOf(schema) => schema.default_key(),
+                _ => panic!("non-object-schema in `AllOfSchema`"),
+            };
+
+            if default_key.is_some() {
+                return default_key;
+            }
+        }
+
+        None
     }
 }
 
@@ -1244,6 +1269,13 @@ impl ObjectSchemaType for ParameterSchema {
         match self {
             ParameterSchema::Object(o) => o.additional_properties(),
             ParameterSchema::AllOf(o) => o.additional_properties(),
+        }
+    }
+
+    fn default_key(&self) -> Option<&'static str> {
+        match self {
+            ParameterSchema::Object(o) => o.default_key(),
+            ParameterSchema::AllOf(o) => o.default_key(),
         }
     }
 }
