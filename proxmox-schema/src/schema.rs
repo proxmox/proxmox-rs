@@ -1067,6 +1067,70 @@ impl Schema {
             _ => panic!("unwrap_all_of_schema on different schema"),
         }
     }
+
+    /// Gets the underlying [`BooleanSchema`].
+    pub const fn boolean(&self) -> Option<&BooleanSchema> {
+        match self {
+            Schema::Boolean(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Gets the underlying [`IntegerSchema`].
+    pub const fn integer(&self) -> Option<&IntegerSchema> {
+        match self {
+            Schema::Integer(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Gets the underlying [`NumberSchema`].
+    pub const fn number(&self) -> Option<&NumberSchema> {
+        match self {
+            Schema::Number(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Gets the underlying [`StringSchema`].
+    pub const fn string(&self) -> Option<&StringSchema> {
+        match self {
+            Schema::String(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Gets the underlying [`ObjectSchema`].
+    pub const fn object(&self) -> Option<&ObjectSchema> {
+        match self {
+            Schema::Object(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Gets the underlying [`ArraySchema`].
+    pub const fn array(&self) -> Option<&ArraySchema> {
+        match self {
+            Schema::Array(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Gets the underlying [`AllOfSchema`].
+    pub const fn all_of(&self) -> Option<&AllOfSchema> {
+        match self {
+            Schema::AllOf(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    pub fn any_object(&self) -> Option<&dyn ObjectSchemaType> {
+        match self {
+            Schema::Object(s) => Some(s),
+            Schema::AllOf(s) => Some(s),
+            _ => None,
+        }
+    }
 }
 
 /// A string enum entry. An enum entry must have a value and a description.
