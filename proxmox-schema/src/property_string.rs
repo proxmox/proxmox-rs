@@ -221,7 +221,7 @@ impl<T> PropertyString<T> {
     }
 }
 
-impl<T: Serialize> PropertyString<T> {
+impl<T: Serialize + ApiType> PropertyString<T> {
     pub fn to_property_string(&self) -> Result<String, Error> {
         print(&self.0)
     }
@@ -322,7 +322,7 @@ where
 
 impl<T> Serialize for PropertyString<T>
 where
-    T: Serialize,
+    T: Serialize + ApiType,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -335,8 +335,11 @@ where
 }
 
 /// Serialize a value as a property string.
-pub fn print<T: Serialize>(value: &T) -> Result<String, Error> {
-    value.serialize(crate::ser::PropertyStringSerializer::new(String::new()))
+pub fn print<T: Serialize + ApiType>(value: &T) -> Result<String, Error> {
+    value.serialize(crate::ser::PropertyStringSerializer::new(
+        String::new(),
+        &T::API_SCHEMA,
+    ))
 }
 
 /// Deserialize a value from a property string.

@@ -6,6 +6,7 @@ use std::mem;
 use serde::ser::{self, Serialize, Serializer};
 
 use crate::de::Error;
+use crate::schema::{ArraySchema, ObjectSchemaType, Schema};
 
 impl serde::ser::Error for Error {
     fn custom<T: fmt::Display>(msg: T) -> Self {
@@ -15,11 +16,26 @@ impl serde::ser::Error for Error {
 
 pub struct PropertyStringSerializer<T> {
     inner: T,
+    schema: &'static Schema,
 }
 
-impl<T> PropertyStringSerializer<T> {
-    pub fn new(inner: T) -> Self {
-        Self { inner }
+impl<T: fmt::Write> PropertyStringSerializer<T> {
+    pub fn new(inner: T, schema: &'static Schema) -> Self {
+        Self { inner, schema }
+    }
+
+    fn do_seq(self) -> Result<SerializeSeq<T>, Error> {
+        let schema = self.schema.array().ok_or_else(|| {
+            Error::msg("property string serializer used for array with non-array schema")
+        })?;
+        Ok(SerializeSeq::new(self.inner, Some(schema)))
+    }
+
+    fn do_object(self) -> Result<SerializeStruct<T>, Error> {
+        let schema = self.schema.any_object().ok_or_else(|| {
+            Error::msg("property string serializer used for object with non-object schema")
+        })?;
+        Ok(SerializeStruct::new(self.inner, Some(schema)))
     }
 }
 
@@ -27,21 +43,21 @@ macro_rules! not_an_object {
     () => {};
     ($name:ident($ty:ty) $($rest:tt)*) => {
         fn $name(self, _v: $ty) -> Result<Self::Ok, Error> {
-            Err(Error::msg("property string serializer used with a non-object type"))
+            Err(Error::msg("property string serializer used with a non-object/array type"))
         }
 
         not_an_object! { $($rest)* }
     };
     ($name:ident($($args:tt)*) $($rest:tt)*) => {
         fn $name(self, $($args)*) -> Result<Self::Ok, Error> {
-            Err(Error::msg("property string serializer used with a non-object type"))
+            Err(Error::msg("property string serializer used with a non-object/array type"))
         }
 
         not_an_object! { $($rest)* }
     };
     ($name:ident<($($gen:tt)*)>($($args:tt)*) $($rest:tt)*) => {
         fn $name<$($gen)*>(self, $($args)*) -> Result<Self::Ok, Error> {
-            Err(Error::msg("property string serializer used with a non-object type"))
+            Err(Error::msg("property string serializer used with a non-object/array type"))
         }
 
         not_an_object! { $($rest)* }
@@ -124,11 +140,11 @@ impl<T: fmt::Write> Serializer for PropertyStringSerializer<T> {
     }
 
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Error> {
-        Ok(SerializeSeq::new(self.inner))
+        self.do_seq()
     }
 
     fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Error> {
-        Ok(SerializeSeq::new(self.inner))
+        self.do_seq()
     }
 
     fn serialize_tuple_struct(
@@ -136,7 +152,7 @@ impl<T: fmt::Write> Serializer for PropertyStringSerializer<T> {
         _name: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleStruct, Error> {
-        Ok(SerializeSeq::new(self.inner))
+        self.do_seq()
     }
 
     fn serialize_tuple_variant(
@@ -146,7 +162,7 @@ impl<T: fmt::Write> Serializer for PropertyStringSerializer<T> {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant, Error> {
-        Ok(SerializeSeq::new(self.inner))
+        self.do_seq()
     }
 
     fn serialize_struct(
@@ -154,7 +170,7 @@ impl<T: fmt::Write> Serializer for PropertyStringSerializer<T> {
         _name: &'static str,
         _len: usize,
     ) -> Result<SerializeStruct<T>, Error> {
-        Ok(SerializeStruct::new(self.inner))
+        self.do_object()
     }
 
     fn serialize_struct_variant(
@@ -164,43 +180,71 @@ impl<T: fmt::Write> Serializer for PropertyStringSerializer<T> {
         _variant: &'static str,
         _len: usize,
     ) -> Result<SerializeStruct<T>, Error> {
-        Ok(SerializeStruct::new(self.inner))
+        self.do_object()
     }
 
     fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Error> {
-        Ok(SerializeStruct::new(self.inner))
+        self.do_object()
     }
 }
 
 pub struct SerializeStruct<T> {
     inner: Option<T>,
     comma: bool,
+    schema: Option<&'static dyn ObjectSchemaType>,
+    value_schema: Option<&'static Schema>,
 }
 
 impl<T: fmt::Write> SerializeStruct<T> {
-    fn new(inner: T) -> Self {
+    fn new(inner: T, schema: Option<&'static dyn ObjectSchemaType>) -> Self {
         Self {
             inner: Some(inner),
             comma: false,
+            schema,
+            value_schema: None,
         }
-    }
-
-    fn field<V>(&mut self, key: &'static str, value: &V) -> Result<(), Error>
-    where
-        V: Serialize + ?Sized,
-    {
-        let mut inner = self.inner.take().unwrap();
-
-        if mem::replace(&mut self.comma, true) {
-            inner.write_char(',')?;
-        }
-        write!(inner, "{key}=")?;
-        self.inner = Some(value.serialize(ElementSerializer::new(inner))?);
-        Ok(())
     }
 
     fn finish(mut self) -> Result<T, Error> {
         Ok(self.inner.take().unwrap())
+    }
+
+    fn do_key<K>(&mut self, key: &K) -> Result<(), Error>
+    where
+        K: Serialize + ?Sized,
+    {
+        let key = key.serialize(ElementSerializer::new(String::new(), None))?;
+
+        let inner = self.inner.as_mut().unwrap();
+        if mem::replace(&mut self.comma, true) {
+            inner.write_char(',')?;
+        }
+
+        if let Some(schema) = self.schema {
+            self.value_schema = schema.lookup(&key).map(|(_optional, schema)| schema);
+            if self.value_schema.is_none() && !schema.additional_properties() {
+                return Err(Error::msg(format!(
+                    "key {key:?} is not part of the schema and it does not allow additional properties"
+                )));
+            }
+            if schema.default_key() == Some(&key[..]) {
+                return Ok(());
+            }
+        }
+
+        inner.write_str(&key)?;
+        inner.write_char('=')?;
+        Ok(())
+    }
+
+    fn do_value<V>(&mut self, value: &V) -> Result<(), Error>
+    where
+        V: Serialize + ?Sized,
+    {
+        let mut inner = self.inner.take().unwrap();
+        inner = value.serialize(ElementSerializer::new(inner, self.value_schema))?;
+        self.inner = Some(inner);
+        Ok(())
     }
 }
 
@@ -215,7 +259,8 @@ same_impl! {
         where
             V: Serialize + ?Sized,
         {
-            self.field(key, value)
+            self.do_key(key)?;
+            self.do_value(value)
         }
 
         fn end(self) -> Result<Self::Ok, Self::Error> {
@@ -232,24 +277,14 @@ impl<T: fmt::Write> ser::SerializeMap for SerializeStruct<T> {
     where
         K: Serialize + ?Sized,
     {
-        let mut inner = self.inner.take().unwrap();
-        if mem::replace(&mut self.comma, true) {
-            inner.write_char(',')?;
-        }
-        inner = key.serialize(ElementSerializer::new(inner))?;
-        inner.write_char('=')?;
-        self.inner = Some(inner);
-        Ok(())
+        self.do_key(key)
     }
 
     fn serialize_value<V>(&mut self, value: &V) -> Result<(), Self::Error>
     where
         V: Serialize + ?Sized,
     {
-        let mut inner = self.inner.take().unwrap();
-        inner = value.serialize(ElementSerializer::new(inner))?;
-        self.inner = Some(inner);
-        Ok(())
+        self.do_key(value)
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
@@ -260,13 +295,15 @@ impl<T: fmt::Write> ser::SerializeMap for SerializeStruct<T> {
 pub struct SerializeSeq<T: fmt::Write> {
     inner: Option<T>,
     comma: bool,
+    schema: Option<&'static ArraySchema>,
 }
 
 impl<T: fmt::Write> SerializeSeq<T> {
-    fn new(inner: T) -> Self {
+    fn new(inner: T, schema: Option<&'static ArraySchema>) -> Self {
         Self {
             inner: Some(inner),
             comma: false,
+            schema,
         }
     }
 
@@ -279,7 +316,7 @@ impl<T: fmt::Write> SerializeSeq<T> {
             inner.write_char(',')?;
         }
 
-        inner = value.serialize(ElementSerializer::new(inner))?;
+        inner = value.serialize(ElementSerializer::new(inner, self.schema.map(|s| s.items)))?;
         self.inner = Some(inner);
         Ok(())
     }
@@ -331,11 +368,12 @@ same_impl! {
 
 pub struct ElementSerializer<T> {
     inner: T,
+    schema: Option<&'static Schema>,
 }
 
 impl<T> ElementSerializer<T> {
-    fn new(inner: T) -> Self {
-        Self { inner }
+    fn new(inner: T, schema: Option<&'static Schema>) -> Self {
+        Self { inner, schema }
     }
 }
 
@@ -344,6 +382,26 @@ impl<T: fmt::Write> ElementSerializer<T> {
         write!(self.inner, "{v}")
             .map_err(|err| Error::msg(format!("failed to write string: {err}")))?;
         Ok(self.inner)
+    }
+
+    fn do_seq(self) -> Result<ElementSerializeSeq<T>, Error> {
+        let schema = match self.schema {
+            Some(schema) => Some(schema.array().ok_or_else(|| {
+                Error::msg("property string serializer used for array with non-array schema")
+            })?),
+            None => None,
+        };
+        Ok(ElementSerializeSeq::new(self.inner, schema))
+    }
+
+    fn do_object(self) -> Result<ElementSerializeStruct<T>, Error> {
+        let schema = match self.schema {
+            Some(schema) => Some(schema.any_object().ok_or_else(|| {
+                Error::msg("property string serializer used for object with non-object schema")
+            })?),
+            None => None,
+        };
+        Ok(ElementSerializeStruct::new(self.inner, schema))
     }
 }
 
@@ -456,11 +514,11 @@ impl<T: fmt::Write> Serializer for ElementSerializer<T> {
     }
 
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Error> {
-        Ok(ElementSerializeSeq::new(self.inner))
+        self.do_seq()
     }
 
     fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Error> {
-        Ok(ElementSerializeSeq::new(self.inner))
+        self.do_seq()
     }
 
     fn serialize_tuple_struct(
@@ -468,7 +526,7 @@ impl<T: fmt::Write> Serializer for ElementSerializer<T> {
         _name: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleStruct, Error> {
-        Ok(ElementSerializeSeq::new(self.inner))
+        self.do_seq()
     }
 
     fn serialize_tuple_variant(
@@ -478,7 +536,7 @@ impl<T: fmt::Write> Serializer for ElementSerializer<T> {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant, Error> {
-        Ok(ElementSerializeSeq::new(self.inner))
+        self.do_seq()
     }
 
     fn serialize_struct(
@@ -486,7 +544,7 @@ impl<T: fmt::Write> Serializer for ElementSerializer<T> {
         _name: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStruct, Error> {
-        Ok(ElementSerializeStruct::new(self.inner))
+        self.do_object()
     }
 
     fn serialize_struct_variant(
@@ -496,11 +554,11 @@ impl<T: fmt::Write> Serializer for ElementSerializer<T> {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant, Error> {
-        Ok(ElementSerializeStruct::new(self.inner))
+        self.do_object()
     }
 
     fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Error> {
-        Ok(ElementSerializeStruct::new(self.inner))
+        self.do_object()
     }
 }
 
@@ -510,10 +568,10 @@ pub struct ElementSerializeStruct<T> {
 }
 
 impl<T: fmt::Write> ElementSerializeStruct<T> {
-    fn new(inner: T) -> Self {
+    fn new(inner: T, schema: Option<&'static dyn ObjectSchemaType>) -> Self {
         Self {
             output: inner,
-            inner: SerializeStruct::new(String::new()),
+            inner: SerializeStruct::new(String::new(), schema),
         }
     }
 
@@ -537,7 +595,8 @@ same_impl! {
         where
             V: Serialize + ?Sized,
         {
-            self.inner.field(key, value)
+            self.inner.do_key(key)?;
+            self.inner.do_value(value)
         }
 
         fn end(self) -> Result<Self::Ok, Self::Error> {
@@ -575,10 +634,10 @@ pub struct ElementSerializeSeq<T: fmt::Write> {
 }
 
 impl<T: fmt::Write> ElementSerializeSeq<T> {
-    fn new(inner: T) -> Self {
+    fn new(inner: T, schema: Option<&'static ArraySchema>) -> Self {
         Self {
             output: inner,
-            inner: SerializeSeq::new(String::new()),
+            inner: SerializeSeq::new(String::new(), schema),
         }
     }
 
