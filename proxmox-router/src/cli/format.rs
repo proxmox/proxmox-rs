@@ -2,6 +2,7 @@
 
 use std::collections::HashSet;
 
+use serde::Serialize;
 use serde_json::Value;
 
 use proxmox_schema::format::{
@@ -17,7 +18,7 @@ use super::{CliCommand, CliCommandMap, CommandLineInterface};
 /// This is implemented for machine generatable formats 'json' and
 /// 'json-pretty'. The 'text' format needs to be handled somewhere
 /// else.
-pub fn format_and_print_result(result: &Value, output_format: &str) {
+pub fn format_and_print_result<T: Serialize>(result: &T, output_format: &str) {
     if output_format == "json-pretty" {
         println!("{}", serde_json::to_string_pretty(&result).unwrap());
     } else if output_format == "json" {
