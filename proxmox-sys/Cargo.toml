@@ -21,16 +21,12 @@ serde_json.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
 zstd = { workspace = true, optional = true}
 
-# Macro crates:
-proxmox-sortable-macro = { workspace = true, optional = true }
-
 proxmox-io.workspace = true
 proxmox-lang.workspace = true
 proxmox-time.workspace = true
 
 [features]
 default = []
-sortable-macro = ["dep:proxmox-sortable-macro"]
 logrotate = ["dep:zstd"]
 acl = []
 crypt = []

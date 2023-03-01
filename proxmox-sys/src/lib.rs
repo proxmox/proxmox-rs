@@ -18,20 +18,6 @@ pub mod systemd;
 mod worker_task_context;
 pub use worker_task_context::*;
 
-#[deprecated(
-    since = "0.2.2",
-    note = "the sortable macro does not require this anymore, it will be removed"
-)]
-/// An identity (nop) macro. Used by the `#[sortable]` proc macro.
-#[cfg(feature = "sortable-macro")]
-#[macro_export]
-macro_rules! identity {
-    ($($any:tt)*) => ($($any)*)
-}
-
-#[cfg(feature = "sortable-macro")]
-pub use proxmox_sortable_macro::sortable;
-
 #[allow(deprecated)]
 use fd::Fd;
 
