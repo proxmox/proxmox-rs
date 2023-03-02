@@ -76,8 +76,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-tfa-dev (= ${binary:Version}),
- librust-proxmox-schema-1+api-macro-dev (>= 1.3.6-~~),
- librust-proxmox-schema-1+default-dev (>= 1.3.6-~~)
+ librust-proxmox-schema-1+api-macro-dev (>= 1.3.7-~~),
+ librust-proxmox-schema-1+default-dev (>= 1.3.7-~~)
 Provides:
  librust-proxmox-tfa-3+api-types-dev (= ${binary:Version}),
  librust-proxmox-tfa-3.0+api-types-dev (= ${binary:Version}),
