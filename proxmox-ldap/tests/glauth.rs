@@ -36,19 +36,19 @@ impl Drop for GlauthServer {
     }
 }
 
-fn authenticate(con: &LdapConnection, user: &str, pass: &str) -> Result<(), Error> {
+fn authenticate(con: &Connection, user: &str, pass: &str) -> Result<(), Error> {
     proxmox_async::runtime::block_on(con.authenticate_user(user, pass))
 }
 
-fn default_config() -> LdapConfig {
-    LdapConfig {
+fn default_config() -> Config {
+    Config {
         servers: vec!["localhost".into()],
         port: Some(3893),
         user_attr: "cn".into(),
         base_dn: "dc=example,dc=com".into(),
         bind_dn: Some("cn=serviceuser,ou=svcaccts,dc=example,dc=com".into()),
         bind_password: Some("password".into()),
-        tls_mode: LdapConnectionMode::Ldap,
+        tls_mode: ConnectionMode::Ldap,
         verify_certificate: false,
         additional_trusted_certificates: None,
         certificate_store_path: Some("/etc/ssl/certs".into()),
@@ -60,7 +60,7 @@ fn default_config() -> LdapConfig {
 fn test_authentication() -> Result<(), Error> {
     let _glauth = GlauthServer::new("tests/assets/glauth.cfg")?;
 
-    let connection = LdapConnection::new(default_config());
+    let connection = Connection::new(default_config());
 
     assert!(authenticate(&connection, "test1", "password").is_ok());
     assert!(authenticate(&connection, "test2", "password").is_ok());
@@ -76,12 +76,12 @@ fn test_authentication() -> Result<(), Error> {
 fn test_authentication_via_ipv6() -> Result<(), Error> {
     let _glauth = GlauthServer::new("tests/assets/glauth_v6.cfg")?;
 
-    let settings = LdapConfig {
+    let settings = Config {
         servers: vec!["[::1]".into()],
         ..default_config()
     };
 
-    let connection = LdapConnection::new(settings);
+    let connection = Connection::new(settings);
 
     assert!(authenticate(&connection, "test1", "password").is_ok());
 
@@ -91,9 +91,9 @@ fn test_authentication_via_ipv6() -> Result<(), Error> {
 #[test]
 #[ignore]
 fn test_authentication_via_ldaps() -> Result<(), Error> {
-    let settings = LdapConfig {
+    let settings = Config {
         port: Some(3894),
-        tls_mode: LdapConnectionMode::Ldaps,
+        tls_mode: ConnectionMode::Ldaps,
         verify_certificate: true,
         additional_trusted_certificates: Some(vec!["tests/assets/glauth.crt".into()]),
         ..default_config()
@@ -101,7 +101,7 @@ fn test_authentication_via_ldaps() -> Result<(), Error> {
 
     let _glauth = GlauthServer::new("tests/assets/glauth.cfg")?;
 
-    let connection = LdapConnection::new(settings);
+    let connection = Connection::new(settings);
 
     assert!(authenticate(&connection, "test1", "password").is_ok());
     assert!(authenticate(&connection, "test1", "invalid").is_err());
@@ -112,14 +112,14 @@ fn test_authentication_via_ldaps() -> Result<(), Error> {
 #[test]
 #[ignore]
 fn test_fallback() -> Result<(), Error> {
-    let settings = LdapConfig {
+    let settings = Config {
         servers: vec!["invalid.host".into(), "localhost".into()],
         ..default_config()
     };
 
     let _glauth = GlauthServer::new("tests/assets/glauth.cfg")?;
 
-    let connection = LdapConnection::new(settings);
+    let connection = Connection::new(settings);
     assert!(authenticate(&connection, "test1", "password").is_ok());
 
     Ok(())
@@ -130,7 +130,7 @@ fn test_fallback() -> Result<(), Error> {
 fn test_search() -> Result<(), Error> {
     let _glauth = GlauthServer::new("tests/assets/glauth.cfg")?;
 
-    let connection = LdapConnection::new(default_config());
+    let connection = Connection::new(default_config());
 
     let params = SearchParameters {
         attributes: vec!["cn".into(), "mail".into(), "sn".into()],
