@@ -14,7 +14,7 @@ use proxmox_router::{
 };
 use proxmox_schema::api;
 
-use proxmox_rest_server::{ApiConfig, AuthError, RestEnvironment, RestServer, ServerAdapter};
+use proxmox_rest_server::{ApiConfig, AuthError, RestEnvironment, RestServer};
 
 // Create a Dummy User information system
 struct DummyUserInfo;
@@ -32,42 +32,34 @@ impl UserInformation for DummyUserInfo {
     }
 }
 
-struct MinimalServer;
+fn check_auth<'a>(
+    _headers: &'a HeaderMap,
+    _method: &'a Method,
+) -> Pin<
+    Box<
+        dyn Future<Output = Result<(String, Box<dyn UserInformation + Sync + Send>), AuthError>>
+            + Send
+            + 'a,
+    >,
+> {
+    Box::pin(async move {
+        // get some global/cached userinfo
+        let userinfo: Box<dyn UserInformation + Sync + Send> = Box::new(DummyUserInfo);
+        // Do some user checks, e.g. cookie/csrf
+        Ok(("User".to_string(), userinfo))
+    })
+}
 
-// implement the server adapter
-impl ServerAdapter for MinimalServer {
-    // normally this would check and authenticate the user
-    fn check_auth(
-        &self,
-        _headers: &HeaderMap,
-        _method: &Method,
-    ) -> Pin<
-        Box<
-            dyn Future<Output = Result<(String, Box<dyn UserInformation + Sync + Send>), AuthError>>
-                + Send,
-        >,
-    > {
-        Box::pin(async move {
-            // get some global/cached userinfo
-            let userinfo: Box<dyn UserInformation + Sync + Send> = Box::new(DummyUserInfo);
-            // Do some user checks, e.g. cookie/csrf
-            Ok(("User".to_string(), userinfo))
-        })
-    }
-
-    // this should return the index page of the webserver, iow. what the user browses to
-    fn get_index(
-        &self,
-        _env: RestEnvironment,
-        _parts: Parts,
-    ) -> Pin<Box<dyn Future<Output = Response<Body>> + Send>> {
-        Box::pin(async move {
-            // build an index page
-            http::Response::builder()
-                .body("hello world".into())
-                .unwrap()
-        })
-    }
+fn get_index(
+    _env: RestEnvironment,
+    _parts: Parts,
+) -> Pin<Box<dyn Future<Output = Response<Body>> + Send>> {
+    Box::pin(async move {
+        // build an index page
+        http::Response::builder()
+            .body("hello world".into())
+            .unwrap()
+    })
 }
 
 // a few examples on how to do api calls with the Router
@@ -199,12 +191,10 @@ const ROUTER: Router = Router::new()
 async fn run() -> Result<(), Error> {
     // we first have to configure the api environment (basedir etc.)
 
-    let config = ApiConfig::new(
-        "/var/tmp/",
-        &ROUTER,
-        RpcEnvironmentType::PUBLIC,
-        MinimalServer,
-    )?;
+    let config = ApiConfig::new("/var/tmp/", RpcEnvironmentType::PUBLIC)
+        .default_api2_handler(&ROUTER)
+        .auth_handler_func(check_auth)
+        .index_handler_func(get_index);
     let rest_server = RestServer::new(config);
 
     // then we have to create a daemon that listens, accepts and serves the api to clients
