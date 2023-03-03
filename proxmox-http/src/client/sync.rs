@@ -7,8 +7,6 @@ use http::Response;
 use crate::HttpClient;
 use crate::HttpOptions;
 
-pub const DEFAULT_USER_AGENT_STRING: &str = "proxmox-sync-http-client/0.1";
-
 #[derive(Default)]
 /// Blocking HTTP client for usage with [`HttpClient`].
 pub struct Client {
@@ -23,12 +21,10 @@ impl Client {
     fn agent(&self) -> Result<ureq::Agent, Error> {
         let mut builder = ureq::AgentBuilder::new();
 
-        builder = builder.user_agent(
-            self.options
-                .user_agent
-                .as_deref()
-                .unwrap_or(DEFAULT_USER_AGENT_STRING),
-        );
+        builder = builder.user_agent(self.options.user_agent.as_deref().unwrap_or(&format!(
+            "proxmox-sync-http-client/{}",
+            env!("CARGO_PKG_VERSION")
+        )));
 
         if let Some(proxy_config) = &self.options.proxy_config {
             builder = builder.proxy(ureq::Proxy::new(proxy_config.to_proxy_string()?)?);
