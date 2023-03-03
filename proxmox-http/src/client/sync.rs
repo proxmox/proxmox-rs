@@ -37,19 +37,7 @@ impl Client {
         Ok(builder.build())
     }
 
-    fn add_user_agent(&self, req: ureq::Request) -> ureq::Request {
-        req.set(
-            "User-Agent",
-            self.options
-                .user_agent
-                .as_deref()
-                .unwrap_or(DEFAULT_USER_AGENT_STRING),
-        )
-    }
-
     fn call(&self, req: ureq::Request) -> Result<ureq::Response, Error> {
-        let req = self.add_user_agent(req);
-
         req.call().map_err(Into::into)
     }
 
@@ -57,8 +45,6 @@ impl Client {
     where
         R: Read,
     {
-        let req = self.add_user_agent(req);
-
         req.send(body).map_err(Into::into)
     }
 
@@ -147,7 +133,6 @@ impl HttpClient<String, String> for Client {
         let mut req = self
             .agent()?
             .request(request.method().as_str(), &request.uri().to_string());
-        req = self.add_user_agent(req);
 
         let orig_headers = request.headers();
 
@@ -195,7 +180,6 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
         let mut req = self
             .agent()?
             .request(request.method().as_str(), &request.uri().to_string());
-        req = self.add_user_agent(req);
 
         let orig_headers = request.headers();
 
