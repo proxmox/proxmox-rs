@@ -22,6 +22,14 @@ impl Client {
 
     fn agent(&self) -> Result<ureq::Agent, Error> {
         let mut builder = ureq::AgentBuilder::new();
+
+        builder = builder.user_agent(
+            self.options
+                .user_agent
+                .as_deref()
+                .unwrap_or(DEFAULT_USER_AGENT_STRING),
+        );
+
         if let Some(proxy_config) = &self.options.proxy_config {
             builder = builder.proxy(ureq::Proxy::new(proxy_config.to_proxy_string()?)?);
         }
