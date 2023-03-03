@@ -267,9 +267,11 @@ where
     where
         D: serde::Deserializer<'de>,
     {
+        use crate::de::{set_in_property_string, InPropertyStringGuard};
+
         use std::marker::PhantomData;
 
-        struct V<T>(PhantomData<T>);
+        struct V<T>(InPropertyStringGuard, PhantomData<T>);
 
         impl<'de, T> serde::de::Visitor<'de> for V<T>
         where
@@ -292,6 +294,7 @@ where
             where
                 E: serde::de::Error,
             {
+                drop(self); // unset IN_PROPERTY_STRING
                 T::deserialize(crate::de::SchemaDeserializer::new(s, &T::API_SCHEMA))
                     .map_err(|err| E::custom(err.to_string()))
             }
@@ -300,12 +303,15 @@ where
             where
                 E: serde::de::Error,
             {
+                drop(self); // unset IN_PROPERTY_STRING
                 T::deserialize(crate::de::SchemaDeserializer::new(s, &T::API_SCHEMA))
                     .map_err(|err| E::custom(err.to_string()))
             }
         }
 
-        deserializer.deserialize_string(V(PhantomData)).map(Self)
+        deserializer
+            .deserialize_string(V(set_in_property_string(), PhantomData))
+            .map(Self)
     }
 }
 

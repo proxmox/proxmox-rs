@@ -1,6 +1,7 @@
 //! Property string deserialization.
 
 use std::borrow::Cow;
+use std::cell::Cell;
 use std::fmt;
 use std::ops::Range;
 
@@ -17,6 +18,25 @@ pub mod verify;
 pub use extract::ExtractValueDeserializer;
 
 use cow3::{str_slice_to_range, Cow3};
+
+// Used to disable calling `check_constraints` on a `StringSchema` if it is being deserialized
+// for a `PropertyString`, which performs its own checking.
+thread_local! {
+    static IN_PROPERTY_STRING: Cell<bool> = Cell::new(false);
+}
+
+pub(crate) struct InPropertyStringGuard;
+
+pub(crate) fn set_in_property_string() -> InPropertyStringGuard {
+    IN_PROPERTY_STRING.with(|v| v.set(true));
+    InPropertyStringGuard
+}
+
+impl Drop for InPropertyStringGuard {
+    fn drop(&mut self) {
+        IN_PROPERTY_STRING.with(|v| v.set(false));
+    }
+}
 
 #[derive(Debug)]
 pub struct Error(Cow<'static, str>);
@@ -86,9 +106,11 @@ impl<'de, 'i> SchemaDeserializer<'de, 'i> {
     where
         V: de::Visitor<'de>,
     {
-        schema
-            .check_constraints(&self.input)
-            .map_err(|err| Error::invalid(err))?;
+        if !IN_PROPERTY_STRING.with(|v| v.get()) {
+            schema
+                .check_constraints(&self.input)
+                .map_err(|err| Error::invalid(err))?;
+        }
         match self.input {
             Cow3::Original(input) => visitor.visit_borrowed_str(input),
             Cow3::Intermediate(input) => visitor.visit_str(input),
