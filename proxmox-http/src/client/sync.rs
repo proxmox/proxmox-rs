@@ -33,11 +33,11 @@ impl Client {
         Ok(builder.build())
     }
 
-    fn call(&self, req: ureq::Request) -> Result<ureq::Response, Error> {
+    fn call(req: ureq::Request) -> Result<ureq::Response, Error> {
         req.call().map_err(Into::into)
     }
 
-    fn send<R>(&self, req: ureq::Request, body: R) -> Result<ureq::Response, Error>
+    fn send<R>(req: ureq::Request, body: R) -> Result<ureq::Response, Error>
     where
         R: Read,
     {
@@ -105,7 +105,7 @@ impl HttpClient<String, String> for Client {
         let req = self.agent()?.get(uri);
         let req = Self::add_headers(req, None, extra_headers);
 
-        self.call(req).and_then(Self::convert_response_to_string)
+        Self::call(req).and_then(Self::convert_response_to_string)
     }
 
     fn post(
@@ -119,8 +119,8 @@ impl HttpClient<String, String> for Client {
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
-            Some(body) => self.send(req, body.as_bytes()),
-            None => self.call(req),
+            Some(body) => Self::send(req, body.as_bytes()),
+            None => Self::call(req),
         }
         .and_then(Self::convert_response_to_string)
     }
@@ -138,8 +138,7 @@ impl HttpClient<String, String> for Client {
             }
         }
 
-        self.send(req, request.body().as_bytes())
-            .and_then(Self::convert_response_to_string)
+        Self::send(req, request.body().as_bytes()).and_then(Self::convert_response_to_string)
     }
 }
 
@@ -152,7 +151,7 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
         let req = self.agent()?.get(uri);
         let req = Self::add_headers(req, None, extra_headers);
 
-        self.call(req).and_then(Self::convert_response_to_vec)
+        Self::call(req).and_then(Self::convert_response_to_vec)
     }
 
     fn post(
@@ -166,8 +165,8 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
-            Some(body) => self.send(req, body),
-            None => self.call(req),
+            Some(body) => Self::send(req, body),
+            None => Self::call(req),
         }
         .and_then(Self::convert_response_to_vec)
     }
@@ -185,8 +184,7 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
             }
         }
 
-        self.send(req, *request.body())
-            .and_then(Self::convert_response_to_vec)
+        Self::send(req, *request.body()).and_then(Self::convert_response_to_vec)
     }
 }
 
@@ -199,7 +197,7 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
         let req = self.agent()?.get(uri);
         let req = Self::add_headers(req, None, extra_headers);
 
-        self.call(req).and_then(Self::convert_response_to_reader)
+        Self::call(req).and_then(Self::convert_response_to_reader)
     }
 
     fn post(
@@ -213,8 +211,8 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
-            Some(body) => self.send(req, body),
-            None => self.call(req),
+            Some(body) => Self::send(req, body),
+            None => Self::call(req),
         }
         .and_then(Self::convert_response_to_reader)
     }
@@ -234,7 +232,6 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
             }
         }
 
-        self.send(req, Box::new(request.body_mut()))
-            .and_then(Self::convert_response_to_reader)
+        Self::send(req, Box::new(request.body_mut())).and_then(Self::convert_response_to_reader)
     }
 }
