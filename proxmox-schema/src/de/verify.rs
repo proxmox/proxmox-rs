@@ -1,5 +1,5 @@
 use std::borrow::Cow;
-use std::cell::UnsafeCell;
+use std::cell::RefCell;
 use std::collections::HashSet;
 use std::fmt;
 use std::mem;
@@ -16,19 +16,19 @@ struct VerifyState {
 }
 
 thread_local! {
-    static VERIFY_SCHEMA: UnsafeCell<Option<VerifyState>> = UnsafeCell::new(None);
-    static ERRORS: UnsafeCell<Vec<(String, anyhow::Error)>> = UnsafeCell::new(Vec::new());
+    static VERIFY_SCHEMA: RefCell<Option<VerifyState>> = RefCell::new(None);
+    static ERRORS: RefCell<Vec<(String, anyhow::Error)>> = RefCell::new(Vec::new());
 }
 
 pub(crate) struct SchemaGuard(Option<VerifyState>);
 
 impl Drop for SchemaGuard {
     fn drop(&mut self) {
-        VERIFY_SCHEMA.with(|schema| unsafe {
+        VERIFY_SCHEMA.with(|schema| {
             if self.0.is_none() {
-                ERRORS.with(|errors| (*errors.get()).clear())
+                ERRORS.with(|errors| errors.borrow_mut().clear())
             }
-            *schema.get() = self.0.take();
+            *schema.borrow_mut() = self.0.take();
         });
     }
 }
@@ -37,7 +37,7 @@ impl SchemaGuard {
     /// If this is the "final" guard, take out the errors:
     fn errors(self) -> Option<Vec<(String, anyhow::Error)>> {
         if self.0.is_none() {
-            Some(ERRORS.with(|e| mem::take(unsafe { &mut *e.get() })))
+            Some(ERRORS.with(|e| mem::take(&mut *e.borrow_mut())))
         } else {
             None
         }
@@ -46,7 +46,7 @@ impl SchemaGuard {
 
 pub(crate) fn push_schema(schema: Option<&'static Schema>, path: Option<&str>) -> SchemaGuard {
     SchemaGuard(VERIFY_SCHEMA.with(|s| {
-        let prev = unsafe { (*s.get()).take() };
+        let prev = s.borrow_mut().take();
         let path = match (path, &prev) {
             (Some(path), Some(prev)) => join_path(&prev.path, path),
             (Some(path), None) => path.to_owned(),
@@ -54,24 +54,22 @@ pub(crate) fn push_schema(schema: Option<&'static Schema>, path: Option<&str>) -
             (None, None) => String::new(),
         };
 
-        unsafe {
-            (*s.get()) = Some(VerifyState { schema, path });
-        }
+        *s.borrow_mut() = Some(VerifyState { schema, path });
 
         prev
     }))
 }
 
 fn get_path() -> Option<String> {
-    VERIFY_SCHEMA.with(|s| unsafe { (*s.get()).as_ref().map(|state| state.path.clone()) })
+    VERIFY_SCHEMA.with(|s| s.borrow().as_ref().map(|state| state.path.clone()))
 }
 
 fn get_schema() -> Option<&'static Schema> {
-    VERIFY_SCHEMA.with(|s| unsafe { (*s.get()).as_ref().and_then(|state| state.schema) })
+    VERIFY_SCHEMA.with(|s| s.borrow().as_ref().and_then(|state| state.schema))
 }
 
 pub(crate) fn is_verifying() -> bool {
-    VERIFY_SCHEMA.with(|s| unsafe { (*s.get()).as_ref().is_some() })
+    VERIFY_SCHEMA.with(|s| s.borrow().as_ref().is_some())
 }
 
 fn join_path(a: &str, b: &str) -> String {
@@ -95,7 +93,7 @@ fn push_err(err: impl fmt::Display) {
 }
 
 fn push_err_do(path: String, err: anyhow::Error) {
-    ERRORS.with(move |errors| unsafe { (*errors.get()).push((path, err)) })
+    ERRORS.with(move |errors| errors.borrow_mut().push((path, err)))
 }
 
 /// Helper to collect multiple deserialization errors for better reporting.
