@@ -606,7 +606,11 @@ impl<'de, 'i> de::MapAccess<'de> for MapAccess<'de, 'i> {
                         .ok_or(Error::msg("bad default key"))?;
                     (Cow::Borrowed(key), Some(schema))
                 }
-                None => return Err(Error::msg("missing key")),
+                None => {
+                    return Err(Error::msg(
+                        "value without key, but schema does not define a default key",
+                    ))
+                }
             },
         };
         let schema = schema.map(|(_optional, schema)| schema);

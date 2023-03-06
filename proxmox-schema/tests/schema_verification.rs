@@ -158,7 +158,7 @@ fn verify_nested_property1() -> Result<(), Error> {
         &value,
         &[(
             "ps1",
-            "Value without key, but schema does not define a default key.",
+            "value without key, but schema does not define a default key",
         )],
     )?;
 
@@ -172,7 +172,11 @@ fn verify_nested_property2() -> Result<(), Error> {
     test_verify(
         &NESTED_PROPERTY_SCHEMA,
         &value,
-        &[("ps1/abc", "schema does not allow additional properties.")],
+        &[
+            ("ps1/abc", "schema does not allow additional properties"),
+            ("ps1/prop1", "property is missing and it is not optional"),
+            ("ps1/prop3", "property is missing and it is not optional"),
+        ],
     )?;
 
     Ok(())
@@ -186,8 +190,8 @@ fn verify_nested_property3() -> Result<(), Error> {
         &NESTED_PROPERTY_SCHEMA,
         &value,
         &[
-            ("ps1/prop1", "parameter is missing and it is not optional."),
-            ("ps1/prop3", "parameter is missing and it is not optional."),
+            ("ps1/prop1", "property is missing and it is not optional"),
+            ("ps1/prop3", "property is missing and it is not optional"),
         ],
     )?;
 

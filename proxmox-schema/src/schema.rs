@@ -472,7 +472,7 @@ impl StringSchema {
                     }
                 }
                 ApiStringFormat::PropertyString(subschema) => {
-                    subschema.parse_property_string(value)?;
+                    crate::de::verify::verify(subschema, value)?;
                 }
                 ApiStringFormat::VerifyFn(verify_fn) => {
                     verify_fn(value)?;
