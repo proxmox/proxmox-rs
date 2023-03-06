@@ -37,7 +37,8 @@ impl SchemaGuard {
     /// If this is the "final" guard, take out the errors:
     fn errors(self) -> Option<Vec<(String, anyhow::Error)>> {
         if self.0.is_none() {
-            Some(ERRORS.with(|e| mem::take(&mut *e.borrow_mut())))
+            let errors = ERRORS.with(|e| mem::take(&mut *e.borrow_mut()));
+            (!errors.is_empty()).then_some(errors)
         } else {
             None
         }
