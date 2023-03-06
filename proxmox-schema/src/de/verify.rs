@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashSet};
 use std::fmt;
 use std::mem;
 
@@ -229,7 +229,9 @@ impl<'de> de::Visitor<'de> for Visitor {
             _ => return Err(A::Error::invalid_type(Unexpected::Map, &self)),
         };
 
-        let mut required_keys = HashSet::<&'static str>::new();
+        // The tests need this to be in a predictable order, so HashSet won't work as it uses a
+        // randomized default state.
+        let mut required_keys = BTreeSet::<&'static str>::new();
         for (key, optional, _schema) in schema.properties() {
             if !optional {
                 required_keys.insert(key);
