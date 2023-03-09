@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll};
 
 use anyhow::{bail, format_err, Error};
-use futures::future::{FutureExt, TryFutureExt};
+use futures::future::FutureExt;
 use futures::stream::TryStreamExt;
 use hyper::body::HttpBody;
 use hyper::header::{self, HeaderMap};
@@ -443,7 +443,8 @@ async fn get_request_parameters<S: 'static + BuildHasher + Send>(
 struct NoLogExtension();
 
 async fn proxy_protected_request(
-    info: &'static ApiMethod,
+    config: &ApiConfig,
+    info: &ApiMethod,
     mut parts: Parts,
     req_body: Body,
     peer: &std::net::SocketAddr,
@@ -464,14 +465,16 @@ async fn proxy_protected_request(
 
     let reload_timezone = info.reload_timezone;
 
-    let resp = hyper::client::Client::new()
-        .request(request)
-        .map_err(Error::from)
-        .map_ok(|mut resp| {
-            resp.extensions_mut().insert(NoLogExtension());
-            resp
-        })
-        .await?;
+    let mut resp = match config.privileged_addr.clone() {
+        None => hyper::client::Client::new().request(request).await?,
+        Some(addr) => {
+            hyper::client::Client::builder()
+                .build(addr)
+                .request(request)
+                .await?
+        }
+    };
+    resp.extensions_mut().insert(NoLogExtension());
 
     if reload_timezone {
         unsafe {
@@ -1024,7 +1027,7 @@ impl Formatted {
                 let result = if api_method.protected
                     && rpcenv.env_type == RpcEnvironmentType::PUBLIC
                 {
-                    proxy_protected_request(api_method, parts, body, peer).await
+                    proxy_protected_request(config, api_method, parts, body, peer).await
                 } else {
                     handle_api_request(rpcenv, api_method, formatter, parts, body, uri_param).await
                 };
@@ -1129,7 +1132,7 @@ impl Unformatted {
                 let result = if api_method.protected
                     && rpcenv.env_type == RpcEnvironmentType::PUBLIC
                 {
-                    proxy_protected_request(api_method, parts, body, peer).await
+                    proxy_protected_request(config, api_method, parts, body, peer).await
                 } else {
                     handle_unformatted_api_request(rpcenv, api_method, parts, body, uri_param).await
                 };

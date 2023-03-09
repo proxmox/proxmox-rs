@@ -1,13 +1,16 @@
 use std::collections::HashMap;
 use std::future::Future;
+use std::io;
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
+use std::task::{Context, Poll};
 
 use anyhow::{format_err, Error};
-use http::{HeaderMap, Method};
+use http::{HeaderMap, Method, Uri};
 use hyper::http::request::Parts;
 use hyper::{Body, Response};
+use tower_service::Service;
 
 use proxmox_router::{Router, RpcEnvironmentType, UserInformation};
 use proxmox_sys::fs::{create_path, CreateOptions};
@@ -25,6 +28,7 @@ pub struct ApiConfig {
     handlers: Vec<Handler>,
     auth_handler: Option<AuthHandler>,
     index_handler: Option<IndexHandler>,
+    pub(crate) privileged_addr: Option<PrivilegedAddr>,
 
     #[cfg(feature = "templates")]
     templates: templates::Templates,
@@ -53,6 +57,7 @@ impl ApiConfig {
             handlers: Vec::new(),
             auth_handler: None,
             index_handler: None,
+            privileged_addr: None,
 
             #[cfg(feature = "templates")]
             templates: Default::default(),
@@ -71,6 +76,12 @@ impl ApiConfig {
         Func: for<'a> Fn(&'a HeaderMap, &'a Method) -> CheckAuthFuture<'a> + Send + Sync + 'static,
     {
         self.auth_handler(AuthHandler::from_fn(func))
+    }
+
+    /// This is used for `protected` API calls to proxy to a more privileged service.
+    pub fn privileged_addr(mut self, addr: impl Into<PrivilegedAddr>) -> Self {
+        self.privileged_addr = Some(addr.into());
+        self
     }
 
     /// Set the index handler.
@@ -450,5 +461,158 @@ pub enum AuthError {
 impl From<Error> for AuthError {
     fn from(err: Error) -> Self {
         AuthError::Generic(err)
+    }
+}
+
+#[derive(Clone, Debug)]
+/// For `protected` requests we support TCP or Unix connections.
+pub enum PrivilegedAddr {
+    Tcp(std::net::SocketAddr),
+    Unix(std::os::unix::net::SocketAddr),
+}
+
+impl From<std::net::SocketAddr> for PrivilegedAddr {
+    fn from(addr: std::net::SocketAddr) -> Self {
+        Self::Tcp(addr)
+    }
+}
+
+impl From<std::os::unix::net::SocketAddr> for PrivilegedAddr {
+    fn from(addr: std::os::unix::net::SocketAddr) -> Self {
+        Self::Unix(addr)
+    }
+}
+
+impl Service<Uri> for PrivilegedAddr {
+    type Response = PrivilegedSocket;
+    type Error = io::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, _req: Uri) -> Self::Future {
+        match self {
+            PrivilegedAddr::Tcp(addr) => {
+                let addr = addr.clone();
+                Box::pin(async move {
+                    tokio::net::TcpStream::connect(addr)
+                        .await
+                        .map(PrivilegedSocket::Tcp)
+                })
+            }
+            PrivilegedAddr::Unix(addr) => {
+                let addr = addr.clone();
+                Box::pin(async move {
+                    tokio::net::UnixStream::connect(addr.as_pathname().ok_or_else(|| {
+                        io::Error::new(io::ErrorKind::Other, "empty path for unix socket")
+                    })?)
+                    .await
+                    .map(PrivilegedSocket::Unix)
+                })
+            }
+        }
+    }
+}
+
+/// A socket which is either a TCP stream or a UNIX stream.
+pub enum PrivilegedSocket {
+    Tcp(tokio::net::TcpStream),
+    Unix(tokio::net::UnixStream),
+}
+
+impl tokio::io::AsyncRead for PrivilegedSocket {
+    fn poll_read(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut tokio::io::ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
+        match self.get_mut() {
+            Self::Tcp(s) => Pin::new(s).poll_read(cx, buf),
+            Self::Unix(s) => Pin::new(s).poll_read(cx, buf),
+        }
+    }
+}
+
+impl tokio::io::AsyncWrite for PrivilegedSocket {
+    fn poll_write(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<io::Result<usize>> {
+        match self.get_mut() {
+            Self::Tcp(s) => Pin::new(s).poll_write(cx, buf),
+            Self::Unix(s) => Pin::new(s).poll_write(cx, buf),
+        }
+    }
+
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+        match self.get_mut() {
+            Self::Tcp(s) => Pin::new(s).poll_flush(cx),
+            Self::Unix(s) => Pin::new(s).poll_flush(cx),
+        }
+    }
+
+    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+        match self.get_mut() {
+            Self::Tcp(s) => Pin::new(s).poll_shutdown(cx),
+            Self::Unix(s) => Pin::new(s).poll_shutdown(cx),
+        }
+    }
+
+    fn poll_write_vectored(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        bufs: &[io::IoSlice<'_>],
+    ) -> Poll<io::Result<usize>> {
+        match self.get_mut() {
+            Self::Tcp(s) => Pin::new(s).poll_write_vectored(cx, bufs),
+            Self::Unix(s) => Pin::new(s).poll_write_vectored(cx, bufs),
+        }
+    }
+
+    fn is_write_vectored(&self) -> bool {
+        match self {
+            Self::Tcp(s) => s.is_write_vectored(),
+            Self::Unix(s) => s.is_write_vectored(),
+        }
+    }
+}
+
+impl hyper::client::connect::Connection for PrivilegedSocket {
+    fn connected(&self) -> hyper::client::connect::Connected {
+        match self {
+            Self::Tcp(s) => s.connected(),
+            Self::Unix(_) => hyper::client::connect::Connected::new(),
+        }
+    }
+}
+
+/// Implements hyper's `Accept` for `UnixListener`s.
+pub struct UnixAcceptor {
+    listener: tokio::net::UnixListener,
+}
+
+impl From<tokio::net::UnixListener> for UnixAcceptor {
+    fn from(listener: tokio::net::UnixListener) -> Self {
+        Self { listener }
+    }
+}
+
+impl hyper::server::accept::Accept for UnixAcceptor {
+    type Conn = tokio::net::UnixStream;
+    type Error = io::Error;
+
+    fn poll_accept(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Option<io::Result<Self::Conn>>> {
+        Pin::new(&mut self.get_mut().listener)
+            .poll_accept(cx)
+            .map(|res| match res {
+                Ok((stream, _addr)) => Some(Ok(stream)),
+                Err(err) => Some(Err(err)),
+            })
     }
 }
