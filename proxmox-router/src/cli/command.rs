@@ -335,9 +335,10 @@ pub fn handle_command(
     result
 }
 
-fn prepare_cli_command(def: &CommandLineInterface) -> (String, Vec<String>) {
-    let mut args = std::env::args();
-
+fn prepare_cli_command<A>(def: &CommandLineInterface, mut args: A) -> (String, Vec<String>)
+where
+    A: Iterator<Item = String>,
+{
     let prefix = args.next().unwrap();
     let prefix = prefix.rsplit('/').next().unwrap().to_string(); // without path
 
@@ -379,12 +380,44 @@ fn prepare_cli_command(def: &CommandLineInterface) -> (String, Vec<String>) {
 /// - ``printdoc``: Output ReST documentation.
 ///
 pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C, rpcenv: CliEnvironment) {
+    run_async_cli_command_with_args(def, rpcenv, std::env::args()).await
+}
+
+/// Helper to get arguments and invoke the command.
+///
+/// This is the synchrounous version of run_async_cli_command. You can
+/// pass an optional ``run`` function to execute async commands (else
+/// async commands simply fail).
+pub fn run_cli_command<C: Into<CommandLineInterface>>(
+    def: C,
+    rpcenv: CliEnvironment,
+    run: Option<fn(ApiFuture) -> Result<Value, Error>>,
+) {
+    run_cli_command_with_args(def, rpcenv, run, std::env::args())
+}
+
+/// Helper to get arguments and invoke the command (async).
+///
+/// The first argument is assumed to be the program name, and is passed as ``prefix`` to
+/// ``handle_command()``.
+///
+/// This helper automatically add the help command, and two special
+/// sub-command:
+///
+/// - ``bashcomplete``: Output bash completions instead of running the command.
+/// - ``printdoc``: Output ReST documentation.
+///
+pub async fn run_async_cli_command_with_args<A, C>(def: C, rpcenv: CliEnvironment, args: A)
+where
+    C: Into<CommandLineInterface>,
+    A: IntoIterator<Item = String>,
+{
     let def = match def.into() {
         CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
         CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help()),
     };
 
-    let (prefix, args) = prepare_cli_command(&def);
+    let (prefix, args) = prepare_cli_command(&def, args.into_iter());
 
     if handle_command_future(Arc::new(def), &prefix, args, rpcenv)
         .await
@@ -399,17 +432,21 @@ pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C, rpcenv
 /// This is the synchrounous version of run_async_cli_command. You can
 /// pass an optional ``run`` function to execute async commands (else
 /// async commands simply fail).
-pub fn run_cli_command<C: Into<CommandLineInterface>>(
+pub fn run_cli_command_with_args<A, C>(
     def: C,
     rpcenv: CliEnvironment,
     run: Option<fn(ApiFuture) -> Result<Value, Error>>,
-) {
+    args: A,
+) where
+    C: Into<CommandLineInterface>,
+    A: IntoIterator<Item = String>,
+{
     let def = match def.into() {
         CommandLineInterface::Simple(cli_cmd) => CommandLineInterface::Simple(cli_cmd),
         CommandLineInterface::Nested(map) => CommandLineInterface::Nested(map.insert_help()),
     };
 
-    let (prefix, args) = prepare_cli_command(&def);
+    let (prefix, args) = prepare_cli_command(&def, args.into_iter());
 
     if handle_command(Arc::new(def), &prefix, args, rpcenv, run).is_err() {
         std::process::exit(-1);
