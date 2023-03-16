@@ -4,6 +4,7 @@
 //! completely static API definitions that can be included within the programs read-only text
 //! segment.
 
+use std::collections::HashSet;
 use std::fmt;
 
 use anyhow::{bail, format_err, Error};
@@ -693,22 +694,103 @@ impl AllOfSchema {
 
     pub fn lookup(&self, key: &str) -> Option<(bool, &Schema)> {
         for entry in self.list {
-            match entry {
-                Schema::AllOf(s) => {
-                    if let Some(v) = s.lookup(key) {
-                        return Some(v);
-                    }
-                }
-                Schema::Object(s) => {
-                    if let Some(v) = s.lookup(key) {
-                        return Some(v);
-                    }
-                }
-                _ => panic!("non-object-schema in `AllOfSchema`"),
+            if let Some(v) = entry
+                .any_object()
+                .expect("non-object-schema in `AllOfSchema`")
+                .lookup(key)
+            {
+                return Some(v);
             }
         }
 
         None
+    }
+
+    /// Parse key/value pairs and verify with object schema
+    ///
+    /// - `test_required`: is set, checks if all required properties are
+    ///   present.
+    pub fn parse_parameter_strings(
+        &'static self,
+        data: &[(String, String)],
+        test_required: bool,
+    ) -> Result<Value, ParameterError> {
+        ParameterSchema::from(self).parse_parameter_strings(data, test_required)
+    }
+}
+
+/// An object schema which is basically like a rust enum: exactly one variant may match.
+///
+/// Contrary to JSON Schema, we require there be a 'type' property to distinguish the types.
+/// In serde-language, we use an internally tagged enum representation.
+///
+/// Note that these are limited to object schemas. Other schemas will produce errors.
+#[derive(Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+pub struct OneOfSchema {
+    pub description: &'static str,
+
+    /// The type property entry.
+    ///
+    /// This must be a static reference due to how we implemented the property iterator.
+    pub type_property_entry: &'static SchemaPropertyEntry,
+
+    /// The parameter is checked against all of the schemas in the list. Note that all schemas must
+    /// be object schemas.
+    pub list: &'static [(&'static str, &'static Schema)],
+}
+
+impl OneOfSchema {
+    pub const fn new(
+        description: &'static str,
+        type_property_entry: &'static SchemaPropertyEntry,
+        list: &'static [(&'static str, &'static Schema)],
+    ) -> Self {
+        Self {
+            description,
+            type_property_entry,
+            list,
+        }
+    }
+
+    pub const fn schema(self) -> Schema {
+        Schema::OneOf(self)
+    }
+
+    pub fn type_property(&self) -> &'static str {
+        self.type_property_entry.0
+    }
+
+    pub fn type_schema(&self) -> &'static Schema {
+        self.type_property_entry.2
+    }
+
+    pub fn lookup(&self, key: &str) -> Option<(bool, &Schema)> {
+        if key == self.type_property() {
+            return Some((false, self.type_schema()));
+        }
+
+        for (_variant, entry) in self.list {
+            if let Some(v) = entry
+                .any_object()
+                .expect("non-object-schema in `OneOfSchema`")
+                .lookup(key)
+            {
+                return Some(v);
+            }
+        }
+
+        None
+    }
+
+    pub fn lookup_variant(&self, name: &str) -> Option<&Schema> {
+        Some(
+            self.list[self
+                .list
+                .binary_search_by_key(&name, |(name, _)| name)
+                .ok()?]
+            .1,
+        )
     }
 
     /// Parse key/value pairs and verify with object schema
@@ -774,6 +856,23 @@ pub trait ObjectSchemaType {
     }
 }
 
+#[doc(hidden)]
+pub enum ObjectPropertyIterator {
+    Simple(SimpleObjectPropertyIterator),
+    OneOf(OneOfPropertyIterator),
+}
+
+impl Iterator for ObjectPropertyIterator {
+    type Item = &'static SchemaPropertyEntry;
+
+    fn next(&mut self) -> Option<&'static SchemaPropertyEntry> {
+        match self {
+            Self::Simple(iter) => iter.next(),
+            Self::OneOf(iter) => iter.next(),
+        }
+    }
+}
+
 impl ObjectSchemaType for ObjectSchema {
     fn description(&self) -> &'static str {
         self.description
@@ -784,11 +883,11 @@ impl ObjectSchemaType for ObjectSchema {
     }
 
     fn properties(&self) -> ObjectPropertyIterator {
-        ObjectPropertyIterator {
+        ObjectPropertyIterator::Simple(SimpleObjectPropertyIterator {
             schemas: [].iter(),
             properties: Some(self.properties.iter()),
             nested: None,
-        }
+        })
     }
 
     fn additional_properties(&self) -> bool {
@@ -810,11 +909,11 @@ impl ObjectSchemaType for AllOfSchema {
     }
 
     fn properties(&self) -> ObjectPropertyIterator {
-        ObjectPropertyIterator {
+        ObjectPropertyIterator::Simple(SimpleObjectPropertyIterator {
             schemas: self.list.iter(),
             properties: None,
             nested: None,
-        }
+        })
     }
 
     fn additional_properties(&self) -> bool {
@@ -823,11 +922,10 @@ impl ObjectSchemaType for AllOfSchema {
 
     fn default_key(&self) -> Option<&'static str> {
         for schema in self.list {
-            let default_key = match schema {
-                Schema::Object(schema) => schema.default_key(),
-                Schema::AllOf(schema) => schema.default_key(),
-                _ => panic!("non-object-schema in `AllOfSchema`"),
-            };
+            let default_key = schema
+                .any_object()
+                .expect("non-object-schema in `AllOfSchema`")
+                .default_key();
 
             if default_key.is_some() {
                 return default_key;
@@ -839,13 +937,13 @@ impl ObjectSchemaType for AllOfSchema {
 }
 
 #[doc(hidden)]
-pub struct ObjectPropertyIterator {
+pub struct SimpleObjectPropertyIterator {
     schemas: std::slice::Iter<'static, &'static Schema>,
     properties: Option<std::slice::Iter<'static, SchemaPropertyEntry>>,
     nested: Option<Box<ObjectPropertyIterator>>,
 }
 
-impl Iterator for ObjectPropertyIterator {
+impl Iterator for SimpleObjectPropertyIterator {
     type Item = &'static SchemaPropertyEntry;
 
     fn next(&mut self) -> Option<&'static SchemaPropertyEntry> {
@@ -859,6 +957,7 @@ impl Iterator for ObjectPropertyIterator {
                 Some(item) => return Some(item),
                 None => match self.schemas.next()? {
                     Schema::AllOf(o) => self.nested = Some(Box::new(o.properties())),
+                    Schema::OneOf(o) => self.nested = Some(Box::new(o.properties())),
                     Schema::Object(o) => self.properties = Some(o.properties.iter()),
                     _ => {
                         self.properties = None;
@@ -866,6 +965,93 @@ impl Iterator for ObjectPropertyIterator {
                     }
                 },
             }
+        }
+    }
+}
+
+impl ObjectSchemaType for OneOfSchema {
+    fn description(&self) -> &'static str {
+        self.description
+    }
+
+    fn lookup(&self, key: &str) -> Option<(bool, &Schema)> {
+        OneOfSchema::lookup(self, key)
+    }
+
+    fn properties(&self) -> ObjectPropertyIterator {
+        ObjectPropertyIterator::OneOf(OneOfPropertyIterator {
+            type_property_entry: self.type_property_entry,
+            schemas: self.list.iter(),
+            done: HashSet::new(),
+            nested: None,
+        })
+    }
+
+    fn additional_properties(&self) -> bool {
+        true
+    }
+
+    fn default_key(&self) -> Option<&'static str> {
+        None
+    }
+
+    fn verify_json(&self, data: &Value) -> Result<(), Error> {
+        let map = match data {
+            Value::Object(ref map) => map,
+            Value::Array(_) => bail!("Expected object - got array."),
+            _ => bail!("Expected object - got scalar value."),
+        };
+
+        // Without the type we also cannot verify anything else...:
+        let variant = match map.get(self.type_property()) {
+            None => bail!("Missing '{}' property", self.type_property()),
+            Some(Value::String(v)) => v,
+            _ => bail!("Expected string in '{}'", self.type_property()),
+        };
+
+        let schema = self
+            .lookup_variant(variant)
+            .ok_or_else(|| format_err!("invalid '{}': {}", self.type_property(), variant))?;
+
+        schema.verify_json(data)
+    }
+}
+
+#[doc(hidden)]
+pub struct OneOfPropertyIterator {
+    type_property_entry: &'static SchemaPropertyEntry,
+    schemas: std::slice::Iter<'static, (&'static str, &'static Schema)>,
+    done: HashSet<&'static str>,
+    nested: Option<Box<ObjectPropertyIterator>>,
+}
+
+impl Iterator for OneOfPropertyIterator {
+    type Item = &'static SchemaPropertyEntry;
+
+    fn next(&mut self) -> Option<&'static SchemaPropertyEntry> {
+        if self.done.insert(self.type_property_entry.0) {
+            return Some(self.type_property_entry);
+        }
+
+        loop {
+            match self.nested.as_mut().and_then(Iterator::next) {
+                Some(item) => {
+                    if !self.done.insert(item.0) {
+                        continue;
+                    }
+                    return Some(item);
+                }
+                None => self.nested = None,
+            }
+
+            self.nested = Some(Box::new(
+                self.schemas
+                    .next()?
+                    .1
+                    .any_object()
+                    .expect("non-object-schema in `OneOfSchema`")
+                    .properties(),
+            ));
         }
     }
 }
@@ -910,6 +1096,7 @@ pub enum Schema {
     Object(ObjectSchema),
     Array(ArraySchema),
     AllOf(AllOfSchema),
+    OneOf(OneOfSchema),
 }
 
 impl Schema {
@@ -928,6 +1115,7 @@ impl Schema {
             Schema::Number(s) => s.verify_json(data)?,
             Schema::String(s) => s.verify_json(data)?,
             Schema::AllOf(s) => s.verify_json(data)?,
+            Schema::OneOf(s) => s.verify_json(data)?,
         }
         Ok(())
     }
@@ -1072,6 +1260,14 @@ impl Schema {
         }
     }
 
+    /// Gets the underlying [`OneOfSchema`], panics on different schemas.
+    pub const fn unwrap_one_of_schema(&self) -> &OneOfSchema {
+        match self {
+            Schema::OneOf(s) => s,
+            _ => panic!("unwrap_one_of_schema on different schema"),
+        }
+    }
+
     /// Gets the underlying [`BooleanSchema`].
     pub const fn boolean(&self) -> Option<&BooleanSchema> {
         match self {
@@ -1128,10 +1324,19 @@ impl Schema {
         }
     }
 
+    /// Gets the underlying [`AllOfSchema`].
+    pub const fn one_of(&self) -> Option<&OneOfSchema> {
+        match self {
+            Schema::OneOf(s) => Some(s),
+            _ => None,
+        }
+    }
+
     pub fn any_object(&self) -> Option<&dyn ObjectSchemaType> {
         match self {
             Schema::Object(s) => Some(s),
             Schema::AllOf(s) => Some(s),
+            Schema::OneOf(s) => Some(s),
             _ => None,
         }
     }
@@ -1295,6 +1500,7 @@ impl PartialEq for ApiStringFormat {
 pub enum ParameterSchema {
     Object(&'static ObjectSchema),
     AllOf(&'static AllOfSchema),
+    OneOf(&'static OneOfSchema),
 }
 
 impl ParameterSchema {
@@ -1316,6 +1522,7 @@ impl ObjectSchemaType for ParameterSchema {
         match self {
             ParameterSchema::Object(o) => o.description(),
             ParameterSchema::AllOf(o) => o.description(),
+            ParameterSchema::OneOf(o) => o.description(),
         }
     }
 
@@ -1323,6 +1530,7 @@ impl ObjectSchemaType for ParameterSchema {
         match self {
             ParameterSchema::Object(o) => o.lookup(key),
             ParameterSchema::AllOf(o) => o.lookup(key),
+            ParameterSchema::OneOf(o) => o.lookup(key),
         }
     }
 
@@ -1330,6 +1538,7 @@ impl ObjectSchemaType for ParameterSchema {
         match self {
             ParameterSchema::Object(o) => o.properties(),
             ParameterSchema::AllOf(o) => o.properties(),
+            ParameterSchema::OneOf(o) => o.properties(),
         }
     }
 
@@ -1337,6 +1546,7 @@ impl ObjectSchemaType for ParameterSchema {
         match self {
             ParameterSchema::Object(o) => o.additional_properties(),
             ParameterSchema::AllOf(o) => o.additional_properties(),
+            ParameterSchema::OneOf(o) => o.additional_properties(),
         }
     }
 
@@ -1344,6 +1554,7 @@ impl ObjectSchemaType for ParameterSchema {
         match self {
             ParameterSchema::Object(o) => o.default_key(),
             ParameterSchema::AllOf(o) => o.default_key(),
+            ParameterSchema::OneOf(o) => o.default_key(),
         }
     }
 }
@@ -1357,6 +1568,12 @@ impl From<&'static ObjectSchema> for ParameterSchema {
 impl From<&'static AllOfSchema> for ParameterSchema {
     fn from(schema: &'static AllOfSchema) -> Self {
         ParameterSchema::AllOf(schema)
+    }
+}
+
+impl From<&'static OneOfSchema> for ParameterSchema {
+    fn from(schema: &'static OneOfSchema) -> Self {
+        ParameterSchema::OneOf(schema)
     }
 }
 

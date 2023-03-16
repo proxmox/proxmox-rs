@@ -120,6 +120,7 @@ impl<'de> Deserialize<'de> for Verifier {
                 Schema::String(_) => deserializer.deserialize_str(visitor),
                 Schema::Object(_) => deserializer.deserialize_map(visitor),
                 Schema::AllOf(_) => deserializer.deserialize_map(visitor),
+                Schema::OneOf(_) => deserializer.deserialize_map(visitor),
                 Schema::Array(_) => deserializer.deserialize_seq(visitor),
                 Schema::Null => deserializer.deserialize_unit(visitor),
             }
@@ -153,6 +154,7 @@ impl<'de> de::Visitor<'de> for Visitor {
             Schema::String(_) => f.write_str("string"),
             Schema::Object(_) => f.write_str("object"),
             Schema::AllOf(_) => f.write_str("allOf"),
+            Schema::OneOf(_) => f.write_str("oneOf"),
             Schema::Array(_) => f.write_str("Array"),
             Schema::Null => f.write_str("null"),
         }
@@ -226,6 +228,7 @@ impl<'de> de::Visitor<'de> for Visitor {
         let schema: &'static dyn crate::schema::ObjectSchemaType = match self.0 {
             Schema::Object(schema) => schema,
             Schema::AllOf(schema) => schema,
+            Schema::OneOf(schema) => schema,
             _ => return Err(A::Error::invalid_type(Unexpected::Map, &self)),
         };
 

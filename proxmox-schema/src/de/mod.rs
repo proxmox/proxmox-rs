@@ -129,6 +129,7 @@ impl<'de, 'i> SchemaDeserializer<'de, 'i> {
         match schema {
             Schema::Object(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
             Schema::AllOf(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
+            Schema::OneOf(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
             _ => Err(Error::msg(
                 "non-object-like schema in ApiStringFormat::PropertyString while deserializing a property string",
             )),
@@ -162,6 +163,7 @@ impl<'de, 'i> de::Deserializer<'de> for SchemaDeserializer<'de, 'i> {
         match self.schema {
             Schema::Array(schema) => visitor.visit_seq(SeqAccess::new(self.input, schema)),
             Schema::AllOf(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
+            Schema::OneOf(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
             Schema::Object(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
             Schema::Null => Err(Error::msg("null")),
             Schema::Boolean(_) => visitor.visit_bool(
@@ -263,6 +265,7 @@ impl<'de, 'i> de::Deserializer<'de> for SchemaDeserializer<'de, 'i> {
         match self.schema {
             Schema::Object(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
             Schema::AllOf(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
+            Schema::OneOf(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
             Schema::String(schema) => match schema.format {
                 Some(schema::ApiStringFormat::PropertyString(schema)) => {
                     self.deserialize_property_string(visitor, schema)
@@ -286,6 +289,7 @@ impl<'de, 'i> de::Deserializer<'de> for SchemaDeserializer<'de, 'i> {
         match self.schema {
             Schema::Object(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
             Schema::AllOf(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
+            Schema::OneOf(schema) => visitor.visit_map(MapAccess::new_cow(self.input, schema)),
             Schema::String(schema) => match schema.format {
                 Some(schema::ApiStringFormat::PropertyString(schema)) => {
                     self.deserialize_property_string(visitor, schema)

@@ -213,6 +213,7 @@ pub fn get_property_description(
         ),
         Schema::Object(ref schema) => (schema.description, None, None),
         Schema::AllOf(ref schema) => (schema.description, None, None),
+        Schema::OneOf(ref schema) => (schema.description, None, None),
         Schema::Array(ref schema) => (
             schema.description,
             None,
@@ -318,6 +319,7 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
         Schema::Object(_) => String::from("<object>"),
         Schema::Array(schema) => get_schema_type_text(schema.items, _style),
         Schema::AllOf(_) => String::from("<object>"),
+        Schema::OneOf(_) => String::from("<object>"),
     }
 }
 
@@ -455,6 +457,11 @@ pub fn dump_api_return_schema(returns: &ReturnType, style: ParameterDisplayStyle
             res.push_str(&dump_properties(obj_schema, "", style, &[]));
         }
         Schema::AllOf(all_of_schema) => {
+            let description = wrap_text("", "", all_of_schema.description, 80);
+            res.push_str(&description);
+            res.push_str(&dump_properties(all_of_schema, "", style, &[]));
+        }
+        Schema::OneOf(all_of_schema) => {
             let description = wrap_text("", "", all_of_schema.description, 80);
             res.push_str(&description);
             res.push_str(&dump_properties(all_of_schema, "", style, &[]));

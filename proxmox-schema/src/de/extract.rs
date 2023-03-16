@@ -52,7 +52,9 @@ impl<'o> ExtractValueDeserializer<'o> {
         schema: &'static Schema,
     ) -> Option<Self> {
         match schema {
-            Schema::Object(_) | Schema::AllOf(_) => Some(Self { object, schema }),
+            Schema::Object(_) | Schema::AllOf(_) | Schema::OneOf(_) => {
+                Some(Self { object, schema })
+            }
             _ => None,
         }
     }
@@ -106,6 +108,10 @@ impl<'de> de::Deserializer<'de> for ExtractValueDeserializer<'de> {
                 self.object,
                 schema.properties().map(|(name, _, _)| *name),
             )),
+            Schema::OneOf(schema) => visitor.visit_map(MapAccess::<'de>::new(
+                self.object,
+                schema.properties().map(|(name, _, _)| *name),
+            )),
 
             // The following should be caught by ExtractValueDeserializer::new()!
             _ => Err(Error::custom(
@@ -131,6 +137,10 @@ impl<'de> de::Deserializer<'de> for ExtractValueDeserializer<'de> {
                 schema.properties().map(|(name, _, _)| *name),
             )),
             Schema::AllOf(schema) => visitor.visit_map(MapAccess::<'de>::new(
+                self.object,
+                schema.properties().map(|(name, _, _)| *name),
+            )),
+            Schema::OneOf(schema) => visitor.visit_map(MapAccess::<'de>::new(
                 self.object,
                 schema.properties().map(|(name, _, _)| *name),
             )),
