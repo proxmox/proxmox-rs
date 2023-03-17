@@ -1,11 +1,11 @@
 use std::io::Write;
 
-use anyhow::{bail, Error};
+use anyhow::{bail, format_err, Error};
 use serde_json::Value;
 use unicode_width::UnicodeWidthStr;
 
 use proxmox_lang::c_str;
-use proxmox_schema::{ObjectSchemaType, Schema, SchemaPropertyEntry};
+use proxmox_schema::{ObjectSchemaType, OneOfSchema, Schema, SchemaPropertyEntry};
 
 /// allows to configure the default output fromat using environment vars
 pub const ENV_VAR_PROXMOX_OUTPUT_FORMAT: &str = "PROXMOX_OUTPUT_FORMAT";
@@ -66,10 +66,9 @@ fn data_to_text(data: &Value, schema: &Schema) -> Result<String, Error> {
     }
 
     match schema {
-        Schema::Null => {
-            // makes no sense to display Null columns
-            bail!("internal error");
-        }
+        // When printing a table of OneOf values, different variants have different properties, and
+        // nonexistent properties will be null.
+        Schema::Null => Ok(String::new()),
         Schema::Boolean(_) => match data.as_bool() {
             Some(value) => Ok(String::from(if value { "1" } else { "0" })),
             None => bail!("got unexpected data (expected bool)."),
@@ -89,6 +88,7 @@ fn data_to_text(data: &Value, schema: &Schema) -> Result<String, Error> {
         Schema::Object(_) => Ok(data.to_string()),
         Schema::Array(_) => Ok(data.to_string()),
         Schema::AllOf(_) => Ok(data.to_string()),
+        Schema::OneOf(_) => Ok(data.to_string()),
     }
 }
 
@@ -620,6 +620,16 @@ fn format_object<W: Write>(
             .collect()
     };
 
+    format_object_with_properties(output, data, schema, options, properties_to_print)
+}
+
+fn format_object_with_properties<W: Write>(
+    output: W,
+    data: &Value,
+    schema: &dyn ObjectSchemaType,
+    options: &TableFormatOptions,
+    properties_to_print: Vec<String>,
+) -> Result<(), Error> {
     let row_count = properties_to_print.len();
     if row_count == 0 {
         return Ok(());
@@ -723,6 +733,25 @@ fn format_object<W: Write>(
     render_table(output, &tabledata, &column_names, options)
 }
 
+fn format_one_of<W: Write>(
+    output: W,
+    data: &Value,
+    schema: &OneOfSchema,
+    options: &TableFormatOptions,
+) -> Result<(), Error> {
+    let properties_to_print = if options.column_config.is_empty() {
+        extract_one_of_variant_properties(data, schema)?
+    } else {
+        options
+            .column_config
+            .iter()
+            .map(|v| v.name.clone())
+            .collect()
+    };
+
+    format_object_with_properties(output, data, schema, options, properties_to_print)
+}
+
 fn extract_properties_to_print<I>(properties: I) -> Vec<String>
 where
     I: Iterator<Item = &'static SchemaPropertyEntry>,
@@ -741,6 +770,21 @@ where
     result.extend(opt_properties);
 
     result
+}
+
+fn extract_one_of_variant_properties(
+    value: &Value,
+    schema: &OneOfSchema,
+) -> Result<Vec<String>, Error> {
+    let variant_name = value[schema.type_property()]
+        .as_str()
+        .ok_or_else(|| format_err!("missing '{}' property", schema.type_property()))?;
+    let variant_schema = schema
+        .lookup_variant(variant_name)
+        .ok_or_else(|| format_err!("invalid variant '{variant_name}'"))?;
+    Ok(extract_properties_to_print(
+        variant_schema.unwrap_object_schema().properties(),
+    ))
 }
 
 /// Format data using TableFormatOptions
@@ -768,8 +812,8 @@ pub fn value_to_text<W: Write>(
         Schema::String(_string_schema) => {
             unimplemented!();
         }
-        Schema::Object(object_schema) => {
-            format_object(output, data, object_schema, options)?;
+        Schema::Object(schema) => {
+            format_object(output, data, schema, options)?;
         }
         Schema::Array(array_schema) => {
             let list = match data.as_array_mut() {
@@ -781,19 +825,25 @@ pub fn value_to_text<W: Write>(
             }
 
             match array_schema.items {
-                Schema::Object(object_schema) => {
-                    format_table(output, list, object_schema, options)?;
+                Schema::Object(schema) => {
+                    format_table(output, list, schema, options)?;
                 }
-                Schema::AllOf(all_of_schema) => {
-                    format_table(output, list, all_of_schema, options)?;
+                Schema::AllOf(schema) => {
+                    format_table(output, list, schema, options)?;
+                }
+                Schema::OneOf(schema) => {
+                    format_table(output, list, schema, options)?;
                 }
                 _ => {
                     unimplemented!();
                 }
             }
         }
-        Schema::AllOf(all_of_schema) => {
-            format_object(output, data, all_of_schema, options)?;
+        Schema::AllOf(schema) => {
+            format_object(output, data, schema, options)?;
+        }
+        Schema::OneOf(schema) => {
+            format_one_of(output, data, schema, options)?;
         }
     }
     Ok(())
