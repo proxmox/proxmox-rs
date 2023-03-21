@@ -104,11 +104,13 @@ pub fn score_nodes_to_start_service(
                 squares_mem += new_mem.powi(2);
             }
 
+            // Add 1.0 to avoid boosting tiny differences: e.g. 0.004 is twice as much as 0.002, but
+            // 1.004 is only slightly more than 1.002.
             PveTopsisAlternative {
-                average_cpu: (squares_cpu / len as f64).sqrt(),
-                highest_cpu,
-                average_memory: (squares_mem / len as f64).sqrt(),
-                highest_memory: highest_mem,
+                average_cpu: 1.0 + (squares_cpu / len as f64).sqrt(),
+                highest_cpu: 1.0 + highest_cpu,
+                average_memory: 1.0 + (squares_mem / len as f64).sqrt(),
+                highest_memory: 1.0 + highest_mem,
             }
             .into()
         })
