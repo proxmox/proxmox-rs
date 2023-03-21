@@ -9,11 +9,11 @@ use crate::topsis;
 pub struct StaticNodeUsage {
     /// Hostname of the node.
     pub name: String,
-    /// CPU utilization. Can be more than `maxcpu` if overcommited.
+    /// CPU utilization. Can be more than `maxcpu` if overcommitted.
     pub cpu: f64,
     /// Total number of CPUs.
     pub maxcpu: usize,
-    /// Used memory in bytes. Can be more than `maxmem` if overcommited.
+    /// Used memory in bytes. Can be more than `maxmem` if overcommitted.
     pub mem: usize,
     /// Total memory in bytes.
     pub maxmem: usize,
