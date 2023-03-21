@@ -1,3 +1,10 @@
+rust-proxmox-resource-scheduling (0.2.0-1) stable; urgency=medium
+
+  * pve ha: fix scoring issue when a node is overcommitted compared to others,
+    that have the same stats by using a nonlinear averaging method.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Mar 2023 14:54:09 +0100
+
 rust-proxmox-resource-scheduling (0.1.0-1) stable; urgency=medium
 
   * Initial release.
