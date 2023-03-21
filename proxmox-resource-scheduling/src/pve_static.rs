@@ -79,11 +79,11 @@ pub fn score_nodes_to_start_service(
         .iter()
         .enumerate()
         .map(|(target_index, _)| {
-            // all of these are as percentages to be comparable across nodes
+            // Base values on percentages to allow comparing nodes with different stats.
             let mut highest_cpu = 0.0;
-            let mut sum_cpu = 0.0;
+            let mut squares_cpu = 0.0;
             let mut highest_mem = 0.0;
-            let mut sum_mem = 0.0;
+            let mut squares_mem = 0.0;
 
             for (index, node) in nodes.iter().enumerate() {
                 let new_cpu = if index == target_index {
@@ -92,7 +92,7 @@ pub fn score_nodes_to_start_service(
                     node.cpu
                 } / (node.maxcpu as f64);
                 highest_cpu = f64::max(highest_cpu, new_cpu);
-                sum_cpu += new_cpu;
+                squares_cpu += new_cpu.powi(2);
 
                 let new_mem = if index == target_index {
                     node.mem + service.maxmem
@@ -101,13 +101,13 @@ pub fn score_nodes_to_start_service(
                 } as f64
                     / node.maxmem as f64;
                 highest_mem = f64::max(highest_mem, new_mem);
-                sum_mem += new_mem;
+                squares_mem += new_mem.powi(2);
             }
 
             PveTopsisAlternative {
-                average_cpu: sum_cpu / len as f64,
+                average_cpu: (squares_cpu / len as f64).sqrt(),
                 highest_cpu,
-                average_memory: sum_mem / len as f64,
+                average_memory: (squares_mem / len as f64).sqrt(),
                 highest_memory: highest_mem,
             }
             .into()
