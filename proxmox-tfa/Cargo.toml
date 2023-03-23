@@ -30,6 +30,7 @@ proxmox-uuid = { workspace = true, optional = true }
 
 [features]
 default = []
+types = [ "serde/derive"]
 u2f = [ "dep:libc", "dep:serde_json", "serde/derive" ]
-api = [ "u2f", "dep:webauthn-rs", "dep:proxmox-uuid", "dep:proxmox-time" ]
-api-types = [ "dep:proxmox-schema" ]
+api = [ "types", "u2f", "dep:webauthn-rs", "dep:proxmox-uuid", "dep:proxmox-time" ]
+api-types = [ "types", "dep:proxmox-schema" ]

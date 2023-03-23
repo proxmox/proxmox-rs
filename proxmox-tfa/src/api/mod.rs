@@ -16,9 +16,6 @@ use webauthn_rs::{proto::UserVerificationPolicy, Webauthn};
 use crate::totp::Totp;
 use proxmox_uuid::Uuid;
 
-#[cfg(feature = "api-types")]
-use proxmox_schema::api;
-
 mod serde_tools;
 
 mod recovery;
@@ -34,6 +31,8 @@ pub use webauthn::{WebauthnConfig, WebauthnCredential};
 
 #[cfg(feature = "api-types")]
 pub use webauthn::WebauthnConfigUpdater;
+
+pub use crate::types::TfaInfo;
 
 use recovery::Recovery;
 use u2f::{U2fChallenge, U2fChallengeEntry, U2fRegistrationChallenge};
@@ -823,47 +822,6 @@ impl<T> TfaEntry<T> {
     pub fn from_parts(info: TfaInfo, entry: T) -> Self {
         Self { info, entry }
     }
-}
-
-#[cfg_attr(feature = "api-types", api)]
-/// Over the API we only provide this part when querying a user's second factor list.
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct TfaInfo {
-    /// The id used to reference this entry.
-    pub id: String,
-
-    /// User chosen description for this entry.
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub description: String,
-
-    /// Creation time of this entry as unix epoch.
-    pub created: i64,
-
-    /// Whether this TFA entry is currently enabled.
-    #[serde(skip_serializing_if = "is_default_tfa_enable")]
-    #[serde(default = "default_tfa_enable")]
-    pub enable: bool,
-}
-
-impl TfaInfo {
-    /// For recovery keys we have a fixed entry.
-    pub fn recovery(created: i64) -> Self {
-        Self {
-            id: "recovery".to_string(),
-            description: String::new(),
-            enable: true,
-            created,
-        }
-    }
-}
-
-const fn default_tfa_enable() -> bool {
-    true
-}
-
-const fn is_default_tfa_enable(v: &bool) -> bool {
-    *v
 }
 
 /// When sending a TFA challenge to the user, we include information about what kind of challenge

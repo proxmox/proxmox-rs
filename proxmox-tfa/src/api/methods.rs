@@ -12,39 +12,7 @@ use proxmox_schema::api;
 use super::{OpenUserChallengeData, TfaConfig, TfaInfo, TfaUserData};
 use crate::totp::Totp;
 
-#[cfg_attr(feature = "api-types", api)]
-/// A TFA entry type.
-#[derive(Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum TfaType {
-    /// A TOTP entry type.
-    Totp,
-    /// A U2F token entry.
-    U2f,
-    /// A Webauthn token entry.
-    Webauthn,
-    /// Recovery tokens.
-    Recovery,
-    /// Yubico authentication entry.
-    Yubico,
-}
-
-#[cfg_attr(feature = "api-types", api(
-    properties: {
-        type: { type: TfaType },
-        info: { type: TfaInfo },
-    },
-))]
-/// A TFA entry for a user.
-#[derive(Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct TypedTfaInfo {
-    #[serde(rename = "type")]
-    pub ty: TfaType,
-
-    #[serde(flatten)]
-    pub info: TfaInfo,
-}
+pub use crate::types::{TfaType, TfaUpdateInfo, TypedTfaInfo};
 
 fn to_data(data: &TfaUserData) -> Vec<TypedTfaInfo> {
     let mut out = Vec::with_capacity(
@@ -258,44 +226,6 @@ pub fn list_tfa(
     Ok(out)
 }
 
-#[cfg_attr(feature = "api-types", api(
-    properties: {
-        recovery: {
-            description: "A list of recovery codes as integers.",
-            type: Array,
-            items: {
-                type: Integer,
-                description: "A one-time usable recovery code entry.",
-            },
-        },
-    },
-))]
-/// The result returned when adding TFA entries to a user.
-#[derive(Default, Serialize)]
-pub struct TfaUpdateInfo {
-    /// The id if a newly added TFA entry.
-    id: Option<String>,
-
-    /// When adding u2f entries, this contains a challenge the user must respond to in order to
-    /// finish the registration.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    challenge: Option<String>,
-
-    /// When adding recovery codes, this contains the list of codes to be displayed to the user
-    /// this one time.
-    #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    recovery: Vec<String>,
-}
-
-impl TfaUpdateInfo {
-    fn id(id: String) -> Self {
-        Self {
-            id: Some(id),
-            ..Default::default()
-        }
-    }
-}
-
 fn need_description(description: Option<String>) -> Result<String, Error> {
     description.ok_or_else(|| format_err!("'description' is required for new entries"))
 }
@@ -389,7 +319,7 @@ fn add_totp(
     {
         bail!("failed to verify TOTP challenge");
     }
-    Ok(TfaUpdateInfo::id(config.add_totp(
+    Ok(TfaUpdateInfo::with_id(config.add_totp(
         userid,
         description,
         totp,
@@ -403,7 +333,7 @@ fn add_yubico(
     value: Option<String>,
 ) -> Result<TfaUpdateInfo, Error> {
     let key = value.ok_or_else(|| format_err!("missing 'value' parameter for 'yubico' entry"))?;
-    Ok(TfaUpdateInfo::id(config.add_yubico(
+    Ok(TfaUpdateInfo::with_id(config.add_yubico(
         userid,
         description,
         key,
@@ -431,7 +361,7 @@ fn add_u2f<A: ?Sized + OpenUserChallengeData>(
             })?;
             config
                 .u2f_registration_finish(access, userid, &challenge, &value)
-                .map(TfaUpdateInfo::id)
+                .map(TfaUpdateInfo::with_id)
         }
     }
 }
@@ -458,7 +388,7 @@ fn add_webauthn<A: ?Sized + OpenUserChallengeData>(
             })?;
             config
                 .webauthn_registration_finish(access, userid, &challenge, &value, origin)
-                .map(TfaUpdateInfo::id)
+                .map(TfaUpdateInfo::with_id)
         }
     }
 }
