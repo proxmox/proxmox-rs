@@ -169,7 +169,7 @@ fn handle_regular_struct(
                     .ok_or_else(|| format_err!(field => "field without name?"))?;
 
                 if let Some(renamed) = attrs.rename {
-                    (renamed.into_str(), ident.span())
+                    (renamed.value(), ident.span())
                 } else if let Some(rename_all) = container_attrs.rename_all {
                     let name = rename_all.apply_to_field(&ident.to_string());
                     (name, ident.span())

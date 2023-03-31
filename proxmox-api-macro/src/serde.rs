@@ -5,7 +5,7 @@
 
 use std::convert::TryFrom;
 
-use crate::util::{AttrArgs, FieldName};
+use crate::util::AttrArgs;
 
 /// Serde name types.
 #[allow(clippy::enum_variant_names)]
@@ -159,7 +159,7 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
 /// `serde` field/variant attributes we support
 #[derive(Default)]
 pub struct SerdeAttrib {
-    pub rename: Option<FieldName>,
+    pub rename: Option<syn::LitStr>,
     pub flatten: bool,
 }
 
@@ -176,10 +176,9 @@ impl SerdeAttrib {
             match arg {
                 NestedMeta::Meta(Meta::NameValue(var)) if var.path.is_ident("rename") => {
                     match var.lit {
-                        syn::Lit::Str(lit) => {
-                            let rename = FieldName::from(&lit);
+                        syn::Lit::Str(rename) => {
                             if self.rename.is_some() && self.rename.as_ref() != Some(&rename) {
-                                error!(lit => "multiple conflicting 'rename' attributes");
+                                error!(&rename => "multiple conflicting 'rename' attributes");
                             }
                             self.rename = Some(rename);
                         }

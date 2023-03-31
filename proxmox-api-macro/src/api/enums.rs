@@ -59,7 +59,7 @@ pub fn handle_enum(
 
         let attrs = serde::SerdeAttrib::try_from(&variant.attrs[..])?;
         let variant_string = if let Some(renamed) = attrs.rename {
-            renamed.into_lit_str()
+            renamed
         } else if let Some(rename_all) = container_attrs.rename_all {
             let name = rename_all.apply_to_variant(&variant.ident.to_string());
             syn::LitStr::new(&name, variant.ident.span())
