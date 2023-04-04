@@ -19,6 +19,8 @@ pub use extract::ExtractValueDeserializer;
 
 use cow3::{str_slice_to_range, Cow3};
 
+pub use no_schema::{split_list, SplitList};
+
 // Used to disable calling `check_constraints` on a `StringSchema` if it is being deserialized
 // for a `PropertyString`, which performs its own checking.
 thread_local! {
@@ -350,7 +352,7 @@ impl<'de, 'i> de::Deserializer<'de> for SchemaDeserializer<'de, 'i> {
     }
 }
 
-fn next_str_entry(input: &str, at: &mut usize, has_null: bool) -> Option<Range<usize>> {
+pub(crate) fn next_str_entry(input: &str, at: &mut usize, has_null: bool) -> Option<Range<usize>> {
     while *at != input.len() {
         let begin = *at;
 
@@ -373,7 +375,7 @@ fn next_str_entry(input: &str, at: &mut usize, has_null: bool) -> Option<Range<u
             }
         };
 
-        if input[..end].is_empty() {
+        if begin == end || input[..end].is_empty() {
             continue;
         }
 
@@ -420,10 +422,6 @@ impl<'de, 'i, 's> de::SeqAccess<'de> for SeqAccess<'de, 'i, 's> {
         }
 
         while let Some(el_range) = next_str_entry(&self.input, &mut self.at, self.has_null) {
-            if el_range.is_empty() {
-                continue;
-            }
-
             if let Some(max) = self.schema.max_length {
                 if self.count == max {
                     return Err(Error::msg("too many elements"));

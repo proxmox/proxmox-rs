@@ -271,41 +271,39 @@ impl<'de, 'i> de::SeqAccess<'de> for SimpleSeqAccess<'de, 'i> {
     where
         T: de::DeserializeSeed<'de>,
     {
-        while self.at != self.input.len() {
-            let begin = self.at;
+        let range = match super::next_str_entry(&self.input, &mut self.at, self.has_null) {
+            None => return Ok(None),
+            Some(range) => range,
+        };
 
-            let input = &self.input[self.at..];
+        seed.deserialize(NoSchemaDeserializer::new(match &self.input {
+            Cow3::Original(input) => Cow::Borrowed(&input[range]),
+            Cow3::Intermediate(input) => Cow::Owned(input[range].to_string()),
+            Cow3::Owned(input) => Cow::Owned(input[range].to_string()),
+        }))
+        .map(Some)
+    }
+}
 
-            let end = if self.has_null {
-                input.find('\0')
-            } else {
-                input.find(|c: char| c == ',' || c == ';' || char::is_ascii_whitespace(&c))
-            };
+pub fn split_list(input: &str) -> SplitList<'_> {
+    SplitList {
+        has_null: input.contains('\0'),
+        input,
+        at: 0,
+    }
+}
 
-            let end = match end {
-                None => {
-                    self.at = self.input.len();
-                    input.len()
-                }
-                Some(pos) => {
-                    self.at += pos + 1;
-                    pos
-                }
-            };
+pub struct SplitList<'a> {
+    input: &'a str,
+    has_null: bool,
+    at: usize,
+}
 
-            if input[..end].is_empty() {
-                continue;
-            }
+impl<'a> Iterator for SplitList<'a> {
+    type Item = &'a str;
 
-            return seed
-                .deserialize(NoSchemaDeserializer::new(match &self.input {
-                    Cow3::Original(input) => Cow::Borrowed(&input[begin..end]),
-                    Cow3::Intermediate(input) => Cow::Owned(input[begin..end].to_string()),
-                    Cow3::Owned(input) => Cow::Owned(input[begin..end].to_string()),
-                }))
-                .map(Some);
-        }
-
-        Ok(None)
+    fn next(&mut self) -> Option<&'a str> {
+        let range = super::next_str_entry(&self.input, &mut self.at, self.has_null)?;
+        Some(&self.input[range])
     }
 }
