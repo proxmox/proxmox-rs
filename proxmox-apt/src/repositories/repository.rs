@@ -373,12 +373,18 @@ fn release_filename(uri: &str, suite: &str, detached: bool) -> PathBuf {
     let encoded_uri = uri_to_filename(uri);
     let filename = if detached { "Release" } else { "InRelease" };
 
-    path.push(format!(
-        "{}_dists_{}_{}",
-        encoded_uri,
-        suite.replace('/', "_"), // e.g. for buster/updates
-        filename,
-    ));
+    if suite == "/" {
+        path.push(format!("{encoded_uri}_{filename}"));
+    } else if suite == "./" {
+        path.push(format!("{encoded_uri}_._{filename}"));
+    } else {
+        path.push(format!(
+            "{}_dists_{}_{}",
+            encoded_uri,
+            suite.replace('/', "_"), // e.g. for buster/updates
+            filename,
+        ));
+    }
 
     path
 }
