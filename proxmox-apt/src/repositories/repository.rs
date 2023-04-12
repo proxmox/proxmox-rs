@@ -323,10 +323,13 @@ impl APTRepository {
     pub fn get_cached_origin(&self) -> Result<Option<String>, Error> {
         for uri in self.uris.iter() {
             for suite in self.suites.iter() {
-                let file = in_release_filename(uri, suite);
+                let mut file = release_filename(uri, suite, false);
 
                 if !file.exists() {
-                    continue;
+                    file = release_filename(uri, suite, true);
+                    if !file.exists() {
+                        continue;
+                    }
                 }
 
                 let raw = std::fs::read(&file)
@@ -362,17 +365,19 @@ impl APTRepository {
     }
 }
 
-/// Get the path to the cached InRelease file.
-fn in_release_filename(uri: &str, suite: &str) -> PathBuf {
+/// Get the path to the cached (In)Release file.
+fn release_filename(uri: &str, suite: &str, detached: bool) -> PathBuf {
     let mut path = PathBuf::from(&crate::config::get().dir_state);
     path.push(&crate::config::get().dir_state_lists);
 
-    let filename = uri_to_filename(uri);
+    let encoded_uri = uri_to_filename(uri);
+    let filename = if detached { "Release" } else { "InRelease" };
 
     path.push(format!(
-        "{}_dists_{}_InRelease",
-        filename,
+        "{}_dists_{}_{}",
+        encoded_uri,
         suite.replace('/', "_"), // e.g. for buster/updates
+        filename,
     ));
 
     path
