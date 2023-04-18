@@ -320,7 +320,7 @@ pub struct TfaUserData {
     pub webauthn: Vec<TfaEntry<WebauthnCredential>>,
 
     /// Recovery keys. (Unordered OTP values).
-    #[serde(skip_serializing_if = "Recovery::option_is_empty", default)]
+    #[serde(skip_serializing_if = "Option::is_none", default)]
     pub recovery: Option<Recovery>,
 
     /// Yubico keys for a user. NOTE: This is not directly supported currently, we just need this
@@ -330,22 +330,13 @@ pub struct TfaUserData {
 }
 
 impl TfaUserData {
-    /// Shortcut to get the recovery entry only if it is not empty!
-    pub fn recovery(&self) -> Option<&Recovery> {
-        if Recovery::option_is_empty(&self.recovery) {
-            None
-        } else {
-            self.recovery.as_ref()
-        }
-    }
-
     /// `true` if no second factors exist
     pub fn is_empty(&self) -> bool {
         self.totp.is_empty()
             && self.u2f.is_empty()
             && self.webauthn.is_empty()
             && self.yubico.is_empty()
-            && self.recovery().is_none()
+            && self.recovery.is_none()
     }
 
     /// Find an entry by id, except for the "recovery" entry which we're currently treating
@@ -577,7 +568,7 @@ impl TfaUserData {
 
         Ok(Some(TfaChallenge {
             totp: self.totp.iter().any(|e| e.info.enable),
-            recovery: RecoveryState::from(&self.recovery),
+            recovery: self.recovery_state(),
             webauthn: match webauthn {
                 Some(webauthn) => self.webauthn_challenge(access, userid, webauthn?)?,
                 None => None,
@@ -591,8 +582,8 @@ impl TfaUserData {
     }
 
     /// Get the recovery state.
-    pub fn recovery_state(&self) -> RecoveryState {
-        RecoveryState::from(&self.recovery)
+    pub fn recovery_state(&self) -> Option<RecoveryState> {
+        self.recovery.as_ref().map(RecoveryState::from)
     }
 
     /// Generate an optional webauthn challenge.
@@ -855,8 +846,8 @@ pub struct TfaChallenge {
     pub totp: bool,
 
     /// Whether there are recovery keys available.
-    #[serde(skip_serializing_if = "RecoveryState::is_unavailable", default)]
-    pub recovery: RecoveryState,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub recovery: Option<RecoveryState>,
 
     /// If the user has any u2f tokens registered, this will contain the U2F challenge data.
     #[serde(skip_serializing_if = "Option::is_none")]

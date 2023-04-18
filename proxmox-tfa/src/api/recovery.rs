@@ -96,12 +96,6 @@ impl Recovery {
         self.available().count()
     }
 
-    /// Convenience serde method to check if either the option is `None` or the content `is_empty`.
-    pub(super) fn option_is_empty(this: &Option<Self>) -> bool {
-        this.as_ref()
-            .map_or(true, |this| this.count_available() == 0)
-    }
-
     /// Verify a key and remove it. Returns whether the key was valid. Errors on openssl errors.
     pub(super) fn verify(&mut self, key: &str) -> Result<bool, Error> {
         let hash = self.hash(key.as_bytes())?;
@@ -128,15 +122,6 @@ impl RecoveryState {
 
     pub fn is_unavailable(&self) -> bool {
         self.0.is_empty()
-    }
-}
-
-impl From<&Option<Recovery>> for RecoveryState {
-    fn from(r: &Option<Recovery>) -> Self {
-        match r {
-            Some(r) => Self::from(r),
-            None => Self::default(),
-        }
     }
 }
 

@@ -52,9 +52,9 @@ fn to_data(data: &TfaUserData) -> Vec<TypedTfaInfo> {
             + data.u2f.len()
             + data.webauthn.len()
             + data.yubico.len()
-            + if data.recovery().is_some() { 1 } else { 0 },
+            + if data.recovery.is_some() { 1 } else { 0 },
     );
-    if let Some(recovery) = data.recovery() {
+    if let Some(recovery) = &data.recovery {
         out.push(TypedTfaInfo {
             ty: TfaType::Recovery,
             info: TfaInfo::recovery(recovery.created),
@@ -145,7 +145,7 @@ pub fn get_tfa_entry(config: &TfaConfig, userid: &str, id: &str) -> Option<Typed
             let entry = tfa_id_iter(user_data).find(|(_ty, _index, entry_id)| id == *entry_id);
             entry.map(|(ty, index, _)| (ty, index))
         } {
-            Some((TfaType::Recovery, _)) => match user_data.recovery() {
+            Some((TfaType::Recovery, _)) => match &user_data.recovery {
                 Some(recovery) => TypedTfaInfo {
                     ty: TfaType::Recovery,
                     info: TfaInfo::recovery(recovery.created),
