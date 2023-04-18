@@ -566,7 +566,7 @@ impl TfaUserData {
             return Ok(None);
         }
 
-        Ok(Some(TfaChallenge {
+        let challenge = TfaChallenge {
             totp: self.totp.iter().any(|e| e.info.enable),
             recovery: self.recovery_state(),
             webauthn: match webauthn {
@@ -578,7 +578,14 @@ impl TfaUserData {
                 None => None,
             },
             yubico: self.yubico.iter().any(|e| e.info.enable),
-        }))
+        };
+
+        // This happens if 2nd factors exist but are all disabled.
+        if challenge.is_empty() {
+            return Ok(None);
+        }
+
+        Ok(Some(challenge))
     }
 
     /// Get the recovery state.
@@ -861,6 +868,16 @@ pub struct TfaChallenge {
     /// True if the user has yubico keys configured.
     #[serde(skip_serializing_if = "bool_is_false", default)]
     pub yubico: bool,
+}
+
+impl TfaChallenge {
+    pub fn is_empty(&self) -> bool {
+        !self.totp
+            && self.recovery.is_none()
+            && self.u2f.is_none()
+            && self.webauthn.is_none()
+            && !self.yubico
+    }
 }
 
 fn bool_is_false(v: &bool) -> bool {
