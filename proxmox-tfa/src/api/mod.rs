@@ -94,8 +94,14 @@ fn check_u2f(u2f: &Option<U2fConfig>) -> Result<u2f::U2f, Error> {
 fn get_webauthn<'a, 'config: 'a, 'origin: 'a>(
     waconfig: &'config Option<WebauthnConfig>,
     origin: Option<&'origin Url>,
-) -> Option<Result<Webauthn<WebauthnConfigInstance<'a>>, Error>> {
-    Some(waconfig.as_ref()?.instantiate(origin).map(Webauthn::new))
+) -> Option<Webauthn<WebauthnConfigInstance<'a>>> {
+    match waconfig.as_ref()?.instantiate(origin) {
+        Ok(wa) => Some(Webauthn::new(wa)),
+        Err(err) => {
+            log::error!("webauthn error: {err}");
+            None
+        }
+    }
 }
 
 /// Helper to get a `WebauthnConfigInstance` from a `WebauthnConfig`
@@ -105,8 +111,7 @@ fn check_webauthn<'a, 'config: 'a, 'origin: 'a>(
     waconfig: &'config Option<WebauthnConfig>,
     origin: Option<&'origin Url>,
 ) -> Result<Webauthn<WebauthnConfigInstance<'a>>, Error> {
-    get_webauthn(waconfig, origin)
-        .ok_or_else(|| format_err!("no webauthn configuration available"))?
+    get_webauthn(waconfig, origin).ok_or_else(|| format_err!("no webauthn configuration available"))
 }
 
 impl TfaConfig {
@@ -559,29 +564,48 @@ impl TfaUserData {
         &mut self,
         access: &A,
         userid: &str,
-        webauthn: Option<Result<Webauthn<WebauthnConfigInstance>, Error>>,
+        webauthn: Option<Webauthn<WebauthnConfigInstance>>,
         u2f: Option<&u2f::U2f>,
     ) -> Result<Option<TfaChallenge>, Error> {
         if self.is_empty() {
             return Ok(None);
         }
 
+        // Since we don't bail out when failing to generate WA or U2F challenges, we keep track of
+        // whether we tried here, otherwise `challenge.check()` would consider these to be not
+        // configured by the user and might allow logging in without them on error.
+        let mut not_empty = false;
+
         let challenge = TfaChallenge {
             totp: self.totp.iter().any(|e| e.info.enable),
             recovery: self.recovery_state(),
             webauthn: match webauthn {
-                Some(webauthn) => self.webauthn_challenge(access, userid, webauthn?)?,
+                Some(webauthn) => match self.webauthn_challenge(access, userid, webauthn) {
+                    Ok(wa) => wa,
+                    Err(err) => {
+                        not_empty = true;
+                        log::error!("failed to generate webauthn challenge: {err}");
+                        None
+                    }
+                },
                 None => None,
             },
             u2f: match u2f {
-                Some(u2f) => self.u2f_challenge(access, userid, u2f)?,
+                Some(u2f) => match self.u2f_challenge(access, userid, u2f) {
+                    Ok(u2f) => u2f,
+                    Err(err) => {
+                        not_empty = true;
+                        log::error!("failed to generate u2f challenge: {err}");
+                        None
+                    }
+                },
                 None => None,
             },
             yubico: self.yubico.iter().any(|e| e.info.enable),
         };
 
         // This happens if 2nd factors exist but are all disabled.
-        if challenge.is_empty() {
+        if challenge.is_empty() && !not_empty {
             return Ok(None);
         }
 
