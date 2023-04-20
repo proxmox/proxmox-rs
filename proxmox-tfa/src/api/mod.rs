@@ -331,6 +331,15 @@ pub struct TfaUserData {
     /// available for PVE, where the yubico API server configuration is part if the realm.
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub yubico: Vec<TfaEntry<String>>,
+
+    /// Once a user runs into a TOTP limit they get locked out of TOTP until they successfully use
+    /// a recovery key.
+    #[serde(skip_serializing_if = "bool_is_false", default)]
+    pub totp_locked: bool,
+
+    /// If a user hits too many 2nd factor failures, they get completely blocked for a while.
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub tfa_blocked_until: Option<i64>,
 }
 
 impl TfaUserData {
@@ -924,6 +933,19 @@ pub struct TfaUserChallenges {
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     #[serde(deserialize_with = "filter_expired_challenge")]
     webauthn_auths: Vec<WebauthnAuthChallenge>,
+
+    /// Number of consecutive TOTP failures. Too many of those will lock out a user.
+    #[serde(skip_serializing_if = "u32_is_zero", default)]
+    totp_failures: u32,
+
+    /// Number of consecutive 2nd factor failures. When the limit is reached, the user is locked
+    /// out for 12 hours.
+    #[serde(skip_serializing_if = "u32_is_zero", default)]
+    tfa_failures: u32,
+}
+
+fn u32_is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 /// Serde helper using our `FilteredVecVisitor` to filter out expired entries directly at load
