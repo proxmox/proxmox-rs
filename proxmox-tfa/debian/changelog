@@ -1,3 +1,37 @@
+rust-proxmox-tfa (4.0.0-1) stable; urgency=medium
+
+  * Don't automatically drop an empty set of recovery keys, instead.
+    This means that now if they are the only 2nd factor, once they're used up,
+    login becomes impossible.
+
+  * With no recovery keys present, the TfaChallenge now explicitly includes an
+    empty set of recovery keys, so the client can see they are empty, rather
+    than not configured.
+
+  * If all 2nd factors are disabled, rather than an empty challenge which
+    cannot be solved, act as if no 2nd factor existed, allowing the user to
+    login normally.
+
+  * Make failing to generate a webauthn or U2F challenge non-fatal: that is, if
+    other 2nd factors are available it should still be possible to login with
+    those.
+
+  * Log errors to syslog which previously cancelled the login process.
+
+  * TOTP: Add option to enable remembering and reject the last used TOTP codes
+    of a user.
+
+  * TOTP: add a failure limit after which TOTP will be completely blocked for a
+    user until a recovery key is used.
+
+  * There can now be alimit on TFA tries in general after which a user gets
+    locked and and admin intervention is required.
+
+  * add a 'types' feature exposing the TfaInfo, TfaType etc API types without
+    exposing the entire API, so API clients can use those.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Apr 2023 09:19:06 +0200
+
 rust-proxmox-tfa (3.0.0-1) stable; urgency=medium
 
   * Make `UserChallengeAccess` object-safe:
