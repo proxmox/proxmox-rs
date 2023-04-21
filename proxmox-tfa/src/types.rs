@@ -112,6 +112,7 @@ pub struct TfaUpdateInfo {
     pub recovery: Vec<String>,
 }
 
+#[cfg(feature = "api")]
 impl TfaUpdateInfo {
     pub(crate) fn with_id(id: String) -> Self {
         Self {
