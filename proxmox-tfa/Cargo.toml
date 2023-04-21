@@ -10,7 +10,7 @@ description = "tfa implementation for totp and u2f"
 exclude.workspace = true
 
 [dependencies]
-anyhow.workspace = true
+anyhow = { workspace = true, optional = true }
 base32.workspace = true
 base64.workspace = true
 hex.workspace = true
@@ -32,5 +32,5 @@ proxmox-uuid = { workspace = true, optional = true }
 default = []
 types = [ "serde/derive"]
 u2f = [ "dep:libc", "dep:serde_json", "serde/derive" ]
-api = [ "types", "u2f", "dep:webauthn-rs", "dep:proxmox-uuid", "dep:proxmox-time" ]
+api = [ "types", "u2f", "dep:anyhow", "dep:webauthn-rs", "dep:proxmox-uuid", "dep:proxmox-time" ]
 api-types = [ "types", "dep:proxmox-schema" ]
