@@ -1,15 +1,68 @@
 //! TOTP implementation.
 
 use std::convert::TryFrom;
+use std::error::Error as StdError;
 use std::fmt;
 use std::time::{Duration, SystemTime};
 
-use anyhow::{anyhow, bail, Error};
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::sign::Signer;
-use percent_encoding::{percent_decode, percent_encode};
+use percent_encoding::{percent_decode, percent_encode, PercentDecode};
 use serde::{Serialize, Serializer};
+
+/// An error from the TOTP TFA submodule.
+#[derive(Debug)]
+pub enum Error {
+    Generic(String),
+    Decode(&'static str, Box<dyn StdError + Send + Sync + 'static>),
+    BadParameter(String, Box<dyn StdError + Send + Sync + 'static>),
+    Ssl(&'static str, openssl::error::ErrorStack),
+    UnsupportedAlgorithm(String),
+    UnknownParameter(String),
+}
+
+impl StdError for Error {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            Self::Ssl(_m, e) => Some(e),
+            Self::Decode(_m, e) => Some(&**e),
+            Self::BadParameter(_m, e) => Some(&**e),
+            _ => None,
+        }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::Generic(e) => f.write_str(&e),
+            Error::Decode(m, _e) => f.write_str(&m),
+            Error::Ssl(m, _e) => f.write_str(&m),
+            Error::UnsupportedAlgorithm(a) => write!(f, "unsupported algorithm: '{a}'"),
+            Error::UnknownParameter(p) => write!(f, "unknown otpauth uri parameter: '{p}'"),
+            Error::BadParameter(m, _e) => f.write_str(&m),
+        }
+    }
+}
+
+impl Error {
+    fn decode<E>(msg: &'static str, err: E) -> Self
+    where
+        E: StdError + Send + Sync + 'static,
+    {
+        Error::Decode(msg, Box::new(err))
+    }
+
+    fn msg<T: fmt::Display>(err: T) -> Self {
+        Error::Generic(err.to_string())
+    }
+}
+
+// for generic errors:
+macro_rules! format_err {
+    ($($msg:tt)*) => {{ Error::Generic(format!($($msg)*)) }};
+}
 
 /// Algorithms supported by the TOTP. This is simply an enum limited to the most common
 /// available implementations.
@@ -50,7 +103,7 @@ impl std::str::FromStr for Algorithm {
             "SHA1" => Algorithm::Sha1,
             "SHA256" => Algorithm::Sha256,
             "SHA512" => Algorithm::Sha512,
-            _ => bail!("unsupported algorithm: {}", s),
+            _ => return Err(Error::UnsupportedAlgorithm(s.to_string())),
         })
     }
 }
@@ -172,7 +225,10 @@ impl Totp {
 
     /// Create a new OTP secret key builder using a secret specified in hexadecimal bytes.
     pub fn builder_from_hex(secret: &str) -> Result<TotpBuilder, Error> {
-        Ok(Self::builder().secret(hex::decode(secret)?))
+        Ok(Self::builder().secret(
+            hex::decode(secret)
+                .map_err(|err| Error::decode("not a valid hexademical string", err))?,
+        ))
     }
 
     /// Get the secret key in binary form.
@@ -208,29 +264,29 @@ impl Totp {
     /// Raw signing function.
     fn sign(&self, input_data: &[u8]) -> Result<TotpValue, Error> {
         let secret = PKey::hmac(&self.secret)
-            .map_err(|err| anyhow!("error instantiating hmac key: {}", err))?;
+            .map_err(|err| Error::Ssl("error instantiating hmac key", err))?;
 
         let mut signer = Signer::new(self.algorithm.into(), &secret)
-            .map_err(|err| anyhow!("error instantiating hmac signer: {}", err))?;
+            .map_err(|err| Error::Ssl("error instantiating hmac signer", err))?;
 
         signer
             .update(input_data)
-            .map_err(|err| anyhow!("error calculating hmac (error in update): {}", err))?;
+            .map_err(|err| Error::Ssl("error updating hmac", err))?;
 
         let hmac = signer
             .sign_to_vec()
-            .map_err(|err| anyhow!("error calculating hmac (error in sign): {}", err))?;
+            .map_err(|err| Error::Ssl("error finishing hmac", err))?;
 
         let byte_offset = usize::from(
             hmac.last()
-                .ok_or_else(|| anyhow!("error calculating hmac (too short)"))?
+                .ok_or_else(|| format_err!("error calculating hmac (too short)"))?
                 & 0xF,
         );
 
         let value = u32::from_be_bytes(
             TryFrom::try_from(
                 hmac.get(byte_offset..(byte_offset + 4))
-                    .ok_or_else(|| anyhow!("error calculating hmac (too short)"))?,
+                    .ok_or_else(|| format_err!("error finalizing hmac (too short)"))?,
             )
             .unwrap(),
         ) & 0x7fffffff;
@@ -254,7 +310,7 @@ impl Totp {
     fn time_to_counter(&self, time: SystemTime) -> Result<u64, Error> {
         match time.duration_since(SystemTime::UNIX_EPOCH) {
             Ok(epoch) => Ok(epoch.as_secs() / (self.period as u64)),
-            Err(_) => bail!("refusing to create otp value for negative time"),
+            Err(_) => Err(Error::msg("refusing to create otp value for negative time")),
         }
     }
 
@@ -288,18 +344,22 @@ impl Totp {
 
         let mut out = String::new();
 
-        write!(out, "otpauth://totp/")?;
+        write!(out, "otpauth://totp/").map_err(Error::msg)?;
 
         let account_name = match &self.account_name {
             Some(account_name) => account_name,
-            None => bail!("cannot create otpauth uri without an account name"),
+            None => {
+                return Err(Error::msg(
+                    "cannot create otpauth uri without an account name",
+                ))
+            }
         };
 
         let issuer = match &self.issuer {
             Some(issuer) => {
                 let issuer = percent_encode(issuer.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
                     .to_string();
-                write!(out, "{}:", issuer)?;
+                write!(out, "{}:", issuer).map_err(Error::msg)?;
                 Some(issuer)
             }
             None => None,
@@ -310,13 +370,14 @@ impl Totp {
             "{}?secret={}",
             percent_encode(account_name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
             base32::encode(base32::Alphabet::RFC4648 { padding: false }, &self.secret),
-        )?;
-        write!(out, "&digits={}", self.digits)?;
-        write!(out, "&algorithm={}", self.algorithm)?;
-        write!(out, "&period={}", self.period)?;
+        )
+        .map_err(Error::msg)?;
+        write!(out, "&digits={}", self.digits).map_err(Error::msg)?;
+        write!(out, "&algorithm={}", self.algorithm).map_err(Error::msg)?;
+        write!(out, "&period={}", self.period).map_err(Error::msg)?;
 
         if let Some(issuer) = issuer {
-            write!(out, "&issuer={}", issuer)?;
+            write!(out, "&issuer={}", issuer).map_err(Error::msg)?;
         }
 
         Ok(out)
@@ -328,14 +389,14 @@ impl std::str::FromStr for Totp {
 
     fn from_str(uri: &str) -> Result<Self, Error> {
         if !uri.starts_with("otpauth://totp/") {
-            bail!("not an otpauth uri");
+            return Err(Error::msg("not an otpauth uri"));
         }
 
         let uri = &uri.as_bytes()[15..];
         let qmark = uri
             .iter()
             .position(|&b| b == b'?')
-            .ok_or_else(|| anyhow!("missing '?' in otp uri"))?;
+            .ok_or_else(|| format_err!("missing '?' in otp uri"))?;
 
         let account = &uri[..qmark];
         let uri = &uri[(qmark + 1)..];
@@ -345,7 +406,7 @@ impl std::str::FromStr for Totp {
         let first_part = percent_decode(
             account
                 .next()
-                .ok_or_else(|| anyhow!("missing account in otpauth uri"))?,
+                .ok_or_else(|| format_err!("missing account in otpauth uri"))?,
         )
         .decode_utf8_lossy()
         .into_owned();
@@ -363,36 +424,57 @@ impl std::str::FromStr for Totp {
 
         for parts in uri.split(|&b| b == b'&') {
             let mut parts = parts.splitn(2, |&b| b == b'=');
+
             let key = percent_decode(
                 parts
                     .next()
-                    .ok_or_else(|| anyhow!("bad key in otpauth uri"))?,
+                    .ok_or_else(|| format_err!("bad key in otpauth uri"))?,
             )
-            .decode_utf8()?;
+            .decode_utf8()
+            .map_err(|err| Error::decode("failed to decode key", err))?;
+
             let value = percent_decode(
                 parts
                     .next()
-                    .ok_or_else(|| anyhow!("bad value in otpauth uri"))?,
+                    .ok_or_else(|| format_err!("bad value in otpauth uri"))?,
             );
+
+            fn decode_utf8<T>(value: PercentDecode, n: &'static str) -> Result<T, Error>
+            where
+                T: std::str::FromStr,
+                T::Err: StdError + Send + Sync + 'static,
+            {
+                value
+                    .decode_utf8()
+                    .map_err(|err| {
+                        Error::BadParameter(format!("failed to decode value '{n}'"), Box::new(err))
+                    })?
+                    .parse()
+                    .map_err(|err| {
+                        Error::BadParameter(format!("failed to parse value '{n}'"), Box::new(err))
+                    })
+            }
 
             match &*key {
                 "secret" => {
                     totp.secret = base32::decode(
                         base32::Alphabet::RFC4648 { padding: false },
-                        &value.decode_utf8()?,
+                        &value
+                            .decode_utf8()
+                            .map_err(|err| Error::decode("failed to decode value", err))?,
                     )
-                    .ok_or_else(|| anyhow!("failed to decode otp secret in otpauth url"))?
+                    .ok_or_else(|| format_err!("failed to decode otp secret in otpauth url"))?
                 }
-                "digits" => totp.digits = value.decode_utf8()?.parse()?,
-                "algorithm" => totp.algorithm = value.decode_utf8()?.parse()?,
-                "period" => totp.period = value.decode_utf8()?.parse()?,
+                "digits" => totp.digits = decode_utf8(value, "digits")?,
+                "algorithm" => totp.algorithm = decode_utf8(value, "algorithm")?,
+                "period" => totp.period = decode_utf8(value, "period")?,
                 "issuer" => totp.issuer = Some(value.decode_utf8_lossy().into_owned()),
-                _other => bail!("unrecognized otpauth uri parameter: {}", key),
+                _other => return Err(Error::UnknownParameter(key.to_string())),
             }
         }
 
         if totp.secret.is_empty() {
-            bail!("missing secret in otpauth url");
+            return Err(Error::msg("missing secret in otpauth url"));
         }
 
         Ok(totp)
