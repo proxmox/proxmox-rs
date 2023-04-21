@@ -1,9 +1,10 @@
 //! U2F implementation.
 
+use std::error::Error as StdError;
+use std::fmt;
 use std::io;
 use std::mem::MaybeUninit;
 
-use anyhow::{bail, format_err, Error};
 use openssl::ec::{EcGroup, EcKey, EcPoint};
 use openssl::ecdsa::EcdsaSig;
 use openssl::pkey::Public;
@@ -13,6 +14,48 @@ use serde::{Deserialize, Serialize};
 
 const CHALLENGE_LEN: usize = 32;
 const U2F_VERSION: &str = "U2F_V2";
+
+/// An error from the U2F TFA submodule.
+#[derive(Debug)]
+pub enum Error {
+    Generic(String),
+    Decode(&'static str, Box<dyn StdError + Send + Sync + 'static>),
+    Ssl(&'static str, openssl::error::ErrorStack),
+}
+
+impl StdError for Error {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            Self::Ssl(_m, e) => Some(e),
+            Self::Decode(_m, e) => Some(&**e),
+            _ => None,
+        }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Error::Generic(e) => f.write_str(&e),
+            Error::Decode(m, _e) => f.write_str(&m),
+            Error::Ssl(m, _e) => f.write_str(&m),
+        }
+    }
+}
+
+impl Error {
+    fn decode<E>(msg: &'static str, err: E) -> Self
+    where
+        E: StdError + Send + Sync + 'static,
+    {
+        Error::Decode(msg, Box::new(err))
+    }
+}
+
+// for generic errors:
+macro_rules! bail {
+    ($($msg:tt)*) => {{ return Err(Error::Generic(format!($($msg)*))); }};
+}
 
 /// The "key" part of a registration, passed to `u2f.sign` in the registered keys list.
 ///
@@ -159,7 +202,7 @@ impl U2f {
         response: &str,
     ) -> Result<Option<Registration>, Error> {
         let response: RegistrationResponse = serde_json::from_str(response)
-            .map_err(|err| format_err!("error parsing response: {}", err))?;
+            .map_err(|err| Error::decode("error parsing response", err))?;
         self.registration_verify_obj(challenge, response)
     }
 
@@ -170,10 +213,10 @@ impl U2f {
         response: RegistrationResponse,
     ) -> Result<Option<Registration>, Error> {
         let client_data_decoded = decode(&response.client_data)
-            .map_err(|err| format_err!("error decoding client data in response: {}", err))?;
+            .map_err(|err| Error::decode("error decoding client data in response", err))?;
 
         let client_data: ClientData = serde_json::from_reader(&mut &client_data_decoded[..])
-            .map_err(|err| format_err!("error parsing client data: {}", err))?;
+            .map_err(|err| Error::decode("error parsing client data: {}", err))?;
 
         if client_data.challenge != challenge {
             bail!("registration challenge did not match");
@@ -188,7 +231,7 @@ impl U2f {
         }
 
         let registration_data = decode(&response.registration_data)
-            .map_err(|err| format_err!("error decoding registration data in response: {}", err))?;
+            .map_err(|err| Error::decode("error decoding registration data in response", err))?;
 
         let registration_data = RegistrationResponseData::from_raw(&registration_data)?;
 
@@ -201,7 +244,7 @@ impl U2f {
         let digest = digest.finish();
 
         let signature = EcdsaSig::from_der(registration_data.signature)
-            .map_err(|err| format_err!("error decoding signature in response: {}", err))?;
+            .map_err(|err| Error::decode("error decoding signature in response", err))?;
 
         // can we decode the public key?
         drop(decode_public_key(registration_data.public_key)?);
@@ -237,7 +280,7 @@ impl U2f {
         response: &str,
     ) -> Result<Option<Authentication>, Error> {
         let response: AuthResponse = serde_json::from_str(response)
-            .map_err(|err| format_err!("error parsing response: {}", err))?;
+            .map_err(|err| Error::decode("error parsing response", err))?;
         self.auth_verify_obj(public_key, challenge, response)
     }
 
@@ -249,10 +292,10 @@ impl U2f {
         response: AuthResponse,
     ) -> Result<Option<Authentication>, Error> {
         let client_data_decoded = decode(&response.client_data)
-            .map_err(|err| format_err!("error decoding client data in response: {}", err))?;
+            .map_err(|err| Error::decode("error decoding client data in response", err))?;
 
         let client_data: ClientData = serde_json::from_reader(&mut &client_data_decoded[..])
-            .map_err(|err| format_err!("error parsing client data: {}", err))?;
+            .map_err(|err| Error::decode("error parsing client data", err))?;
 
         if client_data.challenge != challenge {
             bail!("authentication challenge did not match");
@@ -267,7 +310,7 @@ impl U2f {
         }
 
         let signature_data = decode(&response.signature_data)
-            .map_err(|err| format_err!("error decoding signature data in response: {}", err))?;
+            .map_err(|err| Error::decode("error decoding signature data in response", err))?;
 
         // an ecdsa signature is much longer than 16 bytes but we only need to parse the first 5
         // anyway...
@@ -281,7 +324,7 @@ impl U2f {
         let counter: u32 =
             u32::from_be(unsafe { std::ptr::read_unaligned(counter_bytes.as_ptr() as *const u32) });
         let signature = EcdsaSig::from_der(&signature_data[5..])
-            .map_err(|err| format_err!("error decoding signature in response: {}", err))?;
+            .map_err(|err| Error::decode("error decoding signature in response", err))?;
 
         let public_key = decode_public_key(public_key)?;
 
@@ -312,8 +355,8 @@ fn encode(data: &[u8]) -> String {
 }
 
 /// base64url decoding
-fn decode(data: &str) -> Result<Vec<u8>, Error> {
-    Ok(base64::decode_config(data, base64::URL_SAFE_NO_PAD)?)
+fn decode(data: &str) -> Result<Vec<u8>, base64::DecodeError> {
+    base64::decode_config(data, base64::URL_SAFE_NO_PAD)
 }
 
 /// produce a challenge, which is just a bunch of random data
@@ -323,7 +366,8 @@ fn challenge() -> Result<String, Error> {
         let buf: &mut [u8; CHALLENGE_LEN] = &mut *data.as_mut_ptr();
         let rc = libc::getrandom(buf.as_mut_ptr() as *mut libc::c_void, buf.len(), 0);
         if rc == -1 {
-            return Err(io::Error::last_os_error().into());
+            let err = io::Error::last_os_error();
+            bail!("getrandom() failed with {err}");
         }
         if rc as usize != buf.len() {
             // `CHALLENGE_LEN` is small, so short reads cannot happen (see `getrandom(2)`)
@@ -383,7 +427,7 @@ impl<'a> RegistrationResponseData<'a> {
         let cert_len = der_length(&data[1..])? + 1; // plus the tag!
         let certificate = &data[..cert_len];
         let x509 = X509::from_der(certificate)
-            .map_err(|err| format_err!("error decoding X509 certificate: {}", err))?;
+            .map_err(|err| Error::decode("error decoding X509 certificate", err))?;
         let signature = &data[cert_len..];
 
         Ok(Self {
@@ -391,7 +435,10 @@ impl<'a> RegistrationResponseData<'a> {
             key_handle,
             certificate,
             signature,
-            cert_key: x509.public_key()?.ec_key()?,
+            cert_key: x509
+                .public_key()
+                .and_then(|k| k.ec_key())
+                .map_err(|err| Error::Ssl("failed to get EC public key from certificate", err))?,
         })
     }
 }
@@ -403,23 +450,19 @@ fn decode_public_key(data: &[u8]) -> Result<EcKey<Public>, Error> {
     }
 
     let group = EcGroup::from_curve_name(openssl::nid::Nid::X9_62_PRIME256V1)
-        .map_err(|err| format_err!("openssl error, failed to instantiate ec curve: {}", err))?;
+        .map_err(|err| Error::Ssl("failed to instantiate ec curve", err))?;
 
-    let mut bn = openssl::bn::BigNumContext::new().map_err(|err| {
-        format_err!(
-            "openssl error, failed to instantiate bignum context: {}",
-            err
-        )
-    })?;
+    let mut bn = openssl::bn::BigNumContext::new()
+        .map_err(|err| Error::Ssl("openssl error, failed to instantiate bignum context", err))?;
 
     let point = EcPoint::from_bytes(&group, data, &mut bn)
-        .map_err(|err| format_err!("failed to decode public key point: {}", err))?;
+        .map_err(|err| Error::Ssl("failed to decode public key point", err))?;
 
     let key = EcKey::from_public_key(&group, &point)
-        .map_err(|err| format_err!("failed to instantiate public key: {}", err))?;
+        .map_err(|err| Error::Ssl("failed to instantiate public key", err))?;
 
     key.check_key()
-        .map_err(|err| format_err!("public key failed self check: {}", err))?;
+        .map_err(|err| Error::Ssl("public key failed self check", err))?;
 
     Ok(key)
 }
