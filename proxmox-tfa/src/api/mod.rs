@@ -5,6 +5,7 @@
 //! We may want to move this into a shared crate making the `#[api]` macro feature-gated!
 
 use std::collections::HashMap;
+use std::fmt;
 
 use anyhow::{bail, format_err, Error};
 use serde::{Deserialize, Serialize};
@@ -49,6 +50,34 @@ pub trait OpenUserChallengeData {
 
     /// Should return `true` if something was removed, `false` if no data existed for the user.
     fn remove(&self, userid: &str) -> Result<bool, Error>;
+
+    /// This allows overriding the number of TOTP failures allowed before locking a user out of
+    /// TOTP.
+    fn totp_failure_limit(&self) -> u32 {
+        8
+    }
+
+    /// This allows overriding the number of consecutive TFA failures before an account gets rate
+    /// limited.
+    fn tfa_failure_limit(&self) -> u32 {
+        100
+    }
+
+    /// This allows overriding the time users are locked out when reaching the tfa failure limit.
+    fn tfa_failure_lock_time(&self) -> i64 {
+        3600 * 12
+    }
+
+    /// Since PVE needs cluster-wide package upgrades for new entries in [`TfaUserData`], TOTP code
+    /// reuse checks can be configured here.
+    fn enable_lockout(&self) -> bool {
+        true
+    }
+}
+
+#[test]
+fn ensure_open_user_challenge_data_is_dyn_safe() {
+    let _: Option<&dyn OpenUserChallengeData> = None;
 }
 
 pub trait UserChallengeAccess {
@@ -240,30 +269,130 @@ impl TfaConfig {
         challenge: &TfaChallenge,
         response: TfaResponse,
         origin: Option<&Url>,
-    ) -> Result<NeedsSaving, Error> {
-        match self.users.get_mut(userid) {
-            Some(user) => match response {
-                TfaResponse::Totp(value) => user.verify_totp(&value),
-                TfaResponse::U2f(value) => match &challenge.u2f {
-                    Some(challenge) => {
-                        let u2f = check_u2f(&self.u2f)?;
-                        user.verify_u2f(access, userid, u2f, &challenge.challenge, value)
-                    }
-                    None => bail!("no u2f factor available for user '{}'", userid),
-                },
-                TfaResponse::Webauthn(value) => {
-                    let webauthn = check_webauthn(&self.webauthn, origin)?;
-                    user.verify_webauthn(access, userid, webauthn, value)
-                }
-                TfaResponse::Recovery(value) => {
-                    user.verify_recovery(&value)?;
-                    return Ok(NeedsSaving::Yes);
-                }
-            },
-            None => bail!("no 2nd factor available for user '{}'", userid),
-        }?;
+    ) -> TfaResult {
+        let user = match self.users.get_mut(userid) {
+            Some(user) => user,
+            None => {
+                // This should not be reachable, as an API should not try to verify a 2nd factor
+                // of a user that doesn't have any 2nd factors.
+                log::error!("no 2nd factor available for user '{userid}'");
+                return TfaResult::failure(false);
+            }
+        };
 
-        Ok(NeedsSaving::No)
+        if user.tfa_is_locked() {
+            log::error!("refusing 2nd factor for user '{userid}'");
+            return TfaResult::Locked;
+        }
+
+        let mut was_totp = false;
+        let result = match response {
+            TfaResponse::Totp(value) => {
+                was_totp = true;
+                if user.totp_locked {
+                    log::error!("TOTP of user '{userid}' is locked");
+                    return TfaResult::Locked;
+                }
+                user.verify_totp(access, userid, &value)
+                    .map(|needs_saving| TfaResult::Success { needs_saving })
+            }
+            TfaResponse::U2f(value) => match &challenge.u2f {
+                Some(challenge) => user
+                    .verify_u2f(access, userid, &self.u2f, &challenge.challenge, value)
+                    .map(|()| TfaResult::Success {
+                        needs_saving: false,
+                    }),
+                None => Err(format_err!("no u2f factor available for user '{}'", userid)),
+            },
+            TfaResponse::Webauthn(value) => user
+                .verify_webauthn(access, userid, &self.webauthn, origin, value)
+                .map(|()| TfaResult::Success {
+                    needs_saving: false,
+                }),
+            TfaResponse::Recovery(value) => {
+                // recovery keys get used up so they always persist data:
+                user.verify_recovery(access, userid, &value)
+                    .map(|()| TfaResult::Success { needs_saving: true })
+            }
+        };
+
+        match result {
+            Ok(r @ TfaResult::Success { .. }) => {
+                // reset tfa failure count on success:
+                let mut data = match access.open(userid) {
+                    Ok(data) => data,
+                    Err(err) => {
+                        log::error!("failed to access user challenge data for '{userid}': {err}");
+                        return r;
+                    }
+                };
+
+                let access = data.get_mut();
+                let mut save = false;
+                if was_totp && access.totp_failures != 0 {
+                    access.totp_failures = 0;
+                    save = true;
+                }
+
+                if access.tfa_failures != 0 {
+                    access.tfa_failures = 0;
+                    save = true;
+                }
+
+                if save {
+                    if let Err(err) = data.save() {
+                        log::error!("failed to store user challenge data: {err}");
+                    }
+                }
+                r
+            }
+            Ok(r) => r,
+            Err(err) => {
+                log::error!("error in 2nd factor authentication for user '{userid}': {err}");
+                let mut data = match access.open(userid) {
+                    Ok(data) => data,
+                    Err(err) => {
+                        log::error!("failed to access user challenge data for '{userid}': {err}");
+                        return TfaResult::failure(false);
+                    }
+                };
+
+                let data_mut = data.get_mut();
+                data_mut.tfa_failures += 1;
+                // totp failures are counted in `verify_totp`
+
+                let tfa_limit_reached = data_mut.tfa_failures >= access.tfa_failure_limit();
+                let totp_limit_reached =
+                    was_totp && data_mut.totp_failures >= access.totp_failure_limit();
+
+                if !tfa_limit_reached && !totp_limit_reached {
+                    if let Err(err) = data.save() {
+                        log::error!("failed to store user challenge data: {err}");
+                    }
+                    return TfaResult::failure(false);
+                }
+
+                if let Err(err) = data.save() {
+                    log::error!("failed to store user challenge data: {err}");
+                }
+                drop(data);
+
+                if totp_limit_reached {
+                    user.totp_locked = access.enable_lockout();
+                }
+
+                if tfa_limit_reached && access.enable_lockout() {
+                    user.tfa_locked_until =
+                        Some(proxmox_time::epoch_i64() + access.tfa_failure_lock_time());
+                }
+
+                return TfaResult::Failure {
+                    needs_saving: true,
+                    tfa_limit_reached,
+                    totp_limit_reached,
+                };
+            }
+        }
     }
 
     pub fn remove_user<A: ?Sized + OpenUserChallengeData>(
@@ -275,7 +404,36 @@ impl TfaConfig {
         if self.users.remove(userid).is_some() {
             save = true;
         }
-        Ok(save.into())
+        Ok(if save {
+            NeedsSaving::Yes
+        } else {
+            NeedsSaving::No
+        })
+    }
+}
+
+#[must_use = "must save the config in order to ensure one-time use of recovery keys"]
+#[derive(Debug)]
+pub enum TfaResult {
+    /// Login succeeded. The user file might need updating.
+    Success { needs_saving: bool },
+    /// Login failed. The user file might need updating.
+    Failure {
+        needs_saving: bool,
+        totp_limit_reached: bool,
+        tfa_limit_reached: bool,
+    },
+    /// The current method is blocked.
+    Locked,
+}
+
+impl TfaResult {
+    const fn failure(needs_saving: bool) -> Self {
+        Self::Failure {
+            needs_saving,
+            totp_limit_reached: false,
+            tfa_limit_reached: false,
+        }
     }
 }
 
@@ -293,16 +451,6 @@ impl NeedsSaving {
     }
 }
 
-impl From<bool> for NeedsSaving {
-    fn from(v: bool) -> Self {
-        if v {
-            NeedsSaving::Yes
-        } else {
-            NeedsSaving::No
-        }
-    }
-}
-
 /// Mapping of userid to TFA entry.
 pub type TfaUsers = HashMap<String, TfaUserData>;
 
@@ -313,7 +461,7 @@ pub type TfaUsers = HashMap<String, TfaUserData>;
 pub struct TfaUserData {
     /// Totp keys for a user.
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
-    pub totp: Vec<TfaEntry<Totp>>,
+    pub totp: Vec<TfaEntry<TotpEntry>>,
 
     /// Registered u2f tokens for a user.
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
@@ -339,7 +487,19 @@ pub struct TfaUserData {
 
     /// If a user hits too many 2nd factor failures, they get completely blocked for a while.
     #[serde(skip_serializing_if = "Option::is_none", default)]
-    pub tfa_blocked_until: Option<i64>,
+    #[serde(deserialize_with = "filter_expired_timestamp")]
+    pub tfa_locked_until: Option<i64>,
+}
+
+/// Serde helper to filter out an optional timestamp that should be removed.
+fn filter_expired_timestamp<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    match Option::<i64>::deserialize(deserializer)? {
+        Some(t) if t < proxmox_time::epoch_i64() => Ok(None),
+        other => Ok(other),
+    }
 }
 
 impl TfaUserData {
@@ -496,7 +656,7 @@ impl TfaUserData {
     }
 
     fn add_totp(&mut self, description: String, totp: Totp) -> String {
-        let entry = TfaEntry::new(description, totp);
+        let entry = TfaEntry::new(description, TotpEntry::new(totp));
         let id = entry.info.id.clone();
         self.totp.push(entry);
         id
@@ -523,10 +683,9 @@ impl TfaUserData {
     }
 
     /// Helper to iterate over enabled totp entries.
-    fn enabled_totp_entries(&self) -> impl Iterator<Item = &Totp> {
-        self.totp
-            .iter()
-            .filter_map(|e| if e.info.enable { Some(&e.entry) } else { None })
+    /// Here we also need access to the ID.
+    fn enabled_totp_entries_mut(&mut self) -> impl Iterator<Item = &mut TfaEntry<TotpEntry>> {
+        self.totp.iter_mut().filter(|e| e.info.enable)
     }
 
     /// Helper to iterate over enabled u2f entries.
@@ -555,14 +714,43 @@ impl TfaUserData {
     }
 
     /// Verify a totp challenge. The `value` should be the totp digits as plain text.
-    fn verify_totp(&self, value: &str) -> Result<(), Error> {
+    ///
+    /// TOTP keys are stored in the user data, so we always need to save afterwards.
+    fn verify_totp<A: ?Sized + OpenUserChallengeData>(
+        &mut self,
+        access: &A,
+        userid: &str,
+        value: &str,
+    ) -> Result<bool, Error> {
         let now = std::time::SystemTime::now();
 
-        for entry in self.enabled_totp_entries() {
-            if entry.verify(value, now, -1..=1)?.is_some() {
-                return Ok(());
+        let needs_saving = access.enable_lockout();
+        for entry in self.enabled_totp_entries_mut() {
+            if let Some(current) = entry.entry.verify(value, now, -1..=1)? {
+                if needs_saving {
+                    if current <= entry.entry.last_count {
+                        let mut data = access.open(userid)?;
+                        let data_access = data.get_mut();
+                        data_access.totp_failures += 1;
+                        data.save()?;
+                        bail!("rejecting reused TOTP value");
+                    }
+
+                    entry.entry.last_count = current;
+                }
+
+                let mut data = access.open(userid)?;
+                let data_access = data.get_mut();
+                data_access.totp_failures = 0;
+                data.save()?;
+                return Ok(needs_saving);
             }
         }
+
+        let mut data = access.open(userid)?;
+        let data_access = data.get_mut();
+        data_access.totp_failures += 1;
+        data.save()?;
 
         bail!("totp verification failed");
     }
@@ -696,10 +884,12 @@ impl TfaUserData {
         &self,
         access: &A,
         userid: &str,
-        u2f: u2f::U2f,
+        u2f: &Option<U2fConfig>,
         challenge: &crate::u2f::AuthChallenge,
         response: Value,
     ) -> Result<(), Error> {
+        let u2f = check_u2f(u2f)?;
+
         let expire_before = proxmox_time::epoch_i64() - CHALLENGE_TIMEOUT_SECS;
 
         let response: crate::u2f::AuthResponse = serde_json::from_value(response)
@@ -742,9 +932,12 @@ impl TfaUserData {
         &mut self,
         access: &A,
         userid: &str,
-        webauthn: Webauthn<WebauthnConfigInstance>,
+        webauthn: &Option<WebauthnConfig>,
+        origin: Option<&Url>,
         mut response: Value,
     ) -> Result<(), Error> {
+        let webauthn = check_webauthn(webauthn, origin)?;
+
         let expire_before = proxmox_time::epoch_i64() - CHALLENGE_TIMEOUT_SECS;
 
         let challenge = match response
@@ -790,13 +983,35 @@ impl TfaUserData {
     ///
     /// NOTE: If successful, the key will automatically be removed from the list of available
     /// recovery keys, so the configuration needs to be saved afterwards!
-    fn verify_recovery(&mut self, value: &str) -> Result<(), Error> {
+    fn verify_recovery<A: ?Sized + OpenUserChallengeData>(
+        &mut self,
+        access: &A,
+        userid: &str,
+        value: &str,
+    ) -> Result<(), Error> {
         if let Some(r) = &mut self.recovery {
             if r.verify(value)? {
+                // On success we reset the failure state.
+                self.totp_locked = false;
+                self.tfa_locked_until = None;
+
+                let mut data = access.open(userid)?;
+                let access = data.get_mut();
+                if access.totp_failures != 0 {
+                    access.totp_failures = 0;
+                    data.save()?;
+                }
                 return Ok(());
             }
         }
         bail!("recovery verification failed");
+    }
+
+    fn tfa_is_locked(&self) -> bool {
+        match self.tfa_locked_until {
+            Some(locked_until) => proxmox_time::epoch_i64() < locked_until,
+            None => false,
+        }
     }
 }
 
@@ -830,6 +1045,106 @@ impl<T> TfaEntry<T> {
     /// Create a raw entry from a `TfaInfo` and the corresponding entry data.
     pub fn from_parts(info: TfaInfo, entry: T) -> Self {
         Self { info, entry }
+    }
+}
+
+#[derive(Clone)]
+pub struct TotpEntry {
+    pub totp: Totp,
+    pub last_count: i64,
+}
+
+impl TotpEntry {
+    pub fn new(totp: Totp) -> Self {
+        Self {
+            totp,
+            last_count: i64::MIN,
+        }
+    }
+}
+
+impl std::ops::Deref for TotpEntry {
+    type Target = Totp;
+
+    fn deref(&self) -> &Totp {
+        &self.totp
+    }
+}
+
+impl Serialize for TotpEntry {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+
+        if self.last_count == i64::MIN {
+            return self.totp.serialize(serializer);
+        }
+
+        let mut map = serializer.serialize_struct("TotpEntry", 2)?;
+        map.serialize_field("totp", &self.totp)?;
+        map.serialize_field("last-count", &self.last_count)?;
+        map.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for TotpEntry {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        struct V;
+
+        impl<'de> serde::de::Visitor<'de> for V {
+            type Value = TotpEntry;
+
+            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "a totp string or a TotpEntry struct")
+            }
+
+            fn visit_str<E: Error>(self, s: &str) -> Result<TotpEntry, E> {
+                Ok(TotpEntry::new(s.parse().map_err(|err| E::custom(err))?))
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<TotpEntry, A::Error>
+            where
+                A: serde::de::MapAccess<'de>,
+            {
+                use std::borrow::Cow;
+
+                let mut totp = None;
+                let mut last_count = None;
+
+                loop {
+                    let key: Cow<'de, str> = match map.next_key()? {
+                        Some(k) => k,
+                        None => break,
+                    };
+
+                    match key.as_ref() {
+                        "totp" if totp.is_some() => return Err(A::Error::duplicate_field("totp")),
+                        "totp" => totp = Some(map.next_value()?),
+                        "last-count" if last_count.is_some() => {
+                            return Err(A::Error::duplicate_field("last-count"))
+                        }
+                        "last-count" => last_count = Some(map.next_value()?),
+                        other => {
+                            return Err(A::Error::unknown_field(other, &["totp", "last-count"]))
+                        }
+                    }
+                }
+
+                Ok(TotpEntry {
+                    totp: totp.ok_or_else(|| A::Error::missing_field("totp"))?,
+                    last_count: last_count.unwrap_or(i64::MIN),
+                })
+            }
+        }
+
+        deserializer.deserialize_any(V)
     }
 }
 

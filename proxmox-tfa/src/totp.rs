@@ -307,7 +307,7 @@ impl Totp {
 
     /// Convert a time stamp into a counter value. This makes it easier and cheaper to check a
     /// range of values.
-    fn time_to_counter(&self, time: SystemTime) -> Result<u64, Error> {
+    pub(crate) fn time_to_counter(&self, time: SystemTime) -> Result<u64, Error> {
         match time.duration_since(SystemTime::UNIX_EPOCH) {
             Ok(epoch) => Ok(epoch.as_secs() / (self.period as u64)),
             Err(_) => Err(Error::msg("refusing to create otp value for negative time")),
@@ -328,11 +328,12 @@ impl Totp {
         digits: &str,
         time: SystemTime,
         steps: std::ops::RangeInclusive<isize>,
-    ) -> Result<Option<isize>, Error> {
+    ) -> Result<Option<i64>, Error> {
         let count = self.time_to_counter(time)? as i64;
         for step in steps {
-            if self.counter((count + step as i64) as u64)? == digits {
-                return Ok(Some(step));
+            let count = count + step as i64;
+            if self.counter(count as u64)? == digits {
+                return Ok(Some(count));
             }
         }
         Ok(None)
