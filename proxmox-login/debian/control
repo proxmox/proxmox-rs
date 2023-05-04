@@ -1,0 +1,74 @@
+Source: rust-proxmox-login
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-base64-0.13+default-dev <!nocheck>,
+ librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.6.1
+Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/proxmox-login]
+Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/proxmox-login
+X-Cargo-Crate: proxmox-login
+Rules-Requires-Root: no
+
+Package: librust-proxmox-login-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-base64-0.13+default-dev,
+ librust-percent-encoding-2+default-dev (>= 2.1-~~),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
+ librust-serde-json-1+default-dev
+Suggests:
+ librust-proxmox-login+http-dev (= ${binary:Version}),
+ librust-proxmox-login+webauthn-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-login+default-dev (= ${binary:Version}),
+ librust-proxmox-login-0-dev (= ${binary:Version}),
+ librust-proxmox-login-0+default-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1.0+default-dev (= ${binary:Version})
+Description: Proxmox product authentication api - Rust source code
+ This package contains the source for the Rust proxmox-login crate, packaged by
+ debcargo for use with cargo and dh-cargo.
+
+Package: librust-proxmox-login+http-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-login-dev (= ${binary:Version}),
+ librust-http-0.2+default-dev (>= 0.2.4-~~)
+Provides:
+ librust-proxmox-login-0+http-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1+http-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1.0+http-dev (= ${binary:Version})
+Description: Proxmox product authentication api - feature "http"
+ This metapackage enables feature "http" for the Rust proxmox-login crate, by
+ pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox-login+webauthn-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-login-dev (= ${binary:Version}),
+ librust-webauthn-rs-0.3+default-dev
+Provides:
+ librust-proxmox-login-0+webauthn-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1+webauthn-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1.0+webauthn-dev (= ${binary:Version})
+Description: Proxmox product authentication api - feature "webauthn"
+ This metapackage enables feature "webauthn" for the Rust proxmox-login crate,
+ by pulling in any additional dependencies needed by that feature.
