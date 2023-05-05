@@ -143,7 +143,30 @@ fn check_webauthn<'a, 'config: 'a, 'origin: 'a>(
 }
 
 impl TfaConfig {
-    // Get a u2f registration challenge.
+    /// Unlock a user's 2nd factor authentication (including TOTP).
+    pub fn unlock_tfa(&mut self, userid: &str) -> Result<(), Error> {
+        match self.users.get_mut(userid) {
+            Some(user) => {
+                user.totp_locked = false;
+                user.tfa_locked_until = None;
+                Ok(())
+            }
+            None => bail!("no such challenge"),
+        }
+    }
+
+    /// Unlock a user's TOTP challenges.
+    pub fn unlock_totp(&mut self, userid: &str) -> Result<(), Error> {
+        match self.users.get_mut(userid) {
+            Some(user) => {
+                user.totp_locked = false;
+                Ok(())
+            }
+            None => bail!("no such challenge"),
+        }
+    }
+
+    /// Get a u2f registration challenge.
     pub fn u2f_registration_challenge<A: ?Sized + OpenUserChallengeData>(
         &mut self,
         access: &A,
