@@ -9,6 +9,7 @@ members = [
     "proxmox-io",
     "proxmox-lang",
     "proxmox-ldap",
+    "proxmox-login",
     "proxmox-metrics",
     "proxmox-rest-server",
     "proxmox-router",
