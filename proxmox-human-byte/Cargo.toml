@@ -1,0 +1,15 @@
+[package]
+name = "proxmox-human-byte"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+description = "Proxmox library for formatting byte sizes (IEC or SI)"
+
+[dependencies]
+anyhow.workspace = true
+proxmox-schema = { workspace = true, features = ["api-macro"]}
+proxmox-serde.workspace = true
+serde.workspace = true
