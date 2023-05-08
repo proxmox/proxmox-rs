@@ -265,8 +265,8 @@ impl SecondFactorChallenge {
     }
 
     /// Deal with the API's response object to extract the ticket.
-    pub fn response(&self, body: &[u8]) -> Result<Authentication, ResponseError> {
-        let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_slice(body)?;
+    pub fn response(&self, body: &str) -> Result<Authentication, ResponseError> {
+        let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_str(body)?;
         let response = response.data.ok_or("missing response data")?;
 
         if response.username != self.userid {
