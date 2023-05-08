@@ -1,3 +1,9 @@
+rust-proxmox-resource-scheduling (0.3.0-1) bookworm; urgency=medium
+
+  * re-build for Debian 12 Bookworm based Proxmox VE 8.x release series
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 08 May 2023 14:50:18 +0200
+
 rust-proxmox-resource-scheduling (0.2.1-1) stable; urgency=medium
 
   * pve static-resource scheduler: add one to scoring to avoid boosting

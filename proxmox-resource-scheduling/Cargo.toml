@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-resource-scheduling"
-version = "0.2.1"
+version = "0.3.0"
 authors = [
     "Fiona Ebner <f.ebner@proxmox.com>",
     "Proxmox Support Team <support@proxmox.com>",
