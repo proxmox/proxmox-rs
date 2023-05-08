@@ -39,7 +39,7 @@ fn bool_is_false(b: &bool) -> bool {
 ///
 /// This contains the available key indices.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
-pub struct RecoveryState(Vec<usize>);
+pub struct RecoveryState(pub Vec<usize>);
 
 impl RecoveryState {
     pub fn is_available(&self) -> bool {
