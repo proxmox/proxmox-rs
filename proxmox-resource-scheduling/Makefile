@@ -40,13 +40,13 @@ build:
 .PHONY: deb
 deb: $(DEB)
 $(DEB): build
-	cd $(BUILDDIR); dpkg-buildpackage -b -us -uc --no-pre-clean
+	cd $(BUILDDIR); dpkg-buildpackage -b -us -uc
 	lintian $(DEB)
 
 .PHONY: dsc
 dsc: $(DSC)
 $(DSC): build
-	cd $(BUILDDIR); dpkg-buildpackage -S -us -uc -d -nc
+	cd $(BUILDDIR); dpkg-buildpackage -S -us -uc -d
 	lintian $(DSC)
 
 .PHONY: dinstall
