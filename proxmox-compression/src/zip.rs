@@ -643,7 +643,7 @@ where
         let entry_path = entry.path().to_owned();
         let encoder = &mut encoder;
 
-        if let Err(err) = async move {
+        match async move {
             let entry_path_no_base = entry.path().strip_prefix(base_path)?;
             let metadata = entry.metadata()?;
             let mtime = match metadata
@@ -659,22 +659,27 @@ where
             if entry.file_type().is_file() {
                 let file = tokio::fs::File::open(entry.path()).await?;
                 let ze = ZipEntry::new(entry_path_no_base, mtime, mode, true);
-                encoder.add_entry(ze, Some(file)).await?;
+                Ok(Some((ze, Some(file))))
             } else if entry.file_type().is_dir() {
                 let ze = ZipEntry::new(entry_path_no_base, mtime, mode, false);
                 let content: Option<tokio::fs::File> = None;
-                encoder.add_entry(ze, content).await?;
+                Ok(Some((ze, content)))
+            } else {
+                // ignore other file types
+                Ok::<_, Error>(None)
             }
-            // ignore other file types
-            Ok::<(), Error>(())
         }
         .await
         {
-            eprintln!(
-                "zip: error encoding file or directory '{}': {}",
-                entry_path.display(),
-                err
-            );
+            Ok(Some((ze, content))) => encoder.add_entry(ze, content).await?,
+            Ok(None) => {}
+            Err(err) => {
+                eprintln!(
+                    "zip: error encoding file or directory '{}': {}",
+                    entry_path.display(),
+                    err
+                );
+            }
         }
     }
 
