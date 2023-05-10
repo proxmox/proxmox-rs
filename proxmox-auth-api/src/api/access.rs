@@ -202,19 +202,31 @@ fn authenticate_2nd(
 
     #[allow(clippy::let_unit_value)]
     {
+        use proxmox_tfa::api::TfaResult;
+
         let mut tfa_config_lock = auth_context.tfa_config_write_lock()?;
         let (locked_config, tfa_config) = tfa_config_lock.config_mut();
-        if tfa_config
-            .verify(
-                locked_config,
-                userid.as_str(),
-                &challenge,
-                response.parse()?,
-                None,
-            )?
-            .needs_saving()
-        {
+        let result = tfa_config.verify(
+            locked_config,
+            userid.as_str(),
+            &challenge,
+            response.parse()?,
+            None,
+        );
+
+        let (success, needs_saving) = match result {
+            TfaResult::Locked => (false, false),
+            TfaResult::Failure { needs_saving, .. } => {
+                // TODO: Implement notifications for totp/tfa limits!
+                (false, needs_saving)
+            }
+            TfaResult::Success { needs_saving } => (true, needs_saving),
+        };
+        if needs_saving {
             tfa_config_lock.save_config()?;
+        }
+        if !success {
+            bail!("authentication failed");
         }
     }
 
