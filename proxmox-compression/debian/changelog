@@ -1,3 +1,11 @@
+rust-proxmox-compression (0.2.0-1) bookworm; urgency=medium
+
+  * update to zstd 0.12
+
+  * rebuild for Debian 12 bookworm based series
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 May 2023 11:46:12 +0200
+
 rust-proxmox-compression (0.1.2-1) stable; urgency=medium
 
   * make ZstdEncoder more generic over the error type
