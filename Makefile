@@ -11,6 +11,11 @@ deb: $(foreach c,$(CRATES), $c-deb)
 	echo $(foreach c,$(CRATES), $c-deb)
 	lintian build/*.deb
 
+.PHONY: dsc
+dsc: $(foreach c,$(CRATES), $c-dsc)
+	echo $(foreach c,$(CRATES), $c-dsc)
+	lintian build/*.dsc
+
 .PHONY: autopkgtest
 autopkgtest: $(foreach c,$(CRATES), $c-autopkgtest)
 
@@ -22,6 +27,10 @@ dinstall:
 
 %-deb:
 	./build.sh $*
+	touch $@
+
+%-dsc:
+	BUILDCMD='dpkg-buildpackage -S -us -uc -d' ./build.sh $*
 	touch $@
 
 %-autopkgtest:
