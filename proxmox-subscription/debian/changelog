@@ -1,3 +1,13 @@
+rust-proxmox-subscription (0.4.0-1) bookworm; urgency=medium
+
+  * update proxmox-http dependency to 0.9.0
+
+  * update proxmox-sys dependency to 0.5.0
+
+  * rebuild for Debian 12 bookworm based release series
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 May 2023 12:08:53 +0200
+
 rust-proxmox-subscription (0.3.1-1) unstable; urgency=medium
 
   * update to proxmox-http 0.8
