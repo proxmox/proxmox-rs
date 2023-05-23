@@ -77,7 +77,7 @@ tower-service = "0.3.0"
 url = "2.2"
 walkdir = "2"
 webauthn-rs = "0.3"
-zstd = { version = "0.6", features = [ "bindgen" ] }
+zstd = { version = "0.12", features = [ "bindgen" ] }
 
 # workspace dependencies
 proxmox-api-macro = { version = "1.0.4", path = "proxmox-api-macro" }

@@ -22,8 +22,8 @@ Build-Depends: debhelper (>= 12),
  librust-tokio-1+fs-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+io-util-dev (>= 1.6-~~) <!nocheck>,
  librust-walkdir-2+default-dev <!nocheck>,
- librust-zstd-0.6+bindgen-dev <!nocheck>,
- librust-zstd-0.6+default-dev <!nocheck>
+ librust-zstd-0.12+bindgen-dev <!nocheck>,
+ librust-zstd-0.12+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -52,8 +52,8 @@ Depends:
  librust-tokio-1+fs-dev (>= 1.6-~~),
  librust-tokio-1+io-util-dev (>= 1.6-~~),
  librust-walkdir-2+default-dev,
- librust-zstd-0.6+bindgen-dev,
- librust-zstd-0.6+default-dev
+ librust-zstd-0.12+bindgen-dev,
+ librust-zstd-0.12+default-dev
 Provides:
  librust-proxmox-compression+default-dev (= ${binary:Version}),
  librust-proxmox-compression-0-dev (= ${binary:Version}),

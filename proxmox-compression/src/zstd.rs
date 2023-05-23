@@ -73,7 +73,7 @@ impl<'a, T> ZstdEncoder<'a, T> {
     fn finish(&mut self) -> Result<usize, io::Error> {
         let mut outbuf = OutBuffer::around(self.buffer.get_free_mut_slice());
         let res = self.compressor.finish(&mut outbuf, true);
-        let size = outbuf.pos;
+        let size = outbuf.pos();
         // drop(outbuf);
         self.buffer.add_size(size);
         res

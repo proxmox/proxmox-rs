@@ -49,8 +49,7 @@ Depends:
  libacl1-dev,
  uuid-dev
 Suggests:
- librust-proxmox-sys+logrotate-dev (= ${binary:Version}),
- librust-proxmox-sys+sortable-macro-dev (= ${binary:Version})
+ librust-proxmox-sys+logrotate-dev (= ${binary:Version})
 Provides:
  librust-proxmox-sys+acl-dev (= ${binary:Version}),
  librust-proxmox-sys+crypt-dev (= ${binary:Version}),
@@ -81,8 +80,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-sys-dev (= ${binary:Version}),
- librust-zstd-0.6+bindgen-dev,
- librust-zstd-0.6+default-dev
+ librust-zstd-0.12+bindgen-dev,
+ librust-zstd-0.12+default-dev
 Provides:
  librust-proxmox-sys-0+logrotate-dev (= ${binary:Version}),
  librust-proxmox-sys-0.4+logrotate-dev (= ${binary:Version}),
