@@ -1,3 +1,11 @@
+rust-proxmox-rest-server (0.4.0-1) bookworm; urgency=medium
+
+  * update proxmox-sys dependency to 0.5.0
+
+  * rebuild for Debian 12 bookworm release series
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 May 2023 11:59:15 +0200
+
 rust-proxmox-rest-server (0.3.0-1) stable; urgency=medium
 
   * make socketpair private
