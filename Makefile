@@ -60,7 +60,8 @@ doc:
 .PHONY: clean
 clean:
 	cargo clean
-	rm -rf build *-deb *-autopkgtest
+	rm -rf build/
+	rm -f -- *-deb *-dsc *-autopkgtest *.buildinfo *.changes
 
 .PHONY: update
 update:
