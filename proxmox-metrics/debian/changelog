@@ -1,3 +1,11 @@
+rust-proxmox-metrics (0.3.0-1) bookworm; urgency=medium
+
+  * update proxmox-http to 0.9.0
+
+  * rebuild for Debian 12 bookworm release series
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 May 2023 11:56:53 +0200
+
 rust-proxmox-metrics (0.2.2-1) unstable; urgency=medium
 
   * update to proxmox-http 0.8

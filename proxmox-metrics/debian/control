@@ -12,8 +12,8 @@ Build-Depends: debhelper (>= 12),
  librust-hyper-0.14+default-dev (>= 0.14.5-~~) <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-proxmox-async-0.4+default-dev (>= 0.4.1-~~) <!nocheck>,
- librust-proxmox-http-0.8+client-dev <!nocheck>,
- librust-proxmox-http-0.8+default-dev <!nocheck>,
+ librust-proxmox-http-0.9+client-dev <!nocheck>,
+ librust-proxmox-http-0.9+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
@@ -37,8 +37,8 @@ Depends:
  librust-hyper-0.14+default-dev (>= 0.14.5-~~),
  librust-openssl-0.10+default-dev,
  librust-proxmox-async-0.4+default-dev (>= 0.4.1-~~),
- librust-proxmox-http-0.8+client-dev,
- librust-proxmox-http-0.8+default-dev,
+ librust-proxmox-http-0.9+client-dev,
+ librust-proxmox-http-0.9+default-dev,
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev,
  librust-tokio-1+default-dev (>= 1.6-~~),
@@ -48,10 +48,10 @@ Provides:
  librust-proxmox-metrics+default-dev (= ${binary:Version}),
  librust-proxmox-metrics-0-dev (= ${binary:Version}),
  librust-proxmox-metrics-0+default-dev (= ${binary:Version}),
- librust-proxmox-metrics-0.2-dev (= ${binary:Version}),
- librust-proxmox-metrics-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-metrics-0.2.2-dev (= ${binary:Version}),
- librust-proxmox-metrics-0.2.2+default-dev (= ${binary:Version})
+ librust-proxmox-metrics-0.3-dev (= ${binary:Version}),
+ librust-proxmox-metrics-0.3+default-dev (= ${binary:Version}),
+ librust-proxmox-metrics-0.3.0-dev (= ${binary:Version}),
+ librust-proxmox-metrics-0.3.0+default-dev (= ${binary:Version})
 Description: Metrics Server export utilitites - Rust source code
  This package contains the source for the Rust proxmox-metrics crate, packaged
  by debcargo for use with cargo and dh-cargo.
