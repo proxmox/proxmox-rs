@@ -72,4 +72,4 @@ update:
 	    dcmd --deb rust-$*_*.changes \
 	    | grep -v '.changes$$' \
 	    | tar -cf "$@.tar" -T-; \
-	    cat "$@.tar" | ssh -X repoman@repo.proxmox.com upload --product devel --dist bullseye
+	    cat "$@.tar" | ssh -X repoman@repo.proxmox.com upload --product devel --dist bookworm
