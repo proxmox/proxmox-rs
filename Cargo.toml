@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "proxmox-api-macro",
+    "proxmox-apt",
     "proxmox-async",
     "proxmox-auth-api",
     "proxmox-borrow",
@@ -34,6 +35,7 @@ edition = "2021"
 license = "AGPL-3"
 repository = "https://git.proxmox.com/?p=proxmox.git"
 exclude = [ "debian" ]
+homepage = "https://www.proxmox.com"
 
 [workspace.dependencies]
 # any features enabled here are enabled on all members using 'workspace = true'!

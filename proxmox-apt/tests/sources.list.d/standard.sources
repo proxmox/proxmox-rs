@@ -1,0 +1,10 @@
+Types: deb
+URIs: http://ftp.at.debian.org/debian
+Suites: bullseye bullseye-updates
+Components: main contrib
+
+# security updates
+Types: deb
+URIs: http://security.debian.org
+Suites: bullseye-security
+Components: main contrib

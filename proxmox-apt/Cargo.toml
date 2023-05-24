@@ -1,0 +1,23 @@
+[package]
+name = "proxmox-apt"
+version = "0.9.3"
+description = "Proxmox library for APT"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+exclude = [ "debian" ]
+
+[dependencies]
+anyhow.workspace = true
+hex.workspace = true
+once_cell.workspace = true
+openssl.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+
+rfc822-like = "0.2.1"
+
+proxmox-schema = { workspace = true, features = [ "api-macro" ] }

@@ -1,0 +1,115 @@
+rust-proxmox-apt (0.9.3-1) stable; urgency=medium
+
+  * packages file: add section field
+
+  * deb822: source index support
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Oct 2022 16:17:11 +0200
+
+rust-proxmox-apt (0.9.2-1) stable; urgency=medium
+
+  * release: add Commands file reference type
+
+  * release: add 'architecture' helper
+
+  * release: fix typo in 'Acquire-By-Hash'
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 16 Sep 2022 14:17:10 +0200
+
+rust-proxmox-apt (0.9.1-1) stable; urgency=medium
+
+  * release-file: improve invalid file-reference handling
+
+  * add ceph quincy repositories
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 6 Sep 2022 10:33:17 +0200
+
+rust-proxmox-apt (0.9.0-1) stable; urgency=medium
+
+  * AptRepositoryFile: make path optional
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 21 Jul 2022 13:25:20 +0200
+
+rust-proxmox-apt (0.8.1-1) stable; urgency=medium
+
+  * upgrade to 2021 edition
+
+  * check suites: add special check for Debian security repository
+
+  * file: add pre-parsed content variant
+
+  * add module for parsing Packages and Release (deb822 like) files
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 21 Jul 2022 12:08:23 +0200
+
+rust-proxmox-apt (0.8.0-1) stable; urgency=medium
+
+  * update to proxox-schema crate
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 08 Oct 2021 11:55:47 +0200
+
+rust-proxmox-apt (0.7.0-1) stable; urgency=medium
+
+  * update to proxmox 0.13.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 24 Aug 2021 15:38:52 +0200
+
+rust-proxmox-apt (0.6.0-1) stable; urgency=medium
+
+  * standard repos: add suite parameter for stricter detection
+
+  * check repos: have caller specify the current suite
+
+  * add type DebianCodename
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 29 Jul 2021 18:06:54 +0200
+
+rust-proxmox-apt (0.5.1-1) stable; urgency=medium
+
+  * depend on proxmox 0.12.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 20 Jul 2021 13:18:02 +0200
+
+rust-proxmox-apt (0.5.0-1) stable; urgency=medium
+
+  * standard repo detection: handle alternative URI for PVE repos
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 16 Jul 2021 16:19:06 +0200
+
+rust-proxmox-apt (0.4.0-1) stable; urgency=medium
+
+  * support quote-word parsing for one-line format
+
+  * avoid backtick unicode symbol in string
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 01 Jul 2021 18:33:12 +0200
+
+rust-proxmox-apt (0.3.1-1) stable; urgency=medium
+
+  * standard repos: allow conversion from handle and improve information
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 30 Jun 2021 20:42:52 +0200
+
+rust-proxmox-apt (0.3.0-1) stable; urgency=medium
+
+  * add get_cached_origin method and an initial config module
+
+  * check: return 'origin' property instead of 'badge' for official host
+
+  * standard repos: drop product acronym from repo name
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 30 Jun 2021 13:29:13 +0200
+
+rust-proxmox-apt (0.2.0-1) stable; urgency=medium
+
+  * Add functions to check repositories.
+
+  * Add handling of standard Proxmox repositories.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 23 Jun 2021 14:57:52 +0200
+
+rust-proxmox-apt (0.1.0-1) stable; urgency=medium
+
+  * Initial release.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 18 Feb 2021 10:20:44 +0100

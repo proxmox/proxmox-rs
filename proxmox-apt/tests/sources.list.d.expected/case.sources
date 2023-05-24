@@ -1,0 +1,16 @@
+# comment in here
+Types: deb deb-src
+URIs: http://ftp.at.debian.org/debian
+Suites: bullseye-updates
+Components: main contrib
+languages: it de fr
+Enabled: false
+languages-Add: ja
+languages-Remove: de
+
+# comment in here
+Types: deb deb-src
+URIs: http://ftp.at.debian.org/debian
+Suites: bullseye
+Components: main contrib
+

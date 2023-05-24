@@ -1,0 +1,2 @@
+deb [trusted=yes] "file:///some/spacey/mount point/" bullseye pve
+deb [lang="it"] file:///some/spacey/"mount point"/proxmox/packages/ /
