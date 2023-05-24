@@ -1,0 +1,7 @@
+#deb [trusted=yes] cdrom:[Proxmox VE 5.1]/ stretch pve
+#deb [trusted=yes] cdrom:[Proxmox VE 5.1]/proxmox/packages/ /
+
+deb [trusted=yes] cdrom:[Proxmox VE 7.0 BETA]/ bullseye pve
+deb cdrom:[Proxmox VE 7.0 BETA]/proxmox/packages/ /
+
+deb [ "trusted=yes" ] cdrom:[Debian GNU/Linux 10.6.0 _Buster_ - Official amd64 NETINST 20200926-10:16]/ buster main

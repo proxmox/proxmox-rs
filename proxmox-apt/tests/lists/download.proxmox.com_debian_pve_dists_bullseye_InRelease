@@ -1,0 +1,38 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+Architectures: amd64
+Codename: bullseye
+Components: pvetest
+Date: Mon, 28 Jun 2021 18:05:11 +0000
+Label: Proxmox Debian Repository
+Origin: Proxmox
+Suite: stable
+MD5Sum:
+ 9bea8f79b808979720721f86da15b8c5           163424 pvetest/binary-amd64/Packages
+ a3286322ee6bfd3d5fec80d7c665f9c0            48621 pvetest/binary-amd64/Packages.gz
+SHA1:
+ 80fcafa4bf4a0c3c61c45d3b2fabc44d87772d42           163424 pvetest/binary-amd64/Packages
+ 8ddbdacf5c6e4543300650e9abbfd91557ebae17            48621 pvetest/binary-amd64/Packages.gz
+SHA256:
+ 2b37f06ef01b4735db37a87f426c8042d2dce0fe3e571ba2a70259ef0d25d37b           163424 pvetest/binary-amd64/Packages
+ 86cd183c6684d620dbea9419ac4585d2e6d35e2ecd83ccf3b63cd638d7fec93d            48621 pvetest/binary-amd64/Packages.gz
+SHA512:
+ d2095e4a621159d339682a6340ba3fd9ad32ec2c5c25f39594f8abea803f5c90dfc8c161e1ab3bfd0ec0830ae00165ffb219e18be2e33a8be17c68b86d187ddf           163424 pvetest/binary-amd64/Packages
+ 5af312c9b85252a071d24b434585579980ce28ee27073f076b78f7085b102d089026ded32ea9a00589f72e328362b42ee2efaf7282459d532be52e1766b8b007            48621 pvetest/binary-amd64/Packages.gz
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEKBOaL4ML1oR4oaAf3UujkX4jv1kFAmDaD1sACgkQ3UujkX4j
+v1nT4A/9EwXscYVy3TVw/t1h21EdP/ADvwmJVWJbmhENh7FPxvRNnr9Q7r/4ZcOr
+//gYAWm7e6DaiZEye5R7aH7BKKr16a5LOnXRv0nDWNSj50U/1B3KReGHFgRDRmyJ
+EZ+bg99PzyRzsD5UCjeMdbFvOBLiX8nK430jDg4ccRNdhxzYcu3L7Ds1GiS8C/kO
+bjB0hEEStqK0V4Lj5ZTrDOa+qoj9IS1N9Y4+loi+iEHRfF3q6vCXnqz/ZH53ese5
+SDbKVaBNFX4zsXfeowLV2tqWkuYBgzjOBLNtSEezlWLm83hVQ5cr7MB7zt1yPAYy
+V5+J7gIthKpJy9HE0DJ5qf+aekc/jt+tMVkrpwmwEmMIpyzY3Rh4tvpoyqC5ccqt
+roll1XlnUjjWzPGJUh2W0SGOnvKLb16p/yqDALIYLDgzjnP/B6iserrekWa15Cvz
+/HyffedsRbJ/JBDxJ54rV5KoPbRUsXkAp/fMZqOZu2wOxBHaTLqnHtHVJC9+pnef
+dXeJixX0Bb34vZPbYRRByUrv6DueqlS0M27YIdLoO1KIvRzQL4OWfni6Fu9DF3M6
+Ux1JF10Q/IwksQKXAyTgiGsStqnAGz13m0PJ+/swwzHK+Ktj7OoikKVnHZUkuljr
+easVE4GoqJEwuKC6nI0Dosluy96wkPo5KecsUUdcSeToeaad07U=
+=/mk7
+-----END PGP SIGNATURE-----

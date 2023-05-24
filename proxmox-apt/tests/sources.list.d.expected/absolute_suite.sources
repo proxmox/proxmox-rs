@@ -1,0 +1,5 @@
+# From Debian Administrator's Handbook
+Types: deb
+URIs: http://packages.falcot.com/
+Suites: updates/ internal/
+
