@@ -1,9 +1,0 @@
-Cargo.lock
-target/
-tests/sources.list.d.actual
-tests/sources.list.d.digest
-proxmox-apt-*/
-*proxmox-apt*.buildinfo
-*proxmox-apt*.tar.?z
-*proxmox-apt*.changes
-*proxmox-apt*.deb
