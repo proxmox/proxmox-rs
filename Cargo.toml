@@ -11,6 +11,7 @@ members = [
     "proxmox-ldap",
     "proxmox-login",
     "proxmox-metrics",
+    "proxmox-openid",
     "proxmox-rest-server",
     "proxmox-router",
     "proxmox-schema",

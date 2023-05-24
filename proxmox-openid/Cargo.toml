@@ -1,0 +1,27 @@
+[package]
+name = "proxmox-openid"
+version = "0.9.9"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude = [
+    "build",
+    "debian",
+]
+
+[dependencies]
+anyhow.workspace = true
+http.workspace = true
+nix.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+thiserror = "1"
+native-tls.workspace = true
+url.workspace = true
+
+openidconnect = { version = "2.4", default-features = false, features = ["accept-rfc3339-timestamps"] }
+ureq = { version = "2.4", default-features = false, features = ["native-tls", "gzip"] }
+
+proxmox-time.workspace = true
+proxmox-sys = { workspace = true, features = ["timer"] }
