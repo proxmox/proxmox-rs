@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "proxmox-api-macro",
+    "proxmox-apt",
     "proxmox-async",
     "proxmox-auth-api",
     "proxmox-borrow",
@@ -11,6 +12,7 @@ members = [
     "proxmox-ldap",
     "proxmox-login",
     "proxmox-metrics",
+    "proxmox-openid",
     "proxmox-rest-server",
     "proxmox-router",
     "proxmox-schema",
@@ -32,6 +34,7 @@ authors = ["Proxmox Support Team <support@proxmox.com>"]
 edition = "2021"
 license = "AGPL-3"
 repository = "https://git.proxmox.com/?p=proxmox.git"
+homepage = "https://proxmox.com"
 exclude = [ "debian" ]
 
 [workspace.dependencies]
