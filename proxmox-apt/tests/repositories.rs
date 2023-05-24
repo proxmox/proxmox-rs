@@ -416,7 +416,7 @@ fn test_standard_repositories() -> Result<(), Error> {
 fn test_get_current_release_codename() -> Result<(), Error> {
     let codename = get_current_release_codename()?;
 
-    assert!(codename == DebianCodename::Bullseye);
+    assert!(codename == DebianCodename::Bookworm);
 
     Ok(())
 }
