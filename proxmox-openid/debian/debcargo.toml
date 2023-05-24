@@ -1,0 +1,8 @@
+overlay = "."
+crate_src_path = ".."
+maintainer = "Proxmox Support Team <support@proxmox.com>"
+
+[source]
+# TODO: update once public
+vcs_git = ""
+vcs_browser = ""

@@ -1,0 +1,29 @@
+[package]
+name = "proxmox-openid"
+version = "0.9.9"
+authors = ["Dietmar Maurer <dietmar@proxmox.com>"]
+edition = "2018"
+license = "AGPL-3"
+exclude = [
+    "build",
+    "debian",
+]
+
+[lib]
+name = "proxmox_openid"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0"
+http = "0.2"
+nix = "0.26"
+openidconnect = { version = "2.4", default-features = false, features = ["accept-rfc3339-timestamps"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror="1.0"
+ureq = { version = "2.4", default-features = false, features = ["native-tls", "gzip"] }
+native-tls = "0.2"
+url = "2.1"
+
+proxmox-time = "1"
+proxmox-sys = { version = "0.4", features = ["timer"] }
