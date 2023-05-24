@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-openid"
-version = "0.9.9"
+version = "0.10.0"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true

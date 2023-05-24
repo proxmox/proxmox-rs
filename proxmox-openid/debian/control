@@ -9,18 +9,18 @@ Build-Depends: debhelper (>= 12),
  librust-anyhow-1+default-dev <!nocheck>,
  librust-http-0.2+default-dev <!nocheck>,
  librust-native-tls-0.2+default-dev <!nocheck>,
- librust-nix-0.26+default-dev <!nocheck>,
+ librust-nix-0.26+default-dev (>= 0.26.1-~~) <!nocheck>,
  librust-openidconnect-2+accept-rfc3339-timestamps-dev (>= 2.4-~~) <!nocheck>,
- librust-proxmox-sys-0.4+default-dev <!nocheck>,
- librust-proxmox-sys-0.4+timer-dev <!nocheck>,
- librust-proxmox-time-1+default-dev <!nocheck>,
+ librust-proxmox-sys-0.5+default-dev <!nocheck>,
+ librust-proxmox-sys-0.5+timer-dev <!nocheck>,
+ librust-proxmox-time-1+default-dev (>= 1.1.4-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
  librust-thiserror-1+default-dev <!nocheck>,
  librust-ureq-2+gzip-dev (>= 2.4-~~) <!nocheck>,
  librust-ureq-2+native-tls-dev (>= 2.4-~~) <!nocheck>,
- librust-url-2+default-dev (>= 2.1-~~) <!nocheck>
+ librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
 Vcs-Git: 
@@ -36,26 +36,26 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-http-0.2+default-dev,
  librust-native-tls-0.2+default-dev,
- librust-nix-0.26+default-dev,
+ librust-nix-0.26+default-dev (>= 0.26.1-~~),
  librust-openidconnect-2+accept-rfc3339-timestamps-dev (>= 2.4-~~),
- librust-proxmox-sys-0.4+default-dev,
- librust-proxmox-sys-0.4+timer-dev,
- librust-proxmox-time-1+default-dev,
+ librust-proxmox-sys-0.5+default-dev,
+ librust-proxmox-sys-0.5+timer-dev,
+ librust-proxmox-time-1+default-dev (>= 1.1.4-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev,
  librust-thiserror-1+default-dev,
  librust-ureq-2+gzip-dev (>= 2.4-~~),
  librust-ureq-2+native-tls-dev (>= 2.4-~~),
- librust-url-2+default-dev (>= 2.1-~~)
+ librust-url-2+default-dev (>= 2.2-~~)
 Provides:
  librust-proxmox-openid+default-dev (= ${binary:Version}),
  librust-proxmox-openid-0-dev (= ${binary:Version}),
  librust-proxmox-openid-0+default-dev (= ${binary:Version}),
- librust-proxmox-openid-0.9-dev (= ${binary:Version}),
- librust-proxmox-openid-0.9+default-dev (= ${binary:Version}),
- librust-proxmox-openid-0.9.9-dev (= ${binary:Version}),
- librust-proxmox-openid-0.9.9+default-dev (= ${binary:Version})
+ librust-proxmox-openid-0.10-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.10+default-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.10.0-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.10.0+default-dev (= ${binary:Version})
 Description: Rust crate "proxmox-openid" - Rust source code
  This package contains the source for the Rust proxmox-openid crate, packaged by
  debcargo for use with cargo and dh-cargo.
