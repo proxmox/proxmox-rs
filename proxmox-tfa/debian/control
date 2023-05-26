@@ -47,8 +47,8 @@ Provides:
  librust-proxmox-tfa-4+default-dev (= ${binary:Version}),
  librust-proxmox-tfa-4.0-dev (= ${binary:Version}),
  librust-proxmox-tfa-4.0+default-dev (= ${binary:Version}),
- librust-proxmox-tfa-4.0.0-dev (= ${binary:Version}),
- librust-proxmox-tfa-4.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-tfa-4.0.1-dev (= ${binary:Version}),
+ librust-proxmox-tfa-4.0.1+default-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - Rust source code
  This package contains the source for the Rust proxmox-tfa crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -68,7 +68,7 @@ Depends:
 Provides:
  librust-proxmox-tfa-4+api-dev (= ${binary:Version}),
  librust-proxmox-tfa-4.0+api-dev (= ${binary:Version}),
- librust-proxmox-tfa-4.0.0+api-dev (= ${binary:Version})
+ librust-proxmox-tfa-4.0.1+api-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "api"
  This metapackage enables feature "api" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
@@ -85,7 +85,7 @@ Depends:
 Provides:
  librust-proxmox-tfa-4+api-types-dev (= ${binary:Version}),
  librust-proxmox-tfa-4.0+api-types-dev (= ${binary:Version}),
- librust-proxmox-tfa-4.0.0+api-types-dev (= ${binary:Version})
+ librust-proxmox-tfa-4.0.1+api-types-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
@@ -100,7 +100,7 @@ Depends:
 Provides:
  librust-proxmox-tfa-4+types-dev (= ${binary:Version}),
  librust-proxmox-tfa-4.0+types-dev (= ${binary:Version}),
- librust-proxmox-tfa-4.0.0+types-dev (= ${binary:Version})
+ librust-proxmox-tfa-4.0.1+types-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "types"
  This metapackage enables feature "types" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
@@ -117,7 +117,7 @@ Depends:
 Provides:
  librust-proxmox-tfa-4+u2f-dev (= ${binary:Version}),
  librust-proxmox-tfa-4.0+u2f-dev (= ${binary:Version}),
- librust-proxmox-tfa-4.0.0+u2f-dev (= ${binary:Version})
+ librust-proxmox-tfa-4.0.1+u2f-dev (= ${binary:Version})
 Description: Tfa implementation for totp and u2f - feature "u2f"
  This metapackage enables feature "u2f" for the Rust proxmox-tfa crate, by
  pulling in any additional dependencies needed by that feature.
