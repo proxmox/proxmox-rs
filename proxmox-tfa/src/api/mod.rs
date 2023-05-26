@@ -144,14 +144,16 @@ fn check_webauthn<'a, 'config: 'a, 'origin: 'a>(
 
 impl TfaConfig {
     /// Unlock a user's 2nd factor authentication (including TOTP).
-    pub fn unlock_tfa(&mut self, userid: &str) -> Result<(), Error> {
+    /// Returns whether the user was locked before calling this method.
+    pub fn unlock_tfa(&mut self, userid: &str) -> Result<bool, Error> {
         match self.users.get_mut(userid) {
             Some(user) => {
+                let ret = user.totp_locked || user.tfa_is_locked();
                 user.totp_locked = false;
                 user.tfa_locked_until = None;
-                Ok(())
+                Ok(ret)
             }
-            None => bail!("no such challenge"),
+            None => bail!("no such user"),
         }
     }
 

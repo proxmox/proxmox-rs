@@ -179,6 +179,21 @@ pub fn delete_tfa(config: &mut TfaConfig, userid: &str, id: &str) -> Result<bool
     }
 }
 
+/// API call implementation for `PUT /users/{userid}/unlock-tfa`.
+///
+/// This should only be allowed for user administrators.
+///
+/// The TFA config must be WRITE locked.
+///
+/// The caller must *save* the config if `true` is returned!
+///
+/// Errors only if the user was not found.
+///
+/// Returns `true` if the user was previously locked out, `false` if nothing was changed.
+pub fn unlock_tfa(config: &mut TfaConfig, userid: &str) -> Result<bool, Error> {
+    config.unlock_tfa(userid)
+}
+
 #[cfg_attr(feature = "api-types", api(
     properties: {
         "entries": {
