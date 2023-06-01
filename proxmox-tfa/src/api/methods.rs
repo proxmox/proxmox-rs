@@ -203,7 +203,7 @@ pub fn unlock_tfa(config: &mut TfaConfig, userid: &str) -> Result<bool, Error> {
     },
 ))]
 #[derive(Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields, rename_all = "kebab-case")]
 /// Over the API we only provide the descriptions for TFA data.
 pub struct TfaUser {
     /// The user this entry belongs to.
@@ -211,6 +211,14 @@ pub struct TfaUser {
 
     /// TFA entries.
     entries: Vec<TypedTfaInfo>,
+
+    /// The user is locked out of TOTP authentication.
+    #[serde(skip_serializing_if = "super::bool_is_false")]
+    totp_locked: bool,
+
+    /// If a user's second factor is blocked, this contains the block's expiration time.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tfa_locked_until: Option<i64>,
 }
 
 /// API call implementation for `GET /access/tfa`.
@@ -223,18 +231,24 @@ pub fn list_tfa(
 ) -> Result<Vec<TfaUser>, Error> {
     let tfa_data = &config.users;
 
+    let now = proxmox_time::epoch_i64();
+
     let mut out = Vec::<TfaUser>::new();
     if top_level_allowed {
         for (user, data) in tfa_data {
             out.push(TfaUser {
                 userid: user.clone(),
                 entries: to_data(data),
+                totp_locked: data.totp_locked,
+                tfa_locked_until: data.tfa_locked_until.filter(|&t| t > now),
             });
         }
     } else if let Some(data) = { tfa_data }.get(authid) {
         out.push(TfaUser {
             userid: authid.into(),
             entries: to_data(data),
+            totp_locked: data.totp_locked,
+            tfa_locked_until: data.tfa_locked_until.filter(|&t| t > now),
         });
     }
 

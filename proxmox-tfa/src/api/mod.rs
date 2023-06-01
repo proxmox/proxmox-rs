@@ -1211,7 +1211,7 @@ impl TfaChallenge {
     }
 }
 
-fn bool_is_false(v: &bool) -> bool {
+pub(self) fn bool_is_false(v: &bool) -> bool {
     !v
 }
 
