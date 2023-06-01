@@ -65,7 +65,7 @@ pub trait OpenUserChallengeData {
 
     /// This allows overriding the time users are locked out when reaching the tfa failure limit.
     fn tfa_failure_lock_time(&self) -> i64 {
-        3600 * 12
+        3600
     }
 
     /// Since PVE needs cluster-wide package upgrades for new entries in [`TfaUserData`], TOTP code
