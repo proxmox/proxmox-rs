@@ -19,14 +19,10 @@ fn test_parse_write() -> Result<(), Error> {
 
 fn test_parse_write_dir(read_dir: &str) -> Result<(), Error> {
     let test_dir = std::env::current_dir()?.join("tests");
+    let tmp_dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR").to_string());
     let read_dir = test_dir.join(read_dir);
-    let write_dir = test_dir.join("sources.list.d.actual");
+    let write_dir = tmp_dir.join("sources.list.d.actual");
     let expected_dir = test_dir.join("sources.list.d.expected");
-
-    if write_dir.is_dir() {
-        std::fs::remove_dir_all(&write_dir)
-            .map_err(|err| format_err!("unable to remove dir {:?} - {}", write_dir, err))?;
-    }
 
     std::fs::create_dir_all(&write_dir)
         .map_err(|err| format_err!("unable to create dir {:?} - {}", write_dir, err))?;
@@ -66,6 +62,7 @@ fn test_parse_write_dir(read_dir: &str) -> Result<(), Error> {
         expected_count += 1;
 
         let expected_path = entry?.path();
+
         let actual_path = write_dir.join(expected_path.file_name().unwrap());
 
         let expected_contents = std::fs::read(&expected_path)
@@ -91,13 +88,9 @@ fn test_parse_write_dir(read_dir: &str) -> Result<(), Error> {
 #[test]
 fn test_digest() -> Result<(), Error> {
     let test_dir = std::env::current_dir()?.join("tests");
+    let tmp_dir = PathBuf::from(env!("CARGO_TARGET_TMPDIR").to_string());
     let read_dir = test_dir.join("sources.list.d");
-    let write_dir = test_dir.join("sources.list.d.digest");
-
-    if write_dir.is_dir() {
-        std::fs::remove_dir_all(&write_dir)
-            .map_err(|err| format_err!("unable to remove dir {:?} - {}", write_dir, err))?;
-    }
+    let write_dir = tmp_dir.join("sources.list.d.digest");
 
     std::fs::create_dir_all(&write_dir)
         .map_err(|err| format_err!("unable to create dir {:?} - {}", write_dir, err))?;
