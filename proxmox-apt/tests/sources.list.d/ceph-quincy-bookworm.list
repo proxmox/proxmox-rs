@@ -1,0 +1,4 @@
+deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise
+deb http://download.proxmox.com/debian/ceph-quincy bookworm main
+deb http://download.proxmox.com/debian/ceph-quincy bookworm test
+

@@ -397,6 +397,36 @@ fn test_standard_repositories() -> Result<(), Error> {
 
     assert_eq!(std_repos, expected);
 
+    let pve_alt_list = read_dir.join("ceph-quincy-bookworm.list");
+    let mut file = APTRepositoryFile::new(&pve_alt_list)?.unwrap();
+    file.parse()?;
+
+    expected[0].status = None;
+    expected[1].status = None;
+    expected[2].status = None;
+    expected[3].status = Some(true);
+    expected[4].status = Some(true);
+    expected[5].status = Some(true);
+
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
+
+    assert_eq!(std_repos, expected);
+
+    let pve_alt_list = read_dir.join("ceph-quincy-nosub-bookworm.list");
+    let mut file = APTRepositoryFile::new(&pve_alt_list)?.unwrap();
+    file.parse()?;
+
+    expected[0].status = None;
+    expected[1].status = None;
+    expected[2].status = None;
+    expected[3].status = None;
+    expected[4].status = Some(true);
+    expected[5].status = None;
+
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
+
+    assert_eq!(std_repos, expected);
+
     Ok(())
 }
 
