@@ -92,10 +92,6 @@ pub fn standard_repositories(
         result.append(&mut vec![
             APTStandardRepository::from(APTRepositoryHandle::CephQuincy),
             APTStandardRepository::from(APTRepositoryHandle::CephQuincyTest),
-            APTStandardRepository::from(APTRepositoryHandle::CephPacific),
-            APTStandardRepository::from(APTRepositoryHandle::CephPacificTest),
-            APTStandardRepository::from(APTRepositoryHandle::CephOctopus),
-            APTStandardRepository::from(APTRepositoryHandle::CephOctopusTest),
         ]);
     }
 

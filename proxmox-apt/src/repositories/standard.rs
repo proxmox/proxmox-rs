@@ -50,14 +50,6 @@ pub enum APTRepositoryHandle {
     CephQuincy,
     /// Ceph Quincy test repository.
     CephQuincyTest,
-    /// Ceph Pacific repository.
-    CephPacific,
-    /// Ceph Pacific test repository.
-    CephPacificTest,
-    /// Ceph Octoput repository.
-    CephOctopus,
-    /// Ceph Octoput test repository.
-    CephOctopusTest,
 }
 
 impl From<APTRepositoryHandle> for APTStandardRepository {
@@ -81,10 +73,6 @@ impl TryFrom<&str> for APTRepositoryHandle {
             "test" => Ok(APTRepositoryHandle::Test),
             "ceph-quincy" => Ok(APTRepositoryHandle::CephQuincy),
             "ceph-quincy-test" => Ok(APTRepositoryHandle::CephQuincyTest),
-            "ceph-pacific" => Ok(APTRepositoryHandle::CephPacific),
-            "ceph-pacific-test" => Ok(APTRepositoryHandle::CephPacificTest),
-            "ceph-octopus" => Ok(APTRepositoryHandle::CephOctopus),
-            "ceph-octopus-test" => Ok(APTRepositoryHandle::CephOctopusTest),
             _ => bail!("unknown repository handle '{}'", string),
         }
     }
@@ -98,10 +86,6 @@ impl Display for APTRepositoryHandle {
             APTRepositoryHandle::Test => write!(f, "test"),
             APTRepositoryHandle::CephQuincy => write!(f, "ceph-quincy"),
             APTRepositoryHandle::CephQuincyTest => write!(f, "ceph-quincy-test"),
-            APTRepositoryHandle::CephPacific => write!(f, "ceph-pacific"),
-            APTRepositoryHandle::CephPacificTest => write!(f, "ceph-pacific-test"),
-            APTRepositoryHandle::CephOctopus => write!(f, "ceph-octopus"),
-            APTRepositoryHandle::CephOctopusTest => write!(f, "ceph-octopus-test"),
         }
     }
 }
@@ -130,20 +114,6 @@ impl APTRepositoryHandle {
                 "This repository contains the Ceph Quincy packages before they are moved to the \
                 main repository."
             }
-            APTRepositoryHandle::CephPacific => {
-                "This repository holds the main Proxmox Ceph Pacific packages."
-            }
-            APTRepositoryHandle::CephPacificTest => {
-                "This repository contains the Ceph Pacific packages before they are moved to the \
-                main repository."
-            }
-            APTRepositoryHandle::CephOctopus => {
-                "This repository holds the main Proxmox Ceph Octopus packages."
-            }
-            APTRepositoryHandle::CephOctopusTest => {
-                "This repository contains the Ceph Octopus packages before they are moved to the \
-                main repository."
-            }
         }
         .to_string()
     }
@@ -156,10 +126,6 @@ impl APTRepositoryHandle {
             APTRepositoryHandle::Test => "Test",
             APTRepositoryHandle::CephQuincy => "Ceph Quincy",
             APTRepositoryHandle::CephQuincyTest => "Ceph Quincy Test",
-            APTRepositoryHandle::CephPacific => "Ceph Pacific",
-            APTRepositoryHandle::CephPacificTest => "Ceph Pacific Test",
-            APTRepositoryHandle::CephOctopus => "Ceph Octopus",
-            APTRepositoryHandle::CephOctopusTest => "Ceph Octopus Test",
         }
         .to_string()
     }
@@ -174,10 +140,6 @@ impl APTRepositoryHandle {
             APTRepositoryHandle::Test => "/etc/apt/sources.list".to_string(),
             APTRepositoryHandle::CephQuincy => "/etc/apt/sources.list.d/ceph.list".to_string(),
             APTRepositoryHandle::CephQuincyTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
-            APTRepositoryHandle::CephPacific => "/etc/apt/sources.list.d/ceph.list".to_string(),
-            APTRepositoryHandle::CephPacificTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
-            APTRepositoryHandle::CephOctopus => "/etc/apt/sources.list.d/ceph.list".to_string(),
-            APTRepositoryHandle::CephOctopusTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
         }
     }
 
@@ -227,26 +189,6 @@ impl APTRepositoryHandle {
             APTRepositoryHandle::CephQuincyTest => (
                 APTRepositoryPackageType::Deb,
                 vec!["http://download.proxmox.com/debian/ceph-quincy".to_string()],
-                "test".to_string(),
-            ),
-            APTRepositoryHandle::CephPacific => (
-                APTRepositoryPackageType::Deb,
-                vec!["http://download.proxmox.com/debian/ceph-pacific".to_string()],
-                "main".to_string(),
-            ),
-            APTRepositoryHandle::CephPacificTest => (
-                APTRepositoryPackageType::Deb,
-                vec!["http://download.proxmox.com/debian/ceph-pacific".to_string()],
-                "test".to_string(),
-            ),
-            APTRepositoryHandle::CephOctopus => (
-                APTRepositoryPackageType::Deb,
-                vec!["http://download.proxmox.com/debian/ceph-octopus".to_string()],
-                "main".to_string(),
-            ),
-            APTRepositoryHandle::CephOctopusTest => (
-                APTRepositoryPackageType::Deb,
-                vec!["http://download.proxmox.com/debian/ceph-octopus".to_string()],
                 "test".to_string(),
             ),
         }

@@ -364,10 +364,6 @@ fn test_standard_repositories() -> Result<(), Error> {
         APTStandardRepository::from(APTRepositoryHandle::Test),
         APTStandardRepository::from(APTRepositoryHandle::CephQuincy),
         APTStandardRepository::from(APTRepositoryHandle::CephQuincyTest),
-        APTStandardRepository::from(APTRepositoryHandle::CephPacific),
-        APTStandardRepository::from(APTRepositoryHandle::CephPacificTest),
-        APTStandardRepository::from(APTRepositoryHandle::CephOctopus),
-        APTStandardRepository::from(APTRepositoryHandle::CephOctopusTest),
     ];
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");
