@@ -90,7 +90,8 @@ pub fn standard_repositories(
 
     if product == "pve" {
         result.append(&mut vec![
-            APTStandardRepository::from(APTRepositoryHandle::CephQuincy),
+            APTStandardRepository::from(APTRepositoryHandle::CephQuincyEnterprise),
+            APTStandardRepository::from(APTRepositoryHandle::CephQuincyNoSubscription),
             APTStandardRepository::from(APTRepositoryHandle::CephQuincyTest),
         ]);
     }

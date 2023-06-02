@@ -46,8 +46,10 @@ pub enum APTRepositoryHandle {
     NoSubscription,
     /// The test repository.
     Test,
-    /// Ceph Quincy repository.
-    CephQuincy,
+    /// Ceph Quincy enterprise repository.
+    CephQuincyEnterprise,
+    /// Ceph Quincy no-subscription repository.
+    CephQuincyNoSubscription,
     /// Ceph Quincy test repository.
     CephQuincyTest,
 }
@@ -71,7 +73,8 @@ impl TryFrom<&str> for APTRepositoryHandle {
             "enterprise" => Ok(APTRepositoryHandle::Enterprise),
             "no-subscription" => Ok(APTRepositoryHandle::NoSubscription),
             "test" => Ok(APTRepositoryHandle::Test),
-            "ceph-quincy" => Ok(APTRepositoryHandle::CephQuincy),
+            "ceph-quincy-enterprise" => Ok(APTRepositoryHandle::CephQuincyEnterprise),
+            "ceph-quincy-no-subscription" => Ok(APTRepositoryHandle::CephQuincyNoSubscription),
             "ceph-quincy-test" => Ok(APTRepositoryHandle::CephQuincyTest),
             _ => bail!("unknown repository handle '{}'", string),
         }
@@ -84,7 +87,8 @@ impl Display for APTRepositoryHandle {
             APTRepositoryHandle::Enterprise => write!(f, "enterprise"),
             APTRepositoryHandle::NoSubscription => write!(f, "no-subscription"),
             APTRepositoryHandle::Test => write!(f, "test"),
-            APTRepositoryHandle::CephQuincy => write!(f, "ceph-quincy"),
+            APTRepositoryHandle::CephQuincyEnterprise => write!(f, "ceph-quincy-enterprise"),
+            APTRepositoryHandle::CephQuincyNoSubscription => write!(f, "ceph-quincy-no-subscription"),
             APTRepositoryHandle::CephQuincyTest => write!(f, "ceph-quincy-test"),
         }
     }
@@ -107,8 +111,13 @@ impl APTRepositoryHandle {
                 "This repository contains the latest packages and is primarily used for test labs \
                 and by developers to test new features."
             }
-            APTRepositoryHandle::CephQuincy => {
-                "This repository holds the main Proxmox Ceph Quincy packages."
+            APTRepositoryHandle::CephQuincyEnterprise => {
+                "This repository holds the production-ready Proxmox Ceph Quincy packages."
+            }
+            APTRepositoryHandle::CephQuincyNoSubscription => {
+                "This repository holds the Proxmox Ceph Quincy packages intended for \
+                non-production use. The deprecated 'main' repository is an alias for this in \
+                Proxmox VE 8."
             }
             APTRepositoryHandle::CephQuincyTest => {
                 "This repository contains the Ceph Quincy packages before they are moved to the \
@@ -124,7 +133,8 @@ impl APTRepositoryHandle {
             APTRepositoryHandle::Enterprise => "Enterprise",
             APTRepositoryHandle::NoSubscription => "No-Subscription",
             APTRepositoryHandle::Test => "Test",
-            APTRepositoryHandle::CephQuincy => "Ceph Quincy",
+            APTRepositoryHandle::CephQuincyEnterprise => "Ceph Quincy Enterprise",
+            APTRepositoryHandle::CephQuincyNoSubscription => "Ceph Quincy No-Subscription",
             APTRepositoryHandle::CephQuincyTest => "Ceph Quincy Test",
         }
         .to_string()
@@ -138,7 +148,8 @@ impl APTRepositoryHandle {
             }
             APTRepositoryHandle::NoSubscription => "/etc/apt/sources.list".to_string(),
             APTRepositoryHandle::Test => "/etc/apt/sources.list".to_string(),
-            APTRepositoryHandle::CephQuincy => "/etc/apt/sources.list.d/ceph.list".to_string(),
+            APTRepositoryHandle::CephQuincyEnterprise => "/etc/apt/sources.list.d/ceph.list".to_string(),
+            APTRepositoryHandle::CephQuincyNoSubscription => "/etc/apt/sources.list.d/ceph.list".to_string(),
             APTRepositoryHandle::CephQuincyTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
         }
     }
@@ -181,10 +192,15 @@ impl APTRepositoryHandle {
                 },
                 format!("{}test", product),
             ),
-            APTRepositoryHandle::CephQuincy => (
+            APTRepositoryHandle::CephQuincyEnterprise => (
+                APTRepositoryPackageType::Deb,
+                vec!["https://enterprise.proxmox.com/debian/ceph-quincy".to_string()],
+                "enterprise".to_string(),
+            ),
+            APTRepositoryHandle::CephQuincyNoSubscription => (
                 APTRepositoryPackageType::Deb,
                 vec!["http://download.proxmox.com/debian/ceph-quincy".to_string()],
-                "main".to_string(),
+                "no-subscription".to_string(),
             ),
             APTRepositoryHandle::CephQuincyTest => (
                 APTRepositoryPackageType::Deb,

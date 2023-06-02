@@ -285,11 +285,19 @@ impl APTRepository {
             found_uri = found_uri || handle_uris.iter().any(|handle_uri| handle_uri == uri);
         }
 
+        // In the past it was main instead of enterprise/no-subscription, and main now maps to
+        // no-subscription. Note this only applies for Quincy.
+        let found_component = if handle == APTRepositoryHandle::CephQuincyNoSubscription {
+            self.components.contains(&component) || self.components.contains(&"main".to_string())
+        } else {
+            self.components.contains(&component)
+        };
+
         self.types.contains(&package_type)
             && found_uri
             // using contains would require a &String
             && self.suites.iter().any(|self_suite| self_suite == suite)
-            && self.components.contains(&component)
+            && found_component
     }
 
     /// Guess the origin from the repository's URIs.
