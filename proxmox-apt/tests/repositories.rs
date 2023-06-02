@@ -389,13 +389,11 @@ fn test_standard_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(&pve_alt_list)?.unwrap();
     file.parse()?;
 
-    let file_vec = vec![file];
-
     expected[0].status = Some(true);
     expected[1].status = Some(true);
     expected[2].status = Some(false);
 
-    let std_repos = standard_repositories(&file_vec, "pve", DebianCodename::Bullseye);
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bullseye);
 
     assert_eq!(std_repos, expected);
 
