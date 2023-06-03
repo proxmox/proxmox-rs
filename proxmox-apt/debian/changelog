@@ -1,3 +1,11 @@
+rust-proxmox-apt (0.10.1-1) bookworm; urgency=medium
+
+  * apt: drop older Ceph standard repositories
+
+  * apt: split Ceph main repository into no-subscription and enterprise
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 03 Jun 2023 18:27:53 +0200
+
 rust-proxmox-apt (0.10.0-1) bookworm; urgency=medium
 
   * rebuild for Debian 12 bookworm release series
