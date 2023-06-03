@@ -20,7 +20,14 @@ if [ -e "$CONTROL" ]; then
     rm -f "$PWD/${CRATE}/debian/control"
 fi
 
-debcargo package --config "$PWD/${CRATE}/debian/debcargo.toml" --changelog-ready --no-overlay-write-back --directory "$PWD/build/${CRATE}" "${CRATE}" "$(dpkg-parsechangelog -l "${CRATE}/debian/changelog" -SVersion | sed -e 's/-.*//')"
+debcargo package \
+    --config "$PWD/${CRATE}/debian/debcargo.toml" \
+    --changelog-ready \
+    --no-overlay-write-back \
+    --directory "$PWD/build/${CRATE}" \
+    "${CRATE}" \
+    "$(dpkg-parsechangelog -l "${CRATE}/debian/changelog" -SVersion | sed -e 's/-.*//')"
+
 cd "build/${CRATE}"
 rm -f debian/source/format.debcargo.hint
 ${BUILDCMD}
