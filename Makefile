@@ -61,7 +61,7 @@ doc:
 clean:
 	cargo clean
 	rm -rf build/
-	rm -f -- *-deb *-dsc *-autopkgtest *.buildinfo *.changes
+	rm -f -- *-deb *-dsc *-autopkgtest *.build *.buildinfo *.changes
 
 .PHONY: update
 update:
