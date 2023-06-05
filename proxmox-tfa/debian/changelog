@@ -1,8 +1,16 @@
-rust-proxmox-tfa (4.0.1) UNRELEASED; urgency=medium
+rust-proxmox-tfa (4.0.2) stable; urgency=medium
+
+  * Reduce default TFA lockout time to an hour.
+
+  * Include lockout status in tfa user list.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 05 Jun 2023 08:59:05 +0200
+
+rust-proxmox-tfa (4.0.1) stable; urgency=medium
 
   * Add api::methods::unlock_tfa
 
- -- Proxmox Support Team <support@proxmox.com>  Fri, 26 May 2023 11:28:58 +0200
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 05 Jun 2023 08:58:34 +0200
 
 rust-proxmox-tfa (4.0.0-1) stable; urgency=medium
 
