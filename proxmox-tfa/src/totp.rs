@@ -99,10 +99,10 @@ impl std::str::FromStr for Algorithm {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {
-        Ok(match s {
-            "SHA1" => Algorithm::Sha1,
-            "SHA256" => Algorithm::Sha256,
-            "SHA512" => Algorithm::Sha512,
+        Ok(match s.to_lowercase().as_str() {
+            "sha1" => Algorithm::Sha1,
+            "sha256" => Algorithm::Sha256,
+            "sha512" => Algorithm::Sha512,
             _ => return Err(Error::UnsupportedAlgorithm(s.to_string())),
         })
     }
@@ -639,4 +639,24 @@ fn test_otp() {
     assert_eq!(parsed, totp);
     assert_eq!(parsed.issuer.as_deref(), Some("An Issuer"));
     assert_eq!(parsed.account_name.as_deref(), Some("The Account Name"));
+}
+
+#[test]
+fn test_algorithm_parsing() {
+    let secret = "AA";
+    let period = 30;
+    let digits = 6;
+    let issuer = "ISSUER";
+    let uri = format!("otpauth://totp/user%40hostname?secret={secret}&issuer={issuer}&algorithm=sha1&digits={digits}&period={period}");
+    let hotp: Totp = uri.parse().expect("failed to parse otp uri");
+
+    assert_eq!(hotp.algorithm, Algorithm::Sha1);
+    assert_eq!(hotp.period, period);
+    assert_eq!(hotp.digits, digits);
+    assert_eq!(hotp.issuer.as_deref(), Some(issuer));
+    assert_eq!(hotp.account_name.as_deref(), Some("user@hostname"));
+    assert_eq!(
+        &base32::encode(base32::Alphabet::RFC4648 { padding: false }, &hotp.secret()),
+        secret
+    )
 }
