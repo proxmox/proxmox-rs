@@ -1,4 +1,5 @@
 use std::future::Future;
+use std::net::IpAddr;
 use std::pin::Pin;
 use std::sync::Mutex;
 
@@ -27,10 +28,16 @@ pub trait Authenticator {
         &'a self,
         username: &'a UsernameRef,
         password: &'a str,
+        client_ip: Option<&'a IpAddr>,
     ) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>>;
 
     /// Change a user's password.
-    fn store_password(&self, username: &UsernameRef, password: &str) -> Result<(), Error>;
+    fn store_password(
+        &self,
+        username: &UsernameRef,
+        password: &str,
+        client_ip: Option<&IpAddr>,
+    ) -> Result<(), Error>;
 
     /// Remove a user.
     fn remove_password(&self, username: &UsernameRef) -> Result<(), Error>;

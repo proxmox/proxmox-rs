@@ -3,6 +3,7 @@
 use anyhow::{bail, format_err, Error};
 use serde_json::{json, Value};
 
+use proxmox_rest_server::RestEnvironment;
 use proxmox_router::{http_err, Permission, RpcEnvironment};
 use proxmox_schema::{api, api_types::PASSWORD_SCHEMA};
 use proxmox_tfa::api::TfaChallenge;
@@ -90,14 +91,12 @@ pub async fn create_ticket(
     tfa_challenge: Option<String>,
     rpcenv: &mut dyn RpcEnvironment,
 ) -> Result<Value, Error> {
-    use proxmox_rest_server::RestEnvironment;
-
     let env: &RestEnvironment = rpcenv
         .as_any()
         .downcast_ref::<RestEnvironment>()
         .ok_or_else(|| format_err!("detected wrong RpcEnvironment type"))?;
 
-    match authenticate_user(&username, &password, path, privs, port, tfa_challenge).await {
+    match authenticate_user(&username, &password, path, privs, port, tfa_challenge, env).await {
         Ok(AuthResult::Success) => Ok(json!({ "username": username })),
         Ok(AuthResult::CreateTicket) => {
             let auth_context = auth_context()?;
@@ -139,6 +138,7 @@ async fn authenticate_user(
     privs: Option<String>,
     port: Option<u16>,
     tfa_challenge: Option<String>,
+    rpcenv: &RestEnvironment,
 ) -> Result<AuthResult, Error> {
     let auth_context = auth_context()?;
     let prefix = auth_context.auth_prefix();
@@ -170,12 +170,14 @@ async fn authenticate_user(
         }
     }
 
+    let client_ip = rpcenv.get_client_ip().map(|sa| sa.ip());
+
     #[allow(clippy::let_unit_value)]
     {
         let _: () = auth_context
             .lookup_realm(userid.realm())
             .ok_or_else(|| format_err!("unknown realm {:?}", userid.realm().as_str()))?
-            .authenticate_user(userid.name(), password)
+            .authenticate_user(userid.name(), password, client_ip.as_ref())
             .await?;
     }
 

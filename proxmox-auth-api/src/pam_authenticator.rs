@@ -1,9 +1,12 @@
-use std::ffi::{c_int, c_void, CStr};
+use std::ffi::{c_int, c_void, CStr, CString};
 use std::future::Future;
+use std::net::IpAddr;
 use std::pin::Pin;
 
-use anyhow::{bail, Error};
-use pam_sys::types::{PamHandle, PamMessage, PamMessageStyle, PamResponse, PamReturnCode};
+use anyhow::{bail, format_err, Error};
+use pam_sys::types::{
+    PamHandle, PamItemType, PamMessage, PamMessageStyle, PamResponse, PamReturnCode,
+};
 
 use crate::types::UsernameRef;
 
@@ -23,6 +26,7 @@ impl crate::api::Authenticator for Pam {
         &'a self,
         username: &'a UsernameRef,
         password: &'a str,
+        client_ip: Option<&'a IpAddr>,
     ) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> {
         Box::pin(async move {
             let mut password_conv = PasswordConv {
@@ -46,6 +50,17 @@ impl crate::api::Authenticator for Pam {
                 result: PamReturnCode::SUCCESS,
             };
 
+            if let Some(ip) = client_ip {
+                let ip = ip.to_string();
+                let ip = CString::new(ip).map_err(|_| format_err!("nul-byte in client ip"))?;
+                let ip = unsafe { &*(ip.as_ptr() as *const libc::c_void) };
+
+                let err = pam_sys::wrapped::set_item(handle.handle, PamItemType::RHOST, ip);
+                if err != PamReturnCode::SUCCESS {
+                    bail!("error setting PAM_RHOST - {err}");
+                }
+            }
+
             handle.result =
                 pam_sys::wrapped::authenticate(handle.handle, pam_sys::types::PamFlag::NONE);
             if handle.result != PamReturnCode::SUCCESS {
@@ -56,7 +71,12 @@ impl crate::api::Authenticator for Pam {
         })
     }
 
-    fn store_password(&self, username: &UsernameRef, password: &str) -> Result<(), Error> {
+    fn store_password(
+        &self,
+        username: &UsernameRef,
+        password: &str,
+        client_ip: Option<&IpAddr>,
+    ) -> Result<(), Error> {
         let mut password_conv = PasswordConv {
             login: username.as_str(),
             password,
@@ -77,6 +97,17 @@ impl crate::api::Authenticator for Pam {
             handle: unsafe { &mut *handle },
             result: PamReturnCode::SUCCESS,
         };
+
+        if let Some(ip) = client_ip {
+            let ip = ip.to_string();
+            let ip = CString::new(ip).map_err(|_| format_err!("nul-byte in client ip"))?;
+            let ip = unsafe { &*(ip.as_ptr() as *const libc::c_void) };
+
+            let err = pam_sys::wrapped::set_item(handle.handle, PamItemType::RHOST, ip);
+            if err != PamReturnCode::SUCCESS {
+                bail!("error setting PAM_RHOST - {err}");
+            }
+        }
 
         /*
          * we assume we're root and don't need to authenticate
