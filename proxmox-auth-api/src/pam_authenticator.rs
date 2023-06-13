@@ -25,10 +25,33 @@ impl crate::api::Authenticator for Pam {
         password: &'a str,
     ) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + 'a>> {
         Box::pin(async move {
-            let mut auth = pam::Authenticator::with_password(self.service).unwrap();
-            auth.get_handler()
-                .set_credentials(username.as_str(), password);
-            auth.authenticate()?;
+            let mut password_conv = PasswordConv {
+                login: username.as_str(),
+                password,
+            };
+
+            let conv = pam_sys::types::PamConversation {
+                conv: Some(conv_fn),
+                data_ptr: &mut password_conv as *mut _ as *mut c_void,
+            };
+
+            let mut handle = std::ptr::null_mut();
+            let err =
+                pam_sys::wrapped::start(self.service, Some(username.as_str()), &conv, &mut handle);
+            if err != PamReturnCode::SUCCESS {
+                bail!("error opening pam - {err}");
+            }
+            let mut handle = PamGuard {
+                handle: unsafe { &mut *handle },
+                result: PamReturnCode::SUCCESS,
+            };
+
+            handle.result =
+                pam_sys::wrapped::authenticate(handle.handle, pam_sys::types::PamFlag::NONE);
+            if handle.result != PamReturnCode::SUCCESS {
+                bail!("authentication error - {err}");
+            }
+
             Ok(())
         })
     }

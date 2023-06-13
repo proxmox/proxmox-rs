@@ -21,7 +21,6 @@ libc = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
 openssl = { workspace = true, optional = true }
-pam = { workspace = true, optional = true }
 pam-sys = { workspace = true, optional = true }
 percent-encoding = { workspace = true, optional = true }
 regex = { workspace = true, optional = true }
@@ -50,4 +49,4 @@ api = [
     "dep:proxmox-router",
     "dep:proxmox-tfa",
 ]
-pam-authenticator = [ "api", "dep:libc", "dep:log", "dep:pam", "dep:pam-sys" ]
+pam-authenticator = [ "api", "dep:libc", "dep:log", "dep:pam-sys" ]

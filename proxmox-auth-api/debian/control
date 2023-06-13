@@ -90,7 +90,6 @@ Depends:
  librust-proxmox-auth-api+api-dev (= ${binary:Version}),
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
  librust-log-0.4+default-dev (>= 0.4.17-~~),
- librust-pam-0.7+default-dev,
  librust-pam-sys-0.5+default-dev
 Provides:
  librust-proxmox-auth-api-0+pam-authenticator-dev (= ${binary:Version}),
