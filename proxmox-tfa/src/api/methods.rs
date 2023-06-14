@@ -207,18 +207,18 @@ pub fn unlock_tfa(config: &mut TfaConfig, userid: &str) -> Result<bool, Error> {
 /// Over the API we only provide the descriptions for TFA data.
 pub struct TfaUser {
     /// The user this entry belongs to.
-    userid: String,
+    pub userid: String,
 
     /// TFA entries.
-    entries: Vec<TypedTfaInfo>,
+    pub entries: Vec<TypedTfaInfo>,
 
     /// The user is locked out of TOTP authentication.
     #[serde(skip_serializing_if = "super::bool_is_false")]
-    totp_locked: bool,
+    pub totp_locked: bool,
 
     /// If a user's second factor is blocked, this contains the block's expiration time.
     #[serde(skip_serializing_if = "Option::is_none")]
-    tfa_locked_until: Option<i64>,
+    pub tfa_locked_until: Option<i64>,
 }
 
 /// API call implementation for `GET /access/tfa`.
