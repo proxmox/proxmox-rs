@@ -1,3 +1,9 @@
+rust-proxmox-tfa (4.0.3) bookworm; urgency=medium
+
+  * make the api's TfaUser fields 'pub'
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Jun 2023 13:51:38 +0200
+
 rust-proxmox-tfa (4.0.2) stable; urgency=medium
 
   * Reduce default TFA lockout time to an hour.
