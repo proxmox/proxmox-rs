@@ -1,3 +1,11 @@
+rust-proxmox-auth-api (0.3.0) bookworm; urgency=medium
+
+  * drop pam crate dependency
+
+  * set PAM_RHOST during pam authentication
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Jun 2023 09:55:23 +0200
+
 rust-proxmox-auth-api (0.2.0) bookworm; urgency=medium
 
   * update proxmox-rest-server to 0.4.0
