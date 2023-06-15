@@ -1,3 +1,10 @@
+rust-proxmox-compression (0.2.1-1) bookworm; urgency=medium
+
+  * improve error handling in zip_directory to allow skipping un-zippable file
+    types
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 15 Jun 2023 10:59:02 +0200
+
 rust-proxmox-compression (0.2.0-1) bookworm; urgency=medium
 
   * update to zstd 0.12
