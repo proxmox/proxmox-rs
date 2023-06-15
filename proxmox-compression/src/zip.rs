@@ -643,7 +643,7 @@ where
         let entry_path = entry.path().to_owned();
         let encoder = &mut encoder;
 
-        match async move {
+        let entry = async move {
             let entry_path_no_base = entry.path().strip_prefix(base_path)?;
             let metadata = entry.metadata()?;
             let mtime = match metadata
@@ -669,8 +669,8 @@ where
                 Ok::<_, Error>(None)
             }
         }
-        .await
-        {
+        .await;
+        match entry {
             Ok(Some((ze, content))) => encoder.add_entry(ze, content).await?,
             Ok(None) => {}
             Err(err) => {
