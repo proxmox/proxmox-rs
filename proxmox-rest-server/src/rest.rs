@@ -620,15 +620,11 @@ fn extension_to_content_type(filename: &Path) -> (&'static str, bool) {
 }
 
 async fn simple_static_file_download(
-    filename: PathBuf,
+    mut file: File,
     content_type: &'static str,
     compression: Option<CompressionMethod>,
 ) -> Result<Response<Body>, Error> {
     use tokio::io::AsyncReadExt;
-
-    let mut file = File::open(filename)
-        .await
-        .map_err(|err| http_err!(BAD_REQUEST, "File open failed: {}", err))?;
 
     let mut data: Vec<u8> = Vec::new();
 
@@ -660,18 +656,14 @@ async fn simple_static_file_download(
     Ok(response)
 }
 
-async fn chuncked_static_file_download(
-    filename: PathBuf,
+async fn chunked_static_file_download(
+    file: File,
     content_type: &'static str,
     compression: Option<CompressionMethod>,
 ) -> Result<Response<Body>, Error> {
     let mut resp = Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, content_type);
-
-    let file = File::open(filename)
-        .await
-        .map_err(|err| http_err!(BAD_REQUEST, "File open failed: {}", err))?;
 
     let body = match compression {
         Some(CompressionMethod::Deflate) => {
@@ -691,24 +683,39 @@ async fn chuncked_static_file_download(
 }
 
 async fn handle_static_file_download(
+    components: &[&str],
     filename: PathBuf,
     compression: Option<CompressionMethod>,
 ) -> Result<Response<Body>, Error> {
     let metadata = match tokio::fs::metadata(filename.clone()).await {
         Ok(metadata) => metadata,
         Err(err) if err.kind() == io::ErrorKind::NotFound => {
-            http_bail!(NOT_FOUND, "no such file: {filename:?}")
+            http_bail!(NOT_FOUND, "no such file: '{}'", components.join("/"))
         }
-        Err(err) => http_bail!(BAD_REQUEST, "File access problems: {}", err),
+        Err(err) => http_bail!(
+            BAD_REQUEST,
+            "File access problem on '{}': {}",
+            components.join("/"),
+            err.kind()
+        ),
     };
 
     let (content_type, nocomp) = extension_to_content_type(&filename);
     let compression = if nocomp { None } else { compression };
 
+    let file = File::open(filename).await.map_err(|err| {
+        http_err!(
+            BAD_REQUEST,
+            "File open failed for '{}': {}",
+            components.join("/"),
+            err.kind()
+        )
+    })?;
+
     if metadata.len() < CHUNK_SIZE_LIMIT {
-        simple_static_file_download(filename, content_type, compression).await
+        simple_static_file_download(file, content_type, compression).await
     } else {
-        chuncked_static_file_download(filename, content_type, compression).await
+        chunked_static_file_download(file, content_type, compression).await
     }
 }
 
@@ -782,7 +789,7 @@ impl ApiConfig {
         } else {
             let filename = self.find_alias(&components);
             let compression = extract_compression_method(&parts.headers);
-            return handle_static_file_download(filename, compression).await;
+            return handle_static_file_download(&components, filename, compression).await;
         }
     }
 }
