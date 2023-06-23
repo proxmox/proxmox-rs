@@ -10,21 +10,14 @@ pub use http_client::http_client;
 mod auth_state;
 pub use auth_state::*;
 
-
 use openidconnect::{
     //curl::http_client,
     core::{
-        CoreProviderMetadata,
-        CoreClient,
-        CoreIdTokenClaims,
-        CoreIdTokenVerifier,
-        CoreAuthenticationFlow,
-        CoreAuthDisplay,
-        CoreAuthPrompt,
-        CoreGenderClaim,
+        CoreAuthDisplay, CoreAuthPrompt, CoreAuthenticationFlow, CoreClient, CoreGenderClaim,
+        CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata,
     },
-    PkceCodeChallenge,
-    PkceCodeVerifier,
+    AdditionalClaims,
+    AuthenticationContextClass,
     AuthorizationCode,
     ClientId,
     ClientSecret,
@@ -32,11 +25,11 @@ use openidconnect::{
     IssuerUrl,
     Nonce,
     OAuth2TokenResponse,
+    PkceCodeChallenge,
+    PkceCodeVerifier,
     RedirectUrl,
     Scope,
     UserInfoClaims,
-    AdditionalClaims,
-    AuthenticationContextClass,
 };
 
 /// Stores Additional Claims into a serde_json::Value;
@@ -50,13 +43,13 @@ pub type GenericUserInfoClaims = UserInfoClaims<GenericClaims, CoreGenderClaim>;
 pub struct OpenIdConfig {
     pub issuer_url: String,
     pub client_id: String,
-    #[serde(skip_serializing_if="Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub client_key: Option<String>,
-    #[serde(skip_serializing_if="Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub scopes: Option<Vec<String>>,
-    #[serde(skip_serializing_if="Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub prompt: Option<String>,
-    #[serde(skip_serializing_if="Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub acr_values: Option<Vec<String>>,
 }
 
@@ -80,7 +73,6 @@ pub struct PrivateAuthState {
 }
 
 impl PrivateAuthState {
-
     pub fn new() -> Self {
         let nonce = Nonce::new_random();
         let csrf_token = CsrfToken::new_random();
@@ -113,20 +105,15 @@ impl PrivateAuthState {
 }
 
 impl OpenIdAuthenticator {
-
     pub fn discover(config: &OpenIdConfig, redirect_url: &str) -> Result<Self, Error> {
-
         let client_id = ClientId::new(config.client_id.clone());
         let client_key = config.client_key.clone().map(|key| ClientSecret::new(key));
         let issuer_url = IssuerUrl::new(config.issuer_url.clone())?;
 
         let provider_metadata = CoreProviderMetadata::discover(&issuer_url, http_client)?;
 
-        let client = CoreClient::from_provider_metadata(
-            provider_metadata,
-            client_id,
-            client_key,
-        ).set_redirect_uri(RedirectUrl::new(String::from(redirect_url))?);
+        let client = CoreClient::from_provider_metadata(provider_metadata, client_id, client_key)
+            .set_redirect_uri(RedirectUrl::new(String::from(redirect_url))?);
 
         Ok(Self {
             client,
@@ -135,15 +122,15 @@ impl OpenIdAuthenticator {
     }
 
     pub fn authorize_url(&self, state_dir: &str, realm: &str) -> Result<String, Error> {
-
         let private_auth_state = PrivateAuthState::new();
         let public_auth_state = private_auth_state.public_state_string(realm.to_string())?;
         let nonce = private_auth_state.nonce.clone();
 
         store_auth_state(Path::new(state_dir), realm, &private_auth_state)?;
 
-         // Generate the authorization URL to which we'll redirect the user.
-        let mut request = self.client
+        // Generate the authorization URL to which we'll redirect the user.
+        let mut request = self
+            .client
             .authorize_url(
                 CoreAuthenticationFlow::AuthorizationCode,
                 || CsrfToken::new(public_auth_state),
@@ -154,7 +141,7 @@ impl OpenIdAuthenticator {
         request = request.set_display(CoreAuthDisplay::Page);
 
         match self.config.prompt.as_deref() {
-            None => { /* nothing */ },
+            None => { /* nothing */ }
             Some("none") => {
                 request = request.add_prompt(CoreAuthPrompt::None);
             }
@@ -201,10 +188,10 @@ impl OpenIdAuthenticator {
         code: &str,
         private_auth_state: &PrivateAuthState,
     ) -> Result<(CoreIdTokenClaims, GenericUserInfoClaims), Error> {
-
         let code = AuthorizationCode::new(code.to_string());
         // Exchange the code with a token.
-        let token_response = self.client
+        let token_response = self
+            .client
             .exchange_code(code)
             .set_pkce_verifier(private_auth_state.pkce_verifier())
             .request(http_client)
@@ -218,7 +205,8 @@ impl OpenIdAuthenticator {
             .claims(&id_token_verifier, &private_auth_state.nonce)
             .map_err(|err| format_err!("Failed to verify ID token: {}", err))?;
 
-        let userinfo_claims: GenericUserInfoClaims = self.client
+        let userinfo_claims: GenericUserInfoClaims = self
+            .client
             .user_info(token_response.access_token().to_owned(), None)?
             .request(http_client)
             .map_err(|err| format_err!("Failed to contact userinfo endpoint: {}", err))?;
@@ -232,8 +220,8 @@ impl OpenIdAuthenticator {
         code: &str,
         private_auth_state: &PrivateAuthState,
     ) -> Result<Value, Error> {
-
-        let (id_token_claims, userinfo_claims) = self.verify_authorization_code(&code, &private_auth_state)?;
+        let (id_token_claims, userinfo_claims) =
+            self.verify_authorization_code(&code, &private_auth_state)?;
 
         let mut data = serde_json::to_value(id_token_claims)?;
 

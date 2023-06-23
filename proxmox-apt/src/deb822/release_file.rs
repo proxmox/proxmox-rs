@@ -245,7 +245,10 @@ impl FileReferenceType {
     }
 
     pub fn is_package_index(&self) -> bool {
-        matches!(self, FileReferenceType::Packages(_, _) | FileReferenceType::Sources(_))
+        matches!(
+            self,
+            FileReferenceType::Packages(_, _) | FileReferenceType::Sources(_)
+        )
     }
 }
 

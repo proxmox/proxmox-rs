@@ -59,7 +59,10 @@ fn normalize_url(mut api_url: String) -> String {
 
 impl Login {
     /// Prepare a request given an existing ticket string.
-    pub fn renew(api_url: impl Into<String>, ticket: impl Into<String>) -> Result<Self, TicketError> {
+    pub fn renew(
+        api_url: impl Into<String>,
+        ticket: impl Into<String>,
+    ) -> Result<Self, TicketError> {
         Ok(Self::renew_ticket(api_url, ticket.into().parse()?))
     }
 
@@ -79,7 +82,11 @@ impl Login {
     }
 
     /// Prepare a request given a userid and password.
-    pub fn new(api_url: impl Into<String>, userid: impl Into<String>, password: impl Into<String>) -> Self {
+    pub fn new(
+        api_url: impl Into<String>,
+        userid: impl Into<String>,
+        password: impl Into<String>,
+    ) -> Self {
         Self {
             api_url: normalize_url(api_url.into()),
             userid: userid.into(),
@@ -107,8 +114,7 @@ impl Login {
             ..Default::default()
         };
 
-        let body = serde_json::to_string(&request)
-            .unwrap(); // this can never fail
+        let body = serde_json::to_string(&request).unwrap(); // this can never fail
 
         Request {
             url: format!("{}/api2/json/access/ticket", self.api_url),

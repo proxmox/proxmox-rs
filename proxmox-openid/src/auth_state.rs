@@ -3,22 +3,16 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, Error};
 use serde_json::{json, Value};
 
-use proxmox_sys::fs::{
-    replace_file,
-    open_file_locked,
-    file_get_json,
-    CreateOptions,
-};
+use proxmox_sys::fs::{file_get_json, open_file_locked, replace_file, CreateOptions};
 use proxmox_time::epoch_i64;
 
-use super::{PublicAuthState, PrivateAuthState};
+use super::{PrivateAuthState, PublicAuthState};
 
 fn load_auth_state_locked(
     state_dir: &Path,
     realm: &str,
     default: Option<Value>,
 ) -> Result<(PathBuf, std::fs::File, Vec<Value>), Error> {
-
     let mut lock_path = state_dir.to_owned();
     lock_path.push(format!("proxmox-openid-auth-state-{}.lck", realm));
 
@@ -26,7 +20,7 @@ fn load_auth_state_locked(
         lock_path,
         std::time::Duration::new(10, 0),
         true,
-        CreateOptions::new()
+        CreateOptions::new(),
     )?;
 
     let mut path = state_dir.to_owned();
@@ -38,7 +32,7 @@ fn load_auth_state_locked(
 
     let mut data: Vec<Value> = Vec::new();
 
-    let timeout = 10*60; // 10 minutes
+    let timeout = 10 * 60; // 10 minutes
 
     for v in old_data.as_array().unwrap() {
         let ctime = v["ctime"].as_i64().unwrap_or(0);
@@ -51,11 +45,7 @@ fn load_auth_state_locked(
     Ok((path, lock, data))
 }
 
-fn replace_auth_state(
-    path: &Path,
-    data: &Vec<Value>,
-) -> Result<(), Error> {
-
+fn replace_auth_state(path: &Path, data: &Vec<Value>) -> Result<(), Error> {
     let mode = nix::sys::stat::Mode::from_bits_truncate(0o0600);
     let options = CreateOptions::new().perm(mode);
     let raw = serde_json::to_string_pretty(data)?;
@@ -69,10 +59,10 @@ pub fn verify_public_auth_state(
     state_dir: &Path,
     state: &str,
 ) -> Result<(String, PrivateAuthState), Error> {
-
     let public_auth_state: PublicAuthState = serde_json::from_str(state)?;
 
-    let (path, _lock, old_data) = load_auth_state_locked(state_dir, &public_auth_state.realm, None)?;
+    let (path, _lock, old_data) =
+        load_auth_state_locked(state_dir, &public_auth_state.realm, None)?;
 
     let mut data: Vec<Value> = Vec::new();
 
@@ -101,7 +91,6 @@ pub fn store_auth_state(
     realm: &str,
     auth_state: &PrivateAuthState,
 ) -> Result<(), Error> {
-
     let (path, _lock, mut data) = load_auth_state_locked(state_dir, realm, Some(json!([])))?;
 
     if data.len() > 100 {

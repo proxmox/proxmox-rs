@@ -88,7 +88,9 @@ impl Display for APTRepositoryHandle {
             APTRepositoryHandle::NoSubscription => write!(f, "no-subscription"),
             APTRepositoryHandle::Test => write!(f, "test"),
             APTRepositoryHandle::CephQuincyEnterprise => write!(f, "ceph-quincy-enterprise"),
-            APTRepositoryHandle::CephQuincyNoSubscription => write!(f, "ceph-quincy-no-subscription"),
+            APTRepositoryHandle::CephQuincyNoSubscription => {
+                write!(f, "ceph-quincy-no-subscription")
+            }
             APTRepositoryHandle::CephQuincyTest => write!(f, "ceph-quincy-test"),
         }
     }
@@ -148,8 +150,12 @@ impl APTRepositoryHandle {
             }
             APTRepositoryHandle::NoSubscription => "/etc/apt/sources.list".to_string(),
             APTRepositoryHandle::Test => "/etc/apt/sources.list".to_string(),
-            APTRepositoryHandle::CephQuincyEnterprise => "/etc/apt/sources.list.d/ceph.list".to_string(),
-            APTRepositoryHandle::CephQuincyNoSubscription => "/etc/apt/sources.list.d/ceph.list".to_string(),
+            APTRepositoryHandle::CephQuincyEnterprise => {
+                "/etc/apt/sources.list.d/ceph.list".to_string()
+            }
+            APTRepositoryHandle::CephQuincyNoSubscription => {
+                "/etc/apt/sources.list.d/ceph.list".to_string()
+            }
             APTRepositoryHandle::CephQuincyTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
         }
     }

@@ -13,7 +13,7 @@ use lazy_static::lazy_static;
 use nix::unistd::Pid;
 use serde::Serialize;
 
-use crate::fs::{read_firstline, file_read_firstline};
+use crate::fs::{file_read_firstline, read_firstline};
 
 pub mod mountinfo;
 #[doc(inline)]
