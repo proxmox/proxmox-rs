@@ -352,13 +352,12 @@ impl<'a> Display for FilterElement<'a> {
                 write!(f, "({attr}={value})")?;
             }
             FilterElement::Verbatim(verbatim) => {
-
                 if !verbatim.starts_with('(') && !verbatim.ends_with(')') {
                     write!(f, "({verbatim})")?
                 } else {
                     write!(f, "{verbatim}")?
                 }
-            },
+            }
         }
 
         Ok(())
