@@ -351,7 +351,14 @@ impl<'a> Display for FilterElement<'a> {
             FilterElement::Condition(attr, value) => {
                 write!(f, "({attr}={value})")?;
             }
-            FilterElement::Verbatim(verbatim) => write!(f, "{verbatim}")?,
+            FilterElement::Verbatim(verbatim) => {
+
+                if !verbatim.starts_with('(') && !verbatim.ends_with(')') {
+                    write!(f, "({verbatim})")?
+                } else {
+                    write!(f, "{verbatim}")?
+                }
+            },
         }
 
         Ok(())
@@ -371,6 +378,7 @@ mod tests {
         );
 
         assert_eq!("(foo=bar)", &Verbatim("(foo=bar)").to_string());
+        assert_eq!("(foo=bar)", &Verbatim("foo=bar").to_string());
 
         let filter_string = And(vec![
             Condition("givenname", "john"),
