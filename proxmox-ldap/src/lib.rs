@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{bail, format_err, Context, Error};
 use ldap3::adapters::{Adapter, EntriesOnly, PagedResults};
 use ldap3::{Ldap, LdapConnAsync, LdapConnSettings, LdapResult, Scope, SearchEntry};
 use native_tls::{Certificate, TlsConnector, TlsConnectorBuilder};
@@ -156,6 +156,54 @@ impl Connection {
         let _ = ldap.unbind().await;
 
         Ok(results)
+    }
+
+    /// Helper to check if a connection with the current configuration is possible.
+    ///
+    /// This performs a search with the current configuration. If the search succeeds `Ok(()) is
+    /// returned, otherwise an `Error` is returned.
+    pub async fn check_connection(&self) -> Result<(), Error> {
+        let mut ldap = self.create_connection().await?;
+
+        if let Some(bind_dn) = self.config.bind_dn.as_deref() {
+            let password = self
+                .config
+                .bind_password
+                .as_deref()
+                .ok_or_else(|| format_err!("Missing bind password for {bind_dn}"))?;
+
+            let _: LdapResult = ldap
+                .simple_bind(bind_dn, password)
+                .await?
+                .success()
+                .context("LDAP bind failed, bind_dn or password could be incorrect")?;
+
+            let (_, _) = ldap
+                .search(
+                    &self.config.base_dn,
+                    Scope::Subtree,
+                    "(objectClass=*)",
+                    vec!["*"],
+                )
+                .await?
+                .success()
+                .context("Could not search LDAP realm, base_dn could be incorrect")?;
+
+            let _: Result<(), _> = ldap.unbind().await; // ignore errors, search succeeded already
+        } else {
+            let (_, _) = ldap
+                .search(
+                    &self.config.base_dn,
+                    Scope::Subtree,
+                    "(objectClass=*)",
+                    vec!["*"],
+                )
+                .await?
+                .success()
+                .context("Could not search LDAP realm, base_dn could be incorrect")?;
+        }
+
+        Ok(())
     }
 
     /// Retrive port from LDAP configuration, otherwise use the correct default
