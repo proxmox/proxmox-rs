@@ -1,3 +1,14 @@
+rust-proxmox-ldap (0.2.0-1) bookworm; urgency=medium
+
+  * Remove support for unauthenticated binds.
+
+  * Add check_connection helper function.
+
+  * Surround user filter expression in parenthesis if that's not already the
+    case.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 26 Jun 2023 14:19:43 +0200
+
 rust-proxmox-ldap (0.1.0-1) stable; urgency=medium
 
   * Initial release.
