@@ -1,5 +1,5 @@
-rust-proxmox-human-byte (0.1.0-1) stable; urgency=medium
+rust-proxmox-human-byte (0.1.0-1) bookworm; urgency=medium
 
   * Initial release.
 
- --  Proxmox Support Team <support@proxmox.com>  Thu, 12 Jan 2023 11:42:11 +0200
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 26 Jun 2023 13:36:10 +0200
