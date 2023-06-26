@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{bail, Error};
+use anyhow::{bail, format_err, Error};
 use ldap3::adapters::{Adapter, EntriesOnly, PagedResults};
 use ldap3::{Ldap, LdapConnAsync, LdapConnSettings, LdapResult, Scope, SearchEntry};
 use native_tls::{Certificate, TlsConnector, TlsConnectorBuilder};
@@ -119,7 +119,11 @@ impl Connection {
         let mut ldap = self.create_connection().await?;
 
         if let Some(bind_dn) = self.config.bind_dn.as_deref() {
-            let password = self.config.bind_password.as_deref().unwrap_or_default();
+            let password = self
+                .config
+                .bind_password
+                .as_deref()
+                .ok_or_else(|| format_err!("Missing bind password for {bind_dn}"))?;
             let _: LdapResult = ldap.simple_bind(bind_dn, password).await?.success()?;
         }
 
@@ -254,7 +258,11 @@ impl Connection {
         let mut ldap = self.create_connection().await?;
 
         if let Some(bind_dn) = self.config.bind_dn.as_deref() {
-            let password = self.config.bind_password.as_deref().unwrap_or_default();
+            let password = self
+                .config
+                .bind_password
+                .as_deref()
+                .ok_or_else(|| format_err!("Missing bind password for {bind_dn}"))?;
             let _: LdapResult = ldap.simple_bind(bind_dn, password).await?.success()?;
 
             let user_dn = self.do_search_user_dn(username, &mut ldap).await;
