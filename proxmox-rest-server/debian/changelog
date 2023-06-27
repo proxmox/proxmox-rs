@@ -1,3 +1,11 @@
+rust-proxmox-rest-server (0.4.1-1) bookworm; urgency=medium
+
+  * rest: remove full static file path from error messages to avoid triggering
+    some simple security scanners misinterpreting this as an actual (file
+    serving) HTTP server leaking their web root directory.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 27 Jun 2023 12:43:42 +0200
+
 rust-proxmox-rest-server (0.4.0-1) bookworm; urgency=medium
 
   * update proxmox-sys dependency to 0.5.0
