@@ -1,3 +1,11 @@
+rust-proxmox-apt (0.10.2-1) bookworm; urgency=medium
+
+  * fallback to Release file for Origin retrieval
+
+  * fix #4653: (In)Release file: improve handling of special suites
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 27 Jun 2023 12:31:29 +0200
+
 rust-proxmox-apt (0.10.1-1) bookworm; urgency=medium
 
   * apt: drop older Ceph standard repositories

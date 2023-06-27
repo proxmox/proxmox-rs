@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-apt"
-version = "0.10.1"
+version = "0.10.2"
 description = "Proxmox library for APT"
 authors.workspace = true
 edition.workspace = true
