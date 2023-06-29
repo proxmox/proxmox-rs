@@ -1,3 +1,10 @@
+rust-proxmox-apt (0.10.3-1) bookworm; urgency=medium
+
+  * release file: extend component fixup for Debian security repo also to
+    bookworm suite
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 29 Jun 2023 13:13:44 +0200
+
 rust-proxmox-apt (0.10.2-1) bookworm; urgency=medium
 
   * fallback to Release file for Origin retrieval
