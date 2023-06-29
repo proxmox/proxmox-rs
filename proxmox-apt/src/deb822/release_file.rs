@@ -347,9 +347,10 @@ impl TryFrom<ReleaseFileRaw> for ReleaseFile {
         if let Some(val) = value.extra_fields.get("Acquire-By-Hash") {
             parsed.aquire_by_hash = *val == "yes";
         }
-        // Fixup bullseye-security release files which have invalid components
+        // Fixup bullseye+-security release files which have invalid components
+        let codename = parsed.codename.as_deref();
         if parsed.label.as_deref() == Some("Debian-Security")
-            && parsed.codename.as_deref() == Some("bullseye-security")
+            && (codename == Some("bullseye-security") || codename == Some("bookworm-security"))
         {
             parsed.components = parsed
                 .components
