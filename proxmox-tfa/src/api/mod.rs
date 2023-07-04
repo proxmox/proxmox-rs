@@ -75,6 +75,23 @@ pub trait OpenUserChallengeData {
     }
 }
 
+pub(self) struct NoUserData;
+
+impl OpenUserChallengeData for NoUserData {
+    fn open(&self, _userid: &str) -> Result<Box<dyn UserChallengeAccess>, Error> {
+        bail!("trying to create challenge data via incompatible API endpoint");
+    }
+
+    fn open_no_create(&self, _userid: &str) -> Result<Option<Box<dyn UserChallengeAccess>>, Error> {
+        Ok(None)
+    }
+
+    /// Should return `true` if something was removed, `false` if no data existed for the user.
+    fn remove(&self, _userid: &str) -> Result<bool, Error> {
+        Ok(false)
+    }
+}
+
 #[test]
 fn ensure_open_user_challenge_data_is_dyn_safe() {
     let _: Option<&dyn OpenUserChallengeData> = None;
@@ -145,7 +162,32 @@ fn check_webauthn<'a, 'config: 'a, 'origin: 'a>(
 impl TfaConfig {
     /// Unlock a user's 2nd factor authentication (including TOTP).
     /// Returns whether the user was locked before calling this method.
+    #[deprecated(note = "use unlock_and_reset_tfa instead")]
     pub fn unlock_tfa(&mut self, userid: &str) -> Result<bool, Error> {
+        self.unlock_and_reset_tfa(&NoUserData, userid)
+    }
+
+    /// Unlock a user's TOTP challenges.
+    #[deprecated(note = "use unlock_and_reset_totp instead")]
+    pub fn unlock_totp(&mut self, userid: &str) -> Result<(), Error> {
+        self.unlock_and_reset_totp(&NoUserData, userid)
+    }
+
+    /// Unlock a user's 2nd factor authentication (including TOTP).
+    /// Returns whether the user was locked before calling this method.
+    pub fn unlock_and_reset_tfa<A: ?Sized + OpenUserChallengeData>(
+        &mut self,
+        access: &A,
+        userid: &str,
+    ) -> Result<bool, Error> {
+        if let Some(mut data) = access.open_no_create(userid)? {
+            let access = data.get_mut();
+            if access.totp_failures != 0 || access.tfa_failures != 0 {
+                access.totp_failures = 0;
+                access.tfa_failures = 0;
+                data.save()?;
+            }
+        }
         match self.users.get_mut(userid) {
             Some(user) => {
                 let ret = user.totp_locked || user.tfa_is_locked();
@@ -158,7 +200,19 @@ impl TfaConfig {
     }
 
     /// Unlock a user's TOTP challenges.
-    pub fn unlock_totp(&mut self, userid: &str) -> Result<(), Error> {
+    pub fn unlock_and_reset_totp<A: ?Sized + OpenUserChallengeData>(
+        &mut self,
+        access: &A,
+        userid: &str,
+    ) -> Result<(), Error> {
+        if let Some(mut data) = access.open_no_create(userid)? {
+            let access = data.get_mut();
+            if access.totp_failures != 0 {
+                access.totp_failures = 0;
+                data.save()?;
+            }
+        }
+
         match self.users.get_mut(userid) {
             Some(user) => {
                 user.totp_locked = false;

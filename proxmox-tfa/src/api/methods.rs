@@ -190,8 +190,30 @@ pub fn delete_tfa(config: &mut TfaConfig, userid: &str, id: &str) -> Result<bool
 /// Errors only if the user was not found.
 ///
 /// Returns `true` if the user was previously locked out, `false` if nothing was changed.
+#[deprecated(note = "use unlock_and_tfa instead")]
 pub fn unlock_tfa(config: &mut TfaConfig, userid: &str) -> Result<bool, Error> {
-    config.unlock_tfa(userid)
+    config.unlock_and_reset_tfa(&super::NoUserData, userid)
+}
+
+/// API call implementation for `PUT /users/{userid}/unlock-tfa`.
+///
+/// This should only be allowed for user administrators.
+///
+/// The TFA config must be WRITE locked.
+///
+/// The caller must *save* the config if `true` is returned!
+///
+/// Errors only if the user was not found.
+///
+/// This also resets the failure counts for the user.
+///
+/// Returns `true` if the user was previously locked out, `false` if nothing was changed.
+pub fn unlock_and_reset_tfa<A: ?Sized + OpenUserChallengeData>(
+    config: &mut TfaConfig,
+    access: &A,
+    userid: &str,
+) -> Result<bool, Error> {
+    config.unlock_and_reset_tfa(access, userid)
 }
 
 #[cfg_attr(feature = "api-types", api(
