@@ -1,3 +1,12 @@
+rust-proxmox-tfa (4.0.4) bookworm; urgency=medium
+
+  * make totp algorithm parsing case insensitive to be less strict in case
+    the config is manually edited
+
+  * unlocking can now also reset the failure counters
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 05 Jul 2023 10:43:34 +0200
+
 rust-proxmox-tfa (4.0.3) bookworm; urgency=medium
 
   * make the api's TfaUser fields 'pub'
