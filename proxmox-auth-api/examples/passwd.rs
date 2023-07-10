@@ -43,9 +43,9 @@ async fn run() -> Result<(), Error> {
 
     let realm = proxmox_auth_api::Pam::new("test");
     if changepass {
-        realm.store_password(&username, &password)?;
+        realm.store_password(&username, &password, None)?;
     } else {
-        realm.authenticate_user(&username, &password).await?;
+        realm.authenticate_user(&username, &password, None).await?;
     }
 
     Ok(())
