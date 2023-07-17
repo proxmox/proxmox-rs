@@ -1,7 +1,13 @@
-use std::io::{self, ErrorKind, Read, Seek, SeekFrom, Write};
+use std::io::{self, BufReader, BufWriter, ErrorKind, Read, Seek, SeekFrom, Write};
 
 #[cfg(feature = "tokio")]
-use tokio::io::{AsyncRead, AsyncSeek, AsyncSeekExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{
+    AsyncRead, AsyncReadExt, AsyncSeek, AsyncSeekExt, AsyncWrite, AsyncWriteExt,
+    BufReader as AsyncBufReader, BufWriter as AsyncBufWriter,
+};
+
+const CHUNK_SIZE: usize = 4096;
+const BUF_SIZE: usize = 8192;
 
 /// Efficiently check whether a byte slice contains only zeroes.
 ///
@@ -45,19 +51,27 @@ pub fn sparse_copy<R: Read + ?Sized, W: Write + Seek + ?Sized>(
     reader: &mut R,
     writer: &mut W,
 ) -> Result<SparseCopyResult, io::Error> {
-    let mut buf = crate::byte_buffer::ByteBuffer::with_capacity(4096);
+    let mut reader = BufReader::with_capacity(BUF_SIZE, reader);
+    let mut writer = BufWriter::with_capacity(BUF_SIZE, writer);
+
+    let mut buf: Vec<u8> = crate::vec::undefined(CHUNK_SIZE);
     let mut written = 0;
     let mut seek_amount: i64 = 0;
     let mut seeked_last = false;
+
     loop {
         buf.clear();
-        let len = match buf.read_from(reader) {
+        let len = match reader
+            .by_ref()
+            .take(CHUNK_SIZE as u64)
+            .read_to_end(&mut buf)
+        {
             Ok(len) => len,
             Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
             Err(e) => return Err(e),
         };
 
-        if len > 0 && buffer_is_zero(&buf[..]) {
+        if len > 0 && buffer_is_zero(&buf[..len]) {
             seek_amount += len as i64;
             continue;
         }
@@ -70,7 +84,7 @@ pub fn sparse_copy<R: Read + ?Sized, W: Write + Seek + ?Sized>(
         }
 
         if len > 0 {
-            writer.write_all(&buf[..])?;
+            writer.write_all(&buf[..len])?;
             written += len as u64;
             seeked_last = false;
         } else {
@@ -112,19 +126,26 @@ where
     R: AsyncRead + Unpin,
     W: AsyncWrite + AsyncSeek + Unpin,
 {
-    let mut buf = crate::byte_buffer::ByteBuffer::with_capacity(4096);
+    let mut reader = AsyncBufReader::with_capacity(BUF_SIZE, reader);
+    let mut writer = AsyncBufWriter::with_capacity(BUF_SIZE, writer);
+
+    let mut buf: Vec<u8> = crate::vec::undefined(CHUNK_SIZE);
     let mut written = 0;
     let mut seek_amount: i64 = 0;
     let mut seeked_last = false;
     loop {
         buf.clear();
-        let len = match buf.read_from_async(reader).await {
+        let len = match (&mut reader)
+            .take(CHUNK_SIZE as u64)
+            .read_to_end(&mut buf)
+            .await
+        {
             Ok(len) => len,
             Err(ref e) if e.kind() == ErrorKind::Interrupted => continue,
             Err(e) => return Err(e),
         };
 
-        if len > 0 && buffer_is_zero(&buf[..]) {
+        if len > 0 && buffer_is_zero(&buf[..len]) {
             seek_amount += len as i64;
             continue;
         }
@@ -137,10 +158,12 @@ where
         }
 
         if len > 0 {
-            writer.write_all(&buf[..]).await?;
+            writer.write_all(&buf[..len]).await?;
             written += len as u64;
             seeked_last = false;
         } else {
+            // buffer must be flushed before it goes out of scope
+            writer.flush().await?;
             return Ok(SparseCopyResult {
                 written,
                 seeked_last,
