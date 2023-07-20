@@ -13,6 +13,18 @@ lazy_static! {
 fn config_init() -> SectionConfig {
     let mut config = SectionConfig::new(&BACKEND_NAME_SCHEMA);
 
+    #[cfg(feature = "sendmail")]
+    {
+        use crate::endpoints::sendmail::{SendmailConfig, SENDMAIL_TYPENAME};
+
+        const SENDMAIL_SCHEMA: &ObjectSchema = SendmailConfig::API_SCHEMA.unwrap_object_schema();
+        config.register_plugin(SectionConfigPlugin::new(
+            SENDMAIL_TYPENAME.to_string(),
+            Some(String::from("name")),
+            SENDMAIL_SCHEMA,
+        ));
+    }
+
     config
 }
 

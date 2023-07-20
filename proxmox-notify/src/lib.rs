@@ -200,6 +200,24 @@ impl Bus {
     pub fn from_config(config: &Config) -> Result<Self, Error> {
         let mut endpoints = HashMap::new();
 
+        // Instantiate endpoints
+
+        #[cfg(feature = "sendmail")]
+        {
+            use endpoints::sendmail::SENDMAIL_TYPENAME;
+            use endpoints::sendmail::{SendmailConfig, SendmailEndpoint};
+            endpoints.extend(
+                parse_endpoints_without_private_config!(
+                    config,
+                    SendmailConfig,
+                    SendmailEndpoint,
+                    SENDMAIL_TYPENAME
+                )?
+                .into_iter()
+                .map(|e| (e.name().into(), e)),
+            );
+        }
+
         Ok(Bus { endpoints })
     }
 

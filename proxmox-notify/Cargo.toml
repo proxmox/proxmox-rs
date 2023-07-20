@@ -8,12 +8,17 @@ repository.workspace = true
 exclude.workspace = true
 
 [dependencies]
+handlebars = { workspace = true, optional = true }
 lazy_static.workspace = true
 log.workspace = true
 openssl.workspace = true
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"]}
 proxmox-section-config = { workspace = true }
-proxmox-sys.workspace = true
+proxmox-sys = { workspace = true, optional = true }
 regex.workspace = true
-serde.workspace = true
+serde = { workspace = true, features = ["derive"]}
 serde_json.workspace = true
+
+[features]
+default = ["sendmail"]
+sendmail = ["dep:handlebars", "dep:proxmox-sys"]
