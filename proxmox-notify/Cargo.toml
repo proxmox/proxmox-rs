@@ -12,6 +12,7 @@ handlebars = { workspace = true, optional = true }
 lazy_static.workspace = true
 log.workspace = true
 openssl.workspace = true
+proxmox-http = { workspace = true, features = ["client-sync"], optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"]}
 proxmox-section-config = { workspace = true }
 proxmox-sys = { workspace = true, optional = true }
@@ -20,5 +21,6 @@ serde = { workspace = true, features = ["derive"]}
 serde_json.workspace = true
 
 [features]
-default = ["sendmail"]
+default = ["sendmail", "gotify"]
 sendmail = ["dep:handlebars", "dep:proxmox-sys"]
+gotify = ["dep:proxmox-http"]

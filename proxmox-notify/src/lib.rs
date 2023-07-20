@@ -201,7 +201,6 @@ impl Bus {
         let mut endpoints = HashMap::new();
 
         // Instantiate endpoints
-
         #[cfg(feature = "sendmail")]
         {
             use endpoints::sendmail::SENDMAIL_TYPENAME;
@@ -212,6 +211,23 @@ impl Bus {
                     SendmailConfig,
                     SendmailEndpoint,
                     SENDMAIL_TYPENAME
+                )?
+                .into_iter()
+                .map(|e| (e.name().into(), e)),
+            );
+        }
+
+        #[cfg(feature = "gotify")]
+        {
+            use endpoints::gotify::GOTIFY_TYPENAME;
+            use endpoints::gotify::{GotifyConfig, GotifyEndpoint, GotifyPrivateConfig};
+            endpoints.extend(
+                parse_endpoints_with_private_config!(
+                    config,
+                    GotifyConfig,
+                    GotifyPrivateConfig,
+                    GotifyEndpoint,
+                    GOTIFY_TYPENAME
                 )?
                 .into_iter()
                 .map(|e| (e.name().into(), e)),

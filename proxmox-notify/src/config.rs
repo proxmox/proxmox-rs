@@ -24,12 +24,35 @@ fn config_init() -> SectionConfig {
             SENDMAIL_SCHEMA,
         ));
     }
+    #[cfg(feature = "gotify")]
+    {
+        use crate::endpoints::gotify::{GotifyConfig, GOTIFY_TYPENAME};
+
+        const GOTIFY_SCHEMA: &ObjectSchema = GotifyConfig::API_SCHEMA.unwrap_object_schema();
+        config.register_plugin(SectionConfigPlugin::new(
+            GOTIFY_TYPENAME.to_string(),
+            Some(String::from("name")),
+            GOTIFY_SCHEMA,
+        ));
+    }
 
     config
 }
 
 fn private_config_init() -> SectionConfig {
     let mut config = SectionConfig::new(&BACKEND_NAME_SCHEMA);
+
+    #[cfg(feature = "gotify")]
+    {
+        use crate::endpoints::gotify::{GotifyPrivateConfig, GOTIFY_TYPENAME};
+
+        const GOTIFY_SCHEMA: &ObjectSchema = GotifyPrivateConfig::API_SCHEMA.unwrap_object_schema();
+        config.register_plugin(SectionConfigPlugin::new(
+            GOTIFY_TYPENAME.to_string(),
+            Some(String::from("name")),
+            GOTIFY_SCHEMA,
+        ));
+    }
 
     config
 }
