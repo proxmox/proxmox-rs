@@ -4,6 +4,8 @@ use std::fmt::Display;
 use crate::Config;
 use serde::Serialize;
 
+pub mod common;
+
 #[derive(Debug, Serialize)]
 pub struct ApiError {
     /// HTTP Error code
