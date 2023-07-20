@@ -101,7 +101,7 @@ enum ParseState<'a> {
 }
 
 /// Interface to manipulate configuration data
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SectionConfigData {
     pub sections: HashMap<String, (String, Value)>,
     pub order: Vec<String>,
