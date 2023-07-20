@@ -7,6 +7,7 @@ use serde::Serialize;
 pub mod common;
 #[cfg(feature = "gotify")]
 pub mod gotify;
+pub mod group;
 #[cfg(feature = "sendmail")]
 pub mod sendmail;
 
