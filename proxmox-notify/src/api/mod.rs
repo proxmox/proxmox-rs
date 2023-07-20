@@ -5,6 +5,8 @@ use crate::Config;
 use serde::Serialize;
 
 pub mod common;
+#[cfg(feature = "gotify")]
+pub mod gotify;
 #[cfg(feature = "sendmail")]
 pub mod sendmail;
 
@@ -88,6 +90,10 @@ fn endpoint_exists(config: &Config, name: &str) -> bool {
     #[cfg(feature = "sendmail")]
     {
         exists = exists || sendmail::get_endpoint(config, name).is_ok();
+    }
+    #[cfg(feature = "gotify")]
+    {
+        exists = exists || gotify::get_endpoint(config, name).is_ok();
     }
 
     exists
