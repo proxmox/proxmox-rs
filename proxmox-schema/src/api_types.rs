@@ -16,13 +16,21 @@ const_regex! {
     /// any identifier command line tools work with.
     pub SAFE_ID_REGEX = concat!(r"^", SAFE_ID_REGEX_STR!(), r"$");
     pub PASSWORD_REGEX = r"^[[:^cntrl:]]*$"; // everything but control characters
+    pub SINGLE_LINE_COMMENT_REGEX = r"^[[:^cntrl:]]*$"; // everything but control characters
 }
 
 pub const SAFE_ID_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&SAFE_ID_REGEX);
 pub const PASSWORD_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&PASSWORD_REGEX);
+pub const SINGLE_LINE_COMMENT_FORMAT: ApiStringFormat =
+    ApiStringFormat::Pattern(&SINGLE_LINE_COMMENT_REGEX);
 
 pub const PASSWORD_SCHEMA: Schema = StringSchema::new("Password.")
     .format(&PASSWORD_FORMAT)
     .min_length(1)
     .max_length(1024)
+    .schema();
+
+pub const COMMENT_SCHEMA: Schema = StringSchema::new("Comment.")
+    .format(&SINGLE_LINE_COMMENT_FORMAT)
+    .max_length(128)
     .schema();
