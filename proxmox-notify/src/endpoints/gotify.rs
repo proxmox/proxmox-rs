@@ -8,8 +8,9 @@ use proxmox_schema::api_types::COMMENT_SCHEMA;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use crate::context::context;
 use proxmox_http::client::sync::Client;
-use proxmox_http::{HttpClient, HttpOptions};
+use proxmox_http::{HttpClient, HttpOptions, ProxyConfig};
 use proxmox_schema::{api, Updater};
 
 fn severity_to_priority(level: Severity) -> u32 {
@@ -84,11 +85,6 @@ pub enum DeleteableGotifyProperty {
 
 impl Endpoint for GotifyEndpoint {
     fn send(&self, notification: &Notification) -> Result<(), Error> {
-        // TODO: What about proxy configuration?
-        let client = Client::new(HttpOptions::default());
-
-        let uri = format!("{}/message", self.config.server);
-
         let properties = notification.properties.as_ref();
 
         let title = renderer::render_template(
@@ -120,6 +116,20 @@ impl Endpoint for GotifyEndpoint {
             "Authorization".into(),
             format!("Bearer {}", self.private_config.token),
         )]);
+
+        let proxy_config = context()
+            .http_proxy_config()
+            .map(|url| ProxyConfig::parse_proxy_url(&url))
+            .transpose()
+            .map_err(|err| Error::NotifyFailed(self.name().to_string(), err.into()))?;
+
+        let options = HttpOptions {
+            proxy_config,
+            ..Default::default()
+        };
+
+        let client = Client::new(options);
+        let uri = format!("{}/message", self.config.server);
 
         client
             .post(
