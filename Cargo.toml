@@ -13,6 +13,7 @@ members = [
     "proxmox-ldap",
     "proxmox-login",
     "proxmox-metrics",
+    "proxmox-notify",
     "proxmox-openid",
     "proxmox-rest-server",
     "proxmox-router",
