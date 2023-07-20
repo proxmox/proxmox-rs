@@ -115,6 +115,7 @@ pub fn update_filter(
 pub fn delete_filter(config: &mut Config, name: &str) -> Result<(), ApiError> {
     // Check if the filter exists
     let _ = get_filter(config, name)?;
+    super::ensure_unused(config, name)?;
 
     config.config.sections.remove(name);
 

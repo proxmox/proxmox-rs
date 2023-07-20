@@ -102,6 +102,57 @@ fn endpoint_exists(config: &Config, name: &str) -> bool {
     exists
 }
 
+fn get_referrers(config: &Config, entity: &str) -> Result<HashSet<String>, ApiError> {
+    let mut referrers = HashSet::new();
+
+    for group in group::get_groups(config)? {
+        if group.endpoint.iter().any(|endpoint| endpoint == entity) {
+            referrers.insert(group.name.clone());
+        }
+
+        if let Some(filter) = group.filter {
+            if filter == entity {
+                referrers.insert(group.name);
+            }
+        }
+    }
+
+    #[cfg(feature = "sendmail")]
+    for endpoint in sendmail::get_endpoints(config)? {
+        if let Some(filter) = endpoint.filter {
+            if filter == entity {
+                referrers.insert(endpoint.name);
+            }
+        }
+    }
+
+    #[cfg(feature = "gotify")]
+    for endpoint in gotify::get_endpoints(config)? {
+        if let Some(filter) = endpoint.filter {
+            if filter == entity {
+                referrers.insert(endpoint.name);
+            }
+        }
+    }
+
+    Ok(referrers)
+}
+
+fn ensure_unused(config: &Config, entity: &str) -> Result<(), ApiError> {
+    let referrers = get_referrers(config, entity)?;
+
+    if !referrers.is_empty() {
+        let used_by = referrers.into_iter().collect::<Vec<_>>().join(", ");
+
+        return Err(ApiError::bad_request(
+            format!("cannot delete '{entity}', referenced by: {used_by}"),
+            None,
+        ));
+    }
+
+    Ok(())
+}
+
 fn get_referenced_entities(config: &Config, entity: &str) -> HashSet<String> {
     let mut to_expand = HashSet::new();
     let mut expanded = HashSet::new();
@@ -161,8 +212,7 @@ mod tests {
     use crate::filter::FilterConfig;
     use crate::group::GroupConfig;
 
-    #[test]
-    fn test_get_referenced_entities() {
+    fn prepare_config() -> Result<Config, ApiError> {
         let mut config = super::test_helpers::empty_config();
 
         filter::add_filter(
@@ -171,8 +221,7 @@ mod tests {
                 name: "filter".to_string(),
                 ..Default::default()
             },
-        )
-        .unwrap();
+        )?;
 
         sendmail::add_endpoint(
             &mut config,
@@ -182,8 +231,7 @@ mod tests {
                 filter: Some("filter".to_string()),
                 ..Default::default()
             },
-        )
-        .unwrap();
+        )?;
 
         gotify::add_endpoint(
             &mut config,
@@ -197,8 +245,7 @@ mod tests {
                 name: "gotify".to_string(),
                 token: "foo".to_string(),
             },
-        )
-        .unwrap();
+        )?;
 
         group::add_group(
             &mut config,
@@ -208,8 +255,14 @@ mod tests {
                 filter: Some("filter".to_string()),
                 ..Default::default()
             },
-        )
-        .unwrap();
+        )?;
+
+        Ok(config)
+    }
+
+    #[test]
+    fn test_get_referenced_entities() {
+        let config = prepare_config().unwrap();
 
         assert_eq!(
             get_referenced_entities(&config, "filter"),
@@ -232,5 +285,43 @@ mod tests {
                 "group".to_string()
             ])
         );
+    }
+
+    #[test]
+    fn test_get_referrers_for_entity() -> Result<(), ApiError> {
+        let config = prepare_config().unwrap();
+
+        assert_eq!(
+            get_referrers(&config, "filter")?,
+            HashSet::from([
+                "gotify".to_string(),
+                "sendmail".to_string(),
+                "group".to_string()
+            ])
+        );
+
+        assert_eq!(
+            get_referrers(&config, "sendmail")?,
+            HashSet::from(["group".to_string()])
+        );
+
+        assert_eq!(
+            get_referrers(&config, "gotify")?,
+            HashSet::from(["group".to_string()])
+        );
+
+        assert!(get_referrers(&config, "group")?.is_empty(),);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_ensure_unused() {
+        let config = prepare_config().unwrap();
+
+        assert!(ensure_unused(&config, "filter").is_err());
+        assert!(ensure_unused(&config, "gotify").is_err());
+        assert!(ensure_unused(&config, "sendmail").is_err());
+        assert!(ensure_unused(&config, "group").is_ok());
     }
 }

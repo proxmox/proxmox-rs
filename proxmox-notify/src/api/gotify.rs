@@ -145,6 +145,7 @@ pub fn update_endpoint(
 pub fn delete_gotify_endpoint(config: &mut Config, name: &str) -> Result<(), ApiError> {
     // Check if the endpoint exists
     let _ = get_endpoint(config, name)?;
+    super::ensure_unused(config, name)?;
 
     remove_private_config_entry(config, name)?;
     config.config.sections.remove(name);
