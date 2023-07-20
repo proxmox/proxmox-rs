@@ -80,6 +80,7 @@ pub fn update_group(
         for deleteable_property in delete {
             match deleteable_property {
                 DeleteableGroupProperty::Comment => group.comment = None,
+                DeleteableGroupProperty::Filter => group.filter = None,
             }
         }
     }
@@ -97,6 +98,10 @@ pub fn update_group(
 
     if let Some(comment) = &updater.comment {
         group.comment = Some(comment.into());
+    }
+
+    if let Some(filter) = &updater.filter {
+        group.filter = Some(filter.into());
     }
 
     config
@@ -156,6 +161,7 @@ mod tests {
                 name: "group1".into(),
                 endpoint: vec!["test".to_string()],
                 comment: None,
+                filter: None,
             },
         )?;
 
@@ -171,6 +177,7 @@ mod tests {
                 name: "group1".into(),
                 endpoint: vec!["foo".into()],
                 comment: None,
+                filter: None,
             },
         )
         .is_err());
@@ -228,7 +235,8 @@ mod tests {
             "group1",
             &GroupConfigUpdater {
                 endpoint: None,
-                comment: Some("newcomment".into())
+                comment: Some("newcomment".into()),
+                filter: None
             },
             None,
             None,

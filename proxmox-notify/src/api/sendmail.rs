@@ -75,6 +75,7 @@ pub fn update_endpoint(
                 DeleteableSendmailProperty::FromAddress => endpoint.from_address = None,
                 DeleteableSendmailProperty::Author => endpoint.author = None,
                 DeleteableSendmailProperty::Comment => endpoint.comment = None,
+                DeleteableSendmailProperty::Filter => endpoint.filter = None,
             }
         }
     }
@@ -136,6 +137,7 @@ pub mod tests {
                 from_address: Some("from@example.com".into()),
                 author: Some("root".into()),
                 comment: Some("Comment".into()),
+                filter: None,
             },
         )?;
 
@@ -178,6 +180,7 @@ pub mod tests {
                 from_address: Some("root@example.com".into()),
                 author: Some("newauthor".into()),
                 comment: Some("new comment".into()),
+                filter: None,
             },
             None,
             Some(&[0; 32]),
@@ -202,6 +205,7 @@ pub mod tests {
                 from_address: Some("root@example.com".into()),
                 author: Some("newauthor".into()),
                 comment: Some("new comment".into()),
+                filter: None,
             },
             None,
             Some(&digest),

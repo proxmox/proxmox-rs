@@ -2,6 +2,7 @@ use lazy_static::lazy_static;
 use proxmox_schema::{ApiType, ObjectSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
 
+use crate::filter::{FilterConfig, FILTER_TYPENAME};
 use crate::group::{GroupConfig, GROUP_TYPENAME};
 use crate::schema::BACKEND_NAME_SCHEMA;
 use crate::Error;
@@ -43,6 +44,13 @@ fn config_init() -> SectionConfig {
         GROUP_TYPENAME.to_string(),
         Some(String::from("name")),
         GROUP_SCHEMA,
+    ));
+
+    const FILTER_SCHEMA: &ObjectSchema = FilterConfig::API_SCHEMA.unwrap_object_schema();
+    config.register_plugin(SectionConfigPlugin::new(
+        FILTER_TYPENAME.to_string(),
+        Some(String::from("name")),
+        FILTER_SCHEMA,
     ));
 
     config

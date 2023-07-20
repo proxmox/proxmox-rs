@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt::Display;
 
+use filter::{FilterConfig, FilterMatcher, FILTER_TYPENAME};
 use group::{GroupConfig, GROUP_TYPENAME};
 use proxmox_schema::api;
 use proxmox_section_config::SectionConfigData;
@@ -13,6 +14,7 @@ use std::error::Error as StdError;
 pub mod api;
 mod config;
 pub mod endpoints;
+mod filter;
 pub mod group;
 pub mod schema;
 
@@ -22,7 +24,8 @@ pub enum Error {
     ConfigDeserialization(Box<dyn StdError + Send + Sync>),
     NotifyFailed(String, Box<dyn StdError + Send + Sync>),
     TargetDoesNotExist(String),
-    TargetTestFailed(Vec<Box<dyn StdError + Send + Sync + 'static>>),
+    TargetTestFailed(Vec<Box<dyn StdError + Send + Sync>>),
+    FilterFailed(String),
 }
 
 impl Display for Error {
@@ -47,6 +50,9 @@ impl Display for Error {
 
                 Ok(())
             }
+            Error::FilterFailed(message) => {
+                write!(f, "could not apply filter: {message}")
+            }
         }
     }
 }
@@ -59,6 +65,7 @@ impl StdError for Error {
             Error::NotifyFailed(_, err) => Some(&**err),
             Error::TargetDoesNotExist(_) => None,
             Error::TargetTestFailed(errs) => Some(&*errs[0]),
+            Error::FilterFailed(_) => None,
         }
     }
 }
@@ -85,6 +92,9 @@ pub trait Endpoint {
 
     /// The name/identifier for this endpoint
     fn name(&self) -> &str;
+
+    /// The name of the filter to use
+    fn filter(&self) -> Option<&str>;
 }
 
 #[derive(Debug, Clone)]
@@ -143,6 +153,7 @@ impl Config {
 pub struct Bus {
     endpoints: HashMap<String, Box<dyn Endpoint>>,
     groups: HashMap<String, GroupConfig>,
+    filters: Vec<FilterConfig>,
 }
 
 #[allow(unused_macros)]
@@ -254,7 +265,16 @@ impl Bus {
             .map(|group: GroupConfig| (group.name.clone(), group))
             .collect();
 
-        Ok(Bus { endpoints, groups })
+        let filters = config
+            .config
+            .convert_to_typed_array(FILTER_TYPENAME)
+            .map_err(|err| Error::ConfigDeserialization(err.into()))?;
+
+        Ok(Bus {
+            endpoints,
+            groups,
+            filters,
+        })
     }
 
     #[cfg(test)]
@@ -267,29 +287,63 @@ impl Bus {
         self.groups.insert(group.name.clone(), group);
     }
 
+    #[cfg(test)]
+    pub fn add_filter(&mut self, filter: FilterConfig) {
+        self.filters.push(filter)
+    }
+
     /// Send a notification to a given target (endpoint or group).
     ///
     /// Any errors will not be returned but only logged.
     pub fn send(&self, endpoint_or_group: &str, notification: &Notification) {
+        let mut filter_matcher = FilterMatcher::new(&self.filters, notification);
+
         if let Some(group) = self.groups.get(endpoint_or_group) {
+            if !Bus::check_filter(&mut filter_matcher, group.filter.as_deref()) {
+                return;
+            }
+
             for endpoint in &group.endpoint {
-                self.send_via_single_endpoint(endpoint, notification);
+                self.send_via_single_endpoint(endpoint, notification, &mut filter_matcher);
             }
         } else {
-            self.send_via_single_endpoint(endpoint_or_group, notification);
+            self.send_via_single_endpoint(endpoint_or_group, notification, &mut filter_matcher);
         }
     }
 
-    fn send_via_single_endpoint(&self, endpoint: &str, notification: &Notification) {
+    fn check_filter(filter_matcher: &mut FilterMatcher, filter: Option<&str>) -> bool {
+        if let Some(filter) = filter {
+            match filter_matcher.check_filter_match(filter) {
+                // If the filter does not match, do nothing
+                Ok(r) => r,
+                Err(err) => {
+                    // If there is an error, only log it and still send
+                    log::error!("could not apply filter '{filter}': {err}");
+                    true
+                }
+            }
+        } else {
+            true
+        }
+    }
+
+    fn send_via_single_endpoint(
+        &self,
+        endpoint: &str,
+        notification: &Notification,
+        filter_matcher: &mut FilterMatcher,
+    ) {
         if let Some(endpoint) = self.endpoints.get(endpoint) {
+            if !Bus::check_filter(filter_matcher, endpoint.filter()) {
+                return;
+            }
+
             if let Err(e) = endpoint.send(notification) {
                 // Only log on errors, do not propagate fail to the caller.
                 log::error!(
                     "could not notify via target `{name}`: {e}",
                     name = endpoint.name()
                 );
-            } else {
-                log::info!("notified via endpoint `{name}`", name = endpoint.name());
             }
         } else {
             log::error!("could not notify via endpoint '{endpoint}', it does not exist");
@@ -349,6 +403,7 @@ mod tests {
         // Needs to be an Rc so that we can clone MockEndpoint before
         // passing it to Bus, while still retaining a handle to the Vec
         messages: Rc<RefCell<Vec<Notification>>>,
+        filter: Option<String>,
     }
 
     impl Endpoint for MockEndpoint {
@@ -361,12 +416,17 @@ mod tests {
         fn name(&self) -> &str {
             self.name
         }
+
+        fn filter(&self) -> Option<&str> {
+            self.filter.as_deref()
+        }
     }
 
     impl MockEndpoint {
         fn new(name: &'static str, filter: Option<String>) -> Self {
             Self {
                 name,
+                filter,
                 ..Default::default()
             }
         }
@@ -410,12 +470,14 @@ mod tests {
             name: "group1".to_string(),
             endpoint: vec!["mock1".into()],
             comment: None,
+            filter: None,
         });
 
         bus.add_group(GroupConfig {
             name: "group2".to_string(),
             endpoint: vec!["mock2".into()],
             comment: None,
+            filter: None,
         });
 
         bus.add_endpoint(Box::new(endpoint1.clone()));
@@ -439,6 +501,78 @@ mod tests {
 
         send_to_group("group2");
         assert_eq!(endpoint1.messages().len(), 1);
+        assert_eq!(endpoint2.messages().len(), 1);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_severity_ordering() {
+        // Not intended to be exhaustive, just a quick
+        // sanity check ;)
+
+        assert!(Severity::Info < Severity::Notice);
+        assert!(Severity::Info < Severity::Warning);
+        assert!(Severity::Info < Severity::Error);
+        assert!(Severity::Error > Severity::Warning);
+        assert!(Severity::Warning > Severity::Notice);
+    }
+
+    #[test]
+    fn test_multiple_endpoints_with_different_filters() -> Result<(), Error> {
+        let endpoint1 = MockEndpoint::new("mock1", Some("filter1".into()));
+        let endpoint2 = MockEndpoint::new("mock2", Some("filter2".into()));
+
+        let mut bus = Bus::default();
+
+        bus.add_endpoint(Box::new(endpoint1.clone()));
+        bus.add_endpoint(Box::new(endpoint2.clone()));
+
+        bus.add_group(GroupConfig {
+            name: "channel1".to_string(),
+            endpoint: vec!["mock1".into(), "mock2".into()],
+            comment: None,
+            filter: None,
+        });
+
+        bus.add_filter(FilterConfig {
+            name: "filter1".into(),
+            min_severity: Some(Severity::Warning),
+            mode: None,
+            invert_match: None,
+            comment: None,
+        });
+
+        bus.add_filter(FilterConfig {
+            name: "filter2".into(),
+            min_severity: Some(Severity::Error),
+            mode: None,
+            invert_match: None,
+            comment: None,
+        });
+
+        let send_with_severity = |severity| {
+            bus.send(
+                "channel1",
+                &Notification {
+                    title: "Title".into(),
+                    body: "Body".into(),
+                    severity,
+                    properties: Default::default(),
+                },
+            );
+        };
+
+        send_with_severity(Severity::Info);
+        assert_eq!(endpoint1.messages().len(), 0);
+        assert_eq!(endpoint2.messages().len(), 0);
+
+        send_with_severity(Severity::Warning);
+        assert_eq!(endpoint1.messages().len(), 1);
+        assert_eq!(endpoint2.messages().len(), 0);
+
+        send_with_severity(Severity::Error);
+        assert_eq!(endpoint1.messages().len(), 2);
         assert_eq!(endpoint2.messages().len(), 1);
 
         Ok(())

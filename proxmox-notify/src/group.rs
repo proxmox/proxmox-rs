@@ -18,6 +18,10 @@ pub(crate) const GROUP_TYPENAME: &str = "group";
             optional: true,
             schema: COMMENT_SCHEMA,
         },
+        filter: {
+            optional: true,
+            schema: ENTITY_NAME_SCHEMA,
+        },
     },
 )]
 #[derive(Debug, Serialize, Deserialize, Updater, Default)]
@@ -32,10 +36,14 @@ pub struct GroupConfig {
     /// Comment
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
+    /// Filter to apply
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableGroupProperty {
     Comment,
+    Filter,
 }

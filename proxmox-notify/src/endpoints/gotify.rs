@@ -37,6 +37,10 @@ pub(crate) const GOTIFY_TYPENAME: &str = "gotify";
             optional: true,
             schema: COMMENT_SCHEMA,
         },
+        filter: {
+            optional: true,
+            schema: ENTITY_NAME_SCHEMA,
+        },
     }
 )]
 #[derive(Serialize, Deserialize, Updater, Default)]
@@ -51,6 +55,9 @@ pub struct GotifyConfig {
     /// Comment
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
+    /// Filter to apply
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<String>,
 }
 
 #[api()]
@@ -77,6 +84,7 @@ pub struct GotifyEndpoint {
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableGotifyProperty {
     Comment,
+    Filter,
 }
 
 impl Endpoint for GotifyEndpoint {
@@ -113,5 +121,9 @@ impl Endpoint for GotifyEndpoint {
 
     fn name(&self) -> &str {
         &self.config.name
+    }
+
+    fn filter(&self) -> Option<&str> {
+        self.config.filter.as_deref()
     }
 }
