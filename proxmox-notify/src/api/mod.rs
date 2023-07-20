@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::error::Error as StdError;
 use std::fmt::Display;
 
@@ -101,11 +102,135 @@ fn endpoint_exists(config: &Config, name: &str) -> bool {
     exists
 }
 
+fn get_referenced_entities(config: &Config, entity: &str) -> HashSet<String> {
+    let mut to_expand = HashSet::new();
+    let mut expanded = HashSet::new();
+    to_expand.insert(entity.to_string());
+
+    let expand = |entities: &HashSet<String>| -> HashSet<String> {
+        let mut new = HashSet::new();
+
+        for entity in entities {
+            if let Ok(group) = group::get_group(config, entity) {
+                for target in group.endpoint {
+                    new.insert(target.clone());
+                }
+            }
+
+            #[cfg(feature = "sendmail")]
+            if let Ok(target) = sendmail::get_endpoint(config, entity) {
+                if let Some(filter) = target.filter {
+                    new.insert(filter.clone());
+                }
+            }
+
+            #[cfg(feature = "gotify")]
+            if let Ok(target) = gotify::get_endpoint(config, entity) {
+                if let Some(filter) = target.filter {
+                    new.insert(filter.clone());
+                }
+            }
+        }
+
+        new
+    };
+
+    while !to_expand.is_empty() {
+        let new = expand(&to_expand);
+        expanded.extend(to_expand);
+        to_expand = new;
+    }
+
+    expanded
+}
+
 #[cfg(test)]
 mod test_helpers {
     use crate::Config;
 
     pub fn empty_config() -> Config {
         Config::new("", "").unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::endpoints::gotify::{GotifyConfig, GotifyPrivateConfig};
+    use crate::endpoints::sendmail::SendmailConfig;
+    use crate::filter::FilterConfig;
+    use crate::group::GroupConfig;
+
+    #[test]
+    fn test_get_referenced_entities() {
+        let mut config = super::test_helpers::empty_config();
+
+        filter::add_filter(
+            &mut config,
+            &FilterConfig {
+                name: "filter".to_string(),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        sendmail::add_endpoint(
+            &mut config,
+            &SendmailConfig {
+                name: "sendmail".to_string(),
+                mailto: Some(vec!["foo@example.com".to_string()]),
+                filter: Some("filter".to_string()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        gotify::add_endpoint(
+            &mut config,
+            &GotifyConfig {
+                name: "gotify".to_string(),
+                server: "localhost".to_string(),
+                filter: Some("filter".to_string()),
+                ..Default::default()
+            },
+            &GotifyPrivateConfig {
+                name: "gotify".to_string(),
+                token: "foo".to_string(),
+            },
+        )
+        .unwrap();
+
+        group::add_group(
+            &mut config,
+            &GroupConfig {
+                name: "group".to_string(),
+                endpoint: vec!["gotify".to_string(), "sendmail".to_string()],
+                filter: Some("filter".to_string()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        assert_eq!(
+            get_referenced_entities(&config, "filter"),
+            HashSet::from(["filter".to_string()])
+        );
+        assert_eq!(
+            get_referenced_entities(&config, "sendmail"),
+            HashSet::from(["filter".to_string(), "sendmail".to_string()])
+        );
+        assert_eq!(
+            get_referenced_entities(&config, "gotify"),
+            HashSet::from(["filter".to_string(), "gotify".to_string()])
+        );
+        assert_eq!(
+            get_referenced_entities(&config, "group"),
+            HashSet::from([
+                "filter".to_string(),
+                "gotify".to_string(),
+                "sendmail".to_string(),
+                "group".to_string()
+            ])
+        );
     }
 }
