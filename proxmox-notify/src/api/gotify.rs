@@ -43,15 +43,7 @@ pub fn add_endpoint(
         panic!("name for endpoint config and private config must be identical");
     }
 
-    if super::endpoint_exists(config, &endpoint_config.name) {
-        return Err(ApiError::bad_request(
-            format!(
-                "endpoint with name '{}' already exists!",
-                endpoint_config.name
-            ),
-            None,
-        ));
-    }
+    super::ensure_unique(config, &endpoint_config.name)?;
 
     if let Some(filter) = &endpoint_config.filter {
         // Check if filter exists

@@ -31,12 +31,7 @@ pub fn get_filter(config: &Config, name: &str) -> Result<FilterConfig, ApiError>
 /// Returns an `ApiError` if a filter with the same name already exists or
 /// if the filter could not be saved.
 pub fn add_filter(config: &mut Config, filter_config: &FilterConfig) -> Result<(), ApiError> {
-    if get_filter(config, &filter_config.name).is_ok() {
-        return Err(ApiError::bad_request(
-            format!("filter '{}' already exists", filter_config.name),
-            None,
-        ));
-    }
+    super::ensure_unique(config, &filter_config.name)?;
 
     config
         .config

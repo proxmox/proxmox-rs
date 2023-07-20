@@ -87,7 +87,7 @@ fn verify_digest(config: &Config, digest: Option<&[u8]>) -> Result<(), ApiError>
     Ok(())
 }
 
-fn endpoint_exists(config: &Config, name: &str) -> bool {
+fn ensure_endpoint_exists(config: &Config, name: &str) -> Result<(), ApiError> {
     let mut exists = false;
 
     #[cfg(feature = "sendmail")]
@@ -99,7 +99,33 @@ fn endpoint_exists(config: &Config, name: &str) -> bool {
         exists = exists || gotify::get_endpoint(config, name).is_ok();
     }
 
-    exists
+    if !exists {
+        Err(ApiError::not_found(
+            format!("endpoint '{name}' does not exist"),
+            None,
+        ))
+    } else {
+        Ok(())
+    }
+}
+
+fn ensure_endpoints_exist<T: AsRef<str>>(config: &Config, endpoints: &[T]) -> Result<(), ApiError> {
+    for endpoint in endpoints {
+        ensure_endpoint_exists(config, endpoint.as_ref())?;
+    }
+
+    Ok(())
+}
+
+fn ensure_unique(config: &Config, entity: &str) -> Result<(), ApiError> {
+    if config.config.sections.contains_key(entity) {
+        return Err(ApiError::bad_request(
+            format!("Cannot create '{entity}', an entity with the same name already exists"),
+            None,
+        ));
+    }
+
+    Ok(())
 }
 
 fn get_referrers(config: &Config, entity: &str) -> Result<HashSet<String>, ApiError> {
@@ -323,5 +349,22 @@ mod tests {
         assert!(ensure_unused(&config, "gotify").is_err());
         assert!(ensure_unused(&config, "sendmail").is_err());
         assert!(ensure_unused(&config, "group").is_ok());
+    }
+
+    #[test]
+    fn test_ensure_unique() {
+        let config = prepare_config().unwrap();
+
+        assert!(ensure_unique(&config, "sendmail").is_err());
+        assert!(ensure_unique(&config, "group").is_err());
+        assert!(ensure_unique(&config, "new").is_ok());
+    }
+
+    #[test]
+    fn test_ensure_endpoints_exist() {
+        let config = prepare_config().unwrap();
+
+        assert!(ensure_endpoints_exist(&config, &vec!["sendmail", "gotify"]).is_ok());
+        assert!(ensure_endpoints_exist(&config, &vec!["group", "filter"]).is_err());
     }
 }

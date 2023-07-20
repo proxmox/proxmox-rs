@@ -31,12 +31,7 @@ pub fn get_group(config: &Config, name: &str) -> Result<GroupConfig, ApiError> {
 /// Returns an `ApiError` if a group with the same name already exists, or
 /// if the group could not be saved
 pub fn add_group(config: &mut Config, group_config: &GroupConfig) -> Result<(), ApiError> {
-    if get_group(config, &group_config.name).is_ok() {
-        return Err(ApiError::bad_request(
-            format!("group '{}' already exists", group_config.name),
-            None,
-        ));
-    }
+    super::ensure_unique(config, &group_config.name)?;
 
     if group_config.endpoint.is_empty() {
         return Err(ApiError::bad_request(
@@ -50,7 +45,7 @@ pub fn add_group(config: &mut Config, group_config: &GroupConfig) -> Result<(), 
         super::filter::get_filter(config, filter)?;
     }
 
-    check_if_endpoints_exist(config, &group_config.endpoint)?;
+    super::ensure_endpoints_exist(config, &group_config.endpoint)?;
 
     config
         .config
@@ -91,7 +86,7 @@ pub fn update_group(
     }
 
     if let Some(endpoints) = &updater.endpoint {
-        check_if_endpoints_exist(config, endpoints)?;
+        super::ensure_endpoints_exist(config, endpoints)?;
         if endpoints.is_empty() {
             return Err(ApiError::bad_request(
                 "group must contain at least one endpoint",
@@ -134,19 +129,6 @@ pub fn delete_group(config: &mut Config, name: &str) -> Result<(), ApiError> {
     let _ = get_group(config, name)?;
 
     config.config.sections.remove(name);
-
-    Ok(())
-}
-
-fn check_if_endpoints_exist(config: &Config, endpoints: &[String]) -> Result<(), ApiError> {
-    for endpoint in endpoints {
-        if !super::endpoint_exists(config, endpoint) {
-            return Err(ApiError::not_found(
-                format!("endoint '{endpoint}' does not exist"),
-                None,
-            ));
-        }
-    }
 
     Ok(())
 }

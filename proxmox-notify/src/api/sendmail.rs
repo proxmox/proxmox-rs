@@ -33,12 +33,7 @@ pub fn get_endpoint(config: &Config, name: &str) -> Result<SendmailConfig, ApiEr
 /// Returns an `ApiError` if an endpoint with the same name already exists,
 /// or if the endpoint could not be saved.
 pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<(), ApiError> {
-    if super::endpoint_exists(config, &endpoint.name) {
-        return Err(ApiError::bad_request(
-            format!("endpoint with name '{}' already exists!", &endpoint.name),
-            None,
-        ));
-    }
+    super::ensure_unique(config, &endpoint.name)?;
 
     if let Some(filter) = &endpoint.filter {
         // Check if filter exists
