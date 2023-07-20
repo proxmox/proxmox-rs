@@ -305,8 +305,11 @@ impl Bus {
 
         if let Some(group) = self.groups.get(endpoint_or_group) {
             if !Bus::check_filter(&mut filter_matcher, group.filter.as_deref()) {
+                log::info!("skipped target '{endpoint_or_group}', filter did not match");
                 return;
             }
+
+            log::info!("target '{endpoint_or_group}' is a group, notifying all members...");
 
             for endpoint in &group.endpoint {
                 self.send_via_single_endpoint(endpoint, notification, &mut filter_matcher);
@@ -339,19 +342,23 @@ impl Bus {
         filter_matcher: &mut FilterMatcher,
     ) {
         if let Some(endpoint) = self.endpoints.get(endpoint) {
+            let name = endpoint.name();
             if !Bus::check_filter(filter_matcher, endpoint.filter()) {
+                log::info!("skipped target '{name}', filter did not match");
                 return;
             }
 
-            if let Err(e) = endpoint.send(notification) {
-                // Only log on errors, do not propagate fail to the caller.
-                log::error!(
-                    "could not notify via target `{name}`: {e}",
-                    name = endpoint.name()
-                );
+            match endpoint.send(notification) {
+                Ok(_) => {
+                    log::info!("notified via target `{name}`");
+                }
+                Err(e) => {
+                    // Only log on errors, do not propagate fail to the caller.
+                    log::error!("could not notify via target `{name}`: {e}");
+                }
             }
         } else {
-            log::error!("could not notify via endpoint '{endpoint}', it does not exist");
+            log::error!("could not notify via target '{endpoint}', it does not exist");
         }
     }
 
