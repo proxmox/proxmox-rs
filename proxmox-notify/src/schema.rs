@@ -7,6 +7,12 @@ pub const EMAIL_SCHEMA: Schema = StringSchema::new("E-Mail Address.")
     .max_length(64)
     .schema();
 
+pub const USER_SCHEMA: Schema = StringSchema::new("User ID including realm, e.g. root@pam.")
+    .format(&SINGLE_LINE_COMMENT_FORMAT)
+    .min_length(2)
+    .max_length(64)
+    .schema();
+
 pub const BACKEND_NAME_SCHEMA: Schema = StringSchema::new("Notification backend name.")
     .format(&SAFE_ID_FORMAT)
     .min_length(3)

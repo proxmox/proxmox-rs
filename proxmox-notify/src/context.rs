@@ -1,7 +1,9 @@
 use once_cell::sync::OnceCell;
 use std::fmt::Debug;
 
-pub trait Context: Send + Sync + Debug {}
+pub trait Context: Send + Sync + Debug {
+    fn lookup_email_for_user(&self, user: &str) -> Option<String>;
+}
 
 static CONTEXT: OnceCell<&'static dyn Context> = OnceCell::new();
 

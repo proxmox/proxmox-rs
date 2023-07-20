@@ -1,6 +1,8 @@
+use crate::context::context;
 use crate::renderer::TemplateRenderer;
-use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA};
+use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA, USER_SCHEMA};
 use crate::{renderer, Endpoint, Error, Notification};
+use std::collections::HashSet;
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{api, Updater};
@@ -18,6 +20,14 @@ pub(crate) const SENDMAIL_TYPENAME: &str = "sendmail";
             items: {
                 schema: EMAIL_SCHEMA,
             },
+            optional: true,
+        },
+        "mailto-user": {
+            type: Array,
+            items: {
+                schema: USER_SCHEMA,
+            },
+            optional: true,
         },
         comment: {
             optional: true,
@@ -37,7 +47,11 @@ pub struct SendmailConfig {
     #[updater(skip)]
     pub name: String,
     /// Mail recipients
-    pub mailto: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mailto: Option<Vec<String>>,
+    /// Mail recipients
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mailto_user: Option<Vec<String>>,
     /// `From` address for the mail
     #[serde(skip_serializing_if = "Option::is_none")]
     pub from_address: Option<String>,
@@ -59,6 +73,8 @@ pub enum DeleteableSendmailProperty {
     Author,
     Comment,
     Filter,
+    Mailto,
+    MailtoUser,
 }
 
 /// A sendmail notification endpoint.
@@ -68,7 +84,21 @@ pub struct SendmailEndpoint {
 
 impl Endpoint for SendmailEndpoint {
     fn send(&self, notification: &Notification) -> Result<(), Error> {
-        let recipients: Vec<&str> = self.config.mailto.iter().map(String::as_str).collect();
+        let mut recipients = HashSet::new();
+
+        if let Some(mailto_addrs) = self.config.mailto.as_ref() {
+            for addr in mailto_addrs {
+                recipients.insert(addr.clone());
+            }
+        }
+
+        if let Some(users) = self.config.mailto_user.as_ref() {
+            for user in users {
+                if let Some(addr) = context().lookup_email_for_user(user) {
+                    recipients.insert(addr);
+                }
+            }
+        }
 
         let properties = notification.properties.as_ref();
 
@@ -86,8 +116,10 @@ impl Endpoint for SendmailEndpoint {
         // "Proxmox Backup Server" if it is not set.
         let author = self.config.author.as_deref().or(Some(""));
 
+        let recipients_str: Vec<&str> = recipients.iter().map(String::as_str).collect();
+
         proxmox_sys::email::sendmail(
-            &recipients,
+            &recipients_str,
             &subject,
             Some(&text_part),
             Some(&html_part),

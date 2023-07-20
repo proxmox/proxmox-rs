@@ -45,6 +45,13 @@ pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<()
         super::filter::get_filter(config, filter)?;
     }
 
+    if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
+        return Err(ApiError::bad_request(
+            "must at least provide one recipient, either in mailto or in mailto-user",
+            None,
+        ));
+    }
+
     config
         .config
         .set_data(&endpoint.name, SENDMAIL_TYPENAME, endpoint)
@@ -81,12 +88,18 @@ pub fn update_endpoint(
                 DeleteableSendmailProperty::Author => endpoint.author = None,
                 DeleteableSendmailProperty::Comment => endpoint.comment = None,
                 DeleteableSendmailProperty::Filter => endpoint.filter = None,
+                DeleteableSendmailProperty::Mailto => endpoint.mailto = None,
+                DeleteableSendmailProperty::MailtoUser => endpoint.mailto_user = None,
             }
         }
     }
 
     if let Some(mailto) = &updater.mailto {
-        endpoint.mailto = mailto.iter().map(String::from).collect();
+        endpoint.mailto = Some(mailto.iter().map(String::from).collect());
+    }
+
+    if let Some(mailto_user) = &updater.mailto_user {
+        endpoint.mailto_user = Some(mailto_user.iter().map(String::from).collect());
     }
 
     if let Some(from_address) = &updater.from_address {
@@ -104,6 +117,13 @@ pub fn update_endpoint(
     if let Some(filter) = &updater.filter {
         let _ = super::filter::get_filter(config, filter)?;
         endpoint.filter = Some(filter.into());
+    }
+
+    if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
+        return Err(ApiError::bad_request(
+            "must at least provide one recipient, either in mailto or in mailto-user",
+            None,
+        ));
     }
 
     config
@@ -143,7 +163,8 @@ pub mod tests {
             config,
             &SendmailConfig {
                 name: name.into(),
-                mailto: vec!["user1@example.com".into()],
+                mailto: Some(vec!["user1@example.com".into()]),
+                mailto_user: None,
                 from_address: Some("from@example.com".into()),
                 author: Some("root".into()),
                 comment: Some("Comment".into()),
@@ -187,6 +208,7 @@ pub mod tests {
             "sendmail-endpoint",
             &SendmailConfigUpdater {
                 mailto: Some(vec!["user2@example.com".into(), "user3@example.com".into()]),
+                mailto_user: None,
                 from_address: Some("root@example.com".into()),
                 author: Some("newauthor".into()),
                 comment: Some("new comment".into()),
@@ -212,6 +234,7 @@ pub mod tests {
             "sendmail-endpoint",
             &SendmailConfigUpdater {
                 mailto: Some(vec!["user2@example.com".into(), "user3@example.com".into()]),
+                mailto_user: Some(vec!["root@pam".into()]),
                 from_address: Some("root@example.com".into()),
                 author: Some("newauthor".into()),
                 comment: Some("new comment".into()),
@@ -225,11 +248,12 @@ pub mod tests {
 
         assert_eq!(
             endpoint.mailto,
-            vec![
+            Some(vec![
                 "user2@example.com".to_string(),
                 "user3@example.com".to_string()
-            ]
+            ])
         );
+        assert_eq!(endpoint.mailto_user, Some(vec!["root@pam".to_string(),]));
         assert_eq!(endpoint.from_address, Some("root@example.com".to_string()));
         assert_eq!(endpoint.author, Some("newauthor".to_string()));
         assert_eq!(endpoint.comment, Some("new comment".to_string()));
