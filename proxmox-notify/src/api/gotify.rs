@@ -53,6 +53,11 @@ pub fn add_endpoint(
         ));
     }
 
+    if let Some(filter) = &endpoint_config.filter {
+        // Check if filter exists
+        super::filter::get_filter(config, filter)?;
+    }
+
     set_private_config_entry(config, private_endpoint_config)?;
 
     config
@@ -110,6 +115,13 @@ pub fn update_endpoint(
 
     if let Some(comment) = &endpoint_config_updater.comment {
         endpoint.comment = Some(comment.into());
+    }
+
+    if let Some(filter) = &endpoint_config_updater.filter {
+        // Check if filter exists
+        let _ = super::filter::get_filter(config, filter)?;
+
+        endpoint.filter = Some(filter.into());
     }
 
     config

@@ -45,6 +45,11 @@ pub fn add_group(config: &mut Config, group_config: &GroupConfig) -> Result<(), 
         ));
     }
 
+    if let Some(filter) = &group_config.filter {
+        // Check if filter exists
+        super::filter::get_filter(config, filter)?;
+    }
+
     check_if_endpoints_exist(config, &group_config.endpoint)?;
 
     config
@@ -101,6 +106,8 @@ pub fn update_group(
     }
 
     if let Some(filter) = &updater.filter {
+        // Check if filter exists
+        let _ = super::filter::get_filter(config, filter)?;
         group.filter = Some(filter.into());
     }
 

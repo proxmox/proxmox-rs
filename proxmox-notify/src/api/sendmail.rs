@@ -40,6 +40,11 @@ pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<()
         ));
     }
 
+    if let Some(filter) = &endpoint.filter {
+        // Check if filter exists
+        super::filter::get_filter(config, filter)?;
+    }
+
     config
         .config
         .set_data(&endpoint.name, SENDMAIL_TYPENAME, endpoint)
@@ -94,6 +99,11 @@ pub fn update_endpoint(
 
     if let Some(comment) = &updater.comment {
         endpoint.comment = Some(comment.into());
+    }
+
+    if let Some(filter) = &updater.filter {
+        let _ = super::filter::get_filter(config, filter)?;
+        endpoint.filter = Some(filter.into());
     }
 
     config

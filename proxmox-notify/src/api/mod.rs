@@ -5,6 +5,7 @@ use crate::Config;
 use serde::Serialize;
 
 pub mod common;
+pub mod filter;
 #[cfg(feature = "gotify")]
 pub mod gotify;
 pub mod group;
