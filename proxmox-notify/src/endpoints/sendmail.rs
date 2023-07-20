@@ -112,9 +112,17 @@ impl Endpoint for SendmailEndpoint {
         let text_part =
             renderer::render_template(TemplateRenderer::Plaintext, &notification.body, properties)?;
 
-        // proxmox_sys::email::sendmail will set the author to
-        // "Proxmox Backup Server" if it is not set.
-        let author = self.config.author.as_deref().or(Some(""));
+        let author = self
+            .config
+            .author
+            .clone()
+            .unwrap_or_else(|| context().default_sendmail_author());
+
+        let mailfrom = self
+            .config
+            .from_address
+            .clone()
+            .unwrap_or_else(|| context().default_sendmail_from());
 
         let recipients_str: Vec<&str> = recipients.iter().map(String::as_str).collect();
 
@@ -123,8 +131,8 @@ impl Endpoint for SendmailEndpoint {
             &subject,
             Some(&text_part),
             Some(&html_part),
-            self.config.from_address.as_deref(),
-            author,
+            Some(&mailfrom),
+            Some(&author),
         )
         .map_err(|err| Error::NotifyFailed(self.config.name.clone(), err.into()))
     }
