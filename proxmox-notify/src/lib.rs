@@ -9,6 +9,7 @@ use serde_json::Value;
 
 use std::error::Error as StdError;
 
+pub mod api;
 mod config;
 pub mod endpoints;
 pub mod schema;
