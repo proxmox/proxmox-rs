@@ -13,6 +13,7 @@ use std::error::Error as StdError;
 
 pub mod api;
 mod config;
+pub mod context;
 pub mod endpoints;
 pub mod filter;
 pub mod group;
