@@ -5,6 +5,8 @@ use crate::Config;
 use serde::Serialize;
 
 pub mod common;
+#[cfg(feature = "sendmail")]
+pub mod sendmail;
 
 #[derive(Debug, Serialize)]
 pub struct ApiError {
@@ -82,6 +84,11 @@ fn verify_digest(config: &Config, digest: Option<&[u8]>) -> Result<(), ApiError>
 
 fn endpoint_exists(config: &Config, name: &str) -> bool {
     let mut exists = false;
+
+    #[cfg(feature = "sendmail")]
+    {
+        exists = exists || sendmail::get_endpoint(config, name).is_ok();
+    }
 
     exists
 }
