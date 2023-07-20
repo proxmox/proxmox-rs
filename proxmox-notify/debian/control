@@ -1,0 +1,112 @@
+Source: rust-proxmox-notify
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-handlebars-3+default-dev <!nocheck>,
+ librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
+ librust-log-0.4+default-dev (>= 0.4.17-~~) <!nocheck>,
+ librust-once-cell-1+default-dev (>= 1.3.1-~~) <!nocheck>,
+ librust-openssl-0.10+default-dev <!nocheck>,
+ librust-proxmox-http-0.9+client-sync-dev <!nocheck>,
+ librust-proxmox-http-0.9+default-dev <!nocheck>,
+ librust-proxmox-human-byte-0.1+default-dev <!nocheck>,
+ librust-proxmox-schema-1+api-macro-dev (>= 1.3.7-~~) <!nocheck>,
+ librust-proxmox-schema-1+api-types-dev (>= 1.3.7-~~) <!nocheck>,
+ librust-proxmox-schema-1+default-dev (>= 1.3.7-~~) <!nocheck>,
+ librust-proxmox-section-config-1+default-dev (>= 1.0.2-~~) <!nocheck>,
+ librust-proxmox-sys-0.5+default-dev <!nocheck>,
+ librust-proxmox-time-1+default-dev (>= 1.1.4-~~) <!nocheck>,
+ librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.6.1
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-notify
+Rules-Requires-Root: no
+
+Package: librust-proxmox-notify-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-handlebars-3+default-dev,
+ librust-lazy-static-1+default-dev (>= 1.4-~~),
+ librust-log-0.4+default-dev (>= 0.4.17-~~),
+ librust-once-cell-1+default-dev (>= 1.3.1-~~),
+ librust-openssl-0.10+default-dev,
+ librust-proxmox-human-byte-0.1+default-dev,
+ librust-proxmox-schema-1+api-macro-dev (>= 1.3.7-~~),
+ librust-proxmox-schema-1+api-types-dev (>= 1.3.7-~~),
+ librust-proxmox-schema-1+default-dev (>= 1.3.7-~~),
+ librust-proxmox-section-config-1+default-dev (>= 1.0.2-~~),
+ librust-proxmox-time-1+default-dev (>= 1.1.4-~~),
+ librust-regex-1+default-dev (>= 1.5-~~),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
+ librust-serde-json-1+default-dev
+Recommends:
+ librust-proxmox-notify+default-dev (= ${binary:Version})
+Suggests:
+ librust-proxmox-notify+gotify-dev (= ${binary:Version}),
+ librust-proxmox-notify+sendmail-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-notify-0-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.1-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.1.0-dev (= ${binary:Version})
+Description: Rust crate "proxmox-notify" - Rust source code
+ This package contains the source for the Rust proxmox-notify crate, packaged by
+ debcargo for use with cargo and dh-cargo.
+
+Package: librust-proxmox-notify+default-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-notify-dev (= ${binary:Version}),
+ librust-proxmox-notify+sendmail-dev (= ${binary:Version}),
+ librust-proxmox-notify+gotify-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-notify-0+default-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.1.0+default-dev (= ${binary:Version})
+Description: Rust crate "proxmox-notify" - feature "default"
+ This metapackage enables feature "default" for the Rust proxmox-notify crate,
+ by pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox-notify+gotify-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-notify-dev (= ${binary:Version}),
+ librust-proxmox-http-0.9+client-sync-dev,
+ librust-proxmox-http-0.9+default-dev
+Provides:
+ librust-proxmox-notify-0+gotify-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.1+gotify-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.1.0+gotify-dev (= ${binary:Version})
+Description: Rust crate "proxmox-notify" - feature "gotify"
+ This metapackage enables feature "gotify" for the Rust proxmox-notify crate, by
+ pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox-notify+sendmail-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-notify-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.5+default-dev
+Provides:
+ librust-proxmox-notify-0+sendmail-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.1+sendmail-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.1.0+sendmail-dev (= ${binary:Version})
+Description: Rust crate "proxmox-notify" - feature "sendmail"
+ This metapackage enables feature "sendmail" for the Rust proxmox-notify crate,
+ by pulling in any additional dependencies needed by that feature.
