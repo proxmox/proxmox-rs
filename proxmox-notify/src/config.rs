@@ -2,6 +2,7 @@ use lazy_static::lazy_static;
 use proxmox_schema::{ApiType, ObjectSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
 
+use crate::group::{GroupConfig, GROUP_TYPENAME};
 use crate::schema::BACKEND_NAME_SCHEMA;
 use crate::Error;
 
@@ -35,6 +36,14 @@ fn config_init() -> SectionConfig {
             GOTIFY_SCHEMA,
         ));
     }
+
+    const GROUP_SCHEMA: &ObjectSchema = GroupConfig::API_SCHEMA.unwrap_object_schema();
+
+    config.register_plugin(SectionConfigPlugin::new(
+        GROUP_TYPENAME.to_string(),
+        Some(String::from("name")),
+        GROUP_SCHEMA,
+    ));
 
     config
 }
