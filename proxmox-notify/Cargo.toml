@@ -8,19 +8,21 @@ repository.workspace = true
 exclude.workspace = true
 
 [dependencies]
-handlebars = { workspace = true, optional = true }
+handlebars = { workspace = true }
 lazy_static.workspace = true
 log.workspace = true
 openssl.workspace = true
 proxmox-http = { workspace = true, features = ["client-sync"], optional = true }
+proxmox-human-byte.workspace = true
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"]}
 proxmox-section-config = { workspace = true }
 proxmox-sys = { workspace = true, optional = true }
+proxmox-time.workspace = true
 regex.workspace = true
 serde = { workspace = true, features = ["derive"]}
 serde_json.workspace = true
 
 [features]
 default = ["sendmail", "gotify"]
-sendmail = ["dep:handlebars", "dep:proxmox-sys"]
+sendmail = ["dep:proxmox-sys"]
 gotify = ["dep:proxmox-http"]

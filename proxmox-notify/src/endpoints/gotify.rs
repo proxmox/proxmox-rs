@@ -1,21 +1,16 @@
 use std::collections::HashMap;
 
+use crate::renderer::TemplateRenderer;
 use crate::schema::ENTITY_NAME_SCHEMA;
-use crate::{Endpoint, Error, Notification, Severity};
+use crate::{renderer, Endpoint, Error, Notification, Severity};
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 use proxmox_http::client::sync::Client;
 use proxmox_http::{HttpClient, HttpOptions};
 use proxmox_schema::{api, Updater};
-
-#[derive(Serialize)]
-struct GotifyMessageBody<'a> {
-    title: &'a str,
-    message: &'a str,
-    priority: u32,
-}
 
 fn severity_to_priority(level: Severity) -> u32 {
     match level {
@@ -94,11 +89,30 @@ impl Endpoint for GotifyEndpoint {
 
         let uri = format!("{}/message", self.config.server);
 
-        let body = GotifyMessageBody {
-            title: &notification.title,
-            message: &notification.body,
-            priority: severity_to_priority(notification.severity),
-        };
+        let properties = notification.properties.as_ref();
+
+        let title = renderer::render_template(
+            TemplateRenderer::Plaintext,
+            &notification.title,
+            properties,
+        )?;
+        let message =
+            renderer::render_template(TemplateRenderer::Plaintext, &notification.body, properties)?;
+
+        // We don't have a TemplateRenderer::Markdown yet, so simply put everything
+        // in code tags. Otherwise tables etc. are not formatted properly
+        let message = format!("```\n{message}\n```");
+
+        let body = json!({
+            "title": &title,
+            "message": &message,
+            "priority": severity_to_priority(notification.severity),
+            "extras": {
+                "client::display": {
+                    "contentType": "text/markdown"
+                }
+            }
+        });
 
         let body = serde_json::to_vec(&body)
             .map_err(|err| Error::NotifyFailed(self.name().to_string(), err.into()))?;

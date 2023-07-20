@@ -14,8 +14,9 @@ use std::error::Error as StdError;
 pub mod api;
 mod config;
 pub mod endpoints;
-mod filter;
+pub mod filter;
 pub mod group;
+pub mod renderer;
 pub mod schema;
 
 #[derive(Debug)]
@@ -26,6 +27,7 @@ pub enum Error {
     TargetDoesNotExist(String),
     TargetTestFailed(Vec<Box<dyn StdError + Send + Sync>>),
     FilterFailed(String),
+    RenderError(Box<dyn StdError + Send + Sync>),
 }
 
 impl Display for Error {
@@ -53,6 +55,7 @@ impl Display for Error {
             Error::FilterFailed(message) => {
                 write!(f, "could not apply filter: {message}")
             }
+            Error::RenderError(err) => write!(f, "could not render notification template: {err}"),
         }
     }
 }
@@ -66,6 +69,7 @@ impl StdError for Error {
             Error::TargetDoesNotExist(_) => None,
             Error::TargetTestFailed(errs) => Some(&*errs[0]),
             Error::FilterFailed(_) => None,
+            Error::RenderError(err) => Some(&**err),
         }
     }
 }

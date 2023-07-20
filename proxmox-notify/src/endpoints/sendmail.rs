@@ -1,5 +1,6 @@
-use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA, USER_SCHEMA};
-use crate::{Endpoint, Error, Notification};
+use crate::renderer::TemplateRenderer;
+use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA};
+use crate::{renderer, Endpoint, Error, Notification};
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{api, Updater};
@@ -69,12 +70,17 @@ impl Endpoint for SendmailEndpoint {
     fn send(&self, notification: &Notification) -> Result<(), Error> {
         let recipients: Vec<&str> = self.config.mailto.iter().map(String::as_str).collect();
 
-        // Note: OX has serious problems displaying text mails,
-        // so we include html as well
-        let html = format!(
-            "<html><body><pre>\n{}\n<pre>",
-            handlebars::html_escape(&notification.body)
-        );
+        let properties = notification.properties.as_ref();
+
+        let subject = renderer::render_template(
+            TemplateRenderer::Plaintext,
+            &notification.title,
+            properties,
+        )?;
+        let html_part =
+            renderer::render_template(TemplateRenderer::Html, &notification.body, properties)?;
+        let text_part =
+            renderer::render_template(TemplateRenderer::Plaintext, &notification.body, properties)?;
 
         // proxmox_sys::email::sendmail will set the author to
         // "Proxmox Backup Server" if it is not set.
@@ -82,9 +88,9 @@ impl Endpoint for SendmailEndpoint {
 
         proxmox_sys::email::sendmail(
             &recipients,
-            &notification.title,
-            Some(&notification.body),
-            Some(&html),
+            &subject,
+            Some(&text_part),
+            Some(&html_part),
             self.config.from_address.as_deref(),
             author,
         )
