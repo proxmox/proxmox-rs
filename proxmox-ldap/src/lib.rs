@@ -177,30 +177,22 @@ impl Connection {
                 .await?
                 .success()
                 .context("LDAP bind failed, bind_dn or password could be incorrect")?;
+        }
 
-            let (_, _) = ldap
-                .search(
-                    &self.config.base_dn,
-                    Scope::Subtree,
-                    "(objectClass=*)",
-                    vec!["*"],
-                )
-                .await?
-                .success()
-                .context("Could not search LDAP realm, base_dn could be incorrect")?;
+        // only search base to make sure the base_dn exists while avoiding most common size limits
+        let (_, _) = ldap
+            .search(
+                &self.config.base_dn,
+                Scope::Base,
+                "(objectClass=*)",
+                vec!["*"],
+            )
+            .await?
+            .success()
+            .context("Could not search LDAP realm, base_dn could be incorrect")?;
 
+        if self.config.bind_dn.is_some() {
             let _: Result<(), _> = ldap.unbind().await; // ignore errors, search succeeded already
-        } else {
-            let (_, _) = ldap
-                .search(
-                    &self.config.base_dn,
-                    Scope::Subtree,
-                    "(objectClass=*)",
-                    vec!["*"],
-                )
-                .await?
-                .success()
-                .context("Could not search LDAP realm, base_dn could be incorrect")?;
         }
 
         Ok(())
