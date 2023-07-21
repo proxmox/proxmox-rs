@@ -40,6 +40,11 @@ fn authenticate(con: &Connection, user: &str, pass: &str) -> Result<(), Error> {
     proxmox_async::runtime::block_on(con.authenticate_user(user, pass))
 }
 
+fn check_connection(config: &Config) -> Result<(), Error> {
+    let connection = Connection::new(config.clone());
+    proxmox_async::runtime::block_on(connection.check_connection())
+}
+
 fn default_config() -> Config {
     Config {
         servers: vec!["localhost".into()],
@@ -161,6 +166,28 @@ fn test_search() -> Result<(), Error> {
             .unwrap()
             .eq("User".into()));
     }
+
+    Ok(())
+}
+
+#[test]
+#[ignore]
+fn test_check_connection() -> Result<(), Error> {
+    let _glauth = GlauthServer::new("tests/assets/glauth.cfg")?;
+
+    let mut config = default_config();
+    assert!(check_connection(&config).is_ok());
+
+    config.base_dn = "dc=invalid,dc=com".into();
+    assert!(check_connection(&config).is_err());
+    config.base_dn = "dc=example,dc=com".into();
+
+    config.bind_password = Some("invalid".into());
+    assert!(check_connection(&config).is_err());
+    config.bind_password = Some("password".into());
+
+    config.bind_password = None;
+    assert!(check_connection(&config).is_err());
 
     Ok(())
 }
