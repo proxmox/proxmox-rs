@@ -14,6 +14,7 @@ pub fn set_context(context: &'static dyn Context) {
     CONTEXT.set(context).expect("context has already been set");
 }
 
+#[allow(unused)] // context is not used if all endpoint features are disabled
 pub(crate) fn context() -> &'static dyn Context {
     *CONTEXT.get().expect("context has not been yet")
 }

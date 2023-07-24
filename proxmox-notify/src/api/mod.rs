@@ -87,7 +87,8 @@ fn verify_digest(config: &Config, digest: Option<&[u8]>) -> Result<(), ApiError>
     Ok(())
 }
 
-fn ensure_endpoint_exists(config: &Config, name: &str) -> Result<(), ApiError> {
+fn ensure_endpoint_exists(#[allow(unused)] config: &Config, name: &str) -> Result<(), ApiError> {
+    #[allow(unused_mut)]
     let mut exists = false;
 
     #[cfg(feature = "sendmail")]

@@ -226,6 +226,7 @@ macro_rules! parse_endpoints_without_private_config {
 impl Bus {
     /// Instantiate notification bus from a given configuration.
     pub fn from_config(config: &Config) -> Result<Self, Error> {
+        #[allow(unused_mut)]
         let mut endpoints = HashMap::new();
 
         // Instantiate endpoints

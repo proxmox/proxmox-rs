@@ -57,6 +57,7 @@ fn config_init() -> SectionConfig {
 }
 
 fn private_config_init() -> SectionConfig {
+    #[allow(unused_mut)]
     let mut config = SectionConfig::new(&BACKEND_NAME_SCHEMA);
 
     #[cfg(feature = "gotify")]
