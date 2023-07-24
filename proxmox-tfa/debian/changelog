@@ -1,3 +1,9 @@
+rust-proxmox-tfa (4.0.5) bookworm; urgency=medium
+
+  * update to proxmox-schema 2.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 24 Jul 2023 10:55:40 +0200
+
 rust-proxmox-tfa (4.0.4) bookworm; urgency=medium
 
   * make totp algorithm parsing case insensitive to be less strict in case
