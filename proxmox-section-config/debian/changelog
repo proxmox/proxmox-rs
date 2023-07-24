@@ -1,3 +1,21 @@
+rust-proxmox-section-config (2.0.0-1) bookworm; urgency=medium
+
+  * various clippy fixes
+
+  * use workspace variables in Cargo.toml
+
+  * update two Debian 12 bookworm version
+
+  * add test for array schema
+
+  * fix handling of array schema in unknown sections
+
+  * make ReST dump reproducible
+
+  * derive Clone for SectionConfigData
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 24 Jul 2023 10:58:43 +0200
+
 rust-proxmox-section-config (1.0.2-1) stable; urgency=medium
 
   * support allowing unknown section types for future-proof parsing when only
