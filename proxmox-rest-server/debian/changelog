@@ -1,3 +1,13 @@
+rust-proxmox-rest-server (0.4.2-1) bookworm; urgency=medium
+
+  * remove full static file path from error messages
+
+  * update to proxomx-schema 2.0
+
+  * update to proxomx-router 2.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 24 Jul 2023 10:52:16 +0200
+
 rust-proxmox-rest-server (0.4.1-1) bookworm; urgency=medium
 
   * rest: remove full static file path from error messages to avoid triggering

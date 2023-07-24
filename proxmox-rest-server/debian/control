@@ -22,10 +22,10 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-compression-0.2+default-dev <!nocheck>,
  librust-proxmox-io-1+default-dev <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~) <!nocheck>,
- librust-proxmox-router-1+default-dev (>= 1.3.1-~~) <!nocheck>,
- librust-proxmox-schema-1+api-macro-dev (>= 1.3.7-~~) <!nocheck>,
- librust-proxmox-schema-1+default-dev (>= 1.3.7-~~) <!nocheck>,
- librust-proxmox-schema-1+upid-api-impl-dev (>= 1.3.7-~~) <!nocheck>,
+ librust-proxmox-router-2+default-dev <!nocheck>,
+ librust-proxmox-schema-2+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-2+default-dev <!nocheck>,
+ librust-proxmox-schema-2+upid-api-impl-dev <!nocheck>,
  librust-proxmox-sys-0.5+default-dev <!nocheck>,
  librust-proxmox-sys-0.5+logrotate-dev <!nocheck>,
  librust-proxmox-sys-0.5+timer-dev <!nocheck>,
@@ -69,10 +69,10 @@ Depends:
  librust-proxmox-compression-0.2+default-dev,
  librust-proxmox-io-1+default-dev,
  librust-proxmox-lang-1+default-dev (>= 1.1-~~),
- librust-proxmox-router-1+default-dev (>= 1.3.1-~~),
- librust-proxmox-schema-1+api-macro-dev (>= 1.3.7-~~),
- librust-proxmox-schema-1+default-dev (>= 1.3.7-~~),
- librust-proxmox-schema-1+upid-api-impl-dev (>= 1.3.7-~~),
+ librust-proxmox-router-2+default-dev,
+ librust-proxmox-schema-2+api-macro-dev,
+ librust-proxmox-schema-2+default-dev,
+ librust-proxmox-schema-2+upid-api-impl-dev,
  librust-proxmox-sys-0.5+default-dev,
  librust-proxmox-sys-0.5+logrotate-dev,
  librust-proxmox-sys-0.5+timer-dev,
@@ -97,8 +97,8 @@ Provides:
  librust-proxmox-rest-server-0+default-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.4-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.4+default-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.4.1-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.4.1+default-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.4.2-dev (= ${binary:Version}),
+ librust-proxmox-rest-server-0.4.2+default-dev (= ${binary:Version})
 Description: REST server implementation - Rust source code
  This package contains the source for the Rust proxmox-rest-server crate,
  packaged by debcargo for use with cargo and dh-cargo.
@@ -114,7 +114,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+rate-limited-stream-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.4+rate-limited-stream-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.4.1+rate-limited-stream-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.4.2+rate-limited-stream-dev (= ${binary:Version})
 Description: REST server implementation - feature "rate-limited-stream"
  This metapackage enables feature "rate-limited-stream" for the Rust proxmox-
  rest-server crate, by pulling in any additional dependencies needed by that
@@ -130,7 +130,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+templates-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.4+templates-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.4.1+templates-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.4.2+templates-dev (= ${binary:Version})
 Description: REST server implementation - feature "templates"
  This metapackage enables feature "templates" for the Rust proxmox-rest-server
  crate, by pulling in any additional dependencies needed by that feature.
