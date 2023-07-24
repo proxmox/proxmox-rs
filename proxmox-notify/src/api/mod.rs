@@ -226,12 +226,13 @@ fn get_referenced_entities(config: &Config, entity: &str) -> HashSet<String> {
 mod test_helpers {
     use crate::Config;
 
+    #[allow(unused)]
     pub fn empty_config() -> Config {
         Config::new("", "").unwrap()
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, gotify, sendmail))]
 mod tests {
     use super::*;
     use crate::endpoints::gotify::{GotifyConfig, GotifyPrivateConfig};
