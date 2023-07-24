@@ -1,3 +1,9 @@
+rust-proxmox-subscription (0.4.1-1) bookworm; urgency=medium
+
+  * update to proxmox-schema 2.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 24 Jul 2023 10:56:53 +0200
+
 rust-proxmox-subscription (0.4.0-1) bookworm; urgency=medium
 
   * update proxmox-http dependency to 0.9.0
