@@ -1,3 +1,9 @@
+rust-proxmox-auth-api (0.3.1) bookworm; urgency=medium
+
+  * update to proxmox-schema and proxmox-router 2.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 24 Jul 2023 11:02:33 +0200
+
 rust-proxmox-auth-api (0.3.0) bookworm; urgency=medium
 
   * drop pam crate dependency
