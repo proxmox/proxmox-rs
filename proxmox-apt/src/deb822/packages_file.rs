@@ -13,7 +13,7 @@ pub struct PackagesFileRaw {
     pub package: String,
     pub source: Option<String>,
     pub version: String,
-    pub section: String,
+    pub section: Option<String>,
     pub priority: String,
     pub architecture: String,
     pub essential: Option<String>,
@@ -84,7 +84,7 @@ impl TryFrom<PackagesFileRaw> for PackageEntry {
             size: value.size.parse::<usize>()?,
             installed_size,
             checksums: CheckSums::default(),
-            section: value.section,
+            section: value.section.unwrap_or("unknown".to_owned()),
         };
 
         if let Some(md5) = value.md5_sum {
