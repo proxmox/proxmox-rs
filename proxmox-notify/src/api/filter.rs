@@ -1,63 +1,69 @@
-use crate::api::ApiError;
+use crate::api::http_err;
 use crate::filter::{DeleteableFilterProperty, FilterConfig, FilterConfigUpdater, FILTER_TYPENAME};
 use crate::Config;
+use proxmox_http_error::HttpError;
 
 /// Get a list of all filters
 ///
 /// The caller is responsible for any needed permission checks.
-/// Returns a list of all filters or an `ApiError` if the config is erroneous.
-pub fn get_filters(config: &Config) -> Result<Vec<FilterConfig>, ApiError> {
+/// Returns a list of all filters or a `HttpError` if the config is
+/// (`500 Internal server error`).
+pub fn get_filters(config: &Config) -> Result<Vec<FilterConfig>, HttpError> {
     config
         .config
         .convert_to_typed_array(FILTER_TYPENAME)
-        .map_err(|e| ApiError::internal_server_error("Could not fetch filters", Some(e.into())))
+        .map_err(|e| http_err!(INTERNAL_SERVER_ERROR, "Could not fetch filters: {e}"))
 }
 
 /// Get filter with given `name`
 ///
 /// The caller is responsible for any needed permission checks.
-/// Returns the endpoint or an `ApiError` if the filter was not found.
-pub fn get_filter(config: &Config, name: &str) -> Result<FilterConfig, ApiError> {
+/// Returns the endpoint or a `HttpError` if the filter was not found (`404 Not found`).
+pub fn get_filter(config: &Config, name: &str) -> Result<FilterConfig, HttpError> {
     config
         .config
         .lookup(FILTER_TYPENAME, name)
-        .map_err(|_| ApiError::not_found(format!("filter '{name}' not found"), None))
+        .map_err(|_| http_err!(NOT_FOUND, "filter '{name}' not found"))
 }
 
 /// Add new notification filter.
 ///
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
-/// Returns an `ApiError` if a filter with the same name already exists or
-/// if the filter could not be saved.
-pub fn add_filter(config: &mut Config, filter_config: &FilterConfig) -> Result<(), ApiError> {
+/// Returns a `HttpError` if:
+///   - an entity with the same name already exists (`400 Bad request`)
+///   - the configuration could not be saved (`500 Internal server error`)
+pub fn add_filter(config: &mut Config, filter_config: &FilterConfig) -> Result<(), HttpError> {
     super::ensure_unique(config, &filter_config.name)?;
 
     config
         .config
         .set_data(&filter_config.name, FILTER_TYPENAME, filter_config)
         .map_err(|e| {
-            ApiError::internal_server_error(
-                format!("could not save filter '{}'", filter_config.name),
-                Some(e.into()),
+            http_err!(
+                INTERNAL_SERVER_ERROR,
+                "could not save filter '{}': {e}",
+                filter_config.name
             )
         })?;
 
     Ok(())
 }
 
-/// Update existing filter
+/// Update existing notification filter
 ///
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
-/// Returns an `ApiError` if the config could not be saved.
+/// Returns a `HttpError` if:
+///   - the configuration could not be saved (`500 Internal server error`)
+///   - an invalid digest was passed (`400 Bad request`)
 pub fn update_filter(
     config: &mut Config,
     name: &str,
     filter_updater: &FilterConfigUpdater,
     delete: Option<&[DeleteableFilterProperty]>,
     digest: Option<&[u8]>,
-) -> Result<(), ApiError> {
+) -> Result<(), HttpError> {
     super::verify_digest(config, digest)?;
 
     let mut filter = get_filter(config, name)?;
@@ -92,12 +98,7 @@ pub fn update_filter(
     config
         .config
         .set_data(name, FILTER_TYPENAME, &filter)
-        .map_err(|e| {
-            ApiError::internal_server_error(
-                format!("could not save filter '{name}'"),
-                Some(e.into()),
-            )
-        })?;
+        .map_err(|e| http_err!(INTERNAL_SERVER_ERROR, "could not save filter '{name}': {e}"))?;
 
     Ok(())
 }
@@ -106,8 +107,10 @@ pub fn update_filter(
 ///
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
-/// Returns an `ApiError` if the filter does not exist.
-pub fn delete_filter(config: &mut Config, name: &str) -> Result<(), ApiError> {
+/// Returns a `HttpError` if:
+///   - the entity does not exist (`404 Not found`)
+///   - the filter is still referenced by another entity (`400 Bad request`)
+pub fn delete_filter(config: &mut Config, name: &str) -> Result<(), HttpError> {
     // Check if the filter exists
     let _ = get_filter(config, name)?;
     super::ensure_unused(config, name)?;
@@ -142,14 +145,14 @@ filter: filter2
     }
 
     #[test]
-    fn test_update_not_existing_returns_error() -> Result<(), ApiError> {
+    fn test_update_not_existing_returns_error() -> Result<(), HttpError> {
         let mut config = empty_config();
         assert!(update_filter(&mut config, "test", &Default::default(), None, None).is_err());
         Ok(())
     }
 
     #[test]
-    fn test_update_invalid_digest_returns_error() -> Result<(), ApiError> {
+    fn test_update_invalid_digest_returns_error() -> Result<(), HttpError> {
         let mut config = config_with_two_filters();
         assert!(update_filter(
             &mut config,
@@ -164,7 +167,7 @@ filter: filter2
     }
 
     #[test]
-    fn test_filter_update() -> Result<(), ApiError> {
+    fn test_filter_update() -> Result<(), HttpError> {
         let mut config = config_with_two_filters();
 
         let digest = config.digest;
@@ -215,7 +218,7 @@ filter: filter2
     }
 
     #[test]
-    fn test_filter_delete() -> Result<(), ApiError> {
+    fn test_filter_delete() -> Result<(), HttpError> {
         let mut config = config_with_two_filters();
 
         delete_filter(&mut config, "filter1")?;

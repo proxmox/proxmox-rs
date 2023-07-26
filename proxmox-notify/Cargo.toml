@@ -14,6 +14,7 @@ log.workspace = true
 once_cell.workspace = true
 openssl.workspace = true
 proxmox-http = { workspace = true, features = ["client-sync"], optional = true }
+proxmox-http-error.workspace = true
 proxmox-human-byte.workspace = true
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"]}
 proxmox-section-config = { workspace = true }

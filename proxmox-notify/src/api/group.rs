@@ -1,43 +1,47 @@
-use crate::api::ApiError;
+use proxmox_http_error::HttpError;
+
+use crate::api::{http_bail, http_err};
 use crate::group::{DeleteableGroupProperty, GroupConfig, GroupConfigUpdater, GROUP_TYPENAME};
 use crate::Config;
 
 /// Get all notification groups
 ///
 /// The caller is responsible for any needed permission checks.
-/// Returns a list of all groups or an `ApiError` if the config is erroneous.
-pub fn get_groups(config: &Config) -> Result<Vec<GroupConfig>, ApiError> {
+/// Returns a list of all groups or a `HttpError` if the config is
+/// erroneous (`500 Internal server error`).
+pub fn get_groups(config: &Config) -> Result<Vec<GroupConfig>, HttpError> {
     config
         .config
         .convert_to_typed_array(GROUP_TYPENAME)
-        .map_err(|e| ApiError::internal_server_error("Could not fetch groups", Some(e.into())))
+        .map_err(|e| http_err!(INTERNAL_SERVER_ERROR, "Could not fetch groups: {e}"))
 }
 
 /// Get group with given `name`
 ///
 /// The caller is responsible for any needed permission checks.
-/// Returns the endpoint or an `ApiError` if the group was not found.
-pub fn get_group(config: &Config, name: &str) -> Result<GroupConfig, ApiError> {
+/// Returns the endpoint or an `HttpError` if the group was not found (`404 Not found`).
+pub fn get_group(config: &Config, name: &str) -> Result<GroupConfig, HttpError> {
     config
         .config
         .lookup(GROUP_TYPENAME, name)
-        .map_err(|_| ApiError::not_found(format!("group '{name}' not found"), None))
+        .map_err(|_| http_err!(NOT_FOUND, "group '{name}' not found"))
 }
 
 /// Add a new group.
 ///
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
-/// Returns an `ApiError` if a group with the same name already exists, or
-/// if the group could not be saved
-pub fn add_group(config: &mut Config, group_config: &GroupConfig) -> Result<(), ApiError> {
+/// Returns a `HttpError` if:
+///   - an entity with the same name already exists (`400 Bad request`)
+///   - a referenced filter does not exist (`400 Bad request`)
+///   - no endpoints were passed (`400 Bad request`)
+///   - referenced endpoints do not exist (`404 Not found`)
+///   - the configuration could not be saved (`500 Internal server error`)
+pub fn add_group(config: &mut Config, group_config: &GroupConfig) -> Result<(), HttpError> {
     super::ensure_unique(config, &group_config.name)?;
 
     if group_config.endpoint.is_empty() {
-        return Err(ApiError::bad_request(
-            "group must contain at least one endpoint",
-            None,
-        ));
+        http_bail!(BAD_REQUEST, "group must contain at least one endpoint",);
     }
 
     if let Some(filter) = &group_config.filter {
@@ -51,27 +55,31 @@ pub fn add_group(config: &mut Config, group_config: &GroupConfig) -> Result<(), 
         .config
         .set_data(&group_config.name, GROUP_TYPENAME, group_config)
         .map_err(|e| {
-            ApiError::internal_server_error(
-                format!("could not save group '{}'", group_config.name),
-                Some(e.into()),
+            http_err!(
+                INTERNAL_SERVER_ERROR,
+                "could not save group '{}': {e}",
+                group_config.name
             )
-        })?;
-
-    Ok(())
+        })
 }
 
 /// Update existing group
 ///
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
-/// Returns an `ApiError` if the config could not be saved.
+/// Returns a `HttpError` if:
+///   - a referenced filter does not exist (`400 Bad request`)
+///   - an invalid digest was passed (`400 Bad request`)
+///   - no endpoints were passed (`400 Bad request`)
+///   - referenced endpoints do not exist (`404 Not found`)
+///   - the configuration could not be saved (`500 Internal server error`)
 pub fn update_group(
     config: &mut Config,
     name: &str,
     updater: &GroupConfigUpdater,
     delete: Option<&[DeleteableGroupProperty]>,
     digest: Option<&[u8]>,
-) -> Result<(), ApiError> {
+) -> Result<(), HttpError> {
     super::verify_digest(config, digest)?;
 
     let mut group = get_group(config, name)?;
@@ -88,10 +96,7 @@ pub fn update_group(
     if let Some(endpoints) = &updater.endpoint {
         super::ensure_endpoints_exist(config, endpoints)?;
         if endpoints.is_empty() {
-            return Err(ApiError::bad_request(
-                "group must contain at least one endpoint",
-                None,
-            ));
+            http_bail!(BAD_REQUEST, "group must contain at least one endpoint",);
         }
         group.endpoint = endpoints.iter().map(Into::into).collect()
     }
@@ -109,22 +114,15 @@ pub fn update_group(
     config
         .config
         .set_data(name, GROUP_TYPENAME, &group)
-        .map_err(|e| {
-            ApiError::internal_server_error(
-                format!("could not save group '{name}'"),
-                Some(e.into()),
-            )
-        })?;
-
-    Ok(())
+        .map_err(|e| http_err!(INTERNAL_SERVER_ERROR, "could not save group '{name}': {e}"))
 }
 
 /// Delete existing group
 ///
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
-/// Returns an `ApiError` if the group does not exist.
-pub fn delete_group(config: &mut Config, name: &str) -> Result<(), ApiError> {
+/// Returns a `HttpError` if the group does not exist (`404 Not found`).
+pub fn delete_group(config: &mut Config, name: &str) -> Result<(), HttpError> {
     // Check if the group exists
     let _ = get_group(config, name)?;
 
@@ -141,7 +139,7 @@ mod tests {
     use crate::api::sendmail::tests::add_sendmail_endpoint_for_test;
     use crate::api::test_helpers::*;
 
-    fn add_default_group(config: &mut Config) -> Result<(), ApiError> {
+    fn add_default_group(config: &mut Config) -> Result<(), HttpError> {
         add_sendmail_endpoint_for_test(config, "test")?;
 
         add_group(
@@ -173,14 +171,14 @@ mod tests {
     }
 
     #[test]
-    fn test_add_group() -> Result<(), ApiError> {
+    fn test_add_group() -> Result<(), HttpError> {
         let mut config = empty_config();
         assert!(add_default_group(&mut config).is_ok());
         Ok(())
     }
 
     #[test]
-    fn test_update_group_fails_if_endpoint_does_not_exist() -> Result<(), ApiError> {
+    fn test_update_group_fails_if_endpoint_does_not_exist() -> Result<(), HttpError> {
         let mut config = empty_config();
         add_default_group(&mut config)?;
 
@@ -199,7 +197,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_group_fails_if_digest_invalid() -> Result<(), ApiError> {
+    fn test_update_group_fails_if_digest_invalid() -> Result<(), HttpError> {
         let mut config = empty_config();
         add_default_group(&mut config)?;
 
@@ -215,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_group() -> Result<(), ApiError> {
+    fn test_update_group() -> Result<(), HttpError> {
         let mut config = empty_config();
         add_default_group(&mut config)?;
 
@@ -249,7 +247,7 @@ mod tests {
     }
 
     #[test]
-    fn test_group_delete() -> Result<(), ApiError> {
+    fn test_group_delete() -> Result<(), HttpError> {
         let mut config = empty_config();
         add_default_group(&mut config)?;
 

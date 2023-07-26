@@ -1,9 +1,6 @@
-use std::collections::HashSet;
-use std::error::Error as StdError;
-use std::fmt::Display;
-
 use crate::Config;
-use serde::Serialize;
+use proxmox_http_error::HttpError;
+use std::collections::HashSet;
 
 pub mod common;
 pub mod filter;
@@ -13,81 +10,44 @@ pub mod group;
 #[cfg(feature = "sendmail")]
 pub mod sendmail;
 
-#[derive(Debug, Serialize)]
-pub struct ApiError {
-    /// HTTP Error code
-    code: u16,
-    /// Error message
-    message: String,
-    #[serde(skip_serializing)]
-    /// The underlying cause of the error
-    source: Option<Box<dyn StdError + Send + Sync + 'static>>,
+// We have our own, local versions of http_err and http_bail, because
+// we don't want to wrap the error in anyhow::Error. If we were to do that,
+// we would need to downcast in the perlmod bindings, since we need
+// to return `HttpError` from there.
+#[macro_export]
+macro_rules! http_err {
+    ($status:ident, $($fmt:tt)+) => {{
+        proxmox_http_error::HttpError::new(
+            proxmox_http_error::StatusCode::$status,
+            format!($($fmt)+)
+        )
+    }};
 }
 
-impl ApiError {
-    fn new<S: AsRef<str>>(
-        message: S,
-        code: u16,
-        source: Option<Box<dyn StdError + Send + Sync + 'static>>,
-    ) -> Self {
-        Self {
-            message: message.as_ref().into(),
-            code,
-            source,
-        }
-    }
-
-    pub fn bad_request<S: AsRef<str>>(
-        message: S,
-        source: Option<Box<dyn StdError + Send + Sync + 'static>>,
-    ) -> Self {
-        Self::new(message, 400, source)
-    }
-
-    pub fn not_found<S: AsRef<str>>(
-        message: S,
-        source: Option<Box<dyn StdError + Send + Sync + 'static>>,
-    ) -> Self {
-        Self::new(message, 404, source)
-    }
-
-    pub fn internal_server_error<S: AsRef<str>>(
-        message: S,
-        source: Option<Box<dyn StdError + Send + Sync + 'static>>,
-    ) -> Self {
-        Self::new(message, 500, source)
-    }
+#[macro_export]
+macro_rules! http_bail {
+    ($status:ident, $($fmt:tt)+) => {{
+        return Err($crate::api::http_err!($status, $($fmt)+));
+    }};
 }
 
-impl Display for ApiError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("{} {}", self.code, self.message))
-    }
-}
+pub use http_bail;
+pub use http_err;
 
-impl StdError for ApiError {
-    fn source(&self) -> Option<&(dyn StdError + 'static)> {
-        match &self.source {
-            None => None,
-            Some(source) => Some(&**source),
-        }
-    }
-}
-
-fn verify_digest(config: &Config, digest: Option<&[u8]>) -> Result<(), ApiError> {
+fn verify_digest(config: &Config, digest: Option<&[u8]>) -> Result<(), HttpError> {
     if let Some(digest) = digest {
         if config.digest != *digest {
-            return Err(ApiError::bad_request(
-                "detected modified configuration - file changed by other user? Try again.",
-                None,
-            ));
+            http_bail!(
+                BAD_REQUEST,
+                "detected modified configuration - file changed by other user? Try again."
+            );
         }
     }
 
     Ok(())
 }
 
-fn ensure_endpoint_exists(#[allow(unused)] config: &Config, name: &str) -> Result<(), ApiError> {
+fn ensure_endpoint_exists(#[allow(unused)] config: &Config, name: &str) -> Result<(), HttpError> {
     #[allow(unused_mut)]
     let mut exists = false;
 
@@ -101,16 +61,16 @@ fn ensure_endpoint_exists(#[allow(unused)] config: &Config, name: &str) -> Resul
     }
 
     if !exists {
-        Err(ApiError::not_found(
-            format!("endpoint '{name}' does not exist"),
-            None,
-        ))
+        http_bail!(NOT_FOUND, "endpoint '{name}' does not exist")
     } else {
         Ok(())
     }
 }
 
-fn ensure_endpoints_exist<T: AsRef<str>>(config: &Config, endpoints: &[T]) -> Result<(), ApiError> {
+fn ensure_endpoints_exist<T: AsRef<str>>(
+    config: &Config,
+    endpoints: &[T],
+) -> Result<(), HttpError> {
     for endpoint in endpoints {
         ensure_endpoint_exists(config, endpoint.as_ref())?;
     }
@@ -118,18 +78,18 @@ fn ensure_endpoints_exist<T: AsRef<str>>(config: &Config, endpoints: &[T]) -> Re
     Ok(())
 }
 
-fn ensure_unique(config: &Config, entity: &str) -> Result<(), ApiError> {
+fn ensure_unique(config: &Config, entity: &str) -> Result<(), HttpError> {
     if config.config.sections.contains_key(entity) {
-        return Err(ApiError::bad_request(
-            format!("Cannot create '{entity}', an entity with the same name already exists"),
-            None,
-        ));
+        http_bail!(
+            BAD_REQUEST,
+            "Cannot create '{entity}', an entity with the same name already exists"
+        );
     }
 
     Ok(())
 }
 
-fn get_referrers(config: &Config, entity: &str) -> Result<HashSet<String>, ApiError> {
+fn get_referrers(config: &Config, entity: &str) -> Result<HashSet<String>, HttpError> {
     let mut referrers = HashSet::new();
 
     for group in group::get_groups(config)? {
@@ -165,16 +125,16 @@ fn get_referrers(config: &Config, entity: &str) -> Result<HashSet<String>, ApiEr
     Ok(referrers)
 }
 
-fn ensure_unused(config: &Config, entity: &str) -> Result<(), ApiError> {
+fn ensure_unused(config: &Config, entity: &str) -> Result<(), HttpError> {
     let referrers = get_referrers(config, entity)?;
 
     if !referrers.is_empty() {
         let used_by = referrers.into_iter().collect::<Vec<_>>().join(", ");
 
-        return Err(ApiError::bad_request(
-            format!("cannot delete '{entity}', referenced by: {used_by}"),
-            None,
-        ));
+        http_bail!(
+            BAD_REQUEST,
+            "cannot delete '{entity}', referenced by: {used_by}"
+        );
     }
 
     Ok(())
@@ -240,7 +200,7 @@ mod tests {
     use crate::filter::FilterConfig;
     use crate::group::GroupConfig;
 
-    fn prepare_config() -> Result<Config, ApiError> {
+    fn prepare_config() -> Result<Config, HttpError> {
         let mut config = super::test_helpers::empty_config();
 
         filter::add_filter(
@@ -316,7 +276,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_referrers_for_entity() -> Result<(), ApiError> {
+    fn test_get_referrers_for_entity() -> Result<(), HttpError> {
         let config = prepare_config().unwrap();
 
         assert_eq!(

@@ -1,4 +1,6 @@
-use crate::api::ApiError;
+use proxmox_http_error::HttpError;
+
+use crate::api::{http_bail, http_err};
 use crate::endpoints::sendmail::{
     DeleteableSendmailProperty, SendmailConfig, SendmailConfigUpdater, SENDMAIL_TYPENAME,
 };
@@ -7,32 +9,36 @@ use crate::Config;
 /// Get a list of all sendmail endpoints.
 ///
 /// The caller is responsible for any needed permission checks.
-/// Returns a list of all sendmail endpoints or an `ApiError` if the config is erroneous.
-pub fn get_endpoints(config: &Config) -> Result<Vec<SendmailConfig>, ApiError> {
+/// Returns a list of all sendmail endpoints or a `HttpError` if the config is
+/// erroneous (`500 Internal server error`).
+pub fn get_endpoints(config: &Config) -> Result<Vec<SendmailConfig>, HttpError> {
     config
         .config
         .convert_to_typed_array(SENDMAIL_TYPENAME)
-        .map_err(|e| ApiError::internal_server_error("Could not fetch endpoints", Some(e.into())))
+        .map_err(|e| http_err!(NOT_FOUND, "Could not fetch endpoints: {e}"))
 }
 
 /// Get sendmail endpoint with given `name`.
 ///
 /// The caller is responsible for any needed permission checks.
-/// Returns the endpoint or an `ApiError` if the endpoint was not found.
-pub fn get_endpoint(config: &Config, name: &str) -> Result<SendmailConfig, ApiError> {
+/// Returns the endpoint or a `HttpError` if the endpoint was not found (`404 Not found`).
+pub fn get_endpoint(config: &Config, name: &str) -> Result<SendmailConfig, HttpError> {
     config
         .config
         .lookup(SENDMAIL_TYPENAME, name)
-        .map_err(|_| ApiError::not_found(format!("endpoint '{name}' not found"), None))
+        .map_err(|_| http_err!(NOT_FOUND, "endpoint '{name}' not found"))
 }
 
 /// Add a new sendmail endpoint.
 ///
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
-/// Returns an `ApiError` if an endpoint with the same name already exists,
-/// or if the endpoint could not be saved.
-pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<(), ApiError> {
+/// Returns a `HttpError` if:
+///   - an entity with the same name already exists (`400 Bad request`)
+///   - a referenced filter does not exist (`400 Bad request`)
+///   - the configuration could not be saved (`500 Internal server error`)
+///   - mailto *and* mailto_user are both set to `None`
+pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<(), HttpError> {
     super::ensure_unique(config, &endpoint.name)?;
 
     if let Some(filter) = &endpoint.filter {
@@ -41,37 +47,39 @@ pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<()
     }
 
     if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
-        return Err(ApiError::bad_request(
-            "must at least provide one recipient, either in mailto or in mailto-user",
-            None,
-        ));
+        http_bail!(
+            BAD_REQUEST,
+            "must at least provide one recipient, either in mailto or in mailto-user"
+        );
     }
 
     config
         .config
         .set_data(&endpoint.name, SENDMAIL_TYPENAME, endpoint)
         .map_err(|e| {
-            ApiError::internal_server_error(
-                format!("could not save endpoint '{}'", endpoint.name),
-                Some(e.into()),
+            http_err!(
+                INTERNAL_SERVER_ERROR,
+                "could not save endpoint '{}': {e}",
+                endpoint.name
             )
-        })?;
-
-    Ok(())
+        })
 }
 
 /// Update existing sendmail endpoint
 ///
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
-/// Returns an `ApiError` if the config could not be saved.
+/// Returns a `HttpError` if:
+///   - a referenced filter does not exist (`400 Bad request`)
+///   - the configuration could not be saved (`500 Internal server error`)
+///   - mailto *and* mailto_user are both set to `None`
 pub fn update_endpoint(
     config: &mut Config,
     name: &str,
     updater: &SendmailConfigUpdater,
     delete: Option<&[DeleteableSendmailProperty]>,
     digest: Option<&[u8]>,
-) -> Result<(), ApiError> {
+) -> Result<(), HttpError> {
     super::verify_digest(config, digest)?;
 
     let mut endpoint = get_endpoint(config, name)?;
@@ -115,31 +123,33 @@ pub fn update_endpoint(
     }
 
     if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
-        return Err(ApiError::bad_request(
-            "must at least provide one recipient, either in mailto or in mailto-user",
-            None,
-        ));
+        http_bail!(
+            BAD_REQUEST,
+            "must at least provide one recipient, either in mailto or in mailto-user"
+        );
     }
 
     config
         .config
         .set_data(name, SENDMAIL_TYPENAME, &endpoint)
         .map_err(|e| {
-            ApiError::internal_server_error(
-                format!("could not save endpoint '{name}'"),
-                Some(e.into()),
+            http_err!(
+                INTERNAL_SERVER_ERROR,
+                "could not save endpoint '{}': {e}",
+                endpoint.name
             )
-        })?;
-
-    Ok(())
+        })
 }
 
 /// Delete existing sendmail endpoint
 ///
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
-/// Returns an `ApiError` if the endpoint does not exist.
-pub fn delete_endpoint(config: &mut Config, name: &str) -> Result<(), ApiError> {
+/// Returns a `HttpError` if:
+///   - an entity with the same name already exists (`400 Bad request`)
+///   - a referenced filter does not exist (`400 Bad request`)
+///   - the configuration could not be saved (`500 Internal server error`)
+pub fn delete_endpoint(config: &mut Config, name: &str) -> Result<(), HttpError> {
     // Check if the endpoint exists
     let _ = get_endpoint(config, name)?;
     super::ensure_unused(config, name)?;
@@ -154,7 +164,10 @@ pub mod tests {
     use super::*;
     use crate::api::test_helpers::*;
 
-    pub fn add_sendmail_endpoint_for_test(config: &mut Config, name: &str) -> Result<(), ApiError> {
+    pub fn add_sendmail_endpoint_for_test(
+        config: &mut Config,
+        name: &str,
+    ) -> Result<(), HttpError> {
         add_endpoint(
             config,
             &SendmailConfig {
@@ -173,7 +186,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_sendmail_create() -> Result<(), ApiError> {
+    fn test_sendmail_create() -> Result<(), HttpError> {
         let mut config = empty_config();
 
         assert_eq!(get_endpoints(&config)?.len(), 0);
@@ -186,7 +199,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_update_not_existing_returns_error() -> Result<(), ApiError> {
+    fn test_update_not_existing_returns_error() -> Result<(), HttpError> {
         let mut config = empty_config();
 
         assert!(update_endpoint(&mut config, "test", &Default::default(), None, None,).is_err());
@@ -195,7 +208,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_update_invalid_digest_returns_error() -> Result<(), ApiError> {
+    fn test_update_invalid_digest_returns_error() -> Result<(), HttpError> {
         let mut config = empty_config();
         add_sendmail_endpoint_for_test(&mut config, "sendmail-endpoint")?;
 
@@ -219,7 +232,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_sendmail_update() -> Result<(), ApiError> {
+    fn test_sendmail_update() -> Result<(), HttpError> {
         let mut config = empty_config();
         add_sendmail_endpoint_for_test(&mut config, "sendmail-endpoint")?;
 
@@ -275,7 +288,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_sendmail_delete() -> Result<(), ApiError> {
+    fn test_sendmail_delete() -> Result<(), HttpError> {
         let mut config = empty_config();
         add_sendmail_endpoint_for_test(&mut config, "sendmail-endpoint")?;
 
