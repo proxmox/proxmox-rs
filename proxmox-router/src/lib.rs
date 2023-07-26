@@ -17,7 +17,7 @@ mod serializable_return;
 
 #[doc(inline)]
 #[cfg(feature = "server")]
-pub use error::HttpError;
+pub use error::*;
 
 pub use permission::*;
 pub use router::*;
