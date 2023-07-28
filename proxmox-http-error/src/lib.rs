@@ -1,5 +1,6 @@
-use serde::{ser::SerializeStruct, Serialize, Serializer};
 use std::fmt;
+
+use serde::{ser::SerializeStruct, Serialize, Serializer};
 
 #[doc(hidden)]
 pub use http::StatusCode;
