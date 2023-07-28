@@ -1,3 +1,9 @@
+rust-proxmox-router (2.1.0-1) bookworm; urgency=medium
+
+  * move `HttpError` and its macros into its own crate and re-export here
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 28 Jul 2023 11:08:59 +0200
+
 rust-proxmox-router (2.0.0-1) bookworm; urgency=medium
 
   * update to Debian 12 bookworm versioning
