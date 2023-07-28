@@ -1,0 +1,5 @@
+rust-proxmox-http-error (0.1.0-1) bookworm; urgency=medium
+
+  * Initial release.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 28 Jul 2023 11:05:35 +0200

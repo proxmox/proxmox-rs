@@ -1,0 +1,37 @@
+Source: rust-proxmox-http-error
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-http-0.2+default-dev <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.6.1
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-http-error
+Rules-Requires-Root: no
+
+Package: librust-proxmox-http-error-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-http-0.2+default-dev,
+ librust-serde-1+default-dev
+Provides:
+ librust-proxmox-http-error+default-dev (= ${binary:Version}),
+ librust-proxmox-http-error-0-dev (= ${binary:Version}),
+ librust-proxmox-http-error-0+default-dev (= ${binary:Version}),
+ librust-proxmox-http-error-0.1-dev (= ${binary:Version}),
+ librust-proxmox-http-error-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-http-error-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-http-error-0.1.0+default-dev (= ${binary:Version})
+Description: Proxmox HTTP Error - Rust source code
+ This package contains the source for the Rust proxmox-http-error crate,
+ packaged by debcargo for use with cargo and dh-cargo.
