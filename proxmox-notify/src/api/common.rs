@@ -1,7 +1,7 @@
+use proxmox_http_error::HttpError;
+
 use super::http_err;
 use crate::{Bus, Config, Notification};
-
-use proxmox_http_error::HttpError;
 
 /// Send a notification to a given target.
 ///

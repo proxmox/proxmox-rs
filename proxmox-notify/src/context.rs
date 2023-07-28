@@ -1,5 +1,6 @@
-use once_cell::sync::OnceCell;
 use std::fmt::Debug;
+
+use once_cell::sync::OnceCell;
 
 pub trait Context: Send + Sync + Debug {
     fn lookup_email_for_user(&self, user: &str) -> Option<String>;

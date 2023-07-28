@@ -1,7 +1,9 @@
-use crate::schema::ENTITY_NAME_SCHEMA;
+use serde::{Deserialize, Serialize};
+
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{api, Updater};
-use serde::{Deserialize, Serialize};
+
+use crate::schema::ENTITY_NAME_SCHEMA;
 
 pub(crate) const GROUP_TYPENAME: &str = "group";
 

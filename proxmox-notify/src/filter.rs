@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+
+use serde::{Deserialize, Serialize};
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{api, Updater};

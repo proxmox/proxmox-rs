@@ -1,5 +1,3 @@
-use crate::define_helper_with_prefix_and_postfix;
-use crate::renderer::BlockRenderFunctions;
 use handlebars::{
     Context, Handlebars, Helper, HelperResult, Output, RenderContext,
     RenderError as HandlebarsRenderError,
@@ -7,6 +5,8 @@ use handlebars::{
 use serde_json::Value;
 
 use super::{table::Table, value_to_string};
+use crate::define_helper_with_prefix_and_postfix;
+use crate::renderer::BlockRenderFunctions;
 
 fn render_html_table(
     h: &Helper,

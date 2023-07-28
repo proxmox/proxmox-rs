@@ -1,12 +1,14 @@
+use std::collections::HashSet;
+
+use serde::{Deserialize, Serialize};
+
+use proxmox_schema::api_types::COMMENT_SCHEMA;
+use proxmox_schema::{api, Updater};
+
 use crate::context::context;
 use crate::renderer::TemplateRenderer;
 use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA, USER_SCHEMA};
 use crate::{renderer, Endpoint, Error, Notification};
-use std::collections::HashSet;
-
-use proxmox_schema::api_types::COMMENT_SCHEMA;
-use proxmox_schema::{api, Updater};
-use serde::{Deserialize, Serialize};
 
 pub(crate) const SENDMAIL_TYPENAME: &str = "sendmail";
 

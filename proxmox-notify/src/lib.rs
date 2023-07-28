@@ -1,24 +1,27 @@
 use std::collections::HashMap;
+use std::error::Error as StdError;
 use std::fmt::Display;
 
-use filter::{FilterConfig, FilterMatcher, FILTER_TYPENAME};
-use group::{GroupConfig, GROUP_TYPENAME};
-use proxmox_schema::api;
-use proxmox_section_config::SectionConfigData;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_json::Value;
 
-use std::error::Error as StdError;
+use proxmox_schema::api;
+use proxmox_section_config::SectionConfigData;
+
+pub mod filter;
+use filter::{FilterConfig, FilterMatcher, FILTER_TYPENAME};
+
+pub mod group;
+use group::{GroupConfig, GROUP_TYPENAME};
 
 pub mod api;
-mod config;
 pub mod context;
 pub mod endpoints;
-pub mod filter;
-pub mod group;
 pub mod renderer;
 pub mod schema;
+
+mod config;
 
 #[derive(Debug)]
 pub enum Error {

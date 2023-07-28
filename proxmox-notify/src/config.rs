@@ -1,4 +1,5 @@
 use lazy_static::lazy_static;
+
 use proxmox_schema::{ApiType, ObjectSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
 

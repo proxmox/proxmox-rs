@@ -1,17 +1,17 @@
 use std::collections::HashMap;
 
-use crate::renderer::TemplateRenderer;
-use crate::schema::ENTITY_NAME_SCHEMA;
-use crate::{renderer, Endpoint, Error, Notification, Severity};
-
-use proxmox_schema::api_types::COMMENT_SCHEMA;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::context::context;
 use proxmox_http::client::sync::Client;
 use proxmox_http::{HttpClient, HttpOptions, ProxyConfig};
+use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{api, Updater};
+
+use crate::context::context;
+use crate::renderer::TemplateRenderer;
+use crate::schema::ENTITY_NAME_SCHEMA;
+use crate::{renderer, Endpoint, Error, Notification, Severity};
 
 fn severity_to_priority(level: Severity) -> u32 {
     match level {

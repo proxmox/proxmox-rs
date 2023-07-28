@@ -1,13 +1,14 @@
-use crate::define_helper_with_prefix_and_postfix;
-use crate::renderer::BlockRenderFunctions;
+use std::collections::HashMap;
+
 use handlebars::{
     Context, Handlebars, Helper, HelperResult, Output, RenderContext,
     RenderError as HandlebarsRenderError,
 };
 use serde_json::Value;
-use std::collections::HashMap;
 
 use super::{table::Table, value_to_string};
+use crate::define_helper_with_prefix_and_postfix;
+use crate::renderer::BlockRenderFunctions;
 
 fn optimal_column_widths(table: &Table) -> HashMap<&str, usize> {
     let mut widths = HashMap::new();

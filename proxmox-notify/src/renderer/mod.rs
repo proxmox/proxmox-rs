@@ -1,17 +1,18 @@
 //! Module for rendering notification templates.
 
+use std::time::Duration;
+
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext,
     RenderError as HandlebarsRenderError,
 };
-use std::time::Duration;
-
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::Error;
 use proxmox_human_byte::HumanByte;
 use proxmox_time::TimeSpan;
+
+use crate::Error;
 
 mod html;
 mod plaintext;

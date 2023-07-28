@@ -1,7 +1,8 @@
+use proxmox_http_error::HttpError;
+
 use crate::api::http_err;
 use crate::filter::{DeleteableFilterProperty, FilterConfig, FilterConfigUpdater, FILTER_TYPENAME};
 use crate::Config;
-use proxmox_http_error::HttpError;
 
 /// Get a list of all filters
 ///
