@@ -1,3 +1,11 @@
+rust-proxmox-notify (0.2.0-1) bookworm; urgency=medium
+
+  * fix build warnings and tests when the default features are disabled
+
+  * replace `ApiError` with `HttpError` from proxmox-htt-perror
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 28 Jul 2023 11:47:51 +0200
+
 rust-proxmox-notify (0.1.0-1) bookworm; urgency=medium
 
   * Initial release.

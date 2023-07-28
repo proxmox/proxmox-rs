@@ -13,6 +13,7 @@ Build-Depends: debhelper (>= 12),
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-proxmox-http-0.9+client-sync-dev <!nocheck>,
  librust-proxmox-http-0.9+default-dev <!nocheck>,
+ librust-proxmox-http-error-0.1+default-dev <!nocheck>,
  librust-proxmox-human-byte-0.1+default-dev <!nocheck>,
  librust-proxmox-schema-2+api-macro-dev <!nocheck>,
  librust-proxmox-schema-2+api-types-dev <!nocheck>,
@@ -41,6 +42,7 @@ Depends:
  librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-once-cell-1+default-dev (>= 1.3.1-~~),
  librust-openssl-0.10+default-dev,
+ librust-proxmox-http-error-0.1+default-dev,
  librust-proxmox-human-byte-0.1+default-dev,
  librust-proxmox-schema-2+api-macro-dev,
  librust-proxmox-schema-2+api-types-dev,
@@ -58,8 +60,8 @@ Suggests:
  librust-proxmox-notify+sendmail-dev (= ${binary:Version})
 Provides:
  librust-proxmox-notify-0-dev (= ${binary:Version}),
- librust-proxmox-notify-0.1-dev (= ${binary:Version}),
- librust-proxmox-notify-0.1.0-dev (= ${binary:Version})
+ librust-proxmox-notify-0.2-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.2.0-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - Rust source code
  This package contains the source for the Rust proxmox-notify crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -74,8 +76,8 @@ Depends:
  librust-proxmox-notify+gotify-dev (= ${binary:Version})
 Provides:
  librust-proxmox-notify-0+default-dev (= ${binary:Version}),
- librust-proxmox-notify-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-notify-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-notify-0.2+default-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.2.0+default-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - feature "default"
  This metapackage enables feature "default" for the Rust proxmox-notify crate,
  by pulling in any additional dependencies needed by that feature.
@@ -90,8 +92,8 @@ Depends:
  librust-proxmox-http-0.9+default-dev
 Provides:
  librust-proxmox-notify-0+gotify-dev (= ${binary:Version}),
- librust-proxmox-notify-0.1+gotify-dev (= ${binary:Version}),
- librust-proxmox-notify-0.1.0+gotify-dev (= ${binary:Version})
+ librust-proxmox-notify-0.2+gotify-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.2.0+gotify-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - feature "gotify"
  This metapackage enables feature "gotify" for the Rust proxmox-notify crate, by
  pulling in any additional dependencies needed by that feature.
@@ -105,8 +107,8 @@ Depends:
  librust-proxmox-sys-0.5+default-dev
 Provides:
  librust-proxmox-notify-0+sendmail-dev (= ${binary:Version}),
- librust-proxmox-notify-0.1+sendmail-dev (= ${binary:Version}),
- librust-proxmox-notify-0.1.0+sendmail-dev (= ${binary:Version})
+ librust-proxmox-notify-0.2+sendmail-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.2.0+sendmail-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - feature "sendmail"
  This metapackage enables feature "sendmail" for the Rust proxmox-notify crate,
  by pulling in any additional dependencies needed by that feature.
