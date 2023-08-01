@@ -128,10 +128,17 @@ impl Login {
     ///
     /// On success, this will either yield an [`Authentication`] or a [`SecondFactorChallenge`] if
     /// Two-Factor-Authentication is required.
-    pub fn response(&self, body: &str) -> Result<TicketResult, ResponseError> {
+    pub fn response<T: ?Sized + AsRef<[u8]>>(
+        &self,
+        body: &T,
+    ) -> Result<TicketResult, ResponseError> {
+        self.response_bytes(body.as_ref())
+    }
+
+    fn response_bytes(&self, body: &[u8]) -> Result<TicketResult, ResponseError> {
         use ticket::TicketResponse;
 
-        let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_str(body)?;
+        let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_slice(body)?;
         let response = response.data.ok_or("missing response data")?;
 
         if response.username != self.userid {
@@ -271,8 +278,15 @@ impl SecondFactorChallenge {
     }
 
     /// Deal with the API's response object to extract the ticket.
-    pub fn response(&self, body: &str) -> Result<Authentication, ResponseError> {
-        let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_str(body)?;
+    pub fn response<T: ?Sized + AsRef<[u8]>>(
+        &self,
+        body: &T,
+    ) -> Result<Authentication, ResponseError> {
+        self.response_bytes(body.as_ref())
+    }
+
+    fn response_bytes(&self, body: &[u8]) -> Result<Authentication, ResponseError> {
+        let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_slice(body)?;
         let response = response.data.ok_or("missing response data")?;
 
         if response.username != self.userid {
