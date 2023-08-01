@@ -1,0 +1,98 @@
+Source: rust-proxmox-client
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-base64-0.13+default-dev <!nocheck>,
+ librust-http-0.2+default-dev <!nocheck>,
+ librust-once-cell-1+default-dev (>= 1.3.1-~~) <!nocheck>,
+ librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
+ librust-proxmox-login-0.1+default-dev <!nocheck>,
+ librust-proxmox-login-0.1+http-dev <!nocheck>,
+ librust-proxmox-schema-2+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-2+default-dev <!nocheck>,
+ librust-proxmox-section-config-2+default-dev <!nocheck>,
+ librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>,
+ librust-serde-plain-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.6.1
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-client
+Rules-Requires-Root: no
+
+Package: librust-proxmox-client-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-base64-0.13+default-dev,
+ librust-http-0.2+default-dev,
+ librust-once-cell-1+default-dev (>= 1.3.1-~~),
+ librust-percent-encoding-2+default-dev (>= 2.1-~~),
+ librust-proxmox-login-0.1+default-dev,
+ librust-proxmox-login-0.1+http-dev,
+ librust-proxmox-schema-2+api-macro-dev,
+ librust-proxmox-schema-2+default-dev,
+ librust-proxmox-section-config-2+default-dev,
+ librust-regex-1+default-dev (>= 1.5-~~),
+ librust-serde-1+default-dev,
+ librust-serde-json-1+default-dev,
+ librust-serde-plain-1+default-dev
+Suggests:
+ librust-proxmox-client+hyper-client-dev (= ${binary:Version}),
+ librust-proxmox-client+webauthn-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-client+default-dev (= ${binary:Version}),
+ librust-proxmox-client-0-dev (= ${binary:Version}),
+ librust-proxmox-client-0+default-dev (= ${binary:Version}),
+ librust-proxmox-client-0.1-dev (= ${binary:Version}),
+ librust-proxmox-client-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-client-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-client-0.1.0+default-dev (= ${binary:Version})
+Description: Base client for proxmox APIs for handling login and ticket renewal - Rust source code
+ This package contains the source for the Rust proxmox-client crate, packaged by
+ debcargo for use with cargo and dh-cargo.
+
+Package: librust-proxmox-client+hyper-client-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-client-dev (= ${binary:Version}),
+ librust-hyper-0.14+default-dev (>= 0.14.5-~~),
+ librust-log-0.4+default-dev (>= 0.4.17-~~),
+ librust-openssl-0.10+default-dev,
+ librust-proxmox-http-0.9+client-dev,
+ librust-proxmox-http-0.9+default-dev
+Provides:
+ librust-proxmox-client-0+hyper-client-dev (= ${binary:Version}),
+ librust-proxmox-client-0.1+hyper-client-dev (= ${binary:Version}),
+ librust-proxmox-client-0.1.0+hyper-client-dev (= ${binary:Version})
+Description: Base client for proxmox APIs for handling login and ticket renewal - feature "hyper-client"
+ This metapackage enables feature "hyper-client" for the Rust proxmox-client
+ crate, by pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox-client+webauthn-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-client-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1+http-dev,
+ librust-proxmox-login-0.1+webauthn-dev,
+ librust-webauthn-rs-0.3+default-dev
+Provides:
+ librust-proxmox-client-0+webauthn-dev (= ${binary:Version}),
+ librust-proxmox-client-0.1+webauthn-dev (= ${binary:Version}),
+ librust-proxmox-client-0.1.0+webauthn-dev (= ${binary:Version})
+Description: Base client for proxmox APIs for handling login and ticket renewal - feature "webauthn"
+ This metapackage enables feature "webauthn" for the Rust proxmox-client crate,
+ by pulling in any additional dependencies needed by that feature.

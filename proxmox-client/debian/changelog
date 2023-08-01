@@ -1,0 +1,5 @@
+rust-proxmox-client (0.1.0-1) bookworm; urgency=medium
+
+  * initial release
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 01 Aug 2023 15:46:54 +0200

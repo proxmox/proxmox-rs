@@ -5,6 +5,7 @@ members = [
     "proxmox-async",
     "proxmox-auth-api",
     "proxmox-borrow",
+    "proxmox-client",
     "proxmox-compression",
     "proxmox-http",
     "proxmox-http-error",
@@ -93,6 +94,7 @@ proxmox-http-error = { version = "0.1.0", path = "proxmox-http-error" }
 proxmox-human-byte = { version = "0.1.0", path = "proxmox-human-byte" }
 proxmox-io = { version = "1.0.0", path = "proxmox-io" }
 proxmox-lang = { version = "1.1", path = "proxmox-lang" }
+proxmox-login = { version = "0.1.0", path = "proxmox-login" }
 proxmox-rest-server = { version = "0.4.0", path = "proxmox-rest-server" }
 proxmox-router = { version = "2.0.0", path = "proxmox-router" }
 proxmox-schema = { version = "2.0.0", path = "proxmox-schema" }
