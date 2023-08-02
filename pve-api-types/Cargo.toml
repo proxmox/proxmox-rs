@@ -1,0 +1,28 @@
+[package]
+name = "pve-api-types"
+# For the version we probably want to track the PVE version.
+version = "8.0.0"
+description = "Proxmox VE API types"
+
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+regex.workspace = true
+serde = { workspace = true, features = [ "derive" ] }
+serde_plain.workspace = true
+lazy_static.workspace = true
+# 
+proxmox-login.workspace = true
+proxmox-schema = { workspace = true, features = [ "api-macro" ] }
+
+# For the client feature:
+percent-encoding = { workspace = true, optional = true }
+proxmox-client = { workspace = true, optional = true } # features = [ "hyper-client" ] }
+
+[features]
+default = []
+client = [ "dep:proxmox-client", "dep:percent-encoding" ]
