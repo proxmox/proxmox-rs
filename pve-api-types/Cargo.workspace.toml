@@ -12,7 +12,9 @@ repository = "git://git.proxmox.com/git/proxmox-api-types.git"
 
 [workspace.dependencies]
 anyhow = "1"
+hex = "0.4.3"
 lazy_static = "1.4"
+openssl = "0.10.45"
 percent-encoding = "2.1"
 regex = "1.7"
 serde = "1"
@@ -22,3 +24,4 @@ proxmox-login = "0.1"
 proxmox-schema = "2"
 
 proxmox-client = "0.1"
+proxmox-http = "0.9"
