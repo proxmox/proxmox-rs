@@ -280,7 +280,8 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             type: Integer,
         },
         vmid: {
-            minimum: 1,
+            maximum: 999999999,
+            minimum: 100,
             optional: true,
             type: Integer,
         },
@@ -374,9 +375,9 @@ pub struct ClusterResource {
     pub uptime: Option<i64>,
 
     /// The numerical vmid (when type in qemu,lxc).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub vmid: Option<u64>,
+    pub vmid: Option<u32>,
 }
 
 #[api]
