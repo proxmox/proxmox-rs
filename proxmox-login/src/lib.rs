@@ -57,6 +57,13 @@ fn normalize_url(mut api_url: String) -> String {
     api_url
 }
 
+fn check_ticket_userid(ticket_userid: &str, expected_userid: &str) -> Result<(), ResponseError> {
+    if ticket_userid != expected_userid.trim_end_matches("@quarantine") {
+        return Err("returned ticket contained unexpected userid".into());
+    }
+    Ok(())
+}
+
 impl Login {
     /// Prepare a request given an existing ticket string.
     pub fn renew(
@@ -152,9 +159,7 @@ impl Login {
 
         Ok(match ticket {
             TicketResponse::Full(ticket) => {
-                if ticket.userid() != self.userid {
-                    return Err("returned ticket contained unexpected userid".into());
-                }
+                check_ticket_userid(ticket.userid(), &self.userid)?;
                 TicketResult::Full(Authentication {
                     csrfprevention_token: response
                         .csrfprevention_token
@@ -294,10 +299,7 @@ impl SecondFactorChallenge {
         }
 
         let ticket: Ticket = response.ticket.ok_or("no ticket in response")?.parse()?;
-
-        if ticket.userid() != self.userid {
-            return Err("returned ticket contained unexpected userid".into());
-        }
+        check_ticket_userid(ticket.userid(), &self.userid)?;
 
         Ok(Authentication {
             ticket,
