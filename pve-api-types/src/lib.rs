@@ -4,5 +4,5 @@
 mod types;
 pub use types::*;
 
-#[cfg(feature = "client")]
+#[cfg(feature = "client-util")]
 pub mod client;

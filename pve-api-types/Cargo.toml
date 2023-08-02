@@ -25,4 +25,5 @@ proxmox-client = { workspace = true, optional = true } # features = [ "hyper-cli
 
 [features]
 default = []
-client = [ "dep:proxmox-client", "dep:percent-encoding" ]
+client-util = [ "dep:percent-encoding" ]
+client = [ "client-util", "dep:proxmox-client" ]
