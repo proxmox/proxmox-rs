@@ -1,5 +1,6 @@
 //! Error types.
 
+use std::error::Error as StdError;
 use std::fmt;
 
 /// Ticket parsing error.
@@ -27,33 +28,40 @@ pub enum ResponseError {
     Ticket(TicketError),
 }
 
-impl std::error::Error for ResponseError {}
+impl StdError for ResponseError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            Self::Json(err) => Some(err),
+            _ => None,
+        }
+    }
+}
 
 impl fmt::Display for ResponseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ResponseError::Json(err) => write!(f, "bad ticket response: {err}"),
-            ResponseError::Msg(err) => write!(f, "bad ticket response: {err}"),
-            ResponseError::Ticket(err) => write!(f, "failed to parse ticket in response: {err}"),
+            Self::Json(err) => write!(f, "bad ticket response: {err}"),
+            Self::Msg(err) => write!(f, "bad ticket response: {err}"),
+            Self::Ticket(err) => write!(f, "failed to parse ticket in response: {err}"),
         }
     }
 }
 
 impl From<serde_json::Error> for ResponseError {
     fn from(err: serde_json::Error) -> Self {
-        ResponseError::Json(err)
+        Self::Json(err)
     }
 }
 
 impl From<&'static str> for ResponseError {
     fn from(err: &'static str) -> Self {
-        ResponseError::Msg(err)
+        Self::Msg(err)
     }
 }
 
 impl From<TicketError> for ResponseError {
     fn from(err: TicketError) -> Self {
-        ResponseError::Ticket(err)
+        Self::Ticket(err)
     }
 }
 
@@ -67,19 +75,26 @@ pub enum TfaError {
     Json(serde_json::Error),
 }
 
-impl std::error::Error for TfaError {}
+impl StdError for TfaError {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
+        match self {
+            Self::Json(err) => Some(err),
+            _ => None,
+        }
+    }
+}
 
 impl fmt::Display for TfaError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            TfaError::Unavailable => f.write_str("the chosen TFA method is not available"),
-            TfaError::Json(err) => write!(f, "a serialization error occurred: {err}"),
+            Self::Unavailable => f.write_str("the chosen TFA method is not available"),
+            Self::Json(err) => write!(f, "a serialization error occurred: {err}"),
         }
     }
 }
 
 impl From<serde_json::Error> for TfaError {
     fn from(err: serde_json::Error) -> Self {
-        TfaError::Json(err)
+        Self::Json(err)
     }
 }
