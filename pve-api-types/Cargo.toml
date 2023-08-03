@@ -31,7 +31,10 @@ default = []
 client-util = [ "dep:percent-encoding" ]
 client = [
     "client-util",
-    "dep:openssl",
     "dep:proxmox-client",
+]
+hyper-client = [
+    "client",
+    "dep:openssl",
     "dep:proxmox-http",
 ]

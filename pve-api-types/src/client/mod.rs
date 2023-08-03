@@ -5,6 +5,9 @@ mod code;
 #[cfg(feature = "client")]
 pub use code::*;
 
+#[cfg(feature = "hyper-client")]
+mod hyper_client;
+
 /// Add an optional string parameter to the query, and if it was added, change `separator` to `&`.
 pub fn add_query_arg<T>(query: &mut String, separator: &mut char, name: &str, value: &Option<T>)
 where
