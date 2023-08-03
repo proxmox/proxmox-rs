@@ -86,7 +86,7 @@ webauthn-rs = "0.3"
 zstd = { version = "0.12", features = [ "bindgen" ] }
 
 # workspace dependencies
-proxmox-api-macro = { version = "1.0.4", path = "proxmox-api-macro" }
+proxmox-api-macro = { version = "1.0.5", path = "proxmox-api-macro" }
 proxmox-async = { version = "0.4.1", path = "proxmox-async" }
 proxmox-compression = { version = "0.2.0", path = "proxmox-compression" }
 proxmox-http = { version = "0.9.0", path = "proxmox-http" }
