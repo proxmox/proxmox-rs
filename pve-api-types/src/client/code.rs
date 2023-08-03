@@ -10,6 +10,11 @@ pub struct Client<C, E: Environment> {
 }
 
 impl<C, E: Environment> Client<C, E> {
+    /// Create a new PVE client from a [`proxmox_client::Client`].
+    pub fn new(client: ProxmoxClient) -> Self {
+        Self { client }
+    }
+
     /// Get the underlying client object.
     pub fn inner(&self) -> &ProxmoxClient<C, E> {
         &self.client
