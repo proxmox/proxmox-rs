@@ -73,6 +73,16 @@ impl<C, E> Client<C, E>
 where
     E: Environment,
 {
+    /// Get the underlying client object.
+    pub fn inner(&self) -> &C {
+        &self.client
+    }
+
+    /// Get a mutable reference to the underlying client object.
+    pub fn inner_mut(&mut self) -> &mut C {
+        &mut self.client
+    }
+
     /// Get a reference to the current authentication information.
     pub fn authentication(&self) -> Option<Arc<AuthenticationKind>> {
         self.auth.lock().unwrap().clone()
