@@ -21,7 +21,10 @@ use crate::{Authentication, Environment, Error, Token};
 /// An async [`Client`] requires some kind of async HTTP client implementation.
 pub trait HttpClient: Send + Sync {
     type Error: Error;
+    #[cfg(not(target_arch = "wasm32"))]
     type Request: Future<Output = Result<Response<Vec<u8>>, Self::Error>> + Send;
+    #[cfg(target_arch = "wasm32")]
+    type Request: Future<Output = Result<Response<Vec<u8>>, Self::Error>>;
 
     fn request(&self, request: Request<Vec<u8>>) -> Self::Request;
 }
@@ -417,13 +420,15 @@ where
     /// called again with another cluster node (if available).
     /// Only if no node responds - or a legitimate HTTP error is produced - will the error be
     /// returned.
-    async fn request_retry_loop<Fut>(
+    async fn request_retry_loop<
+        #[cfg(not(target_arch = "wasm32"))]
+        Fut: Future<Output = Result<Request<Vec<u8>>, E::Error>> + Send,
+        #[cfg(target_arch = "wasm32")]
+        Fut: Future<Output = Result<Request<Vec<u8>>, E::Error>>,
+    >(
         &self,
         make_request: impl Fn(Uri) -> Fut,
-    ) -> Result<Response<Vec<u8>>, E::Error>
-    where
-        Fut: Future<Output = Result<Request<Vec<u8>>, E::Error>> + Send,
-    {
+    ) -> Result<Response<Vec<u8>>, E::Error> {
         let generation = self.api_urls.generation();
         let mut url_index = self.api_urls.index();
         let mut retry = None;
