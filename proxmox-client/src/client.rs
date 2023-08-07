@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::future::Future;
 use std::sync::Arc;
-use std::sync::Mutex as StdMutex;
+use std::sync::Mutex;
 
 use http::request::Request;
 use http::response::Response;
@@ -10,10 +10,10 @@ use http::uri::PathAndQuery;
 use http::{StatusCode, Uri};
 use serde_json::Value;
 
-use proxmox_login::{Login, TicketResult};
+use proxmox_login::{Login, SecondFactorChallenge, TicketResult};
 
 use crate::auth::AuthenticationKind;
-use crate::{Authentication, Environment, Error, Token};
+use crate::{Error, Token};
 
 /// HTTP client backend trait.
 ///
@@ -25,18 +25,14 @@ pub trait HttpClient: Send + Sync {
 }
 
 /// Proxmox VE high level API client.
-pub struct Client<C, E: Environment> {
-    env: E,
+pub struct Client<C> {
     api_url: Uri,
-    auth: StdMutex<Option<Arc<AuthenticationKind>>>,
+    auth: Mutex<Option<Arc<AuthenticationKind>>>,
     client: C,
     pve_compat: bool,
 }
 
-impl<C, E> Client<C, E>
-where
-    E: Environment,
-{
+impl<C> Client<C> {
     /// Get the underlying client object.
     pub fn inner(&self) -> &C {
         &self.client
@@ -70,7 +66,7 @@ fn to_request(request: proxmox_login::Request) -> Result<http::Request<Vec<u8>>,
         .map_err(|err| Error::internal("error building login http request", err))
 }
 
-impl<C, E: Environment> Client<C, E> {
+impl<C> Client<C> {
     /// Enable Proxmox VE login API compatibility. This is required to support TFA authentication
     /// on Proxmox VE APIs which require the `new-format` option.
     pub fn set_pve_compatibility(&mut self, compatibility: bool) {
@@ -78,29 +74,28 @@ impl<C, E: Environment> Client<C, E> {
     }
 }
 
-impl<C, E> Client<C, E>
+impl<C> Client<C>
 where
-    E: Environment,
     C: HttpClient,
 {
-    /// Instantiate a client for an API with a given environment and HTTP client instance.
-    pub fn with_client(api_url: Uri, environment: E, client: C) -> Self {
+    /// Instantiate a client for an API with a given HTTP client instance.
+    pub fn with_client(api_url: Uri, client: C) -> Self {
         Self {
-            env: environment,
             api_url,
-            auth: StdMutex::new(None),
+            auth: Mutex::new(None),
             client,
             pve_compat: false,
         }
     }
 
-    pub async fn login_auth(&self) -> Result<Arc<AuthenticationKind>, Error> {
-        self.login().await?;
+    /// Assert that we are authenticated and return the `AuthenticationKind`.
+    /// Otherwise returns `Error::Unauthenticated`.
+    pub fn login_auth(&self) -> Result<Arc<AuthenticationKind>, Error> {
         self.auth
             .lock()
             .unwrap()
             .clone()
-            .ok_or_else(|| Error::Other("login failed to set authentication information"))
+            .ok_or_else(|| Error::Unauthorized)
     }
 
     /// If currently logged in, this will fill in the auth cookie and CSRFPreventionToken header
@@ -122,158 +117,59 @@ where
         &self,
         request: http::request::Builder,
     ) -> Result<http::request::Builder, Error> {
-        Ok(self.login_auth().await?.set_auth_headers(request))
+        Ok(self.login_auth()?.set_auth_headers(request))
     }
 
-    /// Ensure that we have a valid ticket.
+    /// Attempt to login.
     ///
-    /// This will first attempt to load a ticket from the provided [`Environment`]. If successful,
-    /// its expiration time will be verified.
+    /// This will propagate the PVE compatibility state and then perform the `Login` request via
+    /// the inner http client.
     ///
-    /// If no valid ticket is available already, this will connect to the PVE API and perform
-    /// authentication.
-    pub async fn login(&self) -> Result<(), Error> {
-        let (userid, login) = self.need_login().await?;
-        let Some(login) = login else { return Ok(()) };
-
+    /// If the authentication is complete, `None` is returned and the authentication state updated.
+    /// If a 2nd factor is required, `Some` is returned.
+    pub async fn login(&self, login: Login) -> Result<Option<SecondFactorChallenge>, Error> {
         let login = login.pve_compatibility(self.pve_compat);
 
-        let response = self.client.request(to_request(login.request())?).await?;
+        let api_response = self.client.request(to_request(login.request())?).await?;
 
-        if !response.status().is_success() {
+        if !api_response.status().is_success() {
             // FIXME: does `http` somehow expose the status string?
-            return Err(Error::api(response.status(), "authentication failed"));
+            return Err(Error::api(api_response.status(), "authentication failed"));
         }
 
-        let challenge = match login.response(response.body())? {
-            TicketResult::Full(auth) => return self.finish_auth(&userid, auth).await,
-            TicketResult::TfaRequired(challenge) => challenge,
-        };
-
-        let response = self
-            .env
-            .query_second_factor_async(&self.api_url, &userid, &challenge.challenge)
-            .await?;
-
-        let response = self
-            .client
-            .request(to_request(challenge.respond_raw(&response))?)
-            .await?;
-
-        let status = response.status();
-        if !status.is_success() {
-            return Err(Error::api(status, "authentication failed"));
-        }
-
-        let auth = challenge.response(response.body())?;
-
-        self.finish_auth(&userid, auth).await
-    }
-
-    /// Get the current username and, if required, a `Login` request.
-    async fn need_login(&self) -> Result<(String, Option<Login>), Error> {
-        use proxmox_login::ticket::Validity;
-
-        let (userid, auth) = self.current_auth().await?;
-
-        let authkind = match auth {
-            None => {
-                let password = self
-                    .env
-                    .query_password_async(&self.api_url, &userid)
-                    .await?;
-                return Ok((
-                    userid.clone(),
-                    Some(Login::new(self.api_url.to_string(), userid, password)),
-                ));
-            }
-            Some(authkind) => authkind,
-        };
-
-        let auth = match &*authkind {
-            AuthenticationKind::Token(_) => return Ok((userid, None)),
-            AuthenticationKind::Ticket(auth) => auth,
-        };
-
-        Ok(match auth.ticket.validity() {
-            Validity::Valid => {
-                *self.auth.lock().unwrap() = Some(authkind);
-                (userid, None)
-            }
-            Validity::Refresh => (
-                userid,
-                Some(
-                    Login::renew(self.api_url.to_string(), auth.ticket.to_string())
-                        .map_err(Error::Ticket)?,
-                ),
-            ),
-
-            Validity::Expired => {
-                let password = self
-                    .env
-                    .query_password_async(&self.api_url, &userid)
-                    .await?;
-                (
-                    userid.clone(),
-                    Some(Login::new(self.api_url.to_string(), userid, password)),
-                )
+        Ok(match login.response(api_response.body())? {
+            TicketResult::TfaRequired(challenge) => Some(challenge),
+            TicketResult::Full(auth) => {
+                *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
+                None
             }
         })
     }
 
-    /// Store the authentication info in our `auth` field and notify the environment.
-    async fn finish_auth(&self, userid: &str, auth: Authentication) -> Result<(), Error> {
-        let auth_string = serde_json::to_string(&auth)
-            .map_err(|err| Error::internal("failed to serialize authentication info", err))?;
+    /// Attempt to finish a 2nd factor login.
+    ///
+    /// This will propagate the PVE compatibility state and then perform the `Login` request via
+    /// the inner http client.
+    pub async fn login_tfa(
+        &self,
+        challenge: SecondFactorChallenge,
+        challenge_response: proxmox_login::Request,
+    ) -> Result<(), Error> {
+        let api_response = self.client.request(to_request(challenge_response)?).await?;
+
+        if !api_response.status().is_success() {
+            // FIXME: does `http` somehow expose the status string?
+            return Err(Error::api(api_response.status(), "authentication failed"));
+        }
+
+        let auth = challenge.response(api_response.body())?;
         *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
-        self.env
-            .store_ticket_async(&self.api_url, userid, auth_string.as_bytes())
-            .await
+        Ok(())
     }
 
     /// Get the currently used API url.
     pub fn api_url(&self) -> &Uri {
         &self.api_url
-    }
-
-    /// Get the current user id and a reference to the current authentication method.
-    /// If not authenticated yet, authenticate.
-    ///
-    /// This may cause the environment to be queried for user ids/passwords/FIDO/...
-    async fn current_auth(&self) -> Result<(String, Option<Arc<AuthenticationKind>>), Error> {
-        let auth = self.auth.lock().unwrap().clone();
-
-        let userid;
-        let auth = match auth {
-            Some(auth) => {
-                userid = auth.userid().to_owned();
-                Some(auth)
-            }
-            None => {
-                userid = self.env.query_userid_async(&self.api_url).await?;
-                self.reload_existing_ticket(&userid).await?
-            }
-        };
-
-        Ok((userid, auth))
-    }
-
-    /// Attempt to load an existing ticket from the environment.
-    async fn reload_existing_ticket(
-        &self,
-        userid: &str,
-    ) -> Result<Option<Arc<AuthenticationKind>>, Error> {
-        let ticket = match self.env.load_ticket_async(&self.api_url, userid).await? {
-            Some(auth) => auth,
-            None => return Ok(None),
-        };
-
-        let auth: Authentication = serde_json::from_slice(&ticket)
-            .map_err(|err| Error::internal("loaded bad ticket from environment", err))?;
-
-        let auth = Arc::new(auth.into());
-        *self.auth.lock().unwrap() = Some(Arc::clone(&auth));
-        Ok(Some(auth))
     }
 
     /// Build a URI relative to the current API endpoint.
@@ -300,8 +196,6 @@ where
     where
         R: serde::de::DeserializeOwned,
     {
-        self.login().await?;
-
         let request = self
             .set_auth_headers(Request::get(self.build_uri(uri)?))
             .await?
@@ -321,7 +215,7 @@ where
         B: serde::Serialize,
         R: serde::de::DeserializeOwned,
     {
-        let auth = self.login_auth().await?;
+        let auth = self.login_auth()?;
         self.json_request(&auth, http::Method::GET, uri, body).await
     }
 
@@ -331,7 +225,7 @@ where
         B: serde::Serialize,
         R: serde::de::DeserializeOwned,
     {
-        let auth = self.login_auth().await?;
+        let auth = self.login_auth()?;
         self.json_request(&auth, http::Method::PUT, uri, body).await
     }
 
@@ -341,7 +235,7 @@ where
         B: serde::Serialize,
         R: serde::de::DeserializeOwned,
     {
-        let auth = self.login_auth().await?;
+        let auth = self.login_auth()?;
         self.json_request(&auth, http::Method::POST, uri, body)
             .await
     }
@@ -351,8 +245,6 @@ where
     where
         R: serde::de::DeserializeOwned,
     {
-        self.login().await?;
-
         let request = self
             .set_auth_headers(Request::delete(self.build_uri(uri)?))
             .await?
@@ -372,7 +264,7 @@ where
         B: serde::Serialize,
         R: serde::de::DeserializeOwned,
     {
-        let auth = self.login_auth().await?;
+        let auth = self.login_auth()?;
         self.json_request(&auth, http::Method::DELETE, uri, body)
             .await
     }
@@ -547,20 +439,13 @@ impl<T> RawApiResponse<T> {
 }
 
 #[cfg(feature = "hyper-client")]
-pub type HyperClient<E> = Client<Arc<proxmox_http::client::Client>, E>;
+pub type HyperClient = Client<Arc<proxmox_http::client::Client>>;
 
 #[cfg(feature = "hyper-client")]
-impl<C, E> Client<C, E>
-where
-    E: Environment,
-{
+impl<C> Client<C> {
     /// Create a new client instance which will connect to the provided endpoint.
-    pub fn new(api_url: Uri, environment: E) -> HyperClient<E> {
-        Client::with_client(
-            api_url,
-            environment,
-            Arc::new(proxmox_http::client::Client::new()),
-        )
+    pub fn new(api_url: Uri) -> HyperClient {
+        Client::with_client(api_url, Arc::new(proxmox_http::client::Client::new()))
     }
 }
 
@@ -579,7 +464,7 @@ mod hyper_client_extras {
     use proxmox_http::client::Client as ProxmoxClient;
 
     use super::{Client, HyperClient};
-    use crate::{Environment, Error};
+    use crate::Error;
 
     #[derive(Default)]
     pub enum TlsOptions {
@@ -636,17 +521,13 @@ mod hyper_client_extras {
         true
     }
 
-    impl<C, E> Client<C, E>
-    where
-        E: Environment,
-    {
+    impl<C> Client<C> {
         /// Create a new client instance which will connect to the provided endpoint.
         pub fn with_options(
             api_url: Uri,
-            environment: E,
             tls_options: TlsOptions,
             http_options: proxmox_http::HttpOptions,
-        ) -> Result<HyperClient<E>, Error> {
+        ) -> Result<HyperClient, Error> {
             let mut connector = SslConnector::builder(SslMethod::tls_client())
                 .map_err(|err| Error::internal("failed to create ssl connector builder", err))?;
 
@@ -680,7 +561,7 @@ mod hyper_client_extras {
 
             let client = ProxmoxClient::with_ssl_connector(connector.build(), http_options);
 
-            Ok(Client::with_client(api_url, environment, Arc::new(client)))
+            Ok(Client::with_client(api_url, Arc::new(client)))
         }
     }
 

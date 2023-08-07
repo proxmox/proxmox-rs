@@ -1,7 +1,5 @@
-mod environment;
 mod error;
 
-pub use environment::Environment;
 pub use error::Error;
 
 pub use proxmox_login::tfa::TfaChallenge;

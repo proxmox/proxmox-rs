@@ -11,7 +11,7 @@ pub enum Error {
     /// to sleep. This signals that the environment does not support that.
     SleepNotSupported,
 
-    /// Tried to make an API call without a ticket which requires ones.
+    /// Tried to make an API call without a ticket.
     Unauthorized,
 
     /// The API responded with an error code.
