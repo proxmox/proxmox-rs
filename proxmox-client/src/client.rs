@@ -20,9 +20,6 @@ use crate::{Authentication, Environment, Error, Token};
 /// An async [`Client`] requires some kind of async HTTP client implementation.
 pub trait HttpClient: Send + Sync {
     type Error: Error;
-    #[cfg(not(target_arch = "wasm32"))]
-    type ResponseFuture: Future<Output = Result<Response<Vec<u8>>, Self::Error>> + Send;
-    #[cfg(target_arch = "wasm32")]
     type ResponseFuture: Future<Output = Result<Response<Vec<u8>>, Self::Error>>;
 
     fn request(&self, request: Request<Vec<u8>>) -> Self::ResponseFuture;
