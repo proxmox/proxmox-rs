@@ -2,7 +2,7 @@ use std::any::Any;
 use std::fmt::{self, Display};
 
 /// For error types provided by the user of this crate.
-pub trait Error: Sized + Display + fmt::Debug + Any + Send + Sync + 'static {
+pub trait ErrorTrait: Sized + Display + fmt::Debug + Any + Send + Sync + 'static {
     /// An arbitrary error message.
     fn custom<T: Display>(msg: T) -> Self;
 
@@ -54,7 +54,7 @@ pub trait Error: Sized + Display + fmt::Debug + Any + Send + Sync + 'static {
     }
 }
 
-impl Error for anyhow::Error {
+impl ErrorTrait for anyhow::Error {
     fn custom<T: Display>(msg: T) -> Self {
         anyhow::format_err!("{msg}")
     }

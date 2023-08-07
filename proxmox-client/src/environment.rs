@@ -6,12 +6,12 @@ use http::Uri;
 
 use proxmox_login::tfa::TfaChallenge;
 
-use crate::Error;
+use crate::ErrorTrait;
 
 /// Provide input from the environment for storing/loading tickets or tokens and querying the user
 /// for passwords or 2nd factors.
 pub trait Environment: Send + Sync {
-    type Error: Error;
+    type Error: ErrorTrait;
 
     /// Store a ticket belonging to a user of an API.
     ///

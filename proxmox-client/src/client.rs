@@ -13,13 +13,13 @@ use serde_json::Value;
 use proxmox_login::{Login, TicketResult};
 
 use crate::auth::AuthenticationKind;
-use crate::{Authentication, Environment, Error, Token};
+use crate::{Authentication, Environment, ErrorTrait, Token};
 
 /// HTTP client backend trait.
 ///
 /// An async [`Client`] requires some kind of async HTTP client implementation.
 pub trait HttpClient: Send + Sync {
-    type Error: Error;
+    type Error: ErrorTrait;
     type ResponseFuture: Future<Output = Result<Response<Vec<u8>>, Self::Error>>;
 
     fn request(&self, request: Request<Vec<u8>>) -> Self::ResponseFuture;
@@ -58,7 +58,7 @@ where
     }
 }
 
-fn to_request<E: Error>(request: proxmox_login::Request) -> Result<http::Request<Vec<u8>>, E> {
+fn to_request<E: ErrorTrait>(request: proxmox_login::Request) -> Result<http::Request<Vec<u8>>, E> {
     http::Request::builder()
         .method(http::Method::POST)
         .uri(request.url)
@@ -309,7 +309,7 @@ where
             .set_auth_headers(Request::get(self.build_uri(uri)?))
             .await?
             .body(Vec::new())
-            .map_err(Error::internal)?;
+            .map_err(E::Error::internal)?;
 
         Self::handle_response(self.client.request(request).await?)
     }
@@ -364,7 +364,7 @@ where
             .set_auth_headers(Request::delete(self.build_uri(uri)?))
             .await?
             .body(Vec::new())
-            .map_err(Error::internal)?;
+            .map_err(E::Error::internal)?;
 
         Self::handle_response(self.client.request(request).await?)
     }
@@ -437,7 +437,7 @@ where
         let request = auth
             .set_auth_headers(request)
             .body(body.clone())
-            .map_err(Error::internal)?;
+            .map_err(E::Error::internal)?;
 
         Ok(self.client.request(request).await?)
     }
@@ -459,12 +459,12 @@ where
             //    Ok(value) =>
             //        if value["error"]
             let (response, body) = response.into_parts();
-            let body = String::from_utf8(body).map_err(Error::bad_api)?;
+            let body = String::from_utf8(body).map_err(E::Error::bad_api)?;
             return Err(E::Error::api_error(response.status, body));
         }
 
         let data: RawApiResponse<R> =
-            serde_json::from_slice(&response.into_body()).map_err(Error::bad_api)?;
+            serde_json::from_slice(&response.into_body()).map_err(E::Error::bad_api)?;
 
         data.check()
     }
@@ -528,7 +528,7 @@ struct RawApiResponse<T> {
 }
 
 impl<T> RawApiResponse<T> {
-    pub fn check<E: Error>(mut self) -> Result<ApiResponse<T>, E> {
+    pub fn check<E: ErrorTrait>(mut self) -> Result<ApiResponse<T>, E> {
         if !self.success.unwrap_or(false) {
             let status = http::StatusCode::from_u16(self.status.unwrap_or(400))
                 .unwrap_or(http::StatusCode::BAD_REQUEST);
