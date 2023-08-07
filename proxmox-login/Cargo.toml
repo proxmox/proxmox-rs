@@ -19,6 +19,9 @@ webauthn-rs = { workspace = true, optional = true }
 # For `Authentication::set_auth_headers`
 http = { version = "0.2.4", optional = true }
 
+[target.'cfg(target_arch="wasm32")'.dependencies]
+js-sys = "0.3.55"
+
 [features]
 default = []
 webauthn = [ "dep:webauthn-rs" ]
