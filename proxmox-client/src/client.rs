@@ -13,14 +13,13 @@ use serde_json::Value;
 use proxmox_login::{Login, TicketResult};
 
 use crate::auth::AuthenticationKind;
-use crate::{Authentication, Environment, ErrorTrait, Token};
+use crate::{Authentication, Environment, Error, Token};
 
 /// HTTP client backend trait.
 ///
 /// An async [`Client`] requires some kind of async HTTP client implementation.
 pub trait HttpClient: Send + Sync {
-    type Error: ErrorTrait;
-    type ResponseFuture: Future<Output = Result<Response<Vec<u8>>, Self::Error>>;
+    type ResponseFuture: Future<Output = Result<Response<Vec<u8>>, Error>>;
 
     fn request(&self, request: Request<Vec<u8>>) -> Self::ResponseFuture;
 }
@@ -58,7 +57,7 @@ where
     }
 }
 
-fn to_request<E: ErrorTrait>(request: proxmox_login::Request) -> Result<http::Request<Vec<u8>>, E> {
+fn to_request(request: proxmox_login::Request) -> Result<http::Request<Vec<u8>>, Error> {
     http::Request::builder()
         .method(http::Method::POST)
         .uri(request.url)
@@ -68,7 +67,7 @@ fn to_request<E: ErrorTrait>(request: proxmox_login::Request) -> Result<http::Re
             request.content_length.to_string(),
         )
         .body(request.body.into_bytes())
-        .map_err(E::internal)
+        .map_err(|err| Error::internal("error building login http request", err))
 }
 
 impl<C, E: Environment> Client<C, E> {
@@ -83,7 +82,6 @@ impl<C, E> Client<C, E>
 where
     E: Environment,
     C: HttpClient,
-    E::Error: From<C::Error>,
 {
     /// Instantiate a client for an API with a given environment and HTTP client instance.
     pub fn with_client(api_url: Uri, environment: E, client: C) -> Self {
@@ -96,13 +94,13 @@ where
         }
     }
 
-    pub async fn login_auth(&self) -> Result<Arc<AuthenticationKind>, E::Error> {
+    pub async fn login_auth(&self) -> Result<Arc<AuthenticationKind>, Error> {
         self.login().await?;
         self.auth
             .lock()
             .unwrap()
             .clone()
-            .ok_or_else(|| E::Error::internal("login failed to set authentication information"))
+            .ok_or_else(|| Error::Other("login failed to set authentication information"))
     }
 
     /// If currently logged in, this will fill in the auth cookie and CSRFPreventionToken header
@@ -123,7 +121,7 @@ where
     pub async fn set_auth_headers(
         &self,
         request: http::request::Builder,
-    ) -> Result<http::request::Builder, E::Error> {
+    ) -> Result<http::request::Builder, Error> {
         Ok(self.login_auth().await?.set_auth_headers(request))
     }
 
@@ -134,7 +132,7 @@ where
     ///
     /// If no valid ticket is available already, this will connect to the PVE API and perform
     /// authentication.
-    pub async fn login(&self) -> Result<(), E::Error> {
+    pub async fn login(&self) -> Result<(), Error> {
         let (userid, login) = self.need_login().await?;
         let Some(login) = login else { return Ok(()) };
 
@@ -144,13 +142,10 @@ where
 
         if !response.status().is_success() {
             // FIXME: does `http` somehow expose the status string?
-            return Err(E::Error::api_error(
-                response.status(),
-                "authentication failed",
-            ));
+            return Err(Error::api(response.status(), "authentication failed"));
         }
 
-        let challenge = match login.response(response.body()).map_err(E::Error::bad_api)? {
+        let challenge = match login.response(response.body())? {
             TicketResult::Full(auth) => return self.finish_auth(&userid, auth).await,
             TicketResult::TfaRequired(challenge) => challenge,
         };
@@ -167,18 +162,16 @@ where
 
         let status = response.status();
         if !status.is_success() {
-            return Err(E::Error::api_error(status, "authentication failed"));
+            return Err(Error::api(status, "authentication failed"));
         }
 
-        let auth = challenge
-            .response(response.body())
-            .map_err(E::Error::bad_api)?;
+        let auth = challenge.response(response.body())?;
 
         self.finish_auth(&userid, auth).await
     }
 
     /// Get the current username and, if required, a `Login` request.
-    async fn need_login(&self) -> Result<(String, Option<Login>), E::Error> {
+    async fn need_login(&self) -> Result<(String, Option<Login>), Error> {
         use proxmox_login::ticket::Validity;
 
         let (userid, auth) = self.current_auth().await?;
@@ -211,7 +204,7 @@ where
                 userid,
                 Some(
                     Login::renew(self.api_url.to_string(), auth.ticket.to_string())
-                        .map_err(E::Error::custom)?,
+                        .map_err(Error::Ticket)?,
                 ),
             ),
 
@@ -229,8 +222,9 @@ where
     }
 
     /// Store the authentication info in our `auth` field and notify the environment.
-    async fn finish_auth(&self, userid: &str, auth: Authentication) -> Result<(), E::Error> {
-        let auth_string = serde_json::to_string(&auth).map_err(E::Error::internal)?;
+    async fn finish_auth(&self, userid: &str, auth: Authentication) -> Result<(), Error> {
+        let auth_string = serde_json::to_string(&auth)
+            .map_err(|err| Error::internal("failed to serialize authentication info", err))?;
         *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
         self.env
             .store_ticket_async(&self.api_url, userid, auth_string.as_bytes())
@@ -246,7 +240,7 @@ where
     /// If not authenticated yet, authenticate.
     ///
     /// This may cause the environment to be queried for user ids/passwords/FIDO/...
-    async fn current_auth(&self) -> Result<(String, Option<Arc<AuthenticationKind>>), E::Error> {
+    async fn current_auth(&self) -> Result<(String, Option<Arc<AuthenticationKind>>), Error> {
         let auth = self.auth.lock().unwrap().clone();
 
         let userid;
@@ -268,14 +262,14 @@ where
     async fn reload_existing_ticket(
         &self,
         userid: &str,
-    ) -> Result<Option<Arc<AuthenticationKind>>, E::Error> {
+    ) -> Result<Option<Arc<AuthenticationKind>>, Error> {
         let ticket = match self.env.load_ticket_async(&self.api_url, userid).await? {
             Some(auth) => auth,
             None => return Ok(None),
         };
 
         let auth: Authentication = serde_json::from_slice(&ticket)
-            .map_err(|err| E::Error::env(format!("bad ticket data: {err}")))?;
+            .map_err(|err| Error::internal("loaded bad ticket from environment", err))?;
 
         let auth = Arc::new(auth.into());
         *self.auth.lock().unwrap() = Some(Arc::clone(&auth));
@@ -283,7 +277,7 @@ where
     }
 
     /// Build a URI relative to the current API endpoint.
-    fn build_uri(&self, path: &str) -> Result<Uri, E::Error> {
+    fn build_uri(&self, path: &str) -> Result<Uri, Error> {
         let parts = self.api_url.clone().into_parts();
         let mut builder = http::uri::Builder::new();
         if let Some(scheme) = parts.scheme {
@@ -293,13 +287,16 @@ where
             builder = builder.authority(authority)
         }
         builder
-            .path_and_query(path.parse::<PathAndQuery>().map_err(E::Error::internal)?)
+            .path_and_query(
+                path.parse::<PathAndQuery>()
+                    .map_err(|err| Error::internal("failed to parse uri", err))?,
+            )
             .build()
-            .map_err(E::Error::internal)
+            .map_err(|err| Error::internal("failed to build Uri", err))
     }
 
     /// Execute a `GET` request, possibly trying multiple cluster nodes.
-    pub async fn get<'a, R>(&'a self, uri: &str) -> Result<ApiResponse<R>, E::Error>
+    pub async fn get<'a, R>(&'a self, uri: &str) -> Result<ApiResponse<R>, Error>
     where
         R: serde::de::DeserializeOwned,
     {
@@ -309,7 +306,7 @@ where
             .set_auth_headers(Request::get(self.build_uri(uri)?))
             .await?
             .body(Vec::new())
-            .map_err(E::Error::internal)?;
+            .map_err(|err| Error::internal("failed to build request", err))?;
 
         Self::handle_response(self.client.request(request).await?)
     }
@@ -319,7 +316,7 @@ where
         &'a self,
         uri: &str,
         body: &'a B,
-    ) -> Result<ApiResponse<R>, E::Error>
+    ) -> Result<ApiResponse<R>, Error>
     where
         B: serde::Serialize,
         R: serde::de::DeserializeOwned,
@@ -329,7 +326,7 @@ where
     }
 
     /// Execute a `PUT` request with the given body, possibly trying multiple cluster nodes.
-    pub async fn put<'a, B, R>(&'a self, uri: &str, body: &'a B) -> Result<ApiResponse<R>, E::Error>
+    pub async fn put<'a, B, R>(&'a self, uri: &str, body: &'a B) -> Result<ApiResponse<R>, Error>
     where
         B: serde::Serialize,
         R: serde::de::DeserializeOwned,
@@ -339,11 +336,7 @@ where
     }
 
     /// Execute a `POST` request with the given body, possibly trying multiple cluster nodes.
-    pub async fn post<'a, B, R>(
-        &'a self,
-        uri: &str,
-        body: &'a B,
-    ) -> Result<ApiResponse<R>, E::Error>
+    pub async fn post<'a, B, R>(&'a self, uri: &str, body: &'a B) -> Result<ApiResponse<R>, Error>
     where
         B: serde::Serialize,
         R: serde::de::DeserializeOwned,
@@ -354,7 +347,7 @@ where
     }
 
     /// Execute a `DELETE` request, possibly trying multiple cluster nodes.
-    pub async fn delete<'a, R>(&'a self, uri: &str) -> Result<ApiResponse<R>, E::Error>
+    pub async fn delete<'a, R>(&'a self, uri: &str) -> Result<ApiResponse<R>, Error>
     where
         R: serde::de::DeserializeOwned,
     {
@@ -364,7 +357,7 @@ where
             .set_auth_headers(Request::delete(self.build_uri(uri)?))
             .await?
             .body(Vec::new())
-            .map_err(E::Error::internal)?;
+            .map_err(|err| Error::internal("failed to build request", err))?;
 
         Self::handle_response(self.client.request(request).await?)
     }
@@ -374,7 +367,7 @@ where
         &'a self,
         uri: &str,
         body: &'a B,
-    ) -> Result<ApiResponse<R>, E::Error>
+    ) -> Result<ApiResponse<R>, Error>
     where
         B: serde::Serialize,
         R: serde::de::DeserializeOwned,
@@ -391,12 +384,13 @@ where
         method: http::Method,
         uri: &str,
         body: &'a B,
-    ) -> Result<ApiResponse<R>, E::Error>
+    ) -> Result<ApiResponse<R>, Error>
     where
         B: serde::Serialize,
         R: serde::de::DeserializeOwned,
     {
-        let body = serde_json::to_vec(&body).map_err(E::Error::internal)?;
+        let body = serde_json::to_vec(&body)
+            .map_err(|err| Error::internal("failed to serialize request body", err))?;
         let content_length = body.len();
         self.json_request_bytes(auth, method, uri, body, content_length)
             .await
@@ -410,7 +404,7 @@ where
         uri: &str,
         body: Vec<u8>,
         content_length: usize,
-    ) -> Result<ApiResponse<R>, E::Error>
+    ) -> Result<ApiResponse<R>, Error>
     where
         R: serde::de::DeserializeOwned,
     {
@@ -427,7 +421,7 @@ where
         uri: &str,
         body: Vec<u8>,
         content_length: usize,
-    ) -> Result<Response<Vec<u8>>, E::Error> {
+    ) -> Result<Response<Vec<u8>>, Error> {
         let request = Request::builder()
             .method(method.clone())
             .uri(self.build_uri(uri)?)
@@ -437,7 +431,7 @@ where
         let request = auth
             .set_auth_headers(request)
             .body(body.clone())
-            .map_err(E::Error::internal)?;
+            .map_err(|err| Error::internal("failed to build request", err))?;
 
         Ok(self.client.request(request).await?)
     }
@@ -445,12 +439,12 @@ where
     /// Check the status code, deserialize the json/extjs `RawApiResponse` and check for error
     /// messages inside.
     /// On success, deserialize the expected result type.
-    fn handle_response<R>(response: Response<Vec<u8>>) -> Result<ApiResponse<R>, E::Error>
+    fn handle_response<R>(response: Response<Vec<u8>>) -> Result<ApiResponse<R>, Error>
     where
         R: serde::de::DeserializeOwned,
     {
         if response.status() == StatusCode::UNAUTHORIZED {
-            return Err(E::Error::unauthorized());
+            return Err(Error::Unauthorized);
         }
 
         if !response.status().is_success() {
@@ -459,12 +453,13 @@ where
             //    Ok(value) =>
             //        if value["error"]
             let (response, body) = response.into_parts();
-            let body = String::from_utf8(body).map_err(E::Error::bad_api)?;
-            return Err(E::Error::api_error(response.status, body));
+            let body =
+                String::from_utf8(body).map_err(|_| Error::Other("API returned non-utf8 data"))?;
+            return Err(Error::api(response.status, body));
         }
 
-        let data: RawApiResponse<R> =
-            serde_json::from_slice(&response.into_body()).map_err(E::Error::bad_api)?;
+        let data: RawApiResponse<R> = serde_json::from_slice(&response.into_body())
+            .map_err(|err| Error::internal("failed to deserialize api response", err))?;
 
         data.check()
     }
@@ -528,7 +523,7 @@ struct RawApiResponse<T> {
 }
 
 impl<T> RawApiResponse<T> {
-    pub fn check<E: ErrorTrait>(mut self) -> Result<ApiResponse<T>, E> {
+    pub fn check(mut self) -> Result<ApiResponse<T>, Error> {
         if !self.success.unwrap_or(false) {
             let status = http::StatusCode::from_u16(self.status.unwrap_or(400))
                 .unwrap_or(http::StatusCode::BAD_REQUEST);
@@ -541,7 +536,7 @@ impl<T> RawApiResponse<T> {
                 let _ = write!(message, "\n{param}: {error}");
             }
 
-            return Err(E::api_error(status, message));
+            return Err(Error::api(status, message));
         }
 
         Ok(ApiResponse {
@@ -558,7 +553,6 @@ pub type HyperClient<E> = Client<Arc<proxmox_http::client::Client>, E>;
 impl<C, E> Client<C, E>
 where
     E: Environment,
-    E::Error: From<anyhow::Error>,
 {
     /// Create a new client instance which will connect to the provided endpoint.
     pub fn new(api_url: Uri, environment: E) -> HyperClient<E> {
@@ -575,7 +569,6 @@ mod hyper_client_extras {
     use std::future::Future;
     use std::sync::Arc;
 
-    use anyhow::format_err;
     use http::request::Request;
     use http::response::Response;
     use http::Uri;
@@ -586,7 +579,7 @@ mod hyper_client_extras {
     use proxmox_http::client::Client as ProxmoxClient;
 
     use super::{Client, HyperClient};
-    use crate::Environment;
+    use crate::{Environment, Error};
 
     #[derive(Default)]
     pub enum TlsOptions {
@@ -646,7 +639,6 @@ mod hyper_client_extras {
     impl<C, E> Client<C, E>
     where
         E: Environment,
-        E::Error: From<anyhow::Error>,
     {
         /// Create a new client instance which will connect to the provided endpoint.
         pub fn with_options(
@@ -654,9 +646,9 @@ mod hyper_client_extras {
             environment: E,
             tls_options: TlsOptions,
             http_options: proxmox_http::HttpOptions,
-        ) -> Result<HyperClient<E>, E::Error> {
+        ) -> Result<HyperClient<E>, Error> {
             let mut connector = SslConnector::builder(SslMethod::tls_client())
-                .map_err(|err| format_err!("failed to create ssl connector builder: {err}"))?;
+                .map_err(|err| Error::internal("failed to create ssl connector builder", err))?;
 
             match tls_options {
                 TlsOptions::Verify => (),
@@ -677,11 +669,11 @@ mod hyper_client_extras {
                 TlsOptions::CaCert(ca) => {
                     let mut store =
                         openssl::x509::store::X509StoreBuilder::new().map_err(|err| {
-                            format_err!("failed to create certificate store builder: {err}")
+                            Error::internal("failed to create certificate store builder", err)
                         })?;
                     store
                         .add_cert(ca)
-                        .map_err(|err| format_err!("failed to build certificate store: {err}"))?;
+                        .map_err(|err| Error::internal("failed to build certificate store", err))?;
                     connector.set_cert_store(store.build());
                 }
             }
@@ -693,10 +685,9 @@ mod hyper_client_extras {
     }
 
     impl super::HttpClient for Arc<proxmox_http::client::Client> {
-        type Error = anyhow::Error;
         #[allow(clippy::type_complexity)]
         type ResponseFuture =
-            std::pin::Pin<Box<dyn Future<Output = Result<Response<Vec<u8>>, Self::Error>> + Send>>;
+            std::pin::Pin<Box<dyn Future<Output = Result<Response<Vec<u8>>, Error>> + Send>>;
 
         fn request(&self, request: Request<Vec<u8>>) -> Self::ResponseFuture {
             let (parts, body) = request.into_parts();
@@ -705,15 +696,20 @@ mod hyper_client_extras {
             Box::pin(async move {
                 use hyper::body::HttpBody;
 
-                let (response, mut body) = (*this).request(request).await?.into_parts();
+                // FIXME: proxmox_http's client needs a way to return http status codes and such...
+                let (response, mut body) = (*this)
+                    .request(request)
+                    .await
+                    .map_err(Error::Anyhow)?
+                    .into_parts();
 
                 let mut data = Vec::<u8>::new();
                 while let Some(more) = body.data().await {
-                    let more = more?;
+                    let more = more.map_err(|err| Error::internal("error reading body", err))?;
                     data.extend(&more[..]);
                 }
 
-                Ok::<_, anyhow::Error>(Response::from_parts(response, data))
+                Ok::<_, Error>(Response::from_parts(response, data))
             })
         }
     }

@@ -2,7 +2,7 @@ mod environment;
 mod error;
 
 pub use environment::Environment;
-pub use error::ErrorTrait;
+pub use error::Error;
 
 pub use proxmox_login::tfa::TfaChallenge;
 pub use proxmox_login::{Authentication, Ticket};
