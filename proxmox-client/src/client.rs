@@ -21,11 +21,11 @@ use crate::{Authentication, Environment, Error, Token};
 pub trait HttpClient: Send + Sync {
     type Error: Error;
     #[cfg(not(target_arch = "wasm32"))]
-    type Request: Future<Output = Result<Response<Vec<u8>>, Self::Error>> + Send;
+    type ResponseFuture: Future<Output = Result<Response<Vec<u8>>, Self::Error>> + Send;
     #[cfg(target_arch = "wasm32")]
-    type Request: Future<Output = Result<Response<Vec<u8>>, Self::Error>>;
+    type ResponseFuture: Future<Output = Result<Response<Vec<u8>>, Self::Error>>;
 
-    fn request(&self, request: Request<Vec<u8>>) -> Self::Request;
+    fn request(&self, request: Request<Vec<u8>>) -> Self::ResponseFuture;
 }
 
 /// Proxmox VE high level API client.
@@ -698,10 +698,10 @@ mod hyper_client_extras {
     impl super::HttpClient for Arc<proxmox_http::client::Client> {
         type Error = anyhow::Error;
         #[allow(clippy::type_complexity)]
-        type Request =
+        type ResponseFuture =
             std::pin::Pin<Box<dyn Future<Output = Result<Response<Vec<u8>>, Self::Error>> + Send>>;
 
-        fn request(&self, request: Request<Vec<u8>>) -> Self::Request {
+        fn request(&self, request: Request<Vec<u8>>) -> Self::ResponseFuture {
             let (parts, body) = request.into_parts();
             let request = Request::<hyper::Body>::from_parts(parts, body.into());
             let this = Arc::clone(self);
