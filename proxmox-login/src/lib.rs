@@ -78,6 +78,16 @@ impl Login {
         self.api_url = api_url.into();
     }
 
+    /// Get the userid this request is for.
+    pub fn userid(&self) -> &str {
+        &self.userid
+    }
+
+    /// Get the API url this request is for.
+    pub fn api_url(&self) -> &str {
+        &self.api_url
+    }
+
     /// Prepare a request given an already parsed ticket.
     pub fn renew_ticket(api_url: impl Into<String>, ticket: Ticket) -> Self {
         Self {
