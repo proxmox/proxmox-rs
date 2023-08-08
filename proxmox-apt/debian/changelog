@@ -1,3 +1,11 @@
+rust-proxmox-apt (0.10.5-1) bookworm; urgency=medium
+
+  * fix #4868: map missing section field to 'unknown'
+
+  * various clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 08 Aug 2023 14:05:04 +0200
+
 rust-proxmox-apt (0.10.4-1) bookworm; urgency=medium
 
   * update to proxmox-schema 2.0
