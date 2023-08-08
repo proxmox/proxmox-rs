@@ -34,8 +34,8 @@ Provides:
  librust-proxmox-ldap-0+default-dev (= ${binary:Version}),
  librust-proxmox-ldap-0.2-dev (= ${binary:Version}),
  librust-proxmox-ldap-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-ldap-0.2.0-dev (= ${binary:Version}),
- librust-proxmox-ldap-0.2.0+default-dev (= ${binary:Version})
+ librust-proxmox-ldap-0.2.1-dev (= ${binary:Version}),
+ librust-proxmox-ldap-0.2.1+default-dev (= ${binary:Version})
 Description: Proxmox library for LDAP authentication/synchronization - Rust source code
  This package contains the source for the Rust proxmox-ldap crate, packaged by
  debcargo for use with cargo and dh-cargo.
