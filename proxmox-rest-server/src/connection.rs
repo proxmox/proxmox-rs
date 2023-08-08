@@ -226,7 +226,9 @@ impl AcceptBuilder {
                 _ =  shutdown_future => break,
             };
             #[cfg(not(feature = "rate-limited-stream"))]
-            drop(peer);
+            {
+                let _ = &peer;
+            }
 
             sock.set_nodelay(true).unwrap();
             let _ = proxmox_sys::linux::socket::set_tcp_keepalive(
