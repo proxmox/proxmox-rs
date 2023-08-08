@@ -173,7 +173,7 @@ fn ascii_split_around(s: &str, mid: usize) -> (&str, &str) {
 
 /// Split "off" the first `mid` bytes of `s`, advancing it to `mid + 1` (assuming `mid` points to
 /// an ASCII character!).
-fn ascii_split_off<'a, 's>(s: &'a mut &'s str, mid: usize) -> &'s str {
+fn ascii_split_off<'s>(s: &mut &'s str, mid: usize) -> &'s str {
     let (a, b) = ascii_split_around(s, mid);
     *s = b;
     a
