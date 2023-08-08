@@ -106,7 +106,7 @@ pub trait PeerAddress {
 // Pin<Box<T>>
 impl<T: PeerAddress> PeerAddress for Pin<Box<T>> {
     fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
-        T::peer_addr(&*self)
+        T::peer_addr(&**self)
     }
 }
 
