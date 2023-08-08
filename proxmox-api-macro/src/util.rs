@@ -623,17 +623,12 @@ where
 }
 
 /// Helper to distinguish between explicitly set or derived data.
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Default, Eq, PartialEq)]
 pub enum Maybe<T> {
     Explicit(T),
     Derived(T),
+    #[default]
     None,
-}
-
-impl<T> Default for Maybe<T> {
-    fn default() -> Self {
-        Maybe::None
-    }
 }
 
 impl<T> Maybe<T> {

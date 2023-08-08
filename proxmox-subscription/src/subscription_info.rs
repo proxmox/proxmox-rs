@@ -20,7 +20,7 @@ pub(crate) const SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE: i64 = 5 * 24 * 3600;
 
 // Aliases are needed for PVE compat!
 #[cfg_attr(feature = "api-types", api())]
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 /// Subscription status
 pub enum SubscriptionStatus {
@@ -29,6 +29,7 @@ pub enum SubscriptionStatus {
     #[serde(alias = "New")]
     New,
     /// no subscription set
+    #[default]
     #[serde(alias = "NotFound")]
     NotFound,
     /// subscription set and active
@@ -44,11 +45,7 @@ pub enum SubscriptionStatus {
     #[serde(alias = "Suspended")]
     Suspended,
 }
-impl Default for SubscriptionStatus {
-    fn default() -> Self {
-        SubscriptionStatus::NotFound
-    }
-}
+
 impl std::fmt::Display for SubscriptionStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
