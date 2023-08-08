@@ -109,7 +109,7 @@ impl<'de, 'i> SchemaDeserializer<'de, 'i> {
         if !IN_PROPERTY_STRING.with(|v| v.get()) {
             schema
                 .check_constraints(&self.input)
-                .map_err(|err| Error::invalid(err))?;
+                .map_err(Error::invalid)?;
         }
         match self.input {
             Cow3::Original(input) => visitor.visit_borrowed_str(input),
@@ -175,9 +175,7 @@ impl<'de, 'i> de::Deserializer<'de> for SchemaDeserializer<'de, 'i> {
                     .parse()
                     .map_err(|_| Error::msg(format!("not an integer: {:?}", self.input)))?;
 
-                schema
-                    .check_constraints(value)
-                    .map_err(|err| Error::invalid(err))?;
+                schema.check_constraints(value).map_err(Error::invalid)?;
 
                 let value: i64 = i64::try_from(value)
                     .map_err(|_| Error::invalid("isize did not fit into i64"))?;
@@ -194,9 +192,7 @@ impl<'de, 'i> de::Deserializer<'de> for SchemaDeserializer<'de, 'i> {
                     .parse()
                     .map_err(|_| Error::msg(format!("not a valid number: {:?}", self.input)))?;
 
-                schema
-                    .check_constraints(value)
-                    .map_err(|err| Error::invalid(err))?;
+                schema.check_constraints(value).map_err(Error::invalid)?;
 
                 visitor.visit_f64(value)
             }

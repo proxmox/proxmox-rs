@@ -107,7 +107,7 @@ impl PrivateAuthState {
 impl OpenIdAuthenticator {
     pub fn discover(config: &OpenIdConfig, redirect_url: &str) -> Result<Self, Error> {
         let client_id = ClientId::new(config.client_id.clone());
-        let client_key = config.client_key.clone().map(|key| ClientSecret::new(key));
+        let client_key = config.client_key.clone().map(ClientSecret::new);
         let issuer_url = IssuerUrl::new(config.issuer_url.clone())?;
 
         let provider_metadata = CoreProviderMetadata::discover(&issuer_url, http_client)?;
