@@ -113,21 +113,19 @@ pub fn standard_repositories(
     result
 }
 
+/// Type containing successfully parsed files, a list of errors for files that
+/// could not be read and a common digest for the successfully parsed files.
+pub type Repositories = (
+    Vec<APTRepositoryFile>,
+    Vec<APTRepositoryFileError>,
+    [u8; 32],
+);
+
 /// Returns all APT repositories configured in `/etc/apt/sources.list` and
 /// in `/etc/apt/sources.list.d` including disabled repositories.
 ///
-/// Returns the succesfully parsed files, a list of errors for files that could
-/// not be read or parsed and a common digest for the succesfully parsed files.
-///
 /// The digest is guaranteed to be set for each successfully parsed file.
-pub fn repositories() -> Result<
-    (
-        Vec<APTRepositoryFile>,
-        Vec<APTRepositoryFileError>,
-        [u8; 32],
-    ),
-    Error,
-> {
+pub fn repositories() -> Result<Repositories, Error> {
     let to_result = |files: Vec<APTRepositoryFile>, errors: Vec<APTRepositoryFileError>| {
         let common_digest = common_digest(&files);
 
