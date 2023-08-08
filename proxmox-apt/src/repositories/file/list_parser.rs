@@ -54,7 +54,7 @@ impl Iterator for SplitQuoteWord {
                 continue;
             }
 
-            if start == None {
+            if start.is_none() {
                 start = Some(n);
             }
 
