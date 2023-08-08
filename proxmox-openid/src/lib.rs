@@ -72,6 +72,12 @@ pub struct PrivateAuthState {
     pub ctime: i64,
 }
 
+impl Default for PrivateAuthState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PrivateAuthState {
     pub fn new() -> Self {
         let nonce = Nonce::new_random();
