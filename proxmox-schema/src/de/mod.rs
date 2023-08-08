@@ -290,13 +290,9 @@ impl<'de, 'i> de::Deserializer<'de> for SchemaDeserializer<'de, 'i> {
                 Some(schema::ApiStringFormat::PropertyString(schema)) => {
                     self.deserialize_property_string(visitor, schema)
                 }
-                _ => Err(Error::msg(format!(
-                    "cannot deserialize map with a string schema",
-                ))),
+                _ => Err(Error::msg("cannot deserialize map with a string schema")),
             },
-            _ => Err(Error::msg(format!(
-                "cannot deserialize map with non-object schema",
-            ))),
+            _ => Err(Error::msg("cannot deserialize map with non-object schema")),
         }
     }
 
