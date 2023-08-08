@@ -54,15 +54,15 @@ fn ureq_agent() -> Result<ureq::Agent, Error> {
 pub fn http_client(request: HttpRequest) -> Result<HttpResponse, Error> {
     let agent = ureq_agent()?;
     let mut req = if let Method::POST = request.method {
-        agent.post(&request.url.to_string())
+        agent.post(request.url.as_ref())
     } else {
-        agent.get(&request.url.to_string())
+        agent.get(request.url.as_ref())
     };
 
     for (name, value) in request.headers {
         if let Some(name) = name {
             req = req.set(
-                &name.to_string(),
+                name.as_ref(),
                 value.to_str().map_err(|_| {
                     Error::Other(format!(
                         "invalid {} header value {:?}",
