@@ -1,5 +1,5 @@
 use std::error::Error as StdError;
-use std::fmt::{self, Display};
+use std::fmt;
 
 #[derive(Debug)]
 #[non_exhaustive]
@@ -9,6 +9,12 @@ pub enum Error {
 
     /// The API responded with an error code.
     Api(http::StatusCode, String),
+
+    /// The API returned something unexpected.
+    BadApi(String, Option<Box<dyn StdError + Send + Sync + 'static>>),
+
+    /// An API call which is meant to return nothing returned unexpected data.
+    UnexpectedData,
 
     /// An error occurred in the authentication API.
     Authentication(proxmox_login::error::ResponseError),
@@ -33,6 +39,7 @@ impl StdError for Error {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match self {
             Self::Authentication(err) => Some(err),
+            Self::BadApi(_, Some(err)) => Some(&**err),
             Self::Ticket(err) => Some(err),
             Self::Client(err) => Some(&**err),
             Self::Internal(_, err) => Some(&**err),
@@ -47,6 +54,8 @@ impl fmt::Display for Error {
         match self {
             Self::Unauthorized => f.write_str("unauthorized"),
             Self::Api(status, msg) => write!(f, "api error (status = {status}): {msg}"),
+            Self::UnexpectedData => write!(f, "api unexpectedly returned data"),
+            Self::BadApi(msg, _) => write!(f, "api returned unexpected data - {msg}"),
             Self::Other(err) => f.write_str(err),
             Self::Authentication(err) => write!(f, "authentication error: {err}"),
             Self::Ticket(err) => write!(f, "authentication error: {err}"),
@@ -57,21 +66,22 @@ impl fmt::Display for Error {
     }
 }
 
-impl Error {
-    pub(crate) fn api<T: Display>(status: http::StatusCode, msg: T) -> Self {
-        Self::Api(status, msg.to_string())
-    }
-
-    pub(crate) fn internal<E>(context: &'static str, err: E) -> Self
-    where
-        E: StdError + Send + Sync + 'static,
-    {
-        Self::Internal(context, Box::new(err))
-    }
-}
-
 impl From<proxmox_login::error::ResponseError> for Error {
     fn from(err: proxmox_login::error::ResponseError) -> Self {
         Self::Authentication(err)
+    }
+}
+
+impl Error {
+    pub(crate) fn bad_api<T, E>(msg: T, err: E) -> Self
+    where
+        T: Into<String>,
+        E: StdError + Send + Sync + 'static,
+    {
+        Self::BadApi(msg.into(), Some(Box::new(err)))
+    }
+
+    pub(crate) fn api<T: Into<String>>(status: http::StatusCode, msg: T) -> Self {
+        Self::Api(status, msg.into())
     }
 }

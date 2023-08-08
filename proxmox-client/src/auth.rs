@@ -9,22 +9,6 @@ pub enum AuthenticationKind {
     Token(Token),
 }
 
-impl AuthenticationKind {
-    pub fn set_auth_headers(&self, request: http::request::Builder) -> http::request::Builder {
-        match self {
-            AuthenticationKind::Ticket(auth) => auth.set_auth_headers(request),
-            AuthenticationKind::Token(auth) => auth.set_auth_headers(request),
-        }
-    }
-
-    pub fn userid(&self) -> &str {
-        match self {
-            AuthenticationKind::Ticket(auth) => &auth.userid,
-            AuthenticationKind::Token(auth) => &auth.userid,
-        }
-    }
-}
-
 impl From<Authentication> for AuthenticationKind {
     fn from(auth: Authentication) -> Self {
         Self::Ticket(auth)
