@@ -137,6 +137,10 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
         // -1,, it's unsigned
         bail!("strftime failed");
     }
+
+    // `res` is a `libc::size_t`, which on a different target architecture might not be directly
+    // assignable to a `usize`. Thus, we actually want a cast here.
+    #[allow(clippy::unnecessary_cast)]
     let len = res as usize;
 
     if len == 0 {
