@@ -36,12 +36,12 @@ impl StdError for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::Generic(e) => f.write_str(&e),
-            Error::Decode(m, _e) => f.write_str(&m),
-            Error::Ssl(m, _e) => f.write_str(&m),
+            Error::Generic(e) => f.write_str(e),
+            Error::Decode(m, _e) => f.write_str(m),
+            Error::Ssl(m, _e) => f.write_str(m),
             Error::UnsupportedAlgorithm(a) => write!(f, "unsupported algorithm: '{a}'"),
             Error::UnknownParameter(p) => write!(f, "unknown otpauth uri parameter: '{p}'"),
-            Error::BadParameter(m, _e) => f.write_str(&m),
+            Error::BadParameter(m, _e) => f.write_str(m),
         }
     }
 }

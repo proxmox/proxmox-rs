@@ -588,7 +588,7 @@ impl<'de, 'i> de::MapAccess<'de> for MapAccess<'de, 'i> {
 
         let (key, schema) = match key {
             Some(key) => {
-                let schema = self.schema.lookup(&key);
+                let schema = self.schema.lookup(key);
                 let key = match str_slice_to_range(&self.input, key) {
                     None => Cow::Owned(key.to_string()),
                     Some(range) => match &self.input {

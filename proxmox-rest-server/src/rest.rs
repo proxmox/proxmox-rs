@@ -946,7 +946,7 @@ impl Formatted {
                 let result = if api_method.protected
                     && rpcenv.env_type == RpcEnvironmentType::PUBLIC
                 {
-                    proxy_protected_request(api_method, parts, body, &peer).await
+                    proxy_protected_request(api_method, parts, body, peer).await
                 } else {
                     handle_api_request(rpcenv, api_method, formatter, parts, body, uri_param).await
                 };
@@ -1051,7 +1051,7 @@ impl Unformatted {
                 let result = if api_method.protected
                     && rpcenv.env_type == RpcEnvironmentType::PUBLIC
                 {
-                    proxy_protected_request(api_method, parts, body, &peer).await
+                    proxy_protected_request(api_method, parts, body, peer).await
                 } else {
                     handle_unformatted_api_request(rpcenv, api_method, parts, body, uri_param).await
                 };

@@ -93,7 +93,7 @@ where
     <B as ToOwned>::Owned: Borrow<B>,
 {
     fn as_ref(&self) -> &B {
-        &self
+        self
     }
 }
 

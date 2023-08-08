@@ -221,7 +221,7 @@ impl OpenIdAuthenticator {
         private_auth_state: &PrivateAuthState,
     ) -> Result<Value, Error> {
         let (id_token_claims, userinfo_claims) =
-            self.verify_authorization_code(&code, &private_auth_state)?;
+            self.verify_authorization_code(code, private_auth_state)?;
 
         let mut data = serde_json::to_value(id_token_claims)?;
 
