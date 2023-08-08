@@ -785,11 +785,11 @@ impl ApiConfig {
                 }
                 Err(AuthError::NoData) => {}
             }
-            return Ok(self.get_index(rpcenv, parts).await);
+            Ok(self.get_index(rpcenv, parts).await)
         } else {
             let filename = self.find_alias(&components);
             let compression = extract_compression_method(&parts.headers);
-            return handle_static_file_download(&components, filename, compression).await;
+            handle_static_file_download(&components, filename, compression).await
         }
     }
 }
@@ -926,7 +926,7 @@ impl Formatted {
         match api_method {
             None => {
                 let err = http_err!(NOT_FOUND, "Path '{}' not found.", full_path);
-                return Ok(formatter.format_error(err));
+                Ok(formatter.format_error(err))
             }
             Some(api_method) => {
                 let auth_id = rpcenv.get_auth_id();
@@ -962,7 +962,7 @@ impl Formatted {
                         .insert(AuthStringExtension(auth_id));
                 }
 
-                return Ok(response);
+                Ok(response)
             }
         }
     }
@@ -1067,7 +1067,7 @@ impl Unformatted {
                         .insert(AuthStringExtension(auth_id));
                 }
 
-                return Ok(response);
+                Ok(response)
             }
         }
     }
