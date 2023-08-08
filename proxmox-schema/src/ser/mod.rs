@@ -448,7 +448,7 @@ impl<T: fmt::Write> Serializer for ElementSerializer<T> {
     }
 
     fn serialize_str(mut self, v: &str) -> Result<Self::Ok, Error> {
-        if v.contains(&['"', '\\', '\n']) {
+        if v.contains(['"', '\\', '\n']) {
             self.inner.write_char('"')?;
             crate::property_string::quote(v, &mut self.inner)?;
             self.inner.write_char('"')?;
@@ -643,7 +643,7 @@ impl<T: fmt::Write> ElementSerializeSeq<T> {
 
     fn finish(mut self) -> Result<T, Error> {
         let value = self.inner.finish()?;
-        if value.contains(&[',', ';', ' ', '"', '\\', '\n']) {
+        if value.contains([',', ';', ' ', '"', '\\', '\n']) {
             self.output.write_char('"')?;
             crate::property_string::quote(&value, &mut self.output)?;
             self.output.write_char('"')?;

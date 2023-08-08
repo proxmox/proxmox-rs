@@ -25,7 +25,7 @@ fn register_subscription<C: HttpClient<String, String>>(
     client: C,
 ) -> Result<(String, String), Error> {
     // WHCMS sample code feeds the key into this, but it's just a challenge, so keep it simple
-    let rand = hex::encode(&proxmox_sys::linux::random_data(16)?);
+    let rand = hex::encode(proxmox_sys::linux::random_data(16)?);
     let challenge = format!("{}{}", checktime, rand);
 
     let params = json!({

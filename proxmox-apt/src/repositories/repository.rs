@@ -414,7 +414,7 @@ fn uri_to_filename(uri: &str) -> String {
         if *b <= 0x20 || *b >= 0x7F || encode_chars.contains(*b as char) {
             let mut hex = [0u8; 2];
             // unwrap: we're hex-encoding a single byte into a 2-byte slice
-            hex::encode_to_slice(&[*b], &mut hex).unwrap();
+            hex::encode_to_slice([*b], &mut hex).unwrap();
             let hex = unsafe { std::str::from_utf8_unchecked(&hex) };
             encoded = format!("{}%{}", encoded, hex);
         } else {

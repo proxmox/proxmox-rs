@@ -97,7 +97,7 @@ pub fn store_auth_state(
         bail!("too many pending openid auth request for realm {}", realm);
     }
 
-    data.push(serde_json::to_value(&auth_state)?);
+    data.push(serde_json::to_value(auth_state)?);
 
     replace_auth_state(&path, &data)?;
 

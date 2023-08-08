@@ -293,7 +293,7 @@ impl APTRepositoryFile {
         }
 
         if self.repositories.is_empty() {
-            return std::fs::remove_file(&path)
+            return std::fs::remove_file(path)
                 .map_err(|err| self.err(format_err!("unable to remove file - {}", err)));
         }
 

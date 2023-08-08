@@ -1023,11 +1023,11 @@ impl WorkerTaskContext for WorkerTask {
 
     fn log(&self, level: log::Level, message: &std::fmt::Arguments) {
         match level {
-            log::Level::Error => self.log_warning(&message.to_string()),
-            log::Level::Warn => self.log_warning(&message.to_string()),
-            log::Level::Info => self.log_message(&message.to_string()),
-            log::Level::Debug => self.log_message(&format!("DEBUG: {}", message)),
-            log::Level::Trace => self.log_message(&format!("TRACE: {}", message)),
+            log::Level::Error => self.log_warning(message.to_string()),
+            log::Level::Warn => self.log_warning(message.to_string()),
+            log::Level::Info => self.log_message(message.to_string()),
+            log::Level::Debug => self.log_message(format!("DEBUG: {}", message)),
+            log::Level::Trace => self.log_message(format!("TRACE: {}", message)),
         }
     }
 }

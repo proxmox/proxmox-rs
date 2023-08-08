@@ -86,9 +86,8 @@ pub mod bytes_as_base64 {
         D: Deserializer<'de>,
     {
         use serde::de::Error;
-        String::deserialize(deserializer).and_then(|string| {
-            base64::decode(&string).map_err(|err| Error::custom(err.to_string()))
-        })
+        String::deserialize(deserializer)
+            .and_then(|string| base64::decode(string).map_err(|err| Error::custom(err.to_string())))
     }
 }
 
@@ -125,7 +124,7 @@ pub mod string_as_base64 {
     fn finish_deserializing<'de, D: Deserializer<'de>>(string: String) -> Result<String, D::Error> {
         use serde::de::Error;
 
-        let bytes = base64::decode(&string).map_err(|err| {
+        let bytes = base64::decode(string).map_err(|err| {
             let msg = format!("base64 decode: {}", err);
             Error::custom(msg)
         })?;
@@ -219,7 +218,7 @@ pub mod bytes_as_base64url_nopad {
     {
         use serde::de::Error;
         String::deserialize(deserializer).and_then(|string| {
-            base64::decode_config(&string, base64::URL_SAFE_NO_PAD)
+            base64::decode_config(string, base64::URL_SAFE_NO_PAD)
                 .map_err(|err| Error::custom(err.to_string()))
         })
     }
