@@ -292,6 +292,7 @@ impl<'de> de::Visitor<'de> for Visitor {
             _ => return Err(E::invalid_type(Unexpected::Str(value), &self)),
         };
 
+        #[allow(clippy::let_unit_value)]
         let _: () = schema.check_constraints(value).map_err(E::custom)?;
 
         Ok(Verifier)
