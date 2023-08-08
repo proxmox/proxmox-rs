@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
 use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -8,78 +9,59 @@ use http::request::Request;
 use http::response::Response;
 use http::uri::PathAndQuery;
 use http::{StatusCode, Uri};
+use hyper::body::{Body, HttpBody};
+use openssl::hash::MessageDigest;
+use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
+use openssl::x509::{self, X509};
+use serde::Serialize;
 use serde_json::Value;
 
+use proxmox_login::ticket::Validity;
 use proxmox_login::{Login, SecondFactorChallenge, TicketResult};
 
 use crate::auth::AuthenticationKind;
 use crate::{Error, Token};
 
-/// HTTP client backend trait.
-///
-/// An async [`Client`] requires some kind of async HTTP client implementation.
-pub trait HttpClient: Send + Sync {
-    type ResponseFuture: Future<Output = Result<Response<Vec<u8>>, Error>>;
+use super::{HttpApiClient, HttpApiResponse};
 
-    fn request(&self, request: Request<Vec<u8>>) -> Self::ResponseFuture;
+#[allow(clippy::type_complexity)]
+type ResponseFuture = Pin<Box<dyn Future<Output = Result<HttpApiResponse, Error>> + Send>>;
+
+#[derive(Default)]
+pub enum TlsOptions {
+    /// Default TLS verification.
+    #[default]
+    Verify,
+
+    /// Insecure: ignore invalid certificates.
+    Insecure,
+
+    /// Expect a specific certificate fingerprint.
+    Fingerprint(Vec<u8>),
+
+    /// Verify with a specific PEM formatted CA.
+    CaCert(X509),
+
+    /// Use a callback for certificate verification.
+    Callback(Box<dyn Fn(bool, &mut x509::X509StoreContextRef) -> bool + Send + Sync + 'static>),
 }
 
-/// Proxmox VE high level API client.
-pub struct Client<C> {
+/// A Proxmox API client base backed by a [`proxmox_http::Client`].
+pub struct Client {
     api_url: Uri,
     auth: Mutex<Option<Arc<AuthenticationKind>>>,
-    client: C,
+    client: Arc<proxmox_http::client::Client>,
     pve_compat: bool,
 }
 
-impl<C> Client<C> {
-    /// Get the underlying client object.
-    pub fn inner(&self) -> &C {
-        &self.client
+impl Client {
+    /// Create a new client instance which will connect to the provided endpoint.
+    pub fn new(api_url: Uri) -> Self {
+        Client::with_client(api_url, Arc::new(proxmox_http::client::Client::new()))
     }
 
-    /// Get a mutable reference to the underlying client object.
-    pub fn inner_mut(&mut self) -> &mut C {
-        &mut self.client
-    }
-
-    /// Get a reference to the current authentication information.
-    pub fn authentication(&self) -> Option<Arc<AuthenticationKind>> {
-        self.auth.lock().unwrap().clone()
-    }
-
-    pub fn use_api_token(&self, token: Token) {
-        *self.auth.lock().unwrap() = Some(Arc::new(token.into()));
-    }
-}
-
-fn to_request(request: proxmox_login::Request) -> Result<http::Request<Vec<u8>>, Error> {
-    http::Request::builder()
-        .method(http::Method::POST)
-        .uri(request.url)
-        .header(http::header::CONTENT_TYPE, request.content_type)
-        .header(
-            http::header::CONTENT_LENGTH,
-            request.content_length.to_string(),
-        )
-        .body(request.body.into_bytes())
-        .map_err(|err| Error::internal("error building login http request", err))
-}
-
-impl<C> Client<C> {
-    /// Enable Proxmox VE login API compatibility. This is required to support TFA authentication
-    /// on Proxmox VE APIs which require the `new-format` option.
-    pub fn set_pve_compatibility(&mut self, compatibility: bool) {
-        self.pve_compat = compatibility;
-    }
-}
-
-impl<C> Client<C>
-where
-    C: HttpClient,
-{
     /// Instantiate a client for an API with a given HTTP client instance.
-    pub fn with_client(api_url: Uri, client: C) -> Self {
+    pub fn with_client(api_url: Uri, client: Arc<proxmox_http::client::Client>) -> Self {
         Self {
             api_url,
             auth: Mutex::new(None),
@@ -88,8 +70,139 @@ where
         }
     }
 
+    /// Create a new client instance which will connect to the provided endpoint.
+    pub fn with_options(
+        api_url: Uri,
+        tls_options: TlsOptions,
+        http_options: proxmox_http::HttpOptions,
+    ) -> Result<Self, Error> {
+        let mut connector = SslConnector::builder(SslMethod::tls_client())
+            .map_err(|err| Error::internal("failed to create ssl connector builder", err))?;
+
+        match tls_options {
+            TlsOptions::Verify => (),
+            TlsOptions::Insecure => connector.set_verify(SslVerifyMode::NONE),
+            TlsOptions::Fingerprint(expected_fingerprint) => {
+                connector.set_verify_callback(SslVerifyMode::PEER, move |valid, chain| {
+                    if valid {
+                        return true;
+                    }
+                    verify_fingerprint(chain, &expected_fingerprint)
+                });
+            }
+            TlsOptions::Callback(cb) => {
+                connector
+                    .set_verify_callback(SslVerifyMode::PEER, move |valid, chain| cb(valid, chain));
+            }
+            TlsOptions::CaCert(ca) => {
+                let mut store = openssl::x509::store::X509StoreBuilder::new().map_err(|err| {
+                    Error::internal("failed to create certificate store builder", err)
+                })?;
+                store
+                    .add_cert(ca)
+                    .map_err(|err| Error::internal("failed to build certificate store", err))?;
+                connector.set_cert_store(store.build());
+            }
+        }
+
+        let client =
+            proxmox_http::client::Client::with_ssl_connector(connector.build(), http_options);
+
+        Ok(Self::with_client(api_url, Arc::new(client)))
+    }
+
+    /// Get the underlying client object.
+    pub fn http_client(&self) -> &Arc<proxmox_http::client::Client> {
+        &self.client
+    }
+
+    /// Get a reference to the current authentication information.
+    pub fn authentication(&self) -> Option<Arc<AuthenticationKind>> {
+        self.auth.lock().unwrap().clone()
+    }
+
+    /// Replace the authentication information with an API token.
+    pub fn use_api_token(&self, token: Token) {
+        *self.auth.lock().unwrap() = Some(Arc::new(token.into()));
+    }
+
+    /// Drop the current authentication information.
+    pub fn logout(&self) {
+        self.auth.lock().unwrap().take();
+    }
+
+    /// Enable Proxmox VE login API compatibility. This is required to support TFA authentication
+    /// on Proxmox VE APIs which require the `new-format` option.
+    pub fn set_pve_compatibility(&mut self, compatibility: bool) {
+        self.pve_compat = compatibility;
+    }
+
+    /// Get the currently used API url.
+    pub fn api_url(&self) -> &Uri {
+        &self.api_url
+    }
+
+    /// Build a URI relative to the current API endpoint.
+    fn build_uri(&self, path_and_query: &str) -> Result<Uri, Error> {
+        let parts = self.api_url.clone().into_parts();
+        let mut builder = http::uri::Builder::new();
+        if let Some(scheme) = parts.scheme {
+            builder = builder.scheme(scheme);
+        }
+        if let Some(authority) = parts.authority {
+            builder = builder.authority(authority)
+        }
+        builder
+            .path_and_query(
+                path_and_query
+                    .parse::<PathAndQuery>()
+                    .map_err(|err| Error::internal("failed to parse uri", err))?,
+            )
+            .build()
+            .map_err(|err| Error::internal("failed to build Uri", err))
+    }
+
+    /// Perform an *unauthenticated* HTTP request.
+    async fn authenticated_request(
+        client: Arc<proxmox_http::client::Client>,
+        auth: Arc<AuthenticationKind>,
+        method: http::Method,
+        uri: Uri,
+        json_body: Option<String>,
+    ) -> Result<HttpApiResponse, Error> {
+        let request = auth
+            .set_auth_headers(Request::builder().method(method).uri(uri))
+            .body(json_body.unwrap_or_default().into())
+            .map_err(|err| Error::internal("failed to build request", err))?;
+
+        let response = client.request(request).await.map_err(Error::Anyhow)?;
+
+        if response.status() == StatusCode::UNAUTHORIZED {
+            return Err(Error::Unauthorized);
+        }
+
+        let (response, body) = response.into_parts();
+        let body = read_body(body).await?;
+
+        if !response.status.is_success() {
+            // FIXME: Decode json errors...
+            //match serde_json::from_slice(&data)
+            //    Ok(value) =>
+            //        if value["error"]
+            let data =
+                String::from_utf8(body).map_err(|_| Error::Other("API returned non-utf8 data"))?;
+
+            return Err(Error::api(response.status, data));
+        }
+
+        Ok(HttpApiResponse {
+            status: response.status.as_u16(),
+            body,
+        })
+    }
+
     /// Assert that we are authenticated and return the `AuthenticationKind`.
-    /// Otherwise returns `Error::Unauthenticated`.
+    /// Otherwise returns `Error::Unauthorized`.
     pub fn login_auth(&self) -> Result<Arc<AuthenticationKind>, Error> {
         self.auth
             .lock()
@@ -98,6 +211,166 @@ where
             .ok_or_else(|| Error::Unauthorized)
     }
 
+    /// Check to see if we need to refresh the ticket. Note that it is an error to call this when
+    /// logged out, which will return `Error::Unauthorized`.
+    ///
+    /// Tokens are always valid.
+    pub fn ticket_validity(&self) -> Result<Validity, Error> {
+        match &*self.login_auth()? {
+            AuthenticationKind::Token(_) => Ok(Validity::Valid),
+            AuthenticationKind::Ticket(auth) => Ok(auth.ticket.validity()),
+        }
+    }
+
+    /// If the ticket expires soon (has a validity of [`Validity::Refresh`]), this will attempt to
+    /// refresh the ticket.
+    pub async fn maybe_refresh_ticket(&self) -> Result<(), Error> {
+        if let Validity::Refresh = self.ticket_validity()? {
+            self.refresh_ticket().await?;
+        }
+
+        Ok(())
+    }
+
+    /// Attempt to refresh the current ticket.
+    ///
+    /// If not logged in at all yet, `Error::Unauthorized` will be returned.
+    pub async fn refresh_ticket(&self) -> Result<(), Error> {
+        let auth = self.login_auth()?;
+        let auth = match &*auth {
+            AuthenticationKind::Token(_) => return Ok(()),
+            AuthenticationKind::Ticket(auth) => auth,
+        };
+
+        let login = Login::renew(self.api_url.to_string(), auth.ticket.to_string())
+            .map_err(Error::Ticket)?;
+        let request = login_to_request(login.request())?;
+
+        let response = self.client.request(request).await.map_err(Error::Anyhow)?;
+        if !response.status().is_success() {
+            return Err(Error::api(response.status(), "authentication failed"));
+        }
+
+        let (_, body) = response.into_parts();
+        let body = read_body(body).await?;
+        match login.response(&body)? {
+            TicketResult::Full(auth) => {
+                *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
+                Ok(())
+            }
+            TicketResult::TfaRequired(_) => Err(proxmox_login::error::ResponseError::Msg(
+                "ticket refresh returned a TFA challenge",
+            )
+            .into()),
+        }
+    }
+}
+
+async fn read_body(mut body: Body) -> Result<Vec<u8>, Error> {
+    let mut data = Vec::<u8>::new();
+    while let Some(more) = body.data().await {
+        let more = more.map_err(|err| Error::internal("error reading response body", err))?;
+        data.extend(&more[..]);
+    }
+    Ok(data)
+}
+
+impl HttpApiClient for Client {
+    type ResponseFuture = ResponseFuture;
+
+    fn get(&self, path_and_query: &str) -> Self::ResponseFuture {
+        let client = Arc::clone(&self.client);
+        let request_params = self
+            .login_auth()
+            .and_then(|auth| self.build_uri(path_and_query).map(|uri| (auth, uri)));
+        Box::pin(async move {
+            let (auth, uri) = request_params?;
+            Self::authenticated_request(client, auth, http::Method::GET, uri, None).await
+        })
+    }
+
+    fn post<T>(&self, path_and_query: &str, params: &T) -> Self::ResponseFuture
+    where
+        T: ?Sized + Serialize,
+    {
+        let client = Arc::clone(&self.client);
+        let request_params = self
+            .login_auth()
+            .and_then(|auth| self.build_uri(path_and_query).map(|uri| (auth, uri)))
+            .and_then(|(auth, uri)| {
+                serde_json::to_string(params)
+                    .map_err(|err| Error::internal("failed to serialize parametres", err))
+                    .map(|params| (auth, uri, params))
+            });
+        Box::pin(async move {
+            let (auth, uri, params) = request_params?;
+            Self::authenticated_request(client, auth, http::Method::POST, uri, Some(params)).await
+        })
+    }
+
+    fn delete(&self, path_and_query: &str) -> Self::ResponseFuture {
+        let client = Arc::clone(&self.client);
+        let request_params = self
+            .login_auth()
+            .and_then(|auth| self.build_uri(path_and_query).map(|uri| (auth, uri)));
+        Box::pin(async move {
+            let (auth, uri) = request_params?;
+            Self::authenticated_request(client, auth, http::Method::DELETE, uri, None).await
+        })
+    }
+}
+
+fn login_to_request(request: proxmox_login::Request) -> Result<http::Request<Body>, Error> {
+    http::Request::builder()
+        .method(http::Method::POST)
+        .uri(request.url)
+        .header(http::header::CONTENT_TYPE, request.content_type)
+        .header(
+            http::header::CONTENT_LENGTH,
+            request.content_length.to_string(),
+        )
+        .body(request.body.into())
+        .map_err(|err| Error::internal("error building login http request", err))
+}
+
+fn verify_fingerprint(chain: &x509::X509StoreContextRef, expected_fingerprint: &[u8]) -> bool {
+    let Some(cert) = chain.current_cert() else {
+            log::error!("no certificate in chain?");
+            return false;
+        };
+
+    let fp = match cert.digest(MessageDigest::sha256()) {
+        Err(err) => {
+            log::error!("error calculating certificate fingerprint: {err}");
+            return false;
+        }
+        Ok(fp) => fp,
+    };
+
+    if expected_fingerprint != fp.as_ref() {
+        log::error!("bad fingerprint: {}", fp_string(&fp));
+        log::error!("expected fingerprint: {}", fp_string(&expected_fingerprint));
+        return false;
+    }
+
+    true
+}
+
+fn fp_string(fp: &[u8]) -> String {
+    use std::fmt::Write as _;
+
+    let mut out = String::new();
+    for b in fp {
+        if !out.is_empty() {
+            out.push(':');
+        }
+        let _ = write!(out, "{b:02x}");
+    }
+    out
+}
+
+/*
+impl Client {
     /// If currently logged in, this will fill in the auth cookie and CSRFPreventionToken header
     /// and return `Ok(request)`, otherwise it'll return `Err(request)` with the request
     /// unmodified.
@@ -110,14 +383,6 @@ where
             Some(auth) => Ok(auth.set_auth_headers(request)),
             None => Err(request),
         }
-    }
-
-    /// Convenience method to login and set the authentication headers for a request.
-    pub async fn set_auth_headers(
-        &self,
-        request: http::request::Builder,
-    ) -> Result<http::request::Builder, Error> {
-        Ok(self.login_auth()?.set_auth_headers(request))
     }
 
     /// Attempt to login.
@@ -165,30 +430,6 @@ where
         let auth = challenge.response(api_response.body())?;
         *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
         Ok(())
-    }
-
-    /// Get the currently used API url.
-    pub fn api_url(&self) -> &Uri {
-        &self.api_url
-    }
-
-    /// Build a URI relative to the current API endpoint.
-    fn build_uri(&self, path: &str) -> Result<Uri, Error> {
-        let parts = self.api_url.clone().into_parts();
-        let mut builder = http::uri::Builder::new();
-        if let Some(scheme) = parts.scheme {
-            builder = builder.scheme(scheme);
-        }
-        if let Some(authority) = parts.authority {
-            builder = builder.authority(authority)
-        }
-        builder
-            .path_and_query(
-                path.parse::<PathAndQuery>()
-                    .map_err(|err| Error::internal("failed to parse uri", err))?,
-            )
-            .build()
-            .map_err(|err| Error::internal("failed to build Uri", err))
     }
 
     /// Execute a `GET` request, possibly trying multiple cluster nodes.
@@ -288,7 +529,7 @@ where
             .await
     }
 
-    /// Helper method for a request with a byte body, yieldinig a JSON result of type `R`.
+    /// Helper method for a request with a byte body, yielding a JSON result of type `R`.
     async fn json_request_bytes<'a, R>(
         &'a self,
         auth: &AuthenticationKind,
@@ -438,163 +679,15 @@ impl<T> RawApiResponse<T> {
     }
 }
 
-#[cfg(feature = "hyper-client")]
-pub type HyperClient = Client<Arc<proxmox_http::client::Client>>;
 
-#[cfg(feature = "hyper-client")]
-impl<C> Client<C> {
-    /// Create a new client instance which will connect to the provided endpoint.
-    pub fn new(api_url: Uri) -> HyperClient {
-        Client::with_client(api_url, Arc::new(proxmox_http::client::Client::new()))
+
+impl Client {
+    /// Convenience method to login and set the authentication headers for a request.
+    pub fn set_auth_headers(
+        &self,
+        request: http::request::Builder,
+    ) -> Result<http::request::Builder, Error> {
+        Ok(self.login_auth()?.set_auth_headers(request))
     }
 }
-
-#[cfg(feature = "hyper-client")]
-mod hyper_client_extras {
-    use std::future::Future;
-    use std::sync::Arc;
-
-    use http::request::Request;
-    use http::response::Response;
-    use http::Uri;
-    use openssl::hash::MessageDigest;
-    use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
-    use openssl::x509::{self, X509};
-
-    use proxmox_http::client::Client as ProxmoxClient;
-
-    use super::{Client, HyperClient};
-    use crate::Error;
-
-    #[derive(Default)]
-    pub enum TlsOptions {
-        /// Default TLS verification.
-        #[default]
-        Verify,
-
-        /// Insecure: ignore invalid certificates.
-        Insecure,
-
-        /// Expect a specific certificate fingerprint.
-        Fingerprint(Vec<u8>),
-
-        /// Verify with a specific PEM formatted CA.
-        CaCert(X509),
-
-        /// Use a callback for certificate verification.
-        Callback(Box<dyn Fn(bool, &mut x509::X509StoreContextRef) -> bool + Send + Sync + 'static>),
-    }
-
-    fn fp_string(fp: &[u8]) -> String {
-        use std::fmt::Write as _;
-
-        let mut out = String::new();
-        for b in fp {
-            if !out.is_empty() {
-                out.push(':');
-            }
-            let _ = write!(out, "{b:02x}");
-        }
-        out
-    }
-
-    fn verify_fingerprint(chain: &x509::X509StoreContextRef, expected_fingerprint: &[u8]) -> bool {
-        let Some(cert) = chain.current_cert() else {
-            log::error!("no certificate in chain?");
-            return false;
-        };
-
-        let fp = match cert.digest(MessageDigest::sha256()) {
-            Err(err) => {
-                log::error!("error calculating certificate fingerprint: {err}");
-                return false;
-            }
-            Ok(fp) => fp,
-        };
-
-        if expected_fingerprint != fp.as_ref() {
-            log::error!("bad fingerprint: {}", fp_string(&fp));
-            log::error!("expected fingerprint: {}", fp_string(&expected_fingerprint));
-            return false;
-        }
-
-        true
-    }
-
-    impl<C> Client<C> {
-        /// Create a new client instance which will connect to the provided endpoint.
-        pub fn with_options(
-            api_url: Uri,
-            tls_options: TlsOptions,
-            http_options: proxmox_http::HttpOptions,
-        ) -> Result<HyperClient, Error> {
-            let mut connector = SslConnector::builder(SslMethod::tls_client())
-                .map_err(|err| Error::internal("failed to create ssl connector builder", err))?;
-
-            match tls_options {
-                TlsOptions::Verify => (),
-                TlsOptions::Insecure => connector.set_verify(SslVerifyMode::NONE),
-                TlsOptions::Fingerprint(expected_fingerprint) => {
-                    connector.set_verify_callback(SslVerifyMode::PEER, move |valid, chain| {
-                        if valid {
-                            return true;
-                        }
-                        verify_fingerprint(chain, &expected_fingerprint)
-                    });
-                }
-                TlsOptions::Callback(cb) => {
-                    connector.set_verify_callback(SslVerifyMode::PEER, move |valid, chain| {
-                        cb(valid, chain)
-                    });
-                }
-                TlsOptions::CaCert(ca) => {
-                    let mut store =
-                        openssl::x509::store::X509StoreBuilder::new().map_err(|err| {
-                            Error::internal("failed to create certificate store builder", err)
-                        })?;
-                    store
-                        .add_cert(ca)
-                        .map_err(|err| Error::internal("failed to build certificate store", err))?;
-                    connector.set_cert_store(store.build());
-                }
-            }
-
-            let client = ProxmoxClient::with_ssl_connector(connector.build(), http_options);
-
-            Ok(Client::with_client(api_url, Arc::new(client)))
-        }
-    }
-
-    impl super::HttpClient for Arc<proxmox_http::client::Client> {
-        #[allow(clippy::type_complexity)]
-        type ResponseFuture =
-            std::pin::Pin<Box<dyn Future<Output = Result<Response<Vec<u8>>, Error>> + Send>>;
-
-        fn request(&self, request: Request<Vec<u8>>) -> Self::ResponseFuture {
-            let (parts, body) = request.into_parts();
-            let request = Request::<hyper::Body>::from_parts(parts, body.into());
-            let this = Arc::clone(self);
-            Box::pin(async move {
-                use hyper::body::HttpBody;
-
-                // FIXME: proxmox_http's client needs a way to return http status codes and such...
-                let (response, mut body) = (*this)
-                    .request(request)
-                    .await
-                    .map_err(Error::Anyhow)?
-                    .into_parts();
-
-                let mut data = Vec::<u8>::new();
-                while let Some(more) = body.data().await {
-                    let more = more.map_err(|err| Error::internal("error reading body", err))?;
-                    data.extend(&more[..]);
-                }
-
-                Ok::<_, Error>(Response::from_parts(response, data))
-            })
-        }
-    }
-}
-
-#[cfg(feature = "hyper-client")]
-pub use hyper_client_extras::TlsOptions;
+*/

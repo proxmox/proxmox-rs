@@ -4,13 +4,6 @@ use std::fmt::{self, Display};
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum Error {
-    /// The environment did not provide a way to get a 2nd factor.
-    TfaNotSupported,
-
-    /// The task API wants to poll for completion of a task at regular intervals, for this it needs
-    /// to sleep. This signals that the environment does not support that.
-    SleepNotSupported,
-
     /// Tried to make an API call without a ticket.
     Unauthorized,
 
@@ -52,8 +45,6 @@ impl StdError for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::TfaNotSupported => f.write_str("tfa not supported by environment"),
-            Self::SleepNotSupported => f.write_str("environment does not support sleeping"),
             Self::Unauthorized => f.write_str("unauthorized"),
             Self::Api(status, msg) => write!(f, "api error (status = {status}): {msg}"),
             Self::Other(err) => f.write_str(err),
