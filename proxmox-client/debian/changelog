@@ -1,3 +1,10 @@
+rust-proxmox-client (0.2.0-1) bookworm; urgency=medium
+
+  * drop nested client structs in favor of a HttpApiClient trait based method
+    for better wasm support
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 09 Aug 2023 13:22:06 +0200
+
 rust-proxmox-client (0.1.0-1) bookworm; urgency=medium
 
   * initial release
