@@ -363,6 +363,31 @@ impl HttpApiClient for Client {
         })
     }
 
+    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    where
+        T: ?Sized + Serialize,
+    {
+        let params = serde_json::to_string(params)
+            .map_err(|err| Error::internal("failed to serialize parametres", err));
+
+        Box::pin(async move {
+            let params = params?;
+            let auth = self.login_auth()?;
+            let uri = self.build_uri(path_and_query)?;
+            let client = Arc::clone(&self.client);
+            Self::authenticated_request(client, auth, http::Method::PUT, uri, Some(params)).await
+        })
+    }
+
+    fn put_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        Box::pin(async move {
+            let auth = self.login_auth()?;
+            let uri = self.build_uri(path_and_query)?;
+            let client = Arc::clone(&self.client);
+            Self::authenticated_request(client, auth, http::Method::PUT, uri, None).await
+        })
+    }
+
     fn delete<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
         Box::pin(async move {
             let auth = self.login_auth()?;
