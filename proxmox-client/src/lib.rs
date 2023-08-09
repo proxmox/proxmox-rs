@@ -21,7 +21,7 @@ pub use client::{Client, TlsOptions};
 
 /// HTTP client backend trait. This should be implemented for a HTTP client capable of making
 /// *authenticated* API requests to a proxmox HTTP API.
-pub trait HttpApiClient: Send + Sync {
+pub trait HttpApiClient {
     /// An API call should return a status code and the raw body.
     type ResponseFuture<'a>: Future<Output = Result<HttpApiResponse, Error>> + 'a
     where
@@ -158,5 +158,110 @@ impl<T> RawApiResponse<T> {
                 .ok_or_else(|| Error::BadApi("api returned no data".to_string(), None))?,
             attribs: self.attribs,
         })
+    }
+}
+
+impl<'c, C> HttpApiClient for &'c C
+where
+    C: HttpApiClient,
+{
+    type ResponseFuture<'a> = C::ResponseFuture<'a>
+    where
+        Self: 'a;
+
+    fn get<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::get(self, path_and_query)
+    }
+
+    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    where
+        T: ?Sized + Serialize,
+    {
+        C::post(self, path_and_query, params)
+    }
+
+    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    where
+        T: ?Sized + Serialize,
+    {
+        C::put(self, path_and_query, params)
+    }
+
+    fn put_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::put_without_body(self, path_and_query)
+    }
+
+    fn delete<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::delete(self, path_and_query)
+    }
+}
+
+impl<C> HttpApiClient for std::sync::Arc<C>
+where
+    C: HttpApiClient,
+{
+    type ResponseFuture<'a> = C::ResponseFuture<'a>
+    where
+        Self: 'a;
+
+    fn get<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::get(self, path_and_query)
+    }
+
+    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    where
+        T: ?Sized + Serialize,
+    {
+        C::post(self, path_and_query, params)
+    }
+
+    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    where
+        T: ?Sized + Serialize,
+    {
+        C::put(self, path_and_query, params)
+    }
+
+    fn put_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::put_without_body(self, path_and_query)
+    }
+
+    fn delete<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::delete(self, path_and_query)
+    }
+}
+
+impl<C> HttpApiClient for std::rc::Rc<C>
+where
+    C: HttpApiClient,
+{
+    type ResponseFuture<'a> = C::ResponseFuture<'a>
+    where
+        Self: 'a;
+
+    fn get<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::get(self, path_and_query)
+    }
+
+    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    where
+        T: ?Sized + Serialize,
+    {
+        C::post(self, path_and_query, params)
+    }
+
+    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    where
+        T: ?Sized + Serialize,
+    {
+        C::put(self, path_and_query, params)
+    }
+
+    fn put_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::put_without_body(self, path_and_query)
+    }
+
+    fn delete<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::delete(self, path_and_query)
     }
 }
