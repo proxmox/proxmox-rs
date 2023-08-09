@@ -338,28 +338,16 @@
 /// - /storage
 /// - /storage/{storage}
 /// ```
-impl<C, E> Client<C, E>
-where
-    C: HttpClient,
-    E: Environment,
-    E::Error: From<C::Error>,
-    E::Error: From<anyhow::Error>,
-    anyhow::Error: From<E::Error>,
-{
+impl<T: HttpApiClient> PveClient<T> {
     /// Resources index (cluster wide).
     pub async fn cluster_resources(
         &self,
         ty: Option<ClusterResourceKind>,
-    ) -> Result<Vec<ClusterResource>, E::Error> {
+    ) -> Result<Vec<ClusterResource>, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_arg(&mut query, &mut sep, "type", &ty);
         let url = format!("/api2/extjs/cluster/resources{query}");
-        Ok(self
-            .client
-            .get(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Read task list for one node (finished tasks).
@@ -367,7 +355,7 @@ where
         &self,
         node: &str,
         params: ListTasks,
-    ) -> Result<Vec<ListTasksResponse>, E::Error> {
+    ) -> Result<Vec<ListTasksResponse>, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         let ListTasks {
             errors: p_errors,
@@ -392,12 +380,7 @@ where
         add_query_arg(&mut query, &mut sep, "userfilter", &p_userfilter);
         add_query_arg(&mut query, &mut sep, "vmid", &p_vmid);
         let url = format!("/api2/extjs/nodes/{node}/tasks{query}");
-        Ok(self
-            .client
-            .get(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Read task log.
@@ -408,63 +391,39 @@ where
         download: Option<bool>,
         limit: Option<u64>,
         start: Option<u64>,
-    ) -> Result<ApiResponse<Vec<TaskLogLine>>, E::Error> {
+    ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_bool(&mut query, &mut sep, "download", download);
         add_query_arg(&mut query, &mut sep, "limit", &limit);
         add_query_arg(&mut query, &mut sep, "start", &start);
         let url = format!("/api2/extjs/nodes/{node}/tasks/{upid}/log{query}");
-        self.client.get(&url).await
+        self.0.get(&url).await?.expect_json()
     }
 
     /// Read task status.
-    pub async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, E::Error> {
+    pub async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
         let url = format!("/api2/extjs/nodes/{node}/tasks/{upid}/status");
-        Ok(self
-            .client
-            .get(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// LXC container index (per node).
-    pub async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, E::Error> {
+    pub async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
         let url = format!("/api2/extjs/nodes/{node}/lxc");
-        Ok(self
-            .client
-            .get(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Cluster node index.
-    pub async fn list_nodes(&self) -> Result<Vec<ClusterNodeIndexResponse>, E::Error> {
+    pub async fn list_nodes(&self) -> Result<Vec<ClusterNodeIndexResponse>, Error> {
         let url = format!("/api2/extjs/nodes");
-        Ok(self
-            .client
-            .get(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Virtual machine index (per node).
-    pub async fn list_qemu(
-        &self,
-        node: &str,
-        full: Option<bool>,
-    ) -> Result<Vec<VmEntry>, E::Error> {
+    pub async fn list_qemu(&self, node: &str, full: Option<bool>) -> Result<Vec<VmEntry>, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_bool(&mut query, &mut sep, "full", full);
         let url = format!("/api2/extjs/nodes/{node}/qemu{query}");
-        Ok(self
-            .client
-            .get(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Get container configuration.
@@ -474,17 +433,12 @@ where
         vmid: u32,
         current: Option<bool>,
         snapshot: Option<String>,
-    ) -> Result<LxcConfig, E::Error> {
+    ) -> Result<LxcConfig, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_bool(&mut query, &mut sep, "current", current);
         add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
         let url = format!("/api2/extjs/nodes/{node}/lxc/{vmid}/config{query}");
-        Ok(self
-            .client
-            .get(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Get the virtual machine configuration with pending configuration changes
@@ -496,17 +450,12 @@ where
         vmid: u32,
         current: Option<bool>,
         snapshot: Option<String>,
-    ) -> Result<QemuConfig, E::Error> {
+    ) -> Result<QemuConfig, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_bool(&mut query, &mut sep, "current", current);
         add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
         let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config{query}");
-        Ok(self
-            .client
-            .get(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Shutdown the container. This will trigger a clean shutdown of the
@@ -516,13 +465,9 @@ where
         node: &str,
         vmid: u32,
         params: ShutdownLxc,
-    ) -> Result<PveUpid, E::Error> {
+    ) -> Result<PveUpid, Error> {
         let url = format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/shutdown");
-        self.client
-            .post(&url, &params)
-            .await?
-            .into_data_or_err()
-            .map_err(Error::bad_api)
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Shutdown virtual machine. This is similar to pressing the power button
@@ -533,13 +478,9 @@ where
         node: &str,
         vmid: u32,
         params: ShutdownQemu,
-    ) -> Result<PveUpid, E::Error> {
+    ) -> Result<PveUpid, Error> {
         let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/shutdown");
-        self.client
-            .post(&url, &params)
-            .await?
-            .into_data_or_err()
-            .map_err(Error::bad_api)
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Start the container.
@@ -548,13 +489,9 @@ where
         node: &str,
         vmid: u32,
         params: StartLxc,
-    ) -> Result<PveUpid, E::Error> {
+    ) -> Result<PveUpid, Error> {
         let url = format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/start");
-        self.client
-            .post(&url, &params)
-            .await?
-            .into_data_or_err()
-            .map_err(Error::bad_api)
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Start virtual machine.
@@ -563,13 +500,9 @@ where
         node: &str,
         vmid: u32,
         params: StartQemu,
-    ) -> Result<PveUpid, E::Error> {
+    ) -> Result<PveUpid, Error> {
         let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/start");
-        self.client
-            .post(&url, &params)
-            .await?
-            .into_data_or_err()
-            .map_err(Error::bad_api)
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Stop the container. This will abruptly stop all processes running in the
@@ -579,13 +512,9 @@ where
         node: &str,
         vmid: u32,
         params: StopLxc,
-    ) -> Result<PveUpid, E::Error> {
+    ) -> Result<PveUpid, Error> {
         let url = format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/stop");
-        self.client
-            .post(&url, &params)
-            .await?
-            .into_data_or_err()
-            .map_err(Error::bad_api)
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Stop virtual machine. The qemu process will exit immediately. Thisis
@@ -596,35 +525,21 @@ where
         node: &str,
         vmid: u32,
         params: StopQemu,
-    ) -> Result<PveUpid, E::Error> {
+    ) -> Result<PveUpid, Error> {
         let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/stop");
-        self.client
-            .post(&url, &params)
-            .await?
-            .into_data_or_err()
-            .map_err(Error::bad_api)
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Stop a task.
-    pub async fn stop_task(&self, node: &str, upid: &str) -> Result<(), E::Error> {
+    pub async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
         let url = format!("/api2/extjs/nodes/{node}/tasks/{upid}");
-        Ok(self
-            .client
-            .delete(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.delete(&url).await?.expect_json()?.data)
     }
 
     /// API version details, including some parts of the global datacenter
     /// config.
-    pub async fn version(&self) -> Result<VersionResponse, E::Error> {
+    pub async fn version(&self) -> Result<VersionResponse, Error> {
         let url = format!("/api2/extjs/version");
-        Ok(self
-            .client
-            .get(&url)
-            .await?
-            .data
-            .ok_or_else(|| E::Error::bad_api("api returned no data"))?)
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 }

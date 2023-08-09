@@ -1,29 +1,11 @@
-use proxmox_client::Client as ProxmoxClient;
-use proxmox_client::{ApiResponse, Environment, Error, HttpClient};
+//! The generated API client code.
+
+use proxmox_client::{ApiResponseData, Error, HttpApiClient};
 
 use crate::types::*;
 
 use super::{add_query_arg, add_query_bool};
 
-pub struct Client<C, E: Environment> {
-    pub(crate) client: ProxmoxClient<C, E>,
-}
-
-impl<C, E: Environment> Client<C, E> {
-    /// Create a new PVE client from a [`proxmox_client::Client`].
-    pub fn new(client: ProxmoxClient) -> Self {
-        Self { client }
-    }
-
-    /// Get the underlying client object.
-    pub fn inner(&self) -> &ProxmoxClient<C, E> {
-        &self.client
-    }
-
-    /// Get a mutable reference to the underlying client object.
-    pub fn inner_mut(&mut self) -> &mut ProxmoxClient<C, E> {
-        &mut self.client
-    }
-}
+pub struct PveClient<T: HttpApiClient>(pub T);
 
 include!("../generated/code.rs");

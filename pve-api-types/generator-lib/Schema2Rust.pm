@@ -395,14 +395,7 @@ EOF
 }
 
 my $code_header = <<"CODE";
-impl<C, E> Client<C, E>
-where
-    C: HttpClient,
-    E: Environment,
-    E::Error: From<C::Error>,
-    E::Error: From<anyhow::Error>,
-    anyhow::Error: From<E::Error>,
-{
+impl<T: HttpApiClient> PveClient<T> {
 CODE
 my $code_footer = <<"CODE";
 }
@@ -426,7 +419,7 @@ my sub print_method_without_body : prototype($$$$) {
     my $input;
     if (defined($input = $def->{input_type})) {
         print {$out} "    params: $input,\n";
-        print {$out} ") -> Result<$def->{output_type}, E::Error> {\n";
+        print {$out} ") -> Result<$def->{output_type}, Error> {\n";
         print {$out} "    let (mut query, mut sep) = (String::new(), '?');\n";
         my $ty = $all_types->{$input};
         die "bad parameter type: $ty->{kind}\n" if $ty->{kind} ne 'struct';
@@ -456,7 +449,7 @@ my sub print_method_without_body : prototype($$$$) {
         for my $arg ($input->@*) {
             print {$out} "    $arg->{rust_name}: $arg->{type},\n";
         }
-        print {$out} ") -> Result<$def->{output_type}, E::Error> {\n";
+        print {$out} ") -> Result<$def->{output_type}, Error> {\n";
         # print {$out} "    // self.login().await?;\n";
         if (@$input) {
             print {$out} "    let (mut query, mut sep) = (String::new(), '?');\n";
@@ -474,19 +467,15 @@ my sub print_method_without_body : prototype($$$$) {
             print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
         }
     } else {
-        print {$out} ") -> Result<$def->{output_type}, E::Error> {\n";
+        print {$out} ") -> Result<$def->{output_type}, Error> {\n";
         print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
     }
 
+    my $call = "self.0.$method(&url).await?.expect_json()";
     if ($def->{'returns-attribs'}) {
-        print {$out} "    self.client.$method(&url).await\n";
+        print {$out} "    $call\n";
     } else {
-        print {$out} <<"EOF";
-    Ok(self.client.$method(&url).await?
-        .data
-        .ok_or_else(|| E::Error::bad_api(\"api returned no data\"))?
-    )
-EOF
+        print {$out} "    Ok(${call}?.data)\n";
     }
 
     print {$out} "}\n\n";
@@ -509,20 +498,14 @@ my sub print_method_with_body : prototype($$$$) {
     }
     print {$out} "    params: $def->{input_type},\n";
     my $output = $def->{output_type} // '()';
-    print {$out} ") -> Result<$output, E::Error> {\n";
+    print {$out} ") -> Result<$output, Error> {\n";
     # print {$out} "    // self.login().await?;\n";
     print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
+        my $call = "self.0.${method}(&url, &params).await?.expect_json()";
         if ($def->{'returns-attribs'}) {
-            print {$out} "    self.client.${method}(&url, &params).await\n";
+            print {$out} "    $call\n";
         } else {
-            print {$out} <<"EOF";
-    self
-        .client
-        .${method}(&url, &params)
-        .await?
-        .into_data_or_err()
-        .map_err(Error::bad_api)
-EOF
+            print {$out} "    Ok(${call}?.data)\n";
         }
     print {$out} "}\n\n";
 }
@@ -1530,7 +1513,7 @@ my sub method_return_type : prototype($$$$) {
     }
 
     if ($extra->{attribs}) {
-        $def->{output_type} = "ApiResponse<$def->{output_type}>";
+        $def->{output_type} = "ApiResponseData<$def->{output_type}>";
         $def->{'returns-attribs'} = 1;
     }
 }
