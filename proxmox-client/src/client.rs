@@ -17,6 +17,7 @@ use proxmox_login::ticket::Validity;
 use proxmox_login::{Login, SecondFactorChallenge, TicketResult};
 
 use crate::auth::AuthenticationKind;
+use crate::error::ParseFingerprintError;
 use crate::{Error, Token};
 
 use super::{HttpApiClient, HttpApiResponse};
@@ -38,6 +39,23 @@ pub enum TlsOptions {
 
     /// Use a callback for certificate verification.
     Callback(Box<dyn Fn(bool, &mut x509::X509StoreContextRef) -> bool + Send + Sync + 'static>),
+}
+
+impl TlsOptions {
+    pub fn parse_fingerprint(fp: &str) -> Result<Self, ParseFingerprintError> {
+        use hex::FromHex;
+
+        let hex: Vec<u8> = fp
+            .as_bytes()
+            .iter()
+            .copied()
+            .filter(|&b| b != b':')
+            .collect();
+
+        let fp = <[u8; 32]>::from_hex(&hex).map_err(|_| ParseFingerprintError)?;
+
+        Ok(Self::Fingerprint(fp.into()))
+    }
 }
 
 /// A Proxmox API client base backed by a [`proxmox_http::Client`].

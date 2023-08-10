@@ -85,3 +85,14 @@ impl Error {
         Self::Api(status, msg.into())
     }
 }
+
+#[derive(Clone, Copy, Debug)]
+pub struct ParseFingerprintError;
+
+impl StdError for ParseFingerprintError {}
+
+impl fmt::Display for ParseFingerprintError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("failed to parse fingerprint")
+    }
+}
