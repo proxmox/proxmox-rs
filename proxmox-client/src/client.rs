@@ -133,6 +133,20 @@ impl Client {
         self.auth.lock().unwrap().clone()
     }
 
+    /// Get a serialized version of the ticket if one is used.
+    ///
+    /// This returns `None` when using an API token and `Error::Unauthorized` if not logged in.
+    pub fn serialize_ticket(&self) -> Result<Option<Vec<u8>>, Error> {
+        let auth = self.authentication().ok_or(Error::Unauthorized)?;
+        let auth = match &*auth {
+            AuthenticationKind::Token(_) => return Ok(None),
+            AuthenticationKind::Ticket(auth) => auth,
+        };
+        Ok(Some(serde_json::to_vec(auth).map_err(|err| {
+            Error::internal("failed to serialize ticket", err)
+        })?))
+    }
+
     #[deprecated(note = "use set_authentication instead")]
     /// Replace the authentication information with an API token.
     pub fn use_api_token(&self, token: Token) {
