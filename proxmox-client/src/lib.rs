@@ -12,7 +12,7 @@ pub use proxmox_login::tfa::TfaChallenge;
 pub use proxmox_login::{Authentication, Ticket};
 
 pub(crate) mod auth;
-pub use auth::Token;
+pub use auth::{AuthenticationKind, Token};
 
 #[cfg(feature = "hyper-client")]
 mod client;
