@@ -133,9 +133,17 @@ impl Client {
         self.auth.lock().unwrap().clone()
     }
 
+    #[deprecated(note = "use set_authentication instead")]
     /// Replace the authentication information with an API token.
     pub fn use_api_token(&self, token: Token) {
-        *self.auth.lock().unwrap() = Some(Arc::new(token.into()));
+        self.set_authentication(token);
+    }
+
+    /// Replace the currently used authentication.
+    ///
+    /// This can be a `Token` or an [`Authentication`](proxmox_login::Authentication).
+    pub fn set_authentication(&self, auth: impl Into<AuthenticationKind>) {
+        *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
     }
 
     /// Drop the current authentication information.
