@@ -1,3 +1,15 @@
+rust-proxmox-client (0.2.1-1) bookworm; urgency=medium
+
+  * expose `AuthenticationKind`
+
+  * add `set_authentication` method
+
+  * deprecate `use_api_token` method (superseeded by `set_authentication`)
+
+  * add convenience helper to get a serialized ticket
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 16 Aug 2023 14:31:59 +0200
+
 rust-proxmox-client (0.2.0-1) bookworm; urgency=medium
 
   * drop nested client structs in favor of a HttpApiClient trait based method
