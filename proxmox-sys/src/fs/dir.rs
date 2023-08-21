@@ -152,16 +152,21 @@ fn create_path_at_do(
     }
 }
 
-#[test]
-fn test_create_path() {
-    create_path(
-        "testdir/testsub/testsub2/testfinal",
-        Some(CreateOptions::new().perm(stat::Mode::from_bits_truncate(0o755))),
-        Some(
-            CreateOptions::new()
-                .owner(nix::unistd::Uid::effective())
-                .group(nix::unistd::Gid::effective()),
-        ),
-    )
-    .expect("expected create_path to work");
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_path() {
+        create_path(
+            "testdir/testsub/testsub2/testfinal",
+            Some(CreateOptions::new().perm(stat::Mode::from_bits_truncate(0o755))),
+            Some(
+                CreateOptions::new()
+                    .owner(nix::unistd::Uid::effective())
+                    .group(nix::unistd::Gid::effective()),
+            ),
+        )
+        .expect("expected create_path to work");
+    }
 }
