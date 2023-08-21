@@ -71,7 +71,7 @@ mod bytes_as_base64url_nopad {
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         use serde::de::Error;
         String::deserialize(deserializer).and_then(|string| {
-            base64::decode_config(&string, base64::URL_SAFE_NO_PAD)
+            base64::decode_config(string, base64::URL_SAFE_NO_PAD)
                 .map_err(|err| Error::custom(err.to_string()))
         })
     }

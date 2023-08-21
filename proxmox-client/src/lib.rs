@@ -85,13 +85,13 @@ impl HttpApiResponse {
         match self.content_type.as_deref() {
             Some("application/json") => Ok(()),
             Some(other) => {
-                return Err(Error::BadApi(
+                Err(Error::BadApi(
                     format!("expected json body, got {other}",),
                     None,
                 ))
             }
             None => {
-                return Err(Error::BadApi(
+                Err(Error::BadApi(
                     "expected json body, but no Content-Type was sent".to_string(),
                     None,
                 ))
