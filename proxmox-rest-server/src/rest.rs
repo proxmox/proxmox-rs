@@ -349,7 +349,12 @@ async fn get_request_parameters<S: 'static + BuildHasher + Send>(
         std::str::from_utf8(&body).map_err(|err| format_err!("Request body not uft8: {}", err))?;
 
     if is_json {
-        let mut params: Value = serde_json::from_str(utf8_data)?;
+        // treat empty body as empty paramater hash
+        let mut params: Value = if utf8_data.is_empty() {
+            Value::Object(serde_json::Map::new())
+        } else {
+            serde_json::from_str(utf8_data)?
+        };
         for (k, v) in uri_param {
             if let Some((_optional, prop_schema)) = param_schema.lookup(&k) {
                 params[&k] = prop_schema.parse_simple_value(&v)?;
