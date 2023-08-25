@@ -82,20 +82,20 @@ impl HttpApiResponse {
     }
 
     fn assert_json_content_type(&self) -> Result<(), Error> {
-        match self.content_type.as_deref() {
+        match self
+            .content_type
+            .as_deref()
+            .and_then(|v| v.split(';').next())
+        {
             Some("application/json") => Ok(()),
-            Some(other) => {
-                Err(Error::BadApi(
-                    format!("expected json body, got {other}",),
-                    None,
-                ))
-            }
-            None => {
-                Err(Error::BadApi(
-                    "expected json body, but no Content-Type was sent".to_string(),
-                    None,
-                ))
-            }
+            Some(other) => Err(Error::BadApi(
+                format!("expected json body, got {other}",),
+                None,
+            )),
+            None => Err(Error::BadApi(
+                "expected json body, but no Content-Type was sent".to_string(),
+                None,
+            )),
         }
     }
 
