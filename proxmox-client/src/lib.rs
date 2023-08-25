@@ -107,7 +107,7 @@ impl HttpApiResponse {
         if response.data.is_some() {
             Err(Error::UnexpectedData)
         } else {
-            response.check()?;
+            response.check_nodata()?;
             Ok(())
         }
     }
@@ -136,27 +136,42 @@ struct RawApiResponse<T> {
 }
 
 impl<T> RawApiResponse<T> {
-    pub fn check(mut self) -> Result<ApiResponseData<T>, Error> {
-        if !self.success.unwrap_or(false) {
-            let status = http::StatusCode::from_u16(self.status.unwrap_or(400))
-                .unwrap_or(http::StatusCode::BAD_REQUEST);
-            let mut message = self
-                .message
-                .take()
-                .unwrap_or_else(|| "no message provided".to_string());
-            for (param, error) in self.errors {
-                use std::fmt::Write;
-                let _ = write!(message, "\n{param}: {error}");
-            }
-
-            return Err(Error::api(status, message));
+    fn check_success(mut self) -> Result<Self, Error> {
+        if self.success == Some(true) {
+            return Ok(self);
         }
 
+        let status = http::StatusCode::from_u16(self.status.unwrap_or(400))
+            .unwrap_or(http::StatusCode::BAD_REQUEST);
+        let mut message = self
+            .message
+            .take()
+            .unwrap_or_else(|| "no message provided".to_string());
+        for (param, error) in self.errors {
+            use std::fmt::Write;
+            let _ = write!(message, "\n{param}: {error}");
+        }
+
+        Err(Error::api(status, message))
+    }
+
+    fn check(self) -> Result<ApiResponseData<T>, Error> {
+        let this = self.check_success()?;
+
         Ok(ApiResponseData {
-            data: self
+            data: this
                 .data
                 .ok_or_else(|| Error::BadApi("api returned no data".to_string(), None))?,
-            attribs: self.attribs,
+            attribs: this.attribs,
+        })
+    }
+
+    fn check_nodata(self) -> Result<ApiResponseData<()>, Error> {
+        let this = self.check_success()?;
+
+        Ok(ApiResponseData {
+            data: (),
+            attribs: this.attribs,
         })
     }
 }
