@@ -20,7 +20,7 @@ fn optimal_column_widths(table: &Table) -> HashMap<&str, usize> {
             let entry = row.get(&column.id).unwrap_or(&Value::Null);
 
             let text = if let Some(renderer) = &column.renderer {
-                renderer.render(entry).unwrap_or_default()
+                renderer.render(entry)
             } else {
                 value_to_string(entry)
             };
@@ -63,7 +63,7 @@ fn render_plaintext_table(
             let width = widths.get(column.label.as_str()).unwrap_or(&0);
 
             let text = if let Some(renderer) = &column.renderer {
-                renderer.render(entry)?
+                renderer.render(entry)
             } else {
                 value_to_string(entry)
             };

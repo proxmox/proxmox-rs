@@ -42,7 +42,7 @@ fn render_html_table(
             let entry = row.get(&column.id).unwrap_or(&Value::Null);
 
             let text = if let Some(renderer) = &column.renderer {
-                renderer.render(entry)?
+                renderer.render(entry)
             } else {
                 value_to_string(entry)
             };

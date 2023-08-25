@@ -29,20 +29,31 @@ fn value_to_string(value: &Value) -> String {
     }
 }
 
-/// Render a serde_json::Value as a byte size with proper units (IEC, base 2)
+/// Render a `serde_json::Value` as a byte size with proper units (IEC, base 2).
+/// Accepts `serde_json::Value::{Number,String}`.
 ///
-/// Will return `None` if `val` does not contain a number.
+/// Will return `None` if `val` does not contain a number/parseable string.
 fn value_to_byte_size(val: &Value) -> Option<String> {
-    let size = val.as_f64()?;
+    let size = match val {
+        Value::Number(n) => n.as_f64(),
+        Value::String(s) => s.parse().ok(),
+        _ => None,
+    }?;
+
     Some(format!("{}", HumanByte::new_binary(size)))
 }
 
 /// Render a serde_json::Value as a duration.
 /// The value is expected to contain the duration in seconds.
+/// Accepts `serde_json::Value::{Number,String}`.
 ///
-/// Will return `None` if `val` does not contain a number.
+/// Will return `None` if `val` does not contain a number/parseable string.
 fn value_to_duration(val: &Value) -> Option<String> {
-    let duration = val.as_u64()?;
+    let duration = match val {
+        Value::Number(n) => n.as_u64(),
+        Value::String(s) => s.parse().ok(),
+        _ => None,
+    }?;
     let time_span = TimeSpan::from(Duration::from_secs(duration));
 
     Some(format!("{time_span}"))
@@ -50,10 +61,15 @@ fn value_to_duration(val: &Value) -> Option<String> {
 
 /// Render as serde_json::Value as a timestamp.
 /// The value is expected to contain the timestamp as a unix epoch.
+/// Accepts `serde_json::Value::{Number,String}`.
 ///
-/// Will return `None` if `val` does not contain a number.
+/// Will return `None` if `val` does not contain a number/parseable string.
 fn value_to_timestamp(val: &Value) -> Option<String> {
-    let timestamp = val.as_i64()?;
+    let timestamp = match val {
+        Value::Number(n) => n.as_i64(),
+        Value::String(s) => s.parse().ok(),
+        _ => None,
+    }?;
     proxmox_time::strftime_local("%F %H:%M:%S", timestamp).ok()
 }
 
@@ -95,16 +111,15 @@ pub enum ValueRenderFunction {
 }
 
 impl ValueRenderFunction {
-    fn render(&self, value: &Value) -> Result<String, HandlebarsRenderError> {
+    fn render(&self, value: &Value) -> String {
         match self {
             ValueRenderFunction::HumanBytes => value_to_byte_size(value),
             ValueRenderFunction::Duration => value_to_duration(value),
             ValueRenderFunction::Timestamp => value_to_timestamp(value),
         }
-        .ok_or_else(|| {
-            HandlebarsRenderError::new(format!(
-                "could not render value {value} with renderer {self:?}"
-            ))
+        .unwrap_or_else(|| {
+            log::error!("could not render value {value} with renderer {self:?}");
+            String::from("ERROR")
         })
     }
 
@@ -141,7 +156,7 @@ impl ValueRenderFunction {
                         .ok_or(HandlebarsRenderError::new("parameter not found"))?;
 
                     let value = param.value();
-                    out.write(&self.render(value)?)?;
+                    out.write(&self.render(value))?;
 
                     Ok(())
                 },
@@ -363,5 +378,22 @@ val3        val4
         assert_eq!(rendered_plaintext, expected_plaintext);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_helpers() {
+        assert_eq!(value_to_byte_size(&json!(1024)), Some("1 KiB".to_string()));
+        assert_eq!(
+            value_to_byte_size(&json!("1024")),
+            Some("1 KiB".to_string())
+        );
+
+        assert_eq!(value_to_duration(&json!(60)), Some("1min ".to_string()));
+        assert_eq!(value_to_duration(&json!("60")), Some("1min ".to_string()));
+
+        // The rendered value is in localtime, so we only check if the result is `Some`...
+        // ... otherwise the test will break in another timezone :S
+        assert!(value_to_timestamp(&json!(60)).is_some());
+        assert!(value_to_timestamp(&json!("60")).is_some());
     }
 }

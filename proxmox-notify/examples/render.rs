@@ -43,7 +43,7 @@ fn main() -> Result<(), Error> {
             "data" : [
                 {
                     "vmid": 1001,
-                    "size": 1024 * 1024,
+                    "size": "1048576"
                 },
                 {
                     "vmid": 1002,
