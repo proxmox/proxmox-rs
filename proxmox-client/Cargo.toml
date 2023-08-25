@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-client"
-version = "0.2.1"
+version = "0.2.2"
 description = "Base client for proxmox APIs for handling login and ticket renewal"
 authors.workspace = true
 license.workspace = true

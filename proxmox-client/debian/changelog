@@ -1,3 +1,9 @@
+rust-proxmox-client (0.2.2-1) bookworm; urgency=medium
+
+  * fix parsing content types with charsets
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 25 Aug 2023 08:36:55 +0200
+
 rust-proxmox-client (0.2.1-1) bookworm; urgency=medium
 
   * expose `AuthenticationKind`
