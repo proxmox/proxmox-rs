@@ -204,10 +204,16 @@ impl Client {
         uri: Uri,
         json_body: Option<String>,
     ) -> Result<HttpApiResponse, Error> {
-        let request = auth
-            .set_auth_headers(Request::builder().method(method).uri(uri))
-            .body(json_body.unwrap_or_default().into())
-            .map_err(|err| Error::internal("failed to build request", err))?;
+        let request = auth.set_auth_headers(Request::builder().method(method).uri(uri));
+
+        let request = if let Some(body) = json_body {
+            request
+                .header(http::header::CONTENT_TYPE, "application/json")
+                .body(body.into())
+        } else {
+            request.body(Default::default())
+        }
+        .map_err(|err| Error::internal("failed to build request", err))?;
 
         let response = client.request(request).await.map_err(Error::Anyhow)?;
 
