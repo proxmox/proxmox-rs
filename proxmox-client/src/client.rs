@@ -409,6 +409,15 @@ impl HttpApiClient for Client {
         })
     }
 
+    fn post_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        Box::pin(async move {
+            let auth = self.login_auth()?;
+            let uri = self.build_uri(path_and_query)?;
+            let client = Arc::clone(&self.client);
+            Self::authenticated_request(client, auth, http::Method::PUT, uri, None).await
+        })
+    }
+
     fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
     where
         T: ?Sized + Serialize,

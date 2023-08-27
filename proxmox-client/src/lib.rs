@@ -41,6 +41,11 @@ pub trait HttpApiClient {
     where
         T: ?Sized + Serialize;
 
+    /// `POST` request with a path and query component (no hostname), no request body.
+    ///
+    /// For this request, authentication headers should be set!
+    fn post_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a>;
+
     /// `PUT` request with a path and query component (no hostname), and a serializable body.
     ///
     /// The body should be serialized to json and sent with `Content-type: applicaion/json`.
@@ -195,6 +200,10 @@ where
         C::post(self, path_and_query, params)
     }
 
+    fn post_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::post_without_body(self, path_and_query)
+    }
+
     fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
     where
         T: ?Sized + Serialize,
@@ -230,6 +239,10 @@ where
         C::post(self, path_and_query, params)
     }
 
+    fn post_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::post_without_body(self, path_and_query)
+    }
+
     fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
     where
         T: ?Sized + Serialize,
@@ -263,6 +276,10 @@ where
         T: ?Sized + Serialize,
     {
         C::post(self, path_and_query, params)
+    }
+
+    fn post_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        C::post_without_body(self, path_and_query)
     }
 
     fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
