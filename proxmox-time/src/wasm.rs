@@ -14,10 +14,18 @@ pub fn epoch_f64() -> f64 {
 pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
     let js_date = js_sys::Date::new_0();
     js_date.set_time((epoch as f64) * 1000.0);
-    js_date
+    let mut js_date = js_date
         .to_iso_string()
         .as_string()
-        .ok_or_else(|| format_err!("to_iso_string did not return a string"))
+        .ok_or_else(|| format_err!("to_iso_string did not return a string"))?;
+
+    match js_date.len() {
+        len if len < 24 => bail!("invalid length {len} for rfc3339 string"),
+        len => {
+            js_date.replace_range((len - 5).., "Z"); // replace .xxxZ with Z
+            Ok(js_date)
+        }
+    }
 }
 
 /// Convert Unix epoch into RFC3339 local time with TZ
