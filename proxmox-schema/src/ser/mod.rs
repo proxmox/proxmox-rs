@@ -483,14 +483,13 @@ impl<T: fmt::Write> Serializer for ElementSerializer<T> {
     }
 
     fn serialize_unit_variant(
-        self,
-        name: &'static str,
+        mut self,
+        _name: &'static str,
         _index: u32,
         variant: &'static str,
     ) -> Result<Self::Ok, Error> {
-        Err(Error::msg(format!(
-            "tried to serialize a unit variant ({name}::{variant})"
-        )))
+        self.inner.write_str(variant)?;
+        Ok(self.inner)
     }
 
     fn serialize_newtype_struct<V>(self, _name: &'static str, value: &V) -> Result<T, Error>
