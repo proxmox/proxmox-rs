@@ -94,6 +94,13 @@ pub fn standard_repositories(
             APTStandardRepository::from(APTRepositoryHandle::CephQuincyNoSubscription),
             APTStandardRepository::from(APTRepositoryHandle::CephQuincyTest),
         ]);
+        if suite == DebianCodename::Bookworm {
+            result.append(&mut vec![
+                APTStandardRepository::from(APTRepositoryHandle::CephReefEnterprise),
+                APTStandardRepository::from(APTRepositoryHandle::CephReefNoSubscription),
+                APTStandardRepository::from(APTRepositoryHandle::CephReefTest),
+            ]);
+        }
     }
 
     for file in files.iter() {
