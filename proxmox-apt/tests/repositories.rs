@@ -130,6 +130,9 @@ fn test_digest() -> Result<(), Error> {
 
     assert!(file.write().is_err());
 
+    // best-effort cleanup for re-builds without a `cargo clean` in between
+    let _ = std::fs::remove_dir_all(&write_dir);
+
     Ok(())
 }
 
