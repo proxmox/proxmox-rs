@@ -9,6 +9,16 @@ use proxmox_apt::repositories::{
     APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository, DebianCodename,
 };
 
+fn create_clean_directory(path: &PathBuf) -> Result<(), Error> {
+    match std::fs::remove_dir_all(path) {
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => (),
+        Err(err) => bail!("unable to remove dir {path:?} - {err}"),
+        Ok(_) => (),
+    }
+    std::fs::create_dir_all(path)
+        .map_err(|err| format_err!("unable to create dir {path:?} - {err}"))
+}
+
 #[test]
 fn test_parse_write() -> Result<(), Error> {
     test_parse_write_dir("sources.list.d")?;
@@ -24,8 +34,7 @@ fn test_parse_write_dir(read_dir: &str) -> Result<(), Error> {
     let write_dir = tmp_dir.join("sources.list.d.actual");
     let expected_dir = test_dir.join("sources.list.d.expected");
 
-    std::fs::create_dir_all(&write_dir)
-        .map_err(|err| format_err!("unable to create dir {:?} - {}", write_dir, err))?;
+    create_clean_directory(&write_dir)?;
 
     let mut files = vec![];
     let mut errors = vec![];
@@ -66,10 +75,10 @@ fn test_parse_write_dir(read_dir: &str) -> Result<(), Error> {
         let actual_path = write_dir.join(expected_path.file_name().unwrap());
 
         let expected_contents = std::fs::read(&expected_path)
-            .map_err(|err| format_err!("unable to read {:?} - {}", expected_path, err))?;
+            .map_err(|err| format_err!("unable to read {expected_path:?} - {err}"))?;
 
         let actual_contents = std::fs::read(&actual_path)
-            .map_err(|err| format_err!("unable to read {:?} - {}", actual_path, err))?;
+            .map_err(|err| format_err!("unable to read {actual_path:?} - {err}"))?;
 
         assert_eq!(
             expected_contents, actual_contents,
@@ -92,8 +101,7 @@ fn test_digest() -> Result<(), Error> {
     let read_dir = test_dir.join("sources.list.d");
     let write_dir = tmp_dir.join("sources.list.d.digest");
 
-    std::fs::create_dir_all(&write_dir)
-        .map_err(|err| format_err!("unable to create dir {:?} - {}", write_dir, err))?;
+    create_clean_directory(&write_dir)?;
 
     let path = read_dir.join("standard.list");
 
@@ -130,9 +138,6 @@ fn test_digest() -> Result<(), Error> {
 
     assert!(file.write().is_err());
 
-    // best-effort cleanup for re-builds without a `cargo clean` in between
-    let _ = std::fs::remove_dir_all(&write_dir);
-
     Ok(())
 }
 
@@ -142,13 +147,7 @@ fn test_empty_write() -> Result<(), Error> {
     let read_dir = test_dir.join("sources.list.d");
     let write_dir = test_dir.join("sources.list.d.remove");
 
-    if write_dir.is_dir() {
-        std::fs::remove_dir_all(&write_dir)
-            .map_err(|err| format_err!("unable to remove dir {:?} - {}", write_dir, err))?;
-    }
-
-    std::fs::create_dir_all(&write_dir)
-        .map_err(|err| format_err!("unable to create dir {:?} - {}", write_dir, err))?;
+    create_clean_directory(&write_dir)?;
 
     let path = read_dir.join("standard.list");
 
