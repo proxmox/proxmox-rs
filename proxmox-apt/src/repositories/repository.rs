@@ -22,11 +22,11 @@ pub enum APTRepositoryFileType {
 impl TryFrom<&str> for APTRepositoryFileType {
     type Error = Error;
 
-    fn try_from(string: &str) -> Result<Self, Error> {
-        match string {
+    fn try_from(file_type: &str) -> Result<Self, Error> {
+        match file_type {
             "list" => Ok(APTRepositoryFileType::List),
             "sources" => Ok(APTRepositoryFileType::Sources),
-            _ => bail!("invalid file type '{}'", string),
+            _ => bail!("invalid file type '{file_type}'"),
         }
     }
 }
@@ -53,11 +53,11 @@ pub enum APTRepositoryPackageType {
 impl TryFrom<&str> for APTRepositoryPackageType {
     type Error = Error;
 
-    fn try_from(string: &str) -> Result<Self, Error> {
-        match string {
+    fn try_from(package_type: &str) -> Result<Self, Error> {
+        match package_type {
             "deb" => Ok(APTRepositoryPackageType::Deb),
             "deb-src" => Ok(APTRepositoryPackageType::DebSrc),
-            _ => bail!("invalid package type '{}'", string),
+            _ => bail!("invalid package type '{package_type}'"),
         }
     }
 }
@@ -226,8 +226,7 @@ impl APTRepository {
         }
     }
 
-    /// Makes sure that all basic properties of a repository are present and
-    /// not obviously invalid.
+    /// Makes sure that all basic properties of a repository are present and not obviously invalid.
     pub fn basic_check(&self) -> Result<(), Error> {
         if self.types.is_empty() {
             bail!("missing package type(s)");
@@ -241,7 +240,7 @@ impl APTRepository {
 
         for uri in self.uris.iter() {
             if !uri.contains(':') || uri.len() < 3 {
-                bail!("invalid URI: '{}'", uri);
+                bail!("invalid URI: '{uri}'");
             }
         }
 
@@ -249,7 +248,7 @@ impl APTRepository {
             if !suite.ends_with('/') && self.components.is_empty() {
                 bail!("missing component(s)");
             } else if suite.ends_with('/') && !self.components.is_empty() {
-                bail!("absolute suite '{}' does not allow component(s)", suite);
+                bail!("absolute suite '{suite}' does not allow component(s)");
             }
         }
 
@@ -333,12 +332,12 @@ impl APTRepository {
                 }
 
                 let raw = std::fs::read(&file)
-                    .map_err(|err| format_err!("unable to read {:?} - {}", file, err))?;
+                    .map_err(|err| format_err!("unable to read {file:?} - {err}"))?;
                 let reader = BufReader::new(&*raw);
 
                 for line in reader.lines() {
                     let line =
-                        line.map_err(|err| format_err!("unable to read {:?} - {}", file, err))?;
+                        line.map_err(|err| format_err!("unable to read {file:?} - {err}"))?;
 
                     if let Some(value) = line.strip_prefix("Origin:") {
                         return Ok(Some(
@@ -378,12 +377,8 @@ fn release_filename(uri: &str, suite: &str, detached: bool) -> PathBuf {
     } else if suite == "./" {
         path.push(format!("{encoded_uri}_._{filename}"));
     } else {
-        path.push(format!(
-            "{}_dists_{}_{}",
-            encoded_uri,
-            suite.replace('/', "_"), // e.g. for buster/updates
-            filename,
-        ));
+        let normalized_suite = suite.replace('/', "_"); // e.g. for buster/updates
+        path.push(format!("{encoded_uri}_dists_{normalized_suite}_{filename}",));
     }
 
     path
@@ -416,7 +411,7 @@ fn uri_to_filename(uri: &str) -> String {
             // unwrap: we're hex-encoding a single byte into a 2-byte slice
             hex::encode_to_slice([*b], &mut hex).unwrap();
             let hex = unsafe { std::str::from_utf8_unchecked(&hex) };
-            encoded = format!("{}%{}", encoded, hex);
+            encoded = format!("{encoded}%{hex}");
         } else {
             encoded.push(*b as char);
         }
@@ -446,9 +441,9 @@ fn host_from_uri(uri: &str) -> Option<&str> {
     Some(host)
 }
 
-/// Strips existing double quotes from the string first, and then adds double quotes at
-/// the beginning and end if there is an ASCII whitespace in the `string`, which is not
-/// escaped by `[]`.
+/// Strips existing double quotes from the string first, and then adds double quotes at the
+/// beginning and end if there is an ASCII whitespace in the `string`, which is not escaped by
+/// `[]`.
 fn quote_for_one_line(string: &str) -> String {
     let mut add_quotes = false;
     let mut wait_for_bracket = false;
@@ -476,7 +471,7 @@ fn quote_for_one_line(string: &str) -> String {
     }
 
     match add_quotes {
-        true => format!("\"{}\"", string),
+        true => format!("\"{string}\""),
         false => string,
     }
 }
@@ -493,7 +488,7 @@ fn write_one_line(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> 
 
     if !repo.comment.is_empty() {
         for line in repo.comment.lines() {
-            writeln!(w, "#{}", line)?;
+            writeln!(w, "#{line}")?;
         }
     }
 
@@ -507,8 +502,8 @@ fn write_one_line(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> 
         write!(w, "[ ")?;
 
         for option in repo.options.iter() {
-            let option = quote_for_one_line(&format!("{}={}", option.key, option.values.join(",")));
-            write!(w, "{} ", option)?;
+            let (key, value) = (&option.key, option.values.join(","));
+            write!(w, "{} ", quote_for_one_line(&format!("{key}={value}")))?;
         }
 
         write!(w, "] ")?;
@@ -516,15 +511,14 @@ fn write_one_line(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> 
 
     write!(w, "{} ", quote_for_one_line(&repo.uris[0]))?;
     write!(w, "{} ", quote_for_one_line(&repo.suites[0]))?;
-    writeln!(
-        w,
-        "{}",
-        repo.components
-            .iter()
-            .map(|comp| quote_for_one_line(comp))
-            .collect::<Vec<String>>()
-            .join(" ")
-    )?;
+
+    let components = repo
+        .components
+        .iter()
+        .map(|comp| quote_for_one_line(comp))
+        .collect::<Vec<String>>()
+        .join(" ");
+    writeln!(w, "{components}")?;
 
     writeln!(w)?;
 
@@ -541,14 +535,14 @@ fn write_stanza(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> {
 
     if !repo.comment.is_empty() {
         for line in repo.comment.lines() {
-            writeln!(w, "#{}", line)?;
+            writeln!(w, "#{line}")?;
         }
     }
 
     write!(w, "Types:")?;
     repo.types
         .iter()
-        .try_for_each(|package_type| write!(w, " {}", package_type))?;
+        .try_for_each(|package_type| write!(w, " {package_type}"))?;
     writeln!(w)?;
 
     writeln!(w, "URIs: {}", repo.uris.join(" "))?;
