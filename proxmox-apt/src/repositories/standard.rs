@@ -144,8 +144,7 @@ impl APTRepositoryHandle {
             }
             APTRepositoryHandle::CephReefNoSubscription => {
                 "This repository holds the Proxmox Ceph Reef packages intended for \
-                non-production use. The deprecated 'main' repository is an alias for this in \
-                Proxmox VE 8."
+                non-production use."
             }
             APTRepositoryHandle::CephReefTest => {
                 "This repository contains the Ceph Reef packages before they are moved to the \
