@@ -7,6 +7,8 @@ use anyhow::{bail, Error};
 
 /// Sends multi-part mail with text and/or html to a list of recipients
 ///
+/// Includes the header `Auto-Submitted: auto-generated`, so that auto-replies
+/// (i.e. OOO replies) won't trigger.
 /// ``sendmail`` is used for sending the mail.
 pub fn sendmail(
     mailto: &[&str],
@@ -69,6 +71,7 @@ pub fn sendmail(
         body.push_str("This is a multi-part message in MIME format.\n");
         let _ = write!(body, "\n--{}\n", boundary);
     }
+    body.push_str("Auto-Submitted: auto-generated;\n");
     if let Some(text) = text {
         body.push_str("Content-Type: text/plain;\n");
         body.push_str("\tcharset=\"UTF-8\"\n");
