@@ -106,7 +106,7 @@ impl HttpApiResponse {
 
     /// Expect that the API call did *not* return any data in the `data` field.
     pub fn nodata(self) -> Result<(), Error> {
-        let response = serde_json::from_slice::<RawApiResponse<Option<()>>>(&self.body)
+        let response = serde_json::from_slice::<RawApiResponse<()>>(&self.body)
             .map_err(|err| Error::bad_api("unexpected api response", err))?;
 
         if response.data.is_some() {
@@ -131,7 +131,7 @@ struct RawApiResponse<T> {
     message: Option<String>,
     #[serde(default, deserialize_with = "proxmox_login::parse::deserialize_bool")]
     success: Option<bool>,
-    data: T,
+    data: Option<T>,
 
     #[serde(default)]
     errors: HashMap<String, String>,
@@ -140,7 +140,10 @@ struct RawApiResponse<T> {
     attribs: HashMap<String, Value>,
 }
 
-impl<T> RawApiResponse<T> {
+impl<T> RawApiResponse<T>
+where
+    T: for<'de> Deserialize<'de>,
+{
     fn check_success(mut self) -> Result<Self, Error> {
         if self.success == Some(true) {
             return Ok(self);
@@ -163,8 +166,16 @@ impl<T> RawApiResponse<T> {
     fn check(self) -> Result<ApiResponseData<T>, Error> {
         let this = self.check_success()?;
 
+        // RawApiResponse has no data, but this also happens for Value::Null, and T
+        // might be deserializeable from that, so try here again
+        let data = match this.data {
+            Some(data) => data,
+            None => serde_json::from_value(Value::Null)
+                .map_err(|_| Error::BadApi("api returned no data".to_string(), None))?,
+        };
+
         Ok(ApiResponseData {
-            data: this.data,
+            data,
             attribs: this.attribs,
         })
     }
