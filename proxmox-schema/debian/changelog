@@ -1,3 +1,11 @@
+rust-proxmox-schema (2.0.1-1) bookworm; urgency=medium
+
+  * various clippy fixes
+
+  * schema: serialize enum unit variants
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 20 Sep 2023 11:45:55 +0200
+
 rust-proxmox-schema (2.0.0-1) bookworm; urgency=medium
 
   * update to bookworm specific release series
