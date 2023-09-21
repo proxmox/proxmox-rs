@@ -59,7 +59,7 @@ impl<S> RateLimitedStream<S> {
 
     /// Creates a new instance with limiter update callback.
     ///
-    /// The fuction is called every minute to update/change the used limiters.
+    /// The function is called every minute to update/change the used limiters.
     ///
     /// Note: This function is called within an async context, so it
     /// should be fast and must not block.
