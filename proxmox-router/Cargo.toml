@@ -11,7 +11,7 @@ exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-env_logger = { version = "0.9", optional = true }
+env_logger = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
 hyper = { workspace = true, features = [ "full" ], optional = true }
 nix.workspace = true
