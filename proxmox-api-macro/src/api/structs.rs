@@ -32,7 +32,7 @@ pub fn handle_struct(attribs: JSONObject, stru: syn::ItemStruct) -> Result<Token
             handle_newtype_struct(attribs, stru)
         }
         syn::Fields::Unnamed(fields) => bail!(
-            fields.paren_token.span,
+            fields.paren_token.span.open(),
             "api macro does not support tuple structs"
         ),
         syn::Fields::Named(_) => handle_regular_struct(attribs, stru),

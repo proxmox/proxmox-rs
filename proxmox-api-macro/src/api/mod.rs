@@ -114,7 +114,7 @@ impl TryFrom<JSONObject> for Schema {
         );
 
         Ok(Self {
-            span: obj.brace_token.span,
+            span: obj.span(),
             description,
             item: SchemaItem::try_extract_from(&mut obj)?,
             properties: obj

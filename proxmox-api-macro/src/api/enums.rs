@@ -69,7 +69,7 @@ pub fn handle_enum(
         };
 
         if derives_default {
-            if let Some(attr) = variant.attrs.iter().find(|a| a.path.is_ident("default")) {
+            if let Some(attr) = variant.attrs.iter().find(|a| a.path().is_ident("default")) {
                 if let Some(default_value) = &default_value {
                     error!(attr => "multiple default values defined");
                     error!(default_value => "default previously defined here");

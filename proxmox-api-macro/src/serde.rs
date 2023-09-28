@@ -5,7 +5,8 @@
 
 use std::convert::TryFrom;
 
-use crate::util::AttrArgs;
+use syn::punctuated::Punctuated;
+use syn::Token;
 
 /// Serde name types.
 #[allow(clippy::enum_variant_names)]
@@ -134,19 +135,28 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
         let mut this: Self = Default::default();
 
         for attrib in attributes {
-            if !attrib.path.is_ident("serde") {
-                continue;
-            }
+            let list = match &attrib.meta {
+                syn::Meta::List(list) if list.path.is_ident("serde") => list,
+                _ => continue,
+            };
 
-            let args: AttrArgs = syn::parse2(attrib.tokens.clone())?;
-            for arg in args.args {
-                if let syn::NestedMeta::Meta(syn::Meta::NameValue(var)) = arg {
-                    if var.path.is_ident("rename_all") {
-                        let rename_all = RenameAll::try_from(&var.lit)?;
-                        if this.rename_all.is_some() && this.rename_all != Some(rename_all) {
-                            error!(var.lit => "multiple conflicting 'rename_all' attributes");
+            let args =
+                list.parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated)?;
+
+            for arg in args {
+                if let syn::Meta::NameValue(var) = arg {
+                    if !var.path.is_ident("rename_all") {
+                        continue;
+                    }
+                    match &var.value {
+                        syn::Expr::Lit(lit) => {
+                            let rename_all = RenameAll::try_from(&lit.lit)?;
+                            if this.rename_all.is_some() && this.rename_all != Some(rename_all) {
+                                error!(var.value => "multiple conflicting 'rename_all' attributes");
+                            }
+                            this.rename_all = Some(rename_all);
                         }
-                        this.rename_all = Some(rename_all);
+                        _ => error!(var.value => "invalid 'rename_all' value type"),
                     }
                 }
             }
@@ -165,30 +175,31 @@ pub struct SerdeAttrib {
 
 impl SerdeAttrib {
     pub fn parse_attribute(&mut self, attrib: &syn::Attribute) -> Result<(), syn::Error> {
-        use syn::{Meta, NestedMeta};
+        let list = match &attrib.meta {
+            syn::Meta::List(list) if list.path.is_ident("serde") => list,
+            _ => return Ok(()),
+        };
 
-        if !attrib.path.is_ident("serde") {
-            return Ok(());
-        }
+        let args = list.parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated)?;
 
-        let args: AttrArgs = syn::parse2(attrib.tokens.clone())?;
-        for arg in args.args {
-            match arg {
-                NestedMeta::Meta(Meta::NameValue(var)) if var.path.is_ident("rename") => {
-                    match var.lit {
-                        syn::Lit::Str(rename) => {
-                            if self.rename.is_some() && self.rename.as_ref() != Some(&rename) {
-                                error!(&rename => "multiple conflicting 'rename' attributes");
-                            }
-                            self.rename = Some(rename);
+        for arg in args {
+            let path = arg.path();
+            if path.is_ident("rename") {
+                match &arg.require_name_value()?.value {
+                    syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Str(rename),
+                        ..
+                    }) => {
+                        if self.rename.is_some() && self.rename.as_ref() != Some(rename) {
+                            error!(&rename => "multiple conflicting 'rename' attributes");
                         }
-                        _ => error!(var.lit => "'rename' value must be a string literal"),
+                        self.rename = Some(rename.clone());
                     }
+                    value => error!(value => "'rename' value must be a string literal"),
                 }
-                NestedMeta::Meta(Meta::Path(path)) if path.is_ident("flatten") => {
-                    self.flatten = true;
-                }
-                _ => continue,
+            } else if path.is_ident("flatten") {
+                arg.require_path_only()?;
+                self.flatten = true;
             }
         }
 

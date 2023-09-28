@@ -183,7 +183,7 @@ impl JSONValue {
 
     pub fn span(&self) -> Span {
         match self {
-            JSONValue::Object(obj) => obj.brace_token.span,
+            JSONValue::Object(obj) => obj.span(),
             JSONValue::Expr(expr) => expr.span(),
         }
     }
@@ -194,7 +194,7 @@ impl TryFrom<JSONValue> for syn::Expr {
     type Error = syn::Error;
     fn try_from(value: JSONValue) -> Result<Self, syn::Error> {
         match value {
-            JSONValue::Object(s) => bail!(s.brace_token.span, "unexpected object"),
+            JSONValue::Object(s) => bail!(s.span(), "unexpected object"),
             JSONValue::Expr(e) => Ok(e),
         }
     }
@@ -298,7 +298,7 @@ impl Parse for JSONValue {
 
 /// The "core" of our schema is a json object.
 pub struct JSONObject {
-    pub brace_token: syn::token::Brace,
+    pub brace_token: Option<syn::token::Brace>,
     pub elements: HashMap<FieldName, JSONValue>,
 }
 
@@ -308,8 +308,7 @@ impl JSONObject {
     }
 
     fn parse_elements(input: ParseStream) -> syn::Result<HashMap<FieldName, JSONValue>> {
-        let map_elems: Punctuated<JSONMapEntry, Token![,]> =
-            input.parse_terminated(JSONMapEntry::parse)?;
+        let map_elems = input.parse_terminated(JSONMapEntry::parse, Token![,])?;
         let mut elems = HashMap::with_capacity(map_elems.len());
         for c in map_elems {
             if elems.insert(c.key.clone(), c.value).is_some() {
@@ -321,9 +320,7 @@ impl JSONObject {
 
     pub fn parse_inner(input: ParseStream) -> syn::Result<Self> {
         Ok(Self {
-            brace_token: syn::token::Brace {
-                span: Span::call_site(),
-            },
+            brace_token: None,
             elements: Self::parse_elements(input)?,
         })
     }
@@ -333,7 +330,7 @@ impl Parse for JSONObject {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let content;
         Ok(Self {
-            brace_token: syn::braced!(content in input),
+            brace_token: Some(syn::braced!(content in input)),
             elements: Self::parse_elements(&content)?,
         })
     }
@@ -355,7 +352,10 @@ impl std::ops::DerefMut for JSONObject {
 
 impl JSONObject {
     pub fn span(&self) -> Span {
-        self.brace_token.span
+        match &self.brace_token {
+            Some(brace) => brace.span.join(),
+            None => Span::call_site(),
+        }
     }
 
     pub fn remove_required_element(&mut self, name: &str) -> Result<JSONValue, syn::Error> {
@@ -415,12 +415,20 @@ pub fn get_doc_comments(attributes: &[syn::Attribute]) -> Result<(String, Span),
             continue;
         }
 
-        if attr.path.is_ident("doc") {
-            let doc: BareAssignment<syn::LitStr> = syn::parse2(attr.tokens.clone())?;
+        let nv = match &attr.meta {
+            syn::Meta::NameValue(nv) if nv.path.is_ident("doc") => &nv.value,
+            _ => continue,
+        };
+
+        if let syn::Expr::Lit(syn::ExprLit {
+            lit: syn::Lit::Str(doc),
+            ..
+        }) = nv
+        {
             if !doc_comment.is_empty() {
                 doc_comment.push('\n');
             }
-            doc_comment.push_str(doc.content.value().trim());
+            doc_comment.push_str(doc.value().trim());
         }
     }
 
@@ -554,7 +562,7 @@ pub fn make_ident_path(ident: Ident) -> syn::Path {
 pub fn make_path(span: Span, leading_colon: bool, path: &[&str]) -> syn::Path {
     syn::Path {
         leading_colon: if leading_colon {
-            Some(syn::token::Colon2 {
+            Some(syn::token::PathSep {
                 spans: [span, span],
             })
         } else {
@@ -567,30 +575,6 @@ pub fn make_path(span: Span, leading_colon: bool, path: &[&str]) -> syn::Path {
                 arguments: syn::PathArguments::None,
             })
             .collect(),
-    }
-}
-
-/// Helper to do basically what `parse_macro_input!` does, except the macro expects a
-/// `TokenStream_1`, and we always have a `TokenStream` from `proc_macro2`.
-pub struct AttrArgs {
-    pub paren_token: syn::token::Paren,
-    pub args: Punctuated<syn::NestedMeta, Token![,]>,
-}
-
-impl Parse for AttrArgs {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let content;
-        Ok(Self {
-            paren_token: syn::parenthesized!(content in input),
-            args: Punctuated::parse_terminated(&content)?,
-        })
-    }
-}
-
-impl ToTokens for AttrArgs {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.paren_token
-            .surround(tokens, |inner| self.args.to_tokens(inner));
     }
 }
 
@@ -701,7 +685,7 @@ pub fn derives_trait(attributes: &[syn::Attribute], ident: &str) -> bool {
 
 /// Iterator over the types found in `#[derive(...)]` attributes.
 pub struct DerivedItems<'a> {
-    current: Option<<Punctuated<syn::NestedMeta, Token![,]> as IntoIterator>::IntoIter>,
+    current: Option<<Punctuated<syn::Meta, Token![,]> as IntoIterator>::IntoIter>,
     attributes: std::slice::Iter<'a, syn::Attribute>,
 }
 
@@ -713,7 +697,7 @@ impl<'a> Iterator for DerivedItems<'a> {
             if let Some(current) = &mut self.current {
                 loop {
                     match current.next() {
-                        Some(syn::NestedMeta::Meta(syn::Meta::Path(path))) => return Some(path),
+                        Some(syn::Meta::Path(path)) => return Some(path),
                         Some(_) => continue,
                         None => {
                             self.current = None;
@@ -728,15 +712,16 @@ impl<'a> Iterator for DerivedItems<'a> {
                 continue;
             }
 
-            match attr.parse_meta() {
-                Ok(syn::Meta::List(list)) if list.path.is_ident("derive") => {
-                    self.current = Some(list.nested.into_iter());
+            match &attr.meta {
+                syn::Meta::List(list) if list.path.is_ident("derive") => {
+                    if let Ok(items) =
+                        list.parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated)
+                    {
+                        self.current = Some(items.into_iter());
+                    }
                     continue;
                 }
-                // ignore anything that isn't a `derive(...)` attribute
-                Ok(_) => continue,
-                // ignore parse errors
-                Err(_) => continue,
+                _ => continue,
             }
         }
     }
@@ -756,102 +741,71 @@ where
             continue;
         }
 
-        if !attr.path.is_ident("derive") {
-            attributes.push(attr);
-            continue;
-        }
-
-        let mut args: AttrArgs = match syn::parse2(attr.tokens.clone()) {
-            Ok(args) => args,
-            Err(_) => {
-                // if we can't parse it, we don't care
-                attributes.push(attr);
-                continue;
-            }
-        };
-
-        for arg in std::mem::take(&mut args.args).into_pairs() {
-            match arg {
-                Pair::Punctuated(item, punct) => {
-                    if let syn::NestedMeta::Meta(syn::Meta::Path(path)) = &item {
-                        if !func(path) {
-                            continue;
-                        }
-                    }
-                    args.args.push_value(item);
-                    args.args.push_punct(punct);
-                }
-                Pair::End(item) => {
-                    if let syn::NestedMeta::Meta(syn::Meta::Path(path)) = &item {
-                        if !func(path) {
-                            continue;
-                        }
-                    }
-                    args.args.push_value(item);
-                }
-            }
-        }
-
-        if !args.args.is_empty() {
-            attr.tokens = args.into_token_stream();
-            attributes.push(attr);
-        }
-    }
-}
-
-pub fn make_attribute(span: Span, path: syn::Path, tokens: TokenStream) -> syn::Attribute {
-    syn::Attribute {
-        pound_token: syn::token::Pound { spans: [span] },
-        style: syn::AttrStyle::Outer,
-        bracket_token: syn::token::Bracket { span },
-        path,
-        tokens,
-    }
-}
-
-pub fn make_derive_attribute(span: Span, content: TokenStream) -> syn::Attribute {
-    make_attribute(
-        span,
-        make_ident_path(Ident::new("derive", span)),
-        quote::quote! { (#content) },
-    )
-}
-
-/// Extract (remove) an attribute from a list and run a callback on its parameters.
-pub fn extract_attributes(
-    attributes: &mut Vec<syn::Attribute>,
-    attr_name: &str,
-    mut func_matching: impl FnMut(&syn::Attribute, syn::NestedMeta) -> Result<(), syn::Error>,
-) {
-    for attr in std::mem::take(attributes) {
-        if attr.style != syn::AttrStyle::Outer {
-            attributes.push(attr);
-            continue;
-        }
-
-        let meta = match attr.parse_meta() {
-            Ok(meta) => meta,
-            Err(err) => {
-                crate::add_error(err);
-                attributes.push(attr);
-                continue;
-            }
-        };
-
-        let list = match meta {
-            syn::Meta::List(list) if list.path.is_ident(attr_name) => list,
+        let list = match &mut attr.meta {
+            syn::Meta::List(list) if list.path.is_ident("derive") => list,
             _ => {
                 attributes.push(attr);
                 continue;
             }
         };
 
-        for entry in list.nested {
-            match func_matching(&attr, entry) {
-                Ok(()) => (),
-                Err(err) => crate::add_error(err),
+        let mut args =
+            match list.parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated) {
+                Ok(args) => args,
+                Err(_) => {
+                    // if we can't parse it, we don't care
+                    attributes.push(attr);
+                    continue;
+                }
+            };
+
+        for arg in std::mem::take(&mut args).into_pairs() {
+            match arg {
+                Pair::Punctuated(item, punct) => {
+                    if let syn::Meta::Path(path) = &item {
+                        if !func(path) {
+                            continue;
+                        }
+                    }
+                    args.push_value(item);
+                    args.push_punct(punct);
+                }
+                Pair::End(item) => {
+                    if let syn::Meta::Path(path) = &item {
+                        if !func(path) {
+                            continue;
+                        }
+                    }
+                    args.push_value(item);
+                }
             }
         }
+
+        if !args.is_empty() {
+            list.tokens = args.into_token_stream();
+            attributes.push(attr);
+        }
+    }
+}
+
+pub fn make_derive_attribute(span: Span, content: TokenStream) -> syn::Attribute {
+    // FIXME: syn2 wtf come on...
+    let bracket_span =
+        proc_macro2::Group::new(proc_macro2::Delimiter::Bracket, TokenStream::new()).delim_span();
+    let paren_span =
+        proc_macro2::Group::new(proc_macro2::Delimiter::Parenthesis, TokenStream::new())
+            .delim_span();
+
+    syn::Attribute {
+        pound_token: syn::token::Pound { spans: [span] },
+        style: syn::AttrStyle::Outer,
+        bracket_token: syn::token::Bracket { span: bracket_span },
+        //meta: syn::Meta::List(syn::parse_quote_spanned!(span => derive ( #content )).unwrap()),
+        meta: syn::Meta::List(syn::MetaList {
+            path: make_ident_path(Ident::new("derive", span)),
+            delimiter: syn::MacroDelimiter::Paren(syn::token::Paren { span: paren_span }),
+            tokens: content,
+        }),
     }
 }
 
@@ -906,14 +860,15 @@ pub fn respan(mut token: TokenTree, span: Span) -> TokenTree {
 
 /// Parse a string attribute into a value, producing a duplication error if it has already been
 /// set.
-pub fn parse_str_value_to_option<T: Parse>(target: &mut Option<T>, nv: &syn::MetaNameValue) {
-    duplicate(&*target, &nv.path);
-    match &nv.lit {
-        syn::Lit::Str(s) => match parse_lit_str(s) {
-            Ok(value) => *target = Some(value),
-            Err(err) => crate::add_error(err),
-        },
-        other => error!(other => "bad value for '{:?}' attribute", nv.path),
+pub fn parse_str_value_to_option<T: Parse>(
+    target: &mut Option<T>,
+    path: &syn::Path,
+    nv: syn::parse::ParseStream<'_>,
+) {
+    duplicate(&*target, &path);
+    match nv.parse().and_then(|lit| parse_lit_str(&lit)) {
+        Ok(value) => *target = Some(value),
+        Err(err) => crate::add_error(err),
     }
 }
 
