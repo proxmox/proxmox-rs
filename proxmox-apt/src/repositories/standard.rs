@@ -24,7 +24,8 @@ pub struct APTStandardRepository {
     /// Handle referencing a standard repository.
     pub handle: APTRepositoryHandle,
 
-    /// Configuration status of the associated repository.
+    /// Configuration status of the associated repository, where `None` means
+    /// not configured, and `Some(bool)` indicates enabled or disabled.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status: Option<bool>,
 
