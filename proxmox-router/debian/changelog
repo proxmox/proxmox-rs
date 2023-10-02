@@ -1,3 +1,9 @@
+rust-proxmox-router (2.1.1-1) stable; urgency=medium
+
+  * rebuild with env_logger 0.10
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 02 Oct 2023 09:09:32 +0200
+
 rust-proxmox-router (2.1.0-1) bookworm; urgency=medium
 
   * move `HttpError` and its macros into its own crate and re-export here
