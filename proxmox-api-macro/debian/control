@@ -9,10 +9,10 @@ Build-Depends: debhelper (>= 12),
  librust-anyhow-1+default-dev <!nocheck>,
  librust-proc-macro2-1+default-dev <!nocheck>,
  librust-quote-1+default-dev <!nocheck>,
- librust-syn-1+default-dev <!nocheck>,
- librust-syn-1+extra-traits-dev <!nocheck>,
- librust-syn-1+full-dev <!nocheck>,
- librust-syn-1+visit-mut-dev <!nocheck>
+ librust-syn-2+default-dev <!nocheck>,
+ librust-syn-2+extra-traits-dev <!nocheck>,
+ librust-syn-2+full-dev <!nocheck>,
+ librust-syn-2+visit-mut-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -28,18 +28,18 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-proc-macro2-1+default-dev,
  librust-quote-1+default-dev,
- librust-syn-1+default-dev,
- librust-syn-1+extra-traits-dev,
- librust-syn-1+full-dev,
- librust-syn-1+visit-mut-dev
+ librust-syn-2+default-dev,
+ librust-syn-2+extra-traits-dev,
+ librust-syn-2+full-dev,
+ librust-syn-2+visit-mut-dev
 Provides:
  librust-proxmox-api-macro+default-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1+default-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.0-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.0.5-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.0.5+default-dev (= ${binary:Version})
+ librust-proxmox-api-macro-1.0.6-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-1.0.6+default-dev (= ${binary:Version})
 Description: Proxmox API macro - Rust source code
  This package contains the source for the Rust proxmox-api-macro crate, packaged
  by debcargo for use with cargo and dh-cargo.

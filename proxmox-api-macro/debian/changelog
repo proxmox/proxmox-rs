@@ -1,3 +1,11 @@
+rust-proxmox-api-macro (1.0.6-1) stable; urgency=medium
+
+  * clippy fix: this (Default) `impl` can be derived
+
+  * update to syn 2, rework attribute parsing
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 02 Oct 2023 09:27:12 +0200
+
 rust-proxmox-api-macro (1.0.5-1) bookworm; urgency=medium
 
   * support non-idents in serde rename attributes on enum variants
