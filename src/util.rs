@@ -6,7 +6,7 @@ use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
 use openssl::rsa::Rsa;
-use openssl::x509::{X509Extension, X509Name, X509Req};
+use openssl::x509::{self, X509Name, X509Req};
 
 use crate::Error;
 
@@ -55,40 +55,24 @@ impl Csr {
 
         let context = csr.x509v3_context(None);
         let mut ext = openssl::stack::Stack::new()?;
-        ext.push(X509Extension::new_nid(
-            None,
-            None,
-            Nid::BASIC_CONSTRAINTS,
-            "CA:FALSE",
-        )?)?;
-        ext.push(X509Extension::new_nid(
-            None,
-            None,
-            Nid::KEY_USAGE,
-            "digitalSignature,keyEncipherment",
-        )?)?;
-        ext.push(X509Extension::new_nid(
-            None,
-            None,
-            Nid::EXT_KEY_USAGE,
-            "serverAuth,clientAuth",
-        )?)?;
-        ext.push(X509Extension::new_nid(
-            None,
-            Some(&context),
-            Nid::SUBJECT_ALT_NAME,
-            &identifiers
-                .iter()
-                .try_fold(String::new(), |mut acc, dns| {
-                    if !acc.is_empty() {
-                        acc.push(',');
-                    }
-                    use std::fmt::Write;
-                    write!(acc, "DNS:{}", dns.as_ref())?;
-                    Ok::<_, std::fmt::Error>(acc)
-                })
-                .map_err(|err| Error::Csr(err.to_string()))?,
-        )?)?;
+        ext.push(x509::extension::BasicConstraints::new().build()?)?;
+        ext.push(
+            x509::extension::KeyUsage::new()
+                .digital_signature()
+                .key_encipherment()
+                .build()?,
+        )?;
+        ext.push(
+            x509::extension::ExtendedKeyUsage::new()
+                .server_auth()
+                .client_auth()
+                .build()?,
+        )?;
+        let mut san = x509::extension::SubjectAlternativeName::new();
+        for dns in identifiers {
+            san.dns(dns.as_ref());
+        }
+        ext.push({ san }.build(&context)?)?;
         csr.add_extensions(&ext)?;
 
         csr.sign(&private_key, MessageDigest::sha256())?;
