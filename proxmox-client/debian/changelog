@@ -1,3 +1,11 @@
+rust-proxmox-client (0.3.0-1) bookworm; urgency=medium
+
+  * add `post_without_body()` to HttpApiClient
+
+  * improve error handling in RawApiResponse handling
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 16 Oct 2023 13:26:43 +0200
+
 rust-proxmox-client (0.2.3-1) bookworm; urgency=medium
 
   * fix hyper client not setting content type header
