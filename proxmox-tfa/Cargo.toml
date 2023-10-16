@@ -10,6 +10,8 @@ description = "tfa implementation for totp and u2f"
 exclude.workspace = true
 
 [dependencies]
+serde.workspace = true
+
 anyhow = { workspace = true, optional = true }
 base32 = { workspace = true, optional = true }
 base64 = { workspace = true, optional = true }
@@ -18,9 +20,8 @@ libc = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 openssl = { workspace = true, optional = true }
 percent-encoding = { workspace = true, optional = true }
-serde.workspace = true
 serde_json = { workspace = true, optional = true }
-serde_plain.workspace = true
+serde_plain = { workspace = true, optional = true }
 url = { workspace = true, optional = true }
 webauthn-rs = { workspace = true, optional = true }
 
@@ -30,7 +31,7 @@ proxmox-uuid = { workspace = true, optional = true }
 
 [features]
 default = [ "totp" ]
-types = [ "serde/derive"]
+types = [ "dep:serde_plain", "serde/derive" ]
 u2f = [ "dep:base64", "dep:libc", "dep:openssl", "dep:serde_json", "serde/derive" ]
 api = [
     "totp",
@@ -44,4 +45,4 @@ api = [
     "dep:webauthn-rs",
 ]
 api-types = [ "types", "dep:proxmox-schema" ]
-totp = [ "dep:base32", "dep:hex", "dep:openssl", "dep:percent-encoding" ]
+totp = [ "dep:base32", "dep:hex", "dep:openssl", "dep:percent-encoding", "dep:serde_plain" ]
