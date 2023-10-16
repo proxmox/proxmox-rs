@@ -33,6 +33,8 @@ members = [
 exclude = [
     "build",
 ]
+resolver = "2"
+
 [workspace.package]
 authors = ["Proxmox Support Team <support@proxmox.com>"]
 edition = "2021"
