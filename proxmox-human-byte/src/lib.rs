@@ -124,9 +124,9 @@ fn strip_unit(v: &str) -> (&str, SizeUnit) {
 #[derive(Debug, Copy, Clone, UpdaterType, PartialEq)]
 pub struct HumanByte {
     /// The siginficant value, it does not includes any factor of the `unit`
-    size: f64,
+    pub size: f64,
     /// The scale/unit of the value
-    unit: SizeUnit,
+    pub unit: SizeUnit,
 }
 
 fn verify_human_byte(s: &str) -> Result<(), Error> {
