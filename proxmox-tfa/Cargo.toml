@@ -11,17 +11,17 @@ exclude.workspace = true
 
 [dependencies]
 anyhow = { workspace = true, optional = true }
-base32.workspace = true
-base64.workspace = true
-hex.workspace = true
-log.workspace = true
-openssl.workspace = true
-percent-encoding.workspace = true
-serde.workspace = true
-serde_plain.workspace = true
-serde_json = { workspace = true, optional = true }
+base32 = { workspace = true, optional = true }
+base64 = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
 libc = { workspace = true, optional = true }
-url.workspace = true
+log = { workspace = true, optional = true }
+openssl = { workspace = true, optional = true }
+percent-encoding = { workspace = true, optional = true }
+serde.workspace = true
+serde_json = { workspace = true, optional = true }
+serde_plain.workspace = true
+url = { workspace = true, optional = true }
 webauthn-rs = { workspace = true, optional = true }
 
 proxmox-schema = { workspace = true, features = [ "api-macro" ], optional = true }
@@ -29,8 +29,19 @@ proxmox-time = { workspace = true, optional = true }
 proxmox-uuid = { workspace = true, optional = true }
 
 [features]
-default = []
+default = [ "totp" ]
 types = [ "serde/derive"]
-u2f = [ "dep:libc", "dep:serde_json", "serde/derive" ]
-api = [ "types", "u2f", "dep:anyhow", "dep:webauthn-rs", "dep:proxmox-uuid", "dep:proxmox-time" ]
+u2f = [ "dep:base64", "dep:libc", "dep:openssl", "dep:serde_json", "serde/derive" ]
+api = [
+    "totp",
+    "types",
+    "u2f",
+    "dep:anyhow",
+    "dep:log",
+    "dep:proxmox-time",
+    "dep:proxmox-uuid",
+    "dep:url",
+    "dep:webauthn-rs",
+]
 api-types = [ "types", "dep:proxmox-schema" ]
+totp = [ "dep:base32", "dep:hex", "dep:openssl", "dep:percent-encoding" ]
