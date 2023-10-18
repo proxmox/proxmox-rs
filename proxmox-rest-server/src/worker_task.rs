@@ -88,11 +88,29 @@ impl WorkerTaskSetup {
         Ok(TaskListLockGuard(file))
     }
 
-    fn log_path(&self, upid: &UPID) -> std::path::PathBuf {
+    fn log_directory(&self, upid: &UPID) -> std::path::PathBuf {
         let mut path = self.taskdir.clone();
-        path.push(format!("{:02X}", upid.pstart % 256));
+        path.push(format!("{:02X}", upid.pstart & 255));
+        path
+    }
+
+    fn log_path(&self, upid: &UPID) -> std::path::PathBuf {
+        let mut path = self.log_directory(upid);
         path.push(upid.to_string());
         path
+    }
+
+    fn create_and_get_log_path(&self, upid: &UPID) -> Result<std::path::PathBuf, Error> {
+        let mut path = self.log_directory(upid);
+        let dir_opts = self
+            .file_opts
+            .clone()
+            .perm(nix::sys::stat::Mode::from_bits_truncate(0o755));
+
+        create_path(&path, None, Some(dir_opts))?;
+
+        path.push(upid.to_string());
+        Ok(path)
     }
 
     // atomically read/update the task list, update status of finished tasks
@@ -372,7 +390,6 @@ pub fn upid_read_status(upid: &UPID) -> Result<TaskState, Error> {
     };
 
     let path = setup.log_path(upid);
-
     let mut file = File::open(path)?;
 
     /// speedup - only read tail
@@ -814,18 +831,7 @@ impl WorkerTask {
         let upid = UPID::new(worker_type, worker_id, auth_id)?;
         let task_id = upid.task_id;
 
-        let mut path = setup.taskdir.clone();
-
-        path.push(format!("{:02X}", upid.pstart & 255));
-
-        let dir_opts = setup
-            .file_opts
-            .clone()
-            .perm(nix::sys::stat::Mode::from_bits_truncate(0o755));
-
-        create_path(&path, None, Some(dir_opts))?;
-
-        path.push(upid.to_string());
+        let path = setup.create_and_get_log_path(&upid)?;
 
         let logger_options = FileLogOptions {
             to_stdout,
