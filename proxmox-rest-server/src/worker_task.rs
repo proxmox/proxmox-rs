@@ -231,10 +231,15 @@ pub fn init_worker_tasks(basedir: PathBuf, file_opts: CreateOptions) -> Result<(
 
 /// Optionally rotates and/or cleans up the task archive depending on its size and age.
 ///
-/// Check if the Task Archive is bigger than 'size_threshold' bytes, and rotate in that case.
-/// Keeps either only up to 'max_files' if 'max_days' is not given. Else, 'max_files' will be
-/// ignored, and all archive files older than the first with only tasks from before 'now-max_days'
-/// will be deleted
+/// Check if the current task-archive is bigger than 'size_threshold' bytes, and rotate in that
+/// case. If the task archive is smaller, nothing will be done.
+///
+/// Retention is controlled by either 'max_days' or 'max_files', with 'max_days' having precedence.
+///
+/// If only 'max_files' is passed, all files coming latter than that will be deleted.
+/// For 'max_days', the logs will be scanned until one is found that only has entries that are
+/// older than the cut-off time of `now - max_days`. If such a older archive file is found, that
+/// and all older ones will be deleted.
 pub fn rotate_task_log_archive(
     size_threshold: u64,
     compress: bool,
