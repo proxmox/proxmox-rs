@@ -251,12 +251,9 @@ pub fn rotate_task_log_archive(
 
     let _lock = setup.lock_task_list_files(true)?;
 
-    let mut logrotate = LogRotate::new(
-        &setup.task_archive_fn,
-        compress,
-        if max_days.is_none() { max_files } else { None },
-        options,
-    )?;
+    let max_files = if max_days.is_some() { None } else { max_files };
+
+    let mut logrotate = LogRotate::new(&setup.task_archive_fn, compress, max_files, options)?;
 
     let mut rotated = logrotate.rotate(size_threshold)?;
 
