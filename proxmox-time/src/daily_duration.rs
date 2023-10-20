@@ -30,7 +30,7 @@ impl PartialOrd for HmTime {
 }
 
 /// Defines a period of time for on or more [WeekDays]
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct DailyDuration {
     /// the days in a week this duration should trigger
     pub days: WeekDays,
