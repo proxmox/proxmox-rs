@@ -5,7 +5,7 @@ use proxmox_schema::api;
 
 #[cfg_attr(feature = "api-types", api)]
 /// A TFA entry type.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum TfaType {
     /// A TOTP entry type.
