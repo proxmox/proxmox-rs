@@ -101,14 +101,18 @@ impl fmt::Display for ParameterError {
         let mut msg = String::new();
 
         if !self.is_empty() {
-            msg.push_str("parameter verification errors\n\n");
+            if self.len() == 1 {
+                msg.push_str("parameter verification failed - ");
+                let _ = write!(msg, "'{}': {}", self.error_list[0].0, self.error_list[0].1);
+            } else {
+                msg.push_str("parameter verification failed:\n");
+                for (name, err) in self.error_list.iter() {
+                    let _ = writeln!(msg, "- '{}': {}", name, err);
+                }
+            }
         }
 
-        for (name, err) in self.error_list.iter() {
-            let _ = writeln!(msg, "parameter '{}': {}", name, err);
-        }
-
-        write!(f, "{}", msg)
+        write!(f, "{}", msg.trim())
     }
 }
 
