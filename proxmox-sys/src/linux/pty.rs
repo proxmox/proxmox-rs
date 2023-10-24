@@ -48,6 +48,7 @@ ioctl_write_ptr_bad!(set_size, libc::TIOCSWINSZ, nix::pty::Winsize);
 ///     Ok(())
 ///  }
 /// ```
+#[deprecated(note="moved to termproxy directly, only used there. Holler if you run into this.")]
 pub struct PTY {
     primary: PtyMaster,
 }
