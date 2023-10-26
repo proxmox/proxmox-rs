@@ -381,9 +381,20 @@ pub fn upid_log_path(upid: &UPID) -> Result<std::path::PathBuf, Error> {
     Ok(setup.log_path(upid))
 }
 
-/// Read endtime (time of last log line) and exitstatus from task log file
-/// If there is not a single line with at valid datetime, we assume the
-/// starttime to be the endtime
+/// Parse the time and exit status from the last log line in a worker task log file. Works only
+/// correctly on finished tasks.
+///
+/// For parsing the task log file is opened, then seek'd to the end - 8 KiB as performance
+/// optimization with the assumption that any last-line will fit in that range, and then the last
+/// line in that range is searched and then parsed.
+///
+/// Note, this should be avoided for tasks that are still active, as then the 'endtime' and
+/// exit-status might be wrong, e.g., if a log line resembles a exit status message by accident.
+///
+/// Further, if no line starting with a valid date-time is found in the trailing 8 KiB, it can only
+/// be due to either being called on a still running task (e.g., with no output yet) by mistake, or
+/// because the task was (unsafely) interrupted, e.g., due to a power loss. In that case the
+/// end-time is also set to the start-time.
 pub fn upid_read_status(upid: &UPID) -> Result<TaskState, Error> {
     let setup = worker_task_setup()?;
 
