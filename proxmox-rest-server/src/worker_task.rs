@@ -398,10 +398,6 @@ pub fn upid_log_path(upid: &UPID) -> Result<std::path::PathBuf, Error> {
 pub fn upid_read_status(upid: &UPID) -> Result<TaskState, Error> {
     let setup = worker_task_setup()?;
 
-    let mut status = TaskState::Unknown {
-        endtime: upid.starttime,
-    };
-
     let path = setup.log_path(upid);
     let mut file = File::open(path)?;
 
@@ -427,20 +423,20 @@ pub fn upid_read_status(upid: &UPID) -> Result<TaskState, Error> {
     let last_line = std::str::from_utf8(last_line)
         .map_err(|err| format_err!("upid_read_status: utf8 parse failed: {}", err))?;
 
+    let mut endtime = upid.starttime; // as fallback
     let mut iter = last_line.splitn(2, ": ");
     if let Some(time_str) = iter.next() {
-        if let Ok(endtime) = proxmox_time::parse_rfc3339(time_str) {
-            // set the endtime even if we cannot parse the state
-            status = TaskState::Unknown { endtime };
+        if let Ok(parsed_endtime) = proxmox_time::parse_rfc3339(time_str) {
+            endtime = parsed_endtime; // save last found time for when the state cannot be parsed
             if let Some(rest) = iter.next().and_then(|rest| rest.strip_prefix("TASK ")) {
-                if let Ok(state) = TaskState::from_endtime_and_message(endtime, rest) {
-                    status = state;
+                if let Ok(state) = TaskState::from_endtime_and_message(parsed_endtime, rest) {
+                    return Ok(state);
                 }
             }
         }
     }
 
-    Ok(status)
+    Ok(TaskState::Unknown { endtime }) // no last line with both, end-time and task-state, found.
 }
 
 lazy_static! {
