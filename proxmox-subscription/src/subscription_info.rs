@@ -286,6 +286,13 @@ impl SubscriptionInfo {
             .ok_or_else(|| format_err!("no product key set"))
             .map(|key| key[..3].parse::<ProductType>())?
     }
+
+    pub fn get_next_due_date(&self) -> Result<i64, Error> {
+        self.nextduedate
+            .as_ref()
+            .ok_or_else(|| format_err!("no next due date set"))
+            .map(|e| parse_next_due(e))?
+    }
 }
 
 /// Shortcut for md5 sums.
