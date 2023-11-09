@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{fmt::Display, path::Path, str::FromStr};
 
 use anyhow::{bail, format_err, Error};
 use openssl::hash::{hash, DigestBytes, MessageDigest};
@@ -55,6 +55,48 @@ impl std::fmt::Display for SubscriptionStatus {
             SubscriptionStatus::Invalid => write!(f, "invalid"),
             SubscriptionStatus::Expired => write!(f, "expired"),
             SubscriptionStatus::Suspended => write!(f, "suspended"),
+        }
+    }
+}
+
+#[cfg_attr(feature = "api-types", api())]
+#[cfg_attr(feature = "api-types", derive(Updater))]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "lowercase")]
+/// Product type
+pub enum ProductType {
+    /// Proxmox Virtual Environment
+    Pve,
+    /// Proxmox Backup Server
+    Pbs,
+    /// Proxmox Mail Gateway
+    Pmg,
+    /// Proxmox Offline Mirror
+    Pom,
+}
+
+impl Display for ProductType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let txt = match self {
+            ProductType::Pve => "pve",
+            ProductType::Pbs => "pbs",
+            ProductType::Pmg => "pmg",
+            ProductType::Pom => "pom",
+        };
+        f.write_str(txt)
+    }
+}
+
+impl FromStr for ProductType {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "pve" => Ok(ProductType::Pve),
+            "pmg" => Ok(ProductType::Pmg),
+            "pbs" => Ok(ProductType::Pbs),
+            "pom" => Ok(ProductType::Pom),
+            _ => bail!("unknown product type '{s}'"),
         }
     }
 }
@@ -236,6 +278,13 @@ impl SubscriptionInfo {
                 self.message = Some("Signature validation failed".to_string());
             }
         }
+    }
+
+    pub fn get_product_type(&self) -> Result<ProductType, Error> {
+        self.key
+            .as_ref()
+            .ok_or_else(|| format_err!("no product key set"))
+            .map(|key| key[..3].parse::<ProductType>())?
     }
 }
 
