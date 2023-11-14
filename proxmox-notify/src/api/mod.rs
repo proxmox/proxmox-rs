@@ -1,3 +1,4 @@
+use serde::Serialize;
 use std::collections::HashSet;
 
 use proxmox_http_error::HttpError;
@@ -10,6 +11,8 @@ pub mod gotify;
 pub mod matcher;
 #[cfg(feature = "sendmail")]
 pub mod sendmail;
+#[cfg(feature = "smtp")]
+pub mod smtp;
 
 // We have our own, local versions of http_err and http_bail, because
 // we don't want to wrap the error in anyhow::Error. If we were to do that,
@@ -60,6 +63,10 @@ fn ensure_endpoint_exists(#[allow(unused)] config: &Config, name: &str) -> Resul
     {
         exists = exists || gotify::get_endpoint(config, name).is_ok();
     }
+    #[cfg(feature = "smtp")]
+    {
+        exists = exists || smtp::get_endpoint(config, name).is_ok();
+    }
 
     if !exists {
         http_bail!(NOT_FOUND, "endpoint '{name}' does not exist")
@@ -100,6 +107,7 @@ fn get_referrers(config: &Config, entity: &str) -> Result<HashSet<String>, HttpE
             }
         }
     }
+
     Ok(referrers)
 }
 
@@ -146,6 +154,31 @@ fn get_referenced_entities(config: &Config, entity: &str) -> HashSet<String> {
     }
 
     expanded
+}
+
+#[allow(unused)]
+fn set_private_config_entry<T: Serialize>(
+    config: &mut Config,
+    private_config: &T,
+    typename: &str,
+    name: &str,
+) -> Result<(), HttpError> {
+    config
+        .private_config
+        .set_data(name, typename, private_config)
+        .map_err(|e| {
+            http_err!(
+                INTERNAL_SERVER_ERROR,
+                "could not save private config for endpoint '{}': {e}",
+                name
+            )
+        })
+}
+
+#[allow(unused)]
+fn remove_private_config_entry(config: &mut Config, name: &str) -> Result<(), HttpError> {
+    config.private_config.sections.remove(name);
+    Ok(())
 }
 
 #[cfg(test)]
