@@ -1,11 +1,10 @@
-use std::collections::HashSet;
-
 use serde::{Deserialize, Serialize};
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{api, Updater};
 
 use crate::context::context;
+use crate::endpoints::common::mail;
 use crate::renderer::TemplateRenderer;
 use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA, USER_SCHEMA};
 use crate::{renderer, Content, Endpoint, Error, Notification};
@@ -82,21 +81,10 @@ pub struct SendmailEndpoint {
 
 impl Endpoint for SendmailEndpoint {
     fn send(&self, notification: &Notification) -> Result<(), Error> {
-        let mut recipients = HashSet::new();
-
-        if let Some(mailto_addrs) = self.config.mailto.as_ref() {
-            for addr in mailto_addrs {
-                recipients.insert(addr.clone());
-            }
-        }
-
-        if let Some(users) = self.config.mailto_user.as_ref() {
-            for user in users {
-                if let Some(addr) = context().lookup_email_for_user(user) {
-                    recipients.insert(addr);
-                }
-            }
-        }
+        let recipients = mail::get_recipients(
+            self.config.mailto.as_deref(),
+            self.config.mailto_user.as_deref(),
+        );
 
         let recipients_str: Vec<&str> = recipients.iter().map(String::as_str).collect();
         let mailfrom = self

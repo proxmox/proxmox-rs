@@ -28,6 +28,17 @@ fn config_init() -> SectionConfig {
             SENDMAIL_SCHEMA,
         ));
     }
+    #[cfg(feature = "smtp")]
+    {
+        use crate::endpoints::smtp::{SmtpConfig, SMTP_TYPENAME};
+
+        const SMTP_SCHEMA: &ObjectSchema = SmtpConfig::API_SCHEMA.unwrap_object_schema();
+        config.register_plugin(SectionConfigPlugin::new(
+            SMTP_TYPENAME.to_string(),
+            Some(String::from("name")),
+            SMTP_SCHEMA,
+        ));
+    }
     #[cfg(feature = "gotify")]
     {
         use crate::endpoints::gotify::{GotifyConfig, GOTIFY_TYPENAME};
@@ -77,6 +88,18 @@ fn private_config_init() -> SectionConfig {
             GOTIFY_TYPENAME.to_string(),
             Some(String::from("name")),
             GOTIFY_SCHEMA,
+        ));
+    }
+
+    #[cfg(feature = "smtp")]
+    {
+        use crate::endpoints::smtp::{SmtpPrivateConfig, SMTP_TYPENAME};
+
+        const SMTP_SCHEMA: &ObjectSchema = SmtpPrivateConfig::API_SCHEMA.unwrap_object_schema();
+        config.register_plugin(SectionConfigPlugin::new(
+            SMTP_TYPENAME.to_string(),
+            Some(String::from("name")),
+            SMTP_SCHEMA,
         ));
     }
 

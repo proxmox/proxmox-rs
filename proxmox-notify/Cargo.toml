@@ -11,6 +11,7 @@ exclude.workspace = true
 anyhow.workspace = true
 handlebars = { workspace = true }
 lazy_static.workspace = true
+lettre = { workspace = true, optional = true }
 log.workspace = true
 mail-parser = { workspace = true, optional = true }
 openssl.workspace = true
@@ -27,9 +28,10 @@ serde = { workspace = true, features = ["derive"]}
 serde_json.workspace = true
 
 [features]
-default = ["sendmail", "gotify"]
+default = ["sendmail", "gotify", "smtp"]
 mail-forwarder = ["dep:mail-parser"]
 sendmail = ["dep:proxmox-sys"]
 gotify = ["dep:proxmox-http"]
 pve-context = ["dep:proxmox-sys"]
 pbs-context = ["dep:proxmox-sys"]
+smtp = ["dep:lettre"]

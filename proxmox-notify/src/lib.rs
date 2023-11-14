@@ -379,6 +379,22 @@ impl Bus {
                 .map(|e| (e.name().into(), e)),
             );
         }
+        #[cfg(feature = "smtp")]
+        {
+            use endpoints::smtp::SMTP_TYPENAME;
+            use endpoints::smtp::{SmtpConfig, SmtpEndpoint, SmtpPrivateConfig};
+            endpoints.extend(
+                parse_endpoints_with_private_config!(
+                    config,
+                    SmtpConfig,
+                    SmtpPrivateConfig,
+                    SmtpEndpoint,
+                    SMTP_TYPENAME
+                )?
+                .into_iter()
+                .map(|e| (e.name().into(), e)),
+            );
+        }
 
         let matchers = config
             .config
