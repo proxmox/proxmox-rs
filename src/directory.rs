@@ -47,6 +47,18 @@ pub struct Meta {
     /// The terms of service. This is typically in the form of an URL.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub terms_of_service: Option<String>,
+
+    /// Flag indicating if EAB is required, None is equivalent to false
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub external_account_required: Option<bool>,
+
+    /// Website with information about the ACME Server
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
+
+    /// List of hostnames used by the CA, intended for the use with caa dns records
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caa_identities: Option<Vec<String>>,
 }
 
 impl Directory {
@@ -64,6 +76,17 @@ impl Directory {
         }
     }
 
+    /// Get if external account binding is required
+    pub fn external_account_binding_required(&self) -> bool {
+        matches!(
+            &self.data.meta,
+            Some(Meta {
+                external_account_required: Some(true),
+                ..
+            })
+        )
+    }
+
     /// Get the "newNonce" URL. Use `HEAD` requests on this to get a new nonce.
     pub fn new_nonce_url(&self) -> &str {
         &self.data.new_nonce
@@ -78,8 +101,6 @@ impl Directory {
     }
 
     /// Access to the in the Acme spec defined metadata structure.
-    /// Currently only contains the ToS URL already exposed via the `terms_of_service_url()`
-    /// method.
     pub fn meta(&self) -> Option<&Meta> {
         self.data.meta.as_ref()
     }
