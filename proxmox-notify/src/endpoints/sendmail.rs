@@ -134,6 +134,11 @@ impl Endpoint for SendmailEndpoint {
                 )
                 .map_err(|err| Error::NotifyFailed(self.config.name.clone(), err.into()))
             }
+            #[cfg(feature = "mail-forwarder")]
+            Content::ForwardedMail { raw, uid, .. } => {
+                proxmox_sys::email::forward(&recipients_str, &mailfrom, raw, *uid)
+                    .map_err(|err| Error::NotifyFailed(self.config.name.clone(), err.into()))
+            }
         }
     }
 

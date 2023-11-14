@@ -102,6 +102,8 @@ pub enum Severity {
     Warning,
     /// Error
     Error,
+    /// Unknown severity (e.g. forwarded system mails)
+    Unknown,
 }
 
 impl Display for Severity {
@@ -111,6 +113,7 @@ impl Display for Severity {
             Severity::Notice => f.write_str("notice"),
             Severity::Warning => f.write_str("warning"),
             Severity::Error => f.write_str("error"),
+            Severity::Unknown => f.write_str("unknown"),
         }
     }
 }
@@ -123,6 +126,7 @@ impl FromStr for Severity {
             "notice" => Ok(Self::Notice),
             "warning" => Ok(Self::Warning),
             "error" => Ok(Self::Error),
+            "unknown" => Ok(Self::Unknown),
             _ => Err(Error::Generic(format!("invalid severity {s}"))),
         }
     }
@@ -147,6 +151,18 @@ pub enum Content {
         body_template: String,
         /// Data that can be used for template rendering.
         data: Value,
+    },
+    #[cfg(feature = "mail-forwarder")]
+    ForwardedMail {
+        /// Raw mail contents
+        raw: Vec<u8>,
+        /// Fallback title
+        title: String,
+        /// Fallback body
+        body: String,
+        /// UID to use when calling sendmail
+        #[allow(dead_code)] // Unused in some feature flag permutations
+        uid: Option<u32>,
     },
 }
 
@@ -189,6 +205,31 @@ impl Notification {
                 data: template_data,
             },
         }
+    }
+    #[cfg(feature = "mail-forwarder")]
+    pub fn new_forwarded_mail(raw_mail: &[u8], uid: Option<u32>) -> Result<Self, Error> {
+        let message = mail_parser::Message::parse(raw_mail)
+            .ok_or_else(|| Error::Generic("could not parse forwarded email".to_string()))?;
+
+        let title = message.subject().unwrap_or_default().into();
+        let body = message.body_text(0).unwrap_or_default().into();
+
+        Ok(Self {
+            // Unfortunately we cannot reasonably infer the severity from the
+            // mail contents, so just set it to the highest for now so that
+            // it is not filtered out.
+            content: Content::ForwardedMail {
+                raw: raw_mail.into(),
+                title,
+                body,
+                uid,
+            },
+            metadata: Metadata {
+                severity: Severity::Unknown,
+                additional_fields: Default::default(),
+                timestamp: proxmox_time::epoch_i64(),
+            },
+        })
     }
 }
 

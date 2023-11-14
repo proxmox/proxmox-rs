@@ -19,6 +19,7 @@ fn severity_to_priority(level: Severity) -> u32 {
         Severity::Notice => 3,
         Severity::Warning => 5,
         Severity::Error => 9,
+        Severity::Unknown => 3,
     }
 }
 
@@ -94,6 +95,8 @@ impl Endpoint for GotifyEndpoint {
 
                 (rendered_title, rendered_message)
             }
+            #[cfg(feature = "mail-forwarder")]
+            Content::ForwardedMail { title, body, .. } => (title.clone(), body.clone()),
         };
 
         // We don't have a TemplateRenderer::Markdown yet, so simply put everything
