@@ -25,13 +25,22 @@ mod config;
 
 #[derive(Debug)]
 pub enum Error {
+    /// There was an error serializing the config
     ConfigSerialization(Box<dyn StdError + Send + Sync>),
+    /// There was an error deserializing the config
     ConfigDeserialization(Box<dyn StdError + Send + Sync>),
+    /// An endpoint failed to send a notification
     NotifyFailed(String, Box<dyn StdError + Send + Sync>),
+    /// A target does not exist
     TargetDoesNotExist(String),
+    /// Testing one or more notification targets failed
     TargetTestFailed(Vec<Box<dyn StdError + Send + Sync>>),
+    /// A filter could not be applied
     FilterFailed(String),
+    /// The notification's template string could not be rendered
     RenderError(Box<dyn StdError + Send + Sync>),
+    /// Generic error for anything else
+    Generic(String),
 }
 
 impl Display for Error {
@@ -60,6 +69,7 @@ impl Display for Error {
                 write!(f, "could not apply filter: {message}")
             }
             Error::RenderError(err) => write!(f, "could not render notification template: {err}"),
+            Error::Generic(message) => f.write_str(message),
         }
     }
 }
@@ -74,6 +84,7 @@ impl StdError for Error {
             Error::TargetTestFailed(errs) => Some(&*errs[0]),
             Error::FilterFailed(_) => None,
             Error::RenderError(err) => Some(&**err),
+            Error::Generic(_) => None,
         }
     }
 }
