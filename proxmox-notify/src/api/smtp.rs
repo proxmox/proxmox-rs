@@ -100,6 +100,7 @@ pub fn update_endpoint(
             match deleteable_property {
                 DeleteableSmtpProperty::Author => endpoint.author = None,
                 DeleteableSmtpProperty::Comment => endpoint.comment = None,
+                DeleteableSmtpProperty::Disable => endpoint.disable = None,
                 DeleteableSmtpProperty::Mailto => endpoint.mailto = None,
                 DeleteableSmtpProperty::MailtoUser => endpoint.mailto_user = None,
                 DeleteableSmtpProperty::Password => super::set_private_config_entry(
@@ -156,6 +157,10 @@ pub fn update_endpoint(
 
     if let Some(comment) = &updater.comment {
         endpoint.comment = Some(comment.into());
+    }
+
+    if let Some(disable) = &updater.disable {
+        endpoint.disable = Some(*disable);
     }
 
     if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
@@ -215,6 +220,7 @@ pub mod tests {
                 server: "localhost".into(),
                 port: Some(555),
                 username: Some("username".into()),
+                ..Default::default()
             },
             &SmtpPrivateConfig {
                 name: name.into(),

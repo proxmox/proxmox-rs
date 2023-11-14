@@ -85,6 +85,7 @@ pub fn update_matcher(
                 DeleteableMatcherProperty::Mode => matcher.mode = None,
                 DeleteableMatcherProperty::InvertMatch => matcher.invert_match = None,
                 DeleteableMatcherProperty::Comment => matcher.comment = None,
+                DeleteableMatcherProperty::Disable => matcher.disable = None,
             }
         }
     }
@@ -111,6 +112,10 @@ pub fn update_matcher(
 
     if let Some(comment) = &matcher_updater.comment {
         matcher.comment = Some(comment.into());
+    }
+
+    if let Some(disable) = &matcher_updater.disable {
+        matcher.disable = Some(*disable);
     }
 
     if let Some(target) = &matcher_updater.target {
@@ -209,6 +214,7 @@ matcher: matcher2
                 invert_match: Some(true),
                 target: Some(vec!["foo".into()]),
                 comment: Some("new comment".into()),
+                ..Default::default()
             },
             None,
             Some(&digest),

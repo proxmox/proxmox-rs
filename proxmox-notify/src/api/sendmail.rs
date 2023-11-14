@@ -85,6 +85,7 @@ pub fn update_endpoint(
                 DeleteableSendmailProperty::Comment => endpoint.comment = None,
                 DeleteableSendmailProperty::Mailto => endpoint.mailto = None,
                 DeleteableSendmailProperty::MailtoUser => endpoint.mailto_user = None,
+                DeleteableSendmailProperty::Disable => endpoint.disable = None,
             }
         }
     }
@@ -107,6 +108,10 @@ pub fn update_endpoint(
 
     if let Some(comment) = &updater.comment {
         endpoint.comment = Some(comment.into());
+    }
+
+    if let Some(disable) = &updater.disable {
+        endpoint.disable = Some(*disable);
     }
 
     if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
@@ -165,6 +170,7 @@ pub mod tests {
                 author: Some("root".into()),
                 comment: Some("Comment".into()),
                 filter: None,
+                ..Default::default()
             },
         )?;
 
@@ -208,6 +214,7 @@ pub mod tests {
                 from_address: Some("root@example.com".into()),
                 author: Some("newauthor".into()),
                 comment: Some("new comment".into()),
+                ..Default::default()
             },
             None,
             Some(&[0; 32]),
@@ -233,6 +240,7 @@ pub mod tests {
                 from_address: Some("root@example.com".into()),
                 author: Some("newauthor".into()),
                 comment: Some("new comment".into()),
+                ..Default::default()
             },
             None,
             Some(&digest),

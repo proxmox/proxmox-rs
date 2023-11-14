@@ -140,6 +140,10 @@ pub struct MatcherConfig {
     /// Comment
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
+
+    /// Disable this matcher
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable: Option<bool>,
 }
 
 trait MatchDirective {
@@ -393,13 +397,14 @@ impl FromStr for CalendarMatcher {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableMatcherProperty {
-    MatchSeverity,
-    MatchField,
-    MatchCalendar,
-    Target,
-    Mode,
-    InvertMatch,
     Comment,
+    Disable,
+    InvertMatch,
+    MatchCalendar,
+    MatchField,
+    MatchSeverity,
+    Mode,
+    Target,
 }
 
 pub fn check_matches<'a>(
@@ -409,6 +414,12 @@ pub fn check_matches<'a>(
     let mut targets = HashSet::new();
 
     for matcher in matchers {
+        if matcher.disable.unwrap_or_default() {
+            // Skip this matcher if it is disabled
+            log::info!("skipping disabled matcher '{name}'", name = matcher.name);
+            continue;
+        }
+
         match matcher.matches(notification) {
             Ok(t) => {
                 let t = t.unwrap_or_default();

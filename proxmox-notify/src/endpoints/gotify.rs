@@ -52,6 +52,9 @@ pub struct GotifyConfig {
     #[serde(skip_serializing)]
     #[updater(skip)]
     pub filter: Option<String>,
+    /// Disable this target.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable: Option<bool>,
 }
 
 #[api()]
@@ -78,6 +81,7 @@ pub struct GotifyEndpoint {
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableGotifyProperty {
     Comment,
+    Disable,
 }
 
 impl Endpoint for GotifyEndpoint {
@@ -149,5 +153,10 @@ impl Endpoint for GotifyEndpoint {
 
     fn name(&self) -> &str {
         &self.config.name
+    }
+
+    /// Check if the endpoint is disabled
+    fn disabled(&self) -> bool {
+        self.config.disable.unwrap_or_default()
     }
 }

@@ -139,6 +139,9 @@ pub trait Endpoint {
 
     /// The name/identifier for this endpoint
     fn name(&self) -> &str;
+
+    /// Check if the endpoint is disabled
+    fn disabled(&self) -> bool;
 }
 
 #[derive(Debug, Clone)]
@@ -428,6 +431,12 @@ impl Bus {
             if let Some(endpoint) = self.endpoints.get(target) {
                 let name = endpoint.name();
 
+                if endpoint.disabled() {
+                    // Skip this target if it is disabled
+                    log::info!("skipping disabled target '{name}'");
+                    continue;
+                }
+
                 match endpoint.send(notification) {
                     Ok(_) => {
                         log::info!("notified via target `{name}`");
@@ -495,6 +504,10 @@ mod tests {
 
         fn name(&self) -> &str {
             self.name
+        }
+
+        fn disabled(&self) -> bool {
+            false
         }
     }
 

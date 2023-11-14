@@ -62,14 +62,18 @@ pub struct SendmailConfig {
     #[serde(skip_serializing)]
     #[updater(skip)]
     pub filter: Option<String>,
+    /// Disable this target.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableSendmailProperty {
-    FromAddress,
     Author,
     Comment,
+    Disable,
+    FromAddress,
     Mailto,
     MailtoUser,
 }
@@ -132,5 +136,10 @@ impl Endpoint for SendmailEndpoint {
 
     fn name(&self) -> &str {
         &self.config.name
+    }
+
+    /// Check if the endpoint is disabled
+    fn disabled(&self) -> bool {
+        self.config.disable.unwrap_or_default()
     }
 }

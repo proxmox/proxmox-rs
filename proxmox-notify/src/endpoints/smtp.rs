@@ -91,6 +91,9 @@ pub struct SmtpConfig {
     /// Comment
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
+    /// Disable this target.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -98,6 +101,7 @@ pub struct SmtpConfig {
 pub enum DeleteableSmtpProperty {
     Author,
     Comment,
+    Disable,
     Mailto,
     MailtoUser,
     Password,
@@ -246,5 +250,10 @@ impl Endpoint for SmtpEndpoint {
 
     fn name(&self) -> &str {
         &self.config.name
+    }
+
+    /// Check if the endpoint is disabled
+    fn disabled(&self) -> bool {
+        self.config.disable.unwrap_or_default()
     }
 }

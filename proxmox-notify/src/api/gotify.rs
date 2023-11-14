@@ -88,6 +88,7 @@ pub fn update_endpoint(
         for deleteable_property in delete {
             match deleteable_property {
                 DeleteableGotifyProperty::Comment => endpoint.comment = None,
+                DeleteableGotifyProperty::Disable => endpoint.disable = None,
             }
         }
     }
@@ -108,6 +109,10 @@ pub fn update_endpoint(
 
     if let Some(comment) = &endpoint_config_updater.comment {
         endpoint.comment = Some(comment.into());
+    }
+
+    if let Some(disable) = &endpoint_config_updater.disable {
+        endpoint.disable = Some(*disable);
     }
 
     config
@@ -172,7 +177,7 @@ mod tests {
                 name: "gotify-endpoint".into(),
                 server: "localhost".into(),
                 comment: Some("comment".into()),
-                filter: None,
+                ..Default::default()
             },
             &GotifyPrivateConfig {
                 name: "gotify-endpoint".into(),
@@ -232,6 +237,7 @@ mod tests {
             &GotifyConfigUpdater {
                 server: Some("newhost".into()),
                 comment: Some("newcomment".into()),
+                ..Default::default()
             },
             &GotifyPrivateConfigUpdater {
                 token: Some("changedtoken".into()),
