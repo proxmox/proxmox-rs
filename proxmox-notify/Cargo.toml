@@ -13,7 +13,6 @@ handlebars = { workspace = true }
 lazy_static.workspace = true
 log.workspace = true
 mail-parser = { workspace = true, optional = true }
-once_cell.workspace = true
 openssl.workspace = true
 proxmox-http = { workspace = true, features = ["client-sync"], optional = true }
 proxmox-http-error.workspace = true
@@ -32,3 +31,5 @@ default = ["sendmail", "gotify"]
 mail-forwarder = ["dep:mail-parser"]
 sendmail = ["dep:proxmox-sys"]
 gotify = ["dep:proxmox-http"]
+pve-context = ["dep:proxmox-sys"]
+pbs-context = ["dep:proxmox-sys"]
