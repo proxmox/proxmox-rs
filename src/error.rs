@@ -59,6 +59,9 @@ pub enum Error {
     /// An otherwise uncaught serde error happened.
     Json(serde_json::Error),
 
+    /// Failed to parse
+    BadBase64(base64::DecodeError),
+
     /// Can be used by the user for textual error messages without having to downcast to regular
     /// acme errors.
     Custom(String),
@@ -121,6 +124,7 @@ impl fmt::Display for Error {
             Error::HttpClient(err) => fmt::Display::fmt(err, f),
             Error::Client(err) => fmt::Display::fmt(err, f),
             Error::Csr(err) => fmt::Display::fmt(err, f),
+            Error::BadBase64(err) => fmt::Display::fmt(err, f),
         }
     }
 }
@@ -140,5 +144,11 @@ impl From<serde_json::Error> for Error {
 impl From<crate::request::ErrorResponse> for Error {
     fn from(e: crate::request::ErrorResponse) -> Self {
         Error::Api(e)
+    }
+}
+
+impl From<base64::DecodeError> for Error {
+    fn from(e: base64::DecodeError) -> Self {
+        Error::BadBase64(e)
     }
 }

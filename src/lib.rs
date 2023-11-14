@@ -14,6 +14,7 @@
 #![deny(missing_docs)]
 
 mod b64u;
+mod eab;
 mod json;
 mod jws;
 mod key;

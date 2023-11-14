@@ -11,8 +11,9 @@ use serde_json::Value;
 use crate::authorization::{Authorization, GetAuthorization};
 use crate::b64u;
 use crate::directory::Directory;
+use crate::eab::ExternalAccountBinding;
 use crate::jws::Jws;
-use crate::key::PublicKey;
+use crate::key::{Jwk, PublicKey};
 use crate::order::{NewOrder, Order, OrderData};
 use crate::request::Request;
 use crate::Error;
@@ -336,10 +337,9 @@ pub struct AccountData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub terms_of_service_agreed: Option<bool>,
 
-    /// External account information. This is currently not directly supported in any way and only
-    /// stored to completeness.
+    /// External account information.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub external_account_binding: Option<Value>,
+    pub external_account_binding: Option<ExternalAccountBinding>,
 
     /// This is only used by the client when querying an account.
     #[serde(default = "default_true", skip_serializing_if = "is_false")]
@@ -375,6 +375,7 @@ pub struct AccountCreator {
     contact: Vec<String>,
     terms_of_service_agreed: bool,
     key: Option<PKey<Private>>,
+    eab_credentials: Option<(String, PKey<Private>)>,
 }
 
 impl AccountCreator {
@@ -400,6 +401,13 @@ impl AccountCreator {
     pub fn agree_to_tos(mut self, agree: bool) -> Self {
         self.terms_of_service_agreed = agree;
         self
+    }
+
+    /// Set the EAB credentials for the account registration
+    pub fn set_eab_credentials(mut self, kid: String, hmac_key: String) -> Result<Self, Error> {
+        let hmac_key = PKey::hmac(&base64::decode(hmac_key)?)?;
+        self.eab_credentials = Some((kid, hmac_key));
+        Ok(self)
     }
 
     /// Generate a new RSA key of the specified key size.
@@ -431,6 +439,15 @@ impl AccountCreator {
     /// [`response`](AccountCreator::response()) will render the account unusable!
     pub fn request(&self, directory: &Directory, nonce: &str) -> Result<Request, Error> {
         let key = self.key.as_deref().ok_or(Error::MissingKey)?;
+        let url = directory.new_account_url();
+
+        let external_account_binding = self
+            .eab_credentials
+            .as_ref()
+            .map(|cred| {
+                ExternalAccountBinding::new(&cred.0, &cred.1, Jwk::try_from(key)?, url.to_string())
+            })
+            .transpose()?;
 
         let data = AccountData {
             orders: None,
@@ -441,12 +458,11 @@ impl AccountCreator {
             } else {
                 None
             },
-            external_account_binding: None,
+            external_account_binding,
             only_return_existing: false,
             extra: HashMap::new(),
         };
 
-        let url = directory.new_account_url();
         let body = serde_json::to_string(&Jws::new(
             key,
             None,
