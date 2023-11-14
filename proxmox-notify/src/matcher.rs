@@ -265,17 +265,22 @@ impl MatcherConfig {
         let mode = self.mode.unwrap_or_default();
 
         let mut is_match = mode.neutral_element();
+        // If there are no matching directives, the matcher will always match
+        let mut no_matchers = true;
 
         if let Some(severity_matchers) = self.match_severity.as_deref() {
+            no_matchers = false;
             is_match = mode.apply(
                 is_match,
                 self.check_matches(notification, severity_matchers)?,
             );
         }
         if let Some(field_matchers) = self.match_field.as_deref() {
+            no_matchers = false;
             is_match = mode.apply(is_match, self.check_matches(notification, field_matchers)?);
         }
         if let Some(calendar_matchers) = self.match_calendar.as_deref() {
+            no_matchers = false;
             is_match = mode.apply(
                 is_match,
                 self.check_matches(notification, calendar_matchers)?,
@@ -284,7 +289,7 @@ impl MatcherConfig {
 
         let invert_match = self.invert_match.unwrap_or_default();
 
-        Ok(if is_match != invert_match {
+        Ok(if is_match != invert_match || no_matchers {
             Some(self.target.as_deref().unwrap_or_default())
         } else {
             None
@@ -454,5 +459,26 @@ mod tests {
 
         let matcher: SeverityMatcher = "info,notice,warning,error".parse().unwrap();
         assert!(matcher.matches(&notification).unwrap());
+    }
+
+    #[test]
+    fn test_empty_matcher_matches_always() {
+        let notification = Notification::new_templated(
+            Severity::Notice,
+            "test",
+            "test",
+            Value::Null,
+            Default::default(),
+        );
+
+        for mode in [MatchModeOperator::All, MatchModeOperator::Any] {
+            let config = MatcherConfig {
+                name: "matcher".to_string(),
+                mode: Some(mode),
+                ..Default::default()
+            };
+
+            assert!(config.matches(&notification).unwrap().is_some())
+        }
     }
 }
