@@ -367,10 +367,14 @@ impl Client {
         contact: Vec<String>,
         tos_agreed: bool,
         rsa_bits: Option<u32>,
+        eab_creds: Option<(String, String)>,
     ) -> Result<&Account, Error> {
-        let account = Account::creator()
+        let mut account = Account::creator()
             .set_contacts(contact)
             .agree_to_tos(tos_agreed);
+        if let Some((eab_kid, eab_hmac_key)) = eab_creds {
+            account = account.set_eab_credentials(eab_kid, eab_hmac_key)?;
+        }
         let account = if let Some(bits) = rsa_bits {
             account.generate_rsa_key(bits)?
         } else {
