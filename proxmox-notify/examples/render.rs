@@ -53,10 +53,10 @@ fn main() -> Result<(), Error> {
         }
     });
 
-    let output = render_template(TemplateRenderer::Html, TEMPLATE, Some(&properties))?;
+    let output = render_template(TemplateRenderer::Html, TEMPLATE, &properties)?;
     println!("{output}");
 
-    let output = render_template(TemplateRenderer::Plaintext, TEMPLATE, Some(&properties))?;
+    let output = render_template(TemplateRenderer::Plaintext, TEMPLATE, &properties)?;
     println!("{output}");
 
     Ok(())

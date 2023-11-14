@@ -160,7 +160,7 @@ impl<'a> FilterMatcher<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config;
+    use crate::{config, Content};
 
     fn parse_filters(config: &str) -> Result<Vec<FilterConfig>, Error> {
         let (config, _) = config::config(config)?;
@@ -169,10 +169,12 @@ mod tests {
 
     fn empty_notification_with_severity(severity: Severity) -> Notification {
         Notification {
-            title: String::new(),
-            body: String::new(),
+            content: Content::Template {
+                title_template: String::new(),
+                body_template: String::new(),
+                data: Default::default(),
+            },
             severity,
-            properties: Default::default(),
         }
     }
 

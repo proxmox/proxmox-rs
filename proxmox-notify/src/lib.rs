@@ -117,16 +117,43 @@ pub trait Endpoint {
 }
 
 #[derive(Debug, Clone)]
+pub enum Content {
+    /// Title and body will be rendered as a template
+    Template {
+        /// Template for the notification title.
+        title_template: String,
+        /// Template for the notification body.
+        body_template: String,
+        /// Data that can be used for template rendering.
+        data: Value,
+    },
+}
+
+#[derive(Debug, Clone)]
 /// Notification which can be sent
 pub struct Notification {
     /// Notification severity
-    pub severity: Severity,
-    /// The title of the notification
-    pub title: String,
-    /// Notification text
-    pub body: String,
-    /// Additional metadata for the notification
-    pub properties: Option<Value>,
+    severity: Severity,
+    /// Notification content
+    content: Content,
+}
+
+impl Notification {
+    pub fn new_templated<S: AsRef<str>>(
+        severity: Severity,
+        title: S,
+        body: S,
+        properties: Value,
+    ) -> Self {
+        Self {
+            severity,
+            content: Content::Template {
+                title_template: title.as_ref().to_string(),
+                body_template: body.as_ref().to_string(),
+                data: properties,
+            },
+        }
+    }
 }
 
 /// Notification configuration
@@ -384,9 +411,11 @@ impl Bus {
     pub fn test_target(&self, target: &str) -> Result<(), Error> {
         let notification = Notification {
             severity: Severity::Info,
-            title: "Test notification".into(),
-            body: "This is a test of the notification target '{{ target }}'".into(),
-            properties: Some(json!({ "target": target })),
+            content: Content::Template {
+                title_template: "Test notification".into(),
+                body_template: "This is a test of the notification target '{{ target }}'".into(),
+                data: json!({ "target": target }),
+            },
         };
 
         let mut errors: Vec<Box<dyn StdError + Send + Sync>> = Vec::new();
@@ -473,12 +502,7 @@ mod tests {
         // Send directly to endpoint
         bus.send(
             "endpoint",
-            &Notification {
-                title: "Title".into(),
-                body: "Body".into(),
-                severity: Severity::Info,
-                properties: Default::default(),
-            },
+            &Notification::new_templated(Severity::Info, "Title", "Body", Default::default()),
         );
         let messages = mock.messages();
         assert_eq!(messages.len(), 1);
@@ -511,15 +535,9 @@ mod tests {
         bus.add_endpoint(Box::new(endpoint2.clone()));
 
         let send_to_group = |channel| {
-            bus.send(
-                channel,
-                &Notification {
-                    title: "Title".into(),
-                    body: "Body".into(),
-                    severity: Severity::Info,
-                    properties: Default::default(),
-                },
-            )
+            let notification =
+                Notification::new_templated(Severity::Info, "Title", "Body", Default::default());
+            bus.send(channel, &notification)
         };
 
         send_to_group("group1");
@@ -579,15 +597,10 @@ mod tests {
         });
 
         let send_with_severity = |severity| {
-            bus.send(
-                "channel1",
-                &Notification {
-                    title: "Title".into(),
-                    body: "Body".into(),
-                    severity,
-                    properties: Default::default(),
-                },
-            );
+            let notification =
+                Notification::new_templated(severity, "Title", "Body", Default::default());
+
+            bus.send("channel1", &notification);
         };
 
         send_with_severity(Severity::Info);

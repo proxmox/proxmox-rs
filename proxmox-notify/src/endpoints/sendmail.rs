@@ -8,7 +8,7 @@ use proxmox_schema::{api, Updater};
 use crate::context::context;
 use crate::renderer::TemplateRenderer;
 use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA, USER_SCHEMA};
-use crate::{renderer, Endpoint, Error, Notification};
+use crate::{renderer, Content, Endpoint, Error, Notification};
 
 pub(crate) const SENDMAIL_TYPENAME: &str = "sendmail";
 
@@ -102,41 +102,43 @@ impl Endpoint for SendmailEndpoint {
             }
         }
 
-        let properties = notification.properties.as_ref();
-
-        let subject = renderer::render_template(
-            TemplateRenderer::Plaintext,
-            &notification.title,
-            properties,
-        )?;
-        let html_part =
-            renderer::render_template(TemplateRenderer::Html, &notification.body, properties)?;
-        let text_part =
-            renderer::render_template(TemplateRenderer::Plaintext, &notification.body, properties)?;
-
-        let author = self
-            .config
-            .author
-            .clone()
-            .unwrap_or_else(|| context().default_sendmail_author());
-
+        let recipients_str: Vec<&str> = recipients.iter().map(String::as_str).collect();
         let mailfrom = self
             .config
             .from_address
             .clone()
             .unwrap_or_else(|| context().default_sendmail_from());
 
-        let recipients_str: Vec<&str> = recipients.iter().map(String::as_str).collect();
+        match &notification.content {
+            Content::Template {
+                title_template,
+                body_template,
+                data,
+            } => {
+                let subject =
+                    renderer::render_template(TemplateRenderer::Plaintext, title_template, data)?;
+                let html_part =
+                    renderer::render_template(TemplateRenderer::Html, body_template, data)?;
+                let text_part =
+                    renderer::render_template(TemplateRenderer::Plaintext, body_template, data)?;
 
-        proxmox_sys::email::sendmail(
-            &recipients_str,
-            &subject,
-            Some(&text_part),
-            Some(&html_part),
-            Some(&mailfrom),
-            Some(&author),
-        )
-        .map_err(|err| Error::NotifyFailed(self.config.name.clone(), err.into()))
+                let author = self
+                    .config
+                    .author
+                    .clone()
+                    .unwrap_or_else(|| context().default_sendmail_author());
+
+                proxmox_sys::email::sendmail(
+                    &recipients_str,
+                    &subject,
+                    Some(&text_part),
+                    Some(&html_part),
+                    Some(&mailfrom),
+                    Some(&author),
+                )
+                .map_err(|err| Error::NotifyFailed(self.config.name.clone(), err.into()))
+            }
+        }
     }
 
     fn name(&self) -> &str {

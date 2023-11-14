@@ -11,7 +11,7 @@ use proxmox_schema::{api, Updater};
 use crate::context::context;
 use crate::renderer::TemplateRenderer;
 use crate::schema::ENTITY_NAME_SCHEMA;
-use crate::{renderer, Endpoint, Error, Notification, Severity};
+use crate::{renderer, Content, Endpoint, Error, Notification, Severity};
 
 fn severity_to_priority(level: Severity) -> u32 {
     match level {
@@ -85,15 +85,21 @@ pub enum DeleteableGotifyProperty {
 
 impl Endpoint for GotifyEndpoint {
     fn send(&self, notification: &Notification) -> Result<(), Error> {
-        let properties = notification.properties.as_ref();
 
-        let title = renderer::render_template(
-            TemplateRenderer::Plaintext,
-            &notification.title,
-            properties,
-        )?;
-        let message =
-            renderer::render_template(TemplateRenderer::Plaintext, &notification.body, properties)?;
+        let (title, message) = match &notification.content {
+            Content::Template {
+                title_template,
+                body_template,
+                data
+            } => {
+                let rendered_title =
+                    renderer::render_template(TemplateRenderer::Plaintext, title_template, data)?;
+                let rendered_message =
+                    renderer::render_template(TemplateRenderer::Plaintext, body_template, data)?;
+
+                (rendered_title, rendered_message)
+            }
+        };
 
         // We don't have a TemplateRenderer::Markdown yet, so simply put everything
         // in code tags. Otherwise tables etc. are not formatted properly

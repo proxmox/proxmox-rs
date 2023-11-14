@@ -228,11 +228,9 @@ impl BlockRenderFunctions {
 
 fn render_template_impl(
     template: &str,
-    properties: Option<&Value>,
+    data: &Value,
     renderer: TemplateRenderer,
 ) -> Result<String, Error> {
-    let properties = properties.unwrap_or(&Value::Null);
-
     let mut handlebars = Handlebars::new();
     handlebars.register_escape_fn(renderer.escape_fn());
 
@@ -242,7 +240,7 @@ fn render_template_impl(
     ValueRenderFunction::register_helpers(&mut handlebars);
 
     let rendered_template = handlebars
-        .render_template(template, properties)
+        .render_template(template, data)
         .map_err(|err| Error::RenderError(err.into()))?;
 
     Ok(rendered_template)
@@ -255,11 +253,11 @@ fn render_template_impl(
 pub fn render_template(
     renderer: TemplateRenderer,
     template: &str,
-    properties: Option<&Value>,
+    data: &Value,
 ) -> Result<String, Error> {
     let mut rendered_template = String::from(renderer.prefix());
 
-    rendered_template.push_str(&render_template_impl(template, properties, renderer)?);
+    rendered_template.push_str(&render_template_impl(template, data, renderer)?);
     rendered_template.push_str(renderer.postfix());
 
     Ok(rendered_template)
@@ -314,7 +312,7 @@ mod tests {
 
     #[test]
     fn test_render_template() -> Result<(), Error> {
-        let properties = json!({
+        let data = json!({
             "dur": 12345,
             "size": 1024 * 15,
 
@@ -370,8 +368,7 @@ val1        val2
 val3        val4        
 "#;
 
-        let rendered_plaintext =
-            render_template(TemplateRenderer::Plaintext, template, Some(&properties))?;
+        let rendered_plaintext = render_template(TemplateRenderer::Plaintext, template, &data)?;
 
         // Let's not bother about testing the HTML output, too fragile.
 
