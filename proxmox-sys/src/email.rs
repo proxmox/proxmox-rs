@@ -3,7 +3,7 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
 
-use anyhow::{bail, Error};
+use anyhow::{bail, format_err, Error};
 
 /// Sends multi-part mail with text and/or html to a list of recipients
 ///
@@ -106,6 +106,56 @@ pub fn sendmail(
     if let Err(err) = sendmail_process.wait() {
         bail!("sendmail did not exit successfully: {}", err)
     }
+
+    Ok(())
+}
+
+/// Forwards an email message to a given list of recipients.
+///
+/// ``sendmail`` is used for sending the mail, thus `message` must be
+/// compatible with that (the message is piped into stdin unmodified).
+pub fn forward(
+    mailto: &[&str],
+    mailfrom: &str,
+    message: &[u8],
+    uid: Option<u32>,
+) -> Result<(), Error> {
+    use std::os::unix::process::CommandExt;
+
+    if mailto.is_empty() {
+        bail!("At least one recipient has to be specified!")
+    }
+
+    let mut builder = Command::new("/usr/sbin/sendmail");
+
+    builder
+        .args([
+            "-N", "never", // never send DSN (avoid mail loops)
+            "-f", mailfrom, "--",
+        ])
+        .args(mailto)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+
+    if let Some(uid) = uid {
+        builder.uid(uid);
+    }
+
+    let mut process = builder
+        .spawn()
+        .map_err(|err| format_err!("could not spawn sendmail process: {err}"))?;
+
+    process
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(message)
+        .map_err(|err| format_err!("couldn't write to sendmail stdin: {err}"))?;
+
+    process
+        .wait()
+        .map_err(|err| format_err!("sendmail did not exit successfully: {err}"))?;
 
     Ok(())
 }
