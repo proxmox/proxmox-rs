@@ -154,6 +154,8 @@ pub enum Content {
 pub struct Metadata {
     /// Notification severity
     severity: Severity,
+    /// Timestamp of the notification as a UNIX epoch
+    timestamp: i64,
     /// Additional fields for additional key-value metadata
     additional_fields: HashMap<String, String>,
 }
@@ -179,6 +181,7 @@ impl Notification {
             metadata: Metadata {
                 severity,
                 additional_fields: fields,
+                timestamp: proxmox_time::epoch_i64(),
             },
             content: Content::Template {
                 title_template: title.as_ref().to_string(),
@@ -393,6 +396,7 @@ impl Bus {
                 severity: Severity::Info,
                 // TODO: what fields would make sense for test notifications?
                 additional_fields: Default::default(),
+                timestamp: proxmox_time::epoch_i64(),
             },
             content: Content::Template {
                 title_template: "Test notification".into(),

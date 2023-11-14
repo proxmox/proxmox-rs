@@ -80,6 +80,7 @@ pub fn update_matcher(
             match deleteable_property {
                 DeleteableMatcherProperty::MatchSeverity => matcher.match_severity = None,
                 DeleteableMatcherProperty::MatchField => matcher.match_field = None,
+                DeleteableMatcherProperty::MatchCalendar => matcher.match_calendar = None,
                 DeleteableMatcherProperty::Target => matcher.target = None,
                 DeleteableMatcherProperty::Mode => matcher.mode = None,
                 DeleteableMatcherProperty::InvertMatch => matcher.invert_match = None,
@@ -94,6 +95,10 @@ pub fn update_matcher(
 
     if let Some(match_field) = &matcher_updater.match_field {
         matcher.match_field = Some(match_field.clone());
+    }
+
+    if let Some(match_calendar) = &matcher_updater.match_calendar {
+        matcher.match_calendar = Some(match_calendar.clone());
     }
 
     if let Some(mode) = matcher_updater.mode {
@@ -200,6 +205,7 @@ matcher: matcher2
                 mode: Some(MatchModeOperator::Any),
                 match_field: None,
                 match_severity: None,
+                match_calendar: None,
                 invert_match: Some(true),
                 target: Some(vec!["foo".into()]),
                 comment: Some("new comment".into()),

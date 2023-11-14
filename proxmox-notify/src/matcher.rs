@@ -10,6 +10,7 @@ use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{
     api, const_regex, ApiStringFormat, Schema, StringSchema, Updater, SAFE_ID_REGEX_STR,
 };
+use proxmox_time::{parse_daily_duration, DailyDuration};
 
 use crate::schema::ENTITY_NAME_SCHEMA;
 use crate::{Error, Notification, Severity};
@@ -88,6 +89,14 @@ pub const MATCH_FIELD_ENTRY_SCHEMA: Schema = StringSchema::new("Match metadata f
             },
             optional: true,
         },
+        "match-calendar": {
+            type: Array,
+            items: {
+                description: "Time stamps to match",
+                type: String
+            },
+            optional: true,
+        },
         "target": {
             type: Array,
             items: {
@@ -111,6 +120,10 @@ pub struct MatcherConfig {
     /// List of matched severity levels
     #[serde(skip_serializing_if = "Option::is_none")]
     pub match_severity: Option<Vec<SeverityMatcher>>,
+
+    /// List of matched severity levels
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub match_calendar: Option<Vec<CalendarMatcher>>,
 
     /// Decide if 'all' or 'any' match statements must match
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -249,6 +262,7 @@ impl MatcherConfig {
         let mut is_match = mode.neutral_element();
         is_match = mode.apply(is_match, self.check_severity_match(notification));
         is_match = mode.apply(is_match, self.check_field_match(notification)?);
+        is_match = mode.apply(is_match, self.check_calendar_match(notification)?);
 
         let invert_match = self.invert_match.unwrap_or_default();
 
@@ -284,6 +298,19 @@ impl MatcherConfig {
         }
 
         is_match
+    }
+
+    fn check_calendar_match(&self, notification: &Notification) -> Result<bool, Error> {
+        let mode = self.mode.unwrap_or_default();
+        let mut is_match = mode.neutral_element();
+
+        if let Some(matchers) = self.match_calendar.as_ref() {
+            for matcher in matchers {
+                is_match = mode.apply(is_match, matcher.matches(notification)?);
+            }
+        }
+
+        Ok(is_match)
     }
 }
 #[derive(Clone, Debug)]
@@ -323,11 +350,49 @@ impl FromStr for SeverityMatcher {
     }
 }
 
+/// Match timestamp of the notification.
+#[derive(Clone, Debug)]
+pub struct CalendarMatcher {
+    schedule: DailyDuration,
+    original: String,
+}
+
+proxmox_serde::forward_deserialize_to_from_str!(CalendarMatcher);
+proxmox_serde::forward_serialize_to_display!(CalendarMatcher);
+
+impl CalendarMatcher {
+    fn matches(&self, notification: &Notification) -> Result<bool, Error> {
+        self.schedule
+            .time_match(notification.metadata.timestamp, false)
+            .map_err(|err| Error::Generic(format!("could not match timestamp: {err}")))
+    }
+}
+
+impl fmt::Display for CalendarMatcher {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(&self.original)
+    }
+}
+
+impl FromStr for CalendarMatcher {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Error> {
+        let schedule = parse_daily_duration(s)
+            .map_err(|e| Error::Generic(format!("could not parse schedule: {e}")))?;
+
+        Ok(Self {
+            schedule,
+            original: s.to_string(),
+        })
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableMatcherProperty {
     MatchSeverity,
     MatchField,
+    MatchCalendar,
     Target,
     Mode,
     InvertMatch,
