@@ -36,7 +36,6 @@ pub fn get_endpoint(config: &Config, name: &str) -> Result<GotifyConfig, HttpErr
 /// The caller also responsible for locking the configuration files.
 /// Returns a `HttpError` if:
 ///   - an entity with the same name already exists (`400 Bad request`)
-///   - a referenced filter does not exist (`400 Bad request`)
 ///   - the configuration could not be saved (`500 Internal server error`)
 ///
 /// Panics if the names of the private config and the public config do not match.
@@ -51,11 +50,6 @@ pub fn add_endpoint(
     }
 
     super::ensure_unique(config, &endpoint_config.name)?;
-
-    if let Some(filter) = &endpoint_config.filter {
-        // Check if filter exists
-        super::filter::get_filter(config, filter)?;
-    }
 
     set_private_config_entry(config, private_endpoint_config)?;
 
@@ -77,7 +71,6 @@ pub fn add_endpoint(
 /// The caller also responsible for locking the configuration files.
 /// Returns a `HttpError` if:
 ///   - an entity with the same name already exists (`400 Bad request`)
-///   - a referenced filter does not exist (`400 Bad request`)
 ///   - the configuration could not be saved (`500 Internal server error`)
 pub fn update_endpoint(
     config: &mut Config,
@@ -95,7 +88,6 @@ pub fn update_endpoint(
         for deleteable_property in delete {
             match deleteable_property {
                 DeleteableGotifyProperty::Comment => endpoint.comment = None,
-                DeleteableGotifyProperty::Filter => endpoint.filter = None,
             }
         }
     }
@@ -116,13 +108,6 @@ pub fn update_endpoint(
 
     if let Some(comment) = &endpoint_config_updater.comment {
         endpoint.comment = Some(comment.into());
-    }
-
-    if let Some(filter) = &endpoint_config_updater.filter {
-        // Check if filter exists
-        let _ = super::filter::get_filter(config, filter)?;
-
-        endpoint.filter = Some(filter.into());
     }
 
     config
@@ -247,7 +232,6 @@ mod tests {
             &GotifyConfigUpdater {
                 server: Some("newhost".into()),
                 comment: Some("newcomment".into()),
-                filter: None,
             },
             &GotifyPrivateConfigUpdater {
                 token: Some("changedtoken".into()),

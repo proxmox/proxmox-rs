@@ -7,7 +7,7 @@ use crate::{Bus, Config, Notification};
 ///
 /// The caller is responsible for any needed permission checks.
 /// Returns an `anyhow::Error` in case of an error.
-pub fn send(config: &Config, channel: &str, notification: &Notification) -> Result<(), HttpError> {
+pub fn send(config: &Config, notification: &Notification) -> Result<(), HttpError> {
     let bus = Bus::from_config(config).map_err(|err| {
         http_err!(
             INTERNAL_SERVER_ERROR,
@@ -15,7 +15,7 @@ pub fn send(config: &Config, channel: &str, notification: &Notification) -> Resu
         )
     })?;
 
-    bus.send(channel, notification);
+    bus.send(notification);
 
     Ok(())
 }
@@ -50,5 +50,5 @@ pub fn test_target(config: &Config, endpoint: &str) -> Result<(), HttpError> {
 /// If the entity does not exist, the result will only contain the entity.
 pub fn get_referenced_entities(config: &Config, entity: &str) -> Result<Vec<String>, HttpError> {
     let entities = super::get_referenced_entities(config, entity);
-    Ok(Vec::from_iter(entities.into_iter()))
+    Ok(Vec::from_iter(entities))
 }

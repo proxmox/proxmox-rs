@@ -19,9 +19,8 @@ pub const BACKEND_NAME_SCHEMA: Schema = StringSchema::new("Notification backend 
     .max_length(32)
     .schema();
 
-pub const ENTITY_NAME_SCHEMA: Schema =
-    StringSchema::new("Name schema for endpoints, filters and groups")
-        .format(&SAFE_ID_FORMAT)
-        .min_length(2)
-        .max_length(32)
-        .schema();
+pub const ENTITY_NAME_SCHEMA: Schema = StringSchema::new("Name schema for targets and matchers")
+    .format(&SAFE_ID_FORMAT)
+    .min_length(2)
+    .max_length(32)
+    .schema();

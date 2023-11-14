@@ -35,16 +35,10 @@ pub fn get_endpoint(config: &Config, name: &str) -> Result<SendmailConfig, HttpE
 /// The caller also responsible for locking the configuration files.
 /// Returns a `HttpError` if:
 ///   - an entity with the same name already exists (`400 Bad request`)
-///   - a referenced filter does not exist (`400 Bad request`)
 ///   - the configuration could not be saved (`500 Internal server error`)
 ///   - mailto *and* mailto_user are both set to `None`
 pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<(), HttpError> {
     super::ensure_unique(config, &endpoint.name)?;
-
-    if let Some(filter) = &endpoint.filter {
-        // Check if filter exists
-        super::filter::get_filter(config, filter)?;
-    }
 
     if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
         http_bail!(
@@ -70,7 +64,6 @@ pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<()
 /// The caller is responsible for any needed permission checks.
 /// The caller also responsible for locking the configuration files.
 /// Returns a `HttpError` if:
-///   - a referenced filter does not exist (`400 Bad request`)
 ///   - the configuration could not be saved (`500 Internal server error`)
 ///   - mailto *and* mailto_user are both set to `None`
 pub fn update_endpoint(
@@ -90,7 +83,6 @@ pub fn update_endpoint(
                 DeleteableSendmailProperty::FromAddress => endpoint.from_address = None,
                 DeleteableSendmailProperty::Author => endpoint.author = None,
                 DeleteableSendmailProperty::Comment => endpoint.comment = None,
-                DeleteableSendmailProperty::Filter => endpoint.filter = None,
                 DeleteableSendmailProperty::Mailto => endpoint.mailto = None,
                 DeleteableSendmailProperty::MailtoUser => endpoint.mailto_user = None,
             }
@@ -115,11 +107,6 @@ pub fn update_endpoint(
 
     if let Some(comment) = &updater.comment {
         endpoint.comment = Some(comment.into());
-    }
-
-    if let Some(filter) = &updater.filter {
-        let _ = super::filter::get_filter(config, filter)?;
-        endpoint.filter = Some(filter.into());
     }
 
     if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
@@ -221,7 +208,6 @@ pub mod tests {
                 from_address: Some("root@example.com".into()),
                 author: Some("newauthor".into()),
                 comment: Some("new comment".into()),
-                filter: None,
             },
             None,
             Some(&[0; 32]),
@@ -247,7 +233,6 @@ pub mod tests {
                 from_address: Some("root@example.com".into()),
                 author: Some("newauthor".into()),
                 comment: Some("new comment".into()),
-                filter: None,
             },
             None,
             Some(&digest),

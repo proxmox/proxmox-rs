@@ -35,10 +35,6 @@ pub(crate) const SENDMAIL_TYPENAME: &str = "sendmail";
             optional: true,
             schema: COMMENT_SCHEMA,
         },
-        filter: {
-            optional: true,
-            schema: ENTITY_NAME_SCHEMA,
-        },
     },
 )]
 #[derive(Debug, Serialize, Deserialize, Updater, Default)]
@@ -63,8 +59,9 @@ pub struct SendmailConfig {
     /// Comment
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    /// Filter to apply
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Deprecated.
+    #[serde(skip_serializing)]
+    #[updater(skip)]
     pub filter: Option<String>,
 }
 
@@ -74,7 +71,6 @@ pub enum DeleteableSendmailProperty {
     FromAddress,
     Author,
     Comment,
-    Filter,
     Mailto,
     MailtoUser,
 }
@@ -143,9 +139,5 @@ impl Endpoint for SendmailEndpoint {
 
     fn name(&self) -> &str {
         &self.config.name
-    }
-
-    fn filter(&self) -> Option<&str> {
-        self.config.filter.as_deref()
     }
 }

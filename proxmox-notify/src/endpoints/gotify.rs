@@ -33,10 +33,6 @@ pub(crate) const GOTIFY_TYPENAME: &str = "gotify";
             optional: true,
             schema: COMMENT_SCHEMA,
         },
-        filter: {
-            optional: true,
-            schema: ENTITY_NAME_SCHEMA,
-        },
     }
 )]
 #[derive(Serialize, Deserialize, Updater, Default)]
@@ -51,8 +47,9 @@ pub struct GotifyConfig {
     /// Comment
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
-    /// Filter to apply
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Deprecated.
+    #[serde(skip_serializing)]
+    #[updater(skip)]
     pub filter: Option<String>,
 }
 
@@ -80,17 +77,15 @@ pub struct GotifyEndpoint {
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableGotifyProperty {
     Comment,
-    Filter,
 }
 
 impl Endpoint for GotifyEndpoint {
     fn send(&self, notification: &Notification) -> Result<(), Error> {
-
         let (title, message) = match &notification.content {
             Content::Template {
                 title_template,
                 body_template,
-                data
+                data,
             } => {
                 let rendered_title =
                     renderer::render_template(TemplateRenderer::Plaintext, title_template, data)?;
@@ -108,7 +103,7 @@ impl Endpoint for GotifyEndpoint {
         let body = json!({
             "title": &title,
             "message": &message,
-            "priority": severity_to_priority(notification.severity),
+            "priority": severity_to_priority(notification.metadata.severity),
             "extras": {
                 "client::display": {
                     "contentType": "text/markdown"
@@ -151,9 +146,5 @@ impl Endpoint for GotifyEndpoint {
 
     fn name(&self) -> &str {
         &self.config.name
-    }
-
-    fn filter(&self) -> Option<&str> {
-        self.config.filter.as_deref()
     }
 }

@@ -5,10 +5,9 @@ use proxmox_http_error::HttpError;
 use crate::Config;
 
 pub mod common;
-pub mod filter;
 #[cfg(feature = "gotify")]
 pub mod gotify;
-pub mod group;
+pub mod matcher;
 #[cfg(feature = "sendmail")]
 pub mod sendmail;
 
@@ -94,36 +93,13 @@ fn ensure_unique(config: &Config, entity: &str) -> Result<(), HttpError> {
 fn get_referrers(config: &Config, entity: &str) -> Result<HashSet<String>, HttpError> {
     let mut referrers = HashSet::new();
 
-    for group in group::get_groups(config)? {
-        if group.endpoint.iter().any(|endpoint| endpoint == entity) {
-            referrers.insert(group.name.clone());
-        }
-
-        if let Some(filter) = group.filter {
-            if filter == entity {
-                referrers.insert(group.name);
+    for matcher in matcher::get_matchers(config)? {
+        if let Some(targets) = matcher.target {
+            if targets.iter().any(|target| target == entity) {
+                referrers.insert(matcher.name.clone());
             }
         }
     }
-
-    #[cfg(feature = "sendmail")]
-    for endpoint in sendmail::get_endpoints(config)? {
-        if let Some(filter) = endpoint.filter {
-            if filter == entity {
-                referrers.insert(endpoint.name);
-            }
-        }
-    }
-
-    #[cfg(feature = "gotify")]
-    for endpoint in gotify::get_endpoints(config)? {
-        if let Some(filter) = endpoint.filter {
-            if filter == entity {
-                referrers.insert(endpoint.name);
-            }
-        }
-    }
-
     Ok(referrers)
 }
 
@@ -151,23 +127,11 @@ fn get_referenced_entities(config: &Config, entity: &str) -> HashSet<String> {
         let mut new = HashSet::new();
 
         for entity in entities {
-            if let Ok(group) = group::get_group(config, entity) {
-                for target in group.endpoint {
-                    new.insert(target.clone());
-                }
-            }
-
-            #[cfg(feature = "sendmail")]
-            if let Ok(target) = sendmail::get_endpoint(config, entity) {
-                if let Some(filter) = target.filter {
-                    new.insert(filter.clone());
-                }
-            }
-
-            #[cfg(feature = "gotify")]
-            if let Ok(target) = gotify::get_endpoint(config, entity) {
-                if let Some(filter) = target.filter {
-                    new.insert(filter.clone());
+            if let Ok(group) = matcher::get_matcher(config, entity) {
+                if let Some(targets) = group.target {
+                    for target in targets {
+                        new.insert(target.clone());
+                    }
                 }
             }
         }
@@ -205,11 +169,12 @@ mod tests {
     fn prepare_config() -> Result<Config, HttpError> {
         let mut config = super::test_helpers::empty_config();
 
-        filter::add_filter(
+        matcher::add_matcher(
             &mut config,
-            &FilterConfig {
-                name: "filter".to_string(),
-                ..Default::default()
+            &MatcherConfig {
+                name: "matcher".to_string(),
+                target: Some(vec!["sendmail".to_string(), "gotify".to_string()])
+                    ..Default::default(),
             },
         )?;
 
@@ -218,7 +183,6 @@ mod tests {
             &SendmailConfig {
                 name: "sendmail".to_string(),
                 mailto: Some(vec!["foo@example.com".to_string()]),
-                filter: Some("filter".to_string()),
                 ..Default::default()
             },
         )?;
@@ -228,22 +192,11 @@ mod tests {
             &GotifyConfig {
                 name: "gotify".to_string(),
                 server: "localhost".to_string(),
-                filter: Some("filter".to_string()),
                 ..Default::default()
             },
             &GotifyPrivateConfig {
                 name: "gotify".to_string(),
                 token: "foo".to_string(),
-            },
-        )?;
-
-        group::add_group(
-            &mut config,
-            &GroupConfig {
-                name: "group".to_string(),
-                endpoint: vec!["gotify".to_string(), "sendmail".to_string()],
-                filter: Some("filter".to_string()),
-                ..Default::default()
             },
         )?;
 
@@ -255,24 +208,11 @@ mod tests {
         let config = prepare_config().unwrap();
 
         assert_eq!(
-            get_referenced_entities(&config, "filter"),
-            HashSet::from(["filter".to_string()])
-        );
-        assert_eq!(
-            get_referenced_entities(&config, "sendmail"),
-            HashSet::from(["filter".to_string(), "sendmail".to_string()])
-        );
-        assert_eq!(
-            get_referenced_entities(&config, "gotify"),
-            HashSet::from(["filter".to_string(), "gotify".to_string()])
-        );
-        assert_eq!(
-            get_referenced_entities(&config, "group"),
+            get_referenced_entities(&config, "matcher"),
             HashSet::from([
-                "filter".to_string(),
-                "gotify".to_string(),
+                "matcher".to_string(),
                 "sendmail".to_string(),
-                "group".to_string()
+                "gotify".to_string()
             ])
         );
     }
@@ -282,25 +222,14 @@ mod tests {
         let config = prepare_config().unwrap();
 
         assert_eq!(
-            get_referrers(&config, "filter")?,
-            HashSet::from([
-                "gotify".to_string(),
-                "sendmail".to_string(),
-                "group".to_string()
-            ])
-        );
-
-        assert_eq!(
             get_referrers(&config, "sendmail")?,
-            HashSet::from(["group".to_string()])
+            HashSet::from(["matcher".to_string()])
         );
 
         assert_eq!(
             get_referrers(&config, "gotify")?,
-            HashSet::from(["group".to_string()])
+            HashSet::from(["matcher".to_string()])
         );
-
-        assert!(get_referrers(&config, "group")?.is_empty(),);
 
         Ok(())
     }
@@ -309,10 +238,9 @@ mod tests {
     fn test_ensure_unused() {
         let config = prepare_config().unwrap();
 
-        assert!(ensure_unused(&config, "filter").is_err());
         assert!(ensure_unused(&config, "gotify").is_err());
         assert!(ensure_unused(&config, "sendmail").is_err());
-        assert!(ensure_unused(&config, "group").is_ok());
+        assert!(ensure_unused(&config, "matcher").is_ok());
     }
 
     #[test]
@@ -329,6 +257,5 @@ mod tests {
         let config = prepare_config().unwrap();
 
         assert!(ensure_endpoints_exist(&config, &vec!["sendmail", "gotify"]).is_ok());
-        assert!(ensure_endpoints_exist(&config, &vec!["group", "filter"]).is_err());
     }
 }

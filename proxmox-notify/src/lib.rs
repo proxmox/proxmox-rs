@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error as StdError;
 use std::fmt::Display;
+use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -9,15 +10,14 @@ use serde_json::Value;
 use proxmox_schema::api;
 use proxmox_section_config::SectionConfigData;
 
-pub mod filter;
-use filter::{FilterConfig, FilterMatcher, FILTER_TYPENAME};
-
-pub mod group;
-use group::{GroupConfig, GROUP_TYPENAME};
+pub mod matcher;
+use matcher::{MatcherConfig, MATCHER_TYPENAME};
 
 pub mod api;
 pub mod context;
 pub mod endpoints;
+pub mod filter;
+pub mod group;
 pub mod renderer;
 pub mod schema;
 
@@ -104,6 +104,30 @@ pub enum Severity {
     Error,
 }
 
+impl Display for Severity {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::result::Result<(), std::fmt::Error> {
+        match self {
+            Severity::Info => f.write_str("info"),
+            Severity::Notice => f.write_str("notice"),
+            Severity::Warning => f.write_str("warning"),
+            Severity::Error => f.write_str("error"),
+        }
+    }
+}
+
+impl FromStr for Severity {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Error> {
+        match s {
+            "info" => Ok(Self::Info),
+            "notice" => Ok(Self::Notice),
+            "warning" => Ok(Self::Warning),
+            "error" => Ok(Self::Error),
+            _ => Err(Error::Generic(format!("invalid severity {s}"))),
+        }
+    }
+}
+
 /// Notification endpoint trait, implemented by all endpoint plugins
 pub trait Endpoint {
     /// Send a documentation
@@ -111,9 +135,6 @@ pub trait Endpoint {
 
     /// The name/identifier for this endpoint
     fn name(&self) -> &str;
-
-    /// The name of the filter to use
-    fn filter(&self) -> Option<&str>;
 }
 
 #[derive(Debug, Clone)]
@@ -130,12 +151,20 @@ pub enum Content {
 }
 
 #[derive(Debug, Clone)]
-/// Notification which can be sent
-pub struct Notification {
+pub struct Metadata {
     /// Notification severity
     severity: Severity,
+    /// Additional fields for additional key-value metadata
+    additional_fields: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone)]
+/// Notification which can be sent
+pub struct Notification {
     /// Notification content
     content: Content,
+    /// Metadata
+    metadata: Metadata,
 }
 
 impl Notification {
@@ -143,14 +172,18 @@ impl Notification {
         severity: Severity,
         title: S,
         body: S,
-        properties: Value,
+        template_data: Value,
+        fields: HashMap<String, String>,
     ) -> Self {
         Self {
-            severity,
+            metadata: Metadata {
+                severity,
+                additional_fields: fields,
+            },
             content: Content::Template {
                 title_template: title.as_ref().to_string(),
                 body_template: body.as_ref().to_string(),
-                data: properties,
+                data: template_data,
             },
         }
     }
@@ -198,8 +231,7 @@ impl Config {
 #[derive(Default)]
 pub struct Bus {
     endpoints: HashMap<String, Box<dyn Endpoint>>,
-    groups: HashMap<String, GroupConfig>,
-    filters: Vec<FilterConfig>,
+    matchers: Vec<MatcherConfig>,
 }
 
 #[allow(unused_macros)]
@@ -304,23 +336,14 @@ impl Bus {
             );
         }
 
-        let groups: HashMap<String, GroupConfig> = config
+        let matchers = config
             .config
-            .convert_to_typed_array(GROUP_TYPENAME)
-            .map_err(|err| Error::ConfigDeserialization(err.into()))?
-            .into_iter()
-            .map(|group: GroupConfig| (group.name.clone(), group))
-            .collect();
-
-        let filters = config
-            .config
-            .convert_to_typed_array(FILTER_TYPENAME)
+            .convert_to_typed_array(MATCHER_TYPENAME)
             .map_err(|err| Error::ConfigDeserialization(err.into()))?;
 
         Ok(Bus {
             endpoints,
-            groups,
-            filters,
+            matchers,
         })
     }
 
@@ -330,77 +353,33 @@ impl Bus {
     }
 
     #[cfg(test)]
-    pub fn add_group(&mut self, group: GroupConfig) {
-        self.groups.insert(group.name.clone(), group);
+    pub fn add_matcher(&mut self, filter: MatcherConfig) {
+        self.matchers.push(filter)
     }
 
-    #[cfg(test)]
-    pub fn add_filter(&mut self, filter: FilterConfig) {
-        self.filters.push(filter)
-    }
-
-    /// Send a notification to a given target (endpoint or group).
+    /// Send a notification. Notification matchers will determine which targets will receive
+    /// the notification.
     ///
     /// Any errors will not be returned but only logged.
-    pub fn send(&self, endpoint_or_group: &str, notification: &Notification) {
-        let mut filter_matcher = FilterMatcher::new(&self.filters, notification);
+    pub fn send(&self, notification: &Notification) {
+        let targets = matcher::check_matches(self.matchers.as_slice(), notification);
 
-        if let Some(group) = self.groups.get(endpoint_or_group) {
-            if !Bus::check_filter(&mut filter_matcher, group.filter.as_deref()) {
-                log::info!("skipped target '{endpoint_or_group}', filter did not match");
-                return;
-            }
+        for target in targets {
+            if let Some(endpoint) = self.endpoints.get(target) {
+                let name = endpoint.name();
 
-            log::info!("target '{endpoint_or_group}' is a group, notifying all members...");
-
-            for endpoint in &group.endpoint {
-                self.send_via_single_endpoint(endpoint, notification, &mut filter_matcher);
-            }
-        } else {
-            self.send_via_single_endpoint(endpoint_or_group, notification, &mut filter_matcher);
-        }
-    }
-
-    fn check_filter(filter_matcher: &mut FilterMatcher, filter: Option<&str>) -> bool {
-        if let Some(filter) = filter {
-            match filter_matcher.check_filter_match(filter) {
-                // If the filter does not match, do nothing
-                Ok(r) => r,
-                Err(err) => {
-                    // If there is an error, only log it and still send
-                    log::error!("could not apply filter '{filter}': {err}");
-                    true
+                match endpoint.send(notification) {
+                    Ok(_) => {
+                        log::info!("notified via target `{name}`");
+                    }
+                    Err(e) => {
+                        // Only log on errors, do not propagate fail to the caller.
+                        log::error!("could not notify via target `{name}`: {e}");
+                    }
                 }
+            } else {
+                log::error!("could not notify via target '{target}', it does not exist");
             }
-        } else {
-            true
-        }
-    }
-
-    fn send_via_single_endpoint(
-        &self,
-        endpoint: &str,
-        notification: &Notification,
-        filter_matcher: &mut FilterMatcher,
-    ) {
-        if let Some(endpoint) = self.endpoints.get(endpoint) {
-            let name = endpoint.name();
-            if !Bus::check_filter(filter_matcher, endpoint.filter()) {
-                log::info!("skipped target '{name}', filter did not match");
-                return;
-            }
-
-            match endpoint.send(notification) {
-                Ok(_) => {
-                    log::info!("notified via target `{name}`");
-                }
-                Err(e) => {
-                    // Only log on errors, do not propagate fail to the caller.
-                    log::error!("could not notify via target `{name}`: {e}");
-                }
-            }
-        } else {
-            log::error!("could not notify via target '{endpoint}', it does not exist");
         }
     }
 
@@ -410,7 +389,11 @@ impl Bus {
     /// any errors to the caller.
     pub fn test_target(&self, target: &str) -> Result<(), Error> {
         let notification = Notification {
-            severity: Severity::Info,
+            metadata: Metadata {
+                severity: Severity::Info,
+                // TODO: what fields would make sense for test notifications?
+                additional_fields: Default::default(),
+            },
             content: Content::Template {
                 title_template: "Test notification".into(),
                 body_template: "This is a test of the notification target '{{ target }}'".into(),
@@ -418,29 +401,10 @@ impl Bus {
             },
         };
 
-        let mut errors: Vec<Box<dyn StdError + Send + Sync>> = Vec::new();
-
-        let mut my_send = |target: &str| -> Result<(), Error> {
-            if let Some(endpoint) = self.endpoints.get(target) {
-                if let Err(e) = endpoint.send(&notification) {
-                    errors.push(Box::new(e));
-                }
-            } else {
-                return Err(Error::TargetDoesNotExist(target.to_string()));
-            }
-            Ok(())
-        };
-
-        if let Some(group) = self.groups.get(target) {
-            for endpoint_name in &group.endpoint {
-                my_send(endpoint_name)?;
-            }
+        if let Some(endpoint) = self.endpoints.get(target) {
+            endpoint.send(&notification)?;
         } else {
-            my_send(target)?;
-        }
-
-        if !errors.is_empty() {
-            return Err(Error::TargetTestFailed(errors));
+            return Err(Error::TargetDoesNotExist(target.to_string()));
         }
 
         Ok(())
@@ -459,7 +423,6 @@ mod tests {
         // Needs to be an Rc so that we can clone MockEndpoint before
         // passing it to Bus, while still retaining a handle to the Vec
         messages: Rc<RefCell<Vec<Notification>>>,
-        filter: Option<String>,
     }
 
     impl Endpoint for MockEndpoint {
@@ -472,17 +435,12 @@ mod tests {
         fn name(&self) -> &str {
             self.name
         }
-
-        fn filter(&self) -> Option<&str> {
-            self.filter.as_deref()
-        }
     }
 
     impl MockEndpoint {
-        fn new(name: &'static str, filter: Option<String>) -> Self {
+        fn new(name: &'static str) -> Self {
             Self {
                 name,
-                filter,
                 ..Default::default()
             }
         }
@@ -494,16 +452,26 @@ mod tests {
 
     #[test]
     fn test_add_mock_endpoint() -> Result<(), Error> {
-        let mock = MockEndpoint::new("endpoint", None);
+        let mock = MockEndpoint::new("endpoint");
 
         let mut bus = Bus::default();
         bus.add_endpoint(Box::new(mock.clone()));
 
+        let matcher = MatcherConfig {
+            target: Some(vec!["endpoint".into()]),
+            ..Default::default()
+        };
+
+        bus.add_matcher(matcher);
+
         // Send directly to endpoint
-        bus.send(
-            "endpoint",
-            &Notification::new_templated(Severity::Info, "Title", "Body", Default::default()),
-        );
+        bus.send(&Notification::new_templated(
+            Severity::Info,
+            "Title",
+            "Body",
+            Default::default(),
+            Default::default(),
+        ));
         let messages = mock.messages();
         assert_eq!(messages.len(), 1);
 
@@ -511,96 +479,39 @@ mod tests {
     }
 
     #[test]
-    fn test_groups() -> Result<(), Error> {
-        let endpoint1 = MockEndpoint::new("mock1", None);
-        let endpoint2 = MockEndpoint::new("mock2", None);
-
-        let mut bus = Bus::default();
-
-        bus.add_group(GroupConfig {
-            name: "group1".to_string(),
-            endpoint: vec!["mock1".into()],
-            comment: None,
-            filter: None,
-        });
-
-        bus.add_group(GroupConfig {
-            name: "group2".to_string(),
-            endpoint: vec!["mock2".into()],
-            comment: None,
-            filter: None,
-        });
-
-        bus.add_endpoint(Box::new(endpoint1.clone()));
-        bus.add_endpoint(Box::new(endpoint2.clone()));
-
-        let send_to_group = |channel| {
-            let notification =
-                Notification::new_templated(Severity::Info, "Title", "Body", Default::default());
-            bus.send(channel, &notification)
-        };
-
-        send_to_group("group1");
-        assert_eq!(endpoint1.messages().len(), 1);
-        assert_eq!(endpoint2.messages().len(), 0);
-
-        send_to_group("group2");
-        assert_eq!(endpoint1.messages().len(), 1);
-        assert_eq!(endpoint2.messages().len(), 1);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_severity_ordering() {
-        // Not intended to be exhaustive, just a quick
-        // sanity check ;)
-
-        assert!(Severity::Info < Severity::Notice);
-        assert!(Severity::Info < Severity::Warning);
-        assert!(Severity::Info < Severity::Error);
-        assert!(Severity::Error > Severity::Warning);
-        assert!(Severity::Warning > Severity::Notice);
-    }
-
-    #[test]
-    fn test_multiple_endpoints_with_different_filters() -> Result<(), Error> {
-        let endpoint1 = MockEndpoint::new("mock1", Some("filter1".into()));
-        let endpoint2 = MockEndpoint::new("mock2", Some("filter2".into()));
+    fn test_multiple_endpoints_with_different_matchers() -> Result<(), Error> {
+        let endpoint1 = MockEndpoint::new("mock1");
+        let endpoint2 = MockEndpoint::new("mock2");
 
         let mut bus = Bus::default();
 
         bus.add_endpoint(Box::new(endpoint1.clone()));
         bus.add_endpoint(Box::new(endpoint2.clone()));
 
-        bus.add_group(GroupConfig {
-            name: "channel1".to_string(),
-            endpoint: vec!["mock1".into(), "mock2".into()],
-            comment: None,
-            filter: None,
+        bus.add_matcher(MatcherConfig {
+            name: "matcher1".into(),
+            match_severity: Some(vec!["warning,error".parse()?]),
+            target: Some(vec!["mock1".into()]),
+            ..Default::default()
         });
 
-        bus.add_filter(FilterConfig {
-            name: "filter1".into(),
-            min_severity: Some(Severity::Warning),
-            mode: None,
-            invert_match: None,
-            comment: None,
-        });
-
-        bus.add_filter(FilterConfig {
-            name: "filter2".into(),
-            min_severity: Some(Severity::Error),
-            mode: None,
-            invert_match: None,
-            comment: None,
+        bus.add_matcher(MatcherConfig {
+            name: "matcher2".into(),
+            match_severity: Some(vec!["error".parse()?]),
+            target: Some(vec!["mock2".into()]),
+            ..Default::default()
         });
 
         let send_with_severity = |severity| {
-            let notification =
-                Notification::new_templated(severity, "Title", "Body", Default::default());
+            let notification = Notification::new_templated(
+                severity,
+                "Title",
+                "Body",
+                Default::default(),
+                Default::default(),
+            );
 
-            bus.send("channel1", &notification);
+            bus.send(&notification);
         };
 
         send_with_severity(Severity::Info);

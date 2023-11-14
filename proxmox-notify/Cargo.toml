@@ -8,6 +8,7 @@ repository.workspace = true
 exclude.workspace = true
 
 [dependencies]
+anyhow.workspace = true
 handlebars = { workspace = true }
 lazy_static.workspace = true
 log.workspace = true
@@ -16,6 +17,7 @@ openssl.workspace = true
 proxmox-http = { workspace = true, features = ["client-sync"], optional = true }
 proxmox-http-error.workspace = true
 proxmox-human-byte.workspace = true
+proxmox-serde.workspace = true
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"]}
 proxmox-section-config = { workspace = true }
 proxmox-sys = { workspace = true, optional = true }
