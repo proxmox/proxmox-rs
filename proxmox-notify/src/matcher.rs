@@ -142,6 +142,11 @@ pub struct MatcherConfig {
     pub comment: Option<String>,
 }
 
+trait MatchDirective {
+    fn matches(&self, notification: &Notification) -> Result<bool, Error>;
+}
+
+/// Check if the notification metadata fields match
 #[derive(Clone, Debug)]
 pub enum FieldMatcher {
     Exact {
@@ -157,9 +162,9 @@ pub enum FieldMatcher {
 proxmox_serde::forward_deserialize_to_from_str!(FieldMatcher);
 proxmox_serde::forward_serialize_to_display!(FieldMatcher);
 
-impl FieldMatcher {
-    fn matches(&self, notification: &Notification) -> bool {
-        match self {
+impl MatchDirective for FieldMatcher {
+    fn matches(&self, notification: &Notification) -> Result<bool, Error> {
+        Ok(match self {
             FieldMatcher::Exact {
                 field,
                 matched_value,
@@ -186,7 +191,7 @@ impl FieldMatcher {
                     false
                 }
             }
-        }
+        })
     }
 }
 
@@ -260,9 +265,22 @@ impl MatcherConfig {
         let mode = self.mode.unwrap_or_default();
 
         let mut is_match = mode.neutral_element();
-        is_match = mode.apply(is_match, self.check_severity_match(notification));
-        is_match = mode.apply(is_match, self.check_field_match(notification)?);
-        is_match = mode.apply(is_match, self.check_calendar_match(notification)?);
+
+        if let Some(severity_matchers) = self.match_severity.as_deref() {
+            is_match = mode.apply(
+                is_match,
+                self.check_matches(notification, severity_matchers)?,
+            );
+        }
+        if let Some(field_matchers) = self.match_field.as_deref() {
+            is_match = mode.apply(is_match, self.check_matches(notification, field_matchers)?);
+        }
+        if let Some(calendar_matchers) = self.match_calendar.as_deref() {
+            is_match = mode.apply(
+                is_match,
+                self.check_matches(notification, calendar_matchers)?,
+            );
+        }
 
         let invert_match = self.invert_match.unwrap_or_default();
 
@@ -273,46 +291,24 @@ impl MatcherConfig {
         })
     }
 
-    fn check_field_match(&self, notification: &Notification) -> Result<bool, Error> {
+    /// Check if given `MatchDirectives` match a notification.
+    fn check_matches(
+        &self,
+        notification: &Notification,
+        matchers: &[impl MatchDirective],
+    ) -> Result<bool, Error> {
         let mode = self.mode.unwrap_or_default();
         let mut is_match = mode.neutral_element();
 
-        if let Some(match_field) = self.match_field.as_deref() {
-            for field_matcher in match_field {
-                // let field_matcher: FieldMatcher = match_stmt.parse()?;
-                is_match = mode.apply(is_match, field_matcher.matches(notification));
-            }
-        }
-
-        Ok(is_match)
-    }
-
-    fn check_severity_match(&self, notification: &Notification) -> bool {
-        let mode = self.mode.unwrap_or_default();
-        let mut is_match = mode.neutral_element();
-
-        if let Some(matchers) = self.match_severity.as_ref() {
-            for severity_matcher in matchers {
-                is_match = mode.apply(is_match, severity_matcher.matches(notification));
-            }
-        }
-
-        is_match
-    }
-
-    fn check_calendar_match(&self, notification: &Notification) -> Result<bool, Error> {
-        let mode = self.mode.unwrap_or_default();
-        let mut is_match = mode.neutral_element();
-
-        if let Some(matchers) = self.match_calendar.as_ref() {
-            for matcher in matchers {
-                is_match = mode.apply(is_match, matcher.matches(notification)?);
-            }
+        for field_matcher in matchers {
+            is_match = mode.apply(is_match, field_matcher.matches(notification)?);
         }
 
         Ok(is_match)
     }
 }
+
+/// Match severity of the notification.
 #[derive(Clone, Debug)]
 pub struct SeverityMatcher {
     severities: Vec<Severity>,
@@ -321,9 +317,11 @@ pub struct SeverityMatcher {
 proxmox_serde::forward_deserialize_to_from_str!(SeverityMatcher);
 proxmox_serde::forward_serialize_to_display!(SeverityMatcher);
 
-impl SeverityMatcher {
-    fn matches(&self, notification: &Notification) -> bool {
-        self.severities.contains(&notification.metadata.severity)
+/// Common trait implemented by all matching directives
+impl MatchDirective for SeverityMatcher {
+    /// Check if this directive matches a given notification
+    fn matches(&self, notification: &Notification) -> Result<bool, Error> {
+        Ok(self.severities.contains(&notification.metadata.severity))
     }
 }
 
@@ -360,7 +358,7 @@ pub struct CalendarMatcher {
 proxmox_serde::forward_deserialize_to_from_str!(CalendarMatcher);
 proxmox_serde::forward_serialize_to_display!(CalendarMatcher);
 
-impl CalendarMatcher {
+impl MatchDirective for CalendarMatcher {
     fn matches(&self, notification: &Notification) -> Result<bool, Error> {
         self.schedule
             .time_match(notification.metadata.timestamp, false)
@@ -433,13 +431,13 @@ mod tests {
             Notification::new_templated(Severity::Notice, "test", "test", Value::Null, fields);
 
         let matcher: FieldMatcher = "exact:foo=bar".parse().unwrap();
-        assert!(matcher.matches(&notification));
+        assert!(matcher.matches(&notification).unwrap());
 
         let matcher: FieldMatcher = "regex:foo=b.*".parse().unwrap();
-        assert!(matcher.matches(&notification));
+        assert!(matcher.matches(&notification).unwrap());
 
         let matcher: FieldMatcher = "regex:notthere=b.*".parse().unwrap();
-        assert!(!matcher.matches(&notification));
+        assert!(!matcher.matches(&notification).unwrap());
 
         assert!("regex:'3=b.*".parse::<FieldMatcher>().is_err());
         assert!("invalid:'bar=b.*".parse::<FieldMatcher>().is_err());
@@ -455,6 +453,6 @@ mod tests {
         );
 
         let matcher: SeverityMatcher = "info,notice,warning,error".parse().unwrap();
-        assert!(matcher.matches(&notification));
+        assert!(matcher.matches(&notification).unwrap());
     }
 }
