@@ -11,6 +11,18 @@ fn lookup_mail_address(content: &str, user: &str) -> Option<String> {
     }))
 }
 
+const DEFAULT_CONFIG: &str = "\
+sendmail: mail-to-root
+	comment Send mails to root@pam's email address
+	mailto-user root@pam
+
+
+matcher: default-matcher
+    mode all
+    target mail-to-root
+    comment Route all notifications to mail-to-root
+";
+
 #[derive(Debug)]
 pub struct PVEContext;
 
@@ -34,6 +46,10 @@ impl Context for PVEContext {
     fn http_proxy_config(&self) -> Option<String> {
         let content = common::attempt_file_read("/etc/pve/datacenter.cfg");
         content.and_then(|content| common::lookup_datacenter_config_key(&content, "http_proxy"))
+    }
+
+    fn default_config(&self) -> &'static str {
+        return DEFAULT_CONFIG;
     }
 }
 

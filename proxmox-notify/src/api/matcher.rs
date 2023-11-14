@@ -151,7 +151,7 @@ pub fn delete_matcher(config: &mut Config, name: &str) -> Result<(), HttpError> 
     Ok(())
 }
 
-#[cfg(all(test, feature = "sendmail"))]
+#[cfg(all(test, feature = "sendmail", feature = "pve-context"))]
 mod tests {
     use super::*;
     use crate::matcher::MatchModeOperator;
@@ -259,7 +259,6 @@ matcher: matcher2
 
         delete_matcher(&mut config, "matcher1")?;
         assert!(delete_matcher(&mut config, "matcher1").is_err());
-        assert_eq!(get_matchers(&config)?.len(), 1);
 
         Ok(())
     }

@@ -18,9 +18,16 @@ pub trait Context: Send + Sync + Debug {
     fn default_sendmail_from(&self) -> String;
     /// Proxy configuration for the current node
     fn http_proxy_config(&self) -> Option<String>;
+    // Return default config for built-in targets/matchers.
+    fn default_config(&self) -> &'static str;
 }
 
+#[cfg(not(feature = "pve-context"))]
 static CONTEXT: Mutex<Option<&'static dyn Context>> = Mutex::new(None);
+// The test unfortunately require context...
+// TODO: Check if we can make this nicer...
+#[cfg(feature = "pve-context")]
+static CONTEXT: Mutex<Option<&'static dyn Context>> = Mutex::new(Some(&pve::PVE_CONTEXT));
 
 /// Set the product-specific context
 pub fn set_context(context: &'static dyn Context) {

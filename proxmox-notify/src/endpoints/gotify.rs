@@ -11,7 +11,7 @@ use proxmox_schema::{api, Updater};
 use crate::context::context;
 use crate::renderer::TemplateRenderer;
 use crate::schema::ENTITY_NAME_SCHEMA;
-use crate::{renderer, Content, Endpoint, Error, Notification, Severity};
+use crate::{renderer, Content, Endpoint, Error, Notification, Origin, Severity};
 
 fn severity_to_priority(level: Severity) -> u32 {
     match level {
@@ -55,6 +55,10 @@ pub struct GotifyConfig {
     /// Disable this target.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disable: Option<bool>,
+    /// Origin of this config entry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[updater(skip)]
+    pub origin: Option<Origin>,
 }
 
 #[api()]

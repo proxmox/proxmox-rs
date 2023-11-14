@@ -7,7 +7,7 @@ use crate::context::context;
 use crate::endpoints::common::mail;
 use crate::renderer::TemplateRenderer;
 use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA, USER_SCHEMA};
-use crate::{renderer, Content, Endpoint, Error, Notification};
+use crate::{renderer, Content, Endpoint, Error, Notification, Origin};
 
 pub(crate) const SENDMAIL_TYPENAME: &str = "sendmail";
 
@@ -65,6 +65,10 @@ pub struct SendmailConfig {
     /// Disable this target.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disable: Option<bool>,
+    /// Origin of this config entry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[updater(skip)]
+    pub origin: Option<Origin>,
 }
 
 #[derive(Serialize, Deserialize)]

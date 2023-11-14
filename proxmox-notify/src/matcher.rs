@@ -13,7 +13,7 @@ use proxmox_schema::{
 use proxmox_time::{parse_daily_duration, DailyDuration};
 
 use crate::schema::ENTITY_NAME_SCHEMA;
-use crate::{Error, Notification, Severity};
+use crate::{Error, Notification, Origin, Severity};
 
 pub const MATCHER_TYPENAME: &str = "matcher";
 
@@ -144,6 +144,11 @@ pub struct MatcherConfig {
     /// Disable this matcher
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disable: Option<bool>,
+
+    /// Origin of this config entry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[updater(skip)]
+    pub origin: Option<Origin>,
 }
 
 trait MatchDirective {

@@ -3,6 +3,7 @@ use std::error::Error as StdError;
 use std::fmt::Display;
 use std::str::FromStr;
 
+use context::context;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_json::Value;
@@ -11,6 +12,7 @@ use proxmox_schema::api;
 use proxmox_section_config::SectionConfigData;
 
 pub mod matcher;
+use crate::config::CONFIG;
 use matcher::{MatcherConfig, MATCHER_TYPENAME};
 
 pub mod api;
@@ -132,6 +134,18 @@ impl FromStr for Severity {
     }
 }
 
+#[api()]
+#[derive(Clone, Debug, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd)]
+#[serde(rename_all = "kebab-case")]
+pub enum Origin {
+    /// User-created config entry
+    UserCreated,
+    /// Config entry provided by the system
+    Builtin,
+    /// Config entry provided by the system, but modified by the user.
+    ModifiedBuiltin,
+}
+
 /// Notification endpoint trait, implemented by all endpoint plugins
 pub trait Endpoint {
     /// Send a documentation
@@ -247,8 +261,54 @@ pub struct Config {
 impl Config {
     /// Parse raw config
     pub fn new(raw_config: &str, raw_private_config: &str) -> Result<Self, Error> {
-        let (config, digest) = config::config(raw_config)?;
+        let (mut config, digest) = config::config(raw_config)?;
         let (private_config, _) = config::private_config(raw_private_config)?;
+
+        let default_config = context().default_config();
+
+        let builtin_config = CONFIG
+            .parse("<builtin>", default_config)
+            .map_err(|err| Error::ConfigDeserialization(err.into()))?;
+
+        for (key, (builtin_typename, builtin_value)) in &builtin_config.sections {
+            if let Some((typename, value)) = config.sections.get_mut(key) {
+                if builtin_typename == typename && value == builtin_value {
+                    // Entry is built-in and the config entry section in notifications.cfg
+                    // is exactly the same.
+                    if let Some(obj) = value.as_object_mut() {
+                        obj.insert("origin".to_string(), Value::String("builtin".into()));
+                    } else {
+                        log::error!("section config entry is not an object. This should not happen");
+                    }
+                } else {
+                    // Entry is built-in, but it has been modified by the user.
+                    if let Some(obj) = value.as_object_mut() {
+                        obj.insert("origin".to_string(), Value::String("modified-builtin".into()));
+                    } else {
+                        log::error!("section config entry is not an object. This should not happen");
+                    }
+                }
+            } else {
+                let mut val = builtin_value.clone();
+
+                if let Some(obj) = val.as_object_mut() {
+                    obj.insert("origin".to_string(), Value::String("builtin".into()));
+                } else {
+                    log::error!("section config entry is not an object. This should not happen");
+                }
+                config
+                    .set_data(key, builtin_typename, val)
+                    .map_err(|err| Error::ConfigDeserialization(err.into()))?;
+            }
+        }
+
+        for (_, (_, value)) in config.sections.iter_mut() {
+            if let Some(obj) = value.as_object_mut() {
+                if obj.get("origin").is_none() {
+                    obj.insert("origin".to_string(), Value::String("user-created".into()));
+                }
+            }
+        }
 
         Ok(Self {
             config,
@@ -259,8 +319,21 @@ impl Config {
 
     /// Serialize config
     pub fn write(&self) -> Result<(String, String), Error> {
+        let mut c = self.config.clone();
+        for (_, (_, value)) in c.sections.iter_mut() {
+            // Remove 'origin' parameter, we do not want it in our
+            // config fields
+            // TODO: Check if there is a better way for this, maybe a
+            // separate type for API responses?
+            if let Some(obj) = value.as_object_mut() {
+                obj.remove("origin");
+            } else {
+                log::error!("section config entry is not an object. This should not happen");
+            }
+        }
+
         Ok((
-            config::write(&self.config)?,
+            config::write(&c)?,
             config::write_private(&self.private_config)?,
         ))
     }
