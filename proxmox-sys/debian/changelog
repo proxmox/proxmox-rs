@@ -1,3 +1,13 @@
+rust-proxmox-sys (0.5.1-1) bookworm; urgency=medium
+
+  * fix #4162: sys: added `auto-submitted` header to email body
+
+  * email: add `forward`
+
+  * purge now unused pty module
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 17 Nov 2023 10:36:38 +0100
+
 rust-proxmox-sys (0.5.0-1) bookworm; urgency=medium
 
   * bump zstd to 0.12
