@@ -1,3 +1,19 @@
+rust-proxmox-notify (0.3.0-1) bookworm; urgency=medium
+
+  * notify: introduce Error::Generic
+
+  * notify: replace filters and groups with matcher-based system
+
+  * notify: add calendar matcher
+
+  * notify: add 'smtp' endpoint
+
+  * notify: add 'disable' parameter for matchers and targets
+
+  * notify: add built-in config and 'origin' parameter
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 17 Nov 2023 08:38:54 +0100
+
 rust-proxmox-notify (0.2.0-1) bookworm; urgency=medium
 
   * fix build warnings and tests when the default features are disabled
