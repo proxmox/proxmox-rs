@@ -7,7 +7,6 @@ use proxmox_io::vec;
 pub mod magic;
 pub mod pid;
 pub mod procfs;
-pub mod pty;
 pub mod socket;
 #[cfg(feature = "timer")]
 pub mod timer;
