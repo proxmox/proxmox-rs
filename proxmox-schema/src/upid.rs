@@ -14,7 +14,7 @@ use crate::{const_regex, ApiStringFormat, ApiType, Schema, StringSchema};
 /// Please note that we use tokio, so a single thread can run multiple
 /// tasks.
 // #[api] - manually implemented API type
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UPID {
     /// The Unix PID
     pub pid: i32, // really libc::pid_t, but we don't want this as a dependency for proxmox-schema
