@@ -97,6 +97,79 @@ impl<T: PeerAddress> Service<&T> for RestServer {
     }
 }
 
+pub struct Redirector;
+
+impl Default for Redirector {
+    fn default() -> Self {
+        Redirector::new()
+    }
+}
+
+impl Redirector {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl<T> Service<&T> for Redirector {
+    type Response = RedirectService;
+    type Error = Error;
+    type Future = std::future::Ready<Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, _ctx: &T) -> Self::Future {
+        std::future::ready(Ok(RedirectService {}))
+    }
+}
+
+pub struct RedirectService;
+
+impl Service<Request<Body>> for RedirectService {
+    type Response = Response<Body>;
+    type Error = anyhow::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, req: Request<Body>) -> Self::Future {
+        let future = async move {
+            let header_host_value = req
+                .headers()
+                .get("host")
+                .and_then(|value| value.to_str().ok());
+
+            let response = if let Some(value) = header_host_value {
+                let location_value = String::from_iter(["https://", value]);
+
+                let status_code = if matches!(*req.method(), http::Method::GET | http::Method::HEAD)
+                {
+                    StatusCode::MOVED_PERMANENTLY
+                } else {
+                    StatusCode::PERMANENT_REDIRECT
+                };
+
+                Response::builder()
+                    .status(status_code)
+                    .header("Location", String::from(location_value))
+                    .body(Body::empty())?
+            } else {
+                Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body(Body::empty())?
+            };
+
+            Ok(response)
+        };
+
+        future.boxed()
+    }
+}
+
 pub trait PeerAddress {
     fn peer_addr(&self) -> Result<std::net::SocketAddr, Error>;
 }
