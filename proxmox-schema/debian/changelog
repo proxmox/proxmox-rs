@@ -1,3 +1,11 @@
+rust-proxmox-schema (2.0.2-1) bookworm; urgency=medium
+
+  * derive PartialEq for UPID
+
+  * improve some error messages
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 23 Nov 2023 09:16:01 +0100
+
 rust-proxmox-schema (2.0.1-1) bookworm; urgency=medium
 
   * various clippy fixes
