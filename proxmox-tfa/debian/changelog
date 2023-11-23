@@ -1,3 +1,15 @@
+rust-proxmox-tfa (4.1.0) bookworm; urgency=medium
+
+  * make TfaType Clone + Copy + PartialEq
+
+  * make totp a feature
+
+  * make more optional dependencies actually optional
+
+  * clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 23 Nov 2023 09:20:56 +0100
+
 rust-proxmox-tfa (4.0.5) bookworm; urgency=medium
 
   * update to proxmox-schema 2.0
