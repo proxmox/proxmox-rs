@@ -1,3 +1,18 @@
+rust-proxmox-rest-server (0.5.0-1) bookworm; urgency=medium
+
+  * refactor AcceptBuilder to provide support for optional TLS to allow adding
+    a Redirector to redirect HTTP to HTTPS on the same port
+
+  * accept empty body as valid parameters
+
+  * factor out task-log directory and creation
+
+  * better document task-log archive rotation
+
+  * various clippy and code complexity cleanups
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 27 Nov 2023 14:33:12 +0100
+
 rust-proxmox-rest-server (0.4.2-1) bookworm; urgency=medium
 
   * remove full static file path from error messages
