@@ -16,7 +16,7 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-http-0.9+http-helpers-dev <!nocheck>,
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~) <!nocheck>,
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~) <!nocheck>,
- librust-proxmox-sys-0.5+default-dev <!nocheck>,
+ librust-proxmox-sys-0.5+default-dev (>= 0.5.1-~~) <!nocheck>,
  librust-proxmox-time-1+default-dev (>= 1.1.4-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
@@ -43,7 +43,7 @@ Depends:
  librust-proxmox-http-0.9+http-helpers-dev,
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~),
- librust-proxmox-sys-0.5+default-dev,
+ librust-proxmox-sys-0.5+default-dev (>= 0.5.1-~~),
  librust-proxmox-time-1+default-dev (>= 1.1.4-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
@@ -56,8 +56,8 @@ Provides:
  librust-proxmox-subscription-0+default-dev (= ${binary:Version}),
  librust-proxmox-subscription-0.4-dev (= ${binary:Version}),
  librust-proxmox-subscription-0.4+default-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.4.1-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.4.1+default-dev (= ${binary:Version})
+ librust-proxmox-subscription-0.4.2-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.4.2+default-dev (= ${binary:Version})
 Description: Proxmox subscription utilitites - Rust source code
  This package contains the source for the Rust proxmox-subscription crate,
  packaged by debcargo for use with cargo and dh-cargo.
@@ -73,7 +73,7 @@ Depends:
 Provides:
  librust-proxmox-subscription-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-subscription-0.4+api-types-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.4.1+api-types-dev (= ${binary:Version})
+ librust-proxmox-subscription-0.4.2+api-types-dev (= ${binary:Version})
 Description: Proxmox subscription utilitites - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-subscription
  crate, by pulling in any additional dependencies needed by that feature.
