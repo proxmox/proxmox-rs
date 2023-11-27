@@ -1,3 +1,11 @@
+rust-proxmox-subscription (0.4.2-1) stable; urgency=medium
+
+  * move `ProductType` type to `proxmox-subscription` from POM
+
+  * SubscriptionInfo: expose the `next_due_date` as an `i64`
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 27 Nov 2023 13:42:13 +0100
+
 rust-proxmox-subscription (0.4.1-1) bookworm; urgency=medium
 
   * update to proxmox-schema 2.0
