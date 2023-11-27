@@ -166,6 +166,8 @@ pub(crate) fn error_to_response(err: Error) -> Response<Body> {
 ///
 /// * ``success``: boolean attribute indicating the success.
 ///
+/// * ``status``: api call status code.
+///
 /// * ``data``: The result data (on success)
 ///
 /// * ``message``: The error message (on failure)
@@ -174,8 +176,9 @@ pub(crate) fn error_to_response(err: Error) -> Response<Body> {
 ///
 /// Any result attributes set on ``rpcenv`` are also added to the object.
 ///
-/// Please note that errors return status code OK, but setting success
-/// to false.
+/// Please note that errors return a HTTP response with status code OK, but setting success
+/// to false. The real status from the API call is encoded in the status
+/// property.
 pub static EXTJS_FORMATTER: &'static dyn OutputFormatter = &ExtJsFormatter();
 
 struct ExtJsFormatter();
@@ -184,7 +187,8 @@ impl OutputFormatter for ExtJsFormatter {
     fn format_data(&self, data: Value, rpcenv: &dyn RpcEnvironment) -> Response<Body> {
         let mut result = json!({
             "data": data,
-            "success": true
+            "success": true,
+            "status": StatusCode::OK.as_u16(),
         });
 
         add_result_attributes(&mut result, rpcenv);
@@ -199,6 +203,7 @@ impl OutputFormatter for ExtJsFormatter {
     ) -> Result<Response<Body>, Error> {
         let mut value = json!({
             "success": true,
+            "status": StatusCode::OK.as_u16(),
         });
 
         add_result_attributes(&mut value, rpcenv);
@@ -212,20 +217,30 @@ impl OutputFormatter for ExtJsFormatter {
     fn format_error(&self, err: Error) -> Response<Body> {
         let mut errors = HashMap::new();
 
-        let message: String = match err.downcast::<ParameterError>() {
-            Ok(param_err) => {
-                for (name, err) in param_err {
-                    errors.insert(name, err.to_string());
+        let (message, status) = if err.is::<ParameterError>() {
+            match err.downcast::<ParameterError>() {
+                Ok(param_err) => {
+                    for (name, err) in param_err {
+                        errors.insert(name, err.to_string());
+                    }
+                    (String::from("parameter verification errors"), StatusCode::BAD_REQUEST)
                 }
-                String::from("parameter verification errors")
+                Err(err) => (err.to_string(), StatusCode::BAD_REQUEST),
             }
-            Err(err) => err.to_string(),
+        } else {
+            let status = if let Some(apierr) = err.downcast_ref::<HttpError>() {
+                apierr.code
+            } else {
+                StatusCode::BAD_REQUEST
+            };
+            (err.to_string(),  status)
         };
 
         let result = json!({
             "message": message,
             "errors": errors,
-            "success": false
+            "success": false,
+            "status": status.as_u16(),
         });
 
         let mut response = json_data_response(result);
