@@ -61,7 +61,7 @@ impl std::fmt::Display for SubscriptionStatus {
 
 #[cfg_attr(feature = "api-types", api())]
 #[cfg_attr(feature = "api-types", derive(Updater))]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "lowercase")]
 /// Product type
 pub enum ProductType {
