@@ -1,3 +1,11 @@
+rust-proxmox-sys (0.5.2-1) bookworm; urgency=medium
+
+  * add helper to get bootmode and secureboot status
+
+  * email: move Auto-Submitted header up
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 29 Nov 2023 15:25:47 +0100
+
 rust-proxmox-sys (0.5.1-1) bookworm; urgency=medium
 
   * fix #4162: sys: added `auto-submitted` header to email body

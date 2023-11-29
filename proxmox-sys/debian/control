@@ -65,11 +65,11 @@ Provides:
  librust-proxmox-sys-0.5+crypt-dev (= ${binary:Version}),
  librust-proxmox-sys-0.5+default-dev (= ${binary:Version}),
  librust-proxmox-sys-0.5+timer-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.1-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.1+acl-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.1+crypt-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.1+default-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.1+timer-dev (= ${binary:Version})
+ librust-proxmox-sys-0.5.2-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.5.2+acl-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.5.2+crypt-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.5.2+default-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.5.2+timer-dev (= ${binary:Version})
 Description: System tools (using nix) - Rust source code
  This package contains the source for the Rust proxmox-sys crate, packaged by
  debcargo for use with cargo and dh-cargo.
@@ -85,7 +85,7 @@ Depends:
 Provides:
  librust-proxmox-sys-0+logrotate-dev (= ${binary:Version}),
  librust-proxmox-sys-0.5+logrotate-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.1+logrotate-dev (= ${binary:Version})
+ librust-proxmox-sys-0.5.2+logrotate-dev (= ${binary:Version})
 Description: System tools (using nix) - feature "logrotate"
  This metapackage enables feature "logrotate" for the Rust proxmox-sys crate, by
  pulling in any additional dependencies needed by that feature.
