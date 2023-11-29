@@ -66,12 +66,13 @@ pub fn sendmail(
     let localtime = proxmox_time::localtime(now)?;
     let rfc2822_date = proxmox_time::strftime("%a, %d %b %Y %T %z", &localtime)?;
     let _ = writeln!(body, "Date: {}", rfc2822_date);
+    body.push_str("Auto-Submitted: auto-generated;\n");
+
     if is_multipart {
         body.push('\n');
         body.push_str("This is a multi-part message in MIME format.\n");
         let _ = write!(body, "\n--{}\n", boundary);
     }
-    body.push_str("Auto-Submitted: auto-generated;\n");
     if let Some(text) = text {
         body.push_str("Content-Type: text/plain;\n");
         body.push_str("\tcharset=\"UTF-8\"\n");
