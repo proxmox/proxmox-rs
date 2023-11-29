@@ -1,5 +1,6 @@
 use std::os::unix::ffi::OsStrExt;
 
+pub mod boot_mode;
 pub mod command;
 #[cfg(feature = "crypt")]
 pub mod crypt;
