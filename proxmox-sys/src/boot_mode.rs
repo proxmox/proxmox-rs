@@ -24,21 +24,20 @@ static SECURE_BOOT: OnceLock<SecureBoot> = OnceLock::new();
 impl BootMode {
     /// Returns the current bootmode (BIOS or EFI)
     pub fn query() -> BootMode {
-        let value: &BootMode = BOOT_MODE.get_or_init(|| {
+        *BOOT_MODE.get_or_init(|| {
             if std::path::Path::new("/sys/firmware/efi").exists() {
                 BootMode::Efi
             } else {
                 BootMode::Bios
             }
-        });
-        *value
+        })
     }
 }
 
 impl SecureBoot {
     /// Checks if secure boot is enabled
     pub fn query() -> SecureBoot {
-        let value: &SecureBoot = SECURE_BOOT.get_or_init(|| {
+        *SECURE_BOOT.get_or_init(|| {
             // Check if SecureBoot is enabled
             // Attention: this file is not seekable!
             // Spec: https://uefi.org/specs/UEFI/2.10/03_Boot_Manager.html?highlight=8be4d#globally-defined-variables
@@ -54,7 +53,6 @@ impl SecureBoot {
             } else {
                 SecureBoot::Disabled
             }
-        });
-        *value
+        })
     }
 }
