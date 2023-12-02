@@ -61,9 +61,11 @@ pub struct APTRepositoryFile {
     pub repositories: Vec<APTRepository>,
 
     /// The file content, if already parsed.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
 
     /// Digest of the original contents.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub digest: Option<[u8; 32]>,
 }
 
@@ -97,7 +99,7 @@ impl std::error::Error for APTRepositoryFileError {
 /// Additional information for a repository.
 pub struct APTRepositoryInfo {
     /// Path to the defining file.
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub path: String,
 
     /// Index of the associated respository within the file (starting from 0).

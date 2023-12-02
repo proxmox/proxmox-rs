@@ -157,28 +157,28 @@ pub struct APTRepositoryOption {
 /// Describes an APT repository.
 pub struct APTRepository {
     /// List of package types.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub types: Vec<APTRepositoryPackageType>,
 
     /// List of repository URIs.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[serde(rename = "URIs")]
     pub uris: Vec<String>,
 
     /// List of package distributions.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub suites: Vec<String>,
 
     /// List of repository components.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub components: Vec<String>,
 
     /// Additional options.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub options: Vec<APTRepositoryOption>,
 
     /// Associated comment.
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub comment: String,
 
     /// Format of the defining file.
