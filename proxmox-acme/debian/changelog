@@ -1,3 +1,17 @@
+rust-proxmox-acme (0.5.0) bookworm; urgency=medium
+
+  * add external account binding support
+
+  * add a few more standard fields to Meta
+
+  * update deprecated openssl calls
+
+  * documentation fixups
+
+  * general code improvements and cleanups
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 04 Dec 2023 11:46:26 +0100
+
 rust-proxmox-acme-rs (0.4.0) pve; urgency=medium
 
   * switch from curl to ureq with native-tls

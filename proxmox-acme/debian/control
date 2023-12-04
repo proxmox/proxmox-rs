@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 12),
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-base64-0.13+default-dev <!nocheck>,
- librust-openssl-0.10+default-dev (>= 0.10.29-~~) <!nocheck>,
+ librust-openssl-0.10+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
@@ -15,6 +15,7 @@ Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.1
 Vcs-Git: 
 Vcs-Browser: 
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-acme
 Rules-Requires-Root: no
 
@@ -24,7 +25,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-base64-0.13+default-dev,
- librust-openssl-0.10+default-dev (>= 0.10.29-~~),
+ librust-openssl-0.10+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
@@ -36,13 +37,13 @@ Provides:
  librust-proxmox-acme+default-dev (= ${binary:Version}),
  librust-proxmox-acme-0-dev (= ${binary:Version}),
  librust-proxmox-acme-0+default-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4+default-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4.0-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4.0+default-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5+default-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.0-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.0+default-dev (= ${binary:Version})
 Description: ACME client library - Rust source code
- This package contains the source for the Rust proxmox-acme crate, packaged
- by debcargo for use with cargo and dh-cargo.
+ This package contains the source for the Rust proxmox-acme crate, packaged by
+ debcargo for use with cargo and dh-cargo.
 
 Package: librust-proxmox-acme+client-dev
 Architecture: any
@@ -54,11 +55,11 @@ Depends:
  librust-proxmox-acme+native-tls-dev (= ${binary:Version})
 Provides:
  librust-proxmox-acme-0+client-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4+client-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4.0+client-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5+client-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.0+client-dev (= ${binary:Version})
 Description: ACME client library - feature "client"
- This metapackage enables feature "client" for the Rust proxmox-acme crate,
- by pulling in any additional dependencies needed by that feature.
+ This metapackage enables feature "client" for the Rust proxmox-acme crate, by
+ pulling in any additional dependencies needed by that feature.
 
 Package: librust-proxmox-acme+native-tls-dev
 Architecture: any
@@ -69,11 +70,11 @@ Depends:
  librust-native-tls-0.2+default-dev
 Provides:
  librust-proxmox-acme-0+native-tls-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4+native-tls-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4.0+native-tls-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5+native-tls-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.0+native-tls-dev (= ${binary:Version})
 Description: ACME client library - feature "native-tls"
- This metapackage enables feature "native-tls" for the Rust proxmox-acme
- crate, by pulling in any additional dependencies needed by that feature.
+ This metapackage enables feature "native-tls" for the Rust proxmox-acme crate,
+ by pulling in any additional dependencies needed by that feature.
 
 Package: librust-proxmox-acme+ureq-dev
 Architecture: any
@@ -85,8 +86,8 @@ Depends:
  librust-ureq-2+native-tls-dev (>= 2.4-~~)
 Provides:
  librust-proxmox-acme-0+ureq-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4+ureq-dev (= ${binary:Version}),
- librust-proxmox-acme-0.4.0+ureq-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5+ureq-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.0+ureq-dev (= ${binary:Version})
 Description: ACME client library - feature "ureq"
  This metapackage enables feature "ureq" for the Rust proxmox-acme crate, by
  pulling in any additional dependencies needed by that feature.
