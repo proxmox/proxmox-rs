@@ -1,23 +1,23 @@
 [package]
 name = "proxmox-acme"
 version = "0.4.0"
-authors = ["Wolfgang Bumiller <w.bumiller@proxmox.com>"]
-edition = "2021"
-license = "AGPL-3"
 description = "ACME client library"
-exclude = [
-    "build",
-    "debian",
-]
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+exclude = [ "debian" ]
 
 [dependencies]
-base64 = "0.13.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-openssl = "0.10.29"
+base64.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+openssl.workspace = true
 
 # For the client
-native-tls = { version = "0.2", optional = true }
+native-tls = { workspace = true, optional = true }
 
 [dependencies.ureq]
 optional = true
@@ -30,4 +30,4 @@ default = []
 client = ["ureq", "native-tls"]
 
 [dev-dependencies]
-anyhow = "1.0"
+anyhow.workspace = true

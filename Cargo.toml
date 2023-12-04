@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "proxmox-acme",
     "proxmox-api-macro",
     "proxmox-apt",
     "proxmox-async",
