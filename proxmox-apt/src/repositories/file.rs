@@ -41,7 +41,7 @@ trait APTRepositoryParser {
             type: Array,
             items: {
                 description: "Digest byte.",
-                type: Integer,
+                type: u8,
             },
         },
     },
