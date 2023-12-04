@@ -1,0 +1,33 @@
+[package]
+name = "proxmox-acme"
+version = "0.5.0"
+description = "ACME client library"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+exclude = [ "debian" ]
+
+[dependencies]
+base64.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+openssl.workspace = true
+
+# For the client
+native-tls = { workspace = true, optional = true }
+
+[dependencies.ureq]
+optional = true
+version = "2.4"
+default-features = false
+features = [ "native-tls", "gzip" ]
+
+[features]
+default = []
+client = ["ureq", "native-tls"]
+
+[dev-dependencies]
+anyhow.workspace = true
