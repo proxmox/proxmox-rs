@@ -57,8 +57,8 @@ pub struct Meta {
     pub website: Option<String>,
 
     /// List of hostnames used by the CA, intended for the use with caa dns records
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub caa_identities: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub caa_identities: Vec<String>,
 }
 
 impl Directory {
