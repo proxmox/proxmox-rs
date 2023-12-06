@@ -1,3 +1,9 @@
+rust-proxmox-tfa (4.1.1) bookworm; urgency=medium
+
+  * api: methods: add missing #[serde(default)] to TfaUser
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 06 Dec 2023 16:00:51 +0100
+
 rust-proxmox-tfa (4.1.0) bookworm; urgency=medium
 
   * make TfaType Clone + Copy + PartialEq
