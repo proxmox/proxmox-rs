@@ -166,7 +166,7 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
     }
 }
 
-/// `serde` field/variant attributes we support
+/// `serde` field attributes we support
 #[derive(Default)]
 pub struct FieldAttrib {
     pub rename: Option<syn::LitStr>,
@@ -208,6 +208,57 @@ impl FieldAttrib {
 }
 
 impl TryFrom<&[syn::Attribute]> for FieldAttrib {
+    type Error = syn::Error;
+
+    fn try_from(attributes: &[syn::Attribute]) -> Result<Self, syn::Error> {
+        let mut this: Self = Default::default();
+
+        for attrib in attributes {
+            this.parse_attribute(attrib)?;
+        }
+
+        Ok(this)
+    }
+}
+
+/// `serde` variant attributes we support
+#[derive(Default)]
+pub struct VariantAttrib {
+    pub rename: Option<syn::LitStr>,
+}
+
+impl VariantAttrib {
+    pub fn parse_attribute(&mut self, attrib: &syn::Attribute) -> Result<(), syn::Error> {
+        let list = match &attrib.meta {
+            syn::Meta::List(list) if list.path.is_ident("serde") => list,
+            _ => return Ok(()),
+        };
+
+        let args = list.parse_args_with(Punctuated::<syn::Meta, Token![,]>::parse_terminated)?;
+
+        for arg in args {
+            let path = arg.path();
+            if path.is_ident("rename") {
+                match &arg.require_name_value()?.value {
+                    syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Str(rename),
+                        ..
+                    }) => {
+                        if self.rename.is_some() && self.rename.as_ref() != Some(rename) {
+                            error!(&rename => "multiple conflicting 'rename' attributes");
+                        }
+                        self.rename = Some(rename.clone());
+                    }
+                    value => error!(value => "'rename' value must be a string literal"),
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl TryFrom<&[syn::Attribute]> for VariantAttrib {
     type Error = syn::Error;
 
     fn try_from(attributes: &[syn::Attribute]) -> Result<Self, syn::Error> {
