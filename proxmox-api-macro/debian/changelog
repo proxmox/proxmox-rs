@@ -1,3 +1,12 @@
+rust-proxmox-api-macro (1.0.7-1) stable; urgency=medium
+
+  * make serde(skip_serializing_if) without serde(default) for non-Option
+    types an error
+
+  * split field and variant attribute parsing
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 06 Dec 2023 16:02:11 +0100
+
 rust-proxmox-api-macro (1.0.6-1) stable; urgency=medium
 
   * clippy fix: this (Default) `impl` can be derived
