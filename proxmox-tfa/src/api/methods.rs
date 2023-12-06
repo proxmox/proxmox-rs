@@ -235,7 +235,7 @@ pub struct TfaUser {
     pub entries: Vec<TypedTfaInfo>,
 
     /// The user is locked out of TOTP authentication.
-    #[serde(skip_serializing_if = "super::bool_is_false")]
+    #[serde(default, skip_serializing_if = "super::bool_is_false")]
     pub totp_locked: bool,
 
     /// If a user's second factor is blocked, this contains the block's expiration time.
