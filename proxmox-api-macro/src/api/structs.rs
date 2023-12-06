@@ -160,7 +160,7 @@ fn handle_regular_struct(
 
     if let syn::Fields::Named(ref fields) = &stru.fields {
         for field in &fields.named {
-            let attrs = serde::SerdeAttrib::try_from(&field.attrs[..])?;
+            let attrs = serde::FieldAttrib::try_from(&field.attrs[..])?;
 
             let (name, span) = {
                 let ident: &Ident = field

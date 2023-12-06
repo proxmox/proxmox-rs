@@ -168,12 +168,12 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
 
 /// `serde` field/variant attributes we support
 #[derive(Default)]
-pub struct SerdeAttrib {
+pub struct FieldAttrib {
     pub rename: Option<syn::LitStr>,
     pub flatten: bool,
 }
 
-impl SerdeAttrib {
+impl FieldAttrib {
     pub fn parse_attribute(&mut self, attrib: &syn::Attribute) -> Result<(), syn::Error> {
         let list = match &attrib.meta {
             syn::Meta::List(list) if list.path.is_ident("serde") => list,
@@ -207,7 +207,7 @@ impl SerdeAttrib {
     }
 }
 
-impl TryFrom<&[syn::Attribute]> for SerdeAttrib {
+impl TryFrom<&[syn::Attribute]> for FieldAttrib {
     type Error = syn::Error;
 
     fn try_from(attributes: &[syn::Attribute]) -> Result<Self, syn::Error> {

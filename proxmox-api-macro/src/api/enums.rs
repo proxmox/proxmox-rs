@@ -57,7 +57,7 @@ pub fn handle_enum(
             comment = "<missing description>".to_string();
         }
 
-        let attrs = serde::SerdeAttrib::try_from(&variant.attrs[..])?;
+        let attrs = serde::FieldAttrib::try_from(&variant.attrs[..])?;
         let variant_string = if let Some(renamed) = attrs.rename {
             renamed
         } else if let Some(rename_all) = container_attrs.rename_all {
