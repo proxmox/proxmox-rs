@@ -29,7 +29,6 @@ mod text_table;
 pub use text_table::*;
 
 mod completion;
-pub use completion::*;
 
 mod completion_helpers;
 pub use completion_helpers::*;
