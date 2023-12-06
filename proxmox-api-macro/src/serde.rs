@@ -5,7 +5,9 @@
 
 use std::convert::TryFrom;
 
+use proc_macro2::Span;
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 use syn::Token;
 
 /// Serde name types.
@@ -171,6 +173,8 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
 pub struct FieldAttrib {
     pub rename: Option<syn::LitStr>,
     pub flatten: bool,
+    has_skip_serializing_if: Option<Span>,
+    has_default: bool,
 }
 
 impl FieldAttrib {
@@ -200,10 +204,25 @@ impl FieldAttrib {
             } else if path.is_ident("flatten") {
                 arg.require_path_only()?;
                 self.flatten = true;
+            } else if path.is_ident("skip_serializing_if") {
+                self.has_skip_serializing_if = Some(match arg.require_name_value() {
+                    Ok(nv) => nv.span(),
+                    Err(_) => arg.span(),
+                });
+            } else if path.is_ident("default") {
+                self.has_default = true;
             }
         }
 
         Ok(())
+    }
+
+    pub fn check_non_option_type(&self) {
+        if let Some(span) = self.has_skip_serializing_if {
+            if !self.has_default {
+                error!(span, "`skip_serializing_if` without `default`");
+            }
+        }
     }
 }
 

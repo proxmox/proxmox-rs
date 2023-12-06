@@ -168,7 +168,7 @@ fn handle_regular_struct(
                     .as_ref()
                     .ok_or_else(|| format_err!(field => "field without name?"))?;
 
-                if let Some(renamed) = attrs.rename {
+                if let Some(renamed) = attrs.rename.clone() {
                     (renamed.value(), ident.span())
                 } else if let Some(rename_all) = container_attrs.rename_all {
                     let name = rename_all.apply_to_field(&ident.to_string());
@@ -201,7 +201,7 @@ fn handle_regular_struct(
                         }
                     }
 
-                    handle_regular_field(field_def, field, false)?;
+                    handle_regular_field(field_def, field, false, &attrs)?;
 
                     if attrs.flatten {
                         all_of_schemas.extend(quote::quote! {&});
@@ -215,7 +215,7 @@ fn handle_regular_struct(
                         false,
                         Schema::blank(span),
                     );
-                    handle_regular_field(&mut field_def, field, true)?;
+                    handle_regular_field(&mut field_def, field, true, &attrs)?;
 
                     if attrs.flatten {
                         all_of_schemas.extend(quote::quote! {&});
@@ -373,6 +373,7 @@ fn handle_regular_field(
     field_def: &mut ObjectEntry,
     field: &syn::Field,
     derived: bool, // whether this field was missing in the schema
+    attrs: &serde::FieldAttrib,
 ) -> Result<(), Error> {
     let schema: &mut Schema = &mut field_def.schema;
 
@@ -389,6 +390,8 @@ fn handle_regular_field(
         } else if !field_def.optional.expect_bool() {
             error!(&field.ty => "non-optional Option type?");
         }
+    } else {
+        attrs.check_non_option_type();
     }
 
     Ok(())
