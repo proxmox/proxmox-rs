@@ -13,7 +13,7 @@ pub fn timelocal(t: &mut libc::tm) -> Result<i64, Error> {
 
     let epoch = unsafe { libc::mktime(t) };
     if epoch == -1 {
-        bail!("libc::mktime failed for {:?}", t);
+        bail!("libc::mktime failed for {t:?}");
     }
     Ok(epoch)
 }
@@ -27,7 +27,7 @@ pub fn timegm(t: &mut libc::tm) -> Result<i64, Error> {
 
     let epoch = unsafe { libc::timegm(t) };
     if epoch == -1 {
-        bail!("libc::timegm failed for {:?}", t);
+        bail!("libc::timegm failed for {t:?}");
     }
     Ok(epoch)
 }
@@ -54,7 +54,7 @@ pub fn localtime(epoch: i64) -> Result<libc::tm, Error> {
 
     unsafe {
         if libc::localtime_r(&epoch, &mut result).is_null() {
-            bail!("libc::localtime failed for '{}'", epoch);
+            bail!("libc::localtime failed for '{epoch}'");
         }
     }
 
@@ -67,7 +67,7 @@ pub fn gmtime(epoch: i64) -> Result<libc::tm, Error> {
 
     unsafe {
         if libc::gmtime_r(&epoch, &mut result).is_null() {
-            bail!("libc::gmtime failed for '{}'", epoch);
+            bail!("libc::gmtime failed for '{epoch}'");
         }
     }
 
@@ -110,7 +110,7 @@ pub fn epoch_f64() -> f64 {
 
 /// Safe bindings to libc strftime
 pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
-    let format = CString::new(format).map_err(|err| format_err!("{}", err))?;
+    let format = CString::new(format).map_err(|err| format_err!("{err}"))?;
     let mut buf = vec![0u8; 8192];
 
     let res = unsafe {
@@ -135,7 +135,7 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
         bail!("strftime: result len is 0 (string too large)");
     };
 
-    let c_str = CStr::from_bytes_with_nul(&buf[..len + 1]).map_err(|err| format_err!("{}", err))?;
+    let c_str = CStr::from_bytes_with_nul(&buf[..len + 1]).map_err(|err| format_err!("{err}"))?;
     let str_slice: &str = c_str.to_str().unwrap();
     Ok(str_slice.to_owned())
 }
@@ -158,7 +158,7 @@ pub fn epoch_to_rfc3339_utc(epoch: i64) -> Result<String, Error> {
 
     let year = gmtime.tm_year + 1900;
     if year < 0 || year > 9999 {
-        bail!("epoch_to_rfc3339_utc: wrong year '{}'", year);
+        bail!("epoch_to_rfc3339_utc: wrong year '{year}'");
     }
 
     strftime("%010FT%TZ", &gmtime)
@@ -172,7 +172,7 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 
     let year = localtime.tm_year + 1900;
     if year < 0 || year > 9999 {
-        bail!("epoch_to_rfc3339: wrong year '{}'", year);
+        bail!("epoch_to_rfc3339: wrong year '{year}'");
     }
 
     // Note: We cannot use strftime %z because of missing collon
@@ -192,20 +192,15 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 
     let mut s = strftime("%10FT%T", &localtime)?;
     s.push(prefix);
-    let _ = write!(s, "{:02}:{:02}", hours, mins);
+    let _ = write!(s, "{hours:02}:{mins:02}");
 
     Ok(s)
 }
 
 /// Parse RFC3339 into Unix epoch
 pub fn parse_rfc3339(input_str: &str) -> Result<i64, Error> {
-    parse_rfc3339_do(input_str).map_err(|err| {
-        format_err!(
-            "failed to parse rfc3339 timestamp ({:?}) - {}",
-            input_str,
-            err
-        )
-    })
+    parse_rfc3339_do(input_str)
+        .map_err(|err| format_err!("failed to parse rfc3339 timestamp ({input_str:?}) - {err}",))
 }
 
 fn parse_rfc3339_do(input_str: &str) -> Result<i64, Error> {
@@ -213,7 +208,7 @@ fn parse_rfc3339_do(input_str: &str) -> Result<i64, Error> {
 
     let expect = |pos: usize, c: u8| {
         if input[pos] != c {
-            bail!("unexpected char at pos {}", pos);
+            bail!("unexpected char at pos {pos}");
         }
         Ok(())
     };
@@ -221,14 +216,14 @@ fn parse_rfc3339_do(input_str: &str) -> Result<i64, Error> {
     let digit = |pos: usize| -> Result<i32, Error> {
         let digit = input[pos] as i32;
         if digit < 48 || digit > 57 {
-            bail!("unexpected char at pos {}", pos);
+            bail!("unexpected char at pos {pos}");
         }
         Ok(digit - 48)
     };
 
     fn check_max(i: i32, max: i32) -> Result<i32, Error> {
         if i > max {
-            bail!("value too large ({} > {})", i, max);
+            bail!("value too large ({i} > {max})");
         }
         Ok(i)
     }
