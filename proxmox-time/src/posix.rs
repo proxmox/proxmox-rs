@@ -140,6 +140,93 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
     Ok(str_slice.to_owned())
 }
 
+//  The `libc` crate does not yet contain bindings for `strftime_l`
+#[link(name = "c")]
+extern "C" {
+    #[link_name = "strftime_l"]
+    fn libc_strftime_l(
+        s: *mut libc::c_char,
+        max: libc::size_t,
+        format: *const libc::c_char,
+        time: *const libc::tm,
+        locale: libc::locale_t,
+    ) -> libc::size_t;
+}
+
+/// Safe bindings to libc's `strftime_l`
+///
+/// The compared to `strftime`, `strftime_l` allows the caller to provide a
+/// locale object.
+pub fn strftime_l(format: &str, t: &libc::tm, locale: &Locale) -> Result<String, Error> {
+    let format = CString::new(format).map_err(|err| format_err!("{err}"))?;
+    let mut buf = vec![0u8; 8192];
+
+    let res = unsafe {
+        libc_strftime_l(
+            buf.as_mut_ptr() as *mut libc::c_char,
+            buf.len() as libc::size_t,
+            format.as_ptr(),
+            t as *const libc::tm,
+            locale.locale,
+        )
+    };
+    if res == !0 {
+        // -1,, it's unsigned
+        // man strftime: POSIX.1-2001  does  not  specify  any  errno  settings   for strftime()
+        bail!("strftime failed");
+    }
+
+    // `res` is a `libc::size_t`, which on a different target architecture might not be directly
+    // assignable to a `usize`. Thus, we actually want a cast here.
+    #[allow(clippy::unnecessary_cast)]
+    let len = res as usize;
+
+    if len == 0 {
+        bail!("strftime: result len is 0 (string too large)");
+    };
+
+    let c_str = CStr::from_bytes_with_nul(&buf[..len + 1]).map_err(|err| format_err!("{err}"))?;
+    let str_slice: &str = c_str.to_str()?;
+    Ok(str_slice.to_owned())
+}
+
+/// A safe wrapper for `libc::locale_t`.
+///
+/// The enclosed locale object will be automatically freed by `Drop::drop`
+pub struct Locale {
+    locale: libc::locale_t,
+}
+
+impl Locale {
+    /// Portable, minimal locale environment
+    const C: &'static str = "C";
+
+    /// Create a new locale object.
+    /// `category_mask` is expected to be a bitmask based on the
+    /// LC_*_MASK constants from libc. The locale will be set to `locale`
+    /// for every entry in the bitmask which is set.
+    pub fn new(category_mask: i32, locale: &str) -> Result<Self, Error> {
+        let format = CString::new(locale).map_err(|err| format_err!("{err}"))?;
+
+        let locale =
+            unsafe { libc::newlocale(category_mask, format.as_ptr(), std::ptr::null_mut()) };
+
+        if locale.is_null() {
+            return Err(std::io::Error::last_os_error().into());
+        }
+
+        Ok(Self { locale })
+    }
+}
+
+impl Drop for Locale {
+    fn drop(&mut self) {
+        unsafe {
+            libc::freelocale(self.locale);
+        }
+    }
+}
+
 /// Format epoch as local time
 pub fn strftime_local(format: &str, epoch: i64) -> Result<String, Error> {
     let localtime = localtime(epoch)?;
@@ -390,4 +477,16 @@ fn test_timezones() {
 
     let res = epoch_to_rfc3339_utc(parsed).expect("converting to RFC failed");
     assert_eq!(expected_utc, res);
+}
+
+#[test]
+fn test_strftime_l() {
+    let epoch = 1609263000;
+
+    let locale = Locale::new(libc::LC_ALL, Locale::C).expect("could not create locale");
+    let time = gmtime(epoch).expect("gmtime failed");
+
+    let formatted = strftime_l("%a, %d %b %Y %T %z", &time, &locale).expect("strftime_l failed");
+
+    assert_eq!(formatted, "Tue, 29 Dec 2020 17:30:00 +0000");
 }
