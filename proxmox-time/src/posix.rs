@@ -108,25 +108,13 @@ pub fn epoch_f64() -> f64 {
     }
 }
 
-//  rust libc bindings do not include strftime
-#[link(name = "c")]
-extern "C" {
-    #[link_name = "strftime"]
-    fn libc_strftime(
-        s: *mut libc::c_char,
-        max: libc::size_t,
-        format: *const libc::c_char,
-        time: *const libc::tm,
-    ) -> libc::size_t;
-}
-
 /// Safe bindings to libc strftime
 pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
     let format = CString::new(format).map_err(|err| format_err!("{}", err))?;
     let mut buf = vec![0u8; 8192];
 
     let res = unsafe {
-        libc_strftime(
+        libc::strftime(
             buf.as_mut_ptr() as *mut libc::c_char,
             buf.len() as libc::size_t,
             format.as_ptr(),
