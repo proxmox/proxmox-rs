@@ -371,6 +371,15 @@ fn parse_rfc3339_do(input_str: &str) -> Result<i64, Error> {
     Ok(epoch)
 }
 
+/// Convert Unix epoch into RFC2822 local time with TZ
+pub fn epoch_to_rfc2822(epoch: i64) -> Result<String, Error> {
+    let localtime = localtime(epoch)?;
+    let locale = Locale::new(libc::LC_ALL, Locale::C)?;
+    let rfc2822_date = strftime_l("%a, %d %b %Y %T %z", &localtime, &locale)?;
+
+    Ok(rfc2822_date)
+}
+
 #[test]
 fn test_leap_seconds() {
     let convert_reconvert = |epoch| {
@@ -489,4 +498,12 @@ fn test_strftime_l() {
     let formatted = strftime_l("%a, %d %b %Y %T %z", &time, &locale).expect("strftime_l failed");
 
     assert_eq!(formatted, "Tue, 29 Dec 2020 17:30:00 +0000");
+}
+
+#[test]
+fn test_epoch_to_rfc2822() {
+    let epoch = 1609263000;
+    // Output is TZ-dependent, so only verify that it did not fail.
+    // Internally, it uses strftime_l which we test already.
+    assert!(epoch_to_rfc2822(epoch).is_ok());
 }
