@@ -63,8 +63,7 @@ pub fn sendmail(
     }
     let _ = writeln!(body, "From: {} <{}>", author, mailfrom);
     let _ = writeln!(body, "To: {}", &recipients);
-    let localtime = proxmox_time::localtime(now)?;
-    let rfc2822_date = proxmox_time::strftime("%a, %d %b %Y %T %z", &localtime)?;
+    let rfc2822_date = proxmox_time::epoch_to_rfc2822(now)?;
     let _ = writeln!(body, "Date: {}", rfc2822_date);
     body.push_str("Auto-Submitted: auto-generated;\n");
 
