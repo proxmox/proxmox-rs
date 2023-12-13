@@ -233,6 +233,7 @@ impl Notification {
 
         let mut additional_fields = HashMap::new();
         additional_fields.insert("hostname".into(), proxmox_sys::nodename().into());
+        additional_fields.insert("type".into(), "system-mail".into());
 
         Ok(Self {
             // Unfortunately we cannot reasonably infer the severity from the
