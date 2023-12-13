@@ -231,6 +231,9 @@ impl Notification {
         let title = message.subject().unwrap_or_default().into();
         let body = message.body_text(0).unwrap_or_default().into();
 
+        let mut additional_fields = HashMap::new();
+        additional_fields.insert("hostname".into(), proxmox_sys::nodename().into());
+
         Ok(Self {
             // Unfortunately we cannot reasonably infer the severity from the
             // mail contents, so just set it to the highest for now so that
@@ -243,7 +246,7 @@ impl Notification {
             },
             metadata: Metadata {
                 severity: Severity::Unknown,
-                additional_fields: Default::default(),
+                additional_fields,
                 timestamp: proxmox_time::epoch_i64(),
             },
         })
@@ -278,14 +281,21 @@ impl Config {
                     if let Some(obj) = value.as_object_mut() {
                         obj.insert("origin".to_string(), Value::String("builtin".into()));
                     } else {
-                        log::error!("section config entry is not an object. This should not happen");
+                        log::error!(
+                            "section config entry is not an object. This should not happen"
+                        );
                     }
                 } else {
                     // Entry is built-in, but it has been modified by the user.
                     if let Some(obj) = value.as_object_mut() {
-                        obj.insert("origin".to_string(), Value::String("modified-builtin".into()));
+                        obj.insert(
+                            "origin".to_string(),
+                            Value::String("modified-builtin".into()),
+                        );
                     } else {
-                        log::error!("section config entry is not an object. This should not happen");
+                        log::error!(
+                            "section config entry is not an object. This should not happen"
+                        );
                     }
                 }
             } else {
