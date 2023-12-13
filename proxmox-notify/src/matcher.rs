@@ -160,7 +160,7 @@ trait MatchDirective {
 pub enum FieldMatcher {
     Exact {
         field: String,
-        matched_value: String,
+        matched_values: Vec<String>,
     },
     Regex {
         field: String,
@@ -176,12 +176,12 @@ impl MatchDirective for FieldMatcher {
         Ok(match self {
             FieldMatcher::Exact {
                 field,
-                matched_value,
+                matched_values,
             } => {
                 let value = notification.metadata.additional_fields.get(field);
 
                 if let Some(value) = value {
-                    matched_value == value
+                    matched_values.contains(value)
                 } else {
                     // Metadata field does not exist, so we do not match
                     false
@@ -212,9 +212,10 @@ impl fmt::Display for FieldMatcher {
         match self {
             FieldMatcher::Exact {
                 field,
-                matched_value,
+                matched_values,
             } => {
-                write!(f, "exact:{field}={matched_value}")
+                let values = matched_values.join(",");
+                write!(f, "exact:{field}={values}")
             }
             FieldMatcher::Regex {
                 field,
@@ -256,10 +257,17 @@ impl FromStr for FieldMatcher {
                 None => Err(Error::FilterFailed(format!(
                     "invalid match-field statement: {s}"
                 ))),
-                Some((field, expected_value)) => Ok(Self::Exact {
-                    field: field.into(),
-                    matched_value: expected_value.into(),
-                }),
+                Some((field, expected_values)) => {
+                    let values: Vec<String> = expected_values
+                        .split(',')
+                        .map(str::trim)
+                        .map(String::from)
+                        .collect();
+                    Ok(Self::Exact {
+                        field: field.into(),
+                        matched_values: values,
+                    })
+                }
             }
         } else {
             Err(Error::FilterFailed(format!(
@@ -458,6 +466,23 @@ mod tests {
         assert!(matcher.matches(&notification).unwrap());
 
         let matcher: FieldMatcher = "regex:notthere=b.*".parse().unwrap();
+        assert!(!matcher.matches(&notification).unwrap());
+
+        let matcher: FieldMatcher = "exact:foo=bar,test".parse().unwrap();
+        assert!(matcher.matches(&notification).unwrap());
+
+        let mut fields = HashMap::new();
+        fields.insert("foo".into(), "test".into());
+
+        let notification =
+            Notification::new_templated(Severity::Notice, "test", "test", Value::Null, fields);
+        assert!(matcher.matches(&notification).unwrap());
+
+        let mut fields = HashMap::new();
+        fields.insert("foo".into(), "notthere".into());
+
+        let notification =
+            Notification::new_templated(Severity::Notice, "test", "test", Value::Null, fields);
         assert!(!matcher.matches(&notification).unwrap());
 
         assert!("regex:'3=b.*".parse::<FieldMatcher>().is_err());
