@@ -414,7 +414,7 @@ impl HttpApiClient for Client {
             let auth = self.login_auth()?;
             let uri = self.build_uri(path_and_query)?;
             let client = Arc::clone(&self.client);
-            Self::authenticated_request(client, auth, http::Method::PUT, uri, None).await
+            Self::authenticated_request(client, auth, http::Method::POST, uri, None).await
         })
     }
 
