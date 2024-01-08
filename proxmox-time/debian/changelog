@@ -1,3 +1,11 @@
+rust-proxmox-time (1.1.6-1) stable; urgency=medium
+
+  * add strftime_l bindings
+
+  * add epoch_to_rfc2822
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 08 Jan 2024 12:17:05 +0100
+
 rust-proxmox-time (1.1.5-1) stable; urgency=medium
 
   * re-add epoch_to_rfc3339_utc on wasm target
