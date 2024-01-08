@@ -1,3 +1,10 @@
+rust-proxmox-sys (0.5.3-1) bookworm; urgency=medium
+
+  * use epoch_to_rfc2822 from proxmox_time, fixes an issue with times in
+    emails not being formatted correctly
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 08 Jan 2024 12:48:11 +0100
+
 rust-proxmox-sys (0.5.2-1) bookworm; urgency=medium
 
   * add helper to get bootmode and secureboot status
