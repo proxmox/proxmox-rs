@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use lettre::message::header::{HeaderName, HeaderValue};
 use lettre::message::{Mailbox, MultiPart, SinglePart};
 use lettre::transport::smtp::client::{Tls, TlsParameters};
 use lettre::{message::header::ContentType, Message, SmtpTransport, Transport};
@@ -199,7 +200,7 @@ impl Endpoint for SmtpEndpoint {
             email_builder = email_builder.to(parse_address(&recipient)?);
         }
 
-        let email = match &notification.content {
+        let mut email = match &notification.content {
             Content::Template {
                 title_template,
                 body_template,
@@ -232,7 +233,7 @@ impl Endpoint for SmtpEndpoint {
             }
             #[cfg(feature = "mail-forwarder")]
             Content::ForwardedMail { ref raw, title, .. } => {
-                use lettre::message::header::{ContentTransferEncoding, HeaderName, HeaderValue};
+                use lettre::message::header::ContentTransferEncoding;
                 use lettre::message::Body;
 
                 let parsed_message = mail_parser::Message::parse(raw)
@@ -324,6 +325,15 @@ impl Endpoint for SmtpEndpoint {
                 message
             }
         };
+
+        // `Auto-Submitted` is defined in RFC 5436 and describes how
+        // an automatic response (f.e. ooo replies, etc.) should behave on the
+        // emails. When using `Auto-Submitted: auto-generated` (or any value
+        // other than `none`) automatic replies won't be triggered.
+        email.headers_mut().insert_raw(HeaderValue::new(
+            HeaderName::new_from_ascii_str("Auto-Submitted"),
+            "auto-generated;".into(),
+        ));
 
         transport
             .send(&email)
