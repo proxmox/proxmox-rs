@@ -7,6 +7,8 @@ pub mod common;
 pub mod pbs;
 #[cfg(feature = "pve-context")]
 pub mod pve;
+#[cfg(test)]
+mod test;
 
 /// Product-specific context
 pub trait Context: Send + Sync + Debug {
@@ -22,12 +24,10 @@ pub trait Context: Send + Sync + Debug {
     fn default_config(&self) -> &'static str;
 }
 
-#[cfg(not(feature = "pve-context"))]
+#[cfg(not(test))]
 static CONTEXT: Mutex<Option<&'static dyn Context>> = Mutex::new(None);
-// The test unfortunately require context...
-// TODO: Check if we can make this nicer...
-#[cfg(feature = "pve-context")]
-static CONTEXT: Mutex<Option<&'static dyn Context>> = Mutex::new(Some(&pve::PVE_CONTEXT));
+#[cfg(test)]
+static CONTEXT: Mutex<Option<&'static dyn Context>> = Mutex::new(Some(&test::TestContext));
 
 /// Set the product-specific context
 pub fn set_context(context: &'static dyn Context) {
