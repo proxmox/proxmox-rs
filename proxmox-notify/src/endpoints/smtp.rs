@@ -1,8 +1,9 @@
+use std::time::Duration;
+
 use lettre::message::{Mailbox, MultiPart, SinglePart};
 use lettre::transport::smtp::client::{Tls, TlsParameters};
 use lettre::{message::header::ContentType, Message, SmtpTransport, Transport};
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{api, Updater};
@@ -231,17 +232,96 @@ impl Endpoint for SmtpEndpoint {
             }
             #[cfg(feature = "mail-forwarder")]
             Content::ForwardedMail { ref raw, title, .. } => {
-                email_builder = email_builder.subject(title);
+                use lettre::message::header::{ContentTransferEncoding, HeaderName, HeaderValue};
+                use lettre::message::Body;
 
-                // Forwarded messages are embedded inline as 'message/rfc822'
-                // this let's us avoid rewriting any headers (e.g. From)
-                email_builder
-                    .singlepart(
-                        SinglePart::builder()
-                            .header(ContentType::parse("message/rfc822").unwrap())
-                            .body(raw.to_owned()),
-                    )
-                    .map_err(|err| Error::NotifyFailed(self.name().into(), Box::new(err)))?
+                let parsed_message = mail_parser::Message::parse(raw)
+                    .ok_or_else(|| Error::Generic("could not parse forwarded email".to_string()))?;
+
+                let root_part = parsed_message
+                    .part(0)
+                    .ok_or_else(|| Error::Generic("root message part not present".to_string()))?;
+
+                let raw_body = parsed_message
+                    .raw_message()
+                    .get(root_part.offset_body..root_part.offset_end)
+                    .ok_or_else(|| Error::Generic("could not get raw body content".to_string()))?;
+
+                // We assume that the original message content is already properly
+                // encoded, thus we add the original message body in 'Binary' encoding.
+                // This prohibits lettre from trying to re-encode our raw body data.
+                // lettre will automatically set the `Content-Transfer-Encoding: binary` header,
+                // which we need to remove. The actual transfer encoding is later
+                // copied from the original message headers.
+                let body =
+                    Body::new_with_encoding(raw_body.to_vec(), ContentTransferEncoding::Binary)
+                        .map_err(|_| Error::Generic("could not create body".into()))?;
+                let mut message = email_builder
+                    .subject(title)
+                    .body(body)
+                    .map_err(|err| Error::NotifyFailed(self.name().into(), Box::new(err)))?;
+                message
+                    .headers_mut()
+                    .remove_raw("Content-Transfer-Encoding");
+
+                // Copy over all headers that are relevant to display the original body correctly.
+                // Unfortunately this is a bit cumbersome, as we use separate crates for mail parsing (mail-parser)
+                // and creating/sending mails (lettre).
+                // Note: Other MIME-Headers, such as Content-{ID,Description,Disposition} are only used
+                // for body-parts in multipart messages, so we can ignore them for the messages headers.
+                // Since we send the original raw body, the part-headers will be included any way.
+                for header in parsed_message.headers() {
+                    let header_name = header.name.as_str();
+                    // Email headers are case-insensitive, so convert to lowercase...
+                    let value = match header_name.to_lowercase().as_str() {
+                        "content-type" => {
+                            if let mail_parser::HeaderValue::ContentType(ct) = header.value() {
+                                // mail_parser does not give us access to the full decoded and unfolded
+                                // header value, so we unfortunately need to reassemble it ourselves.
+                                // Meh.
+                                let mut value = ct.ctype().to_string();
+                                if let Some(subtype) = ct.subtype() {
+                                    value.push('/');
+                                    value.push_str(subtype);
+                                }
+                                if let Some(attributes) = ct.attributes() {
+                                    use std::fmt::Write;
+
+                                    for attribute in attributes {
+                                        let _ = write!(
+                                            &mut value,
+                                            "; {}=\"{}\"",
+                                            attribute.0, attribute.1
+                                        );
+                                    }
+                                }
+                                Some(value)
+                            } else {
+                                None
+                            }
+                        }
+                        "content-transfer-encoding" | "mime-version" => {
+                            if let mail_parser::HeaderValue::Text(text) = header.value() {
+                                Some(text.to_string())
+                            } else {
+                                None
+                            }
+                        }
+                        _ => None,
+                    };
+
+                    if let Some(value) = value {
+                        match HeaderName::new_from_ascii(header_name.into()) {
+                            Ok(name) => {
+                                let header = HeaderValue::new(name, value);
+                                message.headers_mut().insert_raw(header);
+                            }
+                            Err(e) => log::error!("could not set header: {e}"),
+                        }
+                    }
+                }
+
+                message
             }
         };
 
