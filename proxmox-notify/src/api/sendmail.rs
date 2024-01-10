@@ -144,7 +144,7 @@ pub fn update_endpoint(
 pub fn delete_endpoint(config: &mut Config, name: &str) -> Result<(), HttpError> {
     // Check if the endpoint exists
     let _ = get_endpoint(config, name)?;
-    super::ensure_unused(config, name)?;
+    super::ensure_safe_to_delete(config, name)?;
 
     config.config.sections.remove(name);
 

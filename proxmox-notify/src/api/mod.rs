@@ -1,9 +1,10 @@
-use serde::Serialize;
 use std::collections::HashSet;
+
+use serde::{Deserialize, Serialize};
 
 use proxmox_http_error::HttpError;
 
-use crate::Config;
+use crate::{Config, Origin};
 
 pub mod common;
 #[cfg(feature = "gotify")]
@@ -111,7 +112,20 @@ fn get_referrers(config: &Config, entity: &str) -> Result<HashSet<String>, HttpE
     Ok(referrers)
 }
 
-fn ensure_unused(config: &Config, entity: &str) -> Result<(), HttpError> {
+fn ensure_safe_to_delete(config: &Config, entity: &str) -> Result<(), HttpError> {
+    if let Some(entity_config) = config.config.sections.get(entity) {
+        if let Ok(origin) = Origin::deserialize(&entity_config.1["origin"]) {
+            // Built-ins are never actually removed, only reset to their default
+            // It is thus safe to do the reset if another entity depends
+            // on it
+            if origin == Origin::Builtin || origin == Origin::ModifiedBuiltin {
+                return Ok(());
+            }
+        }
+    } else {
+        http_bail!(NOT_FOUND, "entity '{entity}' does not exist");
+    }
+
     let referrers = get_referrers(config, entity)?;
 
     if !referrers.is_empty() {
@@ -191,31 +205,31 @@ mod test_helpers {
     }
 }
 
-#[cfg(all(test, gotify, sendmail))]
+#[cfg(all(test, feature = "gotify", feature = "sendmail"))]
 mod tests {
     use super::*;
     use crate::endpoints::gotify::{GotifyConfig, GotifyPrivateConfig};
     use crate::endpoints::sendmail::SendmailConfig;
-    use crate::filter::FilterConfig;
-    use crate::group::GroupConfig;
+    use crate::matcher::MatcherConfig;
 
     fn prepare_config() -> Result<Config, HttpError> {
-        let mut config = super::test_helpers::empty_config();
-
-        matcher::add_matcher(
-            &mut config,
-            &MatcherConfig {
-                name: "matcher".to_string(),
-                target: Some(vec!["sendmail".to_string(), "gotify".to_string()])
-                    ..Default::default(),
-            },
-        )?;
+        let mut config = test_helpers::empty_config();
 
         sendmail::add_endpoint(
             &mut config,
             &SendmailConfig {
                 name: "sendmail".to_string(),
                 mailto: Some(vec!["foo@example.com".to_string()]),
+                ..Default::default()
+            },
+        )?;
+
+        sendmail::add_endpoint(
+            &mut config,
+            &SendmailConfig {
+                name: "builtin".to_string(),
+                mailto: Some(vec!["foo@example.com".to_string()]),
+                origin: Some(Origin::Builtin),
                 ..Default::default()
             },
         )?;
@@ -233,6 +247,19 @@ mod tests {
             },
         )?;
 
+        matcher::add_matcher(
+            &mut config,
+            &MatcherConfig {
+                name: "matcher".to_string(),
+                target: Some(vec![
+                    "sendmail".to_string(),
+                    "gotify".to_string(),
+                    "builtin".to_string(),
+                ]),
+                ..Default::default()
+            },
+        )?;
+
         Ok(config)
     }
 
@@ -245,6 +272,7 @@ mod tests {
             HashSet::from([
                 "matcher".to_string(),
                 "sendmail".to_string(),
+                "builtin".to_string(),
                 "gotify".to_string()
             ])
         );
@@ -268,12 +296,17 @@ mod tests {
     }
 
     #[test]
-    fn test_ensure_unused() {
+    fn test_ensure_safe_to_delete() {
         let config = prepare_config().unwrap();
 
-        assert!(ensure_unused(&config, "gotify").is_err());
-        assert!(ensure_unused(&config, "sendmail").is_err());
-        assert!(ensure_unused(&config, "matcher").is_ok());
+        assert!(ensure_safe_to_delete(&config, "gotify").is_err());
+        assert!(ensure_safe_to_delete(&config, "sendmail").is_err());
+        assert!(ensure_safe_to_delete(&config, "matcher").is_ok());
+
+        // built-ins are always safe to delete, since there is no way to actually
+        // delete them... they will only be reset to their default settings and
+        // will thus continue to exist
+        assert!(ensure_safe_to_delete(&config, "builtin").is_ok());
     }
 
     #[test]
@@ -281,7 +314,7 @@ mod tests {
         let config = prepare_config().unwrap();
 
         assert!(ensure_unique(&config, "sendmail").is_err());
-        assert!(ensure_unique(&config, "group").is_err());
+        assert!(ensure_unique(&config, "matcher").is_err());
         assert!(ensure_unique(&config, "new").is_ok());
     }
 
@@ -289,6 +322,6 @@ mod tests {
     fn test_ensure_endpoints_exist() {
         let config = prepare_config().unwrap();
 
-        assert!(ensure_endpoints_exist(&config, &vec!["sendmail", "gotify"]).is_ok());
+        assert!(ensure_endpoints_exist(&config, &["sendmail", "gotify", "builtin"]).is_ok());
     }
 }
