@@ -181,12 +181,7 @@ impl Connection {
 
         // only search base to make sure the base_dn exists while avoiding most common size limits
         let (_, _) = ldap
-            .search(
-                &self.config.base_dn,
-                Scope::Base,
-                "(objectClass=*)",
-                vec!["*"],
-            )
+            .search(&self.config.base_dn, Scope::Base, "(objectClass=*)", &["*"])
             .await?
             .success()
             .context("Could not search LDAP realm, base_dn could be incorrect")?;
@@ -319,7 +314,7 @@ impl Connection {
         let query = format!("(&({}={}))", self.config.user_attr, username);
 
         let (entries, _res) = ldap
-            .search(&self.config.base_dn, Scope::Subtree, &query, vec!["dn"])
+            .search(&self.config.base_dn, Scope::Subtree, &query, &["dn"])
             .await?
             .success()?;
 
