@@ -193,6 +193,28 @@ impl Connection {
         Ok(())
     }
 
+    /// Retrieves an attribute from the root DSE according to RFC 4512, Section 5.1
+    /// https://www.rfc-editor.org/rfc/rfc4512#section-5.1
+    pub async fn retrieve_root_dse_attr(&self, attr: &str) -> Result<Vec<String>, Error> {
+        let mut ldap = self.create_connection().await?;
+
+        let (entries, _res) = ldap
+            .search("", Scope::Base, "(objectClass=*)", &[attr])
+            .await?
+            .success()?;
+
+        if entries.len() > 1 {
+            bail!("found multiple root DSEs with attribute '{attr}'");
+        }
+
+        entries
+            .into_iter()
+            .next()
+            .map(SearchEntry::construct)
+            .and_then(|e| e.attrs.get(attr).cloned())
+            .ok_or_else(|| format_err!("failed to retrieve root DSE attribute '{attr}'"))
+    }
+
     /// Retrive port from LDAP configuration, otherwise use the correct default
     fn port_from_config(&self) -> u16 {
         self.config.port.unwrap_or_else(|| {

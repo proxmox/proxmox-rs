@@ -191,3 +191,19 @@ fn test_check_connection() -> Result<(), Error> {
 
     Ok(())
 }
+
+#[test]
+#[ignore]
+fn test_retrieve_root_dse_attr() -> Result<(), Error> {
+    let _glauth = GlauthServer::new("tests/assets/glauth.cfg")?;
+
+    let connection = Connection::new(default_config());
+
+    let values = proxmox_async::runtime::block_on(
+        connection.retrieve_root_dse_attr("defaultNamingContext"),
+    )?;
+
+    assert_eq!(values, vec!["dc=example,dc=com"]);
+
+    Ok(())
+}
