@@ -301,6 +301,18 @@ impl PartialEq<Realm> for &RealmRef {
     }
 }
 
+impl fmt::Display for Realm {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
+
+impl fmt::Display for RealmRef {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
+
 #[api(
     type: String,
     format: &PROXMOX_TOKEN_NAME_FORMAT,
