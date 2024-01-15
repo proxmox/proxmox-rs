@@ -21,8 +21,8 @@ impl Client {
     fn agent(&self) -> Result<ureq::Agent, Error> {
         let mut builder = ureq::AgentBuilder::new();
 
-        builder = builder.user_agent(self.options.user_agent.as_deref().unwrap_or(&format!(
-            "proxmox-sync-http-client/{}",
+        builder = builder.user_agent(self.options.user_agent.as_deref().unwrap_or(concat!(
+            "proxmox-sync-http-client/",
             env!("CARGO_PKG_VERSION")
         )));
 
