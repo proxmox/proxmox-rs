@@ -6,3 +6,5 @@ pub use types::*;
 
 #[cfg(feature = "client-util")]
 pub mod client;
+
+mod tags;
