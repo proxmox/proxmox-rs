@@ -40,7 +40,7 @@ pub fn verify_volume_id(s: &str) -> Result<(), Error> {
 pub fn verify_pve_phys_bits(s: &str) -> Result<(), Error> {
     s.parse::<u32>()
         .ok()
-        .and_then(|n| (n >= 8 && n <= 64).then_some(()))
+        .and_then(|n| (8..=64).contains(&n).then_some(()))
         .ok_or_else(|| format_err!("invalid number of bits"))
 }
 
@@ -158,10 +158,8 @@ pub fn verify_lxc_mp_string(s: &str) -> Result<(), Error> {
 
 pub fn verify_ip_with_ll_iface(s: &str) -> Result<(), Error> {
     if let Some(percent) = s.find('%') {
-        if FE80_RE.is_match(s) {
-            if IFACE_RE.is_match(&s[(percent + 1)..]) {
-                return verify_ipv6(&s[..percent]);
-            }
+        if FE80_RE.is_match(s) && IFACE_RE.is_match(&s[(percent + 1)..]) {
+            return verify_ipv6(&s[..percent]);
         }
     }
     verify_ip(s)

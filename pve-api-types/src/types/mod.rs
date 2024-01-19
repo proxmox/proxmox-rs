@@ -34,14 +34,13 @@ pub mod stringlist {
         let mut ser =
             proxmox_schema::ser::PropertyStringSerializer::new(String::new(), array_schema)
                 .serialize_seq(Some(data.len()))
-                .map_err(|err| S::Error::custom(err))?;
+                .map_err(S::Error::custom)?;
 
         for element in data {
-            ser.serialize_element(element)
-                .map_err(|err| S::Error::custom(err))?;
+            ser.serialize_element(element).map_err(S::Error::custom)?;
         }
 
-        let out = ser.end().map_err(|err| S::Error::custom(err))?;
+        let out = ser.end().map_err(S::Error::custom)?;
         serializer.serialize_str(&out)
     }
 
@@ -61,7 +60,7 @@ pub mod stringlist {
             string,
             array_schema,
         ))
-        .map_err(|err| D::Error::custom(err))
+        .map_err(D::Error::custom)
     }
 }
 
