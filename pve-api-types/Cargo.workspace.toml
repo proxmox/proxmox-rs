@@ -23,5 +23,5 @@ serde_plain = "1"
 proxmox-login = "0.1"
 proxmox-schema = "2"
 
-proxmox-client = "0.2.3"
+proxmox-client = "0.3"
 proxmox-http = "0.9"
