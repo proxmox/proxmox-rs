@@ -76,10 +76,7 @@ pub(crate) fn parse_argument_list<T: AsRef<str>>(
                     let mut can_default = false;
                     if let Some((_opt, Schema::Boolean(boolean_schema))) = schema.lookup(&name) {
                         want_bool = true;
-                        match boolean_schema.default {
-                            Some(false) | None => can_default = true,
-                            Some(true) => (),
-                        }
+                        can_default = matches!(boolean_schema.default, Some(false) | None);
                     }
 
                     let mut next_is_argument = false;
