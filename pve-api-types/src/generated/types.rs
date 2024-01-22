@@ -2469,6 +2469,40 @@ pub struct LxcEntry {
 
 #[api(
     properties: {
+        apitoken: {
+            type: String,
+        },
+        fingerprint: {
+            optional: true,
+            type: String,
+        },
+        host: {
+            type: String,
+        },
+        port: {
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ProxmoxRemote {
+    pub apitoken: String,
+
+    /// Certificate SHA 256 fingerprint.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fingerprint: Option<String>,
+
+    pub host: String,
+
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port: Option<i64>,
+}
+
+#[api(
+    properties: {
         legacy: {
             default: "cdn",
             optional: true,
@@ -6552,6 +6586,85 @@ pub struct QemuConfigVirtio {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub werror: Option<PveQmIdeWerror>,
+}
+
+#[api(
+    properties: {
+        bwlimit: {
+            default: migrate limit from datacenter or storage config,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        delete: {
+            default: false,
+            optional: true,
+        },
+        online: {
+            default: false,
+            optional: true,
+        },
+        "target-bridge": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_bridge_pair),
+            type: String,
+        },
+        "target-endpoint": {
+            format: &ApiStringFormat::PropertyString(&ProxmoxRemote::API_SCHEMA),
+            type: String,
+        },
+        "target-storage": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_storage_pair),
+            type: String,
+        },
+        "target-vmid": {
+            maximum: 999999999,
+            minimum: 100,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct RemoteMigrateQemu {
+    /// Override I/O bandwidth limit (in KiB/s).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bwlimit: Option<u64>,
+
+    /// Delete the original VM and related data after successful migration. By
+    /// default the original VM is kept on the source cluster in a stopped
+    /// state.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<bool>,
+
+    /// Use online/live migration if VM is running. Ignored if VM is stopped.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub online: Option<bool>,
+
+    /// Mapping from source to target bridges. Providing only a single bridge ID
+    /// maps all source bridges to that bridge. Providing the special value '1'
+    /// will map each source bridge to itself.
+    #[serde(rename = "target-bridge")]
+    pub target_bridge: String,
+
+    /// Remote target endpoint
+    #[serde(rename = "target-endpoint")]
+    pub target_endpoint: String,
+
+    /// Mapping from source to target storages. Providing only a single storage
+    /// ID maps all source storages to that storage. Providing the special value
+    /// '1' will map each source storage to itself.
+    #[serde(rename = "target-storage")]
+    pub target_storage: String,
+
+    /// The (unique) ID of the VM.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-vmid")]
+    pub target_vmid: Option<u32>,
 }
 
 #[api(

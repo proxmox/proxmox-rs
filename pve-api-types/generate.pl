@@ -77,6 +77,7 @@ Schema2Rust::register_format('pve-ct-timezone' => { regex => '^.*/.*$' });
 Schema2Rust::register_format('pve-lxc-dev-string' => { code => 'verifiers::verify_pve_lxc_dev_string' });
 ##
 Schema2Rust::register_format('storage-pair' => { code => 'verifiers::verify_storage_pair' });
+Schema2Rust::register_format('bridge-pair' => { code => 'verifiers::verify_bridge_pair' });
 
 Schema2Rust::register_format('pve-task-status-type' => { regex => '^(?i:ok|error|warning|unknown)$' });
 
@@ -190,6 +191,7 @@ api(POST => '/nodes/{node}/qemu/{vmid}/status/shutdown', 'shutdown_qemu_async', 
 Schema2Rust::derive('StartQemu' => 'Default');
 Schema2Rust::derive('StopQemu' => 'Default');
 Schema2Rust::derive('ShutdownQemu' => 'Default');
+api(POST => '/nodes/{node}/qemu/{vmid}/remote_migrate', 'remote_migrate_qemu',  'output-type' => 'PveUpid', 'param-name' => 'RemoteMigrateQemu');
 
 api(GET => '/nodes/{node}/lxc',                         'list_lxc',            'param-name' => 'FixmeListLxc',      'return-name' => 'LxcEntry');
 api(GET => '/nodes/{node}/lxc/{vmid}/config',           'lxc_get_config',      'param-name' => 'FixmeLxcGetConfig', 'return-name' => 'LxcConfig');

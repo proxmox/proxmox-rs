@@ -290,7 +290,6 @@
 /// - /nodes/{node}/qemu/{vmid}/mtunnel
 /// - /nodes/{node}/qemu/{vmid}/mtunnelwebsocket
 /// - /nodes/{node}/qemu/{vmid}/pending
-/// - /nodes/{node}/qemu/{vmid}/remote_migrate
 /// - /nodes/{node}/qemu/{vmid}/resize
 /// - /nodes/{node}/qemu/{vmid}/rrd
 /// - /nodes/{node}/qemu/{vmid}/rrddata
@@ -492,6 +491,18 @@ impl<T: HttpApiClient> PveClient<T> {
         add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
         let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config{query}");
         Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// Migrate virtual machine to a remote cluster. Creates a new migration
+    /// task. EXPERIMENTAL feature!
+    pub async fn remote_migrate_qemu(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: RemoteMigrateQemu,
+    ) -> Result<PveUpid, Error> {
+        let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/remote_migrate");
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Shutdown the container. This will trigger a clean shutdown of the
