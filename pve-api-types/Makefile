@@ -8,6 +8,12 @@ $(OUTPUT_DIR)/types.rs: generate.pl $(GENERATOR_SOURCES)
 	mkdir $(OUTPUT_DIR)
 	perl ./generate.pl $(OUTPUT_DIR)
 
+.PHONY: refresh
+refresh:
+	rm -f $(OUTPUT_DIR)/code.rs
+	rm -f $(OUTPUT_DIR)/types.rs
+	$(MAKE) $(OUTPUT_DIR)/code.rs
+
 .PHONY: clean
 clean:
 	@true
