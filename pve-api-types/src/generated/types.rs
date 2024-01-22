@@ -2488,14 +2488,17 @@ pub struct LxcEntry {
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct ProxmoxRemote {
+    /// A full Proxmox API token including the secret value.
     pub apitoken: String,
 
-    /// Certificate SHA 256 fingerprint.
+    /// Remote host's certificate fingerprint, if not trusted by system store.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fingerprint: Option<String>,
 
+    /// Remote Proxmox hostname or IP
     pub host: String,
 
+    /// Port to connect to
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub port: Option<i64>,
@@ -6591,7 +6594,6 @@ pub struct QemuConfigVirtio {
 #[api(
     properties: {
         bwlimit: {
-            default: migrate limit from datacenter or storage config,
             minimum: 0,
             optional: true,
             type: Integer,
