@@ -121,12 +121,16 @@ pub fn fs_info<P: ?Sized + nix::NixPath>(path: &P) -> nix::Result<FileSystemInfo
     let res = path.with_nix_path(|cstr| unsafe { libc::statfs64(cstr.as_ptr(), &mut stat) })?;
     nix::errno::Errno::result(res)?;
 
-    let bsize = stat.f_bsize as u64;
+    let block_size = if stat.f_frsize == 0 {
+        stat.f_bsize as u64
+    } else {
+        stat.f_frsize as u64
+    };
 
     Ok(FileSystemInformation {
-        total: stat.f_blocks * bsize,
-        used: (stat.f_blocks - stat.f_bfree) * bsize,
-        available: stat.f_bavail * bsize,
+        total: stat.f_blocks * block_size,
+        used: (stat.f_blocks - stat.f_bfree) * block_size,
+        available: stat.f_bavail * block_size,
         total_inodes: stat.f_files,
         free_inodes: stat.f_ffree,
         fs_type: stat.f_type,
