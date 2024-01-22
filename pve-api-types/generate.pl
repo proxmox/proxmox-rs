@@ -74,6 +74,7 @@ Schema2Rust::register_format('pve-lxc-mp-string' => { code => 'verifiers::verify
 ## Schema2Rust::register_format('lxc-ip-with-ll-iface' => { regex => ['^(?i:', \'pdm_api_types::IPRE!()', ')$'] });
 Schema2Rust::register_format('lxc-ip-with-ll-iface' => { code => 'verifiers::verify_ip_with_ll_iface' });
 Schema2Rust::register_format('pve-ct-timezone' => { regex => '^.*/.*$' });
+Schema2Rust::register_format('pve-lxc-dev-string' => { code => 'verifiers::verify_pve_lxc_dev_string' });
 ##
 Schema2Rust::register_format('storage-pair' => { code => 'verifiers::verify_storage_pair' });
 

@@ -678,6 +678,9 @@ LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
             optional: true,
             type: String,
         },
+        dev: {
+            type: LxcConfigDevArray,
+        },
         digest: {
             type: String,
         },
@@ -828,6 +831,10 @@ pub struct LxcConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 
+    /// Device to pass through to the container
+    #[serde(flatten)]
+    pub dev: LxcConfigDevArray,
+
     /// SHA1 digest of configuration file. This can be used to prevent
     /// concurrent modifications.
     pub digest: String,
@@ -939,6 +946,272 @@ pub struct LxcConfig {
     /// modified manually.
     #[serde(flatten)]
     pub unused: QemuConfigUnusedArray,
+}
+generate_array_field! {
+    LxcConfigDevArray :
+    /// Device to pass through to the container
+    String => {
+        description: "Device to pass through to the container",
+        format: &ApiStringFormat::PropertyString(&LxcConfigDev::API_SCHEMA),
+        type: String,
+        optional: true,
+    }
+    dev0,
+    dev1,
+    dev2,
+    dev3,
+    dev4,
+    dev5,
+    dev6,
+    dev7,
+    dev8,
+    dev9,
+    dev10,
+    dev11,
+    dev12,
+    dev13,
+    dev14,
+    dev15,
+    dev16,
+    dev17,
+    dev18,
+    dev19,
+    dev20,
+    dev21,
+    dev22,
+    dev23,
+    dev24,
+    dev25,
+    dev26,
+    dev27,
+    dev28,
+    dev29,
+    dev30,
+    dev31,
+    dev32,
+    dev33,
+    dev34,
+    dev35,
+    dev36,
+    dev37,
+    dev38,
+    dev39,
+    dev40,
+    dev41,
+    dev42,
+    dev43,
+    dev44,
+    dev45,
+    dev46,
+    dev47,
+    dev48,
+    dev49,
+    dev50,
+    dev51,
+    dev52,
+    dev53,
+    dev54,
+    dev55,
+    dev56,
+    dev57,
+    dev58,
+    dev59,
+    dev60,
+    dev61,
+    dev62,
+    dev63,
+    dev64,
+    dev65,
+    dev66,
+    dev67,
+    dev68,
+    dev69,
+    dev70,
+    dev71,
+    dev72,
+    dev73,
+    dev74,
+    dev75,
+    dev76,
+    dev77,
+    dev78,
+    dev79,
+    dev80,
+    dev81,
+    dev82,
+    dev83,
+    dev84,
+    dev85,
+    dev86,
+    dev87,
+    dev88,
+    dev89,
+    dev90,
+    dev91,
+    dev92,
+    dev93,
+    dev94,
+    dev95,
+    dev96,
+    dev97,
+    dev98,
+    dev99,
+    dev100,
+    dev101,
+    dev102,
+    dev103,
+    dev104,
+    dev105,
+    dev106,
+    dev107,
+    dev108,
+    dev109,
+    dev110,
+    dev111,
+    dev112,
+    dev113,
+    dev114,
+    dev115,
+    dev116,
+    dev117,
+    dev118,
+    dev119,
+    dev120,
+    dev121,
+    dev122,
+    dev123,
+    dev124,
+    dev125,
+    dev126,
+    dev127,
+    dev128,
+    dev129,
+    dev130,
+    dev131,
+    dev132,
+    dev133,
+    dev134,
+    dev135,
+    dev136,
+    dev137,
+    dev138,
+    dev139,
+    dev140,
+    dev141,
+    dev142,
+    dev143,
+    dev144,
+    dev145,
+    dev146,
+    dev147,
+    dev148,
+    dev149,
+    dev150,
+    dev151,
+    dev152,
+    dev153,
+    dev154,
+    dev155,
+    dev156,
+    dev157,
+    dev158,
+    dev159,
+    dev160,
+    dev161,
+    dev162,
+    dev163,
+    dev164,
+    dev165,
+    dev166,
+    dev167,
+    dev168,
+    dev169,
+    dev170,
+    dev171,
+    dev172,
+    dev173,
+    dev174,
+    dev175,
+    dev176,
+    dev177,
+    dev178,
+    dev179,
+    dev180,
+    dev181,
+    dev182,
+    dev183,
+    dev184,
+    dev185,
+    dev186,
+    dev187,
+    dev188,
+    dev189,
+    dev190,
+    dev191,
+    dev192,
+    dev193,
+    dev194,
+    dev195,
+    dev196,
+    dev197,
+    dev198,
+    dev199,
+    dev200,
+    dev201,
+    dev202,
+    dev203,
+    dev204,
+    dev205,
+    dev206,
+    dev207,
+    dev208,
+    dev209,
+    dev210,
+    dev211,
+    dev212,
+    dev213,
+    dev214,
+    dev215,
+    dev216,
+    dev217,
+    dev218,
+    dev219,
+    dev220,
+    dev221,
+    dev222,
+    dev223,
+    dev224,
+    dev225,
+    dev226,
+    dev227,
+    dev228,
+    dev229,
+    dev230,
+    dev231,
+    dev232,
+    dev233,
+    dev234,
+    dev235,
+    dev236,
+    dev237,
+    dev238,
+    dev239,
+    dev240,
+    dev241,
+    dev242,
+    dev243,
+    dev244,
+    dev245,
+    dev246,
+    dev247,
+    dev248,
+    dev249,
+    dev250,
+    dev251,
+    dev252,
+    dev253,
+    dev254,
+    dev255,
 }
 generate_array_field! {
     LxcConfigMpArray :
@@ -1560,6 +1833,51 @@ pub enum LxcConfigCmode {
 }
 serde_plain::derive_display_from_serialize!(LxcConfigCmode);
 serde_plain::derive_fromstr_from_deserialize!(LxcConfigCmode);
+
+#[api(
+    properties: {
+        gid: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        mode: {
+            optional: true,
+            type: String,
+        },
+        path: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_lxc_dev_string),
+            optional: true,
+            type: String,
+        },
+        uid: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct LxcConfigDev {
+    /// Group ID to be assigned to the device node
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gid: Option<u64>,
+
+    /// Access mode to be set on the device node
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mode: Option<String>,
+
+    /// Device to pass through to the container
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+
+    /// User ID to be assigned to the device node
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uid: Option<u64>,
+}
 
 #[api(
     properties: {
@@ -3062,8 +3380,8 @@ pub struct PveVmCpuConf {
     /// List of additional CPU flags separated by ';'. Use '+FLAG' to enable,
     /// '-FLAG' to disable a flag. Custom CPU models can specify any flag
     /// supported by QEMU/KVM, VM-specific flags must be from the following set
-    /// for security reasons: pcid, invpcid, spec-ctrl, ibpb, ssbd, virt-ssbd,
-    /// amd-ssbd, amd-no-ssb, pdpe1gb, md-clear, hv-tlbflush, hv-evmcs, aes
+    /// for security reasons: pcid, spec-ctrl, ibpb, ssbd, virt-ssbd, amd-ssbd,
+    /// amd-no-ssb, pdpe1gb, md-clear, hv-tlbflush, hv-evmcs, aes
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub flags: Option<String>,
 
@@ -3457,10 +3775,9 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             type: String,
         },
         memory: {
-            default: 512,
-            minimum: 16,
+            format: &ApiStringFormat::PropertyString(&QemuConfigMemory::API_SCHEMA),
             optional: true,
-            type: Integer,
+            type: String,
         },
         migrate_downtime: {
             default: 0.1,
@@ -3820,11 +4137,9 @@ pub struct QemuConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub machine: Option<String>,
 
-    /// Amount of RAM for the VM in MiB. This is the maximum available memory
-    /// when you use the balloon device.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    /// Memory properties.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub memory: Option<u64>,
+    pub memory: Option<String>,
 
     /// Set maximum tolerated downtime (in seconds) for migrations.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4454,7 +4769,7 @@ pub struct QemuConfigEfidisk0 {
 #[api]
 /// Size and type of the OVMF EFI vars. '4m' is newer and recommended, and
 /// required for Secure Boot. For backwards compatibility, '2m' is used if not
-/// otherwise specified. Ignored for VMs with arch=aarc64 (ARM).
+/// otherwise specified. Ignored for VMs with arch=aarch64 (ARM).
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigEfidisk0Efitype {
     #[serde(rename = "2m")]
@@ -4627,6 +4942,24 @@ pub enum QemuConfigLock {
 }
 serde_plain::derive_display_from_serialize!(QemuConfigLock);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigLock);
+
+#[api(
+    properties: {
+        current: {
+            default: 512,
+            minimum: 16,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct QemuConfigMemory {
+    /// Current amount of online RAM for the VM in MiB. This is the maximum
+    /// available memory when you use the balloon device.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    pub current: u64,
+}
 
 const_regex! {
 
@@ -5825,6 +6158,9 @@ pub struct QemuConfigUsb {
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct QemuConfigVga {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clipboard: Option<QemuConfigVgaClipboard>,
+
     /// Sets the VGA memory (in MiB). Has no effect with serial display.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5834,6 +6170,18 @@ pub struct QemuConfigVga {
     #[serde(rename = "type")]
     pub ty: Option<QemuConfigVgaType>,
 }
+
+#[api]
+/// Enable a specific clipboard. If not set, depending on the display type the
+/// SPICE one will be added.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum QemuConfigVgaClipboard {
+    #[serde(rename = "vnc")]
+    /// vnc.
+    Vnc,
+}
+serde_plain::derive_display_from_serialize!(QemuConfigVgaClipboard);
+serde_plain::derive_fromstr_from_deserialize!(QemuConfigVgaClipboard);
 
 #[api]
 /// Select the VGA type.

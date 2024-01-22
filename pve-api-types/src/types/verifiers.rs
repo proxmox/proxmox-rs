@@ -169,3 +169,10 @@ pub fn verify_storage_pair(_s: &str) -> Result<(), Error> {
     // FIXME: Implement this!
     Ok(())
 }
+
+pub fn verify_pve_lxc_dev_string(s: &str) -> Result<(), Error> {
+    if !s.starts_with("/dev") || s.ends_with("/..") || s.contains("/..") {
+        bail!("not a valid device string");
+    }
+    Ok(())
+}
