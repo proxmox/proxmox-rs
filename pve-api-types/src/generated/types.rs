@@ -6594,6 +6594,101 @@ pub struct QemuConfigVirtio {
 #[api(
     properties: {
         bwlimit: {
+            minimum: 0.0,
+            optional: true,
+        },
+        delete: {
+            default: false,
+            optional: true,
+        },
+        online: {
+            default: false,
+            optional: true,
+        },
+        restart: {
+            default: false,
+            optional: true,
+        },
+        "target-bridge": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_bridge_pair),
+            type: String,
+        },
+        "target-endpoint": {
+            format: &ApiStringFormat::PropertyString(&ProxmoxRemote::API_SCHEMA),
+            type: String,
+        },
+        "target-storage": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_storage_pair),
+            type: String,
+        },
+        "target-vmid": {
+            maximum: 999999999,
+            minimum: 100,
+            optional: true,
+            type: Integer,
+        },
+        timeout: {
+            default: 180,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct RemoteMigrateLxc {
+    /// Override I/O bandwidth limit (in KiB/s).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bwlimit: Option<f64>,
+
+    /// Delete the original CT and related data after successful migration. By
+    /// default the original CT is kept on the source cluster in a stopped
+    /// state.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<bool>,
+
+    /// Use online/live migration.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub online: Option<bool>,
+
+    /// Use restart migration
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub restart: Option<bool>,
+
+    /// Mapping from source to target bridges. Providing only a single bridge ID
+    /// maps all source bridges to that bridge. Providing the special value '1'
+    /// will map each source bridge to itself.
+    #[serde(rename = "target-bridge")]
+    pub target_bridge: String,
+
+    /// Remote target endpoint
+    #[serde(rename = "target-endpoint")]
+    pub target_endpoint: String,
+
+    /// Mapping from source to target storages. Providing only a single storage
+    /// ID maps all source storages to that storage. Providing the special value
+    /// '1' will map each source storage to itself.
+    #[serde(rename = "target-storage")]
+    pub target_storage: String,
+
+    /// The (unique) ID of the VM.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-vmid")]
+    pub target_vmid: Option<u32>,
+
+    /// Timeout in seconds for shutdown for restart migration
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<i64>,
+}
+
+#[api(
+    properties: {
+        bwlimit: {
             minimum: 0,
             optional: true,
             type: Integer,

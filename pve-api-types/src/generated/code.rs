@@ -220,7 +220,6 @@
 /// - /nodes/{node}/lxc/{vmid}/mtunnel
 /// - /nodes/{node}/lxc/{vmid}/mtunnelwebsocket
 /// - /nodes/{node}/lxc/{vmid}/pending
-/// - /nodes/{node}/lxc/{vmid}/remote_migrate
 /// - /nodes/{node}/lxc/{vmid}/resize
 /// - /nodes/{node}/lxc/{vmid}/rrd
 /// - /nodes/{node}/lxc/{vmid}/rrddata
@@ -491,6 +490,18 @@ impl<T: HttpApiClient> PveClient<T> {
         add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
         let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config{query}");
         Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// Migrate the container to another cluster. Creates a new migration task.
+    /// EXPERIMENTAL feature!
+    pub async fn remote_migrate_lxc(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: RemoteMigrateLxc,
+    ) -> Result<PveUpid, Error> {
+        let url = format!("/api2/extjs/nodes/{node}/lxc/{vmid}/remote_migrate");
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Migrate virtual machine to a remote cluster. Creates a new migration
