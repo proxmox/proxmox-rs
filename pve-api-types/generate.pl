@@ -115,6 +115,7 @@ Schema2Rust::register_api_extension('LxcConfig', '/properties/lxc/items/items', 
 });
 Schema2Rust::register_api_override('StartQemu', '/properties/timeout/default', 30);
 Schema2Rust::register_api_override('RemoteMigrateQemu', '/properties/bwlimit/default', undef);
+Schema2Rust::register_api_override('RemoteMigrateLxc', '/properties/bwlimit/default', undef);
 
 # The task API is missing most documentation...
 Schema2Rust::register_api_extensions('TaskStatus', {
@@ -202,6 +203,7 @@ api(POST => '/nodes/{node}/lxc/{vmid}/status/shutdown', 'shutdown_lxc_async',  '
 Schema2Rust::derive('StartLxc' => 'Default');
 Schema2Rust::derive('StopLxc' => 'Default');
 Schema2Rust::derive('ShutdownLxc' => 'Default');
+api(POST => '/nodes/{node}/lxc/{vmid}/remote_migrate', 'remote_migrate_lxc',  'output-type' => 'PveUpid', 'param-name' => 'RemoteMigrateLxc');
 
 # api(GET => '/storage', 'list_storages', 'return-name' => 'StorageList');
 # api(GET => '/access/domains', 'list_domains', 'return-name' => 'ListRealm');
