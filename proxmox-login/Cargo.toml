@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-login"
-version = "0.1.0"
+version = "0.1.1"
 description = "proxmox product authentication api"
 edition.workspace = true
 license.workspace = true
