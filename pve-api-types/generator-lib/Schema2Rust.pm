@@ -1017,7 +1017,7 @@ my sub array_type : prototype($$$) {
     return "Vec<$def->{type}>";
 }
 
-my %serde_int = (
+my %serde_num = (
     usize => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_usize")]',
     isize => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_isize")]',
     u8 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_u8")]',
@@ -1028,6 +1028,8 @@ my %serde_int = (
     i16 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_i16")]',
     i32 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_i32")]',
     i64 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]',
+    f32 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_f32")]',
+    f64 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]',
 );
 
 sub handle_def : prototype($$$) {
@@ -1051,7 +1053,7 @@ sub handle_def : prototype($$$) {
 
     if ($type eq 'integer') {
         $def->{type} = integer_type($schema, $def->{api});
-        if (defined(my $serde = $serde_int{$def->{type}})) {
+        if (defined(my $serde = $serde_num{$def->{type}})) {
             push $def->{attrs}->@*, $serde;
         }
         $def->{api}->{default} = delete $schema->{default};
@@ -1063,6 +1065,9 @@ sub handle_def : prototype($$$) {
     } elsif ($type eq 'number') {
         $def->{api}->{default} = delete $schema->{default};
         $def->{type} = number_type($schema, $def->{api});
+        if (defined(my $serde = $serde_num{$def->{type}})) {
+            push $def->{attrs}->@*, $serde;
+        }
     } elsif ($type eq 'string') {
         $def->{type} = string_type($schema, $def->{api}, $name_hint, $def);
     } elsif ($type eq 'object') {
