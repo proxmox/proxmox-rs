@@ -1,6 +1,6 @@
 # Shortcut for common operations:
 
-CRATES != cargo metadata --no-deps --format-version=1 | jq -r .workspace_members'[]' | awk '{ print $$1 }'
+CRATES != /usr/bin/cargo metadata --no-deps --format-version=1 | jq -r .workspace_members'[]' | awk '{ print $$1 }'
 
 # By default we just run checks:
 .PHONY: all
