@@ -20,7 +20,7 @@ regex = "1.7"
 serde = "1"
 serde_plain = "1"
 
-proxmox-login = "0.1"
+proxmox-login = "0.1.1"
 proxmox-schema = "2"
 
 proxmox-client = "0.3"
