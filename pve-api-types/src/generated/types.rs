@@ -138,6 +138,7 @@ CLUSTER_NODE_INDEX_RESPONSE_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct ClusterNodeIndexResponse {
     /// CPU utilization.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu: Option<f64>,
 
@@ -302,6 +303,7 @@ pub struct ClusterResource {
     pub content: Option<Vec<StorageContent>>,
 
     /// CPU utilization (when type in node,qemu,lxc).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu: Option<f64>,
 
@@ -323,6 +325,7 @@ pub struct ClusterResource {
     pub level: Option<String>,
 
     /// Number of available CPUs (when type in node,qemu,lxc).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxcpu: Option<f64>,
 
@@ -812,6 +815,7 @@ pub struct LxcConfig {
     ///
     /// NOTE: If the computer has 2 CPUs, it has a total of '2' CPU time. Value
     /// '0' indicates no CPU limit.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpulimit: Option<f64>,
 
@@ -2212,6 +2216,7 @@ pub struct LxcConfigNet {
     pub name: String,
 
     /// Apply rate limiting to the interface
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rate: Option<f64>,
 
@@ -2425,6 +2430,7 @@ pub struct LxcConfigUnused {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct LxcEntry {
     /// Maximum usable CPUs.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpus: Option<f64>,
 
@@ -2978,26 +2984,32 @@ pub struct PveQmIde {
     pub iops_wr_max_length: Option<u64>,
 
     /// Maximum r/w speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps: Option<f64>,
 
     /// Maximum unthrottled r/w pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_max: Option<f64>,
 
     /// Maximum read speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd: Option<f64>,
 
     /// Maximum unthrottled read pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd_max: Option<f64>,
 
     /// Maximum write speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr: Option<f64>,
 
     /// Maximum unthrottled write pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr_max: Option<f64>,
 
@@ -4076,6 +4088,7 @@ pub struct QemuConfig {
     pub cpu: Option<String>,
 
     /// Limit of CPU usage.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpulimit: Option<f64>,
 
@@ -4179,6 +4192,7 @@ pub struct QemuConfig {
     pub memory: Option<String>,
 
     /// Set maximum tolerated downtime (in seconds) for migrations.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migrate_downtime: Option<f64>,
 
@@ -5099,6 +5113,7 @@ pub struct QemuConfigNet {
     pub queues: Option<u8>,
 
     /// Rate limit in mbps (megabytes per second) as floating point number.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rate: Option<f64>,
 
@@ -5186,6 +5201,7 @@ pub struct QemuConfigNuma {
     pub hostnodes: Option<String>,
 
     /// Amount of memory this NUMA node provides.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memory: Option<f64>,
 
@@ -5558,26 +5574,32 @@ pub struct QemuConfigSata {
     pub iops_wr_max_length: Option<u64>,
 
     /// Maximum r/w speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps: Option<f64>,
 
     /// Maximum unthrottled r/w pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_max: Option<f64>,
 
     /// Maximum read speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd: Option<f64>,
 
     /// Maximum unthrottled read pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd_max: Option<f64>,
 
     /// Maximum write speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr: Option<f64>,
 
     /// Maximum unthrottled write pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr_max: Option<f64>,
 
@@ -5902,26 +5924,32 @@ pub struct QemuConfigScsi {
     pub iothread: Option<bool>,
 
     /// Maximum r/w speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps: Option<f64>,
 
     /// Maximum unthrottled r/w pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_max: Option<f64>,
 
     /// Maximum read speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd: Option<f64>,
 
     /// Maximum unthrottled read pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd_max: Option<f64>,
 
     /// Maximum write speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr: Option<f64>,
 
     /// Maximum unthrottled write pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr_max: Option<f64>,
 
@@ -6521,26 +6549,32 @@ pub struct QemuConfigVirtio {
     pub iothread: Option<bool>,
 
     /// Maximum r/w speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps: Option<f64>,
 
     /// Maximum unthrottled r/w pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_max: Option<f64>,
 
     /// Maximum read speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd: Option<f64>,
 
     /// Maximum unthrottled read pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd_max: Option<f64>,
 
     /// Maximum write speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr: Option<f64>,
 
     /// Maximum unthrottled write pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr_max: Option<f64>,
 
@@ -6638,6 +6672,7 @@ pub struct QemuConfigVirtio {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct RemoteMigrateLxc {
     /// Override I/O bandwidth limit (in KiB/s).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bwlimit: Option<f64>,
 
@@ -7141,6 +7176,7 @@ pub struct TaskStatus {
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     pub pid: i64,
 
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     pub starttime: f64,
 
     pub status: IsRunning,
@@ -7255,6 +7291,7 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct VmEntry {
     /// Maximum usable CPUs.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpus: Option<f64>,
 
