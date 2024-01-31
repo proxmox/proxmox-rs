@@ -21,8 +21,6 @@ use serde::{Deserialize, Serialize};
 use proxmox_schema::api;
 use proxmox_sys::fs::{make_tmp_file, CreateOptions};
 
-use crate::rrd_v1;
-
 /// Proxmox RRD v2 file magic number
 // openssl::sha::sha256(b"Proxmox Round Robin Database file v2.0")[0..8];
 pub const PROXMOX_RRD_MAGIC_2_0: [u8; 8] = [224, 200, 228, 27, 239, 112, 122, 159];
@@ -366,15 +364,18 @@ impl RRD {
             bail!("not an rrd file - file is too small ({})", raw.len());
         }
 
-        let rrd = if raw[0..8] == rrd_v1::PROXMOX_RRD_MAGIC_1_0 {
-            let v1 = rrd_v1::RRDv1::from_raw(raw)?;
-            v1.to_rrd_v2()
-                .map_err(|err| format_err!("unable to convert from old V1 format - {}", err))?
-        } else if raw[0..8] == PROXMOX_RRD_MAGIC_2_0 {
-            serde_cbor::from_slice(&raw[8..])
-                .map_err(|err| format_err!("unable to decode RRD file - {}", err))?
-        } else {
-            bail!("not an rrd file - unknown magic number");
+        let rrd: RRD = match &raw[0..8] {
+            #[cfg(feature = "rrd_v1")]
+            magic if magic == crate::rrd_v1::PROXMOX_RRD_MAGIC_1_0 => {
+                let v1 = crate::rrd_v1::RRDv1::from_raw(raw)?;
+                v1.to_rrd_v2()
+                    .map_err(|err| format_err!("unable to convert from old V1 format - {err}"))?
+            }
+            magic if magic == PROXMOX_RRD_MAGIC_2_0 => {
+                serde_cbor::from_slice(&raw[8..])
+                    .map_err(|err| format_err!("unable to decode RRD file - {err}"))?
+            }
+            _ => bail!("not an rrd file - unknown magic number")
         };
 
         if rrd.source.last_update < 0.0 {

@@ -25,3 +25,7 @@ serde_json.workspace = true
 proxmox-schema = { workspace = true, features = [ "api-macro" ] }
 proxmox-sys.workspace = true
 proxmox-time.workspace = true
+
+[features]
+default = [ "rrd_v1" ]
+rrd_v1 = []

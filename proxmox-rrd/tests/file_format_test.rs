@@ -20,12 +20,13 @@ fn compare_file(fn1: &str, fn2: &str) -> Result<(), Error> {
     Ok(())
 }
 
-const RRD_V1_FN: &str = "./tests/testdata/cpu.rrd_v1";
 const RRD_V2_FN: &str = "./tests/testdata/cpu.rrd_v2";
 
 // make sure we can load and convert RRD v1
 #[test]
+#[cfg(feature = "rrd_v1")]
 fn upgrade_from_rrd_v1() -> Result<(), Error> {
+    const RRD_V1_FN: &str = "./tests/testdata/cpu.rrd_v1";
     let rrd = RRD::load(Path::new(RRD_V1_FN), true)?;
 
     const RRD_V2_NEW_FN: &str = "./tests/testdata/cpu.rrd_v2.upgraded";

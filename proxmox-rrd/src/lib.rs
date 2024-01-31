@@ -6,6 +6,7 @@
 //! * Stores data for different time resolution
 //! * Simple cache implementation with journal support
 
+#[cfg(feature = "rrd_v1")]
 mod rrd_v1;
 
 pub mod rrd;
