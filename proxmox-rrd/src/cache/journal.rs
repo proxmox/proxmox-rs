@@ -41,7 +41,7 @@ impl FromStr for JournalEntry {
 
         let parts: Vec<&str> = line.splitn(4, ':').collect();
         if parts.len() != 4 {
-            bail!("wrong numper of components");
+            bail!("wrong number of components");
         }
 
         let time: f64 = parts[0]

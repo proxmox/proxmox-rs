@@ -162,9 +162,9 @@ impl DataSource {
 #[derive(Serialize, Deserialize)]
 /// Round Robin Archive
 pub struct RRA {
-    /// Number of seconds spaned by a single data entry.
+    /// Number of seconds spanned by a single data entry.
     pub resolution: u64,
-    /// Consolitation function.
+    /// Consolidation function.
     pub cf: CF,
     /// Count values computed inside this update interval.
     pub last_count: u64,
@@ -208,7 +208,7 @@ impl RRA {
         data: Vec<Option<f64>>,
     ) -> Result<(), Error> {
         if resolution != self.resolution {
-            bail!("inser_data failed: got wrong resolution");
+            bail!("insert_data failed: got wrong resolution");
         }
 
         let mut index = self.slot(start);

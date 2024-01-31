@@ -85,9 +85,9 @@ pub struct RRDv1 {
     pub hour_avg: RRAv1,
     /// Hourly data (maximum values)
     pub hour_max: RRAv1,
-    /// Dayly data (average values)
+    /// Daily data (average values)
     pub day_avg: RRAv1,
-    /// Dayly data (maximum values)
+    /// Daily data (maximum values)
     pub day_max: RRAv1,
     /// Weekly data (average values)
     pub week_avg: RRAv1,

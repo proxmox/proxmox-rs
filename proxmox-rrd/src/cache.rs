@@ -300,7 +300,7 @@ fn apply_journal_lines(
                     linenr,
                     err,
                 );
-                continue; // skip unparsable lines
+                continue; // skip unparseable lines
             }
         };
 
