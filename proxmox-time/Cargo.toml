@@ -11,7 +11,7 @@ exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-bitflags = "1.2.1"
+bitflags.workspace = true
 lazy_static.workspace = true
 nom = "7"
 
