@@ -10,7 +10,7 @@ pub const RRD_DATA_ENTRIES: usize = 70;
 // openssl::sha::sha256(b"Proxmox Round Robin Database file v1.0")[0..8];
 pub const PROXMOX_RRD_MAGIC_1_0: [u8; 8] = [206, 46, 26, 212, 172, 158, 5, 186];
 
-use crate::rrd::{DataSource, CF, DST, RRA, RRD};
+use crate::rrd::{AggregationFn, Archive, DataSource, DataSourceType, Database};
 
 bitflags! {
     /// Flags to specify the data source type and consolidation function
@@ -30,7 +30,7 @@ bitflags! {
 
 /// Round Robin Archive with [RRD_DATA_ENTRIES] data slots.
 ///
-/// This data structure is used inside [RRD] and directly written to the
+/// This data structure is used inside [Database] and directly written to the
 /// RRD files.
 #[repr(C)]
 pub struct RRAv1 {
@@ -75,7 +75,7 @@ impl RRAv1 {
     }
 }
 
-/// Round Robin Database file format with fixed number of [RRA]s
+/// Round Robin Database file format with fixed number of [Archive]s
 #[repr(C)]
 // Note: Avoid alignment problems by using 8byte types only
 pub struct RRDv1 {
@@ -127,7 +127,7 @@ impl RRDv1 {
         Ok(rrd)
     }
 
-    pub fn to_rrd_v2(&self) -> Result<RRD, Error> {
+    pub fn to_rrd_v2(&self) -> Result<Database, Error> {
         let mut rra_list = Vec::new();
 
         // old format v1:
@@ -194,7 +194,7 @@ impl RRDv1 {
         // Try to convert to new, higher capacity format
 
         // compute daily average (merge old self.day_avg and self.hour_avg
-        let mut day_avg = RRA::new(CF::Average, 60, 1440);
+        let mut day_avg = Archive::new(AggregationFn::Average, 60, 1440);
 
         let (start, reso, data) = self.day_avg.extract_data();
         let (start, reso, data) = extrapolate_data(start, reso, 30, data);
@@ -204,7 +204,7 @@ impl RRDv1 {
         day_avg.insert_data(start, reso, data)?;
 
         // compute daily maximum (merge old self.day_max and self.hour_max
-        let mut day_max = RRA::new(CF::Maximum, 60, 1440);
+        let mut day_max = Archive::new(AggregationFn::Maximum, 60, 1440);
 
         let (start, reso, data) = self.day_max.extract_data();
         let (start, reso, data) = extrapolate_data(start, reso, 30, data);
@@ -215,7 +215,7 @@ impl RRDv1 {
 
         // compute monthly average (merge old self.month_avg,
         // self.week_avg and self.day_avg)
-        let mut month_avg = RRA::new(CF::Average, 30 * 60, 1440);
+        let mut month_avg = Archive::new(AggregationFn::Average, 30 * 60, 1440);
 
         let (start, reso, data) = self.month_avg.extract_data();
         let (start, reso, data) = extrapolate_data(start, reso, 24, data);
@@ -230,7 +230,7 @@ impl RRDv1 {
 
         // compute monthly maximum (merge old self.month_max,
         // self.week_max and self.day_max)
-        let mut month_max = RRA::new(CF::Maximum, 30 * 60, 1440);
+        let mut month_max = Archive::new(AggregationFn::Maximum, 30 * 60, 1440);
 
         let (start, reso, data) = self.month_max.extract_data();
         let (start, reso, data) = extrapolate_data(start, reso, 24, data);
@@ -244,26 +244,26 @@ impl RRDv1 {
         month_max.insert_data(start, reso, data)?;
 
         // compute yearly average (merge old self.year_avg)
-        let mut year_avg = RRA::new(CF::Average, 6 * 3600, 1440);
+        let mut year_avg = Archive::new(AggregationFn::Average, 6 * 3600, 1440);
 
         let (start, reso, data) = self.year_avg.extract_data();
         let (start, reso, data) = extrapolate_data(start, reso, 28, data);
         year_avg.insert_data(start, reso, data)?;
 
         // compute yearly maximum (merge old self.year_avg)
-        let mut year_max = RRA::new(CF::Maximum, 6 * 3600, 1440);
+        let mut year_max = Archive::new(AggregationFn::Maximum, 6 * 3600, 1440);
 
         let (start, reso, data) = self.year_max.extract_data();
         let (start, reso, data) = extrapolate_data(start, reso, 28, data);
         year_max.insert_data(start, reso, data)?;
 
         // compute decade average (merge old self.year_avg)
-        let mut decade_avg = RRA::new(CF::Average, 7 * 86400, 570);
+        let mut decade_avg = Archive::new(AggregationFn::Average, 7 * 86400, 570);
         let (start, reso, data) = self.year_avg.extract_data();
         decade_avg.insert_data(start, reso, data)?;
 
         // compute decade maximum (merge old self.year_max)
-        let mut decade_max = RRA::new(CF::Maximum, 7 * 86400, 570);
+        let mut decade_max = Archive::new(AggregationFn::Maximum, 7 * 86400, 570);
         let (start, reso, data) = self.year_max.extract_data();
         decade_max.insert_data(start, reso, data)?;
 
@@ -278,11 +278,11 @@ impl RRDv1 {
 
         // use values from hour_avg for source (all RRAv1 must have the same config)
         let dst = if self.hour_avg.flags.contains(RRAFlags::DST_COUNTER) {
-            DST::Counter
+            DataSourceType::Counter
         } else if self.hour_avg.flags.contains(RRAFlags::DST_DERIVE) {
-            DST::Derive
+            DataSourceType::Derive
         } else {
-            DST::Gauge
+            DataSourceType::Gauge
         };
 
         let source = DataSource {
@@ -290,6 +290,6 @@ impl RRDv1 {
             last_value: f64::NAN,
             last_update: self.hour_avg.last_update, // IMPORTANT!
         };
-        Ok(RRD { source, rra_list })
+        Ok(Database { source, rra_list })
     }
 }

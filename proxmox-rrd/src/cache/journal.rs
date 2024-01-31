@@ -15,7 +15,7 @@ use proxmox_sys::fs::atomic_open_or_create_file;
 const RRD_JOURNAL_NAME: &str = "rrd.journal";
 
 use crate::cache::CacheConfig;
-use crate::rrd::DST;
+use crate::rrd::DataSourceType;
 
 // shared state behind RwLock
 pub struct JournalState {
@@ -29,7 +29,7 @@ pub struct JournalState {
 pub struct JournalEntry {
     pub time: f64,
     pub value: f64,
-    pub dst: DST,
+    pub dst: DataSourceType,
     pub rel_path: String,
 }
 
@@ -55,8 +55,8 @@ impl FromStr for JournalEntry {
             .map_err(|_| format_err!("unable to parse data source type"))?;
 
         let dst = match dst {
-            0 => DST::Gauge,
-            1 => DST::Derive,
+            0 => DataSourceType::Gauge,
+            1 => DataSourceType::Derive,
             _ => bail!("got strange value for data source type '{}'", dst),
         };
 
@@ -98,7 +98,7 @@ impl JournalState {
         &mut self,
         time: f64,
         value: f64,
-        dst: DST,
+        dst: DataSourceType,
         rel_path: &str,
     ) -> Result<(), Error> {
         let journal_entry = format!("{}:{}:{}:{}\n", time, value, dst as u8, rel_path);

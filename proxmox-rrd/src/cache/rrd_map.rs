@@ -6,21 +6,21 @@ use anyhow::{bail, Error};
 
 use proxmox_sys::fs::create_path;
 
-use crate::rrd::{CF, DST, RRD};
+use crate::rrd::{AggregationFn, DataSourceType, Database};
 
 use super::CacheConfig;
 use crate::Entry;
 
 pub struct RRDMap {
     config: Arc<CacheConfig>,
-    map: HashMap<String, RRD>,
-    load_rrd_cb: fn(path: &Path, rel_path: &str, dst: DST) -> RRD,
+    map: HashMap<String, Database>,
+    load_rrd_cb: fn(path: &Path, rel_path: &str, dst: DataSourceType) -> Database,
 }
 
 impl RRDMap {
     pub(crate) fn new(
         config: Arc<CacheConfig>,
-        load_rrd_cb: fn(path: &Path, rel_path: &str, dst: DST) -> RRD,
+        load_rrd_cb: fn(path: &Path, rel_path: &str, dst: DataSourceType) -> Database,
     ) -> Self {
         Self {
             config,
@@ -34,7 +34,7 @@ impl RRDMap {
         rel_path: &str,
         time: f64,
         value: f64,
-        dst: DST,
+        dst: DataSourceType,
         new_only: bool,
     ) -> Result<(), Error> {
         if let Some(rrd) = self.map.get_mut(rel_path) {
@@ -84,7 +84,7 @@ impl RRDMap {
         &self,
         base: &str,
         name: &str,
-        cf: CF,
+        cf: AggregationFn,
         resolution: u64,
         start: Option<u64>,
         end: Option<u64>,

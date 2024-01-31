@@ -3,7 +3,7 @@ use std::process::Command;
 
 use anyhow::{bail, Error};
 
-use proxmox_rrd::rrd::RRD;
+use proxmox_rrd::rrd::Database;
 use proxmox_sys::fs::CreateOptions;
 
 fn compare_file(fn1: &str, fn2: &str) -> Result<(), Error> {
@@ -27,7 +27,7 @@ const RRD_V2_FN: &str = "./tests/testdata/cpu.rrd_v2";
 #[cfg(feature = "rrd_v1")]
 fn upgrade_from_rrd_v1() -> Result<(), Error> {
     const RRD_V1_FN: &str = "./tests/testdata/cpu.rrd_v1";
-    let rrd = RRD::load(Path::new(RRD_V1_FN), true)?;
+    let rrd = Database::load(Path::new(RRD_V1_FN), true)?;
 
     const RRD_V2_NEW_FN: &str = "./tests/testdata/cpu.rrd_v2.upgraded";
     let new_path = Path::new(RRD_V2_NEW_FN);
@@ -43,7 +43,7 @@ fn upgrade_from_rrd_v1() -> Result<(), Error> {
 // make sure we can load and save RRD v2
 #[test]
 fn load_and_save_rrd_v2() -> Result<(), Error> {
-    let rrd = RRD::load(Path::new(RRD_V2_FN), true)?;
+    let rrd = Database::load(Path::new(RRD_V2_FN), true)?;
 
     const RRD_V2_NEW_FN: &str = "./tests/testdata/cpu.rrd_v2.saved";
     let new_path = Path::new(RRD_V2_NEW_FN);

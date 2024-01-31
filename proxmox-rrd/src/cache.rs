@@ -12,7 +12,7 @@ use crossbeam_channel::{bounded, TryRecvError};
 
 use proxmox_sys::fs::{create_path, CreateOptions};
 
-use crate::rrd::{CF, DST, RRA, RRD};
+use crate::rrd::{AggregationFn, Archive, DataSourceType, Database};
 use crate::Entry;
 
 mod journal;
@@ -25,7 +25,7 @@ use rrd_map::*;
 ///
 /// This cache is designed to run as single instance (no concurrent
 /// access from other processes).
-pub struct RRDCache {
+pub struct Cache {
     config: Arc<CacheConfig>,
     state: Arc<RwLock<JournalState>>,
     rrd_map: Arc<RwLock<RRDMap>>,
@@ -38,7 +38,7 @@ pub(crate) struct CacheConfig {
     dir_options: CreateOptions,
 }
 
-impl RRDCache {
+impl Cache {
     /// Creates a new instance
     ///
     /// `basedir`: All files are stored relative to this path.
@@ -58,7 +58,7 @@ impl RRDCache {
         file_options: Option<CreateOptions>,
         dir_options: Option<CreateOptions>,
         apply_interval: f64,
-        load_rrd_cb: fn(path: &Path, rel_path: &str, dst: DST) -> RRD,
+        load_rrd_cb: fn(path: &Path, rel_path: &str, dst: DataSourceType) -> Database,
     ) -> Result<Self, Error> {
         let basedir = basedir.as_ref().to_owned();
 
@@ -103,23 +103,23 @@ impl RRDCache {
     /// * cf=maximum,r=7*86400,n=570 => 10year
     ///
     /// The resulting data file size is about 80KB.
-    pub fn create_proxmox_backup_default_rrd(dst: DST) -> RRD {
+    pub fn create_proxmox_backup_default_rrd(dst: DataSourceType) -> Database {
         let rra_list = vec![
             // 1 min * 1440 => 1 day
-            RRA::new(CF::Average, 60, 1440),
-            RRA::new(CF::Maximum, 60, 1440),
+            Archive::new(AggregationFn::Average, 60, 1440),
+            Archive::new(AggregationFn::Maximum, 60, 1440),
             // 30 min * 1440 => 30 days ~ 1 month
-            RRA::new(CF::Average, 30 * 60, 1440),
-            RRA::new(CF::Maximum, 30 * 60, 1440),
+            Archive::new(AggregationFn::Average, 30 * 60, 1440),
+            Archive::new(AggregationFn::Maximum, 30 * 60, 1440),
             // 6 h * 1440 => 360 days ~ 1 year
-            RRA::new(CF::Average, 6 * 3600, 1440),
-            RRA::new(CF::Maximum, 6 * 3600, 1440),
+            Archive::new(AggregationFn::Average, 6 * 3600, 1440),
+            Archive::new(AggregationFn::Maximum, 6 * 3600, 1440),
             // 1 week * 570 => 10 years
-            RRA::new(CF::Average, 7 * 86400, 570),
-            RRA::new(CF::Maximum, 7 * 86400, 570),
+            Archive::new(AggregationFn::Average, 7 * 86400, 570),
+            Archive::new(AggregationFn::Maximum, 7 * 86400, 570),
         ];
 
-        RRD::new(dst, rra_list)
+        Database::new(dst, rra_list)
     }
 
     /// Sync the journal data to disk (using `fdatasync` syscall)
@@ -186,7 +186,7 @@ impl RRDCache {
         rel_path: &str,
         time: f64,
         value: f64,
-        dst: DST,
+        dst: DataSourceType,
     ) -> Result<(), Error> {
         let journal_applied = self.apply_journal()?;
 
@@ -214,7 +214,7 @@ impl RRDCache {
         &self,
         base: &str,
         name: &str,
-        cf: CF,
+        cf: AggregationFn,
         resolution: u64,
         start: Option<u64>,
         end: Option<u64>,

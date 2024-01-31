@@ -14,7 +14,7 @@ use proxmox_schema::{api, ApiStringFormat, ApiType, IntegerSchema, Schema, Strin
 
 use proxmox_sys::fs::CreateOptions;
 
-use proxmox_rrd::rrd::{CF, DST, RRA, RRD};
+use proxmox_rrd::rrd::{AggregationFn, Archive, DataSourceType, Database};
 
 pub const RRA_INDEX_SCHEMA: Schema = IntegerSchema::new("Index of the RRA.").minimum(0).schema();
 
@@ -31,7 +31,7 @@ pub const RRA_CONFIG_STRING_SCHEMA: Schema = StringSchema::new("RRA configuratio
 pub struct RRAConfig {
     /// Time resolution
     pub r: u64,
-    pub cf: CF,
+    pub cf: AggregationFn,
     /// Number of data points
     pub n: u64,
 }
@@ -47,7 +47,7 @@ pub struct RRAConfig {
 )]
 /// Dump the RRD file in JSON format
 pub fn dump_rrd(path: String) -> Result<(), Error> {
-    let rrd = RRD::load(&PathBuf::from(path), false)?;
+    let rrd = Database::load(&PathBuf::from(path), false)?;
     serde_json::to_writer_pretty(std::io::stdout(), &rrd)?;
     println!();
     Ok(())
@@ -64,7 +64,7 @@ pub fn dump_rrd(path: String) -> Result<(), Error> {
 )]
 /// RRD file information
 pub fn rrd_info(path: String) -> Result<(), Error> {
-    let rrd = RRD::load(&PathBuf::from(path), false)?;
+    let rrd = Database::load(&PathBuf::from(path), false)?;
 
     println!("DST: {:?}", rrd.source.dst);
 
@@ -106,7 +106,7 @@ pub fn update_rrd(path: String, time: Option<u64>, value: f64) -> Result<(), Err
         .map(|v| v as f64)
         .unwrap_or_else(proxmox_time::epoch_f64);
 
-    let mut rrd = RRD::load(&path, false)?;
+    let mut rrd = Database::load(&path, false)?;
     rrd.update(time, value);
 
     rrd.save(&path, CreateOptions::new(), false)?;
@@ -140,12 +140,12 @@ pub fn update_rrd(path: String, time: Option<u64>, value: f64) -> Result<(), Err
 /// Fetch data from the RRD file
 pub fn fetch_rrd(
     path: String,
-    cf: CF,
+    cf: AggregationFn,
     resolution: u64,
     start: Option<u64>,
     end: Option<u64>,
 ) -> Result<(), Error> {
-    let rrd = RRD::load(&PathBuf::from(path), false)?;
+    let rrd = Database::load(&PathBuf::from(path), false)?;
 
     let data = rrd.extract_data(cf, resolution, start, end)?;
 
@@ -169,7 +169,7 @@ pub fn fetch_rrd(
 /// Return the Unix timestamp of the first time slot inside the
 /// specified RRA (slot start time)
 pub fn first_update_time(path: String, rra_index: usize) -> Result<(), Error> {
-    let rrd = RRD::load(&PathBuf::from(path), false)?;
+    let rrd = Database::load(&PathBuf::from(path), false)?;
 
     if rra_index >= rrd.rra_list.len() {
         bail!("rra-index is out of range");
@@ -193,7 +193,7 @@ pub fn first_update_time(path: String, rra_index: usize) -> Result<(), Error> {
 )]
 /// Return the Unix timestamp of the last update
 pub fn last_update_time(path: String) -> Result<(), Error> {
-    let rrd = RRD::load(&PathBuf::from(path), false)?;
+    let rrd = Database::load(&PathBuf::from(path), false)?;
 
     println!("{}", rrd.source.last_update);
     Ok(())
@@ -210,7 +210,7 @@ pub fn last_update_time(path: String) -> Result<(), Error> {
 )]
 /// Return the time and value from the last update
 pub fn last_update(path: String) -> Result<(), Error> {
-    let rrd = RRD::load(&PathBuf::from(path), false)?;
+    let rrd = Database::load(&PathBuf::from(path), false)?;
 
     let result = json!({
         "time": rrd.source.last_update,
@@ -242,19 +242,19 @@ pub fn last_update(path: String) -> Result<(), Error> {
    },
 )]
 /// Create a new RRD file
-pub fn create_rrd(dst: DST, path: String, rra: Vec<String>) -> Result<(), Error> {
+pub fn create_rrd(dst: DataSourceType, path: String, rra: Vec<String>) -> Result<(), Error> {
     let mut rra_list = Vec::new();
 
     for item in rra.iter() {
         let rra: RRAConfig =
             serde_json::from_value(RRAConfig::API_SCHEMA.parse_property_string(item)?)?;
         println!("GOT {:?}", rra);
-        rra_list.push(RRA::new(rra.cf, rra.r, rra.n as usize));
+        rra_list.push(Archive::new(rra.cf, rra.r, rra.n as usize));
     }
 
     let path = PathBuf::from(path);
 
-    let rrd = RRD::new(dst, rra_list);
+    let rrd = Database::new(dst, rra_list);
 
     rrd.save(&path, CreateOptions::new(), false)?;
 
@@ -281,7 +281,7 @@ pub fn create_rrd(dst: DST, path: String, rra: Vec<String>) -> Result<(), Error>
 pub fn resize_rrd(path: String, rra_index: usize, slots: i64) -> Result<(), Error> {
     let path = PathBuf::from(&path);
 
-    let mut rrd = RRD::load(&path, false)?;
+    let mut rrd = Database::load(&path, false)?;
 
     if rra_index >= rrd.rra_list.len() {
         bail!("rra-index is out of range");
@@ -305,7 +305,7 @@ pub fn resize_rrd(path: String, rra_index: usize, slots: i64) -> Result<(), Erro
         .extract_data(rra_start, rra_end, rrd.source.last_update)
         .into();
 
-    let mut new_rra = RRA::new(rra.cf, rra.resolution, new_slots as usize);
+    let mut new_rra = Archive::new(rra.cf, rra.resolution, new_slots as usize);
     new_rra.last_count = rra.last_count;
 
     new_rra.insert_data(start, reso, data)?;

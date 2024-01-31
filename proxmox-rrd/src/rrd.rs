@@ -29,7 +29,7 @@ pub const PROXMOX_RRD_MAGIC_2_0: [u8; 8] = [224, 200, 228, 27, 239, 112, 122, 15
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 /// RRD data source type
-pub enum DST {
+pub enum DataSourceType {
     /// Gauge values are stored unmodified.
     Gauge,
     /// Stores the difference to the previous value.
@@ -42,8 +42,8 @@ pub enum DST {
 #[api()]
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
-/// Consolidation function
-pub enum CF {
+/// Aggregation function
+pub enum AggregationFn {
     /// Average
     Average,
     /// Maximum
@@ -58,7 +58,7 @@ pub enum CF {
 /// Data source specification
 pub struct DataSource {
     /// Data source type
-    pub dst: DST,
+    pub dst: DataSourceType,
     /// Last update time (epoch)
     pub last_update: f64,
     /// Stores the last value, used to compute differential value for
@@ -110,7 +110,7 @@ impl From<(u64, u64, Vec<Option<f64>>)> for Entry {
 
 impl DataSource {
     /// Create a new Instance
-    pub fn new(dst: DST) -> Self {
+    pub fn new(dst: DataSourceType) -> Self {
         Self {
             dst,
             last_update: 0.0,
@@ -131,9 +131,9 @@ impl DataSource {
         }
 
         // derive counter value
-        let is_counter = self.dst == DST::Counter;
+        let is_counter = self.dst == DataSourceType::Counter;
 
-        if is_counter || self.dst == DST::Derive {
+        if is_counter || self.dst == DataSourceType::Derive {
             let time_diff = time - self.last_update;
 
             let diff = if self.last_value.is_nan() {
@@ -161,20 +161,20 @@ impl DataSource {
 
 #[derive(Serialize, Deserialize)]
 /// Round Robin Archive
-pub struct RRA {
+pub struct Archive {
     /// Number of seconds spanned by a single data entry.
     pub resolution: u64,
     /// Consolidation function.
-    pub cf: CF,
+    pub cf: AggregationFn,
     /// Count values computed inside this update interval.
     pub last_count: u64,
     /// The actual data entries.
     pub data: Vec<f64>,
 }
 
-impl RRA {
+impl Archive {
     /// Creates a new instance
-    pub fn new(cf: CF, resolution: u64, points: usize) -> Self {
+    pub fn new(cf: AggregationFn, resolution: u64, points: usize) -> Self {
         Self {
             cf,
             resolution,
@@ -275,22 +275,22 @@ impl RRA {
             self.last_count = 1;
         } else {
             let new_value = match self.cf {
-                CF::Maximum => {
+                AggregationFn::Maximum => {
                     if last_value > value {
                         last_value
                     } else {
                         value
                     }
                 }
-                CF::Minimum => {
+                AggregationFn::Minimum => {
                     if last_value < value {
                         last_value
                     } else {
                         value
                     }
                 }
-                CF::Last => value,
-                CF::Average => {
+                AggregationFn::Last => value,
+                AggregationFn::Average => {
                     (last_value * (self.last_count as f64)) / (new_count as f64)
                         + value / (new_count as f64)
                 }
@@ -344,19 +344,19 @@ impl RRA {
 
 #[derive(Serialize, Deserialize)]
 /// Round Robin Database
-pub struct RRD {
+pub struct Database {
     /// The data source definition
     pub source: DataSource,
     /// List of round robin archives
-    pub rra_list: Vec<RRA>,
+    pub rra_list: Vec<Archive>,
 }
 
-impl RRD {
+impl Database {
     /// Creates a new Instance
-    pub fn new(dst: DST, rra_list: Vec<RRA>) -> RRD {
+    pub fn new(dst: DataSourceType, rra_list: Vec<Archive>) -> Database {
         let source = DataSource::new(dst);
 
-        RRD { source, rra_list }
+        Database { source, rra_list }
     }
 
     fn from_raw(raw: &[u8]) -> Result<Self, Error> {
@@ -364,18 +364,16 @@ impl RRD {
             bail!("not an rrd file - file is too small ({})", raw.len());
         }
 
-        let rrd: RRD = match &raw[0..8] {
+        let rrd: Database = match &raw[0..8] {
             #[cfg(feature = "rrd_v1")]
             magic if magic == crate::rrd_v1::PROXMOX_RRD_MAGIC_1_0 => {
                 let v1 = crate::rrd_v1::RRDv1::from_raw(raw)?;
                 v1.to_rrd_v2()
                     .map_err(|err| format_err!("unable to convert from old V1 format - {err}"))?
             }
-            magic if magic == PROXMOX_RRD_MAGIC_2_0 => {
-                serde_cbor::from_slice(&raw[8..])
-                    .map_err(|err| format_err!("unable to decode RRD file - {err}"))?
-            }
-            _ => bail!("not an rrd file - unknown magic number")
+            magic if magic == PROXMOX_RRD_MAGIC_2_0 => serde_cbor::from_slice(&raw[8..])
+                .map_err(|err| format_err!("unable to decode RRD file - {err}"))?,
+            _ => bail!("not an rrd file - unknown magic number"),
         };
 
         if rrd.source.last_update < 0.0 {
@@ -491,19 +489,19 @@ impl RRD {
 
     /// Extract data from the archive
     ///
-    /// This selects the RRA with specified [CF] and (minimum)
+    /// This selects the RRA with specified [AggregationFn] and (minimum)
     /// resolution, and extract data from `start` to `end`.
     ///
     /// `start`: Start time. If not specified, we simply extract 10 data points.
     /// `end`: End time. Default is to use the current time.
     pub fn extract_data(
         &self,
-        cf: CF,
+        cf: AggregationFn,
         resolution: u64,
         start: Option<u64>,
         end: Option<u64>,
     ) -> Result<Entry, Error> {
-        let mut rra: Option<&RRA> = None;
+        let mut rra: Option<&Archive> = None;
         for item in self.rra_list.iter() {
             if item.cf != cf {
                 continue;
@@ -538,8 +536,8 @@ mod tests {
 
     #[test]
     fn basic_rra_maximum_gauge_test() -> Result<(), Error> {
-        let rra = RRA::new(CF::Maximum, 60, 5);
-        let mut rrd = RRD::new(DST::Gauge, vec![rra]);
+        let rra = Archive::new(AggregationFn::Maximum, 60, 5);
+        let mut rrd = Database::new(DataSourceType::Gauge, vec![rra]);
 
         for i in 2..10 {
             rrd.update((i as f64) * 30.0, i as f64);
@@ -549,7 +547,7 @@ mod tests {
             start,
             resolution,
             data,
-        } = rrd.extract_data(CF::Maximum, 60, Some(0), Some(5 * 60))?;
+        } = rrd.extract_data(AggregationFn::Maximum, 60, Some(0), Some(5 * 60))?;
         assert_eq!(start, 0);
         assert_eq!(resolution, 60);
         assert_eq!(data, [None, Some(3.0), Some(5.0), Some(7.0), Some(9.0)]);
@@ -559,8 +557,8 @@ mod tests {
 
     #[test]
     fn basic_rra_minimum_gauge_test() -> Result<(), Error> {
-        let rra = RRA::new(CF::Minimum, 60, 5);
-        let mut rrd = RRD::new(DST::Gauge, vec![rra]);
+        let rra = Archive::new(AggregationFn::Minimum, 60, 5);
+        let mut rrd = Database::new(DataSourceType::Gauge, vec![rra]);
 
         for i in 2..10 {
             rrd.update((i as f64) * 30.0, i as f64);
@@ -570,7 +568,7 @@ mod tests {
             start,
             resolution,
             data,
-        } = rrd.extract_data(CF::Minimum, 60, Some(0), Some(5 * 60))?;
+        } = rrd.extract_data(AggregationFn::Minimum, 60, Some(0), Some(5 * 60))?;
         assert_eq!(start, 0);
         assert_eq!(resolution, 60);
         assert_eq!(data, [None, Some(2.0), Some(4.0), Some(6.0), Some(8.0)]);
@@ -580,15 +578,15 @@ mod tests {
 
     #[test]
     fn basic_rra_last_gauge_test() -> Result<(), Error> {
-        let rra = RRA::new(CF::Last, 60, 5);
-        let mut rrd = RRD::new(DST::Gauge, vec![rra]);
+        let rra = Archive::new(AggregationFn::Last, 60, 5);
+        let mut rrd = Database::new(DataSourceType::Gauge, vec![rra]);
 
         for i in 2..10 {
             rrd.update((i as f64) * 30.0, i as f64);
         }
 
         assert!(
-            rrd.extract_data(CF::Average, 60, Some(0), Some(5 * 60))
+            rrd.extract_data(AggregationFn::Average, 60, Some(0), Some(5 * 60))
                 .is_err(),
             "CF::Average should not exist"
         );
@@ -597,7 +595,7 @@ mod tests {
             start,
             resolution,
             data,
-        } = rrd.extract_data(CF::Last, 60, Some(0), Some(20 * 60))?;
+        } = rrd.extract_data(AggregationFn::Last, 60, Some(0), Some(20 * 60))?;
         assert_eq!(start, 0);
         assert_eq!(resolution, 60);
         assert_eq!(data, [None, Some(3.0), Some(5.0), Some(7.0), Some(9.0)]);
@@ -607,8 +605,8 @@ mod tests {
 
     #[test]
     fn basic_rra_average_derive_test() -> Result<(), Error> {
-        let rra = RRA::new(CF::Average, 60, 5);
-        let mut rrd = RRD::new(DST::Derive, vec![rra]);
+        let rra = Archive::new(AggregationFn::Average, 60, 5);
+        let mut rrd = Database::new(DataSourceType::Derive, vec![rra]);
 
         for i in 2..10 {
             rrd.update((i as f64) * 30.0, (i * 60) as f64);
@@ -618,7 +616,7 @@ mod tests {
             start,
             resolution,
             data,
-        } = rrd.extract_data(CF::Average, 60, Some(60), Some(5 * 60))?;
+        } = rrd.extract_data(AggregationFn::Average, 60, Some(60), Some(5 * 60))?;
         assert_eq!(start, 60);
         assert_eq!(resolution, 60);
         assert_eq!(data, [Some(1.0), Some(2.0), Some(2.0), Some(2.0), None]);
@@ -628,8 +626,8 @@ mod tests {
 
     #[test]
     fn basic_rra_average_gauge_test() -> Result<(), Error> {
-        let rra = RRA::new(CF::Average, 60, 5);
-        let mut rrd = RRD::new(DST::Gauge, vec![rra]);
+        let rra = Archive::new(AggregationFn::Average, 60, 5);
+        let mut rrd = Database::new(DataSourceType::Gauge, vec![rra]);
 
         for i in 2..10 {
             rrd.update((i as f64) * 30.0, i as f64);
@@ -639,7 +637,7 @@ mod tests {
             start,
             resolution,
             data,
-        } = rrd.extract_data(CF::Average, 60, Some(60), Some(5 * 60))?;
+        } = rrd.extract_data(AggregationFn::Average, 60, Some(60), Some(5 * 60))?;
         assert_eq!(start, 60);
         assert_eq!(resolution, 60);
         assert_eq!(data, [Some(2.5), Some(4.5), Some(6.5), Some(8.5), None]);
@@ -652,7 +650,7 @@ mod tests {
             start,
             resolution,
             data,
-        } = rrd.extract_data(CF::Average, 60, Some(60), Some(5 * 60))?;
+        } = rrd.extract_data(AggregationFn::Average, 60, Some(60), Some(5 * 60))?;
         assert_eq!(start, 60);
         assert_eq!(resolution, 60);
         assert_eq!(data, [None, Some(4.5), Some(6.5), Some(8.5), Some(10.5)]);
@@ -661,7 +659,7 @@ mod tests {
             start,
             resolution,
             data,
-        } = rrd.extract_data(CF::Average, 60, Some(3 * 60), Some(8 * 60))?;
+        } = rrd.extract_data(AggregationFn::Average, 60, Some(3 * 60), Some(8 * 60))?;
         assert_eq!(start, 3 * 60);
         assert_eq!(resolution, 60);
         assert_eq!(data, [Some(6.5), Some(8.5), Some(10.5), Some(12.5), None]);
@@ -675,7 +673,12 @@ mod tests {
             start,
             resolution,
             data,
-        } = rrd.extract_data(CF::Average, 60, Some(100 * 30), Some(100 * 30 + 5 * 60))?;
+        } = rrd.extract_data(
+            AggregationFn::Average,
+            60,
+            Some(100 * 30),
+            Some(100 * 30 + 5 * 60),
+        )?;
         assert_eq!(start, 100 * 30);
         assert_eq!(resolution, 60);
         assert_eq!(data, [Some(100.0), None, None, None, None]);
@@ -685,7 +688,7 @@ mod tests {
             start,
             resolution,
             data,
-        } = rrd.extract_data(CF::Average, 60, Some(100 * 30), Some(60))?;
+        } = rrd.extract_data(AggregationFn::Average, 60, Some(100 * 30), Some(60))?;
         assert_eq!(start, 100 * 30);
         assert_eq!(resolution, 60);
         assert_eq!(data, []);
