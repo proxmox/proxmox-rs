@@ -1149,7 +1149,7 @@ my sub make_struct_array_field : prototype($$$$$) {
 
     handle_def($def, $inout_schema, namify_type($struct_name, $base_name));
 
-    my $array_dedup_key = "$base_name\0$count\0$def->{type}\0";
+    my $array_dedup_key = "$struct_name\0$base_name\0$count\0$def->{type}\0";
     if (defined(my $module = $dedup_array_types->{$array_dedup_key})) {
         $array_type_name = $module;
     }
