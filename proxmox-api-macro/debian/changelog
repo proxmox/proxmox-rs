@@ -1,3 +1,11 @@
+rust-proxmox-api-macro (1.0.8-1) stable; urgency=medium
+
+  * update to proxmox-schema 3
+
+  * make #[serde(skip_serializing_if)] without #[serde(default)] an error
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 02 Feb 2024 13:44:40 +0100
+
 rust-proxmox-api-macro (1.0.7-1) stable; urgency=medium
 
   * make serde(skip_serializing_if) without serde(default) for non-Option
