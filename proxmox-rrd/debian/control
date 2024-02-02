@@ -12,8 +12,8 @@ Build-Depends: debhelper (>= 12),
  librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
  librust-log-0.4+default-dev (>= 0.4.17-~~) <!nocheck>,
  librust-nix-0.26+default-dev (>= 0.26.1-~~) <!nocheck>,
- librust-proxmox-schema-2+api-macro-dev <!nocheck>,
- librust-proxmox-schema-2+default-dev <!nocheck>,
+ librust-proxmox-schema-3+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-3+default-dev <!nocheck>,
  librust-proxmox-sys-0.5+default-dev (>= 0.5.1-~~) <!nocheck>,
  librust-proxmox-time-1+default-dev (>= 1.1.6-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
@@ -37,8 +37,8 @@ Depends:
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
  librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-nix-0.26+default-dev (>= 0.26.1-~~),
- librust-proxmox-schema-2+api-macro-dev,
- librust-proxmox-schema-2+default-dev,
+ librust-proxmox-schema-3+api-macro-dev,
+ librust-proxmox-schema-3+default-dev,
  librust-proxmox-sys-0.5+default-dev (>= 0.5.1-~~),
  librust-proxmox-time-1+default-dev (>= 1.1.6-~~),
  librust-serde-1+default-dev,
@@ -53,8 +53,8 @@ Provides:
  librust-proxmox-rrd-0.1-dev (= ${binary:Version}),
  librust-proxmox-rrd-0.1+default-dev (= ${binary:Version}),
  librust-proxmox-rrd-0.1+rrd-v1-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.1.0+default-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.1.0+rrd-v1-dev (= ${binary:Version})
+ librust-proxmox-rrd-0.1.1-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.1.1+default-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.1.1+rrd-v1-dev (= ${binary:Version})
 Description: Simple RRD database implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-rrd"
