@@ -1,3 +1,15 @@
+rust-proxmox-apt (0.10.8-1) bookworm; urgency=medium
+
+  * document status property for standard repositories
+
+  * add skip_serializing_if attirbutes to api types
+
+  * add missing #[serde(default)] annotations
+
+  * fix digest api type in APTRepositoryFile
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 02 Feb 2024 13:47:41 +0100
+
 rust-proxmox-apt (0.10.7-1) bookworm; urgency=medium
 
   * add missing #[serde(default)] attributes to api types
