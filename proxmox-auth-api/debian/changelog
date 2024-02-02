@@ -1,3 +1,9 @@
+rust-proxmox-auth-api (0.3.3) bookworm; urgency=medium
+
+  * rebuild with proxmox-schema 3
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 02 Feb 2024 14:01:19 +0100
+
 rust-proxmox-auth-api (0.3.2) bookworm; urgency=medium
 
   * rebuild with proxmox-rest-server 0.5.0

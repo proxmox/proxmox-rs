@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 12),
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-auth-api
@@ -31,11 +31,10 @@ Provides:
  librust-proxmox-auth-api-0+default-dev (= ${binary:Version}),
  librust-proxmox-auth-api-0.3-dev (= ${binary:Version}),
  librust-proxmox-auth-api-0.3+default-dev (= ${binary:Version}),
- librust-proxmox-auth-api-0.3.2-dev (= ${binary:Version}),
- librust-proxmox-auth-api-0.3.2+default-dev (= ${binary:Version})
+ librust-proxmox-auth-api-0.3.3-dev (= ${binary:Version}),
+ librust-proxmox-auth-api-0.3.3+default-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - Rust source code
- This package contains the source for the Rust proxmox-auth-api crate, packaged
- by debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-auth-api"
 
 Package: librust-proxmox-auth-api+api-dev
 Architecture: any
@@ -46,15 +45,15 @@ Depends:
  librust-proxmox-auth-api+api-types-dev (= ${binary:Version}),
  librust-proxmox-auth-api+ticket-dev (= ${binary:Version}),
  librust-http-0.2+default-dev,
- librust-proxmox-rest-server-0.5+default-dev,
- librust-proxmox-router-2+default-dev (>= 2.1.1-~~),
+ librust-proxmox-rest-server-0.5+default-dev (>= 0.5.2-~~),
+ librust-proxmox-router-2+default-dev (>= 2.1.3-~~),
  librust-proxmox-tfa-4+api-dev (>= 4.0.4-~~),
  librust-proxmox-tfa-4+default-dev (>= 4.0.4-~~),
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-auth-api-0+api-dev (= ${binary:Version}),
  librust-proxmox-auth-api-0.3+api-dev (= ${binary:Version}),
- librust-proxmox-auth-api-0.3.2+api-dev (= ${binary:Version})
+ librust-proxmox-auth-api-0.3.3+api-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - feature "api"
  This metapackage enables feature "api" for the Rust proxmox-auth-api crate, by
  pulling in any additional dependencies needed by that feature.
@@ -66,9 +65,9 @@ Depends:
  ${misc:Depends},
  librust-proxmox-auth-api-dev (= ${binary:Version}),
  librust-lazy-static-1+default-dev (>= 1.4-~~),
- librust-proxmox-schema-2+api-macro-dev,
- librust-proxmox-schema-2+api-types-dev,
- librust-proxmox-schema-2+default-dev,
+ librust-proxmox-schema-3+api-macro-dev,
+ librust-proxmox-schema-3+api-types-dev,
+ librust-proxmox-schema-3+default-dev,
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
@@ -76,7 +75,7 @@ Depends:
 Provides:
  librust-proxmox-auth-api-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-auth-api-0.3+api-types-dev (= ${binary:Version}),
- librust-proxmox-auth-api-0.3.2+api-types-dev (= ${binary:Version})
+ librust-proxmox-auth-api-0.3.3+api-types-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-auth-api
  crate, by pulling in any additional dependencies needed by that feature.
@@ -94,7 +93,7 @@ Depends:
 Provides:
  librust-proxmox-auth-api-0+pam-authenticator-dev (= ${binary:Version}),
  librust-proxmox-auth-api-0.3+pam-authenticator-dev (= ${binary:Version}),
- librust-proxmox-auth-api-0.3.2+pam-authenticator-dev (= ${binary:Version})
+ librust-proxmox-auth-api-0.3.3+pam-authenticator-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - feature "pam-authenticator"
  This metapackage enables feature "pam-authenticator" for the Rust proxmox-auth-
  api crate, by pulling in any additional dependencies needed by that feature.
@@ -111,7 +110,7 @@ Depends:
 Provides:
  librust-proxmox-auth-api-0+ticket-dev (= ${binary:Version}),
  librust-proxmox-auth-api-0.3+ticket-dev (= ${binary:Version}),
- librust-proxmox-auth-api-0.3.2+ticket-dev (= ${binary:Version})
+ librust-proxmox-auth-api-0.3.3+ticket-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - feature "ticket"
  This metapackage enables feature "ticket" for the Rust proxmox-auth-api crate,
  by pulling in any additional dependencies needed by that feature.
