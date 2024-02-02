@@ -1,3 +1,11 @@
+rust-proxmox-client (0.3.1-1) bookworm; urgency=medium
+
+  * rebuild with proxmox-schema 3
+
+  * fix post_without_body actually using POST instead of PUT
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 02 Feb 2024 14:05:22 +0100
+
 rust-proxmox-client (0.3.0-1) bookworm; urgency=medium
 
   * add `post_without_body()` to HttpApiClient
