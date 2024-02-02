@@ -1,3 +1,9 @@
+rust-proxmox-tfa (4.1.2) bookworm; urgency=medium
+
+  * rebuild with proxmox-schema 3
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 02 Feb 2024 14:00:19 +0100
+
 rust-proxmox-tfa (4.1.1) bookworm; urgency=medium
 
   * api: methods: add missing #[serde(default)] to TfaUser
