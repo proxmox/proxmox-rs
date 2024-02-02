@@ -7,13 +7,13 @@ Build-Depends: debhelper (>= 12),
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-proxmox-schema-2+api-macro-dev <!nocheck>,
- librust-proxmox-schema-2+default-dev <!nocheck>,
+ librust-proxmox-schema-3+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-3+default-dev <!nocheck>,
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~) <!nocheck>,
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-human-byte
@@ -25,8 +25,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-proxmox-schema-2+api-macro-dev,
- librust-proxmox-schema-2+default-dev,
+ librust-proxmox-schema-3+api-macro-dev,
+ librust-proxmox-schema-3+default-dev,
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~),
  librust-serde-1+default-dev
@@ -36,8 +36,7 @@ Provides:
  librust-proxmox-human-byte-0+default-dev (= ${binary:Version}),
  librust-proxmox-human-byte-0.1-dev (= ${binary:Version}),
  librust-proxmox-human-byte-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0.1.2-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0.1.2+default-dev (= ${binary:Version})
+ librust-proxmox-human-byte-0.1.3-dev (= ${binary:Version}),
+ librust-proxmox-human-byte-0.1.3+default-dev (= ${binary:Version})
 Description: Proxmox library for formatting byte sizes (IEC or SI) - Rust source code
- This package contains the source for the Rust proxmox-human-byte crate,
- packaged by debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-human-byte"
