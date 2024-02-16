@@ -44,6 +44,7 @@ license = "AGPL-3"
 repository = "https://git.proxmox.com/?p=proxmox.git"
 homepage = "https://proxmox.com"
 exclude = [ "debian" ]
+rust-version = "1.70"
 
 [workspace.dependencies]
 # any features enabled here are enabled on all members using 'workspace = true'!
