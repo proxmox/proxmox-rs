@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{IsTerminal, Write};
 
 use anyhow::{bail, format_err, Error};
 use serde_json::Value;
@@ -245,7 +245,7 @@ impl TableFormatOptions {
     pub fn new() -> Self {
         let mut me = Self::default();
 
-        let is_tty = unsafe { libc::isatty(libc::STDOUT_FILENO) == 1 };
+        let is_tty = std::io::stdout().is_terminal();
 
         if is_tty {
             let (_rows, columns) = stdout_terminal_size();
