@@ -37,6 +37,37 @@ static NESTED_PROPERTY_SCHEMA: Schema = ObjectSchema::new(
 )
 .schema();
 
+static ANOTHER_OBJECT_SCHEMA: Schema = ObjectSchema::new(
+    "another simple object schema",
+    &[
+        ("another1", false, &STRING_SCHEMA),
+        ("another2", true, &STRING_SCHEMA),
+    ],
+)
+.schema();
+
+static OBJECT_WITH_ADDITIONAL: Schema = ObjectSchema::new(
+    "object allowing additional properties",
+    &[
+        ("regular1", false, &STRING_SCHEMA),
+        ("regular2", true, &STRING_SCHEMA),
+    ],
+)
+.additional_properties(true)
+.schema();
+
+static ALL_OF_SCHEMA_NO_ADDITIONAL: Schema = AllOfSchema::new(
+    "flattening 2 objects together",
+    &[&SIMPLE_OBJECT_SCHEMA, &ANOTHER_OBJECT_SCHEMA],
+)
+.schema();
+
+static ALL_OF_SCHEMA_ADDITIONAL: Schema = AllOfSchema::new(
+    "flattening 2 objects together where 1 allows additional properties",
+    &[&SIMPLE_OBJECT_SCHEMA, &OBJECT_WITH_ADDITIONAL],
+)
+.schema();
+
 fn compare_error(expected: &[(&str, &str)], err: Error) -> Result<(), Error> {
     let err = match err.downcast_ref::<ParameterError>() {
         Some(err) => err,
@@ -193,6 +224,68 @@ fn verify_nested_property3() -> Result<(), Error> {
             ("ps1/prop1", "property is missing and it is not optional"),
             ("ps1/prop3", "property is missing and it is not optional"),
         ],
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn verify_all_of_schema() -> Result<(), Error> {
+    let value = json!({
+        "prop1": "hello",
+        "prop3": "hello",
+        "another1": "another hello",
+    });
+    ALL_OF_SCHEMA_NO_ADDITIONAL
+        .verify_json(&value)
+        .expect("all of schema failed to verify valid object");
+
+    let value = json!({
+        "prop1": "hello",
+        "prop3": "hello",
+    });
+    test_verify(
+        &ALL_OF_SCHEMA_NO_ADDITIONAL,
+        &value,
+        &[("another1", "property is missing and it is not optional.")],
+    )?;
+
+    let value = json!({
+        "prop1": "hello",
+        "prop3": "hello",
+        "another1": "another hello",
+        "additional": "additional value",
+    });
+    test_verify(
+        &ALL_OF_SCHEMA_NO_ADDITIONAL,
+        &value,
+        &[("additional", "schema does not allow additional properties.")],
+    )?;
+
+    Ok(())
+}
+
+#[test]
+fn verify_all_of_schema_with_additional() -> Result<(), Error> {
+    let value = json!({
+        "prop1": "hello",
+        "prop3": "hello",
+        "regular1": "another hello",
+        "more": "additional property",
+    });
+    ALL_OF_SCHEMA_ADDITIONAL
+        .verify_json(&value)
+        .expect("all of schema failed to verify valid object");
+
+    let value = json!({
+        "prop1": "hello",
+        "prop3": "hello",
+        "more": "additional property",
+    });
+    test_verify(
+        &ALL_OF_SCHEMA_ADDITIONAL,
+        &value,
+        &[("regular1", "property is missing and it is not optional.")],
     )?;
 
     Ok(())
