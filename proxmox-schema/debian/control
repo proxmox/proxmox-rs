@@ -45,10 +45,10 @@ Provides:
  librust-proxmox-schema-3.0+api-types-dev (= ${binary:Version}),
  librust-proxmox-schema-3.0+default-dev (= ${binary:Version}),
  librust-proxmox-schema-3.0+test-harness-dev (= ${binary:Version}),
- librust-proxmox-schema-3.0.0-dev (= ${binary:Version}),
- librust-proxmox-schema-3.0.0+api-types-dev (= ${binary:Version}),
- librust-proxmox-schema-3.0.0+default-dev (= ${binary:Version}),
- librust-proxmox-schema-3.0.0+test-harness-dev (= ${binary:Version})
+ librust-proxmox-schema-3.0.1-dev (= ${binary:Version}),
+ librust-proxmox-schema-3.0.1+api-types-dev (= ${binary:Version}),
+ librust-proxmox-schema-3.0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-schema-3.0.1+test-harness-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - Rust source code
  Source code for Debianized Rust crate "proxmox-schema"
 
@@ -58,11 +58,11 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-schema-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1+default-dev (>= 1.0.6-~~)
+ librust-proxmox-api-macro-1+default-dev (>= 1.0.8-~~)
 Provides:
  librust-proxmox-schema-3+api-macro-dev (= ${binary:Version}),
  librust-proxmox-schema-3.0+api-macro-dev (= ${binary:Version}),
- librust-proxmox-schema-3.0.0+api-macro-dev (= ${binary:Version})
+ librust-proxmox-schema-3.0.1+api-macro-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - feature "api-macro"
  This metapackage enables feature "api-macro" for the Rust proxmox-schema crate,
  by pulling in any additional dependencies needed by that feature.
@@ -78,7 +78,7 @@ Depends:
 Provides:
  librust-proxmox-schema-3+upid-api-impl-dev (= ${binary:Version}),
  librust-proxmox-schema-3.0+upid-api-impl-dev (= ${binary:Version}),
- librust-proxmox-schema-3.0.0+upid-api-impl-dev (= ${binary:Version})
+ librust-proxmox-schema-3.0.1+upid-api-impl-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - feature "upid-api-impl"
  This metapackage enables feature "upid-api-impl" for the Rust proxmox-schema
  crate, by pulling in any additional dependencies needed by that feature.

@@ -1,3 +1,11 @@
+rust-proxmox-schema (3.0.1-1) UNRELEASED; urgency=medium
+
+  * actually perform additional-properties check for AllOf and OneOf schemas
+
+  * clean up a few verification error messages
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 Feb 2024 12:23:35 +0100
+
 rust-proxmox-schema (3.0.0-1) bookworm; urgency=medium
 
   * add basic oneOf schema support
