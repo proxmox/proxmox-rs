@@ -834,7 +834,7 @@ pub trait ObjectSchemaType {
             } else if !additional_properties {
                 errors.push(
                     key.to_string(),
-                    format_err!("schema does not allow additional properties."),
+                    format_err!("schema does not allow additional properties"),
                 );
             }
         }
@@ -843,7 +843,7 @@ pub trait ObjectSchemaType {
             if !(*optional) && data[name] == Value::Null {
                 errors.push(
                     name.to_string(),
-                    format_err!("property is missing and it is not optional."),
+                    format_err!("property is missing and it is not optional"),
                 );
             }
         }

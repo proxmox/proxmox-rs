@@ -135,8 +135,8 @@ fn verify_simple_object() -> Result<(), Error> {
         &simple_value,
         &[
             ("prop1", "Expected string value."),
-            ("prop4", "schema does not allow additional properties."),
-            ("prop3", "property is missing and it is not optional."),
+            ("prop4", "schema does not allow additional properties"),
+            ("prop3", "property is missing and it is not optional"),
         ],
     )?;
 
@@ -152,9 +152,9 @@ fn verify_nested_object1() -> Result<(), Error> {
         &nested_value,
         &[
             ("prop1", "Expected string value."),
-            ("prop4", "schema does not allow additional properties."),
-            ("arr1", "property is missing and it is not optional."),
-            ("obj1", "property is missing and it is not optional."),
+            ("prop4", "schema does not allow additional properties"),
+            ("arr1", "property is missing and it is not optional"),
+            ("obj1", "property is missing and it is not optional"),
         ],
     )?;
 
@@ -170,10 +170,10 @@ fn verify_nested_object2() -> Result<(), Error> {
         &nested_value,
         &[
             ("arr1/[1]", "Expected string value."),
-            ("obj1/prop1", "property is missing and it is not optional."),
-            ("obj1/prop3", "property is missing and it is not optional."),
+            ("obj1/prop1", "property is missing and it is not optional"),
+            ("obj1/prop3", "property is missing and it is not optional"),
             ("prop1", "Expected string value."),
-            ("prop4", "schema does not allow additional properties."),
+            ("prop4", "schema does not allow additional properties"),
         ],
     )?;
 
@@ -247,7 +247,7 @@ fn verify_all_of_schema() -> Result<(), Error> {
     test_verify(
         &ALL_OF_SCHEMA_NO_ADDITIONAL,
         &value,
-        &[("another1", "property is missing and it is not optional.")],
+        &[("another1", "property is missing and it is not optional")],
     )?;
 
     let value = json!({
@@ -259,7 +259,7 @@ fn verify_all_of_schema() -> Result<(), Error> {
     test_verify(
         &ALL_OF_SCHEMA_NO_ADDITIONAL,
         &value,
-        &[("additional", "schema does not allow additional properties.")],
+        &[("additional", "schema does not allow additional properties")],
     )?;
 
     Ok(())
@@ -285,7 +285,7 @@ fn verify_all_of_schema_with_additional() -> Result<(), Error> {
     test_verify(
         &ALL_OF_SCHEMA_ADDITIONAL,
         &value,
-        &[("regular1", "property is missing and it is not optional.")],
+        &[("regular1", "property is missing and it is not optional")],
     )?;
 
     Ok(())
