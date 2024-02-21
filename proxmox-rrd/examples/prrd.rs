@@ -121,7 +121,7 @@ pub fn update_rrd(path: String, time: Option<u64>, value: f64) -> Result<(), Err
                description: "The filename."
            },
            cf: {
-               type: CF,
+               type: AggregationFn,
            },
            resolution: {
                description: "Time resolution",
@@ -226,7 +226,7 @@ pub fn last_update(path: String) -> Result<(), Error> {
    input: {
        properties: {
            dst: {
-               type: DST,
+               type: DataSourceType,
            },
            path: {
                description: "The filename to create."
