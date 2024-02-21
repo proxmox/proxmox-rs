@@ -917,7 +917,12 @@ impl ObjectSchemaType for AllOfSchema {
     }
 
     fn additional_properties(&self) -> bool {
-        true
+        self.list.iter().any(|schema| {
+            schema
+                .any_object()
+                .expect("non-object-schema in `AllOfSchema`")
+                .additional_properties()
+        })
     }
 
     fn default_key(&self) -> Option<&'static str> {
@@ -988,7 +993,12 @@ impl ObjectSchemaType for OneOfSchema {
     }
 
     fn additional_properties(&self) -> bool {
-        true
+        self.list.iter().any(|(_, schema)| {
+            schema
+                .any_object()
+                .expect("non-object-schema in `OneOfSchema`")
+                .additional_properties()
+        })
     }
 
     fn default_key(&self) -> Option<&'static str> {
