@@ -116,26 +116,9 @@ where
     /// Sign the ticket.
     pub fn sign(&mut self, keyring: &Keyring, aad: Option<&str>) -> Result<String, Error> {
         let mut output = self.ticket_data();
-        let mut signer = keyring.signer(MessageDigest::sha256())?;
-
-        signer
-            .update(output.as_bytes())
-            .map_err(Error::from)
-            .and_then(|()| {
-                if let Some(aad) = aad {
-                    signer
-                        .update(b":")
-                        .and_then(|()| signer.update(aad.as_bytes()))
-                        .map_err(Error::from)
-                } else {
-                    Ok::<_, Error>(())
-                }
-            })
+        let signature = keyring
+            .sign(MessageDigest::sha256(), &self.verification_data(aad))
             .map_err(|err| format_err!("error signing ticket: {}", err))?;
-
-        let signature = signer
-            .sign_to_vec()
-            .map_err(|err| format_err!("error finishing ticket signature: {}", err))?;
 
         use std::fmt::Write;
         write!(

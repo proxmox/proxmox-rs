@@ -9,11 +9,13 @@ use openssl::rsa::Rsa;
 use openssl::sign::{Signer, Verifier};
 
 /// A private auth key used for API ticket signing and verification.
+#[derive(Clone)]
 pub struct PrivateKey {
     pub(crate) key: PKey<Private>,
 }
 
 /// A private auth key used for API ticket verification.
+#[derive(Clone)]
 pub struct PublicKey {
     pub(crate) key: PKey<Public>,
 }
@@ -87,6 +89,13 @@ impl PrivateKey {
     /// Get the public key.
     pub fn public_key(&self) -> Result<PublicKey, Error> {
         PublicKey::from_pem(&self.public_key_to_pem()?)
+    }
+
+    pub(self) fn sign(&self, digest: MessageDigest, data: &[u8]) -> Result<Vec<u8>, Error> {
+        Signer::new(digest, &self.key)
+            .map_err(|e| format_err!("could not create private key signer - {e}"))?
+            .sign_oneshot_to_vec(data)
+            .map_err(|e| format_err!("could not sign with private key - {e}"))
     }
 }
 
@@ -204,15 +213,12 @@ impl Keyring {
         Ok(false)
     }
 
-    pub(crate) fn signer(&self, digest: MessageDigest) -> Result<Signer, Error> {
-        Signer::new(
-            digest,
-            &self
-                .signing_key
-                .as_ref()
-                .ok_or_else(|| format_err!("no private key available for signing"))?
-                .key,
-        )
-        .map_err(|err| format_err!("failed to create openssl signer - {err}"))
+    pub(crate) fn sign(&self, digest: MessageDigest, data: &[u8]) -> Result<Vec<u8>, Error> {
+        let key = self
+            .signing_key
+            .as_ref()
+            .ok_or_else(|| format_err!("no private key available for signing"))?;
+
+        key.sign(digest, data)
     }
 }
