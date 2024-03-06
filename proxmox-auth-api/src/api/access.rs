@@ -286,14 +286,15 @@ fn verify_csrf_prevention_token_do(
     }
 
     let timestamp = parts.pop_front().unwrap();
-    let sig = parts.pop_front().unwrap();
+    let sig = parts.pop_front().unwrap().as_bytes();
 
     let ttime = i64::from_str_radix(timestamp, 16)
         .map_err(|err| format_err!("timestamp format error - {}", err))?;
 
     let digest = compute_csrf_secret_digest(ttime, secret, userid);
+    let digest = digest.as_bytes();
 
-    if digest != sig {
+    if digest.len() != sig.len() || !openssl::memcmp::eq(digest, sig) {
         bail!("invalid signature.");
     }
 
