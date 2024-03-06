@@ -140,13 +140,90 @@ impl From<PKey<Public>> for PublicKey {
     }
 }
 
+#[derive(Clone)]
+pub struct HMACKey {
+    key: PKey<Private>,
+}
+
+impl HMACKey {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+        Ok(Self {
+            key: PKey::hmac(bytes)
+                .map_err(|err| format_err!("failed to create hmac key from bytes - {err}"))?,
+        })
+    }
+
+    pub fn from_base64(string: &str) -> Result<Self, Error> {
+        let bytes = base64::decode_config(string, base64::STANDARD_NO_PAD)
+            .map_err(|e| format_err!("could not decode base64 hmac key - {e}"))?;
+
+        Self::from_bytes(&bytes)
+    }
+
+    pub fn generate() -> Result<Self, Error> {
+        // 8*64 = 512 bit security
+        let mut bytes = [0u8; 64];
+        openssl::rand::rand_bytes(&mut bytes)
+            .map_err(|err| format_err!("failed to generate random bytes for hmac key - {err}"))?;
+
+        Self::from_bytes(&bytes)
+    }
+
+    pub fn sign(&self, digest: MessageDigest, data: &[u8]) -> Result<Vec<u8>, Error> {
+        let mut signer = Signer::new(digest, &self.key)
+            .map_err(|e| format_err!("failed to create hmac signer - {e}"))?;
+
+        signer
+            .sign_oneshot_to_vec(data)
+            .map_err(|e| format_err!("failed to sign to vec using hmac - {e}"))
+    }
+
+    pub fn verify(
+        &self,
+        digest: MessageDigest,
+        signature: &[u8],
+        data: &[u8],
+    ) -> Result<bool, Error> {
+        let digest = self.sign(digest, data).map_err(|e| {
+            format_err!("failed to verify, could not create comparison signature - {e}")
+        })?;
+
+        if signature.len() == digest.len() && openssl::memcmp::eq(signature, &digest) {
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    /// This outputs the hmac key *without* any encryption just encoded as base64.
+    pub fn to_base64(&self) -> Result<String, Error> {
+        let bytes = self
+            .key
+            .raw_private_key()
+            .map_err(|e| format_err!("could not get key as raw bytes - {e}"))?;
+
+        Ok(base64::encode_config(bytes, base64::STANDARD_NO_PAD))
+    }
+}
+
+enum SigningKey {
+    Private(PrivateKey),
+    Hmac(HMACKey),
+}
+
+enum VerificationKey {
+    Public(PublicKey),
+    Hmac(HMACKey),
+}
+
 /// A key ring for authentication.
 ///
-/// This holds one active signing key for new tickets, and optionally multiple public keys for
-/// verifying them in order to support key rollover.
+/// This can hold one active signing key for new tickets (either an HMAC secret or an assymmetric
+/// key), and optionally multiple public keys and HMAC secrets for verifying them in order to
+/// support key rollover.
 pub struct Keyring {
-    signing_key: Option<PrivateKey>,
-    public_keys: Vec<PublicKey>,
+    signing_key: Option<SigningKey>,
+    public_keys: Vec<VerificationKey>,
 }
 
 impl Keyring {
@@ -156,6 +233,10 @@ impl Keyring {
 
     pub fn generate_new_ec() -> Result<Self, Error> {
         PrivateKey::generate_ec().map(Self::with_private_key)
+    }
+
+    pub fn generate_new_hmac() -> Result<Self, Error> {
+        HMACKey::generate().map(Self::with_hmac_key)
     }
 
     pub fn new() -> Self {
@@ -168,19 +249,30 @@ impl Keyring {
     pub fn with_public_key(key: PublicKey) -> Self {
         Self {
             signing_key: None,
-            public_keys: vec![key],
+            public_keys: vec![VerificationKey::Public(key)],
         }
     }
 
     pub fn with_private_key(key: PrivateKey) -> Self {
         Self {
-            signing_key: Some(key),
+            signing_key: Some(SigningKey::Private(key)),
+            public_keys: Vec::new(),
+        }
+    }
+
+    pub fn with_hmac_key(key: HMACKey) -> Self {
+        Self {
+            signing_key: Some(SigningKey::Hmac(key)),
             public_keys: Vec::new(),
         }
     }
 
     pub fn add_public_key(&mut self, key: PublicKey) {
-        self.public_keys.push(key);
+        self.public_keys.push(VerificationKey::Public(key));
+    }
+
+    pub fn add_hmac_key(&mut self, key: HMACKey) {
+        self.public_keys.push(VerificationKey::Hmac(key));
     }
 
     pub fn verify(
@@ -209,14 +301,24 @@ impl Keyring {
         }
 
         if let Some(key) = &self.signing_key {
-            if verify_with(&key.key, digest, signature, data)? {
-                return Ok(true);
+            match key {
+                SigningKey::Private(key) if verify_with(&key.key, digest, signature, data)? => {
+                    return Ok(true)
+                }
+                SigningKey::Hmac(key) if key.verify(digest, signature, data)? => return Ok(true),
+                _ => (),
             }
         }
 
         for key in &self.public_keys {
-            if verify_with(&key.key, digest, signature, data)? {
-                return Ok(true);
+            match key {
+                VerificationKey::Public(key) if verify_with(&key.key, digest, signature, data)? => {
+                    return Ok(true)
+                }
+                VerificationKey::Hmac(key) if key.verify(digest, signature, data)? => {
+                    return Ok(true)
+                }
+                _ => (),
             }
         }
 
@@ -224,11 +326,14 @@ impl Keyring {
     }
 
     pub(crate) fn sign(&self, digest: MessageDigest, data: &[u8]) -> Result<Vec<u8>, Error> {
-        let key = self
+        let signing_key = self
             .signing_key
             .as_ref()
             .ok_or_else(|| format_err!("no private key available for signing"))?;
 
-        key.sign(digest, data)
+        match signing_key {
+            SigningKey::Private(key) => key.sign(digest, data),
+            SigningKey::Hmac(key) => key.sign(digest, data),
+        }
     }
 }

@@ -314,4 +314,21 @@ mod test {
             false
         });
     }
+
+    #[test]
+    fn test_tickets_hmac() {
+        let keyring =
+            Keyring::generate_new_hmac().expect("failed to generate HMAC key for testing");
+
+        simple_test(&keyring, Some("secret aad data"), |_| true);
+        simple_test(&keyring, None, |_| true);
+        simple_test(&keyring, None, |t| {
+            t.change_time(0);
+            false
+        });
+        simple_test(&keyring, None, |t| {
+            t.change_time(crate::time::epoch_i64() + 0x1000_0000);
+            false
+        });
+    }
 }
