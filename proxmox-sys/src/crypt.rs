@@ -155,9 +155,15 @@ pub fn encrypt_pw(password: &str) -> Result<String, Error> {
 /// Verify if an encrypted password matches
 pub fn verify_crypt_pw(password: &str, enc_password: &str) -> Result<(), Error> {
     let verify = crypt(password.as_bytes(), enc_password.as_bytes())?;
-    if verify != enc_password {
+
+    // `openssl::memcmp::eq()`'s runtime does not depend on the content of the arrays only the
+    // length, this makes it harder to exploit timing side-channels.
+    if verify.len() != enc_password.len()
+        || !openssl::memcmp::eq(verify.as_bytes(), enc_password.as_bytes())
+    {
         bail!("invalid credentials");
     }
+
     Ok(())
 }
 
