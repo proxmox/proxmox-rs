@@ -9,7 +9,7 @@ use percent_encoding::percent_decode_str;
 use proxmox_rest_server::{extract_cookie, AuthError};
 use proxmox_tfa::api::{OpenUserChallengeData, TfaConfig};
 
-use crate::auth_key::Keyring;
+use crate::auth_key::{HMACKey, Keyring};
 use crate::types::{Authid, RealmRef, Userid, UsernameRef};
 
 mod access;
@@ -18,7 +18,7 @@ mod ticket;
 use crate::ticket::Ticket;
 use access::verify_csrf_prevention_token;
 
-pub use access::{create_ticket, API_METHOD_CREATE_TICKET};
+pub use access::{assemble_csrf_prevention_token, create_ticket, API_METHOD_CREATE_TICKET};
 pub use ticket::{ApiTicket, PartialTicket};
 
 /// Authentication realms are used to manage users: authenticate, change password or remove.
@@ -67,7 +67,7 @@ pub trait AuthContext: Send + Sync {
     fn auth_id_is_active(&self, auth_id: &Authid) -> Result<bool, Error>;
 
     /// CSRF prevention token secret data.
-    fn csrf_secret(&self) -> &[u8];
+    fn csrf_secret(&self) -> &'static HMACKey;
 
     /// Verify a token secret.
     fn verify_token_secret(&self, token_id: &Authid, token_secret: &str) -> Result<(), Error>;

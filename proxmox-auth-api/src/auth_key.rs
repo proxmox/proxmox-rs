@@ -204,6 +204,16 @@ impl HMACKey {
 
         Ok(base64::encode_config(bytes, base64::STANDARD_NO_PAD))
     }
+
+    // This is needed for legacy CSRF token verifyication.
+    //
+    // TODO: remove once all dependent products had a major version release (PBS)
+    pub(crate) fn as_bytes(&self) -> Result<Vec<u8>, Error> {
+        // workaround to get access to the the bytes behind the key.
+        self.key
+            .raw_private_key()
+            .map_err(|e| format_err!("could not get raw bytes of HMAC key - {e}"))
+    }
 }
 
 enum SigningKey {
