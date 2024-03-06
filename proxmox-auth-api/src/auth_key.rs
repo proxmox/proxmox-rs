@@ -1,10 +1,8 @@
 //! Auth key handling.
 
 use anyhow::{bail, format_err, Error};
-use openssl::ec::{EcGroup, EcKey};
 use openssl::hash::MessageDigest;
-use openssl::nid::Nid;
-use openssl::pkey::{HasPublic, PKey, PKeyRef, Private, Public};
+use openssl::pkey::{HasPublic, Id, PKey, PKeyRef, Private, Public};
 use openssl::rsa::Rsa;
 use openssl::sign::{Signer, Verifier};
 
@@ -33,14 +31,9 @@ impl PrivateKey {
 
     /// Generate a new EC auth key.
     pub fn generate_ec() -> Result<Self, Error> {
-        let nid = Nid::X9_62_PRIME256V1;
-        let group = EcGroup::from_curve_name(nid)
-            .map_err(|err| format_err!("failed to get P-256 group - {err}"))?;
-        let ec = EcKey::generate(&group)
-            .map_err(|err| format_err!("failed to generate EC key for testing - {err}"))?;
         Ok(Self {
-            key: PKey::from_ec_key(ec)
-                .map_err(|err| format_err!("failed to get PKey for EC key - {err}"))?,
+            key: PKey::generate_ed25519()
+                .map_err(|err| format_err!("failed to generate EC PKey - {err}"))?,
         })
     }
 
@@ -59,9 +52,10 @@ impl PrivateKey {
                 .map_err(|err| format_err!("failed to encode rsa private key as PEM - {err}"));
         }
 
-        if let Ok(ec) = self.key.ec_key() {
-            return ec
-                .private_key_to_pem()
+        if self.key.id() == Id::ED25519 {
+            return self
+                .key
+                .private_key_to_pem_pkcs8()
                 .map_err(|err| format_err!("failed to encode ec private key as PEM - {err}"));
         }
 
@@ -77,8 +71,9 @@ impl PrivateKey {
                 .map_err(|err| format_err!("failed to encode rsa public key as PEM - {err}"));
         }
 
-        if let Ok(ec) = self.key.ec_key() {
-            return ec
+        if self.key.id() == Id::ED25519 {
+            return self
+                .key
                 .public_key_to_pem()
                 .map_err(|err| format_err!("failed to encode ec public key as PEM - {err}"));
         }
@@ -92,8 +87,15 @@ impl PrivateKey {
     }
 
     pub(self) fn sign(&self, digest: MessageDigest, data: &[u8]) -> Result<Vec<u8>, Error> {
-        Signer::new(digest, &self.key)
-            .map_err(|e| format_err!("could not create private key signer - {e}"))?
+        let mut signer = if self.key.id() == Id::ED25519 {
+            // ed25519 does not support signing with digest
+            Signer::new_without_digest(&self.key)
+        } else {
+            Signer::new(digest, &self.key)
+        }
+        .map_err(|e| format_err!("could not create private key signer - {e}"))?;
+
+        signer
             .sign_oneshot_to_vec(data)
             .map_err(|e| format_err!("could not sign with private key - {e}"))
     }
@@ -121,8 +123,9 @@ impl PublicKey {
                 .map_err(|err| format_err!("failed to encode rsa public key as PEM - {err}"));
         }
 
-        if let Ok(ec) = self.key.ec_key() {
-            return ec
+        if self.key.id() == Id::ED25519 {
+            return self
+                .key
                 .public_key_to_pem()
                 .map_err(|err| format_err!("failed to encode ec public key as PEM - {err}"));
         }
@@ -192,8 +195,15 @@ impl Keyring {
             signature: &[u8],
             data: &[u8],
         ) -> Result<bool, Error> {
-            Verifier::new(digest, key)
-                .map_err(|err| format_err!("failed to create openssl verifier - {err}"))?
+            let mut verifier = if key.id() == Id::ED25519 {
+                // ed25519 does not support digests
+                Verifier::new_without_digest(key)
+            } else {
+                Verifier::new(digest, key)
+            }
+            .map_err(|err| format_err!("failed to create openssl verifier - {err}"))?;
+
+            verifier
                 .verify_oneshot(signature, data)
                 .map_err(|err| format_err!("openssl error verifying data - {err}"))
         }

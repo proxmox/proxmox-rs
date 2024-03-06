@@ -300,7 +300,7 @@ mod test {
     }
 
     #[test]
-    fn test_tickets_ecdsa() {
+    fn test_tickets_ed25519() {
         let keyring = Keyring::generate_new_ec().expect("failed to generate EC key for testing");
 
         simple_test(&keyring, Some("secret aad data"), |_| true);
