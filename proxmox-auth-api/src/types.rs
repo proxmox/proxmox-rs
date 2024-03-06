@@ -111,6 +111,7 @@ pub const PROXMOX_AUTH_REALM_SCHEMA: Schema = PROXMOX_AUTH_REALM_STRING_SCHEMA.s
 /// `.as_str()`.
 ///
 /// ```compile_fail
+/// # use proxmox_auth_api::types::Username;
 /// fn test(a: Username, b: Username) -> bool {
 ///     a == b // illegal and does not compile
 /// }
@@ -332,21 +333,24 @@ pub struct TokennameRef(str);
 
 #[doc(hidden)]
 /// ```compile_fail
+/// # use proxmox_auth_api::types::Username;
 /// let a: Username = unsafe { std::mem::zeroed() };
 /// let b: Username = unsafe { std::mem::zeroed() };
 /// let _ = <Username as PartialEq>::eq(&a, &b);
 /// ```
 ///
 /// ```compile_fail
+/// # use proxmox_auth_api::types::UsernameRef;
 /// let a: &UsernameRef = unsafe { std::mem::zeroed() };
 /// let b: &UsernameRef = unsafe { std::mem::zeroed() };
 /// let _ = <&UsernameRef as PartialEq>::eq(a, b);
 /// ```
 ///
 /// ```compile_fail
-/// let a: &UsernameRef = unsafe { std::mem::zeroed() };
-/// let b: &UsernameRef = unsafe { std::mem::zeroed() };
-/// let _ = <&UsernameRef as PartialEq>::eq(&a, &b);
+/// # use proxmox_auth_api::types::TokennameRef;
+/// let a: &TokennameRef = unsafe { std::mem::zeroed() };
+/// let b: &TokennameRef = unsafe { std::mem::zeroed() };
+/// let _ = <&TokennameRef as PartialEq>::eq(&a, &b);
 /// ```
 struct _AssertNoEqImpl;
 
