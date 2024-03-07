@@ -279,7 +279,7 @@ impl CertificateRevocation<'_> {
 }
 
 /// Status of an ACME account.
-#[cfg_attr(feature="api-types", proxmox_schema::api())]
+#[cfg_attr(feature = "api-types", proxmox_schema::api())]
 #[derive(Clone, Copy, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum AccountStatus {
@@ -312,8 +312,18 @@ impl AccountStatus {
 
 #[cfg_attr(feature="api-types", proxmox_schema::api(
     properties: {
-        extra: { type: Object, properties: {}, additional_properties: true },
-        contact: { type: Array, items: { type: String, description: "Contact Info." }}
+        extra: {
+            type: Object,
+            properties: {},
+            additional_properties: true,
+        },
+        contact: {
+            type: Array,
+            items: {
+                type: String,
+                description: "Contact Info.",
+            },
+        },
     }
 ))]
 /// ACME Account data. This is the part of the account returned from and possibly sent to the ACME
