@@ -19,7 +19,7 @@ openssl.workspace = true
 # For the client
 native-tls = { workspace = true, optional = true }
 
-proxmox-schema = { workspace = true, optional = true, features = [ "api-macro", "api-types" ] }
+proxmox-schema = { workspace = true, optional = true, features = [ "api-macro" ] }
 
 [dependencies.ureq]
 optional = true
