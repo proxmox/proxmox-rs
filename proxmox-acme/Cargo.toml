@@ -19,6 +19,8 @@ openssl.workspace = true
 # For the client
 native-tls = { workspace = true, optional = true }
 
+proxmox-schema = { workspace = true, optional = true, features = [ "api-macro", "api-types" ] }
+
 [dependencies.ureq]
 optional = true
 version = "2.4"
@@ -27,6 +29,7 @@ features = [ "native-tls", "gzip" ]
 
 [features]
 default = []
+api-types = [ "dep:proxmox-schema" ]
 client = ["ureq", "native-tls"]
 
 [dev-dependencies]

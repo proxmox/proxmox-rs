@@ -14,11 +14,16 @@ struct Protected {
     kid: String,
 }
 
+#[cfg_attr(feature="api-types", proxmox_schema::api())]
+/// External Account Bindings
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ExternalAccountBinding {
+    /// JOSE Header (see RFC 7515)
     protected: String,
+    /// Payload
     payload: String,
+    /// HMAC signature
     signature: String,
 }
 
