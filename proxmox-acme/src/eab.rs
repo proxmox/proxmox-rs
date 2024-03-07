@@ -16,7 +16,7 @@ struct Protected {
 
 #[cfg_attr(feature="api-types", proxmox_schema::api())]
 /// External Account Bindings
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct ExternalAccountBinding {
     /// JOSE Header (see RFC 7515)

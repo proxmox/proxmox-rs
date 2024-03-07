@@ -319,7 +319,7 @@ impl AccountStatus {
 /// ACME Account data. This is the part of the account returned from and possibly sent to the ACME
 /// provider. Some fields may be uptdated by the user via a request to the account location, others
 /// may not be changed.
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountData {
     /// The current account status.
