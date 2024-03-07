@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 12),
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: 
 Vcs-Browser: 
 Homepage: https://proxmox.com
@@ -30,6 +30,7 @@ Depends:
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
 Suggests:
+ librust-proxmox-acme+api-types-dev (= ${binary:Version}),
  librust-proxmox-acme+client-dev (= ${binary:Version}),
  librust-proxmox-acme+native-tls-dev (= ${binary:Version}),
  librust-proxmox-acme+ureq-dev (= ${binary:Version})
@@ -39,11 +40,26 @@ Provides:
  librust-proxmox-acme-0+default-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.0-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.0+default-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.1-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.1+default-dev (= ${binary:Version})
 Description: ACME client library - Rust source code
- This package contains the source for the Rust proxmox-acme crate, packaged by
- debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-acme"
+
+Package: librust-proxmox-acme+api-types-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-acme-dev (= ${binary:Version}),
+ librust-proxmox-schema-3+api-macro-dev,
+ librust-proxmox-schema-3+default-dev
+Provides:
+ librust-proxmox-acme-0+api-types-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5+api-types-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.1+api-types-dev (= ${binary:Version})
+Description: ACME client library - feature "api-types"
+ This metapackage enables feature "api-types" for the Rust proxmox-acme crate,
+ by pulling in any additional dependencies needed by that feature.
 
 Package: librust-proxmox-acme+client-dev
 Architecture: any
@@ -56,7 +72,7 @@ Depends:
 Provides:
  librust-proxmox-acme-0+client-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+client-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.0+client-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.1+client-dev (= ${binary:Version})
 Description: ACME client library - feature "client"
  This metapackage enables feature "client" for the Rust proxmox-acme crate, by
  pulling in any additional dependencies needed by that feature.
@@ -71,7 +87,7 @@ Depends:
 Provides:
  librust-proxmox-acme-0+native-tls-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+native-tls-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.0+native-tls-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.1+native-tls-dev (= ${binary:Version})
 Description: ACME client library - feature "native-tls"
  This metapackage enables feature "native-tls" for the Rust proxmox-acme crate,
  by pulling in any additional dependencies needed by that feature.
@@ -87,7 +103,7 @@ Depends:
 Provides:
  librust-proxmox-acme-0+ureq-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+ureq-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.0+ureq-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.1+ureq-dev (= ${binary:Version})
 Description: ACME client library - feature "ureq"
  This metapackage enables feature "ureq" for the Rust proxmox-acme crate, by
  pulling in any additional dependencies needed by that feature.

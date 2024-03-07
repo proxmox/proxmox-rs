@@ -1,3 +1,11 @@
+rust-proxmox-acme (0.5.1) bookworm; urgency=medium
+
+  * add api-types feature to provide schemas for api types
+
+  * derive PartialEq for api types for integration in rust based ui code
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 Mar 2024 13:27:08 +0100
+
 rust-proxmox-acme (0.5.0) bookworm; urgency=medium
 
   * add external account binding support
