@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.10.9-1) bookworm; urgency=medium
+
+  * fix #5249: apt: allow parsing Packages without Priority field
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 19 Apr 2024 08:45:15 +0200
+
 rust-proxmox-apt (0.10.8-1) bookworm; urgency=medium
 
   * document status property for standard repositories
