@@ -14,7 +14,7 @@ pub struct PackagesFileRaw {
     pub source: Option<String>,
     pub version: String,
     pub section: Option<String>,
-    pub priority: String,
+    pub priority: Option<String>,
     pub architecture: String,
     pub essential: Option<String>,
     pub depends: Option<String>,
