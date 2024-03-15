@@ -11,6 +11,7 @@ exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+const_format = { workspace = true, optional = true }
 lazy_static.workspace = true
 regex.workspace = true
 serde.workspace = true
@@ -33,7 +34,7 @@ default = []
 
 api-macro = ["dep:proxmox-api-macro"]
 upid-api-impl = [ "dep:libc", "dep:nix" ]
-api-types = []
+api-types = [ "dep:const_format" ]
 
 # Testing only
 test-harness = []

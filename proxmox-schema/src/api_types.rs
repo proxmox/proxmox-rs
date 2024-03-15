@@ -1,10 +1,10 @@
 //! The "basic" api types we generally require along with some of their macros.
+use const_format::concatcp;
 
 use crate::{ApiStringFormat, Schema, StringSchema};
 
 #[rustfmt::skip]
-#[macro_export]
-macro_rules! SAFE_ID_REGEX_STR { () => { r"(?:[A-Za-z0-9_][A-Za-z0-9._\-]*)" }; }
+const SAFE_ID_REGEX_STR: &str = r"(?:[A-Za-z0-9_][A-Za-z0-9._\-]*)";
 
 const_regex! {
     /// Regex for safe identifiers.
@@ -14,9 +14,11 @@ const_regex! {
     /// contains further information why it is reasonable to restict
     /// names this way. This is not only useful for filenames, but for
     /// any identifier command line tools work with.
-    pub SAFE_ID_REGEX = concat!(r"^", SAFE_ID_REGEX_STR!(), r"$");
-    pub PASSWORD_REGEX = r"^[[:^cntrl:]]*$"; // everything but control characters
-    pub SINGLE_LINE_COMMENT_REGEX = r"^[[:^cntrl:]]*$"; // everything but control characters
+    pub SAFE_ID_REGEX = concatcp!(r"^", SAFE_ID_REGEX_STR, r"$");
+    /// Password. Allow everything but control characters.
+    pub PASSWORD_REGEX = r"^[[:^cntrl:]]*$";
+    /// Single line comment. Allow everything but control characters.
+    pub SINGLE_LINE_COMMENT_REGEX = r"^[[:^cntrl:]]*$";
 }
 
 pub const SAFE_ID_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&SAFE_ID_REGEX);
