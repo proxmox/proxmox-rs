@@ -27,62 +27,36 @@ use std::fmt;
 use anyhow::{bail, format_err, Error};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use const_format::concatcp;
 
 use proxmox_schema::{
     api, const_regex, ApiStringFormat, ApiType, Schema, StringSchema, UpdaterType,
 };
+
+use proxmox_schema::api_types::SAFE_ID_REGEX_STR;
 
 // we only allow a limited set of characters
 // colon is not allowed, because we store usernames in
 // colon separated lists)!
 // slash is not allowed because it is used as pve API delimiter
 // also see "man useradd"
-#[macro_export]
-macro_rules! USER_NAME_REGEX_STR {
-    () => {
-        r"(?:[^\s:/[:cntrl:]]+)"
-    };
-}
-#[macro_export]
-macro_rules! GROUP_NAME_REGEX_STR {
-    () => {
-        $crate::USER_NAME_REGEX_STR!()
-    };
-}
-#[macro_export]
-macro_rules! TOKEN_NAME_REGEX_STR {
-    () => {
-        proxmox_schema::SAFE_ID_REGEX_STR!()
-    };
-}
-#[macro_export]
-macro_rules! USER_ID_REGEX_STR {
-    () => {
-        concat!(
-            $crate::USER_NAME_REGEX_STR!(),
-            r"@",
-            proxmox_schema::SAFE_ID_REGEX_STR!()
-        )
-    };
-}
-#[macro_export]
-macro_rules! APITOKEN_ID_REGEX_STR {
-    () => {
-        concat!(
-            $crate::USER_ID_REGEX_STR!(),
-            r"!",
-            $crate::TOKEN_NAME_REGEX_STR!()
-        )
-    };
-}
+pub const USER_NAME_REGEX_STR: &str = r"(?:[^\s:/[:cntrl:]]+)";
+
+pub const GROUP_NAME_REGEX_STR: &str = USER_NAME_REGEX_STR;
+
+pub const TOKEN_NAME_REGEX_STR: &str = SAFE_ID_REGEX_STR;
+
+pub const USER_ID_REGEX_STR: &str = concatcp!(USER_NAME_REGEX_STR, r"@", SAFE_ID_REGEX_STR);
+
+pub const APITOKEN_ID_REGEX_STR: &str = concatcp!(USER_ID_REGEX_STR, r"!", TOKEN_NAME_REGEX_STR);
 
 const_regex! {
-    pub PROXMOX_USER_NAME_REGEX = concat!(r"^",  USER_NAME_REGEX_STR!(), r"$");
-    pub PROXMOX_TOKEN_NAME_REGEX = concat!(r"^", TOKEN_NAME_REGEX_STR!(), r"$");
-    pub PROXMOX_USER_ID_REGEX = concat!(r"^",  USER_ID_REGEX_STR!(), r"$");
-    pub PROXMOX_APITOKEN_ID_REGEX = concat!(r"^", APITOKEN_ID_REGEX_STR!(), r"$");
-    pub PROXMOX_AUTH_ID_REGEX = concat!(r"^", r"(?:", USER_ID_REGEX_STR!(), r"|", APITOKEN_ID_REGEX_STR!(), r")$");
-    pub PROXMOX_GROUP_ID_REGEX = concat!(r"^",  GROUP_NAME_REGEX_STR!(), r"$");
+    pub PROXMOX_USER_NAME_REGEX = concatcp!(r"^",  USER_NAME_REGEX_STR, r"$");
+    pub PROXMOX_TOKEN_NAME_REGEX = concatcp!(r"^", TOKEN_NAME_REGEX_STR, r"$");
+    pub PROXMOX_USER_ID_REGEX = concatcp!(r"^",  USER_ID_REGEX_STR, r"$");
+    pub PROXMOX_APITOKEN_ID_REGEX = concatcp!(r"^", APITOKEN_ID_REGEX_STR, r"$");
+    pub PROXMOX_AUTH_ID_REGEX = concatcp!(r"^", r"(?:", USER_ID_REGEX_STR, r"|", APITOKEN_ID_REGEX_STR, r")$");
+    pub PROXMOX_GROUP_ID_REGEX = concatcp!(r"^",  GROUP_NAME_REGEX_STR, r"$");
 }
 
 pub const PROXMOX_USER_NAME_FORMAT: ApiStringFormat =
