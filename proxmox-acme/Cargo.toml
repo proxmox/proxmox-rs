@@ -14,7 +14,9 @@ exclude = [ "debian" ]
 base64.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
-openssl.workspace = true
+
+# For the ACME implementation
+openssl = { workspace = true, optional = true }
 
 # For the client
 native-tls = { workspace = true, optional = true }
@@ -28,9 +30,10 @@ default-features = false
 features = [ "native-tls", "gzip" ]
 
 [features]
-default = []
+default = [ "impl" ]
 api-types = [ "dep:proxmox-schema" ]
-client = ["ureq", "native-tls"]
+impl = [ "api-types", "dep:openssl" ]
+client = [ "impl", "dep:ureq", "dep:native-tls"]
 
 [dev-dependencies]
 anyhow.workspace = true

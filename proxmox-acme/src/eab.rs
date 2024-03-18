@@ -1,10 +1,12 @@
 use openssl::hash::MessageDigest;
 use openssl::pkey::{HasPrivate, PKeyRef};
 use openssl::sign::Signer;
-use serde::{Deserialize, Serialize};
+
+use serde::Serialize;
 
 use crate::key::Jwk;
 use crate::{b64u, Error};
+use crate::types::ExternalAccountBinding;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -14,20 +16,8 @@ struct Protected {
     kid: String,
 }
 
-#[cfg_attr(feature = "api-types", proxmox_schema::api())]
-/// External Account Bindings
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct ExternalAccountBinding {
-    /// JOSE Header (see RFC 7515)
-    protected: String,
-    /// Payload
-    payload: String,
-    /// HMAC signature
-    signature: String,
-}
-
 impl ExternalAccountBinding {
+    /// Create a new instance
     pub fn new<P>(
         eab_kid: &str,
         eab_hmac_key: &PKeyRef<P>,
