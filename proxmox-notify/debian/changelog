@@ -1,3 +1,9 @@
+rust-proxmox-notify (0.3.3-1) bookworm; urgency=medium
+
+  * update to new proxmox-schema using const_format to define static strings
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 19 Mar 2024 11:10:22 +0100
+
 rust-proxmox-notify (0.3.2-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 3
