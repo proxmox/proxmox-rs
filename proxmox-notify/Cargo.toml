@@ -9,6 +9,7 @@ exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+const_format.workspace = true
 handlebars = { workspace = true }
 lazy_static.workspace = true
 lettre = { workspace = true, optional = true }

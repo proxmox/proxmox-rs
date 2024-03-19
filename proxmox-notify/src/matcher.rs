@@ -1,15 +1,14 @@
-use regex::Regex;
 use std::collections::HashSet;
 use std::fmt;
 use std::fmt::Debug;
 use std::str::FromStr;
 
+use const_format::concatcp;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use proxmox_schema::api_types::COMMENT_SCHEMA;
-use proxmox_schema::{
-    api, const_regex, ApiStringFormat, Schema, StringSchema, Updater, SAFE_ID_REGEX_STR,
-};
+use proxmox_schema::api_types::{COMMENT_SCHEMA, SAFE_ID_REGEX_STR};
+use proxmox_schema::{api, const_regex, ApiStringFormat, Schema, StringSchema, Updater};
 use proxmox_time::{parse_daily_duration, DailyDuration};
 
 use crate::schema::ENTITY_NAME_SCHEMA;
@@ -47,7 +46,7 @@ impl MatchModeOperator {
 }
 
 const_regex! {
-    pub MATCH_FIELD_ENTRY_REGEX = concat!(r"^(?:(exact|regex):)?(", SAFE_ID_REGEX_STR!(), r")=(.*)$");
+    pub MATCH_FIELD_ENTRY_REGEX = concatcp!(r"^(?:(exact|regex):)?(", SAFE_ID_REGEX_STR, r")=(.*)$");
 }
 
 pub const MATCH_FIELD_ENTRY_FORMAT: ApiStringFormat =
