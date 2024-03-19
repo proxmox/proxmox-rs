@@ -1,10 +1,22 @@
-rust-proxmox-schema (3.0.1-1) UNRELEASED; urgency=medium
+rust-proxmox-schema (3.1.0-1) bookworm; urgency=medium
+
+  * use const_format to define static strings
+
+  * replace SAFE_ID_REGEX_STR macro with a const &str
+
+  * add IP regexes and api types
+
+  * add common api types which were previously in pbs-api-types
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 19 Mar 2024 11:08:22 +0100
+
+rust-proxmox-schema (3.0.1-1) bookworm; urgency=medium
 
   * actually perform additional-properties check for AllOf and OneOf schemas
 
   * clean up a few verification error messages
 
- -- Proxmox Support Team <support@proxmox.com>  Wed, 21 Feb 2024 12:23:35 +0100
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 19 Mar 2024 11:05:43 +0100
 
 rust-proxmox-schema (3.0.0-1) bookworm; urgency=medium
 
