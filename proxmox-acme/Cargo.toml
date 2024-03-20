@@ -22,6 +22,10 @@ openssl = { workspace = true, optional = true }
 native-tls = { workspace = true, optional = true }
 
 proxmox-schema = { workspace = true, optional = true, features = [ "api-macro" ] }
+proxmox-http = { workspace = true, optional = true, features = [ "client" ] }
+anyhow = { workspace = true, optional = true }
+bytes = { workspace = true, optional = true }
+hyper = { workspace = true, optional = true }
 
 [dependencies.ureq]
 optional = true
@@ -34,6 +38,7 @@ default = [ "impl" ]
 api-types = [ "dep:proxmox-schema" ]
 impl = [ "api-types", "dep:openssl" ]
 client = [ "impl", "dep:ureq", "dep:native-tls"]
+async-client = [ "impl", "dep:hyper", "dep:proxmox-http", "dep:anyhow", "dep:bytes" ]
 
 [dev-dependencies]
 anyhow.workspace = true

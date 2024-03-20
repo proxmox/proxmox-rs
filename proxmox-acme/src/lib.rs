@@ -89,3 +89,6 @@ pub const LOCATION: &str = "Location";
 pub mod client;
 #[cfg(feature = "client")]
 pub use client::Client;
+
+#[cfg(feature = "async-client")]
+pub mod async_client;
