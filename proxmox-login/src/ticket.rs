@@ -240,12 +240,12 @@ impl Authentication {
     }
 }
 
-#[cfg(target_arch="wasm32")]
+#[cfg(target_arch = "wasm32")]
 fn epoch_i64() -> i64 {
     (js_sys::Date::now() / 1000.0) as i64
 }
 
-#[cfg(not(target_arch="wasm32"))]
+#[cfg(not(target_arch = "wasm32"))]
 fn epoch_i64() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
 

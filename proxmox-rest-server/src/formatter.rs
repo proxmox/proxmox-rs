@@ -223,7 +223,10 @@ impl OutputFormatter for ExtJsFormatter {
                     for (name, err) in param_err {
                         errors.insert(name, err.to_string());
                     }
-                    (String::from("parameter verification errors"), StatusCode::BAD_REQUEST)
+                    (
+                        String::from("parameter verification errors"),
+                        StatusCode::BAD_REQUEST,
+                    )
                 }
                 Err(err) => (err.to_string(), StatusCode::BAD_REQUEST),
             }
@@ -233,7 +236,7 @@ impl OutputFormatter for ExtJsFormatter {
             } else {
                 StatusCode::BAD_REQUEST
             };
-            (err.to_string(),  status)
+            (err.to_string(), status)
         };
 
         let result = json!({

@@ -25,9 +25,9 @@ use std::borrow::Borrow;
 use std::fmt;
 
 use anyhow::{bail, format_err, Error};
+use const_format::concatcp;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
-use const_format::concatcp;
 
 use proxmox_schema::{
     api, const_regex, ApiStringFormat, ApiType, Schema, StringSchema, UpdaterType,

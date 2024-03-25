@@ -14,7 +14,7 @@ struct Protected {
     kid: String,
 }
 
-#[cfg_attr(feature="api-types", proxmox_schema::api())]
+#[cfg_attr(feature = "api-types", proxmox_schema::api())]
 /// External Account Bindings
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
