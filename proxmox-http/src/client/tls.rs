@@ -87,7 +87,14 @@ impl<S: Connection + AsyncRead + AsyncWrite + Unpin> Connection for MaybeTlsStre
         match self {
             MaybeTlsStream::Normal(s) => s.connected(),
             MaybeTlsStream::Proxied(s) => s.connected().proxy(true),
-            MaybeTlsStream::Secured(s) => s.get_ref().connected(),
+            MaybeTlsStream::Secured(s) => {
+                let connected = s.get_ref().connected();
+                if s.ssl().selected_alpn_protocol() == Some(b"h2") {
+                    connected.negotiated_h2()
+                } else {
+                    connected
+                }
+            }
         }
     }
 }
