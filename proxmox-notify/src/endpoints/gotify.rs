@@ -124,10 +124,13 @@ impl Endpoint for GotifyEndpoint {
 
         let body = serde_json::to_vec(&body)
             .map_err(|err| Error::NotifyFailed(self.name().to_string(), err.into()))?;
-        let extra_headers = HashMap::from([(
-            "Authorization".into(),
-            format!("Bearer {}", self.private_config.token),
-        )]);
+        let extra_headers = HashMap::from([
+            (
+                "Authorization".into(),
+                format!("Bearer {}", self.private_config.token),
+            ),
+            ("X-Gotify-Key".into(), self.private_config.token.clone()),
+        ]);
 
         let proxy_config = context()
             .http_proxy_config()
