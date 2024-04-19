@@ -7,7 +7,6 @@ use handlebars::{
 use serde_json::Value;
 
 use super::{table::Table, value_to_string};
-use crate::define_helper_with_prefix_and_postfix;
 use crate::renderer::BlockRenderFunctions;
 
 fn optimal_column_widths(table: &Table) -> HashMap<&str, usize> {
@@ -76,40 +75,6 @@ fn render_plaintext_table(
     Ok(())
 }
 
-macro_rules! define_underlining_heading_fn {
-    ($name:ident, $underline:expr) => {
-        fn $name<'reg, 'rc>(
-            h: &Helper<'reg, 'rc>,
-            _handlebars: &'reg Handlebars,
-            _context: &'rc Context,
-            _render_context: &mut RenderContext<'reg, 'rc>,
-            out: &mut dyn Output,
-        ) -> HelperResult {
-            let param = h
-                .param(0)
-                .ok_or_else(|| HandlebarsRenderError::new("No parameter provided"))?;
-
-            let value = param.value();
-            let text = value.as_str().ok_or_else(|| {
-                HandlebarsRenderError::new(format!("value {value} is not a string"))
-            })?;
-
-            out.write(text)?;
-            out.write("\n")?;
-
-            for _ in 0..text.len() {
-                out.write($underline)?;
-            }
-            Ok(())
-        }
-    };
-}
-
-define_helper_with_prefix_and_postfix!(verbatim_monospaced, "", "");
-define_underlining_heading_fn!(heading_1, "=");
-define_underlining_heading_fn!(heading_2, "-");
-define_helper_with_prefix_and_postfix!(verbatim, "", "");
-
 fn render_object(
     h: &Helper,
     _: &Handlebars,
@@ -133,10 +98,6 @@ fn render_object(
 pub(super) fn block_render_functions() -> BlockRenderFunctions {
     BlockRenderFunctions {
         table: Box::new(render_plaintext_table),
-        verbatim_monospaced: Box::new(verbatim_monospaced),
-        verbatim: Box::new(verbatim),
         object: Box::new(render_object),
-        heading_1: Box::new(heading_1),
-        heading_2: Box::new(heading_2),
     }
 }

@@ -1,6 +1,8 @@
 use std::fmt::Debug;
 use std::sync::Mutex;
 
+use crate::Error;
+
 #[cfg(any(feature = "pve-context", feature = "pbs-context"))]
 pub mod common;
 #[cfg(feature = "pbs-context")]
@@ -20,8 +22,14 @@ pub trait Context: Send + Sync + Debug {
     fn default_sendmail_from(&self) -> String;
     /// Proxy configuration for the current node
     fn http_proxy_config(&self) -> Option<String>;
-    // Return default config for built-in targets/matchers.
+    /// Return default config for built-in targets/matchers.
     fn default_config(&self) -> &'static str;
+    /// Lookup a template in a certain (optional) namespace
+    fn lookup_template(
+        &self,
+        filename: &str,
+        namespace: Option<&str>,
+    ) -> Result<Option<String>, Error>;
 }
 
 #[cfg(not(test))]

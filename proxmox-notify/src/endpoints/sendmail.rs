@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{api, Updater};
 
-use crate::context::context;
+use crate::context;
 use crate::endpoints::common::mail;
-use crate::renderer::TemplateRenderer;
+use crate::renderer::TemplateType;
 use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA, USER_SCHEMA};
 use crate::{renderer, Content, Endpoint, Error, Notification, Origin};
 
@@ -103,16 +103,15 @@ impl Endpoint for SendmailEndpoint {
 
         match &notification.content {
             Content::Template {
-                title_template,
-                body_template,
+                template_name,
                 data,
             } => {
                 let subject =
-                    renderer::render_template(TemplateRenderer::Plaintext, title_template, data)?;
+                    renderer::render_template(TemplateType::Subject, template_name, data)?;
                 let html_part =
-                    renderer::render_template(TemplateRenderer::Html, body_template, data)?;
+                    renderer::render_template(TemplateType::HtmlBody, template_name, data)?;
                 let text_part =
-                    renderer::render_template(TemplateRenderer::Plaintext, body_template, data)?;
+                    renderer::render_template(TemplateType::PlaintextBody, template_name, data)?;
 
                 let author = self
                     .config

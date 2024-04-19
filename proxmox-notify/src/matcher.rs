@@ -456,7 +456,7 @@ mod tests {
         fields.insert("foo".into(), "bar".into());
 
         let notification =
-            Notification::new_templated(Severity::Notice, "test", "test", Value::Null, fields);
+            Notification::from_template(Severity::Notice, "test", Value::Null, fields);
 
         let matcher: FieldMatcher = "exact:foo=bar".parse().unwrap();
         assert!(matcher.matches(&notification).unwrap());
@@ -474,14 +474,14 @@ mod tests {
         fields.insert("foo".into(), "test".into());
 
         let notification =
-            Notification::new_templated(Severity::Notice, "test", "test", Value::Null, fields);
+            Notification::from_template(Severity::Notice, "test", Value::Null, fields);
         assert!(matcher.matches(&notification).unwrap());
 
         let mut fields = HashMap::new();
         fields.insert("foo".into(), "notthere".into());
 
         let notification =
-            Notification::new_templated(Severity::Notice, "test", "test", Value::Null, fields);
+            Notification::from_template(Severity::Notice, "test", Value::Null, fields);
         assert!(!matcher.matches(&notification).unwrap());
 
         assert!("regex:'3=b.*".parse::<FieldMatcher>().is_err());
@@ -489,13 +489,8 @@ mod tests {
     }
     #[test]
     fn test_severities() {
-        let notification = Notification::new_templated(
-            Severity::Notice,
-            "test",
-            "test",
-            Value::Null,
-            Default::default(),
-        );
+        let notification =
+            Notification::from_template(Severity::Notice, "test", Value::Null, Default::default());
 
         let matcher: SeverityMatcher = "info,notice,warning,error".parse().unwrap();
         assert!(matcher.matches(&notification).unwrap());
@@ -503,13 +498,8 @@ mod tests {
 
     #[test]
     fn test_empty_matcher_matches_always() {
-        let notification = Notification::new_templated(
-            Severity::Notice,
-            "test",
-            "test",
-            Value::Null,
-            Default::default(),
-        );
+        let notification =
+            Notification::from_template(Severity::Notice, "test", Value::Null, Default::default());
 
         for mode in [MatchModeOperator::All, MatchModeOperator::Any] {
             let config = MatcherConfig {

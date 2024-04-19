@@ -162,10 +162,8 @@ pub trait Endpoint {
 pub enum Content {
     /// Title and body will be rendered as a template
     Template {
-        /// Template for the notification title.
-        title_template: String,
-        /// Template for the notification body.
-        body_template: String,
+        /// Name of the used template
+        template_name: String,
         /// Data that can be used for template rendering.
         data: Value,
     },
@@ -203,10 +201,9 @@ pub struct Notification {
 }
 
 impl Notification {
-    pub fn new_templated<S: AsRef<str>>(
+    pub fn from_template<S: AsRef<str>>(
         severity: Severity,
-        title: S,
-        body: S,
+        template_name: S,
         template_data: Value,
         fields: HashMap<String, String>,
     ) -> Self {
@@ -217,8 +214,7 @@ impl Notification {
                 timestamp: proxmox_time::epoch_i64(),
             },
             content: Content::Template {
-                title_template: title.as_ref().to_string(),
-                body_template: body.as_ref().to_string(),
+                template_name: template_name.as_ref().to_string(),
                 data: template_data,
             },
         }
@@ -549,8 +545,7 @@ impl Bus {
                 timestamp: proxmox_time::epoch_i64(),
             },
             content: Content::Template {
-                title_template: "Test notification".into(),
-                body_template: "This is a test of the notification target '{{ target }}'".into(),
+                template_name: "test".to_string(),
                 data: json!({ "target": target }),
             },
         };
@@ -623,10 +618,9 @@ mod tests {
         bus.add_matcher(matcher);
 
         // Send directly to endpoint
-        bus.send(&Notification::new_templated(
+        bus.send(&Notification::from_template(
             Severity::Info,
-            "Title",
-            "Body",
+            "test",
             Default::default(),
             Default::default(),
         ));
@@ -661,10 +655,9 @@ mod tests {
         });
 
         let send_with_severity = |severity| {
-            let notification = Notification::new_templated(
+            let notification = Notification::from_template(
                 severity,
-                "Title",
-                "Body",
+                "test",
                 Default::default(),
                 Default::default(),
             );

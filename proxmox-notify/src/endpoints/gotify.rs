@@ -9,7 +9,7 @@ use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{api, Updater};
 
 use crate::context::context;
-use crate::renderer::TemplateRenderer;
+use crate::renderer::TemplateType;
 use crate::schema::ENTITY_NAME_SCHEMA;
 use crate::{renderer, Content, Endpoint, Error, Notification, Origin, Severity};
 
@@ -92,14 +92,13 @@ impl Endpoint for GotifyEndpoint {
     fn send(&self, notification: &Notification) -> Result<(), Error> {
         let (title, message) = match &notification.content {
             Content::Template {
-                title_template,
-                body_template,
+                template_name,
                 data,
             } => {
                 let rendered_title =
-                    renderer::render_template(TemplateRenderer::Plaintext, title_template, data)?;
+                    renderer::render_template(TemplateType::Subject, template_name, data)?;
                 let rendered_message =
-                    renderer::render_template(TemplateRenderer::Plaintext, body_template, data)?;
+                    renderer::render_template(TemplateType::PlaintextBody, template_name, data)?;
 
                 (rendered_title, rendered_message)
             }

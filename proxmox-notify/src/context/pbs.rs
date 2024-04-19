@@ -1,9 +1,11 @@
 use serde::Deserialize;
+use std::path::Path;
 
 use proxmox_schema::{ObjectSchema, Schema, StringSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigPlugin};
 
 use crate::context::{common, Context};
+use crate::Error;
 
 const PBS_USER_CFG_FILENAME: &str = "/etc/proxmox-backup/user.cfg";
 const PBS_NODE_CFG_FILENAME: &str = "/etc/proxmox-backup/node.cfg";
@@ -97,6 +99,20 @@ impl Context for PBSContext {
 
     fn default_config(&self) -> &'static str {
         return DEFAULT_CONFIG;
+    }
+
+    fn lookup_template(
+        &self,
+        filename: &str,
+        namespace: Option<&str>,
+    ) -> Result<Option<String>, Error> {
+        let path = Path::new("/usr/share/proxmox-backup/templates")
+            .join(namespace.unwrap_or("default"))
+            .join(filename);
+
+        let template_string = proxmox_sys::fs::file_read_optional_string(path)
+            .map_err(|err| Error::Generic(format!("could not load template: {err}")))?;
+        Ok(template_string)
     }
 }
 

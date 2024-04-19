@@ -1,4 +1,5 @@
 use crate::context::Context;
+use crate::Error;
 
 #[derive(Debug)]
 pub struct TestContext;
@@ -22,5 +23,13 @@ impl Context for TestContext {
 
     fn default_config(&self) -> &'static str {
         ""
+    }
+
+    fn lookup_template(
+        &self,
+        _filename: &str,
+        _namespace: Option<&str>,
+    ) -> Result<Option<String>, Error> {
+        Ok(Some(String::new()))
     }
 }

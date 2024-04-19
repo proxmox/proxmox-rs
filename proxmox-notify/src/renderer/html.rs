@@ -5,7 +5,6 @@ use handlebars::{
 use serde_json::Value;
 
 use super::{table::Table, value_to_string};
-use crate::define_helper_with_prefix_and_postfix;
 use crate::renderer::BlockRenderFunctions;
 
 fn render_html_table(
@@ -79,22 +78,9 @@ fn render_object(
     Ok(())
 }
 
-define_helper_with_prefix_and_postfix!(verbatim_monospaced, "<pre>", "</pre>");
-define_helper_with_prefix_and_postfix!(heading_1, "<h1 style=\"font-size: 1.2em\">", "</h1>");
-define_helper_with_prefix_and_postfix!(heading_2, "<h2 style=\"font-size: 1em\">", "</h2>");
-define_helper_with_prefix_and_postfix!(
-    verbatim,
-    "<pre style=\"font-family: sans-serif\">",
-    "</pre>"
-);
-
 pub(super) fn block_render_functions() -> BlockRenderFunctions {
     BlockRenderFunctions {
         table: Box::new(render_html_table),
-        verbatim_monospaced: Box::new(verbatim_monospaced),
         object: Box::new(render_object),
-        heading_1: Box::new(heading_1),
-        heading_2: Box::new(heading_2),
-        verbatim: Box::new(verbatim),
     }
 }

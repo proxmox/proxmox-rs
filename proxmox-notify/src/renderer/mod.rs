@@ -12,7 +12,7 @@ use serde_json::Value;
 use proxmox_human_byte::HumanByte;
 use proxmox_time::TimeSpan;
 
-use crate::Error;
+use crate::{context, Error};
 
 mod html;
 mod plaintext;
@@ -165,41 +165,47 @@ impl ValueRenderFunction {
     }
 }
 
-/// Available renderers for notification templates.
+/// Available template types
 #[derive(Copy, Clone)]
-pub enum TemplateRenderer {
-    /// Render to HTML code
-    Html,
-    /// Render to plain text
-    Plaintext,
+pub enum TemplateType {
+    /// HTML body template
+    HtmlBody,
+    /// Plaintext body template
+    PlaintextBody,
+    /// Plaintext body template
+    Subject,
 }
 
-impl TemplateRenderer {
-    fn prefix(&self) -> &str {
+impl TemplateType {
+    fn file_suffix(&self) -> &'static str {
         match self {
-            TemplateRenderer::Html => "<html>\n<body>\n",
-            TemplateRenderer::Plaintext => "",
+            TemplateType::HtmlBody => "body.html.hbs",
+            TemplateType::PlaintextBody => "body.txt.hbs",
+            TemplateType::Subject => "subject.txt.hbs",
         }
     }
 
-    fn postfix(&self) -> &str {
-        match self {
-            TemplateRenderer::Html => "\n</body>\n</html>",
-            TemplateRenderer::Plaintext => "",
+    fn postprocess(&self, mut rendered: String) -> String {
+        if let Self::Subject = self {
+            rendered = rendered.replace('\n', " ");
         }
+
+        rendered
     }
 
     fn block_render_fns(&self) -> BlockRenderFunctions {
         match self {
-            TemplateRenderer::Html => html::block_render_functions(),
-            TemplateRenderer::Plaintext => plaintext::block_render_functions(),
+            TemplateType::HtmlBody => html::block_render_functions(),
+            TemplateType::Subject => plaintext::block_render_functions(),
+            TemplateType::PlaintextBody => plaintext::block_render_functions(),
         }
     }
 
     fn escape_fn(&self) -> fn(&str) -> String {
         match self {
-            TemplateRenderer::Html => handlebars::html_escape,
-            TemplateRenderer::Plaintext => handlebars::no_escape,
+            TemplateType::PlaintextBody => handlebars::no_escape,
+            TemplateType::Subject => handlebars::no_escape,
+            TemplateType::HtmlBody => handlebars::html_escape,
         }
     }
 }
@@ -208,28 +214,20 @@ type HelperFn = dyn HelperDef + Send + Sync;
 
 struct BlockRenderFunctions {
     table: Box<HelperFn>,
-    verbatim_monospaced: Box<HelperFn>,
     object: Box<HelperFn>,
-    heading_1: Box<HelperFn>,
-    heading_2: Box<HelperFn>,
-    verbatim: Box<HelperFn>,
 }
 
 impl BlockRenderFunctions {
     fn register_helpers(self, handlebars: &mut Handlebars) {
         handlebars.register_helper("table", self.table);
-        handlebars.register_helper("verbatim", self.verbatim);
-        handlebars.register_helper("verbatim-monospaced", self.verbatim_monospaced);
         handlebars.register_helper("object", self.object);
-        handlebars.register_helper("heading-1", self.heading_1);
-        handlebars.register_helper("heading-2", self.heading_2);
     }
 }
 
 fn render_template_impl(
     template: &str,
     data: &Value,
-    renderer: TemplateRenderer,
+    renderer: TemplateType,
 ) -> Result<String, Error> {
     let mut handlebars = Handlebars::new();
     handlebars.register_escape_fn(renderer.escape_fn());
@@ -248,134 +246,51 @@ fn render_template_impl(
 
 /// Render a template string.
 ///
-/// The output format can be chosen via the `renderer` parameter (see [TemplateRenderer]
+/// The output format can be chosen via the `renderer` parameter (see [TemplateType]
 /// for available options).
 pub fn render_template(
-    renderer: TemplateRenderer,
+    mut ty: TemplateType,
     template: &str,
     data: &Value,
 ) -> Result<String, Error> {
-    let mut rendered_template = String::from(renderer.prefix());
+    let filename = format!("{template}-{suffix}", suffix = ty.file_suffix());
 
-    rendered_template.push_str(&render_template_impl(template, data, renderer)?);
-    rendered_template.push_str(renderer.postfix());
+    let template_string = context::context().lookup_template(&filename, None)?;
 
-    Ok(rendered_template)
-}
-
-#[macro_export]
-macro_rules! define_helper_with_prefix_and_postfix {
-    ($name:ident, $pre:expr, $post:expr) => {
-        fn $name<'reg, 'rc>(
-            h: &Helper<'reg, 'rc>,
-            handlebars: &'reg Handlebars,
-            context: &'rc Context,
-            render_context: &mut RenderContext<'reg, 'rc>,
-            out: &mut dyn Output,
-        ) -> HelperResult {
-            use handlebars::Renderable;
-
-            let block_text = h.template();
-            let param = h.param(0);
-
-            out.write($pre)?;
-            match (param, block_text) {
-                (None, Some(block_text)) => {
-                    block_text.render(handlebars, context, render_context, out)
-                }
-                (Some(param), None) => {
-                    let value = param.value();
-                    let text = value.as_str().ok_or_else(|| {
-                        HandlebarsRenderError::new(format!("value {value} is not a string"))
-                    })?;
-
-                    out.write(text)?;
-                    Ok(())
-                }
-                (Some(_), Some(_)) => Err(HandlebarsRenderError::new(
-                    "Cannot use parameter and template at the same time",
-                )),
-                (None, None) => Err(HandlebarsRenderError::new(
-                    "Neither parameter nor template was provided",
-                )),
-            }?;
-            out.write($post)?;
-            Ok(())
+    let (template_string, fallback) = match (template_string, ty) {
+        (None, TemplateType::HtmlBody) => {
+            ty = TemplateType::PlaintextBody;
+            let plaintext_filename = format!("{template}-{suffix}", suffix = ty.file_suffix());
+            log::info!("html template '{filename}' not found, falling back to plain text template '{plaintext_filename}'");
+            (
+                context::context().lookup_template(&plaintext_filename, None)?,
+                true,
+            )
         }
+        (template_string, _) => (template_string, false),
     };
+
+    let template_string = template_string.ok_or(Error::Generic(format!(
+        "could not load template '{template}'"
+    )))?;
+
+    let mut rendered = render_template_impl(&template_string, data, ty)?;
+    rendered = ty.postprocess(rendered);
+
+    if fallback {
+        rendered = format!(
+            "<html><body><pre>{}</pre></body></html>",
+            handlebars::html_escape(&rendered)
+        );
+    }
+
+    Ok(rendered)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::json;
-
-    #[test]
-    fn test_render_template() -> Result<(), Error> {
-        let data = json!({
-            "dur": 12345,
-            "size": 1024 * 15,
-
-            "table": {
-                "schema": {
-                    "columns": [
-                        {
-                            "id": "col1",
-                            "label": "Column 1"
-                        },
-                        {
-                            "id": "col2",
-                            "label": "Column 2"
-                        }
-                    ]
-                },
-                "data": [
-                    {
-                        "col1": "val1",
-                        "col2": "val2"
-                    },
-                    {
-                        "col1": "val3",
-                        "col2": "val4"
-                    },
-                ]
-            }
-
-        });
-
-        let template = r#"
-{{heading-1 "Hello World"}}
-
-{{heading-2 "Hello World"}}
-
-{{human-bytes size}}
-{{duration dur}}
-
-{{table table}}"#;
-
-        let expected_plaintext = r#"
-Hello World
-===========
-
-Hello World
------------
-
-15 KiB
-3h 25min 45s
-
-Column 1    Column 2    
-val1        val2        
-val3        val4        
-"#;
-
-        let rendered_plaintext = render_template(TemplateRenderer::Plaintext, template, &data)?;
-
-        // Let's not bother about testing the HTML output, too fragile.
-
-        assert_eq!(rendered_plaintext, expected_plaintext);
-
-        Ok(())
-    }
 
     #[test]
     fn test_helpers() {
