@@ -81,10 +81,13 @@ pub struct GotifyEndpoint {
     pub private_config: GotifyPrivateConfig,
 }
 
+#[api]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableGotifyProperty {
+    /// Delete `comment`
     Comment,
+    /// Delete `disable`
     Disable,
 }
 

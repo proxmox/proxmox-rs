@@ -412,16 +412,25 @@ impl FromStr for CalendarMatcher {
     }
 }
 
+#[api]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableMatcherProperty {
+    /// Delete `comment`
     Comment,
+    /// Delete `disable`
     Disable,
+    /// Delete `invert-match`
     InvertMatch,
+    /// Delete `match-calendar`
     MatchCalendar,
+    /// Delete `match-field`
     MatchField,
+    /// Delete `match-severity`
     MatchSeverity,
+    /// Delete `mode`
     Mode,
+    /// Delete `target`
     Target,
 }
 

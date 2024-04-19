@@ -73,14 +73,21 @@ pub struct SendmailConfig {
     pub origin: Option<Origin>,
 }
 
+#[api]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableSendmailProperty {
+    /// Delete `author`
     Author,
+    /// Delete `comment`
     Comment,
+    /// Delete `disable`
     Disable,
+    /// Delete `from-address`
     FromAddress,
+    /// Delete `mailto`
     Mailto,
+    /// Delete `mailto-user`
     MailtoUser,
 }
 

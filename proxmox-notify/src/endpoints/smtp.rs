@@ -104,16 +104,25 @@ pub struct SmtpConfig {
     pub origin: Option<Origin>,
 }
 
+#[api]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum DeleteableSmtpProperty {
+    /// Delete `author`
     Author,
+    /// Delete `comment`
     Comment,
+    /// Delete `disable`
     Disable,
+    /// Delete `mailto`
     Mailto,
+    /// Delete `mailto-user`
     MailtoUser,
+    /// Delete `password`
     Password,
+    /// Delete `port`
     Port,
+    /// Delete `username`
     Username,
 }
 
