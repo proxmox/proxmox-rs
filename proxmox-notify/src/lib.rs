@@ -159,9 +159,11 @@ pub trait Endpoint {
     fn disabled(&self) -> bool;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum Content {
     /// Title and body will be rendered as a template
+    #[serde(rename_all = "kebab-case")]
     Template {
         /// Name of the used template
         template_name: String,
@@ -169,6 +171,7 @@ pub enum Content {
         data: Value,
     },
     #[cfg(feature = "mail-forwarder")]
+    #[serde(rename_all = "kebab-case")]
     ForwardedMail {
         /// Raw mail contents
         raw: Vec<u8>,
@@ -182,7 +185,8 @@ pub enum Content {
     },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct Metadata {
     /// Notification severity
     severity: Severity,
@@ -192,7 +196,8 @@ pub struct Metadata {
     additional_fields: HashMap<String, String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 /// Notification which can be sent
 pub struct Notification {
     /// Notification content
