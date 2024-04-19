@@ -10,6 +10,7 @@ use serde_json::Value;
 
 use proxmox_schema::api;
 use proxmox_section_config::SectionConfigData;
+use proxmox_uuid::Uuid;
 
 pub mod matcher;
 use crate::config::CONFIG;
@@ -198,6 +199,8 @@ pub struct Notification {
     content: Content,
     /// Metadata
     metadata: Metadata,
+    /// Unique ID
+    id: Uuid,
 }
 
 impl Notification {
@@ -217,6 +220,7 @@ impl Notification {
                 template_name: template_name.as_ref().to_string(),
                 data: template_data,
             },
+            id: Uuid::generate(),
         }
     }
     #[cfg(feature = "mail-forwarder")]
@@ -246,7 +250,13 @@ impl Notification {
                 additional_fields,
                 timestamp: proxmox_time::epoch_i64(),
             },
+            id: Uuid::generate(),
         })
+    }
+
+    /// Return the unique ID of this notification.
+    pub fn id(&self) -> &Uuid {
+        &self.id
     }
 }
 
@@ -548,6 +558,7 @@ impl Bus {
                 template_name: "test".to_string(),
                 data: json!({ "target": target }),
             },
+            id: Uuid::generate(),
         };
 
         if let Some(endpoint) = self.endpoints.get(target) {
