@@ -113,17 +113,19 @@ pub struct MatcherConfig {
     pub name: String,
 
     /// List of matched metadata fields
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub match_field: Option<Vec<FieldMatcher>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    pub match_field: Vec<FieldMatcher>,
 
     /// List of matched severity levels
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub match_severity: Option<Vec<SeverityMatcher>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    pub match_severity: Vec<SeverityMatcher>,
 
     /// List of matched severity levels
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub match_calendar: Option<Vec<CalendarMatcher>>,
-
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    pub match_calendar: Vec<CalendarMatcher>,
     /// Decide if 'all' or 'any' match statements must match
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<MatchModeOperator>,
@@ -133,8 +135,9 @@ pub struct MatcherConfig {
     pub invert_match: Option<bool>,
 
     /// Targets to notify
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub target: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    pub target: Vec<String>,
 
     /// Comment
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -284,29 +287,32 @@ impl MatcherConfig {
         // If there are no matching directives, the matcher will always match
         let mut no_matchers = true;
 
-        if let Some(severity_matchers) = self.match_severity.as_deref() {
+        if !self.match_severity.is_empty() {
             no_matchers = false;
             is_match = mode.apply(
                 is_match,
-                self.check_matches(notification, severity_matchers)?,
+                self.check_matches(notification, &self.match_severity)?,
             );
         }
-        if let Some(field_matchers) = self.match_field.as_deref() {
-            no_matchers = false;
-            is_match = mode.apply(is_match, self.check_matches(notification, field_matchers)?);
-        }
-        if let Some(calendar_matchers) = self.match_calendar.as_deref() {
+        if !self.match_field.is_empty() {
             no_matchers = false;
             is_match = mode.apply(
                 is_match,
-                self.check_matches(notification, calendar_matchers)?,
+                self.check_matches(notification, &self.match_field)?,
+            );
+        }
+        if !self.match_calendar.is_empty() {
+            no_matchers = false;
+            is_match = mode.apply(
+                is_match,
+                self.check_matches(notification, &self.match_calendar)?,
             );
         }
 
         let invert_match = self.invert_match.unwrap_or_default();
 
         Ok(if is_match != invert_match || no_matchers {
-            Some(self.target.as_deref().unwrap_or_default())
+            Some(&self.target)
         } else {
             None
         })

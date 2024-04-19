@@ -102,10 +102,8 @@ fn get_referrers(config: &Config, entity: &str) -> Result<HashSet<String>, HttpE
     let mut referrers = HashSet::new();
 
     for matcher in matcher::get_matchers(config)? {
-        if let Some(targets) = matcher.target {
-            if targets.iter().any(|target| target == entity) {
-                referrers.insert(matcher.name.clone());
-            }
+        if matcher.target.iter().any(|target| target == entity) {
+            referrers.insert(matcher.name.clone());
         }
     }
 
@@ -149,11 +147,9 @@ fn get_referenced_entities(config: &Config, entity: &str) -> HashSet<String> {
         let mut new = HashSet::new();
 
         for entity in entities {
-            if let Ok(group) = matcher::get_matcher(config, entity) {
-                if let Some(targets) = group.target {
-                    for target in targets {
-                        new.insert(target.clone());
-                    }
+            if let Ok(matcher) = matcher::get_matcher(config, entity) {
+                for target in matcher.target {
+                    new.insert(target.clone());
                 }
             }
         }
@@ -219,7 +215,7 @@ mod tests {
             &mut config,
             SendmailConfig {
                 name: "sendmail".to_string(),
-                mailto: Some(vec!["foo@example.com".to_string()]),
+                mailto: vec!["foo@example.com".to_string()],
                 ..Default::default()
             },
         )?;
@@ -228,7 +224,7 @@ mod tests {
             &mut config,
             SendmailConfig {
                 name: "builtin".to_string(),
-                mailto: Some(vec!["foo@example.com".to_string()]),
+                mailto: vec!["foo@example.com".to_string()],
                 origin: Some(Origin::Builtin),
                 ..Default::default()
             },
@@ -251,11 +247,11 @@ mod tests {
             &mut config,
             MatcherConfig {
                 name: "matcher".to_string(),
-                target: Some(vec![
+                target: vec![
                     "sendmail".to_string(),
                     "gotify".to_string(),
                     "builtin".to_string(),
-                ]),
+                ],
                 ..Default::default()
             },
         )?;

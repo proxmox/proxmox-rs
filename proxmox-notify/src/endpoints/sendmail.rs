@@ -44,11 +44,13 @@ pub struct SendmailConfig {
     #[updater(skip)]
     pub name: String,
     /// Mail recipients
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mailto: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    pub mailto: Vec<String>,
     /// Mail recipients
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mailto_user: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    pub mailto_user: Vec<String>,
     /// `From` address for the mail
     #[serde(skip_serializing_if = "Option::is_none")]
     pub from_address: Option<String>,
@@ -90,8 +92,8 @@ pub struct SendmailEndpoint {
 impl Endpoint for SendmailEndpoint {
     fn send(&self, notification: &Notification) -> Result<(), Error> {
         let recipients = mail::get_recipients(
-            self.config.mailto.as_deref(),
-            self.config.mailto_user.as_deref(),
+            self.config.mailto.as_slice(),
+            self.config.mailto_user.as_slice(),
         );
 
         let recipients_str: Vec<&str> = recipients.iter().map(String::as_str).collect();

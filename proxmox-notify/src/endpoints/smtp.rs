@@ -44,8 +44,8 @@ pub enum SmtpMode {
         },
         mailto: {
             type: Array,
-                items: {
-                    schema: EMAIL_SCHEMA,
+            items: {
+                schema: EMAIL_SCHEMA,
             },
             optional: true,
         },
@@ -80,11 +80,13 @@ pub struct SmtpConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub username: Option<String>,
     /// Mail recipients
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mailto: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    pub mailto: Vec<String>,
     /// Mail recipients
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mailto_user: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    pub mailto_user: Vec<String>,
     /// `From` address for the mail
     pub from_address: String,
     /// Author of the mail
@@ -177,8 +179,8 @@ impl Endpoint for SmtpEndpoint {
         let transport = transport_builder.build();
 
         let recipients = mail::get_recipients(
-            self.config.mailto.as_deref(),
-            self.config.mailto_user.as_deref(),
+            self.config.mailto.as_slice(),
+            self.config.mailto_user.as_slice(),
         );
         let mail_from = self.config.from_address.clone();
 

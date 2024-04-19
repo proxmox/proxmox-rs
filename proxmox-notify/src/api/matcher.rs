@@ -38,10 +38,7 @@ pub fn get_matcher(config: &Config, name: &str) -> Result<MatcherConfig, HttpErr
 ///   - the configuration could not be saved (`500 Internal server error`)
 pub fn add_matcher(config: &mut Config, matcher_config: MatcherConfig) -> Result<(), HttpError> {
     super::ensure_unique(config, &matcher_config.name)?;
-
-    if let Some(targets) = matcher_config.target.as_deref() {
-        super::ensure_endpoints_exist(config, targets)?;
-    }
+    super::ensure_endpoints_exist(config, &matcher_config.target)?;
 
     config
         .config
@@ -78,10 +75,10 @@ pub fn update_matcher(
     if let Some(delete) = delete {
         for deleteable_property in delete {
             match deleteable_property {
-                DeleteableMatcherProperty::MatchSeverity => matcher.match_severity = None,
-                DeleteableMatcherProperty::MatchField => matcher.match_field = None,
-                DeleteableMatcherProperty::MatchCalendar => matcher.match_calendar = None,
-                DeleteableMatcherProperty::Target => matcher.target = None,
+                DeleteableMatcherProperty::MatchSeverity => matcher.match_severity.clear(),
+                DeleteableMatcherProperty::MatchField => matcher.match_field.clear(),
+                DeleteableMatcherProperty::MatchCalendar => matcher.match_calendar.clear(),
+                DeleteableMatcherProperty::Target => matcher.target.clear(),
                 DeleteableMatcherProperty::Mode => matcher.mode = None,
                 DeleteableMatcherProperty::InvertMatch => matcher.invert_match = None,
                 DeleteableMatcherProperty::Comment => matcher.comment = None,
@@ -91,15 +88,15 @@ pub fn update_matcher(
     }
 
     if let Some(match_severity) = matcher_updater.match_severity {
-        matcher.match_severity = Some(match_severity);
+        matcher.match_severity = match_severity;
     }
 
     if let Some(match_field) = matcher_updater.match_field {
-        matcher.match_field = Some(match_field);
+        matcher.match_field = match_field;
     }
 
     if let Some(match_calendar) = matcher_updater.match_calendar {
-        matcher.match_calendar = Some(match_calendar);
+        matcher.match_calendar = match_calendar;
     }
 
     if let Some(mode) = matcher_updater.mode {
@@ -120,7 +117,7 @@ pub fn update_matcher(
 
     if let Some(target) = matcher_updater.target {
         super::ensure_endpoints_exist(config, target.as_slice())?;
-        matcher.target = Some(target);
+        matcher.target = target;
     }
 
     config
@@ -244,9 +241,9 @@ matcher: matcher2
         let matcher = get_matcher(&config, "matcher1")?;
 
         assert_eq!(matcher.invert_match, None);
-        assert!(matcher.match_severity.is_none());
-        assert!(matches!(matcher.match_field, None));
-        assert_eq!(matcher.target, None);
+        assert!(matcher.match_severity.is_empty());
+        assert!(matcher.match_field.is_empty());
+        assert!(matcher.target.is_empty());
         assert!(matcher.mode.is_none());
         assert_eq!(matcher.comment, None);
 

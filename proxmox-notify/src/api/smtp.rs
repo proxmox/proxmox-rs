@@ -50,7 +50,7 @@ pub fn add_endpoint(
 
     super::ensure_unique(config, &endpoint_config.name)?;
 
-    if endpoint_config.mailto.is_none() && endpoint_config.mailto_user.is_none() {
+    if endpoint_config.mailto.is_empty() && endpoint_config.mailto_user.is_empty() {
         http_bail!(
             BAD_REQUEST,
             "must at least provide one recipient, either in mailto or in mailto-user"
@@ -101,8 +101,8 @@ pub fn update_endpoint(
                 DeleteableSmtpProperty::Author => endpoint.author = None,
                 DeleteableSmtpProperty::Comment => endpoint.comment = None,
                 DeleteableSmtpProperty::Disable => endpoint.disable = None,
-                DeleteableSmtpProperty::Mailto => endpoint.mailto = None,
-                DeleteableSmtpProperty::MailtoUser => endpoint.mailto_user = None,
+                DeleteableSmtpProperty::Mailto => endpoint.mailto.clear(),
+                DeleteableSmtpProperty::MailtoUser => endpoint.mailto_user.clear(),
                 DeleteableSmtpProperty::Password => super::set_private_config_entry(
                     config,
                     SmtpPrivateConfig {
@@ -119,10 +119,10 @@ pub fn update_endpoint(
     }
 
     if let Some(mailto) = updater.mailto {
-        endpoint.mailto = Some(mailto);
+        endpoint.mailto = mailto;
     }
     if let Some(mailto_user) = updater.mailto_user {
-        endpoint.mailto_user = Some(mailto_user);
+        endpoint.mailto_user = mailto_user;
     }
     if let Some(from_address) = updater.from_address {
         endpoint.from_address = from_address;
@@ -163,7 +163,7 @@ pub fn update_endpoint(
         endpoint.disable = Some(disable);
     }
 
-    if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
+    if endpoint.mailto.is_empty() && endpoint.mailto_user.is_empty() {
         http_bail!(
             BAD_REQUEST,
             "must at least provide one recipient, either in mailto or in mailto-user"
@@ -211,8 +211,8 @@ pub mod tests {
             config,
             SmtpConfig {
                 name: name.into(),
-                mailto: Some(vec!["user1@example.com".into()]),
-                mailto_user: None,
+                mailto: vec!["user1@example.com".into()],
+                mailto_user: vec![],
                 from_address: "from@example.com".into(),
                 author: Some("root".into()),
                 comment: Some("Comment".into()),
@@ -311,12 +311,12 @@ pub mod tests {
 
         assert_eq!(
             endpoint.mailto,
-            Some(vec![
+            vec![
                 "user2@example.com".to_string(),
                 "user3@example.com".to_string()
-            ])
+            ]
         );
-        assert_eq!(endpoint.mailto_user, Some(vec!["root@pam".to_string(),]));
+        assert_eq!(endpoint.mailto_user, vec!["root@pam".to_string(),]);
         assert_eq!(endpoint.from_address, "root@example.com".to_string());
         assert_eq!(endpoint.author, Some("newauthor".to_string()));
         assert_eq!(endpoint.comment, Some("new comment".to_string()));
@@ -343,7 +343,7 @@ pub mod tests {
         assert_eq!(endpoint.comment, None);
         assert_eq!(endpoint.port, None);
         assert_eq!(endpoint.username, None);
-        assert_eq!(endpoint.mailto_user, None);
+        assert!(endpoint.mailto_user.is_empty());
 
         Ok(())
     }

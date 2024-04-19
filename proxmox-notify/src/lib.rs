@@ -611,7 +611,7 @@ mod tests {
         bus.add_endpoint(Box::new(mock.clone()));
 
         let matcher = MatcherConfig {
-            target: Some(vec!["endpoint".into()]),
+            target: vec!["endpoint".into()],
             ..Default::default()
         };
 
@@ -642,15 +642,15 @@ mod tests {
 
         bus.add_matcher(MatcherConfig {
             name: "matcher1".into(),
-            match_severity: Some(vec!["warning,error".parse()?]),
-            target: Some(vec!["mock1".into()]),
+            match_severity: vec!["warning,error".parse()?],
+            target: vec!["mock1".into()],
             ..Default::default()
         });
 
         bus.add_matcher(MatcherConfig {
             name: "matcher2".into(),
-            match_severity: Some(vec!["error".parse()?]),
-            target: Some(vec!["mock2".into()]),
+            match_severity: vec!["error".parse()?],
+            target: vec!["mock2".into()],
             ..Default::default()
         });
 
