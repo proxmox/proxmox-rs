@@ -151,7 +151,7 @@ pub fn delete_endpoint(config: &mut Config, name: &str) -> Result<(), HttpError>
     Ok(())
 }
 
-#[cfg(all(feature = "pve-context", test))]
+#[cfg(test)]
 pub mod tests {
     use super::*;
     use crate::api::test_helpers::*;

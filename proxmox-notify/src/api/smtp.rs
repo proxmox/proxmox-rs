@@ -200,7 +200,7 @@ pub fn delete_endpoint(config: &mut Config, name: &str) -> Result<(), HttpError>
     Ok(())
 }
 
-#[cfg(all(feature = "pve-context", test))]
+#[cfg(test)]
 pub mod tests {
     use super::*;
     use crate::api::test_helpers::*;
@@ -348,15 +348,15 @@ pub mod tests {
         Ok(())
     }
 
-    // #[test]
-    // fn test_delete() -> Result<(), HttpError> {
-    //     let mut config = empty_config();
-    //     add_smtp_endpoint_for_test(&mut config, "smtp-endpoint")?;
-    //
-    //     delete_endpoint(&mut config, "smtp-endpoint")?;
-    //     assert!(delete_endpoint(&mut config, "smtp-endpoint").is_err());
-    //     assert_eq!(get_endpoints(&config)?.len(), 0);
-    //
-    //     Ok(())
-    // }
+    #[test]
+    fn test_delete() -> Result<(), HttpError> {
+        let mut config = empty_config();
+        add_smtp_endpoint_for_test(&mut config, "smtp-endpoint")?;
+
+        delete_endpoint(&mut config, "smtp-endpoint")?;
+        assert!(delete_endpoint(&mut config, "smtp-endpoint").is_err());
+        assert_eq!(get_endpoints(&config)?.len(), 0);
+
+        Ok(())
+    }
 }

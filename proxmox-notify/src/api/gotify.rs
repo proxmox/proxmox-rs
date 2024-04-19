@@ -165,7 +165,7 @@ fn remove_private_config_entry(config: &mut Config, name: &str) -> Result<(), Ht
     Ok(())
 }
 
-#[cfg(all(feature = "pve-context", test))]
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::api::test_helpers::empty_config;
