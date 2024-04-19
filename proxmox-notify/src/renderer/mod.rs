@@ -73,6 +73,30 @@ fn value_to_timestamp(val: &Value) -> Option<String> {
     proxmox_time::strftime_local("%F %H:%M:%S", timestamp).ok()
 }
 
+fn handlebars_relative_percentage_helper(
+    h: &Helper,
+    _: &Handlebars,
+    _: &Context,
+    _rc: &mut RenderContext,
+    out: &mut dyn Output,
+) -> HelperResult {
+    let param0 = h
+        .param(0)
+        .and_then(|v| v.value().as_f64())
+        .ok_or_else(|| HandlebarsRenderError::new("relative-percentage: param0 not found"))?;
+    let param1 = h
+        .param(1)
+        .and_then(|v| v.value().as_f64())
+        .ok_or_else(|| HandlebarsRenderError::new("relative-percentage: param1 not found"))?;
+
+    if param1 == 0.0 {
+        out.write("-")?;
+    } else {
+        out.write(&format!("{:.2}%", (param0 * 100.0) / param1))?;
+    }
+    Ok(())
+}
+
 /// Available render functions for `serde_json::Values``
 ///
 /// May be used as a handlebars helper, e.g.
@@ -236,6 +260,11 @@ fn render_template_impl(
     block_render_fns.register_helpers(&mut handlebars);
 
     ValueRenderFunction::register_helpers(&mut handlebars);
+
+    handlebars.register_helper(
+        "relative-percentage",
+        Box::new(handlebars_relative_percentage_helper),
+    );
 
     let rendered_template = handlebars
         .render_template(template, data)
