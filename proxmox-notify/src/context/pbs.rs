@@ -82,7 +82,7 @@ impl Context for PBSContext {
     }
 
     fn default_sendmail_author(&self) -> String {
-        "Proxmox Backup Server".into()
+        format!("Proxmox Backup Server - {}", proxmox_sys::nodename())
     }
 
     fn default_sendmail_from(&self) -> String {
