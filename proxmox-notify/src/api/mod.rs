@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 
 use proxmox_http_error::HttpError;
+use proxmox_schema::api;
 
 use crate::{Config, Origin};
 
@@ -38,6 +39,82 @@ macro_rules! http_bail {
 
 pub use http_bail;
 pub use http_err;
+
+#[api]
+#[derive(Clone, Debug, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd)]
+#[serde(rename_all = "kebab-case")]
+/// Type of the endpoint.
+pub enum EndpointType {
+    /// Sendmail endpoint
+    #[cfg(feature = "sendmail")]
+    Sendmail,
+    /// SMTP endpoint
+    #[cfg(feature = "smtp")]
+    Smtp,
+    /// Gotify endpoint
+    #[cfg(feature = "gotify")]
+    Gotify,
+}
+
+#[api]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd)]
+#[serde(rename_all = "kebab-case")]
+/// Target information
+pub struct Target {
+    /// Name of the endpoint
+    name: String,
+    /// Origin of the endpoint
+    origin: Origin,
+    /// Type of the endpoint
+    #[serde(rename = "type")]
+    endpoint_type: EndpointType,
+    /// Target is disabled
+    #[serde(skip_serializing_if = "Option::is_none")]
+    disable: Option<bool>,
+    /// Comment
+    #[serde(skip_serializing_if = "Option::is_none")]
+    comment: Option<String>,
+}
+
+/// Get a list of all notification targets.
+pub fn get_targets(config: &Config) -> Result<Vec<Target>, HttpError> {
+    let mut targets = Vec::new();
+
+    #[cfg(feature = "gotify")]
+    for endpoint in gotify::get_endpoints(config)? {
+        targets.push(Target {
+            name: endpoint.name,
+            origin: endpoint.origin.unwrap_or(Origin::UserCreated),
+            endpoint_type: EndpointType::Gotify,
+            disable: endpoint.disable,
+            comment: endpoint.comment,
+        })
+    }
+
+    #[cfg(feature = "sendmail")]
+    for endpoint in sendmail::get_endpoints(config)? {
+        targets.push(Target {
+            name: endpoint.name,
+            origin: endpoint.origin.unwrap_or(Origin::UserCreated),
+            endpoint_type: EndpointType::Sendmail,
+            disable: endpoint.disable,
+            comment: endpoint.comment,
+        })
+    }
+
+    #[cfg(feature = "smtp")]
+    for endpoint in smtp::get_endpoints(config)? {
+        targets.push(Target {
+            name: endpoint.name,
+            origin: endpoint.origin.unwrap_or(Origin::UserCreated),
+            endpoint_type: EndpointType::Smtp,
+            disable: endpoint.disable,
+            comment: endpoint.comment,
+        })
+    }
+
+    Ok(targets)
+}
 
 fn verify_digest(config: &Config, digest: Option<&[u8]>) -> Result<(), HttpError> {
     if let Some(digest) = digest {
