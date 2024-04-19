@@ -40,8 +40,8 @@ pub fn get_endpoint(config: &Config, name: &str) -> Result<SmtpConfig, HttpError
 ///   - mailto *and* mailto_user are both set to `None`
 pub fn add_endpoint(
     config: &mut Config,
-    endpoint_config: &SmtpConfig,
-    private_endpoint_config: &SmtpPrivateConfig,
+    endpoint_config: SmtpConfig,
+    private_endpoint_config: SmtpPrivateConfig,
 ) -> Result<(), HttpError> {
     if endpoint_config.name != private_endpoint_config.name {
         // Programming error by the user of the crate, thus we panic
@@ -66,7 +66,7 @@ pub fn add_endpoint(
 
     config
         .config
-        .set_data(&endpoint_config.name, SMTP_TYPENAME, endpoint_config)
+        .set_data(&endpoint_config.name, SMTP_TYPENAME, &endpoint_config)
         .map_err(|e| {
             http_err!(
                 INTERNAL_SERVER_ERROR,
@@ -86,8 +86,8 @@ pub fn add_endpoint(
 pub fn update_endpoint(
     config: &mut Config,
     name: &str,
-    updater: &SmtpConfigUpdater,
-    private_endpoint_config_updater: &SmtpPrivateConfigUpdater,
+    updater: SmtpConfigUpdater,
+    private_endpoint_config_updater: SmtpPrivateConfigUpdater,
     delete: Option<&[DeleteableSmtpProperty]>,
     digest: Option<&[u8]>,
 ) -> Result<(), HttpError> {
@@ -105,7 +105,7 @@ pub fn update_endpoint(
                 DeleteableSmtpProperty::MailtoUser => endpoint.mailto_user = None,
                 DeleteableSmtpProperty::Password => super::set_private_config_entry(
                     config,
-                    &SmtpPrivateConfig {
+                    SmtpPrivateConfig {
                         name: name.to_string(),
                         password: None,
                     },
@@ -118,49 +118,49 @@ pub fn update_endpoint(
         }
     }
 
-    if let Some(mailto) = &updater.mailto {
-        endpoint.mailto = Some(mailto.iter().map(String::from).collect());
+    if let Some(mailto) = updater.mailto {
+        endpoint.mailto = Some(mailto);
     }
-    if let Some(mailto_user) = &updater.mailto_user {
-        endpoint.mailto_user = Some(mailto_user.iter().map(String::from).collect());
+    if let Some(mailto_user) = updater.mailto_user {
+        endpoint.mailto_user = Some(mailto_user);
     }
-    if let Some(from_address) = &updater.from_address {
-        endpoint.from_address = from_address.into();
+    if let Some(from_address) = updater.from_address {
+        endpoint.from_address = from_address;
     }
-    if let Some(server) = &updater.server {
-        endpoint.server = server.into();
+    if let Some(server) = updater.server {
+        endpoint.server = server;
     }
-    if let Some(port) = &updater.port {
-        endpoint.port = Some(*port);
+    if let Some(port) = updater.port {
+        endpoint.port = Some(port);
     }
-    if let Some(username) = &updater.username {
-        endpoint.username = Some(username.into());
+    if let Some(username) = updater.username {
+        endpoint.username = Some(username);
     }
-    if let Some(mode) = &updater.mode {
-        endpoint.mode = Some(*mode);
+    if let Some(mode) = updater.mode {
+        endpoint.mode = Some(mode);
     }
-    if let Some(password) = &private_endpoint_config_updater.password {
+    if let Some(password) = private_endpoint_config_updater.password {
         super::set_private_config_entry(
             config,
-            &SmtpPrivateConfig {
+            SmtpPrivateConfig {
                 name: name.into(),
-                password: Some(password.into()),
+                password: Some(password),
             },
             SMTP_TYPENAME,
             name,
         )?;
     }
 
-    if let Some(author) = &updater.author {
-        endpoint.author = Some(author.into());
+    if let Some(author) = updater.author {
+        endpoint.author = Some(author);
     }
 
-    if let Some(comment) = &updater.comment {
-        endpoint.comment = Some(comment.into());
+    if let Some(comment) = updater.comment {
+        endpoint.comment = Some(comment);
     }
 
-    if let Some(disable) = &updater.disable {
-        endpoint.disable = Some(*disable);
+    if let Some(disable) = updater.disable {
+        endpoint.disable = Some(disable);
     }
 
     if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
@@ -209,7 +209,7 @@ pub mod tests {
     pub fn add_smtp_endpoint_for_test(config: &mut Config, name: &str) -> Result<(), HttpError> {
         add_endpoint(
             config,
-            &SmtpConfig {
+            SmtpConfig {
                 name: name.into(),
                 mailto: Some(vec!["user1@example.com".into()]),
                 mailto_user: None,
@@ -222,7 +222,7 @@ pub mod tests {
                 username: Some("username".into()),
                 ..Default::default()
             },
-            &SmtpPrivateConfig {
+            SmtpPrivateConfig {
                 name: name.into(),
                 password: Some("password".into()),
             },
@@ -252,8 +252,8 @@ pub mod tests {
         assert!(update_endpoint(
             &mut config,
             "test",
-            &Default::default(),
-            &Default::default(),
+            Default::default(),
+            Default::default(),
             None,
             None,
         )
@@ -270,8 +270,8 @@ pub mod tests {
         assert!(update_endpoint(
             &mut config,
             "sendmail-endpoint",
-            &Default::default(),
-            &Default::default(),
+            Default::default(),
+            Default::default(),
             None,
             Some(&[0; 32]),
         )
@@ -290,7 +290,7 @@ pub mod tests {
         update_endpoint(
             &mut config,
             "smtp-endpoint",
-            &SmtpConfigUpdater {
+            SmtpConfigUpdater {
                 mailto: Some(vec!["user2@example.com".into(), "user3@example.com".into()]),
                 mailto_user: Some(vec!["root@pam".into()]),
                 from_address: Some("root@example.com".into()),
@@ -302,7 +302,7 @@ pub mod tests {
                 username: Some("newusername".into()),
                 ..Default::default()
             },
-            &Default::default(),
+            Default::default(),
             None,
             Some(&digest),
         )?;
@@ -325,8 +325,8 @@ pub mod tests {
         update_endpoint(
             &mut config,
             "smtp-endpoint",
-            &Default::default(),
-            &Default::default(),
+            Default::default(),
+            Default::default(),
             Some(&[
                 DeleteableSmtpProperty::Author,
                 DeleteableSmtpProperty::MailtoUser,

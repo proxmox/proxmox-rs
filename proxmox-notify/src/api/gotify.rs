@@ -41,8 +41,8 @@ pub fn get_endpoint(config: &Config, name: &str) -> Result<GotifyConfig, HttpErr
 /// Panics if the names of the private config and the public config do not match.
 pub fn add_endpoint(
     config: &mut Config,
-    endpoint_config: &GotifyConfig,
-    private_endpoint_config: &GotifyPrivateConfig,
+    endpoint_config: GotifyConfig,
+    private_endpoint_config: GotifyPrivateConfig,
 ) -> Result<(), HttpError> {
     if endpoint_config.name != private_endpoint_config.name {
         // Programming error by the user of the crate, thus we panic
@@ -51,11 +51,11 @@ pub fn add_endpoint(
 
     super::ensure_unique(config, &endpoint_config.name)?;
 
-    set_private_config_entry(config, private_endpoint_config)?;
+    set_private_config_entry(config, &private_endpoint_config)?;
 
     config
         .config
-        .set_data(&endpoint_config.name, GOTIFY_TYPENAME, endpoint_config)
+        .set_data(&endpoint_config.name, GOTIFY_TYPENAME, &endpoint_config)
         .map_err(|e| {
             http_err!(
                 INTERNAL_SERVER_ERROR,
@@ -75,8 +75,8 @@ pub fn add_endpoint(
 pub fn update_endpoint(
     config: &mut Config,
     name: &str,
-    endpoint_config_updater: &GotifyConfigUpdater,
-    private_endpoint_config_updater: &GotifyPrivateConfigUpdater,
+    endpoint_config_updater: GotifyConfigUpdater,
+    private_endpoint_config_updater: GotifyPrivateConfigUpdater,
     delete: Option<&[DeleteableGotifyProperty]>,
     digest: Option<&[u8]>,
 ) -> Result<(), HttpError> {
@@ -93,11 +93,11 @@ pub fn update_endpoint(
         }
     }
 
-    if let Some(server) = &endpoint_config_updater.server {
-        endpoint.server = server.into();
+    if let Some(server) = endpoint_config_updater.server {
+        endpoint.server = server;
     }
 
-    if let Some(token) = &private_endpoint_config_updater.token {
+    if let Some(token) = private_endpoint_config_updater.token {
         set_private_config_entry(
             config,
             &GotifyPrivateConfig {
@@ -107,12 +107,12 @@ pub fn update_endpoint(
         )?;
     }
 
-    if let Some(comment) = &endpoint_config_updater.comment {
-        endpoint.comment = Some(comment.into());
+    if let Some(comment) = endpoint_config_updater.comment {
+        endpoint.comment = Some(comment)
     }
 
-    if let Some(disable) = &endpoint_config_updater.disable {
-        endpoint.disable = Some(*disable);
+    if let Some(disable) = endpoint_config_updater.disable {
+        endpoint.disable = Some(disable);
     }
 
     config
@@ -173,13 +173,13 @@ mod tests {
     pub fn add_default_gotify_endpoint(config: &mut Config) -> Result<(), HttpError> {
         add_endpoint(
             config,
-            &GotifyConfig {
+            GotifyConfig {
                 name: "gotify-endpoint".into(),
                 server: "localhost".into(),
                 comment: Some("comment".into()),
                 ..Default::default()
             },
-            &GotifyPrivateConfig {
+            GotifyPrivateConfig {
                 name: "gotify-endpoint".into(),
                 token: "supersecrettoken".into(),
             },
@@ -196,8 +196,8 @@ mod tests {
         assert!(update_endpoint(
             &mut config,
             "test",
-            &Default::default(),
-            &Default::default(),
+            Default::default(),
+            Default::default(),
             None,
             None
         )
@@ -214,8 +214,8 @@ mod tests {
         assert!(update_endpoint(
             &mut config,
             "gotify-endpoint",
-            &Default::default(),
-            &Default::default(),
+            Default::default(),
+            Default::default(),
             None,
             Some(&[0; 32])
         )
@@ -234,12 +234,12 @@ mod tests {
         update_endpoint(
             &mut config,
             "gotify-endpoint",
-            &GotifyConfigUpdater {
+            GotifyConfigUpdater {
                 server: Some("newhost".into()),
                 comment: Some("newcomment".into()),
                 ..Default::default()
             },
-            &GotifyPrivateConfigUpdater {
+            GotifyPrivateConfigUpdater {
                 token: Some("changedtoken".into()),
             },
             None,
@@ -263,8 +263,8 @@ mod tests {
         update_endpoint(
             &mut config,
             "gotify-endpoint",
-            &Default::default(),
-            &Default::default(),
+            Default::default(),
+            Default::default(),
             Some(&[DeleteableGotifyProperty::Comment]),
             None,
         )?;

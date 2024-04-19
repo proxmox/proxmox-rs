@@ -37,7 +37,7 @@ pub fn get_endpoint(config: &Config, name: &str) -> Result<SendmailConfig, HttpE
 ///   - an entity with the same name already exists (`400 Bad request`)
 ///   - the configuration could not be saved (`500 Internal server error`)
 ///   - mailto *and* mailto_user are both set to `None`
-pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<(), HttpError> {
+pub fn add_endpoint(config: &mut Config, endpoint: SendmailConfig) -> Result<(), HttpError> {
     super::ensure_unique(config, &endpoint.name)?;
 
     if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
@@ -49,7 +49,7 @@ pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<()
 
     config
         .config
-        .set_data(&endpoint.name, SENDMAIL_TYPENAME, endpoint)
+        .set_data(&endpoint.name, SENDMAIL_TYPENAME, &endpoint)
         .map_err(|e| {
             http_err!(
                 INTERNAL_SERVER_ERROR,
@@ -69,7 +69,7 @@ pub fn add_endpoint(config: &mut Config, endpoint: &SendmailConfig) -> Result<()
 pub fn update_endpoint(
     config: &mut Config,
     name: &str,
-    updater: &SendmailConfigUpdater,
+    updater: SendmailConfigUpdater,
     delete: Option<&[DeleteableSendmailProperty]>,
     digest: Option<&[u8]>,
 ) -> Result<(), HttpError> {
@@ -90,28 +90,28 @@ pub fn update_endpoint(
         }
     }
 
-    if let Some(mailto) = &updater.mailto {
-        endpoint.mailto = Some(mailto.iter().map(String::from).collect());
+    if let Some(mailto) = updater.mailto {
+        endpoint.mailto = Some(mailto);
     }
 
-    if let Some(mailto_user) = &updater.mailto_user {
-        endpoint.mailto_user = Some(mailto_user.iter().map(String::from).collect());
+    if let Some(mailto_user) = updater.mailto_user {
+        endpoint.mailto_user = Some(mailto_user);
     }
 
-    if let Some(from_address) = &updater.from_address {
-        endpoint.from_address = Some(from_address.into());
+    if let Some(from_address) = updater.from_address {
+        endpoint.from_address = Some(from_address);
     }
 
-    if let Some(author) = &updater.author {
-        endpoint.author = Some(author.into());
+    if let Some(author) = updater.author {
+        endpoint.author = Some(author);
     }
 
-    if let Some(comment) = &updater.comment {
-        endpoint.comment = Some(comment.into());
+    if let Some(comment) = updater.comment {
+        endpoint.comment = Some(comment);
     }
 
-    if let Some(disable) = &updater.disable {
-        endpoint.disable = Some(*disable);
+    if let Some(disable) = updater.disable {
+        endpoint.disable = Some(disable);
     }
 
     if endpoint.mailto.is_none() && endpoint.mailto_user.is_none() {
@@ -162,7 +162,7 @@ pub mod tests {
     ) -> Result<(), HttpError> {
         add_endpoint(
             config,
-            &SendmailConfig {
+            SendmailConfig {
                 name: name.into(),
                 mailto: Some(vec!["user1@example.com".into()]),
                 mailto_user: None,
@@ -193,7 +193,7 @@ pub mod tests {
     fn test_update_not_existing_returns_error() -> Result<(), HttpError> {
         let mut config = empty_config();
 
-        assert!(update_endpoint(&mut config, "test", &Default::default(), None, None,).is_err());
+        assert!(update_endpoint(&mut config, "test", Default::default(), None, None,).is_err());
 
         Ok(())
     }
@@ -206,7 +206,7 @@ pub mod tests {
         assert!(update_endpoint(
             &mut config,
             "sendmail-endpoint",
-            &SendmailConfigUpdater {
+            SendmailConfigUpdater {
                 mailto: Some(vec!["user2@example.com".into(), "user3@example.com".into()]),
                 mailto_user: None,
                 from_address: Some("root@example.com".into()),
@@ -232,7 +232,7 @@ pub mod tests {
         update_endpoint(
             &mut config,
             "sendmail-endpoint",
-            &SendmailConfigUpdater {
+            SendmailConfigUpdater {
                 mailto: Some(vec!["user2@example.com".into(), "user3@example.com".into()]),
                 mailto_user: Some(vec!["root@pam".into()]),
                 from_address: Some("root@example.com".into()),
@@ -262,7 +262,7 @@ pub mod tests {
         update_endpoint(
             &mut config,
             "sendmail-endpoint",
-            &Default::default(),
+            Default::default(),
             Some(&[
                 DeleteableSendmailProperty::FromAddress,
                 DeleteableSendmailProperty::Author,

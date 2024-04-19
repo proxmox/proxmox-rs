@@ -36,7 +36,7 @@ pub fn get_matcher(config: &Config, name: &str) -> Result<MatcherConfig, HttpErr
 /// Returns a `HttpError` if:
 ///   - an entity with the same name already exists (`400 Bad request`)
 ///   - the configuration could not be saved (`500 Internal server error`)
-pub fn add_matcher(config: &mut Config, matcher_config: &MatcherConfig) -> Result<(), HttpError> {
+pub fn add_matcher(config: &mut Config, matcher_config: MatcherConfig) -> Result<(), HttpError> {
     super::ensure_unique(config, &matcher_config.name)?;
 
     if let Some(targets) = matcher_config.target.as_deref() {
@@ -45,7 +45,7 @@ pub fn add_matcher(config: &mut Config, matcher_config: &MatcherConfig) -> Resul
 
     config
         .config
-        .set_data(&matcher_config.name, MATCHER_TYPENAME, matcher_config)
+        .set_data(&matcher_config.name, MATCHER_TYPENAME, &matcher_config)
         .map_err(|e| {
             http_err!(
                 INTERNAL_SERVER_ERROR,
@@ -67,7 +67,7 @@ pub fn add_matcher(config: &mut Config, matcher_config: &MatcherConfig) -> Resul
 pub fn update_matcher(
     config: &mut Config,
     name: &str,
-    matcher_updater: &MatcherConfigUpdater,
+    matcher_updater: MatcherConfigUpdater,
     delete: Option<&[DeleteableMatcherProperty]>,
     digest: Option<&[u8]>,
 ) -> Result<(), HttpError> {
@@ -90,16 +90,16 @@ pub fn update_matcher(
         }
     }
 
-    if let Some(match_severity) = &matcher_updater.match_severity {
-        matcher.match_severity = Some(match_severity.clone());
+    if let Some(match_severity) = matcher_updater.match_severity {
+        matcher.match_severity = Some(match_severity);
     }
 
-    if let Some(match_field) = &matcher_updater.match_field {
-        matcher.match_field = Some(match_field.clone());
+    if let Some(match_field) = matcher_updater.match_field {
+        matcher.match_field = Some(match_field);
     }
 
-    if let Some(match_calendar) = &matcher_updater.match_calendar {
-        matcher.match_calendar = Some(match_calendar.clone());
+    if let Some(match_calendar) = matcher_updater.match_calendar {
+        matcher.match_calendar = Some(match_calendar);
     }
 
     if let Some(mode) = matcher_updater.mode {
@@ -110,17 +110,17 @@ pub fn update_matcher(
         matcher.invert_match = Some(invert_match);
     }
 
-    if let Some(comment) = &matcher_updater.comment {
-        matcher.comment = Some(comment.into());
+    if let Some(comment) = matcher_updater.comment {
+        matcher.comment = Some(comment);
     }
 
-    if let Some(disable) = &matcher_updater.disable {
-        matcher.disable = Some(*disable);
+    if let Some(disable) = matcher_updater.disable {
+        matcher.disable = Some(disable);
     }
 
-    if let Some(target) = &matcher_updater.target {
+    if let Some(target) = matcher_updater.target {
         super::ensure_endpoints_exist(config, target.as_slice())?;
-        matcher.target = Some(target.clone());
+        matcher.target = Some(target);
     }
 
     config
@@ -178,7 +178,7 @@ matcher: matcher2
     #[test]
     fn test_update_not_existing_returns_error() -> Result<(), HttpError> {
         let mut config = empty_config();
-        assert!(update_matcher(&mut config, "test", &Default::default(), None, None).is_err());
+        assert!(update_matcher(&mut config, "test", Default::default(), None, None).is_err());
         Ok(())
     }
 
@@ -188,7 +188,7 @@ matcher: matcher2
         assert!(update_matcher(
             &mut config,
             "matcher1",
-            &Default::default(),
+            Default::default(),
             None,
             Some(&[0u8; 32])
         )
@@ -206,7 +206,7 @@ matcher: matcher2
         update_matcher(
             &mut config,
             "matcher1",
-            &MatcherConfigUpdater {
+            MatcherConfigUpdater {
                 mode: Some(MatchModeOperator::Any),
                 match_field: None,
                 match_severity: None,
@@ -230,7 +230,7 @@ matcher: matcher2
         update_matcher(
             &mut config,
             "matcher1",
-            &Default::default(),
+            Default::default(),
             Some(&[
                 DeleteableMatcherProperty::InvertMatch,
                 DeleteableMatcherProperty::Mode,

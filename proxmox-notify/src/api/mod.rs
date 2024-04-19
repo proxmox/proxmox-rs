@@ -173,13 +173,13 @@ fn get_referenced_entities(config: &Config, entity: &str) -> HashSet<String> {
 #[allow(unused)]
 fn set_private_config_entry<T: Serialize>(
     config: &mut Config,
-    private_config: &T,
+    private_config: T,
     typename: &str,
     name: &str,
 ) -> Result<(), HttpError> {
     config
         .private_config
-        .set_data(name, typename, private_config)
+        .set_data(name, typename, &private_config)
         .map_err(|e| {
             http_err!(
                 INTERNAL_SERVER_ERROR,
@@ -217,7 +217,7 @@ mod tests {
 
         sendmail::add_endpoint(
             &mut config,
-            &SendmailConfig {
+            SendmailConfig {
                 name: "sendmail".to_string(),
                 mailto: Some(vec!["foo@example.com".to_string()]),
                 ..Default::default()
@@ -226,7 +226,7 @@ mod tests {
 
         sendmail::add_endpoint(
             &mut config,
-            &SendmailConfig {
+            SendmailConfig {
                 name: "builtin".to_string(),
                 mailto: Some(vec!["foo@example.com".to_string()]),
                 origin: Some(Origin::Builtin),
@@ -236,12 +236,12 @@ mod tests {
 
         gotify::add_endpoint(
             &mut config,
-            &GotifyConfig {
+            GotifyConfig {
                 name: "gotify".to_string(),
                 server: "localhost".to_string(),
                 ..Default::default()
             },
-            &GotifyPrivateConfig {
+            GotifyPrivateConfig {
                 name: "gotify".to_string(),
                 token: "foo".to_string(),
             },
@@ -249,7 +249,7 @@ mod tests {
 
         matcher::add_matcher(
             &mut config,
-            &MatcherConfig {
+            MatcherConfig {
                 name: "matcher".to_string(),
                 target: Some(vec![
                     "sendmail".to_string(),
