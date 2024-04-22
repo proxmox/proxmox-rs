@@ -196,7 +196,7 @@ pub enum TemplateType {
     HtmlBody,
     /// Plaintext body template
     PlaintextBody,
-    /// Plaintext body template
+    /// Subject template
     Subject,
 }
 
