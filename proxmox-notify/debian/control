@@ -9,7 +9,6 @@ Build-Depends: debhelper (>= 12),
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
  librust-handlebars-3+default-dev <!nocheck>,
- librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
  librust-lettre-0.11+default-dev (>= 0.11.1-~~) <!nocheck>,
  librust-log-0.4+default-dev (>= 0.4.17-~~) <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
@@ -25,6 +24,8 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~) <!nocheck>,
  librust-proxmox-sys-0.5+default-dev (>= 0.5.1-~~) <!nocheck>,
  librust-proxmox-time-1+default-dev (>= 1.1.6-~~) <!nocheck>,
+ librust-proxmox-uuid-1+default-dev (>= 1.0.1-~~) <!nocheck>,
+ librust-proxmox-uuid-1+serde-dev (>= 1.0.1-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
@@ -44,7 +45,6 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-const-format-0.2+default-dev,
  librust-handlebars-3+default-dev,
- librust-lazy-static-1+default-dev (>= 1.4-~~),
  librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-openssl-0.10+default-dev,
  librust-proxmox-http-error-0.1+default-dev,
@@ -56,6 +56,8 @@ Depends:
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~),
  librust-proxmox-time-1+default-dev (>= 1.1.6-~~),
+ librust-proxmox-uuid-1+default-dev (>= 1.0.1-~~),
+ librust-proxmox-uuid-1+serde-dev (>= 1.0.1-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
@@ -69,8 +71,8 @@ Suggests:
  librust-proxmox-notify+smtp-dev (= ${binary:Version})
 Provides:
  librust-proxmox-notify-0-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3.3-dev (= ${binary:Version})
+ librust-proxmox-notify-0.4-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4.0-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - Rust source code
  Source code for Debianized Rust crate "proxmox-notify"
 
@@ -85,8 +87,8 @@ Depends:
  librust-proxmox-notify+smtp-dev (= ${binary:Version})
 Provides:
  librust-proxmox-notify-0+default-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3+default-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3.3+default-dev (= ${binary:Version})
+ librust-proxmox-notify-0.4+default-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4.0+default-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - feature "default"
  This metapackage enables feature "default" for the Rust proxmox-notify crate,
  by pulling in any additional dependencies needed by that feature.
@@ -101,8 +103,8 @@ Depends:
  librust-proxmox-http-0.9+default-dev
 Provides:
  librust-proxmox-notify-0+gotify-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3+gotify-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3.3+gotify-dev (= ${binary:Version})
+ librust-proxmox-notify-0.4+gotify-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4.0+gotify-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - feature "gotify"
  This metapackage enables feature "gotify" for the Rust proxmox-notify crate, by
  pulling in any additional dependencies needed by that feature.
@@ -113,11 +115,12 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-notify-dev (= ${binary:Version}),
- librust-mail-parser-0.8+default-dev (>= 0.8.2-~~)
+ librust-mail-parser-0.8+default-dev (>= 0.8.2-~~),
+ librust-proxmox-sys-0.5+default-dev (>= 0.5.1-~~)
 Provides:
  librust-proxmox-notify-0+mail-forwarder-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3+mail-forwarder-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3.3+mail-forwarder-dev (= ${binary:Version})
+ librust-proxmox-notify-0.4+mail-forwarder-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4.0+mail-forwarder-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - feature "mail-forwarder"
  This metapackage enables feature "mail-forwarder" for the Rust proxmox-notify
  crate, by pulling in any additional dependencies needed by that feature.
@@ -135,12 +138,12 @@ Provides:
  librust-proxmox-notify-0+pbs-context-dev (= ${binary:Version}),
  librust-proxmox-notify-0+pve-context-dev (= ${binary:Version}),
  librust-proxmox-notify-0+sendmail-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3+pbs-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3+pve-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3+sendmail-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3.3+pbs-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3.3+pve-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3.3+sendmail-dev (= ${binary:Version})
+ librust-proxmox-notify-0.4+pbs-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4+pve-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4+sendmail-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4.0+pbs-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4.0+pve-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4.0+sendmail-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - feature "pbs-context" and 2 more
  This metapackage enables feature "pbs-context" for the Rust proxmox-notify
  crate, by pulling in any additional dependencies needed by that feature.
@@ -157,8 +160,8 @@ Depends:
  librust-lettre-0.11+default-dev (>= 0.11.1-~~)
 Provides:
  librust-proxmox-notify-0+smtp-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3+smtp-dev (= ${binary:Version}),
- librust-proxmox-notify-0.3.3+smtp-dev (= ${binary:Version})
+ librust-proxmox-notify-0.4+smtp-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.4.0+smtp-dev (= ${binary:Version})
 Description: Rust crate "proxmox-notify" - feature "smtp"
  This metapackage enables feature "smtp" for the Rust proxmox-notify crate, by
  pulling in any additional dependencies needed by that feature.

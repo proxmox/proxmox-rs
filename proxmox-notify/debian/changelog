@@ -1,3 +1,19 @@
+rust-proxmox-notify (0.4.0-1) bookworm; urgency=medium
+
+  * switch to file-based templating system
+
+  * give each notification a unique ID
+
+  * pbs context: include nodename in default sendmail author
+
+  * pbs-context: exclude successful prunes in default matcher
+
+  * endpoints: matcher: improve descriptions for API types
+
+  * add getter for notification timestamp
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 23 Apr 2024 23:09:17 +0200
+
 rust-proxmox-notify (0.3.3-1) bookworm; urgency=medium
 
   * update to new proxmox-schema using const_format to define static strings
