@@ -66,33 +66,41 @@ pub enum SmtpMode {
 #[serde(rename_all = "kebab-case")]
 /// Config for Sendmail notification endpoints
 pub struct SmtpConfig {
-    /// Name of the endpoint
+    /// Name of the endpoint.
     #[updater(skip)]
     pub name: String,
-    /// Host name or IP of the SMTP relay
+    /// Host name or IP of the SMTP relay.
     pub server: String,
-    /// Port to use when connecting to the SMTP relay
+    /// The port to connect to.
+    /// If not set, the used port defaults to 25 (insecure), 465 (tls)
+    /// or 587 (starttls), depending on the value of mode
     #[serde(skip_serializing_if = "Option::is_none")]
     pub port: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<SmtpMode>,
-    /// Username for authentication
+    /// Username to use during authentication.
+    /// If no username is set, no authentication will be performed.
+    /// The PLAIN and LOGIN authentication methods are supported
     #[serde(skip_serializing_if = "Option::is_none")]
     pub username: Option<String>,
-    /// Mail recipients
+    /// Mail address to send a mail to.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     pub mailto: Vec<String>,
-    /// Mail recipients
+    /// Users to send a mail to. The email address of the user
+    /// will be looked up in users.cfg.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     pub mailto_user: Vec<String>,
-    /// `From` address for the mail
+    /// `From` address for the mail.
+    /// SMTP relays might require that this address is owned by the user
+    /// in order to avoid spoofing. The `From` header in the email will be
+    /// set to `$author <$from-address>`.
     pub from_address: String,
-    /// Author of the mail
+    /// Author of the mail. Defaults to 'Proxmox Backup Server ($hostname)'
     #[serde(skip_serializing_if = "Option::is_none")]
     pub author: Option<String>,
-    /// Comment
+    /// Comment.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
     /// Disable this target.
@@ -136,7 +144,7 @@ pub struct SmtpPrivateConfig {
     /// Name of the endpoint
     #[updater(skip)]
     pub name: String,
-    /// Authentication token
+    /// The password to use during authentication.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
 }

@@ -43,21 +43,26 @@ pub struct SendmailConfig {
     /// Name of the endpoint
     #[updater(skip)]
     pub name: String,
-    /// Mail recipients
+    /// Mail address to send a mail to.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     pub mailto: Vec<String>,
-    /// Mail recipients
+    /// Users to send a mail to. The email address of the user
+    /// will be looked up in users.cfg.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     pub mailto_user: Vec<String>,
-    /// `From` address for the mail
+    /// `From` address for sent E-Mails.
+    /// If the parameter is not set, the plugin will fall back to the
+    /// email-from setting from node.cfg (PBS).
+    /// If that is also not set, the plugin will default to root@$hostname,
+    /// where $hostname is the hostname of the node.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub from_address: Option<String>,
-    /// Author of the mail
+    /// Author of the mail. Defaults to 'Proxmox Backup Server ($hostname)'
     #[serde(skip_serializing_if = "Option::is_none")]
     pub author: Option<String>,
-    /// Comment
+    /// Comment.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
     /// Deprecated.

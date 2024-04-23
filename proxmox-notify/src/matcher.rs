@@ -108,42 +108,42 @@ pub const MATCH_FIELD_ENTRY_SCHEMA: Schema = StringSchema::new("Match metadata f
 #[serde(rename_all = "kebab-case")]
 /// Config for Sendmail notification endpoints
 pub struct MatcherConfig {
-    /// Name of the matcher
+    /// Name of the matcher.
     #[updater(skip)]
     pub name: String,
 
-    /// List of matched metadata fields
+    /// List of matched metadata fields.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     pub match_field: Vec<FieldMatcher>,
 
-    /// List of matched severity levels
+    /// List of matched severity levels.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     pub match_severity: Vec<SeverityMatcher>,
 
-    /// List of matched severity levels
+    /// List of matched severity levels.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     pub match_calendar: Vec<CalendarMatcher>,
-    /// Decide if 'all' or 'any' match statements must match
+    /// Decide if 'all' or 'any' match statements must match.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<MatchModeOperator>,
 
-    /// Invert match of the whole filter
+    /// Invert match of the whole filter.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub invert_match: Option<bool>,
 
-    /// Targets to notify
+    /// Targets to notify.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     pub target: Vec<String>,
 
-    /// Comment
+    /// Comment.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
 
-    /// Disable this matcher
+    /// Disable this matcher.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disable: Option<bool>,
 

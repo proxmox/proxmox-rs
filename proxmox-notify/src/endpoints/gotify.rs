@@ -40,12 +40,12 @@ pub(crate) const GOTIFY_TYPENAME: &str = "gotify";
 #[serde(rename_all = "kebab-case")]
 /// Config for  Gotify notification endpoints
 pub struct GotifyConfig {
-    /// Name of the endpoint
+    /// Name of the endpoint.
     #[updater(skip)]
     pub name: String,
-    /// Gotify Server URL
+    /// Gotify Server URL.
     pub server: String,
-    /// Comment
+    /// Comment.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
     /// Deprecated.
