@@ -18,13 +18,12 @@ use matcher::{MatcherConfig, MATCHER_TYPENAME};
 
 pub mod api;
 pub mod context;
+pub mod config;
 pub mod endpoints;
 pub mod filter;
 pub mod group;
 pub mod renderer;
 pub mod schema;
-
-mod config;
 
 #[derive(Debug)]
 pub enum Error {
