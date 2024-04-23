@@ -10,9 +10,18 @@ use proxmox_schema::{api, Updater, UpdaterType};
 
 use super::IsExpired;
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize)]
 /// Origin URL for WebauthnConfig
 pub struct OriginUrl(Url);
+
+impl serde::Serialize for OriginUrl {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
 
 #[cfg(feature = "api-types")]
 impl UpdaterType for OriginUrl {
@@ -27,23 +36,15 @@ impl std::str::FromStr for OriginUrl {
     }
 }
 
-impl std::ops::Deref for OriginUrl {
-    type Target = Url;
-
-    fn deref(&self) -> &Url {
-        &self.0
-    }
-}
-
-impl std::ops::DerefMut for OriginUrl {
-    fn deref_mut(&mut self) -> &mut Url {
-        &mut self.0
-    }
-}
-
 impl From<OriginUrl> for String {
     fn from(url: OriginUrl) -> String {
-        url.0.into()
+        url.to_string()
+    }
+}
+
+impl OriginUrl {
+    fn to_string(&self) -> String {
+        self.0.origin().ascii_serialization()
     }
 }
 
@@ -90,7 +91,7 @@ impl WebauthnConfig {
     pub fn digest(&self) -> [u8; 32] {
         let mut data = format!("rp={:?}\nid={:?}\n", self.rp, self.id,);
         if let Some(origin) = &self.origin {
-            data.push_str(&format!("origin={:?}\n", origin.as_str()));
+            data.push_str(&format!("origin={}\n", origin.to_string()));
         }
         openssl::sha::sha256(data.as_bytes())
     }
