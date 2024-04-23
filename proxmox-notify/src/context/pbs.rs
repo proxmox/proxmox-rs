@@ -66,8 +66,11 @@ sendmail: mail-to-root
 
 matcher: default-matcher
     mode all
+    invert-match true
+    match-field exact:type=prune
+    match-severity info
     target mail-to-root
-    comment Route all notifications to mail-to-root
+    comment Route everything but successful prune job notifications to mail-to-root
 ";
 
 #[derive(Debug)]
