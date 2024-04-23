@@ -1,4 +1,4 @@
-use lazy_static::lazy_static;
+use std::sync::OnceLock;
 
 use proxmox_schema::{ApiType, ObjectSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
@@ -9,9 +9,16 @@ use crate::matcher::{MatcherConfig, MATCHER_TYPENAME};
 use crate::schema::BACKEND_NAME_SCHEMA;
 use crate::Error;
 
-lazy_static! {
-    pub static ref CONFIG: SectionConfig = config_init();
-    pub static ref PRIVATE_CONFIG: SectionConfig = private_config_init();
+/// Section config schema for the public config file.
+pub fn config_parser() -> &'static SectionConfig {
+    static CONFIG: OnceLock<SectionConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| config_init())
+}
+
+/// Section config schema for the private config file.
+pub fn private_config_parser() -> &'static SectionConfig {
+    static CONFIG: OnceLock<SectionConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| private_config_init())
 }
 
 fn config_init() -> SectionConfig {
@@ -108,7 +115,7 @@ fn private_config_init() -> SectionConfig {
 
 pub fn config(raw_config: &str) -> Result<(SectionConfigData, [u8; 32]), Error> {
     let digest = openssl::sha::sha256(raw_config.as_bytes());
-    let mut data = CONFIG
+    let mut data = config_parser()
         .parse("notifications.cfg", raw_config)
         .map_err(|err| Error::ConfigDeserialization(err.into()))?;
 
@@ -139,20 +146,20 @@ pub fn config(raw_config: &str) -> Result<(SectionConfigData, [u8; 32]), Error> 
 
 pub fn private_config(raw_config: &str) -> Result<(SectionConfigData, [u8; 32]), Error> {
     let digest = openssl::sha::sha256(raw_config.as_bytes());
-    let data = PRIVATE_CONFIG
+    let data = private_config_parser()
         .parse("priv/notifications.cfg", raw_config)
         .map_err(|err| Error::ConfigDeserialization(err.into()))?;
     Ok((data, digest))
 }
 
 pub fn write(config: &SectionConfigData) -> Result<String, Error> {
-    CONFIG
+    config_parser()
         .write("notifications.cfg", config)
         .map_err(|err| Error::ConfigSerialization(err.into()))
 }
 
 pub fn write_private(config: &SectionConfigData) -> Result<String, Error> {
-    PRIVATE_CONFIG
+    private_config_parser()
         .write("priv/notifications.cfg", config)
         .map_err(|err| Error::ConfigSerialization(err.into()))
 }

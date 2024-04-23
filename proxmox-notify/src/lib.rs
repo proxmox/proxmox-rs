@@ -13,12 +13,11 @@ use proxmox_section_config::SectionConfigData;
 use proxmox_uuid::Uuid;
 
 pub mod matcher;
-use crate::config::CONFIG;
 use matcher::{MatcherConfig, MATCHER_TYPENAME};
 
 pub mod api;
-pub mod context;
 pub mod config;
+pub mod context;
 pub mod endpoints;
 pub mod filter;
 pub mod group;
@@ -280,7 +279,7 @@ impl Config {
 
         let default_config = context().default_config();
 
-        let builtin_config = CONFIG
+        let builtin_config = config::config_parser()
             .parse("<builtin>", default_config)
             .map_err(|err| Error::ConfigDeserialization(err.into()))?;
 
