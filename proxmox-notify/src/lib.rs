@@ -261,6 +261,11 @@ impl Notification {
     pub fn id(&self) -> &Uuid {
         &self.id
     }
+
+    /// Return the notification's timestamp
+    pub fn timestamp(&self) -> i64 {
+        self.metadata.timestamp
+    }
 }
 
 /// Notification configuration
