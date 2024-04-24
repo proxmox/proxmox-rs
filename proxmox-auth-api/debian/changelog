@@ -1,3 +1,9 @@
+rust-proxmox-auth-api (0.3.5) bookworm; urgency=medium
+
+  * implement `Display` for `Realm{, Ref}`
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 24 Apr 2024 21:21:39 +0200
+
 rust-proxmox-auth-api (0.3.4) bookworm; urgency=medium
 
   * update to new proxmox-schema using const_format to define static strings
