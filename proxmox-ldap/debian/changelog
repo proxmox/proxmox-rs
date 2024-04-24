@@ -1,4 +1,12 @@
-rust-proxmox-ldap (0.2.1-1) UNRELEASED; urgency=medium
+rust-proxmox-ldap (0.2.2-1) bookworm; urgency=medium
+
+  * ldap: avoid superfluous allocation when calling .search()
+
+  * ldap: add method for retrieving root DSE attributes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 24 Apr 2024 21:11:49 +0200
+
+rust-proxmox-ldap (0.2.1-1) bookworm; urgency=medium
 
   * only check base of base_dn when checking connection to avoid some size
     limitations

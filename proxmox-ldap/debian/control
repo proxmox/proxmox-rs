@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 12),
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-ldap
@@ -34,8 +34,7 @@ Provides:
  librust-proxmox-ldap-0+default-dev (= ${binary:Version}),
  librust-proxmox-ldap-0.2-dev (= ${binary:Version}),
  librust-proxmox-ldap-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-ldap-0.2.1-dev (= ${binary:Version}),
- librust-proxmox-ldap-0.2.1+default-dev (= ${binary:Version})
+ librust-proxmox-ldap-0.2.2-dev (= ${binary:Version}),
+ librust-proxmox-ldap-0.2.2+default-dev (= ${binary:Version})
 Description: Proxmox library for LDAP authentication/synchronization - Rust source code
- This package contains the source for the Rust proxmox-ldap crate, packaged by
- debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-ldap"
