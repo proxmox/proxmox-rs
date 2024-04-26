@@ -1,3 +1,12 @@
+rust-proxmox-sys (0.5.4-1) bookworm; urgency=medium
+
+  * sys: Use safe std::io::IsTerminal wrapper for libc::isatty and depreacate
+    it
+
+  * fix: use fragmented block size for space calculation
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 26 Apr 2024 16:52:43 +0200
+
 rust-proxmox-sys (0.5.3-1) bookworm; urgency=medium
 
   * use epoch_to_rfc2822 from proxmox_time, fixes an issue with times in
