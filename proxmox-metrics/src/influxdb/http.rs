@@ -102,8 +102,7 @@ impl InfluxDbHttp {
             .scheme(uri_parts.scheme.clone().unwrap())
             .authority(uri_parts.authority.clone().unwrap())
             .path_and_query(format!(
-                "{}/api/v2/write?org={}&bucket={}",
-                base_path, encoded_org, encoded_bucket
+                "{base_path}/api/v2/write?org={encoded_org}&bucket={encoded_bucket}"
             ))
             .build()?;
 
