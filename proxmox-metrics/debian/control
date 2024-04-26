@@ -18,9 +18,10 @@ Build-Depends: debhelper (>= 12),
  librust-serde-json-1+default-dev <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+net-dev (>= 1.6-~~) <!nocheck>,
- librust-tokio-1+sync-dev (>= 1.6-~~) <!nocheck>
+ librust-tokio-1+sync-dev (>= 1.6-~~) <!nocheck>,
+ librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-metrics
@@ -43,15 +44,15 @@ Depends:
  librust-serde-json-1+default-dev,
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+net-dev (>= 1.6-~~),
- librust-tokio-1+sync-dev (>= 1.6-~~)
+ librust-tokio-1+sync-dev (>= 1.6-~~),
+ librust-url-2+default-dev (>= 2.2-~~)
 Provides:
  librust-proxmox-metrics+default-dev (= ${binary:Version}),
  librust-proxmox-metrics-0-dev (= ${binary:Version}),
  librust-proxmox-metrics-0+default-dev (= ${binary:Version}),
  librust-proxmox-metrics-0.3-dev (= ${binary:Version}),
  librust-proxmox-metrics-0.3+default-dev (= ${binary:Version}),
- librust-proxmox-metrics-0.3.0-dev (= ${binary:Version}),
- librust-proxmox-metrics-0.3.0+default-dev (= ${binary:Version})
+ librust-proxmox-metrics-0.3.1-dev (= ${binary:Version}),
+ librust-proxmox-metrics-0.3.1+default-dev (= ${binary:Version})
 Description: Metrics Server export utilitites - Rust source code
- This package contains the source for the Rust proxmox-metrics crate, packaged
- by debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-metrics"

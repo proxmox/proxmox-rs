@@ -1,3 +1,9 @@
+rust-proxmox-metrics (0.3.1-1) bookworm; urgency=medium
+
+  * metrics: url-encode influxdb 'org' and 'bucket' parameters
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 26 Apr 2024 17:34:18 +0200
+
 rust-proxmox-metrics (0.3.0-1) bookworm; urgency=medium
 
   * update proxmox-http to 0.9.0
