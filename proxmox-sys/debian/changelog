@@ -1,3 +1,9 @@
+rust-proxmox-sys (0.5.4-2) bookworm; urgency=medium
+
+  * re-build for fixed provides
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 26 Apr 2024 17:11:06 +0200
+
 rust-proxmox-sys (0.5.4-1) bookworm; urgency=medium
 
   * sys: Use safe std::io::IsTerminal wrapper for libc::isatty and depreacate
