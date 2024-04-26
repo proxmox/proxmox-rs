@@ -93,12 +93,17 @@ impl InfluxDbHttp {
             ""
         };
 
+        let encoded_org: String =
+            url::form_urlencoded::byte_serialize(organization.as_bytes()).collect();
+        let encoded_bucket: String =
+            url::form_urlencoded::byte_serialize(bucket.as_bytes()).collect();
+
         let writeuri = http::uri::Builder::new()
             .scheme(uri_parts.scheme.clone().unwrap())
             .authority(uri_parts.authority.clone().unwrap())
             .path_and_query(format!(
                 "{}/api/v2/write?org={}&bucket={}",
-                base_path, organization, bucket
+                base_path, encoded_org, encoded_bucket
             ))
             .build()?;
 
