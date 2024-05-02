@@ -1,0 +1,22 @@
+[package]
+name = "proxmox-dns-api"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+description = "DNS API implementation (read/write /etc/resolv.conf)"
+
+[dependencies]
+anyhow.workspace = true
+const_format.workspace = true
+lazy_static.workspace = true
+regex.workspace = true
+
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+proxmox-sys.workspace = true
+proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
+proxmox-product-config.workspace = true
