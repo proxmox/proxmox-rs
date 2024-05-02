@@ -7,6 +7,12 @@ use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use nix::unistd::{Gid, Uid};
 
+mod digest;
+pub use digest::{
+    detect_modified_configuration_file, ConfigDigest, PROXMOX_CONFIG_DIGEST_FORMAT,
+    PROXMOX_CONFIG_DIGEST_SCHEMA,
+};
+
 static mut PRODUCT_CONFIG: Option<ProxmoxProductConfig> = None;
 
 /// Initialize the global product configuration.
@@ -43,8 +49,6 @@ impl ProxmoxProductConfig {
         path.push(rel_path);
         path
     }
-
-
 }
 
 // Check file/directory permissions
@@ -103,7 +107,6 @@ pub fn mkdir_permissions(dir: &str, uid: Uid, gid: Gid, mode: u32) -> Result<(),
 
     Ok(())
 }
-
 
 /// Atomically write data to file owned by `root:api-user` with permission `0640`
 ///
