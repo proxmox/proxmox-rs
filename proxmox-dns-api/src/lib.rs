@@ -15,6 +15,10 @@ use proxmox_schema::api_types::IPRE_STR;
 
 mod api_types;
 pub use api_types::{DeletableResolvConfProperty, ResolvConf, ResolvConfWithDigest};
+pub use api_types::{
+    FIRST_DNS_SERVER_SCHEMA, SEARCH_DOMAIN_SCHEMA, SECOND_DNS_SERVER_SCHEMA,
+    THIRD_DNS_SERVER_SCHEMA,
+};
 
 static RESOLV_CONF_FN: &str = "/etc/resolv.conf";
 
