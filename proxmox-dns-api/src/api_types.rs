@@ -50,10 +50,15 @@ pub const THIRD_DNS_SERVER_SCHEMA: Schema = StringSchema::new("Third name server
 #[derive(Serialize, Deserialize, Default)]
 /// DNS configuration from '/etc/resolv.conf'
 pub struct ResolvConf {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub search: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub dns1: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub dns2: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub dns3: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub options: Option<String>,
 }
 
