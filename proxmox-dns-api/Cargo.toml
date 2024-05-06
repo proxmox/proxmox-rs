@@ -17,6 +17,11 @@ regex.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
-proxmox-sys.workspace = true
+proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
-proxmox-product-config.workspace = true
+proxmox-product-config = { workspace = true, optional = true }
+
+
+[features]
+default = [ "proxmox-product-config/default" ]
+impl =  [ "dep:proxmox-sys", "proxmox-product-config/impl"]
