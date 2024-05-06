@@ -31,6 +31,18 @@ impl ConfigDigest {
         let digest = sha::sha256(data.as_ref());
         ConfigDigest(digest)
     }
+
+    /// Detect modified configuration files
+    ///
+    /// This function fails with a reasonable error message if checksums do not match.
+    pub fn detect_modification(&self, user_digest: Option<&Self>) -> Result<(), Error> {
+        if let Some(user_digest) = user_digest {
+            if user_digest != self {
+                bail!("detected modified configuration - file changed by other user? Try again.");
+            }
+        }
+        Ok(())
+    }
 }
 
 impl ApiType for ConfigDigest {
@@ -95,23 +107,3 @@ impl std::str::FromStr for ConfigDigest {
 
 serde_plain::derive_deserialize_from_fromstr!(ConfigDigest, "valid configuration digest");
 serde_plain::derive_serialize_from_display!(ConfigDigest);
-
-/// Detect modified configuration files
-///
-/// This function fails with a reasonable error message if checksums do not match.
-pub fn detect_modified_configuration_file(
-    user_digest: Option<&[u8; 32]>,
-    config_digest: &[u8; 32],
-) -> Result<(), Error> {
-    use hex::FromHex;
-
-    let user_digest = match user_digest {
-        Some(digest) => <[u8; 32]>::from_hex(digest)?,
-        None => return Ok(()),
-    };
-
-    if user_digest != *config_digest {
-        bail!("detected modified configuration - file changed by other user? Try again.");
-    }
-    Ok(())
-}

@@ -8,10 +8,7 @@ use nix::sys::stat::Mode;
 use nix::unistd::{Gid, Uid};
 
 mod digest;
-pub use digest::{
-    detect_modified_configuration_file, ConfigDigest, PROXMOX_CONFIG_DIGEST_FORMAT,
-    PROXMOX_CONFIG_DIGEST_SCHEMA,
-};
+pub use digest::{ConfigDigest, PROXMOX_CONFIG_DIGEST_FORMAT, PROXMOX_CONFIG_DIGEST_SCHEMA};
 
 static mut PRODUCT_CONFIG: Option<ProxmoxProductConfig> = None;
 
