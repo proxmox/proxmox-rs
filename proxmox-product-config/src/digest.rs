@@ -1,4 +1,6 @@
 use anyhow::{bail, Error};
+
+#[cfg(feature = "impl")]
 use openssl::sha;
 
 use proxmox_schema::api_types::SHA256_HEX_REGEX;
@@ -27,6 +29,7 @@ impl ConfigDigest {
         hex::encode(&self.0[..])
     }
 
+    #[cfg(feature = "impl")]
     pub fn from_slice<T: AsRef<[u8]>>(data: T) -> ConfigDigest {
         let digest = sha::sha256(data.as_ref());
         ConfigDigest(digest)

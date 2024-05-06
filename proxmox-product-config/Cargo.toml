@@ -12,10 +12,14 @@ exclude.workspace = true
 [dependencies]
 anyhow.workspace = true
 hex.workspace = true
-log.workspace = true
-nix.workspace = true
-openssl.workspace = true
+log = { workspace = true, optional = true }
+nix = { workspace = true, optional = true }
+openssl = { workspace = true, optional = true }
 serde.workspace = true
 serde_plain.workspace = true
-proxmox-sys = { workspace = true, features = [ "timer" ] }
-proxmox-schema = { workspace = true, features = [ "api-types" ] }
+proxmox-sys = { workspace = true, optional = true, features = ["timer"] }
+proxmox-schema = { workspace = true, features = ["api-types"] }
+
+[features]
+default = []
+impl = ["dep:log", "dep:nix", "dep:openssl", "dep:proxmox-sys"]
