@@ -19,9 +19,10 @@ serde_json = { workspace = true }
 
 proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
+proxmox-time = { workspace = true, optional = true }
 proxmox-product-config = { workspace = true, optional = true }
 
 
 [features]
 default = [ "proxmox-product-config/default" ]
-impl =  [ "dep:proxmox-sys", "proxmox-product-config/impl"]
+impl =  [ "dep:proxmox-sys", "dep:proxmox-time", "proxmox-product-config/impl"]
