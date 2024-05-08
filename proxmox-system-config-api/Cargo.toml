@@ -22,7 +22,21 @@ proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
 proxmox-time = { workspace = true, optional = true }
 proxmox-product-config = { workspace = true, optional = true }
 
-
 [features]
-default = [ "proxmox-product-config/default" ]
-impl =  [ "dep:proxmox-sys", "dep:proxmox-time", "proxmox-product-config/impl"]
+default = []
+dns = ["dep:proxmox-product-config"]
+dns-impl = [
+    "dns",
+    "dep:proxmox-product-config",
+    "proxmox-product-config?/impl",
+    "dep:proxmox-sys",
+    "dep:proxmox-time",
+]
+time = []
+time-impl = [
+    "time",
+    "dep:proxmox-product-config",
+    "proxmox-product-config?/impl",
+    "dep:proxmox-sys",
+    "dep:proxmox-time",
+]

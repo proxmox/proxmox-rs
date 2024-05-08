@@ -3,7 +3,7 @@ use anyhow::{bail, format_err, Error};
 use proxmox_product_config::replace_system_config;
 use proxmox_sys::fs::file_read_firstline;
 
-use crate::api_types::ServerTimeInfo;
+use super::ServerTimeInfo;
 
 pub fn read_etc_localtime() -> Result<String, Error> {
     // use /etc/timezone

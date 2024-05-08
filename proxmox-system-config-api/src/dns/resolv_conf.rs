@@ -13,9 +13,9 @@ use proxmox_sys::fs::CreateOptions;
 
 use proxmox_schema::api_types::IPRE_STR;
 
-use crate::DeletableResolvConfProperty;
-use crate::ResolvConf;
-use crate::ResolvConfWithDigest;
+use super::DeletableResolvConfProperty;
+use super::ResolvConf;
+use super::ResolvConfWithDigest;
 
 static RESOLV_CONF_FN: &str = "/etc/resolv.conf";
 
