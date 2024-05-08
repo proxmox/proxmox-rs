@@ -16,6 +16,8 @@ regex.workspace = true
 
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
+nix = { workspace = true, optional = true }
+libc = { workspace = true, optional = true }
 
 proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
@@ -39,4 +41,13 @@ time-impl = [
     "proxmox-product-config?/impl",
     "dep:proxmox-sys",
     "dep:proxmox-time",
+]
+network = []
+network-impl = [
+    "network",
+    "dep:proxmox-product-config",
+    "proxmox-product-config?/impl",
+    "dep:nix",
+    "dep:libc",
+    "dep:proxmox-sys",
 ]
