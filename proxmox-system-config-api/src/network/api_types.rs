@@ -267,7 +267,6 @@ pub const NETWORK_INTERFACE_LIST_SCHEMA: Schema =
 /// Network Interface configuration
 pub struct Interface {
     /// Autostart interface
-    #[serde(rename = "autostart")]
     pub autostart: bool,
     /// Interface is active (UP)
     pub active: bool,
