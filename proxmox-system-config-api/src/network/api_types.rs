@@ -1,5 +1,6 @@
 use std::fmt;
 
+use anyhow::{bail, Error};
 use serde::{Deserialize, Serialize};
 
 use lazy_static::lazy_static;
@@ -357,4 +358,31 @@ impl Interface {
             bond_xmit_hash_policy: None,
         }
     }
+
+    /// Setter for bridge ports (check if interface type is a bridge)
+    pub fn set_bridge_ports(&mut self, ports: Vec<String>) -> Result<(), Error> {
+        if self.interface_type != NetworkInterfaceType::Bridge {
+            bail!(
+                "interface '{}' is no bridge (type is {:?})",
+                self.name,
+                self.interface_type
+            );
+        }
+        self.bridge_ports = Some(ports);
+        Ok(())
+    }
+
+    /// Setter for bond slaves (check if interface type is a bond)
+    pub fn set_bond_slaves(&mut self, slaves: Vec<String>) -> Result<(), Error> {
+        if self.interface_type != NetworkInterfaceType::Bond {
+            bail!(
+                "interface '{}' is no bond (type is {:?})",
+                self.name,
+                self.interface_type
+            );
+        }
+        self.slaves = Some(slaves);
+        Ok(())
+    }
+
 }
