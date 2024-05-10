@@ -15,10 +15,12 @@ use super::{
 };
 
 use helper::compute_file_diff;
-use parser::NetworkParser;
 use helper::get_network_interfaces;
+use parser::NetworkParser;
 
-use proxmox_product_config::{open_api_lockfile, replace_system_config, ApiLockGuard, ConfigDigest};
+use proxmox_product_config::{
+    open_api_lockfile, replace_system_config, ApiLockGuard, ConfigDigest,
+};
 
 lazy_static! {
     static ref PHYSICAL_NIC_REGEX: Regex = Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap();
@@ -264,6 +266,49 @@ impl NetworkConfig {
         Ok(interface)
     }
 
+    /// Check that there is no other gateway.
+    ///
+    /// The gateway property is only allowed on passed 'iface'. This should be
+    /// called before setting the gateway.
+    pub fn check_duplicate_gateway_v4(&self, iface: &str) -> Result<(), Error> {
+        let current_gateway_v4 = self
+            .interfaces
+            .iter()
+            .find(|(_, interface)| interface.gateway.is_some())
+            .map(|(name, _)| name.to_string());
+
+        if let Some(current_gateway_v4) = current_gateway_v4 {
+            if current_gateway_v4 != iface {
+                bail!(
+                    "Default IPv4 gateway already exists on interface '{}'",
+                    current_gateway_v4
+                );
+            }
+        }
+        Ok(())
+    }
+
+    /// Check that there is no other v6 gateway.
+    ///
+    /// The gateway6 property is only allowed on passed 'iface'. This should be
+    /// called before setting the gateway6.
+    pub fn check_duplicate_gateway_v6(&self, iface: &str) -> Result<(), Error> {
+        let current_gateway_v6 = self
+            .interfaces
+            .iter()
+            .find(|(_, interface)| interface.gateway6.is_some())
+            .map(|(name, _)| name.to_string());
+
+        if let Some(current_gateway_v6) = current_gateway_v6 {
+            if current_gateway_v6 != iface {
+                bail!(
+                    "Default IPv6 gateway already exists on interface '{}'",
+                    current_gateway_v6
+                );
+            }
+        }
+        Ok(())
+    }
     /// Check if ports are used only once
     fn check_port_usage(&self) -> Result<(), Error> {
         let mut used_ports = HashMap::new();
