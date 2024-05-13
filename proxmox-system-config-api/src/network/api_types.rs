@@ -386,3 +386,161 @@ impl Interface {
     }
 
 }
+
+#[api()]
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+/// Deletable property name
+pub enum DeletableInterfaceProperty {
+    /// Delete the IPv4 address property.
+    Cidr,
+    /// Delete the IPv6 address property.
+    Cidr6,
+    /// Delete the IPv4 gateway property.
+    Gateway,
+    /// Delete the IPv6 gateway property.
+    Gateway6,
+    /// Delete the whole IPv4 configuration entry.
+    Method,
+    /// Delete the whole IPv6 configuration entry.
+    Method6,
+    /// Delete IPv4 comments
+    Comments,
+    /// Delete IPv6 comments
+    Comments6,
+    /// Delete mtu.
+    Mtu,
+    /// Delete autostart flag
+    Autostart,
+    /// Delete bridge ports (set to 'none')
+    #[serde(rename = "bridge_ports")]
+    BridgePorts,
+    /// Delete bridge-vlan-aware flag
+    #[serde(rename = "bridge_vlan_aware")]
+    BridgeVlanAware,
+    /// Delete bond-slaves (set to 'none')
+    Slaves,
+    /// Delete bond-primary
+    BondPrimary,
+    /// Delete bond transmit hash policy
+    #[serde(rename = "bond_xmit_hash_policy")]
+    BondXmitHashPolicy,
+}
+
+#[api(
+         properties: {
+            "type": {
+                type: NetworkInterfaceType,
+                optional: true,
+            },
+            autostart: {
+                description: "Autostart interface.",
+                type: bool,
+                optional: true,
+            },
+            method: {
+                type: NetworkConfigMethod,
+                optional: true,
+            },
+            method6: {
+                type: NetworkConfigMethod,
+                optional: true,
+            },
+            comments: {
+                description: "Comments (inet, may span multiple lines)",
+                type: String,
+                optional: true,
+            },
+            comments6: {
+                description: "Comments (inet5, may span multiple lines)",
+                type: String,
+                optional: true,
+            },
+            cidr: {
+                schema: CIDR_V4_SCHEMA,
+                optional: true,
+            },
+            cidr6: {
+                schema: CIDR_V6_SCHEMA,
+                optional: true,
+            },
+            gateway: {
+                schema: IP_V4_SCHEMA,
+                optional: true,
+            },
+            gateway6: {
+                schema: IP_V6_SCHEMA,
+                optional: true,
+            },
+            mtu: {
+                description: "Maximum Transmission Unit.",
+                optional: true,
+                minimum: 46,
+                maximum: 65535,
+                default: 1500,
+            },
+            bridge_ports: {
+                schema: NETWORK_INTERFACE_LIST_SCHEMA,
+                optional: true,
+            },
+            bridge_vlan_aware: {
+                description: "Enable bridge vlan support.",
+                type: bool,
+                optional: true,
+            },
+            "vlan-id": {
+                description: "VLAN ID.",
+                type: u16,
+                optional: true,
+            },
+            "vlan-raw-device": {
+                schema: NETWORK_INTERFACE_NAME_SCHEMA,
+                optional: true,
+            },
+            bond_mode: {
+                type: LinuxBondMode,
+                optional: true,
+            },
+            "bond-primary": {
+                schema: NETWORK_INTERFACE_NAME_SCHEMA,
+                optional: true,
+            },
+            bond_xmit_hash_policy: {
+                type: BondXmitHashPolicy,
+                optional: true,
+            },
+            slaves: {
+                schema: NETWORK_INTERFACE_LIST_SCHEMA,
+                optional: true,
+            },
+        },
+)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+/// Update network interface config.
+pub struct InterfaceUpdater   {
+    #[serde(rename = "type")]
+    pub interface_type: Option<NetworkInterfaceType>,
+    pub autostart: Option<bool>,
+    pub method: Option<NetworkConfigMethod>,
+    pub method6: Option<NetworkConfigMethod>,
+    pub comments: Option<String>,
+    pub comments6: Option<String>,
+    pub cidr: Option<String>,
+    pub gateway: Option<String>,
+    pub cidr6: Option<String>,
+    pub gateway6: Option<String>,
+    pub mtu: Option<u64>,
+    #[serde(rename = "bridge_ports")]
+    pub bridge_ports: Option<String>,
+    #[serde(rename = "bridge_vlan_aware")]
+    pub bridge_vlan_aware: Option<bool>,
+    pub vlan_id: Option<u16>,
+    pub vlan_raw_device: Option<String>,
+    #[serde(rename = "bond_mode")]
+    pub bond_mode: Option<LinuxBondMode>,
+    pub bond_primary: Option<String>,
+    #[serde(rename = "bond_xmit_hash_policy")]
+    pub bond_xmit_hash_policy: Option<BondXmitHashPolicy>,
+    pub slaves: Option<String>,
+}
