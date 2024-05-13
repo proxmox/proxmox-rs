@@ -372,6 +372,12 @@ impl Interface {
         Ok(())
     }
 
+    /// Setter for bridge ports (check if interface type is a bridge)
+    pub fn set_bridge_port_list(&mut self, ports: &str) -> Result<(), Error> {
+        let ports = Self::split_interface_list(ports)?;
+        self.set_bridge_ports(ports)
+    }
+
     /// Setter for bond slaves (check if interface type is a bond)
     pub fn set_bond_slaves(&mut self, slaves: Vec<String>) -> Result<(), Error> {
         if self.interface_type != NetworkInterfaceType::Bond {
@@ -385,6 +391,22 @@ impl Interface {
         Ok(())
     }
 
+    /// Setter for bond slaves (check if interface type is a bond)
+    pub fn set_bond_slave_list(&mut self, slaves: &str) -> Result<(), Error> {
+        let slaves = Self::split_interface_list(slaves)?;
+        self.set_bond_slaves(slaves)
+    }
+
+    /// Split a network interface list into an array of interface names.
+    pub fn split_interface_list(list: &str) -> Result<Vec<String>, Error> {
+        let value = NETWORK_INTERFACE_ARRAY_SCHEMA.parse_property_string(list)?;
+        Ok(value
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_str().unwrap().to_string())
+            .collect())
+    }
 }
 
 #[api()]

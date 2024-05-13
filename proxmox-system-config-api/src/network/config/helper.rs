@@ -69,7 +69,7 @@ pub fn parse_cidr(cidr: &str) -> Result<(String, u8, bool), Error> {
     }
 }
 
-pub fn check_netmask(mask: u8, is_v6: bool) -> Result<(), Error> {
+pub(crate) fn check_netmask(mask: u8, is_v6: bool) -> Result<(), Error> {
     let (ver, min, max) = if is_v6 {
         ("IPv6", 1, 128)
     } else {
@@ -90,7 +90,7 @@ pub fn check_netmask(mask: u8, is_v6: bool) -> Result<(), Error> {
 }
 
 // parse ip address with optional cidr mask
-pub fn parse_address_or_cidr(cidr: &str) -> Result<(String, Option<u8>, bool), Error> {
+pub(crate) fn parse_address_or_cidr(cidr: &str) -> Result<(String, Option<u8>, bool), Error> {
     // NOTE: This is NOT the same regex as in proxmox-schema as this one has capture groups for
     // the addresses vs cidr portions!
     lazy_static! {
@@ -123,7 +123,7 @@ pub fn parse_address_or_cidr(cidr: &str) -> Result<(String, Option<u8>, bool), E
     }
 }
 
-pub fn get_network_interfaces() -> Result<HashMap<String, bool>, Error> {
+pub(crate) fn get_network_interfaces() -> Result<HashMap<String, bool>, Error> {
     const PROC_NET_DEV: &str = "/proc/net/dev";
 
     #[repr(C)]
@@ -196,7 +196,7 @@ pub fn get_network_interfaces() -> Result<HashMap<String, bool>, Error> {
     Ok(interface_list)
 }
 
-pub fn compute_file_diff(filename: &str, shadow: &str) -> Result<String, Error> {
+pub(crate) fn compute_file_diff(filename: &str, shadow: &str) -> Result<String, Error> {
     let output = Command::new("diff")
         .arg("-b")
         .arg("-u")
