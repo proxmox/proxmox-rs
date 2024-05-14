@@ -271,7 +271,6 @@ pub struct Interface {
     /// Interface is active (UP)
     pub active: bool,
     /// Interface name
-    #[serde(alias = "iface")]
     pub name: String,
     /// Interface type
     #[serde(rename = "type")]
