@@ -27,33 +27,33 @@ proxmox-product-config = { workspace = true, optional = true }
 
 [features]
 default = []
-dns = ["dep:proxmox-product-config"]
+dns-api-types = ["dep:proxmox-product-config"]
 dns-impl = [
-    "dns",
+    "dns-api-types",
     "dep:proxmox-product-config",
     "proxmox-product-config?/impl",
     "dep:proxmox-sys",
     "dep:proxmox-time",
 ]
-time = []
+time-api-types = []
 time-impl = [
-    "time",
+    "time-api-types",
     "dep:proxmox-product-config",
     "proxmox-product-config?/impl",
     "dep:proxmox-sys",
     "dep:proxmox-time",
 ]
-network = []
+network-api-types = []
 network-impl = [
-    "network",
+    "network-api-types",
     "dep:proxmox-product-config",
     "proxmox-product-config?/impl",
     "dep:nix",
     "dep:libc",
     "dep:proxmox-sys",
 ]
-syslog = []
+syslog-api-types = []
 syslog-impl = [
-    "syslog",
+    "syslog-api-types",
     "dep:log",
 ]

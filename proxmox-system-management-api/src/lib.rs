@@ -1,11 +1,11 @@
-#[cfg(feature = "dns")]
+#[cfg(feature = "dns-api-types")]
 pub mod dns;
 
-#[cfg(feature = "network")]
+#[cfg(feature = "network-api-types")]
 pub mod network;
 
-#[cfg(feature = "time")]
+#[cfg(feature = "time-api-types")]
 pub mod time;
 
-#[cfg(feature = "syslog")]
+#[cfg(feature = "syslog-api-types")]
 pub mod syslog;
