@@ -1,4 +1,4 @@
-rust-proxmox-system-config-api (0.1.0-1) bookworm; urgency=medium
+rust-proxmox-system-management-api (0.1.0-1) bookworm; urgency=medium
 
   * initial packaging
 

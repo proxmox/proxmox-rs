@@ -1,12 +1,12 @@
 [package]
-name = "proxmox-system-config-api"
+name = "proxmox-system-management-api"
 version = "0.1.0"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 exclude.workspace = true
-description = "System configuration API implementation (DNS, Time, Network)"
+description = "System Management API implementation (DNS, Time, Network)"
 
 [dependencies]
 anyhow.workspace = true

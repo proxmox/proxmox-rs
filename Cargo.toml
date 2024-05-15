@@ -29,7 +29,7 @@ members = [
     "proxmox-sortable-macro",
     "proxmox-subscription",
     "proxmox-sys",
-    "proxmox-system-config-api",
+    "proxmox-system-management-api",
     "proxmox-tfa",
     "proxmox-time",
     "proxmox-uuid",
