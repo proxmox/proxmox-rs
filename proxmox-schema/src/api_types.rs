@@ -154,6 +154,37 @@ pub const DNS_ALIAS_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&DNS_ALIA
 pub const DNS_NAME_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&DNS_NAME_REGEX);
 pub const DNS_NAME_OR_IP_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&DNS_NAME_OR_IP_REGEX);
 
+pub const IP_V4_SCHEMA: Schema = StringSchema::new("IPv4 address.")
+    .format(&IP_V4_FORMAT)
+    .max_length(15)
+    .schema();
+
+pub const IP_V6_SCHEMA: Schema = StringSchema::new("IPv6 address.")
+    .format(&IP_V6_FORMAT)
+    .max_length(39)
+    .schema();
+
+pub const IP_SCHEMA: Schema = StringSchema::new("IP (IPv4 or IPv6) address.")
+    .format(&IP_FORMAT)
+    .max_length(39)
+    .schema();
+
+pub const CIDR_V4_SCHEMA: Schema = StringSchema::new("IPv4 address with netmask (CIDR notation).")
+    .format(&CIDR_V4_FORMAT)
+    .max_length(18)
+    .schema();
+
+pub const CIDR_V6_SCHEMA: Schema = StringSchema::new("IPv6 address with netmask (CIDR notation).")
+    .format(&CIDR_V6_FORMAT)
+    .max_length(43)
+    .schema();
+
+pub const CIDR_SCHEMA: Schema =
+    StringSchema::new("IP address (IPv4 or IPv6) with netmask (CIDR notation).")
+        .format(&CIDR_FORMAT)
+        .max_length(43)
+        .schema();
+
 pub const FINGERPRINT_SHA256_FORMAT: ApiStringFormat =
     ApiStringFormat::Pattern(&FINGERPRINT_SHA256_REGEX);
 
