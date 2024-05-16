@@ -7,17 +7,13 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 use proxmox_schema::api;
-use proxmox_schema::api_types::CIDR_FORMAT;
-use proxmox_schema::api_types::CIDR_V4_FORMAT;
-use proxmox_schema::api_types::CIDR_V6_FORMAT;
-use proxmox_schema::api_types::IP_FORMAT;
-use proxmox_schema::api_types::IP_V4_FORMAT;
-use proxmox_schema::api_types::IP_V6_FORMAT;
 use proxmox_schema::ApiStringFormat;
 use proxmox_schema::ArraySchema;
 use proxmox_schema::Schema;
 use proxmox_schema::StringSchema;
 use proxmox_schema::api_types::SAFE_ID_REGEX;
+use proxmox_schema::api_types::{IP_V4_SCHEMA, IP_V6_SCHEMA};
+use proxmox_schema::api_types::{CIDR_V4_SCHEMA, CIDR_V6_SCHEMA};
 
 lazy_static! {
     pub static ref PHYSICAL_NIC_REGEX: Regex = Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap();
@@ -27,37 +23,6 @@ lazy_static! {
 
 pub const NETWORK_INTERFACE_FORMAT: ApiStringFormat =
     ApiStringFormat::Pattern(&SAFE_ID_REGEX);
-
-pub const IP_V4_SCHEMA: Schema = StringSchema::new("IPv4 address.")
-    .format(&IP_V4_FORMAT)
-    .max_length(15)
-    .schema();
-
-pub const IP_V6_SCHEMA: Schema = StringSchema::new("IPv6 address.")
-    .format(&IP_V6_FORMAT)
-    .max_length(39)
-    .schema();
-
-pub const IP_SCHEMA: Schema = StringSchema::new("IP (IPv4 or IPv6) address.")
-    .format(&IP_FORMAT)
-    .max_length(39)
-    .schema();
-
-pub const CIDR_V4_SCHEMA: Schema = StringSchema::new("IPv4 address with netmask (CIDR notation).")
-    .format(&CIDR_V4_FORMAT)
-    .max_length(18)
-    .schema();
-
-pub const CIDR_V6_SCHEMA: Schema = StringSchema::new("IPv6 address with netmask (CIDR notation).")
-    .format(&CIDR_V6_FORMAT)
-    .max_length(43)
-    .schema();
-
-pub const CIDR_SCHEMA: Schema =
-    StringSchema::new("IP address (IPv4 or IPv6) with netmask (CIDR notation).")
-        .format(&CIDR_FORMAT)
-        .max_length(43)
-        .schema();
 
 #[api()]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
