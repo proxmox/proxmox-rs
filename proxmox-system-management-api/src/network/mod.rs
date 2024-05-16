@@ -6,3 +6,8 @@ pub use api_types::*;
 mod config;
 #[cfg(feature = "network-impl")]
 pub use config::*;
+
+#[cfg(feature = "network-impl")]
+mod api_impl;
+#[cfg(feature = "network-impl")]
+pub use api_impl::{create_interface, update_interface};
