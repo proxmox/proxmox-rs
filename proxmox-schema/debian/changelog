@@ -1,3 +1,9 @@
+rust-proxmox-schema (3.1.1-1) bookworm; urgency=medium
+
+  * add ip/cidr api schemas
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 16 May 2024 09:31:22 +0200
+
 rust-proxmox-schema (3.1.0-1) bookworm; urgency=medium
 
   * use const_format to define static strings
