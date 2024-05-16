@@ -8,6 +8,8 @@ Build-Depends: debhelper (>= 12),
  libstd-rust-dev <!nocheck>,
  librust-base64-0.13+default-dev <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
+ librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
@@ -25,23 +27,19 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-base64-0.13+default-dev,
- librust-openssl-0.10+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
+Recommends:
+ librust-proxmox-acme+impl-dev (= ${binary:Version})
 Suggests:
  librust-proxmox-acme+api-types-dev (= ${binary:Version}),
- librust-proxmox-acme+client-dev (= ${binary:Version}),
- librust-proxmox-acme+native-tls-dev (= ${binary:Version}),
- librust-proxmox-acme+ureq-dev (= ${binary:Version})
+ librust-proxmox-acme+async-client-dev (= ${binary:Version}),
+ librust-proxmox-acme+client-dev (= ${binary:Version})
 Provides:
- librust-proxmox-acme+default-dev (= ${binary:Version}),
  librust-proxmox-acme-0-dev (= ${binary:Version}),
- librust-proxmox-acme-0+default-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.1-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.1+default-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.2-dev (= ${binary:Version})
 Description: ACME client library - Rust source code
  Source code for Debianized Rust crate "proxmox-acme"
 
@@ -51,15 +49,35 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-acme-dev (= ${binary:Version}),
- librust-proxmox-schema-3+api-macro-dev,
- librust-proxmox-schema-3+default-dev
+ librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~),
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~)
 Provides:
  librust-proxmox-acme-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+api-types-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.1+api-types-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.2+api-types-dev (= ${binary:Version})
 Description: ACME client library - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-acme crate,
  by pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox-acme+async-client-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-acme-dev (= ${binary:Version}),
+ librust-proxmox-acme+impl-dev (= ${binary:Version}),
+ librust-anyhow-1+default-dev,
+ librust-bytes-1+default-dev,
+ librust-hyper-0.14+default-dev (>= 0.14.5-~~),
+ librust-proxmox-http-0.9+client-dev,
+ librust-proxmox-http-0.9+default-dev
+Provides:
+ librust-proxmox-acme-0+async-client-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5+async-client-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.2+async-client-dev (= ${binary:Version})
+Description: ACME client library - feature "async-client"
+ This metapackage enables feature "async-client" for the Rust proxmox-acme
+ crate, by pulling in any additional dependencies needed by that feature.
 
 Package: librust-proxmox-acme+client-dev
 Architecture: any
@@ -67,43 +85,36 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-acme-dev (= ${binary:Version}),
- librust-proxmox-acme+ureq-dev (= ${binary:Version}),
- librust-proxmox-acme+native-tls-dev (= ${binary:Version})
+ librust-proxmox-acme+impl-dev (= ${binary:Version}),
+ librust-native-tls-0.2+default-dev,
+ librust-ureq-2+gzip-dev (>= 2.4-~~),
+ librust-ureq-2+native-tls-dev (>= 2.4-~~)
 Provides:
  librust-proxmox-acme-0+client-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+client-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.1+client-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.2+client-dev (= ${binary:Version})
 Description: ACME client library - feature "client"
  This metapackage enables feature "client" for the Rust proxmox-acme crate, by
  pulling in any additional dependencies needed by that feature.
 
-Package: librust-proxmox-acme+native-tls-dev
+Package: librust-proxmox-acme+impl-dev
 Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-acme-dev (= ${binary:Version}),
- librust-native-tls-0.2+default-dev
+ librust-proxmox-acme+api-types-dev (= ${binary:Version}),
+ librust-openssl-0.10+default-dev
 Provides:
- librust-proxmox-acme-0+native-tls-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5+native-tls-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.1+native-tls-dev (= ${binary:Version})
-Description: ACME client library - feature "native-tls"
- This metapackage enables feature "native-tls" for the Rust proxmox-acme crate,
- by pulling in any additional dependencies needed by that feature.
-
-Package: librust-proxmox-acme+ureq-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-acme-dev (= ${binary:Version}),
- librust-ureq-2+gzip-dev (>= 2.4-~~),
- librust-ureq-2+native-tls-dev (>= 2.4-~~)
-Provides:
- librust-proxmox-acme-0+ureq-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5+ureq-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.1+ureq-dev (= ${binary:Version})
-Description: ACME client library - feature "ureq"
- This metapackage enables feature "ureq" for the Rust proxmox-acme crate, by
+ librust-proxmox-acme+default-dev (= ${binary:Version}),
+ librust-proxmox-acme-0+impl-dev (= ${binary:Version}),
+ librust-proxmox-acme-0+default-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5+impl-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5+default-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.2+impl-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.2+default-dev (= ${binary:Version})
+Description: ACME client library - feature "impl" and 1 more
+ This metapackage enables feature "impl" for the Rust proxmox-acme crate, by
  pulling in any additional dependencies needed by that feature.
+ .
+ Additionally, this package also provides the "default" feature.

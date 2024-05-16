@@ -1,3 +1,11 @@
+rust-proxmox-acme (0.5.2) bookworm; urgency=medium
+
+  * allow to compile/use api types separately.
+
+  * add async-client feature
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 16 May 2024 11:31:43 +0200
+
 rust-proxmox-acme (0.5.1) bookworm; urgency=medium
 
   * add api-types feature to provide schemas for api types
