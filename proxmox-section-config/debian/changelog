@@ -1,3 +1,9 @@
+rust-proxmox-section-config (2.0.2-1) bookworm; urgency=medium
+
+  * pass filesystem paths as AsRef<Path>
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 17 May 2024 11:00:27 +0200
+
 rust-proxmox-section-config (2.0.1-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 3
