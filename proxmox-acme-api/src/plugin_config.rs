@@ -6,9 +6,9 @@ use serde_json::Value;
 
 use proxmox_schema::{ApiType, Schema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
+use proxmox_product_config::{ApiLockGuard, open_api_lockfile, replace_config};
 
-use crate::config::AcmeApiConfig;
-use crate::types::{PLUGIN_ID_SCHEMA, DnsPlugin, StandalonePlugin};
+use crate::types::{DnsPlugin, StandalonePlugin, PLUGIN_ID_SCHEMA};
 
 lazy_static! {
     static ref CONFIG: SectionConfig = init();
@@ -52,62 +52,38 @@ fn init() -> SectionConfig {
     config
 }
 
-// LockGuard for the plugin configuration
-pub(crate) struct AcmePluginConfigLockGuard {
-    _file: Option<std::fs::File>,
+pub(crate) fn lock_plugin_config() -> Result<ApiLockGuard, Error> {
+    super::config::make_acme_dir()?;
+
+    let plugin_cfg_lockfile = super::config::plugin_cfg_lockfile();
+
+    open_api_lockfile(plugin_cfg_lockfile, None, true)
 }
 
-impl AcmeApiConfig {
-    pub(crate) fn lock_plugin_config(&self) -> Result<AcmePluginConfigLockGuard, Error> {
-        self.make_acme_dir()?;
-        let file_owner = (self.file_owner)();
+pub(crate) fn plugin_config() -> Result<(PluginData, [u8; 32]), Error> {
+    let plugin_cfg_filename = super::config::plugin_cfg_filename();
 
-        let mode = nix::sys::stat::Mode::from_bits_truncate(0o0660);
-        let options = proxmox_sys::fs::CreateOptions::new()
-            .perm(mode)
-            .owner(file_owner.uid)
-            .group(file_owner.gid);
+    let content =
+        proxmox_sys::fs::file_read_optional_string(&plugin_cfg_filename)?.unwrap_or_default();
 
-        let timeout = std::time::Duration::new(10, 0);
+    let digest = openssl::sha::sha256(content.as_bytes());
+    let mut data = CONFIG.parse(&plugin_cfg_filename, &content)?;
 
-        let plugin_cfg_lockfile = self.plugin_cfg_lockfile();
-        let file = proxmox_sys::fs::open_file_locked(&plugin_cfg_lockfile, timeout, true, options)?;
-        Ok(AcmePluginConfigLockGuard { _file: Some(file) })
+    if data.sections.get("standalone").is_none() {
+        let standalone = StandalonePlugin::default();
+        data.set_data("standalone", "standalone", &standalone)
+            .unwrap();
     }
 
-    pub(crate) fn plugin_config(&self) -> Result<(PluginData, [u8; 32]), Error> {
-        let plugin_cfg_filename = self.plugin_cfg_filename();
+    Ok((PluginData { data }, digest))
+}
 
-        let content =
-            proxmox_sys::fs::file_read_optional_string(&plugin_cfg_filename)?.unwrap_or_default();
+pub(crate) fn save_plugin_config(config: &PluginData) -> Result<(), Error> {
+    super::config::make_acme_dir()?;
+    let plugin_cfg_filename = super::config::plugin_cfg_filename();
+    let raw = CONFIG.write(&plugin_cfg_filename, &config.data)?;
 
-        let digest = openssl::sha::sha256(content.as_bytes());
-        let mut data = CONFIG.parse(&plugin_cfg_filename, &content)?;
-
-        if data.sections.get("standalone").is_none() {
-            let standalone = StandalonePlugin::default();
-            data.set_data("standalone", "standalone", &standalone)
-                .unwrap();
-        }
-
-        Ok((PluginData { data }, digest))
-    }
-
-    pub(crate) fn save_plugin_config(&self, config: &PluginData) -> Result<(), Error> {
-        self.make_acme_dir()?;
-        let plugin_cfg_filename = self.plugin_cfg_filename();
-        let raw = CONFIG.write(&plugin_cfg_filename, &config.data)?;
-        let file_owner = (self.file_owner)();
-
-        let mode = nix::sys::stat::Mode::from_bits_truncate(0o0640);
-        // set the correct owner/group/permissions while saving file
-        let options = proxmox_sys::fs::CreateOptions::new()
-            .perm(mode)
-            .owner(file_owner.uid)
-            .group(file_owner.gid);
-
-        proxmox_sys::fs::replace_file(plugin_cfg_filename, raw.as_bytes(), options, true)
-    }
+    replace_config(plugin_cfg_filename, raw.as_bytes())
 }
 
 pub(crate) struct PluginData {

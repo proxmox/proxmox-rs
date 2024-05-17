@@ -32,12 +32,15 @@ proxmox-router = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
 proxmox-acme = { workspace = true, optional = true, features = ["api-types"] }
+proxmox-product-config = { workspace = true, optional = true }
 
 [features]
 default = ["api-types"]
 api-types = ["dep:proxmox-acme", "dep:proxmox-serde"]
 impl = [
     "api-types",
+    "dep:proxmox-product-config",
+    "proxmox-product-config?/impl",
     "dep:proxmox-acme",
     "proxmox-acme?/impl",
     "proxmox-acme?/async-client",

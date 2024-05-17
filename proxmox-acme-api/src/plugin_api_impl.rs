@@ -8,152 +8,141 @@ use serde_json::Value;
 
 use proxmox_schema::param_bail;
 
-use crate::config::AcmeApiConfig;
-use crate::types::{DeletablePluginProperty, PluginConfig, DnsPlugin, DnsPluginCore, DnsPluginCoreUpdater};
+use crate::types::{
+    DeletablePluginProperty, DnsPlugin, DnsPluginCore, DnsPluginCoreUpdater, PluginConfig,
+};
 
 use proxmox_router::{http_bail, RpcEnvironment};
 
-impl AcmeApiConfig {
-    pub fn list_plugins(
-        &self,
-        rpcenv: &mut dyn RpcEnvironment,
-    ) -> Result<Vec<PluginConfig>, Error> {
-        let (plugins, digest) = self.plugin_config()?;
+pub fn list_plugins(rpcenv: &mut dyn RpcEnvironment) -> Result<Vec<PluginConfig>, Error> {
+    let (plugins, digest) = super::plugin_config::plugin_config()?;
 
-        rpcenv["digest"] = hex::encode(digest).into();
-        Ok(plugins
-            .iter()
-            .map(|(id, (ty, data))| modify_cfg_for_api(id, ty, data))
-            .collect())
+    rpcenv["digest"] = hex::encode(digest).into();
+    Ok(plugins
+        .iter()
+        .map(|(id, (ty, data))| modify_cfg_for_api(id, ty, data))
+        .collect())
+}
+
+pub fn get_plugin(
+    id: String,
+    rpcenv: &mut dyn RpcEnvironment,
+) -> Result<PluginConfig, Error> {
+    let (plugins, digest) = super::plugin_config::plugin_config()?;
+    rpcenv["digest"] = hex::encode(digest).into();
+
+    match plugins.get(&id) {
+        Some((ty, data)) => Ok(modify_cfg_for_api(&id, ty, data)),
+        None => http_bail!(NOT_FOUND, "no such plugin"),
+    }
+}
+
+pub fn add_plugin(r#type: String, core: DnsPluginCore, data: String) -> Result<(), Error> {
+    // Currently we only support DNS plugins and the standalone plugin is "fixed":
+    if r#type != "dns" {
+        param_bail!("type", "invalid ACME plugin type: {:?}", r#type);
     }
 
-    pub fn get_plugin(
-        &self,
-        id: String,
-        rpcenv: &mut dyn RpcEnvironment,
-    ) -> Result<PluginConfig, Error> {
-        let (plugins, digest) = self.plugin_config()?;
-        rpcenv["digest"] = hex::encode(digest).into();
+    let data = String::from_utf8(base64::decode(data)?)
+        .map_err(|_| format_err!("data must be valid UTF-8"))?;
 
-        match plugins.get(&id) {
-            Some((ty, data)) => Ok(modify_cfg_for_api(&id, ty, data)),
-            None => http_bail!(NOT_FOUND, "no such plugin"),
+    let id = core.id.clone();
+
+    let _lock = super::plugin_config::lock_plugin_config()?;
+
+    let (mut plugins, _digest) = super::plugin_config::plugin_config()?;
+    if plugins.contains_key(&id) {
+        param_bail!("id", "ACME plugin ID {:?} already exists", id);
+    }
+
+    let plugin = serde_json::to_value(DnsPlugin { core, data })?;
+
+    plugins.insert(id, r#type, plugin);
+
+    super::plugin_config::save_plugin_config(&plugins)?;
+
+    Ok(())
+}
+
+pub fn update_plugin(
+    id: String,
+    update: DnsPluginCoreUpdater,
+    data: Option<String>,
+    delete: Option<Vec<DeletablePluginProperty>>,
+    digest: Option<String>,
+) -> Result<(), Error> {
+    let data = data
+        .as_deref()
+        .map(base64::decode)
+        .transpose()?
+        .map(String::from_utf8)
+        .transpose()
+        .map_err(|_| format_err!("data must be valid UTF-8"))?;
+
+    let _lock = super::plugin_config::lock_plugin_config()?;
+
+    let (mut plugins, expected_digest) = super::plugin_config::plugin_config()?;
+
+    if let Some(digest) = digest {
+        let digest = <[u8; 32]>::from_hex(digest)?;
+        if digest != expected_digest {
+            bail!("detected modified configuration - file changed by other user? Try again.");
         }
     }
 
-    pub fn add_plugin(
-        &self,
-        r#type: String,
-        core: DnsPluginCore,
-        data: String,
-    ) -> Result<(), Error> {
-        // Currently we only support DNS plugins and the standalone plugin is "fixed":
-        if r#type != "dns" {
-            param_bail!("type", "invalid ACME plugin type: {:?}", r#type);
-        }
-
-        let data = String::from_utf8(base64::decode(data)?)
-            .map_err(|_| format_err!("data must be valid UTF-8"))?;
-
-        let id = core.id.clone();
-
-        let _lock = self.lock_plugin_config()?;
-
-        let (mut plugins, _digest) = self.plugin_config()?;
-        if plugins.contains_key(&id) {
-            param_bail!("id", "ACME plugin ID {:?} already exists", id);
-        }
-
-        let plugin = serde_json::to_value(DnsPlugin { core, data })?;
-
-        plugins.insert(id, r#type, plugin);
-
-        self.save_plugin_config(&plugins)?;
-
-        Ok(())
-    }
-
-    pub fn update_plugin(
-        &self,
-        id: String,
-        update: DnsPluginCoreUpdater,
-        data: Option<String>,
-        delete: Option<Vec<DeletablePluginProperty>>,
-        digest: Option<String>,
-    ) -> Result<(), Error> {
-        let data = data
-            .as_deref()
-            .map(base64::decode)
-            .transpose()?
-            .map(String::from_utf8)
-            .transpose()
-            .map_err(|_| format_err!("data must be valid UTF-8"))?;
-
-        let _lock = self.lock_plugin_config()?;
-
-        let (mut plugins, expected_digest) = self.plugin_config()?;
-
-        if let Some(digest) = digest {
-            let digest = <[u8; 32]>::from_hex(digest)?;
-            if digest != expected_digest {
-                bail!("detected modified configuration - file changed by other user? Try again.");
+    match plugins.get_mut(&id) {
+        Some((ty, ref mut entry)) => {
+            if ty != "dns" {
+                bail!("cannot update plugin of type {:?}", ty);
             }
-        }
 
-        match plugins.get_mut(&id) {
-            Some((ty, ref mut entry)) => {
-                if ty != "dns" {
-                    bail!("cannot update plugin of type {:?}", ty);
-                }
+            let mut plugin = DnsPlugin::deserialize(&*entry)?;
 
-                let mut plugin = DnsPlugin::deserialize(&*entry)?;
-
-                if let Some(delete) = delete {
-                    for delete_prop in delete {
-                        match delete_prop {
-                            DeletablePluginProperty::ValidationDelay => {
-                                plugin.core.validation_delay = None;
-                            }
-                            DeletablePluginProperty::Disable => {
-                                plugin.core.disable = None;
-                            }
+            if let Some(delete) = delete {
+                for delete_prop in delete {
+                    match delete_prop {
+                        DeletablePluginProperty::ValidationDelay => {
+                            plugin.core.validation_delay = None;
+                        }
+                        DeletablePluginProperty::Disable => {
+                            plugin.core.disable = None;
                         }
                     }
                 }
-                if let Some(data) = data {
-                    plugin.data = data;
-                }
-                if let Some(api) = update.api {
-                    plugin.core.api = api;
-                }
-                if update.validation_delay.is_some() {
-                    plugin.core.validation_delay = update.validation_delay;
-                }
-                if update.disable.is_some() {
-                    plugin.core.disable = update.disable;
-                }
-
-                *entry = serde_json::to_value(plugin)?;
             }
-            None => http_bail!(NOT_FOUND, "no such plugin"),
+            if let Some(data) = data {
+                plugin.data = data;
+            }
+            if let Some(api) = update.api {
+                plugin.core.api = api;
+            }
+            if update.validation_delay.is_some() {
+                plugin.core.validation_delay = update.validation_delay;
+            }
+            if update.disable.is_some() {
+                plugin.core.disable = update.disable;
+            }
+
+            *entry = serde_json::to_value(plugin)?;
         }
-
-        self.save_plugin_config(&plugins)?;
-
-        Ok(())
+        None => http_bail!(NOT_FOUND, "no such plugin"),
     }
 
-    pub fn delete_plugin(&self, id: String) -> Result<(), Error> {
-        let _lock = self.lock_plugin_config()?;
+    super::plugin_config::save_plugin_config(&plugins)?;
 
-        let (mut plugins, _digest) = self.plugin_config()?;
-        if plugins.remove(&id).is_none() {
-            http_bail!(NOT_FOUND, "no such plugin");
-        }
-        self.save_plugin_config(&plugins)?;
+    Ok(())
+}
 
-        Ok(())
+pub fn delete_plugin(id: String) -> Result<(), Error> {
+    let _lock = super::plugin_config::lock_plugin_config()?;
+
+    let (mut plugins, _digest) = super::plugin_config::plugin_config()?;
+    if plugins.remove(&id).is_none() {
+        http_bail!(NOT_FOUND, "no such plugin");
     }
+    super::plugin_config::save_plugin_config(&plugins)?;
+
+    Ok(())
 }
 
 // See PMG/PVE's $modify_cfg_for_api sub

@@ -4,25 +4,37 @@
 pub mod types;
 
 #[cfg(feature = "impl")]
-pub mod challenge_schemas;
+mod config;
 
 #[cfg(feature = "impl")]
-pub mod config;
+mod challenge_schemas;
+#[cfg(feature = "impl")]
+pub use challenge_schemas::get_cached_challenge_schemas;
 
 #[cfg(feature = "impl")]
-pub(crate) mod account_config;
+mod account_config;
 
 #[cfg(feature = "impl")]
-pub(crate) mod plugin_config;
+mod plugin_config;
 
 #[cfg(feature = "impl")]
-pub(crate) mod account_api_impl;
+mod account_api_impl;
+#[cfg(feature = "impl")]
+pub use account_api_impl::{
+    deactivate_account, get_account, get_tos, list_accounts, register_account, update_account,
+};
 
 #[cfg(feature = "impl")]
-pub(crate) mod plugin_api_impl;
+mod plugin_api_impl;
+#[cfg(feature = "impl")]
+pub use plugin_api_impl::{add_plugin, delete_plugin, get_plugin, list_plugins, update_plugin};
+
 
 #[cfg(feature = "impl")]
 pub(crate) mod acme_plugin;
 
+
 #[cfg(feature = "impl")]
-pub(crate) mod certificate_helpers;
+mod certificate_helpers;
+#[cfg(feature = "impl")]
+pub use certificate_helpers::order_certificate;
