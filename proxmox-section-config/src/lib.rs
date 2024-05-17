@@ -18,6 +18,7 @@
 //!     ...
 //! ```
 
+use std::path::Path;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -306,9 +307,9 @@ impl SectionConfig {
     /// This verifies the whole data using the schemas defined in the
     /// plugins. Please note that `filename` is only used to improve
     /// error messages.
-    pub fn write(&self, filename: &str, config: &SectionConfigData) -> Result<String, Error> {
+    pub fn write<P: AsRef<Path>>(&self, filename: P, config: &SectionConfigData) -> Result<String, Error> {
         self.write_do(config)
-            .map_err(|e: Error| format_err!("writing '{}' failed: {}", filename, e))
+            .map_err(|e: Error| format_err!("writing {:?} failed: {}", filename.as_ref(), e))
     }
 
     fn write_do(&self, config: &SectionConfigData) -> Result<String, Error> {
@@ -393,7 +394,7 @@ impl SectionConfig {
     /// This verifies the whole data using the schemas defined in the
     /// plugins. Please note that `filename` is only used to improve
     /// error messages.
-    pub fn parse(&self, filename: &str, raw: &str) -> Result<SectionConfigData, Error> {
+    pub fn parse<P: AsRef<Path>>(&self, filename: P, raw: &str) -> Result<SectionConfigData, Error> {
         let mut state = ParseState::BeforeHeader;
 
         let test_required_properties = |value: &Value,
@@ -572,7 +573,7 @@ impl SectionConfig {
 
             Ok(result)
         })
-        .map_err(|e: Error| format_err!("parsing '{}' failed: {}", filename, e))
+        .map_err(|e: Error| format_err!("parsing {:?} failed: {}", filename.as_ref(), e))
     }
 
     fn default_format_section_header(
