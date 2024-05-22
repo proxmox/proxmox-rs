@@ -276,16 +276,11 @@ fn verify_csrf_prevention_token_do(
     min_age: i64,
     max_age: i64,
 ) -> Result<i64, Error> {
-    use std::collections::VecDeque;
+    let (timestamp, sig) = token
+        .split_once(':')
+        .filter(|(_, sig)| !sig.contains(':'))
+        .ok_or_else(|| format_err!("format error - wrong number of parts."))?;
 
-    let mut parts: VecDeque<&str> = token.split(':').collect();
-
-    if parts.len() != 2 {
-        bail!("format error - wrong number of parts.");
-    }
-
-    let timestamp = parts.pop_front().unwrap();
-    let sig = parts.pop_front().unwrap();
     let sig = base64::decode_config(sig, base64::STANDARD_NO_PAD)
         .map_err(|e| format_err!("could not base64 decode csrf signature - {e}"))?;
 
