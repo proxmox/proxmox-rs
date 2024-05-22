@@ -208,6 +208,7 @@ impl HMACKey {
     // This is needed for legacy CSRF token verifyication.
     //
     // TODO: remove once all dependent products had a major version release (PBS)
+    #[cfg(feature = "api")]
     pub(crate) fn as_bytes(&self) -> Result<Vec<u8>, Error> {
         // workaround to get access to the the bytes behind the key.
         self.key
