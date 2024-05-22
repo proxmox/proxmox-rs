@@ -22,7 +22,7 @@ pub use api::set_auth_context;
 mod auth_key;
 
 #[cfg(any(feature = "api", feature = "ticket"))]
-pub use auth_key::{Keyring, PrivateKey, PublicKey, HMACKey};
+pub use auth_key::{HMACKey, Keyring, PrivateKey, PublicKey};
 
 #[cfg(feature = "ticket")]
 pub mod ticket;
