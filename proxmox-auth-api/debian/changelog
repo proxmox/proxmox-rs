@@ -1,3 +1,17 @@
+rust-proxmox-auth-api (0.4.0) bookworm; urgency=medium
+
+  * move to hmac signing for csrf tokens
+
+  * use constant time comparison for csrf tokens
+
+  * add ability to use hmac singing in keyring
+
+  * move to Ed25519 signatures
+
+  * move signing into the private key
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 22 May 2024 15:58:54 +0200
+
 rust-proxmox-auth-api (0.3.5) bookworm; urgency=medium
 
   * implement `Display` for `Realm{, Ref}`
