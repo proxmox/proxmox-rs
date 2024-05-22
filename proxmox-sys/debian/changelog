@@ -1,3 +1,11 @@
+rust-proxmox-sys (0.5.5-1) bookworm; urgency=medium
+
+  * crypt: use constant time comparison for password verification
+
+  * crypt: move to yescrypt for password hashing by default
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 22 May 2024 15:47:45 +0200
+
 rust-proxmox-sys (0.5.4-2) bookworm; urgency=medium
 
   * re-build for fixed provides
