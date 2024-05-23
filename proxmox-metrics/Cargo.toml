@@ -18,7 +18,7 @@ openssl.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tokio = { workspace = true, features = [ "net", "sync" ] }
-url.workspace = true
+form_urlencoded.workspace = true
 
 proxmox-async.workspace = true
 proxmox-http = { workspace = true, features = [ "client" ] }

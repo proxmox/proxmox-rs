@@ -84,33 +84,7 @@ impl InfluxDbHttp {
             Client::with_ssl_connector(ssl_connector.build(), HttpOptions::default())
         };
 
-        let uri: http::uri::Uri = uri.parse()?;
-        let uri_parts = uri.into_parts();
-
-        let base_path = if let Some(ref p) = uri_parts.path_and_query {
-            p.path().trim_end_matches('/')
-        } else {
-            ""
-        };
-
-        let encoded_org: String =
-            url::form_urlencoded::byte_serialize(organization.as_bytes()).collect();
-        let encoded_bucket: String =
-            url::form_urlencoded::byte_serialize(bucket.as_bytes()).collect();
-
-        let writeuri = http::uri::Builder::new()
-            .scheme(uri_parts.scheme.clone().unwrap())
-            .authority(uri_parts.authority.clone().unwrap())
-            .path_and_query(format!(
-                "{base_path}/api/v2/write?org={encoded_org}&bucket={encoded_bucket}"
-            ))
-            .build()?;
-
-        let healthuri = http::uri::Builder::new()
-            .scheme(uri_parts.scheme.unwrap())
-            .authority(uri_parts.authority.unwrap())
-            .path_and_query(format!("{}/health", base_path))
-            .build()?;
+        let (writeuri, healthuri) = Self::create_uris(uri, organization, bucket)?;
 
         Ok(InfluxDbHttp {
             client,
@@ -121,6 +95,40 @@ impl InfluxDbHttp {
             data: String::new(),
             channel,
         })
+    }
+
+    /// Return a tuple with the write_uri and the health_uri
+    fn create_uris(
+        uri: &str,
+        org: &str,
+        bucket: &str,
+    ) -> Result<(http::uri::Uri, http::uri::Uri), anyhow::Error> {
+        let uri: http::uri::Uri = uri.parse()?;
+        let uri_parts = uri.into_parts();
+
+        let base_path = if let Some(ref p) = uri_parts.path_and_query {
+            p.path().trim_end_matches('/')
+        } else {
+            ""
+        };
+
+        let write_uri_query: String = form_urlencoded::Serializer::new(String::new())
+            .append_pair("org", org)
+            .append_pair("bucket", bucket)
+            .finish();
+
+        Ok((
+            http::uri::Builder::new()
+                .scheme(uri_parts.scheme.clone().unwrap())
+                .authority(uri_parts.authority.clone().unwrap())
+                .path_and_query(format!("{base_path}/api/v2/write?{write_uri_query}"))
+                .build()?,
+            http::uri::Builder::new()
+                .scheme(uri_parts.scheme.unwrap())
+                .authority(uri_parts.authority.unwrap())
+                .path_and_query(format!("{base_path}/health"))
+                .build()?,
+        ))
     }
 
     async fn test_connection(&self) -> Result<(), Error> {
@@ -185,5 +193,37 @@ impl InfluxDbHttp {
         self.flush().await?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::InfluxDbHttp;
+
+    #[test]
+    fn uri_encoding() {
+        let (writeuri, healthuri) =
+            InfluxDbHttp::create_uris("http://localhost/", "c ool/org", "a🔒nother&bu=ck?et")
+                .unwrap();
+        assert_eq!(writeuri.host(), Some("localhost"));
+        assert_eq!(writeuri.path(), "/api/v2/write");
+        assert_eq!(
+            writeuri.query(),
+            Some("org=c+ool%2Forg&bucket=a%F0%9F%94%92nother%26bu%3Dck%3Fet")
+        );
+
+        assert_eq!(healthuri.host(), Some("localhost"));
+        assert_eq!(healthuri.path(), "/health");
+        assert_eq!(healthuri.query(), None);
+
+        let (writeuri, healthuri) =
+            InfluxDbHttp::create_uris("http://localhost/", "org", "bucket").unwrap();
+        assert_eq!(writeuri.host(), Some("localhost"));
+        assert_eq!(writeuri.path(), "/api/v2/write");
+        assert_eq!(writeuri.query(), Some("org=org&bucket=bucket"));
+
+        assert_eq!(healthuri.host(), Some("localhost"));
+        assert_eq!(healthuri.path(), "/health");
+        assert_eq!(healthuri.query(), None);
     }
 }
