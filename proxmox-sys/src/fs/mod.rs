@@ -1,5 +1,4 @@
 //! File system related utilities
-use std::fs::File;
 use std::path::Path;
 
 use anyhow::{bail, Error};
@@ -68,7 +67,7 @@ impl CreateOptions {
         self.owner(nix::unistd::ROOT)
     }
 
-    pub fn apply_to(&self, file: &mut File, path: &Path) -> Result<(), Error> {
+    pub fn apply_to<F: AsRawFd>(&self, file: &mut F, path: &Path) -> Result<(), Error> {
         // clippy bug?: from_bits_truncate is actually a const fn...
         #[allow(clippy::or_fun_call)]
         let mode: stat::Mode = self.perm.unwrap_or(stat::Mode::from_bits_truncate(0o644));
