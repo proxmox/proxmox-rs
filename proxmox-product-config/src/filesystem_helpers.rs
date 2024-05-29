@@ -1,4 +1,5 @@
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
+use std::path::Path;
 
 use anyhow::{bail, format_err, Context, Error};
 
@@ -13,9 +14,10 @@ use super::product_config;
 // For security reasons, we want to make sure they are set correctly:
 // * owned by uid/gid
 // * nobody else can read (mode 0700)
-pub fn check_permissions(dir: &str, uid: Uid, gid: Gid, mode: u32) -> Result<(), Error> {
+pub fn check_permissions<P: AsRef<Path>>(dir: P, uid: Uid, gid: Gid, mode: u32) -> Result<(), Error> {
     let uid = uid.as_raw();
     let gid = gid.as_raw();
+    let dir = dir.as_ref();
 
     let nix::sys::stat::FileStat {
         st_uid,
@@ -41,26 +43,28 @@ pub fn check_permissions(dir: &str, uid: Uid, gid: Gid, mode: u32) -> Result<(),
 /// Create a new directory with uid/gid and mode.
 ///
 /// Returns Ok if the directory already exists with correct access permissions.
-pub fn mkdir_permissions(dir: &str, uid: Uid, gid: Gid, mode: u32) -> Result<(), Error> {
+pub fn mkdir_permissions<P: AsRef<Path>>(dir: P, uid: Uid, gid: Gid, mode: u32) -> Result<(), Error> {
     let nix_mode = Mode::from_bits(mode).expect("bad mode bits for nix crate");
+    let dir = dir.as_ref();
+
     match nix::unistd::mkdir(dir, nix_mode) {
         Ok(()) => (),
         Err(nix::errno::Errno::EEXIST) => {
             check_permissions(dir, uid, gid, mode)
-                .map_err(|err| format_err!("unexpected permissions directory '{dir}': {err}"))?;
+                .map_err(|err| format_err!("unexpected permissions directory {dir:?}: {err}"))?;
             return Ok(());
         }
-        Err(err) => bail!("unable to create directory '{dir}' - {err}",),
+        Err(err) => bail!("unable to create directory {dir:?} - {err}",),
     }
 
     let fd = nix::fcntl::open(dir, OFlag::O_DIRECTORY, Mode::empty())
         .map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
-        .map_err(|err| format_err!("unable to open created directory '{dir}' - {err}"))?;
+        .map_err(|err| format_err!("unable to open created directory {dir:?} - {err}"))?;
     // umask defaults to 022 so make sure the mode is fully honowed:
     nix::sys::stat::fchmod(fd.as_raw_fd(), nix_mode)
-        .map_err(|err| format_err!("unable to set mode for directory '{dir}' - {err}"))?;
+        .map_err(|err| format_err!("unable to set mode for directory {dir:?} - {err}"))?;
     nix::unistd::fchown(fd.as_raw_fd(), Some(uid), Some(gid))
-        .map_err(|err| format_err!("unable to set ownership directory '{dir}' - {err}"))?;
+        .map_err(|err| format_err!("unable to set ownership directory {dir:?} - {err}"))?;
 
     Ok(())
 }
