@@ -1,12 +1,12 @@
 //! ACME plugin configuration API implementation
 
 use anyhow::{bail, format_err, Error};
-use hex::FromHex;
 
 use serde::Deserialize;
 use serde_json::Value;
 
 use proxmox_schema::param_bail;
+use proxmox_config_digest::ConfigDigest;
 
 use crate::types::{
     DeletablePluginProperty, DnsPlugin, DnsPluginCore, DnsPluginCoreUpdater, PluginConfig,
@@ -17,7 +17,7 @@ use proxmox_router::{http_bail, RpcEnvironment};
 pub fn list_plugins(rpcenv: &mut dyn RpcEnvironment) -> Result<Vec<PluginConfig>, Error> {
     let (plugins, digest) = super::plugin_config::plugin_config()?;
 
-    rpcenv["digest"] = hex::encode(digest).into();
+    rpcenv["digest"] = digest.to_hex().into();
     Ok(plugins
         .iter()
         .map(|(id, (ty, data))| modify_cfg_for_api(id, ty, data))
@@ -29,7 +29,7 @@ pub fn get_plugin(
     rpcenv: &mut dyn RpcEnvironment,
 ) -> Result<PluginConfig, Error> {
     let (plugins, digest) = super::plugin_config::plugin_config()?;
-    rpcenv["digest"] = hex::encode(digest).into();
+    rpcenv["digest"] = digest.to_hex().into();
 
     match plugins.get(&id) {
         Some((ty, data)) => Ok(modify_cfg_for_api(&id, ty, data)),
@@ -69,7 +69,7 @@ pub fn update_plugin(
     update: DnsPluginCoreUpdater,
     data: Option<String>,
     delete: Option<Vec<DeletablePluginProperty>>,
-    digest: Option<String>,
+    digest: Option<ConfigDigest>,
 ) -> Result<(), Error> {
     let data = data
         .as_deref()
@@ -83,12 +83,7 @@ pub fn update_plugin(
 
     let (mut plugins, expected_digest) = super::plugin_config::plugin_config()?;
 
-    if let Some(digest) = digest {
-        let digest = <[u8; 32]>::from_hex(digest)?;
-        if digest != expected_digest {
-            bail!("detected modified configuration - file changed by other user? Try again.");
-        }
-    }
+    expected_digest.detect_modification(digest.as_ref())?;
 
     match plugins.get_mut(&id) {
         Some((ty, ref mut entry)) => {

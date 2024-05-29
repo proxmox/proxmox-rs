@@ -20,9 +20,8 @@ use helper::compute_file_diff;
 use helper::get_network_interfaces;
 use parser::NetworkParser;
 
-use proxmox_product_config::{
-    open_api_lockfile, replace_system_config, ApiLockGuard, ConfigDigest,
-};
+use proxmox_config_digest::ConfigDigest;
+use proxmox_product_config::{open_api_lockfile, replace_system_config, ApiLockGuard};
 
 lazy_static! {
     static ref PHYSICAL_NIC_REGEX: Regex = Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap();

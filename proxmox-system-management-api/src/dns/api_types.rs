@@ -5,7 +5,7 @@ use proxmox_schema::api_types::IP_FORMAT;
 use proxmox_schema::Schema;
 use proxmox_schema::StringSchema;
 
-use proxmox_product_config::ConfigDigest;
+use proxmox_config_digest::ConfigDigest;
 
 pub const SEARCH_DOMAIN_SCHEMA: Schema =
     StringSchema::new("Search domain for host-name lookup.").schema();

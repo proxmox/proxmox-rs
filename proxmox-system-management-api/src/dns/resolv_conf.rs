@@ -4,7 +4,7 @@ use std::sync::Mutex;
 use anyhow::Error;
 use const_format::concatcp;
 use lazy_static::lazy_static;
-use proxmox_product_config::ConfigDigest;
+use proxmox_config_digest::ConfigDigest;
 use regex::Regex;
 
 use proxmox_sys::fs::file_get_contents;

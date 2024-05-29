@@ -6,6 +6,7 @@ use serde_json::Value;
 
 use proxmox_schema::{ApiType, Schema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
+use proxmox_config_digest::ConfigDigest;
 use proxmox_product_config::{ApiLockGuard, open_api_lockfile, replace_config};
 
 use crate::types::{DnsPlugin, StandalonePlugin, PLUGIN_ID_SCHEMA};
@@ -60,13 +61,13 @@ pub(crate) fn lock_plugin_config() -> Result<ApiLockGuard, Error> {
     open_api_lockfile(plugin_cfg_lockfile, None, true)
 }
 
-pub(crate) fn plugin_config() -> Result<(PluginData, [u8; 32]), Error> {
+pub(crate) fn plugin_config() -> Result<(PluginData, ConfigDigest), Error> {
     let plugin_cfg_filename = super::config::plugin_cfg_filename();
 
     let content =
         proxmox_sys::fs::file_read_optional_string(&plugin_cfg_filename)?.unwrap_or_default();
 
-    let digest = openssl::sha::sha256(content.as_bytes());
+    let digest = ConfigDigest::from_slice(content.as_bytes());
     let mut data = CONFIG.parse(&plugin_cfg_filename, &content)?;
 
     if data.sections.get("standalone").is_none() {

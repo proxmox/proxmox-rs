@@ -12,19 +12,15 @@ description = "ACME API implementation"
 anyhow.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-
 base64 = { workspace = true, optional = true }
-hex = { workspace = true, optional = true }
-
-
 tokio = { workspace = true, optional = true, features = ["fs"] }
 hyper = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 nix = { workspace = true, optional = true }
-openssl = { workspace = true, optional = true }
 lazy_static = { workspace = true, optional = true }
+
 proxmox-serde = { workspace = true, optional = true }
 proxmox-section-config = { workspace = true, optional = true }
 proxmox-rest-server = { workspace = true, optional = true }
@@ -32,6 +28,7 @@ proxmox-router = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
 proxmox-acme = { workspace = true, optional = true, features = ["api-types"] }
+proxmox-config-digest = { workspace = true, optional = true }
 proxmox-product-config = { workspace = true, optional = true }
 
 [features]
@@ -39,13 +36,14 @@ default = ["api-types"]
 api-types = ["dep:proxmox-acme", "dep:proxmox-serde"]
 impl = [
     "api-types",
+    "dep:proxmox-config-digest",
+    "proxmox-config-digest?/openssl",
     "dep:proxmox-product-config",
-    "proxmox-product-config?/impl",
     "dep:proxmox-acme",
     "proxmox-acme?/impl",
     "proxmox-acme?/async-client",
     "dep:proxmox-section-config",
-    "dep:openssl",
+    #"dep:openssl",
     "dep:lazy_static",
     "dep:log",
     "dep:nix",
@@ -57,5 +55,4 @@ impl = [
     "dep:proxmox-rest-server",
     "dep:proxmox-router",
     "dep:base64",
-    "dep:hex",
 ]

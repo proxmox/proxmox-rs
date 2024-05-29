@@ -23,37 +23,37 @@ log = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
 proxmox-time = { workspace = true, optional = true }
+proxmox-config-digest = { workspace = true, optional = true }
 proxmox-product-config = { workspace = true, optional = true }
 
 [features]
 default = []
-dns-api-types = ["dep:proxmox-product-config"]
+dns-api-types = ["dep:proxmox-config-digest"]
 dns-impl = [
     "dns-api-types",
-    "dep:proxmox-product-config",
-    "proxmox-product-config?/impl",
+    "dep:proxmox-config-digest",
+    "proxmox-config-digest?/openssl",
     "dep:proxmox-sys",
     "dep:proxmox-time",
 ]
 time-api-types = []
 time-impl = [
     "time-api-types",
+    "dep:proxmox-config-digest",
+    "proxmox-config-digest?/openssl",
     "dep:proxmox-product-config",
-    "proxmox-product-config?/impl",
     "dep:proxmox-sys",
     "dep:proxmox-time",
 ]
 network-api-types = []
 network-impl = [
     "network-api-types",
+    "dep:proxmox-config-digest",
+    "proxmox-config-digest?/openssl",
     "dep:proxmox-product-config",
-    "proxmox-product-config?/impl",
     "dep:nix",
     "dep:libc",
     "dep:proxmox-sys",
 ]
 syslog-api-types = []
-syslog-impl = [
-    "syslog-api-types",
-    "dep:log",
-]
+syslog-impl = ["syslog-api-types", "dep:log"]

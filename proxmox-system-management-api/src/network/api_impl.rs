@@ -1,6 +1,6 @@
 use anyhow::{bail, Error};
 
-use proxmox_product_config::ConfigDigest;
+use proxmox_config_digest::ConfigDigest;
 
 use crate::network::{self, parse_vlan_id_from_name, parse_vlan_raw_device_from_name};
 use crate::network::{
