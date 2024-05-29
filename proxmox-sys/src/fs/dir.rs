@@ -19,7 +19,7 @@ pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(),
     #[allow(clippy::or_fun_call)]
     let mode: stat::Mode = options
         .perm
-        .unwrap_or(stat::Mode::from_bits_truncate(0o770));
+        .unwrap_or(stat::Mode::from_bits_truncate(0o750));
 
     let path = path.as_ref();
     nix::unistd::mkdir(path, mode)?;
@@ -43,7 +43,7 @@ pub fn ensure_dir_exists<P: AsRef<Path>>(
 
     let mode: stat::Mode = options
         .perm
-        .unwrap_or(stat::Mode::from_bits_truncate(0o770));
+        .unwrap_or(stat::Mode::from_bits_truncate(0o750));
 
     let path = path.as_ref();
 
