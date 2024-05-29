@@ -1,0 +1,59 @@
+Source: rust-proxmox-config-digest
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-hex-0.4+default-dev <!nocheck>,
+ librust-proxmox-schema-3+api-types-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-plain-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.6.2
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-config-digest
+Rules-Requires-Root: no
+
+Package: librust-proxmox-config-digest-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-hex-0.4+default-dev,
+ librust-proxmox-schema-3+api-types-dev (>= 3.1.1-~~),
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~),
+ librust-serde-1+default-dev,
+ librust-serde-plain-1+default-dev
+Suggests:
+ librust-proxmox-config-digest+openssl-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-config-digest+default-dev (= ${binary:Version}),
+ librust-proxmox-config-digest-0-dev (= ${binary:Version}),
+ librust-proxmox-config-digest-0+default-dev (= ${binary:Version}),
+ librust-proxmox-config-digest-0.1-dev (= ${binary:Version}),
+ librust-proxmox-config-digest-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-config-digest-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-config-digest-0.1.0+default-dev (= ${binary:Version})
+Description: Configuration file digest API type - Rust source code
+ Source code for Debianized Rust crate "proxmox-config-digest"
+
+Package: librust-proxmox-config-digest+openssl-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-config-digest-dev (= ${binary:Version}),
+ librust-openssl-0.10+default-dev
+Provides:
+ librust-proxmox-config-digest-0+openssl-dev (= ${binary:Version}),
+ librust-proxmox-config-digest-0.1+openssl-dev (= ${binary:Version}),
+ librust-proxmox-config-digest-0.1.0+openssl-dev (= ${binary:Version})
+Description: Configuration file digest API type - feature "openssl"
+ This metapackage enables feature "openssl" for the Rust proxmox-config-digest
+ crate, by pulling in any additional dependencies needed by that feature.

@@ -1,0 +1,20 @@
+[package]
+name = "proxmox-config-digest"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Configuration file digest API type."
+
+exclude.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+hex.workspace = true
+serde.workspace = true
+serde_plain.workspace = true
+proxmox-schema = { workspace = true, features = ["api-types"] }
+
+# feature "openssl", allows to compute the SHA256 digest
+openssl = { workspace = true, optional = true }

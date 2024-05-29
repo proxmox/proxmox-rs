@@ -9,6 +9,7 @@ members = [
     "proxmox-borrow",
     "proxmox-client",
     "proxmox-compression",
+    "proxmox-config-digest",
     "proxmox-http",
     "proxmox-http-error",
     "proxmox-human-byte",
@@ -113,6 +114,7 @@ proxmox-io = { version = "1.0.0", path = "proxmox-io" }
 proxmox-lang = { version = "1.1", path = "proxmox-lang" }
 proxmox-login = { version = "0.1.0", path = "proxmox-login" }
 proxmox-product-config = { version = "0.1.0", path = "proxmox-product-config" }
+proxmox-config-digest = { version = "0.1.0", path = "proxmox-config-digest" }
 proxmox-rest-server = { version = "0.5.2", path = "proxmox-rest-server" }
 proxmox-router = { version = "2.1.3", path = "proxmox-router" }
 proxmox-schema = { version = "3.1.1", path = "proxmox-schema" }

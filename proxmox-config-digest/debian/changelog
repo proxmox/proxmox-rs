@@ -1,0 +1,5 @@
+rust-proxmox-config-digest (0.1.0-1) bookworm; urgency=medium
+
+  * initial packaging (split out from proxmox-product-config)
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 29 May 2024 17:49:33 +0200
