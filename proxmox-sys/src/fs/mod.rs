@@ -1,7 +1,7 @@
 //! File system related utilities
 use std::path::Path;
 
-use anyhow::{bail, Error};
+use anyhow::{bail, Context, Error};
 
 use nix::sys::stat;
 use nix::unistd::{Gid, Uid};
@@ -81,6 +81,44 @@ impl CreateOptions {
                 bail!("fchown {:?} failed: {}", path, err);
             }
         }
+        Ok(())
+    }
+
+    /// Check file/directory permissions.
+    ///
+    /// Make sure that the file or dir is owned by uid/gid and has the correct mode.
+    pub fn check<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+        let path = path.as_ref();
+
+        let nix::sys::stat::FileStat {
+            st_uid,
+            st_gid,
+            st_mode,
+            ..
+        } = nix::sys::stat::stat(path).with_context(|| format!("failed to stat {path:?}"))?;
+
+        if let Some(uid) = self.owner {
+            let uid = uid.as_raw();
+            if st_uid != uid {
+                bail!("bad owner on {path:?} ({st_uid} != {uid})");
+            }
+        }
+
+        if let Some(group) = self.group {
+            let gid = group.as_raw();
+            if st_gid != gid {
+                bail!("bad group on {path:?} ({st_gid} != {gid})");
+            }
+        }
+
+        if let Some(mode) = self.perm {
+            let mode = mode.bits();
+            let perms = st_mode & !nix::sys::stat::SFlag::S_IFMT.bits();
+            if perms != mode {
+                bail!("bad permissions on {path:?} (0o{perms:o} != 0o{mode:o})");
+            }
+        }
+
         Ok(())
     }
 
