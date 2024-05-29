@@ -1,11 +1,4 @@
-use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
-use std::path::Path;
-
-use anyhow::{bail, format_err, Context, Error};
-
-use nix::fcntl::OFlag;
-use nix::sys::stat::Mode;
-use nix::unistd::{Gid, Uid};
+use anyhow::Error;
 
 use proxmox_sys::fs::CreateOptions;
 
@@ -63,74 +56,6 @@ pub fn lockfile_create_options() -> CreateOptions {
         .perm(nix::sys::stat::Mode::from_bits_truncate(0o660))
         .owner(api_user.uid)
         .group(api_user.gid)
-}
-
-/// Check file/directory permissions.
-///
-/// Make sure that the file or dir is owned by uid/gid and has the correct mode.
-pub fn check_permissions<P: AsRef<Path>>(
-    dir: P,
-    uid: Uid,
-    gid: Gid,
-    mode: u32,
-) -> Result<(), Error> {
-    let uid = uid.as_raw();
-    let gid = gid.as_raw();
-    let dir = dir.as_ref();
-
-    let nix::sys::stat::FileStat {
-        st_uid,
-        st_gid,
-        st_mode,
-        ..
-    } = nix::sys::stat::stat(dir).with_context(|| format!("failed to stat {dir:?}"))?;
-
-    if st_uid != uid {
-        log::error!("bad owner on {dir:?} ({st_uid} != {uid})");
-    }
-    if st_gid != gid {
-        log::error!("bad group on {dir:?} ({st_gid} != {gid})");
-    }
-    let perms = st_mode & !nix::sys::stat::SFlag::S_IFMT.bits();
-    if perms != mode {
-        log::error!("bad permissions on {dir:?} (0o{perms:o} != 0o{mode:o})");
-    }
-
-    Ok(())
-}
-
-/// Create a new directory with uid/gid and mode.
-///
-/// Returns Ok if the directory already exists with correct access permissions.
-pub fn mkdir_permissions<P: AsRef<Path>>(
-    dir: P,
-    uid: Uid,
-    gid: Gid,
-    mode: u32,
-) -> Result<(), Error> {
-    let nix_mode = Mode::from_bits(mode).expect("bad mode bits for nix crate");
-    let dir = dir.as_ref();
-
-    match nix::unistd::mkdir(dir, nix_mode) {
-        Ok(()) => (),
-        Err(nix::errno::Errno::EEXIST) => {
-            check_permissions(dir, uid, gid, mode)
-                .map_err(|err| format_err!("unexpected permissions directory {dir:?}: {err}"))?;
-            return Ok(());
-        }
-        Err(err) => bail!("unable to create directory {dir:?} - {err}",),
-    }
-
-    let fd = nix::fcntl::open(dir, OFlag::O_DIRECTORY, Mode::empty())
-        .map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
-        .map_err(|err| format_err!("unable to open created directory {dir:?} - {err}"))?;
-    // umask defaults to 022 so make sure the mode is fully honowed:
-    nix::sys::stat::fchmod(fd.as_raw_fd(), nix_mode)
-        .map_err(|err| format_err!("unable to set mode for directory {dir:?} - {err}"))?;
-    nix::unistd::fchown(fd.as_raw_fd(), Some(uid), Some(gid))
-        .map_err(|err| format_err!("unable to set ownership directory {dir:?} - {err}"))?;
-
-    Ok(())
 }
 
 /// Atomically write data to file owned by `root:api-user.gid` with permission `0640`
