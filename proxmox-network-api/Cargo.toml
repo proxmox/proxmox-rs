@@ -1,0 +1,35 @@
+[package]
+name = "proxmox-network-api"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+description = "Network Management API implementation"
+
+[dependencies]
+anyhow.workspace = true
+const_format.workspace = true
+lazy_static.workspace = true
+regex.workspace = true
+
+serde = { workspace = true, features = ["derive"] }
+nix = { workspace = true, optional = true }
+libc = { workspace = true, optional = true }
+
+proxmox-sys = { workspace = true, optional = true }
+proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
+proxmox-config-digest = { workspace = true, optional = true }
+proxmox-product-config = { workspace = true, optional = true }
+
+[features]
+default = []
+impl = [
+    "dep:proxmox-config-digest",
+    "proxmox-config-digest?/openssl",
+    "dep:proxmox-product-config",
+    "dep:nix",
+    "dep:libc",
+    "dep:proxmox-sys",
+]

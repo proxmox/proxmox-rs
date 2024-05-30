@@ -19,6 +19,7 @@ members = [
     "proxmox-ldap",
     "proxmox-login",
     "proxmox-metrics",
+    "proxmox-network-api",
     "proxmox-notify",
     "proxmox-openid",
     "proxmox-product-config",
