@@ -1,0 +1,26 @@
+[package]
+name = "proxmox-time-api"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+description = "Time Management API implementation"
+
+[dependencies]
+anyhow.workspace = true
+serde = { workspace = true, features = ["derive"] }
+
+proxmox-sys = { workspace = true, optional = true }
+proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
+proxmox-time = { workspace = true, optional = true }
+proxmox-product-config = { workspace = true, optional = true }
+
+[features]
+default = []
+impl = [
+    "dep:proxmox-product-config",
+    "dep:proxmox-sys",
+    "dep:proxmox-time",
+]

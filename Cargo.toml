@@ -35,6 +35,7 @@ members = [
     "proxmox-system-management-api",
     "proxmox-tfa",
     "proxmox-time",
+    "proxmox-time-api",
     "proxmox-uuid",
 ]
 exclude = [
