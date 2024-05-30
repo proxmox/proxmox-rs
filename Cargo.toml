@@ -10,6 +10,7 @@ members = [
     "proxmox-client",
     "proxmox-compression",
     "proxmox-config-digest",
+    "proxmox-dns-api",
     "proxmox-http",
     "proxmox-http-error",
     "proxmox-human-byte",

@@ -1,0 +1,5 @@
+rust-proxmox-dns-api (0.1.0-1) bookworm; urgency=medium
+
+  * initial packaging (split out from proxmox-system-management-api)
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 30 May 2024 08:14:29 +0200
