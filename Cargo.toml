@@ -33,6 +33,7 @@ members = [
     "proxmox-sortable-macro",
     "proxmox-subscription",
     "proxmox-sys",
+    "proxmox-syslog-api",
     "proxmox-system-management-api",
     "proxmox-tfa",
     "proxmox-time",

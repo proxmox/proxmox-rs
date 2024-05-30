@@ -1,0 +1,21 @@
+[package]
+name = "proxmox-syslog-api"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+description = "Syslog Management API implementation"
+
+[dependencies]
+anyhow.workspace = true
+
+serde = { workspace = true, features = ["derive"] }
+log = { workspace = true, optional = true }
+
+proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
+
+[features]
+default = []
+impl = ["dep:log"]
