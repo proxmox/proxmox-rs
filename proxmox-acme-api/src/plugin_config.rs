@@ -56,19 +56,19 @@ fn init() -> SectionConfig {
 pub(crate) fn lock_plugin_config() -> Result<ApiLockGuard, Error> {
     super::config::make_acme_dir()?;
 
-    let plugin_cfg_lockfile = super::config::plugin_cfg_lockfile();
+    let plugin_cfg_lockfile = crate::plugin_cfg_lockfile();
 
     open_api_lockfile(plugin_cfg_lockfile, None, true)
 }
 
 pub(crate) fn plugin_config() -> Result<(PluginData, ConfigDigest), Error> {
-    let plugin_cfg_filename = super::config::plugin_cfg_filename();
+    let plugin_cfg_filename = crate::plugin_cfg_filename();
 
     let content =
         proxmox_sys::fs::file_read_optional_string(&plugin_cfg_filename)?.unwrap_or_default();
 
     let digest = ConfigDigest::from_slice(content.as_bytes());
-    let mut data = CONFIG.parse(&plugin_cfg_filename, &content)?;
+    let mut data = CONFIG.parse(plugin_cfg_filename, &content)?;
 
     if data.sections.get("standalone").is_none() {
         let standalone = StandalonePlugin::default();
@@ -81,7 +81,7 @@ pub(crate) fn plugin_config() -> Result<(PluginData, ConfigDigest), Error> {
 
 pub(crate) fn save_plugin_config(config: &PluginData) -> Result<(), Error> {
     super::config::make_acme_dir()?;
-    let plugin_cfg_filename = super::config::plugin_cfg_filename();
+    let plugin_cfg_filename = crate::plugin_cfg_filename();
     let raw = CONFIG.write(&plugin_cfg_filename, &config.data)?;
 
     replace_config(plugin_cfg_filename, raw.as_bytes())

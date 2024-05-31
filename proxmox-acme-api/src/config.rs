@@ -1,14 +1,13 @@
 //! ACME API Configuration.
 
 use std::borrow::Cow;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use proxmox_sys::error::SysError;
 use proxmox_sys::fs::CreateOptions;
 
-use proxmox_product_config::product_config;
-
 use crate::types::KnownAcmeDirectory;
+use crate::acme_config_dir;
 
 /// List of known ACME directorties.
 pub const KNOWN_ACME_DIRECTORIES: &[KnownAcmeDirectory] = &[
@@ -25,17 +24,6 @@ pub const KNOWN_ACME_DIRECTORIES: &[KnownAcmeDirectory] = &[
 /// Default ACME directorties.
 pub const DEFAULT_ACME_DIRECTORY_ENTRY: &KnownAcmeDirectory = &KNOWN_ACME_DIRECTORIES[0];
 
-pub(crate) fn acme_config_dir() -> PathBuf {
-    product_config().absolute_path("acme")
-}
-
-pub(crate) fn plugin_cfg_filename() -> PathBuf {
-    acme_config_dir().join("plugins.cfg")
-}
-
-pub(crate) fn plugin_cfg_lockfile() -> PathBuf {
-    acme_config_dir().join("plugins.lck")
-}
 
 pub(crate) fn create_secret_subdir<P: AsRef<Path>>(dir: P) -> nix::Result<()> {
     let root_only = CreateOptions::new()

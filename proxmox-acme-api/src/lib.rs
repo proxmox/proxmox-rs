@@ -4,6 +4,11 @@
 pub mod types;
 
 #[cfg(feature = "impl")]
+mod init;
+#[cfg(feature = "impl")]
+pub use init::*;
+
+#[cfg(feature = "impl")]
 mod config;
 
 #[cfg(feature = "impl")]

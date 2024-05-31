@@ -18,6 +18,7 @@ use proxmox_acme::types::AccountData as AcmeAccountData;
 use proxmox_acme::Account;
 
 use crate::types::AcmeAccountName;
+use crate::acme_account_dir;
 
 #[inline]
 fn is_false(b: &bool) -> bool {
@@ -78,10 +79,6 @@ impl AccountData {
     }
 }
 
-fn acme_account_dir() -> PathBuf {
-    super::config::acme_config_dir().join("accounts")
-}
-
 /// Returns the path to the account configuration file (`$config_dir/accounts/$name`).
 pub fn account_cfg_filename(name: &str) -> PathBuf {
     acme_account_dir().join(name)
@@ -96,7 +93,7 @@ pub(crate) fn foreach_acme_account<F>(mut func: F) -> Result<(), Error>
 where
     F: FnMut(AcmeAccountName) -> ControlFlow<Result<(), Error>>,
 {
-    match proxmox_sys::fs::scan_subdir(-1, acme_account_dir().as_path(), &SAFE_ID_REGEX) {
+    match proxmox_sys::fs::scan_subdir(-1, acme_account_dir(), &SAFE_ID_REGEX) {
         Ok(files) => {
             for file in files {
                 let file = file?;
