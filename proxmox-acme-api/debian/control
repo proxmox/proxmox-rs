@@ -29,45 +29,27 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
+ librust-proxmox-acme-0.5+api-types-dev (>= 0.5.2-~~),
  librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~),
  librust-proxmox-schema-3+api-types-dev (>= 3.1.1-~~),
  librust-proxmox-schema-3+default-dev (>= 3.1.1-~~),
+ librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
+ librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
-Recommends:
- librust-proxmox-acme-api+api-types-dev (= ${binary:Version})
 Suggests:
  librust-proxmox-acme-api+impl-dev (= ${binary:Version})
 Provides:
+ librust-proxmox-acme-api+default-dev (= ${binary:Version}),
  librust-proxmox-acme-api-0-dev (= ${binary:Version}),
+ librust-proxmox-acme-api-0+default-dev (= ${binary:Version}),
  librust-proxmox-acme-api-0.1-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1.0-dev (= ${binary:Version})
+ librust-proxmox-acme-api-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-acme-api-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-acme-api-0.1.0+default-dev (= ${binary:Version})
 Description: ACME API implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-acme-api"
-
-Package: librust-proxmox-acme-api+api-types-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-acme-api-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5+api-types-dev (>= 0.5.2-~~),
- librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
- librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~)
-Provides:
- librust-proxmox-acme-api+default-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0+api-types-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0+default-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1+api-types-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1.0+api-types-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1.0+default-dev (= ${binary:Version})
-Description: ACME API implementation - feature "api-types" and 1 more
- This metapackage enables feature "api-types" for the Rust proxmox-acme-api
- crate, by pulling in any additional dependencies needed by that feature.
- .
- Additionally, this package also provides the "default" feature.
 
 Package: librust-proxmox-acme-api+impl-dev
 Architecture: any
@@ -75,7 +57,6 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-acme-api-dev (= ${binary:Version}),
- librust-proxmox-acme-api+api-types-dev (= ${binary:Version}),
  librust-base64-0.13+default-dev,
  librust-futures-0.3+default-dev,
  librust-http-0.2+default-dev,
