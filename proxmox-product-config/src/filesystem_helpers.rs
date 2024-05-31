@@ -2,11 +2,11 @@ use anyhow::Error;
 
 use proxmox_sys::fs::CreateOptions;
 
-use super::product_config;
+use super::get_api_user;
 
 /// Return [CreateOptions] for files owned by `api_user.uid/api_user.gid` with mode `0640`.
 pub fn default_create_options() -> CreateOptions {
-    let api_user = &product_config().api_user;
+    let api_user = get_api_user();
     let mode = nix::sys::stat::Mode::from_bits_truncate(0o0640);
     proxmox_sys::fs::CreateOptions::new()
         .perm(mode)
@@ -18,7 +18,7 @@ pub fn default_create_options() -> CreateOptions {
 ///
 /// Only the superuser can write those files, but group `api-user.gid` can read them.
 pub fn privileged_create_options() -> CreateOptions {
-    let api_user = &product_config().api_user;
+    let api_user = get_api_user();
     let mode = nix::sys::stat::Mode::from_bits_truncate(0o0640);
     proxmox_sys::fs::CreateOptions::new()
         .perm(mode)
@@ -51,7 +51,7 @@ pub fn system_config_create_options() -> CreateOptions {
 
 /// Return [CreateOptions] for lock files, owner `api_user.uid/api_user.gid` and mode `0660`.
 pub fn lockfile_create_options() -> CreateOptions {
-    let api_user = &product_config().api_user;
+    let api_user = get_api_user();
     proxmox_sys::fs::CreateOptions::new()
         .perm(nix::sys::stat::Mode::from_bits_truncate(0o660))
         .owner(api_user.uid)
