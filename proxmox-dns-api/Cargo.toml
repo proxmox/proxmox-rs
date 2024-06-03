@@ -25,6 +25,7 @@ proxmox-product-config = { workspace = true, optional = true }
 [features]
 default = []
 impl = [
+    "dep:proxmox-product-config",
     "proxmox-config-digest/openssl",
     "dep:proxmox-sys",
     "dep:proxmox-time",
