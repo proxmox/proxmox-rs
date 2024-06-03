@@ -9,6 +9,8 @@ pub use init::*;
 
 #[cfg(feature = "impl")]
 mod config;
+#[cfg(feature = "impl")]
+pub use config::{DEFAULT_ACME_DIRECTORY_ENTRY, KNOWN_ACME_DIRECTORIES};
 
 #[cfg(feature = "impl")]
 mod challenge_schemas;
