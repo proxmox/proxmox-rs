@@ -1,5 +1,6 @@
 //! ACME API crate (API types and API implementation)
-pub mod types;
+mod types;
+pub use types::*;
 
 #[cfg(feature = "impl")]
 mod init;
