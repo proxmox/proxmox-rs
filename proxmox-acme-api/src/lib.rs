@@ -15,7 +15,7 @@ pub use config::{DEFAULT_ACME_DIRECTORY_ENTRY, KNOWN_ACME_DIRECTORIES};
 #[cfg(feature = "impl")]
 mod challenge_schemas;
 #[cfg(feature = "impl")]
-pub use challenge_schemas::get_cached_challenge_schemas;
+pub use challenge_schemas::{ChallengeSchemaWrapper, get_cached_challenge_schemas};
 
 #[cfg(feature = "impl")]
 mod account_config;
