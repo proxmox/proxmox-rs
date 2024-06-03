@@ -55,9 +55,12 @@ pub async fn register_account(
     name: &AcmeAccountName,
     contact: String,
     tos_url: Option<String>,
-    directory_url: String,
+    directory_url: Option<String>,
     eab_creds: Option<(String, String)>,
 ) -> Result<String, Error> {
+    let directory_url =
+        directory_url.unwrap_or_else(|| DEFAULT_ACME_DIRECTORY_ENTRY.url.to_string());
+
     let mut client = AcmeClient::new(directory_url.clone());
 
     let contact = account_contact_from_string(&contact);
@@ -104,10 +107,7 @@ pub async fn deactivate_account(
     Ok(())
 }
 
-pub async fn update_account(
-    name: &AcmeAccountName,
-    contact: Option<String>,
-) -> Result<(), Error> {
+pub async fn update_account(name: &AcmeAccountName, contact: Option<String>) -> Result<(), Error> {
     let mut account_data = super::account_config::load_account_config(name).await?;
     let mut client = account_data.client();
 
