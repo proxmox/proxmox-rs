@@ -1,6 +1,4 @@
 //! ACME API crate (API types and API implementation)
-
-#[cfg(feature = "api-types")]
 pub mod types;
 
 #[cfg(feature = "impl")]
