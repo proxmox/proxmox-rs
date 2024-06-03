@@ -12,7 +12,12 @@
 //! - Ability to create interactive commands (using ``rustyline``)
 //! - Supports complex/nested commands
 
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    io::{self, Write},
+};
+
+use anyhow::{bail, Error};
 
 use crate::ApiMethod;
 
@@ -59,6 +64,113 @@ pub fn init_cli_logger(env_var_name: &str, default_log_level: &str) {
     .format_target(false)
     .format_timestamp(None)
     .init();
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+/// Use for simple yes or no questions, where booleans can be confusing, especially if there's a
+/// default response to consider. The implementation provides query helper for the CLI.
+pub enum Confirmation {
+    Yes,
+    No,
+}
+
+impl Confirmation {
+    /// Get the formatted choice for the query prompt, with self being the highlighted (default)
+    /// one displayed as upper case.
+    pub fn default_choice_str(self) -> &'static str {
+        match self {
+            Self::Yes => "Y/n",
+            Self::No => "y/N",
+        }
+    }
+
+    /// Returns true if the answer is Yes
+    pub fn is_yes(self) -> bool {
+        self == Self::Yes
+    }
+
+    /// Returns true if the answer is No
+    pub fn is_no(self) -> bool {
+        self == Self::No
+    }
+
+    /// Parse an input string reference as yes or no confirmation.
+    ///
+    /// The input string is checked verbatim if it is exactly one of the single chars 'y', 'Y',
+    /// 'n', or 'N'. You must trim the string before calling, if needed, or use one of the query
+    /// helper functions.
+    ///
+    /// ```
+    /// use proxmox_router::cli::Confirmation;
+    ///
+    /// let answer = Confirmation::from_str("y");
+    /// assert!(answer.expect("valid").is_yes());
+    ///
+    /// let answer = Confirmation::from_str("N");
+    /// assert!(answer.expect("valid").is_no());
+    ///
+    /// let answer = Confirmation::from_str("bogus");
+    /// assert!(answer.is_err());
+    /// ```
+    pub fn from_str(input: &str) -> Result<Self, Error> {
+        match input.trim() {
+            "y" | "Y" => Ok(Self::Yes),
+            "n" | "N" => Ok(Self::No),
+            _ => bail!("unexpected choice '{input}'! Use 'y' or 'n'"),
+        }
+    }
+
+    /// Parse a input string reference as yes or no confirmation, allowing a fallback default
+    /// answer if the user enters an empty choice.
+    ///
+    /// The input string is checked verbatim if it is exactly one of the single chars 'y', 'Y',
+    /// 'n', or 'N'. The empty string maps to the default. You must trim the string before calling,
+    /// if needed, or use one of the query helper functions.
+    ///
+    /// ```
+    /// use proxmox_router::cli::Confirmation;
+    ///
+    /// let answer = Confirmation::from_str_with_default("", Confirmation::No);
+    /// assert!(answer.expect("valid").is_no());
+    ///
+    /// let answer = Confirmation::from_str_with_default("n", Confirmation::Yes);
+    /// assert!(answer.expect("valid").is_no());
+    ///
+    /// let answer = Confirmation::from_str_with_default("yes", Confirmation::Yes);
+    /// assert!(answer.is_err()); // full-word answer not allowed for now.
+    /// ```
+    pub fn from_str_with_default(input: &str, default: Self) -> Result<Self, Error> {
+        match input.trim() {
+            "y" | "Y" => Ok(Self::Yes),
+            "n" | "N" => Ok(Self::No),
+            "" => Ok(default),
+            _ => bail!("unexpected choice '{input}'! Use enter for default or use 'y' or 'n'"),
+        }
+    }
+
+    /// Print a query prompt with available yes no choices and returns the String the user enters.
+    fn read_line(query: &str, choices: &str) -> Result<String, io::Error> {
+        print!("{query} [{choices}]: ");
+
+        io::stdout().flush()?;
+        let stdin = io::stdin();
+        let mut line = String::new();
+        stdin.read_line(&mut line)?;
+        Ok(line)
+    }
+
+    /// Print a query prompt and parse the white-space trimmed answer using `from_str`.
+    pub fn query(query: &str) -> Result<Self, Error> {
+        let line = Self::read_line(query, "y/n")?;
+        Confirmation::from_str(line.trim())
+    }
+
+    /// Print a query prompt and parse the answer using `from_str_with_default`, falling back to the
+    /// default_answer if the user provided an empty string.
+    pub fn query_with_default(query: &str, default_answer: Self) -> Result<Self, Error> {
+        let line = Self::read_line(query, default_answer.default_choice_str())?;
+        Confirmation::from_str_with_default(line.trim(), default_answer)
+    }
 }
 
 /// Define a simple CLI command.
