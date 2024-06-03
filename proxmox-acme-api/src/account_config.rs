@@ -80,7 +80,7 @@ impl AccountData {
 }
 
 /// Returns the path to the account configuration file (`$config_dir/accounts/$name`).
-pub fn account_cfg_filename(name: &str) -> PathBuf {
+pub fn account_config_filename(name: &str) -> PathBuf {
     acme_account_dir().join(name)
 }
 
@@ -121,9 +121,9 @@ where
 
 // Mark account as deactivated
 pub(crate) fn mark_account_deactivated(account_name: &str) -> Result<(), Error> {
-    let from = account_cfg_filename(account_name);
+    let from = account_config_filename(account_name);
     for i in 0..100 {
-        let to = account_cfg_filename(&format!("_deactivated_{}_{}", account_name, i));
+        let to = account_config_filename(&format!("_deactivated_{}_{}", account_name, i));
         if !Path::new(&to).exists() {
             return std::fs::rename(&from, &to).map_err(|err| {
                 format_err!(
@@ -144,22 +144,22 @@ pub(crate) fn mark_account_deactivated(account_name: &str) -> Result<(), Error> 
 
 // Load an existing ACME account by name.
 pub(crate) async fn load_account_config(account_name: &str) -> Result<AccountData, Error> {
-    let account_cfg_filename = account_cfg_filename(account_name);
-    let data = match tokio::fs::read(&account_cfg_filename).await {
+    let account_config_filename = account_config_filename(account_name);
+    let data = match tokio::fs::read(&account_config_filename).await {
         Ok(data) => data,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
             bail!("acme account '{}' does not exist", account_name)
         }
         Err(err) => bail!(
             "failed to load acme account from {:?} - {}",
-            account_cfg_filename,
+            account_config_filename,
             err
         ),
     };
     let data: AccountData = serde_json::from_slice(&data).map_err(|err| {
         format_err!(
             "failed to parse acme account from {:?} - {}",
-            account_cfg_filename,
+            account_config_filename,
             err
         )
     })?;
@@ -174,16 +174,16 @@ pub(crate) fn create_account_config(
 ) -> Result<(), Error> {
     make_acme_account_dir()?;
 
-    let account_cfg_filename = account_cfg_filename(account_name.as_ref());
+    let account_config_filename = account_config_filename(account_name.as_ref());
     let file = OpenOptions::new()
         .write(true)
         .create_new(true)
         .mode(0o600)
-        .open(&account_cfg_filename)
+        .open(&account_config_filename)
         .map_err(|err| {
             format_err!(
                 "failed to open {:?} for writing: {}",
-                account_cfg_filename,
+                account_config_filename,
                 err
             )
         })?;
@@ -191,7 +191,7 @@ pub(crate) fn create_account_config(
     serde_json::to_writer_pretty(file, account).map_err(|err| {
         format_err!(
             "failed to write acme account to {:?}: {}",
-            account_cfg_filename,
+            account_config_filename,
             err
         )
     })?;
@@ -204,13 +204,13 @@ pub(crate) fn save_account_config(
     account_name: &AcmeAccountName,
     account: &AccountData,
 ) -> Result<(), Error> {
-    let account_cfg_filename = account_cfg_filename(account_name.as_ref());
+    let account_config_filename = account_config_filename(account_name.as_ref());
 
     let mut data = Vec::<u8>::new();
     serde_json::to_writer_pretty(&mut data, account).map_err(|err| {
         format_err!(
             "failed to serialize acme account to {:?}: {}",
-            account_cfg_filename,
+            account_config_filename,
             err
         )
     })?;
@@ -218,7 +218,7 @@ pub(crate) fn save_account_config(
     make_acme_account_dir()?;
 
     replace_file(
-        account_cfg_filename,
+        account_config_filename,
         &data,
         CreateOptions::new()
             .perm(nix::sys::stat::Mode::from_bits_truncate(0o600))

@@ -19,6 +19,8 @@ pub use challenge_schemas::get_cached_challenge_schemas;
 
 #[cfg(feature = "impl")]
 mod account_config;
+#[cfg(feature = "impl")]
+pub use account_config::account_config_filename;
 
 #[cfg(feature = "impl")]
 mod plugin_config;
