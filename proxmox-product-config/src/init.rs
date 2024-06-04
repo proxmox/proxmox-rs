@@ -15,8 +15,12 @@ pub fn init(api_user: nix::unistd::User) {
     }
 }
 
-/// Returns the global product configuration (see [init_product_config])
-pub(crate) fn get_api_user() -> &'static nix::unistd::User {
+/// Returns the global api_user set with [init].
+///
+/// # Panics
+///
+/// Panics if [init] wasn't called before.
+pub fn get_api_user() -> &'static nix::unistd::User {
     unsafe {
         &PRODUCT_CONFIG
             .as_ref()
