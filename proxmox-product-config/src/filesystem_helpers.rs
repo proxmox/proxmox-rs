@@ -2,7 +2,7 @@ use anyhow::Error;
 
 use proxmox_sys::fs::CreateOptions;
 
-use super::get_api_user;
+use super::{get_api_user, get_priv_user};
 
 /// Return [CreateOptions] for files owned by `api_user.uid/api_user.gid` with mode `0640`.
 pub fn default_create_options() -> CreateOptions {
@@ -14,27 +14,29 @@ pub fn default_create_options() -> CreateOptions {
         .group(api_user.gid)
 }
 
-/// Return [CreateOptions] for files owned by `root:api-user.gid` with permission `0640`.
+/// Return [CreateOptions] for files owned by `priv_user.uid:api-user.gid` with permission `0640`.
 ///
 /// Only the superuser can write those files, but group `api-user.gid` can read them.
 pub fn privileged_create_options() -> CreateOptions {
     let api_user = get_api_user();
+    let priv_user = get_priv_user();
     let mode = nix::sys::stat::Mode::from_bits_truncate(0o0640);
     proxmox_sys::fs::CreateOptions::new()
         .perm(mode)
-        .owner(nix::unistd::ROOT)
+        .owner(priv_user.uid)
         .group(api_user.gid)
 }
 
-/// Return [CreateOptions] for files owned by `root:root` with permission `0600`.
+/// Return [CreateOptions] for files owned by `priv_user.uid: priv_user.gid` with permission `0600`.
 ///
 /// Only the superuser can read and write those files.
 pub fn secret_create_options() -> CreateOptions {
+    let priv_user = get_priv_user();
     let mode = nix::sys::stat::Mode::from_bits_truncate(0o0600);
     proxmox_sys::fs::CreateOptions::new()
         .perm(mode)
-        .owner(nix::unistd::ROOT)
-        .group(nix::unistd::Gid::from_raw(0))
+        .owner(priv_user.uid)
+        .group(priv_user.gid)
 }
 
 /// Return [CreateOptions] for files owned by `root:root` with permission `0644`.
@@ -58,7 +60,7 @@ pub fn lockfile_create_options() -> CreateOptions {
         .group(api_user.gid)
 }
 
-/// Atomically write data to file owned by `root:api-user.gid` with permission `0640`
+/// Atomically write data to file owned by `priv_user.uid:api-user.gid` with permission `0640`
 ///
 /// Only the superuser can write those files, but group 'api-user' can read them.
 pub fn replace_privileged_config<P: AsRef<std::path::Path>>(
@@ -77,7 +79,7 @@ pub fn replace_config<P: AsRef<std::path::Path>>(path: P, data: &[u8]) -> Result
     Ok(())
 }
 
-/// Atomically write data to file owned by `root:root` with permission `0600`.
+/// Atomically write data to file owned by `priv_user.uid:priv_user.gid` with permission `0600`.
 ///
 /// Only the superuser can read and write those files.
 pub fn replace_secret_config<P: AsRef<std::path::Path>>(path: P, data: &[u8]) -> Result<(), Error> {
