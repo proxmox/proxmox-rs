@@ -54,10 +54,7 @@ fn init() -> SectionConfig {
 }
 
 pub(crate) fn lock_plugin_config() -> Result<ApiLockGuard, Error> {
-    super::config::make_acme_dir()?;
-
     let plugin_cfg_lockfile = crate::plugin_cfg_lockfile();
-
     open_api_lockfile(plugin_cfg_lockfile, None, true)
 }
 
@@ -80,7 +77,6 @@ pub(crate) fn plugin_config() -> Result<(PluginData, ConfigDigest), Error> {
 }
 
 pub(crate) fn save_plugin_config(config: &PluginData) -> Result<(), Error> {
-    super::config::make_acme_dir()?;
     let plugin_cfg_filename = crate::plugin_cfg_filename();
     let raw = CONFIG.write(&plugin_cfg_filename, &config.data)?;
 

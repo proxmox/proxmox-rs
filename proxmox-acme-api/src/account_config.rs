@@ -84,11 +84,6 @@ pub fn account_config_filename(name: &str) -> PathBuf {
     acme_account_dir().join(name)
 }
 
-fn make_acme_account_dir() -> nix::Result<()> {
-    super::config::make_acme_dir()?;
-    super::config::create_secret_subdir(acme_account_dir())
-}
-
 pub(crate) fn foreach_acme_account<F>(mut func: F) -> Result<(), Error>
 where
     F: FnMut(AcmeAccountName) -> ControlFlow<Result<(), Error>>,
@@ -172,8 +167,6 @@ pub(crate) fn create_account_config(
     account_name: &AcmeAccountName,
     account: &AccountData,
 ) -> Result<(), Error> {
-    make_acme_account_dir()?;
-
     let account_config_filename = account_config_filename(account_name.as_ref());
     let file = OpenOptions::new()
         .write(true)
@@ -214,8 +207,6 @@ pub(crate) fn save_account_config(
             err
         )
     })?;
-
-    make_acme_account_dir()?;
 
     replace_file(
         account_config_filename,
