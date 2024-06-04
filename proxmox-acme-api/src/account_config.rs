@@ -9,7 +9,7 @@ use anyhow::{bail, format_err, Error};
 use serde::{Deserialize, Serialize};
 
 use proxmox_sys::error::SysError;
-use proxmox_sys::fs::{replace_file, CreateOptions};
+use proxmox_product_config::replace_secret_config;
 
 use proxmox_schema::api_types::SAFE_ID_REGEX;
 
@@ -208,13 +208,8 @@ pub(crate) fn save_account_config(
         )
     })?;
 
-    replace_file(
+    replace_secret_config(
         account_config_filename,
         &data,
-        CreateOptions::new()
-            .perm(nix::sys::stat::Mode::from_bits_truncate(0o600))
-            .owner(nix::unistd::ROOT)
-            .group(nix::unistd::Gid::from_raw(0)),
-        true,
     )
 }

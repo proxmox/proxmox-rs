@@ -7,7 +7,7 @@ use serde_json::Value;
 use proxmox_schema::{ApiType, Schema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
 use proxmox_config_digest::ConfigDigest;
-use proxmox_product_config::{ApiLockGuard, open_api_lockfile, replace_config};
+use proxmox_product_config::{ApiLockGuard, open_api_lockfile, replace_secret_config};
 
 use crate::types::{DnsPlugin, StandalonePlugin, PLUGIN_ID_SCHEMA};
 
@@ -80,7 +80,7 @@ pub(crate) fn save_plugin_config(config: &PluginData) -> Result<(), Error> {
     let plugin_cfg_filename = crate::plugin_cfg_filename();
     let raw = CONFIG.write(&plugin_cfg_filename, &config.data)?;
 
-    replace_config(plugin_cfg_filename, raw.as_bytes())
+    replace_secret_config(plugin_cfg_filename, raw.as_bytes())
 }
 
 pub(crate) struct PluginData {
