@@ -2,5 +2,4 @@ rust-proxmox-network-api (0.1.0-1) bookworm; urgency=medium
 
   * initial packaging (split out from proxmox-system-management-api)
 
- -- Proxmox Support Team <support@proxmox.com>  Thu, 30 May 2024 09:10:54 +0200
-
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 05 Jun 2024 11:27:23 +0200
