@@ -30,6 +30,7 @@ members = [
     "proxmox-section-config",
     "proxmox-serde",
     "proxmox-shared-memory",
+    "proxmox-simple-config",
     "proxmox-sortable-macro",
     "proxmox-subscription",
     "proxmox-sys",

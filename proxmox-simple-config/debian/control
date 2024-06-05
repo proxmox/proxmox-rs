@@ -1,0 +1,61 @@
+Source: rust-proxmox-simple-config
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-3+api-types-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.6.2
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-simple-config
+Rules-Requires-Root: no
+
+Package: librust-proxmox-simple-config-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~),
+ librust-proxmox-schema-3+api-types-dev (>= 3.1.1-~~),
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
+ librust-serde-json-1+default-dev
+Suggests:
+ librust-proxmox-simple-config+log-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-simple-config+default-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-0-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-0+default-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-0.1-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-0.1.0+default-dev (= ${binary:Version})
+Description: Simple key/value format for configuration files - Rust source code
+ Source code for Debianized Rust crate "proxmox-simple-config"
+
+Package: librust-proxmox-simple-config+log-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-simple-config-dev (= ${binary:Version}),
+ librust-log-0.4+default-dev (>= 0.4.17-~~)
+Provides:
+ librust-proxmox-simple-config-0+log-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-0.1+log-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-0.1.0+log-dev (= ${binary:Version})
+Description: Simple key/value format for configuration files - feature "log"
+ This metapackage enables feature "log" for the Rust proxmox-simple-config
+ crate, by pulling in any additional dependencies needed by that feature.
