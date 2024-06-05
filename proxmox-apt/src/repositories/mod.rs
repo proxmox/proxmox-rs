@@ -146,12 +146,21 @@ pub fn repositories() -> Result<Repositories, Error> {
 
     let sources_list_d_path = PathBuf::from(APT_SOURCES_LIST_DIRECTORY);
 
-    match APTRepositoryFile::new(sources_list_path) {
-        Ok(Some(mut file)) => match file.parse() {
-            Ok(()) => files.push(file),
-            Err(err) => errors.push(err),
-        },
-        _ => bail!("internal error with '{}'", APT_SOURCES_LIST_FILENAME),
+    if sources_list_path.exists() {
+        if sources_list_path.is_file() {
+            match APTRepositoryFile::new(sources_list_path) {
+                Ok(Some(mut file)) => match file.parse() {
+                    Ok(()) => files.push(file),
+                    Err(err) => errors.push(err),
+                },
+                _ => bail!("internal error with '{}'", APT_SOURCES_LIST_FILENAME),
+            }
+        } else {
+            errors.push(APTRepositoryFileError {
+                path: APT_SOURCES_LIST_FILENAME.to_string(),
+                error: "not a regular file!".to_string(),
+            });
+        }
     }
 
     if !sources_list_d_path.exists() {
