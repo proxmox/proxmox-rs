@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[cfg_attr(feature="api-types", proxmox_schema::api())]
+#[cfg_attr(feature = "api-types", proxmox_schema::api())]
 /// External Account Bindings
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]

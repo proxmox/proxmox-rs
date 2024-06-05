@@ -18,9 +18,9 @@
 //!     ...
 //! ```
 
-use std::path::Path;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::path::Path;
 
 use anyhow::{bail, format_err, Error};
 use serde::de::DeserializeOwned;
@@ -307,7 +307,11 @@ impl SectionConfig {
     /// This verifies the whole data using the schemas defined in the
     /// plugins. Please note that `filename` is only used to improve
     /// error messages.
-    pub fn write<P: AsRef<Path>>(&self, filename: P, config: &SectionConfigData) -> Result<String, Error> {
+    pub fn write<P: AsRef<Path>>(
+        &self,
+        filename: P,
+        config: &SectionConfigData,
+    ) -> Result<String, Error> {
         self.write_do(config)
             .map_err(|e: Error| format_err!("writing {:?} failed: {}", filename.as_ref(), e))
     }
@@ -394,7 +398,11 @@ impl SectionConfig {
     /// This verifies the whole data using the schemas defined in the
     /// plugins. Please note that `filename` is only used to improve
     /// error messages.
-    pub fn parse<P: AsRef<Path>>(&self, filename: P, raw: &str) -> Result<SectionConfigData, Error> {
+    pub fn parse<P: AsRef<Path>>(
+        &self,
+        filename: P,
+        raw: &str,
+    ) -> Result<SectionConfigData, Error> {
         let mut state = ParseState::BeforeHeader;
 
         let test_required_properties = |value: &Value,

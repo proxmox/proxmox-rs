@@ -4,10 +4,10 @@ use anyhow::Error;
 use lazy_static::lazy_static;
 use serde_json::Value;
 
+use proxmox_config_digest::ConfigDigest;
+use proxmox_product_config::{open_api_lockfile, replace_secret_config, ApiLockGuard};
 use proxmox_schema::{ApiType, Schema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
-use proxmox_config_digest::ConfigDigest;
-use proxmox_product_config::{ApiLockGuard, open_api_lockfile, replace_secret_config};
 
 use crate::types::{DnsPlugin, StandalonePlugin, PLUGIN_ID_SCHEMA};
 

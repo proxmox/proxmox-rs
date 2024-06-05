@@ -15,8 +15,8 @@ use proxmox_acme::async_client::AcmeClient;
 use proxmox_acme::{Authorization, Challenge};
 use proxmox_rest_server::WorkerTask;
 
-use crate::types::{AcmeDomain, DnsPlugin};
 use crate::plugin_config::PluginData;
+use crate::types::{AcmeDomain, DnsPlugin};
 
 const PROXMOX_ACME_SH_PATH: &str = "/usr/share/proxmox-acme/proxmox-acme";
 

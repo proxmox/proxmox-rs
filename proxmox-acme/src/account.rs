@@ -11,11 +11,11 @@ use serde_json::Value;
 use crate::authorization::{Authorization, GetAuthorization};
 use crate::b64u;
 use crate::directory::Directory;
-use crate::types::{AccountData, AccountStatus, ExternalAccountBinding};
 use crate::jws::Jws;
 use crate::key::{Jwk, PublicKey};
 use crate::order::{NewOrder, Order, OrderData};
 use crate::request::Request;
+use crate::types::{AccountData, AccountStatus, ExternalAccountBinding};
 use crate::Error;
 
 /// An ACME Account.

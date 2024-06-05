@@ -5,8 +5,8 @@ use anyhow::{bail, format_err, Error};
 use serde::Deserialize;
 use serde_json::Value;
 
-use proxmox_schema::param_bail;
 use proxmox_config_digest::ConfigDigest;
+use proxmox_schema::param_bail;
 
 use crate::types::{
     DeletablePluginProperty, DnsPlugin, DnsPluginCore, DnsPluginCoreUpdater, PluginConfig,
@@ -24,10 +24,7 @@ pub fn list_plugins(rpcenv: &mut dyn RpcEnvironment) -> Result<Vec<PluginConfig>
         .collect())
 }
 
-pub fn get_plugin(
-    id: String,
-    rpcenv: &mut dyn RpcEnvironment,
-) -> Result<PluginConfig, Error> {
+pub fn get_plugin(id: String, rpcenv: &mut dyn RpcEnvironment) -> Result<PluginConfig, Error> {
     let (plugins, digest) = super::plugin_config::plugin_config()?;
     rpcenv["digest"] = digest.to_hex().into();
 

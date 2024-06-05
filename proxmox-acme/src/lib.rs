@@ -13,70 +13,66 @@
 
 #![deny(missing_docs)]
 
-#[cfg(feature="api-types")]
+#[cfg(feature = "api-types")]
 pub mod types;
 
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 mod b64u;
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 mod eab;
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 mod json;
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 mod jws;
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 mod key;
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 mod request;
 
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 pub mod account;
 
-#[cfg(feature="impl")]
-
+#[cfg(feature = "impl")]
 pub mod authorization;
-#[cfg(feature="impl")]
-
+#[cfg(feature = "impl")]
 pub mod directory;
-#[cfg(feature="impl")]
-
+#[cfg(feature = "impl")]
 pub mod error;
-#[cfg(feature="impl")]
-
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
+#[cfg(feature = "impl")]
 pub mod order;
 
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 pub mod util;
 
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 #[doc(inline)]
 pub use account::Account;
 
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 #[doc(inline)]
 pub use authorization::{Authorization, Challenge};
 
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 #[doc(inline)]
 pub use directory::Directory;
 
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 #[doc(inline)]
 pub use error::Error;
 
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 #[doc(inline)]
 pub use order::Order;
 
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 #[doc(inline)]
 pub use request::Request;
 
 // we don't inline these:
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 pub use order::NewOrder;
-#[cfg(feature="impl")]
+#[cfg(feature = "impl")]
 pub use request::ErrorResponse;
 
 /// Header name for nonces.

@@ -7,13 +7,13 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 use proxmox_schema::api;
+use proxmox_schema::api_types::SAFE_ID_REGEX;
+use proxmox_schema::api_types::{CIDR_V4_SCHEMA, CIDR_V6_SCHEMA};
+use proxmox_schema::api_types::{IP_V4_SCHEMA, IP_V6_SCHEMA};
 use proxmox_schema::ApiStringFormat;
 use proxmox_schema::ArraySchema;
 use proxmox_schema::Schema;
 use proxmox_schema::StringSchema;
-use proxmox_schema::api_types::SAFE_ID_REGEX;
-use proxmox_schema::api_types::{IP_V4_SCHEMA, IP_V6_SCHEMA};
-use proxmox_schema::api_types::{CIDR_V4_SCHEMA, CIDR_V6_SCHEMA};
 
 lazy_static! {
     pub static ref PHYSICAL_NIC_REGEX: Regex = Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap();
@@ -21,8 +21,7 @@ lazy_static! {
         Regex::new(r"^(?P<vlan_raw_device>\S+)\.(?P<vlan_id>\d+)|vlan(?P<vlan_id2>\d+)$").unwrap();
 }
 
-pub const NETWORK_INTERFACE_FORMAT: ApiStringFormat =
-    ApiStringFormat::Pattern(&SAFE_ID_REGEX);
+pub const NETWORK_INTERFACE_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&SAFE_ID_REGEX);
 
 #[api()]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -504,7 +503,7 @@ pub enum DeletableInterfaceProperty {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 /// Update network interface config.
-pub struct InterfaceUpdater   {
+pub struct InterfaceUpdater {
     #[serde(rename = "type")]
     pub interface_type: Option<NetworkInterfaceType>,
     pub autostart: Option<bool>,

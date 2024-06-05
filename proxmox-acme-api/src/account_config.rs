@@ -8,8 +8,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, format_err, Error};
 use serde::{Deserialize, Serialize};
 
-use proxmox_sys::error::SysError;
 use proxmox_product_config::replace_secret_config;
+use proxmox_sys::error::SysError;
 
 use proxmox_schema::api_types::SAFE_ID_REGEX;
 
@@ -17,8 +17,8 @@ use proxmox_acme::async_client::AcmeClient;
 use proxmox_acme::types::AccountData as AcmeAccountData;
 use proxmox_acme::Account;
 
-use crate::types::AcmeAccountName;
 use crate::acme_account_dir;
+use crate::types::AcmeAccountName;
 
 #[inline]
 fn is_false(b: &bool) -> bool {
@@ -208,8 +208,5 @@ pub(crate) fn save_account_config(
         )
     })?;
 
-    replace_secret_config(
-        account_config_filename,
-        &data,
-    )
+    replace_secret_config(account_config_filename, &data)
 }

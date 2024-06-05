@@ -15,7 +15,7 @@ pub use config::{DEFAULT_ACME_DIRECTORY_ENTRY, KNOWN_ACME_DIRECTORIES};
 #[cfg(feature = "impl")]
 mod challenge_schemas;
 #[cfg(feature = "impl")]
-pub use challenge_schemas::{ChallengeSchemaWrapper, get_cached_challenge_schemas};
+pub use challenge_schemas::{get_cached_challenge_schemas, ChallengeSchemaWrapper};
 
 #[cfg(feature = "impl")]
 mod account_config;
@@ -37,10 +37,8 @@ mod plugin_api_impl;
 #[cfg(feature = "impl")]
 pub use plugin_api_impl::{add_plugin, delete_plugin, get_plugin, list_plugins, update_plugin};
 
-
 #[cfg(feature = "impl")]
 pub(crate) mod acme_plugin;
-
 
 #[cfg(feature = "impl")]
 mod certificate_helpers;

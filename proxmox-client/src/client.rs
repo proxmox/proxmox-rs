@@ -455,9 +455,9 @@ impl HttpApiClient for Client {
 
 fn verify_fingerprint(chain: &x509::X509StoreContextRef, expected_fingerprint: &[u8]) -> bool {
     let Some(cert) = chain.current_cert() else {
-            log::error!("no certificate in chain?");
-            return false;
-        };
+        log::error!("no certificate in chain?");
+        return false;
+    };
 
     let fp = match cert.digest(MessageDigest::sha256()) {
         Err(err) => {
