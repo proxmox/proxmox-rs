@@ -2,5 +2,4 @@ rust-proxmox-product-config (0.1.0-1) bookworm; urgency=medium
 
   * initial packaging
 
- -- Proxmox Support Team <support@proxmox.com>  Fri, 03 May 2024 08:55:56 +0200
-
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 05 Jun 2024 11:26:44 +0200
