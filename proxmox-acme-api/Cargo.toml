@@ -19,8 +19,12 @@ futures = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 nix = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
 lazy_static = { workspace = true, optional = true }
+
+libc = { workspace = true, optional = true }
 openssl = { workspace = true, optional = true }
+foreign-types = { workspace = true, optional = true }
 
 
 proxmox-serde.workspace = true
@@ -30,6 +34,7 @@ proxmox-router = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
 proxmox-uuid = { workspace = true, optional = true }
+proxmox-time = { workspace = true, optional = true }
 proxmox-acme = { workspace = true, features = ["api-types"] }
 proxmox-config-digest = { workspace = true, optional = true }
 proxmox-product-config = { workspace = true, optional = true }
@@ -38,12 +43,14 @@ proxmox-product-config = { workspace = true, optional = true }
 default = []
 impl = [
     "dep:proxmox-uuid",
+    "dep:proxmox-time",
     "dep:proxmox-config-digest",
     "proxmox-config-digest?/openssl",
     "dep:proxmox-product-config",
     "proxmox-acme/impl",
     "proxmox-acme/async-client",
     "dep:proxmox-section-config",
+    "dep:hex",
     "dep:lazy_static",
     "dep:log",
     "dep:nix",
@@ -55,5 +62,7 @@ impl = [
     "dep:proxmox-rest-server",
     "dep:proxmox-router",
     "dep:base64",
+    "dep:libc",
     "dep:openssl",
+    "dep:foreign-types",
 ]

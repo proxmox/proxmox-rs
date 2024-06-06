@@ -1,5 +1,8 @@
+use std::mem::MaybeUninit;
 use std::sync::Arc;
 use std::time::Duration;
+
+use foreign_types::ForeignTypeRef;
 
 use anyhow::{bail, format_err, Error};
 use openssl::pkey::{PKey, Private};
@@ -11,6 +14,7 @@ use proxmox_rest_server::WorkerTask;
 use proxmox_sys::{task_log, task_warn};
 
 use crate::types::{AcmeConfig, AcmeDomain};
+use crate::CertificateInfo;
 
 pub async fn revoke_certificate(acme_config: &AcmeConfig, certificate: &[u8]) -> Result<(), Error> {
     let mut acme = super::account_config::load_account_config(&acme_config.account)
@@ -301,4 +305,93 @@ pub fn create_self_signed_cert(
     x509.sign(&privkey, openssl::hash::MessageDigest::sha256())?;
 
     Ok((privkey, x509.build()))
+}
+
+impl CertificateInfo {
+    pub fn from_pem(filename: &str, cert_pem: &[u8]) -> Result<Self, Error> {
+        let x509 = openssl::x509::X509::from_pem(cert_pem)?;
+
+        let cert_pem = String::from_utf8(cert_pem.to_vec())
+            .map_err(|_| format_err!("certificate in {:?} is not a valid PEM file", filename))?;
+
+        let pubkey = x509.public_key()?;
+
+        let subject = x509name_to_string(x509.subject_name())?;
+        let issuer = x509name_to_string(x509.issuer_name())?;
+
+        let fingerprint = x509.digest(openssl::hash::MessageDigest::sha256())?;
+        let fingerprint = hex::encode(fingerprint)
+            .as_bytes()
+            .chunks(2)
+            .map(|v| std::str::from_utf8(v).unwrap())
+            .collect::<Vec<&str>>()
+            .join(":");
+
+        let public_key_type = openssl::nid::Nid::from_raw(pubkey.id().as_raw())
+            .long_name()
+            .unwrap_or("<unsupported key type>")
+            .to_owned();
+
+        let san = x509
+            .subject_alt_names()
+            .map(|san| {
+                san.into_iter()
+                    // FIXME: Support `.ipaddress()`?
+                    .filter_map(|name| name.dnsname().map(str::to_owned))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        Ok(CertificateInfo {
+            filename: filename.to_string(),
+            pem: Some(cert_pem),
+            subject,
+            issuer,
+            fingerprint: Some(fingerprint),
+            public_key_bits: Some(pubkey.bits()),
+            notbefore: asn1_time_to_unix(x509.not_before()).ok(),
+            notafter: asn1_time_to_unix(x509.not_after()).ok(),
+            public_key_type,
+            san,
+        })
+    }
+
+    /// Check if the certificate is expired at or after a specific unix epoch.
+    pub fn is_expired_after_epoch(&self, epoch: i64) -> Result<bool, Error> {
+        if let Some(notafter) = self.notafter {
+            Ok(notafter < epoch)
+        } else {
+            Ok(false)
+        }
+    }
+}
+
+fn x509name_to_string(name: &openssl::x509::X509NameRef) -> Result<String, Error> {
+    let mut parts = Vec::new();
+    for entry in name.entries() {
+        parts.push(format!(
+            "{} = {}",
+            entry.object().nid().short_name()?,
+            entry.data().as_utf8()?
+        ));
+    }
+    Ok(parts.join(", "))
+}
+
+// C type:
+#[allow(non_camel_case_types)]
+type ASN1_TIME = <openssl::asn1::Asn1TimeRef as ForeignTypeRef>::CType;
+
+extern "C" {
+    fn ASN1_TIME_to_tm(s: *const ASN1_TIME, tm: *mut libc::tm) -> libc::c_int;
+}
+
+fn asn1_time_to_unix(time: &openssl::asn1::Asn1TimeRef) -> Result<i64, Error> {
+    let mut c_tm = MaybeUninit::<libc::tm>::uninit();
+    let rc = unsafe { ASN1_TIME_to_tm(time.as_ptr(), c_tm.as_mut_ptr()) };
+    if rc != 1 {
+        bail!("failed to parse ASN1 time");
+    }
+    let mut c_tm = unsafe { c_tm.assume_init() };
+    proxmox_time::timegm(&mut c_tm)
 }
