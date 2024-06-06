@@ -10,8 +10,8 @@ Build-Depends: debhelper (>= 12),
  librust-hex-0.4+default-dev <!nocheck>,
  librust-once-cell-1+default-dev (>= 1.3.1-~~) <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.0-~~) <!nocheck>,
- librust-proxmox-schema-3+default-dev (>= 3.1.0-~~) <!nocheck>,
+ librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~) <!nocheck>,
  librust-rfc822-like-0.2+default-dev (>= 0.2.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
@@ -33,8 +33,8 @@ Depends:
  librust-hex-0.4+default-dev,
  librust-once-cell-1+default-dev (>= 1.3.1-~~),
  librust-openssl-0.10+default-dev,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.0-~~),
- librust-proxmox-schema-3+default-dev (>= 3.1.0-~~),
+ librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~),
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~),
  librust-rfc822-like-0.2+default-dev (>= 0.2.1-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
@@ -45,7 +45,7 @@ Provides:
  librust-proxmox-apt-0+default-dev (= ${binary:Version}),
  librust-proxmox-apt-0.10-dev (= ${binary:Version}),
  librust-proxmox-apt-0.10+default-dev (= ${binary:Version}),
- librust-proxmox-apt-0.10.9-dev (= ${binary:Version}),
- librust-proxmox-apt-0.10.9+default-dev (= ${binary:Version})
+ librust-proxmox-apt-0.10.10-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.10.10+default-dev (= ${binary:Version})
 Description: Proxmox library for APT - Rust source code
  Source code for Debianized Rust crate "proxmox-apt"
