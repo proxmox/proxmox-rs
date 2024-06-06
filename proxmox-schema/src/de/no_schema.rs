@@ -303,7 +303,7 @@ impl<'a> Iterator for SplitList<'a> {
     type Item = &'a str;
 
     fn next(&mut self) -> Option<&'a str> {
-        let range = super::next_str_entry(&self.input, &mut self.at, self.has_null)?;
+        let range = super::next_str_entry(self.input, &mut self.at, self.has_null)?;
         Some(&self.input[range])
     }
 }

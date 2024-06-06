@@ -62,8 +62,8 @@ impl Cache {
     ) -> Result<Self, Error> {
         let basedir = basedir.as_ref().to_owned();
 
-        let file_options = file_options.unwrap_or_else(CreateOptions::new);
-        let dir_options = dir_options.unwrap_or_else(CreateOptions::new);
+        let file_options = file_options.unwrap_or_default();
+        let dir_options = dir_options.unwrap_or_default();
 
         create_path(
             &basedir,

@@ -495,7 +495,7 @@ impl Service<Uri> for PrivilegedAddr {
     fn call(&mut self, _req: Uri) -> Self::Future {
         match self {
             PrivilegedAddr::Tcp(addr) => {
-                let addr = addr.clone();
+                let addr = *addr;
                 Box::pin(async move {
                     tokio::net::TcpStream::connect(addr)
                         .await

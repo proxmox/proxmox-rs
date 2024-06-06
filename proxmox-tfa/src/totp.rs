@@ -656,7 +656,7 @@ fn test_algorithm_parsing() {
     assert_eq!(hotp.issuer.as_deref(), Some(issuer));
     assert_eq!(hotp.account_name.as_deref(), Some("user@hostname"));
     assert_eq!(
-        &base32::encode(base32::Alphabet::RFC4648 { padding: false }, &hotp.secret()),
+        &base32::encode(base32::Alphabet::RFC4648 { padding: false }, hotp.secret()),
         secret
     )
 }

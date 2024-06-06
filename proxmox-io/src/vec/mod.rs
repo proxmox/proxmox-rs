@@ -54,7 +54,7 @@ pub use byte_vec::ByteVecExt;
 pub unsafe fn uninitialized(len: usize) -> Vec<u8> {
     unsafe {
         let data = std::alloc::alloc(std::alloc::Layout::array::<u8>(len).unwrap());
-        Vec::from_raw_parts(data as *mut u8, len, len)
+        Vec::from_raw_parts(data, len, len)
     }
 }
 

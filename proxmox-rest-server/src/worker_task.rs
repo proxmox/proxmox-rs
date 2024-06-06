@@ -850,7 +850,7 @@ impl WorkerTask {
             file_opts: setup.file_opts.clone(),
             ..Default::default()
         };
-        let logger = FileLogger::new(&path, logger_options)?;
+        let logger = FileLogger::new(path, logger_options)?;
 
         let worker = Arc::new(Self {
             setup,

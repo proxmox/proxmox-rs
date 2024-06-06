@@ -125,7 +125,7 @@ fn test_digest() -> Result<(), Error> {
     std::fs::copy(path, new_path)?;
 
     // modify the repo
-    let mut repo = file.repositories.first_mut().unwrap();
+    let repo = file.repositories.first_mut().unwrap();
     repo.enabled = !repo.enabled;
 
     // ...then it should work
@@ -183,7 +183,7 @@ fn test_check_repositories() -> Result<(), Error> {
     ));
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");
-    let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
+    let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
     let infos = check_repositories(&[file], DebianCodename::Bullseye);
@@ -327,7 +327,7 @@ fn test_get_cached_origin() -> Result<(), Error> {
     ));
 
     let pve_list = read_dir.join("pve.list");
-    let mut file = APTRepositoryFile::new(&pve_list)?.unwrap();
+    let mut file = APTRepositoryFile::new(pve_list)?.unwrap();
     file.parse()?;
 
     let origins = [
@@ -366,7 +366,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     ];
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");
-    let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
+    let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
     let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bullseye);
@@ -374,7 +374,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     assert_eq!(std_repos, &expected[0..=5]);
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");
-    let mut file = APTRepositoryFile::new(&absolute_suite_list)?.unwrap();
+    let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
     let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
@@ -382,7 +382,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     assert_eq!(std_repos, expected);
 
     let pve_list = read_dir.join("pve.list");
-    let mut file = APTRepositoryFile::new(&pve_list)?.unwrap();
+    let mut file = APTRepositoryFile::new(pve_list)?.unwrap();
     file.parse()?;
 
     let file_vec = vec![file];
@@ -399,7 +399,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     assert_eq!(std_repos, &expected[0..=5]);
 
     let pve_alt_list = read_dir.join("pve-alt.list");
-    let mut file = APTRepositoryFile::new(&pve_alt_list)?.unwrap();
+    let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
 
     expected[0].status = Some(true);
@@ -411,7 +411,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     assert_eq!(std_repos, &expected[0..=5]);
 
     let pve_alt_list = read_dir.join("ceph-quincy-bookworm.list");
-    let mut file = APTRepositoryFile::new(&pve_alt_list)?.unwrap();
+    let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
 
     expected[0].status = None;
@@ -426,7 +426,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     assert_eq!(std_repos, expected);
 
     let pve_alt_list = read_dir.join("ceph-quincy-nosub-bookworm.list");
-    let mut file = APTRepositoryFile::new(&pve_alt_list)?.unwrap();
+    let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
 
     expected[0].status = None;
@@ -441,7 +441,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     assert_eq!(std_repos, expected);
 
     let pve_alt_list = read_dir.join("ceph-reef-enterprise-bookworm.list");
-    let mut file = APTRepositoryFile::new(&pve_alt_list)?.unwrap();
+    let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
 
     expected[0].status = None;

@@ -14,7 +14,7 @@ struct GlauthServer {
 impl GlauthServer {
     fn new(path: &str) -> Result<Self, Error> {
         let glauth_bin = std::env::var("GLAUTH_BIN").context("GLAUTH_BIN is not set")?;
-        let handle = Command::new(&glauth_bin)
+        let handle = Command::new(glauth_bin)
             .arg("-c")
             .arg(path)
             .stdin(Stdio::null())
@@ -155,16 +155,10 @@ fn test_search() -> Result<(), Error> {
             .attributes
             .get("mail")
             .unwrap()
-            .get(0)
+            .first()
             .unwrap()
             .ends_with("@example.com"));
-        assert!(a
-            .attributes
-            .get("sn")
-            .unwrap()
-            .get(0)
-            .unwrap()
-            .eq("User".into()));
+        assert!(a.attributes.get("sn").unwrap().first().unwrap().eq("User"));
     }
 
     Ok(())

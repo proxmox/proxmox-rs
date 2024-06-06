@@ -421,7 +421,7 @@ impl<'de, 'i, 's> de::SeqAccess<'de> for SeqAccess<'de, 'i, 's> {
             return Ok(None);
         }
 
-        while let Some(el_range) = next_str_entry(&self.input, &mut self.at, self.has_null) {
+        if let Some(el_range) = next_str_entry(&self.input, &mut self.at, self.has_null) {
             if let Some(max) = self.schema.max_length {
                 if self.count == max {
                     return Err(Error::msg("too many elements"));

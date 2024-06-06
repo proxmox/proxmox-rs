@@ -155,7 +155,7 @@ impl Service<Request<Body>> for RedirectService {
 
                 Response::builder()
                     .status(status_code)
-                    .header("Location", String::from(location_value))
+                    .header("Location", location_value)
                     .body(Body::empty())?
             } else {
                 Response::builder()

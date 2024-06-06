@@ -102,7 +102,7 @@ pub fn update_endpoint(
             config,
             &GotifyPrivateConfig {
                 name: name.into(),
-                token: token.into(),
+                token,
             },
         )?;
     }

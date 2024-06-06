@@ -12,13 +12,13 @@ use crate::Error;
 /// Section config schema for the public config file.
 pub fn config_parser() -> &'static SectionConfig {
     static CONFIG: OnceLock<SectionConfig> = OnceLock::new();
-    CONFIG.get_or_init(|| config_init())
+    CONFIG.get_or_init(config_init)
 }
 
 /// Section config schema for the private config file.
 pub fn private_config_parser() -> &'static SectionConfig {
     static CONFIG: OnceLock<SectionConfig> = OnceLock::new();
-    CONFIG.get_or_init(|| private_config_init())
+    CONFIG.get_or_init(private_config_init)
 }
 
 fn config_init() -> SectionConfig {

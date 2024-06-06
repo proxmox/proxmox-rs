@@ -52,10 +52,8 @@ pub fn ensure_dir_exists<P: AsRef<Path>>(
         Err(nix::errno::Errno::EEXIST) => {
             if enforce_permissions {
                 return options.check(path);
-            } else {
-                if let Err(err) = options.check(path) {
-                    log::error!("{err}");
-                }
+            } else if let Err(err) = options.check(path) {
+                log::error!("{err}");
             }
         }
         Err(err) => bail!("unable to create directory {path:?} - {err}",),

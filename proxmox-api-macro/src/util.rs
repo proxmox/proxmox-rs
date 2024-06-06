@@ -865,7 +865,7 @@ pub fn parse_str_value_to_option<T: Parse>(
     path: &syn::Path,
     nv: syn::parse::ParseStream<'_>,
 ) {
-    duplicate(&*target, &path);
+    duplicate(&*target, path);
     match nv.parse().and_then(|lit| parse_lit_str(&lit)) {
         Ok(value) => *target = Some(value),
         Err(err) => crate::add_error(err),
