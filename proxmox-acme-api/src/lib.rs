@@ -43,4 +43,4 @@ pub(crate) mod acme_plugin;
 #[cfg(feature = "impl")]
 mod certificate_helpers;
 #[cfg(feature = "impl")]
-pub use certificate_helpers::{order_certificate, revoke_certificate};
+pub use certificate_helpers::{create_self_signed_cert, order_certificate, revoke_certificate};

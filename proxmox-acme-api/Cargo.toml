@@ -20,6 +20,8 @@ http = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 nix = { workspace = true, optional = true }
 lazy_static = { workspace = true, optional = true }
+openssl = { workspace = true, optional = true }
+
 
 proxmox-serde.workspace = true
 proxmox-section-config = { workspace = true, optional = true }
@@ -27,6 +29,7 @@ proxmox-rest-server = { workspace = true, optional = true }
 proxmox-router = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
+proxmox-uuid = { workspace = true, optional = true }
 proxmox-acme = { workspace = true, features = ["api-types"] }
 proxmox-config-digest = { workspace = true, optional = true }
 proxmox-product-config = { workspace = true, optional = true }
@@ -34,6 +37,7 @@ proxmox-product-config = { workspace = true, optional = true }
 [features]
 default = []
 impl = [
+    "dep:proxmox-uuid",
     "dep:proxmox-config-digest",
     "proxmox-config-digest?/openssl",
     "dep:proxmox-product-config",
@@ -51,4 +55,5 @@ impl = [
     "dep:proxmox-rest-server",
     "dep:proxmox-router",
     "dep:base64",
+    "dep:openssl",
 ]
