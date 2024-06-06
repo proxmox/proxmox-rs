@@ -9,6 +9,16 @@ use proxmox_sys::{task_log, task_warn};
 
 use crate::types::{AcmeConfig, AcmeDomain};
 
+pub async fn revoke_certificate(acme_config: AcmeConfig, certificate: &[u8]) -> Result<(), Error> {
+    let mut acme = super::account_config::load_account_config(&acme_config.account)
+        .await?
+        .client();
+
+    acme.revoke_certificate(certificate, None).await?;
+
+    Ok(())
+}
+
 pub struct OrderedCertificate {
     pub certificate: Vec<u8>,
     pub private_key_pem: Vec<u8>,
