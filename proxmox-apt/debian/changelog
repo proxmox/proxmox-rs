@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.10.10-1) stable; urgency=medium
+
+  * fix #5513: apt: do not assume that sources.list file exists
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 06 Jun 2024 11:09:12 +0200
+
 rust-proxmox-apt (0.10.9-1) bookworm; urgency=medium
 
   * fix #5249: apt: allow parsing Packages without Priority field
