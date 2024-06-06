@@ -9,7 +9,7 @@ use proxmox_sys::{task_log, task_warn};
 
 use crate::types::{AcmeConfig, AcmeDomain};
 
-pub async fn revoke_certificate(acme_config: AcmeConfig, certificate: &[u8]) -> Result<(), Error> {
+pub async fn revoke_certificate(acme_config: &AcmeConfig, certificate: &[u8]) -> Result<(), Error> {
     let mut acme = super::account_config::load_account_config(&acme_config.account)
         .await?
         .client();
@@ -26,8 +26,8 @@ pub struct OrderedCertificate {
 
 pub async fn order_certificate(
     worker: Arc<WorkerTask>,
-    acme_config: AcmeConfig,
-    domains: Vec<AcmeDomain>,
+    acme_config: &AcmeConfig,
+    domains: &[AcmeDomain],
 ) -> Result<Option<OrderedCertificate>, Error> {
     use proxmox_acme::authorization::Status;
     use proxmox_acme::order::Identifier;
