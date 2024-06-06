@@ -143,9 +143,13 @@ fn test_digest() -> Result<(), Error> {
 
 #[test]
 fn test_empty_write() -> Result<(), Error> {
+    let write_dir = PathBuf::from(
+        std::option_env!("CARGO_TARGET_TMPDIR").expect("no test target dir set by cargo!"),
+    )
+    .join("tests")
+    .join("sources.list.d.remove");
     let test_dir = std::env::current_dir()?.join("tests");
     let read_dir = test_dir.join("sources.list.d");
-    let write_dir = test_dir.join("sources.list.d.remove");
 
     create_clean_directory(&write_dir)?;
 
