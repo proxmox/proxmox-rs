@@ -2,5 +2,4 @@ rust-proxmox-simple-config (0.1.0-1) bookworm; urgency=medium
 
   * initial packaging (copied code from proxmox-backup)
 
- -- Proxmox Support Team <support@proxmox.com>  Wed, 05 Jun 2024 12:52:06 +0200
-
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 07 Jun 2024 11:01:55 +0200
