@@ -336,8 +336,19 @@ impl CertificateInfo {
             .subject_alt_names()
             .map(|san| {
                 san.into_iter()
-                    // FIXME: Support `.ipaddress()`?
-                    .filter_map(|name| name.dnsname().map(str::to_owned))
+                    .filter_map(|name| {
+                        if let Some(name) = name.dnsname() {
+                            Some(format!("DNS: {name}"))
+                        } else if let Some(ip) = name.ipaddress() {
+                            Some(format!("IP: {ip:?}"))
+                        } else if let Some(email) = name.email() {
+                            Some(format!("EMAIL: {email}"))
+                        } else if let Some(uri) = name.uri() {
+                            Some(format!("URI: {uri}"))
+                        } else {
+                            None
+                        }
+                    })
                     .collect()
             })
             .unwrap_or_default();
