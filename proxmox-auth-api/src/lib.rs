@@ -34,3 +34,8 @@ pub mod types;
 mod pam_authenticator;
 #[cfg(feature = "pam-authenticator")]
 pub use pam_authenticator::Pam;
+
+#[cfg(feature = "password-authenticator")]
+mod password_authenticator;
+#[cfg(feature = "password-authenticator")]
+pub use password_authenticator::PasswordAuthenticator;

@@ -20,6 +20,7 @@ lazy_static = { workspace = true, optional = true }
 libc = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
+nix = { workspace = true, optional = true }
 openssl = { workspace = true, optional = true }
 pam-sys = { workspace = true, optional = true }
 percent-encoding = { workspace = true, optional = true }
@@ -28,9 +29,11 @@ serde = { workspace = true, optional = true, features = [ "derive" ] }
 serde_json = { workspace = true, optional = true }
 serde_plain = { workspace = true, optional = true }
 
+proxmox-product-config = { workspace = true, optional = true }
 proxmox-rest-server = { workspace = true, optional = true }
 proxmox-router = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, optional = true, features = [ "api-macro", "api-types" ] }
+proxmox-sys = { workspace = true, optional = true }
 proxmox-tfa = { workspace = true, optional = true, features = [ "api" ] }
 
 [features]
@@ -50,3 +53,11 @@ api = [
     "dep:proxmox-tfa",
 ]
 pam-authenticator = [ "api", "dep:libc", "dep:log", "dep:pam-sys" ]
+password-authenticator = [
+    "api",
+    "dep:log",
+    "dep:nix",
+    "dep:proxmox-product-config",
+    "dep:proxmox-sys",
+    "proxmox-sys?/crypt",
+]
