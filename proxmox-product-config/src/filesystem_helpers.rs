@@ -142,3 +142,22 @@ pub fn open_api_lockfile<P: AsRef<Path>>(
     let file = proxmox_sys::fs::open_file_locked(&path, timeout, exclusive, options)?;
     Ok(ApiLockGuard(Some(file)))
 }
+///
+/// Open or create a lock file owned by root and lock it.
+///
+/// File mode is `0600`.
+/// Default timeout is 10 seconds.
+///
+/// The lock is released as soon as you drop the returned lock guard.
+///
+/// Note: This method needs to be called by user `root`.
+pub fn open_secret_lockfile<P: AsRef<Path>>(
+    path: P,
+    timeout: Option<std::time::Duration>,
+    exclusive: bool,
+) -> Result<ApiLockGuard, Error> {
+    let options = secret_create_options();
+    let timeout = timeout.unwrap_or(std::time::Duration::new(10, 0));
+    let file = proxmox_sys::fs::open_file_locked(&path, timeout, exclusive, options)?;
+    Ok(ApiLockGuard(Some(file)))
+}
