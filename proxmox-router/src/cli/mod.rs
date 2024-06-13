@@ -12,12 +12,19 @@
 //! - Ability to create interactive commands (using ``rustyline``)
 //! - Supports complex/nested commands
 
+use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::io::{self, Write};
 
 use anyhow::{bail, Error};
 
-use crate::ApiMethod;
+use anyhow::{format_err, Error};
+use serde::Deserialize;
+use serde_json::Value;
+
+use proxmox_schema::{ApiType, Schema};
+
+use crate::{ApiFuture, ApiMethod};
 
 mod environment;
 pub use environment::*;
@@ -229,6 +236,9 @@ pub struct CliCommandMap {
     pub aliases: Vec<(Vec<&'static str>, Vec<&'static str>)>,
     /// List of options to suppress in generate_usage
     pub usage_skip_options: &'static [&'static str],
+
+    /// A set of options common to all subcommands. Only object schemas can be used here.
+    pub(crate) global_options: HashMap<TypeId, OptionEntry>,
 }
 
 impl CliCommandMap {
@@ -283,6 +293,27 @@ impl CliCommandMap {
 
         None
     }
+
+    /// Builder style method to set extra options for the entire set of subcommands.
+    /// Can be used multiple times.
+    pub fn global_option<T>(mut self) -> Self
+    where
+        T: Send + Sync + Any + ApiType + for<'a> Deserialize<'a>,
+    {
+        if self
+            .global_options
+            .insert(TypeId::of::<T>(), OptionEntry::of::<T>())
+            .is_some()
+        {
+            panic!("cannot add same option struct multiple times to command line interface");
+        }
+        self
+    }
+
+    /// Finish the command line interface.
+    pub fn build(self) -> CommandLineInterface {
+        self.into()
+    }
 }
 
 /// Define Complex command line interfaces.
@@ -300,5 +331,228 @@ impl From<CliCommand> for CommandLineInterface {
 impl From<CliCommandMap> for CommandLineInterface {
     fn from(list: CliCommandMap) -> Self {
         CommandLineInterface::Nested(list)
+    }
+}
+
+/// Options covering an entire hierarchy set of subcommands.
+pub(crate) struct OptionEntry {
+    schema: &'static Schema,
+    parse: fn(env: &mut CliEnvironment, &mut HashMap<String, String>) -> Result<(), Error>,
+}
+
+impl OptionEntry {
+    /// Get an entry for an API type `T`.
+    fn of<T>() -> Self
+    where
+        T: Send + Sync + Any + ApiType + for<'a> Deserialize<'a>,
+    {
+        return Self {
+            schema: &T::API_SCHEMA,
+            parse: parse_option_entry::<T>,
+        };
+
+        /// Extract known parameters from the current argument hash and store the parsed `T` in the
+        /// `CliEnvironment`'s extra args.
+        fn parse_option_entry<T>(
+            env: &mut CliEnvironment,
+            args: &mut HashMap<String, String>,
+        ) -> Result<(), Error>
+        where
+            T: Send + Sync + Any + ApiType + for<'a> Deserialize<'a>,
+        {
+            let schema: proxmox_schema::ParameterSchema = match &T::API_SCHEMA {
+                Schema::Object(s) => s.into(),
+                Schema::AllOf(s) => s.into(),
+                // FIXME: ParameterSchema should impl `TryFrom<&'static Schema>`
+                _ => panic!("non-object schema in command line interface"),
+            };
+
+            let mut params = Vec::new();
+            for (name, _optional, _schema) in T::API_SCHEMA
+                .any_object()
+                .expect("non-object schema in command line interface")
+                .properties()
+            {
+                let name = *name;
+                if let Some(value) = args.remove(name) {
+                    params.push((name.to_string(), value));
+                }
+            }
+            let value = schema.parse_parameter_strings(&params, true)?;
+
+            let value: T = serde_json::from_value(value)?;
+
+            env.global_options
+                .insert(TypeId::of::<T>(), Box::new(value));
+            Ok(())
+        }
+    }
+
+    /// Get an `Iterator` over the properties of `T`.
+    fn properties(&self) -> impl Iterator<Item = (&'static str, &'static Schema)> {
+        self.schema
+            .any_object()
+            .expect("non-object schema in command line interface")
+            .properties()
+            .map(|(name, _optional, schema)| (*name, *schema))
+    }
+}
+
+pub struct CommandLine<'a> {
+    interface: &'a CommandLineInterface,
+    async_run: Option<fn(ApiFuture) -> Result<Value, Error>>,
+    prefix: String,
+    global_option_schemas: HashMap<&'static str, &'static Schema>,
+    global_option_values: HashMap<String, String>,
+    global_option_types: HashMap<TypeId, &'a OptionEntry>,
+}
+
+impl<'cli> CommandLine<'cli> {
+    pub fn new(interface: &'cli CommandLineInterface) -> Self {
+        Self {
+            interface,
+            async_run: None,
+            prefix: String::new(),
+            global_option_schemas: HashMap::new(),
+            global_option_values: HashMap::new(),
+            global_option_types: HashMap::new(),
+        }
+    }
+
+    pub fn with_async(mut self, async_run: fn(ApiFuture) -> Result<Value, Error>) -> Self {
+        self.async_run = Some(async_run);
+        self
+    }
+
+    pub fn parse<A>(
+        mut self,
+        rpcenv: &mut CliEnvironment,
+        args: A,
+    ) -> Result<Invocation<'cli>, Error>
+    where
+        A: IntoIterator<Item = String>,
+    {
+        let cli = self.interface;
+        let mut args = args.into_iter();
+        self.prefix = args
+            .next()
+            .expect("no parameters passed to CommandLine::parse");
+        self.parse_do(cli, rpcenv, args.collect())
+    }
+
+    fn parse_do(
+        self,
+        cli: &'cli CommandLineInterface,
+        rpcenv: &mut CliEnvironment,
+        args: Vec<String>,
+    ) -> Result<Invocation<'cli>, Error> {
+        match cli {
+            CommandLineInterface::Simple(cli) => self.parse_simple(cli, rpcenv, args),
+            CommandLineInterface::Nested(cli) => self.parse_nested(cli, rpcenv, args),
+        }
+    }
+
+    /// Parse out the current global options and return the remaining `args`.
+    fn handle_current_global_options(&mut self, args: Vec<String>) -> Result<Vec<String>, Error> {
+        let mut global_args = Vec::new();
+        let args = getopts::ParseOptions::new(&mut global_args, &self.global_option_schemas)
+            .stop_at_positional(true)
+            .deny_unknown(true)
+            .parse(args)?;
+        // and merge them into the hash map
+        for (option, argument) in global_args {
+            self.global_option_values.insert(option, argument);
+        }
+
+        Ok(args)
+    }
+
+    fn parse_nested(
+        mut self,
+        cli: &'cli CliCommandMap,
+        rpcenv: &mut CliEnvironment,
+        mut args: Vec<String>,
+    ) -> Result<Invocation<'cli>, Error> {
+        use std::fmt::Write as _;
+
+        command::replace_aliases(&mut args, &cli.aliases);
+
+        // handle possible "global" parameters for the current level:
+        // first add the global args of this level to the known list:
+        for entry in cli.global_options.values() {
+            self.global_option_types
+                .extend(cli.global_options.iter().map(|(id, entry)| (*id, entry)));
+            for (name, schema) in entry.properties() {
+                if self.global_option_schemas.insert(name, schema).is_some() {
+                    panic!(
+                        "duplicate option {name:?} in nested command line interface global options"
+                    );
+                }
+            }
+        }
+
+        let mut args = self.handle_current_global_options(args)?;
+
+        // now deal with the actual subcommand list
+        if args.is_empty() {
+            let mut cmds: Vec<&str> = cli.commands.keys().map(|s| s.as_str()).collect();
+            cmds.sort();
+            let list = cmds.join(", ");
+
+            let err_msg = format!("no command specified.\nPossible commands: {}", list);
+            print_nested_usage_error(&self.prefix, cli, &err_msg);
+            return Err(format_err!("{}", err_msg));
+        }
+
+        let (_, sub_cmd) = match cli.find_command(&args[0]) {
+            Some(cmd) => cmd,
+            None => {
+                let err_msg = format!("no such command '{}'", args[0]);
+                print_nested_usage_error(&self.prefix, cli, &err_msg);
+                return Err(format_err!("{}", err_msg));
+            }
+        };
+
+        let _ = write!(&mut self.prefix, " {}", args.remove(0));
+
+        self.parse_do(sub_cmd, rpcenv, args)
+    }
+
+    fn parse_simple(
+        mut self,
+        cli: &'cli CliCommand,
+        rpcenv: &mut CliEnvironment,
+        args: Vec<String>,
+    ) -> Result<Invocation<'cli>, Error> {
+        let args = self.handle_current_global_options(args)?;
+        self.build_global_options(&mut *rpcenv)?;
+        Ok(Invocation {
+            call: Box::new(move |rpcenv| {
+                command::handle_simple_command(&self.prefix, cli, args, rpcenv, self.async_run)
+            }),
+        })
+    }
+
+    fn build_global_options(&mut self, env: &mut CliEnvironment) -> Result<(), Error> {
+        for entry in self.global_option_types.values() {
+            (entry.parse)(env, &mut self.global_option_values)?;
+        }
+
+        Ok(())
+    }
+}
+
+type InvocationFn<'cli> =
+    Box<dyn FnOnce(&mut CliEnvironment) -> Result<(), Error> + Send + Sync + 'cli>;
+
+/// After parsing the command line, this is responsible for calling the API method with its
+/// parameters, and gives the user a chance to adapt the RPC environment before doing so.
+pub struct Invocation<'cli> {
+    call: InvocationFn<'cli>,
+}
+
+impl Invocation<'_> {
+    pub fn call(self, rpcenv: &mut CliEnvironment) -> Result<(), Error> {
+        (self.call)(rpcenv)
     }
 }

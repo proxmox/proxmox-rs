@@ -91,22 +91,23 @@ async fn handle_simple_command_future(
     Ok(())
 }
 
-fn handle_simple_command(
+pub(crate) fn handle_simple_command(
     prefix: &str,
     cli_cmd: &CliCommand,
     args: Vec<String>,
-    mut rpcenv: CliEnvironment,
+    rpcenv: &mut CliEnvironment,
     run: Option<fn(ApiFuture) -> Result<Value, Error>>,
 ) -> Result<(), Error> {
     let params = parse_arguments(prefix, cli_cmd, args)?;
 
     let result = match cli_cmd.info.handler {
-        ApiHandler::Sync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv),
-        ApiHandler::StreamingSync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
-            .and_then(|r| r.to_value().map_err(Error::from)),
+        ApiHandler::Sync(handler) => (handler)(params, cli_cmd.info, rpcenv),
+        ApiHandler::StreamingSync(handler) => {
+            (handler)(params, cli_cmd.info, rpcenv).and_then(|r| r.to_value().map_err(Error::from))
+        }
         ApiHandler::Async(handler) => match run {
             Some(run) => {
-                let future = (handler)(params, cli_cmd.info, &mut rpcenv);
+                let future = (handler)(params, cli_cmd.info, rpcenv);
                 (run)(future)
             }
             None => {
@@ -260,7 +261,10 @@ pub(crate) fn help_command_def() -> CliCommand {
     CliCommand::new(&API_METHOD_COMMAND_HELP).arg_param(&["command"])
 }
 
-fn replace_aliases(args: &mut Vec<String>, aliases: &[(Vec<&'static str>, Vec<&'static str>)]) {
+pub(crate) fn replace_aliases(
+    args: &mut Vec<String>,
+    aliases: &[(Vec<&'static str>, Vec<&'static str>)],
+) {
     for (old, new) in aliases {
         if args.len() < old.len() {
             continue;
@@ -314,19 +318,19 @@ pub fn handle_command(
     def: Arc<CommandLineInterface>,
     prefix: &str,
     mut args: Vec<String>,
-    rpcenv: CliEnvironment,
+    mut rpcenv: CliEnvironment,
     run: Option<fn(ApiFuture) -> Result<Value, Error>>,
 ) -> Result<(), Error> {
     set_help_context(Some(def.clone()));
 
     let result = match &*def {
         CommandLineInterface::Simple(ref cli_cmd) => {
-            handle_simple_command(prefix, cli_cmd, args, rpcenv, run)
+            handle_simple_command(prefix, cli_cmd, args, &mut rpcenv, run)
         }
         CommandLineInterface::Nested(ref map) => {
             let mut prefix = prefix.to_string();
             let cli_cmd = parse_nested_command(&mut prefix, map, &mut args)?;
-            handle_simple_command(&prefix, cli_cmd, args, rpcenv, run)
+            handle_simple_command(&prefix, cli_cmd, args, &mut rpcenv, run)
         }
     };
 

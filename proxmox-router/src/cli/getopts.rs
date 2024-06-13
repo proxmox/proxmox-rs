@@ -256,3 +256,137 @@ fn test_argument_paramenter() {
         assert!(remaining.is_empty());
     }
 }
+
+pub(crate) struct ParseOptions<'t, 'o> {
+    target: &'t mut Vec<(String, String)>,
+    option_schemas: &'o HashMap<&'o str, &'static Schema>,
+    stop_at_positional: bool,
+    deny_unknown: bool,
+}
+
+impl<'t, 'o> ParseOptions<'t, 'o> {
+    /// Create a new option parser.
+    pub fn new(
+        target: &'t mut Vec<(String, String)>,
+        option_schemas: &'o HashMap<&'o str, &'static Schema>,
+    ) -> Self {
+        Self {
+            target,
+            option_schemas,
+            stop_at_positional: false,
+            deny_unknown: false,
+        }
+    }
+
+    /// Builder style option to deny unknown parameters.
+    pub fn deny_unknown(mut self, deny: bool) -> Self {
+        self.deny_unknown = deny;
+        self
+    }
+
+    /// Builder style option to set whether to stop at positional parameters.
+    /// The `parse()` method will return the rest of the parameters including the first positional one.
+    pub fn stop_at_positional(mut self, stop: bool) -> Self {
+        self.stop_at_positional = stop;
+        self
+    }
+
+    /// Parse arguments with the current configuration.
+    /// Returns the positional parameters.
+    /// If `stop_at_positional` is set, non-positional parameters after the first positional one
+    /// are also included in the returned list.
+    pub fn parse<A, AI>(self, args: A) -> Result<Vec<AI>, ParameterError>
+    where
+        A: IntoIterator<Item = AI>,
+        AI: AsRef<str>,
+    {
+        parse_parameters(args, self)
+    }
+}
+
+pub(crate) fn parse_parameters<A, AI>(
+    args: A,
+    parse_opts: ParseOptions<'_, '_>,
+) -> Result<Vec<AI>, ParameterError>
+where
+    A: IntoIterator<Item = AI>,
+    AI: AsRef<str>,
+{
+    let mut errors = ParameterError::new();
+    let mut positional = Vec::new();
+
+    let mut args = args.into_iter().peekable();
+    while let Some(orig_arg) = args.next() {
+        let arg = orig_arg.as_ref();
+
+        if arg == "--" {
+            break;
+        }
+
+        let option = match arg.strip_prefix("--") {
+            Some(opt) => opt,
+            None => {
+                positional.push(orig_arg);
+                if parse_opts.stop_at_positional {
+                    break;
+                }
+                continue;
+            }
+        };
+
+        if let Some(eq) = option.find('=') {
+            let (option, argument) = (&option[..eq], &option[(eq + 1)..]);
+            if parse_opts.deny_unknown && !parse_opts.option_schemas.contains_key(option) {
+                errors.push(option.to_string(), format_err!("unknown option {option:?}"));
+            }
+            parse_opts
+                .target
+                .push((option.to_string(), argument.to_string()));
+            continue;
+        }
+
+        if parse_opts.deny_unknown && !parse_opts.option_schemas.contains_key(option) {
+            errors.push(option.to_string(), format_err!("unknown option {option:?}"));
+        }
+
+        match parse_opts.option_schemas.get(option) {
+            Some(Schema::Boolean(schema)) => {
+                if let Some(value) = args.next_if(|v| parse_boolean(v.as_ref()).is_ok()) {
+                    parse_opts
+                        .target
+                        .push((option.to_string(), value.as_ref().to_string()));
+                } else {
+                    // next parameter is not a boolean value
+                    if schema.default == Some(true) {
+                        // default-true booleans cannot be passed without values:
+                        errors.push(option.to_string(), format_err!("missing boolean value."));
+                    }
+                    parse_opts
+                        .target
+                        .push((option.to_string(), "true".to_string()))
+                }
+            }
+            _ => {
+                // no schema, assume `--key value`.
+                let next = match args.next() {
+                    Some(next) => next.as_ref().to_string(),
+                    None => {
+                        errors.push(option.to_string(), format_err!("missing parameter value."));
+                        break;
+                    }
+                };
+                parse_opts
+                    .target
+                    .push((option.to_string(), next.to_string()));
+                continue;
+            }
+        }
+    }
+
+    if !errors.is_empty() {
+        return Err(errors);
+    }
+
+    positional.extend(args);
+    Ok(positional)
+}
