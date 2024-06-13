@@ -5,10 +5,15 @@ use serde_json::Value;
 /// Helper to get around `RpcEnvironment: Sized`
 pub trait AsAny {
     fn as_any(&self) -> &(dyn Any + Send);
+    fn as_any_mut(&mut self) -> &mut (dyn Any + Send);
 }
 
 impl<T: Any + Send> AsAny for T {
     fn as_any(&self) -> &(dyn Any + Send) {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut (dyn Any + Send) {
         self
     }
 }
