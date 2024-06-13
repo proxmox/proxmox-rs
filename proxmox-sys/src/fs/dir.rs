@@ -14,7 +14,7 @@ use crate::fs::{fchown, CreateOptions};
 /// Creates directory at the provided path with specified ownership.
 ///
 /// Errors if the directory already exists.
-pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(), nix::Error> {
+pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(), Error> {
     // clippy bug?: from_bits_truncate is actually a const fn...
     #[allow(clippy::or_fun_call)]
     let mode: stat::Mode = options
@@ -22,8 +22,12 @@ pub fn create_dir<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<(),
         .unwrap_or(stat::Mode::from_bits_truncate(0o750));
 
     let path = path.as_ref();
-    nix::unistd::mkdir(path, mode)?;
-    unistd::chown(path, options.owner, options.group)?;
+
+    nix::unistd::mkdir(path, mode)
+        .map_err(|err| format_err!("unable to create directory {path:?} - {err}"))?;
+
+    unistd::chown(path, options.owner, options.group)
+        .map_err(|err| format_err!("unable to set ownership for directory {path:?} - {err}"))?;
 
     Ok(())
 }
@@ -66,7 +70,7 @@ pub fn ensure_dir_exists<P: AsRef<Path>>(
     nix::sys::stat::fchmod(fd.as_raw_fd(), mode)
         .map_err(|err| format_err!("unable to set mode for directory {path:?} - {err}"))?;
     nix::unistd::fchown(fd.as_raw_fd(), uid, gid)
-        .map_err(|err| format_err!("unable to set ownership directory {path:?} - {err}"))?;
+        .map_err(|err| format_err!("unable to set ownership for directory {path:?} - {err}"))?;
 
     Ok(())
 }

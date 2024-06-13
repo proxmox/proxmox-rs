@@ -23,8 +23,8 @@ pub fn init<P: AsRef<Path>>(acme_config_dir: P, create_subdirs: bool) -> Result<
     }
 
     if create_subdirs {
-        create_secret_dir(self::acme_config_dir())?;
-        create_secret_dir(acme_account_dir())?;
+        create_secret_dir(self::acme_config_dir(), false)?;
+        create_secret_dir(acme_account_dir(), false)?;
     }
 
     Ok(())

@@ -3,7 +3,6 @@ use std::path::Path;
 use anyhow::Error;
 use nix::sys::stat::Mode;
 
-use proxmox_sys::error::SysError;
 use proxmox_sys::fs::CreateOptions;
 
 use super::{get_api_user, get_priv_user};
@@ -91,14 +90,11 @@ pub fn replace_secret_config<P: AsRef<Path>>(path: P, data: &[u8]) -> Result<(),
 
 /// Creates a directory owned by `priv_user.uid:priv_user.gid` with permission `0700`.
 ///
-/// Simply returns Ok if the directory already exists.
-pub fn create_secret_dir<P: AsRef<Path>>(dir: P) -> Result<(), Error> {
+/// Simply returns Ok if the directory already exists. Directory permissions are verified
+/// and raise an error if enforce_permissions is set.
+pub fn create_secret_dir<P: AsRef<Path>>(dir: P, enforce_permissions: bool) -> Result<(), Error> {
     let options = secret_create_options().perm(Mode::from_bits_truncate(0o700));
-    match proxmox_sys::fs::create_dir(dir, options) {
-        Ok(()) => Ok(()),
-        Err(err) if err.already_exists() => Ok(()),
-        Err(err) => Err(err.into()),
-    }
+    proxmox_sys::fs::ensure_dir_exists(dir, &options, enforce_permissions)
 }
 
 /// Atomically write data to file owned by `root:root` with permission `0644`.
