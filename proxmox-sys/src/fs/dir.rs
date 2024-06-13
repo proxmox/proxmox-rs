@@ -81,7 +81,7 @@ pub fn ensure_dir_exists<P: AsRef<Path>>(
 /// # use nix::sys::stat::Mode;
 /// # use nix::unistd::{Gid, Uid};
 /// # use proxmox_sys::fs::{create_path, CreateOptions};
-/// # fn code() -> Result<(), Error> {
+/// # fn code() -> Result<(), anyhow::Error> {
 /// create_path(
 ///     "/var/lib/mytool/wwwdata",
 ///     None,
