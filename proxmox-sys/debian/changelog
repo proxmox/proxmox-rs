@@ -1,3 +1,16 @@
+rust-proxmox-sys (0.5.6-1) bookworm; urgency=medium
+
+  * fs: make file parameter generic in CreateOptions
+
+  * fs: add helpers to check file and directory permissions
+
+  * fs: use 0750 as default for directory permissions
+
+  * fs: change error of create_dir to include the path, this changes the error
+    type from nix::Error to anyhow::Error
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 17 Jun 2024 14:04:41 +0200
+
 rust-proxmox-sys (0.5.5-1) bookworm; urgency=medium
 
   * crypt: use constant time comparison for password verification
