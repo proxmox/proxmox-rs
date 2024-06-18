@@ -237,7 +237,7 @@ pub struct CliCommandMap {
     pub usage_skip_options: &'static [&'static str],
 
     /// A set of options common to all subcommands. Only object schemas can be used here.
-    pub(crate) global_options: HashMap<TypeId, OptionEntry>,
+    pub(crate) global_options: HashMap<TypeId, GlobalOptions>,
 }
 
 impl CliCommandMap {
@@ -295,19 +295,16 @@ impl CliCommandMap {
 
     /// Builder style method to set extra options for the entire set of subcommands.
     /// Can be used multiple times.
-    pub fn global_option<T>(mut self) -> Self
-    where
-        T: Send + Sync + Any + ApiType + for<'a> Deserialize<'a>,
-    {
-        if self
-            .global_options
-            .insert(TypeId::of::<T>(), OptionEntry::of::<T>())
-            .is_some()
-        {
+    pub fn global_option(mut self, opts: GlobalOptions) -> Self {
+        if self.global_options.insert(opts.type_id, opts).is_some() {
             panic!("cannot add same option struct multiple times to command line interface");
         }
         self
     }
+
+    /// Builder style method to set extra options for the entire set of subcommands, taking a
+    /// prepared `GlobalOptions` for potential
+    /// Can be used multiple times.
 
     /// Finish the command line interface.
     pub fn build(self) -> CommandLineInterface {
@@ -334,21 +331,24 @@ impl From<CliCommandMap> for CommandLineInterface {
 }
 
 /// Options covering an entire hierarchy set of subcommands.
-#[derive(Clone)]
-pub(crate) struct OptionEntry {
+pub struct GlobalOptions {
+    type_id: TypeId,
     schema: &'static Schema,
     parse: fn(env: &mut CliEnvironment, &mut HashMap<String, String>) -> Result<(), Error>,
+    completion_functions: HashMap<String, CompletionFunction>,
 }
 
-impl OptionEntry {
+impl GlobalOptions {
     /// Get an entry for an API type `T`.
-    fn of<T>() -> Self
+    pub fn of<T>() -> Self
     where
         T: Send + Sync + Any + ApiType + for<'a> Deserialize<'a>,
     {
         return Self {
+            type_id: TypeId::of::<T>(),
             schema: &T::API_SCHEMA,
             parse: parse_option_entry::<T>,
+            completion_functions: HashMap::new(),
         };
 
         /// Extract known parameters from the current argument hash and store the parsed `T` in the
@@ -388,6 +388,12 @@ impl OptionEntry {
         }
     }
 
+    /// Set completion functions.
+    pub fn completion_cb(mut self, param_name: &str, cb: CompletionFunction) -> Self {
+        self.completion_functions.insert(param_name.into(), cb);
+        self
+    }
+
     /// Get an `Iterator` over the properties of `T`.
     fn properties(&self) -> impl Iterator<Item = (&'static str, &'static Schema)> {
         self.schema
@@ -403,11 +409,11 @@ pub struct CommandLine {
     async_run: Option<fn(ApiFuture) -> Result<Value, Error>>,
 }
 
-struct CommandLineParseState {
+struct CommandLineParseState<'cli> {
     prefix: String,
     global_option_schemas: HashMap<&'static str, &'static Schema>,
     global_option_values: HashMap<String, String>,
-    global_option_types: HashMap<TypeId, OptionEntry>,
+    global_option_types: HashMap<TypeId, &'cli GlobalOptions>,
     async_run: Option<fn(ApiFuture) -> Result<Value, Error>>,
 }
 
@@ -445,8 +451,8 @@ impl CommandLine {
     }
 }
 
-impl CommandLineParseState {
-    fn parse_do<'cli>(
+impl<'cli> CommandLineParseState<'cli> {
+    fn parse_do(
         self,
         cli: &'cli CommandLineInterface,
         rpcenv: &mut CliEnvironment,
@@ -474,13 +480,10 @@ impl CommandLineParseState {
     }
 
     /// Enable the current global options to be recognized by the argument parser.
-    fn enable_global_options(&mut self, cli: &CliCommandMap) {
+    fn enable_global_options(&mut self, cli: &'cli CliCommandMap) {
         for entry in cli.global_options.values() {
-            self.global_option_types.extend(
-                cli.global_options
-                    .iter()
-                    .map(|(id, entry)| (*id, entry.clone())),
-            );
+            self.global_option_types
+                .extend(cli.global_options.iter().map(|(id, entry)| (*id, entry)));
             for (name, schema) in entry.properties() {
                 if self.global_option_schemas.insert(name, schema).is_some() {
                     panic!(
@@ -491,7 +494,7 @@ impl CommandLineParseState {
         }
     }
 
-    fn parse_nested<'cli>(
+    fn parse_nested(
         mut self,
         cli: &'cli CliCommandMap,
         rpcenv: &mut CliEnvironment,
@@ -530,7 +533,7 @@ impl CommandLineParseState {
         self.parse_do(sub_cmd, rpcenv, args)
     }
 
-    fn parse_simple<'cli>(
+    fn parse_simple(
         mut self,
         cli: &'cli CliCommand,
         rpcenv: &mut CliEnvironment,
