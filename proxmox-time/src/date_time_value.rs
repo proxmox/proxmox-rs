@@ -5,6 +5,7 @@ pub(crate) enum DateTimeValue {
     Repeated(u32, u32, Option<u32>),
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl DateTimeValue {
     // Test if the entry contains the value
     pub fn contains(&self, value: u32) -> bool {
