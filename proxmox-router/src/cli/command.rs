@@ -83,7 +83,7 @@ async fn handle_simple_command_future(
             }
         }
         Err(err) => {
-            eprintln!("Error: {}", err);
+            eprintln!("Error: {err:?}");
             return Err(err);
         }
     }
@@ -135,7 +135,7 @@ fn handle_simple_command(
             }
         }
         Err(err) => {
-            eprintln!("Error: {}", err);
+            eprintln!("Error: {err:?}");
             return Err(err);
         }
     }
