@@ -15,10 +15,9 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::io::{self, Write};
+use std::sync::Arc;
 
-use anyhow::{bail, Error};
-
-use anyhow::{format_err, Error};
+use anyhow::{bail, format_err, Error};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -335,6 +334,7 @@ impl From<CliCommandMap> for CommandLineInterface {
 }
 
 /// Options covering an entire hierarchy set of subcommands.
+#[derive(Clone)]
 pub(crate) struct OptionEntry {
     schema: &'static Schema,
     parse: fn(env: &mut CliEnvironment, &mut HashMap<String, String>) -> Result<(), Error>,
@@ -398,24 +398,24 @@ impl OptionEntry {
     }
 }
 
-pub struct CommandLine<'a> {
-    interface: &'a CommandLineInterface,
+pub struct CommandLine {
+    interface: Arc<CommandLineInterface>,
     async_run: Option<fn(ApiFuture) -> Result<Value, Error>>,
+}
+
+struct CommandLineParseState {
     prefix: String,
     global_option_schemas: HashMap<&'static str, &'static Schema>,
     global_option_values: HashMap<String, String>,
-    global_option_types: HashMap<TypeId, &'a OptionEntry>,
+    global_option_types: HashMap<TypeId, OptionEntry>,
+    async_run: Option<fn(ApiFuture) -> Result<Value, Error>>,
 }
 
-impl<'cli> CommandLine<'cli> {
-    pub fn new(interface: &'cli CommandLineInterface) -> Self {
+impl CommandLine {
+    pub fn new(interface: CommandLineInterface) -> Self {
         Self {
-            interface,
+            interface: Arc::new(interface),
             async_run: None,
-            prefix: String::new(),
-            global_option_schemas: HashMap::new(),
-            global_option_values: HashMap::new(),
-            global_option_types: HashMap::new(),
         }
     }
 
@@ -424,23 +424,29 @@ impl<'cli> CommandLine<'cli> {
         self
     }
 
-    pub fn parse<A>(
-        mut self,
-        rpcenv: &mut CliEnvironment,
-        args: A,
-    ) -> Result<Invocation<'cli>, Error>
+    pub fn parse<A>(&self, rpcenv: &mut CliEnvironment, args: A) -> Result<Invocation, Error>
     where
         A: IntoIterator<Item = String>,
     {
-        let cli = self.interface;
-        let mut args = args.into_iter();
-        self.prefix = args
-            .next()
-            .expect("no parameters passed to CommandLine::parse");
-        self.parse_do(cli, rpcenv, args.collect())
-    }
+        let (prefix, args) = command::prepare_cli_command(&self.interface, args.into_iter());
 
-    fn parse_do(
+        let state = CommandLineParseState {
+            prefix,
+            global_option_schemas: HashMap::new(),
+            global_option_values: HashMap::new(),
+            global_option_types: HashMap::new(),
+            async_run: self.async_run,
+        };
+
+        command::set_help_context(Some(Arc::clone(&self.interface)));
+        let out = state.parse_do(&self.interface, rpcenv, args);
+        command::set_help_context(None);
+        out
+    }
+}
+
+impl CommandLineParseState {
+    fn parse_do<'cli>(
         self,
         cli: &'cli CommandLineInterface,
         rpcenv: &mut CliEnvironment,
@@ -467,7 +473,7 @@ impl<'cli> CommandLine<'cli> {
         Ok(args)
     }
 
-    fn parse_nested(
+    fn parse_nested<'cli>(
         mut self,
         cli: &'cli CliCommandMap,
         rpcenv: &mut CliEnvironment,
@@ -480,8 +486,11 @@ impl<'cli> CommandLine<'cli> {
         // handle possible "global" parameters for the current level:
         // first add the global args of this level to the known list:
         for entry in cli.global_options.values() {
-            self.global_option_types
-                .extend(cli.global_options.iter().map(|(id, entry)| (*id, entry)));
+            self.global_option_types.extend(
+                cli.global_options
+                    .iter()
+                    .map(|(id, entry)| (*id, entry.clone())),
+            );
             for (name, schema) in entry.properties() {
                 if self.global_option_schemas.insert(name, schema).is_some() {
                     panic!(
@@ -518,7 +527,7 @@ impl<'cli> CommandLine<'cli> {
         self.parse_do(sub_cmd, rpcenv, args)
     }
 
-    fn parse_simple(
+    fn parse_simple<'cli>(
         mut self,
         cli: &'cli CliCommand,
         rpcenv: &mut CliEnvironment,

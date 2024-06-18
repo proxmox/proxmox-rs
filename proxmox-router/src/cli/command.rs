@@ -251,7 +251,7 @@ fn help_command(
     Ok(Value::Null)
 }
 
-fn set_help_context(def: Option<Arc<CommandLineInterface>>) {
+pub(crate) fn set_help_context(def: Option<Arc<CommandLineInterface>>) {
     HELP_CONTEXT.with(|ctx| {
         *ctx.borrow_mut() = def;
     });
@@ -339,7 +339,10 @@ pub fn handle_command(
     result
 }
 
-fn prepare_cli_command<A>(def: &CommandLineInterface, mut args: A) -> (String, Vec<String>)
+pub(crate) fn prepare_cli_command<A>(
+    def: &CommandLineInterface,
+    mut args: A,
+) -> (String, Vec<String>)
 where
     A: Iterator<Item = String>,
 {
