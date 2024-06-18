@@ -473,18 +473,8 @@ impl CommandLineParseState {
         Ok(args)
     }
 
-    fn parse_nested<'cli>(
-        mut self,
-        cli: &'cli CliCommandMap,
-        rpcenv: &mut CliEnvironment,
-        mut args: Vec<String>,
-    ) -> Result<Invocation<'cli>, Error> {
-        use std::fmt::Write as _;
-
-        command::replace_aliases(&mut args, &cli.aliases);
-
-        // handle possible "global" parameters for the current level:
-        // first add the global args of this level to the known list:
+    /// Enable the current global options to be recognized by the argument parser.
+    fn enable_global_options(&mut self, cli: &CliCommandMap) {
         for entry in cli.global_options.values() {
             self.global_option_types.extend(
                 cli.global_options
@@ -499,6 +489,19 @@ impl CommandLineParseState {
                 }
             }
         }
+    }
+
+    fn parse_nested<'cli>(
+        mut self,
+        cli: &'cli CliCommandMap,
+        rpcenv: &mut CliEnvironment,
+        mut args: Vec<String>,
+    ) -> Result<Invocation<'cli>, Error> {
+        use std::fmt::Write as _;
+
+        command::replace_aliases(&mut args, &cli.aliases);
+
+        self.enable_global_options(cli);
 
         let mut args = self.handle_current_global_options(args)?;
 

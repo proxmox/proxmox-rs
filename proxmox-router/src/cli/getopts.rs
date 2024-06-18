@@ -261,7 +261,9 @@ pub(crate) struct ParseOptions<'t, 'o> {
     target: &'t mut Vec<(String, String)>,
     option_schemas: &'o HashMap<&'o str, &'static Schema>,
     stop_at_positional: bool,
+    stop_at_unknown: bool,
     deny_unknown: bool,
+    retain_separator: bool,
 }
 
 impl<'t, 'o> ParseOptions<'t, 'o> {
@@ -274,13 +276,30 @@ impl<'t, 'o> ParseOptions<'t, 'o> {
             target,
             option_schemas,
             stop_at_positional: false,
+            stop_at_unknown: false,
             deny_unknown: false,
+            retain_separator: false,
         }
     }
 
     /// Builder style option to deny unknown parameters.
     pub fn deny_unknown(mut self, deny: bool) -> Self {
         self.deny_unknown = deny;
+        self
+    }
+
+    /// Builder style option to stop parsing on unknown parameters.
+    /// This implies deny_unknown`.
+    /// Useful for bash completion.
+    pub fn stop_at_unknown(mut self, stop: bool) -> Self {
+        self.deny_unknown = stop;
+        self.stop_at_unknown = stop;
+        self
+    }
+
+    /// Builder style option to retain a `--` in the returned argument array.
+    pub fn retain_separator(mut self, stop: bool) -> Self {
+        self.retain_separator = stop;
         self
     }
 
@@ -320,6 +339,9 @@ where
         let arg = orig_arg.as_ref();
 
         if arg == "--" {
+            if parse_opts.retain_separator {
+                positional.push(orig_arg);
+            }
             break;
         }
 
@@ -337,6 +359,10 @@ where
         if let Some(eq) = option.find('=') {
             let (option, argument) = (&option[..eq], &option[(eq + 1)..]);
             if parse_opts.deny_unknown && !parse_opts.option_schemas.contains_key(option) {
+                if parse_opts.stop_at_unknown {
+                    positional.push(orig_arg);
+                    break;
+                }
                 errors.push(option.to_string(), format_err!("unknown option {option:?}"));
             }
             parse_opts
@@ -346,6 +372,10 @@ where
         }
 
         if parse_opts.deny_unknown && !parse_opts.option_schemas.contains_key(option) {
+            if parse_opts.stop_at_unknown {
+                positional.push(orig_arg);
+                break;
+            }
             errors.push(option.to_string(), format_err!("unknown option {option:?}"));
         }
 

@@ -1,9 +1,13 @@
+use std::any::TypeId;
 use std::collections::HashMap;
 
 use proxmox_schema::*;
 
 use super::help_command_def;
-use super::{shellword_split_unclosed, CliCommand, CommandLineInterface, CompletionFunction};
+use super::{
+    shellword_split_unclosed, CliCommand, CliCommandMap, CommandLineInterface, CompletionFunction,
+    OptionEntry,
+};
 
 fn record_done_argument(
     done: &mut HashMap<String, String>,
@@ -76,6 +80,7 @@ fn get_property_completion(
 
 fn get_simple_completion(
     cli_cmd: &CliCommand,
+    global_option_schemas: &HashMap<&'static str, &'static Schema>,
     done: &mut HashMap<String, String>,
     arg_param: &[&str], // we remove done arguments
     args: &[String],
@@ -95,9 +100,21 @@ fn get_simple_completion(
                 record_done_argument(done, cli_cmd.info.parameters, prop_name, &args[0]);
                 if args.len() > 1 {
                     if is_array_param {
-                        return get_simple_completion(cli_cmd, done, arg_param, &args[1..]);
+                        return get_simple_completion(
+                            cli_cmd,
+                            global_option_schemas,
+                            done,
+                            arg_param,
+                            &args[1..],
+                        );
                     } else {
-                        return get_simple_completion(cli_cmd, done, &arg_param[1..], &args[1..]);
+                        return get_simple_completion(
+                            cli_cmd,
+                            global_option_schemas,
+                            done,
+                            &arg_param[1..],
+                            &args[1..],
+                        );
                     }
                 }
 
@@ -142,7 +159,13 @@ fn get_simple_completion(
         let last = &args[args.len() - 2];
         if last.starts_with("--") && last.len() > 2 {
             let prop_name = &last[2..];
-            if let Some((_, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
+            if let Some(schema) = global_option_schemas.get(prop_name).copied().or_else(|| {
+                cli_cmd
+                    .info
+                    .parameters
+                    .lookup(prop_name)
+                    .map(|(_, schema)| schema)
+            }) {
                 return get_property_completion(
                     schema,
                     prop_name,
@@ -156,6 +179,15 @@ fn get_simple_completion(
     }
 
     let mut completions = Vec::new();
+    for name in global_option_schemas.keys() {
+        if done.contains_key(*name) {
+            continue;
+        }
+        let option = String::from("--") + name;
+        if option.starts_with(prefix) {
+            completions.push(option);
+        }
+    }
     for (name, _optional, _schema) in cli_cmd.info.parameters.properties() {
         if done.contains_key(*name) {
             continue;
@@ -177,7 +209,7 @@ impl CommandLineInterface {
 
         match self {
             CommandLineInterface::Simple(_) => {
-                get_simple_completion(help_cmd, &mut done, &[], args)
+                get_simple_completion(help_cmd, &HashMap::new(), &mut done, &[], args)
             }
             CommandLineInterface::Nested(map) => {
                 if args.is_empty() {
@@ -198,44 +230,9 @@ impl CommandLineInterface {
                 }
 
                 if first.starts_with('-') {
-                    return get_simple_completion(help_cmd, &mut done, &[], args);
+                    return get_simple_completion(help_cmd, &HashMap::new(), &mut done, &[], args);
                 }
 
-                let mut completions = Vec::new();
-                for cmd in map.commands.keys() {
-                    if cmd.starts_with(first) {
-                        completions.push(cmd.to_string());
-                    }
-                }
-                completions
-            }
-        }
-    }
-
-    fn get_nested_completion(&self, args: &[String]) -> Vec<String> {
-        match self {
-            CommandLineInterface::Simple(cli_cmd) => {
-                let mut done: HashMap<String, String> = HashMap::new();
-                cli_cmd.fixed_param.iter().for_each(|(key, value)| {
-                    record_done_argument(&mut done, cli_cmd.info.parameters, key, value);
-                });
-                get_simple_completion(cli_cmd, &mut done, cli_cmd.arg_param, args)
-            }
-            CommandLineInterface::Nested(map) => {
-                if args.is_empty() {
-                    let mut completions = Vec::new();
-                    for cmd in map.commands.keys() {
-                        completions.push(cmd.to_string());
-                    }
-                    return completions;
-                }
-                let first = &args[0];
-                if args.len() > 1 {
-                    if let Some((_, sub_cmd)) = map.find_command(first) {
-                        return sub_cmd.get_nested_completion(&args[1..]);
-                    }
-                    return Vec::new();
-                }
                 let mut completions = Vec::new();
                 for cmd in map.commands.keys() {
                     if cmd.starts_with(first) {
@@ -303,10 +300,143 @@ impl CommandLineInterface {
         let completions = if !args.is_empty() && args[0] == "help" {
             self.get_help_completion(&help_command_def(), &args[1..])
         } else {
-            self.get_nested_completion(&args)
+            CompletionParser::default().get_completions(self, args)
         };
 
         (start, completions)
+    }
+}
+
+#[derive(Default)]
+struct CompletionParser {
+    global_option_schemas: HashMap<&'static str, &'static Schema>,
+    global_option_types: HashMap<TypeId, OptionEntry>,
+    done_arguments: HashMap<String, String>,
+}
+
+impl CompletionParser {
+    fn record_done_argument(&mut self, parameters: ParameterSchema, key: &str, value: &str) {
+        if let Some(schema) = self
+            .global_option_schemas
+            .get(key)
+            .copied()
+            .or_else(|| parameters.lookup(key).map(|(_, schema)| schema))
+        {
+            match schema {
+                Schema::Array(_) => { /* do nothing ?? */ }
+                _ => {
+                    self.done_arguments.insert(key.to_owned(), value.to_owned());
+                }
+            }
+        }
+    }
+
+    /// Enable the current global options to be recognized by the argument parser.
+    fn enable_global_options(&mut self, cli: &CliCommandMap) {
+        for entry in cli.global_options.values() {
+            self.global_option_types.extend(
+                cli.global_options
+                    .iter()
+                    .map(|(id, entry)| (*id, entry.clone())),
+            );
+            for (name, schema) in entry.properties() {
+                if self.global_option_schemas.insert(name, schema).is_some() {
+                    panic!(
+                        "duplicate option {name:?} in nested command line interface global options"
+                    );
+                }
+            }
+        }
+    }
+
+    fn get_completions(
+        &mut self,
+        cli: &CommandLineInterface,
+        mut args: Vec<String>,
+    ) -> Vec<String> {
+        match cli {
+            CommandLineInterface::Simple(cli_cmd) => {
+                cli_cmd.fixed_param.iter().for_each(|(key, value)| {
+                    self.record_done_argument(cli_cmd.info.parameters, key, value);
+                });
+                let args = match self.handle_current_global_options(args) {
+                    Ok(args) => args,
+                    Err(_) => return Vec::new(),
+                };
+                get_simple_completion(
+                    cli_cmd,
+                    &self.global_option_schemas,
+                    &mut self.done_arguments,
+                    cli_cmd.arg_param,
+                    &args,
+                )
+            }
+            CommandLineInterface::Nested(map) => {
+                super::command::replace_aliases(&mut args, &map.aliases);
+
+                self.enable_global_options(map);
+                let mut args = match self.handle_current_global_options(args) {
+                    Ok(args) => args,
+                    Err(_) => return Vec::new(),
+                };
+
+                if args.len() <= 1 {
+                    let filter = args.first().map(|s| s.as_str()).unwrap_or_default();
+
+                    if filter.starts_with('-') {
+                        return self
+                            .global_option_schemas
+                            .keys()
+                            .filter_map(|k| {
+                                let k = format!("--{k}");
+                                k.starts_with(filter).then_some(k)
+                            })
+                            .collect();
+                    }
+
+                    let mut completion: Vec<String> = map
+                        .commands
+                        .keys()
+                        .filter(|cmd| cmd.starts_with(filter))
+                        .cloned()
+                        .collect();
+                    if filter.is_empty() {
+                        completion.extend(
+                            self.global_option_schemas
+                                .keys()
+                                .map(|key| format!("--{key}")),
+                        );
+                    }
+                    return completion;
+                }
+
+                let first = args.remove(0);
+                if let Some((_, sub_cmd)) = map.find_command(&first) {
+                    return self.get_completions(sub_cmd, args);
+                }
+
+                Vec::new()
+            }
+        }
+    }
+
+    /// Parse out the current global options and return the remaining `args`.
+    fn handle_current_global_options(
+        &mut self,
+        args: Vec<String>,
+    ) -> Result<Vec<String>, anyhow::Error> {
+        let mut global_args = Vec::new();
+        let args = super::getopts::ParseOptions::new(&mut global_args, &self.global_option_schemas)
+            .stop_at_positional(true)
+            .stop_at_unknown(true)
+            .retain_separator(true)
+            .parse(args)?;
+        // and merge them into the hash map
+        for (option, argument) in global_args {
+            self.done_arguments.insert(option, argument);
+        }
+
+        Ok(args)
     }
 }
 
@@ -315,7 +445,7 @@ mod test {
     use anyhow::Error;
     use serde_json::Value;
 
-    use proxmox_schema::{BooleanSchema, ObjectSchema, StringSchema};
+    use proxmox_schema::{ApiType, BooleanSchema, ObjectSchema, Schema, StringSchema};
 
     use crate::cli::{CliCommand, CliCommandMap, CommandLineInterface};
     use crate::{ApiHandler, ApiMethod, RpcEnvironment};
@@ -349,12 +479,39 @@ mod test {
         ),
     );
 
+    #[allow(dead_code)]
+    struct GlobalOpts {
+        global: String,
+    }
+
+    impl<'de> serde::Deserialize<'de> for GlobalOpts {
+        fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            unreachable!("not used in tests, implemented to satisfy `.global_option` constraint");
+        }
+    }
+
+    impl ApiType for GlobalOpts {
+        const API_SCHEMA: Schema = ObjectSchema::new(
+            "Global options.",
+            &[(
+                "global",
+                true,
+                &StringSchema::new("A global option.").schema(),
+            )],
+        )
+        .schema();
+    }
+
     fn get_complex_test_cmddef() -> CommandLineInterface {
         let sub_def = CliCommandMap::new()
             .insert("l1c1", CliCommand::new(&API_METHOD_SIMPLE1))
             .insert("l1c2", CliCommand::new(&API_METHOD_SIMPLE1));
 
         let cmd_def = CliCommandMap::new()
+            .global_option::<GlobalOpts>()
             .insert_help()
             .insert("l0sub", CommandLineInterface::Nested(sub_def))
             .insert("l0c1", CliCommand::new(&API_METHOD_SIMPLE1))
@@ -384,17 +541,32 @@ mod test {
     fn test_nested_completion() {
         let cmd_def = get_complex_test_cmddef();
 
-        test_completions(&cmd_def, "", 0, &["help", "l0c1", "l0c2", "l0c3", "l0sub"]);
+        test_completions(
+            &cmd_def,
+            "",
+            0,
+            &["--global", "help", "l0c1", "l0c2", "l0c3", "l0sub"],
+        );
 
-        test_completions(&cmd_def, "l0c1 ", 5, &["--optional-arg", "--required-arg"]);
+        test_completions(
+            &cmd_def,
+            "l0c1 ",
+            5,
+            &["--global", "--optional-arg", "--required-arg"],
+        );
 
-        test_completions(&cmd_def, "l0c1 -", 5, &["--optional-arg", "--required-arg"]);
+        test_completions(
+            &cmd_def,
+            "l0c1 -",
+            5,
+            &["--global", "--optional-arg", "--required-arg"],
+        );
 
         test_completions(
             &cmd_def,
             "l0c1 --",
             5,
-            &["--optional-arg", "--required-arg"],
+            &["--global", "--optional-arg", "--required-arg"],
         );
 
         test_completions(&cmd_def, "l0c1 ---", 5, &[]);
@@ -410,14 +582,21 @@ mod test {
             "l0c1 --required-arg -",
             20,
             // Note: --required-arg is not finished, so it still pops up
-            &["--required-arg", "--optional-arg"],
+            &["--global", "--required-arg", "--optional-arg"],
         );
 
         test_completions(
             &cmd_def,
             "l0c1 --required-arg test -",
             25,
-            &["--optional-arg"],
+            &["--global", "--optional-arg"],
+        );
+
+        test_completions(
+            &cmd_def,
+            "l0c1 --global test -",
+            19,
+            &["--required-arg", "--optional-arg"],
         );
 
         test_completions(
@@ -447,6 +626,9 @@ mod test {
             40,
             &["yes"],
         );
+
+        test_completions(&cmd_def, "l0sub ", 6, &["--global", "l1c1", "l1c2"]);
+        test_completions(&cmd_def, "l0sub -", 6, &["--global"]);
     }
 
     #[test]
