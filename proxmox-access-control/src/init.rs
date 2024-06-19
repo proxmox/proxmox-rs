@@ -72,3 +72,10 @@ pub(crate) fn acl_config_lock() -> PathBuf {
     conf_dir().join(".acl.lck")
 }
 
+pub(crate) fn token_shadow() -> PathBuf {
+    conf_dir().join("token.shadow")
+}
+
+pub(crate) fn token_shadow_lock() -> PathBuf {
+    conf_dir().join("token.shadow.lock")
+}

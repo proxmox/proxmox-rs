@@ -17,9 +17,11 @@ anyhow.workspace = true
 nix.workspace = true
 openssl.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 
 # proxmox-notify.workspace = true
 proxmox-auth-api = { workspace = true, features = [ "api-types" ] }
 proxmox-schema.workspace = true
 proxmox-product-config.workspace = true
+proxmox-sys = { workspace = true, features = [ "crypt" ] }
 proxmox-time.workspace = true
