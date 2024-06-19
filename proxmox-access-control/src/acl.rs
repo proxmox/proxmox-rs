@@ -641,6 +641,9 @@ pub fn save_config(acl: &AclTree) -> Result<(), Error> {
     let conf = acl_config();
     replace_privileged_config(conf, &raw)?;
 
+    // increase cache generation so we reload it next time we access it
+    access_conf().increment_cache_generation()?;
+
     Ok(())
 }
 
