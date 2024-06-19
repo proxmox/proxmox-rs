@@ -1,6 +1,7 @@
 # Shortcut for common operations:
 
-CRATES != /usr/bin/cargo metadata --no-deps --format-version=1 | jq -r .workspace_members'[]' | awk '{ print $$1 }'
+# see proxmox-backup if we ever want to support other prefixes
+CRATES != echo proxmox-*/Cargo.toml | sed -e 's|/Cargo.toml||g'
 
 # By default we just run checks:
 .PHONY: all
