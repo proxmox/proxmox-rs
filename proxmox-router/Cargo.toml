@@ -19,7 +19,7 @@ percent-encoding.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 unicode-width ="0.1.8"
-regex.workspace = true
+regex = { workspace = true, optional = true }
 
 # cli:
 tokio = { workspace = true, features = [], optional = true }
@@ -33,6 +33,6 @@ proxmox-async.workspace = true
 
 [features]
 default = [ "cli", "server" ]
-cli = [ "dep:env_logger", "dep:libc", "dep:rustyline", "dep:tokio" ]
+cli = [ "dep:env_logger", "dep:libc", "dep:rustyline", "dep:tokio", "dep:regex" ]
 server = [ "dep:http", "dep:hyper" ]
 test-harness = [ "proxmox-schema/test-harness" ]
