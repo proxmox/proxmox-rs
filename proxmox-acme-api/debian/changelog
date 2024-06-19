@@ -1,3 +1,13 @@
+rust-proxmox-acme-api (0.1.1-1) bookworm; urgency=medium
+
+  * add function to create certificate revocation
+
+  * add function to create self signed certificates
+
+  * add function to get info from PEM formatted certificates
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Jun 2024 12:06:49 +0200
+
 rust-proxmox-acme-api (0.1.0-1) bookworm; urgency=medium
 
   * initial package
