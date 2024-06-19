@@ -16,7 +16,10 @@ description = "A collection of utilities to implement access control management.
 anyhow.workspace = true
 nix.workspace = true
 openssl.workspace = true
+serde.workspace = true
 
 # proxmox-notify.workspace = true
 proxmox-auth-api = { workspace = true, features = [ "api-types" ] }
+proxmox-schema.workspace = true
 proxmox-product-config.workspace = true
+proxmox-time.workspace = true
