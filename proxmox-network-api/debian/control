@@ -44,8 +44,8 @@ Provides:
  librust-proxmox-network-api-0+default-dev (= ${binary:Version}),
  librust-proxmox-network-api-0.1-dev (= ${binary:Version}),
  librust-proxmox-network-api-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-network-api-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-network-api-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-network-api-0.1.1-dev (= ${binary:Version}),
+ librust-proxmox-network-api-0.1.1+default-dev (= ${binary:Version})
 Description: Network Management API implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-network-api"
 
@@ -59,12 +59,12 @@ Depends:
  librust-nix-0.26+default-dev (>= 0.26.1-~~),
  librust-proxmox-config-digest-0.1+default-dev,
  librust-proxmox-config-digest-0.1+openssl-dev,
- librust-proxmox-product-config-0.1+default-dev,
+ librust-proxmox-product-config-0.2+default-dev,
  librust-proxmox-sys-0.5+default-dev (>= 0.5.5-~~)
 Provides:
  librust-proxmox-network-api-0+impl-dev (= ${binary:Version}),
  librust-proxmox-network-api-0.1+impl-dev (= ${binary:Version}),
- librust-proxmox-network-api-0.1.0+impl-dev (= ${binary:Version})
+ librust-proxmox-network-api-0.1.1+impl-dev (= ${binary:Version})
 Description: Network Management API implementation - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-network-api crate,
  by pulling in any additional dependencies needed by that feature.
