@@ -34,9 +34,9 @@ Provides:
  librust-proxmox-product-config+default-dev (= ${binary:Version}),
  librust-proxmox-product-config-0-dev (= ${binary:Version}),
  librust-proxmox-product-config-0+default-dev (= ${binary:Version}),
- librust-proxmox-product-config-0.1-dev (= ${binary:Version}),
- librust-proxmox-product-config-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-product-config-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-product-config-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-product-config-0.2-dev (= ${binary:Version}),
+ librust-proxmox-product-config-0.2+default-dev (= ${binary:Version}),
+ librust-proxmox-product-config-0.2.0-dev (= ${binary:Version}),
+ librust-proxmox-product-config-0.2.0+default-dev (= ${binary:Version})
 Description: Configuration file handling for Proxmox products - Rust source code
  Source code for Debianized Rust crate "proxmox-product-config"
