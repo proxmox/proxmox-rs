@@ -84,10 +84,7 @@ impl AclTreeNode {
 
         for (role, propagate) in roles {
             if *propagate || leaf {
-                if access_conf()
-                    .role_no_access()
-                    .map_or_else(|| false, |r| r == role)
-                {
+                if access_conf().role_no_access() == Some(role) {
                     // return a map with a single role 'NoAccess'
                     let mut map = HashMap::new();
                     map.insert(role.to_string(), false);
@@ -103,8 +100,7 @@ impl AclTreeNode {
     fn extract_group_roles(&self, _user: &Userid, leaf: bool) -> HashMap<String, bool> {
         let mut map = HashMap::new();
 
-        #[allow(clippy::for_kv_map)]
-        for (_group, roles) in &self.groups {
+        for roles in self.groups.values() {
             let is_member = false; // fixme: check if user is member of the group
             if !is_member {
                 continue;
@@ -112,10 +108,7 @@ impl AclTreeNode {
 
             for (role, propagate) in roles {
                 if *propagate || leaf {
-                    if access_conf()
-                        .role_no_access()
-                        .map_or_else(|| false, |r| r == role)
-                    {
+                    if access_conf().role_no_access() == Some(role) {
                         // return a map with a single role 'NoAccess'
                         let mut map = HashMap::new();
                         map.insert(role.to_string(), false);
