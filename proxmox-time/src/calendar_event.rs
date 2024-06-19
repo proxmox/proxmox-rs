@@ -1,6 +1,3 @@
-#[cfg(not(target_arch = "wasm32"))]
-use std::convert::TryInto;
-
 use anyhow::Error;
 use nom::{
     bytes::complete::tag,

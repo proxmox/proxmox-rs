@@ -1,8 +1,5 @@
 use std::cmp::{Ordering, PartialOrd};
 
-#[cfg(not(target_arch = "wasm32"))]
-use std::convert::{TryFrom, TryInto};
-
 use anyhow::Error;
 use nom::{
     bytes::complete::tag, character::complete::space0, error::context, multi::separated_list1,
