@@ -1,0 +1,5 @@
+rust-proxmox-access-control (0.1.0-1) bookworm; urgency=medium
+
+  * initial packaging
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Jun 2024 14:44:26 +0200
