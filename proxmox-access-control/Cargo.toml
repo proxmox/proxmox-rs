@@ -1,0 +1,22 @@
+[package]
+name = "proxmox-access-control"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+exclude.workspace = true
+rust-version.workspace = true
+description = "A collection of utilities to implement access control management."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow.workspace = true
+nix.workspace = true
+openssl.workspace = true
+
+# proxmox-notify.workspace = true
+proxmox-auth-api = { workspace = true, features = [ "api-types" ] }
+proxmox-product-config.workspace = true
