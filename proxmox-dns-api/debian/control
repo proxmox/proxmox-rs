@@ -46,8 +46,8 @@ Provides:
  librust-proxmox-dns-api-0+default-dev (= ${binary:Version}),
  librust-proxmox-dns-api-0.1-dev (= ${binary:Version}),
  librust-proxmox-dns-api-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-dns-api-0.1.1-dev (= ${binary:Version}),
+ librust-proxmox-dns-api-0.1.1+default-dev (= ${binary:Version})
 Description: DNS Management API implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-dns-api"
 
@@ -58,13 +58,13 @@ Depends:
  ${misc:Depends},
  librust-proxmox-dns-api-dev (= ${binary:Version}),
  librust-proxmox-config-digest-0.1+openssl-dev,
- librust-proxmox-product-config-0.1+default-dev,
+ librust-proxmox-product-config-0.2+default-dev,
  librust-proxmox-sys-0.5+default-dev (>= 0.5.5-~~),
  librust-proxmox-time-1+default-dev (>= 1.1.6-~~)
 Provides:
  librust-proxmox-dns-api-0+impl-dev (= ${binary:Version}),
  librust-proxmox-dns-api-0.1+impl-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0.1.0+impl-dev (= ${binary:Version})
+ librust-proxmox-dns-api-0.1.1+impl-dev (= ${binary:Version})
 Description: DNS Management API implementation - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-dns-api crate, by
  pulling in any additional dependencies needed by that feature.
