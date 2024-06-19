@@ -40,32 +40,9 @@ pub const EMAIL_SCHEMA: Schema = StringSchema::new("E-Mail Address.")
 
 #[api(
     properties: {
-        userid: {
-            type: Userid,
-        },
-        comment: {
-            optional: true,
-            schema: COMMENT_SCHEMA,
-        },
-        enable: {
-            optional: true,
-            schema: ENABLE_USER_SCHEMA,
-        },
-        expire: {
-            optional: true,
-            schema: EXPIRE_USER_SCHEMA,
-        },
-        firstname: {
-            optional: true,
-            schema: FIRST_NAME_SCHEMA,
-        },
-        lastname: {
-            schema: LAST_NAME_SCHEMA,
-            optional: true,
-         },
-        email: {
-            schema: EMAIL_SCHEMA,
-            optional: true,
+        user: {
+            type: User,
+            flatten: true,
         },
         tokens: {
             type: Array,
@@ -91,19 +68,8 @@ pub const EMAIL_SCHEMA: Schema = StringSchema::new("E-Mail Address.")
 #[serde(rename_all = "kebab-case")]
 /// User properties with added list of ApiTokens
 pub struct UserWithTokens {
-    pub userid: Userid,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub comment: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub enable: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub expire: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub firstname: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub lastname: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub email: Option<String>,
+    #[serde(flatten)]
+    pub user: User,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub tokens: Vec<ApiToken>,
     #[serde(skip_serializing_if = "bool_is_false", default)]
@@ -193,7 +159,7 @@ impl ApiToken {
         },
     }
 )]
-#[derive(Serialize, Deserialize, Updater, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Updater, PartialEq, Eq, Clone)]
 /// User properties.
 pub struct User {
     #[updater(skip)]
