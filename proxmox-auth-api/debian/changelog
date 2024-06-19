@@ -1,3 +1,9 @@
+rust-proxmox-auth-api (0.4.1) bookworm; urgency=medium
+
+  * add PasswordAuthenticator
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Jun 2024 12:10:00 +0200
+
 rust-proxmox-auth-api (0.4.0) bookworm; urgency=medium
 
   * move to hmac signing for csrf tokens
