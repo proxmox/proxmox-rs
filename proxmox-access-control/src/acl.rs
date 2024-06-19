@@ -665,6 +665,10 @@ mod test {
             &self.roles
         }
 
+        fn privileges(&self) -> &HashMap<&str, u64> {
+            unreachable!("acl tests don't need privileges")
+        }
+
         fn role_no_access(&self) -> Option<&'static str> {
             Some("NoAccess")
         }

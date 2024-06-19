@@ -1,4 +1,5 @@
 use anyhow::{format_err, Error};
+use proxmox_auth_api::types::{Authid, Userid};
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
@@ -16,6 +17,39 @@ pub trait AccessControlConfig: Send + Sync {
 
     /// Returns a mapping of all recognized roles and their corresponding `u64` value.
     fn roles(&self) -> &HashMap<&str, u64>;
+
+    /// Checks whether an `Authid` has super user privileges or not.
+    ///
+    /// Default: Always returns `false`.
+    fn is_superuser(&self, _auth_id: &Authid) -> bool {
+        false
+    }
+
+    /// Checks whether a user is part of a group.
+    ///
+    /// Default: Always returns `false`.
+    fn is_group_member(&self, _user_id: &Userid, _group: &str) -> bool {
+        false
+    }
+
+    /// Returns the current cache generation of the user and acl configs. If the generation was
+    /// incremented since the last time the cache was queried, the configs are loaded again from
+    /// disk.
+    ///
+    /// Returning `None` will always reload the cache.
+    ///
+    /// Default: Always returns `None`.
+    fn cache_generation(&self) -> Option<usize> {
+        None
+    }
+
+    /// Increment the cache generation of user and acl configs. This indicates that they were
+    /// changed on disk.
+    ///
+    /// Default: Does nothing.
+    fn increment_cache_generation(&self) -> Result<(), Error> {
+        Ok(())
+    }
 
     /// Optionally returns a role that has no access to any resource.
     ///
@@ -70,6 +104,14 @@ pub(crate) fn acl_config() -> PathBuf {
 
 pub(crate) fn acl_config_lock() -> PathBuf {
     conf_dir().join(".acl.lck")
+}
+
+pub(crate) fn user_config() -> PathBuf {
+    conf_dir().join("user.cfg")
+}
+
+pub(crate) fn user_config_lock() -> PathBuf {
+    conf_dir().join(".user.lck")
 }
 
 pub(crate) fn token_shadow() -> PathBuf {
