@@ -115,7 +115,7 @@ proxmox-compression = { version = "0.2.0", path = "proxmox-compression" }
 proxmox-http = { version = "0.9.0", path = "proxmox-http" }
 proxmox-http-error = { version = "0.1.0", path = "proxmox-http-error" }
 proxmox-human-byte = { version = "0.1.0", path = "proxmox-human-byte" }
-proxmox-io = { version = "1.0.0", path = "proxmox-io" }
+proxmox-io = { version = "1.1.0", path = "proxmox-io" }
 proxmox-lang = { version = "1.1", path = "proxmox-lang" }
 proxmox-login = { version = "0.1.0", path = "proxmox-login" }
 proxmox-product-config = { version = "0.2.0", path = "proxmox-product-config" }

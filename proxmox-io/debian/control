@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 12),
  librust-endian-trait-0.6+arrays-dev <!nocheck>,
  librust-endian-trait-0.6+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-io
@@ -28,13 +28,12 @@ Provides:
  librust-proxmox-io+default-dev (= ${binary:Version}),
  librust-proxmox-io-1-dev (= ${binary:Version}),
  librust-proxmox-io-1+default-dev (= ${binary:Version}),
- librust-proxmox-io-1.0-dev (= ${binary:Version}),
- librust-proxmox-io-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-io-1.0.1-dev (= ${binary:Version}),
- librust-proxmox-io-1.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-io-1.1-dev (= ${binary:Version}),
+ librust-proxmox-io-1.1+default-dev (= ${binary:Version}),
+ librust-proxmox-io-1.1.0-dev (= ${binary:Version}),
+ librust-proxmox-io-1.1.0+default-dev (= ${binary:Version})
 Description: Extension traits for Read and Write - Rust source code
- This package contains the source for the Rust proxmox-io crate, packaged by
- debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-io"
 
 Package: librust-proxmox-io+tokio-dev
 Architecture: any
@@ -46,8 +45,8 @@ Depends:
  librust-tokio-1+io-util-dev (>= 1.6-~~)
 Provides:
  librust-proxmox-io-1+tokio-dev (= ${binary:Version}),
- librust-proxmox-io-1.0+tokio-dev (= ${binary:Version}),
- librust-proxmox-io-1.0.1+tokio-dev (= ${binary:Version})
+ librust-proxmox-io-1.1+tokio-dev (= ${binary:Version}),
+ librust-proxmox-io-1.1.0+tokio-dev (= ${binary:Version})
 Description: Extension traits for Read and Write - feature "tokio"
  This metapackage enables feature "tokio" for the Rust proxmox-io crate, by
  pulling in any additional dependencies needed by that feature.

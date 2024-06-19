@@ -1,3 +1,13 @@
+rust-proxmox-io (1.1.0-1) bookworm; urgency=medium
+
+  * fix sparse_copy not copying sparsely on irregular read operations
+
+  * add boxed module for zero/uninitialized boxed byte slices
+
+  * switch to using deny(unsafe_op_in_unsafe_fn)
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Jun 2024 12:20:14 +0200
+
 rust-proxmox-io (1.0.1-1) stable; urgency=medium
 
   * imported pbs-tools/src/sync/std_channel_writer.rs
