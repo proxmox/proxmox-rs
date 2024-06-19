@@ -1,3 +1,11 @@
+rust-proxmox-lang (1.2.0-1) bookworm; urgency=medium
+
+  * mosty code and clippy fixups
+
+  * c_str! should now work in const context
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Jun 2024 12:17:00 +0200
+
 rust-proxmox-lang (1.1.0-1) stable; urgency=medium
 
   * add io_err_other, io_format_err, io_bail and io_bail_last macros
