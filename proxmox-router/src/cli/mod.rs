@@ -12,10 +12,8 @@
 //! - Ability to create interactive commands (using ``rustyline``)
 //! - Supports complex/nested commands
 
-use std::{
-    collections::HashMap,
-    io::{self, Write},
-};
+use std::collections::HashMap;
+use std::io::{self, Write};
 
 use anyhow::{bail, Error};
 
