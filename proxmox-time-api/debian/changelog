@@ -1,3 +1,9 @@
+rust-proxmox-time-api (0.1.2-1) bookworm; urgency=medium
+
+  * upgrade to proxmox-time 2.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jun 2024 13:46:23 +0200
+
 rust-proxmox-time-api (0.1.1-1) bookworm; urgency=medium
 
   * rebuild with new proxmox-product-config dependency version
