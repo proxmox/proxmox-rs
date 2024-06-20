@@ -1,3 +1,11 @@
+rust-proxmox-async (0.4.2) bookworm; urgency=medium
+
+  * the runtime module's block_on is now relaxed a bit since tokio's block_on
+    and block_in_place functions should no longer panic when called within the
+    main thread or the single-threaded runtime
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jun 2024 14:29:41 +0200
+
 rust-proxmox-async (0.4.1) unstable; urgency=medium
 
   * add SenderWriter

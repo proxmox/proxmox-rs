@@ -10,9 +10,9 @@ Build-Depends: debhelper (>= 12),
  librust-futures-0.3+default-dev <!nocheck>,
  librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
  librust-pin-utils-0.1+default-dev <!nocheck>,
- librust-proxmox-io-1+default-dev <!nocheck>,
- librust-proxmox-io-1+tokio-dev <!nocheck>,
- librust-proxmox-lang-1+default-dev (>= 1.1-~~) <!nocheck>,
+ librust-proxmox-io-1+default-dev (>= 1.1.0-~~) <!nocheck>,
+ librust-proxmox-io-1+tokio-dev (>= 1.1.0-~~) <!nocheck>,
+ librust-proxmox-lang-1+default-dev (>= 1.3-~~) <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+net-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+rt-dev (>= 1.6-~~) <!nocheck>,
@@ -21,7 +21,7 @@ Build-Depends: debhelper (>= 12),
  libssl-dev <!nocheck>,
  uuid-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-async
@@ -36,9 +36,9 @@ Depends:
  librust-futures-0.3+default-dev,
  librust-lazy-static-1+default-dev (>= 1.4-~~),
  librust-pin-utils-0.1+default-dev,
- librust-proxmox-io-1+default-dev,
- librust-proxmox-io-1+tokio-dev,
- librust-proxmox-lang-1+default-dev (>= 1.1-~~),
+ librust-proxmox-io-1+default-dev (>= 1.1.0-~~),
+ librust-proxmox-io-1+tokio-dev (>= 1.1.0-~~),
+ librust-proxmox-lang-1+default-dev (>= 1.3-~~),
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+net-dev (>= 1.6-~~),
  librust-tokio-1+rt-dev (>= 1.6-~~),
@@ -52,8 +52,7 @@ Provides:
  librust-proxmox-async-0+default-dev (= ${binary:Version}),
  librust-proxmox-async-0.4-dev (= ${binary:Version}),
  librust-proxmox-async-0.4+default-dev (= ${binary:Version}),
- librust-proxmox-async-0.4.1-dev (= ${binary:Version}),
- librust-proxmox-async-0.4.1+default-dev (= ${binary:Version})
+ librust-proxmox-async-0.4.2-dev (= ${binary:Version}),
+ librust-proxmox-async-0.4.2+default-dev (= ${binary:Version})
 Description: Proxmox async/tokio helpers - Rust source code
- This package contains the source for the Rust proxmox-async crate, packaged by
- debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-async"
