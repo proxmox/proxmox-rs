@@ -1,3 +1,11 @@
+rust-proxmox-rest-server (0.5.3-1) bookworm; urgency=medium
+
+  * upgrade proxmox-time to 2.0
+
+  * clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jun 2024 14:05:39 +0200
+
 rust-proxmox-rest-server (0.5.2-1) bookworm; urgency=medium
 
   * support unix sockets in create_daemon
