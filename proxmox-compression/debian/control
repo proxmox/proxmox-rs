@@ -13,10 +13,10 @@ Build-Depends: debhelper (>= 12),
  librust-flate2-1+default-dev <!nocheck>,
  librust-futures-0.3+default-dev <!nocheck>,
  librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
- librust-proxmox-io-1+default-dev <!nocheck>,
- librust-proxmox-io-1+tokio-dev <!nocheck>,
- librust-proxmox-lang-1+default-dev (>= 1.1-~~) <!nocheck>,
- librust-proxmox-time-1+default-dev (>= 1.1.4-~~) <!nocheck>,
+ librust-proxmox-io-1+default-dev (>= 1.1.0-~~) <!nocheck>,
+ librust-proxmox-io-1+tokio-dev (>= 1.1.0-~~) <!nocheck>,
+ librust-proxmox-lang-1+default-dev (>= 1.3-~~) <!nocheck>,
+ librust-proxmox-time-2+default-dev <!nocheck>,
  librust-tar-0.4+default-dev <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+fs-dev (>= 1.6-~~) <!nocheck>,
@@ -25,7 +25,7 @@ Build-Depends: debhelper (>= 12),
  librust-zstd-0.12+bindgen-dev <!nocheck>,
  librust-zstd-0.12+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-compression
@@ -43,10 +43,10 @@ Depends:
  librust-flate2-1+default-dev,
  librust-futures-0.3+default-dev,
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
- librust-proxmox-io-1+default-dev,
- librust-proxmox-io-1+tokio-dev,
- librust-proxmox-lang-1+default-dev (>= 1.1-~~),
- librust-proxmox-time-1+default-dev (>= 1.1.4-~~),
+ librust-proxmox-io-1+default-dev (>= 1.1.0-~~),
+ librust-proxmox-io-1+tokio-dev (>= 1.1.0-~~),
+ librust-proxmox-lang-1+default-dev (>= 1.3-~~),
+ librust-proxmox-time-2+default-dev,
  librust-tar-0.4+default-dev,
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+fs-dev (>= 1.6-~~),
@@ -60,8 +60,7 @@ Provides:
  librust-proxmox-compression-0+default-dev (= ${binary:Version}),
  librust-proxmox-compression-0.2-dev (= ${binary:Version}),
  librust-proxmox-compression-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-compression-0.2.1-dev (= ${binary:Version}),
- librust-proxmox-compression-0.2.1+default-dev (= ${binary:Version})
+ librust-proxmox-compression-0.2.2-dev (= ${binary:Version}),
+ librust-proxmox-compression-0.2.2+default-dev (= ${binary:Version})
 Description: Contains compression utilitites (such as an Zip Encoder for async rust) - Rust source code
- This package contains the source for the Rust proxmox-compression crate,
- packaged by debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-compression"

@@ -1,3 +1,9 @@
+rust-proxmox-compression (0.2.2-1) bookworm; urgency=medium
+
+  * upgrade proxmox-time to 2.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jun 2024 13:59:28 +0200
+
 rust-proxmox-compression (0.2.1-1) bookworm; urgency=medium
 
   * improve error handling in zip_directory to allow skipping un-zippable file
