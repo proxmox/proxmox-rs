@@ -22,9 +22,9 @@ Provides:
  librust-proxmox-lang+default-dev (= ${binary:Version}),
  librust-proxmox-lang-1-dev (= ${binary:Version}),
  librust-proxmox-lang-1+default-dev (= ${binary:Version}),
- librust-proxmox-lang-1.2-dev (= ${binary:Version}),
- librust-proxmox-lang-1.2+default-dev (= ${binary:Version}),
- librust-proxmox-lang-1.2.0-dev (= ${binary:Version}),
- librust-proxmox-lang-1.2.0+default-dev (= ${binary:Version})
+ librust-proxmox-lang-1.3-dev (= ${binary:Version}),
+ librust-proxmox-lang-1.3+default-dev (= ${binary:Version}),
+ librust-proxmox-lang-1.3.0-dev (= ${binary:Version}),
+ librust-proxmox-lang-1.3.0+default-dev (= ${binary:Version})
 Description: Simple rust language utilities such as try_block, which have no dependencies - Rust source code
  Source code for Debianized Rust crate "proxmox-lang"
