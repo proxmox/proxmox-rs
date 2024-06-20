@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 12),
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-bitflags-1+default-dev (>= 1.2.1-~~) <!nocheck>,
+ librust-bitflags-2+default-dev (>= 2.4-~~) <!nocheck>,
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~) <!nocheck>,
  librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
  librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
@@ -26,7 +26,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-bitflags-1+default-dev (>= 1.2.1-~~),
+ librust-bitflags-2+default-dev (>= 2.4-~~),
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~),
  librust-lazy-static-1+default-dev (>= 1.4-~~),
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
@@ -34,11 +34,11 @@ Depends:
  librust-nom-7+default-dev
 Provides:
  librust-proxmox-time+default-dev (= ${binary:Version}),
- librust-proxmox-time-1-dev (= ${binary:Version}),
- librust-proxmox-time-1+default-dev (= ${binary:Version}),
- librust-proxmox-time-1.1-dev (= ${binary:Version}),
- librust-proxmox-time-1.1+default-dev (= ${binary:Version}),
- librust-proxmox-time-1.1.6-dev (= ${binary:Version}),
- librust-proxmox-time-1.1.6+default-dev (= ${binary:Version})
+ librust-proxmox-time-2-dev (= ${binary:Version}),
+ librust-proxmox-time-2+default-dev (= ${binary:Version}),
+ librust-proxmox-time-2.0-dev (= ${binary:Version}),
+ librust-proxmox-time-2.0+default-dev (= ${binary:Version}),
+ librust-proxmox-time-2.0.0-dev (= ${binary:Version}),
+ librust-proxmox-time-2.0.0+default-dev (= ${binary:Version})
 Description: Time utilities and TmEditor - Rust source code
  Source code for Debianized Rust crate "proxmox-time"
