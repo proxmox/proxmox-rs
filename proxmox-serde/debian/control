@@ -8,12 +8,12 @@ Build-Depends: debhelper (>= 12),
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-base64-0.13+default-dev <!nocheck>,
- librust-proxmox-time-1+default-dev (>= 1.1.4-~~) <!nocheck>,
+ librust-proxmox-time-2+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  uuid-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-serde
@@ -26,7 +26,7 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-base64-0.13+default-dev,
- librust-proxmox-time-1+default-dev (>= 1.1.4-~~),
+ librust-proxmox-time-2+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  uuid-dev
@@ -38,11 +38,10 @@ Provides:
  librust-proxmox-serde-0+default-dev (= ${binary:Version}),
  librust-proxmox-serde-0.1-dev (= ${binary:Version}),
  librust-proxmox-serde-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1.1-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1.1+default-dev (= ${binary:Version})
+ librust-proxmox-serde-0.1.2-dev (= ${binary:Version}),
+ librust-proxmox-serde-0.1.2+default-dev (= ${binary:Version})
 Description: Serde formatting tools - Rust source code
- This package contains the source for the Rust proxmox-serde crate, packaged by
- debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-serde"
 
 Package: librust-proxmox-serde+serde-json-dev
 Architecture: any
@@ -54,7 +53,7 @@ Depends:
 Provides:
  librust-proxmox-serde-0+serde-json-dev (= ${binary:Version}),
  librust-proxmox-serde-0.1+serde-json-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1.1+serde-json-dev (= ${binary:Version})
+ librust-proxmox-serde-0.1.2+serde-json-dev (= ${binary:Version})
 Description: Serde formatting tools - feature "serde_json"
  This metapackage enables feature "serde_json" for the Rust proxmox-serde crate,
  by pulling in any additional dependencies needed by that feature.
