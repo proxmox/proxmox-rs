@@ -4,7 +4,6 @@ use anyhow::{bail, format_err, Error};
 use serde_json::Value;
 use unicode_width::UnicodeWidthStr;
 
-use proxmox_lang::c_str;
 use proxmox_schema::{ObjectSchemaType, OneOfSchema, Schema, SchemaPropertyEntry};
 
 /// allows to configure the default output fromat using environment vars
@@ -254,7 +253,7 @@ impl TableFormatOptions {
             }
         }
 
-        let empty_cstr = c_str!("");
+        let empty_cstr = c"";
 
         use std::ffi::CStr;
         let encoding = unsafe {
@@ -262,7 +261,7 @@ impl TableFormatOptions {
             CStr::from_ptr(libc::nl_langinfo(libc::CODESET))
         };
 
-        if encoding != c_str!("UTF-8") {
+        if encoding != c"UTF-8" {
             me.ascii_delimiters = true;
         }
 

@@ -26,7 +26,6 @@ tokio = { workspace = true, features = [], optional = true }
 rustyline = { version = "9", optional = true }
 libc = { workspace = true, optional = true }
 
-proxmox-lang.workspace = true
 proxmox-http-error.workspace = true
 proxmox-schema.workspace = true
 proxmox-async.workspace = true
