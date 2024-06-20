@@ -1,3 +1,11 @@
+rust-proxmox-notify (0.4.1-1) bookworm; urgency=medium
+
+  * upgrade proxmox-time to 2.0
+
+  * documentation fixups
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jun 2024 14:01:48 +0200
+
 rust-proxmox-notify (0.4.0-1) bookworm; urgency=medium
 
   * switch to file-based templating system
