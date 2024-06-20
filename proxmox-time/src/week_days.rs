@@ -5,7 +5,7 @@ use crate::parse_helpers::{parse_error, IResult};
 
 bitflags! {
     /// Defines one or more days of a week.
-    #[derive(Default)]
+    #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
     pub struct WeekDays: u8 {
         const MONDAY = 1;
         const TUESDAY = 2;

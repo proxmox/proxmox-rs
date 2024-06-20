@@ -14,6 +14,7 @@ use crate::rrd::{AggregationFn, Archive, DataSource, DataSourceType, Database};
 
 bitflags! {
     /// Flags to specify the data source type and consolidation function
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct RRAFlags: u64 {
         // Data Source Types
         const DST_GAUGE  = 1;
