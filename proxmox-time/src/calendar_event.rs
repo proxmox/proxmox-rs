@@ -178,28 +178,6 @@ pub fn verify_calendar_event(i: &str) -> Result<(), Error> {
     Ok(())
 }
 
-/// Compute the next event. Use [CalendarEvent::compute_next_event] instead.
-#[deprecated = "use method 'compute_next_event' of CalendarEvent instead"]
-#[cfg(not(target_arch = "wasm32"))]
-pub fn compute_next_event(
-    event: &CalendarEvent,
-    last: i64,
-    utc: bool,
-) -> Result<Option<i64>, Error> {
-    if event.utc != utc {
-        let mut event = event.clone();
-        event.utc = utc;
-        return event.compute_next_event(last);
-    }
-    event.compute_next_event(last)
-}
-
-/// Parse a [CalendarEvent]
-#[deprecated = "use std::str::FromStr trait instead"]
-pub fn parse_calendar_event(i: &str) -> Result<CalendarEvent, Error> {
-    i.parse()
-}
-
 fn parse_calendar_event_incomplete(mut i: &str) -> IResult<&str, CalendarEvent> {
     let mut has_dayspec = false;
     let mut has_timespec = false;

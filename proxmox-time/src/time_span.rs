@@ -206,12 +206,6 @@ impl std::str::FromStr for TimeSpan {
     }
 }
 
-/// Parse a [TimeSpan]
-#[deprecated = "Use std::str::FromStr trait instead."]
-pub fn parse_time_span(i: &str) -> Result<TimeSpan, Error> {
-    i.parse()
-}
-
 fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpan> {
     let mut ts = TimeSpan::default();
 
