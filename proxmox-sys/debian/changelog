@@ -1,3 +1,13 @@
+rust-proxmox-sys (0.5.7-1) bookworm; urgency=medium
+
+  * replace c_str! macro use with c"literals"
+
+  * provide public consts for xattr names
+
+  * deprecate xattr name functions in favor of the new constants
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jun 2024 10:45:22 +0200
+
 rust-proxmox-sys (0.5.6-1) bookworm; urgency=medium
 
   * fs: make file parameter generic in CreateOptions
