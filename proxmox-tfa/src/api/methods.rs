@@ -456,7 +456,7 @@ pub fn update_tfa_entry(
     description: Option<String>,
     enable: Option<bool>,
 ) -> Result<(), EntryNotFound> {
-    let mut entry = config
+    let entry = config
         .users
         .get_mut(userid)
         .and_then(|user| user.find_entry_mut(id))
