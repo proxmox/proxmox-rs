@@ -1,3 +1,9 @@
+rust-proxmox-sys (0.5.8-1) bookworm; urgency=medium
+
+  * upgrade proxmox-time to 2.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jun 2024 13:50:23 +0200
+
 rust-proxmox-sys (0.5.7-1) bookworm; urgency=medium
 
   * replace c_str! macro use with c"literals"
