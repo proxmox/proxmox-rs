@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-router"
-version = "2.1.4"
+version = "2.1.5"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -1,3 +1,9 @@
+rust-proxmox-router (2.1.5-1) stable; urgency=medium
+
+  * repalce c_str! macro usage with c"literalsl"
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jun 2024 10:43:51 +0200
+
 rust-proxmox-router (2.1.4-1) stable; urgency=medium
 
   * include causes when printing fatal errors
