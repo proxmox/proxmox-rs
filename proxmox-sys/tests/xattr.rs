@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use nix::errno::Errno;
 
-use proxmox_lang::c_str;
 use proxmox_sys::fs::xattr::{fgetxattr, fsetxattr};
 
 #[test]
@@ -20,27 +19,27 @@ fn test_fsetxattr_fgetxattr() {
 
     let fd = file.as_raw_fd();
 
-    if let Err(Errno::EOPNOTSUPP) = fsetxattr(fd, c_str!("user.attribute0"), b"value0") {
+    if let Err(Errno::EOPNOTSUPP) = fsetxattr(fd, c"user.attribute0", b"value0") {
         return;
     }
 
-    assert!(fsetxattr(fd, c_str!("user.attribute0"), b"value0").is_ok());
-    assert!(fsetxattr(fd, c_str!("user.empty"), b"").is_ok());
+    assert!(fsetxattr(fd, c"user.attribute0", b"value0").is_ok());
+    assert!(fsetxattr(fd, c"user.empty", b"").is_ok());
 
     if nix::unistd::Uid::current() != nix::unistd::ROOT {
         assert_eq!(
-            fsetxattr(fd, c_str!("trusted.attribute0"), b"value0"),
+            fsetxattr(fd, c"trusted.attribute0", b"value0"),
             Err(Errno::EPERM)
         );
     }
 
-    let v0 = fgetxattr(fd, c_str!("user.attribute0")).unwrap();
-    let v1 = fgetxattr(fd, c_str!("user.empty")).unwrap();
+    let v0 = fgetxattr(fd, c"user.attribute0").unwrap();
+    let v1 = fgetxattr(fd, c"user.empty").unwrap();
 
     assert_eq!(v0, b"value0".as_ref());
     assert_eq!(v1, b"".as_ref());
     assert_eq!(
-        fgetxattr(fd, c_str!("user.attribute1")),
+        fgetxattr(fd, c"user.attribute1"),
         Err(Errno::ENODATA)
     );
 

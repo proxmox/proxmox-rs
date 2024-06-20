@@ -6,30 +6,35 @@ use std::os::unix::io::RawFd;
 use nix::errno::Errno;
 
 use proxmox_io::vec;
-use proxmox_lang::c_str;
 
 /// `"security.capability"` as a CStr to avoid typos.
-///
-/// This cannot be `const` until `const_cstr_unchecked` is stable.
+pub const XATTR_NAME_FCAPS: &CStr = c"security.capability";
+
+/// `"security.capability"` as a CStr to avoid typos.
+#[deprecated = "use the XATTR_NAME_FCAPS constant instead"]
 #[inline]
-pub fn xattr_name_fcaps() -> &'static CStr {
-    c_str!("security.capability")
+pub const fn xattr_name_fcaps() -> &'static CStr {
+    XATTR_NAME_FCAPS
 }
 
 /// `"system.posix_acl_access"` as a CStr to avoid typos.
-///
-/// This cannot be `const` until `const_cstr_unchecked` is stable.
+pub const XATTR_ACL_ACCESS: &CStr = c"system.posix_acl_access";
+
+/// `"system.posix_acl_access"` as a CStr to avoid typos.
+#[deprecated = "use the XATTR_ACL_ACCESS constant instead"]
 #[inline]
-pub fn xattr_acl_access() -> &'static CStr {
-    c_str!("system.posix_acl_access")
+pub const fn xattr_acl_access() -> &'static CStr {
+    XATTR_ACL_ACCESS
 }
 
 /// `"system.posix_acl_default"` as a CStr to avoid typos.
-///
-/// This cannot be `const` until `const_cstr_unchecked` is stable.
+pub const XATTR_ACL_DEFAULT: &CStr = c"system.posix_acl_default";
+
+/// `"system.posix_acl_default"` as a CStr to avoid typos.
+#[deprecated = "use the XATTR_ACL_DEFAULT constant instead"]
 #[inline]
-pub fn xattr_acl_default() -> &'static CStr {
-    c_str!("system.posix_acl_default")
+pub const fn xattr_acl_default() -> &'static CStr {
+    XATTR_ACL_DEFAULT
 }
 
 /// Result of `flistxattr`, allows iterating over the attributes as a list of `&CStr`s.
@@ -161,16 +166,16 @@ pub fn fsetxattr(fd: RawFd, name: &CStr, data: &[u8]) -> Result<(), nix::errno::
 
 pub fn fsetxattr_fcaps(fd: RawFd, fcaps: &[u8]) -> Result<(), nix::errno::Errno> {
     // TODO casync checks and removes capabilities if they are set
-    fsetxattr(fd, xattr_name_fcaps(), fcaps)
+    fsetxattr(fd, XATTR_NAME_FCAPS, fcaps)
 }
 
 pub fn is_security_capability(name: &CStr) -> bool {
-    name.to_bytes() == xattr_name_fcaps().to_bytes()
+    name.to_bytes() == XATTR_NAME_FCAPS.to_bytes()
 }
 
 pub fn is_acl(name: &CStr) -> bool {
-    name.to_bytes() == xattr_acl_access().to_bytes()
-        || name.to_bytes() == xattr_acl_default().to_bytes()
+    name.to_bytes() == XATTR_ACL_ACCESS.to_bytes()
+        || name.to_bytes() == XATTR_ACL_DEFAULT.to_bytes()
 }
 
 /// Check if the passed name buffer starts with a valid xattr namespace prefix
@@ -196,16 +201,14 @@ mod tests {
 
     use std::ffi::CString;
 
-    use proxmox_lang::c_str;
-
     #[test]
     fn test_is_valid_xattr_name() {
         let too_long = CString::new(vec![b'a'; 265]).unwrap();
 
         assert!(!is_valid_xattr_name(&too_long));
-        assert!(!is_valid_xattr_name(c_str!("system.attr")));
-        assert!(is_valid_xattr_name(c_str!("user.attr")));
-        assert!(is_valid_xattr_name(c_str!("trusted.attr")));
-        assert!(is_valid_xattr_name(super::xattr_name_fcaps()));
+        assert!(!is_valid_xattr_name(c"system.attr"));
+        assert!(is_valid_xattr_name(c"user.attr"));
+        assert!(is_valid_xattr_name(c"trusted.attr"));
+        assert!(is_valid_xattr_name(super::XATTR_NAME_FCAPS));
     }
 }
