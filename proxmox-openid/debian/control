@@ -11,9 +11,9 @@ Build-Depends: debhelper (>= 12),
  librust-native-tls-0.2+default-dev <!nocheck>,
  librust-nix-0.26+default-dev (>= 0.26.1-~~) <!nocheck>,
  librust-openidconnect-2+accept-rfc3339-timestamps-dev (>= 2.4-~~) <!nocheck>,
- librust-proxmox-sys-0.5+default-dev <!nocheck>,
- librust-proxmox-sys-0.5+timer-dev <!nocheck>,
- librust-proxmox-time-1+default-dev (>= 1.1.4-~~) <!nocheck>,
+ librust-proxmox-sys-0.5+default-dev (>= 0.5.7-~~) <!nocheck>,
+ librust-proxmox-sys-0.5+timer-dev (>= 0.5.7-~~) <!nocheck>,
+ librust-proxmox-time-2+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
@@ -22,7 +22,7 @@ Build-Depends: debhelper (>= 12),
  librust-ureq-2+native-tls-dev (>= 2.4-~~) <!nocheck>,
  librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: 
 Vcs-Browser: 
 X-Cargo-Crate: proxmox-openid
@@ -38,9 +38,9 @@ Depends:
  librust-native-tls-0.2+default-dev,
  librust-nix-0.26+default-dev (>= 0.26.1-~~),
  librust-openidconnect-2+accept-rfc3339-timestamps-dev (>= 2.4-~~),
- librust-proxmox-sys-0.5+default-dev,
- librust-proxmox-sys-0.5+timer-dev,
- librust-proxmox-time-1+default-dev (>= 1.1.4-~~),
+ librust-proxmox-sys-0.5+default-dev (>= 0.5.7-~~),
+ librust-proxmox-sys-0.5+timer-dev (>= 0.5.7-~~),
+ librust-proxmox-time-2+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev,
@@ -54,8 +54,7 @@ Provides:
  librust-proxmox-openid-0+default-dev (= ${binary:Version}),
  librust-proxmox-openid-0.10-dev (= ${binary:Version}),
  librust-proxmox-openid-0.10+default-dev (= ${binary:Version}),
- librust-proxmox-openid-0.10.0-dev (= ${binary:Version}),
- librust-proxmox-openid-0.10.0+default-dev (= ${binary:Version})
+ librust-proxmox-openid-0.10.1-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.10.1+default-dev (= ${binary:Version})
 Description: Rust crate "proxmox-openid" - Rust source code
- This package contains the source for the Rust proxmox-openid crate, packaged by
- debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-openid"

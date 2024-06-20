@@ -1,3 +1,11 @@
+rust-proxmox-openid (0.10.1-1) bookworm; urgency=medium
+
+  * upgrade proxmox-time to 2.0
+
+  * various clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Jun 2024 14:04:20 +0200
+
 rust-proxmox-openid (0.10.0-1) bookworm; urgency=medium
 
   * rebuild for Debian 12 bookworm based release series
