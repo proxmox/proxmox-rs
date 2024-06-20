@@ -79,12 +79,7 @@ macro_rules! static_assert_size {
 /// assert_eq!(offsetof!(Stuff, second), 4);
 ///
 /// ```
-// FIXME: With 1.56 we get `const transmute` which may help making this usable `const fn` as we can
-// avoid dereferencing the raw pointer by transmuting `0usize` into a proper reference instead.
-//
-// So with 1.56, do this instead:
-//
-//     unsafe { &(std::mem::transmute::<_, &$ty>(0usize).$field) as *const _ as usize }
+#[deprecated = "use std::mem::offset_of! instead"]
 #[macro_export]
 macro_rules! offsetof {
     ($ty:ty, $field:ident) => {
@@ -103,6 +98,7 @@ macro_rules! offsetof {
 /// unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(bytes.as_bytes()) }
 /// # ;
 /// ```
+#[deprecated = "use c\"literals\" instead"]
 #[macro_export]
 macro_rules! c_str {
     ($data:expr) => {{
