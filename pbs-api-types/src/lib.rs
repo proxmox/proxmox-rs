@@ -52,6 +52,13 @@ pub use proxmox_schema::api_types::{SYSTEMD_DATETIME_FORMAT, TIME_ZONE_SCHEMA};
 
 use proxmox_schema::api_types::{DNS_NAME_STR, IPRE_BRACKET_STR};
 
+// re-export APT API types
+pub use proxmox_apt_api_types::{
+    APTChangeRepositoryOptions, APTGetChangelogOptions, APTRepositoriesResult, APTRepositoryFile,
+    APTRepositoryFileError, APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository,
+    APTUpdateInfo, APTUpdateOptions,
+};
+
 #[rustfmt::skip]
 pub const BACKUP_ID_RE: &str = r"[A-Za-z0-9_][A-Za-z0-9._\-]*";
 
@@ -248,34 +255,6 @@ pub const PASSWORD_HINT_SCHEMA: Schema = StringSchema::new("Password hint.")
     .min_length(1)
     .max_length(64)
     .schema();
-
-#[api()]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-/// Describes a package for which an update is available.
-pub struct APTUpdateInfo {
-    /// Package name
-    pub package: String,
-    /// Package title
-    pub title: String,
-    /// Package architecture
-    pub arch: String,
-    /// Human readable package description
-    pub description: String,
-    /// New version to be updated to
-    pub version: String,
-    /// Old version currently installed
-    pub old_version: String,
-    /// Package origin
-    pub origin: String,
-    /// Package priority in human-readable form
-    pub priority: String,
-    /// Package section
-    pub section: String,
-    /// Custom extra field for additional package information
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub extra_info: Option<String>,
-}
 
 #[api()]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
