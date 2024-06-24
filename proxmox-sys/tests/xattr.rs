@@ -38,10 +38,7 @@ fn test_fsetxattr_fgetxattr() {
 
     assert_eq!(v0, b"value0".as_ref());
     assert_eq!(v1, b"".as_ref());
-    assert_eq!(
-        fgetxattr(fd, c"user.attribute1"),
-        Err(Errno::ENODATA)
-    );
+    assert_eq!(fgetxattr(fd, c"user.attribute1"), Err(Errno::ENODATA));
 
     std::fs::remove_file(&path).unwrap();
 }
