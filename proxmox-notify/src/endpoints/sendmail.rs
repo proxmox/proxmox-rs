@@ -186,7 +186,7 @@ fn sendmail(
     let now = proxmox_time::epoch_i64();
     let body = format_mail(mailto, mailfrom, author, subject, text, html, now)?;
 
-    let mut sendmail_process = match Command::new("/usr/sbin/sendmail")
+    let mut sendmail_process = Command::new("/usr/sbin/sendmail")
         .arg("-B")
         .arg("8BITMIME")
         .arg("-f")
@@ -195,32 +195,18 @@ fn sendmail(
         .args(mailto)
         .stdin(Stdio::piped())
         .spawn()
-    {
-        Err(err) => {
-            return Err(Error::Generic(format!(
-                "could not spawn sendmail process: {err}"
-            )))
-        }
-        Ok(process) => process,
-    };
+        .map_err(|err| Error::Generic(format!("could not spawn sendmail process: {err}")))?;
 
-    if let Err(err) = sendmail_process
+    sendmail_process
         .stdin
         .take()
-        .unwrap()
+        .expect("stdin already taken")
         .write_all(body.as_bytes())
-    {
-        return Err(Error::Generic(format!(
-            "couldn't write to sendmail stdin: {err}"
-        )));
-    };
+        .map_err(|err| Error::Generic(format!("couldn't write to sendmail stdin: {err}")))?;
 
-    // wait() closes stdin of the child
-    if let Err(err) = sendmail_process.wait() {
-        return Err(Error::Generic(format!(
-            "sendmail did not exit successfully: {err}"
-        )));
-    }
+    sendmail_process
+        .wait()
+        .map_err(|err| Error::Generic(format!("sendmail did not exit successfully: {err}")))?;
 
     Ok(())
 }
@@ -237,39 +223,46 @@ fn format_mail(
     use std::fmt::Write as _;
 
     let recipients = mailto.join(",");
+    let boundary = format!("----_=_NextPart_001_{timestamp}");
+
     let mut body = String::new();
 
-    let boundary = format!("----_=_NextPart_001_{}", timestamp);
+    // Format email header
     body.push_str("Content-Type: multipart/alternative;\n");
-    let _ = writeln!(body, "\tboundary=\"{}\"", boundary);
+    let _ = writeln!(body, "\tboundary=\"{boundary}\"");
     body.push_str("MIME-Version: 1.0\n");
 
     if !subject.is_ascii() {
         let _ = writeln!(body, "Subject: =?utf-8?B?{}?=", base64::encode(subject));
     } else {
-        let _ = writeln!(body, "Subject: {}", subject);
+        let _ = writeln!(body, "Subject: {subject}");
     }
-    let _ = writeln!(body, "From: {} <{}>", author, mailfrom);
-    let _ = writeln!(body, "To: {}", &recipients);
+    let _ = writeln!(body, "From: {author} <{mailfrom}>");
+    let _ = writeln!(body, "To: {recipients}");
     let rfc2822_date = proxmox_time::epoch_to_rfc2822(timestamp)
         .map_err(|err| Error::Generic(format!("failed to format time: {err}")))?;
-    let _ = writeln!(body, "Date: {}", rfc2822_date);
+    let _ = writeln!(body, "Date: {rfc2822_date}");
     body.push_str("Auto-Submitted: auto-generated;\n");
     body.push('\n');
+
+    // Format email body
     body.push_str("This is a multi-part message in MIME format.\n");
-    let _ = write!(body, "\n--{}\n", boundary);
+    let _ = write!(body, "\n--{boundary}\n");
+
     body.push_str("Content-Type: text/plain;\n");
     body.push_str("\tcharset=\"UTF-8\"\n");
     body.push_str("Content-Transfer-Encoding: 8bit\n");
     body.push('\n');
     body.push_str(text);
-    let _ = write!(body, "\n--{}\n", boundary);
+    let _ = write!(body, "\n--{boundary}\n");
+
     body.push_str("Content-Type: text/html;\n");
     body.push_str("\tcharset=\"UTF-8\"\n");
     body.push_str("Content-Transfer-Encoding: 8bit\n");
     body.push('\n');
     body.push_str(html);
-    let _ = write!(body, "\n--{}--", boundary);
+    let _ = write!(body, "\n--{boundary}--");
+
     Ok(body)
 }
 
