@@ -95,7 +95,7 @@ fn parse_register_response(
                 }
                 info.serverid = Some(server_id.to_owned());
             }
-            "md5hash" => md5hash = value.to_owned(),
+            "md5hash" => value.clone_into(&mut md5hash),
             _ => (),
         }
     }
