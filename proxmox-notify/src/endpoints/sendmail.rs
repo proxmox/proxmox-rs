@@ -140,8 +140,8 @@ impl Endpoint for SendmailEndpoint {
                 sendmail(
                     &recipients_str,
                     &subject,
-                    Some(&text_part),
-                    Some(&html_part),
+                    &text_part,
+                    &html_part,
                     &mailfrom,
                     &author,
                 )
@@ -173,8 +173,8 @@ impl Endpoint for SendmailEndpoint {
 fn sendmail(
     mailto: &[&str],
     subject: &str,
-    text: Option<&str>,
-    html: Option<&str>,
+    text: &str,
+    html: &str,
     mailfrom: &str,
     author: &str,
 ) -> Result<(), Error> {
@@ -230,26 +230,20 @@ fn format_mail(
     mailfrom: &str,
     author: &str,
     subject: &str,
-    text: Option<&str>,
-    html: Option<&str>,
+    text: &str,
+    html: &str,
     timestamp: i64,
 ) -> Result<String, Error> {
     use std::fmt::Write as _;
 
     let recipients = mailto.join(",");
-    let mut is_multipart = false;
-    if let (Some(_), Some(_)) = (text, html) {
-        is_multipart = true;
-    }
     let mut body = String::new();
+
     let boundary = format!("----_=_NextPart_001_{}", timestamp);
-    if is_multipart {
-        body.push_str("Content-Type: multipart/alternative;\n");
-        let _ = writeln!(body, "\tboundary=\"{}\"", boundary);
-        body.push_str("MIME-Version: 1.0\n");
-    } else if !subject.is_ascii() {
-        body.push_str("MIME-Version: 1.0\n");
-    }
+    body.push_str("Content-Type: multipart/alternative;\n");
+    let _ = writeln!(body, "\tboundary=\"{}\"", boundary);
+    body.push_str("MIME-Version: 1.0\n");
+
     if !subject.is_ascii() {
         let _ = writeln!(body, "Subject: =?utf-8?B?{}?=", base64::encode(subject));
     } else {
@@ -261,31 +255,21 @@ fn format_mail(
         .map_err(|err| Error::Generic(format!("failed to format time: {err}")))?;
     let _ = writeln!(body, "Date: {}", rfc2822_date);
     body.push_str("Auto-Submitted: auto-generated;\n");
-    if is_multipart {
-        body.push('\n');
-        body.push_str("This is a multi-part message in MIME format.\n");
-        let _ = write!(body, "\n--{}\n", boundary);
-    }
-    if let Some(text) = text {
-        body.push_str("Content-Type: text/plain;\n");
-        body.push_str("\tcharset=\"UTF-8\"\n");
-        body.push_str("Content-Transfer-Encoding: 8bit\n");
-        body.push('\n');
-        body.push_str(text);
-        if is_multipart {
-            let _ = write!(body, "\n--{}\n", boundary);
-        }
-    }
-    if let Some(html) = html {
-        body.push_str("Content-Type: text/html;\n");
-        body.push_str("\tcharset=\"UTF-8\"\n");
-        body.push_str("Content-Transfer-Encoding: 8bit\n");
-        body.push('\n');
-        body.push_str(html);
-        if is_multipart {
-            let _ = write!(body, "\n--{}--", boundary);
-        }
-    }
+    body.push('\n');
+    body.push_str("This is a multi-part message in MIME format.\n");
+    let _ = write!(body, "\n--{}\n", boundary);
+    body.push_str("Content-Type: text/plain;\n");
+    body.push_str("\tcharset=\"UTF-8\"\n");
+    body.push_str("Content-Transfer-Encoding: 8bit\n");
+    body.push('\n');
+    body.push_str(text);
+    let _ = write!(body, "\n--{}\n", boundary);
+    body.push_str("Content-Type: text/html;\n");
+    body.push_str("\tcharset=\"UTF-8\"\n");
+    body.push_str("Content-Transfer-Encoding: 8bit\n");
+    body.push('\n');
+    body.push_str(html);
+    let _ = write!(body, "\n--{}--", boundary);
     Ok(body)
 }
 
@@ -343,14 +327,7 @@ mod test {
 
     #[test]
     fn email_without_recipients() {
-        let result = sendmail(
-            &[],
-            "Subject2",
-            None,
-            Some("<b>HTML</b>"),
-            "root",
-            "Proxmox",
-        );
+        let result = sendmail(&[], "Subject2", "", "<b>HTML</b>", "root", "Proxmox");
         assert!(result.is_err());
     }
 
@@ -361,8 +338,8 @@ mod test {
             "foobar@example.com",
             "Fred Oobar",
             "This is the subject",
-            Some("This is the plain body"),
-            Some("<body>This is the HTML body</body>"),
+            "This is the plain body",
+            "<body>This is the HTML body</body>",
             1718977850,
         )
         .expect("format_message failed");
