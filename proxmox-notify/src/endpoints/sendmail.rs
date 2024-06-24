@@ -178,16 +178,13 @@ fn sendmail(
     mailfrom: &str,
     author: &str,
 ) -> Result<(), Error> {
-    use std::fmt::Write as _;
-
     if mailto.is_empty() {
         return Err(Error::Generic(
             "At least one recipient has to be specified!".into(),
         ));
     }
-    let recipients = mailto.join(",");
-
     let now = proxmox_time::epoch_i64();
+    let body = format_mail(mailto, mailfrom, author, subject, text, html, now)?;
 
     let mut sendmail_process = match Command::new("/usr/sbin/sendmail")
         .arg("-B")
@@ -206,13 +203,46 @@ fn sendmail(
         }
         Ok(process) => process,
     };
+
+    if let Err(err) = sendmail_process
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(body.as_bytes())
+    {
+        return Err(Error::Generic(format!(
+            "couldn't write to sendmail stdin: {err}"
+        )));
+    };
+
+    // wait() closes stdin of the child
+    if let Err(err) = sendmail_process.wait() {
+        return Err(Error::Generic(format!(
+            "sendmail did not exit successfully: {err}"
+        )));
+    }
+
+    Ok(())
+}
+
+fn format_mail(
+    mailto: &[&str],
+    mailfrom: &str,
+    author: &str,
+    subject: &str,
+    text: Option<&str>,
+    html: Option<&str>,
+    timestamp: i64,
+) -> Result<String, Error> {
+    use std::fmt::Write as _;
+
+    let recipients = mailto.join(",");
     let mut is_multipart = false;
     if let (Some(_), Some(_)) = (text, html) {
         is_multipart = true;
     }
-
     let mut body = String::new();
-    let boundary = format!("----_=_NextPart_001_{}", now);
+    let boundary = format!("----_=_NextPart_001_{}", timestamp);
     if is_multipart {
         body.push_str("Content-Type: multipart/alternative;\n");
         let _ = writeln!(body, "\tboundary=\"{}\"", boundary);
@@ -227,11 +257,10 @@ fn sendmail(
     }
     let _ = writeln!(body, "From: {} <{}>", author, mailfrom);
     let _ = writeln!(body, "To: {}", &recipients);
-    let rfc2822_date = proxmox_time::epoch_to_rfc2822(now)
+    let rfc2822_date = proxmox_time::epoch_to_rfc2822(timestamp)
         .map_err(|err| Error::Generic(format!("failed to format time: {err}")))?;
     let _ = writeln!(body, "Date: {}", rfc2822_date);
     body.push_str("Auto-Submitted: auto-generated;\n");
-
     if is_multipart {
         body.push('\n');
         body.push_str("This is a multi-part message in MIME format.\n");
@@ -257,26 +286,7 @@ fn sendmail(
             let _ = write!(body, "\n--{}--", boundary);
         }
     }
-
-    if let Err(err) = sendmail_process
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(body.as_bytes())
-    {
-        return Err(Error::Generic(format!(
-            "couldn't write to sendmail stdin: {err}"
-        )));
-    };
-
-    // wait() closes stdin of the child
-    if let Err(err) = sendmail_process.wait() {
-        return Err(Error::Generic(format!(
-            "sendmail did not exit successfully: {err}"
-        )));
-    }
-
-    Ok(())
+    Ok(body)
 }
 
 /// Forwards an email message to a given list of recipients.
@@ -342,5 +352,48 @@ mod test {
             "Proxmox",
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_format_mail_multipart() {
+        let message = format_mail(
+            &["Tony Est <test@example.com>"],
+            "foobar@example.com",
+            "Fred Oobar",
+            "This is the subject",
+            Some("This is the plain body"),
+            Some("<body>This is the HTML body</body>"),
+            1718977850,
+        )
+        .expect("format_message failed");
+
+        assert_eq!(
+            message,
+            r#"Content-Type: multipart/alternative;
+	boundary="----_=_NextPart_001_1718977850"
+MIME-Version: 1.0
+Subject: This is the subject
+From: Fred Oobar <foobar@example.com>
+To: Tony Est <test@example.com>
+Date: Fri, 21 Jun 2024 15:50:50 +0200
+Auto-Submitted: auto-generated;
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_1718977850
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+
+This is the plain body
+------_=_NextPart_001_1718977850
+Content-Type: text/html;
+	charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+
+<body>This is the HTML body</body>
+------_=_NextPart_001_1718977850--"#
+                .to_owned()
+        );
     }
 }
