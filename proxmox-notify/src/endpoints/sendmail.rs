@@ -142,8 +142,8 @@ impl Endpoint for SendmailEndpoint {
                     &subject,
                     Some(&text_part),
                     Some(&html_part),
-                    Some(&mailfrom),
-                    Some(&author),
+                    &mailfrom,
+                    &author,
                 )
                 .map_err(|err| Error::NotifyFailed(self.config.name.clone(), err.into()))
             }
@@ -175,8 +175,8 @@ fn sendmail(
     subject: &str,
     text: Option<&str>,
     html: Option<&str>,
-    mailfrom: Option<&str>,
-    author: Option<&str>,
+    mailfrom: &str,
+    author: &str,
 ) -> Result<(), Error> {
     use std::fmt::Write as _;
 
@@ -185,9 +185,7 @@ fn sendmail(
             "At least one recipient has to be specified!".into(),
         ));
     }
-    let mailfrom = mailfrom.unwrap_or("root");
     let recipients = mailto.join(",");
-    let author = author.unwrap_or("Proxmox Backup Server");
 
     let now = proxmox_time::epoch_i64();
 
@@ -340,8 +338,8 @@ mod test {
             "Subject2",
             None,
             Some("<b>HTML</b>"),
-            None,
-            Some("test1"),
+            "root",
+            "Proxmox",
         );
         assert!(result.is_err());
     }
