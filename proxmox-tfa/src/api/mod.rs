@@ -75,7 +75,7 @@ pub trait OpenUserChallengeData {
     }
 }
 
-pub(self) struct NoUserData;
+struct NoUserData;
 
 impl OpenUserChallengeData for NoUserData {
     fn open(&self, _userid: &str) -> Result<Box<dyn UserChallengeAccess>, Error> {
@@ -1265,7 +1265,7 @@ impl TfaChallenge {
     }
 }
 
-pub(self) fn bool_is_false(v: &bool) -> bool {
+fn bool_is_false(v: &bool) -> bool {
     !v
 }
 

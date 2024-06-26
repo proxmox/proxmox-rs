@@ -86,7 +86,7 @@ impl PrivateKey {
         PublicKey::from_pem(&self.public_key_to_pem()?)
     }
 
-    pub(self) fn sign(&self, digest: MessageDigest, data: &[u8]) -> Result<Vec<u8>, Error> {
+    fn sign(&self, digest: MessageDigest, data: &[u8]) -> Result<Vec<u8>, Error> {
         let mut signer = if self.key.id() == Id::ED25519 {
             // ed25519 does not support signing with digest
             Signer::new_without_digest(&self.key)
