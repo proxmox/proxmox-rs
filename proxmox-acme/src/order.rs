@@ -9,9 +9,11 @@ use crate::Error;
 /// Status of an [`Order`].
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum Status {
     /// Invalid, used as a place holder for when sending objects as contrary to account creation,
     /// the Acme RFC does not require the server to ignore unknown parts of the `Order` object.
+    #[default]
     New,
 
     /// Authorization failed and it is now invalid.
@@ -31,12 +33,6 @@ pub enum Status {
     /// The certificate has been issued and can be downloaded from the URL provided in the
     /// [`Order`]'s `certificate` field.
     Valid,
-}
-
-impl Default for Status {
-    fn default() -> Self {
-        Status::New
-    }
 }
 
 impl Status {
