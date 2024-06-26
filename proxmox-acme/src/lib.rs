@@ -39,7 +39,6 @@ pub mod directory;
 #[cfg(feature = "impl")]
 pub mod error;
 #[cfg(feature = "impl")]
-#[cfg(feature = "impl")]
 pub mod order;
 
 #[cfg(feature = "impl")]
