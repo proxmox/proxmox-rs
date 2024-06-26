@@ -313,7 +313,7 @@ pub fn derive_updater_type(item: TokenStream_1) -> TokenStream_1 {
     .into()
 }
 
-thread_local!(static NON_FATAL_ERRORS: RefCell<Option<TokenStream>> = RefCell::new(None));
+thread_local!(static NON_FATAL_ERRORS: RefCell<Option<TokenStream>> = const { RefCell::new(None) });
 
 /// The local error TLS must be freed at the end of a macro as any leftover `TokenStream` (even an
 /// empty one) will just panic between different runs as the multiple source files are handled by

@@ -16,8 +16,8 @@ struct VerifyState {
 }
 
 thread_local! {
-    static VERIFY_SCHEMA: RefCell<Option<VerifyState>> = RefCell::new(None);
-    static ERRORS: RefCell<Vec<(String, anyhow::Error)>> = RefCell::new(Vec::new());
+    static VERIFY_SCHEMA: RefCell<Option<VerifyState>> = const { RefCell::new(None) };
+    static ERRORS: RefCell<Vec<(String, anyhow::Error)>> = const { RefCell::new(Vec::new()) };
 }
 
 pub(crate) struct SchemaGuard(Option<VerifyState>);

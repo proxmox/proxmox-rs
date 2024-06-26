@@ -24,7 +24,7 @@ pub use no_schema::{split_list, SplitList};
 // Used to disable calling `check_constraints` on a `StringSchema` if it is being deserialized
 // for a `PropertyString`, which performs its own checking.
 thread_local! {
-    static IN_PROPERTY_STRING: Cell<bool> = Cell::new(false);
+    static IN_PROPERTY_STRING: Cell<bool> = const { Cell::new(false) };
 }
 
 pub(crate) struct InPropertyStringGuard;

@@ -218,7 +218,7 @@ const API_METHOD_COMMAND_HELP: ApiMethod = ApiMethod::new(
 );
 
 std::thread_local! {
-    static HELP_CONTEXT: RefCell<Option<Arc<CommandLineInterface>>> = RefCell::new(None);
+    static HELP_CONTEXT: RefCell<Option<Arc<CommandLineInterface>>> = const { RefCell::new(None) };
 }
 
 fn help_command(
