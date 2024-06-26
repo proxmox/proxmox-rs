@@ -683,8 +683,7 @@ mod test {
             roles.insert("DatastoreBackup", 4);
             roles.insert("DatastoreReader", 8);
 
-            let config = TestAcmConfig { roles };
-            config
+            TestAcmConfig { roles }
         });
 
         // ignore errors here, we don't care if it's initialized already
