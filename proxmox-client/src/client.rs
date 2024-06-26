@@ -52,7 +52,7 @@ impl TlsOptions {
             .filter(|&b| b != b':')
             .collect();
 
-        let fp = <[u8; 32]>::from_hex(&hex).map_err(|_| ParseFingerprintError)?;
+        let fp = <[u8; 32]>::from_hex(hex).map_err(|_| ParseFingerprintError)?;
 
         Ok(Self::Fingerprint(fp.into()))
     }
@@ -469,7 +469,7 @@ fn verify_fingerprint(chain: &x509::X509StoreContextRef, expected_fingerprint: &
 
     if expected_fingerprint != fp.as_ref() {
         log::error!("bad fingerprint: {}", fp_string(&fp));
-        log::error!("expected fingerprint: {}", fp_string(&expected_fingerprint));
+        log::error!("expected fingerprint: {}", fp_string(expected_fingerprint));
         return false;
     }
 

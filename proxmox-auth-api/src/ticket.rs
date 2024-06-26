@@ -160,7 +160,7 @@ where
 
         let is_valid = keyring.verify(
             MessageDigest::sha256(),
-            &signature,
+            signature,
             &self.verification_data(aad),
         )?;
 

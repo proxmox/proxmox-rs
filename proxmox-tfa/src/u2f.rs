@@ -36,9 +36,9 @@ impl StdError for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::Generic(e) => f.write_str(&e),
-            Error::Decode(m, _e) => f.write_str(&m),
-            Error::Ssl(m, _e) => f.write_str(&m),
+            Error::Generic(e) => f.write_str(e),
+            Error::Decode(m, _e) => f.write_str(m),
+            Error::Ssl(m, _e) => f.write_str(m),
         }
     }
 }
@@ -604,14 +604,13 @@ mod bytes_as_base64 {
     use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<S: Serializer>(data: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&base64::encode(&data))
+        serializer.serialize_str(&base64::encode(data))
     }
 
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         use serde::de::Error;
-        String::deserialize(deserializer).and_then(|string| {
-            base64::decode(&string).map_err(|err| Error::custom(err.to_string()))
-        })
+        String::deserialize(deserializer)
+            .and_then(|string| base64::decode(string).map_err(|err| Error::custom(err.to_string())))
     }
 }
 
@@ -625,7 +624,7 @@ mod bytes_as_base64url_nopad {
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         use serde::de::Error;
         String::deserialize(deserializer).and_then(|string| {
-            base64::decode_config(&string, base64::URL_SAFE_NO_PAD)
+            base64::decode_config(string, base64::URL_SAFE_NO_PAD)
                 .map_err(|err| Error::custom(err.to_string()))
         })
     }

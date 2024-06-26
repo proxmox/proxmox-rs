@@ -49,7 +49,7 @@ impl Recovery {
         getrandom(&mut secret)?;
 
         let mut this = Self {
-            secret: hex::encode(&secret),
+            secret: hex::encode(secret),
             entries: Vec::with_capacity(10),
             created: proxmox_time::epoch_i64(),
         };
@@ -83,7 +83,7 @@ impl Recovery {
             .sign_oneshot_to_vec(data)
             .map_err(|err| format_err!("error calculating hmac: {}", err))?;
 
-        Ok(hex::encode(&hmac))
+        Ok(hex::encode(hmac))
     }
 
     /// Iterator over available keys.

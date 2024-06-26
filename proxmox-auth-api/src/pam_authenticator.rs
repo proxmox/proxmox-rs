@@ -183,7 +183,7 @@ struct PamGuard<'a> {
 
 impl Drop for PamGuard<'_> {
     fn drop(&mut self) {
-        pam_sys::wrapped::end(&mut self.handle, self.result);
+        pam_sys::wrapped::end(self.handle, self.result);
     }
 }
 

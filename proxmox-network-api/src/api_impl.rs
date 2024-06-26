@@ -105,7 +105,7 @@ pub fn create_interface(iface: String, config: InterfaceUpdater) -> Result<(), E
                 }
             }
             if let Some(slaves) = &config.slaves {
-                interface.set_bond_slave_list(&slaves)?;
+                interface.set_bond_slave_list(slaves)?;
             }
         }
         NetworkInterfaceType::Vlan => {

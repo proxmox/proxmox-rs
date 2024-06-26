@@ -70,7 +70,7 @@ pub async fn register_account(
 
     let account = AccountData::from_account_dir_tos(account, directory_url, tos_url);
 
-    super::account_config::create_account_config(&name, &account)?;
+    super::account_config::create_account_config(name, &account)?;
 
     Ok(account.location)
 }
@@ -89,7 +89,7 @@ pub async fn deactivate_account(
     {
         Ok(account) => {
             account_data.account = account.data.clone();
-            super::account_config::save_account_config(&name, &account_data)?;
+            super::account_config::save_account_config(name, &account_data)?;
         }
         Err(err) if !force => return Err(err),
         Err(err) => {
@@ -102,7 +102,7 @@ pub async fn deactivate_account(
         }
     }
 
-    super::account_config::mark_account_deactivated(&name)?;
+    super::account_config::mark_account_deactivated(name)?;
 
     Ok(())
 }
@@ -120,7 +120,7 @@ pub async fn update_account(name: &AcmeAccountName, contact: Option<String>) -> 
 
     let account = client.update_account(&data).await?;
     account_data.account = account.data.clone();
-    super::account_config::save_account_config(&name, &account_data)?;
+    super::account_config::save_account_config(name, &account_data)?;
 
     Ok(())
 }
