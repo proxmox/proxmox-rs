@@ -415,6 +415,7 @@ struct CommandLineParseState<'cli> {
     global_option_values: HashMap<String, String>,
     global_option_types: HashMap<TypeId, &'cli GlobalOptions>,
     async_run: Option<fn(ApiFuture) -> Result<Value, Error>>,
+    interface: Arc<CommandLineInterface>,
 }
 
 impl CommandLine {
@@ -442,12 +443,10 @@ impl CommandLine {
             global_option_values: HashMap::new(),
             global_option_types: HashMap::new(),
             async_run: self.async_run,
+            interface: Arc::clone(&self.interface),
         };
 
-        command::set_help_context(Some(Arc::clone(&self.interface)));
-        let out = state.parse_do(&self.interface, rpcenv, args);
-        command::set_help_context(None);
-        out
+        state.parse_do(&self.interface, rpcenv, args)
     }
 }
 
@@ -541,9 +540,14 @@ impl<'cli> CommandLineParseState<'cli> {
     ) -> Result<Invocation<'cli>, Error> {
         let args = self.handle_current_global_options(args)?;
         self.build_global_options(&mut *rpcenv)?;
+        let interface = Arc::clone(&self.interface);
         Ok(Invocation {
             call: Box::new(move |rpcenv| {
-                command::handle_simple_command(&self.prefix, cli, args, rpcenv, self.async_run)
+                command::set_help_context(Some(interface));
+                let out =
+                    command::handle_simple_command(&self.prefix, cli, args, rpcenv, self.async_run);
+                command::set_help_context(None);
+                out
             }),
         })
     }
