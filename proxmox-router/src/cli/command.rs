@@ -1,4 +1,4 @@
-use anyhow::{format_err, Error};
+use anyhow::{bail, format_err, Error};
 use serde_json::Value;
 use std::cell::RefCell;
 use std::sync::Arc;
@@ -9,8 +9,8 @@ use proxmox_schema::*;
 use super::environment::CliEnvironment;
 use super::getopts;
 use super::{
-    generate_nested_usage, generate_usage_str, print_help, print_nested_usage_error,
-    print_simple_usage_error, CliCommand, CliCommandMap, CommandLineInterface,
+    generate_nested_usage, generate_usage_str_do, print_help, print_nested_usage_error,
+    print_simple_usage_error_do, CliCommand, CliCommandMap, CommandLineInterface,
 };
 use crate::{ApiFuture, ApiHandler, ApiMethod, RpcEnvironment};
 
@@ -28,7 +28,12 @@ pub const OUTPUT_FORMAT: Schema = StringSchema::new("Output format.")
     ]))
     .schema();
 
-fn parse_arguments(prefix: &str, cli_cmd: &CliCommand, args: Vec<String>) -> Result<Value, Error> {
+fn parse_arguments(
+    prefix: &str,
+    cli_cmd: &CliCommand,
+    args: Vec<String>,
+    global_options_iter: impl Iterator<Item = &'static str>,
+) -> Result<Value, Error> {
     let (params, remaining) = match getopts::parse_arguments(
         &args,
         cli_cmd.arg_param,
@@ -38,14 +43,14 @@ fn parse_arguments(prefix: &str, cli_cmd: &CliCommand, args: Vec<String>) -> Res
         Ok((p, r)) => (p, r),
         Err(err) => {
             let err_msg = err.to_string();
-            print_simple_usage_error(prefix, cli_cmd, &err_msg);
+            print_simple_usage_error_do(prefix, cli_cmd, &err_msg, global_options_iter);
             return Err(format_err!("{}", err_msg));
         }
     };
 
     if !remaining.is_empty() {
         let err_msg = format!("got additional arguments: {:?}", remaining);
-        print_simple_usage_error(prefix, cli_cmd, &err_msg);
+        print_simple_usage_error_do(prefix, cli_cmd, &err_msg, global_options_iter);
         return Err(format_err!("{}", err_msg));
     }
 
@@ -58,7 +63,7 @@ async fn handle_simple_command_future(
     args: Vec<String>,
     mut rpcenv: CliEnvironment,
 ) -> Result<(), Error> {
-    let params = parse_arguments(prefix, cli_cmd, args)?;
+    let params = parse_arguments(prefix, cli_cmd, args, [].into_iter())?;
 
     let result = match cli_cmd.info.handler {
         ApiHandler::Sync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv),
@@ -70,9 +75,7 @@ async fn handle_simple_command_future(
             .and_then(|r| r.to_value().map_err(Error::from)),
         #[cfg(feature = "server")]
         ApiHandler::AsyncHttp(_) => {
-            let err_msg = "CliHandler does not support ApiHandler::AsyncHttp - internal error";
-            print_simple_usage_error(prefix, cli_cmd, err_msg);
-            return Err(format_err!("{}", err_msg));
+            bail!("CliHandler does not support ApiHandler::AsyncHttp - internal error")
         }
     };
 
@@ -97,35 +100,28 @@ pub(crate) fn handle_simple_command(
     args: Vec<String>,
     rpcenv: &mut CliEnvironment,
     run: Option<fn(ApiFuture) -> Result<Value, Error>>,
+    global_options_iter: impl Iterator<Item = &'static str>,
 ) -> Result<(), Error> {
-    let params = parse_arguments(prefix, cli_cmd, args)?;
+    let params = parse_arguments(prefix, cli_cmd, args, global_options_iter)?;
 
     let result = match cli_cmd.info.handler {
         ApiHandler::Sync(handler) => (handler)(params, cli_cmd.info, rpcenv),
         ApiHandler::StreamingSync(handler) => {
             (handler)(params, cli_cmd.info, rpcenv).and_then(|r| r.to_value().map_err(Error::from))
         }
-        ApiHandler::Async(handler) => match run {
-            Some(run) => {
-                let future = (handler)(params, cli_cmd.info, rpcenv);
-                (run)(future)
-            }
-            None => {
-                let err_msg = "CliHandler does not support ApiHandler::Async - internal error";
-                print_simple_usage_error(prefix, cli_cmd, err_msg);
-                return Err(format_err!("{}", err_msg));
-            }
-        },
+        ApiHandler::Async(handler) => {
+            let run = run.ok_or_else(|| {
+                format_err!("CliHandler does not support ApiHandler::Async - internal error")
+            })?;
+            let future = (handler)(params, cli_cmd.info, rpcenv);
+            (run)(future)
+        }
         ApiHandler::StreamingAsync(_handler) => {
-            let err_msg = "CliHandler does not support ApiHandler::StreamingAsync - internal error";
-            print_simple_usage_error(prefix, cli_cmd, err_msg);
-            return Err(format_err!("{}", err_msg));
+            bail!("CliHandler does not support ApiHandler::StreamingAsync - internal error");
         }
         #[cfg(feature = "server")]
         ApiHandler::AsyncHttp(_) => {
-            let err_msg = "CliHandler does not support ApiHandler::AsyncHttp - internal error";
-            print_simple_usage_error(prefix, cli_cmd, err_msg);
-            return Err(format_err!("{}", err_msg));
+            bail!("CliHandler does not support ApiHandler::AsyncHttp - internal error");
         }
     };
 
@@ -325,12 +321,12 @@ pub fn handle_command(
 
     let result = match &*def {
         CommandLineInterface::Simple(ref cli_cmd) => {
-            handle_simple_command(prefix, cli_cmd, args, &mut rpcenv, run)
+            handle_simple_command(prefix, cli_cmd, args, &mut rpcenv, run, [].into_iter())
         }
         CommandLineInterface::Nested(ref map) => {
             let mut prefix = prefix.to_string();
             let cli_cmd = parse_nested_command(&mut prefix, map, &mut args)?;
-            handle_simple_command(&prefix, cli_cmd, args, &mut rpcenv, run)
+            handle_simple_command(&prefix, cli_cmd, args, &mut rpcenv, run, [].into_iter())
         }
     };
 
@@ -359,9 +355,14 @@ where
 
         if args[0] == "printdoc" {
             let usage = match def {
-                CommandLineInterface::Simple(cli_cmd) => {
-                    generate_usage_str(&prefix, cli_cmd, DocumentationFormat::ReST, "", &[])
-                }
+                CommandLineInterface::Simple(cli_cmd) => generate_usage_str_do(
+                    &prefix,
+                    cli_cmd,
+                    DocumentationFormat::ReST,
+                    "",
+                    &[],
+                    [].into_iter(),
+                ),
                 CommandLineInterface::Nested(map) => {
                     generate_nested_usage(&prefix, map, DocumentationFormat::ReST)
                 }

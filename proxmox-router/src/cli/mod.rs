@@ -544,8 +544,14 @@ impl<'cli> CommandLineParseState<'cli> {
         Ok(Invocation {
             call: Box::new(move |rpcenv| {
                 command::set_help_context(Some(interface));
-                let out =
-                    command::handle_simple_command(&self.prefix, cli, args, rpcenv, self.async_run);
+                let out = command::handle_simple_command(
+                    &self.prefix,
+                    cli,
+                    args,
+                    rpcenv,
+                    self.async_run,
+                    self.global_option_schemas.keys().copied(),
+                );
                 command::set_help_context(None);
                 out
             }),

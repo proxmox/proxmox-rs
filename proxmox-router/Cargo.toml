@@ -9,6 +9,12 @@ description = "proxmox API Router and CLI utilities"
 
 exclude.workspace = true
 
+[[test]]
+name = "docs"
+path = "tests/docs.rs"
+test = true
+required-features = [ "cli" ]
+
 [dependencies]
 anyhow.workspace = true
 env_logger = { workspace = true, optional = true }
