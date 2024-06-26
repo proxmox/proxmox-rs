@@ -127,7 +127,7 @@ impl ACL {
     }
 
     pub fn create_entry(&mut self) -> Result<ACLEntry, nix::errno::Errno> {
-        let mut ptr = ptr::null_mut() as *mut c_void;
+        let mut ptr = ptr::null_mut();
         let res = unsafe { acl_create_entry(&mut self.ptr, &mut ptr) };
         if res < 0 {
             return Err(Errno::last());
@@ -200,7 +200,7 @@ impl<'a> ACLEntry<'a> {
 
     pub fn get_permissions(&self) -> Result<u64, nix::errno::Errno> {
         let mut permissions = 0;
-        let mut permset = ptr::null_mut() as *mut c_void;
+        let mut permset = ptr::null_mut();
         let mut res = unsafe { acl_get_permset(self.ptr, &mut permset) };
         if res < 0 {
             return Err(Errno::last());
@@ -221,7 +221,7 @@ impl<'a> ACLEntry<'a> {
     }
 
     pub fn set_permissions(&mut self, permissions: u64) -> Result<u64, nix::errno::Errno> {
-        let mut permset = ptr::null_mut() as *mut c_void;
+        let mut permset = ptr::null_mut();
         let mut res = unsafe { acl_get_permset(self.ptr, &mut permset) };
         if res < 0 {
             return Err(Errno::last());
