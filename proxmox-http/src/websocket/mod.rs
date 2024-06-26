@@ -441,7 +441,7 @@ impl FrameHeader {
                 return Ok(None);
             }
             let mut mask = [0u8; 4];
-            mask.copy_from_slice(&data[mask_offset as usize..payload_offset as usize]);
+            mask.copy_from_slice(&data[mask_offset..payload_offset as usize]);
             Some(mask)
         } else {
             None
