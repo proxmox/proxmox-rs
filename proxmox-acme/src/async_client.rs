@@ -62,13 +62,13 @@ impl AcmeClient {
     ///
     /// If an RSA key size is provided, an RSA key will be generated. Otherwise an EC key using the
     /// P-256 curve will be generated.
-    pub async fn new_account<'a>(
-        &'a mut self,
+    pub async fn new_account(
+        &mut self,
         tos_agreed: bool,
         contact: Vec<String>,
         rsa_bits: Option<u32>,
         eab_creds: Option<(String, String)>,
-    ) -> Result<&'a Account, anyhow::Error> {
+    ) -> Result<&Account, anyhow::Error> {
         let mut account = Account::creator()
             .set_contacts(contact)
             .agree_to_tos(tos_agreed);
