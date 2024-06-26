@@ -108,11 +108,7 @@ pub fn set_auth_context(auth_context: &'static dyn AuthContext) {
 }
 
 fn auth_context() -> Result<&'static dyn AuthContext, Error> {
-    AUTH_CONTEXT
-        .lock()
-        .unwrap()
-        .clone()
-        .ok_or_else(|| format_err!("no realm access configured"))
+    (*AUTH_CONTEXT.lock().unwrap()).ok_or_else(|| format_err!("no realm access configured"))
 }
 
 struct UserAuthData {
