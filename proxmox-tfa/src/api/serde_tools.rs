@@ -83,7 +83,7 @@ where
 /// {
 ///     deserializer.deserialize_seq(proxmox_serde::fold(
 ///         "a sequence of integers",
-///         |cap| cap.map(Vec::with_capacity).unwrap_or_else(Vec::new),
+///         |cap| cap.map(Vec::with_capacity).unwrap_or_default(),
 ///         |out, num: u64| {
 ///             if num != 4 {
 ///                 out.push(num.to_string());

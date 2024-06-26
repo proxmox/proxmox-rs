@@ -1352,7 +1352,7 @@ where
     let expire_before = proxmox_time::epoch_i64() - CHALLENGE_TIMEOUT_SECS;
     deserializer.deserialize_seq(serde_tools::fold(
         "a challenge entry",
-        |cap| cap.map(Vec::with_capacity).unwrap_or_else(Vec::new),
+        |cap| cap.map(Vec::with_capacity).unwrap_or_default(),
         move |out, reg: T| {
             if !reg.is_expired(expire_before) {
                 out.push(reg);
