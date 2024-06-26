@@ -600,7 +600,7 @@ impl<R: BufRead> NetworkParser<R> {
             }
         }
 
-        if config.interfaces.get("lo").is_none() {
+        if !config.interfaces.contains_key("lo") {
             let mut interface = Interface::new(String::from("lo"));
             set_method_v4(&mut interface, NetworkConfigMethod::Loopback)?;
             interface.interface_type = NetworkInterfaceType::Loopback;

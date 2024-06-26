@@ -67,7 +67,7 @@ pub(crate) fn plugin_config() -> Result<(PluginData, ConfigDigest), Error> {
     let digest = ConfigDigest::from_slice(content.as_bytes());
     let mut data = CONFIG.parse(plugin_cfg_filename, &content)?;
 
-    if data.sections.get("standalone").is_none() {
+    if !data.sections.contains_key("standalone") {
         let standalone = StandalonePlugin::default();
         data.set_data("standalone", "standalone", &standalone)
             .unwrap();
