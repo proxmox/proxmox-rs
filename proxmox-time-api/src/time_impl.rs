@@ -49,7 +49,7 @@ pub fn get_server_time_info() -> Result<ServerTimeInfo, Error> {
 
     Ok(ServerTimeInfo {
         timezone: read_etc_localtime()?,
-        time: time,
-        localtime: localtime,
+        time,
+        localtime,
     })
 }
