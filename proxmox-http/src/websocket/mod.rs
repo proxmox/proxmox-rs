@@ -372,8 +372,6 @@ impl FrameHeader {
             return Ok(None);
         }
 
-        let data = data;
-
         // we do not support extensions
         if data[0] & 0b01110000 > 0 {
             return Err(WebSocketError::new(
