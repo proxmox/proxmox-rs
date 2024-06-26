@@ -101,7 +101,7 @@ impl Context for PBSContext {
     }
 
     fn default_config(&self) -> &'static str {
-        return DEFAULT_CONFIG;
+        DEFAULT_CONFIG
     }
 
     fn lookup_template(

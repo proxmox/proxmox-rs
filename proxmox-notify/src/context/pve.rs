@@ -51,7 +51,7 @@ impl Context for PVEContext {
     }
 
     fn default_config(&self) -> &'static str {
-        return DEFAULT_CONFIG;
+        DEFAULT_CONFIG
     }
 
     fn lookup_template(

@@ -465,11 +465,11 @@ impl TfaConfig {
                         Some(proxmox_time::epoch_i64() + access.tfa_failure_lock_time());
                 }
 
-                return TfaResult::Failure {
+                TfaResult::Failure {
                     needs_saving: true,
                     tfa_limit_reached,
                     totp_limit_reached,
-                };
+                }
             }
         }
     }
