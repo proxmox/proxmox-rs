@@ -52,9 +52,9 @@ pub fn wrap_text(
             if acc.is_empty() {
                 acc.push_str(&textwrap::wrap(p, &wrap_options1).join("\n"));
             } else {
+                acc.push_str("\n\n");
                 acc.push_str(&textwrap::wrap(p, &wrap_options2).join("\n"));
             }
-            acc.push_str("\n\n");
             acc
         })
 }
@@ -62,7 +62,7 @@ pub fn wrap_text(
 #[test]
 fn test_wrap_text() {
     let text = "Command. This may be a list in order to spefify nested sub-commands.";
-    let expect = "             Command. This may be a list in order to spefify nested sub-\n             commands.\n\n";
+    let expect = "             Command. This may be a list in order to spefify nested sub-\n             commands.";
 
     let indent = "             ";
     let wrapped = wrap_text(indent, indent, text, 80);
