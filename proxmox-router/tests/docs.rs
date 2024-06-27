@@ -152,12 +152,10 @@ Get help about specified command (or sub-command).
   Command. This may be a list in order to spefify nested sub-commands. Can be
   specified more than once.
 
-
 Optional parameters:
 
 ``--verbose`` ``<boolean>``
   Verbose help.
-
 
 ----
 
@@ -168,16 +166,13 @@ Simple API method with one required and one optional argument.
 ``--required-arg`` ``<string>``
   Required string argument.
 
-
 ``--another-required-arg`` ``<string>``
   A second required string argument.
-
 
 Optional parameters:
 
 ``--optional-arg`` ``<boolean>   (default=false)``
   Optional boolean argument.
-
 
 ----
 
@@ -188,16 +183,13 @@ Simple API method with one required and one optional argument.
 ``<required-arg>`` : ``<string>``
   Required string argument.
 
-
 ``--another-required-arg`` ``<string>``
   A second required string argument.
-
 
 Optional parameters:
 
 ``--optional-arg`` ``<boolean>   (default=false)``
   Optional boolean argument.
-
 
 ----
 
@@ -206,10 +198,8 @@ Options available for command group ``clicmd l0sub``:
 ``--global1`` ``one|two``
   A global option.
 
-
 ``--global2`` ``<string>``
   A second global option.
-
 
 ----
 
@@ -220,24 +210,19 @@ Simple API method with one required and one optional argument.
 ``--required-arg`` ``<string>``
   Required string argument.
 
-
 ``--another-required-arg`` ``<string>``
   A second required string argument.
-
 
 Optional parameters:
 
 ``--optional-arg`` ``<boolean>   (default=false)``
   Optional boolean argument.
 
-
 Inherited group parameters:
 
 ``--global1``
 
 ``--global2``
-
-
 
 ----
 
@@ -248,24 +233,20 @@ Simple API method with one required and one optional argument.
 ``--required-arg`` ``<string>``
   Required string argument.
 
-
 ``--another-required-arg`` ``<string>``
   A second required string argument.
-
 
 Optional parameters:
 
 ``--optional-arg`` ``<boolean>   (default=false)``
   Optional boolean argument.
 
-
 Inherited group parameters:
 
 ``--global1``
 
-``--global2``
-"##
-    .trim_start()
+``--global2``"##
+        .trim_start()
 }
 
 #[test]
@@ -275,9 +256,9 @@ fn test_nested_usage() {
         &get_complex_test_cmddef(),
         DocumentationFormat::ReST,
     );
-    println!("--- BEGIN EXPECTED DOC OUTPUT ---");
-    println!("{doc}");
-    println!("--- END EXPECTED DOC OUTPUT ---");
+    // println!("--- BEGIN EXPECTED DOC OUTPUT ---");
+    // print!("{doc}");
+    // println!("--- END EXPECTED DOC OUTPUT ---");
     assert_eq!(doc, expected_nested_usage_text());
 }
 
@@ -293,7 +274,7 @@ fn test_toplevel_help() {
     )
     .expect("failed to format help string");
     // println!("--- BEGIN EXPECTED DOC OUTPUT ---");
-    // println!("{help}");
+    // print!("{help}");
     // println!("--- END EXPECTED DOC OUTPUT ---");
     assert_eq!(help, expected_toplevel_help_text());
 }
@@ -310,7 +291,7 @@ fn test_group_help() {
     )
     .expect("failed to format help string");
     // println!("--- BEGIN EXPECTED DOC OUTPUT ---");
-    // println!("{help}");
+    // print!("{help}");
     // println!("--- END EXPECTED DOC OUTPUT ---");
     assert_eq!(help, expected_group_help_text());
 }

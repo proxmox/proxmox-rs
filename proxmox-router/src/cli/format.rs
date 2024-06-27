@@ -132,6 +132,9 @@ pub(crate) fn generate_usage_str_do(
             ParameterDisplayStyle::Fixed,
             format,
         );
+        if !arg_descr.is_empty() {
+            arg_descr.push_str("\n\n");
+        }
         arg_descr.push_str(&param_descr);
     }
 
@@ -151,6 +154,9 @@ pub(crate) fn generate_usage_str_do(
             get_property_description(prop, param_schema, ParameterDisplayStyle::Arg, format);
 
         if *optional {
+            if !options.is_empty() {
+                options.push('\n');
+            }
             options.push_str(&prop_descr);
         } else {
             args.push_str(" --");
@@ -158,6 +164,9 @@ pub(crate) fn generate_usage_str_do(
             args.push(' ');
             args.push_str(&type_text);
 
+            if !arg_descr.is_empty() {
+                arg_descr.push_str("\n\n");
+            }
             arg_descr.push_str(&prop_descr);
         }
 
@@ -172,11 +181,11 @@ pub(crate) fn generate_usage_str_do(
 
     let mut text = match format {
         DocumentationFormat::Short => {
-            return format!("{}{}{}{}\n", indent, prefix, args, option_indicator);
+            return format!("{}{}{}{}", indent, prefix, args, option_indicator);
         }
-        DocumentationFormat::Long => format!("{}{}{}{}\n", indent, prefix, args, option_indicator),
+        DocumentationFormat::Long => format!("{}{}{}{}", indent, prefix, args, option_indicator),
         DocumentationFormat::Full => format!(
-            "{}{}{}{}\n\n{}\n\n",
+            "{}{}{}{}\n\n{}",
             indent,
             prefix,
             args,
@@ -184,7 +193,7 @@ pub(crate) fn generate_usage_str_do(
             schema.description()
         ),
         DocumentationFormat::ReST => format!(
-            "``{}{}{}``\n\n{}\n\n",
+            "``{}{}{}``\n\n{}",
             prefix,
             args,
             option_indicator,
@@ -193,31 +202,37 @@ pub(crate) fn generate_usage_str_do(
     };
 
     if !arg_descr.is_empty() {
+        text.push_str("\n\n");
         text.push_str(&arg_descr);
     }
 
     if !options.is_empty() {
-        text.push_str("Optional parameters:\n\n");
+        text.push_str("\n\nOptional parameters:\n\n");
         text.push_str(&options);
     }
 
     let mut global_options = String::new();
-    let mut separator = "";
     for opt in global_options_iter {
         use std::fmt::Write as _;
 
         if done_hash.contains(opt) {
             continue;
         }
+        if !global_options.is_empty() {
+            if matches!(format, DocumentationFormat::ReST) {
+                global_options.push_str("\n\n");
+            } else {
+                global_options.push('\n');
+            }
+        }
         let _ = match format {
-            DocumentationFormat::ReST => writeln!(global_options, "{separator}``--{opt}``"),
-            _ => writeln!(global_options, "--{opt}"),
+            DocumentationFormat::ReST => write!(global_options, "``--{opt}``"),
+            _ => write!(global_options, "--{opt}"),
         };
-        separator = "\n";
     }
 
     if !global_options.is_empty() {
-        text.push_str("Inherited group parameters:\n\n");
+        text.push_str("\n\nInherited group parameters:\n\n");
         text.push_str(&global_options);
     }
 
@@ -273,27 +288,23 @@ impl UsageState {
     fn describe_current(&self, prefix: &str, format: DocumentationFormat) -> String {
         use std::fmt::Write as _;
 
-        let mut out = String::new();
-
         let Some(opts) = self.global_options.last() else {
-            return out;
+            return String::new();
         };
 
         if opts.is_empty() {
-            return out;
+            return String::new();
         }
 
         if !matches!(
             format,
             DocumentationFormat::ReST | DocumentationFormat::Full
         ) {
-            return out;
+            return String::new();
         }
 
-        if format == DocumentationFormat::ReST {
-            let _ = write!(out, "----\n\n");
-        }
-        let _ = write!(out, "Options available for command group ``{prefix}``:\n\n");
+        let mut out = String::new();
+        let _ = write!(out, "Options available for command group ``{prefix}``:");
         for opt in opts {
             for (name, _optional, schema) in opt
                 .any_object()
@@ -302,7 +313,7 @@ impl UsageState {
             {
                 let _ = write!(
                     out,
-                    "{}",
+                    "\n\n{}",
                     get_property_description(name, schema, ParameterDisplayStyle::Arg, format)
                 );
             }
@@ -346,10 +357,24 @@ fn generate_nested_usage_do(
 
     let globals = state.describe_current(prefix, format);
     if !globals.is_empty() {
+        if format == DocumentationFormat::ReST {
+            usage.push_str("----\n\n");
+        }
         usage.push_str(&globals);
     }
 
     for cmd in cmds {
+        if !usage.is_empty() {
+            if matches!(
+                format,
+                DocumentationFormat::ReST | DocumentationFormat::Long
+            ) {
+                usage.push_str("\n\n");
+            } else {
+                usage.push('\n');
+            }
+        }
+
         let new_prefix = if prefix.is_empty() {
             String::from(cmd)
         } else {
@@ -439,14 +464,14 @@ pub fn print_help_to(
 
     match iface {
         CommandLineInterface::Nested(map) => {
-            write!(
+            writeln!(
                 to,
                 "Usage:\n\n{}",
                 generate_nested_usage_do(&mut usage_state, &prefix, map, format)
             )?;
         }
         CommandLineInterface::Simple(cli_cmd) => {
-            write!(
+            writeln!(
                 to,
                 "Usage: {}",
                 generate_usage_str_do(
