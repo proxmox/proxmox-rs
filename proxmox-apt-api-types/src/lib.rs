@@ -1,6 +1,5 @@
 use std::fmt::Display;
 
-use anyhow::{bail, Error};
 use serde::{Deserialize, Serialize};
 
 use proxmox_config_digest::ConfigDigest;
@@ -16,26 +15,8 @@ pub enum APTRepositoryFileType {
     Sources,
 }
 
-impl TryFrom<&str> for APTRepositoryFileType {
-    type Error = Error;
-
-    fn try_from(file_type: &str) -> Result<Self, Error> {
-        match file_type {
-            "list" => Ok(APTRepositoryFileType::List),
-            "sources" => Ok(APTRepositoryFileType::Sources),
-            _ => bail!("invalid file type '{file_type}'"),
-        }
-    }
-}
-
-impl Display for APTRepositoryFileType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            APTRepositoryFileType::List => write!(f, "list"),
-            APTRepositoryFileType::Sources => write!(f, "sources"),
-        }
-    }
-}
+serde_plain::derive_display_from_serialize!(APTRepositoryFileType);
+serde_plain::derive_fromstr_from_deserialize!(APTRepositoryFileType);
 
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -47,26 +28,8 @@ pub enum APTRepositoryPackageType {
     DebSrc,
 }
 
-impl TryFrom<&str> for APTRepositoryPackageType {
-    type Error = Error;
-
-    fn try_from(package_type: &str) -> Result<Self, Error> {
-        match package_type {
-            "deb" => Ok(APTRepositoryPackageType::Deb),
-            "deb-src" => Ok(APTRepositoryPackageType::DebSrc),
-            _ => bail!("invalid package type '{package_type}'"),
-        }
-    }
-}
-
-impl Display for APTRepositoryPackageType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            APTRepositoryPackageType::Deb => write!(f, "deb"),
-            APTRepositoryPackageType::DebSrc => write!(f, "deb-src"),
-        }
-    }
-}
+serde_plain::derive_display_from_serialize!(APTRepositoryPackageType);
+serde_plain::derive_fromstr_from_deserialize!(APTRepositoryPackageType);
 
 #[api(
     properties: {
@@ -326,6 +289,9 @@ pub enum APTRepositoryHandle {
     /// Ceph Reef test repository.
     CephReefTest,
 }
+
+serde_plain::derive_display_from_serialize!(APTRepositoryHandle);
+serde_plain::derive_fromstr_from_deserialize!(APTRepositoryHandle);
 
 #[api()]
 #[derive(Debug, Clone, Serialize, Deserialize)]

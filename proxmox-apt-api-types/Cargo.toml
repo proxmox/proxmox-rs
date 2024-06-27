@@ -9,7 +9,7 @@ exclude.workspace = true
 description = "APT API type definitions."
 
 [dependencies]
-anyhow.workspace = true
 serde = { workspace = true, features = ["derive"] }
+serde_plain.workspace = true
 proxmox-schema = { workspace = true, features = ["api-macro"] }
 proxmox-config-digest.workspace = true
