@@ -37,6 +37,23 @@ pub fn wrap_text(
     text: &str,
     columns: usize,
 ) -> String {
+    // first we condense paragraphs by normalizing whitespace:
+    let paragraphs = text
+        .split("\n\n")
+        .map(|paragraph| {
+            paragraph
+                .split_ascii_whitespace()
+                .fold(String::new(), |mut acc, word| {
+                    if !acc.is_empty() {
+                        acc.push(' ');
+                    }
+                    acc.push_str(word);
+                    acc
+                })
+        })
+        .collect::<Vec<_>>();
+
+    // Then we wrap each paragraph with textwrap.
     let wrap_options1 = textwrap::Options::new(columns)
         .initial_indent(initial_indent)
         .subsequent_indent(subsequent_indent);
@@ -45,15 +62,15 @@ pub fn wrap_text(
         .initial_indent(subsequent_indent)
         .subsequent_indent(subsequent_indent);
 
-    text.split("\n\n")
-        .map(|p| p.trim())
+    paragraphs
+        .into_iter()
         .filter(|p| !p.is_empty())
         .fold(String::new(), |mut acc, p| {
             if acc.is_empty() {
-                acc.push_str(&textwrap::wrap(p, &wrap_options1).join("\n"));
+                acc.push_str(&textwrap::wrap(&p, &wrap_options1).join("\n"));
             } else {
                 acc.push_str("\n\n");
-                acc.push_str(&textwrap::wrap(p, &wrap_options2).join("\n"));
+                acc.push_str(&textwrap::wrap(&p, &wrap_options2).join("\n"));
             }
             acc
         })
@@ -61,11 +78,29 @@ pub fn wrap_text(
 
 #[test]
 fn test_wrap_text() {
-    let text = "Command. This may be a list in order to spefify nested sub-commands.";
-    let expect = "             Command. This may be a list in order to spefify nested sub-\n             commands.";
+    let text = "\
+Command. This may be a list in order to specify nested subcommands.
 
-    let indent = "             ";
-    let wrapped = wrap_text(indent, indent, text, 80);
+A
+second
+paragraph which will be formatted differently, consisting of both lines
+which are too long and ones which are
+too
+short.";
+
+    let expect = "    \
+    Command. This may be a list in order to specify nested
+        subcommands.
+
+        A second paragraph which will be formatted
+        differently, consisting of both lines which are too
+        long and ones which are too short.\
+    ";
+
+    let wrapped = wrap_text("    ", "        ", text, 60);
+
+    eprintln!("[[[[\n{expect}]]]]");
+    eprintln!("[[[[\n{wrapped}]]]]");
 
     assert_eq!(wrapped, expect);
 }
