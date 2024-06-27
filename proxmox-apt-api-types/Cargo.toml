@@ -1,0 +1,15 @@
+[package]
+name = "proxmox-apt-api-types"
+version = "1.0.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+description = "APT API type definitions."
+
+[dependencies]
+anyhow.workspace = true
+serde = { workspace = true, features = ["derive"] }
+proxmox-schema = { workspace = true, features = ["api-macro"] }
+proxmox-config-digest.workspace = true
