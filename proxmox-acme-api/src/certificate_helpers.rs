@@ -337,6 +337,8 @@ impl CertificateInfo {
             .map(|san| {
                 san.into_iter()
                     .filter_map(|name| {
+                        // this is not actually a map and we don't want to break the pattern
+                        #[allow(clippy::manual_map)]
                         if let Some(name) = name.dnsname() {
                             Some(format!("DNS: {name}"))
                         } else if let Some(ip) = name.ipaddress() {
