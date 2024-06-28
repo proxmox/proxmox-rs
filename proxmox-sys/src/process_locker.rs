@@ -112,6 +112,7 @@ impl ProcessLocker {
             .create(true)
             .read(true)
             .write(true)
+            .truncate(false)
             .open(lockfile)?;
 
         Ok(Arc::new(Mutex::new(Self {
