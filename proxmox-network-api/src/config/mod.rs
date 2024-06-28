@@ -604,11 +604,9 @@ mod tests {
         };
         assert_eq!(
             String::try_from(nw_config).unwrap().trim(),
-            r#"
+            "\
 iface enp3s0 inet static
-	address 10.0.0.100/16"#
-                .to_string()
-                .trim()
+	address 10.0.0.100/16"
         );
     }
 
@@ -628,12 +626,10 @@ iface enp3s0 inet static
         };
         assert_eq!(
             String::try_from(nw_config).unwrap().trim(),
-            r#"
+            "\
 iface enp3s0 inet static
 	address 10.0.0.100/16
-	gateway 10.0.0.1"#
-                .to_string()
-                .trim()
+	gateway 10.0.0.1"
         );
     }
 
