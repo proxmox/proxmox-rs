@@ -22,6 +22,8 @@ use crate::{Error, Token};
 
 use super::{HttpApiClient, HttpApiResponse};
 
+/// See [`set_verify_callback`](openssl::ssl::SslContextBuilder::set_verify_callback()).
+pub type TlsCallback = dyn Fn(bool, &mut x509::X509StoreContextRef) -> bool + Send + Sync + 'static;
 #[derive(Default)]
 pub enum TlsOptions {
     /// Default TLS verification.
@@ -38,7 +40,7 @@ pub enum TlsOptions {
     CaCert(X509),
 
     /// Use a callback for certificate verification.
-    Callback(Box<dyn Fn(bool, &mut x509::X509StoreContextRef) -> bool + Send + Sync + 'static>),
+    Callback(Box<TlsCallback>),
 }
 
 impl TlsOptions {
