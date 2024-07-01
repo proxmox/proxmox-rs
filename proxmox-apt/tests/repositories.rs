@@ -8,6 +8,9 @@ use proxmox_apt::repositories::{
     check_repositories, get_current_release_codename, standard_repositories, APTRepositoryFile,
     APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository, DebianCodename,
 };
+use proxmox_apt::repositories::{
+    APTRepositoryFileImpl, APTRepositoryHandleImpl, APTRepositoryImpl,
+};
 
 fn create_clean_directory(path: &PathBuf) -> Result<(), Error> {
     match std::fs::remove_dir_all(path) {

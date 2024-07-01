@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use proxmox_schema::api;
 
 use crate::repositories::standard::APTRepositoryHandle;
+use crate::repositories::standard::APTRepositoryHandleImpl;
 
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -188,9 +189,41 @@ pub struct APTRepository {
     pub enabled: bool,
 }
 
-impl APTRepository {
+pub trait APTRepositoryImpl {
     /// Crates an empty repository.
-    pub fn new(file_type: APTRepositoryFileType) -> Self {
+    fn new(file_type: APTRepositoryFileType) -> Self;
+
+    /// Changes the `enabled` flag and makes sure the `Enabled` option for
+    /// `APTRepositoryPackageType::Sources` repositories is updated too.
+    fn set_enabled(&mut self, enabled: bool);
+
+    /// Makes sure that all basic properties of a repository are present and not obviously invalid.
+    fn basic_check(&self) -> Result<(), Error>;
+
+    /// Checks if the repository is the one referenced by the handle.
+    fn is_referenced_repository(
+        &self,
+        handle: APTRepositoryHandle,
+        product: &str,
+        suite: &str,
+    ) -> bool;
+
+    /// Guess the origin from the repository's URIs.
+    ///
+    /// Intended to be used as a fallback for get_cached_origin.
+    fn origin_from_uris(&self) -> Option<String>;
+
+    /// Get the `Origin:` value from a cached InRelease file.
+    fn get_cached_origin(&self) -> Result<Option<String>, Error>;
+
+    /// Writes a repository in the corresponding format followed by a blank.
+    ///
+    /// Expects that `basic_check()` for the repository was successful.
+    fn write(&self, w: &mut dyn Write) -> Result<(), Error>;
+}
+
+impl APTRepositoryImpl for APTRepository {
+    fn new(file_type: APTRepositoryFileType) -> Self {
         Self {
             types: vec![],
             uris: vec![],
@@ -203,9 +236,7 @@ impl APTRepository {
         }
     }
 
-    /// Changes the `enabled` flag and makes sure the `Enabled` option for
-    /// `APTRepositoryPackageType::Sources` repositories is updated too.
-    pub fn set_enabled(&mut self, enabled: bool) {
+    fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
 
         if self.file_type == APTRepositoryFileType::Sources {
@@ -226,8 +257,7 @@ impl APTRepository {
         }
     }
 
-    /// Makes sure that all basic properties of a repository are present and not obviously invalid.
-    pub fn basic_check(&self) -> Result<(), Error> {
+    fn basic_check(&self) -> Result<(), Error> {
         if self.types.is_empty() {
             bail!("missing package type(s)");
         }
@@ -267,8 +297,7 @@ impl APTRepository {
         Ok(())
     }
 
-    /// Checks if the repository is the one referenced by the handle.
-    pub fn is_referenced_repository(
+    fn is_referenced_repository(
         &self,
         handle: APTRepositoryHandle,
         product: &str,
@@ -299,10 +328,7 @@ impl APTRepository {
             && found_component
     }
 
-    /// Guess the origin from the repository's URIs.
-    ///
-    /// Intended to be used as a fallback for get_cached_origin.
-    pub fn origin_from_uris(&self) -> Option<String> {
+    fn origin_from_uris(&self) -> Option<String> {
         for uri in self.uris.iter() {
             if let Some(host) = host_from_uri(uri) {
                 if host == "proxmox.com" || host.ends_with(".proxmox.com") {
@@ -318,8 +344,7 @@ impl APTRepository {
         None
     }
 
-    /// Get the `Origin:` value from a cached InRelease file.
-    pub fn get_cached_origin(&self) -> Result<Option<String>, Error> {
+    fn get_cached_origin(&self) -> Result<Option<String>, Error> {
         for uri in self.uris.iter() {
             for suite in self.suites.iter() {
                 let mut file = release_filename(uri, suite, false);
@@ -353,10 +378,7 @@ impl APTRepository {
         Ok(None)
     }
 
-    /// Writes a repository in the corresponding format followed by a blank.
-    ///
-    /// Expects that `basic_check()` for the repository was successful.
-    pub fn write(&self, w: &mut dyn Write) -> Result<(), Error> {
+    fn write(&self, w: &mut dyn Write) -> Result<(), Error> {
         match self.file_type {
             APTRepositoryFileType::List => write_one_line(self, w),
             APTRepositoryFileType::Sources => write_stanza(self, w),

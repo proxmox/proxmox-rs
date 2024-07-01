@@ -4,17 +4,20 @@ use std::path::PathBuf;
 use anyhow::{bail, Error};
 
 mod repository;
+pub use repository::APTRepositoryImpl;
 pub use repository::{
     APTRepository, APTRepositoryFileType, APTRepositoryOption, APTRepositoryPackageType,
 };
 
 mod file;
+pub use file::APTRepositoryFileImpl;
 pub use file::{APTRepositoryFile, APTRepositoryFileError, APTRepositoryInfo};
 
 mod release;
 pub use release::{get_current_release_codename, DebianCodename};
 
 mod standard;
+pub use standard::APTRepositoryHandleImpl;
 pub use standard::{APTRepositoryHandle, APTStandardRepository};
 
 const APT_SOURCES_LIST_FILENAME: &str = "/etc/apt/sources.list";

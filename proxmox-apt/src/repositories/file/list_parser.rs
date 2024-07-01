@@ -3,9 +3,9 @@ use std::iter::Iterator;
 
 use anyhow::{bail, format_err, Error};
 
-use crate::repositories::{APTRepository, APTRepositoryFileType, APTRepositoryOption};
-
 use super::APTRepositoryParser;
+use crate::repositories::APTRepositoryImpl;
+use crate::repositories::{APTRepository, APTRepositoryFileType, APTRepositoryOption};
 
 // TODO convert %-escape characters. Also adapt printing back accordingly,
 // because at least '%' needs to be re-escaped when printing.

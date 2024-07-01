@@ -3,6 +3,7 @@ use std::iter::Iterator;
 
 use anyhow::{bail, Error};
 
+use crate::repositories::APTRepositoryImpl;
 use crate::repositories::{
     APTRepository, APTRepositoryFileType, APTRepositoryOption, APTRepositoryPackageType,
 };

@@ -9,6 +9,8 @@ use crate::repositories::repository::{
     APTRepository, APTRepositoryFileType, APTRepositoryPackageType,
 };
 
+use crate::repositories::repository::APTRepositoryImpl;
+
 use proxmox_schema::api;
 
 mod list_parser;
@@ -116,13 +118,46 @@ pub struct APTRepositoryInfo {
     pub message: String,
 }
 
-impl APTRepositoryFile {
+pub trait APTRepositoryFileImpl {
     /// Creates a new `APTRepositoryFile` without parsing.
     ///
     /// If the file is hidden, the path points to a directory, or the extension
     /// is usually ignored by APT (e.g. `.orig`), `Ok(None)` is returned, while
     /// invalid file names yield an error.
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Option<Self>, APTRepositoryFileError> {
+    fn new<P: AsRef<Path>>(path: P) -> Result<Option<APTRepositoryFile>, APTRepositoryFileError>;
+
+    fn with_content(content: String, content_type: APTRepositoryFileType) -> Self;
+
+    /// Check if the file exists.
+    fn exists(&self) -> bool;
+
+    fn read_with_digest(&self) -> Result<(Vec<u8>, [u8; 32]), APTRepositoryFileError>;
+
+    /// Create an `APTRepositoryFileError`.
+    fn err(&self, error: Error) -> APTRepositoryFileError;
+
+    /// Parses the APT repositories configured in the file on disk, including
+    /// disabled ones.
+    ///
+    /// Resets the current repositories and digest, even on failure.
+    fn parse(&mut self) -> Result<(), APTRepositoryFileError>;
+
+    /// Writes the repositories to the file on disk.
+    ///
+    /// If a digest is provided, checks that the current content of the file still
+    /// produces the same one.
+    fn write(&self) -> Result<(), APTRepositoryFileError>;
+
+    /// Checks if old or unstable suites are configured and that the Debian security repository
+    /// has the correct suite. Also checks that the `stable` keyword is not used.
+    fn check_suites(&self, current_codename: DebianCodename) -> Vec<APTRepositoryInfo>;
+
+    /// Checks for official URIs.
+    fn check_uris(&self) -> Vec<APTRepositoryInfo>;
+}
+
+impl APTRepositoryFileImpl for APTRepositoryFile {
+    fn new<P: AsRef<Path>>(path: P) -> Result<Option<Self>, APTRepositoryFileError> {
         let path: PathBuf = path.as_ref().to_path_buf();
 
         let new_err = |path_string: String, err: &str| APTRepositoryFileError {
@@ -197,7 +232,7 @@ impl APTRepositoryFile {
         }))
     }
 
-    pub fn with_content(content: String, content_type: APTRepositoryFileType) -> Self {
+    fn with_content(content: String, content_type: APTRepositoryFileType) -> Self {
         Self {
             file_type: content_type,
             content: Some(content),
@@ -207,8 +242,7 @@ impl APTRepositoryFile {
         }
     }
 
-    /// Check if the file exists.
-    pub fn exists(&self) -> bool {
+    fn exists(&self) -> bool {
         if let Some(path) = &self.path {
             PathBuf::from(path).exists()
         } else {
@@ -216,7 +250,7 @@ impl APTRepositoryFile {
         }
     }
 
-    pub fn read_with_digest(&self) -> Result<(Vec<u8>, [u8; 32]), APTRepositoryFileError> {
+    fn read_with_digest(&self) -> Result<(Vec<u8>, [u8; 32]), APTRepositoryFileError> {
         if let Some(path) = &self.path {
             let content = std::fs::read(path).map_err(|err| self.err(format_err!("{}", err)))?;
             let digest = openssl::sha::sha256(&content);
@@ -233,19 +267,14 @@ impl APTRepositoryFile {
         }
     }
 
-    /// Create an `APTRepositoryFileError`.
-    pub fn err(&self, error: Error) -> APTRepositoryFileError {
+    fn err(&self, error: Error) -> APTRepositoryFileError {
         APTRepositoryFileError {
             path: self.path.clone().unwrap_or_default(),
             error: error.to_string(),
         }
     }
 
-    /// Parses the APT repositories configured in the file on disk, including
-    /// disabled ones.
-    ///
-    /// Resets the current repositories and digest, even on failure.
-    pub fn parse(&mut self) -> Result<(), APTRepositoryFileError> {
+    fn parse(&mut self) -> Result<(), APTRepositoryFileError> {
         self.repositories.clear();
         self.digest = None;
 
@@ -269,11 +298,7 @@ impl APTRepositoryFile {
         Ok(())
     }
 
-    /// Writes the repositories to the file on disk.
-    ///
-    /// If a digest is provided, checks that the current content of the file still
-    /// produces the same one.
-    pub fn write(&self) -> Result<(), APTRepositoryFileError> {
+    fn write(&self) -> Result<(), APTRepositoryFileError> {
         let path = match &self.path {
             Some(path) => path,
             None => {
@@ -336,9 +361,7 @@ impl APTRepositoryFile {
         Ok(())
     }
 
-    /// Checks if old or unstable suites are configured and that the Debian security repository
-    /// has the correct suite. Also checks that the `stable` keyword is not used.
-    pub fn check_suites(&self, current_codename: DebianCodename) -> Vec<APTRepositoryInfo> {
+    fn check_suites(&self, current_codename: DebianCodename) -> Vec<APTRepositoryInfo> {
         let mut infos = vec![];
 
         let path = match &self.path {
@@ -427,8 +450,7 @@ impl APTRepositoryFile {
         infos
     }
 
-    /// Checks for official URIs.
-    pub fn check_uris(&self) -> Vec<APTRepositoryInfo> {
+    fn check_uris(&self) -> Vec<APTRepositoryInfo> {
         let mut infos = vec![];
 
         let path = match &self.path {

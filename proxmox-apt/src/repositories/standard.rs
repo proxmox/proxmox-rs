@@ -111,9 +111,26 @@ impl Display for APTRepositoryHandle {
     }
 }
 
-impl APTRepositoryHandle {
+pub trait APTRepositoryHandleImpl {
     /// Get the description for the repository.
-    pub fn description(self) -> String {
+    fn description(self) -> String;
+    /// Get the display name of the repository.
+    fn name(self) -> String;
+    /// Get the standard file path for the repository referenced by the handle.
+    fn path(self, product: &str) -> String;
+    /// Get package type, possible URIs and the component associated with the handle.
+    ///
+    /// The first URI is the preferred one.
+    fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String);
+    /// Get the standard repository referenced by the handle.
+    ///
+    /// An URI in the result is not '/'-terminated (under the assumption that no valid
+    /// product name is).
+    fn to_repository(self, product: &str, suite: &str) -> APTRepository;
+}
+
+impl APTRepositoryHandleImpl for APTRepositoryHandle {
+    fn description(self) -> String {
         match self {
             APTRepositoryHandle::Enterprise => {
                 "This is the default, stable, and recommended repository, available for all \
@@ -155,8 +172,7 @@ impl APTRepositoryHandle {
         .to_string()
     }
 
-    /// Get the display name of the repository.
-    pub fn name(self) -> String {
+    fn name(self) -> String {
         match self {
             APTRepositoryHandle::Enterprise => "Enterprise",
             APTRepositoryHandle::NoSubscription => "No-Subscription",
@@ -171,8 +187,7 @@ impl APTRepositoryHandle {
         .to_string()
     }
 
-    /// Get the standard file path for the repository referenced by the handle.
-    pub fn path(self, product: &str) -> String {
+    fn path(self, product: &str) -> String {
         match self {
             APTRepositoryHandle::Enterprise => {
                 format!("/etc/apt/sources.list.d/{}-enterprise.list", product)
@@ -188,10 +203,7 @@ impl APTRepositoryHandle {
         }
     }
 
-    /// Get package type, possible URIs and the component associated with the handle.
-    ///
-    /// The first URI is the preferred one.
-    pub fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String) {
+    fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String) {
         match self {
             APTRepositoryHandle::Enterprise => (
                 APTRepositoryPackageType::Deb,
@@ -259,11 +271,7 @@ impl APTRepositoryHandle {
         }
     }
 
-    /// Get the standard repository referenced by the handle.
-    ///
-    /// An URI in the result is not '/'-terminated (under the assumption that no valid
-    /// product name is).
-    pub fn to_repository(self, product: &str, suite: &str) -> APTRepository {
+    fn to_repository(self, product: &str, suite: &str) -> APTRepository {
         let (package_type, uris, component) = self.info(product);
 
         APTRepository {
