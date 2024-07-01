@@ -184,7 +184,7 @@ impl<R: BufRead> APTListFileParser<R> {
         // e.g. quoted "deb" is not accepted by APT, so no need for quote word parsing here
         line = match line.split_once(|c| char::is_ascii_whitespace(&c)) {
             Some((package_type, rest)) => {
-                repo.types.push(package_type.try_into()?);
+                repo.types.push(package_type.parse()?);
                 rest
             }
             None => return Ok(None), // empty line

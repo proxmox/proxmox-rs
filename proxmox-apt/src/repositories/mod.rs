@@ -4,21 +4,22 @@ use std::path::PathBuf;
 use anyhow::{bail, Error};
 
 mod repository;
-pub use repository::APTRepositoryImpl;
-pub use repository::{
-    APTRepository, APTRepositoryFileType, APTRepositoryOption, APTRepositoryPackageType,
+use proxmox_apt_api_types::{
+    APTRepository, APTRepositoryFile, APTRepositoryFileError, APTRepositoryFileType,
+    APTRepositoryHandle, APTRepositoryInfo, APTRepositoryOption, APTRepositoryPackageType,
+    APTStandardRepository,
 };
+use proxmox_config_digest::ConfigDigest;
+pub use repository::APTRepositoryImpl;
 
 mod file;
 pub use file::APTRepositoryFileImpl;
-pub use file::{APTRepositoryFile, APTRepositoryFileError, APTRepositoryInfo};
 
 mod release;
 pub use release::{get_current_release_codename, DebianCodename};
 
 mod standard;
-pub use standard::APTRepositoryHandleImpl;
-pub use standard::{APTRepositoryHandle, APTStandardRepository};
+pub use standard::{APTRepositoryHandleImpl, APTStandardRepositoryImpl};
 
 const APT_SOURCES_LIST_FILENAME: &str = "/etc/apt/sources.list";
 const APT_SOURCES_LIST_DIRECTORY: &str = "/etc/apt/sources.list.d/";
@@ -28,7 +29,7 @@ const APT_SOURCES_LIST_DIRECTORY: &str = "/etc/apt/sources.list.d/";
 /// The digest is invariant with respect to file order.
 ///
 /// Files without a digest are ignored.
-fn common_digest(files: &[APTRepositoryFile]) -> [u8; 32] {
+fn common_digest(files: &[APTRepositoryFile]) -> ConfigDigest {
     let mut digests = BTreeMap::new();
 
     for file in files.iter() {
@@ -43,7 +44,7 @@ fn common_digest(files: &[APTRepositoryFile]) -> [u8; 32] {
         }
     }
 
-    openssl::sha::sha256(&common_raw[..])
+    ConfigDigest::from_slice(&common_raw[..])
 }
 
 /// Provides additional information about the repositories.
@@ -86,22 +87,22 @@ pub fn standard_repositories(
     suite: DebianCodename,
 ) -> Vec<APTStandardRepository> {
     let mut result = vec![
-        APTStandardRepository::from(APTRepositoryHandle::Enterprise),
-        APTStandardRepository::from(APTRepositoryHandle::NoSubscription),
-        APTStandardRepository::from(APTRepositoryHandle::Test),
+        APTStandardRepository::from_handle(APTRepositoryHandle::Enterprise),
+        APTStandardRepository::from_handle(APTRepositoryHandle::NoSubscription),
+        APTStandardRepository::from_handle(APTRepositoryHandle::Test),
     ];
 
     if product == "pve" {
         result.append(&mut vec![
-            APTStandardRepository::from(APTRepositoryHandle::CephQuincyEnterprise),
-            APTStandardRepository::from(APTRepositoryHandle::CephQuincyNoSubscription),
-            APTStandardRepository::from(APTRepositoryHandle::CephQuincyTest),
+            APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyEnterprise),
+            APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyNoSubscription),
+            APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyTest),
         ]);
         if suite == DebianCodename::Bookworm {
             result.append(&mut vec![
-                APTStandardRepository::from(APTRepositoryHandle::CephReefEnterprise),
-                APTStandardRepository::from(APTRepositoryHandle::CephReefNoSubscription),
-                APTStandardRepository::from(APTRepositoryHandle::CephReefTest),
+                APTStandardRepository::from_handle(APTRepositoryHandle::CephReefEnterprise),
+                APTStandardRepository::from_handle(APTRepositoryHandle::CephReefNoSubscription),
+                APTStandardRepository::from_handle(APTRepositoryHandle::CephReefTest),
             ]);
         }
     }
@@ -128,7 +129,7 @@ pub fn standard_repositories(
 pub type Repositories = (
     Vec<APTRepositoryFile>,
     Vec<APTRepositoryFileError>,
-    [u8; 32],
+    ConfigDigest,
 );
 
 /// Returns all APT repositories configured in `/etc/apt/sources.list` and

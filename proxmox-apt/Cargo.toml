@@ -8,7 +8,7 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 
-exclude = [ "debian" ]
+exclude = ["debian"]
 
 [dependencies]
 anyhow.workspace = true
@@ -20,4 +20,5 @@ serde_json.workspace = true
 
 rfc822-like = "0.2.1"
 
-proxmox-schema = { workspace = true, features = [ "api-macro" ] }
+proxmox-apt-api-types.workspace = true
+proxmox-config-digest = { workspace = true, features = ["openssl"] }

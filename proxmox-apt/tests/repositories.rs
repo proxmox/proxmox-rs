@@ -9,7 +9,7 @@ use proxmox_apt::repositories::{
     APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository, DebianCodename,
 };
 use proxmox_apt::repositories::{
-    APTRepositoryFileImpl, APTRepositoryHandleImpl, APTRepositoryImpl,
+    APTRepositoryFileImpl, APTRepositoryHandleImpl, APTRepositoryImpl, APTStandardRepositoryImpl,
 };
 
 fn create_clean_directory(path: &PathBuf) -> Result<(), Error> {
@@ -114,7 +114,7 @@ fn test_digest() -> Result<(), Error> {
     let new_path = write_dir.join(path.file_name().unwrap());
     file.path = Some(new_path.clone().into_os_string().into_string().unwrap());
 
-    let old_digest = file.digest.unwrap();
+    let old_digest = file.digest.clone().unwrap();
 
     // file does not exist yet...
     assert!(file.read_with_digest().is_err());
@@ -132,7 +132,7 @@ fn test_digest() -> Result<(), Error> {
     repo.enabled = !repo.enabled;
 
     // ...then it should work
-    file.digest = Some(old_digest);
+    file.digest = Some(old_digest.clone());
     file.write()?;
 
     // expect a different digest, because the repo was modified
@@ -361,15 +361,15 @@ fn test_standard_repositories() -> Result<(), Error> {
     let read_dir = test_dir.join("sources.list.d");
 
     let mut expected = vec![
-        APTStandardRepository::from(APTRepositoryHandle::Enterprise),
-        APTStandardRepository::from(APTRepositoryHandle::NoSubscription),
-        APTStandardRepository::from(APTRepositoryHandle::Test),
-        APTStandardRepository::from(APTRepositoryHandle::CephQuincyEnterprise),
-        APTStandardRepository::from(APTRepositoryHandle::CephQuincyNoSubscription),
-        APTStandardRepository::from(APTRepositoryHandle::CephQuincyTest),
-        APTStandardRepository::from(APTRepositoryHandle::CephReefEnterprise),
-        APTStandardRepository::from(APTRepositoryHandle::CephReefNoSubscription),
-        APTStandardRepository::from(APTRepositoryHandle::CephReefTest),
+        APTStandardRepository::from_handle(APTRepositoryHandle::Enterprise),
+        APTStandardRepository::from_handle(APTRepositoryHandle::NoSubscription),
+        APTStandardRepository::from_handle(APTRepositoryHandle::Test),
+        APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyEnterprise),
+        APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyNoSubscription),
+        APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyTest),
+        APTStandardRepository::from_handle(APTRepositoryHandle::CephReefEnterprise),
+        APTStandardRepository::from_handle(APTRepositoryHandle::CephReefNoSubscription),
+        APTStandardRepository::from_handle(APTRepositoryHandle::CephReefTest),
     ];
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");

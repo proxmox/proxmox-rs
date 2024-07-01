@@ -1,17 +1,14 @@
-use std::fmt::Display;
 use std::path::{Path, PathBuf};
 
 use anyhow::{format_err, Error};
-use serde::{Deserialize, Serialize};
 
 use crate::repositories::release::DebianCodename;
-use crate::repositories::repository::{
-    APTRepository, APTRepositoryFileType, APTRepositoryPackageType,
+use proxmox_apt_api_types::{
+    APTRepository, APTRepositoryFile, APTRepositoryFileError, APTRepositoryFileType,
+    APTRepositoryInfo, APTRepositoryPackageType,
 };
 
 use crate::repositories::repository::APTRepositoryImpl;
-
-use proxmox_schema::api;
 
 mod list_parser;
 use list_parser::APTListFileParser;
@@ -19,103 +16,12 @@ use list_parser::APTListFileParser;
 mod sources_parser;
 use sources_parser::APTSourcesFileParser;
 
+use proxmox_config_digest::ConfigDigest;
+
 trait APTRepositoryParser {
     /// Parse all repositories including the disabled ones and push them onto
     /// the provided vector.
     fn parse_repositories(&mut self) -> Result<Vec<APTRepository>, Error>;
-}
-
-#[api(
-    properties: {
-        "file-type": {
-            type: APTRepositoryFileType,
-        },
-        repositories: {
-            description: "List of APT repositories.",
-            type: Array,
-            items: {
-                type: APTRepository,
-            },
-        },
-        digest: {
-            description: "Digest for the content of the file.",
-            optional: true,
-            type: Array,
-            items: {
-                description: "Digest byte.",
-                type: u8,
-            },
-        },
-    },
-)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-/// Represents an abstract APT repository file.
-pub struct APTRepositoryFile {
-    /// The path to the file. If None, `contents` must be set directly.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub path: Option<String>,
-
-    /// The type of the file.
-    pub file_type: APTRepositoryFileType,
-
-    /// List of repositories in the file.
-    pub repositories: Vec<APTRepository>,
-
-    /// The file content, if already parsed.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub content: Option<String>,
-
-    /// Digest of the original contents.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub digest: Option<[u8; 32]>,
-}
-
-#[api]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-/// Error type for problems with APT repository files.
-pub struct APTRepositoryFileError {
-    /// The path to the problematic file.
-    pub path: String,
-
-    /// The error message.
-    pub error: String,
-}
-
-impl Display for APTRepositoryFileError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "proxmox-apt error for '{}' - {}", self.path, self.error)
-    }
-}
-
-impl std::error::Error for APTRepositoryFileError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        None
-    }
-}
-
-#[api]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-/// Additional information for a repository.
-pub struct APTRepositoryInfo {
-    /// Path to the defining file.
-    #[serde(default, skip_serializing_if = "String::is_empty")]
-    pub path: String,
-
-    /// Index of the associated respository within the file (starting from 0).
-    pub index: usize,
-
-    /// The property from which the info originates (e.g. "Suites")
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub property: Option<String>,
-
-    /// Info kind (e.g. "warning")
-    pub kind: String,
-
-    /// Info message
-    pub message: String,
 }
 
 pub trait APTRepositoryFileImpl {
@@ -131,7 +37,7 @@ pub trait APTRepositoryFileImpl {
     /// Check if the file exists.
     fn exists(&self) -> bool;
 
-    fn read_with_digest(&self) -> Result<(Vec<u8>, [u8; 32]), APTRepositoryFileError>;
+    fn read_with_digest(&self) -> Result<(Vec<u8>, ConfigDigest), APTRepositoryFileError>;
 
     /// Create an `APTRepositoryFileError`.
     fn err(&self, error: Error) -> APTRepositoryFileError;
@@ -213,7 +119,8 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
             return Ok(None);
         }
 
-        let file_type = APTRepositoryFileType::try_from(&extension[..])
+        let file_type = extension[..]
+            .parse()
             .map_err(|_| new_err("invalid extension"))?;
 
         if !file_name
@@ -250,15 +157,15 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
         }
     }
 
-    fn read_with_digest(&self) -> Result<(Vec<u8>, [u8; 32]), APTRepositoryFileError> {
+    fn read_with_digest(&self) -> Result<(Vec<u8>, ConfigDigest), APTRepositoryFileError> {
         if let Some(path) = &self.path {
             let content = std::fs::read(path).map_err(|err| self.err(format_err!("{}", err)))?;
-            let digest = openssl::sha::sha256(&content);
+            let digest = ConfigDigest::from_slice(&content);
 
             Ok((content, digest))
         } else if let Some(ref content) = self.content {
             let content = content.as_bytes();
-            let digest = openssl::sha::sha256(content);
+            let digest = ConfigDigest::from_slice(content);
             Ok((content.to_vec(), digest))
         } else {
             Err(self.err(format_err!(
@@ -308,13 +215,13 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
             }
         };
 
-        if let Some(digest) = self.digest {
+        if let Some(digest) = &self.digest {
             if !self.exists() {
                 return Err(self.err(format_err!("digest specified, but file does not exist")));
             }
 
             let (_, current_digest) = self.read_with_digest()?;
-            if digest != current_digest {
+            if digest != &current_digest {
                 return Err(self.err(format_err!("digest mismatch")));
             }
         }
