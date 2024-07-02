@@ -13,6 +13,7 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-apt-api-types-1+default-dev <!nocheck>,
  librust-proxmox-config-digest-0.1+default-dev <!nocheck>,
  librust-proxmox-config-digest-0.1+openssl-dev <!nocheck>,
+ librust-proxmox-sys-0.5+default-dev (>= 0.5.7-~~) <!nocheck>,
  librust-rfc822-like-0.2+default-dev (>= 0.2.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
@@ -37,10 +38,13 @@ Depends:
  librust-proxmox-apt-api-types-1+default-dev,
  librust-proxmox-config-digest-0.1+default-dev,
  librust-proxmox-config-digest-0.1+openssl-dev,
+ librust-proxmox-sys-0.5+default-dev (>= 0.5.7-~~),
  librust-rfc822-like-0.2+default-dev (>= 0.2.1-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
+Suggests:
+ librust-proxmox-apt+cache-dev (= ${binary:Version})
 Provides:
  librust-proxmox-apt+default-dev (= ${binary:Version}),
  librust-proxmox-apt-0-dev (= ${binary:Version}),
@@ -51,3 +55,22 @@ Provides:
  librust-proxmox-apt-0.10.10+default-dev (= ${binary:Version})
 Description: Proxmox library for APT - Rust source code
  Source code for Debianized Rust crate "proxmox-apt"
+
+Package: librust-proxmox-apt+cache-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-apt-dev (= ${binary:Version}),
+ librust-apt-pkg-native-0.3+default-dev (>= 0.3.2-~~),
+ librust-log-0.4+default-dev (>= 0.4.17-~~),
+ librust-nix-0.26+default-dev (>= 0.26.1-~~),
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~),
+ librust-regex-1+default-dev (>= 1.5-~~)
+Provides:
+ librust-proxmox-apt-0+cache-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.10+cache-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.10.10+cache-dev (= ${binary:Version})
+Description: Proxmox library for APT - feature "cache"
+ This metapackage enables feature "cache" for the Rust proxmox-apt crate, by
+ pulling in any additional dependencies needed by that feature.

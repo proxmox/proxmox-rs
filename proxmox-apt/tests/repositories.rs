@@ -5,11 +5,13 @@ use anyhow::{bail, format_err, Error};
 use proxmox_apt::config::APTConfig;
 
 use proxmox_apt::repositories::{
-    check_repositories, get_current_release_codename, standard_repositories, APTRepositoryFile,
-    APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository, DebianCodename,
+    check_repositories, get_current_release_codename, standard_repositories, DebianCodename,
 };
 use proxmox_apt::repositories::{
-    APTRepositoryFileImpl, APTRepositoryHandleImpl, APTRepositoryImpl, APTStandardRepositoryImpl,
+    APTRepositoryFileImpl, APTRepositoryImpl, APTStandardRepositoryImpl,
+};
+use proxmox_apt_api_types::{
+    APTRepositoryFile, APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository,
 };
 
 fn create_clean_directory(path: &PathBuf) -> Result<(), Error> {

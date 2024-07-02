@@ -22,3 +22,20 @@ rfc822-like = "0.2.1"
 
 proxmox-apt-api-types.workspace = true
 proxmox-config-digest = { workspace = true, features = ["openssl"] }
+proxmox-sys.workspace = true
+
+apt-pkg-native = { version = "0.3.2", optional = true }
+regex = { workspace = true, optional = true }
+nix = { workspace = true, optional = true }
+log = { workspace = true, optional = true }
+proxmox-schema = { workspace = true, optional = true }
+
+[features]
+default = []
+cache = [
+    "dep:apt-pkg-native",
+    "dep:regex",
+    "dep:nix",
+    "dep:log",
+    "dep:proxmox-schema",
+]
