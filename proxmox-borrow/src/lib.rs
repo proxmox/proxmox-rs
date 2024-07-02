@@ -1,5 +1,7 @@
 //! Helpers for borrowing and self-borrowing values.
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::mem::ManuallyDrop;
 
 /// This ties two values together, so that one value can borrow from the other, while allowing the

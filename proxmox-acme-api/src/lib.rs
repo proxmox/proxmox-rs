@@ -1,4 +1,6 @@
 //! ACME API crate (API types and API implementation)
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 mod types;
 pub use types::*;
 

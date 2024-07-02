@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::fmt;
 
 use serde::{ser::SerializeStruct, Serialize, Serializer};

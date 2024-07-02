@@ -1,5 +1,7 @@
 //! API Router and Command Line Interface utilities.
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 pub mod format;
 
 #[cfg(feature = "cli")]

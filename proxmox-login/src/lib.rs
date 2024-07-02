@@ -1,6 +1,8 @@
 //! This package provides helpers for logging into the APIs of Proxmox products such as Proxmox VE
 //! or Proxmox Backup.
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use serde::{Deserialize, Serialize};
 
 pub mod parse;

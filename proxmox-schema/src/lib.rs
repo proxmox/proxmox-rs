@@ -7,6 +7,7 @@
 //! parsers.
 
 #![deny(unsafe_op_in_unsafe_fn)]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 #[cfg(feature = "api-macro")]
 pub use proxmox_api_macro::api;

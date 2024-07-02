@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 #[cfg(feature = "u2f")]
 pub mod u2f;
 

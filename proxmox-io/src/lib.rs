@@ -4,6 +4,7 @@
 //! implementing [`Read`](std::io::Read).
 
 #![deny(unsafe_op_in_unsafe_fn)]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 mod read;
 pub use read::ReadExt;

@@ -6,6 +6,8 @@
 //! * Stores data for different time resolution
 //! * Simple cache implementation with journal support
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 #[cfg(feature = "rrd_v1")]
 mod rrd_v1;
 

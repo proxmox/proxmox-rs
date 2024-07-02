@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::path::Path;
 
 use anyhow::{format_err, Error};

@@ -1,5 +1,7 @@
 //! Simple bindings to libuuid's `uuid_generate`.
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::borrow::{Borrow, BorrowMut};
 use std::fmt;
 

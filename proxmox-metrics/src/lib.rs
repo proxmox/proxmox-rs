@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;

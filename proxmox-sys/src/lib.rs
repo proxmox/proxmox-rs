@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::os::unix::ffi::OsStrExt;
 
 pub mod boot_mode;

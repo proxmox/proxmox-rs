@@ -1,4 +1,5 @@
 #![recursion_limit = "256"]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 extern crate proc_macro;
 extern crate proc_macro2;

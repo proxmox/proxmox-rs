@@ -7,6 +7,8 @@
 //!
 //! The `pam-authenticator` feature enables the `Pam` type.
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 pub const TICKET_LIFETIME: i64 = 3600 * 2; // 2 hours
 
 #[cfg(feature = "ticket")]

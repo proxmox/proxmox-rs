@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::ffi::{CStr, CString};
 use std::fs::File;
 use std::mem::MaybeUninit;

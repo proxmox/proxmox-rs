@@ -4,6 +4,8 @@
 //! sometimes also types from nightly `std` which are simple enough to do just haven't been
 //! bikeshedded and stabilized in the standard library yet.
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 mod constnamedbitmap;
 
 pub mod error;

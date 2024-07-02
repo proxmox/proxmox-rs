@@ -12,6 +12,7 @@
 //! The [`Account`] helper supports RSA and ECC keys and provides most of the API methods.
 
 #![deny(missing_docs)]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 #[cfg(feature = "api-types")]
 pub mod types;

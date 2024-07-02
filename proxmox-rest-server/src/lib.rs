@@ -15,6 +15,8 @@
 //!   - worker task management
 //! * generic interface to authenticate user
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::fmt;
 use std::os::unix::io::{FromRawFd, OwnedFd};
 use std::sync::atomic::{AtomicBool, Ordering};

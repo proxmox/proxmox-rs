@@ -18,6 +18,8 @@
 //!     ...
 //! ```
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;

@@ -1,5 +1,7 @@
 //! Our 'key: value' config format.
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use std::io::Write;
 
 use anyhow::{bail, format_err, Error};

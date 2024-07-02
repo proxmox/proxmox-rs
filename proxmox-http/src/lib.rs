@@ -1,5 +1,7 @@
 //! HTTP related utilities used by various Proxmox products.
 
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 #[cfg(feature = "websocket")]
 pub mod websocket;
 
