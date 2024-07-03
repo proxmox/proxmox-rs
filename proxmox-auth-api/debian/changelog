@@ -1,3 +1,11 @@
+rust-proxmox-auth-api (0.4.2) bookworm; urgency=medium
+
+  * rebuild with proxmox-tfa 5.0.0
+
+  * clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 03 Jul 2024 15:25:09 +0200
+
 rust-proxmox-auth-api (0.4.1) bookworm; urgency=medium
 
   * add PasswordAuthenticator
