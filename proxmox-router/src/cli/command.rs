@@ -10,7 +10,7 @@ use super::environment::CliEnvironment;
 use super::getopts;
 use super::{
     generate_nested_usage, generate_usage_str_do, print_help, print_nested_usage_error,
-    print_simple_usage_error_do, CliCommand, CliCommandMap, CommandLineInterface,
+    print_simple_usage_error_do, CliCommand, CliCommandMap, CommandLineInterface, GlobalOptions,
 };
 use crate::{ApiFuture, ApiHandler, ApiMethod, RpcEnvironment};
 
@@ -28,11 +28,11 @@ pub const OUTPUT_FORMAT: Schema = StringSchema::new("Output format.")
     ]))
     .schema();
 
-fn parse_arguments(
+fn parse_arguments<'cli>(
     prefix: &str,
     cli_cmd: &CliCommand,
     args: Vec<String>,
-    global_options_iter: impl Iterator<Item = &'static str>,
+    global_options_iter: impl Iterator<Item = &'cli GlobalOptions>,
 ) -> Result<Value, Error> {
     let (params, remaining) = match getopts::parse_arguments(
         &args,
@@ -94,13 +94,13 @@ async fn handle_simple_command_future(
     Ok(())
 }
 
-pub(crate) fn handle_simple_command(
+pub(crate) fn handle_simple_command<'cli>(
     prefix: &str,
     cli_cmd: &CliCommand,
     args: Vec<String>,
     rpcenv: &mut CliEnvironment,
     run: Option<fn(ApiFuture) -> Result<Value, Error>>,
-    global_options_iter: impl Iterator<Item = &'static str>,
+    global_options_iter: impl Iterator<Item = &'cli GlobalOptions>,
 ) -> Result<(), Error> {
     let params = parse_arguments(prefix, cli_cmd, args, global_options_iter)?;
 

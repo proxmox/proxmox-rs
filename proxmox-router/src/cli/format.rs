@@ -76,13 +76,13 @@ pub fn generate_usage_str(
     )
 }
 
-pub(crate) fn generate_usage_str_do(
+pub(crate) fn generate_usage_str_do<'cli>(
     prefix: &str,
     cli_cmd: &CliCommand,
     format: DocumentationFormat,
     indent: &str,
     skip_options: &[&str],
-    global_options_iter: impl Iterator<Item = &'static str>,
+    global_options_iter: impl Iterator<Item = &'cli GlobalOptions>,
 ) -> String {
     let arg_param = cli_cmd.arg_param;
     let fixed_param = &cli_cmd.fixed_param;
@@ -212,23 +212,44 @@ pub(crate) fn generate_usage_str_do(
     }
 
     let mut global_options = String::new();
-    for opt in global_options_iter {
-        use std::fmt::Write as _;
 
-        if done_hash.contains(opt) {
+    for (name, _optional, param_schema) in
+        global_options_iter.flat_map(|o| o.schema.any_object().unwrap().properties())
+    {
+        if done_hash.contains(name) {
             continue;
         }
-        if !global_options.is_empty() {
-            if matches!(format, DocumentationFormat::ReST) {
+        if format == DocumentationFormat::ReST {
+            use std::fmt::Write as _;
+
+            // In the ReST outputs we don't include the documentation for global options each time
+            // as this is mostly used for the man page and we have a separate section before
+            // labeled
+            // "Options available for command group <stuff>:"
+            // which documents them fully.
+            //
+            // FIXME: Ideally we'd instead be able to tell the difference between generating the
+            // entire tree or just a single command's documentation to know whether to print all of
+            // them?
+
+            if !global_options.is_empty() {
                 global_options.push_str("\n\n");
-            } else {
+            }
+
+            let _ = write!(global_options, "``--{name}``");
+        } else {
+            // For the other ones we use the same generation method as for any other option:
+
+            if !global_options.is_empty() {
                 global_options.push('\n');
             }
+            global_options.push_str(&get_property_description(
+                name,
+                param_schema,
+                ParameterDisplayStyle::Arg,
+                format,
+            ));
         }
-        let _ = match format {
-            DocumentationFormat::ReST => write!(global_options, "``--{opt}``"),
-            _ => write!(global_options, "--{opt}"),
-        };
     }
 
     if !global_options.is_empty() {
@@ -246,11 +267,11 @@ pub fn print_simple_usage_error(prefix: &str, cli_cmd: &CliCommand, err_msg: &st
 }
 
 /// Print command usage for simple commands to ``stderr``.
-pub(crate) fn print_simple_usage_error_do(
+pub(crate) fn print_simple_usage_error_do<'cli>(
     prefix: &str,
     cli_cmd: &CliCommand,
     err_msg: &str,
-    global_options_iter: impl Iterator<Item = &'static str>,
+    global_options_iter: impl Iterator<Item = &'cli GlobalOptions>,
 ) {
     let usage = generate_usage_str_do(
         prefix,
@@ -271,14 +292,13 @@ pub fn print_nested_usage_error(prefix: &str, def: &CliCommandMap, err_msg: &str
 
 /// While going through nested commands, this keeps track of the available global options.
 #[derive(Default)]
-struct UsageState {
-    global_options: Vec<Vec<&'static Schema>>,
+struct UsageState<'cli> {
+    global_options: Vec<Vec<&'cli GlobalOptions>>,
 }
 
-impl UsageState {
-    fn push_global_options(&mut self, options: &HashMap<std::any::TypeId, GlobalOptions>) {
-        self.global_options
-            .push(options.values().map(|o| o.schema).collect());
+impl<'cli> UsageState<'cli> {
+    fn push_global_options(&mut self, options: &'cli HashMap<std::any::TypeId, GlobalOptions>) {
+        self.global_options.push(options.values().collect());
     }
 
     fn pop_global_options(&mut self) {
@@ -307,6 +327,7 @@ impl UsageState {
         let _ = write!(out, "Options available for command group ``{prefix}``:");
         for opt in opts {
             for (name, _optional, schema) in opt
+                .schema
                 .any_object()
                 .expect("non-object schema in global optiosn")
                 .properties()
@@ -322,12 +343,10 @@ impl UsageState {
         out
     }
 
-    fn global_options_iter(&self) -> impl Iterator<Item = &'static str> + '_ {
+    fn global_options_iter(&self) -> impl Iterator<Item = &'cli GlobalOptions> + '_ {
         self.global_options
             .iter()
             .flat_map(|list| list.iter().copied())
-            .flat_map(|o| o.any_object().unwrap().properties())
-            .map(|(name, _optional, _schema)| *name)
     }
 }
 
@@ -340,10 +359,10 @@ pub fn generate_nested_usage(
     generate_nested_usage_do(&mut UsageState::default(), prefix, def, format)
 }
 
-fn generate_nested_usage_do(
-    state: &mut UsageState,
+fn generate_nested_usage_do<'cli>(
+    state: &mut UsageState<'cli>,
     prefix: &str,
-    def: &CliCommandMap,
+    def: &'cli CliCommandMap,
     format: DocumentationFormat,
 ) -> String {
     state.push_global_options(&def.global_options);

@@ -550,7 +550,7 @@ impl<'cli> CommandLineParseState<'cli> {
                     args,
                     rpcenv,
                     self.async_run,
-                    self.global_option_schemas.keys().copied(),
+                    self.global_option_types.values().copied(),
                 );
                 command::set_help_context(None);
                 out

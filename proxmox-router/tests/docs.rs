@@ -136,8 +136,10 @@ Optional parameters:
 
 Inherited group parameters:
 
---global1
---global2
+ --global1  one|two
+             A global option.
+ --global2  <string>
+             A second global option.
 "##
     .trim_start()
 }
