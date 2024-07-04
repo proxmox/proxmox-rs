@@ -4,6 +4,7 @@ use std::sync::{Arc, OnceLock, RwLock};
 use anyhow::{bail, Error};
 
 use proxmox_auth_api::types::Authid;
+use proxmox_config_digest::ConfigDigest;
 use proxmox_product_config::{open_api_lockfile, replace_privileged_config, ApiLockGuard};
 use proxmox_schema::*;
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
@@ -44,10 +45,10 @@ pub fn lock_config() -> Result<ApiLockGuard, Error> {
     open_api_lockfile(user_config_lock(), None, true)
 }
 
-pub fn config() -> Result<(SectionConfigData, [u8; 32]), Error> {
+pub fn config() -> Result<(SectionConfigData, ConfigDigest), Error> {
     let content = proxmox_sys::fs::file_read_optional_string(user_config())?.unwrap_or_default();
 
-    let digest = openssl::sha::sha256(content.as_bytes());
+    let digest = ConfigDigest::from_slice(content.as_bytes());
     let data = get_or_init_config().parse(user_config(), &content)?;
 
     Ok((data, digest))

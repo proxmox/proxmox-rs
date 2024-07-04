@@ -6,6 +6,7 @@ use std::sync::{Arc, OnceLock, RwLock};
 use anyhow::{bail, Error};
 
 use proxmox_auth_api::types::{Authid, Userid};
+use proxmox_config_digest::ConfigDigest;
 use proxmox_product_config::{open_api_lockfile, replace_privileged_config, ApiLockGuard};
 
 use crate::init::{access_conf, acl_config, acl_config_lock};
@@ -455,7 +456,7 @@ impl AclTree {
         Ok(())
     }
 
-    fn load(filename: &Path) -> Result<(Self, [u8; 32]), Error> {
+    fn load(filename: &Path) -> Result<(Self, ConfigDigest), Error> {
         let mut tree = Self::new();
 
         let raw = match std::fs::read_to_string(filename) {
@@ -469,7 +470,7 @@ impl AclTree {
             }
         };
 
-        let digest = openssl::sha::sha256(raw.as_bytes());
+        let digest = ConfigDigest::from_slice(raw.as_bytes());
 
         for (linenr, line) in raw.lines().enumerate() {
             let line = line.trim();
@@ -564,7 +565,7 @@ pub fn lock_config() -> Result<ApiLockGuard, Error> {
 }
 
 /// Reads the [`AclTree`] from the [default path](ACL_CFG_FILENAME).
-pub fn config() -> Result<(AclTree, [u8; 32]), Error> {
+pub fn config() -> Result<(AclTree, ConfigDigest), Error> {
     let path = acl_config();
     AclTree::load(&path)
 }

@@ -18,10 +18,11 @@ serde.workspace = true
 serde_json = { workspace = true, optional = true }
 
 proxmox-auth-api = { workspace = true, features = [ "api-types" ] }
+proxmox-config-digest = { workspace = true, optional = true, features = [ "openssl" ] }
+proxmox-product-config = { workspace = true, optional = true }
 proxmox-router = { workspace = true, optional = true }
 proxmox-schema.workspace = true
 proxmox-section-config = { workspace = true, optional = true }
-proxmox-product-config = { workspace = true, optional = true }
 proxmox-shared-memory = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, features = [ "crypt" ], optional = true }
 proxmox-time = { workspace = true }
@@ -31,6 +32,7 @@ default = []
 impl = [
     "dep:nix",
     "dep:openssl",
+    "dep:proxmox-config-digest",
     "dep:proxmox-product-config",
     "dep:proxmox-router",
     "dep:proxmox-section-config",
