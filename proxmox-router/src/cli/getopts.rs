@@ -319,104 +319,87 @@ impl<'t, 'o> ParseOptions<'t, 'o> {
         A: IntoIterator<Item = AI>,
         AI: AsRef<str>,
     {
-        parse_parameters(args, self)
-    }
-}
+        let mut errors = ParameterError::new();
+        let mut positional = Vec::new();
 
-pub(crate) fn parse_parameters<A, AI>(
-    args: A,
-    parse_opts: ParseOptions<'_, '_>,
-) -> Result<Vec<AI>, ParameterError>
-where
-    A: IntoIterator<Item = AI>,
-    AI: AsRef<str>,
-{
-    let mut errors = ParameterError::new();
-    let mut positional = Vec::new();
+        let mut args = args.into_iter().peekable();
+        while let Some(orig_arg) = args.next() {
+            let arg = orig_arg.as_ref();
 
-    let mut args = args.into_iter().peekable();
-    while let Some(orig_arg) = args.next() {
-        let arg = orig_arg.as_ref();
-
-        if arg == "--" {
-            if parse_opts.retain_separator {
-                positional.push(orig_arg);
-            }
-            break;
-        }
-
-        let option = match arg.strip_prefix("--") {
-            Some(opt) => opt,
-            None => {
-                positional.push(orig_arg);
-                if parse_opts.stop_at_positional {
-                    break;
+            if arg == "--" {
+                if self.retain_separator {
+                    positional.push(orig_arg);
                 }
+                break;
+            }
+
+            let option = match arg.strip_prefix("--") {
+                Some(opt) => opt,
+                None => {
+                    positional.push(orig_arg);
+                    if self.stop_at_positional {
+                        break;
+                    }
+                    continue;
+                }
+            };
+
+            if let Some(eq) = option.find('=') {
+                let (option, argument) = (&option[..eq], &option[(eq + 1)..]);
+                if self.deny_unknown && !self.option_schemas.contains_key(option) {
+                    if self.stop_at_unknown {
+                        positional.push(orig_arg);
+                        break;
+                    }
+                    errors.push(option.to_string(), format_err!("unknown option {option:?}"));
+                }
+                self.target.push((option.to_string(), argument.to_string()));
                 continue;
             }
-        };
 
-        if let Some(eq) = option.find('=') {
-            let (option, argument) = (&option[..eq], &option[(eq + 1)..]);
-            if parse_opts.deny_unknown && !parse_opts.option_schemas.contains_key(option) {
-                if parse_opts.stop_at_unknown {
+            if self.deny_unknown && !self.option_schemas.contains_key(option) {
+                if self.stop_at_unknown {
                     positional.push(orig_arg);
                     break;
                 }
                 errors.push(option.to_string(), format_err!("unknown option {option:?}"));
             }
-            parse_opts
-                .target
-                .push((option.to_string(), argument.to_string()));
-            continue;
-        }
 
-        if parse_opts.deny_unknown && !parse_opts.option_schemas.contains_key(option) {
-            if parse_opts.stop_at_unknown {
-                positional.push(orig_arg);
-                break;
-            }
-            errors.push(option.to_string(), format_err!("unknown option {option:?}"));
-        }
-
-        match parse_opts.option_schemas.get(option) {
-            Some(Schema::Boolean(schema)) => {
-                if let Some(value) = args.next_if(|v| parse_boolean(v.as_ref()).is_ok()) {
-                    parse_opts
-                        .target
-                        .push((option.to_string(), value.as_ref().to_string()));
-                } else {
-                    // next parameter is not a boolean value
-                    if schema.default == Some(true) {
-                        // default-true booleans cannot be passed without values:
-                        errors.push(option.to_string(), format_err!("missing boolean value."));
+            match self.option_schemas.get(option) {
+                Some(Schema::Boolean(schema)) => {
+                    if let Some(value) = args.next_if(|v| parse_boolean(v.as_ref()).is_ok()) {
+                        self.target
+                            .push((option.to_string(), value.as_ref().to_string()));
+                    } else {
+                        // next parameter is not a boolean value
+                        if schema.default == Some(true) {
+                            // default-true booleans cannot be passed without values:
+                            errors.push(option.to_string(), format_err!("missing boolean value."));
+                        }
+                        self.target.push((option.to_string(), "true".to_string()))
                     }
-                    parse_opts
-                        .target
-                        .push((option.to_string(), "true".to_string()))
+                }
+                _ => {
+                    // no schema, assume `--key value`.
+                    let next = match args.next() {
+                        Some(next) => next.as_ref().to_string(),
+                        None => {
+                            errors
+                                .push(option.to_string(), format_err!("missing parameter value."));
+                            break;
+                        }
+                    };
+                    self.target.push((option.to_string(), next.to_string()));
+                    continue;
                 }
             }
-            _ => {
-                // no schema, assume `--key value`.
-                let next = match args.next() {
-                    Some(next) => next.as_ref().to_string(),
-                    None => {
-                        errors.push(option.to_string(), format_err!("missing parameter value."));
-                        break;
-                    }
-                };
-                parse_opts
-                    .target
-                    .push((option.to_string(), next.to_string()));
-                continue;
-            }
         }
-    }
 
-    if !errors.is_empty() {
-        return Err(errors);
-    }
+        if !errors.is_empty() {
+            return Err(errors);
+        }
 
-    positional.extend(args);
-    Ok(positional)
+        positional.extend(args);
+        Ok(positional)
+    }
 }
