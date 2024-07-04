@@ -402,3 +402,141 @@ impl<'t, 'o> ParseOptions<'t, 'o> {
         Ok(positional)
     }
 }
+
+#[test]
+fn test_parse_options() {
+    const ARG_ENUM: Schema = StringSchema::new("An enum option.")
+        .format(&ApiStringFormat::Enum(&[
+            EnumEntry::new("one", "Option one."),
+            EnumEntry::new("two", "Option two."),
+        ]))
+        .schema();
+
+    const ARG_STR1: Schema = StringSchema::new("A string option.")
+        .min_length(2)
+        .max_length(16)
+        .schema();
+
+    const ARG_INT1: Schema = IntegerSchema::new("An integer option.").schema();
+    const ARG_INT2: Schema = IntegerSchema::new("Another integer option.")
+        .minimum(42)
+        .schema();
+
+    const ARG_BOOL1: Schema = BooleanSchema::new("A boolean option.").schema();
+    const ARG_BOOL2: Schema = BooleanSchema::new("Another boolean option.").schema();
+
+    let mut schema = HashMap::<&'static str, &'static Schema>::new();
+    schema.insert("enum", &ARG_ENUM);
+    schema.insert("str1", &ARG_STR1);
+    schema.insert("int1", &ARG_INT1);
+    schema.insert("int2", &ARG_INT2);
+    schema.insert("bool1", &ARG_BOOL1);
+    schema.insert("bool2", &ARG_BOOL2);
+
+    let base_args = [
+        "--enum=one",
+        "--str1",
+        "string 1",
+        "--bool1",
+        "positional",
+        "--int1",
+        "3",
+        "--bool2",
+        "true",
+    ];
+
+    let base_args_no_positional = [
+        "--enum=one",
+        "--str1",
+        "string 1",
+        "--bool1",
+        "--int1",
+        "3",
+        "--bool2",
+        "true",
+    ];
+
+    let base_result = [
+        ("enum", "one"),
+        ("str1", "string 1"),
+        ("bool1", "true"),
+        ("int1", "3"),
+        ("bool2", "true"),
+    ];
+
+    let mut result = Vec::new();
+    let rest = ParseOptions::new(&mut result, &schema)
+        .parse(base_args.iter())
+        .expect("failed 1");
+    assert_eq!(rest, [&"positional"], "failed to retain positional arg");
+    for ((a1, a2), b) in result.into_iter().zip(base_result.iter().copied()) {
+        assert_eq!((a1.as_str(), a2.as_str()), b);
+    }
+
+    let mut result = Vec::new();
+    let rest = ParseOptions::new(&mut result, &schema)
+        .parse(base_args.iter().chain([&"--", &"--more"]))
+        .expect("failed 2");
+    assert_eq!(
+        rest,
+        [&"positional", &"--more"],
+        "failed to retain positional or trailing args"
+    );
+    for ((a1, a2), b) in result.into_iter().zip(base_result.iter().copied()) {
+        assert_eq!((a1.as_str(), a2.as_str()), b);
+    }
+
+    let mut result = Vec::new();
+    let rest = ParseOptions::new(&mut result, &schema)
+        .retain_separator(true)
+        .parse(base_args_no_positional.iter().chain([&"--", &"--more"]))
+        .expect("failed 3");
+    assert_eq!(rest, [&"--", &"--more"], "failed to retain separator");
+    for ((a1, a2), b) in result.into_iter().zip(base_result.iter().copied()) {
+        assert_eq!((a1.as_str(), a2.as_str()), b);
+    }
+
+    let mut result = Vec::new();
+    let rest = ParseOptions::new(&mut result, &schema)
+        .retain_separator(true)
+        .deny_unknown(true)
+        .parse(base_args.iter().chain([&"--", &"--more"]))
+        .expect("failed 4");
+    assert_eq!(
+        rest,
+        [&"positional", &"--", &"--more"],
+        "deny_unknown misbehved"
+    );
+    for ((a1, a2), b) in result.into_iter().zip(base_result.iter().copied()) {
+        assert_eq!((a1.as_str(), a2.as_str()), b);
+    }
+
+    let mut result = Vec::new();
+    ParseOptions::new(&mut result, &schema)
+        .retain_separator(true)
+        .deny_unknown(true)
+        .parse(
+            base_args
+                .iter()
+                .chain([&"--unknown", &"value", &"--", &"--more"]),
+        )
+        .expect_err("deny_unknown failed");
+
+    let mut result = Vec::new();
+    let rest = ParseOptions::new(&mut result, &schema)
+        .retain_separator(true)
+        .stop_at_unknown(true)
+        .parse(
+            base_args
+                .iter()
+                .chain([&"--unknown", &"value", &"--", &"--more"]),
+        )
+        .expect("failed 5");
+    assert_eq!(
+        rest,
+        [&"positional", &"--unknown", &"value", &"--", &"--more"]
+    );
+    for ((a1, a2), b) in result.into_iter().zip(base_result.iter().copied()) {
+        assert_eq!((a1.as_str(), a2.as_str()), b);
+    }
+}
