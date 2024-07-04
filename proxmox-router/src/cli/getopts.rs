@@ -344,20 +344,14 @@ impl<'t, 'o> ParseOptions<'t, 'o> {
                 }
             };
 
-            if let Some(eq) = option.find('=') {
-                let (option, argument) = (&option[..eq], &option[(eq + 1)..]);
-                if self.deny_unknown && !self.option_schemas.contains_key(option) {
-                    if self.stop_at_unknown {
-                        positional.push(orig_arg);
-                        break;
-                    }
-                    errors.push(option.to_string(), format_err!("unknown option {option:?}"));
-                }
-                self.target.push((option.to_string(), argument.to_string()));
-                continue;
-            }
+            let (option, value) = match option.split_once('=') {
+                None => (option, None),
+                Some((option, arg)) => (option, Some(arg)),
+            };
 
-            if self.deny_unknown && !self.option_schemas.contains_key(option) {
+            let opt_schema = self.option_schemas.get(option).copied();
+
+            if self.deny_unknown && opt_schema.is_none() {
                 if self.stop_at_unknown {
                     positional.push(orig_arg);
                     break;
@@ -365,7 +359,12 @@ impl<'t, 'o> ParseOptions<'t, 'o> {
                 errors.push(option.to_string(), format_err!("unknown option {option:?}"));
             }
 
-            match self.option_schemas.get(option) {
+            if let Some(value) = value {
+                self.target.push((option.to_string(), value.to_string()));
+                continue;
+            }
+
+            match opt_schema {
                 Some(Schema::Boolean(schema)) => {
                     if let Some(value) = args.next_if(|v| parse_boolean(v.as_ref()).is_ok()) {
                         self.target
