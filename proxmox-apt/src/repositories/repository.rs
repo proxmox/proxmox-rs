@@ -1,5 +1,5 @@
 use std::io::{BufRead, BufReader, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{bail, format_err, Error};
 
@@ -33,7 +33,7 @@ pub trait APTRepositoryImpl {
     fn origin_from_uris(&self) -> Option<String>;
 
     /// Get the `Origin:` value from a cached InRelease file.
-    fn get_cached_origin(&self) -> Result<Option<String>, Error>;
+    fn get_cached_origin(&self, apt_lists_dir: &Path) -> Result<Option<String>, Error>;
 
     /// Writes a repository in the corresponding format followed by a blank.
     ///
@@ -163,13 +163,13 @@ impl APTRepositoryImpl for APTRepository {
         None
     }
 
-    fn get_cached_origin(&self) -> Result<Option<String>, Error> {
+    fn get_cached_origin(&self, apt_lists_dir: &Path) -> Result<Option<String>, Error> {
         for uri in self.uris.iter() {
             for suite in self.suites.iter() {
-                let mut file = release_filename(uri, suite, false);
+                let mut file = release_filename(apt_lists_dir, uri, suite, false);
 
                 if !file.exists() {
-                    file = release_filename(uri, suite, true);
+                    file = release_filename(apt_lists_dir, uri, suite, true);
                     if !file.exists() {
                         continue;
                     }
@@ -206,9 +206,8 @@ impl APTRepositoryImpl for APTRepository {
 }
 
 /// Get the path to the cached (In)Release file.
-fn release_filename(uri: &str, suite: &str, detached: bool) -> PathBuf {
-    let mut path = PathBuf::from(&crate::config::get().dir_state);
-    path.push(&crate::config::get().dir_state_lists);
+fn release_filename(apt_lists_dir: &Path, uri: &str, suite: &str, detached: bool) -> PathBuf {
+    let mut path = PathBuf::from(apt_lists_dir);
 
     let encoded_uri = uri_to_filename(uri);
     let filename = if detached { "Release" } else { "InRelease" };

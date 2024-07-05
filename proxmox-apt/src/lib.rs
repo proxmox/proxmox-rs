@@ -9,6 +9,6 @@ pub mod cache;
 mod cache_api;
 #[cfg(feature = "cache")]
 pub use cache_api::{get_package_versions, list_available_apt_update, update_database};
-pub mod config;
+
 pub mod deb822;
 pub mod repositories;

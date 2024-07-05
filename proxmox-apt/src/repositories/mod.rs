@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Error};
 
@@ -56,12 +56,13 @@ fn common_digest(files: &[APTRepositoryFile]) -> ConfigDigest {
 pub fn check_repositories(
     files: &[APTRepositoryFile],
     current_suite: DebianCodename,
+    apt_lists_dir: &Path,
 ) -> Vec<APTRepositoryInfo> {
     let mut infos = vec![];
 
     for file in files.iter() {
         infos.append(&mut file.check_suites(current_suite));
-        infos.append(&mut file.check_uris());
+        infos.append(&mut file.check_uris(apt_lists_dir));
     }
 
     infos

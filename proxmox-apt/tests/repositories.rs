@@ -2,8 +2,6 @@ use std::path::PathBuf;
 
 use anyhow::{bail, format_err, Error};
 
-use proxmox_apt::config::APTConfig;
-
 use proxmox_apt::repositories::{
     check_repositories, get_current_release_codename, standard_repositories, DebianCodename,
 };
@@ -185,17 +183,13 @@ fn test_empty_write() -> Result<(), Error> {
 fn test_check_repositories() -> Result<(), Error> {
     let test_dir = std::env::current_dir()?.join("tests");
     let read_dir = test_dir.join("sources.list.d");
-
-    proxmox_apt::config::init(APTConfig::new(
-        Some(&test_dir.into_os_string().into_string().unwrap()),
-        None,
-    ));
+    let apt_lists_dir: PathBuf = test_dir.join("lists");
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");
     let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let infos = check_repositories(&[file], DebianCodename::Bullseye);
+    let infos = check_repositories(&[file], DebianCodename::Bullseye, &apt_lists_dir);
 
     assert!(infos.is_empty());
     let pve_list = read_dir.join("pve.list");
@@ -220,7 +214,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&[file], DebianCodename::Bullseye);
+    let mut infos = check_repositories(&[file], DebianCodename::Bullseye, &apt_lists_dir);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -286,7 +280,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&[file], DebianCodename::Bullseye);
+    let mut infos = check_repositories(&[file], DebianCodename::Bullseye, &apt_lists_dir);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -318,7 +312,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&[file], DebianCodename::Bullseye);
+    let mut infos = check_repositories(&[file], DebianCodename::Bullseye, &apt_lists_dir);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -329,11 +323,7 @@ fn test_check_repositories() -> Result<(), Error> {
 fn test_get_cached_origin() -> Result<(), Error> {
     let test_dir = std::env::current_dir()?.join("tests");
     let read_dir = test_dir.join("sources.list.d");
-
-    proxmox_apt::config::init(APTConfig::new(
-        Some(&test_dir.into_os_string().into_string().unwrap()),
-        None,
-    ));
+    let apt_lists_dir: PathBuf = test_dir.clone().join("lists");
 
     let pve_list = read_dir.join("pve.list");
     let mut file = APTRepositoryFile::new(pve_list)?.unwrap();
@@ -351,7 +341,7 @@ fn test_get_cached_origin() -> Result<(), Error> {
     assert_eq!(file.repositories.len(), origins.len());
 
     for (n, repo) in file.repositories.iter().enumerate() {
-        assert_eq!(repo.get_cached_origin()?, origins[n]);
+        assert_eq!(repo.get_cached_origin(&apt_lists_dir)?, origins[n]);
     }
 
     Ok(())

@@ -59,7 +59,7 @@ pub trait APTRepositoryFileImpl {
     fn check_suites(&self, current_codename: DebianCodename) -> Vec<APTRepositoryInfo>;
 
     /// Checks for official URIs.
-    fn check_uris(&self) -> Vec<APTRepositoryInfo>;
+    fn check_uris(&self, apt_lists_dir: &Path) -> Vec<APTRepositoryInfo>;
 }
 
 impl APTRepositoryFileImpl for APTRepositoryFile {
@@ -357,7 +357,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
         infos
     }
 
-    fn check_uris(&self) -> Vec<APTRepositoryInfo> {
+    fn check_uris(&self, apt_lists_dir: &Path) -> Vec<APTRepositoryInfo> {
         let mut infos = vec![];
 
         let path = match &self.path {
@@ -366,7 +366,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
         };
 
         for (n, repo) in self.repositories.iter().enumerate() {
-            let mut origin = match repo.get_cached_origin() {
+            let mut origin = match repo.get_cached_origin(apt_lists_dir) {
                 Ok(option) => option,
                 Err(_) => None,
             };

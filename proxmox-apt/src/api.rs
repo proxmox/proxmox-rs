@@ -1,4 +1,5 @@
 // API function that work without feature "cache"
+use std::path::Path;
 
 use anyhow::{bail, Error};
 
@@ -27,11 +28,13 @@ pub fn get_changelog(options: &APTGetChangelogOptions) -> Result<String, Error> 
 
 /// Get APT repository information.
 pub fn list_repositories(product: &str) -> Result<APTRepositoriesResult, Error> {
+    let apt_lists_dir = Path::new("/var/lib/apt/lists");
+
     let (files, errors, digest) = crate::repositories::repositories()?;
 
     let suite = crate::repositories::get_current_release_codename()?;
 
-    let infos = crate::repositories::check_repositories(&files, suite);
+    let infos = crate::repositories::check_repositories(&files, suite, apt_lists_dir);
     let standard_repos = crate::repositories::standard_repositories(&files, product, suite);
 
     Ok(APTRepositoriesResult {
