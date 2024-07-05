@@ -26,6 +26,11 @@ proxmox-async = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-io = { workspace = true, optional = true }
 proxmox-lang = { workspace = true, optional = true }
+proxmox-compression = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = [ "macros" ] }
+flate2 = { workspace = true }
 
 [features]
 default = []
@@ -42,12 +47,14 @@ client = [
     "dep:futures",
     "dep:hyper",
     "dep:openssl",
+    "dep:proxmox-compression",
     "dep:tokio",
     "dep:tokio-openssl",
     "http-helpers",
     "hyper?/client",
     "hyper?/http1",
     "hyper?/http2",
+    "hyper?/stream",
     "hyper?/tcp",
     "rate-limited-stream",
     "tokio?/io-util",

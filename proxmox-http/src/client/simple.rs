@@ -78,7 +78,8 @@ impl Client {
 
         self.add_proxy_headers(&mut request)?;
 
-        self.client.request(request).map_err(Error::from).await
+        let encoded_response = self.client.request(request).map_err(Error::from).await?;
+        decode_response(encoded_response).await
     }
 
     pub async fn post(
@@ -243,5 +244,67 @@ impl crate::HttpClient<String, String> for Client {
             let request = Request::from_parts(parts, body);
             Self::convert_body_to_string(self.request(request).await).await
         })
+    }
+}
+
+/// Wraps the `Body` stream in a DeflateDecoder stream if the `Content-Encoding`
+/// header of the response is `deflate`, otherwise returns the original
+/// response.
+async fn decode_response(mut res: Response<Body>) -> Result<Response<Body>, Error> {
+    let Some(content_encoding) = res.headers_mut().remove(&hyper::header::CONTENT_ENCODING) else {
+        return Ok(res);
+    };
+
+    let encodings = content_encoding.to_str()?;
+    if encodings == "deflate" {
+        let (parts, body) = res.into_parts();
+        let decoder = proxmox_compression::DeflateDecoder::builder(body)
+            .zlib(true)
+            .build();
+        let decoded_body = Body::wrap_stream(decoder);
+        Ok(Response::from_parts(parts, decoded_body))
+    } else {
+        bail!("Unknown encoding format: {encodings}");
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    use std::io::Write;
+
+    const BODY: &str = r#"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+eiusmod tempor incididunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut
+enim aeque doleamus animo, cum corpore dolemus, fieri tamen permagna accessio potest,
+si aliquod aeternum et infinitum impendere."#;
+
+    #[tokio::test]
+    async fn test_parse_response_deflate() {
+        let encoded = encode_deflate(BODY.as_bytes()).unwrap();
+        let encoded_body = Body::from(encoded);
+        let encoded_response = Response::builder()
+            .header(hyper::header::CONTENT_ENCODING, "deflate")
+            .body(encoded_body)
+            .unwrap();
+
+        let decoded_response = decode_response(encoded_response).await.unwrap();
+
+        assert_eq!(
+            Client::response_body_string(decoded_response)
+                .await
+                .unwrap(),
+            BODY
+        );
+    }
+
+    fn encode_deflate(bytes: &[u8]) -> Result<Vec<u8>, std::io::Error> {
+        use flate2::write::ZlibEncoder;
+        use flate2::Compression;
+
+        let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
+        e.write_all(bytes).unwrap();
+
+        e.finish()
     }
 }
