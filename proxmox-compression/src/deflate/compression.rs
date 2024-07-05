@@ -35,26 +35,63 @@ pub struct DeflateEncoder<T> {
     state: EncoderState,
 }
 
-impl<T> DeflateEncoder<T> {
-    pub fn new(inner: T) -> Self {
-        Self::with_quality(inner, Level::Default)
+pub struct DeflateEncoderBuilder<T> {
+    inner: T,
+    is_zlib: bool,
+    buffer_size: usize,
+    level: Level,
+}
+
+impl<T> DeflateEncoderBuilder<T> {
+    pub fn zlib(mut self, is_zlib: bool) -> Self {
+        self.is_zlib = is_zlib;
+        self
     }
 
-    pub fn with_quality(inner: T, level: Level) -> Self {
-        let level = match level {
+    pub fn level(mut self, level: Level) -> Self {
+        self.level = level;
+        self
+    }
+
+    pub fn buffer_size(mut self, buffer_size: usize) -> Self {
+        self.buffer_size = buffer_size;
+        self
+    }
+
+    pub fn build(self) -> DeflateEncoder<T> {
+        let level = match self.level {
             Level::Fastest => Compression::fast(),
             Level::Best => Compression::best(),
             Level::Default => Compression::new(3),
             Level::Precise(val) => Compression::new(val),
         };
 
-        Self {
-            inner,
-            compressor: Compress::new(level, false),
-            buffer: ByteBuffer::with_capacity(super::BUFFER_SIZE),
+        DeflateEncoder {
+            inner: self.inner,
+            compressor: Compress::new(level, self.is_zlib),
+            buffer: ByteBuffer::with_capacity(self.buffer_size),
             input_buffer: Bytes::new(),
             state: EncoderState::Reading,
         }
+    }
+}
+
+impl<T> DeflateEncoder<T> {
+    pub fn new(inner: T) -> Self {
+        Self::builder(inner).build()
+    }
+
+    pub fn builder(inner: T) -> DeflateEncoderBuilder<T> {
+        DeflateEncoderBuilder {
+            inner,
+            is_zlib: false,
+            buffer_size: super::BUFFER_SIZE,
+            level: Level::Default,
+        }
+    }
+
+    pub fn with_quality(inner: T, level: Level) -> Self {
+        Self::builder(inner).level(level).build()
     }
 
     pub fn total_in(&self) -> u64 {
