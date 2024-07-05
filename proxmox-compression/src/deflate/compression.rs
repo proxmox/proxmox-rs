@@ -12,8 +12,6 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use proxmox_io::ByteBuffer;
 use proxmox_lang::io_format_err;
 
-const BUFFER_SIZE: usize = 8192;
-
 pub enum Level {
     Fastest,
     Best,
@@ -53,7 +51,7 @@ impl<T> DeflateEncoder<T> {
         Self {
             inner,
             compressor: Compress::new(level, false),
-            buffer: ByteBuffer::with_capacity(BUFFER_SIZE),
+            buffer: ByteBuffer::with_capacity(super::BUFFER_SIZE),
             input_buffer: Bytes::new(),
             state: EncoderState::Reading,
         }
@@ -109,7 +107,7 @@ impl<T: AsyncWrite + Unpin> DeflateEncoder<T> {
     where
         R: AsyncRead + Unpin,
     {
-        let mut buffer = ByteBuffer::with_capacity(BUFFER_SIZE);
+        let mut buffer = ByteBuffer::with_capacity(super::BUFFER_SIZE);
         let mut eof = false;
         loop {
             if !eof && !buffer.is_full() {
