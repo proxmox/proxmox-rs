@@ -443,6 +443,7 @@ pub enum OptionType {
 
     /// An updater type uses its "base" type's field's updaters to determine whether the field is
     /// supposed to be an option.
+    #[allow(dead_code)]
     Updater(Box<syn::Type>),
 }
 

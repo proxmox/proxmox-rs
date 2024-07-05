@@ -392,15 +392,15 @@ impl Parse for JSONMapEntry {
 
 /// We get macro attributes like `#[doc = "TEXT"]` with the `=` included.
 pub struct BareAssignment<T: Parse> {
-    pub token: Token![=],
-    pub content: T,
+    pub _token: Token![=],
+    pub _content: T,
 }
 
 impl<T: Parse> Parse for BareAssignment<T> {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(Self {
-            token: input.parse()?,
-            content: input.parse()?,
+            _token: input.parse()?,
+            _content: input.parse()?,
         })
     }
 }
