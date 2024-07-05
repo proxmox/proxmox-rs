@@ -27,5 +27,4 @@ proxmox-io = { workspace = true, features = [ "tokio" ] }
 proxmox-lang.workspace = true
 
 [dev-dependencies]
-tokio = { workspace = true, features = [ "macros" ] }
-
+tokio = { workspace = true, features = [ "macros", "rt-multi-thread" ] }
