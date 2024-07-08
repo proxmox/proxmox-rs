@@ -1,3 +1,16 @@
+rust-proxmox-apt (0.11.0-1) stable; urgency=medium
+
+  * dropped api types, they're moved to proxmox-apt-api-types
+
+  * method implementations for api types are now reachable via Impl traits
+
+  * add 'cache' feature and api functions to manipulate the pat cache state
+
+  * remove the global APTConfig and instead pass the path previously confgured
+    there as parameter
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 08 Jul 2024 15:19:42 +0200
+
 rust-proxmox-apt (0.10.10-1) stable; urgency=medium
 
   * fix #5513: apt: do not assume that sources.list file exists
