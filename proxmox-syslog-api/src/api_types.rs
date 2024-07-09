@@ -38,7 +38,7 @@ use proxmox_schema::api_types::SYSTEMD_DATETIME_FORMAT;
     },
 )]
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
-/// Syslog filtering options.
+/// Syslog API filtering options.
 pub struct SyslogFilter {
     pub start: Option<u64>,
     pub limit: Option<u64>,
@@ -55,4 +55,46 @@ pub struct SyslogLine {
     pub n: u64,
     /// Line text.
     pub t: String,
+}
+
+#[api(
+    properties: {
+        since: {
+            type: Integer,
+            optional: true,
+            description: "Display all log since this UNIX epoch. Conflicts with 'startcursor'.",
+            minimum: 0,
+        },
+        until: {
+            type: Integer,
+            optional: true,
+            description: "Display all log until this UNIX epoch. Conflicts with 'endcursor'.",
+            minimum: 0,
+        },
+        lastentries: {
+            type: Integer,
+            optional: true,
+            description: "Limit to the last X lines. Conflicts with a range.",
+            minimum: 0,
+        },
+        startcursor: {
+            type: String,
+            description: "Start after the given Cursor. Conflicts with 'since'.",
+            optional: true,
+        },
+        endcursor: {
+            type: String,
+            description: "End before the given Cursor. Conflicts with 'until'",
+            optional: true,
+        },
+    }
+)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
+/// Journal API filtering options.
+pub struct JournalFilter {
+    pub since: Option<u64>,
+    pub until: Option<u64>,
+    pub lastentries: Option<u64>,
+    pub startcursor: Option<String>,
+    pub endcursor: Option<String>,
 }
