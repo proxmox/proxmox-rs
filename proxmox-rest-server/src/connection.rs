@@ -2,6 +2,7 @@
 //!
 //! Hyper building block.
 
+use std::net::SocketAddr;
 use std::os::unix::io::AsRawFd;
 use std::path::PathBuf;
 use std::pin::Pin;
@@ -257,6 +258,7 @@ impl From<(ClientSender, InsecureClientSender)> for Sender {
 
 struct AcceptState {
     pub socket: InsecureClientStream,
+    pub peer: SocketAddr,
     pub acceptor: Arc<Mutex<SslAcceptor>>,
     pub accept_counter: Arc<()>,
 }
@@ -276,9 +278,9 @@ impl AcceptBuilder {
         let mut shutdown_future = crate::shutdown_future().fuse();
 
         loop {
-            let socket = futures::select! {
+            let (socket, peer) = futures::select! {
                 res = self.try_setup_socket(&listener).fuse() => match res {
-                    Ok(socket) => socket,
+                    Ok(socket_peer) => socket_peer,
                     Err(err) => {
                         log::error!("couldn't set up TCP socket: {err}");
                         continue;
@@ -291,12 +293,13 @@ impl AcceptBuilder {
             let accept_counter = Arc::clone(&accept_counter);
 
             if Arc::strong_count(&accept_counter) > self.max_pending_accepts {
-                log::error!("connection rejected - too many open connections");
+                log::error!("[{peer}] connection rejected - too many open connections");
                 continue;
             }
 
             let state = AcceptState {
                 socket,
+                peer,
                 acceptor,
                 accept_counter,
             };
@@ -328,7 +331,7 @@ impl AcceptBuilder {
     async fn try_setup_socket(
         &self,
         listener: &TcpListener,
-    ) -> Result<InsecureClientStream, Error> {
+    ) -> Result<(InsecureClientStream, SocketAddr), Error> {
         let (socket, peer) = match listener.accept().await {
             Ok(connection) => connection,
             Err(error) => {
@@ -338,10 +341,10 @@ impl AcceptBuilder {
 
         socket
             .set_nodelay(true)
-            .context("error while setting TCP_NODELAY on socket")?;
+            .with_context(|| format!("[{peer}] error while setting TCP_NODELAY on socket"))?;
 
         proxmox_sys::linux::socket::set_tcp_keepalive(socket.as_raw_fd(), self.tcp_keepalive_time)
-            .context("error while setting SO_KEEPALIVE on socket")?;
+            .with_context(|| format!("[{peer}] error while setting SO_KEEPALIVE on socket"))?;
 
         #[cfg(feature = "rate-limited-stream")]
         let socket = match self.lookup_rate_limiter.clone() {
@@ -349,13 +352,12 @@ impl AcceptBuilder {
             None => RateLimitedStream::with_limiter(socket, None, None),
         };
 
-        #[cfg(not(feature = "rate-limited-stream"))]
-        let _peer = peer;
-
-        Ok(socket)
+        Ok((socket, peer))
     }
 
     async fn do_accept_tls(state: AcceptState, flags: AcceptFlags, secure_sender: ClientSender) {
+        let peer = state.peer;
+
         let ssl = {
             // limit acceptor_guard scope
             // Acceptor can be reloaded using the command socket "reload-certificate" command
@@ -364,7 +366,9 @@ impl AcceptBuilder {
             match openssl::ssl::Ssl::new(acceptor_guard.context()) {
                 Ok(ssl) => ssl,
                 Err(err) => {
-                    log::error!("failed to create Ssl object from Acceptor context - {err}");
+                    log::error!(
+                        "[{peer}] failed to create Ssl object from Acceptor context - {err}"
+                    );
                     return;
                 }
             }
@@ -373,7 +377,9 @@ impl AcceptBuilder {
         let secure_stream = match tokio_openssl::SslStream::new(ssl, state.socket) {
             Ok(stream) => stream,
             Err(err) => {
-                log::error!("failed to create SslStream using ssl and connection socket - {err}");
+                log::error!(
+                    "[{peer}] failed to create SslStream using ssl and connection socket - {err}"
+                );
                 return;
             }
         };
@@ -388,17 +394,17 @@ impl AcceptBuilder {
         match result {
             Ok(Ok(())) => {
                 if secure_sender.send(Ok(secure_stream)).await.is_err() && flags.is_debug {
-                    log::error!("detected closed connection channel");
+                    log::error!("[{peer}] detected closed connection channel");
                 }
             }
             Ok(Err(err)) => {
                 if flags.is_debug {
-                    log::error!("https handshake failed - {err}");
+                    log::error!("[{peer}] https handshake failed - {err}");
                 }
             }
             Err(_) => {
                 if flags.is_debug {
-                    log::error!("https handshake timeout");
+                    log::error!("[{peer}] https handshake timeout");
                 }
             }
         }
@@ -412,6 +418,8 @@ impl AcceptBuilder {
         secure_sender: ClientSender,
         insecure_sender: InsecureClientSender,
     ) {
+        let peer = state.peer;
+
         let client_initiates_handshake = {
             #[cfg(feature = "rate-limited-stream")]
             let socket_ref = state.socket.inner();
@@ -422,7 +430,7 @@ impl AcceptBuilder {
             match Self::wait_for_client_tls_handshake(socket_ref).await {
                 Ok(initiates_handshake) => initiates_handshake,
                 Err(err) => {
-                    log::error!("error checking for TLS handshake: {err}");
+                    log::error!("[{peer}] error checking for TLS handshake: {err}");
                     return;
                 }
             }
@@ -432,7 +440,7 @@ impl AcceptBuilder {
             let insecure_stream = Box::pin(state.socket);
 
             if insecure_sender.send(Ok(insecure_stream)).await.is_err() && flags.is_debug {
-                log::error!("detected closed connection channel")
+                log::error!("[{peer}] detected closed connection channel")
             }
 
             return;
