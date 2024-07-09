@@ -43,9 +43,6 @@ pub use state::*;
 mod command_socket;
 pub use command_socket::*;
 
-mod file_logger;
-pub use file_logger::{FileLogOptions, FileLogger};
-
 mod api_config;
 pub use api_config::{ApiConfig, AuthError, AuthHandler, IndexHandler, UnixAcceptor};
 

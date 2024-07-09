@@ -12,11 +12,12 @@ use hyper::http::request::Parts;
 use hyper::{Body, Response};
 use tower_service::Service;
 
+use proxmox_log::{FileLogOptions, FileLogger};
 use proxmox_router::{Router, RpcEnvironmentType, UserInformation};
 use proxmox_sys::fs::{create_path, CreateOptions};
 
 use crate::rest::Handler;
-use crate::{CommandSocket, FileLogOptions, FileLogger, RestEnvironment};
+use crate::{CommandSocket, RestEnvironment};
 
 /// REST server configuration
 pub struct ApiConfig {

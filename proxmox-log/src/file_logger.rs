@@ -30,7 +30,7 @@ pub struct FileLogOptions {
 /// #### Example:
 /// ```
 /// # use anyhow::{bail, format_err, Error};
-/// use proxmox_log::{flog, FileLogger, FileLogOptions};
+/// use proxmox_log::{FileLogger, FileLogOptions};
 ///
 /// # std::fs::remove_file("test.log");
 /// let options = FileLogOptions {
@@ -39,21 +39,13 @@ pub struct FileLogOptions {
 ///     ..Default::default()
 /// };
 /// let mut log = FileLogger::new("test.log", options).unwrap();
-/// flog!(log, "A simple log: {}", "Hello!");
+/// log.log(format!("A simple log: {}", "Hello!"));
 /// # std::fs::remove_file("test.log");
 /// ```
 pub struct FileLogger {
     file: std::fs::File,
     file_name: std::path::PathBuf,
     options: FileLogOptions,
-}
-
-/// Log messages to [FileLogger] - ``println`` like macro
-#[macro_export]
-macro_rules! flog {
-    ($log:expr, $($arg:tt)*) => ({
-        $log.log(format!($($arg)*));
-    })
 }
 
 impl FileLogger {

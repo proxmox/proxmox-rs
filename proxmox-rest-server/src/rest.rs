@@ -31,10 +31,10 @@ use proxmox_schema::{ObjectSchemaType, ParameterSchema};
 
 use proxmox_async::stream::AsyncReaderStream;
 use proxmox_compression::{DeflateEncoder, Level};
+use proxmox_log::FileLogger;
 
 use crate::{
-    formatter::*, normalize_path, ApiConfig, AuthError, CompressionMethod, FileLogger,
-    RestEnvironment,
+    formatter::*, normalize_path, ApiConfig, AuthError, CompressionMethod, RestEnvironment,
 };
 
 extern "C" {

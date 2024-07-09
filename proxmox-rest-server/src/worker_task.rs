@@ -1,3 +1,4 @@
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -16,17 +17,18 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::signal::unix::SignalKind;
 use tokio::sync::oneshot;
+use tracing::{info, warn};
 
 use proxmox_lang::try_block;
+use proxmox_log::{FileLogOptions, FileLogger, LOGGER, WARN_COUNTER};
 use proxmox_schema::upid::UPID;
 use proxmox_sys::fs::{atomic_open_or_create_file, create_path, replace_file, CreateOptions};
 use proxmox_sys::linux::procfs;
-use proxmox_sys::task_warn;
 
 use proxmox_sys::logrotate::{LogRotate, LogRotateFiles};
 use proxmox_sys::WorkerTaskContext;
 
-use crate::{CommandSocket, FileLogOptions, FileLogger};
+use crate::CommandSocket;
 
 #[allow(dead_code)]
 struct TaskListLockGuard(File);
@@ -295,7 +297,7 @@ pub fn rotate_task_log_archive(
 
 /// removes all task logs that are older than the oldest task entry in the
 /// task archive
-pub fn cleanup_old_tasks(worker: &dyn WorkerTaskContext, compressed: bool) -> Result<(), Error> {
+pub fn cleanup_old_tasks(compressed: bool) -> Result<(), Error> {
     let setup = worker_task_setup()?;
 
     let _lock = setup.lock_task_list_files(true)?;
@@ -333,7 +335,7 @@ pub fn cleanup_old_tasks(worker: &dyn WorkerTaskContext, compressed: bool) -> Re
                 Ok(files) => files,
                 Err(err) if err.kind() == std::io::ErrorKind::NotFound => continue,
                 Err(err) => {
-                    task_warn!(worker, "could not check task logs in '{:02X}': {}", i, err);
+                    warn!("could not check task logs in '{i:02X}': {err}");
                     continue;
                 }
             };
@@ -341,12 +343,7 @@ pub fn cleanup_old_tasks(worker: &dyn WorkerTaskContext, compressed: bool) -> Re
                 let file = match file {
                     Ok(file) => file,
                     Err(err) => {
-                        task_warn!(
-                            worker,
-                            "could not check some task log in '{:02X}': {}",
-                            i,
-                            err
-                        );
+                        warn!("could not check some task log in '{i:02X}': {err}");
                         continue;
                     }
                 };
@@ -355,7 +352,7 @@ pub fn cleanup_old_tasks(worker: &dyn WorkerTaskContext, compressed: bool) -> Re
                 let modified = match get_modified(file) {
                     Ok(modified) => modified,
                     Err(err) => {
-                        task_warn!(worker, "error getting mtime for '{:?}': {}", path, err);
+                        warn!("error getting mtime for '{path:?}': {err}");
                         continue;
                     }
                 };
@@ -365,7 +362,7 @@ pub fn cleanup_old_tasks(worker: &dyn WorkerTaskContext, compressed: bool) -> Re
                         Ok(()) => {}
                         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
                         Err(err) => {
-                            task_warn!(worker, "could not remove file '{:?}': {}", path, err)
+                            warn!("could not remove file '{path:?}': {err}")
                         }
                     }
                 }
@@ -823,9 +820,7 @@ impl std::fmt::Display for WorkerTask {
 }
 
 struct WorkerTaskData {
-    logger: FileLogger,
     progress: f64, // 0..1
-    warn_count: u64,
     pub abort_listeners: Vec<oneshot::Sender<()>>,
 }
 
@@ -835,7 +830,7 @@ impl WorkerTask {
         worker_id: Option<String>,
         auth_id: String,
         to_stdout: bool,
-    ) -> Result<Arc<Self>, Error> {
+    ) -> Result<(Arc<Self>, FileLogger), Error> {
         let setup = worker_task_setup()?;
 
         let upid = UPID::new(worker_type, worker_id, auth_id)?;
@@ -858,9 +853,7 @@ impl WorkerTask {
             upid: upid.clone(),
             abort_requested: AtomicBool::new(false),
             data: Mutex::new(WorkerTaskData {
-                logger,
                 progress: 0.0,
-                warn_count: 0,
                 abort_listeners: vec![],
             }),
         });
@@ -874,7 +867,7 @@ impl WorkerTask {
 
         setup.update_active_workers(Some(&upid))?;
 
-        Ok(worker)
+        Ok((worker, logger))
     }
 
     /// Spawn a new tokio task/future.
@@ -889,13 +882,20 @@ impl WorkerTask {
         F: Send + 'static + FnOnce(Arc<WorkerTask>) -> T,
         T: Send + 'static + Future<Output = Result<(), Error>>,
     {
-        let worker = WorkerTask::new(worker_type, worker_id, auth_id, to_stdout)?;
+        let (worker, logger) = WorkerTask::new(worker_type, worker_id, auth_id, to_stdout)?;
         let upid_str = worker.upid.to_string();
         let f = f(worker.clone());
-        tokio::spawn(async move {
-            let result = f.await;
-            worker.log_result(&result);
-        });
+
+        let logger = RefCell::new(logger);
+        let counter = Cell::new(0);
+        tokio::spawn(LOGGER.scope(logger, async move {
+            WARN_COUNTER
+                .scope(counter, async move {
+                    let result = f.await;
+                    worker.log_result(&result);
+                })
+                .await;
+        }));
 
         Ok(upid_str)
     }
@@ -911,22 +911,27 @@ impl WorkerTask {
     where
         F: Send + UnwindSafe + 'static + FnOnce(Arc<WorkerTask>) -> Result<(), Error>,
     {
-        let worker = WorkerTask::new(worker_type, worker_id, auth_id, to_stdout)?;
+        let (worker, logger) = WorkerTask::new(worker_type, worker_id, auth_id, to_stdout)?;
         let upid_str = worker.upid.to_string();
 
         let _child = std::thread::Builder::new()
             .name(upid_str.clone())
             .spawn(move || {
-                let worker1 = worker.clone();
-                let result = match std::panic::catch_unwind(move || f(worker1)) {
-                    Ok(r) => r,
-                    Err(panic) => match panic.downcast::<&str>() {
-                        Ok(panic_msg) => Err(format_err!("worker panicked: {}", panic_msg)),
-                        Err(_) => Err(format_err!("worker panicked: unknown type.")),
-                    },
-                };
+                LOGGER.sync_scope(RefCell::new(logger), || {
+                    WARN_COUNTER.sync_scope(Cell::new(0), || {
+                        let worker1 = worker.clone();
 
-                worker.log_result(&result);
+                        let result = match std::panic::catch_unwind(move || f(worker1)) {
+                            Ok(r) => r,
+                            Err(panic) => match panic.downcast::<&str>() {
+                                Ok(panic_msg) => Err(format_err!("worker panicked: {}", panic_msg)),
+                                Err(_) => Err(format_err!("worker panicked: unknown type.")),
+                            },
+                        };
+
+                        worker.log_result(&result);
+                    });
+                });
             });
 
         Ok(upid_str)
@@ -934,7 +939,7 @@ impl WorkerTask {
 
     /// create state from self and a result
     pub fn create_state(&self, result: &Result<(), Error>) -> TaskState {
-        let warn_count = self.data.lock().unwrap().warn_count;
+        let warn_count = WARN_COUNTER.try_with(Cell::get).unwrap_or(0);
 
         let endtime = proxmox_time::epoch_i64();
 
@@ -965,15 +970,7 @@ impl WorkerTask {
 
     /// Log a message.
     pub fn log_message<S: AsRef<str>>(&self, msg: S) {
-        let mut data = self.data.lock().unwrap();
-        data.logger.log(msg);
-    }
-
-    /// Log a message as warning.
-    pub fn log_warning<S: AsRef<str>>(&self, msg: S) {
-        let mut data = self.data.lock().unwrap();
-        data.logger.log(format!("WARN: {}", msg.as_ref()));
-        data.warn_count += 1;
+        info!("{}", msg.as_ref());
     }
 
     /// Set progress indicator
@@ -1035,16 +1032,6 @@ impl WorkerTaskContext for WorkerTask {
 
     fn fail_on_shutdown(&self) -> Result<(), Error> {
         crate::fail_on_shutdown()
-    }
-
-    fn log(&self, level: log::Level, message: &std::fmt::Arguments) {
-        match level {
-            log::Level::Error => self.log_warning(message.to_string()),
-            log::Level::Warn => self.log_warning(message.to_string()),
-            log::Level::Info => self.log_message(message.to_string()),
-            log::Level::Debug => self.log_message(format!("DEBUG: {}", message)),
-            log::Level::Trace => self.log_message(format!("TRACE: {}", message)),
-        }
     }
 }
 

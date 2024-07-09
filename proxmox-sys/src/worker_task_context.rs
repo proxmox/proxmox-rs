@@ -26,9 +26,6 @@ pub trait WorkerTaskContext: Send + Sync {
         }
         Ok(())
     }
-
-    /// Create a log message for this task.
-    fn log(&self, level: log::Level, message: &std::fmt::Arguments);
 }
 
 /// Convenience implementation:
@@ -48,48 +45,4 @@ impl<T: WorkerTaskContext + ?Sized> WorkerTaskContext for std::sync::Arc<T> {
     fn fail_on_shutdown(&self) -> Result<(), Error> {
         <T as WorkerTaskContext>::fail_on_shutdown(self)
     }
-
-    fn log(&self, level: log::Level, message: &std::fmt::Arguments) {
-        <T as WorkerTaskContext>::log(self, level, message)
-    }
-}
-
-/// Log an error to a [WorkerTaskContext]
-#[macro_export]
-macro_rules! task_error {
-    ($task:expr, $($fmt:tt)+) => {{
-        $crate::WorkerTaskContext::log(&*$task, log::Level::Error, &format_args!($($fmt)+))
-    }};
-}
-
-/// Log a warning to a [WorkerTaskContext]
-#[macro_export]
-macro_rules! task_warn {
-    ($task:expr, $($fmt:tt)+) => {{
-        $crate::WorkerTaskContext::log(&*$task, log::Level::Warn, &format_args!($($fmt)+))
-    }};
-}
-
-/// Log a message to a [WorkerTaskContext]
-#[macro_export]
-macro_rules! task_log {
-    ($task:expr, $($fmt:tt)+) => {{
-        $crate::WorkerTaskContext::log(&*$task, log::Level::Info, &format_args!($($fmt)+))
-    }};
-}
-
-/// Log a debug message to a [WorkerTaskContext]
-#[macro_export]
-macro_rules! task_debug {
-    ($task:expr, $($fmt:tt)+) => {{
-        $crate::WorkerTaskContext::log(&*$task, log::Level::Debug, &format_args!($($fmt)+))
-    }};
-}
-
-/// Log a trace message to a [WorkerTaskContext]
-#[macro_export]
-macro_rules! task_trace {
-    ($task:expr, $($fmt:tt)+) => {{
-        $crate::WorkerTaskContext::log(&*$task, log::Level::Trace, &format_args!($($fmt)+))
-    }};
 }
