@@ -47,7 +47,7 @@ serde_plain::derive_fromstr_from_deserialize!(APTRepositoryPackageType);
         },
     },
 )]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "PascalCase")] // for consistency
 /// Additional options for an APT repository.
 /// Used for both single- and mutli-value options.
@@ -112,7 +112,7 @@ pub struct APTRepositoryOption {
         },
     },
 )]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 /// Describes an APT repository.
 pub struct APTRepository {
@@ -166,7 +166,7 @@ pub struct APTRepository {
         },
     },
 )]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// Represents an abstract APT repository file.
 pub struct APTRepositoryFile {
@@ -190,7 +190,7 @@ pub struct APTRepositoryFile {
 }
 
 #[api]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// Error type for problems with APT repository files.
 pub struct APTRepositoryFileError {
@@ -294,7 +294,7 @@ serde_plain::derive_display_from_serialize!(APTRepositoryHandle);
 serde_plain::derive_fromstr_from_deserialize!(APTRepositoryHandle);
 
 #[api()]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 /// Describes a package for which an update is available.
 pub struct APTUpdateInfo {
@@ -333,7 +333,7 @@ pub struct APTUpdateInfo {
         },
     }
 )]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 /// Options for APT update
 pub struct APTUpdateOptions {
     /// Send notification mail about new package updates available to the email
@@ -374,7 +374,7 @@ pub struct APTUpdateOptions {
         },
     },
 )]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// Result from parsing the APT repository files in /etc/apt/.
 pub struct APTRepositoriesResult {
@@ -390,7 +390,7 @@ pub struct APTRepositoriesResult {
 }
 
 #[api()]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 /// Options for the get changelog API.
 pub struct APTGetChangelogOptions {
     /// Package name to get changelog of.
@@ -400,7 +400,7 @@ pub struct APTGetChangelogOptions {
 }
 
 #[api()]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 /// Options for the change repository API call
 pub struct APTChangeRepositoryOptions {
     /// Whether the repository should be enabled or not.
