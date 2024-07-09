@@ -1,0 +1,5 @@
+rust-proxmox-log (0.1.0-3) UNRELEASED; urgency=medium
+
+  * Initial release
+
+ -- Gabriel Goller <ggoller@luna.proxmox.com>  Wed, 11 Oct 2023 15:13:58 +0200
