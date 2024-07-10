@@ -260,14 +260,14 @@ impl From<(ClientSender, InsecureClientSender)> for Sender {
 }
 
 struct AcceptState {
-    pub socket: InsecureClientStream,
-    pub peer: SocketAddr,
-    pub acceptor: Arc<Mutex<SslAcceptor>>,
-    pub accept_counter: Arc<()>,
+    socket: InsecureClientStream,
+    peer: SocketAddr,
+    acceptor: Arc<Mutex<SslAcceptor>>,
+    accept_counter: Arc<()>,
 }
 
 struct AcceptFlags {
-    pub is_debug: bool,
+    is_debug: bool,
 }
 
 impl AcceptBuilder {
