@@ -1,3 +1,11 @@
+rust-proxmox-compression (0.2.3-1) bookworm; urgency=medium
+
+  * deflate: add builder pattern to allow configuring the compressor
+
+  * deflate: add decompressor
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 10 Jul 2024 12:14:05 +0200
+
 rust-proxmox-compression (0.2.2-1) bookworm; urgency=medium
 
   * upgrade proxmox-time to 2.0
