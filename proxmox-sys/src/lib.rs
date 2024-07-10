@@ -1,5 +1,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
+use std::os::fd::{FromRawFd, OwnedFd};
 use std::os::unix::ffi::OsStrExt;
 
 pub mod boot_mode;
@@ -20,9 +21,6 @@ pub mod systemd;
 
 mod worker_task_context;
 pub use worker_task_context::*;
-
-#[allow(deprecated)]
-use fd::Fd;
 
 /// Returns the hosts node name (UTS node name)
 pub fn nodename() -> &'static str {
@@ -47,8 +45,7 @@ pub fn nodename() -> &'static str {
 
 /// Safe wrapper for `nix::unistd::pipe2` defaulting to `O_CLOEXEC`
 /// and guarding the file descriptors.
-#[allow(deprecated)]
-pub fn pipe() -> Result<(Fd, Fd), nix::Error> {
+pub fn pipe() -> Result<(OwnedFd, OwnedFd), nix::Error> {
     let (pin, pout) = nix::unistd::pipe2(nix::fcntl::OFlag::O_CLOEXEC)?;
-    Ok((Fd(pin), Fd(pout)))
+    Ok(unsafe { (OwnedFd::from_raw_fd(pin), OwnedFd::from_raw_fd(pout)) })
 }

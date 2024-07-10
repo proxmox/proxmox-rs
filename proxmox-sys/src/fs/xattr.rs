@@ -10,32 +10,11 @@ use proxmox_io::vec;
 /// `"security.capability"` as a CStr to avoid typos.
 pub const XATTR_NAME_FCAPS: &CStr = c"security.capability";
 
-/// `"security.capability"` as a CStr to avoid typos.
-#[deprecated = "use the XATTR_NAME_FCAPS constant instead"]
-#[inline]
-pub const fn xattr_name_fcaps() -> &'static CStr {
-    XATTR_NAME_FCAPS
-}
-
 /// `"system.posix_acl_access"` as a CStr to avoid typos.
 pub const XATTR_ACL_ACCESS: &CStr = c"system.posix_acl_access";
 
-/// `"system.posix_acl_access"` as a CStr to avoid typos.
-#[deprecated = "use the XATTR_ACL_ACCESS constant instead"]
-#[inline]
-pub const fn xattr_acl_access() -> &'static CStr {
-    XATTR_ACL_ACCESS
-}
-
 /// `"system.posix_acl_default"` as a CStr to avoid typos.
 pub const XATTR_ACL_DEFAULT: &CStr = c"system.posix_acl_default";
-
-/// `"system.posix_acl_default"` as a CStr to avoid typos.
-#[deprecated = "use the XATTR_ACL_DEFAULT constant instead"]
-#[inline]
-pub const fn xattr_acl_default() -> &'static CStr {
-    XATTR_ACL_DEFAULT
-}
 
 /// Result of `flistxattr`, allows iterating over the attributes as a list of `&CStr`s.
 ///

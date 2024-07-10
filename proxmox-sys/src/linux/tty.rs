@@ -25,18 +25,6 @@ pub fn stdout_terminal_size() -> (usize, usize) {
     (winsize.ws_row as usize, winsize.ws_col as usize)
 }
 
-/// Returns whether the current stdout is a tty.
-#[deprecated(note = "Use std::io::stdout().is_terminal()")]
-pub fn stdout_isatty() -> bool {
-    std::io::stdout().is_terminal()
-}
-
-/// Returns whether the current stdin is a tty.
-#[deprecated(note = "Use std::io::stdin().is_terminal()")]
-pub fn stdin_isatty() -> bool {
-    std::io::stdin().is_terminal()
-}
-
 pub enum TtyOutput {
     Stdout(std::io::Stdout),
     DevTty(OwnedFd),

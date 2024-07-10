@@ -6,15 +6,6 @@ use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use nix::NixPath;
 
-mod fd_impl;
-pub use fd_impl::*;
-
-mod raw_fd_num;
-pub use raw_fd_num::*;
-
-mod borrowed_fd;
-pub use borrowed_fd::*;
-
 use std::os::unix::io::{FromRawFd, OwnedFd, RawFd};
 
 use nix::fcntl::{fcntl, FdFlag, F_GETFD, F_SETFD};
