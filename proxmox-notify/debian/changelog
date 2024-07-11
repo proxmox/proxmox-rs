@@ -1,3 +1,13 @@
+rust-proxmox-notify (0.4.2-1) bookworm; urgency=medium
+
+  * upgrade to proxmox-sys 6.0
+
+  * sendmail() and forward() from proxmox-sys have been moved here
+
+  * clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 11 Jul 2024 15:18:29 +0200
+
 rust-proxmox-notify (0.4.1-1) bookworm; urgency=medium
 
   * upgrade proxmox-time to 2.0
