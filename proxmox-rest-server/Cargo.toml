@@ -46,6 +46,7 @@ proxmox-router.workspace = true
 proxmox-schema = { workspace = true, features = [ "api-macro", "upid-api-impl" ] }
 proxmox-sys = { workspace = true, features = [ "logrotate", "timer" ] }
 proxmox-time.workspace = true
+proxmox-worker-task.workspace = true
 
 [features]
 default = []

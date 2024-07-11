@@ -42,6 +42,7 @@ members = [
     "proxmox-time",
     "proxmox-time-api",
     "proxmox-uuid",
+    "proxmox-worker-task",
 ]
 exclude = [
     "build",
@@ -141,3 +142,4 @@ proxmox-sys = { version = "0.5.7", path = "proxmox-sys" }
 proxmox-tfa = { version = "5.0.0", path = "proxmox-tfa" }
 proxmox-time = { version = "2.0.0", path = "proxmox-time" }
 proxmox-uuid = { version = "1.0.1", path = "proxmox-uuid" }
+proxmox-worker-task = { version = "1.0.0", path = "proxmox-worker-task" }

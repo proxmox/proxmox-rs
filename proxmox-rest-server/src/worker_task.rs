@@ -24,9 +24,8 @@ use proxmox_log::{FileLogOptions, FileLogger, LOGGER, WARN_COUNTER};
 use proxmox_schema::upid::UPID;
 use proxmox_sys::fs::{atomic_open_or_create_file, create_path, replace_file, CreateOptions};
 use proxmox_sys::linux::procfs;
-
 use proxmox_sys::logrotate::{LogRotate, LogRotateFiles};
-use proxmox_sys::WorkerTaskContext;
+use proxmox_worker_task::WorkerTaskContext;
 
 use crate::CommandSocket;
 
