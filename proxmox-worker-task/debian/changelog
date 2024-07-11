@@ -2,4 +2,4 @@ rust-proxmox-worker-task (0.1.0-1) bookworm; urgency=medium
 
   * Initial release
 
- -- Proxmox Support Team <support@proxmox.com>  Thu, 11 Jul 2024 13:03:45 +0200
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 11 Jul 2024 13:04:07 +0200
