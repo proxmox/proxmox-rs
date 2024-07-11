@@ -1,3 +1,9 @@
+rust-proxmox-shared-memory (0.3.1-1) bookworm; urgency=medium
+
+  * rebuild with proxmox-sys 6.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 11 Jul 2024 15:16:01 +0200
+
 rust-proxmox-shared-memory (0.3.0-1) bookworm; urgency=medium
 
   * bump proxmox-sys dependencyto 0.5.0
