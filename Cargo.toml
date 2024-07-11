@@ -138,7 +138,7 @@ proxmox-section-config = { version = "2.0.0", path = "proxmox-section-config" }
 proxmox-serde = { version = "0.1.1", path = "proxmox-serde", features = [ "serde_json" ] }
 proxmox-shared-memory = { version = "0.3.0", path = "proxmox-shared-memory" }
 proxmox-sortable-macro = { version = "0.1.3", path = "proxmox-sortable-macro" }
-proxmox-sys = { version = "0.5.7", path = "proxmox-sys" }
+proxmox-sys = { version = "0.6.0", path = "proxmox-sys" }
 proxmox-tfa = { version = "5.0.0", path = "proxmox-tfa" }
 proxmox-time = { version = "2.0.0", path = "proxmox-time" }
 proxmox-uuid = { version = "1.0.1", path = "proxmox-uuid" }

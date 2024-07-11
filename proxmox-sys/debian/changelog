@@ -1,3 +1,19 @@
+rust-proxmox-sys (0.6.0-1) bookworm; urgency=medium
+
+  * process_locker: explicitly do not truncate the lock file
+
+  * enable cfg(doc_cfg) and cfg(doc_auto_cfg)
+
+  * remove deprecated items
+
+  * remove task_log macros
+
+  * remove email module (this is now internal to proxmox-notify)
+
+  * WorkerTaskContext trait is now in a separate proxomx-worker-task crate
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 11 Jul 2024 13:08:03 +0200
+
 rust-proxmox-sys (0.5.8-1) bookworm; urgency=medium
 
   * upgrade proxmox-time to 2.0

@@ -59,14 +59,14 @@ Provides:
  librust-proxmox-sys-0+acl-dev (= ${binary:Version}),
  librust-proxmox-sys-0+default-dev (= ${binary:Version}),
  librust-proxmox-sys-0+timer-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5+acl-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5+timer-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.8-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.8+acl-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.8+default-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.8+timer-dev (= ${binary:Version})
+ librust-proxmox-sys-0.6-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.6+acl-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.6+default-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.6+timer-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.6.0-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.6.0+acl-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.6.0+default-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.6.0+timer-dev (= ${binary:Version})
 Description: System tools (using nix) - Rust source code
  Source code for Debianized Rust crate "proxmox-sys"
 
@@ -79,8 +79,8 @@ Depends:
  librust-openssl-0.10+default-dev
 Provides:
  librust-proxmox-sys-0+crypt-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5+crypt-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.8+crypt-dev (= ${binary:Version})
+ librust-proxmox-sys-0.6+crypt-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.6.0+crypt-dev (= ${binary:Version})
 Description: System tools (using nix) - feature "crypt"
  This metapackage enables feature "crypt" for the Rust proxmox-sys crate, by
  pulling in any additional dependencies needed by that feature.
@@ -95,8 +95,8 @@ Depends:
  librust-zstd-0.12+default-dev
 Provides:
  librust-proxmox-sys-0+logrotate-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5+logrotate-dev (= ${binary:Version}),
- librust-proxmox-sys-0.5.8+logrotate-dev (= ${binary:Version})
+ librust-proxmox-sys-0.6+logrotate-dev (= ${binary:Version}),
+ librust-proxmox-sys-0.6.0+logrotate-dev (= ${binary:Version})
 Description: System tools (using nix) - feature "logrotate"
  This metapackage enables feature "logrotate" for the Rust proxmox-sys crate, by
  pulling in any additional dependencies needed by that feature.
