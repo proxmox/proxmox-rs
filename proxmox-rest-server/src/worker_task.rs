@@ -28,6 +28,7 @@ use proxmox_sys::WorkerTaskContext;
 
 use crate::{CommandSocket, FileLogOptions, FileLogger};
 
+#[allow(dead_code)]
 struct TaskListLockGuard(File);
 
 struct WorkerTaskSetup {
