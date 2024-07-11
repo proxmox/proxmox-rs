@@ -1,3 +1,9 @@
+rust-proxmox-access-control (0.2.1-1) bookworm; urgency=medium
+
+  * rebuild with proxmox-sys 6.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 11 Jul 2024 14:46:29 +0200
+
 rust-proxmox-access-control (0.2.0-1) bookworm; urgency=medium
 
   * change acl::config() and user::config() to return a ConfigDigest instead
