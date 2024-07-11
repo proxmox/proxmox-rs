@@ -15,6 +15,21 @@ pub use file_logger::{FileLogOptions, FileLogger};
 
 mod tasklog_layer;
 
+pub use tracing::debug;
+pub use tracing::debug_span;
+pub use tracing::enabled;
+pub use tracing::error;
+pub use tracing::error_span;
+pub use tracing::event;
+pub use tracing::info;
+pub use tracing::info_span;
+pub use tracing::span;
+pub use tracing::span_enabled;
+pub use tracing::trace;
+pub use tracing::trace_span;
+pub use tracing::warn;
+pub use tracing::warn_span;
+
 tokio::task_local! {
     pub static LOGGER: RefCell<FileLogger>;
     pub static WARN_COUNTER: Cell<u64>;
