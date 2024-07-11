@@ -10,59 +10,62 @@ description = "ACME API implementation"
 
 [dependencies]
 anyhow.workspace = true
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
 base64 = { workspace = true, optional = true }
-tokio = { workspace = true, optional = true, features = ["fs"] }
-hyper = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
+hyper = { workspace = true, optional = true }
+lazy_static = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 nix = { workspace = true, optional = true }
-hex = { workspace = true, optional = true }
-lazy_static = { workspace = true, optional = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tokio = { workspace = true, optional = true, features = ["fs"] }
 
+foreign-types = { workspace = true, optional = true }
 libc = { workspace = true, optional = true }
 openssl = { workspace = true, optional = true }
-foreign-types = { workspace = true, optional = true }
 
-
-proxmox-serde.workspace = true
-proxmox-section-config = { workspace = true, optional = true }
-proxmox-rest-server = { workspace = true, optional = true }
-proxmox-router = { workspace = true, optional = true }
-proxmox-sys = { workspace = true, optional = true }
-proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
-proxmox-uuid = { workspace = true, optional = true }
-proxmox-time = { workspace = true, optional = true }
 proxmox-acme = { workspace = true, features = ["api-types"] }
 proxmox-config-digest = { workspace = true, optional = true }
+proxmox-log = { workspace = true, optional = true }
 proxmox-product-config = { workspace = true, optional = true }
+proxmox-rest-server = { workspace = true, optional = true }
+proxmox-router = { workspace = true, optional = true }
+proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
+proxmox-section-config = { workspace = true, optional = true }
+proxmox-serde.workspace = true
+proxmox-sys = { workspace = true, optional = true }
+proxmox-time = { workspace = true, optional = true }
+proxmox-uuid = { workspace = true, optional = true }
 
 [features]
 default = []
 impl = [
-    "dep:proxmox-uuid",
-    "dep:proxmox-time",
-    "dep:proxmox-config-digest",
-    "proxmox-config-digest?/openssl",
-    "dep:proxmox-product-config",
-    "proxmox-acme/impl",
-    "proxmox-acme/async-client",
-    "dep:proxmox-section-config",
-    "dep:hex",
-    "dep:lazy_static",
-    "dep:log",
-    "dep:nix",
-    "dep:tokio",
+    "dep:base64",
+    "dep:foreign-types",
     "dep:futures",
+    "dep:hex",
     "dep:http",
     "dep:hyper",
-    "dep:proxmox-sys",
+    "dep:lazy_static",
+    "dep:libc",
+    "dep:log",
+    "dep:nix",
+    "dep:openssl",
+    "dep:tokio",
+
+    "dep:proxmox-config-digest",
+    "dep:proxmox-log",
+    "dep:proxmox-product-config",
     "dep:proxmox-rest-server",
     "dep:proxmox-router",
-    "dep:base64",
-    "dep:libc",
-    "dep:openssl",
-    "dep:foreign-types",
+    "dep:proxmox-section-config",
+    "dep:proxmox-sys",
+    "dep:proxmox-time",
+    "dep:proxmox-uuid",
+
+    "proxmox-acme/async-client",
+    "proxmox-acme/impl",
+    "proxmox-config-digest?/openssl",
 ]

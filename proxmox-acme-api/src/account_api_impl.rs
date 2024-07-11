@@ -7,9 +7,7 @@ use serde_json::json;
 
 use proxmox_acme::async_client::AcmeClient;
 use proxmox_acme::types::AccountData as AcmeAccountData;
-
-use proxmox_rest_server::WorkerTask;
-use proxmox_sys::task_warn;
+use proxmox_log::warn;
 
 use crate::account_config::AccountData;
 use crate::config::DEFAULT_ACME_DIRECTORY_ENTRY;
@@ -75,11 +73,7 @@ pub async fn register_account(
     Ok(account.location)
 }
 
-pub async fn deactivate_account(
-    worker: &WorkerTask,
-    name: &AcmeAccountName,
-    force: bool,
-) -> Result<(), Error> {
+pub async fn deactivate_account(name: &AcmeAccountName, force: bool) -> Result<(), Error> {
     let mut account_data = super::account_config::load_account_config(name).await?;
     let mut client = account_data.client();
 
@@ -93,11 +87,9 @@ pub async fn deactivate_account(
         }
         Err(err) if !force => return Err(err),
         Err(err) => {
-            task_warn!(
-                worker,
+            warn!(
                 "error deactivating account {}, proceedeing anyway - {}",
-                name,
-                err,
+                name, err,
             );
         }
     }

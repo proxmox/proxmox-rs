@@ -10,8 +10,8 @@ use openssl::rsa::Rsa;
 use openssl::x509::{X509Builder, X509};
 
 use proxmox_acme::async_client::AcmeClient;
+use proxmox_log::{info, warn};
 use proxmox_rest_server::WorkerTask;
-use proxmox_sys::{task_log, task_warn};
 
 use crate::types::{AcmeConfig, AcmeDomain};
 use crate::CertificateInfo;
@@ -47,10 +47,7 @@ pub async fn order_certificate(
     };
 
     if domains.is_empty() {
-        task_log!(
-            worker,
-            "No domains configured to be ordered from an ACME server."
-        );
+        info!("No domains configured to be ordered from an ACME server.");
         return Ok(None);
     }
 
@@ -60,13 +57,13 @@ pub async fn order_certificate(
 
     let (plugins, _) = super::plugin_config::plugin_config()?;
 
-    task_log!(worker, "Placing ACME order");
+    info!("Placing ACME order");
 
     let order = acme
         .new_order(domains.iter().map(|d| d.domain.to_ascii_lowercase()))
         .await?;
 
-    task_log!(worker, "Order URL: {}", order.location);
+    info!("Order URL: {}", order.location);
 
     let identifiers: Vec<String> = order
         .data
@@ -78,7 +75,7 @@ pub async fn order_certificate(
         .collect();
 
     for auth_url in &order.data.authorizations {
-        task_log!(worker, "Getting authorization details from '{}'", auth_url);
+        info!("Getting authorization details from '{}'", auth_url);
         let mut auth = acme.get_authorization(auth_url).await?;
 
         let domain = match &mut auth.identifier {
@@ -86,11 +83,11 @@ pub async fn order_certificate(
         };
 
         if auth.status == Status::Valid {
-            task_log!(worker, "{} is already validated!", domain);
+            info!("{} is already validated!", domain);
             continue;
         }
 
-        task_log!(worker, "The validation for {} is pending", domain);
+        info!("The validation for {} is pending", domain);
         let domain_config: &AcmeDomain = get_domain_config(&domain)?;
         let plugin_id = domain_config.plugin.as_deref().unwrap_or("standalone");
         let mut plugin_cfg =
@@ -98,31 +95,28 @@ pub async fn order_certificate(
                 format_err!("plugin '{}' for domain '{}' not found!", plugin_id, domain)
             })?;
 
-        task_log!(worker, "Setting up validation plugin");
+        info!("Setting up validation plugin");
         let validation_url = plugin_cfg
             .setup(&mut acme, &auth, domain_config, Arc::clone(&worker))
             .await?;
 
-        let result = request_validation(&worker, &mut acme, auth_url, validation_url).await;
+        let result = request_validation(&mut acme, auth_url, validation_url).await;
 
         if let Err(err) = plugin_cfg
             .teardown(&mut acme, &auth, domain_config, Arc::clone(&worker))
             .await
         {
-            task_warn!(
-                worker,
+            warn!(
                 "Failed to teardown plugin '{}' for domain '{}' - {}",
-                plugin_id,
-                domain,
-                err
+                plugin_id, domain, err
             );
         }
 
         result?;
     }
 
-    task_log!(worker, "All domains validated");
-    task_log!(worker, "Creating CSR");
+    info!("All domains validated");
+    info!("Creating CSR");
 
     let csr = proxmox_acme::util::Csr::generate(&identifiers, &Default::default())?;
     let mut finalize_error_cnt = 0u8;
@@ -135,7 +129,7 @@ pub async fn order_certificate(
 
         match order.status {
             Status::Pending => {
-                task_log!(worker, "still pending, trying to finalize anyway");
+                info!("still pending, trying to finalize anyway");
                 let finalize = order
                     .finalize
                     .as_deref()
@@ -150,7 +144,7 @@ pub async fn order_certificate(
                 tokio::time::sleep(Duration::from_secs(5)).await;
             }
             Status::Ready => {
-                task_log!(worker, "order is ready, finalizing");
+                info!("order is ready, finalizing");
                 let finalize = order
                     .finalize
                     .as_deref()
@@ -159,18 +153,18 @@ pub async fn order_certificate(
                 tokio::time::sleep(Duration::from_secs(5)).await;
             }
             Status::Processing => {
-                task_log!(worker, "still processing, trying again in 30 seconds");
+                info!("still processing, trying again in 30 seconds");
                 tokio::time::sleep(Duration::from_secs(30)).await;
             }
             Status::Valid => {
-                task_log!(worker, "valid");
+                info!("valid");
                 break;
             }
             other => bail!("order status: {:?}", other),
         }
     }
 
-    task_log!(worker, "Downloading certificate");
+    info!("Downloading certificate");
     let certificate = acme
         .get_certificate(
             order
@@ -187,15 +181,14 @@ pub async fn order_certificate(
 }
 
 async fn request_validation(
-    worker: &WorkerTask,
     acme: &mut AcmeClient,
     auth_url: &str,
     validation_url: &str,
 ) -> Result<(), Error> {
-    task_log!(worker, "Triggering validation");
+    info!("Triggering validation");
     acme.request_challenge_validation(validation_url).await?;
 
-    task_log!(worker, "Sleeping for 5 seconds");
+    info!("Sleeping for 5 seconds");
     tokio::time::sleep(Duration::from_secs(5)).await;
 
     loop {
@@ -204,10 +197,7 @@ async fn request_validation(
         let auth = acme.get_authorization(auth_url).await?;
         match auth.status {
             Status::Pending => {
-                task_log!(
-                    worker,
-                    "Status is still 'pending', trying again in 10 seconds"
-                );
+                info!("Status is still 'pending', trying again in 10 seconds");
                 tokio::time::sleep(Duration::from_secs(10)).await;
             }
             Status::Valid => return Ok(()),
