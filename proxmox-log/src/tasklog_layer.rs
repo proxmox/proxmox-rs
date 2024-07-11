@@ -8,34 +8,31 @@ use tracing::Subscriber;
 use tracing_subscriber::layer::Context;
 use tracing_subscriber::Layer;
 
-use crate::FileLogger;
-use crate::LOGGER;
-use crate::WARN_COUNTER;
+use crate::{FileLogState, LogContext};
 
 pub struct TasklogLayer;
 
 impl<S: Subscriber> Layer<S> for TasklogLayer {
     fn on_event(&self, event: &Event<'_>, _ctx: Context<'_, S>) {
-        let _result = LOGGER.try_with(|logger| {
+        if let Some(ctx) = LogContext::current() {
+            let mut logger = ctx.logger.lock().unwrap();
             let mut buf = String::new();
             event.record(&mut EventVisitor::new(&mut buf));
             let level = event.metadata().level();
-            log_to_file(&mut logger.borrow_mut(), level, &buf);
-        });
+            log_to_file(&mut logger, level, &buf);
+        }
     }
 }
 
-fn log_to_file(logger: &mut FileLogger, level: &Level, buf: &String) {
+fn log_to_file(logger: &mut FileLogState, level: &Level, buf: &String) {
     match *level {
         Level::ERROR | Level::WARN => {
-            WARN_COUNTER.with(|counter| {
-                counter.set(counter.get() + 1);
-            });
-            logger.log(buf);
+            logger.warn_count += 1;
+            logger.logger.log(buf);
         }
-        Level::INFO => logger.log(buf),
-        Level::DEBUG => logger.log(format!("DEBUG: {buf}")),
-        Level::TRACE => logger.log(format!("TRACE: {buf}")),
+        Level::INFO => logger.logger.log(buf),
+        Level::DEBUG => logger.logger.log(format!("DEBUG: {buf}")),
+        Level::TRACE => logger.logger.log(format!("TRACE: {buf}")),
     };
 }
 

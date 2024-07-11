@@ -1,4 +1,3 @@
-use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -20,7 +19,7 @@ use tokio::sync::oneshot;
 use tracing::{info, warn};
 
 use proxmox_lang::try_block;
-use proxmox_log::{FileLogOptions, FileLogger, LOGGER, WARN_COUNTER};
+use proxmox_log::{FileLogOptions, FileLogger, LogContext};
 use proxmox_schema::upid::UPID;
 use proxmox_sys::fs::{atomic_open_or_create_file, create_path, replace_file, CreateOptions};
 use proxmox_sys::linux::procfs;
@@ -885,15 +884,9 @@ impl WorkerTask {
         let upid_str = worker.upid.to_string();
         let f = f(worker.clone());
 
-        let logger = RefCell::new(logger);
-        let counter = Cell::new(0);
-        tokio::spawn(LOGGER.scope(logger, async move {
-            WARN_COUNTER
-                .scope(counter, async move {
-                    let result = f.await;
-                    worker.log_result(&result);
-                })
-                .await;
+        tokio::spawn(LogContext::new(logger).scope(async move {
+            let result = f.await;
+            worker.log_result(&result);
         }));
 
         Ok(upid_str)
@@ -916,20 +909,18 @@ impl WorkerTask {
         let _child = std::thread::Builder::new()
             .name(upid_str.clone())
             .spawn(move || {
-                LOGGER.sync_scope(RefCell::new(logger), || {
-                    WARN_COUNTER.sync_scope(Cell::new(0), || {
-                        let worker1 = worker.clone();
+                LogContext::new(logger).sync_scope(|| {
+                    let worker1 = worker.clone();
 
-                        let result = match std::panic::catch_unwind(move || f(worker1)) {
-                            Ok(r) => r,
-                            Err(panic) => match panic.downcast::<&str>() {
-                                Ok(panic_msg) => Err(format_err!("worker panicked: {}", panic_msg)),
-                                Err(_) => Err(format_err!("worker panicked: unknown type.")),
-                            },
-                        };
+                    let result = match std::panic::catch_unwind(move || f(worker1)) {
+                        Ok(r) => r,
+                        Err(panic) => match panic.downcast::<&str>() {
+                            Ok(panic_msg) => Err(format_err!("worker panicked: {}", panic_msg)),
+                            Err(_) => Err(format_err!("worker panicked: unknown type.")),
+                        },
+                    };
 
-                        worker.log_result(&result);
-                    });
+                    worker.log_result(&result);
                 });
             });
 
@@ -938,7 +929,10 @@ impl WorkerTask {
 
     /// create state from self and a result
     pub fn create_state(&self, result: &Result<(), Error>) -> TaskState {
-        let warn_count = WARN_COUNTER.try_with(Cell::get).unwrap_or(0);
+        let warn_count = match LogContext::current() {
+            Some(ctx) => ctx.state().lock().unwrap().warn_count,
+            None => 0,
+        };
 
         let endtime = proxmox_time::epoch_i64();
 
