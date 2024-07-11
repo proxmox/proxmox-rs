@@ -1,3 +1,15 @@
+rust-proxmox-rest-server (0.6.0-1) bookworm; urgency=medium
+
+  * switch to WorkerTaskContext from new proxmox-worker-task crate
+
+  * switch to tracing infrastructure from new proxmox-log crate
+
+  * drop FileLogger implementation
+
+  * upgrade proxmox-sys to 6.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 11 Jul 2024 15:10:25 +0200
+
 rust-proxmox-rest-server (0.5.4-1) bookworm; urgency=medium
 
   * fix #5105: improve TLS handshake detection
