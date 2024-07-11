@@ -7,7 +7,6 @@ pub mod boot_mode;
 pub mod command;
 #[cfg(feature = "crypt")]
 pub mod crypt;
-pub mod email;
 pub mod error;
 pub mod fd;
 pub mod fs;
