@@ -40,7 +40,6 @@ tokio::task_local! {
 pub fn init_logger(
     env_var_name: &str,
     default_log_level: LevelFilter,
-    _application_name: &str,
 ) -> Result<(), anyhow::Error> {
     let mut log_level = default_log_level;
     if let Ok(v) = env::var(env_var_name) {
