@@ -105,7 +105,7 @@ impl LogContext {
         LOG_CONTEXT.try_with(|ctx| ctx.clone()).ok()
     }
 
-    /// Run a task with a new logger and an initial warn counter of zero.
+    /// Run a task with this log context.
     pub fn sync_scope<F, R>(self, func: F) -> R
     where
         F: FnOnce() -> R,
@@ -113,7 +113,7 @@ impl LogContext {
         LOG_CONTEXT.sync_scope(self, func)
     }
 
-    /// Run a task with a new logger and an initial warn counter of zero.
+    /// Run a task with this log context.
     pub fn scope<F>(self, f: F) -> TaskLocalFuture<Self, F>
     where
         F: Future,
