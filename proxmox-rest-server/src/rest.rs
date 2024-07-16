@@ -30,7 +30,7 @@ use proxmox_router::{http_bail, http_err};
 use proxmox_schema::{ObjectSchemaType, ParameterSchema};
 
 use proxmox_async::stream::AsyncReaderStream;
-use proxmox_compression::{DeflateEncoder, Level};
+use proxmox_compression::DeflateEncoder;
 use proxmox_log::FileLogger;
 
 use crate::{
@@ -557,12 +557,13 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
                 CompressionMethod::Deflate.content_encoding(),
             );
             resp.map(|body| {
-                Body::wrap_stream(DeflateEncoder::with_quality(
-                    TryStreamExt::map_err(body, |err| {
+                Body::wrap_stream(
+                    DeflateEncoder::builder(TryStreamExt::map_err(body, |err| {
                         proxmox_lang::io_format_err!("error during compression: {}", err)
-                    }),
-                    Level::Default,
-                ))
+                    }))
+                    .zlib(true)
+                    .build(),
+                )
             })
         }
         None => resp,
@@ -651,12 +652,13 @@ async fn handle_unformatted_api_request<Env: RpcEnvironment, S: 'static + BuildH
                 CompressionMethod::Deflate.content_encoding(),
             );
             resp.map(|body| {
-                Body::wrap_stream(DeflateEncoder::with_quality(
-                    TryStreamExt::map_err(body, |err| {
+                Body::wrap_stream(
+                    DeflateEncoder::builder(TryStreamExt::map_err(body, |err| {
                         proxmox_lang::io_format_err!("error during compression: {}", err)
-                    }),
-                    Level::Default,
-                ))
+                    }))
+                    .zlib(true)
+                    .build(),
+                )
             })
         }
         None => resp,
@@ -711,7 +713,7 @@ async fn simple_static_file_download(
 
     let mut response = match compression {
         Some(CompressionMethod::Deflate) => {
-            let mut enc = DeflateEncoder::with_quality(data, Level::Default);
+            let mut enc = DeflateEncoder::builder(data).zlib(true).build();
             enc.compress_vec(&mut file, CHUNK_SIZE_LIMIT as usize)
                 .await?;
             let mut response = Response::new(enc.into_inner().into());
@@ -752,10 +754,11 @@ async fn chunked_static_file_download(
                 header::CONTENT_ENCODING,
                 CompressionMethod::Deflate.content_encoding(),
             );
-            Body::wrap_stream(DeflateEncoder::with_quality(
-                AsyncReaderStream::new(file),
-                Level::Default,
-            ))
+            Body::wrap_stream(
+                DeflateEncoder::builder(AsyncReaderStream::new(file))
+                    .zlib(true)
+                    .build(),
+            )
         }
         None => Body::wrap_stream(AsyncReaderStream::new(file)),
     };
