@@ -5,6 +5,7 @@ use std::sync::OnceLock;
 use anyhow::{format_err, Error};
 
 use proxmox_auth_api::types::{Authid, Userid};
+use proxmox_section_config::SectionConfigData;
 
 static ACCESS_CONF: OnceLock<&'static dyn AccessControlConfig> = OnceLock::new();
 static ACCESS_CONF_DIR: OnceLock<PathBuf> = OnceLock::new();
@@ -63,6 +64,13 @@ pub trait AccessControlConfig: Send + Sync {
     /// Default: Returns `None`.
     fn role_admin(&self) -> Option<&str> {
         None
+    }
+
+    /// Called after the user configuration is loaded to potentially re-add fixed users, such as a
+    /// `root@pam` user.
+    fn init_user_config(&self, config: &mut SectionConfigData) -> Result<(), Error> {
+        let _ = config;
+        Ok(())
     }
 }
 

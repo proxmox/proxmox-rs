@@ -49,7 +49,9 @@ pub fn config() -> Result<(SectionConfigData, ConfigDigest), Error> {
     let content = proxmox_sys::fs::file_read_optional_string(user_config())?.unwrap_or_default();
 
     let digest = ConfigDigest::from_slice(content.as_bytes());
-    let data = get_or_init_config().parse(user_config(), &content)?;
+    let mut data = get_or_init_config().parse(user_config(), &content)?;
+
+    access_conf().init_user_config(&mut data)?;
 
     Ok((data, digest))
 }
