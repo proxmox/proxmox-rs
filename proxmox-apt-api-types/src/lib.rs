@@ -185,8 +185,9 @@ pub struct APTRepositoryFile {
     pub content: Option<String>,
 
     /// Digest of the original contents.
+    // We cannot use ConfigDigest here for compatibility reasons.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub digest: Option<ConfigDigest>,
+    pub digest: Option<[u8; 32]>,
 }
 
 #[api]
