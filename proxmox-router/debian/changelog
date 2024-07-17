@@ -1,3 +1,21 @@
+rust-proxmox-router (2.2.0-1) stable; urgency=medium
+
+  * AsAny: add as_any_mut
+
+  * cli: store extra object-schema args by type
+
+  * cli: add a new CLI parser with support for global/hierarchical parameters
+    which does not support single-dash for long options
+
+  * cli: support 'help' output, completion and doc generation with the new CLI
+    parser
+
+  * add tests for doc generation
+
+  * use const blocks in thread_local! calls
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 17 Jul 2024 14:17:48 +0200
+
 rust-proxmox-router (2.1.5-1) stable; urgency=medium
 
   * repalce c_str! macro usage with c"literalsl"
