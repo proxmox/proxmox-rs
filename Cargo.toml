@@ -118,7 +118,7 @@ zstd = { version = "0.12", features = [ "bindgen" ] }
 # workspace dependencies
 proxmox-acme = {  version = "0.5.2", path = "proxmox-acme", default-features = false }
 proxmox-api-macro = { version = "1.0.8", path = "proxmox-api-macro" }
-proxmox-apt-api-types = { version = "1.0.0", path = "proxmox-apt-api-types" }
+proxmox-apt-api-types = { version = "1.0.1", path = "proxmox-apt-api-types" }
 proxmox-auth-api = { version = "0.4.0", path = "proxmox-auth-api" }
 proxmox-async = { version = "0.4.1", path = "proxmox-async" }
 proxmox-compression = { version = "0.2.3", path = "proxmox-compression" }
