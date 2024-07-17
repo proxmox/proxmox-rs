@@ -1,3 +1,17 @@
+rust-proxmox-schema (3.1.2-1) bookworm; urgency=medium
+
+  * drop trailing whitespaces in wrap_text
+
+  * wrap_text now works by paragraphs
+
+  * drop trailing newline in proeprty descriptions
+
+  * use const blocks in thread_local! calls
+
+  * various clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 17 Jul 2024 14:13:39 +0200
+
 rust-proxmox-schema (3.1.1-1) bookworm; urgency=medium
 
   * add ip/cidr api schemas
