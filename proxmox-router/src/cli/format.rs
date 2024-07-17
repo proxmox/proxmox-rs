@@ -57,7 +57,6 @@ pub fn format_and_print_result_full(
     }
 }
 
-#[deprecated = "to be removed, not meant as a public interface"]
 /// Helper to generate command usage text for simple commands.
 pub fn generate_usage_str(
     prefix: &str,
