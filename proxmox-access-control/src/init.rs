@@ -1,10 +1,10 @@
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
+
 use anyhow::{format_err, Error};
+
 use proxmox_auth_api::types::{Authid, Userid};
-use std::{
-    collections::HashMap,
-    path::{Path, PathBuf},
-    sync::OnceLock,
-};
 
 static ACCESS_CONF: OnceLock<&'static dyn AccessControlConfig> = OnceLock::new();
 static ACCESS_CONF_DIR: OnceLock<PathBuf> = OnceLock::new();

@@ -1,6 +1,6 @@
-use proxmox_auth_api::types::{Authid, Userid, PROXMOX_TOKEN_ID_SCHEMA};
 use serde::{Deserialize, Serialize};
 
+use proxmox_auth_api::types::{Authid, Userid, PROXMOX_TOKEN_ID_SCHEMA};
 use proxmox_schema::{
     api,
     api_types::{COMMENT_SCHEMA, SINGLE_LINE_COMMENT_FORMAT},
