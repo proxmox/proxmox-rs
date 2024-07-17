@@ -200,7 +200,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
         }
 
         self.repositories = repos;
-        self.digest = Some(digest);
+        self.digest = Some(*digest);
 
         Ok(())
     }
@@ -221,7 +221,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
             }
 
             let (_, current_digest) = self.read_with_digest()?;
-            if digest != &current_digest {
+            if *digest != *current_digest {
                 return Err(self.err(format_err!("digest mismatch")));
             }
         }

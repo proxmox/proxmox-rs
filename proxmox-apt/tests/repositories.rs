@@ -137,7 +137,7 @@ fn test_digest() -> Result<(), Error> {
 
     // expect a different digest, because the repo was modified
     let (_, new_digest) = file.read_with_digest()?;
-    assert_ne!(old_digest, new_digest);
+    assert_ne!(old_digest, *new_digest);
 
     assert!(file.write().is_err());
 
