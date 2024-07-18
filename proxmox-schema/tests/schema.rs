@@ -338,7 +338,7 @@ fn test_verify_complex_object() {
 fn test_verify_complex_array() {
     {
         const PARAM_SCHEMA: Schema =
-            ArraySchema::new("Integer List.", &IntegerSchema::new("Soemething").schema()).schema();
+            ArraySchema::new("Integer List.", &IntegerSchema::new("Something").schema()).schema();
 
         const SCHEMA: ObjectSchema = ObjectSchema::new(
             "Parameters.",
@@ -369,7 +369,7 @@ fn test_verify_complex_array() {
 
     {
         const PARAM_SCHEMA: Schema =
-            ArraySchema::new("Integer List.", &IntegerSchema::new("Soemething").schema())
+            ArraySchema::new("Integer List.", &IntegerSchema::new("Something").schema())
                 .min_length(1)
                 .max_length(3)
                 .schema();

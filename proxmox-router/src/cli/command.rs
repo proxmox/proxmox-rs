@@ -200,7 +200,7 @@ const API_METHOD_COMMAND_HELP: ApiMethod = ApiMethod::new(
                 "command",
                 true,
                 &ArraySchema::new(
-                    "Command. This may be a list in order to spefify nested sub-commands.",
+                    "Command. This may be a list in order to specify nested sub-commands.",
                     &StringSchema::new("Name.").schema(),
                 )
                 .schema(),

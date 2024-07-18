@@ -25,7 +25,7 @@ async fn run() -> Result<(), Error> {
         None => bail!("missing username or --check parameter"),
         Some(ck) if ck == "--check" => (
             args.next()
-                .ok_or_else(|| format_err!("expected username as paramter"))?
+                .ok_or_else(|| format_err!("expected username as parameter"))?
                 .try_into()?,
             false,
         ),

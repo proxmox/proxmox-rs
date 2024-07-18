@@ -1650,7 +1650,7 @@ fn do_parse_parameter_strings(
                             }
                         }
                         _ => {
-                            errors.push(key.into(), format_err!("expected array - type missmatch"))
+                            errors.push(key.into(), format_err!("expected array - type mismatch"))
                         }
                     }
                 }
@@ -1679,7 +1679,7 @@ fn do_parse_parameter_strings(
                 Value::Array(ref mut array) => {
                     array.push(Value::String(value.to_string()));
                 }
-                _ => errors.push(key.into(), format_err!("expected array - type missmatch")),
+                _ => errors.push(key.into(), format_err!("expected array - type mismatch")),
             }
         } else {
             errors.push(

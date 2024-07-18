@@ -151,7 +151,7 @@ fn expected_nested_usage_text() -> &'static str {
 Get help about specified command (or sub-command).
 
 ``<command>`` : ``<string>``
-  Command. This may be a list in order to spefify nested sub-commands. Can be
+  Command. This may be a list in order to specify nested sub-commands. Can be
   specified more than once.
 
 Optional parameters:

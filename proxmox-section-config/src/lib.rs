@@ -702,7 +702,7 @@ impl SectionConfig {
         _data: &Value,
     ) -> Result<String, Error> {
         if type_name != section_id {
-            bail!("gut unexpexted section type");
+            bail!("gut unexpected section type");
         }
 
         Ok(format!("[{}]\n", section_id))

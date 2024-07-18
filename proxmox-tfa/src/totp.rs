@@ -227,7 +227,7 @@ impl Totp {
     pub fn builder_from_hex(secret: &str) -> Result<TotpBuilder, Error> {
         Ok(Self::builder().secret(
             hex::decode(secret)
-                .map_err(|err| Error::decode("not a valid hexademical string", err))?,
+                .map_err(|err| Error::decode("not a valid hexadecimal string", err))?,
         ))
     }
 

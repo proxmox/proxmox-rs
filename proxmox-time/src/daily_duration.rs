@@ -149,24 +149,24 @@ mod test {
 
         if duration.start.hour != start_h {
             bail!(
-                "start hour missmatch, extected {}, got {:?}",
+                "start hour mismatch, extected {}, got {:?}",
                 start_h,
                 duration
             );
         }
         if duration.start.minute != start_m {
             bail!(
-                "start minute missmatch, extected {}, got {:?}",
+                "start minute mismatch, extected {}, got {:?}",
                 start_m,
                 duration
             );
         }
         if duration.end.hour != end_h {
-            bail!("end hour missmatch, extected {}, got {:?}", end_h, duration);
+            bail!("end hour mismatch, extected {}, got {:?}", end_h, duration);
         }
         if duration.end.minute != end_m {
             bail!(
-                "end minute missmatch, extected {}, got {:?}",
+                "end minute mismatch, extected {}, got {:?}",
                 end_m,
                 duration
             );
@@ -174,7 +174,7 @@ mod test {
 
         if duration.days != expected_days {
             bail!(
-                "weekday missmatch, extected {:?}, got {:?}",
+                "weekday mismatch, extected {:?}, got {:?}",
                 expected_days,
                 duration
             );

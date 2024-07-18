@@ -400,7 +400,7 @@ impl HttpApiClient for Client {
         T: ?Sized + Serialize,
     {
         let params = serde_json::to_string(params)
-            .map_err(|err| Error::internal("failed to serialize parametres", err));
+            .map_err(|err| Error::internal("failed to serialize parameters", err));
 
         Box::pin(async move {
             let params = params?;
@@ -425,7 +425,7 @@ impl HttpApiClient for Client {
         T: ?Sized + Serialize,
     {
         let params = serde_json::to_string(params)
-            .map_err(|err| Error::internal("failed to serialize parametres", err));
+            .map_err(|err| Error::internal("failed to serialize parameters", err));
 
         Box::pin(async move {
             let params = params?;
