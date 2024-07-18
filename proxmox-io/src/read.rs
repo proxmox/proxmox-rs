@@ -10,7 +10,7 @@ use crate::vec::{self, ByteVecExt};
 /// Adds some additional related functionality for types implementing [`Read`](std::io::Read).
 ///
 /// Particularly for reading into a newly allocated buffer, appending to a `Vec<u8>` or reading
-/// values of a specific endianess (types implementing [`Endian`]).
+/// values of a specific endianness (types implementing [`Endian`]).
 ///
 /// Examples:
 /// ```no_run
@@ -29,7 +29,7 @@ use crate::vec::{self, ByteVecExt};
 /// # }
 /// ```
 ///
-/// Or for reading values of a defined representation and endianess:
+/// Or for reading values of a defined representation and endianness:
 ///
 /// ```no_run
 /// # use endian_trait::Endian;
@@ -77,7 +77,7 @@ pub trait ReadExt {
     /// Append an exact amount of data to a vector, growing it as necessary.
     fn append_exact_to_vec(&mut self, out: &mut Vec<u8>, size: usize) -> io::Result<()>;
 
-    /// Read a value with host endianess.
+    /// Read a value with host endianness.
     ///
     /// This is limited to types implementing the [`Endian`] trait under the assumption that
     /// this is only done for types which are supposed to be read/writable directly.
@@ -187,7 +187,7 @@ pub trait ReadExt {
     /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
     unsafe fn read_be_value<T: Endian>(&mut self) -> io::Result<T>;
 
-    /// Read a boxed value with host endianess.
+    /// Read a boxed value with host endianness.
     ///
     /// This is currently not limited to types implementing the [`Endian`] trait as in our use
     /// cases we use this for types which are too big to want to always perform endian swaps

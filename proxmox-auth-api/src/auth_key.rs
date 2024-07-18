@@ -229,7 +229,7 @@ enum VerificationKey {
 
 /// A key ring for authentication.
 ///
-/// This can hold one active signing key for new tickets (either an HMAC secret or an assymmetric
+/// This can hold one active signing key for new tickets (either an HMAC secret or an asymmetric
 /// key), and optionally multiple public keys and HMAC secrets for verifying them in order to
 /// support key rollover.
 pub struct Keyring {

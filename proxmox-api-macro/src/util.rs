@@ -137,7 +137,7 @@ impl Parse for FieldName {
 }
 
 /// Most of our schema definition consists of a json-like notation.
-/// For parsing we mostly just need to destinguish between objects and non-objects.
+/// For parsing we mostly just need to distinguish between objects and non-objects.
 /// For specific expression types we match on the contained expression later on.
 // FIXME: Expr(Box<syn::Expr>)
 #[allow(clippy::large_enum_variant)]

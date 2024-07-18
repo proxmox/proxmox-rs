@@ -753,7 +753,7 @@ pub fn read_loadavg() -> Result<Loadavg, Error> {
     Loadavg::read()
 }
 
-/// Load avarage: floating point values for 1, 5 and 15 minutes of runtime.
+/// Load average: floating point values for 1, 5 and 15 minutes of runtime.
 #[derive(Clone, Debug)]
 pub struct Loadavg(pub f64, pub f64, pub f64);
 

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::TicketError;
 use crate::tfa::TfaChallenge;
 
-/// The repsonse to a ticket call can either be a complete ticket, or a TFA challenge.
+/// The response to a ticket call can either be a complete ticket, or a TFA challenge.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) enum TicketResponse {
     Full(Ticket),
@@ -62,7 +62,7 @@ impl Ticket {
         &self.data[start..(start + len)]
     }
 
-    /// Thet ticket's timestamp as a UNIX epoch.
+    /// The ticket's timestamp as a UNIX epoch.
     pub fn timestamp(&self) -> i64 {
         self.timestamp
     }

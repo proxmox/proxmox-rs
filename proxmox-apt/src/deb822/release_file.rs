@@ -46,7 +46,7 @@ pub type Architecture = String;
 pub type Component = String;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-/// Type of file reference extraced from path.
+/// Type of file reference extracted from path.
 ///
 /// `Packages` and `Sources` will contain further reference to binary or source package files.
 ///  These are handled in `PackagesFile` and `SourcesFile` respectively.

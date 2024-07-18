@@ -50,7 +50,7 @@ serde_plain::derive_fromstr_from_deserialize!(APTRepositoryPackageType);
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "PascalCase")] // for consistency
 /// Additional options for an APT repository.
-/// Used for both single- and mutli-value options.
+/// Used for both single- and multi-value options.
 pub struct APTRepositoryOption {
     /// Option key.
     pub key: String,
@@ -223,7 +223,7 @@ pub struct APTRepositoryInfo {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub path: String,
 
-    /// Index of the associated respository within the file (starting from 0).
+    /// Index of the associated repository within the file (starting from 0).
     pub index: usize,
 
     /// The property from which the info originates (e.g. "Suites")

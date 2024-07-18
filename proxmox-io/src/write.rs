@@ -6,7 +6,7 @@ use endian_trait::Endian;
 
 /// Adds some additional related functionality for types implementing [`Write`](std::io::Write).
 ///
-/// Particularly for writing values of a specific endianess (types implementing [`Endian`]).
+/// Particularly for writing values of a specific endianness (types implementing [`Endian`]).
 ///
 /// Examples:
 /// ```no_run
@@ -35,7 +35,7 @@ use endian_trait::Endian;
 ///
 /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
 pub trait WriteExt {
-    /// Write a value with host endianess.
+    /// Write a value with host endianness.
     ///
     /// This is limited to types implementing the [`Endian`] trait under the assumption that this
     /// is only done for types which are supposed to be read/writable directly.

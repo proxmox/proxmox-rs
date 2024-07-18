@@ -1,4 +1,4 @@
-//! Module to generate and format API Documenation
+//! Module to generate and format API Documentation
 
 use anyhow::{bail, Error};
 
@@ -134,7 +134,7 @@ fn get_simple_type_text(schema: &Schema, list_enums: bool) -> String {
     }
 }
 
-/// Generate ReST Documentaion for object properties
+/// Generate ReST Documentation for object properties
 pub fn dump_properties(
     param: &dyn ObjectSchemaType,
     indent: &str,
@@ -424,7 +424,7 @@ fn get_object_type_text(object_schema: &ObjectSchema) -> String {
     type_text
 }
 
-/// Generate ReST Documentaion for enumeration.
+/// Generate ReST Documentation for enumeration.
 pub fn dump_enum_properties(schema: &Schema) -> Result<String, Error> {
     let mut res = String::new();
 

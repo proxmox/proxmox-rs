@@ -95,7 +95,7 @@ pub struct AccountData {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub orders: Option<String>,
 
-    /// The acccount's contact info.
+    /// The account's contact info.
     ///
     /// This usually contains a `"mailto:<email address>"` entry but may also contain some other
     /// data if the server accepts it.

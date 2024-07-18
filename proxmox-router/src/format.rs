@@ -1,4 +1,4 @@
-//! Module to generate and format API Documenation
+//! Module to generate and format API Documentation
 
 use std::io::Write;
 
@@ -41,7 +41,7 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
     }
 }
 
-/// Generate ReST Documentaion for a complete API defined by a ``Router``.
+/// Generate ReST Documentation for a complete API defined by a ``Router``.
 pub fn dump_api(
     output: &mut dyn Write,
     router: &crate::Router,

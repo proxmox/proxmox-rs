@@ -44,7 +44,7 @@ fn hex_digit(b: u8) -> Result<u8, UuidError> {
 ///
 /// let uuid = Uuid::generate();
 /// println!("Generated uuid: {}", uuid);
-/// // prints somethign like:
+/// // prints something like:
 /// //    Generated uuid: 65b85639-78d7-4330-85c6-39502b2f9b01
 ///
 /// let bytes: &[u8] = uuid.as_ref();

@@ -94,7 +94,7 @@ pub fn epoch_i64() -> i64 {
 
 /// Returns Unix Epoch (now) as f64 with subseconds resolution
 ///
-/// Note: This can be inacurrate for values greater the 2^53. But this
+/// Note: This can be inaccurate for values greater the 2^53. But this
 /// should never happen.
 pub fn epoch_f64() -> f64 {
     use std::time::{SystemTime, UNIX_EPOCH};

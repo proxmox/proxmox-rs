@@ -6,11 +6,11 @@ use unicode_width::UnicodeWidthStr;
 
 use proxmox_schema::{ObjectSchemaType, OneOfSchema, Schema, SchemaPropertyEntry};
 
-/// allows to configure the default output fromat using environment vars
+/// allows to configure the default output format using environment vars
 pub const ENV_VAR_PROXMOX_OUTPUT_FORMAT: &str = "PROXMOX_OUTPUT_FORMAT";
-/// if set, supress borders (and headers) when printing tables
+/// if set, suppress borders (and headers) when printing tables
 pub const ENV_VAR_PROXMOX_OUTPUT_NO_BORDER: &str = "PROXMOX_OUTPUT_NO_BORDER";
-/// if set, supress headers when printing tables
+/// if set, suppress headers when printing tables
 pub const ENV_VAR_PROXMOX_OUTPUT_NO_HEADER: &str = "PROXMOX_OUTPUT_NO_HEADER";
 
 /// Helper to get output format from parameters or environment

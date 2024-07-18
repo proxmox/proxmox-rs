@@ -36,7 +36,7 @@ pub trait HttpApiClient {
 
     /// `POST` request with a path and query component (no hostname), and a serializable body.
     ///
-    /// The body should be serialized to json and sent with `Content-type: applicaion/json`.
+    /// The body should be serialized to json and sent with `Content-type: application/json`.
     ///
     /// For this request, authentication headers should be set!
     fn post<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
@@ -50,7 +50,7 @@ pub trait HttpApiClient {
 
     /// `PUT` request with a path and query component (no hostname), and a serializable body.
     ///
-    /// The body should be serialized to json and sent with `Content-type: applicaion/json`.
+    /// The body should be serialized to json and sent with `Content-type: application/json`.
     ///
     /// For this request, authentication headers should be set!
     fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
@@ -76,7 +76,7 @@ pub struct HttpApiResponse {
 }
 
 impl HttpApiResponse {
-    /// Expect a JSON response as returend by the `extjs` formatter.
+    /// Expect a JSON response as returned by the `extjs` formatter.
     pub fn expect_json<T>(self) -> Result<ApiResponseData<T>, Error>
     where
         T: for<'de> Deserialize<'de>,

@@ -76,7 +76,7 @@ pub enum ChallengeStatus {
     /// The challenge is pending and has not been validated yet.
     Pending,
 
-    /// The valiation is in progress.
+    /// The validation is in progress.
     Processing,
 
     /// The challenge was successfully validated.

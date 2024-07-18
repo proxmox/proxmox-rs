@@ -393,7 +393,7 @@ pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C, rpcenv
 
 /// Helper to get arguments and invoke the command.
 ///
-/// This is the synchrounous version of run_async_cli_command. You can
+/// This is the synchronous version of run_async_cli_command. You can
 /// pass an optional ``run`` function to execute async commands (else
 /// async commands simply fail).
 pub fn run_cli_command<C: Into<CommandLineInterface>>(
@@ -437,7 +437,7 @@ where
 
 /// Helper to get arguments and invoke the command.
 ///
-/// This is the synchrounous version of run_async_cli_command. You can
+/// This is the synchronous version of run_async_cli_command. You can
 /// pass an optional ``run`` function to execute async commands (else
 /// async commands simply fail).
 pub fn run_cli_command_with_args<A, C>(

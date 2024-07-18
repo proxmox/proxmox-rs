@@ -35,7 +35,7 @@ struct crypt_data {
     internal: [libc::c_char; CRYPT_DATA_INTERNAL_SIZE],
 }
 
-/// Encrypt a pasword - see man crypt(3)
+/// Encrypt a password - see man crypt(3)
 pub fn crypt(password: &[u8], salt: &[u8]) -> Result<String, Error> {
     #[link(name = "crypt")]
     extern "C" {
@@ -142,7 +142,7 @@ pub fn crypt_gensalt(prefix: &str, count: u64, rbytes: &[u8]) -> Result<String, 
     Ok(res.to_str()?.to_string())
 }
 
-/// Encrypt a pasword using sha256 hashing method
+/// Encrypt a password using sha256 hashing method
 pub fn encrypt_pw(password: &str) -> Result<String, Error> {
     // 8*32 = 256 bits security (128+ recommended, see `man crypt(5)`)
     let salt = crate::linux::random_data(32)?;

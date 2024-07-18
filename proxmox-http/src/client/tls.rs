@@ -10,7 +10,7 @@ use tokio_openssl::SslStream;
 
 /// Asynchronous stream, possibly encrypted and proxied
 ///
-/// Usefule for HTTP client implementations using hyper.
+/// Useful for HTTP client implementations using hyper.
 pub enum MaybeTlsStream<S> {
     Normal(S),
     Proxied(S),

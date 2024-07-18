@@ -38,7 +38,7 @@ unsafe fn pidfd_send_signal(
     libc::syscall(SYS_pidfd_send_signal, pidfd, sig, info, flags)
 }
 
-/// File descriptor refernce to a process.
+/// File descriptor reference to a process.
 pub struct PidFd {
     fd: OwnedFd,
     pid: Pid,

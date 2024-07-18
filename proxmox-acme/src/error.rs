@@ -22,7 +22,7 @@ pub enum Error {
     /// the user has to agree to the new terms.
     UserActionRequired(String),
 
-    /// Other error repsonses from the Acme API not handled specially.
+    /// Other error responses from the Acme API not handled specially.
     Api(crate::request::ErrorResponse),
 
     /// The Acme API behaved unexpectedly.

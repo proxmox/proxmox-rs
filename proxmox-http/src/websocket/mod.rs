@@ -228,7 +228,7 @@ pub fn create_frame(
 ///
 /// Send websocket frames to anything accepting AsyncWrite.
 ///
-/// Note: Every write to it gets encoded as a seperate websocket frame, without any fragmentation
+/// Note: Every write to it gets encoded as a separate websocket frame, without any fragmentation
 /// being enforced.
 ///
 /// Example usage:

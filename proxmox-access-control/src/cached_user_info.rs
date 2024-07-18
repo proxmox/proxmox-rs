@@ -180,7 +180,7 @@ impl CachedUserInfo {
         (privs, propagated_privs)
     }
 
-    /// Checks whether the `auth_id` has any of the privilegs `privs` on any object below `path`.
+    /// Checks whether the `auth_id` has any of the privileges `privs` on any object below `path`.
     pub fn any_privs_below(
         &self,
         auth_id: &Authid,

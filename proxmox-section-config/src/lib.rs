@@ -1221,7 +1221,7 @@ sync: fail
     assert!(config.parse(filename, raw).is_err());
 }
 
-/// Generate ReST Documentaion for ``SectionConfig``
+/// Generate ReST Documentation for ``SectionConfig``
 pub fn dump_section_config(config: &SectionConfig) -> String {
     let mut res = String::new();
 

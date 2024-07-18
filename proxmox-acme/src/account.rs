@@ -284,7 +284,7 @@ impl CertificateRevocation<'_> {
 /// creation request can be created via the [`request`](AccountCreator::request()) method, giving
 /// it a nonce and a directory.  This can be repeated, if necessary, like when the nonce fails.
 ///
-/// When the server sends a succesful response, it should be passed to the
+/// When the server sends a successful response, it should be passed to the
 /// [`response`](AccountCreator::response()) method to finish the creation of an [`Account`] which
 /// can then be persisted.
 #[derive(Default)]
@@ -297,7 +297,7 @@ pub struct AccountCreator {
 }
 
 impl AccountCreator {
-    /// Replace the contact infor with the provided ACME compatible data.
+    /// Replace the contact info with the provided ACME compatible data.
     pub fn set_contacts(mut self, contact: Vec<String>) -> Self {
         self.contact = contact;
         self

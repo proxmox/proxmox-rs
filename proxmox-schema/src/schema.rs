@@ -1,6 +1,6 @@
 //! Data types to decscribe data types.
 //!
-//! This is loosly based on JSON Schema, but uses static rust data types. This way we can build
+//! This is loosely based on JSON Schema, but uses static rust data types. This way we can build
 //! completely static API definitions that can be included within the programs read-only text
 //! segment.
 
@@ -1403,7 +1403,7 @@ impl EnumEntry {
 /// Use a schema to describe complex types encoded as string.
 ///
 /// Arrays are parsed as comma separated lists, i.e: `"1,2,3"`. The
-/// list may be sparated by comma, semicolon or whitespace.
+/// list may be separated by comma, semicolon or whitespace.
 ///
 /// Objects are parsed as comma (or semicolon) separated `key=value` pairs, i.e:
 /// `"prop1=2,prop2=test"`. Any whitespace is trimmed from key and value.

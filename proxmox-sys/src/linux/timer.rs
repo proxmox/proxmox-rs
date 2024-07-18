@@ -314,7 +314,7 @@ impl TimeoutBlockGuard {
 }
 
 /// Unblock the timeout signal for the current thread. By default we block the
-/// signal this behavior should be restored when done using timeouts, therefor this
+/// signal this behavior should be restored when done using timeouts, therefore this
 /// returns a guard:
 #[inline(always)]
 pub fn unblock_timeout_signal() -> TimeoutBlockGuard {

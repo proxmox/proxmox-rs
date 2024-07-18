@@ -7,7 +7,7 @@ use proxmox_schema::ApiType;
 
 use crate::{RpcEnvironment, RpcEnvironmentType};
 
-/// `RpcEnvironmet` implementation for command line tools
+/// `RpcEnvironment` implementation for command line tools
 #[derive(Default)]
 pub struct CliEnvironment {
     result_attributes: Value,

@@ -526,7 +526,7 @@ impl SchemaObject {
         }
     }
 
-    /// Check whether ther are any kind of fields defined in the struct, regardless of whether
+    /// Check whether there are any kind of fields defined in the struct, regardless of whether
     /// they're flattened or not.
     #[inline]
     pub fn is_empty(&self) -> bool {

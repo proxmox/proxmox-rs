@@ -58,7 +58,7 @@ pub struct Config {
 pub struct SearchParameters {
     /// Attributes that should be retrieved
     pub attributes: Vec<String>,
-    /// `objectclass`es of intereset
+    /// `objectclass`es of interest
     pub user_classes: Vec<String>,
     /// Custom user filter
     pub user_filter: Option<String>,
@@ -217,7 +217,7 @@ impl Connection {
             .ok_or_else(|| format_err!("failed to retrieve root DSE attribute '{attr}'"))
     }
 
-    /// Retrive port from LDAP configuration, otherwise use the correct default
+    /// Retrieve port from LDAP configuration, otherwise use the correct default
     fn port_from_config(&self) -> u16 {
         self.config.port.unwrap_or_else(|| {
             if self.config.tls_mode == ConnectionMode::Ldaps {
