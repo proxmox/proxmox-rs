@@ -248,8 +248,8 @@ impl IntegerSchema {
         self
     }
 
-    pub const fn maximum(mut self, maximium: isize) -> Self {
-        self.maximum = Some(maximium);
+    pub const fn maximum(mut self, maximum: isize) -> Self {
+        self.maximum = Some(maximum);
         self
     }
 
@@ -323,8 +323,8 @@ impl NumberSchema {
         self
     }
 
-    pub const fn maximum(mut self, maximium: f64) -> Self {
-        self.maximum = Some(maximium);
+    pub const fn maximum(mut self, maximum: f64) -> Self {
+        self.maximum = Some(maximum);
         self
     }
 

@@ -85,8 +85,8 @@ pub fn update_endpoint(
     let mut endpoint = get_endpoint(config, name)?;
 
     if let Some(delete) = delete {
-        for deleteable_property in delete {
-            match deleteable_property {
+        for deletable_property in delete {
+            match deletable_property {
                 DeleteableGotifyProperty::Comment => endpoint.comment = None,
                 DeleteableGotifyProperty::Disable => endpoint.disable = None,
             }

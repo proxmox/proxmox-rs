@@ -1007,7 +1007,7 @@ fn test_section_config_with_additional_properties() {
         default_key: None,
     };
 
-    const USER_PROPERTIES_WITH_ADDTIONAL: ObjectSchema = ObjectSchema {
+    const USER_PROPERTIES_WITH_ADDITIONAL: ObjectSchema = ObjectSchema {
         description: "user properties with additional",
         properties: &PROPERTIES,
         additional_properties: true,
@@ -1024,7 +1024,7 @@ fn test_section_config_with_additional_properties() {
     let plugin = SectionConfigPlugin::new(
         "user".to_string(),
         Some("userid".to_string()),
-        &USER_PROPERTIES_WITH_ADDTIONAL,
+        &USER_PROPERTIES_WITH_ADDITIONAL,
     );
     config_with_additional.register_plugin(plugin);
 

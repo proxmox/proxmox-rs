@@ -231,7 +231,7 @@ fn test_boolean_arg() {
 }
 
 #[test]
-fn test_argument_paramenter() {
+fn test_argument_parameter() {
     use proxmox_schema::*;
 
     const PARAMETERS: ObjectSchema = ObjectSchema::new(

@@ -444,16 +444,16 @@ fn test_rfc3339_range() {
         parse_rfc3339(first_century_str).expect("parsing first century string should work");
     assert_eq!(parsed, first_century);
 
-    let first_millenium = -59011459200;
-    let first_millenium_str = "0100-01-01T00:00:00Z";
+    let first_millennium = -59011459200;
+    let first_millennium_str = "0100-01-01T00:00:00Z";
 
-    let converted = epoch_to_rfc3339_utc(first_millenium)
-        .expect("converting epoch representing first millenium year should work");
-    assert_eq!(converted, first_millenium_str);
+    let converted = epoch_to_rfc3339_utc(first_millennium)
+        .expect("converting epoch representing first millennium year should work");
+    assert_eq!(converted, first_millennium_str);
 
     let parsed =
-        parse_rfc3339(first_millenium_str).expect("parsing first millenium string should work");
-    assert_eq!(parsed, first_millenium);
+        parse_rfc3339(first_millennium_str).expect("parsing first millennium string should work");
+    assert_eq!(parsed, first_millennium);
 }
 
 #[test]

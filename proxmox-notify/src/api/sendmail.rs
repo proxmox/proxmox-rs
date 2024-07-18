@@ -78,8 +78,8 @@ pub fn update_endpoint(
     let mut endpoint = get_endpoint(config, name)?;
 
     if let Some(delete) = delete {
-        for deleteable_property in delete {
-            match deleteable_property {
+        for deletable_property in delete {
+            match deletable_property {
                 DeleteableSendmailProperty::FromAddress => endpoint.from_address = None,
                 DeleteableSendmailProperty::Author => endpoint.author = None,
                 DeleteableSendmailProperty::Comment => endpoint.comment = None,

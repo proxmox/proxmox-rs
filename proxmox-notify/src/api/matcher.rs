@@ -73,8 +73,8 @@ pub fn update_matcher(
     let mut matcher = get_matcher(config, name)?;
 
     if let Some(delete) = delete {
-        for deleteable_property in delete {
-            match deleteable_property {
+        for deletable_property in delete {
+            match deletable_property {
                 DeleteableMatcherProperty::MatchSeverity => matcher.match_severity.clear(),
                 DeleteableMatcherProperty::MatchField => matcher.match_field.clear(),
                 DeleteableMatcherProperty::MatchCalendar => matcher.match_calendar.clear(),
