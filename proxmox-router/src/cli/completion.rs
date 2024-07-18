@@ -168,7 +168,7 @@ fn get_simple_completion_do(
         return Vec::new();
     }
 
-    // Try to parse all argumnets but last, record args already done
+    // Try to parse all arguments but last, record args already done
     if args.len() > 1 {
         let mut errors = ParameterError::new(); // we simply ignore any parsing errors here
         let (data, _remaining) = super::getopts::parse_argument_list(

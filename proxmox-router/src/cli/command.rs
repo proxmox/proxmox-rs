@@ -147,7 +147,7 @@ fn parse_nested_command<'a>(
 ) -> Result<&'a CliCommand, Error> {
     let mut map = def;
 
-    // Note: Avoid async recursive function, because current rust compiler cant handle that
+    // Note: Avoid async recursive function, because current rust compiler can't handle that
     loop {
         replace_aliases(args, &map.aliases);
 

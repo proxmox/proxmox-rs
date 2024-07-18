@@ -29,7 +29,7 @@ pub fn get_api_user() -> &'static nix::unistd::User {
     }
 }
 
-// Returns the global priviledged user set with [init].
+// Returns the global privileged user set with [init].
 ///
 /// # Panics
 ///

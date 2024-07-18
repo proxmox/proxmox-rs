@@ -95,7 +95,7 @@ impl Uuid {
         use std::alloc::{alloc, Layout};
         let uuid: *mut [u8; 16] = unsafe { alloc(Layout::new::<[u8; 16]>()) as *mut [u8; 16] };
         if src.len() == 36 {
-            // Unfortunately the manpage of `uuid_parse(3)` states that it technically requiers a
+            // Unfortunately the manpage of `uuid_parse(3)` states that it technically requires a
             // terminating null byte at the end, which we don't have, so do this manually:
             let uuid: &mut [u8] = unsafe { &mut (*uuid)[..] };
             let src = src.as_bytes();

@@ -683,7 +683,7 @@ fn extract_normal_parameter(
             body.extend(quote_spanned! { span => ; });
         }
         Some(flatten_span) => {
-            // Flattened parameter, we need ot use our special partial-object deserializer.
+            // Flattened parameter, we need to use our special partial-object deserializer.
             // Also note that we do not support simply nesting schemas. We need a referenced type.
             // Otherwise the expanded code here gets ugly and we'd need to make sure we pull out
             // nested schemas into named variables first... No thanks.

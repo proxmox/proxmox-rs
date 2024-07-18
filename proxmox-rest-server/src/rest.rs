@@ -422,7 +422,7 @@ async fn get_request_parameters<S: 'static + BuildHasher + Send>(
         std::str::from_utf8(&body).map_err(|err| format_err!("Request body not uft8: {}", err))?;
 
     if is_json {
-        // treat empty body as empty paramater hash
+        // treat empty body as empty parameter hash
         let mut params: Value = if utf8_data.is_empty() {
             Value::Object(serde_json::Map::new())
         } else {

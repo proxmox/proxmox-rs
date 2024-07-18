@@ -271,7 +271,7 @@ fn do_setup_timeout_handler() -> io::Result<()> {
     Ok(())
 }
 
-// The first time we unblock SIGTIMEOUT should cause approprate initialization:
+// The first time we unblock SIGTIMEOUT should cause appropriate initialization:
 static SETUP_TIMEOUT_HANDLER: std::sync::Once = std::sync::Once::new();
 
 /// Setup our timeout-signal workflow. This establishes the signal handler for

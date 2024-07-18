@@ -3,7 +3,7 @@ use std::fmt;
 use crate::Uuid;
 
 pub fn uuid_generate(out: *mut [u8; 16]) {
-    // TODO: implement soemthing better than this
+    // TODO: implement something better than this
 
     let time = js_sys::Date::now() as u64;
     let random1 = (js_sys::Math::random() * f64::MAX) as u64;

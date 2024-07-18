@@ -218,13 +218,13 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
     }
 
     let exclusive = if oflag.contains(OFlag::O_EXCL) {
-        oflag.remove(OFlag::O_EXCL); // we nned to handle that ourselfes
+        oflag.remove(OFlag::O_EXCL); // we need to handle that ourselves
         true
     } else {
         false
     };
 
-    oflag.remove(OFlag::O_CREAT); // we want to handle CREAT ourselfes
+    oflag.remove(OFlag::O_CREAT); // we want to handle CREAT ourselves
 
     if !exclusive {
         // Note: 'mode' is ignored, because oflag does not contain O_CREAT or O_TMPFILE

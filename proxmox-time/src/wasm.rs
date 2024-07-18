@@ -58,7 +58,7 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
 
 /// Parse RFC3339 into Unix epoch
 pub fn parse_rfc3339(input_str: &str) -> Result<i64, Error> {
-    // TOTO: This should parse olny RFC3339, but currently also parse
+    // TOTO: This should parse only RFC3339, but currently also parse
     // other formats
     let time_milli = js_sys::Date::parse(input_str);
     if time_milli.is_nan() {
