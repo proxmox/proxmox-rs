@@ -263,6 +263,7 @@ pub(crate) struct ParseOptions<'t, 'o> {
     stop_at_positional: bool,
     stop_at_unknown: bool,
     deny_unknown: bool,
+    retain_unknown: bool,
     retain_separator: bool,
 }
 
@@ -278,6 +279,7 @@ impl<'t, 'o> ParseOptions<'t, 'o> {
             stop_at_positional: false,
             stop_at_unknown: false,
             deny_unknown: false,
+            retain_unknown: false,
             retain_separator: false,
         }
     }
@@ -285,6 +287,12 @@ impl<'t, 'o> ParseOptions<'t, 'o> {
     /// Builder style option to deny unknown parameters.
     pub fn deny_unknown(mut self, deny: bool) -> Self {
         self.deny_unknown = deny;
+        self
+    }
+
+    /// Builder style option to retain unknown parameters in the returned argument array.
+    pub fn retain_unknown(mut self, deny: bool) -> Self {
+        self.retain_unknown = deny;
         self
     }
 
@@ -351,12 +359,19 @@ impl<'t, 'o> ParseOptions<'t, 'o> {
 
             let opt_schema = self.option_schemas.get(option).copied();
 
-            if self.deny_unknown && opt_schema.is_none() {
-                if self.stop_at_unknown {
+            if opt_schema.is_none() {
+                if self.retain_unknown {
                     positional.push(orig_arg);
-                    break;
+                    continue;
                 }
-                errors.push(option.to_string(), format_err!("unknown option {option:?}"));
+
+                if self.deny_unknown {
+                    if self.stop_at_unknown {
+                        positional.push(orig_arg);
+                        break;
+                    }
+                    errors.push(option.to_string(), format_err!("unknown option {option:?}"));
+                }
             }
 
             if let Some(value) = value {

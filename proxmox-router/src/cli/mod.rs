@@ -464,11 +464,16 @@ impl<'cli> CommandLineParseState<'cli> {
     }
 
     /// Parse out the current global options and return the remaining `args`.
-    fn handle_current_global_options(&mut self, args: Vec<String>) -> Result<Vec<String>, Error> {
+    fn handle_current_global_options(
+        &mut self,
+        args: Vec<String>,
+        needs_subcommand: bool,
+    ) -> Result<Vec<String>, Error> {
         let mut global_args = Vec::new();
         let args = getopts::ParseOptions::new(&mut global_args, &self.global_option_schemas)
-            .stop_at_positional(true)
-            .deny_unknown(true)
+            .deny_unknown(needs_subcommand)
+            .stop_at_positional(needs_subcommand)
+            .retain_unknown(!needs_subcommand)
             .parse(args)?;
         // and merge them into the hash map
         for (option, argument) in global_args {
@@ -505,7 +510,7 @@ impl<'cli> CommandLineParseState<'cli> {
 
         self.enable_global_options(cli);
 
-        let mut args = self.handle_current_global_options(args)?;
+        let mut args = self.handle_current_global_options(args, true)?;
 
         // now deal with the actual subcommand list
         if args.is_empty() {
@@ -538,7 +543,7 @@ impl<'cli> CommandLineParseState<'cli> {
         rpcenv: &mut CliEnvironment,
         args: Vec<String>,
     ) -> Result<Invocation<'cli>, Error> {
-        let args = self.handle_current_global_options(args)?;
+        let args = self.handle_current_global_options(args, false)?;
         self.build_global_options(&mut *rpcenv)?;
         let interface = Arc::clone(&self.interface);
         Ok(Invocation {
