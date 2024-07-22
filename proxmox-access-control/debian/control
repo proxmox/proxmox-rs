@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 12),
  librust-anyhow-1+default-dev <!nocheck>,
  librust-proxmox-auth-api-0.4+api-types-dev <!nocheck>,
  librust-proxmox-auth-api-0.4+default-dev <!nocheck>,
- librust-proxmox-schema-3+default-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-3+default-dev (>= 3.1.2-~~) <!nocheck>,
  librust-proxmox-time-2+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -28,7 +28,7 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-proxmox-auth-api-0.4+api-types-dev,
  librust-proxmox-auth-api-0.4+default-dev,
- librust-proxmox-schema-3+default-dev (>= 3.1.1-~~),
+ librust-proxmox-schema-3+default-dev (>= 3.1.2-~~),
  librust-proxmox-time-2+default-dev,
  librust-serde-1+default-dev
 Suggests:
@@ -39,8 +39,8 @@ Provides:
  librust-proxmox-access-control-0+default-dev (= ${binary:Version}),
  librust-proxmox-access-control-0.2-dev (= ${binary:Version}),
  librust-proxmox-access-control-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2.1-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2.1+default-dev (= ${binary:Version})
+ librust-proxmox-access-control-0.2.2-dev (= ${binary:Version}),
+ librust-proxmox-access-control-0.2.2+default-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - Rust source code
  Source code for Debianized Rust crate "proxmox-access-control"
 
@@ -64,7 +64,7 @@ Depends:
 Provides:
  librust-proxmox-access-control-0+impl-dev (= ${binary:Version}),
  librust-proxmox-access-control-0.2+impl-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2.1+impl-dev (= ${binary:Version})
+ librust-proxmox-access-control-0.2.2+impl-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-access-control
  crate, by pulling in any additional dependencies needed by that feature.

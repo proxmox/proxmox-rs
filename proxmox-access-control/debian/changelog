@@ -1,3 +1,11 @@
+rust-proxmox-access-control (0.2.2-1) bookworm; urgency=medium
+
+  * add init_user_config() to AccessControlConfig with a default
+    implementation so downstream can ensure default users such as 'root@pam'
+    are enabled if so desired
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 22 Jul 2024 09:04:59 +0200
+
 rust-proxmox-access-control (0.2.1-1) bookworm; urgency=medium
 
   * rebuild with proxmox-sys 6.0
