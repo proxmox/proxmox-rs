@@ -375,6 +375,7 @@ where
 
 #[link(name = "systemd")]
 extern "C" {
+    #[deprecated = "use proxmox_systemd::journal::stream_fd"]
     fn sd_journal_stream_fd(
         identifier: *const c_uchar,
         priority: c_int,
@@ -385,6 +386,7 @@ extern "C" {
 }
 
 /// Systemd sercice startup states (see: ``man sd_notify``)
+#[deprecated = "use proxmox_systemd::SystemdNotify instead"]
 pub enum SystemdNotify {
     Ready,
     Reloading,
@@ -394,6 +396,8 @@ pub enum SystemdNotify {
 }
 
 /// Tells systemd the startup state of the service (see: ``man sd_notify``)
+#[deprecated = "use proxmox_systemd::notify::SystemdNotify::notify() instead"]
+#[allow(deprecated)]
 pub fn systemd_notify(state: SystemdNotify) -> Result<(), Error> {
     let message = match state {
         SystemdNotify::Ready => {
@@ -417,6 +421,7 @@ pub fn systemd_notify(state: SystemdNotify) -> Result<(), Error> {
 }
 
 /// Waits until all previously sent messages with sd_notify are processed
+#[deprecated = "use proxmox_systemd::notify::barrier() instead"]
 pub fn systemd_notify_barrier(timeout: u64) -> Result<(), Error> {
     let rc = unsafe { sd_notify_barrier(0, timeout) };
     if rc < 0 {
