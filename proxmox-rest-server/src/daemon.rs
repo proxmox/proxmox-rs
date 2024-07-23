@@ -3,7 +3,6 @@
 use std::ffi::CString;
 use std::future::Future;
 use std::io::{self, Read, Write};
-use std::os::raw::{c_char, c_int, c_uchar};
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::panic::UnwindSafe;
@@ -83,6 +82,27 @@ impl Reloader {
         Ok(())
     }
 
+    fn redirect_journal_fd(&self, priority: libc::c_int, target: RawFd) -> Result<(), Error> {
+        match proxmox_systemd::journal::stream_fd(
+            self.self_exe.file_name().unwrap(),
+            priority,
+            true,
+        ) {
+            Ok(fd) => {
+                if fd.as_raw_fd() == target {
+                    std::mem::forget(fd);
+                } else {
+                    nix::unistd::dup2(fd.as_raw_fd(), target)?;
+                }
+            }
+            Err(err) => {
+                log::error!("failed to update STDOUT journal redirection ({})", err);
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn fork_restart(self, pid_fn: Option<&str>) -> Result<(), Error> {
         // Get our parameters as Vec<CString>
         let args = std::env::args_os();
@@ -103,7 +123,7 @@ impl Reloader {
                         std::mem::drop(pold);
                         // At this point we call pre-exec helpers. We must be certain that if they fail for
                         // whatever reason we can still call `_exit()`, so use catch_unwind.
-                        match std::panic::catch_unwind(move || {
+                        let perform_reexec = move || {
                             let mut pnew = std::fs::File::from(pnew);
                             let pid = nix::unistd::Pid::this();
                             if let Err(e) = pnew.write_all(&pid.as_raw().to_ne_bytes()) {
@@ -125,28 +145,13 @@ impl Reloader {
                             std::mem::drop(pnew);
 
                             // Try to reopen STDOUT/STDERR journald streams to get correct PID in logs
-                            let ident = CString::new(self.self_exe.file_name().unwrap().as_bytes())
-                                .unwrap();
-                            let ident = ident.as_bytes();
-                            let fd =
-                                unsafe { sd_journal_stream_fd(ident.as_ptr(), libc::LOG_INFO, 1) };
-                            if fd >= 0 && fd != 1 {
-                                let fd = unsafe { OwnedFd::from_raw_fd(fd) }; // add drop handler
-                                nix::unistd::dup2(fd.as_raw_fd(), 1)?;
-                            } else {
-                                log::error!("failed to update STDOUT journal redirection ({})", fd);
-                            }
-                            let fd =
-                                unsafe { sd_journal_stream_fd(ident.as_ptr(), libc::LOG_ERR, 1) };
-                            if fd >= 0 && fd != 2 {
-                                let fd = unsafe { OwnedFd::from_raw_fd(fd) }; // add drop handler
-                                nix::unistd::dup2(fd.as_raw_fd(), 2)?;
-                            } else {
-                                log::error!("failed to update STDERR journal redirection ({})", fd);
-                            }
+                            self.redirect_journal_fd(libc::LOG_INFO, 1)?;
+                            self.redirect_journal_fd(libc::LOG_ERR, 2)?;
 
                             self.do_reexec(new_args)
-                        }) {
+                        };
+
+                        match std::panic::catch_unwind(perform_reexec) {
                             Ok(Ok(())) => log::error!("do_reexec returned!"),
                             Ok(Err(err)) => log::error!("do_reexec failed: {}", err),
                             Err(_) => log::error!("panic in re-exec"),
@@ -191,12 +196,14 @@ impl Reloader {
                     )?;
                 }
 
-                if let Err(e) = systemd_notify(SystemdNotify::MainPid(child)) {
+                if let Err(e) =
+                    proxmox_systemd::notify::SystemdNotify::MainPid(child.into()).notify()
+                {
                     log::error!("failed to notify systemd about the new main pid: {}", e);
                 }
                 // ensure systemd got the message about the new main PID before continuing, else it
                 // will get confused if the new main process sends its READY signal before that
-                if let Err(e) = systemd_notify_barrier(u64::MAX) {
+                if let Err(e) = proxmox_systemd::notify::barrier(u64::MAX) {
                     log::error!("failed to wait on systemd-processing: {}", e);
                 }
 
@@ -306,7 +313,8 @@ impl Listenable for tokio::net::UnixListener {
 /// If the variable already exists, its contents will instead be used to restore the listening
 /// socket.  The finished listening socket is then passed to the `create_service` function which
 /// can be used to setup the TLS and the HTTP daemon. The returned future has to call
-/// [systemd_notify] with [SystemdNotify::Ready] when the service is ready.
+/// [systemd_notify] with [SystemdNotify::Ready](proxmox_systemd::notify::SystemdNotify) when the
+/// service is ready.
 pub async fn create_daemon<F, S, L>(
     address: L::Address,
     create_service: F,
@@ -350,16 +358,18 @@ where
 
     if crate::is_reload_request() {
         log::info!("daemon reload...");
-        if let Err(e) = systemd_notify(SystemdNotify::Reloading) {
+        if let Err(e) = proxmox_systemd::notify::SystemdNotify::Reloading.notify() {
             log::error!("failed to notify systemd about the state change: {}", e);
         }
-        if let Err(e) = systemd_notify_barrier(u64::MAX) {
+        if let Err(e) = proxmox_systemd::notify::barrier(u64::MAX) {
             log::error!("failed to wait on systemd-processing: {}", e);
         }
 
         if let Err(e) = reloader.take().unwrap().fork_restart(pidfn) {
             log::error!("error during reload: {}", e);
-            let _ = systemd_notify(SystemdNotify::Status("error during reload".to_string()));
+            let _ =
+                proxmox_systemd::notify::SystemdNotify::Status("error during reload".to_string())
+                    .notify();
         }
     } else {
         log::info!("daemon shutting down...");
@@ -370,65 +380,5 @@ where
     }
 
     log::info!("daemon shut down.");
-    Ok(())
-}
-
-#[link(name = "systemd")]
-extern "C" {
-    #[deprecated = "use proxmox_systemd::journal::stream_fd"]
-    fn sd_journal_stream_fd(
-        identifier: *const c_uchar,
-        priority: c_int,
-        level_prefix: c_int,
-    ) -> c_int;
-    fn sd_notify(unset_environment: c_int, state: *const c_char) -> c_int;
-    fn sd_notify_barrier(unset_environment: c_int, timeout: u64) -> c_int;
-}
-
-/// Systemd sercice startup states (see: ``man sd_notify``)
-#[deprecated = "use proxmox_systemd::SystemdNotify instead"]
-pub enum SystemdNotify {
-    Ready,
-    Reloading,
-    Stopping,
-    Status(String),
-    MainPid(nix::unistd::Pid),
-}
-
-/// Tells systemd the startup state of the service (see: ``man sd_notify``)
-#[deprecated = "use proxmox_systemd::notify::SystemdNotify::notify() instead"]
-#[allow(deprecated)]
-pub fn systemd_notify(state: SystemdNotify) -> Result<(), Error> {
-    let message = match state {
-        SystemdNotify::Ready => {
-            log::info!("service is ready");
-            CString::new("READY=1")
-        }
-        SystemdNotify::Reloading => CString::new("RELOADING=1"),
-        SystemdNotify::Stopping => CString::new("STOPPING=1"),
-        SystemdNotify::Status(msg) => CString::new(format!("STATUS={}", msg)),
-        SystemdNotify::MainPid(pid) => CString::new(format!("MAINPID={}", pid)),
-    }?;
-    let rc = unsafe { sd_notify(0, message.as_ptr()) };
-    if rc < 0 {
-        bail!(
-            "systemd_notify failed: {}",
-            std::io::Error::from_raw_os_error(-rc)
-        );
-    }
-
-    Ok(())
-}
-
-/// Waits until all previously sent messages with sd_notify are processed
-#[deprecated = "use proxmox_systemd::notify::barrier() instead"]
-pub fn systemd_notify_barrier(timeout: u64) -> Result<(), Error> {
-    let rc = unsafe { sd_notify_barrier(0, timeout) };
-    if rc < 0 {
-        bail!(
-            "systemd_notify_barrier failed: {}",
-            std::io::Error::from_raw_os_error(-rc)
-        );
-    }
     Ok(())
 }
