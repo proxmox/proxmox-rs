@@ -53,7 +53,7 @@ pub fn init_logger(
             tracing_journald::layer()
                 .expect("Unable to open syslog")
                 .with_filter(filter_fn(|metadata| {
-                    LogContext::exists() || *metadata.level() == Level::ERROR
+                    !LogContext::exists() || *metadata.level() >= Level::ERROR
                 }))
                 .with_filter(log_level),
         )
