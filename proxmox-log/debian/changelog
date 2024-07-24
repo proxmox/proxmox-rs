@@ -1,3 +1,13 @@
+rust-proxmox-log (0.2.0-1) bookworm; urgency=medium
+
+  * reorder filters for a minor performance improvement
+
+  * drop unused parameter in init_logger
+
+  * fix filter condition for journal layer
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 24 Jul 2024 14:27:22 +0200
+
 rust-proxmox-log (0.1.0-1) bookworm; urgency=medium
 
   * Initial release

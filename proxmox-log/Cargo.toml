@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-log"
-version = "0.1.0"
+version = "0.2.0"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -20,4 +20,3 @@ tracing-log = { workspace = true, features = ["std"] }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 proxmox-time.workspace = true
 proxmox-sys.workspace = true
-
