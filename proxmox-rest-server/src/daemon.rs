@@ -14,7 +14,6 @@ use anyhow::{bail, format_err, Error};
 use futures::future::{self, Either};
 use nix::unistd::{fork, ForkResult};
 
-use proxmox_io::{ReadExt, WriteExt};
 use proxmox_sys::fd::fd_change_cloexec;
 use proxmox_sys::fs::CreateOptions;
 
@@ -107,7 +106,7 @@ impl Reloader {
                         match std::panic::catch_unwind(move || {
                             let mut pnew = std::fs::File::from(pnew);
                             let pid = nix::unistd::Pid::this();
-                            if let Err(e) = unsafe { pnew.write_host_value(pid.as_raw()) } {
+                            if let Err(e) = pnew.write_all(&pid.as_raw().to_ne_bytes()) {
                                 log::error!("failed to send new server PID to parent: {}", e);
                                 unsafe {
                                     libc::_exit(-1);
@@ -169,8 +168,9 @@ impl Reloader {
                 );
                 std::mem::drop(pnew);
                 let mut pold = std::fs::File::from(pold);
-                let child = nix::unistd::Pid::from_raw(match unsafe { pold.read_le_value() } {
-                    Ok(v) => v,
+                let mut child_pid = (0 as libc::pid_t).to_ne_bytes();
+                let child = nix::unistd::Pid::from_raw(match pold.read_exact(&mut child_pid) {
+                    Ok(()) => libc::pid_t::from_ne_bytes(child_pid),
                     Err(e) => {
                         log::error!(
                             "failed to receive pid of double-forked child process: {}",
