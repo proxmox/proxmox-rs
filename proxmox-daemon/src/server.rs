@@ -37,7 +37,7 @@ struct Reloader {
 // Currently we only need environment variables for storage, but in theory we could also add
 // variants which need temporary files or pipes...
 struct PreExecEntry {
-    name: &'static str, // Feel free to change to String if necessary...
+    name: &'static str,
     store_fn: BoxedStoreFunc,
 }
 
