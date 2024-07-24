@@ -1,4 +1,4 @@
-//! Helpers to implement restartable daemons/services.
+//! Helpers to implement restartable server listening for incoming connections.
 
 use std::ffi::CString;
 use std::future::Future;
@@ -7,7 +7,7 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::panic::UnwindSafe;
 use std::path::PathBuf;
-use std::pin::Pin;
+use std::pin::{pin, Pin};
 
 use anyhow::{bail, format_err, Error};
 use futures::future::{self, Either};
@@ -112,7 +112,7 @@ impl Reloader {
         }
 
         // Synchronisation pipe:
-        let (pold, pnew) = super::socketpair()?;
+        let (pold, pnew) = socketpair()?;
 
         // Start ourselves in the background:
         match unsafe { fork() } {
@@ -342,13 +342,11 @@ where
     };
 
     let server_future = Box::pin(service);
-    let shutdown_future = crate::shutdown_future();
+    let shutdown_future = pin!(crate::shutdown_future());
 
     let finish_future = match future::select(server_future, shutdown_future).await {
         Either::Left((_, _)) => {
-            if !crate::shutdown_requested() {
-                crate::request_shutdown(); // make sure we are in shutdown mode
-            }
+            crate::request_shutdown(); // make sure we are in shutdown mode
             None
         }
         Either::Right((_, server_future)) => Some(server_future),
@@ -356,7 +354,7 @@ where
 
     let mut reloader = Some(reloader);
 
-    if crate::is_reload_request() {
+    if crate::is_reload_requested() {
         log::info!("daemon reload...");
         if let Err(e) = proxmox_systemd::notify::SystemdNotify::Reloading.notify() {
             log::error!("failed to notify systemd about the state change: {}", e);
@@ -381,4 +379,17 @@ where
 
     log::info!("daemon shut down.");
     Ok(())
+}
+
+/// safe wrapper for `nix::sys::socket::socketpair` defaulting to `O_CLOEXEC` and guarding the file
+/// descriptors.
+fn socketpair() -> Result<(OwnedFd, OwnedFd), Error> {
+    use nix::sys::socket;
+    let (pa, pb) = socket::socketpair(
+        socket::AddressFamily::Unix,
+        socket::SockType::Stream,
+        None,
+        socket::SockFlag::SOCK_CLOEXEC,
+    )?;
+    Ok(unsafe { (OwnedFd::from_raw_fd(pa), OwnedFd::from_raw_fd(pb)) })
 }

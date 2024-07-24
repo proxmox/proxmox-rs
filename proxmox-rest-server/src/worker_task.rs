@@ -3,8 +3,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::panic::UnwindSafe;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, SystemTime};
 
 use anyhow::{bail, format_err, Error};
@@ -15,9 +15,10 @@ use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::signal::unix::SignalKind;
-use tokio::sync::oneshot;
+use tokio::sync::{oneshot, watch};
 use tracing::{info, warn};
 
+use proxmox_daemon::command_socket::CommandSocket;
 use proxmox_lang::try_block;
 use proxmox_log::{FileLogOptions, FileLogger, LogContext};
 use proxmox_schema::upid::UPID;
@@ -26,7 +27,66 @@ use proxmox_sys::linux::procfs;
 use proxmox_sys::logrotate::{LogRotate, LogRotateFiles};
 use proxmox_worker_task::WorkerTaskContext;
 
-use crate::CommandSocket;
+static LAST_WORKER_LISTENERS: OnceLock<watch::Sender<bool>> = OnceLock::new();
+static WORKER_COUNT: AtomicUsize = AtomicUsize::new(0);
+static INTERNAL_TASK_COUNT: AtomicUsize = AtomicUsize::new(0);
+
+fn last_worker_listeners() -> &'static watch::Sender<bool> {
+    LAST_WORKER_LISTENERS.get_or_init(|| watch::channel(false).0)
+}
+
+/// This future finishes once there are no more running workers (including internal tasks).
+pub async fn last_worker_future() {
+    let _ = last_worker_listeners().subscribe().wait_for(|&v| v).await;
+}
+
+/// This drives the [`last_worker_listener()`] futures: if a shutdown is requested and no workers
+/// and no internal tasks are running, the [`last_worker_listener()`] futures are triggered to
+/// finish.
+pub fn check_last_worker() {
+    if proxmox_daemon::is_shutdown_requested()
+        && WORKER_COUNT.load(Ordering::Acquire) == 0
+        && INTERNAL_TASK_COUNT.load(Ordering::Acquire) == 0
+    {
+        let _ = last_worker_listeners().send(true);
+    }
+}
+
+/// Spawn a task which calls [`check_last_worker()`] in the case of a requested shutdown. This used
+/// to be implied by the [`request_shutdown()`] call when it was part of the `proxmox-rest-server`
+/// crate, which is no longer the case.
+fn check_workers_on_shutdown() {
+    tokio::spawn(async {
+        let _ = proxmox_daemon::shutdown_future().await;
+        check_last_worker();
+    });
+}
+
+/// Spawns a tokio task that will be tracked for reload
+/// and if it is finished, notify the [last_worker_future] if we
+/// are in shutdown mode.
+pub fn spawn_internal_task<T>(task: T)
+where
+    T: Future + Send + 'static,
+    T::Output: Send + 'static,
+{
+    INTERNAL_TASK_COUNT.fetch_add(1, Ordering::Release);
+
+    tokio::spawn(async move {
+        let _ = task.await;
+        INTERNAL_TASK_COUNT.fetch_sub(1, Ordering::Release);
+
+        check_last_worker();
+    });
+}
+
+/// Update the worker count.
+/// If the count is set to 0 and no internal tasks are running, all [`last_worker_future()`] will
+/// finish.
+pub fn set_worker_count(count: usize) {
+    WORKER_COUNT.store(count, Ordering::Release);
+    check_last_worker();
+}
 
 #[allow(dead_code)]
 struct TaskListLockGuard(File);
@@ -227,7 +287,9 @@ pub fn init_worker_tasks(basedir: PathBuf, file_opts: CreateOptions) -> Result<(
     setup.create_task_log_dirs()?;
     WORKER_TASK_SETUP
         .set(setup)
-        .map_err(|_| format_err!("init_worker_tasks failed - already initialized"))
+        .map_err(|_| format_err!("init_worker_tasks failed - already initialized"))?;
+    check_workers_on_shutdown();
+    Ok(())
 }
 
 /// Optionally rotates and/or cleans up the task archive depending on its size and age.
@@ -455,14 +517,14 @@ pub async fn worker_is_active(upid: &UPID) -> Result<bool, Error> {
         return Ok(false);
     }
 
-    let sock = crate::ctrl_sock_from_pid(upid.pid);
+    let sock = proxmox_daemon::command_socket::path_from_pid(upid.pid);
     let cmd = json!({
         "command": "worker-task-status",
         "args": {
             "upid": upid.to_string(),
         },
     });
-    let status = crate::send_command(sock, &cmd).await?;
+    let status = proxmox_daemon::command_socket::send(sock, &cmd).await?;
 
     if let Some(active) = status.as_bool() {
         Ok(active)
@@ -543,14 +605,16 @@ pub fn abort_worker_nowait(upid: UPID) {
 ///
 /// By sending ``worker-task-abort`` to the control socket.
 pub async fn abort_worker(upid: UPID) -> Result<(), Error> {
-    let sock = crate::ctrl_sock_from_pid(upid.pid);
+    let sock = proxmox_daemon::command_socket::path_from_pid(upid.pid);
     let cmd = json!({
         "command": "worker-task-abort",
         "args": {
             "upid": upid.to_string(),
         },
     });
-    crate::send_command(sock, &cmd).map_ok(|_| ()).await
+    proxmox_daemon::command_socket::send(sock, &cmd)
+        .map_ok(|_| ())
+        .await
 }
 
 fn parse_worker_status_line(line: &str) -> Result<(String, UPID, Option<TaskState>), Error> {
@@ -860,7 +924,7 @@ impl WorkerTask {
         {
             let mut hash = WORKER_TASK_LIST.lock().unwrap();
             hash.insert(task_id, worker.clone());
-            crate::set_worker_count(hash.len());
+            set_worker_count(hash.len());
         }
 
         setup.update_active_workers(Some(&upid))?;
@@ -958,7 +1022,7 @@ impl WorkerTask {
 
         WORKER_TASK_LIST.lock().unwrap().remove(&self.upid.task_id);
         let _ = self.setup.update_active_workers(None);
-        crate::set_worker_count(WORKER_TASK_LIST.lock().unwrap().len());
+        set_worker_count(WORKER_TASK_LIST.lock().unwrap().len());
     }
 
     /// Log a message.
@@ -1020,11 +1084,11 @@ impl WorkerTaskContext for WorkerTask {
     }
 
     fn shutdown_requested(&self) -> bool {
-        crate::shutdown_requested()
+        proxmox_daemon::is_shutdown_requested()
     }
 
     fn fail_on_shutdown(&self) -> Result<(), Error> {
-        crate::fail_on_shutdown()
+        proxmox_daemon::fail_on_shutdown()
     }
 }
 

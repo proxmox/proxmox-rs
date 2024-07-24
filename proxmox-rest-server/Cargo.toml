@@ -38,6 +38,7 @@ url.workspace = true
 
 proxmox-async.workspace = true
 proxmox-compression.workspace = true
+proxmox-daemon.workspace = true
 proxmox-http = { workspace = true, optional = true }
 proxmox-lang.workspace = true
 proxmox-log.workspace = true

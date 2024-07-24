@@ -7,7 +7,6 @@
 //!
 //! * highly threaded code, uses Rust async
 //! * static API definitions using schemas
-//! * restartable systemd daemons using `systemd_notify`
 //! * support for long running worker tasks (threads or async tokio tasks)
 //! * supports separate access and authentication log files
 //! * extra control socket to trigger management operations
@@ -18,10 +17,8 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 use std::fmt;
-use std::os::unix::io::{FromRawFd, OwnedFd};
-use std::sync::atomic::{AtomicBool, Ordering};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{format_err, Error};
 use nix::unistd::Pid;
 
 use proxmox_sys::fs::CreateOptions;
@@ -30,18 +27,10 @@ use proxmox_sys::linux::procfs::PidStat;
 mod compression;
 pub use compression::*;
 
-pub mod daemon;
-
 pub mod formatter;
 
 mod environment;
 pub use environment::*;
-
-mod state;
-pub use state::*;
-
-mod command_socket;
-pub use command_socket::*;
 
 mod api_config;
 pub use api_config::{ApiConfig, AuthError, AuthHandler, IndexHandler, UnixAcceptor};
@@ -88,57 +77,6 @@ pub fn read_pid(pid_fn: &str) -> Result<i32, Error> {
     let pid = std::str::from_utf8(&pid)?.trim();
     pid.parse()
         .map_err(|err| format_err!("could not parse pid - {}", err))
-}
-
-/// Returns the control socket path for a specific process ID.
-///
-/// Note: The control socket always uses @/run/proxmox-backup/ as
-/// prefix for historic reason. This does not matter because the
-/// generated path is unique for each ``pid`` anyways.
-pub fn ctrl_sock_from_pid(pid: i32) -> String {
-    // Note: The control socket always uses @/run/proxmox-backup/ as prefix
-    // for historc reason.
-    format!("\0{}/control-{}.sock", "/run/proxmox-backup", pid)
-}
-
-/// Returns the control socket path for this server.
-pub fn our_ctrl_sock() -> String {
-    ctrl_sock_from_pid(*PID)
-}
-
-static SHUTDOWN_REQUESTED: AtomicBool = AtomicBool::new(false);
-
-/// Request a server shutdown (usually called from [catch_shutdown_signal])
-pub fn request_shutdown() {
-    SHUTDOWN_REQUESTED.store(true, Ordering::SeqCst);
-    crate::server_shutdown();
-}
-
-/// Returns true if there was a shutdown request.
-#[inline(always)]
-pub fn shutdown_requested() -> bool {
-    SHUTDOWN_REQUESTED.load(Ordering::SeqCst)
-}
-
-/// Raise an error if there was a shutdown request.
-pub fn fail_on_shutdown() -> Result<(), Error> {
-    if shutdown_requested() {
-        bail!("Server shutdown requested - aborting task");
-    }
-    Ok(())
-}
-
-/// safe wrapper for `nix::sys::socket::socketpair` defaulting to `O_CLOEXEC` and guarding the file
-/// descriptors.
-fn socketpair() -> Result<(OwnedFd, OwnedFd), Error> {
-    use nix::sys::socket;
-    let (pa, pb) = socket::socketpair(
-        socket::AddressFamily::Unix,
-        socket::SockType::Stream,
-        None,
-        socket::SockFlag::SOCK_CLOEXEC,
-    )?;
-    Ok(unsafe { (OwnedFd::from_raw_fd(pa), OwnedFd::from_raw_fd(pb)) })
 }
 
 /// Extract a specific cookie from cookie header.

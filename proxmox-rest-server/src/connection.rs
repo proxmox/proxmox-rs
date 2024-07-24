@@ -8,7 +8,7 @@ use std::net::SocketAddr;
 use std::os::fd::FromRawFd;
 use std::os::unix::io::AsRawFd;
 use std::path::PathBuf;
-use std::pin::Pin;
+use std::pin::{pin, Pin};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -278,7 +278,7 @@ impl AcceptBuilder {
         sender: Sender,
     ) {
         let accept_counter = Arc::new(());
-        let mut shutdown_future = crate::shutdown_future().fuse();
+        let mut shutdown_future = pin!(proxmox_daemon::shutdown_future().fuse());
 
         loop {
             let (socket, peer) = futures::select! {
