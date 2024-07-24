@@ -1,3 +1,13 @@
+rust-proxmox-rest-server (0.7.0-1) bookworm; urgency=medium
+
+  * removed the 'daemon' module
+    - the systemd notify functionality is in proxmox-systemd
+    - the reloadable-server-daemon creation in proxmox-daemon's server module
+
+  * moved the command socket code to proxmox-daemon
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 24 Jul 2024 14:24:14 +0200
+
 rust-proxmox-rest-server (0.6.0-1) bookworm; urgency=medium
 
   * switch to WorkerTaskContext from new proxmox-worker-task crate
