@@ -16,8 +16,7 @@ use nix::unistd::{fork, ForkResult};
 use proxmox_sys::fd::fd_change_cloexec;
 use proxmox_sys::fs::CreateOptions;
 
-// Unfortunately FnBox is nightly-only and Box<FnOnce> is unusable, so just use Box<Fn>...
-type BoxedStoreFunc = Box<dyn FnMut() -> Result<String, Error> + UnwindSafe + Send>;
+type BoxedStoreFunc = Box<dyn FnOnce() -> Result<String, Error> + UnwindSafe + Send>;
 
 // Helper trait to "store" something in the environment to be re-used after re-executing the
 // service on a reload.
@@ -76,7 +75,7 @@ impl Reloader {
     }
 
     fn pre_exec(self) -> Result<(), Error> {
-        for mut item in self.pre_exec {
+        for item in self.pre_exec {
             std::env::set_var(item.name, (item.store_fn)()?);
         }
         Ok(())
@@ -232,14 +231,13 @@ impl Reloader {
 }
 
 fn fd_store_func(fd: RawFd) -> Result<BoxedStoreFunc, Error> {
-    let mut fd_opt = Some(unsafe {
+    let fd = unsafe {
         OwnedFd::from_raw_fd(nix::fcntl::fcntl(
             fd,
             nix::fcntl::FcntlArg::F_DUPFD_CLOEXEC(0),
         )?)
-    });
+    };
     Ok(Box::new(move || {
-        let fd = fd_opt.take().unwrap();
         fd_change_cloexec(fd.as_raw_fd(), false)?;
         Ok(fd.into_raw_fd().to_string())
     }))
