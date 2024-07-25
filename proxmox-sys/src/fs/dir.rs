@@ -117,11 +117,7 @@ fn create_path_do(
         Some(Component::Prefix(_)) => bail!("illegal prefix path component encountered"),
         Some(Component::RootDir) => {
             let _ = iter.next();
-            crate::fd::open(
-                unsafe { CStr::from_bytes_with_nul_unchecked(b"/\0") },
-                OFlag::O_DIRECTORY,
-                stat::Mode::empty(),
-            )?
+            crate::fd::open(c"/", OFlag::O_DIRECTORY, stat::Mode::empty())?
         }
         Some(Component::CurDir) => {
             let _ = iter.next();
@@ -129,11 +125,7 @@ fn create_path_do(
         }
         Some(Component::ParentDir) => {
             let _ = iter.next();
-            crate::fd::open(
-                unsafe { CStr::from_bytes_with_nul_unchecked(b"..\0") },
-                OFlag::O_DIRECTORY,
-                stat::Mode::empty(),
-            )?
+            crate::fd::open(c"..", OFlag::O_DIRECTORY, stat::Mode::empty())?
         }
         Some(Component::Normal(_)) => {
             // simply do not advance the iterator, heavy lifting happens in create_path_at_do()
@@ -159,12 +151,7 @@ fn create_path_at_do(
             None => return Ok(created),
 
             Some(Component::ParentDir) => {
-                at = crate::fd::openat(
-                    &at,
-                    unsafe { CStr::from_bytes_with_nul_unchecked(b"..\0") },
-                    OFlag::O_DIRECTORY,
-                    stat::Mode::empty(),
-                )?;
+                at = crate::fd::openat(&at, c"..", OFlag::O_DIRECTORY, stat::Mode::empty())?;
             }
 
             Some(Component::Normal(path)) => {
