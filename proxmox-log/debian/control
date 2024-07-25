@@ -15,7 +15,7 @@ Build-Depends: debhelper (>= 12),
  librust-tokio-1+rt-multi-thread-dev (>= 1.6-~~) <!nocheck>,
  librust-tracing-0.1+default-dev <!nocheck>,
  librust-tracing-journald-0.3+default-dev <!nocheck>,
- librust-tracing-log-0.1+std-dev (>= 0.1.3-~~) <!nocheck>,
+ librust-tracing-log-0.2+std-dev <!nocheck>,
  librust-tracing-subscriber-0.3+default-dev (>= 0.3.16-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.2
@@ -38,7 +38,7 @@ Depends:
  librust-tokio-1+rt-multi-thread-dev (>= 1.6-~~),
  librust-tracing-0.1+default-dev,
  librust-tracing-journald-0.3+default-dev,
- librust-tracing-log-0.1+std-dev (>= 0.1.3-~~),
+ librust-tracing-log-0.2+std-dev,
  librust-tracing-subscriber-0.3+default-dev (>= 0.3.16-~~)
 Provides:
  librust-proxmox-log+default-dev (= ${binary:Version}),
@@ -46,7 +46,7 @@ Provides:
  librust-proxmox-log-0+default-dev (= ${binary:Version}),
  librust-proxmox-log-0.2-dev (= ${binary:Version}),
  librust-proxmox-log-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-log-0.2.0-dev (= ${binary:Version}),
- librust-proxmox-log-0.2.0+default-dev (= ${binary:Version})
+ librust-proxmox-log-0.2.1-dev (= ${binary:Version}),
+ librust-proxmox-log-0.2.1+default-dev (= ${binary:Version})
 Description: Logging infrastructure for proxmox - Rust source code
  Source code for Debianized Rust crate "proxmox-log"

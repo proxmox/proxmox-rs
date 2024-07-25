@@ -1,3 +1,9 @@
+rust-proxmox-log (0.2.1-1) stable; urgency=medium
+
+  * rebuild with tracing-log 0.2
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 25 Jul 2024 12:03:57 +0200
+
 rust-proxmox-log (0.2.0-1) bookworm; urgency=medium
 
   * reorder filters for a minor performance improvement
