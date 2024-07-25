@@ -1,8 +1,8 @@
 mod compression;
 mod decompression;
 
-pub use compression::{DeflateEncoder, Level};
-pub use decompression::DeflateDecoder;
+pub use compression::{DeflateEncoder, DeflateEncoderBuilder, Level};
+pub use decompression::{DeflateDecoder, DeflateDecoderBuilder};
 
 const BUFFER_SIZE: usize = 8192;
 
