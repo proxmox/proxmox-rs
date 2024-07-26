@@ -6,6 +6,7 @@ use std::io;
 /// Helper to convert non-system-errors into an `io::Error` or `io::ErrorKind::Other`.
 ///
 /// A more convenient way is to use the `io_format_err!` macro.
+#[deprecated = "use std::io::Error::other instead to box the original error"]
 pub fn io_err_other<E: ToString>(e: E) -> io::Error {
     io::Error::new(std::io::ErrorKind::Other, e.to_string())
 }
