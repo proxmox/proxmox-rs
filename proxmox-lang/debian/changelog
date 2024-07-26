@@ -1,3 +1,9 @@
+rust-proxmox-lang (1.4.0-1) bookworm; urgency=medium
+
+  * deprecate io_err_other in favor of std::io::Error::other
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 26 Jul 2024 13:13:21 +0200
+
 rust-proxmox-lang (1.3.0-1) bookworm; urgency=medium
 
   * deprecate c_str! macro in favor of c"literals"
