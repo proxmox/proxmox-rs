@@ -17,8 +17,6 @@ use std::io;
 
 use nix::errno::Errno;
 
-use proxmox_lang::error::io_err_other;
-
 /// This trait should be implemented for error types which can represent system errors. Note that
 /// it is discouraged to try to map non-system errors to with this trait, since users of this trait
 /// assume there to be a relation between the error code and a previous system call. For instance,
@@ -146,7 +144,7 @@ macro_rules! other_error {
 
             #[inline]
             fn into_io_result(self) -> io::Result<T> {
-                self.map_err($crate::error::io_err_other)
+                self.map_err(::std::io::Error::other)
             }
         }
     };

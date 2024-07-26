@@ -6,10 +6,9 @@ use std::num::NonZeroUsize;
 use std::os::unix::io::RawFd;
 use std::{io, mem};
 
-use anyhow::format_err;
 use nix::sys::mman;
 
-use proxmox_lang::error::io_err_other;
+use proxmox_lang::io_format_err;
 
 use crate::error::SysError;
 
@@ -35,7 +34,7 @@ impl<T> Mmap<T> {
         flags: mman::MapFlags,
     ) -> io::Result<Self> {
         let byte_len = NonZeroUsize::new(count * mem::size_of::<T>())
-            .ok_or(io_err_other(format_err!("mapped length must not be zero")))?;
+            .ok_or_else(|| io_format_err!("mapped length must not be zero"))?;
 
         // libc::size_t vs usize
         #[allow(clippy::useless_conversion)]
@@ -45,7 +44,7 @@ impl<T> Mmap<T> {
             prot,
             flags,
             fd,
-            libc::off_t::try_from(ofs).map_err(io_err_other)?,
+            libc::off_t::try_from(ofs).map_err(io::Error::other)?,
         )
         .map_err(SysError::into_io_error)?;
 

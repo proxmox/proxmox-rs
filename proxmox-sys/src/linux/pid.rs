@@ -11,8 +11,6 @@ use nix::sys::stat::Mode;
 use nix::unistd::Pid;
 use nix::NixPath;
 
-use proxmox_lang::error::io_err_other;
-
 use crate::error::SysResult;
 use crate::linux::procfs::{MountInfo, PidStat};
 use crate::{c_result, c_try};
@@ -109,13 +107,13 @@ impl PidFd {
     /// Get the `PidStat` structure for this process. (`/proc/PID/stat`)
     pub fn get_stat(&self) -> io::Result<PidStat> {
         let data = self.read_file(c"stat")?;
-        let data = String::from_utf8(data).map_err(io_err_other)?;
-        PidStat::parse(&data).map_err(io_err_other)
+        let data = String::from_utf8(data).map_err(io::Error::other)?;
+        PidStat::parse(&data).map_err(io::Error::other)
     }
 
     /// Read this process' `/proc/PID/mountinfo` file.
     pub fn get_mount_info(&self) -> io::Result<MountInfo> {
-        MountInfo::parse(&self.read_file(c"mountinfo")?).map_err(io_err_other)
+        MountInfo::parse(&self.read_file(c"mountinfo")?).map_err(io::Error::other)
     }
 
     /// Attempt to get a `PidFd` from a raw file descriptor.
