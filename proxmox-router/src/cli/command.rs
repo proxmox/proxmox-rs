@@ -1,7 +1,9 @@
-use anyhow::{bail, format_err, Error};
-use serde_json::Value;
 use std::cell::RefCell;
 use std::sync::Arc;
+
+use anyhow::{bail, format_err, Error};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use proxmox_schema::format::DocumentationFormat;
 use proxmox_schema::*;
@@ -13,6 +15,25 @@ use super::{
     print_simple_usage_error_do, CliCommand, CliCommandMap, CommandLineInterface, GlobalOptions,
 };
 use crate::{ApiFuture, ApiHandler, ApiMethod, RpcEnvironment};
+
+/// Command line output format.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum OutputFormat {
+    /// Command specific plain text output.
+    #[default]
+    Text,
+    /// Single line JSON output.
+    Json,
+    /// Prettified JSON output.
+    JsonPretty,
+}
+serde_plain::derive_display_from_serialize!(OutputFormat);
+serde_plain::derive_fromstr_from_deserialize!(OutputFormat);
+
+impl ApiType for OutputFormat {
+    const API_SCHEMA: Schema = OUTPUT_FORMAT;
+}
 
 /// Schema definition for ``--output-format`` parameter.
 ///
