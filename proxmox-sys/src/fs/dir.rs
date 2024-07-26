@@ -1,4 +1,3 @@
-use std::ffi::CStr;
 use std::os::fd::FromRawFd;
 use std::os::unix::io::{AsRawFd, OwnedFd};
 use std::path::Path;
