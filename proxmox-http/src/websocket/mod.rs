@@ -23,7 +23,7 @@ use futures::future::FutureExt;
 use futures::ready;
 
 use proxmox_io::ByteBuffer;
-use proxmox_lang::error::io_err_other;
+use proxmox_lang::io_format_err;
 
 // see RFC6455 section 7.4.1
 #[derive(Debug, Clone, Copy)]
@@ -278,7 +278,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
             let frame = match create_frame(this.mask, buf, OpCode::Binary) {
                 Ok(f) => f,
                 Err(e) => {
-                    return Poll::Ready(Err(io_err_other(e)));
+                    return Poll::Ready(Err(io::Error::other(e)));
                 }
             };
             this.frame = Some((frame, 0, buf.len()));
@@ -527,12 +527,12 @@ impl<R: AsyncRead + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
                 ReaderState::NoData => {
                     let mut reader = match this.reader.take() {
                         Some(reader) => reader,
-                        None => return Poll::Ready(Err(io_err_other("no reader"))),
+                        None => return Poll::Ready(Err(io_format_err!("no reader"))),
                     };
 
                     let mut buffer = match this.read_buffer.take() {
                         Some(buffer) => buffer,
-                        None => return Poll::Ready(Err(io_err_other("no buffer"))),
+                        None => return Poll::Ready(Err(io_format_err!("no buffer"))),
                     };
 
                     let future = async move {
@@ -566,7 +566,7 @@ impl<R: AsyncRead + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
                 ReaderState::HaveData => {
                     let mut read_buffer = match this.read_buffer.take() {
                         Some(read_buffer) => read_buffer,
-                        None => return Poll::Ready(Err(io_err_other("no buffer"))),
+                        None => return Poll::Ready(Err(io_format_err!("no buffer"))),
                     };
 
                     let mut header = match this.header.take() {
@@ -581,9 +581,9 @@ impl<R: AsyncRead + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
                                 }
                                 Err(err) => {
                                     if let Err(err) = this.sender.send(Err(err.clone())) {
-                                        return Poll::Ready(Err(io_err_other(err)));
+                                        return Poll::Ready(Err(io::Error::other(err)));
                                     }
-                                    return Poll::Ready(Err(io_err_other(err)));
+                                    return Poll::Ready(Err(io::Error::other(err)));
                                 }
                             };
 
