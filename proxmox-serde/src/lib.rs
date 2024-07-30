@@ -180,7 +180,7 @@ pub mod string_as_base64 {
     }
 }
 
-/// Serialize Vec<u8> as base64url encoded string without padding.
+/// Serialize `Vec<u8>` as base64url encoded string without padding.
 ///
 /// Usage example:
 /// ```

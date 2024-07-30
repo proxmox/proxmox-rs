@@ -99,7 +99,7 @@ fn push_err_do(path: String, err: anyhow::Error) {
 
 /// Helper to collect multiple deserialization errors for better reporting.
 ///
-/// This is similar to [`IgnoredAny`] in that it implements [`Deserialize`]
+/// This is similar to [`IgnoredAny`](serde::de::IgnoredAny) in that it implements [`Deserialize`]
 /// but does not actually deserialize to anything, however, when a deserialization error occurs,
 /// it'll try to continue and collect further errors.
 ///

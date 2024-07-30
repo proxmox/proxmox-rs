@@ -4,7 +4,8 @@ use std::sync::mpsc::SyncSender;
 
 /// Wrapper around SyncSender, which implements Write
 ///
-/// Each write in translated into a send(Vec<u8>).
+/// Each write in translated into a `send(Vec<u8>)` (that is, for each write, an owned byte vector
+/// is allocated and sent over the channel).
 pub struct StdChannelWriter<E>(SyncSender<Result<Vec<u8>, E>>);
 
 impl<E: ToString> StdChannelWriter<E> {
