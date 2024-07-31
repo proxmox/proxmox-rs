@@ -22,6 +22,7 @@ syn = { workspace = true , features = [ "extra-traits" ] }
 futures.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
 serde_json.workspace = true
+proxmox-section-config.workspace = true
 
 [dev-dependencies.proxmox-schema]
 workspace = true

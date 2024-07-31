@@ -33,6 +33,8 @@ use proxmox_lang::try_block;
 use proxmox_schema::format::{dump_properties, wrap_text, ParameterDisplayStyle};
 use proxmox_schema::*;
 
+pub mod typed;
+
 /// Used for additional properties when the schema allows them.
 const ADDITIONAL_PROPERTY_SCHEMA: Schema = StringSchema::new("Additional property").schema();
 

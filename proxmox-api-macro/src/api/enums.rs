@@ -4,13 +4,54 @@ use anyhow::Error;
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
+use syn::spanned::Spanned;
 
 use super::Schema;
 use crate::serde;
 use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
 
 /// Enums, provided they're simple enums, simply get an enum string schema attached to them.
-pub fn handle_enum(
+pub fn handle_enum(attribs: JSONObject, enum_ty: syn::ItemEnum) -> Result<TokenStream, Error> {
+    let mut first_unit = None;
+    let mut first_unnamed = None;
+    let mut first_named = None;
+    for variant in &enum_ty.variants {
+        match &variant.fields {
+            syn::Fields::Unit => first_unit = Some(variant.fields.span()),
+            syn::Fields::Unnamed(_) => first_unnamed = Some(variant.fields.span()),
+            syn::Fields::Named(_) => first_named = Some(variant.fields.span()),
+        }
+    }
+
+    if first_unit.is_some() {
+        if let Some(conflict) = first_unnamed.or(first_named) {
+            bail!(
+                conflict,
+                "enums must be either with only unit types or only newtypes"
+            );
+        }
+        return handle_string_enum(attribs, enum_ty);
+    }
+
+    if first_unnamed.is_some() {
+        if let Some(conflict) = first_unit.or(first_named) {
+            bail!(
+                conflict,
+                "enums must be either with only unit types or only newtypes"
+            );
+        }
+        return handle_section_config_enum(attribs, enum_ty);
+    }
+
+    if let Some(bad) = first_named {
+        bail!(bad, "api type enums with named fields are not allowed");
+    }
+
+    bail!(enum_ty => "api type enums must not be empty");
+}
+
+/// Enums, provided they're simple enums, simply get an enum string schema attached to them.
+fn handle_string_enum(
     mut attribs: JSONObject,
     mut enum_ty: syn::ItemEnum,
 ) -> Result<TokenStream, Error> {
@@ -111,6 +152,130 @@ pub fn handle_enum(
 
         impl ::proxmox_schema::UpdaterType for #name {
             type Updater = Option<Self>;
+        }
+    })
+}
+
+fn handle_section_config_enum(
+    mut attribs: JSONObject,
+    enum_ty: syn::ItemEnum,
+) -> Result<TokenStream, Error> {
+    let name = &enum_ty.ident;
+
+    let description: syn::LitStr = match attribs.remove("description") {
+        Some(desc) => desc.try_into()?,
+        None => {
+            let (comment, span) = util::get_doc_comments(&enum_ty.attrs)?;
+            syn::LitStr::new(comment.trim(), span)
+        }
+    };
+
+    let id_schema = {
+        let schema: Schema = match attribs.remove("id-schema") {
+            Some(schema) => schema.try_into()?,
+            None => {
+                bail!(name => "missing 'id-schema' property for SectionConfig style enum")
+            }
+        };
+
+        let mut ts = TokenStream::new();
+        schema.to_typed_schema(&mut ts)?;
+        ts
+    };
+    let id_property: syn::LitStr = match attribs.remove("id-property") {
+        Some(name) => name.try_into()?,
+        None => bail!(name => "missing 'id-property' property for SectionConfig style enum"),
+    };
+
+    let container_attrs = serde::ContainerAttrib::try_from(&enum_ty.attrs[..])?;
+    let Some(tag) = container_attrs.tag.as_ref() else {
+        bail!(name => r#"SectionConfig enum needs a `#[serde(tag = "...")]` container attribute"#);
+    };
+
+    let mut variants = TokenStream::new();
+    let mut register_sections = TokenStream::new();
+    let mut to_type = TokenStream::new();
+    for variant in &enum_ty.variants {
+        let field = match &variant.fields {
+            syn::Fields::Unnamed(field) if field.unnamed.len() == 1 => &field.unnamed[0],
+            _ => bail!(variant => "SectionConfig style enum can only have newtype variants"),
+        };
+
+        let attrs = serde::VariantAttrib::try_from(&variant.attrs[..])?;
+        let variant_string = if let Some(renamed) = attrs.rename {
+            renamed
+        } else if let Some(rename_all) = container_attrs.rename_all {
+            let name = rename_all.apply_to_variant(&variant.ident.to_string());
+            syn::LitStr::new(&name, variant.ident.span())
+        } else {
+            let name = &variant.ident;
+            syn::LitStr::new(&name.to_string(), name.span())
+        };
+
+        let variant_ident = &variant.ident;
+        let ty = &field.ty;
+        variants.extend(quote_spanned! { variant.ident.span() =>
+            (
+                #variant_string,
+                &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA,
+            ),
+        });
+        register_sections.extend(quote_spanned! { variant.ident.span() =>
+            this.register_plugin(::proxmox_section_config::SectionConfigPlugin::new(
+                #variant_string.to_string(),
+                Some(#id_property.to_string()),
+                const {
+                    match &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA {
+                        ::proxmox_schema::Schema::Object(schema) => schema,
+                        ::proxmox_schema::Schema::OneOf(schema) => schema,
+                        _ => panic!("enum requires an object schema"),
+                    }
+                }
+            ));
+        });
+        to_type.extend(quote_spanned! { variant.ident.span() =>
+            Self::#variant_ident(_) => #variant_string,
+        });
+    }
+
+    Ok(quote_spanned! { name.span() =>
+        #enum_ty
+
+        impl ::proxmox_schema::ApiType for #name {
+            const API_SCHEMA: ::proxmox_schema::Schema =
+                ::proxmox_schema::OneOfSchema::new(
+                    #description,
+                    &(#tag, false, &#id_schema.schema()),
+                    &[#variants],
+                )
+                .schema();
+        }
+
+        impl ::proxmox_section_config::typed::ApiSectionDataEntry for #name {
+            const INTERNALLY_TAGGED: Option<&'static str> = Some(#tag);
+
+            fn section_config() -> &'static ::proxmox_section_config::SectionConfig {
+                static CONFIG: ::std::sync::OnceLock<::proxmox_section_config::SectionConfig> =
+                    ::std::sync::OnceLock::new();
+
+                CONFIG.get_or_init(|| {
+                    let id_schema = const {
+                        <Self as ::proxmox_schema::ApiType>::API_SCHEMA
+                            .unwrap_one_of_schema()
+                            .type_property_entry
+                            .2
+                    };
+                    let mut this = ::proxmox_section_config::SectionConfig::new(id_schema);
+                    #register_sections
+                    this
+                })
+            }
+
+            fn section_type(&self) -> &'static str {
+                match self {
+                    #to_type
+                }
+            }
         }
     })
 }

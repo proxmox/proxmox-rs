@@ -128,6 +128,7 @@ impl RenameAll {
 #[derive(Default)]
 pub struct ContainerAttrib {
     pub rename_all: Option<RenameAll>,
+    pub tag: Option<syn::LitStr>,
 }
 
 impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
@@ -147,18 +148,28 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
 
             for arg in args {
                 if let syn::Meta::NameValue(var) = arg {
-                    if !var.path.is_ident("rename_all") {
-                        continue;
-                    }
-                    match &var.value {
-                        syn::Expr::Lit(lit) => {
-                            let rename_all = RenameAll::try_from(&lit.lit)?;
-                            if this.rename_all.is_some() && this.rename_all != Some(rename_all) {
-                                error!(var.value => "multiple conflicting 'rename_all' attributes");
+                    if var.path.is_ident("rename_all") {
+                        match &var.value {
+                            syn::Expr::Lit(lit) => {
+                                let rename_all = RenameAll::try_from(&lit.lit)?;
+                                if this.rename_all.is_some() && this.rename_all != Some(rename_all)
+                                {
+                                    error!(var.value => "multiple conflicting 'rename_all' attributes");
+                                }
+                                this.rename_all = Some(rename_all);
                             }
-                            this.rename_all = Some(rename_all);
+                            _ => error!(var.value => "invalid 'rename_all' value type"),
                         }
-                        _ => error!(var.value => "invalid 'rename_all' value type"),
+                    } else if var.path.is_ident("tag") {
+                        match &var.value {
+                            syn::Expr::Lit(syn::ExprLit {
+                                lit: syn::Lit::Str(lit),
+                                ..
+                            }) => {
+                                this.tag = Some(lit.clone());
+                            }
+                            _ => error!(var.value => "invalid 'tag' value type"),
+                        }
                     }
                 }
             }
