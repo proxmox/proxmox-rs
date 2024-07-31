@@ -1,3 +1,9 @@
+rust-proxmox-router (2.2.2-1) stable; urgency=medium
+
+  * cli: add OutputFormat enum api type
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 31 Jul 2024 10:05:26 +0200
+
 rust-proxmox-router (2.2.1-1) stable; urgency=medium
 
   * cli: fix cli commands with no positional args (don't set 'deny_unknown' at

@@ -20,7 +20,9 @@ Build-Depends: debhelper (>= 12),
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-rustyline-9+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
+ librust-serde-plain-1+default-dev <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
  librust-unicode-width-0.1+default-dev (>= 0.1.8-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -42,7 +44,9 @@ Depends:
  librust-proxmox-http-error-0.1+default-dev,
  librust-proxmox-schema-3+default-dev (>= 3.1.2-~~),
  librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev,
+ librust-serde-plain-1+default-dev,
  librust-unicode-width-0.1+default-dev (>= 0.1.8-~~)
 Recommends:
  librust-proxmox-router+default-dev (= ${binary:Version})
@@ -53,7 +57,7 @@ Suggests:
 Provides:
  librust-proxmox-router-2-dev (= ${binary:Version}),
  librust-proxmox-router-2.2-dev (= ${binary:Version}),
- librust-proxmox-router-2.2.1-dev (= ${binary:Version})
+ librust-proxmox-router-2.2.2-dev (= ${binary:Version})
 Description: Proxmox API Router and CLI utilities - Rust source code
  Source code for Debianized Rust crate "proxmox-router"
 
@@ -71,7 +75,7 @@ Depends:
 Provides:
  librust-proxmox-router-2+cli-dev (= ${binary:Version}),
  librust-proxmox-router-2.2+cli-dev (= ${binary:Version}),
- librust-proxmox-router-2.2.1+cli-dev (= ${binary:Version})
+ librust-proxmox-router-2.2.2+cli-dev (= ${binary:Version})
 Description: Proxmox API Router and CLI utilities - feature "cli"
  This metapackage enables feature "cli" for the Rust proxmox-router crate, by
  pulling in any additional dependencies needed by that feature.
@@ -87,7 +91,7 @@ Depends:
 Provides:
  librust-proxmox-router-2+default-dev (= ${binary:Version}),
  librust-proxmox-router-2.2+default-dev (= ${binary:Version}),
- librust-proxmox-router-2.2.1+default-dev (= ${binary:Version})
+ librust-proxmox-router-2.2.2+default-dev (= ${binary:Version})
 Description: Proxmox API Router and CLI utilities - feature "default"
  This metapackage enables feature "default" for the Rust proxmox-router crate,
  by pulling in any additional dependencies needed by that feature.
@@ -104,7 +108,7 @@ Depends:
 Provides:
  librust-proxmox-router-2+server-dev (= ${binary:Version}),
  librust-proxmox-router-2.2+server-dev (= ${binary:Version}),
- librust-proxmox-router-2.2.1+server-dev (= ${binary:Version})
+ librust-proxmox-router-2.2.2+server-dev (= ${binary:Version})
 Description: Proxmox API Router and CLI utilities - feature "server"
  This metapackage enables feature "server" for the Rust proxmox-router crate, by
  pulling in any additional dependencies needed by that feature.
@@ -119,7 +123,7 @@ Depends:
 Provides:
  librust-proxmox-router-2+test-harness-dev (= ${binary:Version}),
  librust-proxmox-router-2.2+test-harness-dev (= ${binary:Version}),
- librust-proxmox-router-2.2.1+test-harness-dev (= ${binary:Version})
+ librust-proxmox-router-2.2.2+test-harness-dev (= ${binary:Version})
 Description: Proxmox API Router and CLI utilities - feature "test-harness"
  This metapackage enables feature "test-harness" for the Rust proxmox-router
  crate, by pulling in any additional dependencies needed by that feature.
