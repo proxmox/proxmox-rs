@@ -155,3 +155,19 @@ pub struct WithSerde {
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     more: MyType,
 }
+
+#[api(
+    properties: {
+        another: { type: MyType },
+    },
+)]
+/// A struct where we replace serde attributes.
+#[derive(Deserialize, Serialize, Updater)]
+pub struct RenamedStuff {
+    /// Simple string.
+    data: String,
+
+    #[serde(rename = "another")]
+    #[updater(skip)]
+    more: MyType,
+}

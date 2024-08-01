@@ -271,7 +271,8 @@ fn handle_regular_struct(
             }
         });
         if derive {
-            let updater = derive_updater(stru.clone(), schema.clone(), &mut stru)?;
+            let updater =
+                derive_updater(stru.clone(), schema.clone(), &mut stru, &container_attrs)?;
 
             // make sure we don't leave #[updater] attributes on the original struct:
             if let syn::Fields::Named(fields) = &mut stru.fields {
@@ -403,6 +404,7 @@ fn derive_updater(
     mut stru: syn::ItemStruct,
     mut schema: Schema,
     original_struct: &mut syn::ItemStruct,
+    container_attrs: &serde::ContainerAttrib,
 ) -> Result<TokenStream, Error> {
     let original_name = &original_struct.ident;
     stru.ident = Ident::new(&format!("{}Updater", stru.ident), stru.ident.span());
@@ -425,6 +427,7 @@ fn derive_updater(
                 &mut schema,
                 &mut all_of_schemas,
                 &mut is_empty_impl,
+                container_attrs,
             ) {
                 Ok(FieldAction::Keep) => fields.named.push(field),
                 Ok(FieldAction::Skip) => (),
@@ -471,32 +474,51 @@ fn handle_updater_field(
     schema: &mut Schema,
     all_of_schemas: &mut TokenStream,
     is_empty_impl: &mut TokenStream,
+    container_attrs: &serde::ContainerAttrib,
 ) -> Result<FieldAction, syn::Error> {
     let updater_attrs = UpdaterFieldAttributes::from_attributes(&mut field.attrs);
+    let serde_attrs = serde::FieldAttrib::try_from(&field.attrs[..])?;
 
     let field_name = field.ident.as_ref().expect("unnamed field in FieldsNamed");
     let field_name_string = field_name.to_string();
 
+    let (name, name_span) = {
+        let ident: &Ident = field
+            .ident
+            .as_ref()
+            .ok_or_else(|| format_err!(&field => "field without name?"))?;
+
+        if let Some(renamed) = serde_attrs.rename.clone() {
+            (renamed.value(), ident.span())
+        } else if let Some(rename_all) = container_attrs.rename_all {
+            let name = rename_all.apply_to_field(&ident.to_string());
+            (name, ident.span())
+        } else {
+            (ident.to_string(), ident.span())
+        }
+    };
+
     if updater_attrs.skip() {
-        if !schema.remove_obj_property_by_ident(&field_name_string) {
-            bail!(
-                field_name.span(),
-                "failed to find schema entry for {:?}",
-                field_name_string,
-            );
+        if !schema.remove_obj_property_by_ident(&name)
+            && !schema.remove_obj_property_by_ident(&field_name_string)
+        {
+            bail!(name_span, "failed to find schema entry for {:?}", name);
         }
         return Ok(FieldAction::Skip);
     }
 
-    let field_schema = match schema.find_obj_property_by_ident_mut(&field_name_string) {
+    let field_schema = match schema.find_obj_property_by_ident_mut(&name) {
         Some(obj) => obj,
-        None => {
-            bail!(
-                field_name.span(),
-                "failed to find schema entry for {:?}",
-                field_name_string,
-            );
-        }
+        None => match schema.find_obj_property_by_ident_mut(&field_name_string) {
+            Some(obj) => obj,
+            None => {
+                bail!(
+                    field_name.span(),
+                    "failed to find schema entry for {:?}",
+                    field_name_string,
+                );
+            }
+        },
     };
 
     let span = Span::call_site();
