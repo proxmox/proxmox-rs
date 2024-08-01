@@ -198,7 +198,7 @@ async fn run() -> Result<(), Error> {
     let rest_server = RestServer::new(config);
 
     // then we have to create a daemon that listens, accepts and serves the api to clients
-    proxmox_rest_server::daemon::create_daemon(
+    proxmox_daemon::server::create_daemon(
         ([127, 0, 0, 1], 65000).into(),
         move |listener| {
             let incoming = hyper::server::conn::AddrIncoming::from_listener(listener)?;
