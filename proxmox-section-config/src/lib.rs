@@ -43,6 +43,7 @@ pub struct SectionConfigPlugin {
     type_name: String,
     properties: &'static (dyn ObjectSchemaType + Send + Sync + 'static),
     id_property: Option<String>,
+    type_key: Option<&'static str>,
 }
 
 impl SectionConfigPlugin {
@@ -55,7 +56,14 @@ impl SectionConfigPlugin {
             type_name,
             properties,
             id_property,
+            type_key: None,
         }
+    }
+
+    /// Override the type key for this plugin.
+    pub const fn with_type_key(mut self, type_key: &'static str) -> Self {
+        self.type_key = Some(type_key);
+        self
     }
 
     pub fn type_name(&self) -> &str {
@@ -97,6 +105,7 @@ pub struct SectionConfig {
         fn(type_name: &str, section_id: &str, key: &str, value: &Value) -> Result<String, Error>,
 
     allow_unknown_sections: bool,
+    type_key: Option<&'static str>,
 }
 
 enum ParseState<'a> {
@@ -247,6 +256,7 @@ impl SectionConfig {
             format_section_header: Self::default_format_section_header,
             format_section_content: Self::default_format_section_content,
             allow_unknown_sections: false,
+            type_key: None,
         }
     }
 
@@ -260,6 +270,7 @@ impl SectionConfig {
             format_section_header: Self::systemd_format_section_header,
             format_section_content: Self::systemd_format_section_content,
             allow_unknown_sections: false,
+            type_key: None,
         }
     }
 
@@ -288,11 +299,18 @@ impl SectionConfig {
             format_section_header,
             format_section_content,
             allow_unknown_sections: false,
+            type_key: None,
         }
     }
 
     pub const fn allow_unknown_sections(mut self, allow_unknown_sections: bool) -> Self {
         self.allow_unknown_sections = allow_unknown_sections;
+        self
+    }
+
+    /// The default type key for all and unknown section types.
+    pub const fn with_type_key(mut self, type_key: &'static str) -> Self {
+        self.type_key = Some(type_key);
         self
     }
 
@@ -365,10 +383,11 @@ impl SectionConfig {
                     raw += &(self.format_section_header)(type_name, section_id, section_config)?;
 
                     for (key, value) in section_config.as_object().unwrap() {
-                        if let Some(id_property) = &plugin.id_property {
-                            if id_property == key {
-                                continue; // skip writing out id properties, they are in the section header
-                            }
+                        if plugin.id_property.as_deref() == Some(key)
+                            || plugin.type_key == Some(key)
+                            || (plugin.type_key.is_none() && self.type_key == Some(key))
+                        {
+                            continue; // id and type are part of the section header
                         }
                         raw += &(self.format_section_content)(type_name, section_id, key, value)?;
                     }
@@ -449,7 +468,15 @@ impl SectionConfig {
                                 (self.parse_section_header)(line)
                             {
                                 //println!("OKLINE: type: {} ID: {}", section_type, section_id);
+
                                 if let Some(plugin) = self.plugins.get(&section_type) {
+                                    let section_data =
+                                        if let Some(type_key) = plugin.type_key.or(self.type_key) {
+                                            json!({type_key: section_type})
+                                        } else {
+                                            json!({})
+                                        };
+
                                     let id_schema =
                                         plugin.get_id_schema().unwrap_or(self.id_schema);
                                     if let Err(err) = id_schema.parse_simple_value(&section_id) {
@@ -459,12 +486,17 @@ impl SectionConfig {
                                         );
                                     }
                                     state =
-                                        ParseState::InsideSection(plugin, section_id, json!({}));
+                                        ParseState::InsideSection(plugin, section_id, section_data);
                                 } else if self.allow_unknown_sections {
+                                    let section_data = if let Some(type_key) = self.type_key {
+                                        json!({type_key: section_type})
+                                    } else {
+                                        json!({})
+                                    };
                                     state = ParseState::InsideUnknownSection(
                                         section_type,
                                         section_id,
-                                        json!({}),
+                                        section_data,
                                     );
                                 } else {
                                     bail!("unknown section type '{}'", section_type);
