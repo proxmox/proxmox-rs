@@ -1,3 +1,17 @@
+rust-proxmox-section-config (2.1.0-1) bookworm; urgency=medium
+
+  * add an experimental `typed` submodule for typed enums for section configs
+
+  * support a 'type_key' globally or by plugin to automatically include the
+    type string within the data for easier de/serialization of structs
+    containing the type inside (like internally tagged enums)
+
+  * use `contains_key` instead of `.get().is_some/none()`
+
+  * documentation and typo fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 06 Aug 2024 14:15:18 +0200
+
 rust-proxmox-section-config (2.0.2-1) bookworm; urgency=medium
 
   * pass filesystem paths as AsRef<Path>
