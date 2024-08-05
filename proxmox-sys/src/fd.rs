@@ -23,7 +23,7 @@ pub fn change_cloexec(fd: RawFd, on: bool) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-pub fn cwd() -> Result<OwnedFd, nix::Error> {
+pub(crate) fn cwd() -> Result<OwnedFd, nix::Error> {
     open(".", OFlag::O_DIRECTORY, stat::Mode::empty())
 }
 
