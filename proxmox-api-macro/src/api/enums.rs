@@ -6,6 +6,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
 use syn::spanned::Spanned;
 
+use super::attributes::EnumFieldAttributes;
 use super::Schema;
 use crate::serde;
 use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
@@ -158,7 +159,7 @@ fn handle_string_enum(
 
 fn handle_section_config_enum(
     mut attribs: JSONObject,
-    enum_ty: syn::ItemEnum,
+    mut enum_ty: syn::ItemEnum,
 ) -> Result<TokenStream, Error> {
     let name = &enum_ty.ident;
 
@@ -186,6 +187,13 @@ fn handle_section_config_enum(
         Some(name) => name.try_into()?,
         None => bail!(name => "missing 'id-property' property for SectionConfig style enum"),
     };
+    let with_type_key: TokenStream = match attribs.remove("type-key") {
+        Some(value) => {
+            let value: syn::LitStr = value.try_into()?;
+            quote_spanned!(value.span() => .with_type_key(#value))
+        }
+        None => TokenStream::new(),
+    };
 
     let container_attrs = serde::ContainerAttrib::try_from(&enum_ty.attrs[..])?;
     let Some(tag) = container_attrs.tag.as_ref() else {
@@ -195,7 +203,7 @@ fn handle_section_config_enum(
     let mut variants = TokenStream::new();
     let mut register_sections = TokenStream::new();
     let mut to_type = TokenStream::new();
-    for variant in &enum_ty.variants {
+    for variant in &mut enum_ty.variants {
         let field = match &variant.fields {
             syn::Fields::Unnamed(field) if field.unnamed.len() == 1 => &field.unnamed[0],
             _ => bail!(variant => "SectionConfig style enum can only have newtype variants"),
@@ -212,6 +220,13 @@ fn handle_section_config_enum(
             syn::LitStr::new(&name.to_string(), name.span())
         };
 
+        let field_attrs = EnumFieldAttributes::from_attributes(&mut variant.attrs);
+        let with_type_key = if let Some(key) = field_attrs.type_key() {
+            quote_spanned!(key.span() => .with_type_key(#key))
+        } else {
+            TokenStream::new()
+        };
+
         let variant_ident = &variant.ident;
         let ty = &field.ty;
         variants.extend(quote_spanned! { variant.ident.span() =>
@@ -221,17 +236,20 @@ fn handle_section_config_enum(
             ),
         });
         register_sections.extend(quote_spanned! { variant.ident.span() =>
-            this.register_plugin(::proxmox_section_config::SectionConfigPlugin::new(
-                #variant_string.to_string(),
-                Some(#id_property.to_string()),
-                const {
-                    match &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA {
-                        ::proxmox_schema::Schema::Object(schema) => schema,
-                        ::proxmox_schema::Schema::OneOf(schema) => schema,
-                        _ => panic!("enum requires an object schema"),
+            this.register_plugin(
+                ::proxmox_section_config::SectionConfigPlugin::new(
+                    #variant_string.to_string(),
+                    Some(#id_property.to_string()),
+                    const {
+                        match &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA {
+                            ::proxmox_schema::Schema::Object(schema) => schema,
+                            ::proxmox_schema::Schema::OneOf(schema) => schema,
+                            _ => panic!("enum requires an object schema"),
+                        }
                     }
-                }
-            ));
+                )
+                #with_type_key
+            );
         });
         to_type.extend(quote_spanned! { variant.ident.span() =>
             Self::#variant_ident(_) => #variant_string,
@@ -265,7 +283,8 @@ fn handle_section_config_enum(
                             .type_property_entry
                             .2
                     };
-                    let mut this = ::proxmox_section_config::SectionConfig::new(id_schema);
+                    let mut this = ::proxmox_section_config::SectionConfig::new(id_schema)
+                        #with_type_key;
                     #register_sections
                     this
                 })

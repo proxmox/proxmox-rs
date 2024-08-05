@@ -68,3 +68,45 @@ impl UpdaterFieldAttributes {
         }
     }
 }
+
+#[derive(Default)]
+pub struct EnumFieldAttributes {
+    /// Change the "type-key" for this entry type..
+    type_key: Option<syn::LitStr>,
+}
+
+impl EnumFieldAttributes {
+    pub fn from_attributes(input: &mut Vec<syn::Attribute>) -> Self {
+        let mut this = Self::default();
+
+        for attr in std::mem::take(input) {
+            if attr.style != syn::AttrStyle::Outer || !attr.path().is_ident("api") {
+                input.push(attr);
+                continue;
+            }
+            match attr.parse_nested_meta(|meta| this.parse(meta)) {
+                Ok(()) => (),
+                Err(err) => crate::add_error(err),
+            }
+        }
+
+        this
+    }
+
+    fn parse(&mut self, meta: ParseNestedMeta<'_>) -> Result<(), syn::Error> {
+        let path = &meta.path;
+
+        if path.is_ident("type_key") {
+            util::duplicate(&self.type_key, path);
+            self.type_key = Some(meta.value()?.parse()?);
+        } else {
+            return Err(meta.error(format!("invalid api attribute: {path:?}")));
+        }
+
+        Ok(())
+    }
+
+    pub fn type_key(&self) -> Option<&syn::LitStr> {
+        self.type_key.as_ref()
+    }
+}
