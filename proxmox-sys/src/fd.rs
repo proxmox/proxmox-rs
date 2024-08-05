@@ -2,9 +2,9 @@
 
 use std::os::unix::io::AsRawFd;
 
-use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use nix::NixPath;
+use nix::{fcntl::OFlag, sys::stat};
 
 use std::os::unix::io::{FromRawFd, OwnedFd, RawFd};
 
@@ -23,8 +23,8 @@ pub fn change_cloexec(fd: RawFd, on: bool) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-pub fn cwd() -> OwnedFd {
-    unsafe { OwnedFd::from_raw_fd(libc::AT_FDCWD) }
+pub fn cwd() -> Result<OwnedFd, nix::Error> {
+    open(".", OFlag::O_DIRECTORY, stat::Mode::empty())
 }
 
 pub fn open<P>(path: &P, oflag: OFlag, mode: Mode) -> Result<OwnedFd, nix::Error>

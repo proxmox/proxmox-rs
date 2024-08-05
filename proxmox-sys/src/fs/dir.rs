@@ -120,7 +120,7 @@ fn create_path_do(
         }
         Some(Component::CurDir) => {
             let _ = iter.next();
-            crate::fd::cwd()
+            crate::fd::cwd()?
         }
         Some(Component::ParentDir) => {
             let _ = iter.next();
@@ -128,7 +128,7 @@ fn create_path_do(
         }
         Some(Component::Normal(_)) => {
             // simply do not advance the iterator, heavy lifting happens in create_path_at_do()
-            crate::fd::cwd()
+            crate::fd::cwd()?
         }
         None => bail!("create_path on empty path?"),
     };
