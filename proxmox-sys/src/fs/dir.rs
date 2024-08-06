@@ -1,12 +1,17 @@
+use std::ffi::OsString;
 use std::os::fd::FromRawFd;
+use std::os::unix::ffi::OsStrExt;
+use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::{AsRawFd, OwnedFd};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::{bail, format_err, Error};
 use nix::errno::Errno;
 use nix::fcntl::OFlag;
 use nix::sys::stat;
 use nix::unistd;
+
+use proxmox_lang::try_block;
 
 use crate::fs::{fchown, CreateOptions};
 
@@ -186,6 +191,52 @@ fn create_path_at_do(
     }
 }
 
+///  Create a temporary directory.
+///
+/// `directory` determines where the temporary directory will be created. For instance, if
+/// `directory` is `/tmp`, on success the function will return a path in the style of
+/// `/tmp/tmp_XXXXXX`, where X stands for a random string, ensuring that the path is unique.
+///
+/// By default, the created directory has `0o700` permissions. If this is not desired, custom
+/// [`CreateOptions`] can be passed via the `options` parameter.
+pub fn make_tmp_dir<P: AsRef<Path>>(
+    directory: P,
+    options: Option<CreateOptions>,
+) -> Result<PathBuf, Error> {
+    let template = directory.as_ref().join("tmp_XXXXXX");
+
+    let mut template = template.into_os_string().as_bytes().to_owned();
+    // Push NULL byte so that we have a proper NULL-terminated string
+    template.push(0);
+
+    let returned_buffer = unsafe { libc::mkdtemp(template.as_mut_ptr() as *mut i8) };
+
+    // Check errno immediately, so that nothing else can overwrite it.
+    let err = std::io::Error::last_os_error();
+
+    if returned_buffer.is_null() {
+        return Err(err.into());
+    }
+
+    template.pop(); // drop terminating nul byte
+    let path = PathBuf::from(OsString::from_vec(template));
+
+    if let Some(options) = options {
+        if let Err(err) = try_block!({
+            let mut fd = crate::fd::open(&path, OFlag::O_DIRECTORY, stat::Mode::empty())?;
+            options.apply_to(&mut fd, &path)?;
+            Ok::<(), Error>(())
+        }) {
+            if let Err(err) = std::fs::remove_dir(&path) {
+                log::error!("could not clean up temporary directory at {path:?}: {err}")
+            }
+            bail!("could not apply create options to new temporary directory: {err}");
+        }
+    }
+
+    Ok(path)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -202,5 +253,22 @@ mod tests {
             ),
         )
         .expect("expected create_path to work");
+    }
+
+    #[test]
+    fn test_make_tmp_dir() -> Result<(), Error> {
+        let options = CreateOptions::new()
+            .owner(unistd::Uid::effective())
+            .group(unistd::Gid::effective())
+            .perm(stat::Mode::from_bits_truncate(0o755));
+
+        let path = make_tmp_dir("/tmp", Some(options))?;
+
+        assert!(path.exists());
+        assert!(path.is_dir());
+
+        std::fs::remove_dir_all(&path)?;
+
+        Ok(())
     }
 }
