@@ -17,3 +17,6 @@ pub use rrd::Entry;
 
 mod cache;
 pub use cache::*;
+
+#[cfg(feature = "api-types")]
+pub mod api_types;

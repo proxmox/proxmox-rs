@@ -28,4 +28,5 @@ proxmox-time.workspace = true
 
 [features]
 default = [ "rrd_v1" ]
+api-types = []
 rrd_v1 = []
