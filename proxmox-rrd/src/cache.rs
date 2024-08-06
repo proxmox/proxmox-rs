@@ -191,6 +191,32 @@ impl Cache {
         value: f64,
         dst: DataSourceType,
     ) -> Result<(), Error> {
+        self.update_value_impl(rel_path, time, value, dst, false)
+    }
+
+    /// Update data in RAM and write file back to disk (journal)
+    ///
+    /// This method is equivalent to `update_value`, but it ignores
+    /// the call if `time` is older than any previously stored data point.
+    /// A journal entry will still be created, but then also ignored when applying.
+    pub fn update_value_ignore_old(
+        &self,
+        rel_path: &str,
+        time: f64,
+        value: f64,
+        dst: DataSourceType,
+    ) -> Result<(), Error> {
+        self.update_value_impl(rel_path, time, value, dst, true)
+    }
+
+    fn update_value_impl(
+        &self,
+        rel_path: &str,
+        time: f64,
+        value: f64,
+        dst: DataSourceType,
+        new_only: bool,
+    ) -> Result<(), Error> {
         let journal_applied = self.apply_journal()?;
 
         self.state
@@ -202,7 +228,7 @@ impl Cache {
             self.rrd_map
                 .write()
                 .unwrap()
-                .update(rel_path, time, value, dst, false)?;
+                .update(rel_path, time, value, dst, new_only)?;
         }
 
         Ok(())
