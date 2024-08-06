@@ -5,6 +5,7 @@ use proxmox_schema::ApiType;
 
 /// An i16: -32768 to 32767.
 #[api]
+#[allow(dead_code)]
 pub struct AnI16(i16);
 
 #[test]
@@ -20,6 +21,7 @@ fn test_an_i16_schema() {
 
 /// Already limited on one side.
 #[api(minimum: -50)]
+#[allow(dead_code)]
 pub struct I16G50(i16);
 
 #[test]
@@ -35,6 +37,7 @@ fn test_i16g50_schema() {
 
 /// An i32: -0x8000_0000 to 0x7fff_ffff.
 #[api]
+#[allow(dead_code)]
 pub struct AnI32(i32);
 
 #[test]
@@ -50,6 +53,7 @@ fn test_an_i32_schema() {
 
 /// Unsigned implies a minimum of zero.
 #[api]
+#[allow(dead_code)]
 pub struct AnU32(u32);
 
 #[test]
@@ -65,6 +69,7 @@ fn test_an_u32_schema() {
 
 /// An i64: this is left unlimited.
 #[api]
+#[allow(dead_code)]
 pub struct AnI64(i64);
 
 #[test]
@@ -77,6 +82,7 @@ fn test_an_i64_schema() {
 
 /// Unsigned implies a minimum of zero.
 #[api]
+#[allow(dead_code)]
 pub struct AnU64(u64);
 
 #[test]
