@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn test_http_err() {
         // Make sure the macro generates valid code.
-        http_err!(IM_A_TEAPOT, "Cannot brew coffee");
+        let _ = http_err!(IM_A_TEAPOT, "Cannot brew coffee");
     }
 
     #[test]
