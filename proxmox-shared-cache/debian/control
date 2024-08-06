@@ -1,0 +1,50 @@
+Source: rust-proxmox-shared-cache
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-nix-0.26+default-dev (>= 0.26.1-~~) <!nocheck>,
+ librust-proxmox-schema-3+api-types-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-sys-0.5+default-dev (>= 0.5.5-~~) <!nocheck>,
+ librust-proxmox-sys-0.5+timer-dev (>= 0.5.5-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>,
+ librust-serde-json-1+raw-value-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.6.2
+Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/proxmox-shared-cache]
+Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/proxmox-shared-cache
+X-Cargo-Crate: proxmox-shared-cache
+Rules-Requires-Root: no
+
+Package: librust-proxmox-shared-cache-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-nix-0.26+default-dev (>= 0.26.1-~~),
+ librust-proxmox-schema-3+api-types-dev (>= 3.1.1-~~),
+ librust-proxmox-schema-3+default-dev (>= 3.1.1-~~),
+ librust-proxmox-sys-0.5+default-dev (>= 0.5.5-~~),
+ librust-proxmox-sys-0.5+timer-dev (>= 0.5.5-~~),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
+ librust-serde-json-1+default-dev,
+ librust-serde-json-1+raw-value-dev
+Provides:
+ librust-proxmox-shared-cache+default-dev (= ${binary:Version}),
+ librust-proxmox-shared-cache-0-dev (= ${binary:Version}),
+ librust-proxmox-shared-cache-0+default-dev (= ${binary:Version}),
+ librust-proxmox-shared-cache-0.1-dev (= ${binary:Version}),
+ librust-proxmox-shared-cache-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-shared-cache-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-shared-cache-0.1.0+default-dev (= ${binary:Version})
+Description: Cache that can be used from multiple processes simultaneously - Rust source code
+ Source code for Debianized Rust crate "proxmox-shared-cache"

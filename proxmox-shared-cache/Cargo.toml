@@ -1,0 +1,17 @@
+[package]
+name = "proxmox-shared-cache"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+description = "A cache that can be used from multiple processes simultaneously"
+
+[dependencies]
+anyhow.workspace = true
+proxmox-sys = { workspace = true, features = ["timer"] }
+proxmox-schema = { workspace = true, features = ["api-types"]}
+serde_json = { workspace = true, features = ["raw_value"] }
+serde = { workspace = true, features = ["derive"]}
+nix.workspace = true
