@@ -14,18 +14,21 @@ use crate::Entry;
 pub struct RRDMap {
     config: Arc<CacheConfig>,
     map: HashMap<String, Database>,
-    load_rrd_cb: fn(path: &Path, rel_path: &str, dst: DataSourceType) -> Database,
+    load_rrd_cb: fn(path: &Path, rel_path: &str) -> Option<Database>,
+    create_rrd_cb: fn(dst: DataSourceType) -> Database,
 }
 
 impl RRDMap {
     pub(crate) fn new(
         config: Arc<CacheConfig>,
-        load_rrd_cb: fn(path: &Path, rel_path: &str, dst: DataSourceType) -> Database,
+        load_rrd_cb: fn(path: &Path, rel_path: &str) -> Option<Database>,
+        create_rrd_cb: fn(dst: DataSourceType) -> Database,
     ) -> Self {
         Self {
             config,
             map: HashMap::new(),
             load_rrd_cb,
+            create_rrd_cb,
         }
     }
 
@@ -44,13 +47,18 @@ impl RRDMap {
         } else {
             let mut path = self.config.basedir.clone();
             path.push(rel_path);
-            create_path(
-                path.parent().unwrap(),
-                Some(self.config.dir_options.clone()),
-                Some(self.config.dir_options.clone()),
-            )?;
+            let mut rrd = match (self.load_rrd_cb)(&path, rel_path) {
+                None => {
+                    create_path(
+                        path.parent().unwrap(),
+                        Some(self.config.dir_options.clone()),
+                        Some(self.config.dir_options.clone()),
+                    )?;
 
-            let mut rrd = (self.load_rrd_cb)(&path, rel_path, dst);
+                    (self.create_rrd_cb)(dst)
+                }
+                Some(rrd) => rrd,
+            };
 
             if !new_only || time > rrd.last_update() {
                 rrd.update(time, value);
@@ -92,6 +100,23 @@ impl RRDMap {
         match self.map.get(&format!("{}/{}", base, name)) {
             Some(rrd) => Ok(Some(rrd.extract_data(cf, resolution, start, end)?)),
             None => Ok(None),
+        }
+    }
+
+    pub fn load(&mut self, rel_path: &str) -> Result<bool, Error> {
+        if self.map.get(rel_path).is_some() {
+            // Already loaded, do nothing
+            return Ok(true);
+        }
+
+        let mut path = self.config.basedir.clone();
+        path.push(rel_path);
+
+        if let Some(rrd) = (self.load_rrd_cb)(&path, rel_path) {
+            self.map.insert(rel_path.to_string(), rrd);
+            return Ok(true);
+        } else {
+            return Ok(false);
         }
     }
 }

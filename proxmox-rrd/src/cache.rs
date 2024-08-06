@@ -12,7 +12,7 @@ use crossbeam_channel::{bounded, TryRecvError};
 
 use proxmox_sys::fs::{create_path, CreateOptions};
 
-use crate::rrd::{AggregationFn, Archive, DataSourceType, Database};
+use crate::rrd::{AggregationFn, DataSourceType, Database};
 use crate::Entry;
 
 mod journal;
@@ -58,7 +58,8 @@ impl Cache {
         file_options: Option<CreateOptions>,
         dir_options: Option<CreateOptions>,
         apply_interval: f64,
-        load_rrd_cb: fn(path: &Path, rel_path: &str, dst: DataSourceType) -> Database,
+        load_rrd_cb: fn(path: &Path, rel_path: &str) -> Option<Database>,
+        create_rrd_cb: fn(dst: DataSourceType) -> Database,
     ) -> Result<Self, Error> {
         let basedir = basedir.as_ref().to_owned();
 
@@ -80,7 +81,7 @@ impl Cache {
         });
 
         let state = JournalState::new(Arc::clone(&config))?;
-        let rrd_map = RRDMap::new(Arc::clone(&config), load_rrd_cb);
+        let rrd_map = RRDMap::new(Arc::clone(&config), load_rrd_cb, create_rrd_cb);
 
         Ok(Self {
             config: Arc::clone(&config),
@@ -248,10 +249,24 @@ impl Cache {
         start: Option<u64>,
         end: Option<u64>,
     ) -> Result<Option<Entry>, Error> {
-        self.rrd_map
-            .read()
-            .unwrap()
-            .extract_cached_data(base, name, cf, resolution, start, end)
+        let res = {
+            let map = self.rrd_map.read().unwrap();
+            map.extract_cached_data(base, name, cf, resolution, start, end)?
+        };
+
+        match res {
+            Some(entry) => Ok(Some(entry)),
+            None => {
+                let mut map = self.rrd_map.write().unwrap();
+                let loaded = map.load(&format!("{base}/{name}"))?;
+
+                if loaded {
+                    map.extract_cached_data(base, name, cf, resolution, start, end)
+                } else {
+                    Ok(None)
+                }
+            }
+        }
     }
 }
 
