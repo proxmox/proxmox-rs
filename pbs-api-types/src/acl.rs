@@ -223,7 +223,7 @@ pub enum Role {
     RemoteAudit = ROLE_REMOTE_AUDIT,
     /// Remote Administrator
     RemoteAdmin = ROLE_REMOTE_ADMIN,
-    /// Syncronisation Opertator
+    /// Synchronization Operator
     RemoteSyncOperator = ROLE_REMOTE_SYNC_OPERATOR,
     /// Tape Auditor
     TapeAudit = ROLE_TAPE_AUDIT,
