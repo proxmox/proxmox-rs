@@ -114,7 +114,7 @@ fn test_digest() -> Result<(), Error> {
     let new_path = write_dir.join(path.file_name().unwrap());
     file.path = Some(new_path.clone().into_os_string().into_string().unwrap());
 
-    let old_digest = file.digest.clone().unwrap();
+    let old_digest = file.digest.unwrap();
 
     // file does not exist yet...
     assert!(file.read_with_digest().is_err());
@@ -132,7 +132,7 @@ fn test_digest() -> Result<(), Error> {
     repo.enabled = !repo.enabled;
 
     // ...then it should work
-    file.digest = Some(old_digest.clone());
+    file.digest = Some(old_digest);
     file.write()?;
 
     // expect a different digest, because the repo was modified
