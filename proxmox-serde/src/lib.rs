@@ -52,7 +52,7 @@ pub mod epoch_as_rfc3339 {
     }
 }
 
-/// Serialize Vec<u8> as base64 encoded string.
+/// Serialize `Vec<u8>` as base64 encoded string.
 ///
 /// Usage example:
 /// ```
