@@ -24,7 +24,6 @@ zstd = { workspace = true, optional = true}
 
 proxmox-io.workspace = true
 proxmox-lang.workspace = true
-proxmox-time.workspace = true
 
 [features]
 default = []
