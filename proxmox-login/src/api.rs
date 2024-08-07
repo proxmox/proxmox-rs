@@ -32,7 +32,7 @@ pub struct CreateTicket {
     pub privs: Option<String>,
 
     /// You can optionally pass the realm using this parameter. Normally the
-    /// realm is simply added to the username <username>@<relam>.
+    /// realm is simply added to the username `<username>@<realm>`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub realm: Option<String>,
 
