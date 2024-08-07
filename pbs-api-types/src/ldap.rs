@@ -149,7 +149,7 @@ pub const SYNC_DEFAULTS_STRING_SCHEMA: Schema = StringSchema::new("sync defaults
     .schema();
 
 const REMOVE_VANISHED_DESCRIPTION: &str =
-    "A semicolon-seperated list of things to remove when they or the user \
+    "A semicolon-separated list of things to remove when they or the user \
 vanishes during user synchronization. The following values are possible: ``entry`` removes the \
 user when not returned from the sync; ``properties`` removes any  \
 properties on existing user that do not appear in the source. \
