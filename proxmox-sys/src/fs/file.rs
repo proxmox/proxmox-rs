@@ -5,15 +5,13 @@ use std::path::{Path, PathBuf};
 #[cfg(feature = "timer")]
 use std::time::Duration;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{bail, format_err, Context as _, Error};
 use nix::errno::Errno;
 use nix::fcntl::OFlag;
 use nix::sys::stat;
 use nix::unistd;
 use nix::NixPath;
 use serde_json::Value;
-
-use proxmox_lang::try_block;
 
 use crate::error::SysError;
 
@@ -86,8 +84,9 @@ pub fn file_read_optional_string<P: AsRef<Path>>(path: P) -> Result<Option<Strin
 pub fn file_get_json<P: AsRef<Path>>(path: P, default: Option<Value>) -> Result<Value, Error> {
     let path = path.as_ref();
 
-    let raw = match std::fs::read(path) {
-        Ok(v) => v,
+    match std::fs::read(path) {
+        Ok(data) => serde_json::from_slice(&data)
+            .with_context(|| format!("unable to parse json from {path:?}")),
         Err(err) => {
             if err.kind() == std::io::ErrorKind::NotFound {
                 if let Some(v) = default {
@@ -96,14 +95,7 @@ pub fn file_get_json<P: AsRef<Path>>(path: P, default: Option<Value>) -> Result<
             }
             bail!("unable to read json {:?} - {}", path, err);
         }
-    };
-
-    try_block!({
-        let data = String::from_utf8(raw)?;
-        let json = serde_json::from_str(&data)?;
-        Ok(json)
-    })
-    .map_err(|err: Error| format_err!("unable to parse json from {:?} - {}", path, err))
+    }
 }
 
 /// Read the first line of a file as String in std IO error context
