@@ -1,10 +1,10 @@
 //! Simple TLS capable HTTP client implementations.
 //!
 //! Feature `client` contains a lightweight wrapper around `hyper` with support for TLS connections
-//! in [`Client`](crate::client::Client).
+//! in [`Client`].
 //!
 //! Feature `client-sync` contains a lightweight wrapper around `ureq` in
-//! [`sync::Client`](crate::client::sync::Client).
+//! [`sync::Client`].
 //!
 //! Both clients implement [`HttpClient`](crate::HttpClient) if the feature `client-trait` is enabled.
 
