@@ -195,8 +195,9 @@ impl Connection {
         Ok(())
     }
 
-    /// Retrieves an attribute from the root DSE according to RFC 4512, Section 5.1
-    /// https://www.rfc-editor.org/rfc/rfc4512#section-5.1
+    /// Retrieves an attribute from the root DSE according to [RFC 4512], Section 5.1
+    ///
+    /// [RFC 4512]: https://www.rfc-editor.org/rfc/rfc4512#section-5.1
     pub async fn retrieve_root_dse_attr(&self, attr: &str) -> Result<Vec<String>, Error> {
         let mut ldap = self.create_connection().await?;
 
