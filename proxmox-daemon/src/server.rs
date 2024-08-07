@@ -311,7 +311,8 @@ impl Listenable for tokio::net::UnixListener {
 /// If the variable already exists, its contents will instead be used to restore the listening
 /// socket.  The finished listening socket is then passed to the `create_service` function which
 /// can be used to setup the TLS and the HTTP daemon. The returned future has to call
-/// [systemd_notify] with [SystemdNotify::Ready](proxmox_systemd::notify::SystemdNotify) when the
+/// [SystemdNotify::notify](proxmox_systemd::notify::SystemdNotify::notify) with
+/// [SystemdNotify::Ready](proxmox_systemd::notify::SystemdNotify) when the
 /// service is ready.
 pub async fn create_daemon<F, S, L>(
     address: L::Address,
