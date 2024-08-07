@@ -176,7 +176,7 @@ impl SubscriptionInfo {
     /// - Signed instances are valid for up to a year, clamped by the next due date
     /// - Unsigned instances are valid for 30+5 days
     /// - If `recheck` is set to `true`, unsigned instances are only treated as valid for 5 days
-    ///  (this mode is used to decide whether to refresh the subscription information)
+    ///   (this mode is used to decide whether to refresh the subscription information)
     ///
     /// If the criteria are not met, `status` is set to [SubscriptionStatus::Invalid] and `message`
     /// to a human-readable error message.

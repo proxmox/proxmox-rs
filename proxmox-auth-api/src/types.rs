@@ -14,7 +14,7 @@
 //! * [`TokennameRef`]: a borrowed `Tokenname` (`str` equivalent).
 //! * [`Userid`]: an owned user id (`"user@realm"`).
 //! * [`Authid`]: an owned Authentication ID (a `Userid` with an optional `Tokenname`).
-//! Note that `Userid` and `Authid` do not have a separate borrowed type.
+//!   Note that `Userid` and `Authid` do not have a separate borrowed type.
 //!
 //! Note that `Username`s are not unique, therefore they do not implement `Eq` and cannot be
 //! compared directly. If a direct comparison is really required, they can be compared as strings

@@ -553,7 +553,7 @@ pub fn worker_is_active_local(upid: &UPID) -> bool {
 /// * ``worker-task-abort <UPID>``: calls [abort_local_worker]
 ///
 /// * ``worker-task-status <UPID>``: return true of false, depending on
-/// whether the worker is running or stopped.
+///   whether the worker is running or stopped.
 pub fn register_task_control_commands(commando_sock: &mut CommandSocket) -> Result<(), Error> {
     fn get_upid(args: Option<&Value>) -> Result<UPID, Error> {
         let args = if let Some(args) = args {
