@@ -63,7 +63,7 @@ pub trait AuthContext: Send + Sync {
     /// Access the TFA config with an exclusive lock.
     fn tfa_config_write_lock(&self) -> Result<Box<dyn LockedTfaConfig>, Error>;
 
-    /// Check if a userid is enabled and return a [`UserInformation`] handle.
+    /// Check if a userid is enabled.
     fn auth_id_is_active(&self, auth_id: &Authid) -> Result<bool, Error>;
 
     /// CSRF prevention token secret data.
