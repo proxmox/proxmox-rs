@@ -349,9 +349,9 @@ pub fn print<T: Serialize + ApiType>(value: &T) -> Result<String, Error> {
 }
 
 /// Deserialize a value from a property string.
-pub fn parse<T: ApiType>(value: &str) -> Result<T, Error>
+pub fn parse<T>(value: &str) -> Result<T, Error>
 where
-    T: for<'de> Deserialize<'de>,
+    T: for<'de> Deserialize<'de> + ApiType,
 {
     parse_with_schema(value, &T::API_SCHEMA)
 }
