@@ -1,3 +1,15 @@
+rust-proxmox-rrd (0.3.0-1) bookworm; urgency=medium
+
+  * deprecate `create_pbs_default_rrd`
+
+  * cache: add `update_value_ignore_old()`
+
+  * try to load database in extract_cached_data if it wasn't already loaded
+
+  * add common rrd related api types in the `api-types` feature
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 09 Aug 2024 13:02:43 +0200
+
 rust-proxmox-rrd (0.2.1-1) bookworm; urgency=medium
 
   * rebuild with proxmox-sys 6.0
