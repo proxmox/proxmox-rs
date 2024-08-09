@@ -1,3 +1,11 @@
+rust-proxmox-sys (0.6.2-1) bookworm; urgency=medium
+
+  * drop unused dependency on proxmox-time
+
+  * add fs::make_tmp_dir
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 09 Aug 2024 12:53:03 +0200
+
 rust-proxmox-sys (0.6.1-1) bookworm; urgency=medium
 
   * drop fd::cwd() - this is known to not be in use and trivially replaced by
