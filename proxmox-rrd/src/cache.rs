@@ -104,7 +104,7 @@ impl Cache {
     /// * cf=maximum,r=7*86400,n=570 => 10year
     ///
     /// The resulting data file size is about 80KB.
-    #[deprecated(note="Implement in client code")]
+    #[deprecated(note = "Implement in client code")]
     pub fn create_proxmox_backup_default_rrd(dst: DataSourceType) -> Database {
         use crate::rrd::Archive;
 

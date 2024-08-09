@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use proxmox_schema::api;
 
-#[api()]
+#[api]
 #[derive(Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
 /// RRD consolidation mode
@@ -13,7 +13,7 @@ pub enum RRDMode {
     Average,
 }
 
-#[api()]
+#[api]
 #[derive(Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 /// RRD time frame
