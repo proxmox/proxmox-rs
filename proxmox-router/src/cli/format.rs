@@ -139,7 +139,10 @@ pub(crate) fn generate_usage_str_do<'cli>(
 
     let mut options = String::new();
 
-    for (prop, optional, param_schema) in schema.properties() {
+    let mut properties: Vec<_> = schema.properties().collect();
+    properties.sort_by(|a, b| a.0.cmp(b.0));
+
+    for (prop, optional, param_schema) in properties {
         if done_hash.contains(prop) {
             continue;
         }
@@ -212,9 +215,12 @@ pub(crate) fn generate_usage_str_do<'cli>(
 
     let mut global_options = String::new();
 
-    for (name, _optional, param_schema) in
-        global_options_iter.flat_map(|o| o.schema.any_object().unwrap().properties())
-    {
+    let mut properties: Vec<_> = global_options_iter
+        .flat_map(|o| o.schema.any_object().unwrap().properties())
+        .collect();
+    properties.sort_by(|a, b| a.0.cmp(b.0));
+
+    for (name, _optional, param_schema) in properties {
         if done_hash.contains(name) {
             continue;
         }
@@ -325,12 +331,14 @@ impl<'cli> UsageState<'cli> {
         let mut out = String::new();
         let _ = write!(out, "Options available for command group ``{prefix}``:");
         for opt in opts {
-            for (name, _optional, schema) in opt
+            let mut properties: Vec<_> = opt
                 .schema
                 .any_object()
                 .expect("non-object schema in global optiosn")
                 .properties()
-            {
+                .collect();
+            properties.sort_by(|a, b| a.0.cmp(b.0));
+            for (name, _optional, schema) in properties {
                 let _ = write!(
                     out,
                     "\n\n{}",

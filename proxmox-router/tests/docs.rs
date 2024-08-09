@@ -109,25 +109,25 @@ fn expected_toplevel_help_text() -> &'static str {
 Usage:
 
 clicmd help [{<command>}] [OPTIONS]
-clicmd l0c1 --required-arg <string> --another-required-arg <string> [OPTIONS]
+clicmd l0c1 --another-required-arg <string> --required-arg <string> [OPTIONS]
 clicmd l0c2 <required-arg> --another-required-arg <string> [OPTIONS]
-clicmd l0sub l1c1 --required-arg <string> --another-required-arg <string> [OPTIONS]
-clicmd l0sub l1c2 --required-arg <string> --another-required-arg <string> [OPTIONS]
+clicmd l0sub l1c1 --another-required-arg <string> --required-arg <string> [OPTIONS]
+clicmd l0sub l1c2 --another-required-arg <string> --required-arg <string> [OPTIONS]
 "##
     .trim_start()
 }
 
 fn expected_group_help_text() -> &'static str {
     r##"
-Usage: clicmd l0sub l1c1 --required-arg <string> --another-required-arg <string> [OPTIONS]
+Usage: clicmd l0sub l1c1 --another-required-arg <string> --required-arg <string> [OPTIONS]
 
 Simple API method with one required and one optional argument.
 
- --required-arg <string>
-             Required string argument.
-
  --another-required-arg <string>
              A second required string argument.
+
+ --required-arg <string>
+             Required string argument.
 
 Optional parameters:
 
@@ -161,15 +161,15 @@ Optional parameters:
 
 ----
 
-``clicmd l0c1 --required-arg <string> --another-required-arg <string> [OPTIONS]``
+``clicmd l0c1 --another-required-arg <string> --required-arg <string> [OPTIONS]``
 
 Simple API method with one required and one optional argument.
 
-``--required-arg`` ``<string>``
-  Required string argument.
-
 ``--another-required-arg`` ``<string>``
   A second required string argument.
+
+``--required-arg`` ``<string>``
+  Required string argument.
 
 Optional parameters:
 
@@ -205,15 +205,15 @@ Options available for command group ``clicmd l0sub``:
 
 ----
 
-``clicmd l0sub l1c1 --required-arg <string> --another-required-arg <string> [OPTIONS]``
+``clicmd l0sub l1c1 --another-required-arg <string> --required-arg <string> [OPTIONS]``
 
 Simple API method with one required and one optional argument.
 
-``--required-arg`` ``<string>``
-  Required string argument.
-
 ``--another-required-arg`` ``<string>``
   A second required string argument.
+
+``--required-arg`` ``<string>``
+  Required string argument.
 
 Optional parameters:
 
@@ -228,15 +228,15 @@ Inherited group parameters:
 
 ----
 
-``clicmd l0sub l1c2 --required-arg <string> --another-required-arg <string> [OPTIONS]``
+``clicmd l0sub l1c2 --another-required-arg <string> --required-arg <string> [OPTIONS]``
 
 Simple API method with one required and one optional argument.
 
-``--required-arg`` ``<string>``
-  Required string argument.
-
 ``--another-required-arg`` ``<string>``
   A second required string argument.
+
+``--required-arg`` ``<string>``
+  Required string argument.
 
 Optional parameters:
 
