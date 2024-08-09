@@ -14,5 +14,4 @@ nix.workspace = true
 serde = { workspace = true, features = ["derive"]}
 serde_json = { workspace = true, features = ["raw_value"] }
 
-proxmox-schema = { workspace = true, features = ["api-types"]}
 proxmox-sys = { workspace = true, features = ["timer"] }
