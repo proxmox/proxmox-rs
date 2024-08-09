@@ -1,6 +1,5 @@
 use std::ffi::OsString;
 use std::os::fd::FromRawFd;
-use std::os::unix::ffi::OsStrExt;
 use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::{AsRawFd, OwnedFd};
 use std::path::{Path, PathBuf};
@@ -205,7 +204,7 @@ pub fn make_tmp_dir<P: AsRef<Path>>(
 ) -> Result<PathBuf, Error> {
     let template = directory.as_ref().join("tmp_XXXXXX");
 
-    let mut template = template.into_os_string().as_bytes().to_owned();
+    let mut template = template.into_os_string().into_vec();
     // Push NULL byte so that we have a proper NULL-terminated string
     template.push(0);
 
