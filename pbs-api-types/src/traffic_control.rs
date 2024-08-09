@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use proxmox_human_byte::HumanByte;
-use proxmox_schema::{api, IntegerSchema, Schema, StringSchema, Updater};
+use proxmox_schema::{api, ApiType, Schema, StringSchema, Updater};
 
 use crate::{
     CIDR_SCHEMA, DAILY_DURATION_FORMAT, PROXMOX_SAFE_ID_FORMAT, SINGLE_LINE_COMMENT_SCHEMA,
@@ -17,16 +17,6 @@ pub const TRAFFIC_CONTROL_ID_SCHEMA: Schema = StringSchema::new("Rule ID.")
     .min_length(3)
     .max_length(32)
     .schema();
-
-pub const TRAFFIC_CONTROL_RATE_SCHEMA: Schema =
-    IntegerSchema::new("Rate limit (for Token bucket filter) in bytes/second.")
-        .minimum(100_000)
-        .schema();
-
-pub const TRAFFIC_CONTROL_BURST_SCHEMA: Schema =
-    IntegerSchema::new("Size of the token bucket (for Token bucket filter) in bytes.")
-        .minimum(1000)
-        .schema();
 
 #[api(
     properties: {
@@ -71,6 +61,45 @@ impl RateLimitConfig {
             burst_out: burst,
         }
     }
+
+    /// Create a [RateLimitConfig] from a [ClientRateLimitConfig]
+    pub fn from_client_config(limit: ClientRateLimitConfig) -> Self {
+        Self::with_same_inout(limit.rate, limit.burst)
+    }
+}
+
+const CLIENT_RATE_LIMIT_SCHEMA: Schema = StringSchema {
+    description: "Rate limit (for Token bucket filter) in bytes/s with optional unit (B, KB (base 10), MB, GB, ..., KiB (base 2), MiB, Gib, ...).",
+    ..*HumanByte::API_SCHEMA.unwrap_string_schema()
+}
+.schema();
+
+const CLIENT_BURST_SCHEMA: Schema = StringSchema {
+    description: "Size of the token bucket (for Token bucket filter) in bytes with optional unit (B, KB (base 10), MB, GB, ..., KiB (base 2), MiB, Gib, ...).",
+    ..*HumanByte::API_SCHEMA.unwrap_string_schema()
+}
+.schema();
+
+#[api(
+    properties: {
+        rate: {
+            schema: CLIENT_RATE_LIMIT_SCHEMA,
+            optional: true,
+        },
+        burst: {
+            schema: CLIENT_BURST_SCHEMA,
+            optional: true,
+        },
+    },
+)]
+#[derive(Serialize, Deserialize, Default, Clone)]
+#[serde(rename_all = "kebab-case")]
+/// Client Rate Limit Configuration
+pub struct ClientRateLimitConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rate: Option<HumanByte>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    burst: Option<HumanByte>,
 }
 
 #[api(
