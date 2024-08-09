@@ -58,13 +58,8 @@ impl SharedCache {
                     None => Ok(None),
                 }
             }
-            Err(err) => {
-                if err.kind() != ErrorKind::NotFound {
-                    Err(err.into())
-                } else {
-                    Ok(None)
-                }
-            }
+            Err(err) if err.kind() == ErrorKind::NotFound => Ok(None),
+            Err(err) => Err(err.into()),
         }
     }
 
