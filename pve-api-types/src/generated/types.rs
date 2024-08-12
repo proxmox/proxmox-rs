@@ -96,6 +96,75 @@ mod cluster_resource_content {
     }
 }
 
+#[api(
+    properties: {
+        data: {
+            items: {
+                type: ClusterMetricsData,
+            },
+            type: Array,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterMetrics {
+    /// Array of system metrics. Metrics are sorted by their timestamp.
+    pub data: Vec<ClusterMetricsData>,
+}
+
+#[api(
+    properties: {
+        id: {
+            type: String,
+        },
+        metric: {
+            type: String,
+        },
+        timestamp: {
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterMetricsData {
+    /// Unique identifier for this metric object, for instance 'node/<nodename>'
+    /// or 'qemu/<vmid>'.
+    pub id: String,
+
+    /// Name of the metric.
+    pub metric: String,
+
+    /// Time at which this metric was observed
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub timestamp: i64,
+
+    #[serde(rename = "type")]
+    pub ty: ClusterMetricsDataType,
+
+    /// Metric value.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    pub value: f64,
+}
+
+#[api]
+/// Type of the metric.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterMetricsDataType {
+    #[serde(rename = "gauge")]
+    /// gauge.
+    Gauge,
+    #[serde(rename = "counter")]
+    /// counter.
+    Counter,
+    #[serde(rename = "derive")]
+    /// derive.
+    Derive,
+}
+serde_plain::derive_display_from_serialize!(ClusterMetricsDataType);
+serde_plain::derive_fromstr_from_deserialize!(ClusterMetricsDataType);
+
 const_regex! {
 
 CLUSTER_NODE_INDEX_RESPONSE_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;

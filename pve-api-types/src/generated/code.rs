@@ -373,6 +373,21 @@
 /// - /storage/{storage}
 /// ```
 impl<T: HttpApiClient> PveClient<T> {
+    /// Retrieve metrics of the cluster.
+    pub async fn cluster_metrics_export(
+        &self,
+        history: Option<bool>,
+        local_only: Option<bool>,
+        start_time: Option<i64>,
+    ) -> Result<ClusterMetrics, Error> {
+        let (mut query, mut sep) = (String::new(), '?');
+        add_query_bool(&mut query, &mut sep, "history", history);
+        add_query_bool(&mut query, &mut sep, "local-only", local_only);
+        add_query_arg(&mut query, &mut sep, "start-time", &start_time);
+        let url = format!("/api2/extjs/cluster/metrics/export{query}");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
     /// Resources index (cluster wide).
     pub async fn cluster_resources(
         &self,

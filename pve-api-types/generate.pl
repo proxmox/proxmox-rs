@@ -205,6 +205,9 @@ Schema2Rust::derive('StopLxc' => 'Default');
 Schema2Rust::derive('ShutdownLxc' => 'Default');
 api(POST => '/nodes/{node}/lxc/{vmid}/remote_migrate', 'remote_migrate_lxc',  'output-type' => 'PveUpid', 'param-name' => 'RemoteMigrateLxc');
 
+Schema2Rust::register_api_override('ClusterMetrics', '/properties/data/items', { type => "ClusterMetricsData"});
+api(GET => '/cluster/metrics/export', 'cluster_metrics_export', 'return-name' => 'ClusterMetrics');
+
 # api(GET => '/storage', 'list_storages', 'return-name' => 'StorageList');
 # api(GET => '/access/domains', 'list_domains', 'return-name' => 'ListRealm');
 # api(GET => '/access/groups', 'list_groups', 'return-name' => 'ListGroups');
