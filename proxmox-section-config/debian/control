@@ -36,7 +36,7 @@ Provides:
  librust-proxmox-section-config-2+default-dev (= ${binary:Version}),
  librust-proxmox-section-config-2.1-dev (= ${binary:Version}),
  librust-proxmox-section-config-2.1+default-dev (= ${binary:Version}),
- librust-proxmox-section-config-2.1.0-dev (= ${binary:Version}),
- librust-proxmox-section-config-2.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-section-config-2.1.1-dev (= ${binary:Version}),
+ librust-proxmox-section-config-2.1.1+default-dev (= ${binary:Version})
 Description: Proxmox schema based section config format parsing - Rust source code
  Source code for Debianized Rust crate "proxmox-section-config"

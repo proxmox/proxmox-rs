@@ -1,3 +1,9 @@
+rust-proxmox-section-config (2.1.1-1) UNRELEASED; urgency=medium
+
+  * make typed data usable with `.with_type_key()`
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 13 Aug 2024 14:10:59 +0200
+
 rust-proxmox-section-config (2.1.0-1) bookworm; urgency=medium
 
   * add an experimental `typed` submodule for typed enums for section configs
