@@ -15,6 +15,13 @@ pub trait ApiSectionDataEntry: Sized {
     /// property.
     const INTERNALLY_TAGGED: Option<&'static str> = None;
 
+    /// If the [`SectionConfig`] returned by the [`section_config()`][seccfg] method includes the
+    /// `.with_type_key()` properties correctly, this should be set to `true`, otherwise `false`
+    /// (which is the default).
+    ///
+    /// [seccfg] ApiSectionDataEntry::section_config()
+    const SECION_CONFIG_USES_TYPE_KEY: bool = false;
+
     /// Get the `SectionConfig` configuration for this enum.
     fn section_config() -> &'static SectionConfig;
 
@@ -26,7 +33,9 @@ pub trait ApiSectionDataEntry: Sized {
     where
         Self: serde::de::DeserializeOwned,
     {
-        if let Some(tag) = Self::INTERNALLY_TAGGED {
+        if Self::SECION_CONFIG_USES_TYPE_KEY {
+            serde_json::from_value::<Self>(value)
+        } else if let Some(tag) = Self::INTERNALLY_TAGGED {
             match &mut value {
                 Value::Object(obj) => {
                     obj.insert(tag.to_string(), ty.into());
@@ -51,7 +60,11 @@ pub trait ApiSectionDataEntry: Sized {
     where
         Self: Serialize,
     {
-        to_pair(serde_json::to_value(self)?, Self::INTERNALLY_TAGGED)
+        to_pair(
+            serde_json::to_value(self)?,
+            Self::INTERNALLY_TAGGED,
+            !Self::SECION_CONFIG_USES_TYPE_KEY,
+        )
     }
 
     /// Turn this entry into a pair of `(type, value)`.
@@ -61,7 +74,11 @@ pub trait ApiSectionDataEntry: Sized {
     where
         Self: Serialize,
     {
-        to_pair(serde_json::to_value(self)?, Self::INTERNALLY_TAGGED)
+        to_pair(
+            serde_json::to_value(self)?,
+            Self::INTERNALLY_TAGGED,
+            !Self::SECION_CONFIG_USES_TYPE_KEY,
+        )
     }
 
     /// Provided. Shortcut for `Self::section_config().parse(filename, data)?.try_into()`.
@@ -90,14 +107,23 @@ pub trait ApiSectionDataEntry: Sized {
 /// the type being the key.
 ///
 /// Otherwise this will fail.
-fn to_pair(value: Value, tag: Option<&'static str>) -> Result<(String, Value), serde_json::Error> {
+fn to_pair(
+    value: Value,
+    tag: Option<&'static str>,
+    strip_tag: bool,
+) -> Result<(String, Value), serde_json::Error> {
     use serde::ser::Error;
 
     match (value, tag) {
         (Value::Object(mut obj), Some(tag)) => {
-            let id = obj
-                .remove(tag)
-                .ok_or_else(|| Error::custom(format!("tag {tag:?} missing in object")))?;
+            let id = if strip_tag {
+                obj.remove(tag)
+                    .ok_or_else(|| Error::custom(format!("tag {tag:?} missing in object")))?
+            } else {
+                obj.get(tag)
+                    .ok_or_else(|| Error::custom(format!("tag {tag:?} missing in object")))?
+                    .clone()
+            };
             match id {
                 Value::String(id) => Ok((id, Value::Object(obj))),
                 _ => Err(Error::custom(format!(
@@ -285,5 +311,155 @@ impl<'a, T> Iterator for Iter<'a, T> {
                 return Some((id, data));
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::borrow::Cow;
+    use std::collections::HashMap;
+    use std::sync::OnceLock;
+
+    use proxmox_schema::{ApiStringFormat, EnumEntry, ObjectSchema, Schema, StringSchema};
+
+    use crate::{SectionConfig, SectionConfigPlugin};
+
+    use super::{ApiSectionDataEntry, SectionConfigData};
+
+    enum Ty {
+        A,
+        B,
+    }
+
+    struct Entry {
+        ty: Ty,
+        id: String,
+        value: String,
+    }
+
+    impl serde::Serialize for Entry {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::ser::Serializer,
+        {
+            use serde::ser::SerializeStruct;
+
+            let mut s = serializer.serialize_struct("Entry", 3)?;
+            s.serialize_field(
+                "ty",
+                match self.ty {
+                    Ty::A => "a",
+                    Ty::B => "b",
+                },
+            )?;
+            s.serialize_field("id", &self.id)?;
+            s.serialize_field("value", &self.value)?;
+            s.end()
+        }
+    }
+
+    impl<'de> serde::Deserialize<'de> for Entry {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::de::Deserializer<'de>,
+        {
+            use serde::de::Error;
+
+            let mut data = HashMap::<Cow<str>, String>::deserialize(deserializer)?;
+
+            Ok(Entry {
+                ty: match data
+                    .remove("ty")
+                    .ok_or_else(|| D::Error::custom("missing 'ty'"))?
+                    .as_ref()
+                {
+                    "a" => Ty::A,
+                    "b" => Ty::B,
+                    other => return Err(D::Error::custom(format!("bad type '{other}'"))),
+                },
+
+                id: data
+                    .remove("id")
+                    .ok_or_else(|| D::Error::custom("missing 'id'"))?,
+                value: data
+                    .remove("value")
+                    .ok_or_else(|| D::Error::custom("missing 'value'"))?,
+            })
+        }
+    }
+
+    const TYPE_SCHEMA: Schema = StringSchema::new("Type.")
+        .format(&ApiStringFormat::Enum(&[
+            EnumEntry {
+                value: "a",
+                description: "A",
+            },
+            EnumEntry {
+                value: "b",
+                description: "B",
+            },
+        ]))
+        .schema();
+
+    const PROPERTIES: ObjectSchema = ObjectSchema::new(
+        "Stuff",
+        &[
+            ("id", false, &StringSchema::new("Some id.").schema()),
+            ("ty", false, &TYPE_SCHEMA),
+            ("value", false, &StringSchema::new("Some value.").schema()),
+        ],
+    );
+
+    const ID_SCHEMA: Schema = StringSchema::new("ID schema.").min_length(3).schema();
+
+    impl ApiSectionDataEntry for Entry {
+        const INTERNALLY_TAGGED: Option<&'static str> = Some("ty");
+        const SECION_CONFIG_USES_TYPE_KEY: bool = true;
+
+        fn section_config() -> &'static SectionConfig {
+            static SC: OnceLock<SectionConfig> = OnceLock::new();
+
+            SC.get_or_init(|| {
+                let mut config = SectionConfig::new(&ID_SCHEMA).with_type_key("ty");
+                config.register_plugin(SectionConfigPlugin::new(
+                    "a".to_string(),
+                    Some("id".to_string()),
+                    &PROPERTIES,
+                ));
+                config.register_plugin(SectionConfigPlugin::new(
+                    "b".to_string(),
+                    Some("id".to_string()),
+                    &PROPERTIES,
+                ));
+                config
+            })
+        }
+
+        fn section_type(&self) -> &'static str {
+            match self.ty {
+                Ty::A => "a",
+                Ty::B => "a",
+            }
+        }
+    }
+
+    #[test]
+    fn test_type_key() {
+        let filename = "sync.cfg";
+        let raw = "\
+            a: first\n\
+                \tvalue 1\n\
+            \n\
+            b: second\n\
+                \tvalue 2\n\
+        ";
+
+        let parsed = Entry::section_config()
+            .parse(filename, raw)
+            .expect("failed to parse");
+        let res: SectionConfigData<Entry> = parsed.try_into().expect("failed to convert");
+        let written = Entry::write_section_config(filename, &res)
+            .expect("failed to write out section config");
+        assert_eq!(written, raw);
     }
 }
