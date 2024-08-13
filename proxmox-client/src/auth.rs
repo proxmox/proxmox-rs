@@ -31,13 +31,19 @@ pub struct Token {
 
     /// The api token's value.
     pub value: String,
+
+    /// The separator for userid & value, due to inconsistencies between perl and rust based
+    /// products.
+    /// FIXME: Make one of them work for both types of products and remove this!
+    pub perl_compat: bool,
 }
 
 impl Token {
     pub fn set_auth_headers(&self, request: http::request::Builder) -> http::request::Builder {
+        let delim = if self.perl_compat { '=' } else { ':' };
         request.header(
             http::header::AUTHORIZATION,
-            format!("{}={}={}", self.prefix, self.userid, self.value),
+            format!("{}={}{delim}{}", self.prefix, self.userid, self.value),
         )
     }
 }
