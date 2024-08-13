@@ -1,3 +1,9 @@
+rust-proxmox-client (0.4.0-1) bookworm; urgency=medium
+
+  * add 'perl_compat' member to Token struct
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 13 Aug 2024 15:39:40 +0200
+
 rust-proxmox-client (0.3.1-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 3
