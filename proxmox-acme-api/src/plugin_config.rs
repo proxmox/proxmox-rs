@@ -1,7 +1,8 @@
 //! ACME plugin configuration helpers (SectionConfig implementation)
 
+use std::sync::LazyLock;
+
 use anyhow::Error;
-use lazy_static::lazy_static;
 use serde_json::Value;
 
 use proxmox_config_digest::ConfigDigest;
@@ -11,9 +12,7 @@ use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlug
 
 use crate::types::{DnsPlugin, StandalonePlugin, PLUGIN_ID_SCHEMA};
 
-lazy_static! {
-    static ref CONFIG: SectionConfig = init();
-}
+static CONFIG: LazyLock<SectionConfig> = LazyLock::new(init);
 
 impl DnsPlugin {
     pub fn decode_data(&self, output: &mut Vec<u8>) -> Result<(), Error> {

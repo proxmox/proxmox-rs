@@ -2,12 +2,10 @@
 //!
 //! Those schemas are provided by debian  package "libproxmox-acme-plugins".
 
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::SystemTime;
 
 use anyhow::Error;
-use lazy_static::lazy_static;
 use serde::Serialize;
 use serde_json::Value;
 
@@ -51,10 +49,8 @@ fn load_dns_challenge_schema() -> Result<Vec<AcmeChallengeSchema>, Error> {
 }
 
 pub fn get_cached_challenge_schemas() -> Result<ChallengeSchemaWrapper, Error> {
-    lazy_static! {
-        static ref CACHE: Mutex<Option<(Arc<Vec<AcmeChallengeSchema>>, SystemTime)>> =
-            Mutex::new(None);
-    }
+    static CACHE: LazyLock<Mutex<Option<(Arc<Vec<AcmeChallengeSchema>>, SystemTime)>>> =
+        LazyLock::new(|| Mutex::new(None));
 
     // the actual loading code
     let mut last = CACHE.lock().unwrap();

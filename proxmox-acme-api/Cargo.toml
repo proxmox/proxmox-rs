@@ -7,6 +7,7 @@ license.workspace = true
 repository.workspace = true
 exclude.workspace = true
 description = "ACME API implementation"
+rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
@@ -15,7 +16,6 @@ futures = { workspace = true, optional = true }
 hex = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
 hyper = { workspace = true, optional = true }
-lazy_static = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 nix = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
@@ -48,7 +48,6 @@ impl = [
     "dep:hex",
     "dep:http",
     "dep:hyper",
-    "dep:lazy_static",
     "dep:libc",
     "dep:log",
     "dep:nix",
