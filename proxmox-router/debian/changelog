@@ -1,3 +1,9 @@
+rust-proxmox-router (2.2.3-1) stable; urgency=medium
+
+  * remove unused dependencies `regex` and `tokio`
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 12:01:40 +0200
+
 rust-proxmox-router (2.2.2-1) stable; urgency=medium
 
   * cli: add OutputFormat enum api type
