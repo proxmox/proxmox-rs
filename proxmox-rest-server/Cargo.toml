@@ -6,6 +6,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "REST server implementation"
+rust-version.workspace = true
 
 exclude.workspace = true
 
@@ -19,7 +20,6 @@ futures.workspace = true
 handlebars = { workspace = true, optional = true }
 http.workspace = true
 hyper = { workspace = true, features = [ "full" ] }
-lazy_static.workspace = true
 libc.workspace = true
 log.workspace = true
 nix.workspace = true

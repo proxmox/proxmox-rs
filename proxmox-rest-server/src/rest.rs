@@ -4,7 +4,7 @@ use std::hash::BuildHasher;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::task::{Context, Poll};
 
 use anyhow::{bail, format_err, Error};
@@ -14,7 +14,6 @@ use hyper::body::HttpBody;
 use hyper::header::{self, HeaderMap};
 use hyper::http::request::Parts;
 use hyper::{Body, Request, Response, StatusCode};
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde_json::Value;
 use tokio::fs::File;
@@ -289,9 +288,7 @@ fn log_response(
 }
 
 fn get_proxied_peer(headers: &HeaderMap) -> Option<std::net::SocketAddr> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r#"for="([^"]+)""#).unwrap();
-    }
+    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"for="([^"]+)""#).unwrap());
     let forwarded = headers.get(header::FORWARDED)?.to_str().ok()?;
     let capture = RE.captures(forwarded)?;
     let rhost = capture.get(1)?.as_str();

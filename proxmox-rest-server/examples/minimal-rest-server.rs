@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 use anyhow::{bail, format_err, Error};
 use http::request::Parts;
 use http::HeaderMap;
 use hyper::{Body, Method, Response};
-use lazy_static::lazy_static;
 
 use proxmox_router::{
     list_subdirs_api_method, Router, RpcEnvironmentType, SubdirMap, UserInformation,
@@ -70,9 +69,8 @@ fn ping() -> Result<String, Error> {
     Ok("pong".to_string())
 }
 
-lazy_static! {
-    static ref ITEM_MAP: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
-}
+static ITEM_MAP: LazyLock<Mutex<HashMap<String, String>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[api]
 /// Lists all current items

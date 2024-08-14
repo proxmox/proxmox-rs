@@ -4,12 +4,11 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::panic::UnwindSafe;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 use std::time::{Duration, SystemTime};
 
 use anyhow::{bail, format_err, Error};
 use futures::*;
-use lazy_static::lazy_static;
 use nix::fcntl::OFlag;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
@@ -497,10 +496,8 @@ pub fn upid_read_status(upid: &UPID) -> Result<TaskState, Error> {
     Ok(TaskState::Unknown { endtime }) // no last line with both, end-time and task-state, found.
 }
 
-lazy_static! {
-    static ref WORKER_TASK_LIST: Mutex<HashMap<usize, Arc<WorkerTask>>> =
-        Mutex::new(HashMap::new());
-}
+static WORKER_TASK_LIST: LazyLock<Mutex<HashMap<usize, Arc<WorkerTask>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// checks if the task UPID refers to a worker from this process
 fn is_local_worker(upid: &UPID) -> bool {

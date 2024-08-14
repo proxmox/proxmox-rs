@@ -17,6 +17,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 use std::fmt;
+use std::sync::LazyLock;
 
 use anyhow::{format_err, Error};
 use nix::unistd::Pid;
@@ -46,10 +47,12 @@ pub use worker_task::*;
 mod h2service;
 pub use h2service::*;
 
-lazy_static::lazy_static! {
-    static ref PID: i32 = unsafe { libc::getpid() };
-    static ref PSTART: u64 = PidStat::read_from_pid(Pid::from_raw(*PID)).unwrap().starttime;
-}
+static PID: LazyLock<i32> = LazyLock::new(|| unsafe { libc::getpid() });
+static PSTART: LazyLock<u64> = LazyLock::new(|| {
+    PidStat::read_from_pid(Pid::from_raw(*PID))
+        .unwrap()
+        .starttime
+});
 
 /// Returns the current process ID (see [libc::getpid])
 ///
