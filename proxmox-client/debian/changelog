@@ -1,3 +1,21 @@
+rust-proxmox-client (0.4.1-1) bookworm; urgency=medium
+
+  * drop a lot of unused dependencies:
+    - base64
+    - once_cell
+    - percent_encoding
+    - regex
+    - serde_plain
+    - webauthn-rs
+    - proxmox-section-config
+    - proxmox-schema
+
+  * the 'webauthn' feature now only activates the 'webauthn' feature of
+    proxmox-login, so pulls webauthn-rs in *transitively*, but we do not
+    make explicit use of it
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 11:50:27 +0200
+
 rust-proxmox-client (0.4.0-1) bookworm; urgency=medium
 
   * add 'perl_compat' member to Token struct
