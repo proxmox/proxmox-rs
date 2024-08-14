@@ -1,3 +1,11 @@
+rust-proxmox-auth-api (0.4.5) bookworm; urgency=medium
+
+  * replace lazy_static with std's LazyLock and drop the dependency
+
+  * doc and clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 11:15:30 +0200
+
 rust-proxmox-auth-api (0.4.4) bookworm; urgency=medium
 
   * rebuild with proxmox-log 0.2 and proxmox-rest-server 0.7.0
