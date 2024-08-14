@@ -1,4 +1,4 @@
-rust-proxmox-section-config (2.1.1-1) UNRELEASED; urgency=medium
+rust-proxmox-section-config (2.1.1-1) bookworm; urgency=medium
 
   * make typed data usable with `.with_type_key()`
 
