@@ -6,13 +6,13 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "System tools (using nix)."
+rust-version.workspace = true
 
 exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
 base64.workspace = true
-lazy_static.workspace = true
 libc.workspace = true
 log.workspace = true
 nix.workspace = true

@@ -5,11 +5,10 @@ use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader};
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
-use std::sync::RwLock;
+use std::sync::{LazyLock, RwLock};
 use std::time::Instant;
 
 use anyhow::{bail, format_err, Error};
-use lazy_static::lazy_static;
 use nix::unistd::Pid;
 use serde::Serialize;
 
@@ -27,9 +26,7 @@ pub fn sysconf(name: i32) -> i64 {
     unsafe { sysconf(name) }
 }
 
-lazy_static! {
-    pub static ref CLOCK_TICKS: f64 = sysconf(libc::_SC_CLK_TCK) as f64;
-}
+pub static CLOCK_TICKS: LazyLock<f64> = LazyLock::new(|| sysconf(libc::_SC_CLK_TCK) as f64);
 
 /// Selected contents of the `/proc/PID/stat` file.
 pub struct PidStat {
@@ -223,10 +220,8 @@ pub struct ProcFsStat {
     pub iowait_percent: f64,
 }
 
-lazy_static! {
-    static ref PROC_LAST_STAT: RwLock<(ProcFsStat, Instant, bool)> =
-        RwLock::new((ProcFsStat::default(), Instant::now(), true));
-}
+static PROC_LAST_STAT: LazyLock<RwLock<(ProcFsStat, Instant, bool)>> =
+    LazyLock::new(|| RwLock::new((ProcFsStat::default(), Instant::now(), true)));
 
 /// reads `/proc/stat`. For now only total host CPU usage is handled as the
 /// other metrics are not really interesting
