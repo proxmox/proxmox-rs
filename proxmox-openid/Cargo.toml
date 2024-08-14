@@ -18,7 +18,6 @@ serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 thiserror = "1"
 native-tls.workspace = true
-url.workspace = true
 
 openidconnect = { version = "2.4", default-features = false, features = ["accept-rfc3339-timestamps"] }
 ureq = { version = "2.4", default-features = false, features = ["native-tls", "gzip"] }
