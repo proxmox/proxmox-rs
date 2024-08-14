@@ -6,13 +6,13 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "time utilities and TmEditor"
+rust-version.workspace = true
 
 exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
 bitflags.workspace = true
-lazy_static.workspace = true
 nom = "7"
 
 [target.'cfg(not(target_arch="wasm32"))'.dependencies]

@@ -1,79 +1,77 @@
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 use anyhow::Error;
-use lazy_static::lazy_static;
 use nom::{bytes::complete::take_while1, character::complete::space0, combinator::opt};
 
 use crate::parse_helpers::{parse_complete_line, parse_error, parse_u64, IResult};
 
-lazy_static! {
-    static ref TIME_SPAN_UNITS: HashMap<&'static str, f64> = {
-        let mut map = HashMap::new();
+static TIME_SPAN_UNITS: LazyLock<HashMap<&'static str, f64>> = LazyLock::new(|| {
+    let mut map = HashMap::new();
 
-        let second = 1.0;
+    let second = 1.0;
 
-        map.insert("seconds", second);
-        map.insert("second", second);
-        map.insert("sec", second);
-        map.insert("s", second);
+    map.insert("seconds", second);
+    map.insert("second", second);
+    map.insert("sec", second);
+    map.insert("s", second);
 
-        let msec = second / 1000.0;
+    let msec = second / 1000.0;
 
-        map.insert("msec", msec);
-        map.insert("ms", msec);
+    map.insert("msec", msec);
+    map.insert("ms", msec);
 
-        let usec = msec / 1000.0;
+    let usec = msec / 1000.0;
 
-        map.insert("usec", usec);
-        map.insert("us", usec);
-        map.insert("µs", usec);
+    map.insert("usec", usec);
+    map.insert("us", usec);
+    map.insert("µs", usec);
 
-        let nsec = usec / 1000.0;
+    let nsec = usec / 1000.0;
 
-        map.insert("nsec", nsec);
-        map.insert("ns", nsec);
+    map.insert("nsec", nsec);
+    map.insert("ns", nsec);
 
-        let minute = second * 60.0;
+    let minute = second * 60.0;
 
-        map.insert("minutes", minute);
-        map.insert("minute", minute);
-        map.insert("min", minute);
-        map.insert("m", minute);
+    map.insert("minutes", minute);
+    map.insert("minute", minute);
+    map.insert("min", minute);
+    map.insert("m", minute);
 
-        let hour = minute * 60.0;
+    let hour = minute * 60.0;
 
-        map.insert("hours", hour);
-        map.insert("hour", hour);
-        map.insert("hr", hour);
-        map.insert("h", hour);
+    map.insert("hours", hour);
+    map.insert("hour", hour);
+    map.insert("hr", hour);
+    map.insert("h", hour);
 
-        let day = hour * 24.0;
+    let day = hour * 24.0;
 
-        map.insert("days", day);
-        map.insert("day", day);
-        map.insert("d", day);
+    map.insert("days", day);
+    map.insert("day", day);
+    map.insert("d", day);
 
-        let week = day * 7.0;
+    let week = day * 7.0;
 
-        map.insert("weeks", week);
-        map.insert("week", week);
-        map.insert("w", week);
+    map.insert("weeks", week);
+    map.insert("week", week);
+    map.insert("w", week);
 
-        let month = 30.44 * day;
+    let month = 30.44 * day;
 
-        map.insert("months", month);
-        map.insert("month", month);
-        map.insert("M", month);
+    map.insert("months", month);
+    map.insert("month", month);
+    map.insert("M", month);
 
-        let year = 365.25 * day;
+    let year = 365.25 * day;
 
-        map.insert("years", year);
-        map.insert("year", year);
-        map.insert("y", year);
+    map.insert("years", year);
+    map.insert("year", year);
+    map.insert("y", year);
 
-        map
-    };
-}
+    map
+});
 
 /// A time spans defines a time duration
 #[derive(Default, Clone, Debug)]
