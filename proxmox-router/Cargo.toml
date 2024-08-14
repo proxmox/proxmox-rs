@@ -26,10 +26,8 @@ serde = { workspace = true, features = [ "derive" ] }
 serde_json.workspace = true
 serde_plain.workspace = true
 unicode-width ="0.1.8"
-regex = { workspace = true, optional = true }
 
 # cli:
-tokio = { workspace = true, features = [], optional = true }
 rustyline = { version = "9", optional = true }
 libc = { workspace = true, optional = true }
 
@@ -39,6 +37,6 @@ proxmox-async.workspace = true
 
 [features]
 default = [ "cli", "server" ]
-cli = [ "dep:env_logger", "dep:libc", "dep:rustyline", "dep:tokio", "dep:regex" ]
+cli = [ "dep:env_logger", "dep:libc", "dep:rustyline" ]
 server = [ "dep:http", "dep:hyper" ]
 test-harness = [ "proxmox-schema/test-harness" ]
