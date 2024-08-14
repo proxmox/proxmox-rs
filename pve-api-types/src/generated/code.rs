@@ -99,6 +99,8 @@
 /// - /cluster/notifications/endpoints/sendmail/{name}
 /// - /cluster/notifications/endpoints/smtp
 /// - /cluster/notifications/endpoints/smtp/{name}
+/// - /cluster/notifications/matcher-field-values
+/// - /cluster/notifications/matcher-fields
 /// - /cluster/notifications/matchers
 /// - /cluster/notifications/matchers/{name}
 /// - /cluster/notifications/targets
@@ -350,6 +352,7 @@
 /// - /nodes/{node}/storage/{storage}/file-restore
 /// - /nodes/{node}/storage/{storage}/file-restore/download
 /// - /nodes/{node}/storage/{storage}/file-restore/list
+/// - /nodes/{node}/storage/{storage}/import-metadata
 /// - /nodes/{node}/storage/{storage}/prunebackups
 /// - /nodes/{node}/storage/{storage}/rrd
 /// - /nodes/{node}/storage/{storage}/rrddata
@@ -544,7 +547,7 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Shutdown virtual machine. This is similar to pressing the power button
-    /// on a physical machine.This will send an ACPI event for the guest OS,
+    /// on a physical machine. This will send an ACPI event for the guest OS,
     /// which should then proceed to a clean shutdown.
     pub async fn shutdown_qemu_async(
         &self,
@@ -590,9 +593,9 @@ impl<T: HttpApiClient> PveClient<T> {
         Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
-    /// Stop virtual machine. The qemu process will exit immediately. Thisis
+    /// Stop virtual machine. The qemu process will exit immediately. This is
     /// akin to pulling the power plug of a running computer and may damage the
-    /// VM data
+    /// VM data.
     pub async fn stop_qemu_async(
         &self,
         node: &str,

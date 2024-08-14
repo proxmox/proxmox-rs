@@ -3581,21 +3581,38 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "EPYC")]
     /// EPYC.
     Epyc,
+    #[serde(rename = "EPYC-Genoa")]
+    /// EPYC-Genoa.
+    EpycGenoa,
     #[serde(rename = "EPYC-IBPB")]
     /// EPYC-IBPB.
     EpycIbpb,
     #[serde(rename = "EPYC-Milan")]
     /// EPYC-Milan.
     EpycMilan,
+    #[serde(rename = "EPYC-Milan-v2")]
+    /// EPYC-Milan-v2.
+    EpycMilanV2,
     #[serde(rename = "EPYC-Rome")]
     /// EPYC-Rome.
     EpycRome,
     #[serde(rename = "EPYC-Rome-v2")]
     /// EPYC-Rome-v2.
     EpycRomeV2,
+    #[serde(rename = "EPYC-Rome-v3")]
+    /// EPYC-Rome-v3.
+    EpycRomeV3,
+    #[serde(rename = "EPYC-Rome-v4")]
+    /// EPYC-Rome-v4.
+    EpycRomeV4,
     #[serde(rename = "EPYC-v3")]
     /// EPYC-v3.
     EpycV3,
+    #[serde(rename = "EPYC-v4")]
+    /// EPYC-v4.
+    EpycV4,
+    /// GraniteRapids.
+    GraniteRapids,
     /// Haswell.
     Haswell,
     #[serde(rename = "Haswell-IBRS")]
@@ -3697,6 +3714,9 @@ pub enum PveVmCpuConfReportedModel {
     SandyBridgeIbrs,
     /// SapphireRapids.
     SapphireRapids,
+    #[serde(rename = "SapphireRapids-v2")]
+    /// SapphireRapids-v2.
+    SapphireRapidsV2,
     #[serde(rename = "Skylake-Client")]
     /// Skylake-Client.
     SkylakeClient,
@@ -3888,7 +3908,7 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
         },
         machine: {
-            max_length: 40,
+            format: &ApiStringFormat::PropertyString(&QemuConfigMachine::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -4252,7 +4272,7 @@ pub struct QemuConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lock: Option<QemuConfigLock>,
 
-    /// Specifies the QEMU machine type.
+    /// Specify the QEMU machine.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub machine: Option<String>,
 
@@ -4260,7 +4280,10 @@ pub struct QemuConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memory: Option<String>,
 
-    /// Set maximum tolerated downtime (in seconds) for migrations.
+    /// Set maximum tolerated downtime (in seconds) for migrations. Should the
+    /// migration not be able to converge in the very end, because too much
+    /// newly dirtied RAM needs to be transferred, the limit will be increased
+    /// automatically step-by-step until migration can converge.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migrate_downtime: Option<f64>,
@@ -5373,6 +5396,42 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigLock);
 
 #[api(
     properties: {
+        type: {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct QemuConfigMachine {
+    /// Specifies the QEMU machine type.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "type")]
+    pub ty: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub viommu: Option<QemuConfigMachineViommu>,
+}
+
+#[api]
+/// Enable and set guest vIOMMU variant (Intel vIOMMU needs q35 to be set as
+/// machine type).
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum QemuConfigMachineViommu {
+    #[serde(rename = "intel")]
+    /// intel.
+    Intel,
+    #[serde(rename = "virtio")]
+    /// virtio.
+    Virtio,
+}
+serde_plain::derive_display_from_serialize!(QemuConfigMachineViommu);
+serde_plain::derive_fromstr_from_deserialize!(QemuConfigMachineViommu);
+
+#[api(
+    properties: {
         current: {
             default: 512,
             minimum: 16,
@@ -6132,6 +6191,10 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
+        product: {
+            optional: true,
+            type: String,
+        },
         queues: {
             minimum: 2,
             optional: true,
@@ -6175,6 +6238,10 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         ssd: {
             default: false,
             optional: true,
+        },
+        vendor: {
+            optional: true,
+            type: String,
         },
         wwn: {
             optional: true,
@@ -6333,6 +6400,10 @@ pub struct QemuConfigScsi {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub media: Option<PveQmIdeMedia>,
 
+    /// The drive's product name, up to 16 bytes long.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub product: Option<String>,
+
     /// Number of queues.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -6391,6 +6462,10 @@ pub struct QemuConfigScsi {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trans: Option<PveQmIdeTrans>,
+
+    /// The drive's vendor name, up to 8 bytes long.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vendor: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub werror: Option<PveQmIdeWerror>,
@@ -6615,7 +6690,7 @@ pub struct QemuConfigVga {
 
 #[api]
 /// Enable a specific clipboard. If not set, depending on the display type the
-/// SPICE one will be added.
+/// SPICE one will be added. Migration with VNC clipboard is not yet supported!
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigVgaClipboard {
     #[serde(rename = "vnc")]
@@ -6626,7 +6701,7 @@ serde_plain::derive_display_from_serialize!(QemuConfigVgaClipboard);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigVgaClipboard);
 
 #[api]
-/// Select the VGA type.
+/// Select the VGA type. Using type 'cirrus' is not recommended.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigVgaType {
     #[serde(rename = "cirrus")]
@@ -7291,7 +7366,7 @@ START_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
             type: String,
         },
         machine: {
-            max_length: 40,
+            format: &ApiStringFormat::PropertyString(&QemuConfigMachine::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -7335,7 +7410,7 @@ pub struct StartQemu {
     #[serde(rename = "force-cpu")]
     pub force_cpu: Option<String>,
 
-    /// Specifies the QEMU machine type.
+    /// Specify the QEMU machine.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub machine: Option<String>,
 
@@ -7388,6 +7463,10 @@ serde_plain::derive_fromstr_from_deserialize!(StartQemuMigrationType);
 
 #[api(
     properties: {
+        "overrule-shutdown": {
+            default: false,
+            optional: true,
+        },
         skiplock: {
             default: false,
             optional: true,
@@ -7397,6 +7476,12 @@ serde_plain::derive_fromstr_from_deserialize!(StartQemuMigrationType);
 /// Object.
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct StopLxc {
+    /// Try to abort active 'vzshutdown' tasks before stopping.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "overrule-shutdown")]
+    pub overrule_shutdown: Option<bool>,
+
     /// Ignore locks - only root is allowed to use this option.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -7419,6 +7504,10 @@ STOP_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
             format: &ApiStringFormat::Pattern(&STOP_QEMU_MIGRATEDFROM_RE),
             optional: true,
             type: String,
+        },
+        "overrule-shutdown": {
+            default: false,
+            optional: true,
         },
         skiplock: {
             default: false,
@@ -7443,6 +7532,12 @@ pub struct StopQemu {
     /// The cluster node name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migratedfrom: Option<String>,
+
+    /// Try to abort active 'qmshutdown' tasks before stopping.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "overrule-shutdown")]
+    pub overrule_shutdown: Option<bool>,
 
     /// Ignore locks - only root is allowed to use this option.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
