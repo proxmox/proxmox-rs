@@ -1,3 +1,11 @@
+rust-proxmox-sys (0.6.3-1) bookworm; urgency=medium
+
+  * replace lazy_static with std's LazyLock and drop the dependency
+
+  * drop unused dependency on base64
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 11:30:23 +0200
+
 rust-proxmox-sys (0.6.2-1) bookworm; urgency=medium
 
   * drop unused dependency on proxmox-time
