@@ -29,13 +29,5 @@ pub use schema::*;
 
 pub mod upid;
 
-// const_regex uses lazy_static, but we otherwise don't need it, and don't want to force users to
-// have to write it out in their Cargo.toml as dependency, so we add a hidden re-export here which
-// is semver-exempt!
-#[doc(hidden)]
-pub mod semver_exempt {
-    pub use lazy_static::lazy_static;
-}
-
 #[cfg(feature = "api-types")]
 pub mod api_types;

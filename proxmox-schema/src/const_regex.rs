@@ -5,7 +5,7 @@ use std::fmt;
 /// The current Regex::new() function is not `const_fn`. Unless that
 /// works, we use `ConstRegexPattern` to represent static regular
 /// expressions. Please use the `const_regex` macro to generate
-/// instances of this type (uses lazy_static).
+/// instances of this type.
 pub struct ConstRegexPattern {
     /// This is only used for documentation and debugging
     pub regex_string: &'static str,
@@ -47,9 +47,7 @@ macro_rules! const_regex {
             $crate::ConstRegexPattern {
                 regex_string: $regex,
                 regex_obj: (|| ->   &'static ::regex::Regex {
-                    $crate::semver_exempt::lazy_static! {
-                        static ref SCHEMA: ::regex::Regex = ::regex::Regex::new($regex).unwrap();
-                    }
+                    static SCHEMA: std::sync::LazyLock<::regex::Regex> = std::sync::LazyLock::new(|| ::regex::Regex::new($regex).unwrap());
                     &SCHEMA
                 })
             };
