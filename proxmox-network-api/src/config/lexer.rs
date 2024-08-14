@@ -1,8 +1,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::io::BufRead;
 use std::iter::Iterator;
-
-use lazy_static::lazy_static;
+use std::sync::LazyLock;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Token {
@@ -33,39 +32,37 @@ pub enum Token {
     EOF,
 }
 
-lazy_static! {
-    static ref KEYWORDS: HashMap<&'static str, Token> = {
-        let mut map = HashMap::new();
-        map.insert("address", Token::Address);
-        map.insert("auto", Token::Auto);
-        map.insert("dhcp", Token::DHCP);
-        map.insert("gateway", Token::Gateway);
-        map.insert("inet", Token::Inet);
-        map.insert("inet6", Token::Inet6);
-        map.insert("iface", Token::Iface);
-        map.insert("loopback", Token::Loopback);
-        map.insert("manual", Token::Manual);
-        map.insert("netmask", Token::Netmask);
-        map.insert("static", Token::Static);
-        map.insert("mtu", Token::MTU);
-        map.insert("bridge-ports", Token::BridgePorts);
-        map.insert("bridge_ports", Token::BridgePorts);
-        map.insert("bridge-vlan-aware", Token::BridgeVlanAware);
-        map.insert("bridge_vlan_aware", Token::BridgeVlanAware);
-        map.insert("vlan-id", Token::VlanId);
-        map.insert("vlan_id", Token::VlanId);
-        map.insert("vlan-raw-device", Token::VlanRawDevice);
-        map.insert("vlan_raw_device", Token::VlanRawDevice);
-        map.insert("bond-slaves", Token::BondSlaves);
-        map.insert("bond_slaves", Token::BondSlaves);
-        map.insert("bond-mode", Token::BondMode);
-        map.insert("bond-primary", Token::BondPrimary);
-        map.insert("bond_primary", Token::BondPrimary);
-        map.insert("bond_xmit_hash_policy", Token::BondXmitHashPolicy);
-        map.insert("bond-xmit-hash-policy", Token::BondXmitHashPolicy);
-        map
-    };
-}
+static KEYWORDS: LazyLock<HashMap<&'static str, Token>> = LazyLock::new(|| {
+    let mut map = HashMap::new();
+    map.insert("address", Token::Address);
+    map.insert("auto", Token::Auto);
+    map.insert("dhcp", Token::DHCP);
+    map.insert("gateway", Token::Gateway);
+    map.insert("inet", Token::Inet);
+    map.insert("inet6", Token::Inet6);
+    map.insert("iface", Token::Iface);
+    map.insert("loopback", Token::Loopback);
+    map.insert("manual", Token::Manual);
+    map.insert("netmask", Token::Netmask);
+    map.insert("static", Token::Static);
+    map.insert("mtu", Token::MTU);
+    map.insert("bridge-ports", Token::BridgePorts);
+    map.insert("bridge_ports", Token::BridgePorts);
+    map.insert("bridge-vlan-aware", Token::BridgeVlanAware);
+    map.insert("bridge_vlan_aware", Token::BridgeVlanAware);
+    map.insert("vlan-id", Token::VlanId);
+    map.insert("vlan_id", Token::VlanId);
+    map.insert("vlan-raw-device", Token::VlanRawDevice);
+    map.insert("vlan_raw_device", Token::VlanRawDevice);
+    map.insert("bond-slaves", Token::BondSlaves);
+    map.insert("bond_slaves", Token::BondSlaves);
+    map.insert("bond-mode", Token::BondMode);
+    map.insert("bond-primary", Token::BondPrimary);
+    map.insert("bond_primary", Token::BondPrimary);
+    map.insert("bond_xmit_hash_policy", Token::BondXmitHashPolicy);
+    map.insert("bond-xmit-hash-policy", Token::BondXmitHashPolicy);
+    map
+});
 
 pub struct Lexer<R> {
     input: R,

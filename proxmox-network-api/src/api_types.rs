@@ -1,9 +1,9 @@
 use std::fmt;
+use std::sync::LazyLock;
 
 use anyhow::{bail, Error};
 use serde::{Deserialize, Serialize};
 
-use lazy_static::lazy_static;
 use regex::Regex;
 
 use proxmox_schema::api;
@@ -15,11 +15,11 @@ use proxmox_schema::ArraySchema;
 use proxmox_schema::Schema;
 use proxmox_schema::StringSchema;
 
-lazy_static! {
-    pub static ref PHYSICAL_NIC_REGEX: Regex = Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap();
-    pub static ref VLAN_INTERFACE_REGEX: Regex =
-        Regex::new(r"^(?P<vlan_raw_device>\S+)\.(?P<vlan_id>\d+)|vlan(?P<vlan_id2>\d+)$").unwrap();
-}
+pub static PHYSICAL_NIC_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap());
+pub static VLAN_INTERFACE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(?P<vlan_raw_device>\S+)\.(?P<vlan_id>\d+)|vlan(?P<vlan_id2>\d+)$").unwrap()
+});
 
 pub const NETWORK_INTERFACE_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&SAFE_ID_REGEX);
 

@@ -6,9 +6,9 @@ pub use helper::{assert_ifupdown2_installed, network_reload, parse_cidr};
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::Write;
+use std::sync::LazyLock;
 
 use anyhow::{bail, format_err, Error};
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde::de::{value, Deserialize, IntoDeserializer};
 
@@ -23,11 +23,11 @@ use parser::NetworkParser;
 use proxmox_config_digest::ConfigDigest;
 use proxmox_product_config::{open_api_lockfile, replace_system_config, ApiLockGuard};
 
-lazy_static! {
-    static ref PHYSICAL_NIC_REGEX: Regex = Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap();
-    static ref VLAN_INTERFACE_REGEX: Regex =
-        Regex::new(r"^(?P<vlan_raw_device>\S+)\.(?P<vlan_id>\d+)|vlan(?P<vlan_id2>\d+)$").unwrap();
-}
+static PHYSICAL_NIC_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap());
+static VLAN_INTERFACE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(?P<vlan_raw_device>\S+)\.(?P<vlan_id>\d+)|vlan(?P<vlan_id2>\d+)$").unwrap()
+});
 
 pub fn is_physical_nic(iface: &str) -> bool {
     PHYSICAL_NIC_REGEX.is_match(iface)
@@ -409,9 +409,8 @@ impl NetworkConfig {
 
     /// Check if bridge ports exists
     fn check_bridge_ports(&self) -> Result<(), Error> {
-        lazy_static! {
-            static ref VLAN_INTERFACE_REGEX: Regex = Regex::new(r"^(\S+)\.(\d+)$").unwrap();
-        }
+        static VLAN_INTERFACE_REGEX: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"^(\S+)\.(\d+)$").unwrap());
 
         for (iface, interface) in self.interfaces.iter() {
             if let Some(ports) = &interface.bridge_ports {

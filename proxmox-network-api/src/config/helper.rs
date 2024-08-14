@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::os::unix::io::{AsRawFd, FromRawFd, OwnedFd};
 use std::path::Path;
 use std::process::Command;
+use std::sync::LazyLock;
 
 use anyhow::{bail, format_err, Error};
 use const_format::concatcp;
-use lazy_static::lazy_static;
 use nix::ioctl_read_bad;
 use nix::sys::socket::{socket, AddressFamily, SockFlag, SockType};
 use regex::Regex;
@@ -49,16 +49,14 @@ pub static IPV4_REVERSE_MASK: &[&str] = &[
     "255.255.255.255",
 ];
 
-lazy_static! {
-    pub static ref IPV4_MASK_HASH_LOCALNET: HashMap<&'static str, u8> = {
-        let mut map = HashMap::new();
-        #[allow(clippy::needless_range_loop)]
-        for i in 0..IPV4_REVERSE_MASK.len() {
-            map.insert(IPV4_REVERSE_MASK[i], i as u8);
-        }
-        map
-    };
-}
+pub static IPV4_MASK_HASH_LOCALNET: LazyLock<HashMap<&'static str, u8>> = LazyLock::new(|| {
+    let mut map = HashMap::new();
+    #[allow(clippy::needless_range_loop)]
+    for i in 0..IPV4_REVERSE_MASK.len() {
+        map.insert(IPV4_REVERSE_MASK[i], i as u8);
+    }
+    map
+});
 
 pub fn parse_cidr(cidr: &str) -> Result<(String, u8, bool), Error> {
     let (address, mask, is_v6) = parse_address_or_cidr(cidr)?;
@@ -93,12 +91,10 @@ pub(crate) fn check_netmask(mask: u8, is_v6: bool) -> Result<(), Error> {
 pub(crate) fn parse_address_or_cidr(cidr: &str) -> Result<(String, Option<u8>, bool), Error> {
     // NOTE: This is NOT the same regex as in proxmox-schema as this one has capture groups for
     // the addresses vs cidr portions!
-    lazy_static! {
-        pub static ref CIDR_V4_REGEX: Regex =
-            Regex::new(concatcp!(r"^(", IPV4RE_STR, r")(?:/(\d{1,2}))?$")).unwrap();
-        pub static ref CIDR_V6_REGEX: Regex =
-            Regex::new(concatcp!(r"^(", IPV6RE_STR, r")(?:/(\d{1,3}))?$")).unwrap();
-    }
+    pub static CIDR_V4_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(concatcp!(r"^(", IPV4RE_STR, r")(?:/(\d{1,2}))?$")).unwrap());
+    pub static CIDR_V6_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(concatcp!(r"^(", IPV6RE_STR, r")(?:/(\d{1,3}))?$")).unwrap());
 
     if let Some(caps) = CIDR_V4_REGEX.captures(cidr) {
         let address = &caps[1];
@@ -134,9 +130,8 @@ pub(crate) fn get_network_interfaces() -> Result<HashMap<String, bool>, Error> {
 
     ioctl_read_bad!(get_interface_flags, libc::SIOCGIFFLAGS, ifreq);
 
-    lazy_static! {
-        static ref IFACE_LINE_REGEX: Regex = Regex::new(r"^\s*([^:\s]+):").unwrap();
-    }
+    static IFACE_LINE_REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"^\s*([^:\s]+):").unwrap());
     let raw = std::fs::read_to_string(PROC_NET_DEV)
         .map_err(|err| format_err!("unable to read {} - {}", PROC_NET_DEV, err))?;
 

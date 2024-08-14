@@ -3,9 +3,9 @@ use crate::VLAN_INTERFACE_REGEX;
 use std::collections::{HashMap, HashSet};
 use std::io::BufRead;
 use std::iter::{Iterator, Peekable};
+use std::sync::LazyLock;
 
 use anyhow::{bail, format_err, Error};
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde::de::{value, Deserialize, IntoDeserializer};
 
@@ -551,9 +551,8 @@ impl<R: BufRead> NetworkParser<R> {
             }
         }
 
-        lazy_static! {
-            static ref INTERFACE_ALIAS_REGEX: Regex = Regex::new(r"^\S+:\d+$").unwrap();
-        }
+        static INTERFACE_ALIAS_REGEX: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"^\S+:\d+$").unwrap());
 
         if let Some(existing_interfaces) = existing_interfaces {
             for (iface, active) in existing_interfaces.iter() {
