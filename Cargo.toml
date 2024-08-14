@@ -83,7 +83,6 @@ handlebars = "3.0"
 hex = "0.4"
 http = "0.2"
 hyper = "0.14.5"
-lazy_static = "1.4"
 ldap3 = { version = "0.11", default-features = false }
 lettre = "0.11.1"
 libc = "0.2.107"
