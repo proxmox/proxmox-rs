@@ -15,7 +15,6 @@ proxmox-router = { workspace = true, features = ["cli", "server"] }
 anyhow.workspace = true
 bitflags.workspace = true
 crossbeam-channel.workspace = true
-libc.workspace = true
 log.workspace = true
 nix.workspace = true
 serde.workspace = true
