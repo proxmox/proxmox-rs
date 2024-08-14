@@ -19,8 +19,7 @@ Build-Depends: debhelper (>= 12),
  librust-serde-json-1+default-dev <!nocheck>,
  librust-thiserror-1+default-dev <!nocheck>,
  librust-ureq-2+gzip-dev (>= 2.4-~~) <!nocheck>,
- librust-ureq-2+native-tls-dev (>= 2.4-~~) <!nocheck>,
- librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
+ librust-ureq-2+native-tls-dev (>= 2.4-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.2
 Vcs-Git: 
@@ -46,15 +45,14 @@ Depends:
  librust-serde-json-1+default-dev,
  librust-thiserror-1+default-dev,
  librust-ureq-2+gzip-dev (>= 2.4-~~),
- librust-ureq-2+native-tls-dev (>= 2.4-~~),
- librust-url-2+default-dev (>= 2.2-~~)
+ librust-ureq-2+native-tls-dev (>= 2.4-~~)
 Provides:
  librust-proxmox-openid+default-dev (= ${binary:Version}),
  librust-proxmox-openid-0-dev (= ${binary:Version}),
  librust-proxmox-openid-0+default-dev (= ${binary:Version}),
  librust-proxmox-openid-0.10-dev (= ${binary:Version}),
  librust-proxmox-openid-0.10+default-dev (= ${binary:Version}),
- librust-proxmox-openid-0.10.2-dev (= ${binary:Version}),
- librust-proxmox-openid-0.10.2+default-dev (= ${binary:Version})
+ librust-proxmox-openid-0.10.3-dev (= ${binary:Version}),
+ librust-proxmox-openid-0.10.3+default-dev (= ${binary:Version})
 Description: Rust crate "proxmox-openid" - Rust source code
  Source code for Debianized Rust crate "proxmox-openid"
