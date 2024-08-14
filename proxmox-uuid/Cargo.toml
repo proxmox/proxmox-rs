@@ -10,7 +10,6 @@ description = "bindings for libuuid with optional serde support"
 exclude.workspace = true
 
 [dependencies]
-libc.workspace = true
 serde = { workspace = true, optional = true }
 
 [features]
