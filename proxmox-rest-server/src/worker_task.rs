@@ -10,7 +10,6 @@ use std::time::{Duration, SystemTime};
 use anyhow::{bail, format_err, Error};
 use futures::*;
 use nix::fcntl::OFlag;
-use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::signal::unix::SignalKind;
@@ -99,7 +98,7 @@ struct WorkerTaskSetup {
     task_archive_fn: PathBuf,
 }
 
-static WORKER_TASK_SETUP: OnceCell<WorkerTaskSetup> = OnceCell::new();
+static WORKER_TASK_SETUP: OnceLock<WorkerTaskSetup> = OnceLock::new();
 
 fn worker_task_setup() -> Result<&'static WorkerTaskSetup, Error> {
     WORKER_TASK_SETUP
