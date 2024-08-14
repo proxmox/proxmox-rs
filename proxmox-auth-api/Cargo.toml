@@ -7,6 +7,7 @@ license.workspace = true
 repository.workspace = true
 exclude.workspace = true
 description = "Tickets, API and Realm handling"
+rust-version.workspace = true
 
 [[example]]
 name = "passwd"
@@ -16,7 +17,6 @@ required-features = [ "pam-authenticator" ]
 anyhow.workspace = true
 const_format = { workspace = true, optional = true }
 base64 = { workspace = true, optional = true }
-lazy_static = { workspace = true, optional = true }
 libc = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
@@ -40,7 +40,7 @@ proxmox-tfa = { workspace = true, optional = true, features = [ "api" ] }
 default = []
 
 ticket = [ "dep:base64", "dep:percent-encoding", "dep:openssl" ]
-api-types = [ "dep:const_format", "dep:lazy_static", "dep:regex", "dep:serde", "dep:serde_plain", "dep:proxmox-schema" ]
+api-types = [ "dep:const_format", "dep:regex", "dep:serde", "dep:serde_plain", "dep:proxmox-schema" ]
 api = [
     "api-types",
     "ticket",

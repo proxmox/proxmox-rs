@@ -23,10 +23,10 @@
 
 use std::borrow::Borrow;
 use std::fmt;
+use std::sync::LazyLock;
 
 use anyhow::{bail, format_err, Error};
 use const_format::concatcp;
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
 use proxmox_schema::{
@@ -454,9 +454,7 @@ impl Userid {
     }
 }
 
-lazy_static! {
-    pub static ref ROOT_USERID: Userid = Userid::new("root@pam".to_string(), 4);
-}
+pub static ROOT_USERID: LazyLock<Userid> = LazyLock::new(|| Userid::new("root@pam".to_string(), 4));
 
 impl From<Authid> for Userid {
     fn from(authid: Authid) -> Self {
@@ -587,9 +585,8 @@ impl Authid {
     }
 }
 
-lazy_static! {
-    pub static ref ROOT_AUTHID: Authid = Authid::from(Userid::new("root@pam".to_string(), 4));
-}
+pub static ROOT_AUTHID: LazyLock<Authid> =
+    LazyLock::new(|| Authid::from(Userid::new("root@pam".to_string(), 4)));
 
 impl From<Userid> for Authid {
     fn from(parts: Userid) -> Self {
