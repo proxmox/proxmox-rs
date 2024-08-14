@@ -1,3 +1,11 @@
+rust-proxmox-product-config (0.2.2-1) bookworm; urgency=medium
+
+  * drop unused dependencies `hex` and `log`
+
+  * various documentation fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 11:52:47 +0200
+
 rust-proxmox-product-config (0.2.1-1) bookworm; urgency=medium
 
   * rebuild with proxmox-sys 6.0

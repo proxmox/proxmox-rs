@@ -7,8 +7,6 @@ Build-Depends: debhelper (>= 12),
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-hex-0.4+default-dev <!nocheck>,
- librust-log-0.4+default-dev (>= 0.4.17-~~) <!nocheck>,
  librust-nix-0.26+default-dev (>= 0.26.1-~~) <!nocheck>,
  librust-proxmox-sys-0.6+default-dev <!nocheck>,
  librust-proxmox-sys-0.6+timer-dev <!nocheck>
@@ -25,8 +23,6 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-hex-0.4+default-dev,
- librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-nix-0.26+default-dev (>= 0.26.1-~~),
  librust-proxmox-sys-0.6+default-dev,
  librust-proxmox-sys-0.6+timer-dev
@@ -36,7 +32,7 @@ Provides:
  librust-proxmox-product-config-0+default-dev (= ${binary:Version}),
  librust-proxmox-product-config-0.2-dev (= ${binary:Version}),
  librust-proxmox-product-config-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-product-config-0.2.1-dev (= ${binary:Version}),
- librust-proxmox-product-config-0.2.1+default-dev (= ${binary:Version})
+ librust-proxmox-product-config-0.2.2-dev (= ${binary:Version}),
+ librust-proxmox-product-config-0.2.2+default-dev (= ${binary:Version})
 Description: Configuration file handling for Proxmox products - Rust source code
  Source code for Debianized Rust crate "proxmox-product-config"
