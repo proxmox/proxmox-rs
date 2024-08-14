@@ -7,11 +7,11 @@ license.workspace = true
 repository.workspace = true
 exclude.workspace = true
 description = "DNS Management API implementation"
+rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
 const_format.workspace = true
-lazy_static.workspace = true
 regex.workspace = true
 serde = { workspace = true, features = ["derive"] }
 
