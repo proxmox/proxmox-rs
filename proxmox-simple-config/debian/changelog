@@ -1,3 +1,9 @@
+rust-proxmox-simple-config (0.1.1-1) bookworm; urgency=medium
+
+  * remove unused dependency on proxmox-log
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 11:44:00 +0200
+
 rust-proxmox-simple-config (0.1.0-1) bookworm; urgency=medium
 
   * initial packaging (copied code from proxmox-backup)
