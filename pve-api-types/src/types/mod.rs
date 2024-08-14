@@ -9,8 +9,6 @@ use proxmox_schema::{api, const_regex, ApiStringFormat, ApiType, Schema, StringS
 mod macros;
 use macros::generate_array_field;
 
-mod common_regex;
-
 mod verifiers;
 
 include!("../generated/types.rs");

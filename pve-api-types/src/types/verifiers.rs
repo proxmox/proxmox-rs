@@ -2,8 +2,6 @@ use anyhow::{bail, format_err, Error};
 
 use proxmox_schema::const_regex;
 
-use super::common_regex;
-
 pub fn verify_pve_volume_id_or_qm_path(s: &str) -> Result<(), Error> {
     if s == "none" || s == "cdrom" || s.starts_with('/') {
         return Ok(());
@@ -45,7 +43,7 @@ pub fn verify_pve_phys_bits(s: &str) -> Result<(), Error> {
 }
 
 pub fn verify_ipv4(s: &str) -> Result<(), Error> {
-    if common_regex::IPV4_REGEX.is_match(s) {
+    if proxmox_schema::api_types::IP_V4_REGEX.is_match(s) {
         Ok(())
     } else {
         bail!("not a valid IPv4 address");
@@ -53,7 +51,7 @@ pub fn verify_ipv4(s: &str) -> Result<(), Error> {
 }
 
 pub fn verify_ipv6(s: &str) -> Result<(), Error> {
-    if common_regex::IPV6_REGEX.is_match(s) {
+    if proxmox_schema::api_types::IP_V6_REGEX.is_match(s) {
         Ok(())
     } else {
         bail!("not a valid IPv6 address");
@@ -61,7 +59,7 @@ pub fn verify_ipv6(s: &str) -> Result<(), Error> {
 }
 
 pub fn verify_ip(s: &str) -> Result<(), Error> {
-    if common_regex::IP_REGEX.is_match(s) {
+    if proxmox_schema::api_types::IP_REGEX.is_match(s) {
         Ok(())
     } else {
         bail!("not a valid IP address");
