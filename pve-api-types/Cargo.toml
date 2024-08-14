@@ -11,7 +11,6 @@ repository.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-hex.workspace = true
 regex.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
 serde_plain.workspace = true
@@ -20,10 +19,8 @@ proxmox-login.workspace = true
 proxmox-schema = { workspace = true, features = [ "api-macro" ] }
 
 # For the client feature:
-openssl = { workspace = true, optional = true }
 percent-encoding = { workspace = true, optional = true }
 proxmox-client = { workspace = true, optional = true }
-proxmox-http = { workspace = true, optional = true, features = [ "http-helpers" ] }
 
 [features]
 default = []
