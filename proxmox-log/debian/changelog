@@ -1,3 +1,9 @@
+rust-proxmox-log (0.2.2-1) stable; urgency=medium
+
+  * drop unused dependency on log
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 11:51:44 +0200
+
 rust-proxmox-log (0.2.1-1) stable; urgency=medium
 
   * rebuild with tracing-log 0.2
