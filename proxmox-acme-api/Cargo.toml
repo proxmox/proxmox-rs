@@ -16,8 +16,6 @@ futures = { workspace = true, optional = true }
 hex = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
 hyper = { workspace = true, optional = true }
-log = { workspace = true, optional = true }
-nix = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 tokio = { workspace = true, optional = true, features = ["fs"] }
@@ -49,8 +47,6 @@ impl = [
     "dep:http",
     "dep:hyper",
     "dep:libc",
-    "dep:log",
-    "dep:nix",
     "dep:openssl",
     "dep:tokio",
 
