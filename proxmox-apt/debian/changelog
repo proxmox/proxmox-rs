@@ -1,3 +1,11 @@
+rust-proxmox-apt (0.11.3-1) bookworm; urgency=medium
+
+  * drop unused dependency on once_cell
+
+  * various docs and clippy fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 11:48:01 +0200
+
 rust-proxmox-apt (0.11.2-1) bookworm; urgency=medium
 
   * apt: updates for changed api (digest as array)
