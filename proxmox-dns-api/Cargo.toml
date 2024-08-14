@@ -19,14 +19,10 @@ proxmox-config-digest.workspace = true
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
 
 proxmox-sys = { workspace = true, optional = true }
-proxmox-time = { workspace = true, optional = true }
-proxmox-product-config = { workspace = true, optional = true }
 
 [features]
 default = []
 impl = [
-    "dep:proxmox-product-config",
     "proxmox-config-digest/openssl",
     "dep:proxmox-sys",
-    "dep:proxmox-time",
 ]
