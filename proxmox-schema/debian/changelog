@@ -1,3 +1,13 @@
+rust-proxmox-schema (3.1.3-1) bookworm; urgency=medium
+
+  * replace lazy_static dependency with std's LazyLock
+
+  * some clippy fixes
+
+  * fix various typos in documentation
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 11:06:10 +0200
+
 rust-proxmox-schema (3.1.2-1) bookworm; urgency=medium
 
   * drop trailing whitespaces in wrap_text

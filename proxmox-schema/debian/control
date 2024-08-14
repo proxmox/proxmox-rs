@@ -4,10 +4,9 @@ Priority: optional
 Build-Depends: debhelper (>= 12),
  dh-cargo (>= 25),
  cargo:native <!nocheck>,
- rustc:native <!nocheck>,
+ rustc:native (>= 1.80) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
@@ -25,7 +24,6 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-lazy-static-1+default-dev (>= 1.4-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev,
@@ -43,9 +41,9 @@ Provides:
  librust-proxmox-schema-3.1-dev (= ${binary:Version}),
  librust-proxmox-schema-3.1+default-dev (= ${binary:Version}),
  librust-proxmox-schema-3.1+test-harness-dev (= ${binary:Version}),
- librust-proxmox-schema-3.1.2-dev (= ${binary:Version}),
- librust-proxmox-schema-3.1.2+default-dev (= ${binary:Version}),
- librust-proxmox-schema-3.1.2+test-harness-dev (= ${binary:Version})
+ librust-proxmox-schema-3.1.3-dev (= ${binary:Version}),
+ librust-proxmox-schema-3.1.3+default-dev (= ${binary:Version}),
+ librust-proxmox-schema-3.1.3+test-harness-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - Rust source code
  Source code for Debianized Rust crate "proxmox-schema"
 
@@ -55,11 +53,11 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-schema-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1+default-dev (>= 1.0.8-~~)
+ librust-proxmox-api-macro-1+default-dev (>= 1.1.0-~~)
 Provides:
  librust-proxmox-schema-3+api-macro-dev (= ${binary:Version}),
  librust-proxmox-schema-3.1+api-macro-dev (= ${binary:Version}),
- librust-proxmox-schema-3.1.2+api-macro-dev (= ${binary:Version})
+ librust-proxmox-schema-3.1.3+api-macro-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - feature "api-macro"
  This metapackage enables feature "api-macro" for the Rust proxmox-schema crate,
  by pulling in any additional dependencies needed by that feature.
@@ -74,7 +72,7 @@ Depends:
 Provides:
  librust-proxmox-schema-3+api-types-dev (= ${binary:Version}),
  librust-proxmox-schema-3.1+api-types-dev (= ${binary:Version}),
- librust-proxmox-schema-3.1.2+api-types-dev (= ${binary:Version})
+ librust-proxmox-schema-3.1.3+api-types-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-schema crate,
  by pulling in any additional dependencies needed by that feature.
@@ -90,7 +88,7 @@ Depends:
 Provides:
  librust-proxmox-schema-3+upid-api-impl-dev (= ${binary:Version}),
  librust-proxmox-schema-3.1+upid-api-impl-dev (= ${binary:Version}),
- librust-proxmox-schema-3.1.2+upid-api-impl-dev (= ${binary:Version})
+ librust-proxmox-schema-3.1.3+upid-api-impl-dev (= ${binary:Version})
 Description: Proxmox api schema and validation - feature "upid-api-impl"
  This metapackage enables feature "upid-api-impl" for the Rust proxmox-schema
  crate, by pulling in any additional dependencies needed by that feature.
