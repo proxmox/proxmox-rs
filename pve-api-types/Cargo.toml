@@ -15,8 +15,7 @@ hex.workspace = true
 regex.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
 serde_plain.workspace = true
-lazy_static.workspace = true
-# 
+#
 proxmox-login.workspace = true
 proxmox-schema = { workspace = true, features = [ "api-macro" ] }
 

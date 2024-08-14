@@ -5,8 +5,8 @@
 //!
 //! FIXME: When moving this to a common location make sure the macros get exported!
 
-use lazy_static::lazy_static;
 use regex::Regex;
+use std::sync::LazyLock;
 
 #[rustfmt::skip]
 //#[macro_export]
@@ -56,16 +56,18 @@ macro_rules! IPRE_BRACKET { () => (
     r")"))
 }
 
-lazy_static! {
-    pub static ref IP_REGEX: Regex = Regex::new(concat!(r"^", IPRE!(), r"$")).unwrap();
-    pub static ref IP_BRACKET_REGEX: Regex =
-        Regex::new(concat!(r"^", IPRE_BRACKET!(), r"$")).unwrap();
-    pub static ref IPV4_REGEX: Regex = Regex::new(concat!(r"^", IPV4RE!(), r"$")).unwrap();
-    pub static ref IPV6_REGEX: Regex = Regex::new(concat!(r"^", IPV6RE!(), r"$")).unwrap();
-    pub static ref SHA256_HEX_REGEX: Regex = Regex::new(r"^[a-f0-9]{64}$").unwrap();
-    pub static ref SYSTEMD_DATETIME_REGEX: Regex =
-        Regex::new(r"^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$").unwrap();
-}
+pub static IP_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(concat!(r"^", IPRE!(), r"$")).unwrap());
+pub static IP_BRACKET_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(concat!(r"^", IPRE_BRACKET!(), r"$")).unwrap());
+pub static IPV4_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(concat!(r"^", IPV4RE!(), r"$")).unwrap());
+pub static IPV6_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(concat!(r"^", IPV6RE!(), r"$")).unwrap());
+pub static SHA256_HEX_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[a-f0-9]{64}$").unwrap());
+pub static SYSTEMD_DATETIME_REGEX: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$").unwrap());
 
 #[test]
 fn test_regexes() {
