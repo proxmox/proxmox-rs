@@ -1,6 +1,7 @@
+use std::sync::LazyLock;
+
 use anyhow::{bail, format_err, Error};
 
-use lazy_static::lazy_static;
 use regex::Regex;
 use serde_json::json;
 
@@ -11,9 +12,8 @@ use crate::{
     SubscriptionInfo, SubscriptionStatus,
 };
 
-lazy_static! {
-    static ref ATTR_RE: Regex = Regex::new(r"<([^>]+)>([^<]+)</[^>]+>").unwrap();
-}
+static ATTR_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"<([^>]+)>([^<]+)</[^>]+>").unwrap());
 
 const SHOP_URI: &str = "https://shop.proxmox.com/modules/servers/licensing/verify.php";
 
