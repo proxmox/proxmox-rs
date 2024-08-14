@@ -12,6 +12,5 @@ description = "Simple key/value format for configuration files."
 anyhow.workspace = true
 serde_json.workspace = true
 serde = { workspace = true, features = ["derive"] }
-log = { workspace = true, optional = true }
 
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
