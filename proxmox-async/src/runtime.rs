@@ -33,19 +33,16 @@
 //! [openssl-bug]: https://github.com/openssl/openssl/issues/6214
 
 use std::future::Future;
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, LazyLock, Mutex, Weak};
 use std::task::{Context, Poll, Waker};
 use std::thread::{self, Thread};
 
-use lazy_static::lazy_static;
 use pin_utils::pin_mut;
 use tokio::runtime::{self, Runtime, RuntimeFlavor};
 
-lazy_static! {
-    // avoid openssl bug: https://github.com/openssl/openssl/issues/6214
-    // by dropping the runtime as early as possible
-    static ref RUNTIME: Mutex<Weak<Runtime>> = Mutex::new(Weak::new());
-}
+// avoid openssl bug: https://github.com/openssl/openssl/issues/6214
+// by dropping the runtime as early as possible
+static RUNTIME: LazyLock<Mutex<Weak<Runtime>>> = LazyLock::new(|| Mutex::new(Weak::new()));
 
 #[link(name = "crypto")]
 extern "C" {
