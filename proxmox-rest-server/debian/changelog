@@ -1,3 +1,17 @@
+rust-proxmox-rest-server (0.7.1-1) bookworm; urgency=medium
+
+  * replace lazy_static with std's LazyLock and drop the dependency
+
+  * replace once_cell with std equivalents
+
+  * drop unused dependency on proxmox-systemd
+
+  * some documentation and clippy fixes
+
+  * update example codes to work with the new 'daemon' crate
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 14 Aug 2024 11:32:31 +0200
+
 rust-proxmox-rest-server (0.7.0-1) bookworm; urgency=medium
 
   * removed the 'daemon' module
