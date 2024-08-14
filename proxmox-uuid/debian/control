@@ -7,10 +7,9 @@ Build-Depends: debhelper (>= 12),
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~) <!nocheck>,
- librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
  uuid-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-uuid
@@ -22,7 +21,6 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~),
- librust-libc-0.2+default-dev (>= 0.2.107-~~),
  uuid-dev
 Suggests:
  librust-proxmox-uuid+serde-dev (= ${binary:Version})
@@ -32,11 +30,10 @@ Provides:
  librust-proxmox-uuid-1+default-dev (= ${binary:Version}),
  librust-proxmox-uuid-1.0-dev (= ${binary:Version}),
  librust-proxmox-uuid-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-uuid-1.0.2-dev (= ${binary:Version}),
- librust-proxmox-uuid-1.0.2+default-dev (= ${binary:Version})
+ librust-proxmox-uuid-1.0.3-dev (= ${binary:Version}),
+ librust-proxmox-uuid-1.0.3+default-dev (= ${binary:Version})
 Description: Bindings for libuuid with optional serde support - Rust source code
- This package contains the source for the Rust proxmox-uuid crate, packaged by
- debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-uuid"
 
 Package: librust-proxmox-uuid+serde-dev
 Architecture: any
@@ -48,7 +45,7 @@ Depends:
 Provides:
  librust-proxmox-uuid-1+serde-dev (= ${binary:Version}),
  librust-proxmox-uuid-1.0+serde-dev (= ${binary:Version}),
- librust-proxmox-uuid-1.0.2+serde-dev (= ${binary:Version})
+ librust-proxmox-uuid-1.0.3+serde-dev (= ${binary:Version})
 Description: Bindings for libuuid with optional serde support - feature "serde"
  This metapackage enables feature "serde" for the Rust proxmox-uuid crate, by
  pulling in any additional dependencies needed by that feature.

@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-uuid"
-version = "1.0.2"
+version = "1.0.3"
 authors.workspace = true
 edition.workspace = true
 license.workspace = true
