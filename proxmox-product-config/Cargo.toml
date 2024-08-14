@@ -11,7 +11,5 @@ exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-hex.workspace = true
-log.workspace = true
 nix.workspace = true
 proxmox-sys = { workspace = true, features = ["timer"] }
