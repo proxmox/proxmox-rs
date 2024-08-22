@@ -13,6 +13,9 @@ pub enum RRDMode {
     Average,
 }
 
+serde_plain::derive_display_from_serialize!(RRDMode);
+serde_plain::derive_fromstr_from_deserialize!(RRDMode);
+
 #[api]
 #[derive(Copy, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -31,3 +34,6 @@ pub enum RRDTimeFrame {
     /// Decade (10 years)
     Decade,
 }
+
+serde_plain::derive_display_from_serialize!(RRDTimeFrame);
+serde_plain::derive_fromstr_from_deserialize!(RRDTimeFrame);
