@@ -236,18 +236,18 @@ pub fn basic_function() -> Result<(), Error> {
 }
 
 #[api(
-    streaming: true,
+    serializing: true,
 )]
-/// streaming async call
-pub async fn streaming_async_call() -> Result<(), Error> {
+/// serializing async call
+pub async fn serializing_async_call() -> Result<(), Error> {
     Ok(())
 }
 
 #[api(
-    streaming: true,
+    serializing: true,
 )]
-/// streaming sync call
-pub fn streaming_sync_call() -> Result<(), Error> {
+/// serializing sync call
+pub fn serializing_sync_call() -> Result<(), Error> {
     Ok(())
 }
 

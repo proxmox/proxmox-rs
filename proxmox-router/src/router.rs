@@ -64,11 +64,11 @@ pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironm
 /// }
 ///
 /// const API_METHOD_HELLO: ApiMethod = ApiMethod::new(
-///    &ApiHandler::StreamingSync(&hello),
+///    &ApiHandler::SerializingSync(&hello),
 ///    &ObjectSchema::new("Hello World Example", &[])
 /// );
 /// ```
-pub type StreamingApiHandlerFn = &'static (dyn Fn(
+pub type SerializingApiHandlerFn = &'static (dyn Fn(
     Value,
     &ApiMethod,
     &mut dyn RpcEnvironment,
@@ -109,13 +109,13 @@ pub type ApiAsyncHandlerFn = &'static (dyn for<'a> Fn(Value, &'static ApiMethod,
 
 pub type ApiFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, anyhow::Error>> + Send + 'a>>;
 
-/// Streaming asynchronous API handlers
+/// Serializing asynchronous API handlers
 ///
 /// Returns a future Value.
 /// ```
 /// # use serde_json::{json, Value};
 /// #
-/// use proxmox_router::{ApiFuture, ApiHandler, ApiMethod, RpcEnvironment, StreamingApiFuture, SerializableReturn};
+/// use proxmox_router::{ApiFuture, ApiHandler, ApiMethod, RpcEnvironment, SerializingApiFuture, SerializableReturn};
 /// use proxmox_schema::ObjectSchema;
 ///
 ///
@@ -123,7 +123,7 @@ pub type ApiFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, anyhow::Error
 ///    param: Value,
 ///    info: &ApiMethod,
 ///    rpcenv: &'a mut dyn RpcEnvironment,
-/// ) -> StreamingApiFuture<'a> {
+/// ) -> SerializingApiFuture<'a> {
 ///    Box::pin(async move {
 ///        let res: Box<dyn SerializableReturn + Send> = Box::new(format!("Hello World!"));
 ///        Ok(res)
@@ -131,19 +131,19 @@ pub type ApiFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, anyhow::Error
 /// }
 ///
 /// const API_METHOD_HELLO_FUTURE: ApiMethod = ApiMethod::new(
-///    &ApiHandler::StreamingAsync(&hello_future),
+///    &ApiHandler::SerializingAsync(&hello_future),
 ///    &ObjectSchema::new("Hello World Example (async)", &[])
 /// );
 /// ```
-pub type StreamingApiAsyncHandlerFn = &'static (dyn for<'a> Fn(
+pub type SerializingApiAsyncHandlerFn = &'static (dyn for<'a> Fn(
     Value,
     &'static ApiMethod,
     &'a mut dyn RpcEnvironment,
-) -> StreamingApiFuture<'a>
+) -> SerializingApiFuture<'a>
               + Send
               + Sync);
 
-pub type StreamingApiFuture<'a> = Pin<
+pub type SerializingApiFuture<'a> = Pin<
     Box<dyn Future<Output = Result<Box<dyn SerializableReturn + Send>, anyhow::Error>> + Send + 'a>,
 >;
 
@@ -200,9 +200,9 @@ pub type ApiResponseFuture =
 #[non_exhaustive]
 pub enum ApiHandler {
     Sync(ApiHandlerFn),
-    StreamingSync(StreamingApiHandlerFn),
+    SerializingSync(SerializingApiHandlerFn),
     Async(ApiAsyncHandlerFn),
-    StreamingAsync(StreamingApiAsyncHandlerFn),
+    SerializingAsync(SerializingApiAsyncHandlerFn),
     #[cfg(feature = "server")]
     AsyncHttp(ApiAsyncHttpHandlerFn),
 }
@@ -218,13 +218,13 @@ impl PartialEq for ApiHandler {
                 (ApiHandler::Sync(l), ApiHandler::Sync(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
-                (ApiHandler::StreamingSync(l), ApiHandler::StreamingSync(r)) => {
+                (ApiHandler::SerializingSync(l), ApiHandler::SerializingSync(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
                 (ApiHandler::Async(l), ApiHandler::Async(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
-                (ApiHandler::StreamingAsync(l), ApiHandler::StreamingAsync(r)) => {
+                (ApiHandler::SerializingAsync(l), ApiHandler::SerializingAsync(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
                 #[cfg(feature = "server")]

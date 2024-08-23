@@ -505,13 +505,13 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
             let params = parse_query_parameters(info.parameters, "", &parts, &uri_param)?;
             (handler)(parts, req_body, params, info, Box::new(rpcenv)).await
         }
-        ApiHandler::StreamingSync(handler) => {
+        ApiHandler::SerializingSync(handler) => {
             let params =
                 get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
             (handler)(params, info, &mut rpcenv)
                 .and_then(|data| formatter.format_data_streaming(data, &rpcenv))
         }
-        ApiHandler::StreamingAsync(handler) => {
+        ApiHandler::SerializingAsync(handler) => {
             let params =
                 get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
             (handler)(params, info, &mut rpcenv)
@@ -617,11 +617,11 @@ async fn handle_unformatted_api_request<Env: RpcEnvironment, S: 'static + BuildH
                 .await
                 .and_then(|v| to_json_response(v, &rpcenv))
         }
-        ApiHandler::StreamingSync(_) => http_bail!(
+        ApiHandler::SerializingSync(_) => http_bail!(
             INTERNAL_SERVER_ERROR,
             "old-style streaming calls not supported"
         ),
-        ApiHandler::StreamingAsync(_) => http_bail!(
+        ApiHandler::SerializingAsync(_) => http_bail!(
             INTERNAL_SERVER_ERROR,
             "old-style streaming calls not supported"
         ),

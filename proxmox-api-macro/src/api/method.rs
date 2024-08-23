@@ -169,8 +169,15 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         .transpose()?
         .unwrap_or(false);
 
-    let streaming: bool = attribs
-        .remove("streaming")
+    if let Some(streaming) = attribs.remove("streaming") {
+        error!(
+            streaming.span(),
+            "streaming attribute was renamed to 'serializing', as it did not actually stream"
+        );
+    }
+
+    let serializing: bool = attribs
+        .remove("serializing")
         .map(TryFrom::try_from)
         .transpose()?
         .unwrap_or(false);
@@ -201,7 +208,7 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         &mut func,
         &mut wrapper_ts,
         &mut default_consts,
-        streaming,
+        serializing,
     )?;
 
     // input schema is done, let's give the method body a chance to extract default parameters:
@@ -224,9 +231,9 @@ pub fn handle_method(mut attribs: JSONObject, mut func: syn::ItemFn) -> Result<T
         returns_schema_setter = quote! { .returns(#inner) };
     }
 
-    let api_handler = match (streaming, is_async) {
-        (true, true) => quote! { ::proxmox_router::ApiHandler::StreamingAsync(&#api_func_name) },
-        (true, false) => quote! { ::proxmox_router::ApiHandler::StreamingSync(&#api_func_name) },
+    let api_handler = match (serializing, is_async) {
+        (true, true) => quote! { ::proxmox_router::ApiHandler::SerializingAsync(&#api_func_name) },
+        (true, false) => quote! { ::proxmox_router::ApiHandler::SerializingSync(&#api_func_name) },
         (false, true) => quote! { ::proxmox_router::ApiHandler::Async(&#api_func_name) },
         (false, false) => quote! { ::proxmox_router::ApiHandler::Sync(&#api_func_name) },
     };
@@ -287,7 +294,7 @@ fn handle_function_signature(
     func: &mut syn::ItemFn,
     wrapper_ts: &mut TokenStream,
     default_consts: &mut TokenStream,
-    streaming: bool,
+    serializing: bool,
 ) -> Result<Ident, Error> {
     let sig = &func.sig;
     let is_async = sig.asyncness.is_some();
@@ -423,7 +430,7 @@ fn handle_function_signature(
         wrapper_ts,
         default_consts,
         is_async,
-        streaming,
+        serializing,
     )
 }
 
@@ -481,7 +488,7 @@ fn create_wrapper_function(
     wrapper_ts: &mut TokenStream,
     default_consts: &mut TokenStream,
     is_async: bool,
-    streaming: bool,
+    serializing: bool,
 ) -> Result<Ident, Error> {
     let api_func_name = Ident::new(
         &format!("api_function_{}", &func.sig.ident),
@@ -523,7 +530,7 @@ fn create_wrapper_function(
         _ => Some(quote!(?)),
     };
 
-    let body = if streaming {
+    let body = if serializing {
         quote! {
             if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
                 #body
@@ -545,14 +552,14 @@ fn create_wrapper_function(
         }
     };
 
-    match (streaming, is_async) {
+    match (serializing, is_async) {
         (true, true) => {
             wrapper_ts.extend(quote! {
                 fn #api_func_name<'a>(
                     mut input_params: ::serde_json::Value,
                     api_method_param: &'static ::proxmox_router::ApiMethod,
                     rpc_env_param: &'a mut dyn ::proxmox_router::RpcEnvironment,
-                ) -> ::proxmox_router::StreamingApiFuture<'a> {
+                ) -> ::proxmox_router::SerializingApiFuture<'a> {
                     ::std::boxed::Box::pin(async move { #body })
                 }
             });

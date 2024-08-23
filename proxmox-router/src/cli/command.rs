@@ -88,10 +88,10 @@ async fn handle_simple_command_future(
 
     let result = match cli_cmd.info.handler {
         ApiHandler::Sync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv),
-        ApiHandler::StreamingSync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
+        ApiHandler::SerializingSync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
             .and_then(|r| r.to_value().map_err(Error::from)),
         ApiHandler::Async(handler) => (handler)(params, cli_cmd.info, &mut rpcenv).await,
-        ApiHandler::StreamingAsync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
+        ApiHandler::SerializingAsync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
             .await
             .and_then(|r| r.to_value().map_err(Error::from)),
         #[cfg(feature = "server")]
@@ -127,7 +127,7 @@ pub(crate) fn handle_simple_command<'cli>(
 
     let result = match cli_cmd.info.handler {
         ApiHandler::Sync(handler) => (handler)(params, cli_cmd.info, rpcenv),
-        ApiHandler::StreamingSync(handler) => {
+        ApiHandler::SerializingSync(handler) => {
             (handler)(params, cli_cmd.info, rpcenv).and_then(|r| r.to_value().map_err(Error::from))
         }
         ApiHandler::Async(handler) => {
@@ -137,8 +137,8 @@ pub(crate) fn handle_simple_command<'cli>(
             let future = (handler)(params, cli_cmd.info, rpcenv);
             (run)(future)
         }
-        ApiHandler::StreamingAsync(_handler) => {
-            bail!("CliHandler does not support ApiHandler::StreamingAsync - internal error");
+        ApiHandler::SerializingAsync(_handler) => {
+            bail!("CliHandler does not support ApiHandler::SerializingAsync - internal error");
         }
         #[cfg(feature = "server")]
         ApiHandler::AsyncHttp(_) => {
