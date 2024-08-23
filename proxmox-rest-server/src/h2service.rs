@@ -66,7 +66,7 @@ impl<E: RpcEnvironment + Clone> H2Service<E> {
             Some(api_method) => crate::rest::handle_api_request(
                 self.rpcenv.clone(),
                 api_method,
-                formatter,
+                Some(formatter),
                 parts,
                 body,
                 uri_param,

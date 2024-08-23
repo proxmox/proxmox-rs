@@ -11,6 +11,7 @@ use http::{Method, Response};
 #[cfg(feature = "server")]
 use hyper::Body;
 use percent_encoding::percent_decode_str;
+use serde::Serialize;
 use serde_json::Value;
 
 use proxmox_schema::{ObjectSchema, ParameterSchema, ReturnType, Schema};
@@ -76,6 +77,137 @@ pub type SerializingApiHandlerFn = &'static (dyn Fn(
               + Send
               + Sync
               + 'static);
+
+#[derive(Serialize)]
+#[serde(rename_all = "kebab-case")]
+enum RecordEntry<'a> {
+    /// A successful record.
+    Data(&'a Value),
+    /// An error entry.
+    Error(Value),
+}
+
+impl<'a> From<&'a Result<Value, Error>> for RecordEntry<'a> {
+    fn from(res: &'a Result<Value, Error>) -> Self {
+        match res {
+            Ok(value) => Self::Data(value),
+            Err(err) => Self::Error(err.to_string().into()),
+        }
+    }
+}
+
+/// A record for a streaming API call. This contains a `Result<Value, Error>` and allows formatting
+/// as a `json-seq` formatted string.
+///
+/// This is currently just a json string, but we don't want to fixate strings or byte vectors as
+/// output for the streaming API handler, but also not commit to creating lots of allocated
+/// `Box<dyn SerializableReturn>` elements, so this can be turned into either without breaking the
+/// API.
+pub struct Record {
+    // direct access is only for the CLI code
+    pub(crate) data: Result<Value, Error>,
+}
+
+impl Record {
+    /// Create a new successful record from a serializeable element.
+    pub fn new<T: ?Sized + Serialize>(data: &T) -> Self {
+        Self {
+            data: Ok(serde_json::to_value(data).expect("failed to create json string")),
+        }
+    }
+
+    /// Create a new error record from an error value.
+    pub fn error<E: Into<Error>>(error: E) -> Self {
+        Self {
+            data: Err(error.into()),
+        }
+    }
+
+    /// Create a new error record from `Result`.
+    pub fn from_result<T, E>(result: Result<T, E>) -> Self
+    where
+        T: Serialize,
+        E: Into<Error>,
+    {
+        match result {
+            Ok(res) => Self::new(&res),
+            Err(err) => Self::error(err),
+        }
+    }
+
+    /// Create/get the bytes for a complete record to be streamed as a json sequence according to
+    /// RFC7464: the data is prefixed with a record separator (`\x1E`) and ends with a newline
+    /// (`'\n').
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut data = Vec::new();
+        data.push(b'\x1E');
+        // We assume json serialization doesn't fail.
+        // Don't return special objects that can fail to serialize.
+        // As for "normal" data - we don't expect spurious errors, otherwise they could also happen
+        // when serializing *errors*...
+        serde_json::to_writer(&mut data, &RecordEntry::from(&self.data))
+            .expect("failed to create JSON record");
+        data.push(b'\n');
+        data
+    }
+}
+
+/// A synchronous API handler returns an [`Iterator`] over items which should be serialized.
+///
+/// ```
+/// # use anyhow::Error;
+/// # use serde_json::{json, Value};
+/// use proxmox_router::{ApiHandler, ApiMethod, Record, RpcEnvironment, SyncStream};
+/// use proxmox_schema::ObjectSchema;
+///
+/// fn hello(
+///    param: Value,
+///    info: &ApiMethod,
+///    rpcenv: &mut dyn RpcEnvironment,
+/// ) -> Result<SyncStream, Error> {
+///     Ok([Record::new(&3u32)].into())
+/// }
+///
+/// const API_METHOD_HELLO: ApiMethod = ApiMethod::new(
+///    &ApiHandler::StreamSync(&hello),
+///    &ObjectSchema::new("Hello World Example", &[])
+/// );
+/// ```
+pub type StreamApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<SyncStream, Error>
+              + Send
+              + Sync
+              + 'static);
+
+pub struct SyncStream {
+    inner: Box<dyn Iterator<Item = Record> + Send>,
+}
+
+impl SyncStream {
+    pub fn from_boxed(inner: Box<dyn Iterator<Item = Record> + Send>) -> Self {
+        Self { inner }
+    }
+
+    pub fn into_inner(self) -> Box<dyn Iterator<Item = Record> + Send> {
+        self.inner
+    }
+
+    pub fn try_collect(self) -> Result<Value, Error> {
+        let mut acc = Vec::new();
+        for i in self.inner {
+            acc.push(i.data?);
+        }
+        Ok(Value::Array(acc))
+    }
+}
+
+impl<I> From<I> for SyncStream
+where
+    I: IntoIterator<Item: IntoRecord, IntoIter: Send> + Send + 'static,
+{
+    fn from(iter: I) -> Self {
+        Self::from_boxed(Box::new(iter.into_iter().map(IntoRecord::into_record)))
+    }
+}
 
 /// Asynchronous API handlers
 ///
@@ -147,6 +279,103 @@ pub type SerializingApiFuture<'a> = Pin<
     Box<dyn Future<Output = Result<Box<dyn SerializableReturn + Send>, anyhow::Error>> + Send + 'a>,
 >;
 
+/// Streaming asynchronous API handlers
+///
+/// Returns a future Value.
+/// ```
+/// # use serde_json::{json, Value};
+/// # use tokio::sync::mpsc;
+/// # use tokio::spawn;
+/// use proxmox_router::{ApiFuture, ApiHandler, ApiMethod, Record, RpcEnvironment, StreamApiFuture};
+/// use proxmox_schema::ObjectSchema;
+///
+///
+/// fn hello_future<'a>(
+///    param: Value,
+///    info: &ApiMethod,
+///    rpcenv: &'a mut dyn RpcEnvironment,
+/// ) -> StreamApiFuture<'a> {
+///     let (sender, receiver) = mpsc::channel(8);
+///     tokio::spawn(async move {
+///         sender.send(Record::new("data")).await;
+///         sender.send(Record::new("more data")).await;
+///         // ...
+///     });
+///     let receiver = tokio_stream::wrappers::ReceiverStream::new(receiver);
+///     Box::pin(async move { Ok(receiver.into()) })
+/// }
+///
+/// const API_METHOD_HELLO_FUTURE: ApiMethod = ApiMethod::new(
+///    &ApiHandler::StreamAsync(&hello_future),
+///    &ObjectSchema::new("Hello World Example (async)", &[])
+/// );
+/// ```
+pub type StreamApiAsyncHandlerFn = &'static (dyn for<'a> Fn(
+    Value,
+    &'static ApiMethod,
+    &'a mut dyn RpcEnvironment,
+) -> StreamApiFuture<'a>
+              + Send
+              + Sync);
+
+pub type StreamApiFuture<'a> =
+    Pin<Box<dyn Future<Output = Result<Stream, anyhow::Error>> + Send + 'a>>;
+
+pub struct Stream {
+    inner: Pin<Box<dyn futures::Stream<Item = Record> + Send>>,
+}
+
+impl Stream {
+    pub fn from_boxed(inner: Pin<Box<dyn futures::Stream<Item = Record> + Send>>) -> Self {
+        Self { inner }
+    }
+
+    pub fn into_inner(self) -> Pin<Box<dyn futures::Stream<Item = Record> + Send>> {
+        self.inner
+    }
+
+    pub async fn try_collect(mut self) -> Result<Value, Error> {
+        use futures::StreamExt;
+
+        let mut acc = Vec::new();
+        while let Some(i) = self.inner.next().await {
+            acc.push(i.data?);
+        }
+        Ok(Value::Array(acc))
+    }
+}
+
+impl<I> From<I> for Stream
+where
+    I: futures::Stream<Item: IntoRecord> + Send + 'static,
+{
+    fn from(stream: I) -> Self {
+        use futures::stream::StreamExt;
+        Self::from_boxed(Box::pin(stream.map(IntoRecord::into_record)))
+    }
+}
+
+/// Helper trait to allow [`Stream`] and [`SyncStream`] to be constructed from both
+/// regular streams and "`TryStreams`".
+pub trait IntoRecord {
+    fn into_record(self) -> Record;
+}
+
+impl IntoRecord for Record {
+    fn into_record(self) -> Record {
+        self
+    }
+}
+
+impl IntoRecord for Result<Record, Error> {
+    fn into_record(self) -> Record {
+        match self {
+            Ok(record) => record,
+            Err(err) => Record::error(err),
+        }
+    }
+}
+
 /// Asynchronous HTTP API handlers
 ///
 /// They get low level access to request and response data. Use this
@@ -201,8 +430,10 @@ pub type ApiResponseFuture =
 pub enum ApiHandler {
     Sync(ApiHandlerFn),
     SerializingSync(SerializingApiHandlerFn),
+    StreamSync(StreamApiHandlerFn),
     Async(ApiAsyncHandlerFn),
     SerializingAsync(SerializingApiAsyncHandlerFn),
+    StreamAsync(StreamApiAsyncHandlerFn),
     #[cfg(feature = "server")]
     AsyncHttp(ApiAsyncHttpHandlerFn),
 }
@@ -221,10 +452,16 @@ impl PartialEq for ApiHandler {
                 (ApiHandler::SerializingSync(l), ApiHandler::SerializingSync(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
+                (ApiHandler::StreamSync(l), ApiHandler::StreamSync(r)) => {
+                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
+                }
                 (ApiHandler::Async(l), ApiHandler::Async(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
                 (ApiHandler::SerializingAsync(l), ApiHandler::SerializingAsync(r)) => {
+                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
+                }
+                (ApiHandler::StreamAsync(l), ApiHandler::StreamAsync(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
                 #[cfg(feature = "server")]

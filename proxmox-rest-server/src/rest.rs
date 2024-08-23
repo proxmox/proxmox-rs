@@ -490,20 +490,84 @@ fn access_forbidden_time() -> std::time::Instant {
     std::time::Instant::now() + std::time::Duration::from_millis(500)
 }
 
+fn handle_stream_as_json_seq(stream: proxmox_router::Stream) -> Result<Response<Body>, Error> {
+    let (mut send, body) = hyper::Body::channel();
+    tokio::spawn(async move {
+        use futures::StreamExt;
+
+        let mut stream = stream.into_inner();
+        while let Some(record) = stream.next().await {
+            if send.send_data(record.to_bytes().into()).await.is_err() {
+                break;
+            }
+        }
+    });
+
+    Ok(Response::builder()
+        .status(http::StatusCode::OK)
+        .header(http::header::CONTENT_TYPE, "application/json-seq")
+        .body(body)?)
+}
+
+fn handle_sync_stream_as_json_seq(
+    iter: proxmox_router::SyncStream,
+) -> Result<Response<Body>, Error> {
+    let iter = iter
+        .into_inner()
+        .map(|record| Ok::<_, Error>(record.to_bytes()));
+
+    Ok(Response::builder()
+        .status(http::StatusCode::OK)
+        .header(http::header::CONTENT_TYPE, "application/json-seq")
+        .body(Body::wrap_stream(futures::stream::iter(iter)))?)
+}
+
 pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHasher + Send>(
     mut rpcenv: Env,
     info: &'static ApiMethod,
-    formatter: &'static dyn OutputFormatter,
+    formatter: Option<&'static dyn OutputFormatter>,
     parts: Parts,
     req_body: Body,
     uri_param: HashMap<String, String, S>,
 ) -> Result<Response<Body>, Error> {
+    let formatter = formatter.unwrap_or(crate::formatter::DIRECT_JSON_FORMATTER);
+
     let compression = extract_compression_method(&parts.headers);
+
+    let accept_json_seq = parts.headers.get_all(http::header::ACCEPT).iter().any(|h| {
+        h.as_ref()
+            .split(|&b| b == b',')
+            .map(|e| e.trim_ascii_start())
+            .any(|e| e == b"application/json-seq" || e.starts_with(b"application/json-seq;"))
+    });
 
     let result = match info.handler {
         ApiHandler::AsyncHttp(handler) => {
             let params = parse_query_parameters(info.parameters, "", &parts, &uri_param)?;
             (handler)(parts, req_body, params, info, Box::new(rpcenv)).await
+        }
+        ApiHandler::StreamSync(handler) => {
+            let params =
+                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+            match (handler)(params, info, &mut rpcenv) {
+                Ok(iter) if accept_json_seq => handle_sync_stream_as_json_seq(iter),
+                Ok(iter) => iter
+                    .try_collect()
+                    .map(|data| formatter.format_data(data, &rpcenv)),
+                Err(err) => Err(err),
+            }
+        }
+        ApiHandler::StreamAsync(handler) => {
+            let params =
+                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+            match (handler)(params, info, &mut rpcenv).await {
+                Ok(stream) if accept_json_seq => handle_stream_as_json_seq(stream),
+                Ok(stream) => stream
+                    .try_collect()
+                    .await
+                    .map(|data| formatter.format_data(data, &rpcenv)),
+                Err(err) => Err(err),
+            }
         }
         ApiHandler::SerializingSync(handler) => {
             let params =
@@ -544,101 +608,6 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
                 }
             }
             formatter.format_error(err)
-        }
-    };
-
-    let resp = match compression {
-        Some(CompressionMethod::Deflate) => {
-            resp.headers_mut().insert(
-                header::CONTENT_ENCODING,
-                CompressionMethod::Deflate.content_encoding(),
-            );
-            resp.map(|body| {
-                Body::wrap_stream(
-                    DeflateEncoder::builder(TryStreamExt::map_err(body, |err| {
-                        proxmox_lang::io_format_err!("error during compression: {}", err)
-                    }))
-                    .zlib(true)
-                    .build(),
-                )
-            })
-        }
-        None => resp,
-    };
-
-    if info.reload_timezone {
-        unsafe {
-            tzset();
-        }
-    }
-
-    Ok(resp)
-}
-
-async fn handle_unformatted_api_request<Env: RpcEnvironment, S: 'static + BuildHasher + Send>(
-    mut rpcenv: Env,
-    info: &'static ApiMethod,
-    parts: Parts,
-    req_body: Body,
-    uri_param: HashMap<String, String, S>,
-) -> Result<Response<Body>, Error> {
-    let compression = extract_compression_method(&parts.headers);
-
-    fn to_json_response<Env: RpcEnvironment>(
-        value: Value,
-        env: &Env,
-    ) -> Result<Response<Body>, Error> {
-        if let Some(attr) = env.result_attrib().as_object() {
-            if !attr.is_empty() {
-                http_bail!(
-                    INTERNAL_SERVER_ERROR,
-                    "result attributes are no longer supported"
-                );
-            }
-        }
-        let value = serde_json::to_string(&value)?;
-        Ok(Response::builder().status(200).body(value.into())?)
-    }
-
-    let result = match info.handler {
-        ApiHandler::AsyncHttp(handler) => {
-            let params = parse_query_parameters(info.parameters, "", &parts, &uri_param)?;
-            (handler)(parts, req_body, params, info, Box::new(rpcenv)).await
-        }
-        ApiHandler::Sync(handler) => {
-            let params =
-                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
-            (handler)(params, info, &mut rpcenv).and_then(|v| to_json_response(v, &rpcenv))
-        }
-        ApiHandler::Async(handler) => {
-            let params =
-                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
-            (handler)(params, info, &mut rpcenv)
-                .await
-                .and_then(|v| to_json_response(v, &rpcenv))
-        }
-        ApiHandler::SerializingSync(_) => http_bail!(
-            INTERNAL_SERVER_ERROR,
-            "old-style streaming calls not supported"
-        ),
-        ApiHandler::SerializingAsync(_) => http_bail!(
-            INTERNAL_SERVER_ERROR,
-            "old-style streaming calls not supported"
-        ),
-        _ => {
-            bail!("Unknown API handler type");
-        }
-    };
-
-    let mut resp = match result {
-        Ok(resp) => resp,
-        Err(err) => {
-            if let Some(httperr) = err.downcast_ref::<HttpError>() {
-                if httperr.code == StatusCode::UNAUTHORIZED {
-                    tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
-                }
-            }
-            return Err(err);
         }
     };
 
@@ -1029,7 +998,8 @@ impl Formatted {
                 {
                     proxy_protected_request(config, api_method, parts, body, peer).await
                 } else {
-                    handle_api_request(rpcenv, api_method, formatter, parts, body, uri_param).await
+                    handle_api_request(rpcenv, api_method, Some(formatter), parts, body, uri_param)
+                        .await
                 };
 
                 let mut response = match result {
@@ -1129,13 +1099,12 @@ impl Unformatted {
                     return Err(err);
                 }
 
-                let result = if api_method.protected
-                    && rpcenv.env_type == RpcEnvironmentType::PUBLIC
-                {
-                    proxy_protected_request(config, api_method, parts, body, peer).await
-                } else {
-                    handle_unformatted_api_request(rpcenv, api_method, parts, body, uri_param).await
-                };
+                let result =
+                    if api_method.protected && rpcenv.env_type == RpcEnvironmentType::PUBLIC {
+                        proxy_protected_request(config, api_method, parts, body, peer).await
+                    } else {
+                        handle_api_request(rpcenv, api_method, None, parts, body, uri_param).await
+                    };
 
                 let mut response = match result {
                     Ok(resp) => resp,

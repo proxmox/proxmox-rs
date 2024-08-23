@@ -94,6 +94,35 @@ fn start_data_streaming(
     reader
 }
 
+struct DirectJsonFormatter;
+
+/// Format data directly as ``application/json``.
+///
+/// This does not support result attributes set on `rpcenv`.
+///
+/// Errors generates a BAD_REQUEST containing the error message as string.
+pub static DIRECT_JSON_FORMATTER: &'static dyn OutputFormatter = &DirectJsonFormatter;
+
+impl OutputFormatter for DirectJsonFormatter {
+    fn format_data(&self, data: Value, _rpcenv: &dyn RpcEnvironment) -> Response<Body> {
+        json_data_response(data)
+    }
+
+    fn format_data_streaming(
+        &self,
+        data: Box<dyn SerializableReturn + Send>,
+        _rpcenv: &dyn RpcEnvironment,
+    ) -> Result<Response<Body>, Error> {
+        let reader = start_data_streaming(Value::Null, data);
+        let stream = tokio_stream::wrappers::ReceiverStream::new(reader);
+        json_data_response_streaming(Body::wrap_stream(stream))
+    }
+
+    fn format_error(&self, err: Error) -> Response<Body> {
+        error_to_response(err)
+    }
+}
+
 struct JsonFormatter();
 
 /// Format data as ``application/json``

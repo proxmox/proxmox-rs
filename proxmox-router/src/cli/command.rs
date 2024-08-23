@@ -90,10 +90,19 @@ async fn handle_simple_command_future(
         ApiHandler::Sync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv),
         ApiHandler::SerializingSync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
             .and_then(|r| r.to_value().map_err(Error::from)),
+        ApiHandler::StreamSync(handler) => {
+            (handler)(params, cli_cmd.info, &mut rpcenv).and_then(|iter| iter.try_collect())
+        }
         ApiHandler::Async(handler) => (handler)(params, cli_cmd.info, &mut rpcenv).await,
         ApiHandler::SerializingAsync(handler) => (handler)(params, cli_cmd.info, &mut rpcenv)
             .await
             .and_then(|r| r.to_value().map_err(Error::from)),
+        ApiHandler::StreamAsync(handler) => {
+            match (handler)(params, cli_cmd.info, &mut rpcenv).await {
+                Ok(stream) => stream.try_collect().await,
+                Err(err) => Err(err),
+            }
+        }
         #[cfg(feature = "server")]
         ApiHandler::AsyncHttp(_) => {
             bail!("CliHandler does not support ApiHandler::AsyncHttp - internal error")
@@ -130,6 +139,9 @@ pub(crate) fn handle_simple_command<'cli>(
         ApiHandler::SerializingSync(handler) => {
             (handler)(params, cli_cmd.info, rpcenv).and_then(|r| r.to_value().map_err(Error::from))
         }
+        ApiHandler::StreamSync(handler) => {
+            (handler)(params, cli_cmd.info, rpcenv).and_then(|iter| iter.try_collect())
+        }
         ApiHandler::Async(handler) => {
             let run = run.ok_or_else(|| {
                 format_err!("CliHandler does not support ApiHandler::Async - internal error")
@@ -139,6 +151,9 @@ pub(crate) fn handle_simple_command<'cli>(
         }
         ApiHandler::SerializingAsync(_handler) => {
             bail!("CliHandler does not support ApiHandler::SerializingAsync - internal error");
+        }
+        ApiHandler::StreamAsync(_handler) => {
+            bail!("CliHandler does not support ApiHandler::StreamAsync - internal error");
         }
         #[cfg(feature = "server")]
         ApiHandler::AsyncHttp(_) => {
