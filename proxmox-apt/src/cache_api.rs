@@ -74,10 +74,7 @@ pub fn update_database<P: AsRef<Path>>(
     let mut cache = crate::cache::update_cache(apt_state_file)?;
 
     if notify {
-        let mut notified = match cache.notified {
-            Some(notified) => notified,
-            None => std::collections::HashMap::new(),
-        };
+        let mut notified = cache.notified.unwrap_or_default();
         let mut to_notify: Vec<&APTUpdateInfo> = Vec::new();
 
         for pkg in &cache.package_status {
