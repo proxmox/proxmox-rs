@@ -138,7 +138,7 @@ fn to_pair(
     }
 }
 
-/// Typed variant of [`SectionConfigData`](proxmox_section_config::SectionConfigData).
+/// Typed variant of [`SectionConfigData`](crate::SectionConfigData).
 /// This dereferences to the section hash for convenience.
 #[derive(Debug, Clone)]
 pub struct SectionConfigData<T> {
