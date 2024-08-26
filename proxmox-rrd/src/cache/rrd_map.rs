@@ -104,7 +104,7 @@ impl RRDMap {
     }
 
     pub fn load(&mut self, rel_path: &str) -> Result<bool, Error> {
-        if self.map.get(rel_path).is_some() {
+        if self.map.contains_key(rel_path) {
             // Already loaded, do nothing
             return Ok(true);
         }
