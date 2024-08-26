@@ -108,7 +108,7 @@ impl<R: BufRead> APTSourcesFileParser<R> {
                         }
                         let mut types = Vec::<APTRepositoryPackageType>::new();
                         for package_type in values {
-                            types.push((&package_type[..]).parse()?);
+                            types.push(package_type[..].parse()?);
                         }
                         repo.types = types;
                     }
