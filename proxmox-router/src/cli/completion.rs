@@ -151,7 +151,7 @@ fn get_simple_completion_do(
                     return get_property_completion(
                         schema,
                         prop_name,
-                        &completion_functions,
+                        completion_functions,
                         &args[0],
                         done,
                     );
@@ -198,7 +198,7 @@ fn get_simple_completion_do(
                 return get_property_completion(
                     schema,
                     prop_name,
-                    &completion_functions,
+                    completion_functions,
                     prefix,
                     done,
                 );
