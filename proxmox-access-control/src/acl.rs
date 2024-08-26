@@ -515,8 +515,8 @@ impl AclTree {
     /// - iterate over all intermediate nodes along `path` and collect roles with `propagate` set
     /// - get all (propagating and non-propagating) roles for last component of path
     /// - more specific role maps replace less specific role maps
-    /// -- user/token is more specific than group at each level
-    /// -- roles lower in the tree are more specific than those higher up along the path
+    ///   -- user/token is more specific than group at each level
+    ///   -- roles lower in the tree are more specific than those higher up along the path
     pub fn roles(&self, auth_id: &Authid, path: &[&str]) -> HashMap<String, bool> {
         let mut node = &self.root;
         let mut role_map = node.extract_roles(auth_id, path.is_empty());
