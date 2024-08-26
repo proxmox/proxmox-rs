@@ -114,9 +114,9 @@ impl RRDMap {
 
         if let Some(rrd) = (self.load_rrd_cb)(&path, rel_path) {
             self.map.insert(rel_path.to_string(), rrd);
-            return Ok(true);
+            Ok(true)
         } else {
-            return Ok(false);
+            Ok(false)
         }
     }
 }
