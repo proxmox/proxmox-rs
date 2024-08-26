@@ -19,7 +19,7 @@ pub trait ApiSectionDataEntry: Sized {
     /// `.with_type_key()` properties correctly, this should be set to `true`, otherwise `false`
     /// (which is the default).
     ///
-    /// [seccfg] ApiSectionDataEntry::section_config()
+    /// [seccfg]: Self::section_config()
     const SECION_CONFIG_USES_TYPE_KEY: bool = false;
 
     /// Get the `SectionConfig` configuration for this enum.
