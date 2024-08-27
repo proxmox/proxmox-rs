@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 use std::future::Future;
 
+use http::Method;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -29,43 +30,84 @@ pub trait HttpApiClient {
     where
         Self: 'a;
 
-    /// `GET` request with a path and query component (no hostname).
-    ///
-    /// For this request, authentication headers should be set!
-    fn get<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a>;
+    /// Some requests are better "streamed" than collected in RAM, for this, the body type used by
+    /// the underlying client needs to be exposed.
+    type Body;
 
-    /// `POST` request with a path and query component (no hostname), and a serializable body.
-    ///
-    /// The body should be serialized to json and sent with `Content-type: application/json`.
-    ///
-    /// For this request, authentication headers should be set!
-    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    /// Future for streamed requests.
+    type ResponseStreamFuture<'a>: Future<Output = Result<HttpApiResponseStream<Self::Body>, Error>>
+        + 'a
     where
-        T: ?Sized + Serialize;
+        Self: 'a;
 
-    /// `POST` request with a path and query component (no hostname), no request body.
+    /// An *authenticated* asynchronous request with a path and query component (no hostname), and
+    /// an optional body, of which the response body is read to completion.
     ///
     /// For this request, authentication headers should be set!
-    fn post_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a>;
-
-    /// `PUT` request with a path and query component (no hostname), and a serializable body.
-    ///
-    /// The body should be serialized to json and sent with `Content-type: application/json`.
-    ///
-    /// For this request, authentication headers should be set!
-    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    fn request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseFuture<'a>
     where
-        T: ?Sized + Serialize;
+        T: Serialize + 'a;
 
-    /// `PUT` request with a path and query component (no hostname), no request body.
+    /// An *authenticated* asynchronous request with a path and query component (no hostname), and
+    /// an optional body. The response status is returned, but the body is returned for the caller
+    /// to read from.
     ///
     /// For this request, authentication headers should be set!
-    fn put_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a>;
+    fn streaming_request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseStreamFuture<'a>
+    where
+        T: Serialize + 'a;
 
-    /// `DELETE` request with a path and query component (no hostname).
-    ///
-    /// For this request, authentication headers should be set!
-    fn delete<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a>;
+    /// This is deprecated.
+    /// Calls `self.request` with `Method::GET` and `None` for the body.
+    fn get<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        self.request(Method::GET, path_and_query, None::<()>)
+    }
+
+    /// This is deprecated.
+    /// Calls `self.request` with `Method::POST`.
+    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &'a T) -> Self::ResponseFuture<'a>
+    where
+        T: ?Sized + Serialize,
+    {
+        self.request(Method::POST, path_and_query, Some(params))
+    }
+
+    /// This is deprecated.
+    /// Calls `self.request` with `Method::POST` and `None` for the body..
+    fn post_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        self.request(Method::POST, path_and_query, None::<()>)
+    }
+
+    /// This is deprecated.
+    /// Calls `self.request` with `Method::PUT`.
+    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &'a T) -> Self::ResponseFuture<'a>
+    where
+        T: ?Sized + Serialize,
+    {
+        self.request(Method::PUT, path_and_query, Some(params))
+    }
+
+    /// This is deprecated.
+    /// Calls `self.request` with `Method::PUT` and `None` for the body..
+    fn put_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        self.request(Method::PUT, path_and_query, None::<()>)
+    }
+
+    /// This is deprecated.
+    /// Calls `self.request` with `Method::DELETE`.
+    fn delete<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
+        self.request(Method::DELETE, path_and_query, None::<()>)
+    }
 }
 
 /// A response from the HTTP API as required by the [`HttpApiClient`] trait.
@@ -200,11 +242,41 @@ where
     where
         Self: 'a;
 
+    type Body = C::Body;
+
+    type ResponseStreamFuture<'a> = C::ResponseStreamFuture<'a>
+    where
+        Self: 'a;
+
+    fn request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseFuture<'a>
+    where
+        T: Serialize + 'a,
+    {
+        C::request(self, method, path_and_query, params)
+    }
+
+    fn streaming_request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseStreamFuture<'a>
+    where
+        T: Serialize + 'a,
+    {
+        C::streaming_request(self, method, path_and_query, params)
+    }
+
     fn get<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
         C::get(self, path_and_query)
     }
 
-    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &'a T) -> Self::ResponseFuture<'a>
     where
         T: ?Sized + Serialize,
     {
@@ -215,7 +287,7 @@ where
         C::post_without_body(self, path_and_query)
     }
 
-    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &'a T) -> Self::ResponseFuture<'a>
     where
         T: ?Sized + Serialize,
     {
@@ -239,11 +311,41 @@ where
     where
         Self: 'a;
 
+    type Body = C::Body;
+
+    type ResponseStreamFuture<'a> = C::ResponseStreamFuture<'a>
+    where
+        Self: 'a;
+
+    fn request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseFuture<'a>
+    where
+        T: Serialize + 'a,
+    {
+        C::request(self, method, path_and_query, params)
+    }
+
+    fn streaming_request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseStreamFuture<'a>
+    where
+        T: Serialize + 'a,
+    {
+        C::streaming_request(self, method, path_and_query, params)
+    }
+
     fn get<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
         C::get(self, path_and_query)
     }
 
-    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &'a T) -> Self::ResponseFuture<'a>
     where
         T: ?Sized + Serialize,
     {
@@ -254,7 +356,7 @@ where
         C::post_without_body(self, path_and_query)
     }
 
-    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &'a T) -> Self::ResponseFuture<'a>
     where
         T: ?Sized + Serialize,
     {
@@ -278,11 +380,41 @@ where
     where
         Self: 'a;
 
+    type Body = C::Body;
+
+    type ResponseStreamFuture<'a> = C::ResponseStreamFuture<'a>
+    where
+        Self: 'a;
+
+    fn request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseFuture<'a>
+    where
+        T: Serialize + 'a,
+    {
+        C::request(self, method, path_and_query, params)
+    }
+
+    fn streaming_request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseStreamFuture<'a>
+    where
+        T: Serialize + 'a,
+    {
+        C::streaming_request(self, method, path_and_query, params)
+    }
+
     fn get<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
         C::get(self, path_and_query)
     }
 
-    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &'a T) -> Self::ResponseFuture<'a>
     where
         T: ?Sized + Serialize,
     {
@@ -293,7 +425,7 @@ where
         C::post_without_body(self, path_and_query)
     }
 
-    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &'a T) -> Self::ResponseFuture<'a>
     where
         T: ?Sized + Serialize,
     {
@@ -307,4 +439,12 @@ where
     fn delete<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
         C::delete(self, path_and_query)
     }
+}
+
+/// A streaming response from the HTTP API as required by the [`HttpApiClient`] trait.
+pub struct HttpApiResponseStream<Body> {
+    pub status: u16,
+    pub content_type: Option<String>,
+    /// Requests where the response has no body may put `None` here.
+    pub body: Option<Body>,
 }

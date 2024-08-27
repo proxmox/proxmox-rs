@@ -6,6 +6,7 @@ use std::sync::Mutex;
 
 use http::request::Request;
 use http::uri::PathAndQuery;
+use http::Method;
 use http::{StatusCode, Uri};
 use hyper::body::{Body, HttpBody};
 use openssl::hash::MessageDigest;
@@ -20,7 +21,7 @@ use crate::auth::AuthenticationKind;
 use crate::error::ParseFingerprintError;
 use crate::{Error, Token};
 
-use super::{HttpApiClient, HttpApiResponse};
+use super::{HttpApiClient, HttpApiResponse, HttpApiResponseStream};
 
 /// See [`set_verify_callback`](openssl::ssl::SslContextBuilder::set_verify_callback()).
 pub type TlsCallback = dyn Fn(bool, &mut x509::X509StoreContextRef) -> bool + Send + Sync + 'static;
@@ -199,14 +200,19 @@ impl Client {
     }
 
     /// Perform an *unauthenticated* HTTP request.
-    async fn authenticated_request(
+    async fn send_authenticated_request(
         client: Arc<proxmox_http::client::Client>,
         auth: Arc<AuthenticationKind>,
-        method: http::Method,
+        method: Method,
         uri: Uri,
         json_body: Option<String>,
-    ) -> Result<HttpApiResponse, Error> {
-        let request = auth.set_auth_headers(Request::builder().method(method).uri(uri));
+        // send an `Accept: application/json-seq` header.
+        streaming: bool,
+    ) -> Result<(http::response::Parts, hyper::Body), Error> {
+        let mut request = auth.set_auth_headers(Request::builder().method(method).uri(uri));
+        if streaming {
+            request = request.header(http::header::ACCEPT, "application/json-seq");
+        }
 
         let request = if let Some(body) = json_body {
             request
@@ -224,9 +230,9 @@ impl Client {
         }
 
         let (response, body) = response.into_parts();
-        let body = read_body(body).await?;
 
         if !response.status.is_success() {
+            let body = read_body(body).await?;
             // FIXME: Decode json errors...
             //match serde_json::from_slice(&data)
             //    Ok(value) =>
@@ -236,6 +242,21 @@ impl Client {
 
             return Err(Error::api(response.status, data));
         }
+
+        Ok((response, body))
+    }
+
+    /// Perform an *unauthenticated* HTTP request.
+    async fn authenticated_request(
+        client: Arc<proxmox_http::client::Client>,
+        auth: Arc<AuthenticationKind>,
+        method: Method,
+        uri: Uri,
+        json_body: Option<String>,
+    ) -> Result<HttpApiResponse, Error> {
+        let (response, body) =
+            Self::send_authenticated_request(client, auth, method, uri, json_body, false).await?;
+        let body = read_body(body).await?;
 
         let content_type = match response.headers.get(http::header::CONTENT_TYPE) {
             None => None,
@@ -287,7 +308,7 @@ impl Client {
 
     async fn do_login_request(&self, request: proxmox_login::Request) -> Result<Vec<u8>, Error> {
         let request = http::Request::builder()
-            .method(http::Method::POST)
+            .method(Method::POST)
             .uri(request.url)
             .header(http::header::CONTENT_TYPE, request.content_type)
             .header(
@@ -386,71 +407,75 @@ impl HttpApiClient for Client {
     type ResponseFuture<'a> =
         Pin<Box<dyn Future<Output = Result<HttpApiResponse, Error>> + Send + 'a>>;
 
-    fn get<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
-        Box::pin(async move {
-            let auth = self.login_auth()?;
-            let uri = self.build_uri(path_and_query)?;
-            let client = Arc::clone(&self.client);
-            Self::authenticated_request(client, auth, http::Method::GET, uri, None).await
-        })
-    }
+    type ResponseStreamFuture<'a> =
+        Pin<Box<dyn Future<Output = Result<HttpApiResponseStream<Self::Body>, Error>> + Send + 'a>>;
 
-    fn post<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    type Body = hyper::Body;
+
+    fn request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseFuture<'a>
     where
-        T: ?Sized + Serialize,
+        T: Serialize + 'a,
     {
-        let params = serde_json::to_string(params)
-            .map_err(|err| Error::internal("failed to serialize parameters", err));
+        let params = params
+            .map(|params| {
+                serde_json::to_string(&params)
+                    .map_err(|err| Error::internal("failed to serialize parameters", err))
+            })
+            .transpose();
 
         Box::pin(async move {
             let params = params?;
             let auth = self.login_auth()?;
             let uri = self.build_uri(path_and_query)?;
             let client = Arc::clone(&self.client);
-            Self::authenticated_request(client, auth, http::Method::POST, uri, Some(params)).await
+            Self::authenticated_request(client, auth, method, uri, params).await
         })
     }
 
-    fn post_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
-        Box::pin(async move {
-            let auth = self.login_auth()?;
-            let uri = self.build_uri(path_and_query)?;
-            let client = Arc::clone(&self.client);
-            Self::authenticated_request(client, auth, http::Method::POST, uri, None).await
-        })
-    }
-
-    fn put<'a, T>(&'a self, path_and_query: &'a str, params: &T) -> Self::ResponseFuture<'a>
+    fn streaming_request<'a, T>(
+        &'a self,
+        method: Method,
+        path_and_query: &'a str,
+        params: Option<T>,
+    ) -> Self::ResponseStreamFuture<'a>
     where
-        T: ?Sized + Serialize,
+        T: Serialize + 'a,
     {
-        let params = serde_json::to_string(params)
-            .map_err(|err| Error::internal("failed to serialize parameters", err));
+        let params = params
+            .map(|params| {
+                serde_json::to_string(&params)
+                    .map_err(|err| Error::internal("failed to serialize parameters", err))
+            })
+            .transpose();
 
         Box::pin(async move {
             let params = params?;
             let auth = self.login_auth()?;
             let uri = self.build_uri(path_and_query)?;
             let client = Arc::clone(&self.client);
-            Self::authenticated_request(client, auth, http::Method::PUT, uri, Some(params)).await
-        })
-    }
+            let (response, body) =
+                Self::send_authenticated_request(client, auth, method, uri, params, true).await?;
 
-    fn put_without_body<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
-        Box::pin(async move {
-            let auth = self.login_auth()?;
-            let uri = self.build_uri(path_and_query)?;
-            let client = Arc::clone(&self.client);
-            Self::authenticated_request(client, auth, http::Method::PUT, uri, None).await
-        })
-    }
+            let content_type = match response.headers.get(http::header::CONTENT_TYPE) {
+                None => None,
+                Some(value) => Some(
+                    value
+                        .to_str()
+                        .map_err(|err| Error::internal("bad Content-Type header", err))?
+                        .to_owned(),
+                ),
+            };
 
-    fn delete<'a>(&'a self, path_and_query: &'a str) -> Self::ResponseFuture<'a> {
-        Box::pin(async move {
-            let auth = self.login_auth()?;
-            let uri = self.build_uri(path_and_query)?;
-            let client = Arc::clone(&self.client);
-            Self::authenticated_request(client, auth, http::Method::DELETE, uri, None).await
+            Ok(HttpApiResponseStream {
+                status: response.status.as_u16(),
+                content_type,
+                body: Some(body),
+            })
         })
     }
 }
