@@ -1286,6 +1286,17 @@ impl Schema {
         }
     }
 
+    /// Gets the underlying schema as a [`dyn ObjectSchemaType`], panics on schema types other than
+    /// `Object`, `AllOf` or `OneOf`.
+    pub const fn unwrap_any_object_schema(&self) -> &dyn ObjectSchemaType {
+        match self {
+            Schema::Object(s) => s,
+            Schema::AllOf(s) => s,
+            Schema::OneOf(s) => s,
+            _ => panic!("unwrap_any_object_schema on non-object schema"),
+        }
+    }
+
     /// Gets the underlying [`BooleanSchema`].
     pub const fn boolean(&self) -> Option<&BooleanSchema> {
         match self {
@@ -1350,6 +1361,7 @@ impl Schema {
         }
     }
 
+    /// Gets the underlying schema as a [`dyn ObjectSchemaType`].
     pub const fn any_object(&self) -> Option<&dyn ObjectSchemaType> {
         match self {
             Schema::Object(s) => Some(s),
