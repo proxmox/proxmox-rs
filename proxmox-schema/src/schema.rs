@@ -1649,9 +1649,7 @@ fn do_parse_parameter_strings(
                                 Err(err) => errors.push(key.into(), err),
                             }
                         }
-                        _ => {
-                            errors.push(key.into(), format_err!("expected array - type mismatch"))
-                        }
+                        _ => errors.push(key.into(), format_err!("expected array - type mismatch")),
                     }
                 }
                 _ => match prop_schema.parse_simple_value(value) {
