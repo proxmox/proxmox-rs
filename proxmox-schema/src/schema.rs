@@ -1342,7 +1342,7 @@ impl Schema {
         }
     }
 
-    pub fn any_object(&self) -> Option<&dyn ObjectSchemaType> {
+    pub const fn any_object(&self) -> Option<&dyn ObjectSchemaType> {
         match self {
             Schema::Object(s) => Some(s),
             Schema::AllOf(s) => Some(s),
