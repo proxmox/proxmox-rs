@@ -1,3 +1,15 @@
+rust-proxmox-schema (3.1.4-1) bookworm; urgency=medium
+
+  * make Schema::any_object a const fn
+
+  * add Schema::unwrap_any_object_schema as const fn
+
+  * seal ObjectSchemaType
+
+  * assert that dyn ObjectSchemaType is Send + Sync
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 28 Aug 2024 14:50:58 +0200
+
 rust-proxmox-schema (3.1.3-1) bookworm; urgency=medium
 
   * replace lazy_static dependency with std's LazyLock
