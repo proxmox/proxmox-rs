@@ -26,7 +26,7 @@ pub const HASH_PREFIX: &str = "$y$";
 const HASH_COST: u64 = 5;
 
 #[repr(C)]
-struct crypt_data {
+struct CryptData {
     output: [libc::c_char; CRYPT_OUTPUT_SIZE],
     setting: [libc::c_char; CRYPT_OUTPUT_SIZE],
     input: [libc::c_char; CRYPT_MAX_PASSPHRASE_SIZE],
@@ -43,11 +43,11 @@ pub fn crypt(password: &[u8], salt: &[u8]) -> Result<String, Error> {
         fn __crypt_r(
             key: *const libc::c_char,
             salt: *const libc::c_char,
-            data: *mut crypt_data,
+            data: *mut CryptData,
         ) -> *mut libc::c_char;
     }
 
-    let mut data: crypt_data = unsafe { std::mem::zeroed() };
+    let mut data: CryptData = unsafe { std::mem::zeroed() };
     for (i, c) in salt.iter().take(data.setting.len() - 1).enumerate() {
         data.setting[i] = *c as libc::c_char;
     }
@@ -71,7 +71,7 @@ pub fn crypt(password: &[u8], salt: &[u8]) -> Result<String, Error> {
         // > output field of their data argument, and crypt writes an invalid hash to its static
         // > storage area.  This string will be shorter than 13 characters, will begin with a ‘*’,
         // > and will not compare equal to setting.
-        if data.output.first().is_none() || Some(&('*' as i8)) == data.output.first() {
+        if data.output[0] == '*' as libc::c_char {
             bail!("internal error: crypt_r returned invalid hash");
         }
         CStr::from_ptr(&data.output as *const _)
@@ -133,7 +133,7 @@ pub fn crypt_gensalt(prefix: &str, count: u64, rbytes: &[u8]) -> Result<String, 
     // while it states that this is "in addition" to returning a null pointer, this isn't how
     // `crypt_r` seems to behave (sometimes only setting an invalid hash) so add this here too just
     // in case.
-    if output.first().is_none() || Some(&('*' as i8)) == output.first() {
+    if output[0] == '*' as libc::c_char {
         bail!("internal error: crypt_gensalt_rn could not create a valid salt");
     }
 
