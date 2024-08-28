@@ -806,8 +806,16 @@ impl OneOfSchema {
     }
 }
 
+mod private {
+    pub trait Sealed: Send + Sync {}
+    impl Sealed for super::ObjectSchema {}
+    impl Sealed for super::AllOfSchema {}
+    impl Sealed for super::OneOfSchema {}
+    impl Sealed for super::ParameterSchema {}
+}
+
 /// Beside [`ObjectSchema`] we also have an [`AllOfSchema`] which also represents objects.
-pub trait ObjectSchemaType {
+pub trait ObjectSchemaType: private::Sealed + Send + Sync {
     fn description(&self) -> &'static str;
     fn lookup(&self, key: &str) -> Option<(bool, &Schema)>;
     fn properties(&self) -> ObjectPropertyIterator;
