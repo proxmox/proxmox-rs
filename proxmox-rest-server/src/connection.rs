@@ -12,13 +12,13 @@ use std::pin::{pin, Pin};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use anyhow::{format_err, Context as _, Error};
+use anyhow::{format_err, Context, Error};
 use futures::FutureExt;
 use hyper::server::accept;
 use openssl::ec::{EcGroup, EcKey};
 use openssl::nid::Nid;
 use openssl::pkey::{PKey, Private};
-use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use openssl::ssl::{SslAcceptor, SslMethod};
 use openssl::x509::X509;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
@@ -99,9 +99,17 @@ impl TlsAcceptorBuilder {
                     .context("failed to set tls acceptor certificate")?;
             }
             Some(Tls::FilesPem(key, cert)) => {
+                let key_content = std::fs::read(&key)
+                    .with_context(|| format!("Failed to read from private key file {:?}", key))?;
                 acceptor
-                    .set_private_key_file(key, SslFiletype::PEM)
+                    .set_private_key(PKey::private_key_from_pem(&key_content)?.as_ref())
                     .context("failed to set tls acceptor private key file")?;
+
+                {
+                    // Check the permissions by opening the file
+                    let _cert_fd = std::fs::File::open(&cert)
+                        .with_context(|| format!("Failed to open certificate at {:?}", cert))?;
+                }
                 acceptor
                     .set_certificate_chain_file(cert)
                     .context("failed to set tls acceptor certificate chain file")?;
