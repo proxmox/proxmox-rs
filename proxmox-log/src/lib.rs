@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use tokio::task::futures::TaskLocalFuture;
 use tracing::Level;
 use tracing_log::{AsLog, LogTracer};
-use tracing_subscriber::filter::{filter_fn, LevelFilter};
+use tracing_subscriber::filter::filter_fn;
 use tracing_subscriber::prelude::*;
 
 use tasklog_layer::TasklogLayer;
@@ -32,6 +32,7 @@ pub use tracing::trace;
 pub use tracing::trace_span;
 pub use tracing::warn;
 pub use tracing::warn_span;
+pub use tracing_subscriber::filter::LevelFilter;
 
 tokio::task_local! {
     static LOG_CONTEXT: LogContext;
@@ -124,4 +125,43 @@ impl LogContext {
     pub fn state(&self) -> &Arc<Mutex<FileLogState>> {
         &self.logger
     }
+}
+
+/// Initialize default logger for CLI binaries
+pub fn init_cli_logger(
+    env_var_name: &str,
+    default_log_level: LevelFilter,
+) -> Result<(), anyhow::Error> {
+    let mut log_level = default_log_level;
+    if let Ok(v) = env::var(env_var_name) {
+        match v.parse::<LevelFilter>() {
+            Ok(l) => {
+                log_level = l;
+            },
+            Err(e) => {
+                eprintln!("env variable PBS_LOG found, but parsing failed: {e:?}");
+            }
+        }
+    }
+
+    let format = tracing_subscriber::fmt::format()
+        .with_level(false)
+        .without_time()
+        .with_target(false)
+        .compact();
+
+    let registry = tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::fmt::layer()
+                .event_format(format)
+                .with_filter(filter_fn(|metadata| {
+                    !LogContext::exists() || *metadata.level() >= Level::ERROR
+                }))
+                .with_filter(log_level),
+        )
+        .with(TasklogLayer {}.with_filter(log_level));
+
+    tracing::subscriber::set_global_default(registry)?;
+    LogTracer::init_with_filter(log_level.as_log())?;
+    Ok(())
 }

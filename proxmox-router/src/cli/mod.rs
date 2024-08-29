@@ -58,6 +58,7 @@ pub use readline::*;
 pub type CompletionFunction = fn(&str, &HashMap<String, String>) -> Vec<String>;
 
 /// Initialize default logger for CLI binaries
+#[deprecated = "use proxmox_log::init_cli_logger instead"]
 pub fn init_cli_logger(env_var_name: &str, default_log_level: &str) {
     env_logger::Builder::from_env(
         env_logger::Env::new().filter_or(env_var_name, default_log_level),
