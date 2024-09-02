@@ -29,3 +29,5 @@ pub use serializable_return::SerializableReturn;
 // make list_subdirs_api_method! work without an explicit proxmox-schema dependency:
 #[doc(hidden)]
 pub use proxmox_schema::ObjectSchema as ListSubdirsObjectSchema;
+
+pub mod stream;

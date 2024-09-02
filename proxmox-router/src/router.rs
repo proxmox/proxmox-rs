@@ -78,24 +78,6 @@ pub type SerializingApiHandlerFn = &'static (dyn Fn(
               + Sync
               + 'static);
 
-#[derive(Serialize)]
-#[serde(rename_all = "kebab-case")]
-enum RecordEntry<'a> {
-    /// A successful record.
-    Data(&'a Value),
-    /// An error entry.
-    Error(Value),
-}
-
-impl<'a> From<&'a Result<Value, Error>> for RecordEntry<'a> {
-    fn from(res: &'a Result<Value, Error>) -> Self {
-        match res {
-            Ok(value) => Self::Data(value),
-            Err(err) => Self::Error(err.to_string().into()),
-        }
-    }
-}
-
 /// A record for a streaming API call. This contains a `Result<Value, Error>` and allows formatting
 /// as a `json-seq` formatted string.
 ///
@@ -105,21 +87,39 @@ impl<'a> From<&'a Result<Value, Error>> for RecordEntry<'a> {
 /// API.
 pub struct Record {
     // direct access is only for the CLI code
-    pub(crate) data: Result<Value, Error>,
+    pub(crate) data: crate::stream::Record<Value>,
 }
 
 impl Record {
     /// Create a new successful record from a serializeable element.
-    pub fn new<T: ?Sized + Serialize>(data: &T) -> Self {
+    pub fn new<T: Serialize>(data: T) -> Self {
         Self {
-            data: Ok(serde_json::to_value(data).expect("failed to create json string")),
+            data: crate::stream::Record::Data(
+                serde_json::to_value(data).expect("failed to create json string"),
+            ),
         }
     }
 
     /// Create a new error record from an error value.
     pub fn error<E: Into<Error>>(error: E) -> Self {
         Self {
-            data: Err(error.into()),
+            data: crate::stream::Record::Error(error.into().to_string().into()),
+        }
+    }
+
+    /// Create a new error record from an error message.
+    pub fn error_msg<T: fmt::Display>(msg: T) -> Self {
+        Self {
+            data: crate::stream::Record::Error(msg.to_string().into()),
+        }
+    }
+
+    /// Create a new structured error record from an error value.
+    pub fn error_value<T: Serialize>(error: T) -> Self {
+        Self {
+            data: crate::stream::Record::Error(
+                serde_json::to_value(error).expect("failed to create json string"),
+            ),
         }
     }
 
@@ -145,10 +145,23 @@ impl Record {
         // Don't return special objects that can fail to serialize.
         // As for "normal" data - we don't expect spurious errors, otherwise they could also happen
         // when serializing *errors*...
-        serde_json::to_writer(&mut data, &RecordEntry::from(&self.data))
-            .expect("failed to create JSON record");
+        serde_json::to_writer(&mut data, &self.data).expect("failed to create JSON record");
         data.push(b'\n');
         data
+    }
+}
+
+impl<T> From<crate::stream::Record<T>> for Record
+where
+    T: Serialize,
+{
+    fn from(data: crate::stream::Record<T>) -> Self {
+        match data {
+            crate::stream::Record::Data(data) => Self::new(data),
+            crate::stream::Record::Error(err) => Self {
+                data: crate::stream::Record::Error(err),
+            },
+        }
     }
 }
 
@@ -194,7 +207,7 @@ impl SyncStream {
     pub fn try_collect(self) -> Result<Value, Error> {
         let mut acc = Vec::new();
         for i in self.inner {
-            acc.push(i.data?);
+            acc.push(i.data.into_result()?);
         }
         Ok(Value::Array(acc))
     }
@@ -339,7 +352,7 @@ impl Stream {
 
         let mut acc = Vec::new();
         while let Some(i) = self.inner.next().await {
-            acc.push(i.data?);
+            acc.push(i.data.into_result()?);
         }
         Ok(Value::Array(acc))
     }
