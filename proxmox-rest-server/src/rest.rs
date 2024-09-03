@@ -611,6 +611,12 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
         }
     };
 
+    let is_streaming = accept_json_seq
+        && resp
+            .headers()
+            .get(http::header::CONTENT_TYPE)
+            .is_some_and(|h| h.as_ref().starts_with(b"application/json-seq"));
+
     let resp = match compression {
         Some(CompressionMethod::Deflate) => {
             resp.headers_mut().insert(
@@ -623,6 +629,7 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
                         proxmox_lang::io_format_err!("error during compression: {}", err)
                     }))
                     .zlib(true)
+                    .flush_window(is_streaming.then_some(64 * 1024))
                     .build(),
                 )
             })
