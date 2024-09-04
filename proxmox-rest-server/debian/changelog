@@ -1,3 +1,15 @@
+rust-proxmox-rest-server (0.8.0-1) bookworm; urgency=medium
+
+  * rename old "streaming" api to "serializing" (as it was not truly
+    streaming)
+
+  * add actual streaming API handler support
+
+  * utilize the compressor's "flush window" support, so compressed streaming
+    calls don't buffer for too long
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 04 Sep 2024 15:33:33 +0200
+
 rust-proxmox-rest-server (0.7.1-1) bookworm; urgency=medium
 
   * replace lazy_static with std's LazyLock and drop the dependency

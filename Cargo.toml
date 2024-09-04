@@ -133,7 +133,7 @@ proxmox-log= { version = "0.2.3", path = "proxmox-log" }
 proxmox-login = { version = "0.1.0", path = "proxmox-login" }
 proxmox-product-config = { version = "0.2.0", path = "proxmox-product-config" }
 proxmox-config-digest = { version = "0.1.0", path = "proxmox-config-digest" }
-proxmox-rest-server = { version = "0.7.0", path = "proxmox-rest-server" }
+proxmox-rest-server = { version = "0.8.0", path = "proxmox-rest-server" }
 proxmox-router = { version = "3.0.0", path = "proxmox-router" }
 proxmox-schema = { version = "3.1.2", path = "proxmox-schema" }
 proxmox-section-config = { version = "2.1.0", path = "proxmox-section-config" }
