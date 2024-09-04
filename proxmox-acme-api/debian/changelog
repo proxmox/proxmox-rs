@@ -1,3 +1,9 @@
+rust-proxmox-acme-api (0.1.6-1) bookworm; urgency=medium
+
+  * rebuild with new rest-server and router dependencies
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 04 Sep 2024 15:42:27 +0200
+
 rust-proxmox-acme-api (0.1.5-1) bookworm; urgency=medium
 
   * replace lazy_static with std's LazyLock and drop the dependency
