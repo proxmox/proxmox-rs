@@ -6,7 +6,6 @@ use std::future::Future;
 use std::sync::{Arc, Mutex};
 
 use tokio::task::futures::TaskLocalFuture;
-use tracing::Level;
 use tracing_log::{AsLog, LogTracer};
 use tracing_subscriber::filter::filter_fn;
 use tracing_subscriber::prelude::*;
@@ -32,6 +31,7 @@ pub use tracing::trace;
 pub use tracing::trace_span;
 pub use tracing::warn;
 pub use tracing::warn_span;
+pub use tracing::Level;
 pub use tracing_subscriber::filter::LevelFilter;
 
 tokio::task_local! {
@@ -154,6 +154,7 @@ pub fn init_cli_logger(
         .with(
             tracing_subscriber::fmt::layer()
                 .event_format(format)
+                .with_writer(std::io::stderr)
                 .with_filter(filter_fn(|metadata| {
                     !LogContext::exists() || *metadata.level() >= Level::ERROR
                 }))
