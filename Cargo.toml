@@ -122,7 +122,7 @@ proxmox-api-macro = { version = "1.1.0", path = "proxmox-api-macro" }
 proxmox-apt-api-types = { version = "1.0.1", path = "proxmox-apt-api-types" }
 proxmox-auth-api = { version = "0.4.0", path = "proxmox-auth-api" }
 proxmox-async = { version = "0.4.1", path = "proxmox-async" }
-proxmox-compression = { version = "0.2.3", path = "proxmox-compression" }
+proxmox-compression = { version = "0.2.4", path = "proxmox-compression" }
 proxmox-daemon = { version = "0.1.0", path = "proxmox-daemon" }
 proxmox-http = { version = "0.9.2", path = "proxmox-http" }
 proxmox-http-error = { version = "0.1.0", path = "proxmox-http-error" }
