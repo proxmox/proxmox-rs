@@ -6,7 +6,9 @@ use std::task::{ready, Poll};
 use anyhow::{format_err, Context as _, Error};
 use futures::io::{AsyncBufRead, AsyncBufReadExt, AsyncRead, BufReader};
 use hyper::body::{Body, Bytes};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+
+use super::Record;
 
 pub struct Records<R = BodyBufReader>
 where
@@ -305,35 +307,6 @@ impl AsyncBufRead for BodyBufReader {
             if *at == buf.len() {
                 self.buf_at = None;
             }
-        }
-    }
-}
-
-/// Streamed JSON records can contain either "data" or an error.
-///
-/// Errors can be a simple string or structured data.
-///
-/// For convenience, an [`into_result()`](Record::into_result) method is provided to turn the
-/// record into a regular `Result`, where the error is converted to either a message or, for
-/// structured errors, a json representation.
-#[derive(Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum Record<T> {
-    /// A successful record.
-    Data(T),
-    /// An error entry.
-    Error(serde_json::Value),
-}
-
-impl<T> Record<T> {
-    pub fn into_result(self) -> Result<T, Error> {
-        match self {
-            Self::Data(data) => Ok(data),
-            Self::Error(serde_json::Value::String(s)) => Err(Error::msg(s)),
-            Self::Error(other) => match serde_json::to_string(&other) {
-                Ok(s) => Err(Error::msg(s)),
-                Err(err) => Err(Error::from(err)),
-            },
         }
     }
 }

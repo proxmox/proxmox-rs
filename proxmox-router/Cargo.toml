@@ -42,6 +42,7 @@ tokio-stream.workspace = true
 
 [features]
 default = [ "cli", "server" ]
-cli = [ "dep:env_logger", "dep:libc", "dep:rustyline" ]
+cli = [ "stream", "dep:env_logger", "dep:libc", "dep:rustyline" ]
 server = [ "dep:http", "dep:hyper" ]
 test-harness = [ "proxmox-schema/test-harness" ]
+stream = [ "dep:hyper" ]

@@ -80,11 +80,6 @@ pub type SerializingApiHandlerFn = &'static (dyn Fn(
 
 /// A record for a streaming API call. This contains a `Result<Value, Error>` and allows formatting
 /// as a `json-seq` formatted string.
-///
-/// This is currently just a json string, but we don't want to fixate strings or byte vectors as
-/// output for the streaming API handler, but also not commit to creating lots of allocated
-/// `Box<dyn SerializableReturn>` elements, so this can be turned into either without breaking the
-/// API.
 pub struct Record {
     // direct access is only for the CLI code
     pub(crate) data: crate::stream::Record<Value>,
@@ -204,6 +199,7 @@ impl SyncStream {
         self.inner
     }
 
+    #[cfg(feature = "stream")]
     pub fn try_collect(self) -> Result<Value, Error> {
         let mut acc = Vec::new();
         for i in self.inner {
@@ -347,6 +343,7 @@ impl Stream {
         self.inner
     }
 
+    #[cfg(feature = "stream")]
     pub async fn try_collect(mut self) -> Result<Value, Error> {
         use futures::StreamExt;
 
