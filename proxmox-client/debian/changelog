@@ -1,3 +1,19 @@
+rust-proxmox-client (0.5.0-1) bookworm; urgency=medium
+
+  * add generic `Client::request` trait method
+
+  * provide default impls for all the specialized Client trait methods to use
+    the generic `request` method
+
+  * add `Client::Body` as associated type to declare which body type is used
+    (hyper::Body for hyper based clients, ReadableStream for wasm on the
+    web...)
+
+  * add `Client::streaming_request` as a variant which returns the underlying
+    `Self::Body`
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 04 Sep 2024 15:41:21 +0200
+
 rust-proxmox-client (0.4.1-1) bookworm; urgency=medium
 
   * drop a lot of unused dependencies:

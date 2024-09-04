@@ -39,10 +39,10 @@ Provides:
  librust-proxmox-client+default-dev (= ${binary:Version}),
  librust-proxmox-client-0-dev (= ${binary:Version}),
  librust-proxmox-client-0+default-dev (= ${binary:Version}),
- librust-proxmox-client-0.4-dev (= ${binary:Version}),
- librust-proxmox-client-0.4+default-dev (= ${binary:Version}),
- librust-proxmox-client-0.4.1-dev (= ${binary:Version}),
- librust-proxmox-client-0.4.1+default-dev (= ${binary:Version})
+ librust-proxmox-client-0.5-dev (= ${binary:Version}),
+ librust-proxmox-client-0.5+default-dev (= ${binary:Version}),
+ librust-proxmox-client-0.5.0-dev (= ${binary:Version}),
+ librust-proxmox-client-0.5.0+default-dev (= ${binary:Version})
 Description: Base client for proxmox APIs for handling login and ticket renewal - Rust source code
  Source code for Debianized Rust crate "proxmox-client"
 
@@ -59,8 +59,8 @@ Depends:
  librust-proxmox-http-0.9+default-dev (>= 0.9.2-~~)
 Provides:
  librust-proxmox-client-0+hyper-client-dev (= ${binary:Version}),
- librust-proxmox-client-0.4+hyper-client-dev (= ${binary:Version}),
- librust-proxmox-client-0.4.1+hyper-client-dev (= ${binary:Version})
+ librust-proxmox-client-0.5+hyper-client-dev (= ${binary:Version}),
+ librust-proxmox-client-0.5.0+hyper-client-dev (= ${binary:Version})
 Description: Base client for proxmox APIs for handling login and ticket renewal - feature "hyper-client"
  This metapackage enables feature "hyper-client" for the Rust proxmox-client
  crate, by pulling in any additional dependencies needed by that feature.
@@ -75,8 +75,8 @@ Depends:
  librust-proxmox-login-0.1+webauthn-dev
 Provides:
  librust-proxmox-client-0+webauthn-dev (= ${binary:Version}),
- librust-proxmox-client-0.4+webauthn-dev (= ${binary:Version}),
- librust-proxmox-client-0.4.1+webauthn-dev (= ${binary:Version})
+ librust-proxmox-client-0.5+webauthn-dev (= ${binary:Version}),
+ librust-proxmox-client-0.5.0+webauthn-dev (= ${binary:Version})
 Description: Base client for proxmox APIs for handling login and ticket renewal - feature "webauthn"
  This metapackage enables feature "webauthn" for the Rust proxmox-client crate,
  by pulling in any additional dependencies needed by that feature.
