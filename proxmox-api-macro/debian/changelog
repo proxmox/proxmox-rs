@@ -1,3 +1,15 @@
+rust-proxmox-api-macro (1.2.0-1) bookworm; urgency=medium
+
+  * deprecate old "streaming" method attribute
+
+  * add "serializing" method attribute to replace the old "streaming" one
+
+  * add "stream" method attribute for the *new* streaming API
+
+  * fix warnings in tests
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 04 Sep 2024 15:36:05 +0200
+
 rust-proxmox-api-macro (1.1.0-1) stable; urgency=medium
 
   * fix handling of renames when deriving an Updater for structs
