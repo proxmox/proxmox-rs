@@ -7,29 +7,30 @@ export RUSTC=/usr/bin/rustc
 
 CRATE=$1
 BUILDCMD=${BUILDCMD:-"dpkg-buildpackage -b -uc -us"}
+BUILDDIR="${BUILDDIR:-"build"}"
 
-mkdir -p build
-echo system >build/rust-toolchain
-rm -rf "build/${CRATE}"
+mkdir -p "${BUILDDIR}"
+echo system >"${BUILDDIR}"/rust-toolchain
+rm -rf ""${BUILDDIR}"/${CRATE}"
 
 CONTROL="$PWD/${CRATE}/debian/control"
 
 if [ -e "$CONTROL" ]; then
     # check but only warn, debcargo fails anyway if crates are missing
     dpkg-checkbuilddeps $PWD/${CRATE}/debian/control || true
-    rm -f "$PWD/${CRATE}/debian/control"
+    [ "x$NOCONTROL" = 'x' ] && rm -f "$PWD/${CRATE}/debian/control"
 fi
 
 debcargo package \
     --config "$PWD/${CRATE}/debian/debcargo.toml" \
     --changelog-ready \
     --no-overlay-write-back \
-    --directory "$PWD/build/${CRATE}" \
+    --directory "$PWD/"${BUILDDIR}"/${CRATE}" \
     "${CRATE}" \
     "$(dpkg-parsechangelog -l "${CRATE}/debian/changelog" -SVersion | sed -e 's/-.*//')"
 
-cd "build/${CRATE}"
+cd ""${BUILDDIR}"/${CRATE}"
 rm -f debian/source/format.debcargo.hint
 ${BUILDCMD}
 
-cp debian/control "$CONTROL"
+[ "x$NOCONTROL" = "x" ] && cp debian/control "$CONTROL"

@@ -74,3 +74,69 @@ update:
 	    | grep -v '.changes$$' \
 	    | tar -cf "$@.tar" -T-; \
 	    cat "$@.tar" | ssh -X repoman@repo.proxmox.com upload --product devel --dist bookworm
+
+%-install:
+	rm -rf build/install/$*
+	mkdir -p build/install/$*
+	BUILDDIR=build/install/$* BUILDCMD=/usr/bin/true NOCONTROL=1 ./build.sh "$*" || true
+	version="$$(dpkg-parsechangelog -l $*/debian/changelog -SVersion | sed -e 's/-.*//')"; \
+	  install -m755 -Dd "$(DESTDIR)/usr/share/cargo/registry/$*-$${version}"; \
+	  rm -rf "$(DESTDIR)/usr/share/cargo/registry/$*-$${version}"; \
+	  mv "build/install/$*/$*" \
+	    "$(DESTDIR)/usr/share/cargo/registry/$*-$${version}"; \
+	  mv "$(DESTDIR)/usr/share/cargo/registry/$*-$${version}/debian/cargo-checksum.json" \
+	    "$(DESTDIR)/usr/share/cargo/registry/$*-$${version}/.cargo-checksum.json"; \
+	  rm -rf "$(DESTDIR)/usr/share/cargo/registry/$*-$${version}/debian" \
+
+.PHONY: install
+install: $(foreach c,$(CRATES), $c-install)
+
+%-install-overlay: %-install
+	version="$$(dpkg-parsechangelog -l $*/debian/changelog -SVersion | sed -e 's/-.*//')"; \
+	  setfattr -n trusted.overlay.opaque -v y \
+	    "$(DESTDIR)/usr/share/cargo/registry/$*-$${version}"
+	install -m755 -Dd $(DESTDIR)/usr/lib/extension-release.d
+	echo 'ID=_any' >$(DESTDIR)/usr/lib/extension-release.d/extension-release.$*
+
+.PHONY: install-overlay
+install-overlay: $(foreach c,$(CRATES), $c-install-overlay)
+
+# To make sure a sysext *replaces* a crate, rather than "merging" with it, we
+# need to be able to set the 'trusted.overlay.opaque' xattr. Since we cannot do
+# this as a user, we utilize `fakeroot` which keeps track of this for us, and
+# turn the final directory into an 'erofs' file system image.
+#
+# The reason is that if a crate gets changed like this:
+#
+#     old:
+#         src/foo.rs
+#     new:
+#         src/foo/mod.rs
+#
+# if its /usr/share/cargo/registry/$crate-$version directory was not marked as
+# "opaque", the merged file system would end up with both
+#
+#         src/foo.rs
+#         src/foo/mod.rs
+#
+# together.
+#
+# See https://docs.kernel.org/filesystems/overlayfs.html
+%-sysext:
+	fakeroot $(MAKE) $*-sysext-do
+%-sysext-do:
+	rm -f extensions/$*.raw
+	$(MAKE) DESTDIR=build/sysext/$* $*-install-overlay
+	mkdir -p extensions
+	mkfs.erofs extensions/$*.raw build/sysext/$*
+
+sysext:
+	fakeroot $(MAKE) sysext-do
+sysext-do:
+	rm -f extensions/proxmox-workspace.raw
+	[ -n "$(NOCLEAN)" ] || rm -rf build/sysext/workspace
+	$(MAKE) DESTDIR=build/sysext/workspace $(foreach c,$(CRATES), $c-install)
+	install -m755 -Dd build/sysext/workspace/usr/lib/extension-release.d
+	echo 'ID=_any' >build/sysext/workspace/usr/lib/extension-release.d/extension-release.proxmox-workspace
+	mkdir -p extensions
+	mkfs.erofs extensions/proxmox-workspace.raw build/sysext/workspace
