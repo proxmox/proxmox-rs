@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper (>= 12),
  dh-cargo (>= 25),
  cargo:native <!nocheck>,
- rustc:native (>= 1.70) <!nocheck>,
+ rustc:native (>= 1.80) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-proxmox-auth-api-0.4+api-types-dev <!nocheck>,
@@ -39,8 +39,8 @@ Provides:
  librust-proxmox-access-control-0+default-dev (= ${binary:Version}),
  librust-proxmox-access-control-0.2-dev (= ${binary:Version}),
  librust-proxmox-access-control-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2.2-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2.2+default-dev (= ${binary:Version})
+ librust-proxmox-access-control-0.2.3-dev (= ${binary:Version}),
+ librust-proxmox-access-control-0.2.3+default-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - Rust source code
  Source code for Debianized Rust crate "proxmox-access-control"
 
@@ -55,8 +55,8 @@ Depends:
  librust-proxmox-config-digest-0.1+default-dev,
  librust-proxmox-config-digest-0.1+openssl-dev,
  librust-proxmox-product-config-0.2+default-dev,
- librust-proxmox-router-2+default-dev (>= 2.1.5-~~),
- librust-proxmox-section-config-2+default-dev,
+ librust-proxmox-router-3+default-dev,
+ librust-proxmox-section-config-2+default-dev (>= 2.1.0-~~),
  librust-proxmox-shared-memory-0.3+default-dev,
  librust-proxmox-sys-0.6+crypt-dev,
  librust-proxmox-sys-0.6+default-dev,
@@ -64,7 +64,7 @@ Depends:
 Provides:
  librust-proxmox-access-control-0+impl-dev (= ${binary:Version}),
  librust-proxmox-access-control-0.2+impl-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2.2+impl-dev (= ${binary:Version})
+ librust-proxmox-access-control-0.2.3+impl-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-access-control
  crate, by pulling in any additional dependencies needed by that feature.

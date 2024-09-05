@@ -1,3 +1,11 @@
+rust-proxmox-access-control (0.2.3-1) bookworm; urgency=medium
+
+  * upgrade to current proxmox-router
+
+  * doc fixup
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 05 Sep 2024 14:25:02 +0200
+
 rust-proxmox-access-control (0.2.2-1) bookworm; urgency=medium
 
   * add init_user_config() to AccessControlConfig with a default
