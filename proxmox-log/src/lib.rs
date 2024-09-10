@@ -50,8 +50,7 @@ pub fn init_logger(
     }
     let registry = tracing_subscriber::registry()
         .with(
-            tracing_journald::layer()
-                .expect("Unable to open syslog")
+            journald_or_stderr_layer()
                 .with_filter(filter_fn(|metadata| {
                     !LogContext::exists() || *metadata.level() >= Level::ERROR
                 }))
@@ -127,6 +126,35 @@ impl LogContext {
     }
 }
 
+fn journald_or_stderr_layer<S>() -> Box<dyn tracing_subscriber::Layer<S> + Send + Sync>
+where
+    S: tracing::Subscriber,
+    S: for<'a> tracing_subscriber::registry::LookupSpan<'a>,
+{
+    match tracing_journald::layer() {
+        Ok(layer) => layer.boxed(),
+        Err(err) => {
+            eprintln!("Unable to open syslog: {err:?}");
+            plain_stderr_layer().boxed()
+        }
+    }
+}
+
+fn plain_stderr_layer<S>() -> impl tracing_subscriber::Layer<S>
+where
+    S: tracing::Subscriber,
+    S: for<'a> tracing_subscriber::registry::LookupSpan<'a>,
+{
+    let format = tracing_subscriber::fmt::format()
+        .with_level(false)
+        .without_time()
+        .with_target(false)
+        .compact();
+    tracing_subscriber::fmt::layer()
+        .event_format(format)
+        .with_writer(std::io::stderr)
+}
+
 /// Initialize default logger for CLI binaries
 pub fn init_cli_logger(
     env_var_name: &str,
@@ -144,17 +172,9 @@ pub fn init_cli_logger(
         }
     }
 
-    let format = tracing_subscriber::fmt::format()
-        .with_level(false)
-        .without_time()
-        .with_target(false)
-        .compact();
-
     let registry = tracing_subscriber::registry()
         .with(
-            tracing_subscriber::fmt::layer()
-                .event_format(format)
-                .with_writer(std::io::stderr)
+            plain_stderr_layer()
                 .with_filter(filter_fn(|metadata| {
                     !LogContext::exists() || *metadata.level() >= Level::ERROR
                 }))
