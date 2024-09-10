@@ -44,8 +44,13 @@ pub fn init_logger(
 ) -> Result<(), anyhow::Error> {
     let mut log_level = default_log_level;
     if let Ok(v) = env::var(env_var_name) {
-        if let Ok(l) = v.parse::<LevelFilter>() {
-            log_level = l;
+        match v.parse::<LevelFilter>() {
+            Ok(l) => {
+                log_level = l;
+            }
+            Err(e) => {
+                eprintln!("env variable {env_var_name} found, but parsing failed: {e:?}");
+            }
         }
     }
     let registry = tracing_subscriber::registry()
@@ -165,9 +170,9 @@ pub fn init_cli_logger(
         match v.parse::<LevelFilter>() {
             Ok(l) => {
                 log_level = l;
-            },
+            }
             Err(e) => {
-                eprintln!("env variable PBS_LOG found, but parsing failed: {e:?}");
+                eprintln!("env variable {env_var_name} found, but parsing failed: {e:?}");
             }
         }
     }
