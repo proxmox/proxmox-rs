@@ -62,7 +62,7 @@ impl ApiConfig {
             privileged_addr: None,
 
             #[cfg(feature = "templates")]
-            templates: Default::default(),
+            templates: templates::Templates::with_escape_fn(),
         }
     }
 
@@ -335,6 +335,31 @@ mod templates {
     }
 
     impl Templates {
+        pub fn with_escape_fn() -> Templates {
+            let mut registry = Handlebars::new();
+            // This is the same as the default `html_escape` fn in handlebars, **but** it does not
+            // escape the '='. This is to preserve base64 values.
+            registry.register_escape_fn(|value| {
+                let mut output = String::new();
+                for c in value.chars() {
+                    match c {
+                        '<' => output.push_str("&lt;"),
+                        '>' => output.push_str("&gt;"),
+                        '"' => output.push_str("&quot;"),
+                        '&' => output.push_str("&amp;"),
+                        '\'' => output.push_str("&#x27;"),
+                        '`' => output.push_str("&#x60;"),
+                        _ => output.push(c),
+                    }
+                }
+                output
+            });
+            Self {
+                templates: RwLock::new(registry),
+                template_files: RwLock::new(HashMap::new()),
+            }
+        }
+
         pub fn register<P>(&self, name: &str, path: P) -> Result<(), Error>
         where
             P: Into<PathBuf>,
