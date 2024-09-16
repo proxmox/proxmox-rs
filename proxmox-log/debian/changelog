@@ -1,3 +1,11 @@
+rust-proxmox-log (0.2.5-1) bookworm; urgency=medium
+
+  * init_logger: fall back to printing to stderr when syslog is unavailable
+
+  * show an error on stderr if parsing the log level variable fails
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 16 Sep 2024 15:11:10 +0200
+
 rust-proxmox-log (0.2.4-1) bookworm; urgency=medium
 
   * restore behavior that the cli logger logs to stderr instead of stdout
