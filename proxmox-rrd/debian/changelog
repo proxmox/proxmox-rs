@@ -1,3 +1,10 @@
+rust-proxmox-rrd (0.4.0-1) bookworm; urgency=medium
+
+  * drop api-types feature, the module was moved into its own crate
+    proxmox-rrd-api-types
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 18 Sep 2024 16:01:03 +0200
+
 rust-proxmox-rrd (0.3.2-1) bookworm; urgency=medium
 
   * derive Display and FromStr for RRDMode and RRDTimeFrame

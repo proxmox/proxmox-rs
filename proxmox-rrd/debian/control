@@ -16,6 +16,7 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-sys-0.6+default-dev <!nocheck>,
  librust-proxmox-time-2+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>,
  librust-serde-cbor-0.11+default-dev (>= 0.11.1-~~) <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
@@ -41,24 +42,21 @@ Depends:
  librust-proxmox-sys-0.6+default-dev,
  librust-proxmox-time-2+default-dev,
  librust-serde-1+default-dev,
+ librust-serde-1+derive-dev,
  librust-serde-cbor-0.11+default-dev (>= 0.11.1-~~),
  librust-serde-json-1+default-dev,
  librust-serde-plain-1+default-dev
 Provides:
- librust-proxmox-rrd+api-types-dev (= ${binary:Version}),
  librust-proxmox-rrd+default-dev (= ${binary:Version}),
  librust-proxmox-rrd+rrd-v1-dev (= ${binary:Version}),
  librust-proxmox-rrd-0-dev (= ${binary:Version}),
- librust-proxmox-rrd-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-rrd-0+default-dev (= ${binary:Version}),
  librust-proxmox-rrd-0+rrd-v1-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3+api-types-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3+default-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3+rrd-v1-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3.2-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3.2+api-types-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3.2+default-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3.2+rrd-v1-dev (= ${binary:Version})
+ librust-proxmox-rrd-0.4-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.4+default-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.4+rrd-v1-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.4.0-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.4.0+default-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.4.0+rrd-v1-dev (= ${binary:Version})
 Description: Simple RRD database implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-rrd"
