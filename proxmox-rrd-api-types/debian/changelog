@@ -1,0 +1,5 @@
+rust-proxmox-rrd-api-types (1.0.0-1) bookworm; urgency=medium
+
+  * split out of proxmox-rrd
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 18 Sep 2024 15:24:01 +0200

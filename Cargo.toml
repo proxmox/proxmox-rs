@@ -30,6 +30,7 @@ members = [
     "proxmox-rest-server",
     "proxmox-router",
     "proxmox-rrd",
+    "proxmox-rrd-api-types",
     "proxmox-schema",
     "proxmox-section-config",
     "proxmox-serde",

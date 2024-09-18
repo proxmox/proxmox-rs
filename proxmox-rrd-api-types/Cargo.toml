@@ -1,0 +1,15 @@
+[package]
+name = "proxmox-rrd-api-types"
+version = "1.0.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+description = "Types for RRD values."
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_plain.workspace = true
+
+proxmox-schema = { workspace = true, features = [ "api-macro" ] }
