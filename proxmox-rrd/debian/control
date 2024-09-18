@@ -17,7 +17,8 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-time-2+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-cbor-0.11+default-dev (>= 0.11.1-~~) <!nocheck>,
- librust-serde-json-1+default-dev <!nocheck>
+ librust-serde-json-1+default-dev <!nocheck>,
+ librust-serde-plain-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -41,7 +42,8 @@ Depends:
  librust-proxmox-time-2+default-dev,
  librust-serde-1+default-dev,
  librust-serde-cbor-0.11+default-dev (>= 0.11.1-~~),
- librust-serde-json-1+default-dev
+ librust-serde-json-1+default-dev,
+ librust-serde-plain-1+default-dev
 Provides:
  librust-proxmox-rrd+api-types-dev (= ${binary:Version}),
  librust-proxmox-rrd+default-dev (= ${binary:Version}),
@@ -54,9 +56,9 @@ Provides:
  librust-proxmox-rrd-0.3+api-types-dev (= ${binary:Version}),
  librust-proxmox-rrd-0.3+default-dev (= ${binary:Version}),
  librust-proxmox-rrd-0.3+rrd-v1-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3.1-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3.1+api-types-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3.1+default-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.3.1+rrd-v1-dev (= ${binary:Version})
+ librust-proxmox-rrd-0.3.2-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.3.2+api-types-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.3.2+default-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.3.2+rrd-v1-dev (= ${binary:Version})
 Description: Simple RRD database implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-rrd"
