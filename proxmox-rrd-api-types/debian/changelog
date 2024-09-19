@@ -1,3 +1,9 @@
+rust-proxmox-rrd-api-types (1.0.1-1) bookworm; urgency=medium
+
+  * derive Debug, Eq, PartialEq for RRDMode and RRDTimeFrame
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 19 Sep 2024 14:58:41 +0200
+
 rust-proxmox-rrd-api-types (1.0.0-1) bookworm; urgency=medium
 
   * split out of proxmox-rrd
