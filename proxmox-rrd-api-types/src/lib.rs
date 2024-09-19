@@ -6,21 +6,24 @@ use proxmox_schema::api;
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "UPPERCASE")]
 /// RRD consolidation mode
-pub enum RRDMode {
+pub enum RrdMode {
     /// Maximum
     Max,
     /// Average
     Average,
 }
 
-serde_plain::derive_display_from_serialize!(RRDMode);
-serde_plain::derive_fromstr_from_deserialize!(RRDMode);
+serde_plain::derive_display_from_serialize!(RrdMode);
+serde_plain::derive_fromstr_from_deserialize!(RrdMode);
+
+#[deprecated = "use RrdMode instead"]
+pub type RRDMode = RrdMode;
 
 #[api]
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 /// RRD time frame
-pub enum RRDTimeFrame {
+pub enum RrdTimeframe {
     /// Hour
     Hour,
     /// Day
@@ -35,5 +38,8 @@ pub enum RRDTimeFrame {
     Decade,
 }
 
-serde_plain::derive_display_from_serialize!(RRDTimeFrame);
-serde_plain::derive_fromstr_from_deserialize!(RRDTimeFrame);
+serde_plain::derive_display_from_serialize!(RrdTimeframe);
+serde_plain::derive_fromstr_from_deserialize!(RrdTimeframe);
+
+#[deprecated = "use RrdTimeframe instead"]
+pub type RRDTimeFrame = RrdTimeframe;
