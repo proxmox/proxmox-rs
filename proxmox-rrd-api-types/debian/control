@@ -34,7 +34,7 @@ Provides:
  librust-proxmox-rrd-api-types-1+default-dev (= ${binary:Version}),
  librust-proxmox-rrd-api-types-1.0-dev (= ${binary:Version}),
  librust-proxmox-rrd-api-types-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-rrd-api-types-1.0.1-dev (= ${binary:Version}),
- librust-proxmox-rrd-api-types-1.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-rrd-api-types-1.0.2-dev (= ${binary:Version}),
+ librust-proxmox-rrd-api-types-1.0.2+default-dev (= ${binary:Version})
 Description: Types for RRD values - Rust source code
  Source code for Debianized Rust crate "proxmox-rrd-api-types"

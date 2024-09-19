@@ -1,3 +1,11 @@
+rust-proxmox-rrd-api-types (1.0.2-1) bookworm; urgency=medium
+
+  * rename RrdMode and RrdTimeframe to follow naming guidelines
+
+  * add deprecated type aliases for the old spellings
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 19 Sep 2024 15:16:36 +0200
+
 rust-proxmox-rrd-api-types (1.0.1-1) bookworm; urgency=medium
 
   * derive Debug, Eq, PartialEq for RRDMode and RRDTimeFrame
