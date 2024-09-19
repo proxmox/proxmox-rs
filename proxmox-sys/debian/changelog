@@ -1,3 +1,9 @@
+rust-proxmox-sys (0.6.4-1) bookworm; urgency=medium
+
+  * drop unnecessary not-empty check on fixed-size array
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 19 Sep 2024 09:04:20 +0200
+
 rust-proxmox-sys (0.6.3-1) bookworm; urgency=medium
 
   * replace lazy_static with std's LazyLock and drop the dependency
