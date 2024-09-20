@@ -38,6 +38,12 @@ dinstall:
 	autopkgtest build/$* build/*.deb -- null
 	touch $@
 
+.PHONY: list-packages
+list-packages:
+	@for p in $(CRATES); do \
+		echo "librust-$$p-dev"; \
+	done
+
 .PHONY: check
 check:
 	cargo test

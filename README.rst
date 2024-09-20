@@ -11,13 +11,23 @@ checksums are not compatible.
 To reference new dependencies (or updated versions) that are not yet packaged,
 the dependency needs to point directly to a path or git source.
 
+Quickly installing all packages from apt
+========================================
+
+To a void too many manual installations when ``mk-build-deps`` etc. fail, a
+quick way to install all the main packages of this workspace is to run:
+
+::
+
+    # apt install $(make list-packages)
+
 Steps for Releases
 ==================
 
 - Run ./bump.sh <CRATE> [patch|minor|major|<VERSION>]
 -- Fill out changelog
 -- Confirm bump commit
-- Build packages with `make deb`.
+- Build packages with `make <crate>-deb`.
 -- Don't forget to commit updated d/control!
 
 Adding Crates
