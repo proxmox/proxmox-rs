@@ -1,7 +1,7 @@
 Local cargo config
 ==================
 
-This repository ships with a ``.cargo/config`` that replaces the crates.io
+This repository ships with a ``.cargo/config.toml`` that replaces the crates.io
 registry with packaged crates located in ``/usr/share/cargo/registry``.
 
 A similar config is also applied building with dh_cargo. Cargo.lock needs to be
