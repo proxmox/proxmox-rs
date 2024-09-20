@@ -1,12 +1,14 @@
 [package]
 name = "proxmox-auth-api"
+description = "Tickets, API and Realm handling"
 version = "0.4.6"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-exclude.workspace = true
-description = "Tickets, API and Realm handling"
 rust-version.workspace = true
 
 [[example]]

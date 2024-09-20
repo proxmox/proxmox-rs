@@ -1,12 +1,15 @@
 [package]
 name = "proxmox-syslog-api"
+description = "Syslog Management API implementation"
 version = "0.1.1"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-exclude.workspace = true
-description = "Syslog Management API implementation"
+rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true

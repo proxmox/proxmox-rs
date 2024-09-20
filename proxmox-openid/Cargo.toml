@@ -1,14 +1,16 @@
 [package]
 name = "proxmox-openid"
+description = "base for openid authentication in proxmox products"
 version = "0.10.3"
+
+exclude = [ "build", "debian" ]
+
 authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-exclude = [
-    "build",
-    "debian",
-]
+rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true

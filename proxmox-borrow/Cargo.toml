@@ -1,12 +1,13 @@
 [package]
 name = "proxmox-borrow"
+description = "contains the Tied type to tie a value with a lifetime to the value it borrows from"
 version = "1.0.1"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "contains the Tied type to tie a value with a lifetime to the value it borrows from"
-
-exclude.workspace = true
 
 [dependencies]

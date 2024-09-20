@@ -1,13 +1,14 @@
 [package]
 name = "proxmox-section-config"
+description = "proxmox schema based section config format parsing"
 version = "2.1.1"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "proxmox schema based section config format parsing"
-
-exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true

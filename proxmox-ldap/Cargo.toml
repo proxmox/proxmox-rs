@@ -1,12 +1,14 @@
 [package]
 name = "proxmox-ldap"
+description = "Proxmox library for LDAP authentication/synchronization"
 version = "0.2.2"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-exclude.workspace = true
-description = "Proxmox library for LDAP authentication/synchronization"
 
 [dependencies]
 anyhow.workspace = true

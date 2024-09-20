@@ -1,14 +1,15 @@
 [package]
 name = "proxmox-sys"
+description = "System tools (using nix)."
 version = "0.6.4"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "System tools (using nix)."
 rust-version.workspace = true
-
-exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true

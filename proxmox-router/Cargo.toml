@@ -1,13 +1,15 @@
 [package]
 name = "proxmox-router"
+description = "proxmox API Router and CLI utilities"
 version = "3.0.0"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "proxmox API Router and CLI utilities"
-
-exclude.workspace = true
+rust-version.workspace = true
 
 [[test]]
 name = "docs"

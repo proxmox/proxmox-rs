@@ -1,13 +1,14 @@
 [package]
 name = "proxmox-compression"
+description = "contains compression utilitites (such as an Zip Encoder for async rust)"
 version = "0.2.4"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "contains compression utilitites (such as an Zip Encoder for async rust)"
-
-exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true

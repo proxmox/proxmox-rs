@@ -1,14 +1,15 @@
 [package]
 name = "proxmox-subscription"
+description = "Proxmox subscription utilitites"
 version = "0.4.6"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Proxmox subscription utilitites"
 rust-version.workspace = true
-
-exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true

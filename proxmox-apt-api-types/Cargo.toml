@@ -1,12 +1,13 @@
 [package]
 name = "proxmox-apt-api-types"
+description = "APT API type definitions."
 version = "1.0.1"
+
 authors.workspace = true
 edition.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-exclude.workspace = true
-description = "APT API type definitions."
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }

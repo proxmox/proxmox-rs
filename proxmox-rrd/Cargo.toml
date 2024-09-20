@@ -1,12 +1,14 @@
 [package]
 name = "proxmox-rrd"
+description = "Simple RRD database implementation."
 version = "0.4.0"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-exclude.workspace = true
-description = "Simple RRD database implementation."
 
 [dev-dependencies]
 proxmox-router = { workspace = true, features = ["cli", "server"] }

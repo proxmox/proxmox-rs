@@ -1,13 +1,14 @@
 [package]
 name = "proxmox-product-config"
+description = "Configuration file handling for Proxmox products."
 version = "0.2.2"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Configuration file handling for Proxmox products."
-
-exclude.workspace = true
 
 [dependencies]
 anyhow.workspace = true

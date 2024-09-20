@@ -1,13 +1,14 @@
 [package]
 name = "proxmox-tfa"
+description = "tfa implementation for totp and u2f"
 version = "5.0.0"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "tfa implementation for totp and u2f"
-
-exclude.workspace = true
 
 [dependencies]
 serde.workspace = true

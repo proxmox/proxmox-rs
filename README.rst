@@ -30,10 +30,14 @@ Adding Crates
 2) In the new crate's ``Cargo.toml``:
   - In ``[package]`` set:
       authors.workspace = true
-      license.workspace = true
       edition.workspace = true
       exclude.workspace = true
+      homepage.workspace = true
+      license.workspace = true
       repository.workspace = true
+      rust-version.workspace = true
+    If a separate 'exclude' is need it, separate it out as its own block  above
+    the inherited fields.
   - Add a meaningful ``description``
   - Copy ``debian/copyright`` and ``debian/debcargo.toml`` from another subcrate.
 

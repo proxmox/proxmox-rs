@@ -1,14 +1,15 @@
 [package]
 name = "proxmox-acme"
-version = "0.5.2"
 description = "ACME client library"
-authors.workspace = true
-license.workspace = true
-edition.workspace = true
-homepage.workspace = true
-repository.workspace = true
+version = "0.5.2"
 
 exclude = [ "debian" ]
+
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [dependencies]
 base64.workspace = true

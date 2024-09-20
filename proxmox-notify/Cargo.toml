@@ -1,11 +1,15 @@
 [package]
 name = "proxmox-notify"
+description = "implementation of notification base and plugins"
 version = "0.4.2"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-exclude.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true

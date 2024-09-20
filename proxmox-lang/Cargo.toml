@@ -1,12 +1,13 @@
 [package]
 name = "proxmox-lang"
+description = "simple rust language utilities such as try_block, which have no dependencies"
 version = "1.4.0"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "simple rust language utilities such as try_block, which have no dependencies"
-
-exclude.workspace = true
 
 [dependencies]

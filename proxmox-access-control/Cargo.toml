@@ -1,14 +1,15 @@
 [package]
 name = "proxmox-access-control"
+description = "A collection of utilities to implement access control management."
 version = "0.2.3"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-homepage.workspace = true
-exclude.workspace = true
 rust-version.workspace = true
-description = "A collection of utilities to implement access control management."
 
 [dependencies]
 anyhow.workspace = true

@@ -1,12 +1,14 @@
 [package]
 name = "proxmox-shared-cache"
+description = "A cache that can be used from multiple processes simultaneously"
 version = "0.1.0"
+
 authors.workspace = true
 edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
 license.workspace = true
 repository.workspace = true
-exclude.workspace = true
-description = "A cache that can be used from multiple processes simultaneously"
 
 [dependencies]
 anyhow.workspace = true
