@@ -1909,6 +1909,10 @@ serde_plain::derive_fromstr_from_deserialize!(LxcConfigCmode);
 
 #[api(
     properties: {
+        "deny-write": {
+            default: false,
+            optional: true,
+        },
         gid: {
             minimum: 0,
             optional: true,
@@ -1933,6 +1937,12 @@ serde_plain::derive_fromstr_from_deserialize!(LxcConfigCmode);
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct LxcConfigDev {
+    /// Deny the container to write to the device
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "deny-write")]
+    pub deny_write: Option<bool>,
+
     /// Group ID to be assigned to the device node
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
