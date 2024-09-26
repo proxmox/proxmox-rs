@@ -44,7 +44,7 @@ my sub to_doc_comment : prototype($);
 my sub handle_def : prototype($$$);
 my sub namify_type : prototype($;@);
 my sub indent_lines : prototype($$);
-sub generate_struct : prototype($$$);
+sub generate_struct : prototype($$$$);
 
 sub dump {
     print(Dumper($all_types));
@@ -733,6 +733,7 @@ my sub get_format : prototype($$) {
             $name_hint,
             { type => 'object', properties => $format, additionalProperties => 0 },
             {},
+            {},
         );
         return {
             format_name => $format_name,
@@ -1071,7 +1072,7 @@ sub handle_def : prototype($$$) {
     } elsif ($type eq 'string') {
         $def->{type} = string_type($schema, $def->{api}, $name_hint, $def);
     } elsif ($type eq 'object') {
-        $def->{type} = generate_struct($name_hint, $orig_schema, {});
+        $def->{type} = generate_struct($name_hint, $orig_schema, {}, $def->{api});
         # generate_struct uses the original schema and warns by itself
         return;
     } elsif ($type eq 'array') {
@@ -1189,8 +1190,8 @@ sub is_array : prototype($$) {
     return ($base, $count);
 }
 
-sub generate_struct : prototype($$$) {
-    my ($name_hint, $schema, $extra) = @_;
+sub generate_struct : prototype($$$$) {
+    my ($name_hint, $schema, $extra, $api_props) = @_;
     die "no struct name defined, unnamed parameter list?\n" if !defined($name_hint);
     local $__err_path = "$__err_path => struct $name_hint";
 
@@ -1223,6 +1224,7 @@ sub generate_struct : prototype($$$) {
         }
         $dedup_struct->{$properties} = $name_hint;
     }
+    $api_props->{type} = $name_hint;
     return $name_hint if exists $all_structs->{$name_hint};
 
     my $def = {
@@ -1477,6 +1479,7 @@ my sub method_parameters : prototype($$$$$) {
         $param_name,
         $parameters,
         {}, # { skip => $url_params },
+        {},
     );
 }
 
@@ -1499,6 +1502,7 @@ my sub method_return_type : prototype($$$$) {
         $def->{output_type} = generate_struct(
             $return_name,
             $returns,
+            {},
             {},
         );
     } elsif ($type eq 'array') {
