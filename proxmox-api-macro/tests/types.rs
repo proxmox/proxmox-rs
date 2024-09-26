@@ -3,6 +3,8 @@
 
 #![allow(dead_code)]
 
+use std::collections::HashMap;
+
 use proxmox_api_macro::api;
 use proxmox_schema as schema;
 use proxmox_schema::{ApiType, EnumEntry};
@@ -10,6 +12,8 @@ use proxmox_schema::{ApiType, EnumEntry};
 use anyhow::Error;
 use serde::Deserialize;
 use serde_json::Value;
+
+pub const TEXT_SCHEMA: schema::Schema = schema::StringSchema::new("Text.").schema();
 
 #[api(
     type: String,
@@ -185,4 +189,28 @@ fn string_check_schema_test() {
 /// Some Description.
 pub struct RenamedAndDescribed {
     a_field: String,
+}
+
+#[api(
+    properties: {},
+    additional_properties: "rest",
+)]
+#[derive(Deserialize)]
+/// Some Description.
+pub struct UnspecifiedData {
+    /// Text.
+    field: String,
+
+    /// Remaining data.
+    rest: HashMap<String, Value>,
+}
+
+#[test]
+fn additional_properties_test() {
+    const TEST_UNSPECIFIED: ::proxmox_schema::Schema =
+        ::proxmox_schema::ObjectSchema::new("Some Description.", &[("field", false, &TEXT_SCHEMA)])
+            .additional_properties(true)
+            .schema();
+
+    assert_eq!(TEST_UNSPECIFIED, UnspecifiedData::API_SCHEMA);
 }

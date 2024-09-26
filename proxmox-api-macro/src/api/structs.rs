@@ -141,9 +141,15 @@ fn handle_regular_struct(
     // fields if there are any.
     let mut schema_fields: HashMap<String, &mut ObjectEntry> = HashMap::new();
 
+    let mut additional_properties = None;
+
     // We also keep a reference to the SchemaObject around since we derive missing fields
     // automatically.
     if let SchemaItem::Object(obj) = &mut schema.item {
+        additional_properties = obj
+            .additional_properties
+            .as_ref()
+            .and_then(|a| a.to_option_string());
         for field in obj.properties_mut() {
             schema_fields.insert(field.name.as_str().to_string(), field);
         }
@@ -177,6 +183,12 @@ fn handle_regular_struct(
                     (ident.to_string(), ident.span())
                 }
             };
+
+            if additional_properties.as_deref() == Some(name.as_ref()) {
+                // we just *skip* the additional properties field, it is supposed to be a flattened
+                // `HashMap<String, Value>` collecting all the values that have no schema
+                continue;
+            }
 
             match schema_fields.remove(&name) {
                 Some(field_def) => {

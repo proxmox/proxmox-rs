@@ -357,6 +357,13 @@ impl SchemaItem {
                 ts.extend(quote_spanned! { obj.span =>
                     ::proxmox_schema::ObjectSchema::new(#description, &[#elems])
                 });
+                if obj
+                    .additional_properties
+                    .as_ref()
+                    .is_some_and(|a| a.to_bool())
+                {
+                    ts.extend(quote_spanned! { obj.span => .additional_properties(true) });
+                }
             }
             SchemaItem::Array(array) => {
                 let description = check_description()?;
@@ -516,6 +523,51 @@ impl ObjectEntry {
 pub struct SchemaObject {
     span: Span,
     properties_: Vec<ObjectEntry>,
+    additional_properties: Option<AdditionalProperties>,
+}
+
+#[derive(Clone)]
+pub enum AdditionalProperties {
+    /// `additional_properties: false`.
+    No,
+    /// `additional_properties: true`.
+    Ignored,
+    /// `additional_properties: "field_name"`.
+    Field(syn::LitStr),
+}
+
+impl TryFrom<JSONValue> for AdditionalProperties {
+    type Error = syn::Error;
+
+    fn try_from(value: JSONValue) -> Result<Self, Self::Error> {
+        let span = value.span();
+        if let JSONValue::Expr(syn::Expr::Lit(expr_lit)) = value {
+            match expr_lit.lit {
+                syn::Lit::Str(s) => return Ok(Self::Field(s)),
+                syn::Lit::Bool(b) => {
+                    return Ok(if b.value() { Self::Ignored } else { Self::No });
+                }
+                _ => (),
+            }
+        }
+        bail!(
+            span,
+            "invalid value for additional_properties, expected boolean or field name"
+        );
+    }
+}
+
+impl AdditionalProperties {
+    pub fn to_option_string(&self) -> Option<String> {
+        match self {
+            Self::Field(name) => Some(name.value()),
+            _ => None,
+        }
+    }
+
+    pub fn to_bool(&self) -> bool {
+        !matches!(self, Self::No)
+    }
 }
 
 impl SchemaObject {
@@ -523,6 +575,7 @@ impl SchemaObject {
         Self {
             span,
             properties_: Vec::new(),
+            additional_properties: None,
         }
     }
 
@@ -574,6 +627,10 @@ impl SchemaObject {
     fn try_extract_from(obj: &mut JSONObject) -> Result<Self, syn::Error> {
         let mut this = Self {
             span: obj.span(),
+            additional_properties: obj
+                .remove("additional_properties")
+                .map(AdditionalProperties::try_from)
+                .transpose()?,
             properties_: obj
                 .remove_required_element("properties")?
                 .into_object("object field definition")?
