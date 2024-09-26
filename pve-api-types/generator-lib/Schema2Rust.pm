@@ -1220,10 +1220,18 @@ sub generate_struct : prototype($$$$) {
         # default is 1 urrrgh
         if (!$schema->{additionalProperties}) {
             warn "no 'properties' in object schema, using serde_json::Value\n";
+            $api_props->{type} = 'Object';
+            $api_props->{properties} = '{}';
+            if (defined(my $description = $schema->{description})) {
+                $api_props->{description} = quote_string($description);
+            } else {
+                $api_props->{description} = quote_string("FIXME: missing description in PVE");
+            }
             return 'serde_json::Value';
         }
     } else {
         if (my $name = $dedup_struct->{$properties}) {
+            $api_props->{type} = $name;
             return $name;
         }
         $dedup_struct->{$properties} = $name_hint;
