@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (1.2.1-1) bookworm; urgency=medium
+
+  * allow declaring a field meant to collect the 'additional_properties'
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 26 Sep 2024 14:52:43 +0200
+
 rust-proxmox-api-macro (1.2.0-1) bookworm; urgency=medium
 
   * deprecate old "streaming" method attribute
