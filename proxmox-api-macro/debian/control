@@ -17,6 +17,7 @@ Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-api-macro
 Rules-Requires-Root: no
 
@@ -38,7 +39,7 @@ Provides:
  librust-proxmox-api-macro-1+default-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.2-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.2+default-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.2.0-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.2.0+default-dev (= ${binary:Version})
+ librust-proxmox-api-macro-1.2.1-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-1.2.1+default-dev (= ${binary:Version})
 Description: Proxmox API macro - Rust source code
  Source code for Debianized Rust crate "proxmox-api-macro"
