@@ -2,7 +2,10 @@
 
 // This file contains the support code for the generated API types.
 
+use std::collections::HashMap;
+
 use anyhow::{bail, Error};
+use serde_json::Value;
 
 use proxmox_schema::{api, const_regex, ApiStringFormat, ApiType, Schema, StringSchema};
 

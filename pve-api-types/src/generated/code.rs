@@ -48,7 +48,6 @@
 /// - /cluster/ceph/status
 /// - /cluster/config
 /// - /cluster/config/apiversion
-/// - /cluster/config/join
 /// - /cluster/config/nodes
 /// - /cluster/config/nodes/{node}
 /// - /cluster/config/qdevice
@@ -376,6 +375,17 @@
 /// - /storage/{storage}
 /// ```
 impl<T: HttpApiClient> PveClient<T> {
+    /// Get information needed to join this cluster over the connected node.
+    pub async fn cluster_config_join(
+        &self,
+        node: Option<String>,
+    ) -> Result<ClusterJoinInfo, Error> {
+        let (mut query, mut sep) = (String::new(), '?');
+        add_query_arg(&mut query, &mut sep, "node", &node);
+        let url = format!("/api2/extjs/cluster/config/join{query}");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
     /// Retrieve metrics of the cluster.
     pub async fn cluster_metrics_export(
         &self,

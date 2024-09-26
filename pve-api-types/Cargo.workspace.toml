@@ -18,6 +18,7 @@ percent-encoding = "2.1"
 regex = "1.7"
 serde = "1"
 serde_plain = "1"
+serde_json = "1"
 
 proxmox-login = "0.1.1"
 proxmox-schema = "3"

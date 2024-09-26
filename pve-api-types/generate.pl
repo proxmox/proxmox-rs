@@ -96,6 +96,7 @@ Schema2Rust::register_enum_variant('QemuConfigTpmstate0Version::v2.0' => 'V2_0')
 Schema2Rust::register_format('pve-hotplug-features' => { unchecked => 1 });
 ## # FIXME: Figure out something sane for these
 Schema2Rust::register_format('address' => { code => 'verifiers::verify_address' });
+Schema2Rust::register_format('ip' => { code => 'verifiers::verify_ip' });
 Schema2Rust::register_format('ipv4' => { code => 'verifiers::verify_ipv4' });
 Schema2Rust::register_format('ipv6' => { code => 'verifiers::verify_ipv6' });
 Schema2Rust::register_format('pve-ipv4-config' => { code => 'verifiers::verify_ipv4_config' });
@@ -207,6 +208,17 @@ api(POST => '/nodes/{node}/lxc/{vmid}/remote_migrate', 'remote_migrate_lxc',  'o
 
 Schema2Rust::register_api_override('ClusterMetrics', '/properties/data/items', { type => "ClusterMetricsData"});
 api(GET => '/cluster/metrics/export', 'cluster_metrics_export', 'return-name' => 'ClusterMetrics');
+
+Schema2Rust::register_api_extensions('ClusterJoinInfoNodelist', {
+    '/properties/pve_addr' => { description => sq("FIXME: Missing description in PVE.") },
+    '/properties/pve_fp' => { description => sq("FIXME: Missing description in PVE.") },
+    '/properties/quorum_votes' => { description => sq("FIXME: Missing description in PVE.") },
+});
+Schema2Rust::register_api_extensions('ClusterJoinInfo', {
+    '/properties/config_digest' => { description => sq("FIXME: Missing description in PVE.") },
+    '/properties/nodelist' => { description => sq("FIXME: Missing description in PVE.") },
+});
+api(GET => '/cluster/config/join', 'cluster_config_join', 'return-name' => 'ClusterJoinInfo');
 
 # api(GET => '/storage', 'list_storages', 'return-name' => 'StorageList');
 # api(GET => '/access/domains', 'list_domains', 'return-name' => 'ListRealm');

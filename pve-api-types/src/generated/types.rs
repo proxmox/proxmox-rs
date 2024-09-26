@@ -96,6 +96,145 @@ mod cluster_resource_content {
     }
 }
 
+const_regex! {
+
+CLUSTER_JOIN_INFO_PREFERRED_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+
+}
+
+#[api(
+    properties: {
+        config_digest: {
+            type: String,
+            description: "FIXME: Missing description in PVE.",
+        },
+        nodelist: {
+            items: {
+                type: ClusterJoinInfoNodelist,
+            },
+            type: Array,
+            description: "FIXME: Missing description in PVE.",
+        },
+        preferred_node: {
+            format: &ApiStringFormat::Pattern(&CLUSTER_JOIN_INFO_PREFERRED_NODE_RE),
+            type: String,
+        },
+        totem: {
+            description: "FIXME: missing description in PVE",
+            properties: {},
+            type: Object,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterJoinInfo {
+    pub config_digest: String,
+
+    pub nodelist: Vec<ClusterJoinInfoNodelist>,
+
+    /// The cluster node name.
+    pub preferred_node: String,
+
+    pub totem: serde_json::Value,
+}
+
+const_regex! {
+
+CLUSTER_JOIN_INFO_NODELIST_NAME_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+
+}
+
+#[api(
+    additional_properties: "additional_properties",
+    properties: {
+        name: {
+            format: &ApiStringFormat::Pattern(&CLUSTER_JOIN_INFO_NODELIST_NAME_RE),
+            type: String,
+        },
+        nodeid: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        pve_addr: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+            type: String,
+            description: "FIXME: Missing description in PVE.",
+        },
+        pve_fp: {
+            type: String,
+            description: "FIXME: Missing description in PVE.",
+        },
+        quorum_votes: {
+            minimum: 0,
+            type: Integer,
+            description: "FIXME: Missing description in PVE.",
+        },
+        ring0_addr: {
+            format: &ApiStringFormat::PropertyString(&ClusterJoinInfoNodelistRing0Addr::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterJoinInfoNodelist {
+    /// The cluster node name.
+    pub name: String,
+
+    /// Node id for this node.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodeid: Option<u64>,
+
+    pub pve_addr: String,
+
+    /// Certificate SHA 256 fingerprint.
+    pub pve_fp: String,
+
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    pub quorum_votes: u64,
+
+    /// Address and priority information of a single corosync link. (up to 8
+    /// links supported; link0..link7)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ring0_addr: Option<String>,
+
+    #[serde(flatten)]
+    pub additional_properties: HashMap<String, Value>,
+}
+
+#[api(
+    properties: {
+        address: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_address),
+            type: String,
+        },
+        priority: {
+            default: 0,
+            maximum: 255,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterJoinInfoNodelistRing0Addr {
+    /// Hostname (or IP) of this corosync link address.
+    pub address: String,
+
+    /// The priority for the link when knet is used in 'passive' mode (default).
+    /// Lower value means higher priority. Only valid for cluster create,
+    /// ignored on node add.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub priority: Option<u8>,
+}
+
 #[api(
     properties: {
         data: {
