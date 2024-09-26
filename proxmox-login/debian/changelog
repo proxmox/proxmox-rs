@@ -1,3 +1,12 @@
+rust-proxmox-login (0.1.2-1) unstable; urgency=medium
+
+  * support accessing the "raw" webauthn challenge for when the webauthn-rs
+    crate is available (like in the wasm code)
+
+  * documentation updates
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 26 Sep 2024 14:51:30 +0200
+
 rust-proxmox-login (0.1.1-1) unstable; urgency=medium
 
   * add parser helpers for f32 and f64

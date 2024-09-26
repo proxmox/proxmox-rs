@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper (>= 12),
  dh-cargo (>= 25),
  cargo:native <!nocheck>,
- rustc:native <!nocheck>,
+ rustc:native (>= 1.80) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-base64-0.13+default-dev <!nocheck>,
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~) <!nocheck>,
@@ -16,6 +16,7 @@ Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.6.2
 Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/proxmox-login]
 Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/proxmox-login
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-login
 Rules-Requires-Root: no
 
@@ -39,8 +40,8 @@ Provides:
  librust-proxmox-login-0+default-dev (= ${binary:Version}),
  librust-proxmox-login-0.1-dev (= ${binary:Version}),
  librust-proxmox-login-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-login-0.1.1-dev (= ${binary:Version}),
- librust-proxmox-login-0.1.1+default-dev (= ${binary:Version})
+ librust-proxmox-login-0.1.2-dev (= ${binary:Version}),
+ librust-proxmox-login-0.1.2+default-dev (= ${binary:Version})
 Description: Proxmox product authentication api - Rust source code
  Source code for Debianized Rust crate "proxmox-login"
 
@@ -54,7 +55,7 @@ Depends:
 Provides:
  librust-proxmox-login-0+http-dev (= ${binary:Version}),
  librust-proxmox-login-0.1+http-dev (= ${binary:Version}),
- librust-proxmox-login-0.1.1+http-dev (= ${binary:Version})
+ librust-proxmox-login-0.1.2+http-dev (= ${binary:Version})
 Description: Proxmox product authentication api - feature "http"
  This metapackage enables feature "http" for the Rust proxmox-login crate, by
  pulling in any additional dependencies needed by that feature.
@@ -69,7 +70,7 @@ Depends:
 Provides:
  librust-proxmox-login-0+webauthn-dev (= ${binary:Version}),
  librust-proxmox-login-0.1+webauthn-dev (= ${binary:Version}),
- librust-proxmox-login-0.1.1+webauthn-dev (= ${binary:Version})
+ librust-proxmox-login-0.1.2+webauthn-dev (= ${binary:Version})
 Description: Proxmox product authentication api - feature "webauthn"
  This metapackage enables feature "webauthn" for the Rust proxmox-login crate,
  by pulling in any additional dependencies needed by that feature.
