@@ -26,6 +26,12 @@ pub struct TfaChallenge {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub webauthn: Option<webauthn_rs::proto::RequestChallengeResponse>,
 
+    /// If the user has any webauthn credentials registered, this will contain the corresponding
+    /// challenge data as a json string.
+    /// This field is never serialized and is only meant to be informative.
+    #[serde(default, skip)]
+    pub webauthn_raw: Option<String>,
+
     /// True if the user has yubico keys configured.
     #[serde(skip_serializing_if = "bool_is_false", default)]
     pub yubico: bool,

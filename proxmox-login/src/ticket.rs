@@ -3,6 +3,7 @@
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::error::TicketError;
 use crate::tfa::TfaChallenge;
@@ -24,7 +25,15 @@ impl std::str::FromStr for TicketResponse {
                 Some(pos) => {
                     let challenge: std::borrow::Cow<[u8]> =
                         percent_encoding::percent_decode_str(&challenge[..pos]).into();
-                    let challenge = serde_json::from_slice(&challenge).map_err(|_| TicketError)?;
+                    let raw_challenge: Value =
+                        serde_json::from_slice(&challenge).map_err(|_| TicketError)?;
+                    let webauthn_raw = raw_challenge["webauthn"].clone();
+                    let mut challenge: TfaChallenge =
+                        serde_json::from_value(raw_challenge).map_err(|_| TicketError)?;
+                    if !webauthn_raw.is_null() {
+                        challenge.webauthn_raw =
+                            Some(serde_json::to_string(&webauthn_raw).map_err(|_| TicketError)?);
+                    }
                     Ok(TicketResponse::Tfa(ticket.to_string(), challenge))
                 }
                 None => Err(TicketError),
