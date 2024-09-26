@@ -228,6 +228,10 @@ my sub print_struct : prototype($$$) {
         print {$out} "    pub $field_def->{rust_name}: $field_def->{type},\n";
         print {$out} "\n";
     }
+    if ($def->{additional_properties}) {
+        print {$out} "    #[serde(flatten)]\n";
+        print {$out} "    pub additional_properties: HashMap<String, Value>,\n";
+    }
     print {$out} "}\n";
 
     my $regexes_str = '';
@@ -1207,13 +1211,13 @@ sub generate_struct : prototype($$$$) {
         # does not actually become a struct, but a `HashMap<String, TY>`
         my $additional = $schema->{additionalProperties};
         if (ref($additional)) {
-            my $name = generate_struct($name_hint, $additional, $extra);
+            my $name = generate_struct($name_hint, $additional, $extra, {});
             return "HashMap<String, $name>";
         }
     }
 
     if (!$properties) {
-        my $additional = delete($schema->{additionalProperties}); # default is 1 urrrgh
+        # default is 1 urrrgh
         if (!$schema->{additionalProperties}) {
             warn "no 'properties' in object schema, using serde_json::Value\n";
             return 'serde_json::Value';
@@ -1317,8 +1321,9 @@ sub generate_struct : prototype($$$$) {
             # FIXME: proxmox_schema doesn't support this yet.
             die "struct with additional properties not currently supported, don't know how to name the field\n";
         } else {
-            die "struct with arbitrary additional properties currently not supported\n"
-                if !ref($additional);
+            $def->{api}->{additional_properties} = '"additional_properties"';
+            $def->{additional_properties} = true;
+            #die "struct with arbitrary additional properties currently not supported\n";
         }
     }
 
