@@ -24,7 +24,6 @@
 /// - /access/users/{userid}
 /// - /access/users/{userid}/tfa
 /// - /access/users/{userid}/token
-/// - /access/users/{userid}/token/{tokenid}
 /// - /access/users/{userid}/unlock-tfa
 /// - /cluster
 /// - /cluster/acme
@@ -410,6 +409,18 @@ impl<T: HttpApiClient> PveClient<T> {
         add_query_arg(&mut query, &mut sep, "type", &ty);
         let url = format!("/api2/extjs/cluster/resources{query}");
         Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// Generate a new API token for a specific user. NOTE: returns API token
+    /// value, which needs to be stored as it cannot be retrieved afterwards!
+    pub async fn create_token(
+        &self,
+        userid: &str,
+        tokenid: &str,
+        params: CreateToken,
+    ) -> Result<CreateTokenResponse, Error> {
+        let url = format!("/api2/extjs/access/users/{userid}/token/{tokenid}");
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Read task list for one node (finished tasks).

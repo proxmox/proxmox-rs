@@ -639,6 +639,106 @@ pub enum ClusterResourceType {
 serde_plain::derive_display_from_serialize!(ClusterResourceType);
 serde_plain::derive_fromstr_from_deserialize!(ClusterResourceType);
 
+#[api(
+    properties: {
+        comment: {
+            optional: true,
+            type: String,
+            description: "Description of the Token",
+        },
+        expire: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        privsep: {
+            default: true,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
+pub struct CreateToken {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// API token expiration date (seconds since epoch). '0' means no expiration
+    /// date.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expire: Option<u64>,
+
+    /// Restrict API token privileges with separate ACLs (default), or give full
+    /// privileges of corresponding user.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub privsep: Option<bool>,
+}
+
+#[api(
+    properties: {
+        "full-tokenid": {
+            type: String,
+        },
+        info: {
+            type: CreateTokenResponseInfo,
+        },
+        value: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateTokenResponse {
+    /// The full token id.
+    #[serde(rename = "full-tokenid")]
+    pub full_tokenid: String,
+
+    pub info: CreateTokenResponseInfo,
+
+    /// API token value used for authentication.
+    pub value: String,
+}
+
+#[api(
+    properties: {
+        comment: {
+            optional: true,
+            type: String,
+            description: "Description of the Token",
+        },
+        expire: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        privsep: {
+            default: true,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateTokenResponseInfo {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// API token expiration date (seconds since epoch). '0' means no expiration
+    /// date.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expire: Option<u64>,
+
+    /// Restrict API token privileges with separate ACLs (default), or give full
+    /// privileges of corresponding user.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub privsep: Option<bool>,
+}
+
 #[api]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum IsRunning {

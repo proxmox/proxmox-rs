@@ -46,7 +46,7 @@ Schema2Rust::register_format('mac-addr' => { regex => '^(?i)[a-f0-9][02468ace](?
 Schema2Rust::register_format('pve-bridge-id' => { regex => '^[-_.\w\d]+$' });
 Schema2Rust::register_format('pve-configid' => { regex => $CONFIGID_RE });
 ## Schema2Rust::register_format('pve-groupid' => { code => 'verify_pve_groupid' });
-## Schema2Rust::register_format('pve-userid' => { code => 'verify_pve_userid' });
+Schema2Rust::register_format('pve-userid' => { code => 'verify_pve_userid' });
 ## # copied from JSONSchema's verify_pve_node sub:
 Schema2Rust::register_format('pve-node' => { regex => '^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$' });
 ## #Schema2Rust::register_format('pve-node' => { code => 'verify_pve_node' });
@@ -117,6 +117,16 @@ Schema2Rust::register_api_extension('LxcConfig', '/properties/lxc/items/items', 
 Schema2Rust::register_api_override('StartQemu', '/properties/timeout/default', 30);
 Schema2Rust::register_api_override('RemoteMigrateQemu', '/properties/bwlimit/default', undef);
 Schema2Rust::register_api_override('RemoteMigrateLxc', '/properties/bwlimit/default', undef);
+
+# Token api is missing some descriptions and has textual defaults for integers
+Schema2Rust::register_api_extensions('CreateTokenResponseInfo', {
+    '/properties/comment' => { description => sq("Description of the Token") },
+});
+Schema2Rust::register_api_extensions('CreateToken', {
+    '/properties/comment' => { description => sq("Description of the Token") },
+});
+Schema2Rust::register_api_override('CreateTokenResponseInfo', '/properties/expire/default', undef);
+Schema2Rust::register_api_override('CreateToken', '/properties/expire/default', undef);
 
 # The task API is missing most documentation...
 Schema2Rust::register_api_extensions('TaskStatus', {
@@ -226,8 +236,8 @@ api(GET => '/cluster/config/join', 'cluster_config_join', 'return-name' => 'Clus
 # api(GET => '/access/groups/{groupid}', 'get_group', 'return-name' => 'Group');
 # api(GET => '/access/users', 'list_users', 'return-name' => 'ListUsers');
 # api(GET => '/access/users/{userid}', 'get_user', 'return-name' => 'User');
-# api(POST => '/access/users/{userid}/token/{tokenid}', 'create_token', 'param-name' => 'CreateToken');
-# Schema2Rust::derive('CreateToken' => 'Default');
+api(POST => '/access/users/{userid}/token/{tokenid}', 'create_token', 'param-name' => 'CreateToken');
+Schema2Rust::derive('CreateToken' => 'Default');
 
 # NOW DUMP THE CODE:
 #
