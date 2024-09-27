@@ -94,11 +94,13 @@ where
         let value = if value.eq_ignore_ascii_case("true")
             || value.eq_ignore_ascii_case("yes")
             || value.eq_ignore_ascii_case("on")
+            || value == "1"
         {
             true
         } else if value.eq_ignore_ascii_case("false")
             || value.eq_ignore_ascii_case("no")
             || value.eq_ignore_ascii_case("off")
+            || value == "0"
         {
             false
         } else {
