@@ -1,3 +1,11 @@
+rust-proxmox-tfa (5.0.1) bookworm; urgency=medium
+
+  * provide TfaUser via the 'types' feature
+
+  * typo fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 01 Oct 2024 12:48:13 +0200
+
 rust-proxmox-tfa (5.0.0) bookworm; urgency=medium
 
   * webauthn: make OriginUrl stringify according to RFC6454 (no trailing slash)
