@@ -73,7 +73,7 @@ impl TfaInfo {
     )
 )]
 /// A TFA entry for a user.
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct TypedTfaInfo {
     #[serde(rename = "type")]
@@ -120,4 +120,35 @@ impl TfaUpdateInfo {
             ..Default::default()
         }
     }
+}
+
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        "entries": {
+            type: Array,
+            items: { type: TypedTfaInfo },
+        },
+    },
+))]
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all = "kebab-case")]
+/// Over the API we only provide the descriptions for TFA data.
+pub struct TfaUser {
+    /// The user this entry belongs to.
+    pub userid: String,
+
+    /// TFA entries.
+    pub entries: Vec<TypedTfaInfo>,
+
+    /// The user is locked out of TOTP authentication.
+    #[serde(default, skip_serializing_if = "bool_is_false")]
+    pub totp_locked: bool,
+
+    /// If a user's second factor is blocked, this contains the block's expiration time.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tfa_locked_until: Option<i64>,
+}
+
+pub(crate) fn bool_is_false(v: &bool) -> bool {
+    !v
 }

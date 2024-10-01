@@ -12,7 +12,7 @@ use proxmox_schema::api;
 use super::{OpenUserChallengeData, TfaConfig, TfaInfo, TfaUserData};
 use crate::totp::Totp;
 
-pub use crate::types::{TfaType, TfaUpdateInfo, TypedTfaInfo};
+pub use crate::types::{TfaType, TfaUpdateInfo, TfaUser, TypedTfaInfo};
 
 fn to_data(data: &TfaUserData) -> Vec<TypedTfaInfo> {
     let mut out = Vec::with_capacity(
@@ -214,33 +214,6 @@ pub fn unlock_and_reset_tfa<A: ?Sized + OpenUserChallengeData>(
     userid: &str,
 ) -> Result<bool, Error> {
     config.unlock_and_reset_tfa(access, userid)
-}
-
-#[cfg_attr(feature = "api-types", api(
-    properties: {
-        "entries": {
-            type: Array,
-            items: { type: TypedTfaInfo },
-        },
-    },
-))]
-#[derive(Deserialize, Serialize)]
-#[serde(deny_unknown_fields, rename_all = "kebab-case")]
-/// Over the API we only provide the descriptions for TFA data.
-pub struct TfaUser {
-    /// The user this entry belongs to.
-    pub userid: String,
-
-    /// TFA entries.
-    pub entries: Vec<TypedTfaInfo>,
-
-    /// The user is locked out of TOTP authentication.
-    #[serde(default, skip_serializing_if = "super::bool_is_false")]
-    pub totp_locked: bool,
-
-    /// If a user's second factor is blocked, this contains the block's expiration time.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tfa_locked_until: Option<i64>,
 }
 
 /// API call implementation for `GET /access/tfa`.

@@ -15,6 +15,7 @@ use url::Url;
 use webauthn_rs::{proto::UserVerificationPolicy, Webauthn};
 
 use crate::totp::Totp;
+use crate::types::bool_is_false;
 use proxmox_uuid::Uuid;
 
 mod serde_tools;
@@ -1263,10 +1264,6 @@ impl TfaChallenge {
             && self.webauthn.is_none()
             && !self.yubico
     }
-}
-
-fn bool_is_false(v: &bool) -> bool {
-    !v
 }
 
 /// A user's response to a TFA challenge.
