@@ -7,6 +7,11 @@ pub fn encode(data: &[u8]) -> String {
     base64::encode_config(data, config())
 }
 
+/// Decode a base64url encoded string.
+pub fn decode<T: AsRef<[u8]>>(data: &T) -> Result<Vec<u8>, crate::Error> {
+    Ok(base64::decode_config(data.as_ref(), config())?)
+}
+
 // curiously currently unused as we don't deserialize any of that
 // /// Decode bytes from a base64url string.
 // pub fn decode(data: &str) -> Result<Vec<u8>, base64::DecodeError> {
