@@ -1,3 +1,9 @@
+rust-proxmox-acme (0.5.3) bookworm; urgency=medium
+
+  * detect base64 vs base64url encoded eab hmac key
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 03 Oct 2024 09:52:20 +0200
+
 rust-proxmox-acme (0.5.2) bookworm; urgency=medium
 
   * allow to compile/use api types separately.
