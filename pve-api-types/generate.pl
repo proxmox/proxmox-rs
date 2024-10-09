@@ -204,6 +204,8 @@ api(POST => '/nodes/{node}/qemu/{vmid}/status/shutdown', 'shutdown_qemu_async', 
 Schema2Rust::derive('StartQemu' => 'Default');
 Schema2Rust::derive('StopQemu' => 'Default');
 Schema2Rust::derive('ShutdownQemu' => 'Default');
+api(POST => '/nodes/{node}/qemu/{vmid}/migrate',        'migrate_qemu',         'output-type' => 'PveUpid', 'param-name' => 'MigrateQemu');
+Schema2Rust::register_api_override('MigrateQemu', '/properties/bwlimit/default', undef);
 api(POST => '/nodes/{node}/qemu/{vmid}/remote_migrate', 'remote_migrate_qemu',  'output-type' => 'PveUpid', 'param-name' => 'RemoteMigrateQemu');
 
 api(GET => '/nodes/{node}/lxc',                         'list_lxc',            'param-name' => 'FixmeListLxc',      'return-name' => 'LxcEntry');
@@ -214,6 +216,8 @@ api(POST => '/nodes/{node}/lxc/{vmid}/status/shutdown', 'shutdown_lxc_async',  '
 Schema2Rust::derive('StartLxc' => 'Default');
 Schema2Rust::derive('StopLxc' => 'Default');
 Schema2Rust::derive('ShutdownLxc' => 'Default');
+api(POST => '/nodes/{node}/lxc/{vmid}/migrate',        'migrate_lxc',         'output-type' => 'PveUpid', 'param-name' => 'MigrateLxc');
+Schema2Rust::register_api_override('MigrateLxc', '/properties/bwlimit/default', undef);
 api(POST => '/nodes/{node}/lxc/{vmid}/remote_migrate', 'remote_migrate_lxc',  'output-type' => 'PveUpid', 'param-name' => 'RemoteMigrateLxc');
 
 Schema2Rust::register_api_override('ClusterMetrics', '/properties/data/items', { type => "ClusterMetricsData"});

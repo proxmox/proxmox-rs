@@ -215,7 +215,6 @@
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/lxc/{vmid}/interfaces
-/// - /nodes/{node}/lxc/{vmid}/migrate
 /// - /nodes/{node}/lxc/{vmid}/move_volume
 /// - /nodes/{node}/lxc/{vmid}/mtunnel
 /// - /nodes/{node}/lxc/{vmid}/mtunnelwebsocket
@@ -283,7 +282,6 @@
 /// - /nodes/{node}/qemu/{vmid}/firewall/refs
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules/{pos}
-/// - /nodes/{node}/qemu/{vmid}/migrate
 /// - /nodes/{node}/qemu/{vmid}/monitor
 /// - /nodes/{node}/qemu/{vmid}/move_disk
 /// - /nodes/{node}/qemu/{vmid}/mtunnel
@@ -512,6 +510,28 @@ impl<T: HttpApiClient> PveClient<T> {
         add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
         let url = format!("/api2/extjs/nodes/{node}/lxc/{vmid}/config{query}");
         Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// Migrate the container to another node. Creates a new migration task.
+    pub async fn migrate_lxc(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: MigrateLxc,
+    ) -> Result<PveUpid, Error> {
+        let url = format!("/api2/extjs/nodes/{node}/lxc/{vmid}/migrate");
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+    }
+
+    /// Migrate virtual machine. Creates a new migration task.
+    pub async fn migrate_qemu(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: MigrateQemu,
+    ) -> Result<PveUpid, Error> {
+        let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate");
+        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
     }
 
     /// Get the virtual machine configuration with pending configuration changes

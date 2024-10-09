@@ -2791,6 +2791,159 @@ pub struct LxcEntry {
     pub vmid: u32,
 }
 
+const_regex! {
+
+MIGRATE_LXC_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+
+}
+
+#[api(
+    properties: {
+        bwlimit: {
+            minimum: 0.0,
+            optional: true,
+        },
+        online: {
+            default: false,
+            optional: true,
+        },
+        restart: {
+            default: false,
+            optional: true,
+        },
+        target: {
+            format: &ApiStringFormat::Pattern(&MIGRATE_LXC_TARGET_RE),
+            type: String,
+        },
+        "target-storage": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_storage_pair),
+            optional: true,
+            type: String,
+        },
+        timeout: {
+            default: 180,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct MigrateLxc {
+    /// Override I/O bandwidth limit (in KiB/s).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bwlimit: Option<f64>,
+
+    /// Use online/live migration.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub online: Option<bool>,
+
+    /// Use restart migration
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub restart: Option<bool>,
+
+    /// Target node.
+    pub target: String,
+
+    /// Mapping from source to target storages. Providing only a single storage
+    /// ID maps all source storages to that storage. Providing the special value
+    /// '1' will map each source storage to itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-storage")]
+    pub target_storage: Option<String>,
+
+    /// Timeout in seconds for shutdown for restart migration
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<i64>,
+}
+
+const_regex! {
+
+MIGRATE_QEMU_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+
+}
+
+#[api(
+    properties: {
+        bwlimit: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        force: {
+            default: false,
+            optional: true,
+        },
+        migration_network: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidr),
+            optional: true,
+            type: String,
+        },
+        online: {
+            default: false,
+            optional: true,
+        },
+        target: {
+            format: &ApiStringFormat::Pattern(&MIGRATE_QEMU_TARGET_RE),
+            type: String,
+        },
+        targetstorage: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_storage_pair),
+            optional: true,
+            type: String,
+        },
+        "with-local-disks": {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct MigrateQemu {
+    /// Override I/O bandwidth limit (in KiB/s).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bwlimit: Option<u64>,
+
+    /// Allow to migrate VMs which use local devices. Only root may use this
+    /// option.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub force: Option<bool>,
+
+    /// CIDR of the (sub) network that is used for migration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migration_network: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migration_type: Option<StartQemuMigrationType>,
+
+    /// Use online/live migration if VM is running. Ignored if VM is stopped.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub online: Option<bool>,
+
+    /// Target node.
+    pub target: String,
+
+    /// Mapping from source to target storages. Providing only a single storage
+    /// ID maps all source storages to that storage. Providing the special value
+    /// '1' will map each source storage to itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub targetstorage: Option<String>,
+
+    /// Enable live storage migration for local disk
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "with-local-disks")]
+    pub with_local_disks: Option<bool>,
+}
+
 #[api(
     properties: {
         apitoken: {
