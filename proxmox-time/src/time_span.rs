@@ -170,11 +170,11 @@ impl std::fmt::Display for TimeSpan {
                 do_write(self.minutes, "min")?;
             }
         }
-        if !first {
-            write!(f, " ")?;
-        }
         let seconds = self.seconds as f64 + (self.msec as f64 / 1000.0);
         if seconds >= 0.1 {
+            if !first {
+                write!(f, " ")?;
+            }
             if seconds >= 1.0 || !first {
                 write!(f, "{:.0}s", seconds)?;
             } else {
