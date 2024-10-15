@@ -187,3 +187,69 @@ pub struct MetricServerInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
 }
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[api(
+    properties: {
+        data: {
+            type: Array,
+            items: {
+                type: MetricDataPoint,
+            }
+        }
+    }
+)]
+/// Return type for the metric API endpoint
+pub struct Metrics {
+    /// List of metric data points, sorted by timestamp
+    pub data: Vec<MetricDataPoint>,
+}
+
+#[api(
+    properties: {
+        id: {
+            type: String,
+        },
+        metric: {
+            type: String,
+        },
+        timestamp: {
+            type: Integer,
+        },
+    },
+)]
+/// Metric data point
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct MetricDataPoint {
+    /// Unique identifier for this metric object, for instance 'node/<nodename>'
+    /// or 'qemu/<vmid>'.
+    pub id: String,
+
+    /// Name of the metric.
+    pub metric: String,
+
+    /// Time at which this metric was observed
+    pub timestamp: i64,
+
+    #[serde(rename = "type")]
+    pub ty: MetricDataType,
+
+    /// Metric value.
+    pub value: f64,
+}
+
+#[api]
+/// Type of the metric.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MetricDataType {
+    /// gauge.
+    Gauge,
+    /// counter.
+    Counter,
+    /// derive.
+    Derive,
+}
+
+serde_plain::derive_display_from_serialize!(MetricDataType);
+serde_plain::derive_fromstr_from_deserialize!(MetricDataType);
