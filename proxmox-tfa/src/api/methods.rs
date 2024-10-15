@@ -4,10 +4,6 @@
 //! PBS, PVE, PMG.
 
 use anyhow::{bail, format_err, Error};
-use serde::{Deserialize, Serialize};
-
-#[cfg(feature = "api-types")]
-use proxmox_schema::api;
 
 use super::{OpenUserChallengeData, TfaConfig, TfaInfo, TfaUserData};
 use crate::totp::Totp;
