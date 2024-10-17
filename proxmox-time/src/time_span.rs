@@ -114,7 +114,7 @@ static TIME_SPAN_UNITS: LazyLock<HashMap<&'static str, f64>> = LazyLock::new(|| 
 });
 
 /// A time spans defines a time duration
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct TimeSpan {
     pub nsec: u64,
     pub usec: u64,
@@ -302,4 +302,39 @@ fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpan> {
 pub fn verify_time_span(i: &str) -> Result<(), Error> {
     let _: TimeSpan = i.parse()?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+    use super::*;
+
+    #[test]
+    fn conversions() {
+        let ts1 = TimeSpan::from_str("1h 1m 3s").unwrap();
+        let ts2 = TimeSpan::from_str("1 hour 1 minute 3 second").unwrap();
+        let ts3 = TimeSpan::from_str("0y 0M 0w 1h 1m 3s").unwrap();
+        let ts4 = TimeSpan::from_str("1h1m3s").unwrap();
+        let ts5 = TimeSpan::from_str("3s 1m 1h").unwrap();
+        // TODO: below fails to compare equal to above as we do not normalize on parse, while that
+        // might be OK it would be at least nice to provide a normalize method for TimeSpan (e.g.
+        // by converting the time stamp to a Duration and then back again using from<Duration>
+        //let ts6 = TimeSpan::from_str("3663s").unwrap();
+        assert_eq!(ts1, ts2);
+        assert_eq!(ts1, ts3);
+        assert_eq!(ts1, ts4);
+        assert_eq!(ts1, ts5);
+
+        let display_ts1 = format!("{ts1}");
+        let display_ts2 = format!("{ts2}");
+        assert_eq!(display_ts1, display_ts2);
+        assert_eq!(String::from("1h 1m 3s"), display_ts2);
+
+        let duration1 = std::time::Duration::new(32 * 24 * 60 * 60 + 3, 0);
+        let ts1 = TimeSpan::from(duration1);
+        let ts2 = TimeSpan::from_str("1M 1d 3s").unwrap();
+        let ts3 = TimeSpan::from_str("1m 1d 3s").unwrap();
+        assert_eq!(ts1, ts2);
+        assert_ne!(ts1, ts3);
+    }
 }
