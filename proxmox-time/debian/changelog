@@ -1,3 +1,13 @@
+rust-proxmox-time (2.0.2-1) bookworm; urgency=medium
+
+  * time span:
+    - drop trailing space when not showing seconds at end
+    - avoid displaying months with a minute time unit
+    - use single-letter time unit variant for displaying minutes
+    - add basic module level docs
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 17 Oct 2024 16:13:23 +0200
+
 rust-proxmox-time (2.0.1-1) bookworm; urgency=medium
 
   * replace lazy_static with std's LazyLock and drop dependency

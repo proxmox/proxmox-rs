@@ -1,10 +1,10 @@
 Source: rust-proxmox-time
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
- rustc:native (>= 1.80) <!nocheck>,
+ rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-bitflags-2+default-dev (>= 2.4-~~) <!nocheck>,
@@ -13,9 +13,10 @@ Build-Depends: debhelper (>= 12),
  librust-libc-0.2+extra-traits-dev (>= 0.2.107-~~) <!nocheck>,
  librust-nom-7+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-time
 Rules-Requires-Root: no
 
@@ -36,7 +37,7 @@ Provides:
  librust-proxmox-time-2+default-dev (= ${binary:Version}),
  librust-proxmox-time-2.0-dev (= ${binary:Version}),
  librust-proxmox-time-2.0+default-dev (= ${binary:Version}),
- librust-proxmox-time-2.0.1-dev (= ${binary:Version}),
- librust-proxmox-time-2.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-time-2.0.2-dev (= ${binary:Version}),
+ librust-proxmox-time-2.0.2+default-dev (= ${binary:Version})
 Description: Time utilities and TmEditor - Rust source code
  Source code for Debianized Rust crate "proxmox-time"
