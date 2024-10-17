@@ -1,3 +1,43 @@
+//! Timespans that try to be compatible with the systemd time span format.
+//!
+//! Time spans refer to time durations, like [std::time::Duration] but in the format that is
+//! targetting human interfaces and that systemd understands. Parts of this documentation have been
+//! adapted from the systemd.time manual page.
+//!
+//! The following time units are understood:
+//! - `nsec`, `ns` (not always accepted by systemd.time)
+//! - `usec`, `us`, `µs`
+//! - `msec`, `ms`
+//! - `seconds`, s`econd`, `sec`, `s`
+//! - `minutes`, `minute`, `min`, `m`
+//! - `hours`, `hour`, `hr`, `h`
+//! - `days`, `day`, `d`
+//! - `weeks`, `week`, `w`
+//! - `months`, `month`, `M` (defined as 30.44 days)
+//! - `years`, `year`, `y` (defined as 365.25 days)
+//!
+//! On display, time spans are formatted as space-separated series of time values each
+//! suffixed by the single-character time unit, for example
+//!
+//! - `2h 30m`
+//! - `1w 2m 3s`
+//!
+//! For parsing a time stamp the same syntax applies, all time units from above are supported, and
+//! spaces between units and/or values can be added or omitted. The order of the time values does
+//! not matter.
+//!
+//! The following examples are all represeting the exact same time span of 1 day 2 hours and 3
+//! minutes:
+//!
+//! - `1d 2h 3m`
+//! - `1d2h3m`
+//! - `26h 180s`
+//! - `1 day 2 hours 3 minutes`
+//! - `0y 0M 0w 1d 2h 3m`
+//! - `2h 1d 3m`
+//!
+//! This module also supports transforming a [std::time::Duration] to a [TimeSpan].
+
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
