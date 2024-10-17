@@ -149,7 +149,7 @@ impl std::fmt::Display for TimeSpan {
                     write!(f, " ")?;
                 }
                 first = false;
-                write!(f, "{}{}", v, unit)
+                write!(f, "{v}{unit}")
             };
             if self.years > 0 {
                 do_write(self.years, "y")?;
@@ -176,9 +176,9 @@ impl std::fmt::Display for TimeSpan {
                 write!(f, " ")?;
             }
             if seconds >= 1.0 || !first {
-                write!(f, "{:.0}s", seconds)?;
+                write!(f, "{seconds:.0}s")?;
             } else {
-                write!(f, "{:.1}s", seconds)?;
+                write!(f, "{seconds:.1}s")?;
             }
         } else if first {
             write!(f, "<0.1s")?;
