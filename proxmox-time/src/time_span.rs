@@ -155,7 +155,7 @@ impl std::fmt::Display for TimeSpan {
                 do_write(self.years, "y")?;
             }
             if self.months > 0 {
-                do_write(self.months, "m")?;
+                do_write(self.months, "M")?;
             }
             if self.weeks > 0 {
                 do_write(self.weeks, "w")?;
@@ -167,7 +167,7 @@ impl std::fmt::Display for TimeSpan {
                 do_write(self.hours, "h")?;
             }
             if self.minutes > 0 {
-                do_write(self.minutes, "min")?;
+                do_write(self.minutes, "m")?;
             }
         }
         let seconds = self.seconds as f64 + (self.msec as f64 / 1000.0);
