@@ -57,7 +57,7 @@ pub fn init_logger(
         .with(
             journald_or_stderr_layer()
                 .with_filter(filter_fn(|metadata| {
-                    !LogContext::exists() || *metadata.level() >= Level::ERROR
+                    !LogContext::exists() || *metadata.level() == Level::ERROR
                 }))
                 .with_filter(log_level),
         )
