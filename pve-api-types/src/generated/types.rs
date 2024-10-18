@@ -24,10 +24,7 @@ mod cluster_resource_content {
         where
             D: Deserializer<'de>,
         {
-            Ok(super::stringlist::deserialize(
-                deserializer,
-                &super::CLUSTER_RESOURCE_CONTENT,
-            )?)
+            super::stringlist::deserialize(deserializer, &super::CLUSTER_RESOURCE_CONTENT)
         }
     }
 

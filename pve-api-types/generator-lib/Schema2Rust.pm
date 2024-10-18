@@ -318,10 +318,10 @@ mod $mod_name {
         where
             D: Deserializer<'de>,
         {
-            Ok(super::stringlist::deserialize(
+            super::stringlist::deserialize(
                 deserializer,
                 &super::$name,
-            )?)
+            )
         }
     }
 
