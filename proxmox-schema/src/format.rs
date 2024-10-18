@@ -257,12 +257,12 @@ pub fn get_property_description(
     };
 
     let default_text = match default {
-        Some(text) => format!("   (default={})", text),
+        Some(text) => format!("   (default={text})"),
         None => String::new(),
     };
 
     let descr = match extra {
-        Some(extra) => format!("{} {}", descr, extra),
+        Some(extra) => format!("{descr} {extra}"),
         None => String::from(descr),
     };
 
@@ -270,18 +270,18 @@ pub fn get_property_description(
         let mut text = match style {
             ParameterDisplayStyle::Config => {
                 // reST definition list format
-                format!("``{}`` : ``{}{}``\n  ", name, type_text, default_text)
+                format!("``{name}`` : ``{type_text}{default_text}``\n  ")
             }
             ParameterDisplayStyle::ConfigSub => {
                 // reST definition list format
-                format!("``{}`` = ``{}{}``\n  ", name, type_text, default_text)
+                format!("``{name}`` = ``{type_text}{default_text}``\n  ")
             }
             ParameterDisplayStyle::Arg => {
                 // reST option list format
-                format!("``--{}`` ``{}{}``\n  ", name, type_text, default_text)
+                format!("``--{name}`` ``{type_text}{default_text}``\n  ")
             }
             ParameterDisplayStyle::Fixed => {
-                format!("``<{}>`` : ``{}{}``\n  ", name, type_text, default_text)
+                format!("``<{name}>`` : ``{type_text}{default_text}``\n  ")
             }
         };
 
@@ -290,13 +290,13 @@ pub fn get_property_description(
         text
     } else {
         let display_name = match style {
-            ParameterDisplayStyle::Config => format!("{}:", name),
-            ParameterDisplayStyle::ConfigSub => format!("{}=", name),
-            ParameterDisplayStyle::Arg => format!("--{}", name),
-            ParameterDisplayStyle::Fixed => format!("<{}>", name),
+            ParameterDisplayStyle::Config => format!("{name}:"),
+            ParameterDisplayStyle::ConfigSub => format!("{name}="),
+            ParameterDisplayStyle::Arg => format!("--{name}"),
+            ParameterDisplayStyle::Fixed => format!("<{name}>"),
         };
 
-        let mut text = format!(" {:-10} {}{}", display_name, type_text, default_text);
+        let mut text = format!(" {display_name:-10} {type_text}{default_text}");
         let indent = "             ";
         text.push('\n');
         text.push_str(&wrap_text(indent, indent, &descr, 80));
