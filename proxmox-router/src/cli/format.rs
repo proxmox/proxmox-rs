@@ -183,22 +183,15 @@ pub(crate) fn generate_usage_str_do<'cli>(
 
     let mut text = match format {
         DocumentationFormat::Short => {
-            return format!("{}{}{}{}", indent, prefix, args, option_indicator);
+            return format!("{indent}{prefix}{args}{option_indicator}");
         }
-        DocumentationFormat::Long => format!("{}{}{}{}", indent, prefix, args, option_indicator),
+        DocumentationFormat::Long => format!("{indent}{prefix}{args}{option_indicator}"),
         DocumentationFormat::Full => format!(
-            "{}{}{}{}\n\n{}",
-            indent,
-            prefix,
-            args,
-            option_indicator,
+            "{indent}{prefix}{args}{option_indicator}\n\n{}",
             schema.description()
         ),
         DocumentationFormat::ReST => format!(
-            "``{}{}{}``\n\n{}",
-            prefix,
-            args,
-            option_indicator,
+            "``{prefix}{args}{option_indicator}``\n\n{}",
             schema.description()
         ),
     };
