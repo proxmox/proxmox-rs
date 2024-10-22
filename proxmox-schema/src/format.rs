@@ -270,22 +270,22 @@ pub fn get_property_description(
         let mut text = match style {
             ParameterDisplayStyle::Config => {
                 // reST definition list format
-                format!("``{name}`` : ``{type_text}{default_text}``\n  ")
+                format!("``{name}`` : ``{type_text}{default_text}``\n")
             }
             ParameterDisplayStyle::ConfigSub => {
                 // reST definition list format
-                format!("``{name}`` = ``{type_text}{default_text}``\n  ")
+                format!("``{name}`` = ``{type_text}{default_text}``\n")
             }
             ParameterDisplayStyle::Arg => {
                 // reST option list format
-                format!("``--{name}`` ``{type_text}{default_text}``\n  ")
+                format!("``--{name}`` ``{type_text}{default_text}``\n")
             }
             ParameterDisplayStyle::Fixed => {
-                format!("``<{name}>`` : ``{type_text}{default_text}``\n  ")
+                format!("``<{name}>`` : ``{type_text}{default_text}``\n")
             }
         };
 
-        text.push_str(&wrap_text("", "  ", &descr, 80));
+        text.push_str(&wrap_text("  ", "  ", &descr, 80));
 
         text
     } else {
