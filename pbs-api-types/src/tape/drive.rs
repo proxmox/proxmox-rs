@@ -112,6 +112,7 @@ pub struct MamAttribute {
 
 #[api()]
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialOrd, PartialEq)]
+/// The density of a tape medium, derived from the LTO version.
 pub enum TapeDensity {
     /// Unknown (no media loaded)
     Unknown,

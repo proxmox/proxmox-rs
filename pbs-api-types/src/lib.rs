@@ -270,6 +270,7 @@ pub enum NodePowerCommand {
 #[api()]
 #[derive(Eq, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+/// The state (result) of a finished worker task.
 pub enum TaskStateType {
     /// Ok
     OK,
