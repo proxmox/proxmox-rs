@@ -19,6 +19,7 @@ pub const MATCHER_TYPENAME: &str = "matcher";
 #[api]
 #[derive(Debug, Serialize, Deserialize, Default, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
+/// The mode in which the results of matches are combined.
 pub enum MatchModeOperator {
     /// All match statements have to match (AND)
     #[default]
@@ -415,6 +416,7 @@ impl FromStr for CalendarMatcher {
 #[api]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
+/// The set of matcher properties that can be deleted.
 pub enum DeleteableMatcherProperty {
     /// Delete `comment`
     Comment,

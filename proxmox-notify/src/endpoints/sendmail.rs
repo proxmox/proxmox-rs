@@ -84,6 +84,7 @@ pub struct SendmailConfig {
 #[api]
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
+/// The set of properties that can be deleted from a sendmail endpoint configuration.
 pub enum DeleteableSendmailProperty {
     /// Delete `author`
     Author,

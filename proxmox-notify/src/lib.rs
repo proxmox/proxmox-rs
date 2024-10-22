@@ -138,6 +138,7 @@ impl FromStr for Severity {
 #[api()]
 #[derive(Clone, Debug, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd)]
 #[serde(rename_all = "kebab-case")]
+/// The origin of a notification configuration entry.
 pub enum Origin {
     /// User-created config entry
     UserCreated,
