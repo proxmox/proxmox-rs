@@ -8,6 +8,7 @@ use proxmox_schema::api;
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
+/// The type of format used for an APT repository.
 pub enum APTRepositoryFileType {
     /// One-line-style format
     List,
@@ -21,6 +22,7 @@ serde_plain::derive_fromstr_from_deserialize!(APTRepositoryFileType);
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
+/// The type of an APT package.
 pub enum APTRepositoryPackageType {
     /// Debian package
     Deb,
