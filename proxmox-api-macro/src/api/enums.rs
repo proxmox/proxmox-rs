@@ -74,6 +74,12 @@ fn handle_string_enum(
 
         if schema.description.is_none() {
             let (comment, span) = util::get_doc_comments(&enum_ty.attrs)?;
+            if comment.is_empty() {
+                error!(
+                    Span::call_site(),
+                    "missing doc comment on enum for api-schema description"
+                );
+            }
             schema.description = Maybe::Derived(syn::LitStr::new(comment.trim(), span));
         }
 
