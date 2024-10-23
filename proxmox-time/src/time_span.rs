@@ -1,14 +1,14 @@
 //! Timespans that try to be compatible with the systemd time span format.
 //!
 //! Time spans refer to time durations, like [std::time::Duration] but in the format that is
-//! targetting human interfaces and that systemd understands. Parts of this documentation have been
+//! targeting human interfaces and that systemd understands. Parts of this documentation have been
 //! adapted from the systemd.time manual page.
 //!
 //! The following time units are understood:
 //! - `nsec`, `ns` (not always accepted by systemd.time)
 //! - `usec`, `us`, `µs`
 //! - `msec`, `ms`
-//! - `seconds`, s`econd`, `sec`, `s`
+//! - `seconds`, `second`, `sec`, `s`
 //! - `minutes`, `minute`, `min`, `m`
 //! - `hours`, `hour`, `hr`, `h`
 //! - `days`, `day`, `d`
@@ -26,7 +26,7 @@
 //! spaces between units and/or values can be added or omitted. The order of the time values does
 //! not matter.
 //!
-//! The following examples are all represeting the exact same time span of 1 day 2 hours and 3
+//! The following examples are all representing the exact same time span of 1 day 2 hours and 3
 //! minutes:
 //!
 //! - `1d 2h 3m`
