@@ -128,8 +128,8 @@ pub struct TimeSpan {
     pub years: u64,
 }
 
-impl From<TimeSpan> for f64 {
-    fn from(ts: TimeSpan) -> Self {
+impl From<&TimeSpan> for f64 {
+    fn from(ts: &TimeSpan) -> Self {
         (ts.seconds as f64)
             + ((ts.nsec as f64) / 1_000_000_000.0)
             + ((ts.usec as f64) / 1_000_000.0)
@@ -140,6 +140,12 @@ impl From<TimeSpan> for f64 {
             + ((ts.weeks as f64) * 3600.0 * 24.0 * 7.0)
             + ((ts.months as f64) * 3600.0 * 24.0 * 30.44)
             + ((ts.years as f64) * 3600.0 * 24.0 * 365.25)
+    }
+}
+
+impl From<TimeSpan> for f64 {
+    fn from(ts: TimeSpan) -> Self {
+        Self::from(&ts)
     }
 }
 
