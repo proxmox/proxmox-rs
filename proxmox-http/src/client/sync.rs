@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::io::Read;
+use std::sync::Arc;
 
 use anyhow::Error;
 use http::Response;
@@ -20,6 +21,9 @@ impl Client {
 
     fn agent(&self) -> Result<ureq::Agent, Error> {
         let mut builder = ureq::AgentBuilder::new();
+
+        let connector = Arc::new(native_tls::TlsConnector::new()?);
+        builder = builder.tls_connector(connector);
 
         builder = builder.user_agent(self.options.user_agent.as_deref().unwrap_or(concat!(
             "proxmox-sync-http-client/",

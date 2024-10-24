@@ -17,11 +17,12 @@ base64 = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
 hyper = { workspace = true, optional = true }
+native-tls = { workspace = true, optional = true }
 openssl =  { version = "0.10", optional = true }
 serde_json = { workspace = true, optional = true }
 tokio = { workspace = true, features = [], optional = true }
 tokio-openssl = { workspace = true, optional = true }
-ureq = { version = "2.4", features = ["native-certs"], optional = true }
+ureq = { version = "2.4", features = ["native-certs", "native-tls"], optional = true, default-features = false }
 url = { workspace = true, optional = true }
 
 proxmox-async = { workspace = true, optional = true }
@@ -61,7 +62,7 @@ client = [
     "rate-limited-stream",
     "tokio?/io-util",
 ]
-client-sync = [ "client-trait", "http-helpers", "dep:ureq" ]
+client-sync = [ "client-trait", "http-helpers", "dep:ureq", "dep:native-tls" ]
 client-trait = [ "dep:http" ]
 http-helpers = [ "dep:base64", "dep:http", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
 websocket = [
