@@ -103,7 +103,11 @@ Schema2Rust::register_format('pve-ipv4-config' => { code => 'verifiers::verify_i
 Schema2Rust::register_format('pve-ipv6-config' => { code => 'verifiers::verify_ipv6_config' });
 
 # This is used as both a task status and guest status.
-Schema2Rust::generate_enum('IsRunning', { type => 'string', enum => ['running', 'stopped'] });
+Schema2Rust::generate_enum('IsRunning', {
+    type => 'string',
+    description => "A guest's run state.",
+    enum => ['running', 'stopped'],
+});
 
 # We have a textual description of the default value in there, just pick the cgroupv2 one:
 Schema2Rust::register_api_override('QemuConfig', '/properties/cpuunits/default', 1024);
@@ -137,6 +141,7 @@ Schema2Rust::register_api_extensions('TaskStatus', {
     '/properties/upid' => { description => sq("The task's UPID.") },
     '/properties/user' => { description => sq("The task owner's user id.") },
     '/properties/pid' => { description => sq("The task process id.") },
+    '/properties/pstart' => { description => sq("The task's proc start time.") },
     '/properties/starttime' => { description => sq("The task's start time.") },
 });
 Schema2Rust::register_api_extensions('ListTasksResponse', {
@@ -157,7 +162,11 @@ Schema2Rust::register_api_extensions('ClusterResource', {
 
 # pve-storage-content uses verify_
 my $storage_content_types = [sort keys PVE::Storage::Plugin::valid_content_types('dir')->%*];
-Schema2Rust::generate_enum('StorageContent', { type => 'string', enum => $storage_content_types });
+Schema2Rust::generate_enum('StorageContent', {
+    type => 'string',
+    description => 'Storage content type.',
+    enum => $storage_content_types,
+});
 
 sub api : prototype($$$;%) {
     my ($method, $api_url, $rust_method_name, %extra) = @_;
@@ -172,6 +181,7 @@ Schema2Rust::generate_enum(
     'ClusterResourceKind',
     {
         type => 'string',
+        description => 'Resource type.',
         enum => ['vm', 'storage', 'node', 'sdn'],
     }
 );
