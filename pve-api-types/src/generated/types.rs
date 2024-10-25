@@ -425,6 +425,14 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
             type: Integer,
         },
+        diskread: {
+            optional: true,
+            type: Integer,
+        },
+        diskwrite: {
+            optional: true,
+            type: Integer,
+        },
         hastate: {
             optional: true,
             type: String,
@@ -459,6 +467,14 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
             type: String,
         },
+        netin: {
+            optional: true,
+            type: Integer,
+        },
+        netout: {
+            optional: true,
+            type: Integer,
+        },
         node: {
             format: &ApiStringFormat::Pattern(&CLUSTER_RESOURCE_NODE_RE),
             optional: true,
@@ -480,6 +496,10 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             format: &ApiStringFormat::Pattern(&CLUSTER_RESOURCE_STORAGE_RE),
             optional: true,
             type: String,
+        },
+        template: {
+            default: false,
+            optional: true,
         },
         uptime: {
             optional: true,
@@ -518,6 +538,20 @@ pub struct ClusterResource {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub disk: Option<u64>,
 
+    /// The amount of bytes the guest read from it's block devices since the
+    /// guest was started. This info is not available for all storage types.
+    /// (for type 'qemu' and 'lxc')
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskread: Option<i64>,
+
+    /// The amount of bytes the guest wrote to it's block devices since the
+    /// guest was started. This info is not available for all storage types.
+    /// (for type 'qemu' and 'lxc')
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskwrite: Option<i64>,
+
     /// HA service status (for HA managed VMs).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hastate: Option<String>,
@@ -554,6 +588,18 @@ pub struct ClusterResource {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 
+    /// The amount of traffic in bytes that was sent to the guest over the
+    /// network since it was started. (for type 'qemu' and 'lxc')
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netin: Option<i64>,
+
+    /// The amount of traffic in bytes that was sent from the guest over the
+    /// network since it was started. (for type 'qemu' and 'lxc')
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netout: Option<i64>,
+
     /// The cluster node name (when type in node,storage,qemu,lxc).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub node: Option<String>,
@@ -574,10 +620,15 @@ pub struct ClusterResource {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub storage: Option<String>,
 
+    /// Determines if the guest is a template. (type in qemu,lxc)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<bool>,
+
     #[serde(rename = "type")]
     pub ty: ClusterResourceType,
 
-    /// Node uptime in seconds (when type in node,qemu,lxc).
+    /// Uptime of node or virtual guest in seconds (when type in node,qemu,lxc).
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
@@ -589,6 +640,7 @@ pub struct ClusterResource {
 }
 
 #[api]
+/// Resource type.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum ClusterResourceKind {
     #[serde(rename = "vm")]
@@ -737,6 +789,7 @@ pub struct CreateTokenResponseInfo {
 }
 
 #[api]
+/// A guest's run state.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum IsRunning {
     #[serde(rename = "running")]
@@ -3137,7 +3190,7 @@ pub struct PveQmHostpci {
     ///
     /// 'bus:dev.func' (hexadecimal numbers)
     ///
-    /// You can us the 'lspci' command to list existing PCI devices.
+    /// You can use the 'lspci' command to list existing PCI devices.
     ///
     /// Either this or the 'mapping' key must be set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5930,7 +5983,7 @@ pub struct QemuConfigNet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub link_down: Option<bool>,
 
-    /// MAC address. That address must be unique withing your network. This is
+    /// MAC address. That address must be unique within your network. This is
     /// automatically generated if not specified.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub macaddr: Option<String>,
@@ -7032,7 +7085,7 @@ pub struct QemuConfigUsb {
     /// is:
     ///
     ///  'bus-port(.port)*' (decimal numbers) or
-    ///  'vendor_id:product_id' (hexadeciaml numbers) or
+    ///  'vendor_id:product_id' (hexadecimal numbers) or
     ///  'spice'
     ///
     /// You can use the 'lsusb -t' command to list existing usb devices.
@@ -7950,6 +8003,7 @@ pub struct StopQemu {
 }
 
 #[api]
+/// Storage content type.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum StorageContent {
     #[serde(rename = "backup")]
@@ -8017,6 +8071,10 @@ pub struct TaskLogLine {
             type: Integer,
             description: "The task process id.",
         },
+        pstart: {
+            type: Integer,
+            description: "The task's proc start time.",
+        },
         starttime: {
             description: "The task's start time.",
         },
@@ -8046,6 +8104,9 @@ pub struct TaskStatus {
 
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     pub pid: i64,
+
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub pstart: i64,
 
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     pub starttime: f64,
@@ -8111,6 +8172,14 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
 
 #[api(
     properties: {
+        diskread: {
+            optional: true,
+            type: Integer,
+        },
+        diskwrite: {
+            optional: true,
+            type: Integer,
+        },
         lock: {
             optional: true,
             type: String,
@@ -8126,6 +8195,14 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
         name: {
             optional: true,
             type: String,
+        },
+        netin: {
+            optional: true,
+            type: Integer,
+        },
+        netout: {
+            optional: true,
+            type: Integer,
         },
         pid: {
             optional: true,
@@ -8147,6 +8224,10 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
             optional: true,
             type: String,
         },
+        template: {
+            default: false,
+            optional: true,
+        },
         uptime: {
             optional: true,
             type: Integer,
@@ -8166,6 +8247,20 @@ pub struct VmEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpus: Option<f64>,
 
+    /// The amount of bytes the guest read from it's block devices since the
+    /// guest was started. (Note: This info is not available for all storage
+    /// types.)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskread: Option<i64>,
+
+    /// The amount of bytes the guest wrote from it's block devices since the
+    /// guest was started. (Note: This info is not available for all storage
+    /// types.)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskwrite: Option<i64>,
+
     /// The current config lock, if any.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lock: Option<String>,
@@ -8180,11 +8275,23 @@ pub struct VmEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
-    /// VM name.
+    /// VM (host)name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 
-    /// PID of running qemu process.
+    /// The amount of traffic in bytes that was sent to the guest over the
+    /// network since it was started.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netin: Option<i64>,
+
+    /// The amount of traffic in bytes that was sent from the guest over the
+    /// network since it was started.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netout: Option<i64>,
+
+    /// PID of the QEMU process, if the VM is running.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pid: Option<i64>,
@@ -8198,7 +8305,7 @@ pub struct VmEntry {
     #[serde(rename = "running-machine")]
     pub running_machine: Option<String>,
 
-    /// The currently running QEMU version (if running).
+    /// The QEMU version the VM is currently using (if running).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "running-qemu")]
     pub running_qemu: Option<String>,
@@ -8209,7 +8316,12 @@ pub struct VmEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<String>,
 
-    /// Uptime.
+    /// Determines if the guest is a template.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<bool>,
+
+    /// Uptime in seconds.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
