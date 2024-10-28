@@ -354,7 +354,6 @@
 /// - /nodes/{node}/storage/{storage}/rrddata
 /// - /nodes/{node}/storage/{storage}/status
 /// - /nodes/{node}/storage/{storage}/upload
-/// - /nodes/{node}/subscription
 /// - /nodes/{node}/suspendall
 /// - /nodes/{node}/syslog
 /// - /nodes/{node}/termproxy
@@ -419,6 +418,12 @@ impl<T: HttpApiClient> PveClient<T> {
     ) -> Result<CreateTokenResponse, Error> {
         let url = format!("/api2/extjs/access/users/{userid}/token/{tokenid}");
         Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+    }
+
+    /// Read subscription info.
+    pub async fn get_subscription(&self, node: &str) -> Result<NodeSubscriptionInfo, Error> {
+        let url = format!("/api2/extjs/nodes/{node}/subscription");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Read task list for one node (finished tasks).

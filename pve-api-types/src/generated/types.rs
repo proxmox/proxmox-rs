@@ -2996,6 +2996,132 @@ pub struct MigrateQemu {
 
 #[api(
     properties: {
+        checktime: {
+            optional: true,
+            type: Integer,
+        },
+        key: {
+            optional: true,
+            type: String,
+        },
+        level: {
+            optional: true,
+            type: String,
+        },
+        message: {
+            optional: true,
+            type: String,
+        },
+        nextduedate: {
+            optional: true,
+            type: String,
+        },
+        productname: {
+            optional: true,
+            type: String,
+        },
+        regdate: {
+            optional: true,
+            type: String,
+        },
+        serverid: {
+            optional: true,
+            type: String,
+        },
+        signature: {
+            optional: true,
+            type: String,
+        },
+        sockets: {
+            optional: true,
+            type: Integer,
+        },
+        url: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeSubscriptionInfo {
+    /// Timestamp of the last check done.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub checktime: Option<i64>,
+
+    /// The subscription key, if set and permitted to access.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub key: Option<String>,
+
+    /// A short code for the subscription level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<String>,
+
+    /// A more human readable status message.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+
+    /// Next due date of the set subscription.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nextduedate: Option<String>,
+
+    /// Human readable productname of the set subscription.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub productname: Option<String>,
+
+    /// Register date of the set subscription.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub regdate: Option<String>,
+
+    /// The server ID, if permitted to access.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub serverid: Option<String>,
+
+    /// Signature for offline keys
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signature: Option<String>,
+
+    /// The number of sockets for this host.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sockets: Option<i64>,
+
+    pub status: NodeSubscriptionInfoStatus,
+
+    /// URL to the web shop.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+}
+
+#[api]
+/// The current subscription status.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NodeSubscriptionInfoStatus {
+    #[serde(rename = "new")]
+    /// new.
+    New,
+    #[serde(rename = "notfound")]
+    /// notfound.
+    NotFound,
+    #[serde(rename = "active")]
+    /// active.
+    Active,
+    #[serde(rename = "invalid")]
+    /// invalid.
+    Invalid,
+    #[serde(rename = "expired")]
+    /// expired.
+    Expired,
+    #[serde(rename = "suspended")]
+    /// suspended.
+    Suspended,
+}
+serde_plain::derive_display_from_serialize!(NodeSubscriptionInfoStatus);
+serde_plain::derive_fromstr_from_deserialize!(NodeSubscriptionInfoStatus);
+
+#[api(
+    properties: {
         apitoken: {
             type: String,
         },

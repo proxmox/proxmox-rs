@@ -196,7 +196,10 @@ api(GET => '/nodes', 'list_nodes', 'return-name' => 'ClusterNodeIndexResponse');
 #     # 'return-type' => { type => 'object', properties => PVE::NodeConfig::get_nodeconfig_schema() },
 # );
 # api(PUT => '/nodes/{node}/config', 'set_node_config', 'param-name' => 'UpdateNodeConfig');
-# 
+# subscription api
+#
+Schema2Rust::register_enum_variant('NodeSubscriptionInfoStatus::notfound' => 'NotFound');
+api(GET => '/nodes/{node}/subscription', 'get_subscription',   'return-name' => 'NodeSubscriptionInfo');
 # # low level task api:
 # # ?? api(GET    => '/nodes/{node}/tasks/{upid}', 'get_task');
 api(GET => '/nodes/{node}/tasks',               'get_task_list',   'param-name' => 'ListTasks');
