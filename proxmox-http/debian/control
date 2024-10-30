@@ -1,16 +1,17 @@
 Source: rust-proxmox-http
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
- rustc:native <!nocheck>,
+ rustc:native (>= 1.80) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-http
 Rules-Requires-Root: no
 
@@ -56,7 +57,7 @@ Depends:
  librust-hyper-0.14+stream-dev (>= 0.14.5-~~),
  librust-hyper-0.14+tcp-dev (>= 0.14.5-~~),
  librust-openssl-0.10+default-dev,
- librust-proxmox-compression-0.2+default-dev (>= 0.2.3-~~),
+ librust-proxmox-compression-0.2+default-dev (>= 0.2.4-~~),
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+io-util-dev (>= 1.6-~~),
  librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~)
@@ -76,8 +77,9 @@ Depends:
  librust-proxmox-http-dev (= ${binary:Version}),
  librust-proxmox-http+client-trait-dev (= ${binary:Version}),
  librust-proxmox-http+http-helpers-dev (= ${binary:Version}),
- librust-ureq-2+default-dev (>= 2.4-~~),
- librust-ureq-2+native-certs-dev (>= 2.4-~~)
+ librust-native-tls-0.2+default-dev,
+ librust-ureq-2+native-certs-dev (>= 2.4-~~),
+ librust-ureq-2+native-tls-dev (>= 2.4-~~)
 Provides:
  librust-proxmox-http-0+client-sync-dev (= ${binary:Version}),
  librust-proxmox-http-0.9+client-sync-dev (= ${binary:Version}),
