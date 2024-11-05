@@ -294,7 +294,9 @@ print {$code_pipe} "/// ```\n";
 
 # Schema2Rust::dump();
 Schema2Rust::print_types($type_pipe);
-Schema2Rust::print_methods($code_pipe);
+Schema2Rust::print_trait($code_pipe);
+print {$code_pipe} "\n";
+Schema2Rust::print_implementation($code_pipe);
 $type_pipe->flush();
 $code_pipe->flush();
 close($type_pipe);

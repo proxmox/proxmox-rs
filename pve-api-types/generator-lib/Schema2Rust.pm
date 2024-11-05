@@ -399,21 +399,41 @@ EOF
 }
 
 my $code_header = <<"CODE";
-impl<T: HttpApiClient> PveClient<T> {
+#[async_trait::async_trait]
+impl<T> PveClient for PveClientImpl<T> 
+where
+    T: HttpApiClient + Send + Sync,
+    for<'a> <T as HttpApiClient>::ResponseFuture<'a>: Send
+{
 CODE
 my $code_footer = <<"CODE";
 }
 CODE
 
-my sub print_method_without_body : prototype($$$$) {
-    my ($out, $name, $def, $method) = @_;
+my $trait_header = <<"CODE";
+#[async_trait::async_trait]
+pub trait PveClient {
+CODE
+my $trait_footer = <<"CODE";
+}
+CODE
+
+my sub print_default_impl : prototype($$) {
+    my ($out, $method_name) = @_;
+    print {$out} "Err(Error::Other(\"$method_name not implemented\"))\n";
+    print {$out} "}\n\n";
+
+}
+
+my sub print_method_without_body : prototype($$$$$) {
+    my ($out, $name, $def, $method, $trait) = @_;
 
     my $doc = $def->{description};
 
     if ($doc && length($doc)) {
         print {$out} to_doc_comment($doc)."\n";
     }
-    print {$out} "pub async fn $name(\n";
+    print {$out} "async fn $name(\n";
     print {$out} "    &self,\n";
     for my $url_arg ($def->{url_params}->@*) {
         my ($arg, $def) = @$url_arg;
@@ -424,6 +444,10 @@ my sub print_method_without_body : prototype($$$$) {
     if (defined($input = $def->{input_type})) {
         print {$out} "    params: $input,\n";
         print {$out} ") -> Result<$def->{output_type}, Error> {\n";
+        if ($trait) {
+            print_default_impl($out, $name);
+            return;
+        }
         print {$out} "    let (mut query, mut sep) = (String::new(), '?');\n";
         my $ty = $all_types->{$input};
         die "bad parameter type: $ty->{kind}\n" if $ty->{kind} ne 'struct';
@@ -454,6 +478,10 @@ my sub print_method_without_body : prototype($$$$) {
             print {$out} "    $arg->{rust_name}: $arg->{type},\n";
         }
         print {$out} ") -> Result<$def->{output_type}, Error> {\n";
+        if ($trait) {
+            print_default_impl($out, $name);
+            return;
+        }
         # print {$out} "    // self.login().await?;\n";
         if (@$input) {
             print {$out} "    let (mut query, mut sep) = (String::new(), '?');\n";
@@ -472,6 +500,10 @@ my sub print_method_without_body : prototype($$$$) {
         }
     } else {
         print {$out} ") -> Result<$def->{output_type}, Error> {\n";
+        if ($trait) {
+            print_default_impl($out, $name);
+            return;
+        }
         print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
     }
 
@@ -485,15 +517,16 @@ my sub print_method_without_body : prototype($$$$) {
     print {$out} "}\n\n";
 }
 
-my sub print_method_with_body : prototype($$$$) {
-    my ($out, $name, $def, $method) = @_;
+my sub print_method_with_body : prototype($$$$$) {
+    my ($out, $name, $def, $method, $trait) = @_;
 
     my $doc = $def->{description};
 
     if ($doc && length($doc)) {
         print {$out} to_doc_comment($doc)."\n";
     }
-    print {$out} "pub async fn $name(\n";
+
+    print {$out} "async fn $name(\n";
     print {$out} "    &self,\n";
     my $url_params = $def->{url_params};
     for my $url_arg ($url_params->@*) {
@@ -503,6 +536,10 @@ my sub print_method_with_body : prototype($$$$) {
     print {$out} "    params: $def->{input_type},\n";
     my $output = $def->{output_type} // '()';
     print {$out} ") -> Result<$output, Error> {\n";
+    if ($trait) {
+        print_default_impl($out, $name);
+        return;
+    }
     # print {$out} "    // self.login().await?;\n";
     print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
         my $call = "self.0.${method}(&url, &params).await?.expect_json()";
@@ -514,7 +551,7 @@ my sub print_method_with_body : prototype($$$$) {
     print {$out} "}\n\n";
 }
 
-sub print_methods : prototype($) {
+sub print_implementation : prototype($) {
     my ($out) = @_;
 
     print {$out} $code_header;
@@ -522,19 +559,42 @@ sub print_methods : prototype($) {
         my $def = $all_methods->{$name};
         my $http_method = $def->{http_method};
         if ($http_method eq 'GET') {
-            print_method_without_body($out, $name, $def, 'get');
+            print_method_without_body($out, $name, $def, 'get', 0);
         } elsif ($http_method eq 'PUT') {
-            print_method_with_body($out, $name, $def, 'put');
+            print_method_with_body($out, $name, $def, 'put', 0);
         } elsif ($http_method eq 'POST') {
-            print_method_with_body($out, $name, $def, 'post');
+            print_method_with_body($out, $name, $def, 'post', 0);
         } elsif ($http_method eq 'DELETE') {
-            print_method_without_body($out, $name, $def, 'delete');
+            print_method_without_body($out, $name, $def, 'delete', 0);
         } else {
             print "Method $name: ".Dumper($def);
             warn "TODO: $http_method methods\n";
         }
     }
     print {$out} $code_footer;
+}
+
+sub print_trait : prototype($) {
+    my ($out) = @_;
+
+    print {$out} $trait_header;
+    for my $name (sort keys $all_methods->%*) {
+        my $def = $all_methods->{$name};
+        my $http_method = $def->{http_method};
+        if ($http_method eq 'GET') {
+            print_method_without_body($out, $name, $def, 'get', 1);
+        } elsif ($http_method eq 'PUT') {
+            print_method_with_body($out, $name, $def, 'put', 1);
+        } elsif ($http_method eq 'POST') {
+            print_method_with_body($out, $name, $def, 'post', 1);
+        } elsif ($http_method eq 'DELETE') {
+            print_method_without_body($out, $name, $def, 'delete', 1);
+        } else {
+            print "Method $name: ".Dumper($def);
+            warn "TODO: $http_method methods\n";
+        }
+    }
+    print {$out} $trait_footer;
 }
 
 sub register_format : prototype($$) {
