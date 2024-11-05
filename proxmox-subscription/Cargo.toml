@@ -13,20 +13,21 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-base64.workspace = true
-hex.workspace = true
-openssl.workspace = true
+base64 = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
+openssl = { workspace = true, optional = true }
 regex.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
-proxmox-http = { workspace = true, features = ["client-trait", "http-helpers"] }
+proxmox-http = { workspace = true, optional = true, features = ["client-trait", "http-helpers"] }
 proxmox-serde.workspace = true
-proxmox-sys.workspace = true
-proxmox-time.workspace = true
+proxmox-sys = { workspace = true, optional = true }
+proxmox-time = { workspace = true, optional = true }
 
 proxmox-schema = { workspace = true, features = ["api-macro"], optional = true }
 
 [features]
-default = []
+default = ["impl"]
+impl = [ "dep:base64", "dep:hex", "dep:openssl", "dep:proxmox-http", "dep:proxmox-sys", "dep:proxmox-time"]
 api-types = ["dep:proxmox-schema"]

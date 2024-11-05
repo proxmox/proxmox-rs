@@ -1,22 +1,10 @@
-use std::{fmt::Display, path::Path, str::FromStr};
+use std::{fmt::Display, str::FromStr};
 
-use anyhow::{bail, format_err, Error};
-use openssl::hash::{hash, DigestBytes, MessageDigest};
-use proxmox_sys::fs::file_get_contents;
-use proxmox_time::TmEditor;
+use anyhow::{bail, Error};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "api-types")]
 use proxmox_schema::{api, Updater};
-
-use crate::sign::Verifier;
-
-pub(crate) const SHARED_KEY_DATA: &str = "kjfdlskfhiuewhfk947368";
-
-/// How long the local key is valid for in between remote checks
-pub(crate) const SUBSCRIPTION_MAX_LOCAL_KEY_AGE: i64 = 15 * 24 * 3600;
-pub(crate) const SUBSCRIPTION_MAX_LOCAL_SIGNED_KEY_AGE: i64 = 365 * 24 * 3600;
-pub(crate) const SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE: i64 = 5 * 24 * 3600;
 
 // Aliases are needed for PVE compat!
 #[cfg_attr(feature = "api-types", api())]
@@ -144,196 +132,226 @@ pub struct SubscriptionInfo {
     pub signature: Option<String>,
 }
 
-impl SubscriptionInfo {
-    /// Returns the canonicalized signed data and, if available, signature contained in `self`.
-    pub fn signed_data(&self) -> Result<(Vec<u8>, Option<String>), Error> {
-        let mut data = serde_json::to_value(self)?;
-        let signature = data
-            .as_object_mut()
-            .ok_or_else(|| format_err!("subscription info not a JSON object"))?
-            .remove("signature")
-            .and_then(|v| v.as_str().map(|v| v.to_owned()));
+#[cfg(feature = "impl")]
+pub use _impl::get_hardware_address;
 
-        if self.is_signed() && signature.is_none() {
-            bail!("Failed to extract signature value!");
-        }
+#[cfg(feature = "impl")]
+pub(crate) use _impl::{md5sum, SHARED_KEY_DATA};
 
-        let data = proxmox_serde::json::to_canonical_json(&data)?;
-        Ok((data, signature))
-    }
+#[cfg(feature = "impl")]
+mod _impl {
 
-    /// Whether a signature exists - *this does not check the signature's validity!*
-    ///
-    /// Use [SubscriptionInfo::check_signature()] to verify the
-    /// signature.
-    pub fn is_signed(&self) -> bool {
-        self.signature.is_some()
-    }
+    use std::path::Path;
 
-    /// Checks whether a [SubscriptionInfo]'s `checktime` matches the age criteria:
-    ///
-    /// - Instances generated (more than 1.5h) in the future are invalid
-    /// - Signed instances are valid for up to a year, clamped by the next due date
-    /// - Unsigned instances are valid for 30+5 days
-    /// - If `recheck` is set to `true`, unsigned instances are only treated as valid for 5 days
-    ///   (this mode is used to decide whether to refresh the subscription information)
-    ///
-    /// If the criteria are not met, `status` is set to [SubscriptionStatus::Invalid] and `message`
-    /// to a human-readable error message.
-    pub fn check_age(&mut self, recheck: bool) {
-        let now = proxmox_time::epoch_i64();
-        let age = now - self.checktime.unwrap_or(0);
+    use anyhow::format_err;
+    use anyhow::{bail, Error};
+    use openssl::hash::{hash, DigestBytes, MessageDigest};
+    use proxmox_sys::fs::file_get_contents;
+    use proxmox_time::TmEditor;
 
-        let cutoff = if self.is_signed() {
-            SUBSCRIPTION_MAX_LOCAL_SIGNED_KEY_AGE
-        } else if recheck {
-            SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE
-        } else {
-            SUBSCRIPTION_MAX_LOCAL_KEY_AGE + SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE
-        };
+    use crate::sign::Verifier;
 
-        // allow some delta for DST changes or time syncs, 1.5h
-        if age < -5400 {
-            self.status = SubscriptionStatus::Invalid;
-            self.message = Some("last check date too far in the future".to_string());
-            self.signature = None;
-        } else if age > cutoff {
-            if let SubscriptionStatus::Active = self.status {
-                self.status = SubscriptionStatus::Invalid;
-                self.message = Some("subscription information too old".to_string());
-                self.signature = None;
+    pub(crate) const SHARED_KEY_DATA: &str = "kjfdlskfhiuewhfk947368";
+
+    /// How long the local key is valid for in between remote checks
+    pub(crate) const SUBSCRIPTION_MAX_LOCAL_KEY_AGE: i64 = 15 * 24 * 3600;
+    pub(crate) const SUBSCRIPTION_MAX_LOCAL_SIGNED_KEY_AGE: i64 = 365 * 24 * 3600;
+    pub(crate) const SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE: i64 = 5 * 24 * 3600;
+
+    use super::{ProductType, SubscriptionInfo, SubscriptionStatus};
+
+    impl SubscriptionInfo {
+        /// Returns the canonicalized signed data and, if available, signature contained in `self`.
+        pub fn signed_data(&self) -> Result<(Vec<u8>, Option<String>), Error> {
+            let mut data = serde_json::to_value(self)?;
+            let signature = data
+                .as_object_mut()
+                .ok_or_else(|| format_err!("subscription info not a JSON object"))?
+                .remove("signature")
+                .and_then(|v| v.as_str().map(|v| v.to_owned()));
+
+            if self.is_signed() && signature.is_none() {
+                bail!("Failed to extract signature value!");
             }
+
+            let data = proxmox_serde::json::to_canonical_json(&data)?;
+            Ok((data, signature))
         }
 
-        if self.is_signed() && self.status == SubscriptionStatus::Active {
-            if let Some(next_due) = self.nextduedate.as_ref() {
-                match parse_next_due(next_due.as_str()) {
-                    Ok(next_due) if now > next_due => {
-                        self.status = SubscriptionStatus::Invalid;
-                        self.message = Some("subscription information too old".to_string());
-                        self.signature = None;
-                    }
-                    Ok(_) => {}
-                    Err(err) => {
-                        self.status = SubscriptionStatus::Invalid;
-                        self.message = Some(format!("Failed parsing 'nextduedate' - {err}"));
-                        self.signature = None;
+        /// Whether a signature exists - *this does not check the signature's validity!*
+        ///
+        /// Use [SubscriptionInfo::check_signature()] to verify the
+        /// signature.
+        pub fn is_signed(&self) -> bool {
+            self.signature.is_some()
+        }
+
+        /// Checks whether a [SubscriptionInfo]'s `checktime` matches the age criteria:
+        ///
+        /// - Instances generated (more than 1.5h) in the future are invalid
+        /// - Signed instances are valid for up to a year, clamped by the next due date
+        /// - Unsigned instances are valid for 30+5 days
+        /// - If `recheck` is set to `true`, unsigned instances are only treated as valid for 5 days
+        ///   (this mode is used to decide whether to refresh the subscription information)
+        ///
+        /// If the criteria are not met, `status` is set to [SubscriptionStatus::Invalid] and `message`
+        /// to a human-readable error message.
+        pub fn check_age(&mut self, recheck: bool) {
+            let now = proxmox_time::epoch_i64();
+            let age = now - self.checktime.unwrap_or(0);
+
+            let cutoff = if self.is_signed() {
+                SUBSCRIPTION_MAX_LOCAL_SIGNED_KEY_AGE
+            } else if recheck {
+                SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE
+            } else {
+                SUBSCRIPTION_MAX_LOCAL_KEY_AGE + SUBSCRIPTION_MAX_KEY_CHECK_FAILURE_AGE
+            };
+
+            // allow some delta for DST changes or time syncs, 1.5h
+            if age < -5400 {
+                self.status = SubscriptionStatus::Invalid;
+                self.message = Some("last check date too far in the future".to_string());
+                self.signature = None;
+            } else if age > cutoff {
+                if let SubscriptionStatus::Active = self.status {
+                    self.status = SubscriptionStatus::Invalid;
+                    self.message = Some("subscription information too old".to_string());
+                    self.signature = None;
+                }
+            }
+
+            if self.is_signed() && self.status == SubscriptionStatus::Active {
+                if let Some(next_due) = self.nextduedate.as_ref() {
+                    match parse_next_due(next_due.as_str()) {
+                        Ok(next_due) if now > next_due => {
+                            self.status = SubscriptionStatus::Invalid;
+                            self.message = Some("subscription information too old".to_string());
+                            self.signature = None;
+                        }
+                        Ok(_) => {}
+                        Err(err) => {
+                            self.status = SubscriptionStatus::Invalid;
+                            self.message = Some(format!("Failed parsing 'nextduedate' - {err}"));
+                            self.signature = None;
+                        }
                     }
                 }
             }
         }
-    }
 
-    /// Check that server ID contained in [SubscriptionInfo] matches that of current system.
-    ///
-    /// `status` is set to [SubscriptionStatus::Invalid] and `message` to a human-readable
-    ///  message in case it does not.
-    pub fn check_server_id(&mut self) {
-        match (self.serverid.as_ref(), get_hardware_address()) {
-            (_, Err(err)) => {
-                self.status = SubscriptionStatus::Invalid;
-                self.message = Some(format!("Failed to obtain server ID - {err}."));
-                self.signature = None;
+        /// Check that server ID contained in [SubscriptionInfo] matches that of current system.
+        ///
+        /// `status` is set to [SubscriptionStatus::Invalid] and `message` to a human-readable
+        ///  message in case it does not.
+        pub fn check_server_id(&mut self) {
+            match (self.serverid.as_ref(), get_hardware_address()) {
+                (_, Err(err)) => {
+                    self.status = SubscriptionStatus::Invalid;
+                    self.message = Some(format!("Failed to obtain server ID - {err}."));
+                    self.signature = None;
+                }
+                (None, _) => {
+                    self.status = SubscriptionStatus::Invalid;
+                    self.message = Some("Missing server ID.".to_string());
+                    self.signature = None;
+                }
+                (Some(contained), Ok(expected)) if &expected != contained => {
+                    self.status = SubscriptionStatus::Invalid;
+                    self.message = Some("Server ID mismatch.".to_string());
+                    self.signature = None;
+                }
+                (Some(_), Ok(_)) => {}
             }
-            (None, _) => {
-                self.status = SubscriptionStatus::Invalid;
-                self.message = Some("Missing server ID.".to_string());
-                self.signature = None;
-            }
-            (Some(contained), Ok(expected)) if &expected != contained => {
-                self.status = SubscriptionStatus::Invalid;
-                self.message = Some("Server ID mismatch.".to_string());
-                self.signature = None;
-            }
-            (Some(_), Ok(_)) => {}
         }
-    }
 
-    /// Check a [SubscriptionInfo]'s signature, if one is available.
-    ///
-    /// `status` is set to [SubscriptionStatus::Invalid] and `message` to a human-readable error
-    /// message in case a signature is available but not valid for the given `key`.
-    pub fn check_signature<P: AsRef<Path>>(&mut self, keys: &[P]) {
-        let verify = |info: &SubscriptionInfo, path: &P| -> Result<(), Error> {
-            let raw = file_get_contents(path)?;
+        /// Check a [SubscriptionInfo]'s signature, if one is available.
+        ///
+        /// `status` is set to [SubscriptionStatus::Invalid] and `message` to a human-readable error
+        /// message in case a signature is available but not valid for the given `key`.
+        pub fn check_signature<P: AsRef<Path>>(&mut self, keys: &[P]) {
+            let verify = |info: &SubscriptionInfo, path: &P| -> Result<(), Error> {
+                let raw = file_get_contents(path)?;
 
-            let key = openssl::pkey::PKey::public_key_from_pem(&raw)?;
+                let key = openssl::pkey::PKey::public_key_from_pem(&raw)?;
 
-            let (signed, signature) = info.signed_data()?;
-            let signature = match signature {
-                None => bail!("Failed to extract signature value."),
-                Some(sig) => sig,
+                let (signed, signature) = info.signed_data()?;
+                let signature = match signature {
+                    None => bail!("Failed to extract signature value."),
+                    Some(sig) => sig,
+                };
+
+                key.verify(&signed, &signature)
+                    .map_err(|err| format_err!("Signature verification failed - {err}"))
             };
 
-            key.verify(&signed, &signature)
-                .map_err(|err| format_err!("Signature verification failed - {err}"))
-        };
-
-        if self.is_signed() {
-            if keys.is_empty() {
-                self.status = SubscriptionStatus::Invalid;
-                self.message = Some("Signature exists, but no key available.".to_string());
-            } else if !keys.iter().any(|key| verify(self, key).is_ok()) {
-                self.status = SubscriptionStatus::Invalid;
-                self.message = Some("Signature validation failed".to_string());
+            if self.is_signed() {
+                if keys.is_empty() {
+                    self.status = SubscriptionStatus::Invalid;
+                    self.message = Some("Signature exists, but no key available.".to_string());
+                } else if !keys.iter().any(|key| verify(self, key).is_ok()) {
+                    self.status = SubscriptionStatus::Invalid;
+                    self.message = Some("Signature validation failed".to_string());
+                }
             }
+        }
+
+        pub fn get_product_type(&self) -> Result<ProductType, Error> {
+            self.key
+                .as_ref()
+                .ok_or_else(|| format_err!("no product key set"))
+                .map(|key| key[..3].parse::<ProductType>())?
+        }
+
+        pub fn get_next_due_date(&self) -> Result<i64, Error> {
+            self.nextduedate
+                .as_ref()
+                .ok_or_else(|| format_err!("no next due date set"))
+                .map(|e| parse_next_due(e))?
         }
     }
 
-    pub fn get_product_type(&self) -> Result<ProductType, Error> {
-        self.key
-            .as_ref()
-            .ok_or_else(|| format_err!("no product key set"))
-            .map(|key| key[..3].parse::<ProductType>())?
+    /// Shortcut for md5 sums.
+    pub(crate) fn md5sum(data: &[u8]) -> Result<DigestBytes, Error> {
+        hash(MessageDigest::md5(), data).map_err(Error::from)
     }
 
-    pub fn get_next_due_date(&self) -> Result<i64, Error> {
-        self.nextduedate
-            .as_ref()
-            .ok_or_else(|| format_err!("no next due date set"))
-            .map(|e| parse_next_due(e))?
-    }
-}
+    /// Generate the current system's "server ID".
+    pub fn get_hardware_address() -> Result<String, Error> {
+        static FILENAME: &str = "/etc/ssh/ssh_host_rsa_key.pub";
 
-/// Shortcut for md5 sums.
-pub(crate) fn md5sum(data: &[u8]) -> Result<DigestBytes, Error> {
-    hash(MessageDigest::md5(), data).map_err(Error::from)
-}
+        let contents = proxmox_sys::fs::file_get_contents(FILENAME)
+            .map_err(|e| format_err!("Error getting host key - {}", e))?;
+        let digest =
+            md5sum(&contents).map_err(|e| format_err!("Error digesting host key - {}", e))?;
 
-/// Generate the current system's "server ID".
-pub fn get_hardware_address() -> Result<String, Error> {
-    static FILENAME: &str = "/etc/ssh/ssh_host_rsa_key.pub";
-
-    let contents = proxmox_sys::fs::file_get_contents(FILENAME)
-        .map_err(|e| format_err!("Error getting host key - {}", e))?;
-    let digest = md5sum(&contents).map_err(|e| format_err!("Error digesting host key - {}", e))?;
-
-    Ok(hex::encode(digest).to_uppercase())
-}
-
-fn parse_next_due(value: &str) -> Result<i64, Error> {
-    let mut components = value.split('-');
-    let year = components
-        .next()
-        .ok_or_else(|| format_err!("missing year component."))?
-        .parse::<i32>()?;
-    let month = components
-        .next()
-        .ok_or_else(|| format_err!("missing month component."))?
-        .parse::<i32>()?;
-    let day = components
-        .next()
-        .ok_or_else(|| format_err!("missing day component."))?
-        .parse::<i32>()?;
-
-    if components.next().is_some() {
-        bail!("cannot parse 'nextduedate' value '{value}'");
+        Ok(hex::encode(digest).to_uppercase())
     }
 
-    let mut tm = TmEditor::new(true);
-    tm.set_year(year)?;
-    tm.set_mon(month)?;
-    tm.set_mday(day)?;
+    fn parse_next_due(value: &str) -> Result<i64, Error> {
+        let mut components = value.split('-');
+        let year = components
+            .next()
+            .ok_or_else(|| format_err!("missing year component."))?
+            .parse::<i32>()?;
+        let month = components
+            .next()
+            .ok_or_else(|| format_err!("missing month component."))?
+            .parse::<i32>()?;
+        let day = components
+            .next()
+            .ok_or_else(|| format_err!("missing day component."))?
+            .parse::<i32>()?;
 
-    tm.into_epoch()
+        if components.next().is_some() {
+            bail!("cannot parse 'nextduedate' value '{value}'");
+        }
+
+        let mut tm = TmEditor::new(true);
+        tm.set_year(year)?;
+        tm.set_mon(month)?;
+        tm.set_mday(day)?;
+
+        tm.into_epoch()
+    }
 }
