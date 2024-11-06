@@ -370,12 +370,240 @@
 /// - /storage
 /// - /storage/{storage}
 /// ```
-impl<T: HttpApiClient> PveClient<T> {
+#[async_trait::async_trait]
+pub trait PveClient {
     /// Get information needed to join this cluster over the connected node.
-    pub async fn cluster_config_join(
+    async fn cluster_config_join(&self, node: Option<String>) -> Result<ClusterJoinInfo, Error> {
+        Err(Error::Other("cluster_config_join not implemented"))
+    }
+
+    /// Retrieve metrics of the cluster.
+    async fn cluster_metrics_export(
         &self,
-        node: Option<String>,
-    ) -> Result<ClusterJoinInfo, Error> {
+        history: Option<bool>,
+        local_only: Option<bool>,
+        start_time: Option<i64>,
+    ) -> Result<ClusterMetrics, Error> {
+        Err(Error::Other("cluster_metrics_export not implemented"))
+    }
+
+    /// Resources index (cluster wide).
+    async fn cluster_resources(
+        &self,
+        ty: Option<ClusterResourceKind>,
+    ) -> Result<Vec<ClusterResource>, Error> {
+        Err(Error::Other("cluster_resources not implemented"))
+    }
+
+    /// Generate a new API token for a specific user. NOTE: returns API token
+    /// value, which needs to be stored as it cannot be retrieved afterwards!
+    async fn create_token(
+        &self,
+        userid: &str,
+        tokenid: &str,
+        params: CreateToken,
+    ) -> Result<CreateTokenResponse, Error> {
+        Err(Error::Other("create_token not implemented"))
+    }
+
+    /// Read subscription info.
+    async fn get_subscription(&self, node: &str) -> Result<NodeSubscriptionInfo, Error> {
+        Err(Error::Other("get_subscription not implemented"))
+    }
+
+    /// Read task list for one node (finished tasks).
+    async fn get_task_list(
+        &self,
+        node: &str,
+        params: ListTasks,
+    ) -> Result<Vec<ListTasksResponse>, Error> {
+        Err(Error::Other("get_task_list not implemented"))
+    }
+
+    /// Read task log.
+    async fn get_task_log(
+        &self,
+        node: &str,
+        upid: &str,
+        download: Option<bool>,
+        limit: Option<u64>,
+        start: Option<u64>,
+    ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
+        Err(Error::Other("get_task_log not implemented"))
+    }
+
+    /// Read task status.
+    async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
+        Err(Error::Other("get_task_status not implemented"))
+    }
+
+    /// LXC container index (per node).
+    async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
+        Err(Error::Other("list_lxc not implemented"))
+    }
+
+    /// Cluster node index.
+    async fn list_nodes(&self) -> Result<Vec<ClusterNodeIndexResponse>, Error> {
+        Err(Error::Other("list_nodes not implemented"))
+    }
+
+    /// Virtual machine index (per node).
+    async fn list_qemu(&self, node: &str, full: Option<bool>) -> Result<Vec<VmEntry>, Error> {
+        Err(Error::Other("list_qemu not implemented"))
+    }
+
+    /// Get container configuration.
+    async fn lxc_get_config(
+        &self,
+        node: &str,
+        vmid: u32,
+        current: Option<bool>,
+        snapshot: Option<String>,
+    ) -> Result<LxcConfig, Error> {
+        Err(Error::Other("lxc_get_config not implemented"))
+    }
+
+    /// Migrate the container to another node. Creates a new migration task.
+    async fn migrate_lxc(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: MigrateLxc,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("migrate_lxc not implemented"))
+    }
+
+    /// Migrate virtual machine. Creates a new migration task.
+    async fn migrate_qemu(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: MigrateQemu,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("migrate_qemu not implemented"))
+    }
+
+    /// Get the virtual machine configuration with pending configuration changes
+    /// applied. Set the 'current' parameter to get the current configuration
+    /// instead.
+    async fn qemu_get_config(
+        &self,
+        node: &str,
+        vmid: u32,
+        current: Option<bool>,
+        snapshot: Option<String>,
+    ) -> Result<QemuConfig, Error> {
+        Err(Error::Other("qemu_get_config not implemented"))
+    }
+
+    /// Migrate the container to another cluster. Creates a new migration task.
+    /// EXPERIMENTAL feature!
+    async fn remote_migrate_lxc(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: RemoteMigrateLxc,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("remote_migrate_lxc not implemented"))
+    }
+
+    /// Migrate virtual machine to a remote cluster. Creates a new migration
+    /// task. EXPERIMENTAL feature!
+    async fn remote_migrate_qemu(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: RemoteMigrateQemu,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("remote_migrate_qemu not implemented"))
+    }
+
+    /// Shutdown the container. This will trigger a clean shutdown of the
+    /// container, see lxc-stop(1) for details.
+    async fn shutdown_lxc_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: ShutdownLxc,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("shutdown_lxc_async not implemented"))
+    }
+
+    /// Shutdown virtual machine. This is similar to pressing the power button
+    /// on a physical machine. This will send an ACPI event for the guest OS,
+    /// which should then proceed to a clean shutdown.
+    async fn shutdown_qemu_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: ShutdownQemu,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("shutdown_qemu_async not implemented"))
+    }
+
+    /// Start the container.
+    async fn start_lxc_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: StartLxc,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("start_lxc_async not implemented"))
+    }
+
+    /// Start virtual machine.
+    async fn start_qemu_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: StartQemu,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("start_qemu_async not implemented"))
+    }
+
+    /// Stop the container. This will abruptly stop all processes running in the
+    /// container.
+    async fn stop_lxc_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: StopLxc,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("stop_lxc_async not implemented"))
+    }
+
+    /// Stop virtual machine. The qemu process will exit immediately. This is
+    /// akin to pulling the power plug of a running computer and may damage the
+    /// VM data.
+    async fn stop_qemu_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: StopQemu,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("stop_qemu_async not implemented"))
+    }
+
+    /// Stop a task.
+    async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
+        Err(Error::Other("stop_task not implemented"))
+    }
+
+    /// API version details, including some parts of the global datacenter
+    /// config.
+    async fn version(&self) -> Result<VersionResponse, Error> {
+        Err(Error::Other("version not implemented"))
+    }
+}
+
+#[async_trait::async_trait]
+impl<T> PveClient for PveClientImpl<T>
+where
+    T: HttpApiClient + Send + Sync,
+    for<'a> <T as HttpApiClient>::ResponseFuture<'a>: Send,
+{
+    /// Get information needed to join this cluster over the connected node.
+    async fn cluster_config_join(&self, node: Option<String>) -> Result<ClusterJoinInfo, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_arg(&mut query, &mut sep, "node", &node);
         let url = format!("/api2/extjs/cluster/config/join{query}");
@@ -383,7 +611,7 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Retrieve metrics of the cluster.
-    pub async fn cluster_metrics_export(
+    async fn cluster_metrics_export(
         &self,
         history: Option<bool>,
         local_only: Option<bool>,
@@ -398,7 +626,7 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Resources index (cluster wide).
-    pub async fn cluster_resources(
+    async fn cluster_resources(
         &self,
         ty: Option<ClusterResourceKind>,
     ) -> Result<Vec<ClusterResource>, Error> {
@@ -410,7 +638,7 @@ impl<T: HttpApiClient> PveClient<T> {
 
     /// Generate a new API token for a specific user. NOTE: returns API token
     /// value, which needs to be stored as it cannot be retrieved afterwards!
-    pub async fn create_token(
+    async fn create_token(
         &self,
         userid: &str,
         tokenid: &str,
@@ -421,13 +649,13 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Read subscription info.
-    pub async fn get_subscription(&self, node: &str) -> Result<NodeSubscriptionInfo, Error> {
+    async fn get_subscription(&self, node: &str) -> Result<NodeSubscriptionInfo, Error> {
         let url = format!("/api2/extjs/nodes/{node}/subscription");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Read task list for one node (finished tasks).
-    pub async fn get_task_list(
+    async fn get_task_list(
         &self,
         node: &str,
         params: ListTasks,
@@ -460,7 +688,7 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Read task log.
-    pub async fn get_task_log(
+    async fn get_task_log(
         &self,
         node: &str,
         upid: &str,
@@ -477,25 +705,25 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Read task status.
-    pub async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
+    async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
         let url = format!("/api2/extjs/nodes/{node}/tasks/{upid}/status");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// LXC container index (per node).
-    pub async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
+    async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
         let url = format!("/api2/extjs/nodes/{node}/lxc");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Cluster node index.
-    pub async fn list_nodes(&self) -> Result<Vec<ClusterNodeIndexResponse>, Error> {
+    async fn list_nodes(&self) -> Result<Vec<ClusterNodeIndexResponse>, Error> {
         let url = format!("/api2/extjs/nodes");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Virtual machine index (per node).
-    pub async fn list_qemu(&self, node: &str, full: Option<bool>) -> Result<Vec<VmEntry>, Error> {
+    async fn list_qemu(&self, node: &str, full: Option<bool>) -> Result<Vec<VmEntry>, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_bool(&mut query, &mut sep, "full", full);
         let url = format!("/api2/extjs/nodes/{node}/qemu{query}");
@@ -503,7 +731,7 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Get container configuration.
-    pub async fn lxc_get_config(
+    async fn lxc_get_config(
         &self,
         node: &str,
         vmid: u32,
@@ -518,7 +746,7 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Migrate the container to another node. Creates a new migration task.
-    pub async fn migrate_lxc(
+    async fn migrate_lxc(
         &self,
         node: &str,
         vmid: u32,
@@ -529,7 +757,7 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Migrate virtual machine. Creates a new migration task.
-    pub async fn migrate_qemu(
+    async fn migrate_qemu(
         &self,
         node: &str,
         vmid: u32,
@@ -542,7 +770,7 @@ impl<T: HttpApiClient> PveClient<T> {
     /// Get the virtual machine configuration with pending configuration changes
     /// applied. Set the 'current' parameter to get the current configuration
     /// instead.
-    pub async fn qemu_get_config(
+    async fn qemu_get_config(
         &self,
         node: &str,
         vmid: u32,
@@ -558,7 +786,7 @@ impl<T: HttpApiClient> PveClient<T> {
 
     /// Migrate the container to another cluster. Creates a new migration task.
     /// EXPERIMENTAL feature!
-    pub async fn remote_migrate_lxc(
+    async fn remote_migrate_lxc(
         &self,
         node: &str,
         vmid: u32,
@@ -570,7 +798,7 @@ impl<T: HttpApiClient> PveClient<T> {
 
     /// Migrate virtual machine to a remote cluster. Creates a new migration
     /// task. EXPERIMENTAL feature!
-    pub async fn remote_migrate_qemu(
+    async fn remote_migrate_qemu(
         &self,
         node: &str,
         vmid: u32,
@@ -582,7 +810,7 @@ impl<T: HttpApiClient> PveClient<T> {
 
     /// Shutdown the container. This will trigger a clean shutdown of the
     /// container, see lxc-stop(1) for details.
-    pub async fn shutdown_lxc_async(
+    async fn shutdown_lxc_async(
         &self,
         node: &str,
         vmid: u32,
@@ -595,7 +823,7 @@ impl<T: HttpApiClient> PveClient<T> {
     /// Shutdown virtual machine. This is similar to pressing the power button
     /// on a physical machine. This will send an ACPI event for the guest OS,
     /// which should then proceed to a clean shutdown.
-    pub async fn shutdown_qemu_async(
+    async fn shutdown_qemu_async(
         &self,
         node: &str,
         vmid: u32,
@@ -606,7 +834,7 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Start the container.
-    pub async fn start_lxc_async(
+    async fn start_lxc_async(
         &self,
         node: &str,
         vmid: u32,
@@ -617,7 +845,7 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Start virtual machine.
-    pub async fn start_qemu_async(
+    async fn start_qemu_async(
         &self,
         node: &str,
         vmid: u32,
@@ -629,7 +857,7 @@ impl<T: HttpApiClient> PveClient<T> {
 
     /// Stop the container. This will abruptly stop all processes running in the
     /// container.
-    pub async fn stop_lxc_async(
+    async fn stop_lxc_async(
         &self,
         node: &str,
         vmid: u32,
@@ -642,7 +870,7 @@ impl<T: HttpApiClient> PveClient<T> {
     /// Stop virtual machine. The qemu process will exit immediately. This is
     /// akin to pulling the power plug of a running computer and may damage the
     /// VM data.
-    pub async fn stop_qemu_async(
+    async fn stop_qemu_async(
         &self,
         node: &str,
         vmid: u32,
@@ -653,14 +881,14 @@ impl<T: HttpApiClient> PveClient<T> {
     }
 
     /// Stop a task.
-    pub async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
+    async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
         let url = format!("/api2/extjs/nodes/{node}/tasks/{upid}");
         Ok(self.0.delete(&url).await?.expect_json()?.data)
     }
 
     /// API version details, including some parts of the global datacenter
     /// config.
-    pub async fn version(&self) -> Result<VersionResponse, Error> {
+    async fn version(&self) -> Result<VersionResponse, Error> {
         let url = format!("/api2/extjs/version");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
