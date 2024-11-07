@@ -1,4 +1,4 @@
-rust-proxmox-subscription (0.5.0-1) unstable; urgency=medium
+rust-proxmox-subscription (0.5.0-1) bookworm; urgency=medium
 
    * move most of the implmentation into `impl` feature
 
