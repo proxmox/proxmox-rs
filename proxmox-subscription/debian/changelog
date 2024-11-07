@@ -1,3 +1,9 @@
+rust-proxmox-subscription (0.5.0-1) unstable; urgency=medium
+
+   * move most of the implmentation into `impl` feature
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 Nov 2024 12:31:46 +0100
+
 rust-proxmox-subscription (0.4.6-1) bookworm; urgency=medium
 
   * replace lazy_static with std's LazyLock and drop the dependency
