@@ -445,6 +445,10 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
             type: String,
         },
+        lock: {
+            optional: true,
+            type: String,
+        },
         maxcpu: {
             minimum: 0.0,
             optional: true,
@@ -494,6 +498,10 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
         },
         storage: {
             format: &ApiStringFormat::Pattern(&CLUSTER_RESOURCE_STORAGE_RE),
+            optional: true,
+            type: String,
+        },
+        tags: {
             optional: true,
             type: String,
         },
@@ -563,6 +571,10 @@ pub struct ClusterResource {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub level: Option<String>,
 
+    /// The current config lock of the guets (type in qemu,lxc)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lock: Option<String>,
+
     /// Number of available CPUs (when type in node,qemu,lxc).
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -619,6 +631,10 @@ pub struct ClusterResource {
     /// The storage identifier (when type == storage).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub storage: Option<String>,
+
+    /// The set tags of the guest (type in qemu,lxc)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tags: Option<String>,
 
     /// Determines if the guest is a template. (type in qemu,lxc)
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
@@ -8202,6 +8218,7 @@ pub struct TaskLogLine {
             description: "The task's proc start time.",
         },
         starttime: {
+            type: Integer,
             description: "The task's start time.",
         },
         type: {
@@ -8234,8 +8251,8 @@ pub struct TaskStatus {
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     pub pstart: i64,
 
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
-    pub starttime: f64,
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub starttime: i64,
 
     pub status: IsRunning,
 
