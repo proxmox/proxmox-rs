@@ -1,8 +1,8 @@
 Source: rust-proxmox-rest-server
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
  rustc:native (>= 1.80) <!nocheck>,
  libstd-rust-dev <!nocheck>,
@@ -20,7 +20,7 @@ Build-Depends: debhelper (>= 12),
  librust-proxmox-compression-0.2+default-dev (>= 0.2.4-~~) <!nocheck>,
  librust-proxmox-daemon-0.1+default-dev <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.3-~~) <!nocheck>,
- librust-proxmox-log-0.2+default-dev (>= 0.2.3-~~) <!nocheck>,
+ librust-proxmox-log-0.2+default-dev (>= 0.2.5-~~) <!nocheck>,
  librust-proxmox-router-3+default-dev <!nocheck>,
  librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~) <!nocheck>,
  librust-proxmox-schema-3+default-dev (>= 3.1.2-~~) <!nocheck>,
@@ -43,9 +43,10 @@ Build-Depends: debhelper (>= 12),
  librust-tracing-0.1+default-dev <!nocheck>,
  librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-rest-server
 Rules-Requires-Root: no
 
@@ -68,7 +69,7 @@ Depends:
  librust-proxmox-compression-0.2+default-dev (>= 0.2.4-~~),
  librust-proxmox-daemon-0.1+default-dev,
  librust-proxmox-lang-1+default-dev (>= 1.3-~~),
- librust-proxmox-log-0.2+default-dev (>= 0.2.3-~~),
+ librust-proxmox-log-0.2+default-dev (>= 0.2.5-~~),
  librust-proxmox-router-3+default-dev,
  librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~),
  librust-proxmox-schema-3+default-dev (>= 3.1.2-~~),
@@ -99,8 +100,8 @@ Provides:
  librust-proxmox-rest-server-0+default-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+default-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.0-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.0+default-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.1-dev (= ${binary:Version}),
+ librust-proxmox-rest-server-0.8.1+default-dev (= ${binary:Version})
 Description: REST server implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-rest-server"
 
@@ -115,7 +116,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+rate-limited-stream-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+rate-limited-stream-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.0+rate-limited-stream-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.1+rate-limited-stream-dev (= ${binary:Version})
 Description: REST server implementation - feature "rate-limited-stream"
  This metapackage enables feature "rate-limited-stream" for the Rust proxmox-
  rest-server crate, by pulling in any additional dependencies needed by that
@@ -131,7 +132,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+templates-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+templates-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.0+templates-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.1+templates-dev (= ${binary:Version})
 Description: REST server implementation - feature "templates"
  This metapackage enables feature "templates" for the Rust proxmox-rest-server
  crate, by pulling in any additional dependencies needed by that feature.
