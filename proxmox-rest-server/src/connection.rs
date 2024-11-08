@@ -78,6 +78,17 @@ impl TlsAcceptorBuilder {
     pub fn build(self) -> Result<SslAcceptor, Error> {
         let mut acceptor = SslAcceptor::mozilla_intermediate_v5(SslMethod::tls()).unwrap();
 
+        if let Some(cipher_suites) = self.cipher_suites.as_deref() {
+            acceptor
+                .set_ciphersuites(cipher_suites)
+                .context("failed to set tls acceptor cipher suites")?;
+        }
+        if let Some(cipher_list) = self.cipher_list.as_deref() {
+            acceptor
+                .set_cipher_list(cipher_list)
+                .context("failed to set tls acceptor cipher list")?;
+        }
+
         match self.tls {
             Some(Tls::KeyCert(key, cert)) => {
                 acceptor
