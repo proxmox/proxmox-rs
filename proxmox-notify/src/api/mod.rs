@@ -15,6 +15,8 @@ pub mod matcher;
 pub mod sendmail;
 #[cfg(feature = "smtp")]
 pub mod smtp;
+#[cfg(feature = "webhook")]
+pub mod webhook;
 
 // We have our own, local versions of http_err and http_bail, because
 // we don't want to wrap the error in anyhow::Error. If we were to do that,
@@ -54,6 +56,9 @@ pub enum EndpointType {
     /// Gotify endpoint
     #[cfg(feature = "gotify")]
     Gotify,
+    /// Webhook endpoint
+    #[cfg(feature = "webhook")]
+    Webhook,
 }
 
 #[api]
@@ -113,6 +118,17 @@ pub fn get_targets(config: &Config) -> Result<Vec<Target>, HttpError> {
         })
     }
 
+    #[cfg(feature = "webhook")]
+    for endpoint in webhook::get_endpoints(config)? {
+        targets.push(Target {
+            name: endpoint.name,
+            origin: endpoint.origin.unwrap_or(Origin::UserCreated),
+            endpoint_type: EndpointType::Webhook,
+            disable: endpoint.disable,
+            comment: endpoint.comment,
+        })
+    }
+
     Ok(targets)
 }
 
@@ -144,6 +160,10 @@ fn ensure_endpoint_exists(#[allow(unused)] config: &Config, name: &str) -> Resul
     #[cfg(feature = "smtp")]
     {
         exists = exists || smtp::get_endpoint(config, name).is_ok();
+    }
+    #[cfg(feature = "webhook")]
+    {
+        exists = exists || webhook::get_endpoint(config, name).is_ok();
     }
 
     if !exists {
