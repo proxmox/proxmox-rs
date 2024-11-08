@@ -329,8 +329,8 @@ mod tests {
             Some("1 KiB".to_string())
         );
 
-        assert_eq!(value_to_duration(&json!(60)), Some("1min ".to_string()));
-        assert_eq!(value_to_duration(&json!("60")), Some("1min ".to_string()));
+        assert_eq!(value_to_duration(&json!(60)), Some("1m".to_string()));
+        assert_eq!(value_to_duration(&json!("60")), Some("1m".to_string()));
 
         // The rendered value is in localtime, so we only check if the result is `Some`...
         // ... otherwise the test will break in another timezone :S
