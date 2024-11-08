@@ -100,7 +100,7 @@ impl TlsAcceptorBuilder {
             }
             Some(Tls::FilesPem(key, cert)) => {
                 let key_content = std::fs::read(&key)
-                    .with_context(|| format!("Failed to read from private key file {:?}", key))?;
+                    .with_context(|| format!("Failed to read from private key file {key:?}"))?;
                 acceptor
                     .set_private_key(PKey::private_key_from_pem(&key_content)?.as_ref())
                     .context("failed to set tls acceptor private key file")?;
@@ -108,7 +108,7 @@ impl TlsAcceptorBuilder {
                 {
                     // Check the permissions by opening the file
                     let _cert_fd = std::fs::File::open(&cert)
-                        .with_context(|| format!("Failed to open certificate at {:?}", cert))?;
+                        .with_context(|| format!("Failed to open certificate at {cert:?}"))?;
                 }
                 acceptor
                     .set_certificate_chain_file(cert)
