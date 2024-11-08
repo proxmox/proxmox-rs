@@ -57,6 +57,17 @@ fn config_init() -> SectionConfig {
             GOTIFY_SCHEMA,
         ));
     }
+    #[cfg(feature = "webhook")]
+    {
+        use crate::endpoints::webhook::{WebhookConfig, WEBHOOK_TYPENAME};
+
+        const WEBHOOK_SCHEMA: &ObjectSchema = WebhookConfig::API_SCHEMA.unwrap_object_schema();
+        config.register_plugin(SectionConfigPlugin::new(
+            WEBHOOK_TYPENAME.to_string(),
+            Some(String::from("name")),
+            WEBHOOK_SCHEMA,
+        ));
+    }
 
     const MATCHER_SCHEMA: &ObjectSchema = MatcherConfig::API_SCHEMA.unwrap_object_schema();
     config.register_plugin(SectionConfigPlugin::new(
@@ -110,6 +121,18 @@ fn private_config_init() -> SectionConfig {
         ));
     }
 
+    #[cfg(feature = "webhook")]
+    {
+        use crate::endpoints::webhook::{WebhookPrivateConfig, WEBHOOK_TYPENAME};
+
+        const WEBHOOK_SCHEMA: &ObjectSchema =
+            WebhookPrivateConfig::API_SCHEMA.unwrap_object_schema();
+        config.register_plugin(SectionConfigPlugin::new(
+            WEBHOOK_TYPENAME.to_string(),
+            Some(String::from("name")),
+            WEBHOOK_SCHEMA,
+        ));
+    }
     config
 }
 

@@ -500,6 +500,23 @@ impl Bus {
             );
         }
 
+        #[cfg(feature = "webhook")]
+        {
+            use endpoints::webhook::WEBHOOK_TYPENAME;
+            use endpoints::webhook::{WebhookConfig, WebhookEndpoint, WebhookPrivateConfig};
+            endpoints.extend(
+                parse_endpoints_with_private_config!(
+                    config,
+                    WebhookConfig,
+                    WebhookPrivateConfig,
+                    WebhookEndpoint,
+                    WEBHOOK_TYPENAME
+                )?
+                .into_iter()
+                .map(|e| (e.name().into(), e)),
+            );
+        }
+
         let matchers = config
             .config
             .convert_to_typed_array(MATCHER_TYPENAME)

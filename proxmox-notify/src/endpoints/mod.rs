@@ -4,5 +4,7 @@ pub mod gotify;
 pub mod sendmail;
 #[cfg(feature = "smtp")]
 pub mod smtp;
+#[cfg(feature = "webhook")]
+pub mod webhook;
 
 mod common;
