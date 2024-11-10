@@ -75,6 +75,17 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 "This repository contains the Ceph Reef packages before they are moved to the \
                 main repository."
             }
+            APTRepositoryHandle::CephSquidEnterprise => {
+                "This repository holds the production-ready Proxmox Ceph Squid packages."
+            }
+            APTRepositoryHandle::CephSquidNoSubscription => {
+                "This repository holds the Proxmox Ceph Squid packages intended for \
+                non-production use."
+            }
+            APTRepositoryHandle::CephSquidTest => {
+                "This repository contains the Ceph Squid packages before they are moved to the \
+                main repository."
+            }
         }
         .to_string()
     }
@@ -90,6 +101,9 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             APTRepositoryHandle::CephReefEnterprise => "Ceph Reef Enterprise",
             APTRepositoryHandle::CephReefNoSubscription => "Ceph Reef No-Subscription",
             APTRepositoryHandle::CephReefTest => "Ceph Reef Test",
+            APTRepositoryHandle::CephSquidEnterprise => "Ceph Squid Enterprise",
+            APTRepositoryHandle::CephSquidNoSubscription => "Ceph Squid No-Subscription",
+            APTRepositoryHandle::CephSquidTest => "Ceph Squid Test",
         }
         .to_string()
     }
@@ -106,7 +120,10 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             | APTRepositoryHandle::CephQuincyTest
             | APTRepositoryHandle::CephReefEnterprise
             | APTRepositoryHandle::CephReefNoSubscription
-            | APTRepositoryHandle::CephReefTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
+            | APTRepositoryHandle::CephReefTest
+            | APTRepositoryHandle::CephSquidEnterprise
+            | APTRepositoryHandle::CephSquidNoSubscription
+            | APTRepositoryHandle::CephSquidTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
         }
     }
 
@@ -173,6 +190,21 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             APTRepositoryHandle::CephReefTest => (
                 APTRepositoryPackageType::Deb,
                 vec!["http://download.proxmox.com/debian/ceph-reef".to_string()],
+                "test".to_string(),
+            ),
+            APTRepositoryHandle::CephSquidEnterprise => (
+                APTRepositoryPackageType::Deb,
+                vec!["https://enterprise.proxmox.com/debian/ceph-squid".to_string()],
+                "enterprise".to_string(),
+            ),
+            APTRepositoryHandle::CephSquidNoSubscription => (
+                APTRepositoryPackageType::Deb,
+                vec!["http://download.proxmox.com/debian/ceph-squid".to_string()],
+                "no-subscription".to_string(),
+            ),
+            APTRepositoryHandle::CephSquidTest => (
+                APTRepositoryPackageType::Deb,
+                vec!["http://download.proxmox.com/debian/ceph-squid".to_string()],
                 "test".to_string(),
             ),
         }
