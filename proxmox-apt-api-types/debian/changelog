@@ -1,3 +1,9 @@
+rust-proxmox-apt-api-types (1.0.2-1) bookworm; urgency=medium
+
+  * add Ceph Squid as valid Proxmox APT repository handle.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 10 Nov 2024 18:41:28 +0100
+
 rust-proxmox-apt-api-types (1.0.1-1) bookworm; urgency=medium
 
   * fix backward compatibility by encoding digest as array

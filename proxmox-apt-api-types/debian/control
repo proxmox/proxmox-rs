@@ -1,21 +1,22 @@
 Source: rust-proxmox-apt-api-types
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-proxmox-config-digest-0.1+default-dev <!nocheck>,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~) <!nocheck>,
- librust-proxmox-schema-3+default-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~) <!nocheck>,
+ librust-proxmox-schema-3+default-dev (>= 3.1.2-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox-apt.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox-apt.git
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-apt-api-types
 Rules-Requires-Root: no
 
@@ -25,8 +26,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-config-digest-0.1+default-dev,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~),
- librust-proxmox-schema-3+default-dev (>= 3.1.1-~~),
+ librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~),
+ librust-proxmox-schema-3+default-dev (>= 3.1.2-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-plain-1+default-dev
@@ -36,7 +37,7 @@ Provides:
  librust-proxmox-apt-api-types-1+default-dev (= ${binary:Version}),
  librust-proxmox-apt-api-types-1.0-dev (= ${binary:Version}),
  librust-proxmox-apt-api-types-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-1.0.1-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-1.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-apt-api-types-1.0.2-dev (= ${binary:Version}),
+ librust-proxmox-apt-api-types-1.0.2+default-dev (= ${binary:Version})
 Description: APT API type definitions - Rust source code
  Source code for Debianized Rust crate "proxmox-apt-api-types"
