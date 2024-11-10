@@ -291,6 +291,12 @@ pub enum APTRepositoryHandle {
     CephReefNoSubscription,
     /// Ceph Reef test repository.
     CephReefTest,
+    /// Ceph Squid enterprise repository.
+    CephSquidEnterprise,
+    /// Ceph Squid no-subscription repository.
+    CephSquidNoSubscription,
+    /// Ceph Squid test repository.
+    CephSquidTest,
 }
 
 serde_plain::derive_display_from_serialize!(APTRepositoryHandle);
