@@ -1,3 +1,9 @@
+rust-proxmox-notify (0.5.0-1) bookworm; urgency=medium
+
+  * implement webhook targets and api to manage them
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 10 Nov 2024 18:57:36 +0100
+
 rust-proxmox-notify (0.4.2-1) bookworm; urgency=medium
 
   * upgrade to proxmox-sys 6.0
