@@ -1,15 +1,15 @@
 Source: rust-proxmox-apt
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-hex-0.4+default-dev <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
- librust-proxmox-apt-api-types-1+default-dev (>= 1.0.1-~~) <!nocheck>,
+ librust-proxmox-apt-api-types-1+default-dev (>= 1.0.2-~~) <!nocheck>,
  librust-proxmox-config-digest-0.1+default-dev <!nocheck>,
  librust-proxmox-config-digest-0.1+openssl-dev <!nocheck>,
  librust-proxmox-sys-0.6+default-dev <!nocheck>,
@@ -18,7 +18,7 @@ Build-Depends: debhelper (>= 12),
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox-apt.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox-apt.git
 Homepage: https://proxmox.com
@@ -33,7 +33,7 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-hex-0.4+default-dev,
  librust-openssl-0.10+default-dev,
- librust-proxmox-apt-api-types-1+default-dev (>= 1.0.1-~~),
+ librust-proxmox-apt-api-types-1+default-dev (>= 1.0.2-~~),
  librust-proxmox-config-digest-0.1+default-dev,
  librust-proxmox-config-digest-0.1+openssl-dev,
  librust-proxmox-sys-0.6+default-dev,
@@ -49,8 +49,8 @@ Provides:
  librust-proxmox-apt-0+default-dev (= ${binary:Version}),
  librust-proxmox-apt-0.11-dev (= ${binary:Version}),
  librust-proxmox-apt-0.11+default-dev (= ${binary:Version}),
- librust-proxmox-apt-0.11.3-dev (= ${binary:Version}),
- librust-proxmox-apt-0.11.3+default-dev (= ${binary:Version})
+ librust-proxmox-apt-0.11.4-dev (= ${binary:Version}),
+ librust-proxmox-apt-0.11.4+default-dev (= ${binary:Version})
 Description: Proxmox library for APT - Rust source code
  Source code for Debianized Rust crate "proxmox-apt"
 
@@ -68,7 +68,7 @@ Depends:
 Provides:
  librust-proxmox-apt-0+cache-dev (= ${binary:Version}),
  librust-proxmox-apt-0.11+cache-dev (= ${binary:Version}),
- librust-proxmox-apt-0.11.3+cache-dev (= ${binary:Version})
+ librust-proxmox-apt-0.11.4+cache-dev (= ${binary:Version})
 Description: Proxmox library for APT - feature "cache"
  This metapackage enables feature "cache" for the Rust proxmox-apt crate, by
  pulling in any additional dependencies needed by that feature.

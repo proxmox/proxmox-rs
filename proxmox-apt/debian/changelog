@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.11.4-1) bookworm; urgency=medium
+
+  * add support for Ceph Squid repositories
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 10 Nov 2024 18:48:37 +0100
+
 rust-proxmox-apt (0.11.3-1) bookworm; urgency=medium
 
   * drop unused dependency on once_cell
