@@ -1580,3 +1580,33 @@ pub fn print_store_and_ns(store: &str, ns: &BackupNamespace) -> String {
         format!("datastore '{}', namespace '{}'", store, ns)
     }
 }
+
+#[derive(Default)]
+pub struct BackupGroupDeleteStats {
+    // Count of protected snapshots, therefore not removed
+    protected_snapshots: usize,
+    // Count of deleted snapshots
+    removed_snapshots: usize,
+}
+
+impl BackupGroupDeleteStats {
+    pub fn all_removed(&self) -> bool {
+        self.protected_snapshots == 0
+    }
+
+    pub fn removed_snapshots(&self) -> usize {
+        self.removed_snapshots
+    }
+
+    pub fn protected_snapshots(&self) -> usize {
+        self.protected_snapshots
+    }
+
+    pub fn increment_removed_snapshots(&mut self) {
+        self.removed_snapshots += 1;
+    }
+
+    pub fn increment_protected_snapshots(&mut self) {
+        self.protected_snapshots += 1;
+    }
+}
