@@ -155,6 +155,9 @@ pub use zfs::*;
 mod metrics;
 pub use metrics::*;
 
+mod version;
+pub use version::*;
+
 const_regex! {
     // just a rough check - dummy acceptor is used before persisting
     pub OPENSSL_CIPHERS_REGEX = r"^[0-9A-Za-z_:, +!\-@=.]+$";
