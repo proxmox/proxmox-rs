@@ -498,6 +498,44 @@ pub const TRANSFER_LAST_SCHEMA: Schema =
         .minimum(1)
         .schema();
 
+#[api()]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+/// Direction of the sync job, push or pull
+pub enum SyncDirection {
+    /// Sync direction pull
+    #[default]
+    Pull,
+    /// Sync direction push
+    Push,
+}
+
+impl std::fmt::Display for SyncDirection {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SyncDirection::Pull => f.write_str("pull"),
+            SyncDirection::Push => f.write_str("push"),
+        }
+    }
+}
+
+impl SyncDirection {
+    pub fn as_config_type_str(&self) -> &'static str {
+        match self {
+            SyncDirection::Pull => "sync",
+            SyncDirection::Push => "sync-push",
+        }
+    }
+
+    pub fn from_config_type_str(config_type: &str) -> Result<Self, anyhow::Error> {
+        match config_type {
+            "sync" => Ok(SyncDirection::Pull),
+            "sync-push" => Ok(SyncDirection::Push),
+            _ => bail!("invalid config type for sync job"),
+        }
+    }
+}
+
 #[api(
     properties: {
         id: {
