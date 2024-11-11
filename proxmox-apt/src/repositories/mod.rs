@@ -104,6 +104,9 @@ pub fn standard_repositories(
                 APTStandardRepository::from_handle(APTRepositoryHandle::CephReefEnterprise),
                 APTStandardRepository::from_handle(APTRepositoryHandle::CephReefNoSubscription),
                 APTStandardRepository::from_handle(APTRepositoryHandle::CephReefTest),
+                APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidEnterprise),
+                APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidNoSubscription),
+                APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidTest),
             ]);
         }
     }
