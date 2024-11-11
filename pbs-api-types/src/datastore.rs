@@ -722,15 +722,21 @@ impl BackupNamespace {
         Ok(())
     }
 
-    pub fn acl_path<'a>(&'a self, store: &'a str) -> Vec<&'a str> {
-        let mut path: Vec<&str> = vec!["datastore", store];
-
+    fn acl_path_extend<'a>(&'a self, mut path: Vec<&'a str>) -> Vec<&'a str> {
         if self.is_root() {
             path
         } else {
             path.extend(self.inner.iter().map(|comp| comp.as_str()));
             path
         }
+    }
+
+    pub fn acl_path<'a>(&'a self, store: &'a str) -> Vec<&'a str> {
+        self.acl_path_extend(vec!["datastore", store])
+    }
+
+    pub fn remote_acl_path<'a>(&'a self, remote: &'a str, store: &'a str) -> Vec<&'a str> {
+        self.acl_path_extend(vec!["remote", remote, store])
     }
 
     /// Check whether this namespace contains another namespace.
