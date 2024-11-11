@@ -594,6 +594,14 @@ impl SyncJobConfig {
             None => vec!["datastore", &self.store],
         }
     }
+
+    pub fn remote_acl_path(&self) -> Option<Vec<&str>> {
+        let remote = self.remote.as_ref()?;
+        match &self.remote_ns {
+            Some(remote_ns) => Some(remote_ns.remote_acl_path(remote, &self.remote_store)),
+            None => Some(vec!["remote", remote, &self.remote_store]),
+        }
+    }
 }
 
 #[api(
