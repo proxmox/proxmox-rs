@@ -1581,8 +1581,28 @@ pub fn print_store_and_ns(store: &str, ns: &BackupNamespace) -> String {
     }
 }
 
-#[derive(Default)]
+pub const DELETE_STATS_COUNT_SCHEMA: Schema =
+    IntegerSchema::new("Number of entities").minimum(0).schema();
+
+#[api(
+    properties: {
+        "removed-groups": {
+            schema: DELETE_STATS_COUNT_SCHEMA,
+        },
+        "protected-snapshots": {
+            schema: DELETE_STATS_COUNT_SCHEMA,
+        },
+        "removed-snapshots": {
+            schema: DELETE_STATS_COUNT_SCHEMA,
+        },
+     },
+)]
+#[derive(Default, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+/// Statistics for removed backup groups
 pub struct BackupGroupDeleteStats {
+    // Count of removed groups
+    removed_groups: usize,
     // Count of protected snapshots, therefore not removed
     protected_snapshots: usize,
     // Count of deleted snapshots
@@ -1594,12 +1614,26 @@ impl BackupGroupDeleteStats {
         self.protected_snapshots == 0
     }
 
+    pub fn removed_groups(&self) -> usize {
+        self.removed_groups
+    }
+
     pub fn removed_snapshots(&self) -> usize {
         self.removed_snapshots
     }
 
     pub fn protected_snapshots(&self) -> usize {
         self.protected_snapshots
+    }
+
+    pub fn add(&mut self, rhs: &Self) {
+        self.removed_groups += rhs.removed_groups;
+        self.protected_snapshots += rhs.protected_snapshots;
+        self.removed_snapshots += rhs.removed_snapshots;
+    }
+
+    pub fn increment_removed_groups(&mut self) {
+        self.removed_groups += 1;
     }
 
     pub fn increment_removed_snapshots(&mut self) {
