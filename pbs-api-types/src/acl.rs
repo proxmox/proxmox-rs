@@ -58,6 +58,12 @@ constnamedbitmap! {
         PRIV_REMOTE_MODIFY("Remote.Modify");
         /// Remote.Read allows reading data from a configured `Remote`
         PRIV_REMOTE_READ("Remote.Read");
+        /// Remote.DatastoreBackup allows creating new snapshots on remote datastores
+        PRIV_REMOTE_DATASTORE_BACKUP("Remote.DatastoreBackup");
+        /// Remote.DatastoreModify allows to modify remote datastores
+        PRIV_REMOTE_DATASTORE_MODIFY("Remote.DatastoreModify");
+        /// Remote.DatastorePrune allows deleting snapshots on remote datastores
+        PRIV_REMOTE_DATASTORE_PRUNE("Remote.DatastorePrune");
 
         /// Sys.Console allows access to the system's console
         PRIV_SYS_CONSOLE("Sys.Console");
@@ -162,6 +168,32 @@ pub const ROLE_REMOTE_SYNC_OPERATOR: u64 = 0
 
 #[rustfmt::skip]
 #[allow(clippy::identity_op)]
+/// Remote.SyncPushOperator can read and push snapshots to the remote.
+pub const ROLE_REMOTE_SYNC_PUSH_OPERATOR: u64 = 0
+    | PRIV_REMOTE_AUDIT
+    | PRIV_REMOTE_DATASTORE_BACKUP;
+
+#[rustfmt::skip]
+#[allow(clippy::identity_op)]
+/// Remote.DatastorePowerUser can read and push snapshots to the remote, and prune owned snapshots
+/// and groups but not create or remove namespaces.
+pub const ROLE_REMOTE_DATASTORE_POWERUSER: u64 = 0
+    | PRIV_REMOTE_AUDIT
+    | PRIV_REMOTE_DATASTORE_BACKUP
+    | PRIV_REMOTE_DATASTORE_PRUNE;
+
+#[rustfmt::skip]
+#[allow(clippy::identity_op)]
+/// Remote.DatastoreAdmin can read and push snapshots to the remote, prune owned snapshots
+/// and groups, as well as create or remove namespaces.
+pub const ROLE_REMOTE_DATASTORE_ADMIN: u64 = 0
+    | PRIV_REMOTE_AUDIT
+    | PRIV_REMOTE_DATASTORE_BACKUP
+    | PRIV_REMOTE_DATASTORE_MODIFY
+    | PRIV_REMOTE_DATASTORE_PRUNE;
+
+#[rustfmt::skip]
+#[allow(clippy::identity_op)]
 /// Tape.Audit can audit the tape backup configuration and media content
 pub const ROLE_TAPE_AUDIT: u64 = 0
     | PRIV_TAPE_AUDIT;
@@ -225,6 +257,12 @@ pub enum Role {
     RemoteAdmin = ROLE_REMOTE_ADMIN,
     /// Synchronization Operator
     RemoteSyncOperator = ROLE_REMOTE_SYNC_OPERATOR,
+    /// Synchronisation Operator (push direction)
+    RemoteSyncPushOperator = ROLE_REMOTE_SYNC_PUSH_OPERATOR,
+    /// Remote Datastore Prune
+    RemoteDatastorePowerUser = ROLE_REMOTE_DATASTORE_POWERUSER,
+    /// Remote Datastore Admin
+    RemoteDatastoreAdmin = ROLE_REMOTE_DATASTORE_ADMIN,
     /// Tape Auditor
     TapeAudit = ROLE_TAPE_AUDIT,
     /// Tape Administrator
