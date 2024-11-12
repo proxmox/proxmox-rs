@@ -143,6 +143,9 @@ pub use ad::*;
 mod remote;
 pub use remote::*;
 
+mod pathpatterns;
+pub use pathpatterns::*;
+
 mod tape;
 pub use tape::*;
 
