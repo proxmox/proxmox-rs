@@ -357,6 +357,11 @@ impl DataStoreConfig {
         }
     }
 
+    /// Returns the absolute path to the datastore content.
+    pub fn absolute_path(&self) -> String {
+        self.path.clone()
+    }
+
     pub fn get_maintenance_mode(&self) -> Option<MaintenanceMode> {
         self.maintenance_mode.as_ref().and_then(|str| {
             MaintenanceMode::deserialize(proxmox_schema::de::SchemaDeserializer::new(
