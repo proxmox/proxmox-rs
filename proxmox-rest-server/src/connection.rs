@@ -477,6 +477,7 @@ impl AcceptBuilder {
         const HANDSHAKE_BYTES_LEN: usize = 5;
 
         let future = async {
+            let mut previous_peek_len = 0;
             incoming_stream
                 .async_io(tokio::io::Interest::READABLE, || {
                     let mut buf = [0; HANDSHAKE_BYTES_LEN];
@@ -500,7 +501,15 @@ impl AcceptBuilder {
                         // This means we will peek into the stream's queue until we got
                         // HANDSHAKE_BYTE_LEN bytes or an error.
                         Ok(peek_len) if peek_len < HANDSHAKE_BYTES_LEN => {
-                            Err(io::ErrorKind::WouldBlock.into())
+                            log::info!("peek_len = {peek_len}");
+                            // if we detect the same peek len again but still got a readable stream,
+                            // the connection was probably closed, so abort here
+                            if peek_len == previous_peek_len {
+                                Err(io::ErrorKind::ConnectionAborted.into())
+                            } else {
+                                previous_peek_len = peek_len;
+                                Err(io::ErrorKind::WouldBlock.into())
+                            }
                         }
                         // Either we got Ok(HANDSHAKE_BYTES_LEN) or some error.
                         res => res.map(|_| contains_tls_handshake_fragment(&buf)),
