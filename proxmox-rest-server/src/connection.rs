@@ -501,7 +501,6 @@ impl AcceptBuilder {
                         // This means we will peek into the stream's queue until we got
                         // HANDSHAKE_BYTE_LEN bytes or an error.
                         Ok(peek_len) if peek_len < HANDSHAKE_BYTES_LEN => {
-                            log::info!("peek_len = {peek_len}");
                             // if we detect the same peek len again but still got a readable stream,
                             // the connection was probably closed, so abort here
                             if peek_len == previous_peek_len {
