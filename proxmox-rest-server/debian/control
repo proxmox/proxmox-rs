@@ -100,8 +100,8 @@ Provides:
  librust-proxmox-rest-server-0+default-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+default-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.2-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.2+default-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.3-dev (= ${binary:Version}),
+ librust-proxmox-rest-server-0.8.3+default-dev (= ${binary:Version})
 Description: REST server implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-rest-server"
 
@@ -116,7 +116,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+rate-limited-stream-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+rate-limited-stream-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.2+rate-limited-stream-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.3+rate-limited-stream-dev (= ${binary:Version})
 Description: REST server implementation - feature "rate-limited-stream"
  This metapackage enables feature "rate-limited-stream" for the Rust proxmox-
  rest-server crate, by pulling in any additional dependencies needed by that
@@ -132,7 +132,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+templates-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+templates-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.2+templates-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.3+templates-dev (= ${binary:Version})
 Description: REST server implementation - feature "templates"
  This metapackage enables feature "templates" for the Rust proxmox-rest-server
  crate, by pulling in any additional dependencies needed by that feature.
