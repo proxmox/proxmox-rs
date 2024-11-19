@@ -223,7 +223,10 @@ impl Client {
         }
         .map_err(|err| Error::internal("failed to build request", err))?;
 
-        let response = client.request(request).await.map_err(Error::Anyhow)?;
+        let response = client
+            .request(request)
+            .await
+            .map_err(|err| Error::Client(err.into()))?;
 
         if response.status() == StatusCode::UNAUTHORIZED {
             return Err(Error::Unauthorized);
@@ -318,7 +321,11 @@ impl Client {
             .body(request.body.into())
             .map_err(|err| Error::internal("error building login http request", err))?;
 
-        let api_response = self.client.request(request).await.map_err(Error::Anyhow)?;
+        let api_response = self
+            .client
+            .request(request)
+            .await
+            .map_err(|err| Error::Client(err.into()))?;
         if !api_response.status().is_success() {
             return Err(Error::api(api_response.status(), "authentication failed"));
         }
