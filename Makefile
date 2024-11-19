@@ -132,6 +132,8 @@ install-overlay: $(foreach c,$(CRATES), $c-install-overlay)
 	fakeroot $(MAKE) $*-sysext-do
 %-sysext-do:
 	rm -f extensions/$*.raw
+	rm -rf build/sysext/$*
+	rm -rf build/install/$*
 	$(MAKE) DESTDIR=build/sysext/$* $*-install-overlay
 	mkdir -p extensions
 	mkfs.erofs extensions/$*.raw build/sysext/$*
