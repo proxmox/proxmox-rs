@@ -95,3 +95,59 @@ Some restrictions apply:
 - workspace dependency specifications cannot include `optional`
   - if needed, the `optional` flag needs to be set at the member level when
     using a workspace dependency
+
+# Working with *other* projects while changing to *single crates here*
+
+When crates from this workspace need changes caused by requirements in projects
+*outside* of this repository, it can often be annoying to keep building and
+installing `.deb` files.
+
+Additionally, doing so often requires complete rebuilds as cargo will not pick
+up *file* changes of external dependencies.
+
+One way to fix this is by actually changing the version. Since we cut away
+anything starting at the first hyphen in the version, we need to use a `+`
+(build metadata) version suffix.
+
+Eg. turn `5.0.0` into `5.0.0+test8`.
+
+There are 2 faster ways:
+
+## Adding a `#[patch.crates-io]` section to the other project.
+
+Note, however, that this requires *ALL* crates from this workspace to be listed,
+otherwise multiple conflicting versions of the same crate AND even the same
+numerical *version* might be built, causing *weird* errors.
+
+The advantage, however, is that `cargo` will pick up on file changes and rebuild
+the crate on changes.
+
+## An in-between: system extensions
+
+An easy way to quickly get the new package "installed" *temporarily*, such that
+real apt package upgrades are unaffected is as a system-extension.
+
+The easiest way — if no other extensions are used — is to just symlink the
+`extensions/` directory to `/run` as root via:
+
+```
+# ln -s ${THIS_DIR}/extensions /run/extensions
+```
+
+This does not persist across reboots.
+(Note: that the `extensions/` directory does not need to exist for the above to
+work.)
+
+Once this is done, trying a new version of a crate works by:
+
+1. Bump the version: eg. `5.0.0+test8` -> `5.0.0+test9`
+   While this is technically optional (the sysext would then *replace*
+   (temporarily) the installed version as long as the sysext is active), just
+   like with `.deb` files, not doing this causes `cargo` to consider the crate
+   to be unchanged and it will not rebuild its code.
+2. here:    `$ make ${crate}-sysext`    (rebuilds `extensions/${crate}.raw`)
+3. as root: `# systemd-sysext refresh`  (activates current extensions images)
+4. in the other project: `$ cargo update && cargo build`
+
+In the last step, cargo sees that there's a newer version of the crate available
+and use that.
