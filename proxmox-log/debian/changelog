@@ -1,3 +1,10 @@
+rust-proxmox-log (0.2.6-1) bookworm; urgency=medium
+
+  * log: only print error level to syslog/stderr to avoid that, e.g., the
+    whole worker task logs are mirrored to the journal.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 19 Nov 2024 11:32:00 +0100
+
 rust-proxmox-log (0.2.5-1) bookworm; urgency=medium
 
   * init_logger: fall back to printing to stderr when syslog is unavailable
