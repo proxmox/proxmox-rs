@@ -97,6 +97,8 @@
 /// - /cluster/notifications/endpoints/sendmail/{name}
 /// - /cluster/notifications/endpoints/smtp
 /// - /cluster/notifications/endpoints/smtp/{name}
+/// - /cluster/notifications/endpoints/webhook
+/// - /cluster/notifications/endpoints/webhook/{name}
 /// - /cluster/notifications/matcher-field-values
 /// - /cluster/notifications/matcher-fields
 /// - /cluster/notifications/matchers
@@ -117,6 +119,10 @@
 /// - /cluster/sdn/ipams/{ipam}/status
 /// - /cluster/sdn/vnets
 /// - /cluster/sdn/vnets/{vnet}
+/// - /cluster/sdn/vnets/{vnet}/firewall
+/// - /cluster/sdn/vnets/{vnet}/firewall/options
+/// - /cluster/sdn/vnets/{vnet}/firewall/rules
+/// - /cluster/sdn/vnets/{vnet}/firewall/rules/{pos}
 /// - /cluster/sdn/vnets/{vnet}/ips
 /// - /cluster/sdn/vnets/{vnet}/subnets
 /// - /cluster/sdn/vnets/{vnet}/subnets/{subnet}
@@ -195,8 +201,8 @@
 /// - /nodes/{node}/firewall/rules/{pos}
 /// - /nodes/{node}/hardware
 /// - /nodes/{node}/hardware/pci
-/// - /nodes/{node}/hardware/pci/{pciid}
-/// - /nodes/{node}/hardware/pci/{pciid}/mdev
+/// - /nodes/{node}/hardware/pci/{pci-id-or-mapping}
+/// - /nodes/{node}/hardware/pci/{pci-id-or-mapping}/mdev
 /// - /nodes/{node}/hardware/usb
 /// - /nodes/{node}/hosts
 /// - /nodes/{node}/journal

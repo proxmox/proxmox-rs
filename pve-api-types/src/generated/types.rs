@@ -260,6 +260,9 @@ pub struct ClusterMetrics {
         timestamp: {
             type: Integer,
         },
+        type: {
+            type: ClusterMetricsDataType,
+        },
     },
 )]
 /// Object.
@@ -332,6 +335,9 @@ CLUSTER_NODE_INDEX_RESPONSE_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?
         ssl_fingerprint: {
             optional: true,
             type: String,
+        },
+        status: {
+            type: ClusterNodeIndexResponseStatus,
         },
         uptime: {
             optional: true,
@@ -509,6 +515,9 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             default: false,
             optional: true,
         },
+        type: {
+            type: ClusterResourceType,
+        },
         uptime: {
             optional: true,
             type: Integer,
@@ -524,38 +533,38 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct ClusterResource {
-    /// The cgroup mode the node operates under (when type == node).
+    /// The cgroup mode the node operates under (for type 'node').
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "cgroup-mode")]
     pub cgroup_mode: Option<i64>,
 
-    /// Allowed storage content types (when type == storage).
+    /// Allowed storage content types (for type 'storage').
     #[serde(with = "cluster_resource_content")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub content: Option<Vec<StorageContent>>,
 
-    /// CPU utilization (when type in node,qemu,lxc).
+    /// CPU utilization (for types 'node', 'qemu' and 'lxc').
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu: Option<f64>,
 
-    /// Used disk space in bytes (when type in storage), used root image spave
-    /// for VMs (type in qemu,lxc).
+    /// Used disk space in bytes (for type 'storage'), used root image space for
+    /// VMs (for types 'qemu' and 'lxc').
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub disk: Option<u64>,
 
-    /// The amount of bytes the guest read from it's block devices since the
+    /// The amount of bytes the guest read from its block devices since the
     /// guest was started. This info is not available for all storage types.
-    /// (for type 'qemu' and 'lxc')
+    /// (for types 'qemu' and 'lxc')
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskread: Option<i64>,
 
-    /// The amount of bytes the guest wrote to it's block devices since the
-    /// guest was started. This info is not available for all storage types.
-    /// (for type 'qemu' and 'lxc')
+    /// The amount of bytes the guest wrote to its block devices since the guest
+    /// was started. This info is not available for all storage types. (for
+    /// types 'qemu' and 'lxc')
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskwrite: Option<i64>,
@@ -567,31 +576,32 @@ pub struct ClusterResource {
     /// Resource id.
     pub id: String,
 
-    /// Support level (when type == node).
+    /// Support level (for type 'node').
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub level: Option<String>,
 
-    /// The current config lock of the guets (type in qemu,lxc)
+    /// The guest's current config lock (for types 'qemu' and 'lxc')
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lock: Option<String>,
 
-    /// Number of available CPUs (when type in node,qemu,lxc).
+    /// Number of available CPUs (for types 'node', 'qemu' and 'lxc').
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxcpu: Option<f64>,
 
-    /// Storage size in bytes (when type in storage), root image size for VMs
-    /// (type in qemu,lxc).
+    /// Storage size in bytes (for type 'storage'), root image size for VMs (for
+    /// types 'qemu' and 'lxc').
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxdisk: Option<u64>,
 
-    /// Number of available memory in bytes (when type in node,qemu,lxc).
+    /// Number of available memory in bytes (for types 'node', 'qemu' and
+    /// 'lxc').
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
-    /// Used memory in bytes (when type in node,qemu,lxc).
+    /// Used memory in bytes (for types 'node', 'qemu' and 'lxc').
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<u64>,
@@ -601,18 +611,18 @@ pub struct ClusterResource {
     pub name: Option<String>,
 
     /// The amount of traffic in bytes that was sent to the guest over the
-    /// network since it was started. (for type 'qemu' and 'lxc')
+    /// network since it was started. (for types 'qemu' and 'lxc')
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netin: Option<i64>,
 
     /// The amount of traffic in bytes that was sent from the guest over the
-    /// network since it was started. (for type 'qemu' and 'lxc')
+    /// network since it was started. (for types 'qemu' and 'lxc')
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netout: Option<i64>,
 
-    /// The cluster node name (when type in node,storage,qemu,lxc).
+    /// The cluster node name (for types 'node', 'storage', 'qemu', and 'lxc').
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub node: Option<String>,
 
@@ -620,7 +630,7 @@ pub struct ClusterResource {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub plugintype: Option<String>,
 
-    /// The pool name (when type in pool,qemu,lxc).
+    /// The pool name (for types 'pool', 'qemu' and 'lxc').
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pool: Option<String>,
 
@@ -628,15 +638,15 @@ pub struct ClusterResource {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
 
-    /// The storage identifier (when type == storage).
+    /// The storage identifier (for type 'storage').
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub storage: Option<String>,
 
-    /// The set tags of the guest (type in qemu,lxc)
+    /// The guest's tags (for types 'qemu' and 'lxc')
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<String>,
 
-    /// Determines if the guest is a template. (type in qemu,lxc)
+    /// Determines if the guest is a template. (for types 'qemu' and 'lxc')
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<bool>,
@@ -644,12 +654,13 @@ pub struct ClusterResource {
     #[serde(rename = "type")]
     pub ty: ClusterResourceType,
 
-    /// Uptime of node or virtual guest in seconds (when type in node,qemu,lxc).
+    /// Uptime of node or virtual guest in seconds (for types 'node', 'qemu' and
+    /// 'lxc').
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
 
-    /// The numerical vmid (when type in qemu,lxc).
+    /// The numerical vmid (for types 'qemu' and 'lxc').
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vmid: Option<u32>,
@@ -840,6 +851,10 @@ LIST_TASKS_STATUSFILTER_RE = r##"^(?i:ok|error|warning|unknown)$"##;
             optional: true,
             type: Integer,
         },
+        source: {
+            optional: true,
+            type: ListTasksSource,
+        },
         start: {
             default: 0,
             minimum: 0,
@@ -1023,6 +1038,14 @@ LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
 
 #[api(
     properties: {
+        arch: {
+            optional: true,
+            type: LxcConfigArch,
+        },
+        cmode: {
+            optional: true,
+            type: LxcConfigCmode,
+        },
         console: {
             default: true,
             optional: true,
@@ -1077,6 +1100,10 @@ LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
             optional: true,
             type: String,
         },
+        lock: {
+            optional: true,
+            type: LxcConfigLock,
+        },
         lxc: {
             items: {
                 items: {
@@ -1109,6 +1136,10 @@ LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
         onboot: {
             default: false,
             optional: true,
+        },
+        ostype: {
+            optional: true,
+            type: LxcConfigOstype,
         },
         protection: {
             default: false,
@@ -1221,7 +1252,7 @@ pub struct LxcConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub features: Option<String>,
 
-    /// Script that will be exectued during various steps in the containers
+    /// Script that will be executed during various steps in the containers
     /// lifetime.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hookscript: Option<String>,
@@ -2549,6 +2580,10 @@ LXC_CONFIG_NET_HWADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
             optional: true,
             type: String,
         },
+        type: {
+            optional: true,
+            type: LxcConfigNetType,
+        },
     },
 )]
 /// Object.
@@ -2775,6 +2810,19 @@ pub struct LxcConfigUnused {
 
 #[api(
     properties: {
+        disk: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        diskread: {
+            optional: true,
+            type: Integer,
+        },
+        diskwrite: {
+            optional: true,
+            type: Integer,
+        },
         lock: {
             optional: true,
             type: String,
@@ -2795,9 +2843,24 @@ pub struct LxcConfigUnused {
             optional: true,
             type: String,
         },
+        netin: {
+            optional: true,
+            type: Integer,
+        },
+        netout: {
+            optional: true,
+            type: Integer,
+        },
+        status: {
+            type: IsRunning,
+        },
         tags: {
             optional: true,
             type: String,
+        },
+        template: {
+            default: false,
+            optional: true,
         },
         uptime: {
             optional: true,
@@ -2818,11 +2881,30 @@ pub struct LxcEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpus: Option<f64>,
 
+    /// Root disk image space-usage in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub disk: Option<u64>,
+
+    /// The amount of bytes the guest read from it's block devices since the
+    /// guest was started. (Note: This info is not available for all storage
+    /// types.)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskread: Option<i64>,
+
+    /// The amount of bytes the guest wrote from it's block devices since the
+    /// guest was started. (Note: This info is not available for all storage
+    /// types.)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskwrite: Option<i64>,
+
     /// The current config lock, if any.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lock: Option<String>,
 
-    /// Root disk size in bytes.
+    /// Root disk image size in bytes.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxdisk: Option<i64>,
@@ -2841,13 +2923,30 @@ pub struct LxcEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 
+    /// The amount of traffic in bytes that was sent to the guest over the
+    /// network since it was started.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netin: Option<i64>,
+
+    /// The amount of traffic in bytes that was sent from the guest over the
+    /// network since it was started.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netout: Option<i64>,
+
     pub status: IsRunning,
 
     /// The current configured tags, if any.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<String>,
 
-    /// Uptime.
+    /// Determines if the guest is a template.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<bool>,
+
+    /// Uptime in seconds.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
@@ -2948,6 +3047,10 @@ MIGRATE_QEMU_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
             format: &ApiStringFormat::VerifyFn(verifiers::verify_cidr),
             optional: true,
             type: String,
+        },
+        migration_type: {
+            optional: true,
+            type: StartQemuMigrationType,
         },
         online: {
             default: false,
@@ -3051,6 +3154,9 @@ pub struct MigrateQemu {
         sockets: {
             optional: true,
             type: Integer,
+        },
+        status: {
+            type: NodeSubscriptionInfoStatus,
         },
         url: {
             optional: true,
@@ -3172,6 +3278,65 @@ pub struct ProxmoxRemote {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub port: Option<i64>,
 }
+
+#[api(
+    properties: {
+        "kernel-hashes": {
+            default: false,
+            optional: true,
+        },
+        "no-debug": {
+            default: false,
+            optional: true,
+        },
+        "no-key-sharing": {
+            default: false,
+            optional: true,
+        },
+        type: {
+            type: PveQemuSevFmtType,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct PveQemuSevFmt {
+    /// Add kernel hashes to guest firmware for measured linux kernel launch
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "kernel-hashes")]
+    pub kernel_hashes: Option<bool>,
+
+    /// Sets policy bit 0 to 1 to disallow debugging of guest
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "no-debug")]
+    pub no_debug: Option<bool>,
+
+    /// Sets policy bit 1 to 1 to disallow key sharing with other guests
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "no-key-sharing")]
+    pub no_key_sharing: Option<bool>,
+
+    #[serde(rename = "type")]
+    pub ty: PveQemuSevFmtType,
+}
+
+#[api]
+/// Enable standard SEV with type='std' or enable experimental SEV-ES with the
+/// 'es' option.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum PveQemuSevFmtType {
+    #[serde(rename = "std")]
+    /// std.
+    Std,
+    #[serde(rename = "es")]
+    /// es.
+    Es,
+}
+serde_plain::derive_display_from_serialize!(PveQemuSevFmtType);
+serde_plain::derive_fromstr_from_deserialize!(PveQemuSevFmtType);
 
 #[api(
     properties: {
@@ -3404,6 +3569,10 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 #[api(
     properties: {
+        aio: {
+            optional: true,
+            type: PveQmIdeAio,
+        },
         backup: {
             default: false,
             optional: true,
@@ -3435,6 +3604,10 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: Integer,
         },
+        cache: {
+            optional: true,
+            type: PveQmIdeCache,
+        },
         cyls: {
             optional: true,
             type: Integer,
@@ -3443,9 +3616,17 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
+        discard: {
+            optional: true,
+            type: PveQmIdeDiscard,
+        },
         file: {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
             type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
         },
         heads: {
             optional: true,
@@ -3490,6 +3671,10 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: Integer,
         },
+        media: {
+            optional: true,
+            type: PveQmIdeMedia,
+        },
         model: {
             format: &ApiStringFormat::Pattern(&PVE_QM_IDE_MODEL_RE),
             max_length: 120,
@@ -3499,6 +3684,10 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         replicate: {
             default: true,
             optional: true,
+        },
+        rerror: {
+            optional: true,
+            type: PveQmIdeRerror,
         },
         secs: {
             optional: true,
@@ -3526,6 +3715,14 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         ssd: {
             default: false,
             optional: true,
+        },
+        trans: {
+            optional: true,
+            type: PveQmIdeTrans,
+        },
+        werror: {
+            optional: true,
+            type: PveQmIdeWerror,
         },
         wwn: {
             optional: true,
@@ -4003,7 +4200,18 @@ pub struct PveQmSmbios1 {
     pub version: Option<String>,
 }
 
-#[api]
+#[api(
+    properties: {
+        action: {
+            optional: true,
+            type: PveQmWatchdogAction,
+        },
+        model: {
+            optional: true,
+            type: PveQmWatchdogModel,
+        },
+    },
+)]
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct PveQmWatchdog {
@@ -4078,6 +4286,10 @@ serde_plain::derive_fromstr_from_deserialize!(PveQmWatchdogModel);
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_phys_bits),
             optional: true,
             type: String,
+        },
+        "reported-model": {
+            optional: true,
+            type: PveVmCpuConfReportedModel,
         },
     },
 )]
@@ -4373,6 +4585,15 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
             type: String,
         },
+        "amd-sev": {
+            format: &ApiStringFormat::PropertyString(&PveQemuSevFmt::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        arch: {
+            optional: true,
+            type: QemuConfigArch,
+        },
         args: {
             optional: true,
             type: String,
@@ -4390,6 +4611,10 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             minimum: 0,
             optional: true,
             type: Integer,
+        },
+        bios: {
+            optional: true,
+            type: QemuConfigBios,
         },
         boot: {
             format: &ApiStringFormat::PropertyString(&PveQmBoot::API_SCHEMA),
@@ -4415,6 +4640,10 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
         cipassword: {
             optional: true,
             type: String,
+        },
+        citype: {
+            optional: true,
+            type: QemuConfigCitype,
         },
         ciupgrade: {
             default: true,
@@ -4478,6 +4707,10 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
             type: String,
         },
+        hugepages: {
+            optional: true,
+            type: QemuConfigHugepages,
+        },
         ide: {
             type: QemuConfigIdeArray,
         },
@@ -4493,6 +4726,10 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             default: false,
             optional: true,
         },
+        keyboard: {
+            optional: true,
+            type: QemuConfigKeyboard,
+        },
         kvm: {
             default: true,
             optional: true,
@@ -4500,6 +4737,10 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
         localtime: {
             default: false,
             optional: true,
+        },
+        lock: {
+            optional: true,
+            type: QemuConfigLock,
         },
         machine: {
             format: &ApiStringFormat::PropertyString(&QemuConfigMachine::API_SCHEMA),
@@ -4546,6 +4787,10 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             default: false,
             optional: true,
         },
+        ostype: {
+            optional: true,
+            type: QemuConfigOstype,
+        },
         parallel: {
             type: QemuConfigParallelArray,
         },
@@ -4567,6 +4812,10 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
         },
         scsi: {
             type: QemuConfigScsiArray,
+        },
+        scsihw: {
+            optional: true,
+            type: QemuConfigScsihw,
         },
         searchdomain: {
             optional: true,
@@ -4697,6 +4946,11 @@ pub struct QemuConfig {
     /// properties.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub agent: Option<String>,
+
+    /// Secure Encrypted Virtualization (SEV) features by AMD CPUs
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "amd-sev")]
+    pub amd_sev: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub arch: Option<QemuConfigArch>,
@@ -5634,6 +5888,10 @@ generate_array_field! {
             default: false,
             optional: true,
         },
+        type: {
+            optional: true,
+            type: QemuConfigAgentType,
+        },
     },
 )]
 /// Object.
@@ -5688,7 +5946,17 @@ pub enum QemuConfigArch {
 serde_plain::derive_display_from_serialize!(QemuConfigArch);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigArch);
 
-#[api]
+#[api(
+    properties: {
+        device: {
+            type: QemuConfigAudio0Device,
+        },
+        driver: {
+            optional: true,
+            type: QemuConfigAudio0Driver,
+        },
+    },
+)]
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct QemuConfigAudio0 {
@@ -5770,9 +6038,17 @@ QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 #[api(
     properties: {
+        efitype: {
+            optional: true,
+            type: QemuConfigEfidisk0Efitype,
+        },
         file: {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
             type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
         },
         "pre-enrolled-keys": {
             default: false,
@@ -5995,6 +6271,10 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigLock);
             optional: true,
             type: String,
         },
+        viommu: {
+            optional: true,
+            type: QemuConfigMachineViommu,
+        },
     },
 )]
 /// Object.
@@ -6068,6 +6348,9 @@ QEMU_CONFIG_NET_MACADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
             format: &ApiStringFormat::Pattern(&QEMU_CONFIG_NET_MACADDR_RE),
             optional: true,
             type: String,
+        },
+        model: {
+            type: QemuConfigNetModel,
         },
         mtu: {
             maximum: 65520,
@@ -6218,6 +6501,10 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigNetModel);
             optional: true,
             type: String,
         },
+        policy: {
+            optional: true,
+            type: QemuConfigNumaPolicy,
+        },
     },
 )]
 /// Object.
@@ -6315,6 +6602,9 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigOstype);
             optional: true,
             type: Integer,
         },
+        source: {
+            type: QemuConfigRng0Source,
+        },
     },
 )]
 /// Object.
@@ -6367,6 +6657,10 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 #[api(
     properties: {
+        aio: {
+            optional: true,
+            type: PveQmIdeAio,
+        },
         backup: {
             default: false,
             optional: true,
@@ -6398,6 +6692,10 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: Integer,
         },
+        cache: {
+            optional: true,
+            type: PveQmIdeCache,
+        },
         cyls: {
             optional: true,
             type: Integer,
@@ -6406,9 +6704,17 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
+        discard: {
+            optional: true,
+            type: PveQmIdeDiscard,
+        },
         file: {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
             type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
         },
         heads: {
             optional: true,
@@ -6453,9 +6759,17 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: Integer,
         },
+        media: {
+            optional: true,
+            type: PveQmIdeMedia,
+        },
         replicate: {
             default: true,
             optional: true,
+        },
+        rerror: {
+            optional: true,
+            type: PveQmIdeRerror,
         },
         secs: {
             optional: true,
@@ -6483,6 +6797,14 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         ssd: {
             default: false,
             optional: true,
+        },
+        trans: {
+            optional: true,
+            type: PveQmIdeTrans,
+        },
+        werror: {
+            optional: true,
+            type: PveQmIdeWerror,
         },
         wwn: {
             optional: true,
@@ -6695,6 +7017,10 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 #[api(
     properties: {
+        aio: {
+            optional: true,
+            type: PveQmIdeAio,
+        },
         backup: {
             default: false,
             optional: true,
@@ -6726,6 +7052,10 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: Integer,
         },
+        cache: {
+            optional: true,
+            type: PveQmIdeCache,
+        },
         cyls: {
             optional: true,
             type: Integer,
@@ -6734,9 +7064,17 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
+        discard: {
+            optional: true,
+            type: PveQmIdeDiscard,
+        },
         file: {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
             type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
         },
         heads: {
             optional: true,
@@ -6785,6 +7123,10 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
+        media: {
+            optional: true,
+            type: PveQmIdeMedia,
+        },
         product: {
             optional: true,
             type: String,
@@ -6797,6 +7139,10 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         replicate: {
             default: true,
             optional: true,
+        },
+        rerror: {
+            optional: true,
+            type: PveQmIdeRerror,
         },
         ro: {
             default: false,
@@ -6833,9 +7179,17 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
+        trans: {
+            optional: true,
+            type: PveQmIdeTrans,
+        },
         vendor: {
             optional: true,
             type: String,
+        },
+        werror: {
+            optional: true,
+            type: PveQmIdeWerror,
         },
         wwn: {
             optional: true,
@@ -7102,6 +7456,10 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigScsihw);
             default: false,
             optional: true,
         },
+        videostreaming: {
+            optional: true,
+            type: QemuConfigSpiceEnhancementsVideostreaming,
+        },
     },
 )]
 /// Object.
@@ -7150,6 +7508,10 @@ QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             format: &ApiStringFormat::Pattern(&QEMU_CONFIG_TPMSTATE0_SIZE_RE),
             optional: true,
             type: String,
+        },
+        version: {
+            optional: true,
+            type: QemuConfigTpmstate0Version,
         },
     },
 )]
@@ -7258,11 +7620,19 @@ pub struct QemuConfigUsb {
 
 #[api(
     properties: {
+        clipboard: {
+            optional: true,
+            type: QemuConfigVgaClipboard,
+        },
         memory: {
             maximum: 512,
             minimum: 4,
             optional: true,
             type: Integer,
+        },
+        type: {
+            optional: true,
+            type: QemuConfigVgaType,
         },
     },
 )]
@@ -7353,6 +7723,10 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 #[api(
     properties: {
+        aio: {
+            optional: true,
+            type: PveQmIdeAio,
+        },
         backup: {
             default: false,
             optional: true,
@@ -7384,6 +7758,10 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: Integer,
         },
+        cache: {
+            optional: true,
+            type: PveQmIdeCache,
+        },
         cyls: {
             optional: true,
             type: Integer,
@@ -7392,9 +7770,17 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
+        discard: {
+            optional: true,
+            type: PveQmIdeDiscard,
+        },
         file: {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
             type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
         },
         heads: {
             optional: true,
@@ -7443,9 +7829,17 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
+        media: {
+            optional: true,
+            type: PveQmIdeMedia,
+        },
         replicate: {
             default: true,
             optional: true,
+        },
+        rerror: {
+            optional: true,
+            type: PveQmIdeRerror,
         },
         ro: {
             default: false,
@@ -7473,6 +7867,14 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         snapshot: {
             default: false,
             optional: true,
+        },
+        trans: {
+            optional: true,
+            type: PveQmIdeTrans,
+        },
+        werror: {
+            optional: true,
+            type: PveQmIdeWerror,
         },
     },
 )]
@@ -7974,6 +8376,10 @@ START_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
             optional: true,
             type: String,
         },
+        migration_type: {
+            optional: true,
+            type: StartQemuMigrationType,
+        },
         skiplock: {
             default: false,
             optional: true,
@@ -8154,6 +8560,9 @@ pub enum StorageContent {
     #[serde(rename = "images")]
     /// images.
     Images,
+    #[serde(rename = "import")]
+    /// import.
+    Import,
     #[serde(rename = "iso")]
     /// iso.
     Iso,
@@ -8221,6 +8630,9 @@ pub struct TaskLogLine {
             type: Integer,
             description: "The task's start time.",
         },
+        status: {
+            type: IsRunning,
+        },
         type: {
             type: String,
             description: "The task type.",
@@ -8266,6 +8678,10 @@ pub struct TaskStatus {
 
 #[api(
     properties: {
+        console: {
+            optional: true,
+            type: VersionResponseConsole,
+        },
         release: {
             type: String,
         },
@@ -8362,6 +8778,9 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
         "running-qemu": {
             optional: true,
             type: String,
+        },
+        status: {
+            type: IsRunning,
         },
         tags: {
             optional: true,
