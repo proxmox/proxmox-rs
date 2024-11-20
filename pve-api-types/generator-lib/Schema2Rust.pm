@@ -898,11 +898,14 @@ my sub check_rust_name : prototype($$$) {
     }
 }
 
-sub generate_enum : prototype($$) {
-    my ($name_hint, $schema) = @_;
+sub generate_enum : prototype($$;$) {
+    my ($name_hint, $schema, $api_props) = @_;
+
+    $api_props //= {};
 
     my $dedup_key = join("\0", sort $schema->{enum}->@*);
     if (my $name = $dedup_enum->{$dedup_key}) {
+        $api_props->{type} = $name;
         return $name;
     }
     # If this is not a duplicate we clash, this happens in `/cluster/resources`
@@ -926,6 +929,7 @@ sub generate_enum : prototype($$) {
     $all_enums->{$name_hint} = $def;
     die "duplicate type name: '$name_hint'\n" if exists $all_types->{$name_hint};
     $all_types->{$name_hint} = $def;
+    $api_props->{type} = $name_hint;
 
     # Copy so we don't modify the original.
     $schema = { %$schema };
@@ -1102,7 +1106,7 @@ sub handle_def : prototype($$$) {
 
     my $type = type_of($$inout_schema);
     if ($type eq 'string' && $$inout_schema->{enum}) {
-        $def->{type} = generate_enum($name_hint, $$inout_schema);
+        $def->{type} = generate_enum($name_hint, $$inout_schema, $def->{api});
         return;
     }
 
@@ -1635,6 +1639,11 @@ sub create_method : prototype($$$;%) {
 
     method_parameters($def, $api_url, $param_name, $method, $rust_method_name);
     method_return_type($def, $method, $return_name, \%extra);
+    $all_methods->{$rust_method_name} = $def;
+}
+
+sub add_custom_method : prototype($$) {
+    my ($rust_method_name, $def) = @_;
     $all_methods->{$rust_method_name} = $def;
 }
 
