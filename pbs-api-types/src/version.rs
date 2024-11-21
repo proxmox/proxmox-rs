@@ -20,14 +20,6 @@ use proxmox_schema::api;
             description: "Version repository id",
             type: String,
         },
-        "features": {
-            description: "List of supported features",
-            type: Array,
-            items: {
-                type: String,
-                description: "Feature id",
-            },
-        },
     }
 )]
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -35,8 +27,6 @@ pub struct ApiVersionInfo {
     pub version: String,
     pub release: String,
     pub repoid: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub features: Vec<String>,
 }
 
 pub type ApiVersionMajor = u64;
@@ -48,7 +38,6 @@ pub struct ApiVersion {
     pub minor: ApiVersionMinor,
     pub release: ApiVersionRelease,
     pub repoid: String,
-    pub features: Vec<String>,
 }
 
 impl TryFrom<ApiVersionInfo> for ApiVersion {
@@ -76,13 +65,6 @@ impl TryFrom<ApiVersionInfo> for ApiVersion {
             minor,
             release,
             repoid: value.repoid.clone(),
-            features: value.features.clone(),
         })
-    }
-}
-
-impl ApiVersion {
-    pub fn supports_feature(&self, feature: &str) -> bool {
-        self.features.iter().any(|f| f == feature)
     }
 }
