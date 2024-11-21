@@ -6,7 +6,7 @@ use proxmox_client::{ApiResponseData, Error, HttpApiClient};
 
 use crate::types::*;
 
-use super::{add_query_arg, add_query_bool};
+use super::{add_query_arg, add_query_arg_string_list, add_query_bool};
 
 pub struct PveClientImpl<T: HttpApiClient>(pub T);
 

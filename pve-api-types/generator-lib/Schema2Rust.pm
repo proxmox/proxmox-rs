@@ -468,6 +468,8 @@ my sub print_method_without_body : prototype($$$$$) {
 
             if ($arg->{type} eq 'Option<bool>') {
                 print {$out} "    add_query_bool(&mut query, &mut sep, \"$name\", p_$rust_name);\n";
+            } elsif ($arg->{is_string_list}) {
+                print {$out} "    add_query_arg_string_list(&mut query, &mut sep, \"$name\", &p_$rust_name);\n";
             } else {
                 print {$out} "    add_query_arg(&mut query, &mut sep, \"$name\", &p_$rust_name);\n";
             }
@@ -490,6 +492,8 @@ my sub print_method_without_body : prototype($$$$$) {
                 my $rust_name = $arg->{rust_name};
                 if ($arg->{type} eq 'Option<bool>') {
                     print {$out} "    add_query_bool(&mut query, &mut sep, \"$name\", $rust_name);\n";
+                } elsif ($arg->{is_string_list}) {
+                    print {$out} "    add_query_arg_string_list(&mut query, &mut sep, \"$name\", &$rust_name);\n";
                 } else {
                     print {$out} "    add_query_arg(&mut query, &mut sep, \"$name\", &$rust_name);\n";
                 }
@@ -779,10 +783,12 @@ my sub get_format : prototype($$) {
 
     my $format_name = $name;
     my $format_kind;
+    my $is_string_list = false; # marks formats with an explicit "-list" suffix...
     if (!ref($format)) {
         if ($format =~ /^(.*)-a?(list|opt)$/) {
             ($format, $format_kind) = ($1, $2);
-            $format_kind = 'array' if $format_kind eq 'list';
+            $is_string_list = bool($format_kind eq 'list');
+            $format_kind = 'array' if $is_string_list;
         }
 
         $format_name = $format;
@@ -802,6 +808,7 @@ my sub get_format : prototype($$) {
         return {
             format_name => $format_name,
             kind => $format_kind,
+            is_string_list => $is_string_list,
             property_string => $type,
         };
     }
@@ -812,6 +819,7 @@ my sub get_format : prototype($$) {
 
         return {
             kind => $format_kind,
+            is_string_list => $is_string_list,
             %$info,
         };
     }
@@ -1043,6 +1051,7 @@ my sub string_type : prototype($$$$) {
                 $api_props->{format} = "&ApiStringFormat::PropertyString(&$array)";
                 my $module_name = namify_field($array);
                 push $def->{attrs}->@*, "#[serde(with = \"$module_name\")]";
+                $def->{is_string_list} = $fmt->{is_string_list};
                 return "Vec<$ty>";
             }
 
