@@ -1810,3 +1810,67 @@ impl BackupArchiveName {
 impl ApiType for BackupArchiveName {
     const API_SCHEMA: Schema = BACKUP_ARCHIVE_NAME_SCHEMA;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_invalid_backup_archive_names() {
+        let invalid_archive_names = ["/invalid/", "/invalid/..", "/invalid/archive-name.invalid"];
+
+        for archive_name in invalid_archive_names {
+            assert!(BackupArchiveName::from_path(archive_name).is_err());
+        }
+    }
+
+    #[test]
+    fn test_valid_didx_backup_archive_names() {
+        let valid_archive_names = [
+            "/valid/archive-name.pxar",
+            "/valid/archive-name.pxar.didx",
+            "/valid/archive-name.mpxar",
+            "/valid/archive-name.mpxar.didx",
+            "/valid/archive-name.ppxar",
+            "/valid/archive-name.ppxar.didx",
+            "/valid/archive-name.pcat1",
+            "/valid/archive-name.pcat1.didx",
+        ];
+
+        for archive_name in valid_archive_names {
+            let archive = BackupArchiveName::from_path(archive_name).unwrap();
+            assert!(archive.as_ref().ends_with(".didx"));
+            assert!(archive.archive_type() == ArchiveType::DynamicIndex);
+        }
+    }
+
+    #[test]
+    fn test_valid_fidx_backup_archive_names() {
+        let valid_archive_names = ["/valid/archive-name.img", "/valid/archive-name.img.fidx"];
+
+        for archive_name in valid_archive_names {
+            let archive = BackupArchiveName::from_path(archive_name).unwrap();
+            assert!(archive.as_ref() == "archive-name.img.fidx");
+            assert!(archive.without_type_extension() == "archive-name.img");
+            assert!(archive.archive_type() == ArchiveType::FixedIndex);
+        }
+    }
+
+    #[test]
+    fn test_valid_blob_backup_archive_names() {
+        let valid_archive_names = [
+            "/valid/index.json",
+            "/valid/index.json.blob",
+            "/valid/rsa-encrypted.key",
+            "/valid/rsa-encrypted.key.blob",
+            "/valid/archive-name.log",
+            "/valid/archive-name.log.blob",
+        ];
+
+        for archive_name in valid_archive_names {
+            let archive = BackupArchiveName::from_path(archive_name).unwrap();
+            assert!(archive.as_ref().ends_with(".blob"));
+            assert!(archive.archive_type() == ArchiveType::Blob);
+        }
+    }
+}
