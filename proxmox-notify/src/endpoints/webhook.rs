@@ -7,6 +7,8 @@
 //! Secrets are kept in a private configuration file, accessible only by root, and are not retrievable via the API.
 //! Within templates, secrets can be referenced using `{{ secrets.<name> }}`.
 //! Additionally, we take measures to prevent secrets from appearing in logs or error messages.
+use std::time::Duration;
+
 use handlebars::{
     Context as HandlebarsContext, Handlebars, Helper, HelperResult, Output, RenderContext,
     RenderError as HandlebarsRenderError,
@@ -29,6 +31,8 @@ use crate::{renderer, Content, Endpoint, Error, Notification, Origin};
 
 /// This will be used as a section type in the public/private configuration file.
 pub(crate) const WEBHOOK_TYPENAME: &str = "webhook";
+
+const HTTP_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[api]
 #[derive(Serialize, Deserialize, Clone, Copy, Default)]
@@ -270,7 +274,7 @@ impl WebhookEndpoint {
             ..Default::default()
         };
 
-        Ok(Client::new(options))
+        Ok(Client::new_with_timeout(options, HTTP_TIMEOUT))
     }
 
     fn build_request(&self, notification: &Notification) -> Result<Request<String>, Error> {

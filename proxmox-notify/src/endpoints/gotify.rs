@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -12,6 +13,8 @@ use crate::context::context;
 use crate::renderer::TemplateType;
 use crate::schema::ENTITY_NAME_SCHEMA;
 use crate::{renderer, Content, Endpoint, Error, Notification, Origin, Severity};
+
+const HTTP_TIMEOUT: Duration = Duration::from_secs(10);
 
 fn severity_to_priority(level: Severity) -> u32 {
     match level {
@@ -146,7 +149,7 @@ impl Endpoint for GotifyEndpoint {
             ..Default::default()
         };
 
-        let client = Client::new(options);
+        let client = Client::new_with_timeout(options, HTTP_TIMEOUT);
         let uri = format!("{}/message", self.config.server);
 
         client
