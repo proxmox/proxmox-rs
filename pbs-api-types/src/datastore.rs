@@ -1817,7 +1817,13 @@ mod tests {
 
     #[test]
     fn test_invalid_backup_archive_names() {
-        let invalid_archive_names = ["/invalid/", "/invalid/..", "/invalid/archive-name.invalid"];
+        let invalid_archive_names = [
+            "/invalid/",
+            "/invalid/archive-name.pxar/",
+            "/invalid/archive-name.pxar.didx/",
+            "/invalid/..",
+            "/invalid/archive-name.invalid",
+        ];
 
         for archive_name in invalid_archive_names {
             assert!(BackupArchiveName::from_path(archive_name).is_err());
