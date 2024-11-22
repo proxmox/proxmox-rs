@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::Read;
 use std::sync::Arc;
+use std::time::Duration;
 
 use anyhow::Error;
 use http::Response;
@@ -12,15 +13,30 @@ use crate::HttpOptions;
 /// Blocking HTTP client for usage with [`HttpClient`].
 pub struct Client {
     options: HttpOptions,
+    timeout: Option<Duration>,
 }
 
 impl Client {
     pub fn new(options: HttpOptions) -> Self {
-        Self { options }
+        Self {
+            options,
+            timeout: None,
+        }
+    }
+
+    pub fn new_with_timeout(options: HttpOptions, timeout: Duration) -> Self {
+        Self {
+            options,
+            timeout: Some(timeout),
+        }
     }
 
     fn agent(&self) -> Result<ureq::Agent, Error> {
         let mut builder = ureq::AgentBuilder::new();
+
+        if let Some(timeout) = self.timeout {
+            builder = builder.timeout(timeout);
+        };
 
         let connector = Arc::new(native_tls::TlsConnector::new()?);
         builder = builder.tls_connector(connector);
