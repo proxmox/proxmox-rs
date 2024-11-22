@@ -536,6 +536,10 @@ impl SyncDirection {
     }
 }
 
+pub const RESYNC_CORRUPT_SCHEMA: Schema =
+    BooleanSchema::new("If the verification failed for a local snapshot, try to pull it again.")
+        .schema();
+
 #[api(
     properties: {
         id: {
@@ -590,6 +594,10 @@ impl SyncDirection {
             schema: TRANSFER_LAST_SCHEMA,
             optional: true,
         },
+        "resync-corrupt": {
+            schema: RESYNC_CORRUPT_SCHEMA,
+            optional: true,
+        }
     }
 )]
 #[derive(Serialize, Deserialize, Clone, Updater, PartialEq)]
@@ -623,6 +631,8 @@ pub struct SyncJobConfig {
     pub limit: RateLimitConfig,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub transfer_last: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resync_corrupt: Option<bool>,
 }
 
 impl SyncJobConfig {
