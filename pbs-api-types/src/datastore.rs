@@ -1,5 +1,8 @@
+use std::convert::{AsRef, TryFrom};
 use std::fmt;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
+use std::sync::LazyLock;
 
 use anyhow::{bail, format_err, Error};
 use const_format::concatcp;
@@ -1645,7 +1648,7 @@ impl BackupGroupDeleteStats {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 /// Allowed variants of backup archives to be contained in a snapshot's manifest
 pub enum ArchiveType {
     FixedIndex,
@@ -1664,4 +1667,146 @@ impl ArchiveType {
         };
         Ok(archive_type)
     }
+
+    pub fn extension(&self) -> &'static str {
+        match self {
+            ArchiveType::DynamicIndex => "didx",
+            ArchiveType::FixedIndex => "fidx",
+            ArchiveType::Blob => "blob",
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+/// Name of archive files contained in snapshot's manifest
+pub struct BackupArchiveName {
+    // archive name including the `.fidx`, `.didx` or `.blob` archive type extension
+    name: String,
+    // archive type parsed based on given extension
+    ty: ArchiveType,
+}
+
+pub static MANIFEST_BLOB_NAME: LazyLock<BackupArchiveName> = LazyLock::new(|| BackupArchiveName {
+    name: "index.json.blob".to_string(),
+    ty: ArchiveType::Blob,
+});
+
+pub static CATALOG_NAME: LazyLock<BackupArchiveName> = LazyLock::new(|| BackupArchiveName {
+    name: "catalog.pcat1.didx".to_string(),
+    ty: ArchiveType::DynamicIndex,
+});
+
+pub static CLIENT_LOG_BLOB_NAME: LazyLock<BackupArchiveName> =
+    LazyLock::new(|| BackupArchiveName {
+        name: "client.log.blob".to_string(),
+        ty: ArchiveType::Blob,
+    });
+
+pub static ENCRYPTED_KEY_BLOB_NAME: LazyLock<BackupArchiveName> =
+    LazyLock::new(|| BackupArchiveName {
+        name: "rsa-encrypted.key.blob".to_string(),
+        ty: ArchiveType::Blob,
+    });
+
+impl fmt::Display for BackupArchiveName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{name}", name = self.name)
+    }
+}
+
+serde_plain::derive_deserialize_from_fromstr!(BackupArchiveName, "archive name");
+
+impl FromStr for BackupArchiveName {
+    type Err = Error;
+
+    fn from_str(name: &str) -> Result<Self, Self::Err> {
+        Self::try_from(name)
+    }
+}
+
+serde_plain::derive_serialize_from_display!(BackupArchiveName);
+
+impl TryFrom<&str> for BackupArchiveName {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let (name, ty) = Self::parse_archive_type(value)?;
+        Ok(Self { name, ty })
+    }
+}
+
+impl AsRef<str> for BackupArchiveName {
+    fn as_ref(&self) -> &str {
+        &self.name
+    }
+}
+
+impl BackupArchiveName {
+    pub fn from_path(path: impl AsRef<Path>) -> Result<Self, Error> {
+        let path = path.as_ref();
+        if path.as_os_str().as_encoded_bytes().last() == Some(&b'/') {
+            bail!("invalid archive name, got directory");
+        }
+        let file_name = path
+            .file_name()
+            .ok_or_else(|| format_err!("invalid archive name"))?;
+        let name = file_name
+            .to_str()
+            .ok_or_else(|| format_err!("archive name not valid UTF-8"))?;
+
+        Self::try_from(name)
+    }
+
+    pub fn archive_type(&self) -> ArchiveType {
+        self.ty.clone()
+    }
+
+    pub fn ends_with(&self, postfix: &str) -> bool {
+        self.name.ends_with(postfix)
+    }
+
+    pub fn has_pxar_filename_extension(&self) -> bool {
+        self.name.ends_with(".pxar.didx")
+            || self.name.ends_with(".mpxar.didx")
+            || self.name.ends_with(".ppxar.didx")
+    }
+
+    pub fn without_type_extension(&self) -> String {
+        self.name
+            .strip_suffix(&format!(".{ext}", ext = self.ty.extension()))
+            .unwrap()
+            .into()
+    }
+
+    fn parse_archive_type(archive_name: &str) -> Result<(String, ArchiveType), Error> {
+        // Detect archive type via given server archive name type extension, if present
+        if let Ok(archive_type) = ArchiveType::from_path(archive_name) {
+            return Ok((archive_name.into(), archive_type));
+        }
+
+        // No server archive name type extension in archive name, map based on extension
+        let archive_type = match Path::new(archive_name)
+            .extension()
+            .and_then(|ext| ext.to_str())
+        {
+            Some("pxar") => ArchiveType::DynamicIndex,
+            Some("mpxar") => ArchiveType::DynamicIndex,
+            Some("ppxar") => ArchiveType::DynamicIndex,
+            Some("pcat1") => ArchiveType::DynamicIndex,
+            Some("img") => ArchiveType::FixedIndex,
+            Some("json") => ArchiveType::Blob,
+            Some("key") => ArchiveType::Blob,
+            Some("log") => ArchiveType::Blob,
+            _ => bail!("failed to parse archive type for '{archive_name}'"),
+        };
+
+        Ok((
+            format!("{archive_name}.{ext}", ext = archive_type.extension()),
+            archive_type,
+        ))
+    }
+}
+
+impl ApiType for BackupArchiveName {
+    const API_SCHEMA: Schema = BACKUP_ARCHIVE_NAME_SCHEMA;
 }
