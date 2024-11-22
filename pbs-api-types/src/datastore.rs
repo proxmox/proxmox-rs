@@ -1,5 +1,5 @@
 use std::fmt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{bail, format_err, Error};
 use const_format::concatcp;
@@ -1642,5 +1642,26 @@ impl BackupGroupDeleteStats {
 
     pub fn increment_protected_snapshots(&mut self) {
         self.protected_snapshots += 1;
+    }
+}
+
+#[derive(PartialEq, Eq)]
+/// Allowed variants of backup archives to be contained in a snapshot's manifest
+pub enum ArchiveType {
+    FixedIndex,
+    DynamicIndex,
+    Blob,
+}
+
+impl ArchiveType {
+    pub fn from_path(archive_name: impl AsRef<Path>) -> Result<Self, Error> {
+        let archive_name = archive_name.as_ref();
+        let archive_type = match archive_name.extension().and_then(|ext| ext.to_str()) {
+            Some("didx") => ArchiveType::DynamicIndex,
+            Some("fidx") => ArchiveType::FixedIndex,
+            Some("blob") => ArchiveType::Blob,
+            _ => bail!("unknown archive type: {archive_name:?}"),
+        };
+        Ok(archive_type)
     }
 }
