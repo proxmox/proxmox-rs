@@ -45,7 +45,7 @@ const_regex! {
 
 pub const CHUNK_DIGEST_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&SHA256_HEX_REGEX);
 
-pub const DIR_NAME_SCHEMA: Schema = StringSchema::new("Directory name")
+pub const DATASTORE_DIR_NAME_SCHEMA: Schema = StringSchema::new("Either the absolute path to the datastore directory, or a relative on-device path for removable datastores.")
     .min_length(1)
     .max_length(4096)
     .schema();
@@ -163,6 +163,9 @@ pub const PRUNE_SCHEMA_KEEP_YEARLY: Schema =
         .minimum(1)
         .schema();
 
+/// Base directory where datastores are mounted
+pub const DATASTORE_MOUNT_DIR: &str = "/mnt/datastore";
+
 #[api]
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -237,7 +240,7 @@ pub const DATASTORE_TUNING_STRING_SCHEMA: Schema = StringSchema::new("Datastore 
             schema: DATASTORE_SCHEMA,
         },
         path: {
-            schema: DIR_NAME_SCHEMA,
+            schema: DATASTORE_DIR_NAME_SCHEMA,
         },
         "notify-user": {
             optional: true,
@@ -276,6 +279,12 @@ pub const DATASTORE_TUNING_STRING_SCHEMA: Schema = StringSchema::new("Datastore 
             format: &ApiStringFormat::PropertyString(&MaintenanceMode::API_SCHEMA),
             type: String,
         },
+        "backing-device": {
+            description: "The UUID of the filesystem partition for removable datastores.",
+            optional: true,
+            format: &proxmox_schema::api_types::UUID_FORMAT,
+            type: String,
+        }
     }
 )]
 #[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
@@ -323,6 +332,11 @@ pub struct DataStoreConfig {
     /// Maintenance mode, type is either 'offline' or 'read-only', message should be enclosed in "
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maintenance_mode: Option<String>,
+
+    /// The UUID of the device(for removable datastores)
+    #[updater(skip)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub backing_device: Option<String>,
 }
 
 #[api]
@@ -357,12 +371,17 @@ impl DataStoreConfig {
             notification_mode: None,
             tuning: None,
             maintenance_mode: None,
+            backing_device: None,
         }
     }
 
     /// Returns the absolute path to the datastore content.
     pub fn absolute_path(&self) -> String {
-        self.path.clone()
+        if self.backing_device.is_some() {
+            format!("{DATASTORE_MOUNT_DIR}/{}", self.name)
+        } else {
+            self.path.clone()
+        }
     }
 
     pub fn get_maintenance_mode(&self) -> Option<MaintenanceMode> {
