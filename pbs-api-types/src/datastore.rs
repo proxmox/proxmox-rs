@@ -401,6 +401,9 @@ impl DataStoreConfig {
         match current_type {
             Some(MaintenanceType::ReadOnly) => { /* always OK  */ }
             Some(MaintenanceType::Offline) => { /* always OK  */ }
+            Some(MaintenanceType::Unmount) => {
+                bail!("datastore is being unmounted");
+            }
             Some(MaintenanceType::Delete) => {
                 match new_type {
                     Some(MaintenanceType::Delete) => { /* allow to delete a deleted storage */ }

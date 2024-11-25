@@ -38,7 +38,6 @@ pub enum Operation {
 /// Maintenance type.
 pub enum MaintenanceType {
     // TODO:
-    //  - Add "unmounting" once we got pluggable datastores
     //  - Add "GarbageCollection" or "DeleteOnly" as type and track GC (or all deletes) as separate
     //    operation, so that one can enable a mode where nothing new can be added but stuff can be
     //    cleaned
@@ -48,6 +47,8 @@ pub enum MaintenanceType {
     Offline,
     /// The datastore is being deleted.
     Delete,
+    /// The (removable) datastore is being unmounted.
+    Unmount,
 }
 serde_plain::derive_display_from_serialize!(MaintenanceType);
 serde_plain::derive_fromstr_from_deserialize!(MaintenanceType);
@@ -79,7 +80,9 @@ pub struct MaintenanceMode {
 impl MaintenanceMode {
     /// Used for deciding whether the datastore is cleared from the internal cache
     pub fn clear_from_cache(&self) -> bool {
-        self.ty == MaintenanceType::Offline || self.ty == MaintenanceType::Delete
+        self.ty == MaintenanceType::Offline
+            || self.ty == MaintenanceType::Delete
+            || self.ty == MaintenanceType::Unmount
     }
 
     pub fn check(&self, operation: Option<Operation>) -> Result<(), Error> {
@@ -93,6 +96,8 @@ impl MaintenanceMode {
 
         if let Some(Operation::Lookup) = operation {
             return Ok(());
+        } else if self.ty == MaintenanceType::Unmount {
+            bail!("datastore is being unmounted");
         } else if self.ty == MaintenanceType::Offline {
             bail!("offline maintenance mode: {}", message);
         } else if self.ty == MaintenanceType::ReadOnly {
