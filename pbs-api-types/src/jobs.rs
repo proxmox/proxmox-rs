@@ -597,7 +597,11 @@ pub const RESYNC_CORRUPT_SCHEMA: Schema =
         "resync-corrupt": {
             schema: RESYNC_CORRUPT_SCHEMA,
             optional: true,
-        }
+        },
+        "sync-direction": {
+            type: SyncDirection,
+            optional: true,
+        },
     }
 )]
 #[derive(Serialize, Deserialize, Clone, Updater, PartialEq)]
@@ -633,6 +637,8 @@ pub struct SyncJobConfig {
     pub transfer_last: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resync_corrupt: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sync_direction: Option<SyncDirection>,
 }
 
 impl SyncJobConfig {
