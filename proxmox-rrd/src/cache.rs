@@ -285,13 +285,9 @@ fn apply_and_commit_journal_thread(
         match apply_journal_impl(Arc::clone(&state), Arc::clone(&rrd_map)) {
             Ok(entries) => {
                 let elapsed = start_time.elapsed().unwrap().as_secs_f64();
-                log::info!(
-                    "applied rrd journal ({} entries in {:.3} seconds)",
-                    entries,
-                    elapsed
-                );
+                log::info!("applied rrd journal ({entries} entries in {elapsed:.3} seconds)");
             }
-            Err(err) => bail!("apply rrd journal failed - {}", err),
+            Err(err) => bail!("apply rrd journal failed - {err}"),
         }
     }
 
@@ -302,12 +298,10 @@ fn apply_and_commit_journal_thread(
         Ok(rrd_file_count) => {
             let elapsed = start_time.elapsed().unwrap().as_secs_f64();
             log::info!(
-                "rrd journal successfully committed ({} files in {:.3} seconds)",
-                rrd_file_count,
-                elapsed
+                "rrd journal successfully committed ({rrd_file_count} files in {elapsed:.3} seconds)"
             );
         }
-        Err(err) => bail!("rrd journal commit failed: {}", err),
+        Err(err) => bail!("rrd journal commit failed: {err}"),
     }
     Ok(())
 }
