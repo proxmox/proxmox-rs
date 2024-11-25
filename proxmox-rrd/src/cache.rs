@@ -448,7 +448,7 @@ fn commit_journal_impl(
 
     let mut dir_set = BTreeSet::new();
 
-    log::info!("write rrd data back to disk");
+    log::debug!("write rrd data back to disk");
 
     // save all RRDs - we only need a read lock here
     // Note: no fsync here (we do it afterwards)
@@ -470,7 +470,7 @@ fn commit_journal_impl(
     // the likelihood that files are already synced, so this is
     // much faster (although we need to re-open the files).
 
-    log::info!("starting rrd data sync");
+    log::debug!("starting rrd data sync");
 
     for rel_path in files.iter() {
         let mut path = config.basedir.clone();
