@@ -519,23 +519,6 @@ impl std::fmt::Display for SyncDirection {
     }
 }
 
-impl SyncDirection {
-    pub fn as_config_type_str(&self) -> &'static str {
-        match self {
-            SyncDirection::Pull => "sync",
-            SyncDirection::Push => "sync-push",
-        }
-    }
-
-    pub fn from_config_type_str(config_type: &str) -> Result<Self, anyhow::Error> {
-        match config_type {
-            "sync" => Ok(SyncDirection::Pull),
-            "sync-push" => Ok(SyncDirection::Push),
-            _ => bail!("invalid config type for sync job"),
-        }
-    }
-}
-
 pub const RESYNC_CORRUPT_SCHEMA: Schema =
     BooleanSchema::new("If the verification failed for a local snapshot, try to pull it again.")
         .schema();
