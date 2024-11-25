@@ -1,3 +1,10 @@
+rust-proxmox-rest-server (0.8.4-1) bookworm; urgency=medium
+
+  * add custom handlebars escape fn and skip escaping the '=' charater. This
+    is required to support base64 encoded values.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 25 Nov 2024 17:14:25 +0100
+
 rust-proxmox-rest-server (0.8.3-1) bookworm; urgency=medium
 
   * connection: drop logging peek-length, which was only used for debugging
