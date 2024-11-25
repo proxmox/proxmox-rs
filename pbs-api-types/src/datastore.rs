@@ -181,6 +181,20 @@ pub enum ChunkOrder {
 #[api]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+/// Current mounting status of a datastore, useful for removable datastores.
+pub enum DataStoreMountStatus {
+    /// Removable datastore is currently mounted correctly.
+    Mounted,
+    /// Removable datastore is currebtly not mounted.
+    NotMounted,
+    /// Datastore is not removable, so there is no mount status.
+    #[default]
+    NonRemovable,
+}
+
+#[api]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 /// The level of syncing that is done when writing into a datastore.
 pub enum DatastoreFSyncLevel {
     /// No special fsync or syncfs calls are triggered. The system default dirty write back
@@ -451,6 +465,7 @@ impl DataStoreConfig {
 pub struct DataStoreListItem {
     pub store: String,
     pub comment: Option<String>,
+    pub mount_status: DataStoreMountStatus,
     /// If the datastore is in maintenance mode, information about it
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maintenance: Option<String>,
@@ -1456,6 +1471,7 @@ pub struct DataStoreStatusListItem {
     /// The available bytes of the underlying storage. (-1 on error)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub avail: Option<u64>,
+    pub mount_status: DataStoreMountStatus,
     /// A list of usages of the past (last Month).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub history: Option<Vec<Option<f64>>>,
@@ -1480,12 +1496,13 @@ pub struct DataStoreStatusListItem {
 }
 
 impl DataStoreStatusListItem {
-    pub fn empty(store: &str, err: Option<String>) -> Self {
+    pub fn empty(store: &str, err: Option<String>, mount_status: DataStoreMountStatus) -> Self {
         DataStoreStatusListItem {
             store: store.to_owned(),
             total: None,
             used: None,
             avail: None,
+            mount_status,
             history: None,
             history_start: None,
             history_delta: None,
