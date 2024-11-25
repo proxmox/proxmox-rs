@@ -1,8 +1,8 @@
 Source: rust-proxmox-rrd
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
@@ -21,9 +21,10 @@ Build-Depends: debhelper (>= 12),
  librust-serde-json-1+default-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-rrd
 Rules-Requires-Root: no
 
@@ -55,8 +56,8 @@ Provides:
  librust-proxmox-rrd-0.4-dev (= ${binary:Version}),
  librust-proxmox-rrd-0.4+default-dev (= ${binary:Version}),
  librust-proxmox-rrd-0.4+rrd-v1-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.4.0-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.4.0+default-dev (= ${binary:Version}),
- librust-proxmox-rrd-0.4.0+rrd-v1-dev (= ${binary:Version})
+ librust-proxmox-rrd-0.4.1-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.4.1+default-dev (= ${binary:Version}),
+ librust-proxmox-rrd-0.4.1+rrd-v1-dev (= ${binary:Version})
 Description: Simple RRD database implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-rrd"

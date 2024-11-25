@@ -1,3 +1,9 @@
+rust-proxmox-rrd (0.4.1-1) bookworm; urgency=medium
+
+  * do not log three info-level messages on applying journal, one is enough
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 25 Nov 2024 17:48:55 +0100
+
 rust-proxmox-rrd (0.4.0-1) bookworm; urgency=medium
 
   * drop api-types feature, the module was moved into its own crate
