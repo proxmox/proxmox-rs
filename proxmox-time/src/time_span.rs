@@ -306,8 +306,8 @@ pub fn verify_time_span(i: &str) -> Result<(), Error> {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
     use super::*;
+    use std::str::FromStr;
 
     #[test]
     fn conversions() {
