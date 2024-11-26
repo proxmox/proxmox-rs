@@ -452,6 +452,9 @@ impl DataStoreConfig {
             optional: true,
             schema: SINGLE_LINE_COMMENT_SCHEMA,
         },
+        "mount-status": {
+            type: DataStoreMountStatus,
+        },
         maintenance: {
             optional: true,
             format: &ApiStringFormat::PropertyString(&MaintenanceMode::API_SCHEMA),
@@ -465,6 +468,7 @@ impl DataStoreConfig {
 pub struct DataStoreListItem {
     pub store: String,
     pub comment: Option<String>,
+    #[serde(default)]
     pub mount_status: DataStoreMountStatus,
     /// If the datastore is in maintenance mode, information about it
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1447,6 +1451,9 @@ pub struct DataStoreStatus {
         store: {
             schema: DATASTORE_SCHEMA,
         },
+        "mount-status": {
+            type: DataStoreMountStatus,
+        },
         history: {
             type: Array,
             optional: true,
@@ -1471,6 +1478,7 @@ pub struct DataStoreStatusListItem {
     /// The available bytes of the underlying storage. (-1 on error)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub avail: Option<u64>,
+    #[serde(default)]
     pub mount_status: DataStoreMountStatus,
     /// A list of usages of the past (last Month).
     #[serde(skip_serializing_if = "Option::is_none")]
