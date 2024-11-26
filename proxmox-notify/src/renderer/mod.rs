@@ -290,7 +290,6 @@ pub fn render_template(
         (None, TemplateType::HtmlBody) => {
             ty = TemplateType::PlaintextBody;
             let plaintext_filename = format!("{template}-{suffix}", suffix = ty.file_suffix());
-            log::info!("html template '{filename}' not found, falling back to plain text template '{plaintext_filename}'");
             (
                 context::context().lookup_template(&plaintext_filename, None)?,
                 true,
