@@ -1841,6 +1841,7 @@ impl BackupArchiveName {
             Some("ppxar") => ArchiveType::DynamicIndex,
             Some("pcat1") => ArchiveType::DynamicIndex,
             Some("img") => ArchiveType::FixedIndex,
+            Some("conf") => ArchiveType::Blob,
             Some("json") => ArchiveType::Blob,
             Some("key") => ArchiveType::Blob,
             Some("log") => ArchiveType::Blob,
@@ -1918,6 +1919,8 @@ mod tests {
             "/valid/rsa-encrypted.key.blob",
             "/valid/archive-name.log",
             "/valid/archive-name.log.blob",
+            "/valid/qemu-server.conf",
+            "/valid/qemu-server.conf.blob",
         ];
 
         for archive_name in valid_archive_names {
