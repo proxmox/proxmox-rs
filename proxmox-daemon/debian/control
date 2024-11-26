@@ -1,8 +1,8 @@
 Source: rust-proxmox-daemon
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
@@ -22,9 +22,10 @@ Build-Depends: debhelper (>= 12),
  librust-tokio-1+signal-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+sync-dev (>= 1.6-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-daemon
 Rules-Requires-Root: no
 

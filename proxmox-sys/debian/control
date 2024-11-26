@@ -1,8 +1,8 @@
 Source: rust-proxmox-sys
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
  rustc:native (>= 1.80) <!nocheck>,
  libstd-rust-dev <!nocheck>,
@@ -19,9 +19,10 @@ Build-Depends: debhelper (>= 12),
  libacl1-dev <!nocheck>,
  uuid-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-sys
 Rules-Requires-Root: no
 

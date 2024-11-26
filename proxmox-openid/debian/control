@@ -1,10 +1,10 @@
 Source: rust-proxmox-openid
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
- rustc:native <!nocheck>,
+ rustc:native (>= 1.80) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-http-0.2+default-dev <!nocheck>,
@@ -21,9 +21,10 @@ Build-Depends: debhelper (>= 12),
  librust-ureq-2+gzip-dev (>= 2.4-~~) <!nocheck>,
  librust-ureq-2+native-tls-dev (>= 2.4-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
 Vcs-Git: 
 Vcs-Browser: 
+Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-openid
 Rules-Requires-Root: no
 
@@ -54,5 +55,5 @@ Provides:
  librust-proxmox-openid-0.10+default-dev (= ${binary:Version}),
  librust-proxmox-openid-0.10.3-dev (= ${binary:Version}),
  librust-proxmox-openid-0.10.3+default-dev (= ${binary:Version})
-Description: Rust crate "proxmox-openid" - Rust source code
+Description: Base for openid authentication in proxmox products - Rust source code
  Source code for Debianized Rust crate "proxmox-openid"
