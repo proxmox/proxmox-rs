@@ -1,3 +1,10 @@
+rust-proxmox-time (2.0.3-1) bookworm; urgency=medium
+
+  * also implement `From<&TimeSpan> for f64` to support taking a reference, as
+    we do not require ownership here.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 26 Nov 2024 16:52:28 +0100
+
 rust-proxmox-time (2.0.2-1) bookworm; urgency=medium
 
   * time span:

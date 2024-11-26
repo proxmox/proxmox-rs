@@ -37,7 +37,7 @@ Provides:
  librust-proxmox-time-2+default-dev (= ${binary:Version}),
  librust-proxmox-time-2.0-dev (= ${binary:Version}),
  librust-proxmox-time-2.0+default-dev (= ${binary:Version}),
- librust-proxmox-time-2.0.2-dev (= ${binary:Version}),
- librust-proxmox-time-2.0.2+default-dev (= ${binary:Version})
+ librust-proxmox-time-2.0.3-dev (= ${binary:Version}),
+ librust-proxmox-time-2.0.3+default-dev (= ${binary:Version})
 Description: Time utilities and TmEditor - Rust source code
  Source code for Debianized Rust crate "proxmox-time"
