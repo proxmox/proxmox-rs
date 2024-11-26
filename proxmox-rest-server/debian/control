@@ -111,8 +111,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-rest-server-dev (= ${binary:Version}),
- librust-proxmox-http-0.9+default-dev (>= 0.9.2-~~),
- librust-proxmox-http-0.9+rate-limited-stream-dev (>= 0.9.2-~~)
+ librust-proxmox-http-0.9+default-dev (>= 0.9.4-~~),
+ librust-proxmox-http-0.9+rate-limited-stream-dev (>= 0.9.4-~~)
 Provides:
  librust-proxmox-rest-server-0+rate-limited-stream-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+rate-limited-stream-dev (= ${binary:Version}),

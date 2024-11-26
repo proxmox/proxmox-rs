@@ -55,8 +55,8 @@ Depends:
  librust-hyper-0.14+default-dev (>= 0.14.5-~~),
  librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-openssl-0.10+default-dev,
- librust-proxmox-http-0.9+client-dev (>= 0.9.2-~~),
- librust-proxmox-http-0.9+default-dev (>= 0.9.2-~~)
+ librust-proxmox-http-0.9+client-dev (>= 0.9.4-~~),
+ librust-proxmox-http-0.9+default-dev (>= 0.9.4-~~)
 Provides:
  librust-proxmox-client-0+hyper-client-dev (= ${binary:Version}),
  librust-proxmox-client-0.5+hyper-client-dev (= ${binary:Version}),

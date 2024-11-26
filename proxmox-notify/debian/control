@@ -15,8 +15,8 @@ Build-Depends: debhelper-compat (= 13),
  librust-log-0.4+default-dev (>= 0.4.17-~~) <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
- librust-proxmox-http-0.9+client-sync-dev (>= 0.9.2-~~) <!nocheck>,
- librust-proxmox-http-0.9+default-dev (>= 0.9.2-~~) <!nocheck>,
+ librust-proxmox-http-0.9+client-sync-dev (>= 0.9.4-~~) <!nocheck>,
+ librust-proxmox-http-0.9+default-dev (>= 0.9.4-~~) <!nocheck>,
  librust-proxmox-http-error-0.1+default-dev <!nocheck>,
  librust-proxmox-human-byte-0.1+default-dev <!nocheck>,
  librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~) <!nocheck>,
@@ -106,8 +106,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-notify-dev (= ${binary:Version}),
- librust-proxmox-http-0.9+client-sync-dev (>= 0.9.2-~~),
- librust-proxmox-http-0.9+default-dev (>= 0.9.2-~~)
+ librust-proxmox-http-0.9+client-sync-dev (>= 0.9.4-~~),
+ librust-proxmox-http-0.9+default-dev (>= 0.9.4-~~)
 Provides:
  librust-proxmox-notify-0+gotify-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5+gotify-dev (= ${binary:Version}),
