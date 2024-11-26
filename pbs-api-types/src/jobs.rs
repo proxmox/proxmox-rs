@@ -649,9 +649,6 @@ impl SyncJobConfig {
         status: {
             type: JobScheduleStatus,
         },
-        direction: {
-            type: SyncDirection,
-        },
     },
 )]
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
@@ -662,9 +659,6 @@ pub struct SyncJobStatus {
     pub config: SyncJobConfig,
     #[serde(flatten)]
     pub status: JobScheduleStatus,
-
-    /// The direction of the job
-    pub direction: SyncDirection,
 }
 
 /// These are used separately without `ns`/`max-depth` sometimes in the API, specifically in the API
