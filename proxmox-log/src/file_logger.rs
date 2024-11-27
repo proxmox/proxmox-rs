@@ -17,7 +17,8 @@ pub struct FileLogOptions {
     pub read: bool,
     /// If set, ensure that the file is newly created or error out if already existing.
     pub exclusive: bool,
-    /// Duplicate logged messages to STDOUT, like tee
+    /// Duplicate logged messages to STDOUT, like tee.
+    /// NOTE: this is now handled by tracing, this option will be removed soon.
     pub to_stdout: bool,
     /// Prefix messages logged to the file with the current local time as RFC 3339
     pub prefix_time: bool,
@@ -103,11 +104,12 @@ impl FileLogger {
     pub fn log<S: AsRef<str>>(&mut self, msg: S) {
         let msg = msg.as_ref();
 
-        if self.options.to_stdout {
-            let mut stdout = std::io::stdout();
-            let _ = stdout.write_all(msg.as_bytes());
-            let _ = stdout.write_all(b"\n");
-        }
+        // TODO: remove whole to_stdout option, handled by tracing now
+        //if self.options.to_stdout {
+        //    let mut stdout = std::io::stdout();
+        //    let _ = stdout.write_all(msg.as_bytes());
+        //    let _ = stdout.write_all(b"\n");
+        //}
 
         let line = if self.options.prefix_time {
             let now = proxmox_time::epoch_i64();
@@ -128,16 +130,18 @@ impl FileLogger {
 
 impl std::io::Write for FileLogger {
     fn write(&mut self, buf: &[u8]) -> Result<usize, std::io::Error> {
-        if self.options.to_stdout {
-            let _ = std::io::stdout().write(buf);
-        }
+        // TODO: remove whole to_stdout option, handled by tracing now
+        //if self.options.to_stdout {
+        //    let _ = std::io::stdout().write(buf);
+        //}
         self.file.write(buf)
     }
 
     fn flush(&mut self) -> Result<(), std::io::Error> {
-        if self.options.to_stdout {
-            let _ = std::io::stdout().flush();
-        }
+        // TODO: remove whole to_stdout option, handled by tracing now
+        //if self.options.to_stdout {
+        //    let _ = std::io::stdout().flush();
+        //}
         self.file.flush()
     }
 }
