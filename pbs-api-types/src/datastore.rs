@@ -441,6 +441,45 @@ impl DataStoreConfig {
 
         Ok(())
     }
+
+    pub fn ensure_not_nested(&self, stores: &[DataStoreConfig]) -> Result<(), Error> {
+        let our_absolute_path = PathBuf::from(self.absolute_path());
+        let removable = self.backing_device.is_some();
+        for other_store in stores {
+            if self == other_store {
+                continue;
+            };
+
+            // Relative paths must not be nested on the backing device of removable datastores
+            if removable && other_store.backing_device == self.backing_device {
+                let our_relative_path = Path::new(&self.path);
+                let other_relative_path = Path::new(&other_store.path);
+                if our_relative_path.starts_with(other_relative_path)
+                    || other_relative_path.starts_with(our_relative_path)
+                {
+                    bail!(
+                        "paths on backing device must not be nested - {path:?} already used by '{store}'!",
+                        path = other_relative_path,
+                        store = other_store.name,
+                    );
+                }
+            }
+
+            // No two datastores should have a nested absolute path
+            let other_absolute_path = PathBuf::from(other_store.absolute_path());
+            if other_absolute_path.starts_with(&our_absolute_path)
+                || our_absolute_path.starts_with(&other_absolute_path)
+            {
+                bail!(
+                    "nested datastores not allowed: '{}' already in {:?}",
+                    other_store.name,
+                    other_absolute_path,
+                );
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[api(
