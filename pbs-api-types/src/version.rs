@@ -37,7 +37,6 @@ pub struct ApiVersion {
     pub major: ApiVersionMajor,
     pub minor: ApiVersionMinor,
     pub release: ApiVersionRelease,
-    pub repoid: String,
 }
 
 impl TryFrom<ApiVersionInfo> for ApiVersion {
@@ -64,7 +63,6 @@ impl TryFrom<ApiVersionInfo> for ApiVersion {
             major,
             minor,
             release,
-            repoid: value.repoid.clone(),
         })
     }
 }
