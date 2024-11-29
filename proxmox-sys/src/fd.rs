@@ -24,7 +24,7 @@ pub fn change_cloexec(fd: RawFd, on: bool) -> Result<(), anyhow::Error> {
 }
 
 pub(crate) fn cwd() -> Result<OwnedFd, nix::Error> {
-    open(".", OFlag::O_DIRECTORY, stat::Mode::empty())
+    open(".", crate::fs::DIR_FLAGS, stat::Mode::empty())
 }
 
 pub fn open<P>(path: &P, oflag: OFlag, mode: Mode) -> Result<OwnedFd, nix::Error>

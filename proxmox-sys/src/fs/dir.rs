@@ -14,6 +14,11 @@ use proxmox_lang::try_block;
 
 use crate::fs::{fchown, CreateOptions};
 
+/// The default list of [`OFlag`]'s we want to use when opening directories. Besides ensuring that
+/// the FD indeed points to a directory we also must ensure that it gets closed on exec to avoid
+/// leaking a open FD to a child process.
+pub(crate) const DIR_FLAGS: OFlag = OFlag::O_DIRECTORY.union(OFlag::O_CLOEXEC);
+
 /// Creates directory at the provided path with specified ownership.
 ///
 /// Errors if the directory already exists.
@@ -66,7 +71,7 @@ pub fn ensure_dir_exists<P: AsRef<Path>>(
         Err(err) => bail!("unable to create directory {path:?} - {err}",),
     }
 
-    let fd = nix::fcntl::open(path, OFlag::O_DIRECTORY, stat::Mode::empty())
+    let fd = nix::fcntl::open(path, DIR_FLAGS, stat::Mode::empty())
         .map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
         .map_err(|err| format_err!("unable to open created directory {path:?} - {err}"))?;
     // umask defaults to 022 so make sure the mode is fully honowed:
@@ -120,7 +125,7 @@ fn create_path_do(
         Some(Component::Prefix(_)) => bail!("illegal prefix path component encountered"),
         Some(Component::RootDir) => {
             let _ = iter.next();
-            crate::fd::open(c"/", OFlag::O_DIRECTORY, stat::Mode::empty())?
+            crate::fd::open(c"/", DIR_FLAGS, stat::Mode::empty())?
         }
         Some(Component::CurDir) => {
             let _ = iter.next();
@@ -128,7 +133,7 @@ fn create_path_do(
         }
         Some(Component::ParentDir) => {
             let _ = iter.next();
-            crate::fd::open(c"..", OFlag::O_DIRECTORY, stat::Mode::empty())?
+            crate::fd::open(c"..", DIR_FLAGS, stat::Mode::empty())?
         }
         Some(Component::Normal(_)) => {
             // simply do not advance the iterator, heavy lifting happens in create_path_at_do()
@@ -154,7 +159,7 @@ fn create_path_at_do(
             None => return Ok(created),
 
             Some(Component::ParentDir) => {
-                at = crate::fd::openat(&at, c"..", OFlag::O_DIRECTORY, stat::Mode::empty())?;
+                at = crate::fd::openat(&at, c"..", DIR_FLAGS, stat::Mode::empty())?;
             }
 
             Some(Component::Normal(path)) => {
@@ -175,7 +180,7 @@ fn create_path_at_do(
                     Err(e) => return Err(e.into()),
                     Ok(_) => true,
                 };
-                at = crate::fd::openat(&at, path, OFlag::O_DIRECTORY, stat::Mode::empty())?;
+                at = crate::fd::openat(&at, path, DIR_FLAGS, stat::Mode::empty())?;
 
                 if let (true, Some(opts)) = (created, opts) {
                     if opts.owner.is_some() || opts.group.is_some() {
@@ -222,7 +227,7 @@ pub fn make_tmp_dir<P: AsRef<Path>>(
 
     if let Some(options) = options {
         if let Err(err) = try_block!({
-            let mut fd = crate::fd::open(&path, OFlag::O_DIRECTORY, stat::Mode::empty())?;
+            let mut fd = crate::fd::open(&path, DIR_FLAGS, stat::Mode::empty())?;
             options.apply_to(&mut fd, &path)?;
             Ok::<(), Error>(())
         }) {
