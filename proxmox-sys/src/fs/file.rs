@@ -116,6 +116,29 @@ pub fn file_read_firstline<P: AsRef<Path>>(path: P) -> Result<String, Error> {
     read_firstline(path).map_err(|err| format_err!("unable to read {path:?} - {err}"))
 }
 
+#[inline]
+/// Creates a tmpfile like [`nix::unistd::mkstemp`], but with [`nix::fctnl::Oflag`] set.
+///
+/// Note that some flags are masked out since they can produce an error, see mkostemp(2) for details.
+// code is mostly copied from nix mkstemp
+fn mkostemp<P: ?Sized + NixPath>(
+    template: &P,
+    oflag: OFlag,
+) -> nix::Result<(std::os::fd::RawFd, PathBuf)> {
+    use std::os::unix::ffi::OsStringExt;
+    let mut path = template.with_nix_path(|path| path.to_bytes_with_nul().to_owned())?;
+    let p = path.as_mut_ptr().cast();
+
+    let flags = OFlag::intersection(OFlag::O_APPEND | OFlag::O_CLOEXEC | OFlag::O_SYNC, oflag);
+
+    let fd = unsafe { libc::mkostemp(p, flags.bits()) };
+    let last = path.pop(); // drop the trailing nul
+    debug_assert!(last == Some(b'\0'));
+    let pathname = std::ffi::OsString::from_vec(path);
+    Errno::result(fd)?;
+    Ok((fd, PathBuf::from(pathname)))
+}
+
 /// Takes a Path and CreateOptions, creates a tmpfile from it and returns
 /// a RawFd and PathBuf for it
 pub fn make_tmp_file<P: AsRef<Path>>(
@@ -127,7 +150,7 @@ pub fn make_tmp_file<P: AsRef<Path>>(
     // use mkstemp here, because it works with different processes, threads, even tokio tasks
     let mut template = path.to_owned();
     template.set_extension("tmp_XXXXXX");
-    let (mut file, tmp_path) = match unistd::mkstemp(&template) {
+    let (mut file, tmp_path) = match mkostemp(&template, OFlag::O_CLOEXEC) {
         Ok((fd, path)) => (unsafe { File::from_raw_fd(fd) }, path),
         Err(err) => bail!("mkstemp {:?} failed: {}", template, err),
     };
