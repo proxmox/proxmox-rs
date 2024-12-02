@@ -1,3 +1,18 @@
+rust-proxmox-rest-server (0.8.5-1) bookworm; urgency=medium
+
+  * update proxmox-http-client to 0.9.4
+
+  * handle failure in worker task setup correctly to avoid a reference count
+    issue with active workers that can keep an old API daemon alive on reload,
+    e.g. on package upgrade.
+
+  * close race window when updating worker task count
+
+  * increase task index lock timeout to 15s to handle overloaded systems
+    better while still not waiting overly long.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 02 Dec 2024 18:11:47 +0100
+
 rust-proxmox-rest-server (0.8.4-1) bookworm; urgency=medium
 
   * add custom handlebars escape fn and skip escaping the '=' charater. This
