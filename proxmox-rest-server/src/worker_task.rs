@@ -923,7 +923,12 @@ impl WorkerTask {
             set_worker_count(hash.len());
         }
 
-        setup.update_active_workers(Some(&upid))?;
+        let res = setup.update_active_workers(Some(&upid));
+        if res.is_err() {
+            // needed to undo the insertion into WORKER_TASK_LIST above
+            worker.log_result(&res);
+            res?
+        }
 
         Ok((worker, logger))
     }
