@@ -139,7 +139,7 @@ impl WorkerTaskSetup {
             .clone()
             .perm(nix::sys::stat::Mode::from_bits_truncate(0o660));
 
-        let timeout = std::time::Duration::new(10, 0);
+        let timeout = std::time::Duration::new(15, 0);
 
         let file =
             proxmox_sys::fs::open_file_locked(&self.task_lock_fn, timeout, exclusive, options)?;
