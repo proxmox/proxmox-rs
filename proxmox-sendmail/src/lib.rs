@@ -291,6 +291,56 @@ impl<'a> Mail<'a> {
         Ok(())
     }
 
+    /// Forwards an email message to a given list of recipients.
+    ///
+    /// `message` must be compatible with ``sendmail`` (the message is piped into stdin unmodified).
+    #[cfg(feature = "mail-forwarder")]
+    pub fn forward(
+        mailto: &[&str],
+        mailfrom: &str,
+        message: &[u8],
+        uid: Option<u32>,
+    ) -> Result<(), Error> {
+        use std::os::unix::process::CommandExt;
+
+        if mailto.is_empty() {
+            bail!("At least one recipient has to be specified!");
+        }
+
+        let mut builder = Command::new("/usr/sbin/sendmail");
+
+        builder
+            .args([
+                "-N", "never", // never send DSN (avoid mail loops)
+                "-f", mailfrom, "--",
+            ])
+            .args(mailto)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+
+        if let Some(uid) = uid {
+            builder.uid(uid);
+        }
+
+        let mut sendmail_process = builder
+            .spawn()
+            .with_context(|| "could not spawn sendmail process")?;
+
+        sendmail_process
+            .stdin
+            .take()
+            .unwrap()
+            .write_all(message)
+            .with_context(|| "couldn't write to sendmail stdin")?;
+
+        sendmail_process
+            .wait()
+            .with_context(|| "sendmail did not exit successfully")?;
+
+        Ok(())
+    }
+
     fn format_mail(&self, now: i64) -> Result<String, Error> {
         use std::fmt::Write;
 
@@ -439,6 +489,13 @@ mod test {
     #[test]
     fn email_without_recipients_fails() {
         let result = Mail::new("Sender", "mail@example.com", "hi", "body").send();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    #[cfg(feature = "mail-forwarder")]
+    fn forwarding_without_recipients_fails() {
+        let result = Mail::forward(&[], "me@example.com", String::from("text").as_bytes(), None);
         assert!(result.is_err());
     }
 
