@@ -923,6 +923,7 @@ impl WorkerTask {
             set_worker_count(hash.len());
         }
 
+        // this wants to access WORKER_TASK_LIST, so we need to drop the lock above
         let res = setup.update_active_workers(Some(&upid));
         if res.is_err() {
             // needed to undo the insertion into WORKER_TASK_LIST above
@@ -1022,8 +1023,11 @@ impl WorkerTask {
         self.log_message(state.result_text());
 
         WORKER_TASK_LIST.lock().unwrap().remove(&self.upid.task_id);
+        // this wants to access WORKER_TASK_LIST, so we need to drop the lock above
         let _ = self.setup.update_active_workers(None);
-        set_worker_count(WORKER_TASK_LIST.lock().unwrap().len());
+        // re-acquire the lock and hold it while updating the count
+        let lock = WORKER_TASK_LIST.lock().unwrap();
+        set_worker_count(lock.len());
     }
 
     /// Log a message.
