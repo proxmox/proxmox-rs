@@ -1,0 +1,5 @@
+rust-proxmox-sendmail (0.1.0-1) bookworm; urgency=medium
+
+  * Initial release.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 02 Dec 2024 14:47:42 +0100
