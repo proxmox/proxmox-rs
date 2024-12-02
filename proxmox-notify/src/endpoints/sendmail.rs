@@ -137,15 +137,14 @@ impl Endpoint for SendmailEndpoint {
                     .clone()
                     .unwrap_or_else(|| context().default_sendmail_author());
 
-                sendmail(
-                    &recipients_str,
-                    &subject,
-                    &text_part,
-                    &html_part,
-                    &mailfrom,
-                    &author,
-                )
-                .map_err(|err| Error::NotifyFailed(self.config.name.clone(), err.into()))
+                let mut mail = Mail::new(&author, &mailfrom, &subject, &text_part)
+                    .with_html_alt(&html_part)
+                    .with_unmasked_recipients();
+
+                recipients_str.iter().for_each(|r| mail.add_recipient(r));
+
+                mail.send()
+                    .map_err(|err| Error::NotifyFailed(self.config.name.clone(), err.into()))
             }
             #[cfg(feature = "mail-forwarder")]
             Content::ForwardedMail { raw, uid, .. } => {
@@ -163,107 +162,6 @@ impl Endpoint for SendmailEndpoint {
     fn disabled(&self) -> bool {
         self.config.disable.unwrap_or_default()
     }
-}
-
-/// Sends multi-part mail with text and/or html to a list of recipients
-///
-/// Includes the header `Auto-Submitted: auto-generated`, so that auto-replies
-/// (i.e. OOO replies) won't trigger.
-/// ``sendmail`` is used for sending the mail.
-fn sendmail(
-    mailto: &[&str],
-    subject: &str,
-    text: &str,
-    html: &str,
-    mailfrom: &str,
-    author: &str,
-) -> Result<(), Error> {
-    if mailto.is_empty() {
-        return Err(Error::Generic(
-            "At least one recipient has to be specified!".into(),
-        ));
-    }
-    let now = proxmox_time::epoch_i64();
-    let body = format_mail(mailto, mailfrom, author, subject, text, html, now)?;
-
-    let mut sendmail_process = Command::new("/usr/sbin/sendmail")
-        .arg("-B")
-        .arg("8BITMIME")
-        .arg("-f")
-        .arg(mailfrom)
-        .arg("--")
-        .args(mailto)
-        .stdin(Stdio::piped())
-        .spawn()
-        .map_err(|err| Error::Generic(format!("could not spawn sendmail process: {err}")))?;
-
-    sendmail_process
-        .stdin
-        .take()
-        .expect("stdin already taken")
-        .write_all(body.as_bytes())
-        .map_err(|err| Error::Generic(format!("couldn't write to sendmail stdin: {err}")))?;
-
-    sendmail_process
-        .wait()
-        .map_err(|err| Error::Generic(format!("sendmail did not exit successfully: {err}")))?;
-
-    Ok(())
-}
-
-fn format_mail(
-    mailto: &[&str],
-    mailfrom: &str,
-    author: &str,
-    subject: &str,
-    text: &str,
-    html: &str,
-    timestamp: i64,
-) -> Result<String, Error> {
-    use std::fmt::Write as _;
-
-    let recipients = mailto.join(",");
-    let boundary = format!("----_=_NextPart_001_{timestamp}");
-
-    let mut body = String::new();
-
-    // Format email header
-    body.push_str("Content-Type: multipart/alternative;\n");
-    let _ = writeln!(body, "\tboundary=\"{boundary}\"");
-    body.push_str("MIME-Version: 1.0\n");
-
-    if !subject.is_ascii() {
-        let _ = writeln!(body, "Subject: =?utf-8?B?{}?=", base64::encode(subject));
-    } else {
-        let _ = writeln!(body, "Subject: {subject}");
-    }
-    let _ = writeln!(body, "From: {author} <{mailfrom}>");
-    let _ = writeln!(body, "To: {recipients}");
-    let rfc2822_date = proxmox_time::epoch_to_rfc2822(timestamp)
-        .map_err(|err| Error::Generic(format!("failed to format time: {err}")))?;
-    let _ = writeln!(body, "Date: {rfc2822_date}");
-    body.push_str("Auto-Submitted: auto-generated;\n");
-    body.push('\n');
-
-    // Format email body
-    body.push_str("This is a multi-part message in MIME format.\n");
-    let _ = write!(body, "\n--{boundary}\n");
-
-    body.push_str("Content-Type: text/plain;\n");
-    body.push_str("\tcharset=\"UTF-8\"\n");
-    body.push_str("Content-Transfer-Encoding: 8bit\n");
-    body.push('\n');
-    body.push_str(text);
-    let _ = write!(body, "\n--{boundary}\n");
-
-    body.push_str("Content-Type: text/html;\n");
-    body.push_str("\tcharset=\"UTF-8\"\n");
-    body.push_str("Content-Transfer-Encoding: 8bit\n");
-    body.push('\n');
-    body.push_str(html);
-    let _ = write!(body, "\n--{boundary}--");
-
-    Ok(body)
 }
 
 /// Forwards an email message to a given list of recipients.
@@ -312,58 +210,4 @@ fn forward(mailto: &[&str], mailfrom: &str, message: &[u8], uid: Option<u32>) ->
         .map_err(|err| Error::Generic(format!("sendmail did not exit successfully: {err}")))?;
 
     Ok(())
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn email_without_recipients() {
-        let result = sendmail(&[], "Subject2", "", "<b>HTML</b>", "root", "Proxmox");
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_format_mail_multipart() {
-        let message = format_mail(
-            &["Tony Est <test@example.com>"],
-            "foobar@example.com",
-            "Fred Oobar",
-            "This is the subject",
-            "This is the plain body",
-            "<body>This is the HTML body</body>",
-            1718977850,
-        )
-        .expect("format_message failed");
-
-        assert_eq!(
-            message,
-            r#"Content-Type: multipart/alternative;
-	boundary="----_=_NextPart_001_1718977850"
-MIME-Version: 1.0
-Subject: This is the subject
-From: Fred Oobar <foobar@example.com>
-To: Tony Est <test@example.com>
-Date: Fri, 21 Jun 2024 15:50:50 +0200
-Auto-Submitted: auto-generated;
-
-This is a multi-part message in MIME format.
-
-------_=_NextPart_001_1718977850
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-
-This is the plain body
-------_=_NextPart_001_1718977850
-Content-Type: text/html;
-	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-
-<body>This is the HTML body</body>
-------_=_NextPart_001_1718977850--"#
-                .to_owned()
-        );
-    }
 }

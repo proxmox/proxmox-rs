@@ -32,6 +32,7 @@ proxmox-human-byte.workspace = true
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
 proxmox-section-config = { workspace = true }
 proxmox-serde.workspace = true
+proxmox-sendmail = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-time.workspace = true
 proxmox-uuid = { workspace = true, features = ["serde"] }
@@ -39,7 +40,7 @@ proxmox-uuid = { workspace = true, features = ["serde"] }
 [features]
 default = ["sendmail", "gotify", "smtp", "webhook"]
 mail-forwarder = ["dep:mail-parser", "dep:proxmox-sys"]
-sendmail = ["dep:proxmox-sys", "dep:base64"]
+sendmail = ["dep:proxmox-sys", "dep:base64", "dep:proxmox-sendmail"]
 gotify = ["dep:proxmox-http"]
 pve-context = ["dep:proxmox-sys"]
 pbs-context = ["dep:proxmox-sys"]
