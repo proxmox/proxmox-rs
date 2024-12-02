@@ -39,7 +39,7 @@ proxmox-uuid = { workspace = true, features = ["serde"] }
 
 [features]
 default = ["sendmail", "gotify", "smtp", "webhook"]
-mail-forwarder = ["dep:mail-parser", "dep:proxmox-sys"]
+mail-forwarder = ["dep:mail-parser", "dep:proxmox-sys", "proxmox-sendmail/mail-forwarder"]
 sendmail = ["dep:proxmox-sys", "dep:base64", "dep:proxmox-sendmail"]
 gotify = ["dep:proxmox-http"]
 pve-context = ["dep:proxmox-sys"]

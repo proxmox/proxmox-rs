@@ -1,6 +1,4 @@
-use std::io::Write;
-use std::process::{Command, Stdio};
-
+use proxmox_sendmail::Mail;
 use serde::{Deserialize, Serialize};
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
@@ -148,7 +146,7 @@ impl Endpoint for SendmailEndpoint {
             }
             #[cfg(feature = "mail-forwarder")]
             Content::ForwardedMail { raw, uid, .. } => {
-                forward(&recipients_str, &mailfrom, raw, *uid)
+                Mail::forward(&recipients_str, &mailfrom, raw, *uid)
                     .map_err(|err| Error::NotifyFailed(self.config.name.clone(), err.into()))
             }
         }
@@ -162,52 +160,4 @@ impl Endpoint for SendmailEndpoint {
     fn disabled(&self) -> bool {
         self.config.disable.unwrap_or_default()
     }
-}
-
-/// Forwards an email message to a given list of recipients.
-///
-/// ``sendmail`` is used for sending the mail, thus `message` must be
-/// compatible with that (the message is piped into stdin unmodified).
-#[cfg(feature = "mail-forwarder")]
-fn forward(mailto: &[&str], mailfrom: &str, message: &[u8], uid: Option<u32>) -> Result<(), Error> {
-    use std::os::unix::process::CommandExt;
-
-    if mailto.is_empty() {
-        return Err(Error::Generic(
-            "At least one recipient has to be specified!".into(),
-        ));
-    }
-
-    let mut builder = Command::new("/usr/sbin/sendmail");
-
-    builder
-        .args([
-            "-N", "never", // never send DSN (avoid mail loops)
-            "-f", mailfrom, "--",
-        ])
-        .args(mailto)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
-
-    if let Some(uid) = uid {
-        builder.uid(uid);
-    }
-
-    let mut process = builder
-        .spawn()
-        .map_err(|err| Error::Generic(format!("could not spawn sendmail process: {err}")))?;
-
-    process
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(message)
-        .map_err(|err| Error::Generic(format!("couldn't write to sendmail stdin: {err}")))?;
-
-    process
-        .wait()
-        .map_err(|err| Error::Generic(format!("sendmail did not exit successfully: {err}")))?;
-
-    Ok(())
 }
