@@ -392,7 +392,7 @@ enum FilterElement<'a> {
     Verbatim(&'a str),
 }
 
-impl<'a> Display for FilterElement<'a> {
+impl Display for FilterElement<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         fn write_children(f: &mut Formatter<'_>, children: &[FilterElement]) -> std::fmt::Result {
             for child in children {

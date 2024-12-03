@@ -689,7 +689,7 @@ pub struct DerivedItems<'a> {
     attributes: std::slice::Iter<'a, syn::Attribute>,
 }
 
-impl<'a> Iterator for DerivedItems<'a> {
+impl Iterator for DerivedItems<'_> {
     type Item = syn::Path;
 
     fn next(&mut self) -> Option<Self::Item> {

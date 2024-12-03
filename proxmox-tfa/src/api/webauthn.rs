@@ -123,7 +123,7 @@ pub(super) struct WebauthnConfigInstance<'a> {
 ///
 /// Note that we may consider changing this so `get_origin` returns the `Host:` header provided by
 /// the connecting client.
-impl<'a> webauthn_rs::WebauthnConfig for WebauthnConfigInstance<'a> {
+impl webauthn_rs::WebauthnConfig for WebauthnConfigInstance<'_> {
     fn get_relying_party_name(&self) -> &str {
         self.rp
     }

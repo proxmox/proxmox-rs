@@ -178,7 +178,7 @@ pub struct ACLEntry<'a> {
     _phantom: PhantomData<&'a mut ()>,
 }
 
-impl<'a> ACLEntry<'a> {
+impl ACLEntry<'_> {
     pub fn get_tag_type(&self) -> Result<ACLTag, nix::errno::Errno> {
         let mut tag = ACL_UNDEFINED_TAG;
         let res = unsafe { acl_get_tag_type(self.ptr, &mut tag as *mut ACLTag) };

@@ -234,7 +234,7 @@ where
     }
 }
 
-impl<'c, C> HttpApiClient for &'c C
+impl<C> HttpApiClient for &C
 where
     C: HttpApiClient,
 {

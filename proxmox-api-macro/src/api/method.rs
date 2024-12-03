@@ -935,7 +935,7 @@ fn serialize_input_schema(
 
 struct DefaultParameters<'a>(&'a Schema);
 
-impl<'a> VisitMut for DefaultParameters<'a> {
+impl VisitMut for DefaultParameters<'_> {
     fn visit_expr_mut(&mut self, i: &mut syn::Expr) {
         if let syn::Expr::Macro(exprmac) = i {
             if exprmac.mac.path.is_ident("api_get_default") {
@@ -955,7 +955,7 @@ impl<'a> VisitMut for DefaultParameters<'a> {
     }
 }
 
-impl<'a> DefaultParameters<'a> {
+impl DefaultParameters<'_> {
     fn get_default(&self, param_tokens: TokenStream) -> Result<syn::Expr, syn::Error> {
         let param_name: syn::LitStr = syn::parse2(param_tokens)?;
         match self.0.find_obj_property_by_ident(&param_name.value()) {

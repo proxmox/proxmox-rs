@@ -71,7 +71,7 @@ struct Attachment<'a> {
     content: &'a [u8],
 }
 
-impl<'a> Attachment<'a> {
+impl Attachment<'_> {
     fn format_attachment(&self, file_boundary: &str) -> String {
         use std::fmt::Write;
 

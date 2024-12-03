@@ -201,7 +201,7 @@ impl<'de> serde::Deserialize<'de> for Uuid {
 
         struct ForwardToStrVisitor;
 
-        impl<'a> serde::de::Visitor<'a> for ForwardToStrVisitor {
+        impl serde::de::Visitor<'_> for ForwardToStrVisitor {
             type Value = Uuid;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

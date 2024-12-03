@@ -155,7 +155,7 @@ impl<'de, 'i> SchemaDeserializer<'de, 'i> {
     }
 }
 
-impl<'de, 'i> de::Deserializer<'de> for SchemaDeserializer<'de, 'i> {
+impl<'de> de::Deserializer<'de> for SchemaDeserializer<'de, '_> {
     type Error = Error;
 
     fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Error>
@@ -410,7 +410,7 @@ impl<'o, 'i, 's> SeqAccess<'o, 'i, 's> {
     }
 }
 
-impl<'de, 'i, 's> de::SeqAccess<'de> for SeqAccess<'de, 'i, 's> {
+impl<'de> de::SeqAccess<'de> for SeqAccess<'de, '_, '_> {
     type Error = Error;
 
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Error>
@@ -448,7 +448,7 @@ impl<'de, 'i, 's> de::SeqAccess<'de> for SeqAccess<'de, 'i, 's> {
     }
 }
 
-impl<'de, 'i, 's> de::Deserializer<'de> for SeqAccess<'de, 'i, 's> {
+impl<'de> de::Deserializer<'de> for SeqAccess<'de, '_, '_> {
     type Error = Error;
 
     fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Error>
@@ -538,7 +538,7 @@ impl<'de, 'i> MapAccess<'de, 'i> {
     }
 }
 
-impl<'de, 'i> de::MapAccess<'de> for MapAccess<'de, 'i> {
+impl<'de> de::MapAccess<'de> for MapAccess<'de, '_> {
     type Error = Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Error>

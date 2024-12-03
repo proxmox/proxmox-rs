@@ -85,7 +85,7 @@ pub(crate) fn next_property(mut data: &str) -> Option<Result<NextProperty, Error
     Some(Ok((key, value, data)))
 }
 
-impl<'a> std::iter::FusedIterator for PropertyIterator<'a> {}
+impl std::iter::FusedIterator for PropertyIterator<'_> {}
 
 /// Parse a quoted string and move `data` to after the closing quote.
 ///
