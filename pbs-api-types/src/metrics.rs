@@ -221,8 +221,8 @@ pub struct Metrics {
 /// Metric data point
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct MetricDataPoint {
-    /// Unique identifier for this metric object, for instance 'node/<nodename>'
-    /// or 'qemu/<vmid>'.
+    /// Unique identifier for this metric object, for instance `node/<nodename>`
+    /// or `qemu/<vmid>`.
     pub id: String,
 
     /// Name of the metric.
