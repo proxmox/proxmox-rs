@@ -19,7 +19,7 @@ where
 
 impl<R: Send + Sync> Records<R> {
     /// Create a *new buffered reader* for to cerate a record stream from an [`AsyncRead`].
-    /// Note: If the underlying type already implements [`AsyncBufRead`], use [`Records::::from`]
+    /// Note: If the underlying type already implements [`AsyncBufRead`], use [`Records::from`]
     /// isntead!
     pub fn new<T>(reader: T) -> Records<BufReader<T>>
     where
