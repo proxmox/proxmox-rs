@@ -31,7 +31,6 @@ pub mod ops;
 /// })
 /// .map_err(|e| format_err!("my try block returned an error - {}", e));
 /// ```
-
 #[macro_export]
 macro_rules! try_block {
     { $($token:tt)* } => {{ (|| -> Result<_,_> { $($token)* })() }}

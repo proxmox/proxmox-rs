@@ -306,7 +306,7 @@ impl CliCommandMap {
     /// Builder style method to set extra options for the entire set of subcommands, taking a
     /// prepared `GlobalOptions` for potential
     /// Can be used multiple times.
-
+    ///
     /// Finish the command line interface.
     pub fn build(self) -> CommandLineInterface {
         self.into()
