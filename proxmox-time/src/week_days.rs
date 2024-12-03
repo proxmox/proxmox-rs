@@ -28,7 +28,7 @@ fn parse_weekday(i: &str) -> IResult<&str, WeekDays> {
         "friday" | "fri" => Ok((i, WeekDays::FRIDAY)),
         "saturday" | "sat" => Ok((i, WeekDays::SATURDAY)),
         "sunday" | "sun" => Ok((i, WeekDays::SUNDAY)),
-        _ => return Err(parse_error(text, "weekday")),
+        _ => Err(parse_error(text, "weekday")),
     }
 }
 

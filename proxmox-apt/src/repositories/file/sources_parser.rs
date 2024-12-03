@@ -43,7 +43,7 @@ impl<R: BufRead> APTSourcesFileParser<R> {
         if key.starts_with('-') {
             return false;
         };
-        return key.chars().all(|c| matches!(c, '!'..='9' | ';'..='~'));
+        key.chars().all(|c| matches!(c, '!'..='9' | ';'..='~'))
     }
 
     /// Try parsing a repository in stanza format from `lines`.
