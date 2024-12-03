@@ -238,13 +238,15 @@ impl<C> HttpApiClient for &C
 where
     C: HttpApiClient,
 {
-    type ResponseFuture<'a> = C::ResponseFuture<'a>
+    type ResponseFuture<'a>
+        = C::ResponseFuture<'a>
     where
         Self: 'a;
 
     type Body = C::Body;
 
-    type ResponseStreamFuture<'a> = C::ResponseStreamFuture<'a>
+    type ResponseStreamFuture<'a>
+        = C::ResponseStreamFuture<'a>
     where
         Self: 'a;
 
@@ -307,13 +309,15 @@ impl<C> HttpApiClient for std::sync::Arc<C>
 where
     C: HttpApiClient,
 {
-    type ResponseFuture<'a> = C::ResponseFuture<'a>
+    type ResponseFuture<'a>
+        = C::ResponseFuture<'a>
     where
         Self: 'a;
 
     type Body = C::Body;
 
-    type ResponseStreamFuture<'a> = C::ResponseStreamFuture<'a>
+    type ResponseStreamFuture<'a>
+        = C::ResponseStreamFuture<'a>
     where
         Self: 'a;
 
@@ -376,13 +380,15 @@ impl<C> HttpApiClient for std::rc::Rc<C>
 where
     C: HttpApiClient,
 {
-    type ResponseFuture<'a> = C::ResponseFuture<'a>
+    type ResponseFuture<'a>
+        = C::ResponseFuture<'a>
     where
         Self: 'a;
 
     type Body = C::Body;
 
-    type ResponseStreamFuture<'a> = C::ResponseStreamFuture<'a>
+    type ResponseStreamFuture<'a>
+        = C::ResponseStreamFuture<'a>
     where
         Self: 'a;
 
