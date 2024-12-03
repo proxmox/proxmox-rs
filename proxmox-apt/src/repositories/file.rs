@@ -366,10 +366,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
         };
 
         for (n, repo) in self.repositories.iter().enumerate() {
-            let mut origin = match repo.get_cached_origin(apt_lists_dir) {
-                Ok(option) => option,
-                Err(_) => None,
-            };
+            let mut origin = repo.get_cached_origin(apt_lists_dir).unwrap_or_default();
 
             if origin.is_none() {
                 origin = repo.origin_from_uris();
