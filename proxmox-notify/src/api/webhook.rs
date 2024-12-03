@@ -128,7 +128,7 @@ pub fn add_endpoint(
 /// Returns a `HttpError` if:
 ///   - the passed `digest` does not match (`400 Bad request`)
 ///   - parameters are ill-formed (empty header value, invalid base64, unknown header/secret)
-///   (`400 Bad request`)
+///     (`400 Bad request`)
 ///   - an entity with the same name already exists (`400 Bad request`)
 ///   - the configuration could not be saved (`500 Internal server error`)
 pub fn update_endpoint(
