@@ -1,26 +1,28 @@
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 use anyhow::Error;
 
 use proxmox_product_config::create_secret_dir;
 
+#[derive(Debug)]
 struct AcmeApiConfig {
     acme_config_dir: PathBuf,
     acme_account_dir: PathBuf,
 }
 
-static mut ACME_ACME_CONFIG: Option<AcmeApiConfig> = None;
+static ACME_ACME_CONFIG: OnceLock<AcmeApiConfig> = OnceLock::new();
 
 /// Initialize the global product configuration.
 pub fn init<P: AsRef<Path>>(acme_config_dir: P, create_subdirs: bool) -> Result<(), Error> {
     let acme_config_dir = acme_config_dir.as_ref().to_owned();
 
-    unsafe {
-        ACME_ACME_CONFIG = Some(AcmeApiConfig {
+    ACME_ACME_CONFIG
+        .set(AcmeApiConfig {
             acme_account_dir: acme_config_dir.join("accounts"),
             acme_config_dir,
-        });
-    }
+        })
+        .expect("cannot set acme configuration twice");
 
     if create_subdirs {
         create_secret_dir(self::acme_config_dir(), false)?;
@@ -31,11 +33,9 @@ pub fn init<P: AsRef<Path>>(acme_config_dir: P, create_subdirs: bool) -> Result<
 }
 
 fn acme_api_config() -> &'static AcmeApiConfig {
-    unsafe {
-        ACME_ACME_CONFIG
-            .as_ref()
-            .expect("ProxmoxProductConfig is not initialized!")
-    }
+    ACME_ACME_CONFIG
+        .get()
+        .expect("ProxmoxProductConfig is not initialized!")
 }
 
 fn acme_config_dir() -> &'static Path {
