@@ -37,10 +37,8 @@ fn common_digest(files: &[APTRepositoryFile]) -> ConfigDigest {
     }
 
     let mut common_raw = Vec::<u8>::with_capacity(digests.len() * 32);
-    for digest in digests.values() {
-        if let Some(digest) = digest {
-            common_raw.extend_from_slice(&digest[..]);
-        }
+    for digest in digests.into_values().flatten() {
+        common_raw.extend_from_slice(&digest[..]);
     }
 
     ConfigDigest::from_slice(&common_raw[..])
