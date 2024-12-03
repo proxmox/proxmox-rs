@@ -1,3 +1,13 @@
+rust-proxmox-sys (0.6.5-1) bookworm; urgency=medium
+
+  * sys: fs: set CLOEXEC when creating temp files to avoid passing them to
+    other processes without them being aware about these FDs. This can, for
+    example, happen on our rest-server daemon reload.
+
+  * sys: open directories with O_CLOEXEC with similar intention than above
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 03 Dec 2024 17:41:21 +0100
+
 rust-proxmox-sys (0.6.4-1) bookworm; urgency=medium
 
   * drop unnecessary not-empty check on fixed-size array
