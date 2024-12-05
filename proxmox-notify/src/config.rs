@@ -1,5 +1,7 @@
 use std::sync::OnceLock;
 
+use tracing::warn;
+
 use proxmox_schema::{ApiType, ObjectSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
 
@@ -148,7 +150,7 @@ pub fn config(raw_config: &str) -> Result<(SectionConfigData, [u8; 32]), Error> 
     // This mechanism cleans out left-over entries.
     let entries: Vec<GroupConfig> = data.convert_to_typed_array("group").unwrap_or_default();
     if !entries.is_empty() {
-        log::warn!("clearing left-over 'group' entries from notifications.cfg");
+        warn!("clearing left-over 'group' entries from notifications.cfg");
     }
 
     for entry in entries {
@@ -157,7 +159,7 @@ pub fn config(raw_config: &str) -> Result<(SectionConfigData, [u8; 32]), Error> 
 
     let entries: Vec<FilterConfig> = data.convert_to_typed_array("filter").unwrap_or_default();
     if !entries.is_empty() {
-        log::warn!("clearing left-over 'filter' entries from notifications.cfg");
+        warn!("clearing left-over 'filter' entries from notifications.cfg");
     }
 
     for entry in entries {

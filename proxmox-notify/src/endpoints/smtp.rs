@@ -336,7 +336,7 @@ impl Endpoint for SmtpEndpoint {
                                 let header = HeaderValue::new(name, value);
                                 message.headers_mut().insert_raw(header);
                             }
-                            Err(e) => log::error!("could not set header: {e}"),
+                            Err(e) => error!("could not set header: {e}"),
                         }
                     }
                 }

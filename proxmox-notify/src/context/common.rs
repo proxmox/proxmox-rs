@@ -1,10 +1,12 @@
 use std::path::Path;
 
+use tracing::error;
+
 pub(crate) fn attempt_file_read<P: AsRef<Path>>(path: P) -> Option<String> {
     match proxmox_sys::fs::file_read_optional_string(path) {
         Ok(contents) => contents,
         Err(err) => {
-            log::error!("{err}");
+            error!("{err}");
             None
         }
     }

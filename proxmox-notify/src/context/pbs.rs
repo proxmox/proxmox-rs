@@ -1,5 +1,7 @@
-use serde::Deserialize;
 use std::path::Path;
+
+use serde::Deserialize;
+use tracing::error;
 
 use proxmox_schema::{ObjectSchema, Schema, StringSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigPlugin};
@@ -46,13 +48,13 @@ fn lookup_mail_address(content: &str, username: &str) -> Option<String> {
             match parsed.lookup::<DummyPbsUser>("user", username) {
                 Ok(user) => common::normalize_for_return(user.email.as_deref()),
                 Err(err) => {
-                    log::error!("unable to parse {PBS_USER_CFG_FILENAME}: {err}");
+                    error!("unable to parse {PBS_USER_CFG_FILENAME}: {err}");
                     None
                 }
             }
         }
         Err(err) => {
-            log::error!("unable to parse {PBS_USER_CFG_FILENAME}: {err}");
+            error!("unable to parse {PBS_USER_CFG_FILENAME}: {err}");
             None
         }
     }

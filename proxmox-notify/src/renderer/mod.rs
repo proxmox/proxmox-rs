@@ -8,6 +8,7 @@ use handlebars::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use tracing::error;
 
 use proxmox_human_byte::HumanByte;
 use proxmox_time::TimeSpan;
@@ -142,7 +143,7 @@ impl ValueRenderFunction {
             ValueRenderFunction::Timestamp => value_to_timestamp(value),
         }
         .unwrap_or_else(|| {
-            log::error!("could not render value {value} with renderer {self:?}");
+            error!("could not render value {value} with renderer {self:?}");
             String::from("ERROR")
         })
     }

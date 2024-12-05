@@ -6,6 +6,7 @@ use std::str::FromStr;
 use const_format::concatcp;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
+use tracing::{error, info};
 
 use proxmox_schema::api_types::{COMMENT_SCHEMA, SAFE_ID_REGEX_STR};
 use proxmox_schema::{api, const_regex, ApiStringFormat, Schema, StringSchema, Updater};
@@ -445,7 +446,7 @@ pub fn check_matches<'a>(
     for matcher in matchers {
         if matcher.disable.unwrap_or_default() {
             // Skip this matcher if it is disabled
-            log::info!("skipping disabled matcher '{name}'", name = matcher.name);
+            info!("skipping disabled matcher '{name}'", name = matcher.name);
             continue;
         }
 
@@ -454,7 +455,7 @@ pub fn check_matches<'a>(
                 let t = t.unwrap_or_default();
                 targets.extend(t.iter().map(|s| s.as_str()));
             }
-            Err(err) => log::error!("matcher '{matcher}' failed: {err}", matcher = matcher.name),
+            Err(err) => error!("matcher '{matcher}' failed: {err}", matcher = matcher.name),
         }
     }
 

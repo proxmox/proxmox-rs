@@ -9,6 +9,7 @@ use context::context;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_json::Value;
+use tracing::{error, info};
 
 use proxmox_schema::api;
 use proxmox_section_config::SectionConfigData;
@@ -299,9 +300,7 @@ impl Config {
                     if let Some(obj) = value.as_object_mut() {
                         obj.insert("origin".to_string(), Value::String("builtin".into()));
                     } else {
-                        log::error!(
-                            "section config entry is not an object. This should not happen"
-                        );
+                        error!("section config entry is not an object. This should not happen");
                     }
                 } else {
                     // Entry is built-in, but it has been modified by the user.
@@ -311,9 +310,7 @@ impl Config {
                             Value::String("modified-builtin".into()),
                         );
                     } else {
-                        log::error!(
-                            "section config entry is not an object. This should not happen"
-                        );
+                        error!("section config entry is not an object. This should not happen");
                     }
                 }
             } else {
@@ -322,7 +319,7 @@ impl Config {
                 if let Some(obj) = val.as_object_mut() {
                     obj.insert("origin".to_string(), Value::String("builtin".into()));
                 } else {
-                    log::error!("section config entry is not an object. This should not happen");
+                    error!("section config entry is not an object. This should not happen");
                 }
                 config
                     .set_data(key, builtin_typename, val)
@@ -356,7 +353,7 @@ impl Config {
             if let Some(obj) = value.as_object_mut() {
                 obj.remove("origin");
             } else {
-                log::error!("section config entry is not an object. This should not happen");
+                error!("section config entry is not an object. This should not happen");
             }
         }
 
@@ -397,7 +394,7 @@ macro_rules! parse_endpoints_with_private_config {
                 match $config.private_config.sections.get(&config.name) {
                     Some((section_type_name, private_config)) => {
                         if $type_name != section_type_name {
-                            log::error!(
+                            error!(
                                 "Could not instantiate endpoint '{name}': \
                                 private config has wrong type",
                                 name = config.name
@@ -411,7 +408,7 @@ macro_rules! parse_endpoints_with_private_config {
                             private_config: private_config.clone(),
                         }));
                     }
-                    None => log::error!(
+                    None => error!(
                         "Could not instantiate endpoint '{name}': \
                             private config does not exist",
                         name = config.name
@@ -551,21 +548,21 @@ impl Bus {
 
                 if endpoint.disabled() {
                     // Skip this target if it is disabled
-                    log::info!("skipping disabled target '{name}'");
+                    info!("skipping disabled target '{name}'");
                     continue;
                 }
 
                 match endpoint.send(notification) {
                     Ok(_) => {
-                        log::info!("notified via target `{name}`");
+                        info!("notified via target `{name}`");
                     }
                     Err(e) => {
                         // Only log on errors, do not propagate fail to the caller.
-                        log::error!("could not notify via target `{name}`: {e}");
+                        error!("could not notify via target `{name}`: {e}");
                     }
                 }
             } else {
-                log::error!("could not notify via target '{target}', it does not exist");
+                error!("could not notify via target '{target}', it does not exist");
             }
         }
     }
