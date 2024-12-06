@@ -346,7 +346,7 @@ CLUSTER_NODE_INDEX_RESPONSE_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?
     },
 )]
 /// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct ClusterNodeIndexResponse {
     /// CPU utilization.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
