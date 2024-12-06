@@ -3100,6 +3100,162 @@ pub struct LxcEntry {
     pub vmid: u32,
 }
 
+#[api(
+    properties: {
+        disk: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        diskread: {
+            optional: true,
+            type: Integer,
+        },
+        diskwrite: {
+            optional: true,
+            type: Integer,
+        },
+        ha: {
+            description: "HA manager service status.",
+            properties: {},
+            type: Object,
+        },
+        lock: {
+            optional: true,
+            type: String,
+        },
+        maxdisk: {
+            optional: true,
+            type: Integer,
+        },
+        maxmem: {
+            optional: true,
+            type: Integer,
+        },
+        maxswap: {
+            optional: true,
+            type: Integer,
+        },
+        name: {
+            optional: true,
+            type: String,
+        },
+        netin: {
+            optional: true,
+            type: Integer,
+        },
+        netout: {
+            optional: true,
+            type: Integer,
+        },
+        status: {
+            type: IsRunning,
+        },
+        tags: {
+            optional: true,
+            type: String,
+        },
+        template: {
+            default: false,
+            optional: true,
+        },
+        uptime: {
+            optional: true,
+            type: Integer,
+        },
+        vmid: {
+            maximum: 999999999,
+            minimum: 100,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct LxcStatus {
+    /// Maximum usable CPUs.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpus: Option<f64>,
+
+    /// Root disk image space-usage in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub disk: Option<u64>,
+
+    /// The amount of bytes the guest read from it's block devices since the
+    /// guest was started. (Note: This info is not available for all storage
+    /// types.)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskread: Option<i64>,
+
+    /// The amount of bytes the guest wrote from it's block devices since the
+    /// guest was started. (Note: This info is not available for all storage
+    /// types.)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskwrite: Option<i64>,
+
+    /// HA manager service status.
+    pub ha: serde_json::Value,
+
+    /// The current config lock, if any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lock: Option<String>,
+
+    /// Root disk image size in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub maxdisk: Option<i64>,
+
+    /// Maximum memory in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub maxmem: Option<i64>,
+
+    /// Maximum SWAP memory in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub maxswap: Option<i64>,
+
+    /// Container name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    /// The amount of traffic in bytes that was sent to the guest over the
+    /// network since it was started.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netin: Option<i64>,
+
+    /// The amount of traffic in bytes that was sent from the guest over the
+    /// network since it was started.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netout: Option<i64>,
+
+    pub status: IsRunning,
+
+    /// The current configured tags, if any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tags: Option<String>,
+
+    /// Determines if the guest is a template.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<bool>,
+
+    /// Uptime in seconds.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uptime: Option<i64>,
+
+    /// The (unique) ID of the VM.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    pub vmid: u32,
+}
+
 const_regex! {
 
 MIGRATE_LXC_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
@@ -8842,6 +8998,203 @@ pub struct QemuConfigVirtio {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub werror: Option<PveQmIdeWerror>,
+}
+
+#[api(
+    properties: {
+        agent: {
+            default: false,
+            optional: true,
+        },
+        clipboard: {
+            optional: true,
+            type: QemuConfigVgaClipboard,
+        },
+        diskread: {
+            optional: true,
+            type: Integer,
+        },
+        diskwrite: {
+            optional: true,
+            type: Integer,
+        },
+        ha: {
+            description: "HA manager service status.",
+            properties: {},
+            type: Object,
+        },
+        lock: {
+            optional: true,
+            type: String,
+        },
+        maxdisk: {
+            optional: true,
+            type: Integer,
+        },
+        maxmem: {
+            optional: true,
+            type: Integer,
+        },
+        name: {
+            optional: true,
+            type: String,
+        },
+        netin: {
+            optional: true,
+            type: Integer,
+        },
+        netout: {
+            optional: true,
+            type: Integer,
+        },
+        pid: {
+            optional: true,
+            type: Integer,
+        },
+        qmpstatus: {
+            optional: true,
+            type: String,
+        },
+        "running-machine": {
+            optional: true,
+            type: String,
+        },
+        "running-qemu": {
+            optional: true,
+            type: String,
+        },
+        spice: {
+            default: false,
+            optional: true,
+        },
+        status: {
+            type: IsRunning,
+        },
+        tags: {
+            optional: true,
+            type: String,
+        },
+        template: {
+            default: false,
+            optional: true,
+        },
+        uptime: {
+            optional: true,
+            type: Integer,
+        },
+        vmid: {
+            maximum: 999999999,
+            minimum: 100,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct QemuStatus {
+    /// QEMU Guest Agent is enabled in config.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub agent: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clipboard: Option<QemuConfigVgaClipboard>,
+
+    /// Maximum usable CPUs.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpus: Option<f64>,
+
+    /// The amount of bytes the guest read from it's block devices since the
+    /// guest was started. (Note: This info is not available for all storage
+    /// types.)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskread: Option<i64>,
+
+    /// The amount of bytes the guest wrote from it's block devices since the
+    /// guest was started. (Note: This info is not available for all storage
+    /// types.)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diskwrite: Option<i64>,
+
+    /// HA manager service status.
+    pub ha: serde_json::Value,
+
+    /// The current config lock, if any.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lock: Option<String>,
+
+    /// Root disk size in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub maxdisk: Option<i64>,
+
+    /// Maximum memory in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub maxmem: Option<i64>,
+
+    /// VM (host)name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    /// The amount of traffic in bytes that was sent to the guest over the
+    /// network since it was started.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netin: Option<i64>,
+
+    /// The amount of traffic in bytes that was sent from the guest over the
+    /// network since it was started.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netout: Option<i64>,
+
+    /// PID of the QEMU process, if the VM is running.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pid: Option<i64>,
+
+    /// VM run state from the 'query-status' QMP monitor command.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub qmpstatus: Option<String>,
+
+    /// The currently running machine type (if running).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "running-machine")]
+    pub running_machine: Option<String>,
+
+    /// The QEMU version the VM is currently using (if running).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "running-qemu")]
+    pub running_qemu: Option<String>,
+
+    /// QEMU VGA configuration supports spice.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spice: Option<bool>,
+
+    pub status: IsRunning,
+
+    /// The current configured tags, if any
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tags: Option<String>,
+
+    /// Determines if the guest is a template.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<bool>,
+
+    /// Uptime in seconds.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uptime: Option<i64>,
+
+    /// The (unique) ID of the VM.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    pub vmid: u32,
 }
 
 #[api(

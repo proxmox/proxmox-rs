@@ -234,7 +234,6 @@
 /// - /nodes/{node}/lxc/{vmid}/snapshot/{snapname}/rollback
 /// - /nodes/{node}/lxc/{vmid}/spiceproxy
 /// - /nodes/{node}/lxc/{vmid}/status
-/// - /nodes/{node}/lxc/{vmid}/status/current
 /// - /nodes/{node}/lxc/{vmid}/status/reboot
 /// - /nodes/{node}/lxc/{vmid}/status/resume
 /// - /nodes/{node}/lxc/{vmid}/status/suspend
@@ -302,7 +301,6 @@
 /// - /nodes/{node}/qemu/{vmid}/snapshot/{snapname}/rollback
 /// - /nodes/{node}/qemu/{vmid}/spiceproxy
 /// - /nodes/{node}/qemu/{vmid}/status
-/// - /nodes/{node}/qemu/{vmid}/status/current
 /// - /nodes/{node}/qemu/{vmid}/status/reboot
 /// - /nodes/{node}/qemu/{vmid}/status/reset
 /// - /nodes/{node}/qemu/{vmid}/status/resume
@@ -489,6 +487,11 @@ pub trait PveClient {
         Err(Error::Other("lxc_get_config not implemented"))
     }
 
+    /// Get virtual machine status.
+    async fn lxc_get_status(&self, node: &str, vmid: u32) -> Result<LxcStatus, Error> {
+        Err(Error::Other("lxc_get_status not implemented"))
+    }
+
     /// Migrate the container to another node. Creates a new migration task.
     async fn migrate_lxc(
         &self,
@@ -520,6 +523,11 @@ pub trait PveClient {
         snapshot: Option<String>,
     ) -> Result<QemuConfig, Error> {
         Err(Error::Other("qemu_get_config not implemented"))
+    }
+
+    /// Get virtual machine status.
+    async fn qemu_get_status(&self, node: &str, vmid: u32) -> Result<QemuStatus, Error> {
+        Err(Error::Other("qemu_get_status not implemented"))
     }
 
     /// Migrate the container to another cluster. Creates a new migration task.
@@ -803,6 +811,12 @@ where
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
+    /// Get virtual machine status.
+    async fn lxc_get_status(&self, node: &str, vmid: u32) -> Result<LxcStatus, Error> {
+        let url = format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/current");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
     /// Migrate the container to another node. Creates a new migration task.
     async fn migrate_lxc(
         &self,
@@ -839,6 +853,12 @@ where
         add_query_bool(&mut query, &mut sep, "current", current);
         add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
         let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config{query}");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// Get virtual machine status.
+    async fn qemu_get_status(&self, node: &str, vmid: u32) -> Result<QemuStatus, Error> {
+        let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/current");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
