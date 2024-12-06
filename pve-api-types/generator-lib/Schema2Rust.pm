@@ -1087,10 +1087,15 @@ my sub array_type : prototype($$$) {
     };
 
     my $items = delete $schema->{items} or die "missing 'items' in array schema\n";
+    my $description = $items->{description};
+
     handle_def($def, \$items, $name_hint);
 
     $api_props->{type} = 'Array';
     $api_props->{items} = $def->{api};
+    if ($description && !$items->{description}) {
+	$api_props->{items}->{description} = quote_string($description);
+    }
 
     return "Vec<$def->{type}>";
 }
