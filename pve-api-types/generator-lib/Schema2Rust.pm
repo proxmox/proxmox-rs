@@ -1324,7 +1324,6 @@ sub generate_struct : prototype($$$$) {
         derive => derive_default(),
         description => '',
         api => {},
-        default_key => undef,
     };
     $all_structs->{$name_hint} = $def;
     die "duplicate type name: '$name_hint'\n" if exists $all_types->{$name_hint};
@@ -1384,7 +1383,7 @@ sub generate_struct : prototype($$$$) {
             my $field_schema = { $properties->{$field_name}->%* };
             $properties->{$field_name} = $field_schema;
             if (delete $field_schema->{default_key}) {
-                $def->{default_key} = $field_name;
+                $def->{api}->{default_key} = "\"$field_name\"";
             }
             my $field = make_struct_field($name_hint, $field_name, $field_rust_name, \$field_schema);
             die "duplicate field name '$field_name'\n" if exists($def->{fields}->{$field_name});

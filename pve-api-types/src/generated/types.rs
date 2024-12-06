@@ -204,6 +204,7 @@ pub struct ClusterJoinInfoNodelist {
 }
 
 #[api(
+    default_key: "address",
     properties: {
         address: {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_address),
@@ -2244,6 +2245,7 @@ serde_plain::derive_display_from_serialize!(LxcConfigCmode);
 serde_plain::derive_fromstr_from_deserialize!(LxcConfigCmode);
 
 #[api(
+    default_key: "path",
     properties: {
         "deny-write": {
             default: false,
@@ -2421,6 +2423,7 @@ LXC_CONFIG_MP_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[api(
+    default_key: "volume",
     properties: {
         acl: {
             default: false,
@@ -2715,6 +2718,7 @@ LXC_CONFIG_ROOTFS_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[api(
+    default_key: "volume",
     properties: {
         acl: {
             default: false,
@@ -2794,6 +2798,7 @@ pub struct LxcConfigRootfs {
 }
 
 #[api(
+    default_key: "volume",
     properties: {
         volume: {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_volume_id),
@@ -3280,6 +3285,7 @@ pub struct ProxmoxRemote {
 }
 
 #[api(
+    default_key: "type",
     properties: {
         "kernel-hashes": {
             default: false,
@@ -3339,6 +3345,7 @@ serde_plain::derive_display_from_serialize!(PveQemuSevFmtType);
 serde_plain::derive_fromstr_from_deserialize!(PveQemuSevFmtType);
 
 #[api(
+    default_key: "legacy",
     properties: {
         legacy: {
             default: "cdn",
@@ -3432,6 +3439,7 @@ PVE_QM_HOSTPCI_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[api(
+    default_key: "host",
     properties: {
         "device-id": {
             optional: true,
@@ -3568,6 +3576,7 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[api(
+    default_key: "file",
     properties: {
         aio: {
             optional: true,
@@ -4201,6 +4210,7 @@ pub struct PveQmSmbios1 {
 }
 
 #[api(
+    default_key: "model",
     properties: {
         action: {
             optional: true,
@@ -4264,6 +4274,7 @@ serde_plain::derive_display_from_serialize!(PveQmWatchdogModel);
 serde_plain::derive_fromstr_from_deserialize!(PveQmWatchdogModel);
 
 #[api(
+    default_key: "cputype",
     properties: {
         cputype: {
             default: "kvm64",
@@ -5876,6 +5887,7 @@ generate_array_field! {
 }
 
 #[api(
+    default_key: "enabled",
     properties: {
         enabled: {
             default: false,
@@ -6037,6 +6049,7 @@ QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[api(
+    default_key: "file",
     properties: {
         efitype: {
             optional: true,
@@ -6265,6 +6278,7 @@ serde_plain::derive_display_from_serialize!(QemuConfigLock);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigLock);
 
 #[api(
+    default_key: "type",
     properties: {
         type: {
             max_length: 40,
@@ -6305,6 +6319,7 @@ serde_plain::derive_display_from_serialize!(QemuConfigMachineViommu);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigMachineViommu);
 
 #[api(
+    default_key: "current",
     properties: {
         current: {
             default: 512,
@@ -6330,6 +6345,7 @@ QEMU_CONFIG_NET_MACADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 }
 
 #[api(
+    default_key: "model",
     properties: {
         bridge: {
             format: &ApiStringFormat::Pattern(&QEMU_CONFIG_NET_BRIDGE_RE),
@@ -6591,6 +6607,7 @@ serde_plain::derive_display_from_serialize!(QemuConfigOstype);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigOstype);
 
 #[api(
+    default_key: "source",
     properties: {
         max_bytes: {
             default: 1024,
@@ -6656,6 +6673,7 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[api(
+    default_key: "file",
     properties: {
         aio: {
             optional: true,
@@ -7016,6 +7034,7 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[api(
+    default_key: "file",
     properties: {
         aio: {
             optional: true,
@@ -7499,6 +7518,7 @@ QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[api(
+    default_key: "file",
     properties: {
         file: {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
@@ -7545,6 +7565,7 @@ serde_plain::derive_display_from_serialize!(QemuConfigTpmstate0Version);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigTpmstate0Version);
 
 #[api(
+    default_key: "file",
     properties: {
         file: {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_volume_id),
@@ -7566,6 +7587,7 @@ QEMU_CONFIG_USB_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[api(
+    default_key: "host",
     properties: {
         host: {
             optional: true,
@@ -7619,6 +7641,7 @@ pub struct QemuConfigUsb {
 }
 
 #[api(
+    default_key: "type",
     properties: {
         clipboard: {
             optional: true,
@@ -7722,6 +7745,7 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[api(
+    default_key: "file",
     properties: {
         aio: {
             optional: true,
