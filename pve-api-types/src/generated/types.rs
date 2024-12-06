@@ -830,6 +830,101 @@ pub enum IsRunning {
 serde_plain::derive_display_from_serialize!(IsRunning);
 serde_plain::derive_fromstr_from_deserialize!(IsRunning);
 
+const LIST_STORAGES_CONTENT: Schema =
+    proxmox_schema::ArraySchema::new("list", &StorageContent::API_SCHEMA).schema();
+
+mod list_storages_content {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    #[doc(hidden)]
+    pub trait Ser: Sized {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>;
+    }
+
+    impl<T: Serialize + for<'a> Deserialize<'a>> Ser for Vec<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            super::stringlist::serialize(&self[..], serializer, &super::LIST_STORAGES_CONTENT)
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            super::stringlist::deserialize(deserializer, &super::LIST_STORAGES_CONTENT)
+        }
+    }
+
+    impl<T: Ser> Ser for Option<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            match self {
+                None => serializer.serialize_none(),
+                Some(inner) => inner.ser(serializer),
+            }
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            use std::fmt;
+            use std::marker::PhantomData;
+
+            struct V<T: Ser>(PhantomData<T>);
+
+            impl<'de, T: Ser> serde::de::Visitor<'de> for V<T> {
+                type Value = Option<T>;
+
+                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("an optional string")
+                }
+
+                fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                    Ok(None)
+                }
+
+                fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+                where
+                    D: Deserializer<'de>,
+                {
+                    T::de(deserializer).map(Some)
+                }
+
+                fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
+                    use serde::de::IntoDeserializer;
+                    T::de(value.into_deserializer()).map(Some)
+                }
+            }
+
+            deserializer.deserialize_option(V::<T>(PhantomData))
+        }
+    }
+
+    pub fn serialize<T, S>(this: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: Ser,
+    {
+        this.ser(serializer)
+    }
+
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+        T: Ser,
+    {
+        T::de(deserializer)
+    }
+}
+
 #[api]
 /// Only list specific interface types.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -8923,6 +9018,101 @@ pub struct RemoteMigrateQemu {
     pub target_vmid: Option<u32>,
 }
 
+const STORAGE_INFO_CONTENT: Schema =
+    proxmox_schema::ArraySchema::new("list", &StorageContent::API_SCHEMA).schema();
+
+mod storage_info_content {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    #[doc(hidden)]
+    pub trait Ser: Sized {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>;
+    }
+
+    impl<T: Serialize + for<'a> Deserialize<'a>> Ser for Vec<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            super::stringlist::serialize(&self[..], serializer, &super::STORAGE_INFO_CONTENT)
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            super::stringlist::deserialize(deserializer, &super::STORAGE_INFO_CONTENT)
+        }
+    }
+
+    impl<T: Ser> Ser for Option<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            match self {
+                None => serializer.serialize_none(),
+                Some(inner) => inner.ser(serializer),
+            }
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            use std::fmt;
+            use std::marker::PhantomData;
+
+            struct V<T: Ser>(PhantomData<T>);
+
+            impl<'de, T: Ser> serde::de::Visitor<'de> for V<T> {
+                type Value = Option<T>;
+
+                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("an optional string")
+                }
+
+                fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                    Ok(None)
+                }
+
+                fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+                where
+                    D: Deserializer<'de>,
+                {
+                    T::de(deserializer).map(Some)
+                }
+
+                fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
+                    use serde::de::IntoDeserializer;
+                    T::de(value.into_deserializer()).map(Some)
+                }
+            }
+
+            deserializer.deserialize_option(V::<T>(PhantomData))
+        }
+    }
+
+    pub fn serialize<T, S>(this: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: Ser,
+    {
+        this.ser(serializer)
+    }
+
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+        T: Ser,
+    {
+        T::de(deserializer)
+    }
+}
+
 #[api(
     properties: {
         forceStop: {
@@ -9257,6 +9447,101 @@ pub enum StorageContent {
 }
 serde_plain::derive_display_from_serialize!(StorageContent);
 serde_plain::derive_fromstr_from_deserialize!(StorageContent);
+
+const_regex! {
+
+STORAGE_INFO_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
+
+}
+
+#[api(
+    properties: {
+        active: {
+            default: false,
+            optional: true,
+        },
+        avail: {
+            optional: true,
+            type: Integer,
+        },
+        content: {
+            format: &ApiStringFormat::PropertyString(&STORAGE_INFO_CONTENT),
+            type: String,
+        },
+        enabled: {
+            default: false,
+            optional: true,
+        },
+        shared: {
+            default: false,
+            optional: true,
+        },
+        storage: {
+            format: &ApiStringFormat::Pattern(&STORAGE_INFO_STORAGE_RE),
+            type: String,
+        },
+        total: {
+            optional: true,
+            type: Integer,
+        },
+        type: {
+            type: String,
+        },
+        used: {
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct StorageInfo {
+    /// Set when storage is accessible.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active: Option<bool>,
+
+    /// Available storage space in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub avail: Option<i64>,
+
+    /// Allowed storage content types.
+    #[serde(with = "storage_info_content")]
+    pub content: Vec<StorageContent>,
+
+    /// Set when storage is enabled (not disabled).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+
+    /// Shared flag from storage configuration.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared: Option<bool>,
+
+    /// The storage identifier.
+    pub storage: String,
+
+    /// Total storage space in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub total: Option<i64>,
+
+    /// Storage type.
+    #[serde(rename = "type")]
+    pub ty: String,
+
+    /// Used storage space in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub used: Option<i64>,
+
+    /// Used fraction (used/total).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub used_fraction: Option<f64>,
+}
 
 #[api(
     properties: {

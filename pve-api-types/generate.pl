@@ -253,6 +253,9 @@ Schema2Rust::register_enum_variant('NetworkInterfaceVlanProtocol::802.1q' => 'Ie
 api(GET => '/nodes/{node}/network', 'list_networks', 'return-name' => 'NetworkInterface');
 Schema2Rust::derive('NetworkInterface' => 'Clone', 'PartialEq');
 
+api(GET => '/nodes/{node}/storage', 'list_storages', 'return-name' => 'StorageInfo');
+Schema2Rust::derive('StorageInfo' => 'Clone', 'PartialEq');
+
 Schema2Rust::register_api_override('ClusterMetrics', '/properties/data/items', { type => "ClusterMetricsData"});
 api(GET => '/cluster/metrics/export', 'cluster_metrics_export', 'return-name' => 'ClusterMetrics');
 

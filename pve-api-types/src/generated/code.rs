@@ -345,7 +345,6 @@
 /// - /nodes/{node}/startall
 /// - /nodes/{node}/status
 /// - /nodes/{node}/stopall
-/// - /nodes/{node}/storage
 /// - /nodes/{node}/storage/{storage}
 /// - /nodes/{node}/storage/{storage}/content
 /// - /nodes/{node}/storage/{storage}/content/{volume}
@@ -464,6 +463,19 @@ pub trait PveClient {
     /// Virtual machine index (per node).
     async fn list_qemu(&self, node: &str, full: Option<bool>) -> Result<Vec<VmEntry>, Error> {
         Err(Error::Other("list_qemu not implemented"))
+    }
+
+    /// Get status for all datastores.
+    async fn list_storages(
+        &self,
+        node: &str,
+        content: Option<Vec<StorageContent>>,
+        enabled: Option<bool>,
+        format: Option<bool>,
+        storage: Option<String>,
+        target: Option<String>,
+    ) -> Result<Vec<StorageInfo>, Error> {
+        Err(Error::Other("list_storages not implemented"))
     }
 
     /// Get container configuration.
@@ -753,6 +765,26 @@ where
         let (mut query, mut sep) = (String::new(), '?');
         add_query_bool(&mut query, &mut sep, "full", full);
         let url = format!("/api2/extjs/nodes/{node}/qemu{query}");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// Get status for all datastores.
+    async fn list_storages(
+        &self,
+        node: &str,
+        content: Option<Vec<StorageContent>>,
+        enabled: Option<bool>,
+        format: Option<bool>,
+        storage: Option<String>,
+        target: Option<String>,
+    ) -> Result<Vec<StorageInfo>, Error> {
+        let (mut query, mut sep) = (String::new(), '?');
+        add_query_arg_string_list(&mut query, &mut sep, "content", &content);
+        add_query_bool(&mut query, &mut sep, "enabled", enabled);
+        add_query_bool(&mut query, &mut sep, "format", format);
+        add_query_arg(&mut query, &mut sep, "storage", &storage);
+        add_query_arg(&mut query, &mut sep, "target", &target);
+        let url = format!("/api2/extjs/nodes/{node}/storage{query}");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
