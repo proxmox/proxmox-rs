@@ -40,6 +40,9 @@ my $CONFIGID_RE = '^(?i:[a-z][a-z0-9_-]+)$';
 #$Schema2Rust::API = 0;
 
 Schema2Rust::register_format('CIDR' => { code => 'verifiers::verify_cidr' });
+Schema2Rust::register_format('CIDRv4' => { code => 'verifiers::verify_cidrv4' });
+Schema2Rust::register_format('CIDRv6' => { code => 'verifiers::verify_cidrv6' });
+Schema2Rust::register_format('ipv4mask' => { code => 'verifiers::verify_ipv4_mask' });
 Schema2Rust::register_format('mac-addr' => { regex => '^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$' });
 ## Schema2Rust::register_format('pve-acme-alias' => { code => 'verify_pve_acme_alias' });
 ## Schema2Rust::register_format('pve-acme-domain' => { code => 'verify_pve_acme_domain' });
@@ -101,6 +104,10 @@ Schema2Rust::register_format('ipv4' => { code => 'verifiers::verify_ipv4' });
 Schema2Rust::register_format('ipv6' => { code => 'verifiers::verify_ipv6' });
 Schema2Rust::register_format('pve-ipv4-config' => { code => 'verifiers::verify_ipv4_config' });
 Schema2Rust::register_format('pve-ipv6-config' => { code => 'verifiers::verify_ipv6_config' });
+
+Schema2Rust::register_format('pve-iface' => { regex => '^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$' });
+
+Schema2Rust::register_format('pve-vlan-id-or-range' => { code => 'verifiers::verify_vlan_id_or_range' });
 
 # This is used as both a task status and guest status.
 Schema2Rust::generate_enum('IsRunning', {
@@ -233,6 +240,18 @@ Schema2Rust::derive('ShutdownLxc' => 'Default');
 api(POST => '/nodes/{node}/lxc/{vmid}/migrate',        'migrate_lxc',         'output-type' => 'PveUpid', 'param-name' => 'MigrateLxc');
 Schema2Rust::register_api_override('MigrateLxc', '/properties/bwlimit/default', undef);
 api(POST => '/nodes/{node}/lxc/{vmid}/remote_migrate', 'remote_migrate_lxc',  'output-type' => 'PveUpid', 'param-name' => 'RemoteMigrateLxc');
+
+Schema2Rust::register_enum_variant('ListNetworksType::OVSBridge' => 'OvsBridge');
+Schema2Rust::register_enum_variant('ListNetworksType::OVSBond' => 'OvsBond');
+Schema2Rust::register_enum_variant('ListNetworksType::OVSPort' => 'OvsPort');
+Schema2Rust::register_enum_variant('ListNetworksType::OVSIntPort' => 'OvsIntPort');
+Schema2Rust::register_enum_variant('NetworkInterfaceBondXmitHashPolicy::layer2+3' => 'Layer2_3');
+Schema2Rust::register_enum_variant('NetworkInterfaceBondXmitHashPolicy::layer3+4' => 'Layer3_4');
+Schema2Rust::register_enum_variant('NetworkInterfaceBondMode::802.3ad' => 'Ieee802_3ad');
+Schema2Rust::register_enum_variant('NetworkInterfaceVlanProtocol::802.1ad' => 'Ieee802_1ad');
+Schema2Rust::register_enum_variant('NetworkInterfaceVlanProtocol::802.1q' => 'Ieee802_1q');
+api(GET => '/nodes/{node}/network', 'list_networks', 'return-name' => 'NetworkInterface');
+Schema2Rust::derive('NetworkInterface' => 'Clone', 'PartialEq');
 
 Schema2Rust::register_api_override('ClusterMetrics', '/properties/data/items', { type => "ClusterMetricsData"});
 api(GET => '/cluster/metrics/export', 'cluster_metrics_export', 'return-name' => 'ClusterMetrics');

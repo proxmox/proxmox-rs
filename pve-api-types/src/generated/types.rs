@@ -830,6 +830,50 @@ pub enum IsRunning {
 serde_plain::derive_display_from_serialize!(IsRunning);
 serde_plain::derive_fromstr_from_deserialize!(IsRunning);
 
+#[api]
+/// Only list specific interface types.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ListNetworksType {
+    #[serde(rename = "bridge")]
+    /// bridge.
+    Bridge,
+    #[serde(rename = "bond")]
+    /// bond.
+    Bond,
+    #[serde(rename = "eth")]
+    /// eth.
+    Eth,
+    #[serde(rename = "alias")]
+    /// alias.
+    Alias,
+    #[serde(rename = "vlan")]
+    /// vlan.
+    Vlan,
+    #[serde(rename = "OVSBridge")]
+    /// OVSBridge.
+    OvsBridge,
+    #[serde(rename = "OVSBond")]
+    /// OVSBond.
+    OvsBond,
+    #[serde(rename = "OVSPort")]
+    /// OVSPort.
+    OvsPort,
+    #[serde(rename = "OVSIntPort")]
+    /// OVSIntPort.
+    OvsIntPort,
+    #[serde(rename = "vnet")]
+    /// vnet.
+    Vnet,
+    #[serde(rename = "any_bridge")]
+    /// any_bridge.
+    AnyBridge,
+    #[serde(rename = "any_local_bridge")]
+    /// any_local_bridge.
+    AnyLocalBridge,
+}
+serde_plain::derive_display_from_serialize!(ListNetworksType);
+serde_plain::derive_fromstr_from_deserialize!(ListNetworksType);
+
 const_regex! {
 
 LIST_TASKS_STATUSFILTER_RE = r##"^(?i:ok|error|warning|unknown)$"##;
@@ -3117,6 +3161,614 @@ pub struct MigrateQemu {
     #[serde(rename = "with-local-disks")]
     pub with_local_disks: Option<bool>,
 }
+
+const_regex! {
+
+NETWORK_INTERFACE_BOND_PRIMARY_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+NETWORK_INTERFACE_BRIDGE_PORTS_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+NETWORK_INTERFACE_IFACE_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+NETWORK_INTERFACE_OVS_BONDS_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+NETWORK_INTERFACE_OVS_BRIDGE_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+NETWORK_INTERFACE_OVS_PORTS_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+NETWORK_INTERFACE_SLAVES_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+NETWORK_INTERFACE_VLAN_RAW_DEVICE_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+
+}
+
+#[api(
+    properties: {
+        active: {
+            default: false,
+            optional: true,
+        },
+        address: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ipv4),
+            optional: true,
+            type: String,
+        },
+        address6: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ipv6),
+            optional: true,
+            type: String,
+        },
+        autostart: {
+            default: false,
+            optional: true,
+        },
+        "bond-primary": {
+            format: &ApiStringFormat::Pattern(&NETWORK_INTERFACE_BOND_PRIMARY_RE),
+            optional: true,
+            type: String,
+        },
+        bond_mode: {
+            optional: true,
+            type: NetworkInterfaceBondMode,
+        },
+        bond_xmit_hash_policy: {
+            optional: true,
+            type: NetworkInterfaceBondXmitHashPolicy,
+        },
+        "bridge-access": {
+            optional: true,
+            type: Integer,
+        },
+        "bridge-arp-nd-suppress": {
+            default: false,
+            optional: true,
+        },
+        "bridge-learning": {
+            default: false,
+            optional: true,
+        },
+        "bridge-multicast-flood": {
+            default: false,
+            optional: true,
+        },
+        "bridge-unicast-flood": {
+            default: false,
+            optional: true,
+        },
+        bridge_ports: {
+            format: &ApiStringFormat::Pattern(&NETWORK_INTERFACE_BRIDGE_PORTS_RE),
+            optional: true,
+            type: String,
+        },
+        bridge_vids: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_vlan_id_or_range),
+            optional: true,
+            type: String,
+        },
+        bridge_vlan_aware: {
+            default: false,
+            optional: true,
+        },
+        cidr: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidrv4),
+            optional: true,
+            type: String,
+        },
+        cidr6: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidrv6),
+            optional: true,
+            type: String,
+        },
+        comments: {
+            optional: true,
+            type: String,
+        },
+        comments6: {
+            optional: true,
+            type: String,
+        },
+        exists: {
+            default: false,
+            optional: true,
+        },
+        families: {
+            items: {
+                type: NetworkInterfaceFamilies,
+            },
+            optional: true,
+            type: Array,
+        },
+        gateway: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ipv4),
+            optional: true,
+            type: String,
+        },
+        gateway6: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ipv6),
+            optional: true,
+            type: String,
+        },
+        iface: {
+            format: &ApiStringFormat::Pattern(&NETWORK_INTERFACE_IFACE_RE),
+            max_length: 20,
+            min_length: 2,
+            type: String,
+        },
+        "link-type": {
+            optional: true,
+            type: String,
+        },
+        method: {
+            optional: true,
+            type: NetworkInterfaceMethod,
+        },
+        method6: {
+            optional: true,
+            type: NetworkInterfaceMethod,
+        },
+        mtu: {
+            maximum: 65520,
+            minimum: 1280,
+            optional: true,
+            type: Integer,
+        },
+        netmask: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ipv4_mask),
+            optional: true,
+            type: String,
+        },
+        netmask6: {
+            maximum: 128,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        options: {
+            items: {
+                description: "An interface property.",
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        options6: {
+            items: {
+                description: "An interface property.",
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        ovs_bonds: {
+            format: &ApiStringFormat::Pattern(&NETWORK_INTERFACE_OVS_BONDS_RE),
+            optional: true,
+            type: String,
+        },
+        ovs_bridge: {
+            format: &ApiStringFormat::Pattern(&NETWORK_INTERFACE_OVS_BRIDGE_RE),
+            optional: true,
+            type: String,
+        },
+        ovs_options: {
+            max_length: 1024,
+            optional: true,
+            type: String,
+        },
+        ovs_ports: {
+            format: &ApiStringFormat::Pattern(&NETWORK_INTERFACE_OVS_PORTS_RE),
+            optional: true,
+            type: String,
+        },
+        ovs_tag: {
+            maximum: 4094,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        priority: {
+            optional: true,
+            type: Integer,
+        },
+        slaves: {
+            format: &ApiStringFormat::Pattern(&NETWORK_INTERFACE_SLAVES_RE),
+            optional: true,
+            type: String,
+        },
+        type: {
+            type: NetworkInterfaceType,
+        },
+        "uplink-id": {
+            optional: true,
+            type: String,
+        },
+        "vlan-id": {
+            maximum: 4094,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        "vlan-protocol": {
+            optional: true,
+            type: NetworkInterfaceVlanProtocol,
+        },
+        "vlan-raw-device": {
+            format: &ApiStringFormat::Pattern(&NETWORK_INTERFACE_VLAN_RAW_DEVICE_RE),
+            optional: true,
+            type: String,
+        },
+        "vxlan-id": {
+            optional: true,
+            type: Integer,
+        },
+        "vxlan-local-tunnelip": {
+            optional: true,
+            type: String,
+        },
+        "vxlan-physdev": {
+            optional: true,
+            type: String,
+        },
+        "vxlan-svcnodeip": {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct NetworkInterface {
+    /// Set to true if the interface is active.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active: Option<bool>,
+
+    /// IP address.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub address: Option<String>,
+
+    /// IP address.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub address6: Option<String>,
+
+    /// Automatically start interface on boot.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub autostart: Option<bool>,
+
+    /// Specify the primary interface for active-backup bond.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bond-primary")]
+    pub bond_primary: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bond_mode: Option<NetworkInterfaceBondMode>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bond_xmit_hash_policy: Option<NetworkInterfaceBondXmitHashPolicy>,
+
+    /// The bridge port access VLAN.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bridge-access")]
+    pub bridge_access: Option<i64>,
+
+    /// Bridge port ARP/ND suppress flag.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bridge-arp-nd-suppress")]
+    pub bridge_arp_nd_suppress: Option<bool>,
+
+    /// Bridge port learning flag.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bridge-learning")]
+    pub bridge_learning: Option<bool>,
+
+    /// Bridge port multicast flood flag.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bridge-multicast-flood")]
+    pub bridge_multicast_flood: Option<bool>,
+
+    /// Bridge port unicast flood flag.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bridge-unicast-flood")]
+    pub bridge_unicast_flood: Option<bool>,
+
+    /// Specify the interfaces you want to add to your bridge.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge_ports: Option<String>,
+
+    /// Specify the allowed VLANs. For example: '2 4 100-200'. Only used if the
+    /// bridge is VLAN aware.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge_vids: Option<String>,
+
+    /// Enable bridge vlan support.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge_vlan_aware: Option<bool>,
+
+    /// IPv4 CIDR.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cidr: Option<String>,
+
+    /// IPv6 CIDR.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cidr6: Option<String>,
+
+    /// Comments
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comments: Option<String>,
+
+    /// Comments
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comments6: Option<String>,
+
+    /// Set to true if the interface physically exists.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exists: Option<bool>,
+
+    /// The network families.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub families: Option<Vec<NetworkInterfaceFamilies>>,
+
+    /// Default gateway address.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gateway: Option<String>,
+
+    /// Default ipv6 gateway address.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gateway6: Option<String>,
+
+    /// Network interface name.
+    pub iface: String,
+
+    /// The link type.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "link-type")]
+    pub link_type: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub method: Option<NetworkInterfaceMethod>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub method6: Option<NetworkInterfaceMethod>,
+
+    /// MTU.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mtu: Option<u16>,
+
+    /// Network mask.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netmask: Option<String>,
+
+    /// Network mask.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub netmask6: Option<u8>,
+
+    /// A list of additional interface options for IPv4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub options: Option<Vec<String>>,
+
+    /// A list of additional interface options for IPv6.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub options6: Option<Vec<String>>,
+
+    /// Specify the interfaces used by the bonding device.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ovs_bonds: Option<String>,
+
+    /// The OVS bridge associated with a OVS port. This is required when you
+    /// create an OVS port.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ovs_bridge: Option<String>,
+
+    /// OVS interface options.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ovs_options: Option<String>,
+
+    /// Specify the interfaces you want to add to your bridge.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ovs_ports: Option<String>,
+
+    /// Specify a VLan tag (used by OVSPort, OVSIntPort, OVSBond)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ovs_tag: Option<u16>,
+
+    /// The order of the interface.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub priority: Option<i64>,
+
+    /// Specify the interfaces used by the bonding device.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub slaves: Option<String>,
+
+    #[serde(rename = "type")]
+    pub ty: NetworkInterfaceType,
+
+    /// The uplink ID.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "uplink-id")]
+    pub uplink_id: Option<String>,
+
+    /// vlan-id for a custom named vlan interface (ifupdown2 only).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vlan-id")]
+    pub vlan_id: Option<u16>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vlan-protocol")]
+    pub vlan_protocol: Option<NetworkInterfaceVlanProtocol>,
+
+    /// Specify the raw interface for the vlan interface.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vlan-raw-device")]
+    pub vlan_raw_device: Option<String>,
+
+    /// The VXLAN ID.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vxlan-id")]
+    pub vxlan_id: Option<i64>,
+
+    /// The VXLAN local tunnel IP.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vxlan-local-tunnelip")]
+    pub vxlan_local_tunnelip: Option<String>,
+
+    /// The physical device for the VXLAN tunnel.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vxlan-physdev")]
+    pub vxlan_physdev: Option<String>,
+
+    /// The VXLAN SVC node IP.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vxlan-svcnodeip")]
+    pub vxlan_svcnodeip: Option<String>,
+}
+
+#[api]
+/// Bonding mode.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NetworkInterfaceBondMode {
+    #[serde(rename = "balance-rr")]
+    /// balance-rr.
+    BalanceRr,
+    #[serde(rename = "active-backup")]
+    /// active-backup.
+    ActiveBackup,
+    #[serde(rename = "balance-xor")]
+    /// balance-xor.
+    BalanceXor,
+    #[serde(rename = "broadcast")]
+    /// broadcast.
+    Broadcast,
+    #[serde(rename = "802.3ad")]
+    /// 802.3ad.
+    Ieee802_3ad,
+    #[serde(rename = "balance-tlb")]
+    /// balance-tlb.
+    BalanceTlb,
+    #[serde(rename = "balance-alb")]
+    /// balance-alb.
+    BalanceAlb,
+    #[serde(rename = "balance-slb")]
+    /// balance-slb.
+    BalanceSlb,
+    #[serde(rename = "lacp-balance-slb")]
+    /// lacp-balance-slb.
+    LacpBalanceSlb,
+    #[serde(rename = "lacp-balance-tcp")]
+    /// lacp-balance-tcp.
+    LacpBalanceTcp,
+}
+serde_plain::derive_display_from_serialize!(NetworkInterfaceBondMode);
+serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceBondMode);
+
+#[api]
+/// Selects the transmit hash policy to use for slave selection in balance-xor
+/// and 802.3ad modes.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NetworkInterfaceBondXmitHashPolicy {
+    #[serde(rename = "layer2")]
+    /// layer2.
+    Layer2,
+    #[serde(rename = "layer2+3")]
+    /// layer2+3.
+    Layer2_3,
+    #[serde(rename = "layer3+4")]
+    /// layer3+4.
+    Layer3_4,
+}
+serde_plain::derive_display_from_serialize!(NetworkInterfaceBondXmitHashPolicy);
+serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceBondXmitHashPolicy);
+
+#[api]
+/// A network family.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NetworkInterfaceFamilies {
+    #[serde(rename = "inet")]
+    /// inet.
+    Inet,
+    #[serde(rename = "inet6")]
+    /// inet6.
+    Inet6,
+}
+serde_plain::derive_display_from_serialize!(NetworkInterfaceFamilies);
+serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceFamilies);
+
+#[api]
+/// The network configuration method for IPv4.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NetworkInterfaceMethod {
+    #[serde(rename = "manual")]
+    /// manual.
+    Manual,
+    #[serde(rename = "static")]
+    /// static.
+    Static,
+    #[serde(rename = "auto")]
+    /// auto.
+    Auto,
+}
+serde_plain::derive_display_from_serialize!(NetworkInterfaceMethod);
+serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceMethod);
+
+#[api]
+/// Network interface type
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NetworkInterfaceType {
+    #[serde(rename = "bridge")]
+    /// bridge.
+    Bridge,
+    #[serde(rename = "bond")]
+    /// bond.
+    Bond,
+    #[serde(rename = "eth")]
+    /// eth.
+    Eth,
+    #[serde(rename = "alias")]
+    /// alias.
+    Alias,
+    #[serde(rename = "vlan")]
+    /// vlan.
+    Vlan,
+    #[serde(rename = "OVSBridge")]
+    /// OVSBridge.
+    Ovsbridge,
+    #[serde(rename = "OVSBond")]
+    /// OVSBond.
+    Ovsbond,
+    #[serde(rename = "OVSPort")]
+    /// OVSPort.
+    Ovsport,
+    #[serde(rename = "OVSIntPort")]
+    /// OVSIntPort.
+    OvsintPort,
+    #[serde(rename = "vnet")]
+    /// vnet.
+    Vnet,
+    #[serde(rename = "unknown")]
+    /// unknown.
+    Unknown,
+}
+serde_plain::derive_display_from_serialize!(NetworkInterfaceType);
+serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceType);
+
+#[api]
+/// The VLAN protocol.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NetworkInterfaceVlanProtocol {
+    #[serde(rename = "802.1ad")]
+    /// 802.1ad.
+    Ieee802_1ad,
+    #[serde(rename = "802.1q")]
+    /// 802.1q.
+    Ieee802_1q,
+}
+serde_plain::derive_display_from_serialize!(NetworkInterfaceVlanProtocol);
+serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceVlanProtocol);
 
 #[api(
     properties: {

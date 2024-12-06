@@ -244,7 +244,6 @@
 /// - /nodes/{node}/lxc/{vmid}/vncwebsocket
 /// - /nodes/{node}/migrateall
 /// - /nodes/{node}/netstat
-/// - /nodes/{node}/network
 /// - /nodes/{node}/network/{iface}
 /// - /nodes/{node}/qemu/{vmid}
 /// - /nodes/{node}/qemu/{vmid}/agent
@@ -446,6 +445,15 @@ pub trait PveClient {
     /// LXC container index (per node).
     async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
         Err(Error::Other("list_lxc not implemented"))
+    }
+
+    /// List available networks
+    async fn list_networks(
+        &self,
+        node: &str,
+        ty: Option<ListNetworksType>,
+    ) -> Result<Vec<NetworkInterface>, Error> {
+        Err(Error::Other("list_networks not implemented"))
     }
 
     /// Cluster node index.
@@ -719,6 +727,18 @@ where
     /// LXC container index (per node).
     async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
         let url = format!("/api2/extjs/nodes/{node}/lxc");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// List available networks
+    async fn list_networks(
+        &self,
+        node: &str,
+        ty: Option<ListNetworksType>,
+    ) -> Result<Vec<NetworkInterface>, Error> {
+        let (mut query, mut sep) = (String::new(), '?');
+        add_query_arg(&mut query, &mut sep, "type", &ty);
+        let url = format!("/api2/extjs/nodes/{node}/network{query}");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 

@@ -25,6 +25,8 @@ pub FE80_RE = r##"^(?i)fe80:"##;
 
 pub IFACE_RE = r##"^(?i)[a-z][a-z0-9_]{1,20}([:\.]\d+)?$"##;
 
+pub VLAN_ID_OR_RANGE = r##"^(\d+)(?:-(\d+))?$"##;
+
 }
 
 pub fn verify_volume_id(s: &str) -> Result<(), Error> {
@@ -132,6 +134,19 @@ pub fn verify_ipv6_config(s: &str) -> Result<(), Error> {
     verify_cidrv6(s)
 }
 
+pub fn verify_ipv4_mask(s: &str) -> Result<(), Error> {
+    match s {
+        "0.0.0.0" | "128.0.0.0" | "192.0.0.0" | "224.0.0.0" | "240.0.0.0" | "248.0.0.0"
+        | "252.0.0.0" | "254.0.0.0" | "255.0.0.0" | "255.128.0.0" | "255.192.0.0"
+        | "255.224.0.0" | "255.240.0.0" | "255.248.0.0" | "255.252.0.0" | "255.254.0.0"
+        | "255.255.0.0" | "255.255.128.0" | "255.255.192.0" | "255.255.224.0" | "255.255.240.0"
+        | "255.255.248.0" | "255.255.252.0" | "255.255.254.0" | "255.255.255.0"
+        | "255.255.255.128" | "255.255.255.192" | "255.255.255.224" | "255.255.255.240"
+        | "255.255.255.248" | "255.255.255.252" | "255.255.255.254" | "255.255.255.255" => Ok(()),
+        _ => bail!("not a valid ipv4 netmask"),
+    }
+}
+
 pub fn verify_dns_name(s: &str) -> Result<(), Error> {
     if DNS_RE.is_match(s) {
         Ok(())
@@ -177,5 +192,37 @@ pub fn verify_pve_lxc_dev_string(s: &str) -> Result<(), Error> {
     if !s.starts_with("/dev") || s.ends_with("/..") || s.contains("/..") {
         bail!("not a valid device string");
     }
+    Ok(())
+}
+
+pub fn verify_vlan_id_or_range(s: &str) -> Result<(), Error> {
+    let check_vid = |vid: u16| -> Result<(), Error> {
+        if vid > 4094 || vid < 2 {
+            bail!("invalid VLAN tag '{vid}'");
+        } else {
+            Ok(())
+        }
+    };
+
+    let captures = VLAN_ID_OR_RANGE
+        .captures(s)
+        .ok_or_else(|| format_err!("invalid VLAN configuration '{s}"))?;
+
+    match (captures.get(1), captures.get(2)) {
+        (Some(start), Some(end)) => {
+            let start = start.as_str().parse()?;
+            let end = end.as_str().parse()?;
+            check_vid(start)?;
+            check_vid(end)?;
+            if start >= end {
+                bail!("VLAN range must go from lower to higher tag: '{s}");
+            }
+        }
+        (Some(vid), None) => {
+            check_vid(vid.as_str().parse()?)?;
+        }
+        (None, _) => bail!("invalid VLAN configuration '{s}"),
+    }
+
     Ok(())
 }
