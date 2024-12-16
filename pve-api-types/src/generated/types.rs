@@ -4022,6 +4022,235 @@ serde_plain::derive_display_from_serialize!(NetworkInterfaceVlanProtocol);
 serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceVlanProtocol);
 
 #[api(
+    additional_properties: "additional_properties",
+    properties: {
+        "boot-info": {
+            type: NodeStatusBootInfo,
+        },
+        cpuinfo: {
+            type: NodeStatusCpuinfo,
+        },
+        "current-kernel": {
+            type: NodeStatusCurrentKernel,
+        },
+        loadavg: {
+            items: {
+                description: "The value of the load.",
+                type: String,
+            },
+            type: Array,
+        },
+        memory: {
+            type: NodeStatusMemory,
+        },
+        pveversion: {
+            type: String,
+        },
+        rootfs: {
+            type: NodeStatusRootfs,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeStatus {
+    /// Meta-information about the boot mode.
+    #[serde(rename = "boot-info")]
+    pub boot_info: NodeStatusBootInfo,
+
+    /// The current cpu usage.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    pub cpu: f64,
+
+    pub cpuinfo: NodeStatusCpuinfo,
+
+    /// Meta-information about the currently booted kernel of this node.
+    #[serde(rename = "current-kernel")]
+    pub current_kernel: NodeStatusCurrentKernel,
+
+    /// An array of load avg for 1, 5 and 15 minutes respectively.
+    pub loadavg: Vec<String>,
+
+    pub memory: NodeStatusMemory,
+
+    /// The PVE version string.
+    pub pveversion: String,
+
+    pub rootfs: NodeStatusRootfs,
+
+    #[serde(flatten)]
+    pub additional_properties: HashMap<String, Value>,
+}
+
+#[api(
+    properties: {
+        mode: {
+            type: NodeStatusBootInfoMode,
+        },
+        secureboot: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Meta-information about the boot mode.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeStatusBootInfo {
+    pub mode: NodeStatusBootInfoMode,
+
+    /// System is booted in secure mode, only applicable for the "efi" mode.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub secureboot: Option<bool>,
+}
+
+#[api]
+/// Through which firmware the system got booted.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NodeStatusBootInfoMode {
+    #[serde(rename = "efi")]
+    /// efi.
+    Efi,
+    #[serde(rename = "legacy-bios")]
+    /// legacy-bios.
+    LegacyBios,
+}
+serde_plain::derive_display_from_serialize!(NodeStatusBootInfoMode);
+serde_plain::derive_fromstr_from_deserialize!(NodeStatusBootInfoMode);
+
+#[api(
+    properties: {
+        cores: {
+            type: Integer,
+        },
+        cpus: {
+            type: Integer,
+        },
+        model: {
+            type: String,
+        },
+        sockets: {
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeStatusCpuinfo {
+    /// The number of physical cores of the CPU.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub cores: i64,
+
+    /// The number of logical threads of the CPU.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub cpus: i64,
+
+    /// The CPU model
+    pub model: String,
+
+    /// The number of logical threads of the CPU.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub sockets: i64,
+}
+
+#[api(
+    properties: {
+        machine: {
+            type: String,
+        },
+        release: {
+            type: String,
+        },
+        sysname: {
+            type: String,
+        },
+        version: {
+            type: String,
+        },
+    },
+)]
+/// Meta-information about the currently booted kernel of this node.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeStatusCurrentKernel {
+    /// Hardware (architecture) type
+    pub machine: String,
+
+    /// OS kernel release (e.g., "6.8.0")
+    pub release: String,
+
+    /// OS kernel name (e.g., "Linux")
+    pub sysname: String,
+
+    /// OS kernel version with build info
+    pub version: String,
+}
+
+#[api(
+    properties: {
+        free: {
+            type: Integer,
+        },
+        total: {
+            type: Integer,
+        },
+        used: {
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeStatusMemory {
+    /// The free memory in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub free: i64,
+
+    /// The total memory in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub total: i64,
+
+    /// The used memory in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub used: i64,
+}
+
+#[api(
+    properties: {
+        avail: {
+            type: Integer,
+        },
+        free: {
+            type: Integer,
+        },
+        total: {
+            type: Integer,
+        },
+        used: {
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeStatusRootfs {
+    /// The available bytes in the root filesystem.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub avail: i64,
+
+    /// The free bytes on the root filesystem.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub free: i64,
+
+    /// The total size of the root filesystem in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub total: i64,
+
+    /// The used bytes in the root filesystem.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub used: i64,
+}
+
+#[api(
     properties: {
         checktime: {
             optional: true,

@@ -341,7 +341,6 @@
 /// - /nodes/{node}/services/{service}/stop
 /// - /nodes/{node}/spiceshell
 /// - /nodes/{node}/startall
-/// - /nodes/{node}/status
 /// - /nodes/{node}/stopall
 /// - /nodes/{node}/storage/{storage}
 /// - /nodes/{node}/storage/{storage}/content
@@ -510,6 +509,11 @@ pub trait PveClient {
         params: MigrateQemu,
     ) -> Result<PveUpid, Error> {
         Err(Error::Other("migrate_qemu not implemented"))
+    }
+
+    /// Read node status
+    async fn node_status(&self, node: &str) -> Result<NodeStatus, Error> {
+        Err(Error::Other("node_status not implemented"))
     }
 
     /// Get the virtual machine configuration with pending configuration changes
@@ -837,6 +841,12 @@ where
     ) -> Result<PveUpid, Error> {
         let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate");
         Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+    }
+
+    /// Read node status
+    async fn node_status(&self, node: &str) -> Result<NodeStatus, Error> {
+        let url = format!("/api2/extjs/nodes/{node}/status");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Get the virtual machine configuration with pending configuration changes

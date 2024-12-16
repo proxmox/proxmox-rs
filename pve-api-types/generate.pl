@@ -258,6 +258,8 @@ Schema2Rust::derive('NetworkInterface' => 'Clone', 'PartialEq');
 api(GET => '/nodes/{node}/storage', 'list_storages', 'return-name' => 'StorageInfo');
 Schema2Rust::derive('StorageInfo' => 'Clone', 'PartialEq');
 
+api(GET => '/nodes/{node}/status', 'node_status', 'return-name' => 'NodeStatus');
+
 Schema2Rust::register_api_override('ClusterMetrics', '/properties/data/items', { type => "ClusterMetricsData"});
 api(GET => '/cluster/metrics/export', 'cluster_metrics_export', 'return-name' => 'ClusterMetrics');
 
