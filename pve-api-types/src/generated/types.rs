@@ -2983,6 +2983,10 @@ pub struct LxcConfigUnused {
             optional: true,
             type: Integer,
         },
+        mem: {
+            optional: true,
+            type: Integer,
+        },
         name: {
             optional: true,
             type: String,
@@ -3020,6 +3024,11 @@ pub struct LxcConfigUnused {
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct LxcEntry {
+    /// Current CPU usage.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpu: Option<f64>,
+
     /// Maximum usable CPUs.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3062,6 +3071,11 @@ pub struct LxcEntry {
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxswap: Option<i64>,
+
+    /// Currently used memory in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mem: Option<i64>,
 
     /// Container name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3136,6 +3150,10 @@ pub struct LxcEntry {
             optional: true,
             type: Integer,
         },
+        mem: {
+            optional: true,
+            type: Integer,
+        },
         name: {
             optional: true,
             type: String,
@@ -3173,6 +3191,11 @@ pub struct LxcEntry {
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct LxcStatus {
+    /// Current CPU usage.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpu: Option<f64>,
+
     /// Maximum usable CPUs.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3218,6 +3241,11 @@ pub struct LxcStatus {
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxswap: Option<i64>,
+
+    /// Currently used memory in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mem: Option<i64>,
 
     /// Container name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9264,6 +9292,10 @@ pub struct QemuConfigVirtio {
             optional: true,
             type: Integer,
         },
+        mem: {
+            optional: true,
+            type: Integer,
+        },
         name: {
             optional: true,
             type: String,
@@ -9329,6 +9361,11 @@ pub struct QemuStatus {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clipboard: Option<QemuConfigVgaClipboard>,
 
+    /// Current CPU usage.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpu: Option<f64>,
+
     /// Maximum usable CPUs.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9364,6 +9401,11 @@ pub struct QemuStatus {
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
+
+    /// Current memroy usage in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mem: Option<i64>,
 
     /// VM (host)name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -10294,6 +10336,10 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
             optional: true,
             type: Integer,
         },
+        mem: {
+            optional: true,
+            type: Integer,
+        },
         name: {
             optional: true,
             type: String,
@@ -10347,6 +10393,11 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct VmEntry {
+    /// Current CPU usage.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpu: Option<f64>,
+
     /// Maximum usable CPUs.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -10379,6 +10430,11 @@ pub struct VmEntry {
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
+
+    /// Current memroy usage in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mem: Option<i64>,
 
     /// VM (host)name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
