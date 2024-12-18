@@ -9259,6 +9259,128 @@ pub struct QemuConfigVirtio {
 
 #[api(
     properties: {
+        allowed_nodes: {
+            items: {
+                description: "An allowed node",
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        local_disks: {
+            items: {
+                type: QemuMigratePreconditionsLocalDisks,
+            },
+            type: Array,
+        },
+        local_resources: {
+            items: {
+                description: "A local resource",
+                type: String,
+            },
+            type: Array,
+        },
+        "mapped-resources": {
+            items: {
+                description: "A mapped resource",
+                type: String,
+            },
+            type: Array,
+        },
+        not_allowed_nodes: {
+            optional: true,
+            type: QemuMigratePreconditionsNotAllowedNodes,
+        },
+        running: {
+            default: false,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct QemuMigratePreconditions {
+    /// List nodes allowed for offline migration, only passed if VM is offline
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub allowed_nodes: Option<Vec<String>>,
+
+    /// List local disks including CD-Rom, unused and not referenced disks
+    pub local_disks: Vec<QemuMigratePreconditionsLocalDisks>,
+
+    /// List local resources e.g. pci, usb
+    pub local_resources: Vec<String>,
+
+    /// List of mapped resources e.g. pci, usb
+    #[serde(rename = "mapped-resources")]
+    pub mapped_resources: Vec<String>,
+
+    /// List not allowed nodes with additional information, only passed if VM is
+    /// offline
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub not_allowed_nodes: Option<QemuMigratePreconditionsNotAllowedNodes>,
+
+    /// Determines if the VM is running.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    pub running: bool,
+}
+
+#[api(
+    properties: {
+        cdrom: {
+            default: false,
+        },
+        is_unused: {
+            default: false,
+        },
+        size: {
+            type: Integer,
+        },
+        volid: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct QemuMigratePreconditionsLocalDisks {
+    /// True if the disk is a cdrom.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    pub cdrom: bool,
+
+    /// True if the disk is unused.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    pub is_unused: bool,
+
+    /// The size of the disk in bytes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    pub size: i64,
+
+    /// The volid of the disk.
+    pub volid: String,
+}
+
+#[api(
+    properties: {
+        unavailable_storages: {
+            items: {
+                description: "A storage",
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+    },
+)]
+/// List not allowed nodes with additional information, only passed if VM is
+/// offline
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct QemuMigratePreconditionsNotAllowedNodes {
+    /// A list of not available storages.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unavailable_storages: Option<Vec<String>>,
+}
+
+#[api(
+    properties: {
         agent: {
             default: false,
             optional: true,

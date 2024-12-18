@@ -534,6 +534,16 @@ pub trait PveClient {
         Err(Error::Other("qemu_get_status not implemented"))
     }
 
+    /// Get preconditions for migration.
+    async fn qemu_migrate_preconditions(
+        &self,
+        node: &str,
+        vmid: u32,
+        target: Option<String>,
+    ) -> Result<QemuMigratePreconditions, Error> {
+        Err(Error::Other("qemu_migrate_preconditions not implemented"))
+    }
+
     /// Migrate the container to another cluster. Creates a new migration task.
     /// EXPERIMENTAL feature!
     async fn remote_migrate_lxc(
@@ -869,6 +879,19 @@ where
     /// Get virtual machine status.
     async fn qemu_get_status(&self, node: &str, vmid: u32) -> Result<QemuStatus, Error> {
         let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/current");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// Get preconditions for migration.
+    async fn qemu_migrate_preconditions(
+        &self,
+        node: &str,
+        vmid: u32,
+        target: Option<String>,
+    ) -> Result<QemuMigratePreconditions, Error> {
+        let (mut query, mut sep) = (String::new(), '?');
+        add_query_arg(&mut query, &mut sep, "target", &target);
+        let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate{query}");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 

@@ -223,6 +223,11 @@ api(GET => '/nodes/{node}/qemu/{vmid}/status/current', 'qemu_get_status', 'retur
 api(POST => '/nodes/{node}/qemu/{vmid}/status/start',    'start_qemu_async',    'output-type' => 'PveUpid', 'param-name' => 'StartQemu');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/stop',     'stop_qemu_async',     'output-type' => 'PveUpid', 'param-name' => 'StopQemu');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/shutdown', 'shutdown_qemu_async', 'output-type' => 'PveUpid', 'param-name' => 'ShutdownQemu');
+api(GET => '/nodes/{node}/qemu/{vmid}/migrate',           'qemu_migrate_preconditions', 'return-name' => 'QemuMigratePreconditions');
+Schema2Rust::derive('QemuMigratePreconditionsNotAllowedNodes' => 'Clone', 'PartialEq');
+Schema2Rust::derive('QemuMigratePreconditionsLocalDisks' => 'Clone', 'PartialEq');
+Schema2Rust::derive('QemuMigratePreconditions' => 'Clone', 'PartialEq');
+
 Schema2Rust::derive('StartQemu' => 'Default');
 Schema2Rust::derive('StopQemu' => 'Default');
 Schema2Rust::derive('ShutdownQemu' => 'Default');
