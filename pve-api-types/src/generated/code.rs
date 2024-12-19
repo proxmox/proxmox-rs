@@ -4,7 +4,6 @@
 /// ```text
 /// - /access
 /// - /access/acl
-/// - /access/domains
 /// - /access/domains/{realm}
 /// - /access/domains/{realm}/sync
 /// - /access/groups
@@ -438,6 +437,11 @@ pub trait PveClient {
         Err(Error::Other("get_task_status not implemented"))
     }
 
+    /// Authentication domain index.
+    async fn list_domains(&self) -> Result<Vec<ListRealm>, Error> {
+        Err(Error::Other("list_domains not implemented"))
+    }
+
     /// LXC container index (per node).
     async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
         Err(Error::Other("list_lxc not implemented"))
@@ -755,6 +759,12 @@ where
     /// Read task status.
     async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
         let url = format!("/api2/extjs/nodes/{node}/tasks/{upid}/status");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// Authentication domain index.
+    async fn list_domains(&self) -> Result<Vec<ListRealm>, Error> {
+        let url = format!("/api2/extjs/access/domains");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 

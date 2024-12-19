@@ -969,6 +969,57 @@ pub enum ListNetworksType {
 serde_plain::derive_display_from_serialize!(ListNetworksType);
 serde_plain::derive_fromstr_from_deserialize!(ListNetworksType);
 
+#[api(
+    properties: {
+        comment: {
+            optional: true,
+            type: String,
+        },
+        realm: {
+            type: String,
+            description: "FIXME: Missing description in PVE.",
+        },
+        tfa: {
+            optional: true,
+            type: ListRealmTfa,
+        },
+        type: {
+            type: String,
+            description: "FIXME: Missing description in PVE.",
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct ListRealm {
+    /// A comment. The GUI use this text when you select a domain (Realm) on the
+    /// login window.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    pub realm: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tfa: Option<ListRealmTfa>,
+
+    #[serde(rename = "type")]
+    pub ty: String,
+}
+
+#[api]
+/// Two-factor authentication provider.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ListRealmTfa {
+    #[serde(rename = "yubico")]
+    /// yubico.
+    Yubico,
+    #[serde(rename = "oath")]
+    /// oath.
+    Oath,
+}
+serde_plain::derive_display_from_serialize!(ListRealmTfa);
+serde_plain::derive_fromstr_from_deserialize!(ListRealmTfa);
+
 const_regex! {
 
 LIST_TASKS_STATUSFILTER_RE = r##"^(?i:ok|error|warning|unknown)$"##;

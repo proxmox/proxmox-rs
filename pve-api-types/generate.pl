@@ -280,7 +280,12 @@ Schema2Rust::register_api_extensions('ClusterJoinInfo', {
 api(GET => '/cluster/config/join', 'cluster_config_join', 'return-name' => 'ClusterJoinInfo');
 
 # api(GET => '/storage', 'list_storages', 'return-name' => 'StorageList');
-# api(GET => '/access/domains', 'list_domains', 'return-name' => 'ListRealm');
+Schema2Rust::register_api_extensions('ListRealm', {
+    '/properties/realm' => { description => sq("FIXME: Missing description in PVE.") },
+    '/properties/type' => { description => sq("FIXME: Missing description in PVE.") },
+});
+api(GET => '/access/domains', 'list_domains', 'return-name' => 'ListRealm');
+Schema2Rust::derive('ListRealm' => 'Clone', 'PartialEq');
 # api(GET => '/access/groups', 'list_groups', 'return-name' => 'ListGroups');
 # api(GET => '/access/groups/{groupid}', 'get_group', 'return-name' => 'Group');
 # api(GET => '/access/users', 'list_users', 'return-name' => 'ListUsers');
