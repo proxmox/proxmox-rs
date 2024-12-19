@@ -160,7 +160,10 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                     ],
                     _ => vec![format!("http://download.proxmox.com/debian/{}", product)],
                 },
-                format!("{}test", product),
+                match product {
+                    "pdm" => format!("{}-test", product),
+                    _ => format!("{}test", product),
+                },
             ),
             APTRepositoryHandle::CephQuincyEnterprise => (
                 APTRepositoryPackageType::Deb,
