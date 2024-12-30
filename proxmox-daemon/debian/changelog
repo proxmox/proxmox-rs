@@ -1,3 +1,12 @@
+rust-proxmox-daemon (0.1.2-1) bookworm; urgency=medium
+
+  * try to remove existing unix socket in bind directly, as there we can tell
+    for sure that the old one isn't required anymore.
+
+  * output debug log when restoring FD passed through environment.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 30 Dec 2024 15:33:03 +0100
+
 rust-proxmox-daemon (0.1.1-1) bookworm; urgency=medium
 
   * remove unused dependency on once_cell

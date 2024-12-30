@@ -3,7 +3,7 @@ name = "proxmox-daemon"
 description = """
 Daemon state handling (catching reload signals, registering commands with the command socket, ...)
 """
-version = "0.1.1"
+version = "0.1.2"
 
 authors.workspace = true
 edition.workspace = true

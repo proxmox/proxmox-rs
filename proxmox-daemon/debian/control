@@ -11,7 +11,7 @@ Build-Depends: debhelper-compat (= 13),
  librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
  librust-log-0.4+default-dev (>= 0.4.17-~~) <!nocheck>,
  librust-nix-0.26+default-dev (>= 0.26.1-~~) <!nocheck>,
- librust-proxmox-sys-0.6+default-dev <!nocheck>,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~) <!nocheck>,
  librust-proxmox-systemd-0.1+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
@@ -41,7 +41,7 @@ Depends:
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
  librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-nix-0.26+default-dev (>= 0.26.1-~~),
- librust-proxmox-sys-0.6+default-dev,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~),
  librust-proxmox-systemd-0.1+default-dev,
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev,
@@ -57,7 +57,7 @@ Provides:
  librust-proxmox-daemon-0+default-dev (= ${binary:Version}),
  librust-proxmox-daemon-0.1-dev (= ${binary:Version}),
  librust-proxmox-daemon-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-daemon-0.1.1-dev (= ${binary:Version}),
- librust-proxmox-daemon-0.1.1+default-dev (= ${binary:Version})
+ librust-proxmox-daemon-0.1.2-dev (= ${binary:Version}),
+ librust-proxmox-daemon-0.1.2+default-dev (= ${binary:Version})
 Description: Daemon state handling (catching reload signals, registering commands with the command socket, ...) - Rust source code
  Source code for Debianized Rust crate "proxmox-daemon"
