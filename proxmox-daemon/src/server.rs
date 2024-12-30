@@ -303,6 +303,11 @@ impl Listenable for tokio::net::UnixListener {
             let addr = addr.as_pathname().ok_or_else(|| {
                 io::Error::new(io::ErrorKind::Other, "missing path for unix socket")
             })?;
+            match std::fs::remove_file(addr) {
+                Ok(()) => (),
+                Err(err) if err.kind() == io::ErrorKind::NotFound => (),
+                Err(err) => Err(err)?,
+            }
             Self::bind(addr)
         })
     }
