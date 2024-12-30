@@ -62,7 +62,10 @@ impl Reloader {
         U: Future<Output = Result<T, Error>>,
     {
         let res = match std::env::var(name) {
-            Ok(varstr) => T::restore(&varstr)?,
+            Ok(varstr) => {
+                log::debug!("restoring socket from FD {varstr}");
+                T::restore(&varstr)?
+            }
             Err(std::env::VarError::NotPresent) => or_create().await?,
             Err(_) => bail!("variable {} has invalid value", name),
         };
