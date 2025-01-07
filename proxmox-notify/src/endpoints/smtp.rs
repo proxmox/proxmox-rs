@@ -254,6 +254,7 @@ impl Endpoint for SmtpEndpoint {
             Content::ForwardedMail { ref raw, title, .. } => {
                 use lettre::message::header::ContentTransferEncoding;
                 use lettre::message::Body;
+                use tracing::error;
 
                 let parsed_message = mail_parser::Message::parse(raw)
                     .ok_or_else(|| Error::Generic("could not parse forwarded email".to_string()))?;
