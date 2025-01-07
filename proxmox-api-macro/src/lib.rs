@@ -295,6 +295,24 @@ pub fn api(attr: TokenStream_1, item: TokenStream_1) -> TokenStream_1 {
     handle_error(item.clone(), api::api(attr.into(), item)).into()
 }
 
+/// *Experimental:* Transform a json-like schema definition into an expression yielding a `Schema`.
+///
+/// This is currently considered experimental as it should not be required for normal code.
+#[proc_macro]
+pub fn json_schema(item: TokenStream_1) -> TokenStream_1 {
+    let _error_guard = init_local_error();
+    let item: TokenStream = item.into();
+    let mut output = take_non_fatal_errors();
+    match api::json_schema(item) {
+        Ok(ts) => output.extend(ts),
+        Err(err) => match err.downcast::<syn::Error>() {
+            Ok(err) => output.extend(err.to_compile_error()),
+            Err(err) => panic!("error in json_schema!() macro: {err}"),
+        },
+    }
+    quote::quote!({ #output }).into()
+}
+
 /// This is a dummy derive macro actually handled by `#[api]`!
 #[doc(hidden)]
 #[proc_macro_derive(Updater, attributes(updater, serde))]

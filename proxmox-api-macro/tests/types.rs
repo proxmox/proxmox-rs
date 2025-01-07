@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use proxmox_api_macro::api;
+use proxmox_api_macro::{api, json_schema};
 use proxmox_schema as schema;
 use proxmox_schema::{ApiType, EnumEntry};
 
@@ -68,6 +68,24 @@ fn test_struct() {
     .schema();
 
     assert_eq!(TEST_SCHEMA, TestStruct::API_SCHEMA);
+
+    const TEST_JSON_SCHEMA: ::proxmox_schema::Schema = json_schema! {
+        description: "An example of a simple struct type.",
+        properties: {
+            another: {
+                type: String,
+                description: "An optional auto-derived value for testing:",
+                optional: true,
+            },
+            test_string: {
+                type: String,
+                description: "A test string.",
+                optional: false,
+            },
+        },
+    };
+
+    assert_eq!(TEST_SCHEMA, TEST_JSON_SCHEMA);
 }
 
 #[api]

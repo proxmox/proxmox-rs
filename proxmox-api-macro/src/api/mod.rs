@@ -761,3 +761,13 @@ pub(crate) fn api(attr: TokenStream, item: TokenStream) -> Result<TokenStream, E
         _ => bail!(item => "api macro only works on functions"),
     }
 }
+
+/// Directly convert a json schema into a `Schema` expression.
+pub(crate) fn json_schema(item: TokenStream) -> Result<TokenStream, Error> {
+    let attribs = JSONObject::parse_inner.parse2(item)?;
+    let schema: Schema = attribs.try_into()?;
+
+    let mut ts = TokenStream::new();
+    schema.to_schema(&mut ts)?;
+    Ok(ts)
+}
