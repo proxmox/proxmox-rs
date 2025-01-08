@@ -41,6 +41,7 @@ my $dedup_array_types = {};
 our $__err_path = '';
 
 my sub to_doc_comment : prototype($);
+my sub strip_doc_comment : prototype($);
 my sub handle_def : prototype($$$);
 my sub namify_type : prototype($;@);
 my sub indent_lines : prototype($$);
@@ -242,8 +243,8 @@ my sub print_struct : prototype($$$) {
         $done_array_types->{$type_name} = 1;
         my $count = $array->{array_count};
         print {$out} "generate_array_field! {\n";
-        print {$out} "    $type_name :\n";
-        print {$out} indent_lines('    ', $array->{description})."\n";
+        print {$out} "    $type_name [ $count ] :\n";
+        print {$out} "    r#\"" . strip_doc_comment($array->{description}) . "\"#,\n";
         my $api_str = '';
         if ($API) {
             open(my $api_str_fh, '>', \$api_str);
@@ -251,11 +252,8 @@ my sub print_struct : prototype($$$) {
             api_to_string(' 'x8, $api_str_fh, $array->{api}, 'array-field', $regexes_fh);
         }
         print {$out} "    $array->{'field-type'} => {\n${api_str}";
-        print {$out} "        optional: true,\n";
         print {$out} "    }\n"; # field type and its api doc
-        for my $i (0..($count - 1)) {
-            print {$out} "    $array->{name}${i},\n";
-        }
+        print {$out} "    $array->{name}\n";
         print {$out} "}\n";
     }
     print {$out} "\n\n";
@@ -761,6 +759,11 @@ sub to_doc_comment : prototype($) {
     return '' if !defined($text);
 
     return indent_lines('/// ', $text);
+}
+
+sub strip_doc_comment : prototype($) {
+    my ($text) = @_;
+    return $text =~ s@^/// @@mgr;
 }
 
 my sub type_of : prototype($) {
