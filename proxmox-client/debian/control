@@ -9,8 +9,8 @@ Build-Depends: debhelper-compat (= 13),
  librust-anyhow-1+default-dev <!nocheck>,
  librust-hex-0.4+default-dev <!nocheck>,
  librust-http-0.2+default-dev <!nocheck>,
- librust-proxmox-login-0.1+default-dev <!nocheck>,
- librust-proxmox-login-0.1+http-dev <!nocheck>,
+ librust-proxmox-login-0.1+default-dev (>= 0.1.3-~~) <!nocheck>,
+ librust-proxmox-login-0.1+http-dev (>= 0.1.3-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -29,8 +29,8 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-hex-0.4+default-dev,
  librust-http-0.2+default-dev,
- librust-proxmox-login-0.1+default-dev,
- librust-proxmox-login-0.1+http-dev,
+ librust-proxmox-login-0.1+default-dev (>= 0.1.3-~~),
+ librust-proxmox-login-0.1+http-dev (>= 0.1.3-~~),
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev
 Suggests:
@@ -42,8 +42,8 @@ Provides:
  librust-proxmox-client-0+default-dev (= ${binary:Version}),
  librust-proxmox-client-0.5-dev (= ${binary:Version}),
  librust-proxmox-client-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-client-0.5.0-dev (= ${binary:Version}),
- librust-proxmox-client-0.5.0+default-dev (= ${binary:Version})
+ librust-proxmox-client-0.5.1-dev (= ${binary:Version}),
+ librust-proxmox-client-0.5.1+default-dev (= ${binary:Version})
 Description: Base client for proxmox APIs for handling login and ticket renewal - Rust source code
  Source code for Debianized Rust crate "proxmox-client"
 
@@ -61,7 +61,7 @@ Depends:
 Provides:
  librust-proxmox-client-0+hyper-client-dev (= ${binary:Version}),
  librust-proxmox-client-0.5+hyper-client-dev (= ${binary:Version}),
- librust-proxmox-client-0.5.0+hyper-client-dev (= ${binary:Version})
+ librust-proxmox-client-0.5.1+hyper-client-dev (= ${binary:Version})
 Description: Base client for proxmox APIs for handling login and ticket renewal - feature "hyper-client"
  This metapackage enables feature "hyper-client" for the Rust proxmox-client
  crate, by pulling in any additional dependencies needed by that feature.
@@ -72,12 +72,12 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-client-dev (= ${binary:Version}),
- librust-proxmox-login-0.1+http-dev,
- librust-proxmox-login-0.1+webauthn-dev
+ librust-proxmox-login-0.1+http-dev (>= 0.1.3-~~),
+ librust-proxmox-login-0.1+webauthn-dev (>= 0.1.3-~~)
 Provides:
  librust-proxmox-client-0+webauthn-dev (= ${binary:Version}),
  librust-proxmox-client-0.5+webauthn-dev (= ${binary:Version}),
- librust-proxmox-client-0.5.0+webauthn-dev (= ${binary:Version})
+ librust-proxmox-client-0.5.1+webauthn-dev (= ${binary:Version})
 Description: Base client for proxmox APIs for handling login and ticket renewal - feature "webauthn"
  This metapackage enables feature "webauthn" for the Rust proxmox-client crate,
  by pulling in any additional dependencies needed by that feature.
