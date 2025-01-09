@@ -1,3 +1,12 @@
+rust-proxmox-api-macro (1.3.0-1) bookworm; urgency=medium
+
+  * A missing/empty description for enums is now an error.
+
+  * Add experimental json_schema!() macro to create a `Schema` in json
+    notation.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 09 Jan 2025 14:20:54 +0100
+
 rust-proxmox-api-macro (1.2.1-1) bookworm; urgency=medium
 
   * allow declaring a field meant to collect the 'additional_properties'
