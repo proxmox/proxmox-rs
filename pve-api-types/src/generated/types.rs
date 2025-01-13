@@ -405,6 +405,120 @@ pub enum ClusterNodeIndexResponseStatus {
 serde_plain::derive_display_from_serialize!(ClusterNodeIndexResponseStatus);
 serde_plain::derive_fromstr_from_deserialize!(ClusterNodeIndexResponseStatus);
 
+#[api(
+    properties: {
+        id: {
+            type: String,
+            description: "FIXME: Missing description in PVE.",
+        },
+        ip: {
+            optional: true,
+            type: String,
+        },
+        level: {
+            optional: true,
+            type: String,
+        },
+        local: {
+            default: false,
+            optional: true,
+        },
+        name: {
+            type: String,
+            description: "FIXME: Missing description in PVE.",
+        },
+        nodeid: {
+            optional: true,
+            type: Integer,
+        },
+        nodes: {
+            optional: true,
+            type: Integer,
+        },
+        online: {
+            default: false,
+            optional: true,
+        },
+        quorate: {
+            default: false,
+            optional: true,
+        },
+        type: {
+            type: ClusterNodeStatusType,
+        },
+        version: {
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterNodeStatus {
+    pub id: String,
+
+    /// [node] IP of the resolved nodename.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ip: Option<String>,
+
+    /// [node] Proxmox VE Subscription level, indicates if eligible for
+    /// enterprise support as well as access to the stable Proxmox VE Enterprise
+    /// Repository.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<String>,
+
+    /// [node] Indicates if this is the responding node.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub local: Option<bool>,
+
+    pub name: String,
+
+    /// [node] ID of the node from the corosync configuration.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodeid: Option<i64>,
+
+    /// [cluster] Nodes count, including offline nodes.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodes: Option<i64>,
+
+    /// [node] Indicates if the node is online or offline.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub online: Option<bool>,
+
+    /// [cluster] Indicates if there is a majority of nodes online to make
+    /// decisions
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quorate: Option<bool>,
+
+    #[serde(rename = "type")]
+    pub ty: ClusterNodeStatusType,
+
+    /// [cluster] Current version of the corosync configuration file.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<i64>,
+}
+
+#[api]
+/// Indicates the type, either cluster or node. The type defines the object
+/// properties e.g. quorate available for type cluster.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterNodeStatusType {
+    #[serde(rename = "cluster")]
+    /// cluster.
+    Cluster,
+    #[serde(rename = "node")]
+    /// node.
+    Node,
+}
+serde_plain::derive_display_from_serialize!(ClusterNodeStatusType);
+serde_plain::derive_fromstr_from_deserialize!(ClusterNodeStatusType);
+
 const_regex! {
 
 CLUSTER_RESOURCE_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;

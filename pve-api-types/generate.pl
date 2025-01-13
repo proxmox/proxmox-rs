@@ -279,6 +279,13 @@ Schema2Rust::register_api_extensions('ClusterJoinInfo', {
 });
 api(GET => '/cluster/config/join', 'cluster_config_join', 'return-name' => 'ClusterJoinInfo');
 
+# cluster status info
+Schema2Rust::register_api_extensions('ClusterNodeStatus', {
+    '/properties/id' => { description => sq("FIXME: Missing description in PVE.") },
+    '/properties/name' => { description => sq("FIXME: Missing description in PVE.") },
+});
+api(GET => '/cluster/status', 'cluster_status', 'return-name' => 'ClusterNodeStatus');
+
 # api(GET => '/storage', 'list_storages', 'return-name' => 'StorageList');
 Schema2Rust::register_api_extensions('ListRealm', {
     '/properties/realm' => { description => sq("FIXME: Missing description in PVE.") },

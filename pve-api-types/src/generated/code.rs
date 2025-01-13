@@ -127,7 +127,6 @@
 /// - /cluster/sdn/vnets/{vnet}/subnets/{subnet}
 /// - /cluster/sdn/zones
 /// - /cluster/sdn/zones/{zone}
-/// - /cluster/status
 /// - /cluster/tasks
 /// - /nodes/{node}
 /// - /nodes/{node}/aplinfo
@@ -393,6 +392,11 @@ pub trait PveClient {
         ty: Option<ClusterResourceKind>,
     ) -> Result<Vec<ClusterResource>, Error> {
         Err(Error::Other("cluster_resources not implemented"))
+    }
+
+    /// Get cluster status information.
+    async fn cluster_status(&self) -> Result<Vec<ClusterNodeStatus>, Error> {
+        Err(Error::Other("cluster_status not implemented"))
     }
 
     /// Generate a new API token for a specific user. NOTE: returns API token
@@ -685,6 +689,12 @@ where
         let (mut query, mut sep) = (String::new(), '?');
         add_query_arg(&mut query, &mut sep, "type", &ty);
         let url = format!("/api2/extjs/cluster/resources{query}");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
+    }
+
+    /// Get cluster status information.
+    async fn cluster_status(&self) -> Result<Vec<ClusterNodeStatus>, Error> {
+        let url = format!("/api2/extjs/cluster/status");
         Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
