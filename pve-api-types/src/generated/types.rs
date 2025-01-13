@@ -3232,6 +3232,12 @@ serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceFamilies);
 /// The network configuration method for IPv4.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum NetworkInterfaceMethod {
+    #[serde(rename = "loopback")]
+    /// loopback.
+    Loopback,
+    #[serde(rename = "dhcp")]
+    /// dhcp.
+    Dhcp,
     #[serde(rename = "manual")]
     /// manual.
     Manual,
