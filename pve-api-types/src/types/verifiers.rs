@@ -199,10 +199,10 @@ pub fn verify_pve_lxc_dev_string(s: &str) -> Result<(), Error> {
 
 pub fn verify_vlan_id_or_range(s: &str) -> Result<(), Error> {
     let check_vid = |vid: u16| -> Result<(), Error> {
-        if vid > 4094 || vid < 2 {
-            bail!("invalid VLAN tag '{vid}'");
-        } else {
+        if (2..=4094).contains(&vid) {
             Ok(())
+        } else {
+            bail!("invalid VLAN tag '{vid}'");
         }
     };
 
