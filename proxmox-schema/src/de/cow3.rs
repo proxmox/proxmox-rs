@@ -153,17 +153,15 @@ impl<'o, 'i> Cow3<'o, 'i, str> {
 }
 
 pub fn str_slice_to_range(original: &str, slice: &str) -> Option<Range<usize>> {
-    let bytes = original.as_bytes();
-
-    let orig_addr = bytes.as_ptr() as usize;
-    let slice_addr = slice.as_bytes().as_ptr() as usize;
+    let orig_addr = original.as_ptr() as usize;
+    let slice_addr = slice.as_ptr() as usize;
     let offset = slice_addr.checked_sub(orig_addr)?;
-    if offset > orig_addr + bytes.len() {
+    if offset > original.len() {
         return None;
     }
 
-    let end = offset + slice.as_bytes().len();
-    if end > orig_addr + bytes.len() {
+    let end = offset + slice.len();
+    if end > original.len() {
         return None;
     }
 
