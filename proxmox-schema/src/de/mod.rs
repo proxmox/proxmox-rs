@@ -498,6 +498,9 @@ pub struct MapAccess<'de, 'i> {
 
     /// The current next value's key, value and schema (if available).
     value: Option<(Cow<'de, str>, Cow<'de, str>, Option<&'static Schema>)>,
+
+    /// We just returned the key-value pair of a keyAlias:
+    was_alias: Option<&'static str>,
 }
 
 impl<'de, 'i> MapAccess<'de, 'i> {
@@ -508,6 +511,7 @@ impl<'de, 'i> MapAccess<'de, 'i> {
             schema,
             input_at: 0,
             value: None,
+            was_alias: None,
         }
     }
 
@@ -521,6 +525,7 @@ impl<'de, 'i> MapAccess<'de, 'i> {
             schema,
             input_at: 0,
             value: None,
+            was_alias: None,
         }
     }
 
@@ -534,7 +539,25 @@ impl<'de, 'i> MapAccess<'de, 'i> {
             schema,
             input_at: 0,
             value: None,
+            was_alias: None,
         }
+    }
+
+    /// Returns (key, value), since the key exists as a static string in the KeyAliasInfo, we
+    /// return the static one instead of the passed parameter, this simplifies later lifetime
+    /// handling.
+    fn try_key_alias_info(
+        &self,
+        key: Option<&str>,
+    ) -> Option<(&'static str, &'static str, &'static str)> {
+        let key = key?;
+        let info = self.schema.key_alias_info()?;
+
+        let Ok(index) = info.values.binary_search(&key) else {
+            return None;
+        };
+
+        Some((info.key_alias, info.values[index], info.alias))
     }
 }
 
@@ -552,10 +575,29 @@ impl<'de> de::MapAccess<'de> for MapAccess<'de, '_> {
             return Ok(None);
         }
 
-        let (key, value, rem) = match next_property(&self.input[self.input_at..]) {
+        let (mut key, value, rem) = match next_property(&self.input[self.input_at..]) {
             None => return Ok(None),
             Some(entry) => entry?,
         };
+
+        if let Some(alias) = std::mem::take(&mut self.was_alias) {
+            key = Some(alias);
+        } else if let Some((key, value, alias)) = self.try_key_alias_info(key) {
+            // If the object schema has a "KeyAliasInfo", take a detour through it: if our
+            // "key" is defined in it, we first return the key as a value for its declared
+            // `keyAlias`.
+            self.was_alias = Some(alias);
+            let schema = self
+                .schema
+                .lookup(key)
+                .ok_or(Error::msg("key alias info pointed to key a without schema"))?
+                .1;
+
+            let out =
+                seed.deserialize(de::value::BorrowedStrDeserializer::<'de, Error>::new(key))?;
+            self.value = Some((Cow::Borrowed(key), Cow::Borrowed(value), Some(schema)));
+            return Ok(Some(out));
+        }
 
         if rem.is_empty() {
             self.input_at = self.input.len();

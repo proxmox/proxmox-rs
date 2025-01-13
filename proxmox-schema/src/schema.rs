@@ -604,6 +604,31 @@ pub type SchemaPropertyEntry = (&'static str, bool, &'static Schema);
 /// This is a workaround unless RUST can const_fn `Hash::new()`
 pub type SchemaPropertyMap = &'static [SchemaPropertyEntry];
 
+/// Legacy property strings may contain shortcuts where the *value* of a specific key is used as a
+/// *key* for yet another option. Most notably, PVE's `netX` properties use `<model>=<macaddr>`
+/// instead of `model=<model>,macaddr=<macaddr>`.
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+pub struct KeyAliasInfo {
+    pub key_alias: &'static str,
+    pub values: &'static [&'static str],
+    pub alias: &'static str,
+}
+
+impl KeyAliasInfo {
+    pub const fn new(
+        key_alias: &'static str,
+        values: &'static [&'static str],
+        alias: &'static str,
+    ) -> Self {
+        Self {
+            key_alias,
+            values,
+            alias,
+        }
+    }
+}
+
 /// Data type to describe objects (maps).
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
@@ -616,6 +641,13 @@ pub struct ObjectSchema {
     pub properties: SchemaPropertyMap,
     /// Default key name - used by `parse_parameter_string()`
     pub default_key: Option<&'static str>,
+    /// DO NOT USE!
+    ///
+    /// This is meant for the PVE schema generator ONLY!
+    ///
+    /// This is to support legacy property string information: declare a `keyAlias` and its
+    /// corresponding `alias` property (as defined in PVE's schema).
+    pub key_alias_info: Option<KeyAliasInfo>,
 }
 
 impl ObjectSchema {
@@ -625,6 +657,7 @@ impl ObjectSchema {
             properties,
             additional_properties: false,
             default_key: None,
+            key_alias_info: None,
         }
     }
 
@@ -664,6 +697,17 @@ impl ObjectSchema {
         test_required: bool,
     ) -> Result<Value, ParameterError> {
         ParameterSchema::from(self).parse_parameter_strings(data, test_required)
+    }
+
+    /// DO NOT USE!
+    ///
+    /// This is meant for the PVE schema generator ONLY!
+    ///
+    /// This is to support legacy property string information: declare a `keyAlias` and its
+    /// corresponding `alias` property (as defined in PVE's schema).
+    pub const fn key_alias_info(mut self, key_alias_info: KeyAliasInfo) -> Self {
+        self.key_alias_info = Some(key_alias_info);
+        self
     }
 }
 
@@ -822,6 +866,11 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
     fn additional_properties(&self) -> bool;
     fn default_key(&self) -> Option<&'static str>;
 
+    /// Should always return `None`, unless dealing with *legacy* PVE property strings.
+    fn key_alias_info(&self) -> Option<KeyAliasInfo> {
+        None
+    }
+
     /// Verify JSON value using an object schema.
     fn verify_json(&self, data: &Value) -> Result<(), Error> {
         let map = match data {
@@ -904,6 +953,10 @@ impl ObjectSchemaType for ObjectSchema {
 
     fn default_key(&self) -> Option<&'static str> {
         self.default_key
+    }
+
+    fn key_alias_info(&self) -> Option<KeyAliasInfo> {
+        self.key_alias_info
     }
 }
 

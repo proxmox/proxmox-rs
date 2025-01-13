@@ -468,4 +468,51 @@ mod test {
 
         Ok(())
     }
+
+    #[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+    pub struct NetworkCard {
+        model: String,
+        macaddr: String,
+        disconnected: Option<bool>,
+    }
+
+    impl ApiType for NetworkCard {
+        const API_SCHEMA: Schema = ObjectSchema::new(
+            "A network card",
+            &[
+                // MUST BE SORTED
+                (
+                    "disconnected",
+                    true,
+                    &BooleanSchema::new("disconnected").schema(),
+                ),
+                ("macaddr", false, &StringSchema::new("macaddr").schema()),
+                ("model", false, &StringSchema::new("model").schema()),
+            ],
+        )
+        .key_alias_info(crate::schema::KeyAliasInfo::new(
+            "model",
+            &["e1000", "virtio"],
+            "macaddr",
+        ))
+        .schema();
+    }
+
+    #[test]
+    fn test_key_alias_info() -> Result<(), super::Error> {
+        let deserialized: NetworkCard = super::parse("virtio=aa:bb:cc:dd:ee,disconnected=0")
+            .expect("failed to parse property string");
+
+        assert_eq!(
+            deserialized,
+            NetworkCard {
+                model: "virtio".to_string(),
+                macaddr: "aa:bb:cc:dd:ee".to_string(),
+                disconnected: Some(false),
+            },
+            "KeyAliasInfo deserialization failed"
+        );
+
+        Ok(())
+    }
 }

@@ -25,6 +25,7 @@ fn test_schema1() {
         additional_properties: false,
         properties: &[],
         default_key: None,
+        key_alias_info: None,
     });
 
     println!("TEST Schema: {:?}", schema);
