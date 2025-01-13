@@ -1807,6 +1807,10 @@ impl<T> UpdaterType for Vec<T> {
     type Updater = Option<Self>;
 }
 
+impl<T> UpdaterType for crate::property_string::PropertyString<T> {
+    type Updater = Option<Self>;
+}
+
 /// Trait signifying that a type contains an API schema.
 pub trait ApiType {
     const API_SCHEMA: Schema;
