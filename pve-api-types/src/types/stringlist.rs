@@ -1,51 +1,44 @@
 //! Dealing with `-list`, `-alist` types in pve schemas.
 
-pub mod list {
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-    use proxmox_schema::Schema;
+use proxmox_schema::Schema;
 
-    pub fn serialize<S, T>(
-        data: &[T],
-        serializer: S,
-        array_schema: &'static Schema,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-        T: Serialize,
-    {
-        use serde::ser::{Error, SerializeSeq};
+pub fn serialize<S, T>(
+    data: &[T],
+    serializer: S,
+    array_schema: &'static Schema,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    T: Serialize,
+{
+    use serde::ser::{Error, SerializeSeq};
 
-        let mut ser =
-            proxmox_schema::ser::PropertyStringSerializer::new(String::new(), array_schema)
-                .serialize_seq(Some(data.len()))
-                .map_err(|err| S::Error::custom(err))?;
+    let mut ser = proxmox_schema::ser::PropertyStringSerializer::new(String::new(), array_schema)
+        .serialize_seq(Some(data.len()))
+        .map_err(S::Error::custom)?;
 
-        for element in data {
-            ser.serialize_element(element)
-                .map_err(|err| S::Error::custom(err))?;
-        }
-
-        let out = ser.end().map_err(|err| S::Error::custom(err))?;
-        serializer.serialize_str(&out)
+    for element in data {
+        ser.serialize_element(element).map_err(S::Error::custom)?;
     }
 
-    pub fn deserialize<'de, D, T>(
-        deserializer: D,
-        array_schema: &'static Schema,
-    ) -> Result<T, D::Error>
-    where
-        D: Deserializer<'de>,
-        T: Deserialize<'de>,
-    {
-        use serde::de::Error;
+    let out = ser.end().map_err(S::Error::custom)?;
+    serializer.serialize_str(&out)
+}
 
-        let string = std::borrow::Cow::<'de, str>::deserialize(deserializer)?;
+pub fn deserialize<'de, D, T>(deserializer: D, array_schema: &'static Schema) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    use serde::de::Error;
 
-        T::deserialize(proxmox_schema::de::SchemaDeserializer::new(
-            string,
-            array_schema,
-        ))
-        .map_err(|err| D::Error::custom(err))
-    }
+    let string = std::borrow::Cow::<'de, str>::deserialize(deserializer)?;
+
+    T::deserialize(proxmox_schema::de::SchemaDeserializer::new(
+        string,
+        array_schema,
+    ))
+    .map_err(D::Error::custom)
 }

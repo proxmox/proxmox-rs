@@ -1,3 +1,5 @@
+//! Verifier functions for the schema.
+
 use anyhow::{bail, format_err, Error};
 
 use proxmox_schema::const_regex;
