@@ -22,6 +22,11 @@ const API_METHOD_SIMPLE1: ApiMethod = ApiMethod::new(
         "Simple API method with one required and one optional argument.",
         &[
             (
+                "another-required-arg",
+                false,
+                &StringSchema::new("A second required string argument.").schema(),
+            ),
+            (
                 "optional-arg",
                 true,
                 &BooleanSchema::new("Optional boolean argument.")
@@ -32,11 +37,6 @@ const API_METHOD_SIMPLE1: ApiMethod = ApiMethod::new(
                 "required-arg",
                 false,
                 &StringSchema::new("Required string argument.").schema(),
-            ),
-            (
-                "another-required-arg",
-                false,
-                &StringSchema::new("A second required string argument.").schema(),
             ),
         ],
     ),
