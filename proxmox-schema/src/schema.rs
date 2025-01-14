@@ -1671,31 +1671,6 @@ pub fn parse_boolean(value_str: &str) -> Result<bool, Error> {
     }
 }
 
-/// Parse a complex property string (`ApiStringFormat::PropertyString`)
-#[deprecated(note = "this is now a method of Schema")]
-pub fn parse_property_string(value_str: &str, schema: &'static Schema) -> Result<Value, Error> {
-    schema.parse_property_string(value_str)
-}
-
-/// Parse a simple value (no arrays and no objects)
-#[deprecated(note = "this is now a method of Schema")]
-pub fn parse_simple_value(value_str: &str, schema: &Schema) -> Result<Value, Error> {
-    schema.parse_simple_value(value_str)
-}
-
-/// Parse key/value pairs and verify with object schema
-///
-/// - `test_required`: is set, checks if all required properties are
-///   present.
-#[deprecated(note = "this is now a method of parameter schema types")]
-pub fn parse_parameter_strings<T: Into<ParameterSchema>>(
-    data: &[(String, String)],
-    schema: T,
-    test_required: bool,
-) -> Result<Value, ParameterError> {
-    do_parse_parameter_strings(schema.into(), data, test_required)
-}
-
 fn do_parse_parameter_strings(
     schema: ParameterSchema,
     data: &[(String, String)],
@@ -1775,48 +1750,6 @@ fn do_parse_parameter_strings(
     } else {
         Ok(params)
     }
-}
-
-/// Verify JSON value with `schema`.
-#[deprecated(note = "use the method schema.verify_json() instead")]
-pub fn verify_json(data: &Value, schema: &Schema) -> Result<(), Error> {
-    schema.verify_json(data)
-}
-
-/// Verify JSON value using a `StringSchema`.
-#[deprecated(note = "use the method string_schema.verify_json() instead")]
-pub fn verify_json_string(data: &Value, schema: &StringSchema) -> Result<(), Error> {
-    schema.verify_json(data)
-}
-
-/// Verify JSON value using a `BooleanSchema`.
-#[deprecated(note = "use the method boolean_schema.verify_json() instead")]
-pub fn verify_json_boolean(data: &Value, schema: &BooleanSchema) -> Result<(), Error> {
-    schema.verify_json(data)
-}
-
-/// Verify JSON value using an `IntegerSchema`.
-#[deprecated(note = "use the method integer_schema.verify_json() instead")]
-pub fn verify_json_integer(data: &Value, schema: &IntegerSchema) -> Result<(), Error> {
-    schema.verify_json(data)
-}
-
-/// Verify JSON value using an `NumberSchema`.
-#[deprecated(note = "use the method number_schema.verify_json() instead")]
-pub fn verify_json_number(data: &Value, schema: &NumberSchema) -> Result<(), Error> {
-    schema.verify_json(data)
-}
-
-/// Verify JSON value using an `ArraySchema`.
-#[deprecated(note = "use the method array_schema.verify_json() instead")]
-pub fn verify_json_array(data: &Value, schema: &ArraySchema) -> Result<(), Error> {
-    schema.verify_json(data)
-}
-
-/// Verify JSON value using an `ObjectSchema`.
-#[deprecated(note = "use the verify_json() method via the ObjectSchemaType trait instead")]
-pub fn verify_json_object(data: &Value, schema: &dyn ObjectSchemaType) -> Result<(), Error> {
-    schema.verify_json(data)
 }
 
 /// API types should define an "updater type" via this trait in order to support derived "Updater"
