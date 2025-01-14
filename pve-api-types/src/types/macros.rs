@@ -40,10 +40,28 @@ macro_rules! generate_array_field {
 
         impl<'de> serde::Deserialize<'de> for $type_name {
             fn deserialize<D: serde::Deserializer<'de>>(de: D) -> Result<Self, D::Error> {
+                use std::sync::OnceLock;
+
+                static FIELDS: OnceLock<Vec<String>> = OnceLock::new();
+                static FIELDS_STR: OnceLock<Vec<&'static str>> = OnceLock::new();
+
+                let fields_str: &'static [&'static str] = FIELDS_STR.get_or_init(|| {
+                    let fields = FIELDS.get_or_init(|| {
+                        let mut vec = Vec::with_capacity($array_len);
+                        for i in 0..$array_len {
+                            vec.push(format!("{}{}", stringify!($field_prefix), i));
+                        }
+                        vec
+                    });
+                    Vec::from_iter(fields.iter().map(|n| n.as_str()))
+                });
+
+
                 let inner = crate::array::ArrayMap::deserialize(
                     de,
                     stringify!($field_prefix),
                     stringify!($type_name),
+                    fields_str,
                 )?;
                 Ok(Self { inner })
             }

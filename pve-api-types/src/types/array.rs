@@ -4,7 +4,6 @@
 use std::collections::btree_map::{self, BTreeMap};
 use std::fmt;
 use std::marker::PhantomData;
-use std::sync::OnceLock;
 
 use serde::{Deserialize, Serialize};
 
@@ -135,24 +134,11 @@ impl<T, const MAX: usize> ArrayMap<T, { MAX }> {
         de: D,
         prefix: &'static str,
         type_name: &'static str,
+        fields: &'static [&'static str],
     ) -> Result<Self, D::Error>
     where
         T: Deserialize<'de>,
     {
-        static FIELDS: OnceLock<Vec<String>> = OnceLock::new();
-        static FIELDS_STR: OnceLock<Vec<&'static str>> = OnceLock::new();
-
-        let fields_str: &'static [&'static str] = FIELDS_STR.get_or_init(|| {
-            let fields = FIELDS.get_or_init(|| {
-                let mut vec = Vec::with_capacity(MAX);
-                for i in 0..MAX {
-                    vec.push(format!("{prefix}{i}"));
-                }
-                vec
-            });
-            Vec::from_iter(fields.iter().map(|n| n.as_str()))
-        });
-
         struct V<T, const MAX: usize> {
             prefix: &'static str,
             type_name: &'static str,
@@ -200,7 +186,7 @@ impl<T, const MAX: usize> ArrayMap<T, { MAX }> {
 
         de.deserialize_struct(
             type_name,
-            fields_str,
+            fields,
             V::<T, { MAX }> {
                 prefix,
                 type_name,
