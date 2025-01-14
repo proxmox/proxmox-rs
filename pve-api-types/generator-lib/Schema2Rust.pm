@@ -1349,9 +1349,33 @@ sub generate_struct : prototype($$$$) {
         $def->{description} = to_doc_comment($description);
     }
 
+    my $key_alias_info;
+
     my @array_bases;
     PROPERTY: for my $field_name (sort keys $properties->%*) {
-        next if exists $properties->{$field_name}->{alias};
+        if (my $key_alias = $properties->{$field_name}->{keyAlias}) {
+            # Legacy property string stuff...
+            if (my $existing = $key_alias_info->{key_alias}) {
+                die "conflicting (multiple) keyAlias keys: '$existing' != '$key_alias'\n"
+                    if $key_alias ne $existing;
+                my $alias = $properties->{$field_name}->{alias} // '<missing alias>';
+                my $existing_alias = $key_alias_info->{alias};
+                die "conflicting alias for keyAlias: '$existing_alias' != '$alias'\n"
+                    if $alias ne $existing_alias;
+                push $key_alias_info->{values}->@*, $field_name;
+            } else {
+                my $alias = $properties->{$field_name}->{alias}
+                    or die "missing 'alias' for 'keyAlias'-key\n";
+                $key_alias_info = {
+                    key_alias => $key_alias,
+                    alias => $alias,
+                    values => [$field_name],
+                }
+            }
+            next;
+        } elsif (exists $properties->{$field_name}->{alias}) {
+            next;
+        }
         for my $base (@array_bases) {
             next PROPERTY if $field_name =~ $base;
         }
@@ -1393,6 +1417,23 @@ sub generate_struct : prototype($$$$) {
             $def->{fields}->{$field_name} = $field;
             $def->{api}->{properties}->{$field_name} = $field->{api};
         }
+    }
+
+    if (defined($key_alias_info)) {
+        use Data::Dumper;
+        my ($key_alias, $values, $alias) = $key_alias_info->@{qw(key_alias values alias)};
+        $values = join ",\n            ", map { "\"$_\"" } @$values;
+        my $api_key_alias_info = <<"EOF";
+proxmox_schema::KeyAliasInfo::new(
+        \"$key_alias\",
+        &[
+            $values
+        ],
+        \"$alias\"
+    )
+EOF
+        chomp $api_key_alias_info;
+        $def->{api}->{key_alias_info} = $api_key_alias_info;
     }
 
     my $additional = delete($schema->{additionalProperties}); # default is 1 urrrgh

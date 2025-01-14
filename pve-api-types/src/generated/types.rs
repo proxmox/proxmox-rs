@@ -3346,12 +3346,6 @@ serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceFamilies);
 /// The network configuration method for IPv4.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum NetworkInterfaceMethod {
-    #[serde(rename = "loopback")]
-    /// loopback.
-    Loopback,
-    #[serde(rename = "dhcp")]
-    /// dhcp.
-    Dhcp,
     #[serde(rename = "manual")]
     /// manual.
     Manual,
@@ -6455,6 +6449,26 @@ QEMU_CONFIG_NET_MACADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 
 #[api(
     default_key: "model",
+    key_alias_info: proxmox_schema::KeyAliasInfo::new(
+        "model",
+        &[
+            "e1000",
+            "e1000-82540em",
+            "e1000-82544gc",
+            "e1000-82545em",
+            "e1000e",
+            "i82551",
+            "i82557b",
+            "i82559er",
+            "ne2k_isa",
+            "ne2k_pci",
+            "pcnet",
+            "rtl8139",
+            "virtio",
+            "vmxnet3"
+        ],
+        "macaddr"
+    ),
     properties: {
         bridge: {
             format: &ApiStringFormat::Pattern(&QEMU_CONFIG_NET_BRIDGE_RE),

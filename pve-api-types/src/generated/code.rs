@@ -774,8 +774,8 @@ where
 
     /// Authentication domain index.
     async fn list_domains(&self) -> Result<Vec<ListRealm>, Error> {
-        let url = "/api2/extjs/access/domains";
-        Ok(self.0.get(url).await?.expect_json()?.data)
+        let url = format!("/api2/extjs/access/domains");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// LXC container index (per node).
@@ -798,8 +798,8 @@ where
 
     /// Cluster node index.
     async fn list_nodes(&self) -> Result<Vec<ClusterNodeIndexResponse>, Error> {
-        let url = "/api2/extjs/nodes";
-        Ok(self.0.get(url).await?.expect_json()?.data)
+        let url = format!("/api2/extjs/nodes");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 
     /// Virtual machine index (per node).
@@ -1014,14 +1014,13 @@ where
     /// Stop a task.
     async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
         let url = format!("/api2/extjs/nodes/{node}/tasks/{upid}");
-        self.0.delete(&url).await?.expect_json::<()>()?;
-        Ok(())
+        Ok(self.0.delete(&url).await?.expect_json()?.data)
     }
 
     /// API version details, including some parts of the global datacenter
     /// config.
     async fn version(&self) -> Result<VersionResponse, Error> {
-        let url = "/api2/extjs/version";
-        Ok(self.0.get(url).await?.expect_json()?.data)
+        let url = format!("/api2/extjs/version");
+        Ok(self.0.get(&url).await?.expect_json()?.data)
     }
 }
