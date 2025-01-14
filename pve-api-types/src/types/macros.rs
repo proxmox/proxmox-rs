@@ -66,6 +66,30 @@ macro_rules! generate_array_field {
                 Ok(Self { inner })
             }
         }
+
+        impl IntoIterator for $type_name {
+            type Item = <crate::array::ArrayMap::<$field_type, { $array_len }> as IntoIterator>::Item;
+            type IntoIter = <crate::array::ArrayMap::<$field_type, { $array_len }> as IntoIterator>::IntoIter;
+            fn into_iter(self) -> Self::IntoIter {
+                self.inner.into_iter()
+            }
+        }
+
+        impl<'a> IntoIterator for &'a $type_name {
+            type Item = <&'a crate::array::ArrayMap::<$field_type, { $array_len }> as IntoIterator>::Item;
+            type IntoIter = <&'a crate::array::ArrayMap::<$field_type, { $array_len }> as IntoIterator>::IntoIter;
+            fn into_iter(self) -> Self::IntoIter {
+                (&self.inner).into_iter()
+            }
+        }
+
+        impl<'a> IntoIterator for &'a mut $type_name {
+            type Item = <&'a mut crate::array::ArrayMap::<$field_type, { $array_len }> as IntoIterator>::Item;
+            type IntoIter = <&'a mut crate::array::ArrayMap::<$field_type, { $array_len }> as IntoIterator>::IntoIter;
+            fn into_iter(self) -> Self::IntoIter {
+                (&mut self.inner).into_iter()
+            }
+        }
     };
 }
 
