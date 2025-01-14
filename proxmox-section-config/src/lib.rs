@@ -1034,19 +1034,11 @@ fn test_section_config_with_additional_properties() {
         ),
     ];
 
-    const USER_PROPERTIES: ObjectSchema = ObjectSchema {
-        description: "user properties",
-        properties: &PROPERTIES,
-        additional_properties: false,
-        default_key: None,
-    };
+    const USER_PROPERTIES: ObjectSchema = ObjectSchema::new("user properties", &PROPERTIES);
 
-    const USER_PROPERTIES_WITH_ADDITIONAL: ObjectSchema = ObjectSchema {
-        description: "user properties with additional",
-        properties: &PROPERTIES,
-        additional_properties: true,
-        default_key: None,
-    };
+    const USER_PROPERTIES_WITH_ADDITIONAL: ObjectSchema =
+        ObjectSchema::new("user properties with additional", &PROPERTIES)
+            .additional_properties(true);
 
     let plugin = SectionConfigPlugin::new(
         "user".to_string(),
@@ -1104,12 +1096,7 @@ fn test_section_config_with_unknown_section_types() {
         ),
     ];
 
-    const USER_PROPERTIES: ObjectSchema = ObjectSchema {
-        description: "user properties",
-        properties: &PROPERTIES,
-        additional_properties: false,
-        default_key: None,
-    };
+    const USER_PROPERTIES: ObjectSchema = ObjectSchema::new("user properties", &PROPERTIES);
 
     let plugin = SectionConfigPlugin::new(
         "user".to_string(),
