@@ -1489,7 +1489,6 @@ impl EnumEntry {
 ///
 /// ```
 /// use proxmox_schema::{ApiStringFormat, ArraySchema, IntegerSchema, Schema, StringSchema};
-/// use proxmox_schema::{parse_simple_value, parse_property_string};
 ///
 /// const PRODUCT_LIST_SCHEMA: Schema =
 ///             ArraySchema::new("Product List.", &IntegerSchema::new("Product ID").schema())
@@ -1500,13 +1499,13 @@ impl EnumEntry {
 ///     .format(&ApiStringFormat::PropertyString(&PRODUCT_LIST_SCHEMA))
 ///     .schema();
 ///
-/// let res = parse_simple_value("", &SCHEMA);
+/// let res = SCHEMA.parse_simple_value("");
 /// assert!(res.is_err());
 ///
-/// let res = parse_simple_value("1,2,3", &SCHEMA); // parse as String
+/// let res = SCHEMA.parse_simple_value("1,2,3"); // parse as String
 /// assert!(res.is_ok());
 ///
-/// let data = parse_property_string("1,2", &PRODUCT_LIST_SCHEMA); // parse as Array
+/// let data = PRODUCT_LIST_SCHEMA.parse_property_string("1,2"); // parse as Array
 /// assert!(data.is_ok());
 /// ```
 pub enum ApiStringFormat {
