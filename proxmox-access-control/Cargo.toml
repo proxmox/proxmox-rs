@@ -1,7 +1,7 @@
 [package]
 name = "proxmox-access-control"
 description = "A collection of utilities to implement access control management."
-version = "0.2.3"
+version = "0.2.4"
 
 authors.workspace = true
 edition.workspace = true
