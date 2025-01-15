@@ -8,8 +8,8 @@ Build-Depends: debhelper-compat (= 13),
  libstd-rust-dev <!nocheck>,
  librust-base64-0.13+default-dev <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~) <!nocheck>,
- librust-proxmox-schema-3+default-dev (>= 3.1.2-~~) <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-4+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
@@ -39,7 +39,7 @@ Suggests:
 Provides:
  librust-proxmox-acme-0-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.3-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.4-dev (= ${binary:Version})
 Description: ACME client library - Rust source code
  Source code for Debianized Rust crate "proxmox-acme"
 
@@ -49,12 +49,12 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-acme-dev (= ${binary:Version}),
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~),
- librust-proxmox-schema-3+default-dev (>= 3.1.2-~~)
+ librust-proxmox-schema-4+api-macro-dev,
+ librust-proxmox-schema-4+default-dev
 Provides:
  librust-proxmox-acme-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+api-types-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.3+api-types-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.4+api-types-dev (= ${binary:Version})
 Description: ACME client library - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-acme crate,
  by pulling in any additional dependencies needed by that feature.
@@ -74,7 +74,7 @@ Depends:
 Provides:
  librust-proxmox-acme-0+async-client-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+async-client-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.3+async-client-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.4+async-client-dev (= ${binary:Version})
 Description: ACME client library - feature "async-client"
  This metapackage enables feature "async-client" for the Rust proxmox-acme
  crate, by pulling in any additional dependencies needed by that feature.
@@ -92,7 +92,7 @@ Depends:
 Provides:
  librust-proxmox-acme-0+client-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+client-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.3+client-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.4+client-dev (= ${binary:Version})
 Description: ACME client library - feature "client"
  This metapackage enables feature "client" for the Rust proxmox-acme crate, by
  pulling in any additional dependencies needed by that feature.
@@ -111,8 +111,8 @@ Provides:
  librust-proxmox-acme-0+default-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+impl-dev (= ${binary:Version}),
  librust-proxmox-acme-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.3+impl-dev (= ${binary:Version}),
- librust-proxmox-acme-0.5.3+default-dev (= ${binary:Version})
+ librust-proxmox-acme-0.5.4+impl-dev (= ${binary:Version}),
+ librust-proxmox-acme-0.5.4+default-dev (= ${binary:Version})
 Description: ACME client library - feature "impl" and 1 more
  This metapackage enables feature "impl" for the Rust proxmox-acme crate, by
  pulling in any additional dependencies needed by that feature.
