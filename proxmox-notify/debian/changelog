@@ -1,3 +1,17 @@
+rust-proxmox-notify (0.5.2-1) bookworm; urgency=medium
+
+  * switch from `log` to `tracing`
+
+  * update to proxmox-schema 4 and use builder pattern for `ObjectSchema`
+
+  * switch sendmail endpoint to use `proxmox-sendmail` crate
+
+  * use forward implementation from `proxmox-sendmail` crate
+
+  * fix indentation in webhook documentation
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2025 12:10:06 +0100
+
 rust-proxmox-notify (0.5.1-1) bookworm; urgency=medium
 
   * sendmail: various cleanups and refactoring
