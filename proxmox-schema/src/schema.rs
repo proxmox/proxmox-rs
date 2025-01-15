@@ -198,6 +198,11 @@ impl BooleanSchema {
         }
     }
 
+    pub const fn description(mut self, description: &'static str) -> Self {
+        self.description = description;
+        self
+    }
+
     pub const fn default(mut self, default: bool) -> Self {
         self.default = Some(default);
         self
@@ -238,6 +243,11 @@ impl IntegerSchema {
             minimum: None,
             maximum: None,
         }
+    }
+
+    pub const fn description(mut self, description: &'static str) -> Self {
+        self.description = description;
+        self
     }
 
     pub const fn default(mut self, default: isize) -> Self {
@@ -314,6 +324,11 @@ impl NumberSchema {
             minimum: None,
             maximum: None,
         }
+    }
+
+    pub const fn description(mut self, description: &'static str) -> Self {
+        self.description = description;
+        self
     }
 
     pub const fn default(mut self, default: f64) -> Self {
@@ -418,6 +433,11 @@ impl StringSchema {
             format: None,
             type_text: None,
         }
+    }
+
+    pub const fn description(mut self, description: &'static str) -> Self {
+        self.description = description;
+        self
     }
 
     pub const fn default(mut self, text: &'static str) -> Self {
@@ -535,6 +555,11 @@ impl ArraySchema {
             min_length: None,
             max_length: None,
         }
+    }
+
+    pub const fn description(mut self, description: &'static str) -> Self {
+        self.description = description;
+        self
     }
 
     pub const fn min_length(mut self, min_length: usize) -> Self {
