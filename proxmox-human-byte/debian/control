@@ -1,14 +1,14 @@
 Source: rust-proxmox-human-byte
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
  cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-proxmox-schema-3+api-macro-dev <!nocheck>,
- librust-proxmox-schema-3+default-dev <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-4+default-dev <!nocheck>,
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~) <!nocheck>,
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>
@@ -26,8 +26,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-proxmox-schema-3+api-macro-dev,
- librust-proxmox-schema-3+default-dev,
+ librust-proxmox-schema-4+api-macro-dev,
+ librust-proxmox-schema-4+default-dev,
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~),
  librust-serde-1+default-dev
@@ -37,7 +37,7 @@ Provides:
  librust-proxmox-human-byte-0+default-dev (= ${binary:Version}),
  librust-proxmox-human-byte-0.1-dev (= ${binary:Version}),
  librust-proxmox-human-byte-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0.1.3-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0.1.3+default-dev (= ${binary:Version})
+ librust-proxmox-human-byte-0.1.4-dev (= ${binary:Version}),
+ librust-proxmox-human-byte-0.1.4+default-dev (= ${binary:Version})
 Description: Proxmox library for formatting byte sizes (IEC or SI) - Rust source code
  Source code for Debianized Rust crate "proxmox-human-byte"

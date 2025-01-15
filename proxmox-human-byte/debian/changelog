@@ -1,3 +1,9 @@
+rust-proxmox-human-byte (0.1.4-1) bookworm; urgency=medium
+
+  * rebuild with proxmox-schema 4
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2025 12:14:13 +0100
+
 rust-proxmox-human-byte (0.1.3-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 3
