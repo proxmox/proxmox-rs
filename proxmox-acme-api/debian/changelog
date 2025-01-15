@@ -1,3 +1,11 @@
+rust-proxmox-acme-api (0.1.7-1) bookworm; urgency=medium
+
+  * rebuild with proxmox-schema 4.0
+
+  * use inner mutability for ACME_ACME_CONFIG
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2025 12:45:05 +0100
+
 rust-proxmox-acme-api (0.1.6-1) bookworm; urgency=medium
 
   * rebuild with new rest-server and router dependencies

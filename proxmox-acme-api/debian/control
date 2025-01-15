@@ -7,10 +7,10 @@ Build-Depends: debhelper-compat (= 13),
  rustc:native (>= 1.80) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-proxmox-acme-0.5+api-types-dev (>= 0.5.2-~~) <!nocheck>,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~) <!nocheck>,
- librust-proxmox-schema-3+api-types-dev (>= 3.1.2-~~) <!nocheck>,
- librust-proxmox-schema-3+default-dev (>= 3.1.2-~~) <!nocheck>,
+ librust-proxmox-acme-0.5+api-types-dev (>= 0.5.3-~~) <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-4+api-types-dev <!nocheck>,
+ librust-proxmox-schema-4+default-dev <!nocheck>,
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~) <!nocheck>,
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
@@ -30,10 +30,10 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-proxmox-acme-0.5+api-types-dev (>= 0.5.2-~~),
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~),
- librust-proxmox-schema-3+api-types-dev (>= 3.1.2-~~),
- librust-proxmox-schema-3+default-dev (>= 3.1.2-~~),
+ librust-proxmox-acme-0.5+api-types-dev (>= 0.5.3-~~),
+ librust-proxmox-schema-4+api-macro-dev,
+ librust-proxmox-schema-4+api-types-dev,
+ librust-proxmox-schema-4+default-dev,
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~),
  librust-serde-1+default-dev,
@@ -47,8 +47,8 @@ Provides:
  librust-proxmox-acme-api-0+default-dev (= ${binary:Version}),
  librust-proxmox-acme-api-0.1-dev (= ${binary:Version}),
  librust-proxmox-acme-api-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1.6-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1.6+default-dev (= ${binary:Version})
+ librust-proxmox-acme-api-0.1.7-dev (= ${binary:Version}),
+ librust-proxmox-acme-api-0.1.7+default-dev (= ${binary:Version})
 Description: ACME API implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-acme-api"
 
@@ -66,17 +66,17 @@ Depends:
  librust-hyper-0.14+default-dev (>= 0.14.5-~~),
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
  librust-openssl-0.10+default-dev,
- librust-proxmox-acme-0.5+api-types-dev (>= 0.5.2-~~),
- librust-proxmox-acme-0.5+async-client-dev (>= 0.5.2-~~),
- librust-proxmox-acme-0.5+impl-dev (>= 0.5.2-~~),
+ librust-proxmox-acme-0.5+api-types-dev (>= 0.5.3-~~),
+ librust-proxmox-acme-0.5+async-client-dev (>= 0.5.3-~~),
+ librust-proxmox-acme-0.5+impl-dev (>= 0.5.3-~~),
  librust-proxmox-config-digest-0.1+default-dev,
  librust-proxmox-config-digest-0.1+openssl-dev,
- librust-proxmox-log-0.2+default-dev (>= 0.2.3-~~),
+ librust-proxmox-log-0.2+default-dev (>= 0.2.5-~~),
  librust-proxmox-product-config-0.2+default-dev,
  librust-proxmox-rest-server-0.8+default-dev,
  librust-proxmox-router-3+default-dev,
  librust-proxmox-section-config-2+default-dev (>= 2.1.0-~~),
- librust-proxmox-sys-0.6+default-dev,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~),
  librust-proxmox-time-2+default-dev,
  librust-proxmox-uuid-1+default-dev (>= 1.0.1-~~),
  librust-tokio-1+default-dev (>= 1.6-~~),
@@ -84,7 +84,7 @@ Depends:
 Provides:
  librust-proxmox-acme-api-0+impl-dev (= ${binary:Version}),
  librust-proxmox-acme-api-0.1+impl-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1.6+impl-dev (= ${binary:Version})
+ librust-proxmox-acme-api-0.1.7+impl-dev (= ${binary:Version})
 Description: ACME API implementation - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-acme-api crate, by
  pulling in any additional dependencies needed by that feature.
