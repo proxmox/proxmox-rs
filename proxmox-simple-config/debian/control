@@ -7,9 +7,9 @@ Build-Depends: debhelper-compat (= 13),
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~) <!nocheck>,
- librust-proxmox-schema-3+api-types-dev (>= 3.1.2-~~) <!nocheck>,
- librust-proxmox-schema-3+default-dev (>= 3.1.2-~~) <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-4+api-types-dev <!nocheck>,
+ librust-proxmox-schema-4+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
@@ -27,9 +27,9 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~),
- librust-proxmox-schema-3+api-types-dev (>= 3.1.2-~~),
- librust-proxmox-schema-3+default-dev (>= 3.1.2-~~),
+ librust-proxmox-schema-4+api-macro-dev,
+ librust-proxmox-schema-4+api-types-dev,
+ librust-proxmox-schema-4+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
@@ -39,7 +39,7 @@ Provides:
  librust-proxmox-simple-config-0+default-dev (= ${binary:Version}),
  librust-proxmox-simple-config-0.1-dev (= ${binary:Version}),
  librust-proxmox-simple-config-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-simple-config-0.1.1-dev (= ${binary:Version}),
- librust-proxmox-simple-config-0.1.1+default-dev (= ${binary:Version})
+ librust-proxmox-simple-config-0.1.2-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-0.1.2+default-dev (= ${binary:Version})
 Description: Simple key/value format for configuration files - Rust source code
  Source code for Debianized Rust crate "proxmox-simple-config"
