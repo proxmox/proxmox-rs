@@ -15,7 +15,7 @@ Build-Depends: debhelper-compat (= 13),
  librust-proxmox-http-0.9+http-helpers-dev (>= 0.9.4-~~) <!nocheck>,
  librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~) <!nocheck>,
  librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~) <!nocheck>,
- librust-proxmox-sys-0.6+default-dev <!nocheck>,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~) <!nocheck>,
  librust-proxmox-time-2+default-dev <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
@@ -46,7 +46,7 @@ Suggests:
 Provides:
  librust-proxmox-subscription-0-dev (= ${binary:Version}),
  librust-proxmox-subscription-0.5-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.5.0-dev (= ${binary:Version})
+ librust-proxmox-subscription-0.5.1-dev (= ${binary:Version})
 Description: Proxmox subscription utilitites - Rust source code
  Source code for Debianized Rust crate "proxmox-subscription"
 
@@ -56,12 +56,12 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-subscription-dev (= ${binary:Version}),
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~),
- librust-proxmox-schema-3+default-dev (>= 3.1.2-~~)
+ librust-proxmox-schema-4+api-macro-dev,
+ librust-proxmox-schema-4+default-dev
 Provides:
  librust-proxmox-subscription-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-subscription-0.5+api-types-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.5.0+api-types-dev (= ${binary:Version})
+ librust-proxmox-subscription-0.5.1+api-types-dev (= ${binary:Version})
 Description: Proxmox subscription utilitites - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-subscription
  crate, by pulling in any additional dependencies needed by that feature.
@@ -78,7 +78,7 @@ Depends:
  librust-proxmox-http-0.9+client-trait-dev (>= 0.9.4-~~),
  librust-proxmox-http-0.9+default-dev (>= 0.9.4-~~),
  librust-proxmox-http-0.9+http-helpers-dev (>= 0.9.4-~~),
- librust-proxmox-sys-0.6+default-dev,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~),
  librust-proxmox-time-2+default-dev
 Provides:
  librust-proxmox-subscription+default-dev (= ${binary:Version}),
@@ -86,8 +86,8 @@ Provides:
  librust-proxmox-subscription-0+default-dev (= ${binary:Version}),
  librust-proxmox-subscription-0.5+impl-dev (= ${binary:Version}),
  librust-proxmox-subscription-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.5.0+impl-dev (= ${binary:Version}),
- librust-proxmox-subscription-0.5.0+default-dev (= ${binary:Version})
+ librust-proxmox-subscription-0.5.1+impl-dev (= ${binary:Version}),
+ librust-proxmox-subscription-0.5.1+default-dev (= ${binary:Version})
 Description: Proxmox subscription utilitites - feature "impl" and 1 more
  This metapackage enables feature "impl" for the Rust proxmox-subscription
  crate, by pulling in any additional dependencies needed by that feature.
