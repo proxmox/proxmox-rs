@@ -1,3 +1,9 @@
+rust-proxmox-router (3.0.1-1) bookworm; urgency=medium
+
+  * rebuild with proxmox-schema 4.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2025 12:32:41 +0100
+
 rust-proxmox-router (3.0.0-1) bookworm; urgency=medium
 
   * rename old streaming api to "serializing" (as it is not truly streaming)
