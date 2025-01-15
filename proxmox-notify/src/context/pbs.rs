@@ -17,15 +17,14 @@ const PBS_NODE_CFG_FILENAME: &str = "/etc/proxmox-backup/node.cfg";
 // it with the less restrictive schema should be enough for the purpose of getting the mail address.
 const DUMMY_ID_SCHEMA: Schema = StringSchema::new("dummy ID").min_length(3).schema();
 const DUMMY_EMAIL_SCHEMA: Schema = StringSchema::new("dummy email").schema();
-const DUMMY_USER_SCHEMA: ObjectSchema = ObjectSchema {
-    description: "minimal PBS user",
-    properties: &[
+const DUMMY_USER_SCHEMA: ObjectSchema = ObjectSchema::new(
+    "minimal PBS user",
+    &[
         ("userid", false, &DUMMY_ID_SCHEMA),
         ("email", true, &DUMMY_EMAIL_SCHEMA),
     ],
-    additional_properties: true,
-    default_key: None,
-};
+)
+.additional_properties(true);
 
 #[derive(Deserialize)]
 struct DummyPbsUser {
