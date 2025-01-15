@@ -68,17 +68,15 @@ impl RateLimitConfig {
     }
 }
 
-const CLIENT_RATE_LIMIT_SCHEMA: Schema = StringSchema {
-    description: "Rate limit (for Token bucket filter) in bytes/s with optional unit (B, KB (base 10), MB, GB, ..., KiB (base 2), MiB, Gib, ...).",
-    ..*HumanByte::API_SCHEMA.unwrap_string_schema()
-}
-.schema();
+const CLIENT_RATE_LIMIT_SCHEMA: Schema = HumanByte::API_SCHEMA
+    .unwrap_string_schema_cloned()
+    .description("Rate limit (for Token bucket filter) in bytes/s with optional unit (B, KB (base 10), MB, GB, ..., KiB (base 2), MiB, Gib, ...).")
+    .schema();
 
-const CLIENT_BURST_SCHEMA: Schema = StringSchema {
-    description: "Size of the token bucket (for Token bucket filter) in bytes with optional unit (B, KB (base 10), MB, GB, ..., KiB (base 2), MiB, Gib, ...).",
-    ..*HumanByte::API_SCHEMA.unwrap_string_schema()
-}
-.schema();
+const CLIENT_BURST_SCHEMA: Schema = HumanByte::API_SCHEMA
+    .unwrap_string_schema_cloned()
+    .description("Size of the token bucket (for Token bucket filter) in bytes with optional unit (B, KB (base 10), MB, GB, ..., KiB (base 2), MiB, Gib, ...).")
+    .schema();
 
 #[api(
     properties: {
