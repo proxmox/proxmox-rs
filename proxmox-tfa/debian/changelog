@@ -1,3 +1,9 @@
+rust-proxmox-tfa (5.0.2-1) bookworm; urgency=medium
+
+  * rebuild with proxmox-schema 4.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2025 12:42:55 +0100
+
 rust-proxmox-tfa (5.0.1) bookworm; urgency=medium
 
   * provide TfaUser via the 'types' feature
