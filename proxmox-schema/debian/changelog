@@ -1,3 +1,30 @@
+rust-proxmox-schema (4.0.0-1) bookworm; urgency=medium
+
+  * drop deprecated functions
+
+  * make schema types non_exhaustive
+
+  * add 'description()' builder methods to schema types
+
+  * add `unwrap_*_schema_cloned()` to schema types as const fn to get a copy
+    of a schema which can be manipulated in const contexts
+
+  * impl UpdaterType fro PropertyString<T> as Option<Self>
+
+  * fix a pointer vs length confusion in the property string deserializer when
+    using static strings
+
+  * support PVE's 'keyAlias/alias' combination in serde based PropertyString
+    deserialization
+
+  * update docs to not use now-removed (previously deprecated) functions
+
+  * improve indentation handling in doc output
+
+  * elide lifetimes where possible with current expected rustc versions
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2025 12:07:42 +0100
+
 rust-proxmox-schema (3.2.0-1) bookworm; urgency=medium
 
   * bump api-macro dependency to 1.2
