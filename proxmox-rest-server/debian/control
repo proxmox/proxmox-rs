@@ -22,12 +22,12 @@ Build-Depends: debhelper-compat (= 13),
  librust-proxmox-lang-1+default-dev (>= 1.3-~~) <!nocheck>,
  librust-proxmox-log-0.2+default-dev (>= 0.2.5-~~) <!nocheck>,
  librust-proxmox-router-3+default-dev <!nocheck>,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~) <!nocheck>,
- librust-proxmox-schema-3+default-dev (>= 3.1.2-~~) <!nocheck>,
- librust-proxmox-schema-3+upid-api-impl-dev (>= 3.1.2-~~) <!nocheck>,
- librust-proxmox-sys-0.6+default-dev <!nocheck>,
- librust-proxmox-sys-0.6+logrotate-dev <!nocheck>,
- librust-proxmox-sys-0.6+timer-dev <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-4+default-dev <!nocheck>,
+ librust-proxmox-schema-4+upid-api-impl-dev <!nocheck>,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~) <!nocheck>,
+ librust-proxmox-sys-0.6+logrotate-dev (>= 0.6.5-~~) <!nocheck>,
+ librust-proxmox-sys-0.6+timer-dev (>= 0.6.5-~~) <!nocheck>,
  librust-proxmox-time-2+default-dev <!nocheck>,
  librust-proxmox-worker-task-0.1+default-dev <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
@@ -71,12 +71,12 @@ Depends:
  librust-proxmox-lang-1+default-dev (>= 1.3-~~),
  librust-proxmox-log-0.2+default-dev (>= 0.2.5-~~),
  librust-proxmox-router-3+default-dev,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.2-~~),
- librust-proxmox-schema-3+default-dev (>= 3.1.2-~~),
- librust-proxmox-schema-3+upid-api-impl-dev (>= 3.1.2-~~),
- librust-proxmox-sys-0.6+default-dev,
- librust-proxmox-sys-0.6+logrotate-dev,
- librust-proxmox-sys-0.6+timer-dev,
+ librust-proxmox-schema-4+api-macro-dev,
+ librust-proxmox-schema-4+default-dev,
+ librust-proxmox-schema-4+upid-api-impl-dev,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~),
+ librust-proxmox-sys-0.6+logrotate-dev (>= 0.6.5-~~),
+ librust-proxmox-sys-0.6+timer-dev (>= 0.6.5-~~),
  librust-proxmox-time-2+default-dev,
  librust-proxmox-worker-task-0.1+default-dev,
  librust-regex-1+default-dev (>= 1.5-~~),
@@ -100,8 +100,8 @@ Provides:
  librust-proxmox-rest-server-0+default-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+default-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.5-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.5+default-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.6-dev (= ${binary:Version}),
+ librust-proxmox-rest-server-0.8.6+default-dev (= ${binary:Version})
 Description: REST server implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-rest-server"
 
@@ -116,7 +116,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+rate-limited-stream-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+rate-limited-stream-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.5+rate-limited-stream-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.6+rate-limited-stream-dev (= ${binary:Version})
 Description: REST server implementation - feature "rate-limited-stream"
  This metapackage enables feature "rate-limited-stream" for the Rust proxmox-
  rest-server crate, by pulling in any additional dependencies needed by that
@@ -132,7 +132,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+templates-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+templates-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.5+templates-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.6+templates-dev (= ${binary:Version})
 Description: REST server implementation - feature "templates"
  This metapackage enables feature "templates" for the Rust proxmox-rest-server
  crate, by pulling in any additional dependencies needed by that feature.

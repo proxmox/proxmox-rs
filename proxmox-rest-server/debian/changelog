@@ -1,3 +1,9 @@
+rust-proxmox-rest-server (0.8.6-1) bookworm; urgency=medium
+
+  * rebuild with proxmox-schema 4.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 15 Jan 2025 12:34:10 +0100
+
 rust-proxmox-rest-server (0.8.5-1) bookworm; urgency=medium
 
   * update proxmox-http-client to 0.9.4
