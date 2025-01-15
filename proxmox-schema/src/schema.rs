@@ -183,6 +183,7 @@ impl<'a> FromIterator<(&'a str, Error)> for ParameterError {
 /// Data type to describe boolean values
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+#[non_exhaustive]
 pub struct BooleanSchema {
     pub description: &'static str,
     /// Optional default value.
@@ -218,6 +219,7 @@ impl BooleanSchema {
 /// Data type to describe integer values.
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+#[non_exhaustive]
 pub struct IntegerSchema {
     pub description: &'static str,
     /// Optional minimum.
@@ -293,6 +295,7 @@ impl IntegerSchema {
 
 /// Data type to describe (JSON like) number value
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct NumberSchema {
     pub description: &'static str,
     /// Optional minimum.
@@ -390,6 +393,7 @@ impl PartialEq for NumberSchema {
 /// Data type to describe string values.
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+#[non_exhaustive]
 pub struct StringSchema {
     pub description: &'static str,
     /// Optional default value.
@@ -512,6 +516,7 @@ impl StringSchema {
 /// schema.
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+#[non_exhaustive]
 pub struct ArraySchema {
     pub description: &'static str,
     /// Element type schema.
@@ -632,6 +637,7 @@ impl KeyAliasInfo {
 /// Data type to describe objects (maps).
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+#[non_exhaustive]
 pub struct ObjectSchema {
     pub description: &'static str,
     /// If set, allow additional properties which are not defined in
@@ -719,6 +725,7 @@ impl ObjectSchema {
 /// Schema, this is not supported, so here we simply assume additional properties to be allowed.
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+#[non_exhaustive]
 pub struct AllOfSchema {
     pub description: &'static str,
 
@@ -771,6 +778,7 @@ impl AllOfSchema {
 /// Note that these are limited to object schemas. Other schemas will produce errors.
 #[derive(Debug)]
 #[cfg_attr(feature = "test-harness", derive(Eq, PartialEq))]
+#[non_exhaustive]
 pub struct OneOfSchema {
     pub description: &'static str,
 
