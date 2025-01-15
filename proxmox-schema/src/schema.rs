@@ -1456,6 +1456,70 @@ impl Schema {
             _ => None,
         }
     }
+
+    /// Gets a copy of the underlying [`BooleanSchema`], panics on different schemas.
+    pub const fn unwrap_boolean_schema_cloned(&self) -> BooleanSchema {
+        match self {
+            Schema::Boolean(s) => BooleanSchema { ..*s },
+            _ => panic!("unwrap_boolean_schema_cloned on different schema"),
+        }
+    }
+
+    /// Gets a copy of the underlying [`IntegerSchema`], panics on different schemas.
+    pub const fn unwrap_integer_schema_cloned(&self) -> IntegerSchema {
+        match self {
+            Schema::Integer(s) => IntegerSchema { ..*s },
+            _ => panic!("unwrap_integer_schema_cloned on different schema"),
+        }
+    }
+
+    /// Gets a copy of the underlying [`NumberSchema`], panics on different schemas.
+    pub const fn unwrap_number_schema_cloned(&self) -> NumberSchema {
+        match self {
+            Schema::Number(s) => NumberSchema { ..*s },
+            _ => panic!("unwrap_number_schema_cloned on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`StringSchema`], panics on different schemas.
+    pub const fn unwrap_string_schema_cloned(&self) -> StringSchema {
+        match self {
+            Schema::String(s) => StringSchema { ..*s },
+            _ => panic!("unwrap_string_schema_cloned on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`ObjectSchema`], panics on different schemas.
+    pub const fn unwrap_object_schema_cloned(&self) -> ObjectSchema {
+        match self {
+            Schema::Object(s) => ObjectSchema { ..*s },
+            _ => panic!("unwrap_object_schema_cloned on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`ArraySchema`], panics on different schemas.
+    pub const fn unwrap_array_schema_cloned(&self) -> ArraySchema {
+        match self {
+            Schema::Array(s) => ArraySchema { ..*s },
+            _ => panic!("unwrap_array_schema_cloned on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`AllOfSchema`], panics on different schemas.
+    pub const fn unwrap_all_of_schema_cloned(&self) -> AllOfSchema {
+        match self {
+            Schema::AllOf(s) => AllOfSchema { ..*s },
+            _ => panic!("unwrap_all_of_schema_cloned on different schema"),
+        }
+    }
+
+    /// Gets the underlying [`OneOfSchema`], panics on different schemas.
+    pub const fn unwrap_one_of_schema_cloned(&self) -> OneOfSchema {
+        match self {
+            Schema::OneOf(s) => OneOfSchema { ..*s },
+            _ => panic!("unwrap_one_of_schema_cloned on different schema"),
+        }
+    }
 }
 
 /// A string enum entry. An enum entry must have a value and a description.
