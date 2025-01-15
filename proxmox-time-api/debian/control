@@ -7,9 +7,9 @@ Build-Depends: debhelper-compat (= 13),
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~) <!nocheck>,
- librust-proxmox-schema-3+api-types-dev (>= 3.1.1-~~) <!nocheck>,
- librust-proxmox-schema-3+default-dev (>= 3.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-4+api-types-dev <!nocheck>,
+ librust-proxmox-schema-4+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -26,9 +26,9 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-proxmox-schema-3+api-macro-dev (>= 3.1.1-~~),
- librust-proxmox-schema-3+api-types-dev (>= 3.1.1-~~),
- librust-proxmox-schema-3+default-dev (>= 3.1.1-~~),
+ librust-proxmox-schema-4+api-macro-dev,
+ librust-proxmox-schema-4+api-types-dev,
+ librust-proxmox-schema-4+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev
 Suggests:
@@ -39,8 +39,8 @@ Provides:
  librust-proxmox-time-api-0+default-dev (= ${binary:Version}),
  librust-proxmox-time-api-0.1-dev (= ${binary:Version}),
  librust-proxmox-time-api-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-time-api-0.1.3-dev (= ${binary:Version}),
- librust-proxmox-time-api-0.1.3+default-dev (= ${binary:Version})
+ librust-proxmox-time-api-0.1.4-dev (= ${binary:Version}),
+ librust-proxmox-time-api-0.1.4+default-dev (= ${binary:Version})
 Description: Time Management API implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-time-api"
 
@@ -51,12 +51,12 @@ Depends:
  ${misc:Depends},
  librust-proxmox-time-api-dev (= ${binary:Version}),
  librust-proxmox-product-config-0.2+default-dev,
- librust-proxmox-sys-0.6+default-dev,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~),
  librust-proxmox-time-2+default-dev
 Provides:
  librust-proxmox-time-api-0+impl-dev (= ${binary:Version}),
  librust-proxmox-time-api-0.1+impl-dev (= ${binary:Version}),
- librust-proxmox-time-api-0.1.3+impl-dev (= ${binary:Version})
+ librust-proxmox-time-api-0.1.4+impl-dev (= ${binary:Version})
 Description: Time Management API implementation - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-time-api crate, by
  pulling in any additional dependencies needed by that feature.
