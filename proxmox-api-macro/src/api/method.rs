@@ -758,6 +758,7 @@ fn extract_normal_parameter(
                 // strip possible Option<> from this type:
                 let ty = util::is_option_type(&param.ty).unwrap_or(&param.ty);
                 default_consts.extend(quote_spanned! { span =>
+                    #[allow(dead_code)]
                     pub const #name: #ty = #def;
                 });
 
