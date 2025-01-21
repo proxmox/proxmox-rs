@@ -53,7 +53,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Unauthorized => f.write_str("unauthorized"),
-            Self::Api(status, msg) => write!(f, "api error (status = {}: {})", status.as_u16(), msg),
+            Self::Api(status, msg) => write!(f, "api error (status = {}: {msg})", status.as_u16()),
             Self::UnexpectedData => write!(f, "api unexpectedly returned data"),
             Self::BadApi(msg, _) => write!(f, "api returned unexpected data - {msg}"),
             Self::Other(err) => f.write_str(err),
