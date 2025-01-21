@@ -213,7 +213,8 @@ pub fn make_tmp_dir<P: AsRef<Path>>(
     // Push NULL byte so that we have a proper NULL-terminated string
     template.push(0);
 
-    let returned_buffer = unsafe { libc::mkdtemp(template.as_mut_ptr() as *mut i8) };
+    use std::os::raw::c_char;
+    let returned_buffer = unsafe { libc::mkdtemp(template.as_mut_ptr() as *mut c_char) };
 
     // Check errno immediately, so that nothing else can overwrite it.
     let err = std::io::Error::last_os_error();
