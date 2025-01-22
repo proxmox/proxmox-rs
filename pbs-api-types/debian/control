@@ -1,0 +1,68 @@
+Source: rust-pbs-api-types
+Section: rust
+Priority: optional
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo,
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-const-format-0.2+default-dev <!nocheck>,
+ librust-hex-0.4+default-dev <!nocheck>,
+ librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
+ librust-proxmox-apt-api-types-1+default-dev (>= 1.0.2-~~) <!nocheck>,
+ librust-proxmox-auth-api-0.4+api-types-dev <!nocheck>,
+ librust-proxmox-auth-api-0.4+default-dev <!nocheck>,
+ librust-proxmox-human-byte-0.1+default-dev <!nocheck>,
+ librust-proxmox-lang-1+default-dev (>= 1.3-~~) <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-4+default-dev <!nocheck>,
+ librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~) <!nocheck>,
+ librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~) <!nocheck>,
+ librust-proxmox-time-2+default-dev <!nocheck>,
+ librust-proxmox-uuid-1+default-dev (>= 1.0.1-~~) <!nocheck>,
+ librust-proxmox-uuid-1+serde-dev (>= 1.0.1-~~) <!nocheck>,
+ librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-plain-1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.7.0
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: pbs-api-types
+Rules-Requires-Root: no
+
+Package: librust-pbs-api-types-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-const-format-0.2+default-dev,
+ librust-hex-0.4+default-dev,
+ librust-percent-encoding-2+default-dev (>= 2.1-~~),
+ librust-proxmox-apt-api-types-1+default-dev (>= 1.0.2-~~),
+ librust-proxmox-auth-api-0.4+api-types-dev,
+ librust-proxmox-auth-api-0.4+default-dev,
+ librust-proxmox-human-byte-0.1+default-dev,
+ librust-proxmox-lang-1+default-dev (>= 1.3-~~),
+ librust-proxmox-schema-4+api-macro-dev,
+ librust-proxmox-schema-4+default-dev,
+ librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
+ librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~),
+ librust-proxmox-time-2+default-dev,
+ librust-proxmox-uuid-1+default-dev (>= 1.0.1-~~),
+ librust-proxmox-uuid-1+serde-dev (>= 1.0.1-~~),
+ librust-regex-1+default-dev (>= 1.5-~~),
+ librust-serde-1+default-dev,
+ librust-serde-plain-1+default-dev
+Provides:
+ librust-pbs-api-types+default-dev (= ${binary:Version}),
+ librust-pbs-api-types-0-dev (= ${binary:Version}),
+ librust-pbs-api-types-0+default-dev (= ${binary:Version}),
+ librust-pbs-api-types-0.2-dev (= ${binary:Version}),
+ librust-pbs-api-types-0.2+default-dev (= ${binary:Version}),
+ librust-pbs-api-types-0.2.0-dev (= ${binary:Version}),
+ librust-pbs-api-types-0.2.0+default-dev (= ${binary:Version})
+Description: API types for Proxmox Backup Server - Rust source code
+ Source code for Debianized Rust crate "pbs-api-types"
