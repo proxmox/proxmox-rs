@@ -48,6 +48,7 @@ members = [
     "proxmox-time-api",
     "proxmox-uuid",
     "proxmox-worker-task",
+    "pbs-api-types",
 ]
 exclude = [
     "build",
