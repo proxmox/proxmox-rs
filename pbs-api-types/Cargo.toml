@@ -1,0 +1,24 @@
+[package]
+name = "pbs-api-types"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+description = "general API type helpers for PBS"
+
+[dependencies]
+anyhow.workspace = true
+const_format.workspace = true
+hex.workspace = true
+percent-encoding.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_plain.workspace = true
+
+proxmox-auth-api = { workspace = true, features = [ "api-types" ] }
+proxmox-apt-api-types.workspace = true
+proxmox-human-byte.workspace = true
+proxmox-lang.workspace=true
+proxmox-schema = { workspace = true, features = [ "api-macro" ] }
+proxmox-serde.workspace = true
+proxmox-time.workspace = true
+proxmox-uuid = { workspace = true, features = [ "serde" ] }
