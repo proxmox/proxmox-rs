@@ -980,9 +980,14 @@ impl WorkerTask {
 
                     let result = match std::panic::catch_unwind(move || f(worker1)) {
                         Ok(r) => r,
-                        Err(panic) => match panic.downcast::<&str>() {
-                            Ok(panic_msg) => Err(format_err!("worker panicked: {}", panic_msg)),
-                            Err(_) => Err(format_err!("worker panicked: unknown type.")),
+                        Err(panic) => {
+                            if let Some(panic_msg) = panic.downcast_ref::<&str>() {
+                                Err(format_err!("worker panicked: {panic_msg}"))
+                            } else if let Some(panic_msg) = panic.downcast_ref::<String>() {
+                                Err(format_err!("worker panicked: {panic_msg}"))
+                            } else {
+                                Err(format_err!("worker panicked: cannot show error message due to unknown error type."))
+                            }
                         },
                     };
 
