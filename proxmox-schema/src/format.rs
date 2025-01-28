@@ -174,6 +174,9 @@ pub fn dump_properties(
                             ParameterDisplayStyle::ConfigSub,
                             &[],
                         );
+                        if !sub_text.is_empty() {
+                            param_descr.push_str("\n\n");
+                        }
                         param_descr.push_str(&sub_text);
                     }
                     Schema::Array(_) => {
