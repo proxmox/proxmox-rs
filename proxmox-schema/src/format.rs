@@ -142,7 +142,7 @@ pub fn dump_properties(
     skip: &[&str],
 ) -> String {
     let mut res = String::new();
-    let next_indent = format!("  {}", indent);
+    let next_indent = format!("  {indent}");
 
     let mut required_list: Vec<String> = Vec::new();
     let mut optional_list: Vec<String> = Vec::new();
@@ -156,8 +156,8 @@ pub fn dump_properties(
             get_property_description(prop, schema, style, DocumentationFormat::ReST);
 
         if !indent.is_empty() {
-            param_descr = format!("{}{}", indent, param_descr); // indent first line
-            param_descr = param_descr.replace('\n', &format!("\n{}", indent)); // indent rest
+            param_descr = format!("{indent}{param_descr}"); // indent first line
+            param_descr = param_descr.replace('\n', &format!("\n{indent}")); // indent rest
         }
 
         if style == ParameterDisplayStyle::Config {
@@ -339,15 +339,15 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
         }
         Schema::Boolean(_) => String::from("<boolean>"),
         Schema::Integer(integer_schema) => match (integer_schema.minimum, integer_schema.maximum) {
-            (Some(min), Some(max)) => format!("<integer> ({} - {})", min, max),
-            (Some(min), None) => format!("<integer> ({} - N)", min),
-            (None, Some(max)) => format!("<integer> (-N - {})", max),
+            (Some(min), Some(max)) => format!("<integer> ({min} - {max})"),
+            (Some(min), None) => format!("<integer> ({min} - N)"),
+            (None, Some(max)) => format!("<integer> (-N - {max})"),
             _ => String::from("<integer>"),
         },
         Schema::Number(number_schema) => match (number_schema.minimum, number_schema.maximum) {
-            (Some(min), Some(max)) => format!("<number> ({} - {})", min, max),
-            (Some(min), None) => format!("<number> ({} - N)", min),
-            (None, Some(max)) => format!("<number> (-N - {})", max),
+            (Some(min), Some(max)) => format!("<number> ({min} - {max})"),
+            (Some(min), None) => format!("<number> ({min} - N)"),
+            (None, Some(max)) => format!("<number> (-N - {max})"),
             _ => String::from("<number>"),
         },
         Schema::Object(_) => String::from("<object>"),
@@ -362,7 +362,7 @@ pub fn get_property_string_type_text(schema: &Schema) -> String {
         Schema::Object(object_schema) => get_object_type_text(object_schema),
         Schema::Array(array_schema) => {
             let item_type = get_simple_type_text(array_schema.items, true);
-            format!("[{}, ...]", item_type)
+            format!("[{item_type}, ...]")
         }
         _ => panic!("get_property_string_type_text: expected array or object"),
     }
@@ -374,12 +374,12 @@ fn get_object_type_text(object_schema: &ObjectSchema) -> String {
     let mut add_part = |name, optional, schema| {
         let tt = get_simple_type_text(schema, false);
         let text = if parts.is_empty() {
-            format!("{}={}", name, tt)
+            format!("{name}={tt}")
         } else {
-            format!(",{}={}", name, tt)
+            format!(",{name}={tt}")
         };
         if optional {
-            parts.push(format!("[{}]", text));
+            parts.push(format!("[{text}]"));
         } else {
             parts.push(text);
         }
@@ -459,7 +459,7 @@ pub fn dump_api_return_schema(returns: &ReturnType, style: ParameterDisplayStyle
     };
 
     let type_text = get_schema_type_text(schema, style);
-    let _ = write!(res, "**{}**\n\n", type_text);
+    let _ = write!(res, "**{type_text}**\n\n");
 
     match schema {
         Schema::Null => {

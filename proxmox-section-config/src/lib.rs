@@ -1263,11 +1263,7 @@ pub fn dump_section_config(config: &SectionConfig) -> String {
             use std::fmt::Write as _;
 
             let description = wrap_text("", "", properties.description(), 80);
-            let _ = write!(
-                res,
-                "\n**Section type** \'``{}``\':  {}\n\n",
-                name, description
-            );
+            let _ = write!(res, "\n**Section type** \'``{name}``\':  {description}\n\n");
         }
 
         res.push_str(&dump_properties(
