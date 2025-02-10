@@ -32,7 +32,7 @@ pub fn add_query_bool(query: &mut String, separator: &mut char, name: &str, valu
     }
 }
 
-/// For "<type>-list" entries we turn an array into a string ready for perl's `split_list()` call.
+/// For `<type>-list` entries we turn an array into a string ready for perl's `split_list()` call.
 pub fn add_query_arg_string_list<T>(
     query: &mut String,
     separator: &mut char,
