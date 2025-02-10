@@ -8,6 +8,7 @@ use anyhow::{bail, format_err, Error};
 use const_format::concatcp;
 use serde::{Deserialize, Serialize};
 
+use proxmox_human_byte::HumanByte;
 use proxmox_schema::{
     api, const_regex, ApiStringFormat, ApiType, ArraySchema, EnumEntry, IntegerSchema, ReturnType,
     Schema, StringSchema, Updater, UpdaterType,
@@ -286,6 +287,106 @@ pub const DATASTORE_TUNING_STRING_SCHEMA: Schema = StringSchema::new("Datastore 
     ))
     .schema();
 
+#[api]
+#[derive(Copy, Clone, Default, Deserialize, Serialize, Updater, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+/// Datastore backend type
+pub enum DatastoreBackendType {
+    /// Local filesystem
+    #[default]
+    Filesystem,
+    /// S3 object store
+    S3,
+}
+serde_plain::derive_display_from_serialize!(DatastoreBackendType);
+serde_plain::derive_fromstr_from_deserialize!(DatastoreBackendType);
+
+#[api(
+    properties: {
+        type: {
+            type: DatastoreBackendType,
+            optional: true,
+        },
+        client: {
+            schema: proxmox_s3_client::S3_CLIENT_ID_SCHEMA,
+            optional: true,
+        },
+        bucket: {
+            schema: proxmox_s3_client::S3_BUCKET_NAME_SCHEMA,
+            optional: true,
+        },
+        "max-cache-size": {
+            type: HumanByte,
+            optional: true,
+        }
+    },
+    default_key: "type",
+)]
+#[derive(Default, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+/// Datastore backend config
+pub struct DatastoreBackendConfig {
+    /// backend type
+    #[serde(rename = "type")]
+    pub ty: Option<DatastoreBackendType>,
+    /// s3 client id
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub client: Option<String>,
+    /// s3 bucket name
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bucket: Option<String>,
+    /// maximum cache size for local datastore LRU cache
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_cache_size: Option<HumanByte>,
+}
+
+pub const DATASTORE_BACKEND_CONFIG_STRING_SCHEMA: Schema =
+    StringSchema::new("Datastore backend config")
+        .format(&ApiStringFormat::VerifyFn(verify_datastore_backend_config))
+        .type_text("<backend-config>")
+        .schema();
+
+fn verify_datastore_backend_config(input: &str) -> Result<(), Error> {
+    DatastoreBackendConfig::from_str(input).map(|_| ())
+}
+
+impl FromStr for DatastoreBackendConfig {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let backend_config: DatastoreBackendConfig =
+            proxmox_schema::property_string::parse_with_schema(
+                s,
+                &DatastoreBackendConfig::API_SCHEMA,
+            )?;
+        let backend_type = backend_config.ty.unwrap_or_default();
+        match backend_type {
+            DatastoreBackendType::Filesystem => {
+                if backend_config.client.is_some() {
+                    bail!("additional option client, not allowed for backend type filesystem");
+                }
+                if backend_config.bucket.is_some() {
+                    bail!("additional option bucket, not allowed for backend type filesystem");
+                }
+                if backend_config.max_cache_size.is_some() {
+                    bail!(
+                        "additional option max-cache-size, not allowed for backend type filesystem"
+                    );
+                }
+            }
+            DatastoreBackendType::S3 => {
+                if backend_config.client.is_none() {
+                    bail!("missing option client, required for backend type s3");
+                }
+                if backend_config.bucket.is_none() {
+                    bail!("missing option bucket, required for backend type s3");
+                }
+            }
+        }
+        Ok(backend_config)
+    }
+}
+
 #[api(
     properties: {
         name: {
@@ -336,7 +437,11 @@ pub const DATASTORE_TUNING_STRING_SCHEMA: Schema = StringSchema::new("Datastore 
             optional: true,
             format: &proxmox_schema::api_types::UUID_FORMAT,
             type: String,
-        }
+        },
+        backend: {
+            schema: DATASTORE_BACKEND_CONFIG_STRING_SCHEMA,
+            optional: true,
+        },
     }
 )]
 #[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
@@ -389,6 +494,11 @@ pub struct DataStoreConfig {
     #[updater(skip)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backing_device: Option<String>,
+
+    /// Backend configuration for datastore
+    #[updater(skip)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub backend: Option<String>,
 }
 
 #[api]
@@ -424,6 +534,7 @@ impl DataStoreConfig {
             tuning: None,
             maintenance_mode: None,
             backing_device: None,
+            backend: None,
         }
     }
 
