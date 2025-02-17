@@ -512,7 +512,7 @@ my sub print_method_without_body : prototype($$$$$) {
             }
             print {$out} "    let url = format!(\"/api2/extjs$def->{url}\{query}\");\n";
         } else {
-            print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
+            print {$out} "    let url = \"/api2/extjs$def->{url}\";\n";
         }
     } else {
         print {$out} ") -> Result<$def->{output_type}, Error> {\n";
@@ -520,7 +520,7 @@ my sub print_method_without_body : prototype($$$$$) {
             print_default_impl($out, $name);
             return;
         }
-        print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
+        print {$out} "    let url = \"/api2/extjs$def->{url}\";\n";
     }
 
     my $call = return_expr($def, "self.0.$method(&url).await?");
@@ -553,7 +553,7 @@ my sub print_method_with_body : prototype($$$$$) {
         return;
     }
     # print {$out} "    // self.login().await?;\n";
-    print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
+    print {$out} "    let url = \"/api2/extjs$def->{url}\";\n";
         my $call = return_expr($def, "self.0.${method}(&url, &params).await?");
         print {$out} "    $call\n";
     print {$out} "}\n\n";
