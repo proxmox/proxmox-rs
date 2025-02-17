@@ -2,6 +2,7 @@ package Schema2Rust;
 
 use strict;
 use warnings;
+use v5.36;
 
 use Carp qw(confess carp croak cluck);
 use Data::Dumper;
@@ -420,7 +421,20 @@ my sub print_default_impl : prototype($$) {
     my ($out, $method_name) = @_;
     print {$out} "Err(Error::Other(\"$method_name not implemented\"))\n";
     print {$out} "}\n\n";
+}
 
+my sub return_expr : prototype($$) ($def, $expr) {
+    if ($def->{output_type} eq '()') {
+        die "todo: handle returning attributes with .nodata()\n"
+            if $def->{'returns-attribs'};
+        $expr = "${expr}.nodata()";
+    } else {
+        $expr = "${expr}.expect_json()";
+        if (!$def->{'returns-attribs'}) {
+            $expr = "Ok(${expr}?.data)";
+        }
+    }
+    return $expr;
 }
 
 my sub print_method_without_body : prototype($$$$$) {
@@ -509,12 +523,8 @@ my sub print_method_without_body : prototype($$$$$) {
         print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
     }
 
-    my $call = "self.0.$method(&url).await?.expect_json()";
-    if ($def->{'returns-attribs'}) {
-        print {$out} "    $call\n";
-    } else {
-        print {$out} "    Ok(${call}?.data)\n";
-    }
+    my $call = return_expr($def, "self.0.$method(&url).await?");
+    print {$out} "    $call\n";
 
     print {$out} "}\n\n";
 }
@@ -544,12 +554,8 @@ my sub print_method_with_body : prototype($$$$$) {
     }
     # print {$out} "    // self.login().await?;\n";
     print {$out} "    let url = format!(\"/api2/extjs$def->{url}\");\n";
-        my $call = "self.0.${method}(&url, &params).await?.expect_json()";
-        if ($def->{'returns-attribs'}) {
-            print {$out} "    $call\n";
-        } else {
-            print {$out} "    Ok(${call}?.data)\n";
-        }
+        my $call = return_expr($def, "self.0.${method}(&url, &params).await?");
+        print {$out} "    $call\n";
     print {$out} "}\n\n";
 }
 

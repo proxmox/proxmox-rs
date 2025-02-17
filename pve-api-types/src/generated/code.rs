@@ -1014,7 +1014,7 @@ where
     /// Stop a task.
     async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
         let url = format!("/api2/extjs/nodes/{node}/tasks/{upid}");
-        Ok(self.0.delete(&url).await?.expect_json()?.data)
+        self.0.delete(&url).await?.nodata()
     }
 
     /// API version details, including some parts of the global datacenter
