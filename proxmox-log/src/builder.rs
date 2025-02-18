@@ -4,7 +4,7 @@ use tracing_subscriber::{filter::filter_fn, layer::SubscriberExt, Layer};
 
 use crate::{
     get_env_variable, journald_or_stderr_layer, plain_stderr_layer,
-    tasklog_layer::TasklogLayer, LogContext,
+    pve_task_formatter::PveTaskFormatter, tasklog_layer::TasklogLayer, LogContext,
 };
 
 /// Builder-like struct to compose your logging layers.
@@ -111,6 +111,20 @@ impl Logger {
                 .with_filter(self.global_log_level)
                 .boxed(),
         );
+        self
+    }
+
+    /// Print to stderr in the PVE format.
+    ///
+    /// The PVE format only prints the event level and messages.
+    /// e.g.: `DEBUG: event message`.
+    pub fn stderr_pve(mut self) -> Logger {
+        let layer = tracing_subscriber::fmt::layer()
+            .event_format(PveTaskFormatter {})
+            .with_writer(std::io::stderr)
+            .with_filter(self.global_log_level)
+            .boxed();
+        self.layer.push(layer);
         self
     }
 

@@ -9,6 +9,7 @@ use tokio::task::futures::TaskLocalFuture;
 use tracing_subscriber::prelude::*;
 
 mod file_logger;
+mod pve_task_formatter;
 mod tasklog_layer;
 
 pub mod builder;
