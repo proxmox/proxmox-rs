@@ -98,6 +98,15 @@ impl LogContext {
     pub fn state(&self) -> &Arc<Mutex<FileLogState>> {
         &self.logger
     }
+
+    /// Log directly to the underlying FileLogger, without going through tracing.
+    ///
+    /// Using this function we can guarantee that a log message will be in the tasklog file,
+    /// regardless of the tracing layers/filters.
+    pub fn log_unfiltered(&self, msg: &str) {
+        let mut logger = self.logger.lock().unwrap();
+        logger.logger.log(msg);
+    }
 }
 
 fn journald_or_stderr_layer<S>() -> Box<dyn tracing_subscriber::Layer<S> + Send + Sync>
@@ -172,3 +181,4 @@ pub fn init_cli_logger(
         .tasklog_pbs()
         .init()
 }
+

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::signal::unix::SignalKind;
 use tokio::sync::{oneshot, watch};
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 use proxmox_daemon::command_socket::CommandSocket;
 use proxmox_lang::try_block;
@@ -1019,7 +1019,19 @@ impl WorkerTask {
     /// Log task result, remove task from running list
     pub fn log_result(&self, result: &Result<(), Error>) {
         let state = self.create_state(result);
-        self.log_message(state.result_text());
+
+        // Write the result manually to the workertask file. We don't want to filter or process
+        // this message by the logging system. This also guarantees the result message will be in
+        // the file, regardless of the logging level.
+        match LogContext::current() {
+            Some(context) => {
+                context.log_unfiltered(&state.result_text());
+                if result.is_err() {
+                    eprintln!("{}", &state.result_text());
+                }
+            },
+            None => error!("error writing task result to the tasklog"),
+        }
 
         WORKER_TASK_LIST.lock().unwrap().remove(&self.upid.task_id);
         // this wants to access WORKER_TASK_LIST, so we need to drop the lock above
