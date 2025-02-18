@@ -6,16 +6,14 @@ use std::future::Future;
 use std::sync::{Arc, Mutex};
 
 use tokio::task::futures::TaskLocalFuture;
-use tracing_log::{AsLog, LogTracer};
-use tracing_subscriber::filter::filter_fn;
 use tracing_subscriber::prelude::*;
 
-use tasklog_layer::TasklogLayer;
-
 mod file_logger;
-pub use file_logger::{FileLogOptions, FileLogger};
-
 mod tasklog_layer;
+
+pub mod builder;
+pub use builder::Logger;
+pub use file_logger::{FileLogOptions, FileLogger};
 
 pub use tracing::debug;
 pub use tracing::debug_span;
@@ -36,36 +34,6 @@ pub use tracing_subscriber::filter::LevelFilter;
 
 tokio::task_local! {
     static LOG_CONTEXT: LogContext;
-}
-
-pub fn init_logger(
-    env_var_name: &str,
-    default_log_level: LevelFilter,
-) -> Result<(), anyhow::Error> {
-    let mut log_level = default_log_level;
-    if let Ok(v) = env::var(env_var_name) {
-        match v.parse::<LevelFilter>() {
-            Ok(l) => {
-                log_level = l;
-            }
-            Err(e) => {
-                eprintln!("env variable {env_var_name} found, but parsing failed: {e:?}");
-            }
-        }
-    }
-    let registry = tracing_subscriber::registry()
-        .with(
-            journald_or_stderr_layer()
-                .with_filter(filter_fn(|metadata| {
-                    !LogContext::exists() || *metadata.level() == Level::ERROR
-                }))
-                .with_filter(log_level),
-        )
-        .with(TasklogLayer {}.with_filter(log_level));
-
-    tracing::subscriber::set_global_default(registry)?;
-    LogTracer::init_with_filter(log_level.as_log())?;
-    Ok(())
 }
 
 /// A file logger and warnings counter which can be used across a scope for separate logging.
@@ -160,34 +128,46 @@ where
         .with_writer(std::io::stderr)
 }
 
-/// Initialize default logger for CLI binaries
-pub fn init_cli_logger(
-    env_var_name: &str,
-    default_log_level: LevelFilter,
-) -> Result<(), anyhow::Error> {
+fn get_env_variable(env_var: &str, default_log_level: LevelFilter) -> LevelFilter {
     let mut log_level = default_log_level;
-    if let Ok(v) = env::var(env_var_name) {
+    if let Ok(v) = env::var(env_var) {
         match v.parse::<LevelFilter>() {
             Ok(l) => {
                 log_level = l;
             }
             Err(e) => {
-                eprintln!("env variable {env_var_name} found, but parsing failed: {e:?}");
+                eprintln!("env variable {env_var} found, but parsing failed: {e:?}");
             }
         }
     }
+    log_level
+}
 
-    let registry = tracing_subscriber::registry()
-        .with(
-            plain_stderr_layer()
-                .with_filter(filter_fn(|metadata| {
-                    !LogContext::exists() || *metadata.level() >= Level::ERROR
-                }))
-                .with_filter(log_level),
-        )
-        .with(TasklogLayer {}.with_filter(log_level));
+/// Initialize tracing logger that prints to journald or stderr depending on if we are in a pbs
+/// task.
+///
+/// Check the (tokio) LogContext and print to either journald or the Tasklog.
+#[deprecated(note = "Use the `Logger` builder instead")]
+pub fn init_logger(
+    env_var_name: &str,
+    default_log_level: LevelFilter,
+) -> Result<(), anyhow::Error> {
+    Logger::from_env(env_var_name, default_log_level)
+        .journald_on_no_workertask()
+        .tasklog_pbs()
+        .init()
+}
 
-    tracing::subscriber::set_global_default(registry)?;
-    LogTracer::init_with_filter(log_level.as_log())?;
-    Ok(())
+/// Initialize default tracing logger for CLI binaries.
+///
+/// Prints to stderr and to the tasklog if we are in a pbs workertask.
+#[deprecated(note = "Use the `Logger` builder instead")]
+pub fn init_cli_logger(
+    env_var_name: &str,
+    default_log_level: LevelFilter,
+) -> Result<(), anyhow::Error> {
+    Logger::from_env(env_var_name, default_log_level)
+        .stderr_on_no_workertask()
+        .tasklog_pbs()
+        .init()
 }
