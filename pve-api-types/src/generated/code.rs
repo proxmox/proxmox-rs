@@ -662,8 +662,8 @@ where
     async fn cluster_config_join(&self, node: Option<String>) -> Result<ClusterJoinInfo, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_arg(&mut query, &mut sep, "node", &node);
-        let url = format!("/api2/extjs/cluster/config/join{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/cluster/config/join{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Retrieve metrics of the cluster.
@@ -677,8 +677,8 @@ where
         add_query_bool(&mut query, &mut sep, "history", history);
         add_query_bool(&mut query, &mut sep, "local-only", local_only);
         add_query_arg(&mut query, &mut sep, "start-time", &start_time);
-        let url = format!("/api2/extjs/cluster/metrics/export{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/cluster/metrics/export{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Resources index (cluster wide).
@@ -688,14 +688,14 @@ where
     ) -> Result<Vec<ClusterResource>, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_arg(&mut query, &mut sep, "type", &ty);
-        let url = format!("/api2/extjs/cluster/resources{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/cluster/resources{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get cluster status information.
     async fn cluster_status(&self) -> Result<Vec<ClusterNodeStatus>, Error> {
         let url = "/api2/extjs/cluster/status";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Generate a new API token for a specific user. NOTE: returns API token
@@ -707,13 +707,13 @@ where
         params: CreateToken,
     ) -> Result<CreateTokenResponse, Error> {
         let url = "/api2/extjs/access/users/{userid}/token/{tokenid}";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Read subscription info.
     async fn get_subscription(&self, node: &str) -> Result<NodeSubscriptionInfo, Error> {
         let url = "/api2/extjs/nodes/{node}/subscription";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Read task list for one node (finished tasks).
@@ -745,8 +745,8 @@ where
         add_query_arg(&mut query, &mut sep, "until", &p_until);
         add_query_arg(&mut query, &mut sep, "userfilter", &p_userfilter);
         add_query_arg(&mut query, &mut sep, "vmid", &p_vmid);
-        let url = format!("/api2/extjs/nodes/{node}/tasks{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/nodes/{node}/tasks{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Read task log.
@@ -762,26 +762,26 @@ where
         add_query_bool(&mut query, &mut sep, "download", download);
         add_query_arg(&mut query, &mut sep, "limit", &limit);
         add_query_arg(&mut query, &mut sep, "start", &start);
-        let url = format!("/api2/extjs/nodes/{node}/tasks/{upid}/log{query}");
-        self.0.get(&url).await?.expect_json()
+        let url = &format!("/api2/extjs/nodes/{node}/tasks/{upid}/log{query}");
+        self.0.get(url).await?.expect_json()
     }
 
     /// Read task status.
     async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
         let url = "/api2/extjs/nodes/{node}/tasks/{upid}/status";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Authentication domain index.
     async fn list_domains(&self) -> Result<Vec<ListRealm>, Error> {
         let url = "/api2/extjs/access/domains";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// LXC container index (per node).
     async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
         let url = "/api2/extjs/nodes/{node}/lxc";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// List available networks
@@ -792,22 +792,22 @@ where
     ) -> Result<Vec<NetworkInterface>, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_arg(&mut query, &mut sep, "type", &ty);
-        let url = format!("/api2/extjs/nodes/{node}/network{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/nodes/{node}/network{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Cluster node index.
     async fn list_nodes(&self) -> Result<Vec<ClusterNodeIndexResponse>, Error> {
         let url = "/api2/extjs/nodes";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Virtual machine index (per node).
     async fn list_qemu(&self, node: &str, full: Option<bool>) -> Result<Vec<VmEntry>, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_bool(&mut query, &mut sep, "full", full);
-        let url = format!("/api2/extjs/nodes/{node}/qemu{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/nodes/{node}/qemu{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get status for all datastores.
@@ -826,8 +826,8 @@ where
         add_query_bool(&mut query, &mut sep, "format", format);
         add_query_arg(&mut query, &mut sep, "storage", &storage);
         add_query_arg(&mut query, &mut sep, "target", &target);
-        let url = format!("/api2/extjs/nodes/{node}/storage{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/nodes/{node}/storage{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get container configuration.
@@ -841,14 +841,14 @@ where
         let (mut query, mut sep) = (String::new(), '?');
         add_query_bool(&mut query, &mut sep, "current", current);
         add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
-        let url = format!("/api2/extjs/nodes/{node}/lxc/{vmid}/config{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/config{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get virtual machine status.
     async fn lxc_get_status(&self, node: &str, vmid: u32) -> Result<LxcStatus, Error> {
         let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/status/current";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Migrate the container to another node. Creates a new migration task.
@@ -859,7 +859,7 @@ where
         params: MigrateLxc,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/migrate";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Migrate virtual machine. Creates a new migration task.
@@ -870,13 +870,13 @@ where
         params: MigrateQemu,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/migrate";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Read node status
     async fn node_status(&self, node: &str) -> Result<NodeStatus, Error> {
         let url = "/api2/extjs/nodes/{node}/status";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get the virtual machine configuration with pending configuration changes
@@ -892,14 +892,14 @@ where
         let (mut query, mut sep) = (String::new(), '?');
         add_query_bool(&mut query, &mut sep, "current", current);
         add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
-        let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get virtual machine status.
     async fn qemu_get_status(&self, node: &str, vmid: u32) -> Result<QemuStatus, Error> {
         let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/status/current";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get preconditions for migration.
@@ -911,8 +911,8 @@ where
     ) -> Result<QemuMigratePreconditions, Error> {
         let (mut query, mut sep) = (String::new(), '?');
         add_query_arg(&mut query, &mut sep, "target", &target);
-        let url = format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate{query}");
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate{query}");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Migrate the container to another cluster. Creates a new migration task.
@@ -924,7 +924,7 @@ where
         params: RemoteMigrateLxc,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/remote_migrate";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Migrate virtual machine to a remote cluster. Creates a new migration
@@ -936,7 +936,7 @@ where
         params: RemoteMigrateQemu,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/remote_migrate";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Shutdown the container. This will trigger a clean shutdown of the
@@ -948,7 +948,7 @@ where
         params: ShutdownLxc,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/status/shutdown";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Shutdown virtual machine. This is similar to pressing the power button
@@ -961,7 +961,7 @@ where
         params: ShutdownQemu,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/status/shutdown";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Start the container.
@@ -972,7 +972,7 @@ where
         params: StartLxc,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/status/start";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Start virtual machine.
@@ -983,7 +983,7 @@ where
         params: StartQemu,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/status/start";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Stop the container. This will abruptly stop all processes running in the
@@ -995,7 +995,7 @@ where
         params: StopLxc,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/status/stop";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Stop virtual machine. The qemu process will exit immediately. This is
@@ -1008,19 +1008,19 @@ where
         params: StopQemu,
     ) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/status/stop";
-        Ok(self.0.post(&url, &params).await?.expect_json()?.data)
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Stop a task.
     async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
         let url = "/api2/extjs/nodes/{node}/tasks/{upid}";
-        self.0.delete(&url).await?.nodata()
+        self.0.delete(url).await?.nodata()
     }
 
     /// API version details, including some parts of the global datacenter
     /// config.
     async fn version(&self) -> Result<VersionResponse, Error> {
         let url = "/api2/extjs/version";
-        Ok(self.0.get(&url).await?.expect_json()?.data)
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 }
