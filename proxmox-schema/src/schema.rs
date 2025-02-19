@@ -634,6 +634,26 @@ pub type SchemaPropertyEntry = (&'static str, bool, &'static Schema);
 /// This is a workaround unless RUST can const_fn `Hash::new()`
 pub type SchemaPropertyMap = &'static [SchemaPropertyEntry];
 
+/// Note: this only compares *bytes* and is not strictly speaking equivalent to str::cmp!
+const fn assert_properties_sorted(properties: SchemaPropertyMap) {
+    use std::cmp::Ordering;
+
+    let mut i = 0;
+    let mut prev = None::<&'static str>;
+    while i != properties.len() {
+        let cur = properties[i].0;
+        if let Some(prev) = prev {
+            match crate::const_test_utils::byte_string_cmp(prev.as_bytes(), cur.as_bytes()) {
+                Ordering::Greater => panic!("object schema properties must be sorted"),
+                Ordering::Equal => panic!("duplicate object schema properties not allowed"),
+                Ordering::Less => (),
+            }
+        }
+        prev = Some(cur);
+        i += 1;
+    }
+}
+
 /// Legacy property strings may contain shortcuts where the *value* of a specific key is used as a
 /// *key* for yet another option. Most notably, PVE's `netX` properties use `<model>=<macaddr>`
 /// instead of `model=<model>,macaddr=<macaddr>`.
@@ -682,7 +702,51 @@ pub struct ObjectSchema {
 }
 
 impl ObjectSchema {
+    /// Create a new `object` schema.
+    ///
+    /// Note that the `properties` must be sorted! Therefore it is recommended that any schema
+    /// created outside of a `const` context is wrapped in a `const {}` block.
+    /// (The `#[sortable]` attribute can be used to automate the sorting).
+    ///
+    /// This is okay:
+    ///
+    /// ```
+    /// # use proxmox_schema::{ObjectSchema, Schema, StringSchema};
+    /// const SCHEMA: Schema = ObjectSchema::new(
+    ///     "Some Object",
+    ///     &[
+    ///         ("key1", false, &StringSchema::new("A String").schema()),
+    ///         ("key2", false, &StringSchema::new("Another String").schema()),
+    ///     ],
+    /// ).schema();
+    /// ```
+    ///
+    /// These will panic:
+    ///
+    /// ```compile_fail,E0080
+    /// # use proxmox_schema::{ObjectSchema, Schema, StringSchema};
+    /// const SCHEMA: Schema = ObjectSchema::new(
+    ///     "Some Object",
+    ///     &[
+    ///         ("wrong", false, &StringSchema::new("A String").schema()),
+    ///         ("order", false, &StringSchema::new("Another String").schema()),
+    ///     ],
+    /// ).schema();
+    /// ```
+    ///
+    /// ```compile_fail,E0080
+    /// # use proxmox_schema::{ObjectSchema, Schema, StringSchema};
+    /// const SCHEMA: Schema = ObjectSchema::new(
+    ///     "Some Object",
+    ///     &[
+    ///         ("same", false, &StringSchema::new("A String").schema()),
+    ///         // duplicate field name:
+    ///         ("same", false, &StringSchema::new("Another String").schema()),
+    ///     ],
+    /// ).schema();
+    /// ```
     pub const fn new(description: &'static str, properties: SchemaPropertyMap) -> Self {
+        assert_properties_sorted(properties);
         ObjectSchema {
             description,
             properties,
@@ -817,12 +881,121 @@ pub struct OneOfSchema {
     pub list: &'static [(&'static str, &'static Schema)],
 }
 
+/// Note: this only compares *bytes* and is not strictly speaking equivalent to str::cmp!
+const fn assert_one_of_list_is_sorted(list: &[(&str, &Schema)]) {
+    use std::cmp::Ordering;
+
+    let mut i = 0;
+    let mut prev = None::<&'static str>;
+    while i != list.len() {
+        let cur = list[i].0;
+        if let Some(prev) = prev {
+            match crate::const_test_utils::byte_string_cmp(prev.as_bytes(), cur.as_bytes()) {
+                Ordering::Greater => panic!("oneOf variant list must be sorted"),
+                Ordering::Equal => panic!("multiple variants of the same type"),
+                Ordering::Less => (),
+            }
+        }
+        prev = Some(cur);
+        i += 1;
+    }
+}
+
 impl OneOfSchema {
+    /// Create a new `oneOf` schema.
+    ///
+    /// Note that the `properties` must be sorted! Therefore it is recommended that any schema
+    /// created outside of a `const` context is wrapped in a `const {}` block.
+    /// (The `#[sortable]` attribute can be used to automate the sorting).
+    ///
+    /// This is okay:
+    ///
+    /// ```
+    /// # use proxmox_schema::{OneOfSchema, ObjectSchema, Schema, StringSchema};
+    /// # const SCHEMA_V1: Schema = ObjectSchema::new(
+    /// #     "Some Object",
+    /// #     &[
+    /// #         ("key1", false, &StringSchema::new("A String").schema()),
+    /// #         ("key2", false, &StringSchema::new("Another String").schema()),
+    /// #     ],
+    /// # ).schema();
+    /// # const SCHEMA_V2: Schema = ObjectSchema::new(
+    /// #     "Another Object",
+    /// #     &[
+    /// #         ("key3", false, &StringSchema::new("A String").schema()),
+    /// #         ("key4", false, &StringSchema::new("Another String").schema()),
+    /// #     ],
+    /// # ).schema();
+    /// const SCHEMA: Schema = OneOfSchema::new(
+    ///     "Some enum",
+    ///     &("type", false, &StringSchema::new("v1 or v2").schema()),
+    ///     &[
+    ///         ("v1", &SCHEMA_V1),
+    ///         ("v2", &SCHEMA_V2),
+    ///     ],
+    /// ).schema();
+    /// ```
+    ///
+    /// These will panic:
+    ///
+    /// ```compile_fail,E0080
+    /// # use proxmox_schema::{OneOfSchema, ObjectSchema, Schema, StringSchema};
+    /// # const SCHEMA_V1: Schema = ObjectSchema::new(
+    /// #     "Some Object",
+    /// #     &[
+    /// #         ("key1", false, &StringSchema::new("A String").schema()),
+    /// #         ("key2", false, &StringSchema::new("Another String").schema()),
+    /// #     ],
+    /// # ).schema();
+    /// # const SCHEMA_V2: Schema = ObjectSchema::new(
+    /// #     "Another Object",
+    /// #     &[
+    /// #         ("key3", false, &StringSchema::new("A String").schema()),
+    /// #         ("key4", false, &StringSchema::new("Another String").schema()),
+    /// #     ],
+    /// # ).schema();
+    /// const SCHEMA: Schema = OneOfSchema::new(
+    ///     "Some enum",
+    ///     &("type", false, &StringSchema::new("v1 or v2").schema()),
+    ///     &[
+    ///         ("v2", &SCHEMA_V1),
+    ///         ("v1", &SCHEMA_V2),
+    ///     ],
+    /// ).schema();
+    /// ```
+    ///
+    /// ```compile_fail,E0080
+    /// # use proxmox_schema::{OneOfSchema, ObjectSchema, Schema, StringSchema};
+    /// # const SCHEMA_V1: Schema = ObjectSchema::new(
+    /// #     "Some Object",
+    /// #     &[
+    /// #         ("key1", false, &StringSchema::new("A String").schema()),
+    /// #         ("key2", false, &StringSchema::new("Another String").schema()),
+    /// #     ],
+    /// # ).schema();
+    /// # const SCHEMA_V2: Schema = ObjectSchema::new(
+    /// #     "Another Object",
+    /// #     &[
+    /// #         ("key3", false, &StringSchema::new("A String").schema()),
+    /// #         ("key4", false, &StringSchema::new("Another String").schema()),
+    /// #     ],
+    /// # ).schema();
+    /// const SCHEMA: Schema = OneOfSchema::new(
+    ///     "Some enum",
+    ///     &("type", false, &StringSchema::new("v1 or v2").schema()),
+    ///     &[
+    ///         ("v1", &SCHEMA_V1),
+    ///         // duplicate type key:
+    ///         ("v1", &SCHEMA_V2),
+    ///     ],
+    /// ).schema();
+    /// ```
     pub const fn new(
         description: &'static str,
         type_property_entry: &'static SchemaPropertyEntry,
         list: &'static [(&'static str, &'static Schema)],
     ) -> Self {
+        assert_one_of_list_is_sorted(list);
         Self {
             description,
             type_property_entry,
