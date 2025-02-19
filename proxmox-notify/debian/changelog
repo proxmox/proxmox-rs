@@ -1,3 +1,9 @@
+rust-proxmox-notify (0.5.3-1) bookworm; urgency=medium
+
+  * fix ordering of DUMMY_USER ObjectSchema properties
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Feb 2025 13:00:47 +0100
+
 rust-proxmox-notify (0.5.2-1) bookworm; urgency=medium
 
   * switch from `log` to `tracing`
