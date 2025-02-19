@@ -206,7 +206,7 @@ fn handle_section_config_enum(
         bail!(name => r#"SectionConfig enum needs a `#[serde(tag = "...")]` container attribute"#);
     };
 
-    let mut variants = TokenStream::new();
+    let mut variants = Vec::new();
     let mut register_sections = TokenStream::new();
     let mut to_type = TokenStream::new();
     for variant in &mut enum_ty.variants {
@@ -235,12 +235,15 @@ fn handle_section_config_enum(
 
         let variant_ident = &variant.ident;
         let ty = &field.ty;
-        variants.extend(quote_spanned! { variant.ident.span() =>
-            (
-                #variant_string,
-                &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA,
-            ),
-        });
+        variants.push((
+            variant_string.value(),
+            quote_spanned! { variant.ident.span() =>
+                (
+                    #variant_string,
+                    &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA,
+                ),
+            },
+        ));
         register_sections.extend(quote_spanned! { variant.ident.span() =>
             this.register_plugin(
                 ::proxmox_section_config::SectionConfigPlugin::new(
@@ -261,6 +264,11 @@ fn handle_section_config_enum(
             Self::#variant_ident(_) => #variant_string,
         });
     }
+    variants.sort_by(|a, b| a.0.cmp(&b.0));
+    let variants = variants
+        .into_iter()
+        .map(|(_name, def)| def)
+        .collect::<TokenStream>();
 
     Ok(quote_spanned! { name.span() =>
         #enum_ty
