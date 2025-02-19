@@ -20,8 +20,8 @@ const DUMMY_EMAIL_SCHEMA: Schema = StringSchema::new("dummy email").schema();
 const DUMMY_USER_SCHEMA: ObjectSchema = ObjectSchema::new(
     "minimal PBS user",
     &[
-        ("userid", false, &DUMMY_ID_SCHEMA),
         ("email", true, &DUMMY_EMAIL_SCHEMA),
+        ("userid", false, &DUMMY_ID_SCHEMA),
     ],
 )
 .additional_properties(true);
