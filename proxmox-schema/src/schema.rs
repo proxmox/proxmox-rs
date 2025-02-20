@@ -634,7 +634,6 @@ pub type SchemaPropertyEntry = (&'static str, bool, &'static Schema);
 /// This is a workaround unless RUST can const_fn `Hash::new()`
 pub type SchemaPropertyMap = &'static [SchemaPropertyEntry];
 
-/// Note: this only compares *bytes* and is not strictly speaking equivalent to str::cmp!
 const fn assert_properties_sorted(properties: SchemaPropertyMap) {
     use std::cmp::Ordering;
 
@@ -881,7 +880,6 @@ pub struct OneOfSchema {
     pub list: &'static [(&'static str, &'static Schema)],
 }
 
-/// Note: this only compares *bytes* and is not strictly speaking equivalent to str::cmp!
 const fn assert_one_of_list_is_sorted(list: &[(&str, &Schema)]) {
     use std::cmp::Ordering;
 
