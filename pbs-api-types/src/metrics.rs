@@ -12,13 +12,13 @@ pub const METRIC_SERVER_ID_SCHEMA: Schema = StringSchema::new("Metrics Server ID
     .schema();
 
 pub const INFLUXDB_BUCKET_SCHEMA: Schema = StringSchema::new("InfluxDB Bucket.")
-    .min_length(3)
+    .min_length(1)
     .max_length(32)
     .default("proxmox")
     .schema();
 
 pub const INFLUXDB_ORGANIZATION_SCHEMA: Schema = StringSchema::new("InfluxDB Organization.")
-    .min_length(3)
+    .min_length(1)
     .max_length(32)
     .default("proxmox")
     .schema();
