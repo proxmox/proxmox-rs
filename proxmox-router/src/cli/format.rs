@@ -415,6 +415,9 @@ fn generate_nested_usage_do<'cli>(
                 ));
             }
             CommandLineInterface::Nested(map) => {
+                if format == DocumentationFormat::ReST {
+                    usage.push_str("\n----\n\n");
+                }
                 usage.push_str(&generate_nested_usage_do(state, &new_prefix, map, format));
             }
         }
