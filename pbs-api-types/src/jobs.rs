@@ -306,6 +306,13 @@ pub struct VerificationJobStatus {
             schema: crate::NS_MAX_DEPTH_SCHEMA,
             optional: true,
         },
+        "worker-threads": {
+            type: Integer,
+            optional: true,
+            minimum: 1,
+            maximum: 32,
+            default: 1,
+        },
     }
 )]
 #[derive(Serialize, Deserialize, Clone, Updater, PartialEq)]
@@ -332,6 +339,9 @@ pub struct TapeBackupJobSetup {
     pub ns: Option<BackupNamespace>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub max_depth: Option<usize>,
+    /// Set the number of worker threads to use for the job
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub worker_threads: Option<u64>,
 }
 
 #[api(
