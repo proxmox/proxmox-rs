@@ -706,13 +706,13 @@ where
         tokenid: &str,
         params: CreateToken,
     ) -> Result<CreateTokenResponse, Error> {
-        let url = "/api2/extjs/access/users/{userid}/token/{tokenid}";
+        let url = &format!("/api2/extjs/access/users/{userid}/token/{tokenid}");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Read subscription info.
     async fn get_subscription(&self, node: &str) -> Result<NodeSubscriptionInfo, Error> {
-        let url = "/api2/extjs/nodes/{node}/subscription";
+        let url = &format!("/api2/extjs/nodes/{node}/subscription");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -768,7 +768,7 @@ where
 
     /// Read task status.
     async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
-        let url = "/api2/extjs/nodes/{node}/tasks/{upid}/status";
+        let url = &format!("/api2/extjs/nodes/{node}/tasks/{upid}/status");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -780,7 +780,7 @@ where
 
     /// LXC container index (per node).
     async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
-        let url = "/api2/extjs/nodes/{node}/lxc";
+        let url = &format!("/api2/extjs/nodes/{node}/lxc");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -847,7 +847,7 @@ where
 
     /// Get virtual machine status.
     async fn lxc_get_status(&self, node: &str, vmid: u32) -> Result<LxcStatus, Error> {
-        let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/status/current";
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/current");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -858,7 +858,7 @@ where
         vmid: u32,
         params: MigrateLxc,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/migrate";
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/migrate");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -869,13 +869,13 @@ where
         vmid: u32,
         params: MigrateQemu,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/migrate";
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Read node status
     async fn node_status(&self, node: &str) -> Result<NodeStatus, Error> {
-        let url = "/api2/extjs/nodes/{node}/status";
+        let url = &format!("/api2/extjs/nodes/{node}/status");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -898,7 +898,7 @@ where
 
     /// Get virtual machine status.
     async fn qemu_get_status(&self, node: &str, vmid: u32) -> Result<QemuStatus, Error> {
-        let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/status/current";
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/current");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -923,7 +923,7 @@ where
         vmid: u32,
         params: RemoteMigrateLxc,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/remote_migrate";
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/remote_migrate");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -935,7 +935,7 @@ where
         vmid: u32,
         params: RemoteMigrateQemu,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/remote_migrate";
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/remote_migrate");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -947,7 +947,7 @@ where
         vmid: u32,
         params: ShutdownLxc,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/status/shutdown";
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/shutdown");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -960,7 +960,7 @@ where
         vmid: u32,
         params: ShutdownQemu,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/status/shutdown";
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/shutdown");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -971,7 +971,7 @@ where
         vmid: u32,
         params: StartLxc,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/status/start";
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/start");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -982,7 +982,7 @@ where
         vmid: u32,
         params: StartQemu,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/status/start";
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/start");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -994,7 +994,7 @@ where
         vmid: u32,
         params: StopLxc,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/lxc/{vmid}/status/stop";
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/stop");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1007,13 +1007,13 @@ where
         vmid: u32,
         params: StopQemu,
     ) -> Result<PveUpid, Error> {
-        let url = "/api2/extjs/nodes/{node}/qemu/{vmid}/status/stop";
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/stop");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Stop a task.
     async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
-        let url = "/api2/extjs/nodes/{node}/tasks/{upid}";
+        let url = &format!("/api2/extjs/nodes/{node}/tasks/{upid}");
         self.0.delete(url).await?.nodata()
     }
 
