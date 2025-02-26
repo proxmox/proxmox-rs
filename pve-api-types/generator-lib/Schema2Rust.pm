@@ -437,6 +437,18 @@ my sub return_expr : prototype($$) ($def, $expr) {
     return $expr;
 }
 
+my sub print_url: prototype($$;$) {
+    my ($out, $def, $has_query) = @_;
+
+    if ($has_query) {
+        print {$out} "    let url = &format!(\"/api2/extjs$def->{url}\{query}\");\n";
+    } elsif (defined($def->{url_params}) && $def->{url_params}->@*) {
+        print {$out} "    let url = &format!(\"/api2/extjs$def->{url}\");\n";
+    } else {
+        print {$out} "    let url = \"/api2/extjs$def->{url}\";\n";
+    }
+}
+
 my sub print_method_without_body : prototype($$$$$) {
     my ($out, $name, $def, $method, $trait) = @_;
 
@@ -486,8 +498,8 @@ my sub print_method_without_body : prototype($$$$$) {
                 print {$out} "    add_query_arg(&mut query, &mut sep, \"$name\", &p_$rust_name);\n";
             }
         }
-        print {$out} "    let url = &format!(\"/api2/extjs$def->{url}\{query}\");\n";
-    } elsif (defined($input = $def->{input})) {
+        print_url($out, $def, 1);
+    } elsif (defined($input = $def->{input}) && $input->@*) {
         for my $arg ($input->@*) {
             print {$out} "    $arg->{rust_name}: $arg->{type},\n";
         }
@@ -510,9 +522,9 @@ my sub print_method_without_body : prototype($$$$$) {
                     print {$out} "    add_query_arg(&mut query, &mut sep, \"$name\", &$rust_name);\n";
                 }
             }
-            print {$out} "    let url = &format!(\"/api2/extjs$def->{url}\{query}\");\n";
+            print_url($out, $def, 1);
         } else {
-            print {$out} "    let url = \"/api2/extjs$def->{url}\";\n";
+            print_url($out, $def);
         }
     } else {
         print {$out} ") -> Result<$def->{output_type}, Error> {\n";
@@ -520,7 +532,8 @@ my sub print_method_without_body : prototype($$$$$) {
             print_default_impl($out, $name);
             return;
         }
-        print {$out} "    let url = \"/api2/extjs$def->{url}\";\n";
+
+        print_url($out, $def);
     }
 
     my $call = return_expr($def, "self.0.$method(url).await?");
@@ -553,7 +566,7 @@ my sub print_method_with_body : prototype($$$$$) {
         return;
     }
     # print {$out} "    // self.login().await?;\n";
-    print {$out} "    let url = \"/api2/extjs$def->{url}\";\n";
+    print_url($out, $def);
         my $call = return_expr($def, "self.0.${method}(url, &params).await?");
         print {$out} "    $call\n";
     print {$out} "}\n\n";
