@@ -437,9 +437,7 @@ my sub return_expr : prototype($$) ($def, $expr) {
     return $expr;
 }
 
-my sub print_url: prototype($$;$) {
-    my ($out, $def, $has_query) = @_;
-
+my sub print_url : prototype($$;$) ($out, $def, $has_query = 0) {
     if ($has_query) {
         print {$out} "    let url = &format!(\"/api2/extjs$def->{url}\{query}\");\n";
     } elsif (defined($def->{url_params}) && $def->{url_params}->@*) {
