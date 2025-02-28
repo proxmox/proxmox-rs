@@ -1,12 +1,12 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = [
     "pve-api-types",
 ]
 
 [workspace.package]
 authors = [ "Proxmox Support Team <support@proxmox.com>" ]
-edition = "2021"
+edition = "2024"
 license = "AGPL-3"
 repository = "git://git.proxmox.com/git/proxmox-api-types.git"
 
