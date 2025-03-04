@@ -1,7 +1,7 @@
 use std::future::Future;
 use std::net::IpAddr;
 use std::pin::Pin;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 
 use anyhow::{format_err, Error};
 use percent_encoding::percent_decode_str;
@@ -83,6 +83,16 @@ pub trait AuthContext: Send + Sync {
     ) -> Result<Option<bool>, Error> {
         let _ = (userid, password, path, privs, port);
         Ok(None)
+    }
+
+    /// The auth cookie with a prefix. Usually this will be `__Host-`. However, products that don't
+    /// want a prefix or need a different one such as `__Secure-` should override the default
+    /// implementation.
+    ///
+    /// See: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#cookie_prefixes>
+    fn prefixed_auth_cookie_name(&self) -> &'static str {
+        static HOST_COOKIE: OnceLock<String> = OnceLock::new();
+        HOST_COOKIE.get_or_init(|| format!("__Host-{}", self.auth_cookie_name()))
     }
 }
 
