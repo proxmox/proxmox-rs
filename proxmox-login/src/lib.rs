@@ -200,9 +200,22 @@ impl Login {
             ));
         }
 
+        // `ticket_info` is set when the server sets the ticket via an HttpOnly cookie. this also
+        // means we do not have access to the cookie itself which happens for example in a browser.
+        // assume that the cookie is handled properly by the context (browser) and don't worry
+        // about handling it ourselves.
+        if let Some(ref ticket) = response.ticket_info {
+            let ticket = ticket.parse()?;
+            return Ok(TicketResult::HttpOnly(
+                self.authentication_for(ticket, response)?,
+            ));
+        }
+
+        // old authentication flow where we needed to handle the ticket ourselves even in the
+        // browser etc.
         let ticket: TicketResponse = match response.ticket {
-            Some(ticket) => ticket.parse()?,
-            None => return Err("missing ticket".into()),
+            Some(ref ticket) => ticket.parse()?,
+            None => return Err("no ticket information in response".into()),
         };
 
         Ok(match ticket {
@@ -250,6 +263,9 @@ pub enum TicketResult {
 
     /// The response returned a Two-Factor-Authentication challenge.
     TfaRequired(SecondFactorChallenge),
+
+    /// The response returned a valid ticket as an HttpOnly cookie.
+    HttpOnly(Authentication),
 }
 
 /// A ticket call can returned a TFA challenge. The user should inspect the
