@@ -11,9 +11,7 @@ use proxmox_rest_server::{extract_cookie, RestEnvironment};
 use proxmox_router::{
     http_err, ApiHandler, ApiMethod, ApiResponseFuture, Permission, RpcEnvironment,
 };
-use proxmox_schema::{
-    api, api_types::PASSWORD_SCHEMA, AllOfSchema, ApiType, ParameterSchema, ReturnType,
-};
+use proxmox_schema::{api, AllOfSchema, ApiType, ParameterSchema, ReturnType};
 use proxmox_tfa::api::TfaChallenge;
 
 use super::ApiTicket;
@@ -36,51 +34,14 @@ enum AuthResult {
 #[api(
     input: {
         properties: {
-            username: {
-                type: Userid,
-            },
-            password: {
-                schema: PASSWORD_SCHEMA,
-            },
-            path: {
-                type: String,
-                description: "Path for verifying terminal tickets.",
-                optional: true,
-            },
-            privs: {
-                type: String,
-                description: "Privilege for verifying terminal tickets.",
-                optional: true,
-            },
-            port: {
-                type: Integer,
-                description: "Port for verifying terminal tickets.",
-                optional: true,
-            },
-            "tfa-challenge": {
-                type: String,
-                description: "The signed TFA challenge string the user wants to respond to.",
-                optional: true,
-            },
+            create_params: {
+                type: CreateTicket,
+                flatten: true,
+            }
         },
     },
     returns: {
-        properties: {
-            username: {
-                type: String,
-                description: "User name.",
-            },
-            ticket: {
-                type: String,
-                description: "Auth ticket.",
-            },
-            CSRFPreventionToken: {
-                type: String,
-                description:
-                    "Cross Site Request Forgery Prevention Token. \
-                     For partial tickets this is the string \"invalid\".",
-            },
-        },
+        type: CreateTicketResponse,
     },
     protected: true,
     access: {
@@ -91,52 +52,15 @@ enum AuthResult {
 ///
 /// Returns: An authentication ticket with additional infos.
 pub async fn create_ticket(
-    username: Userid,
-    password: String,
-    path: Option<String>,
-    privs: Option<String>,
-    port: Option<u16>,
-    tfa_challenge: Option<String>,
+    create_params: CreateTicket,
     rpcenv: &mut dyn RpcEnvironment,
-) -> Result<Value, Error> {
+) -> Result<CreateTicketResponse, Error> {
     let env: &RestEnvironment = rpcenv
         .as_any()
         .downcast_ref::<RestEnvironment>()
         .ok_or_else(|| format_err!("detected wrong RpcEnvironment type"))?;
 
-    match authenticate_user(&username, &password, path, privs, port, tfa_challenge, env).await {
-        Ok(AuthResult::Success) => Ok(json!({ "username": username })),
-        Ok(AuthResult::CreateTicket) => {
-            let auth_context = auth_context()?;
-            let api_ticket = ApiTicket::Full(username.clone());
-            let ticket = Ticket::new(auth_context.auth_prefix(), &api_ticket)?
-                .sign(auth_context.keyring(), None)?;
-            let token = assemble_csrf_prevention_token(auth_context.csrf_secret(), &username);
-
-            env.log_auth(username.as_str());
-
-            Ok(json!({
-                "username": username,
-                "ticket": ticket,
-                "CSRFPreventionToken": token,
-            }))
-        }
-        Ok(AuthResult::Partial(challenge)) => {
-            let auth_context = auth_context()?;
-            let api_ticket = ApiTicket::Partial(challenge);
-            let ticket = Ticket::new(auth_context.auth_prefix(), &api_ticket)?
-                .sign(auth_context.keyring(), Some(username.as_str()))?;
-            Ok(json!({
-                "username": username,
-                "ticket": ticket,
-                "CSRFPreventionToken": "invalid",
-            }))
-        }
-        Err(err) => {
-            env.log_failed_auth(Some(username.to_string()), &err.to_string());
-            Err(http_err!(UNAUTHORIZED, "permission check failed."))
-        }
-    }
+    handle_ticket_creation(create_params, env).await
 }
 
 
