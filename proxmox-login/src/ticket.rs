@@ -94,6 +94,12 @@ impl Ticket {
         }
     }
 
+    /// Returns true when this is not a signed ticket, but just the information contained in a
+    /// ticket without a valid signature
+    pub fn is_info_only(&self) -> bool {
+        self.data.ends_with("::ticketinfo")
+    }
+
     /// Get the cookie in the form `<PRODUCT>AuthCookie=Ticket`.
     pub fn cookie(&self) -> String {
         format!("{}AuthCookie={}", self.product(), self.data)
