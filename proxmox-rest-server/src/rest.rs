@@ -383,7 +383,7 @@ fn parse_query_parameters<S: 'static + BuildHasher + Send>(
 
 async fn get_request_parameters<S: 'static + BuildHasher + Send>(
     param_schema: ParameterSchema,
-    parts: Parts,
+    parts: &Parts,
     req_body: Body,
     uri_param: HashMap<String, String, S>,
 ) -> Result<Value, Error> {
@@ -433,7 +433,7 @@ async fn get_request_parameters<S: 'static + BuildHasher + Send>(
         param_schema.verify_json(&params)?;
         Ok(params)
     } else {
-        parse_query_parameters(param_schema, utf8_data, &parts, &uri_param)
+        parse_query_parameters(param_schema, utf8_data, parts, &uri_param)
     }
 }
 
@@ -548,7 +548,7 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
         }
         ApiHandler::StreamSync(handler) => {
             let params =
-                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+                get_request_parameters(info.parameters, &parts, req_body, uri_param).await?;
             match (handler)(params, info, &mut rpcenv) {
                 Ok(iter) if accept_json_seq => handle_sync_stream_as_json_seq(iter),
                 Ok(iter) => iter
@@ -559,7 +559,7 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
         }
         ApiHandler::StreamAsync(handler) => {
             let params =
-                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+                get_request_parameters(info.parameters, &parts, req_body, uri_param).await?;
             match (handler)(params, info, &mut rpcenv).await {
                 Ok(stream) if accept_json_seq => handle_stream_as_json_seq(stream),
                 Ok(stream) => stream
@@ -571,25 +571,25 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
         }
         ApiHandler::SerializingSync(handler) => {
             let params =
-                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+                get_request_parameters(info.parameters, &parts, req_body, uri_param).await?;
             (handler)(params, info, &mut rpcenv)
                 .and_then(|data| formatter.format_data_streaming(data, &rpcenv))
         }
         ApiHandler::SerializingAsync(handler) => {
             let params =
-                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+                get_request_parameters(info.parameters, &parts, req_body, uri_param).await?;
             (handler)(params, info, &mut rpcenv)
                 .await
                 .and_then(|data| formatter.format_data_streaming(data, &rpcenv))
         }
         ApiHandler::Sync(handler) => {
             let params =
-                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+                get_request_parameters(info.parameters, &parts, req_body, uri_param).await?;
             (handler)(params, info, &mut rpcenv).map(|data| formatter.format_data(data, &rpcenv))
         }
         ApiHandler::Async(handler) => {
             let params =
-                get_request_parameters(info.parameters, parts, req_body, uri_param).await?;
+                get_request_parameters(info.parameters, &parts, req_body, uri_param).await?;
             (handler)(params, info, &mut rpcenv)
                 .await
                 .map(|data| formatter.format_data(data, &rpcenv))
