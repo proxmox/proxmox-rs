@@ -20,7 +20,7 @@ use access::verify_csrf_prevention_token;
 
 pub use access::{
     assemble_csrf_prevention_token, create_ticket, API_METHOD_CREATE_TICKET,
-    API_METHOD_CREATE_TICKET_HTTP_ONLY,
+    API_METHOD_CREATE_TICKET_HTTP_ONLY, API_METHOD_LOGOUT,
 };
 pub use ticket::{ApiTicket, PartialTicket};
 

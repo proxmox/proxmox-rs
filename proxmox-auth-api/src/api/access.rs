@@ -11,7 +11,7 @@ use proxmox_rest_server::{extract_cookie, RestEnvironment};
 use proxmox_router::{
     http_err, ApiHandler, ApiMethod, ApiResponseFuture, Permission, RpcEnvironment,
 };
-use proxmox_schema::{api, AllOfSchema, ApiType, ParameterSchema, ReturnType};
+use proxmox_schema::{api, AllOfSchema, ApiType, ObjectSchema, ParameterSchema, ReturnType};
 use proxmox_tfa::api::TfaChallenge;
 
 use super::ApiTicket;
@@ -63,6 +63,33 @@ pub async fn create_ticket(
     handle_ticket_creation(create_params, env).await
 }
 
+pub const API_METHOD_LOGOUT: ApiMethod = ApiMethod::new(
+    &ApiHandler::AsyncHttpBodyParameters(&logout_handler),
+    &ObjectSchema::new("", &[]),
+)
+.protected(true)
+.access(None, &Permission::World);
+
+fn logout_handler(
+    _parts: Parts,
+    _param: Value,
+    _info: &ApiMethod,
+    _rpcenv: Box<dyn RpcEnvironment>,
+) -> ApiResponseFuture {
+    Box::pin(async move {
+        // unset authentication cookie by setting an invalid one. needs the same `Path` and
+        // `Secure` parameter to not be rejected by some browsers. also use the same `HttpOnly` and
+        // `SameSite` parameters just in case.
+        let host_cookie = format!(
+            "{}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=Lax; HttpOnly; Path=/;",
+            auth_context()?.prefixed_auth_cookie_name()
+        );
+
+        Ok(Response::builder()
+            .header(hyper::header::SET_COOKIE, host_cookie)
+            .body(Body::empty())?)
+    })
+}
 
 pub const API_METHOD_CREATE_TICKET_HTTP_ONLY: ApiMethod = ApiMethod::new_full(
     &ApiHandler::AsyncHttpBodyParameters(&create_ticket_http_only),
