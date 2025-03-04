@@ -676,6 +676,71 @@ impl TryFrom<String> for Authid {
     }
 }
 
+#[api]
+/// The parameter object for creating new ticket.
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CreateTicket {
+    /// User name
+    pub username: Userid,
+
+    /// The secret password. This can also be a valid ticket. Only optional if the ticket is
+    /// provided in a cookie header and only if the endpoint supports this.
+    #[serde(default)]
+    pub password: Option<String>,
+
+    /// Verify ticket, and check if user have access 'privs' on 'path'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+
+    /// Verify ticket, and check if user have access 'privs' on 'path'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub privs: Option<String>,
+
+    /// Port for verifying terminal tickets.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port: Option<u16>,
+
+    /// The signed TFA challenge string the user wants to respond to.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "tfa-challenge")]
+    pub tfa_challenge: Option<String>,
+}
+
+#[api]
+/// The API response for a ticket call.
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CreateTicketResponse {
+    /// The CSRF prevention token.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "CSRFPreventionToken")]
+    pub csrfprevention_token: Option<String>,
+
+    /// The ticket as is supposed to be used in the authentication header. Not provided here if the
+    /// endpoint uses HttpOnly cookies to supply the actual ticket.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ticket: Option<String>,
+
+    /// Like a full ticket, except the signature is missing. Useful in HttpOnly-contexts
+    /// (browsers).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ticket-info")]
+    pub ticket_info: Option<String>,
+
+    /// The userid.
+    pub username: Userid,
+}
+
+impl CreateTicketResponse {
+    pub fn new(username: Userid) -> Self {
+        Self {
+            csrfprevention_token: None,
+            ticket: None,
+            ticket_info: None,
+            username,
+        }
+    }
+}
+
 #[test]
 fn test_token_id() {
     let userid: Userid = "test@pam".parse().expect("parsing Userid failed");
