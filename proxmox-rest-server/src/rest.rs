@@ -36,7 +36,7 @@ use crate::{
     formatter::*, normalize_path, ApiConfig, AuthError, CompressionMethod, RestEnvironment,
 };
 
-extern "C" {
+unsafe extern "C" {
     fn tzset();
 }
 

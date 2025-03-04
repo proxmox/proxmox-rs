@@ -385,7 +385,7 @@ fn x509name_to_string(name: &openssl::x509::X509NameRef) -> Result<String, Error
 #[allow(non_camel_case_types)]
 type ASN1_TIME = <openssl::asn1::Asn1TimeRef as ForeignTypeRef>::CType;
 
-extern "C" {
+unsafe extern "C" {
     fn ASN1_TIME_to_tm(s: *const ASN1_TIME, tm: *mut libc::tm) -> libc::c_int;
 }
 

@@ -20,7 +20,7 @@ pub use mountinfo::MountInfo;
 
 /// POSIX sysconf call
 pub fn sysconf(name: i32) -> i64 {
-    extern "C" {
+    unsafe extern "C" {
         fn sysconf(name: i32) -> i64;
     }
     unsafe { sysconf(name) }

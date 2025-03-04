@@ -54,7 +54,7 @@ mod constants {
 pub use constants::*;
 
 #[link(name = "acl")]
-extern "C" {
+unsafe extern "C" {
     fn acl_get_file(path: *const c_char, acl_type: ACLType) -> *mut c_void;
     fn acl_set_file(path: *const c_char, acl_type: ACLType, acl: *mut c_void) -> c_int;
     fn acl_get_fd(fd: RawFd) -> *mut c_void;

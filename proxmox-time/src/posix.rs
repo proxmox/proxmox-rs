@@ -142,7 +142,7 @@ pub fn strftime(format: &str, t: &libc::tm) -> Result<String, Error> {
 
 //  The `libc` crate does not yet contain bindings for `strftime_l`
 #[link(name = "c")]
-extern "C" {
+unsafe extern "C" {
     #[link_name = "strftime_l"]
     fn libc_strftime_l(
         s: *mut libc::c_char,

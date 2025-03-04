@@ -5,7 +5,7 @@ use std::os::fd::RawFd;
 pub const LISTEN_FDS_START: RawFd = 3;
 
 #[link(name = "systemd")]
-extern "C" {
+unsafe extern "C" {
     pub fn sd_journal_stream_fd(
         identifier: *const c_uchar,
         priority: c_int,

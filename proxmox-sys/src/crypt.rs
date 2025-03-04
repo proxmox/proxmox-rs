@@ -38,7 +38,7 @@ struct CryptData {
 /// Encrypt a password - see man crypt(3)
 pub fn crypt(password: &[u8], salt: &[u8]) -> Result<String, Error> {
     #[link(name = "crypt")]
-    extern "C" {
+    unsafe extern "C" {
         #[link_name = "crypt_r"]
         fn __crypt_r(
             key: *const libc::c_char,
@@ -87,7 +87,7 @@ pub fn crypt(password: &[u8], salt: &[u8]) -> Result<String, Error> {
 /// - `rbytes`: The byte slice that contains cryptographically random bytes for generating the salt
 pub fn crypt_gensalt(prefix: &str, count: u64, rbytes: &[u8]) -> Result<String, Error> {
     #[link(name = "crypt")]
-    extern "C" {
+    unsafe extern "C" {
         #[link_name = "crypt_gensalt_rn"]
         fn __crypt_gensalt_rn(
             prefix: *const libc::c_char,

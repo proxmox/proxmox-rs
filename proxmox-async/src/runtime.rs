@@ -45,7 +45,7 @@ use tokio::runtime::{self, Runtime, RuntimeFlavor};
 static RUNTIME: LazyLock<Mutex<Weak<Runtime>>> = LazyLock::new(|| Mutex::new(Weak::new()));
 
 #[link(name = "crypto")]
-extern "C" {
+unsafe extern "C" {
     fn OPENSSL_thread_stop();
 }
 

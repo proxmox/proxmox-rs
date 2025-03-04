@@ -70,7 +70,7 @@ type TimerT = *mut InternalTimerT;
 
 // These wrappers are defined in -lrt.
 #[link(name = "rt")]
-extern "C" {
+unsafe extern "C" {
     fn timer_create(clockid: clockid_t, evp: *mut libc::sigevent, timer: *mut TimerT) -> c_int;
     fn timer_delete(timer: TimerT) -> c_int;
     fn timer_settime(
@@ -232,7 +232,7 @@ pub const SIGTIMEOUT: Signal = Signal(32 + 4);
 
 // Our timeout handler does exactly nothing. We only need it to interrupt
 // system calls.
-extern "C" fn sig_timeout_handler(_: c_int) {}
+unsafe extern "C" fn sig_timeout_handler(_: c_int) {}
 
 // See setup_timeout_handler().
 fn do_setup_timeout_handler() -> io::Result<()> {
