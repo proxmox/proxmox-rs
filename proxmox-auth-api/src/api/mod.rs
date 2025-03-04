@@ -203,16 +203,34 @@ fn extract_auth_data(
     auth_context: &dyn AuthContext,
     headers: &http::HeaderMap,
 ) -> Option<AuthData> {
-    if let Some(raw_cookie) = headers.get(http::header::COOKIE) {
-        if let Ok(cookie) = raw_cookie.to_str() {
-            if let Some(ticket) = extract_cookie(cookie, auth_context.auth_cookie_name()) {
-                let csrf_token = match headers.get("CSRFPreventionToken").map(|v| v.to_str()) {
-                    Some(Ok(v)) => Some(v.to_owned()),
-                    _ => None,
-                };
-                return Some(AuthData::User(UserAuthData { ticket, csrf_token }));
-            }
+    let mut ticket = None;
+    let cookie_name = auth_context.auth_cookie_name();
+    let host_cookie = auth_context.prefixed_auth_cookie_name();
+    let cookies = headers
+        .get_all(http::header::COOKIE)
+        .iter()
+        .filter_map(|c| c.to_str().ok());
+
+    for cookie in cookies {
+        // check if we got a `__Host-` prefixed cookie first and break the loop if we do so we use
+        // that cookie.
+        if let Some(extracted_ticket) = extract_cookie(cookie, host_cookie) {
+            ticket = Some(extracted_ticket);
+            break;
+        // if no such prefixed cookie exists, try to fall back to a non-prefixed one
+        // TODO: remove this once we do not support less secure non-prefixed cookies anymore
+        } else if let Some(extracted_ticket) = extract_cookie(cookie, cookie_name) {
+            ticket = Some(extracted_ticket)
         }
+    }
+
+    if let Some(ticket) = ticket {
+        let csrf_token = match headers.get("CSRFPreventionToken").map(|v| v.to_str()) {
+            Some(Ok(v)) => Some(v.to_owned()),
+            _ => None,
+        };
+
+        return Some(AuthData::User(UserAuthData { ticket, csrf_token }));
     }
 
     let token_prefix = auth_context.auth_token_prefix();
