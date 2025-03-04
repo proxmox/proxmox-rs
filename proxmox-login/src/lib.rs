@@ -50,7 +50,7 @@ pub struct Request {
 pub struct Login {
     api_url: String,
     userid: String,
-    password: String,
+    password: Option<String>,
     pve_compat: bool,
 }
 
@@ -96,7 +96,18 @@ impl Login {
             api_url: normalize_url(api_url.into()),
             pve_compat: ticket.product() == "PVE",
             userid: ticket.userid().to_string(),
-            password: ticket.into(),
+            password: Some(ticket.into()),
+        }
+    }
+
+    /// Prepare a request with the assumption that the context handles the ticket (usually in a
+    /// browser via an HttpOnly cookie).
+    pub fn renew_with_cookie(api_url: impl Into<String>, userid: impl Into<String>) -> Self {
+        Self {
+            api_url: normalize_url(api_url.into()),
+            pve_compat: false,
+            userid: userid.into(),
+            password: None,
         }
     }
 
@@ -109,7 +120,7 @@ impl Login {
         Self {
             api_url: normalize_url(api_url.into()),
             userid: userid.into(),
-            password: password.into(),
+            password: Some(password.into()),
             pve_compat: false,
         }
     }
@@ -129,7 +140,7 @@ impl Login {
         let request = api::CreateTicket {
             new_format: self.pve_compat.then_some(true),
             username: self.userid.clone(),
-            password: Some(self.password.clone()),
+            password: self.password.clone(),
             ..Default::default()
         };
 
