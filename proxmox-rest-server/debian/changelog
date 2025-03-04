@@ -1,3 +1,11 @@
+rust-proxmox-rest-server (0.8.7-1) bookworm; urgency=medium
+
+  * support new `AsyncHttpBodyParameters` from proxmox-router
+
+  * improve panic errors with formatted strings
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 04 Mar 2025 15:04:29 +0100
+
 rust-proxmox-rest-server (0.8.6-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
