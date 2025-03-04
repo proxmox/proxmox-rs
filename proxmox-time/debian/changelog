@@ -1,3 +1,11 @@
+rust-proxmox-time (2.0.4-1) bookworm; urgency=medium
+
+  * add `epoch_to_http_date` helper
+
+  * update to edition 2024
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 04 Mar 2025 14:52:53 +0100
+
 rust-proxmox-time (2.0.3-1) bookworm; urgency=medium
 
   * also implement `From<&TimeSpan> for f64` to support taking a reference, as
