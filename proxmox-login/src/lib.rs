@@ -162,10 +162,27 @@ impl Login {
         &self,
         body: &T,
     ) -> Result<TicketResult, ResponseError> {
-        self.response_bytes(body.as_ref())
+        self.response_bytes(None, body.as_ref())
     }
 
-    fn response_bytes(&self, body: &[u8]) -> Result<TicketResult, ResponseError> {
+    /// Parse the result body of a [`CreateTicket`](api::CreateTicket) API request taking into
+    /// account potential tickets obtained via a `Set-Cookie` header.
+    ///
+    /// On success, this will either yield an [`Authentication`] or a [`SecondFactorChallenge`] if
+    /// Two-Factor-Authentication is required.
+    pub fn response_with_cookie_ticket<T: ?Sized + AsRef<[u8]>>(
+        &self,
+        cookie_ticket: Option<Ticket>,
+        body: &T,
+    ) -> Result<TicketResult, ResponseError> {
+        self.response_bytes(cookie_ticket, body.as_ref())
+    }
+
+    fn response_bytes(
+        &self,
+        cookie_ticket: Option<Ticket>,
+        body: &[u8],
+    ) -> Result<TicketResult, ResponseError> {
         use ticket::TicketResponse;
 
         let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_slice(body)?;
@@ -173,6 +190,14 @@ impl Login {
 
         if response.username != self.userid {
             return Err("ticket response contained unexpected userid".into());
+        }
+
+        // if a ticket was provided via a cookie, use it like a normal ticket
+        if let Some(ticket) = cookie_ticket {
+            check_ticket_userid(ticket.userid(), &self.userid)?;
+            return Ok(TicketResult::Full(
+                self.authentication_for(ticket, response)?,
+            ));
         }
 
         let ticket: TicketResponse = match response.ticket {
@@ -183,15 +208,7 @@ impl Login {
         Ok(match ticket {
             TicketResponse::Full(ticket) => {
                 check_ticket_userid(ticket.userid(), &self.userid)?;
-                TicketResult::Full(Authentication {
-                    csrfprevention_token: response
-                        .csrfprevention_token
-                        .ok_or("missing CSRFPreventionToken in ticket response")?,
-                    clustername: response.clustername,
-                    api_url: self.api_url.clone(),
-                    userid: response.username,
-                    ticket,
-                })
+                TicketResult::Full(self.authentication_for(ticket, response)?)
             }
 
             TicketResponse::Tfa(ticket, challenge) => {
@@ -203,6 +220,22 @@ impl Login {
                     challenge,
                 })
             }
+        })
+    }
+
+    fn authentication_for(
+        &self,
+        ticket: Ticket,
+        response: api::CreateTicketResponse,
+    ) -> Result<Authentication, ResponseError> {
+        Ok(Authentication {
+            csrfprevention_token: response
+                .csrfprevention_token
+                .ok_or("missing CSRFPreventionToken in ticket response")?,
+            clustername: response.clustername,
+            api_url: self.api_url.clone(),
+            userid: response.username,
+            ticket,
         })
     }
 }
@@ -310,10 +343,24 @@ impl SecondFactorChallenge {
         &self,
         body: &T,
     ) -> Result<Authentication, ResponseError> {
-        self.response_bytes(body.as_ref())
+        self.response_bytes(None, body.as_ref())
     }
 
-    fn response_bytes(&self, body: &[u8]) -> Result<Authentication, ResponseError> {
+    /// Deal with the API's response object to extract the ticket either from a cookie or the
+    /// response itself.
+    pub fn response_with_cookie_ticket<T: ?Sized + AsRef<[u8]>>(
+        &self,
+        cookie_ticket: Option<Ticket>,
+        body: &T,
+    ) -> Result<Authentication, ResponseError> {
+        self.response_bytes(cookie_ticket, body.as_ref())
+    }
+
+    fn response_bytes(
+        &self,
+        cookie_ticket: Option<Ticket>,
+        body: &[u8],
+    ) -> Result<Authentication, ResponseError> {
         let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_slice(body)?;
         let response = response.data.ok_or("missing response data")?;
 
@@ -321,7 +368,21 @@ impl SecondFactorChallenge {
             return Err("ticket response contained unexpected userid".into());
         }
 
-        let ticket: Ticket = response.ticket.ok_or("no ticket in response")?.parse()?;
+        // get the ticket from:
+        // 1. the cookie if possible -> new HttpOnly authentication outside of the browser
+        // 2. just the `ticket_info` -> new HttpOnly authentication inside a browser context or
+        //    similar, assume the ticket is handle by that
+        // 3. the `ticket` field -> old authentication flow where we handle the ticket ourselves
+        let ticket: Ticket = cookie_ticket
+            .ok_or(ResponseError::from("no ticket in response"))
+            .or_else(|e| {
+                response
+                    .ticket_info
+                    .or(response.ticket)
+                    .ok_or(e)
+                    .and_then(|t| t.parse().map_err(|e: TicketError| e.into()))
+            })?;
+
         check_ticket_userid(ticket.userid(), &self.userid)?;
 
         Ok(Authentication {
