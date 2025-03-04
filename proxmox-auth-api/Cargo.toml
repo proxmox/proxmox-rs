@@ -1,7 +1,7 @@
 [package]
 name = "proxmox-auth-api"
 description = "Tickets, API and Realm handling"
-version = "0.4.7"
+version = "0.4.8"
 
 authors.workspace = true
 edition.workspace = true

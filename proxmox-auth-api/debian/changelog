@@ -1,3 +1,19 @@
+rust-proxmox-auth-api (0.4.8-1) bookworm; urgency=medium
+
+  * add `AuthContext::prefixed_auth_cookie_name` to prepare for HttpOnly cookies
+
+  * check for new prefixed cookies when extracting auth data
+
+  * introduce `CreateTicket` and `CreateTicketResponse` API types and use them
+    in the create_ticket API
+
+  * add create_ticket endpoint variant for HttpOnly tickets
+
+  * add logout method (as browser-side client code cannot access and therefore
+    not delete HttpOnly cookies)
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 04 Mar 2025 16:00:13 +0100
+
 rust-proxmox-auth-api (0.4.7-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
