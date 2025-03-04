@@ -1,3 +1,19 @@
+rust-proxmox-login (0.2.0-1) bookworm; urgency=medium
+
+  * make password optional in Login requests
+
+  * add helpers to pass cookie values when parsing login responses
+
+  * add TicketResult::HttpOnly for tickets in HttpOnly cookies
+
+  * add helper to check whether a ticket is just informational (as the cookie
+    is managed by the HTTP agent / browser)
+
+  * add functions to specify full cookie names instead of just product
+    prefixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 04 Mar 2025 15:05:45 +0100
+
 rust-proxmox-login (0.1.3-1) unstable; urgency=medium
 
   * boolean parser: accept "1" and "0" as strings, for better PVE API
