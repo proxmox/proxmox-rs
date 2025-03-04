@@ -1,3 +1,11 @@
+rust-proxmox-router (3.1.0-1) bookworm; urgency=medium
+
+  * add `AsyncHttpBodyParameters` api handler type to server feature
+
+  * docs: add horizontal line before nested command docs
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 04 Mar 2025 15:02:07 +0100
+
 rust-proxmox-router (3.0.1-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
