@@ -1,18 +1,25 @@
 //! Provides the "/access/ticket" API call.
 
 use anyhow::{bail, format_err, Error};
+use http::request::Parts;
+use http::Response;
+use hyper::Body;
 use openssl::hash::MessageDigest;
 use serde_json::{json, Value};
 
-use proxmox_rest_server::RestEnvironment;
-use proxmox_router::{http_err, Permission, RpcEnvironment};
-use proxmox_schema::{api, api_types::PASSWORD_SCHEMA};
+use proxmox_rest_server::{extract_cookie, RestEnvironment};
+use proxmox_router::{
+    http_err, ApiHandler, ApiMethod, ApiResponseFuture, Permission, RpcEnvironment,
+};
+use proxmox_schema::{
+    api, api_types::PASSWORD_SCHEMA, AllOfSchema, ApiType, ParameterSchema, ReturnType,
+};
 use proxmox_tfa::api::TfaChallenge;
 
 use super::ApiTicket;
 use super::{auth_context, HMACKey};
 use crate::ticket::Ticket;
-use crate::types::{Authid, Userid};
+use crate::types::{Authid, CreateTicket, CreateTicketResponse, Userid};
 
 #[allow(clippy::large_enum_variant)]
 enum AuthResult {
@@ -124,6 +131,149 @@ pub async fn create_ticket(
                 "ticket": ticket,
                 "CSRFPreventionToken": "invalid",
             }))
+        }
+        Err(err) => {
+            env.log_failed_auth(Some(username.to_string()), &err.to_string());
+            Err(http_err!(UNAUTHORIZED, "permission check failed."))
+        }
+    }
+}
+
+
+pub const API_METHOD_CREATE_TICKET_HTTP_ONLY: ApiMethod = ApiMethod::new_full(
+    &ApiHandler::AsyncHttpBodyParameters(&create_ticket_http_only),
+    ParameterSchema::AllOf(&AllOfSchema::new(
+        "Get a new ticket as an HttpOnly cookie. Supports tickets via cookies.",
+        &[&CreateTicket::API_SCHEMA],
+    )),
+)
+.returns(ReturnType::new(false, &CreateTicketResponse::API_SCHEMA))
+.protected(true)
+.access(None, &Permission::World);
+
+fn create_ticket_http_only(
+    parts: Parts,
+    param: Value,
+    _info: &ApiMethod,
+    rpcenv: Box<dyn RpcEnvironment>,
+) -> ApiResponseFuture {
+    Box::pin(async move {
+        let auth_context = auth_context()?;
+        let host_cookie = auth_context.prefixed_auth_cookie_name();
+        let mut create_params: CreateTicket = serde_json::from_value(param)?;
+
+        // previously to refresh a ticket, the old ticket was provided as a password via this
+        // endpoint's parameters. however, once the ticket is set as an HttpOnly cookie, some
+        // clients won't have access to it anymore. so we need to check whether the ticket is set
+        // in a cookie here too.
+        //
+        // only check the newer `__Host-` prefixed cookies here as older tickets should be
+        // provided via the password parameter anyway.
+        create_params.password = parts
+            .headers
+            // there is a `cookie_from_header` function we could use, but it seems to fail when
+            // multiple cookie headers are set
+            .get_all(http::header::COOKIE)
+            .iter()
+            .filter_map(|c| c.to_str().ok())
+            // after this only `__Host-{Cookie Name}` cookies are in the iterator
+            .filter_map(|c| extract_cookie(c, host_cookie))
+            // so this should just give us the first one if it exists
+            .next()
+            // if not use the parameter
+            .or(create_params.password);
+
+        let env: &RestEnvironment = rpcenv
+            .as_any()
+            .downcast_ref::<RestEnvironment>()
+            .ok_or(format_err!("detected wrong RpcEnvironment type"))?;
+
+        let mut ticket_response = handle_ticket_creation(create_params, env).await?;
+        let mut response = Response::builder();
+
+        // if `ticket_info` is set, we want to return the ticket in a `SET_COOKIE` header and not
+        // the response body
+        if ticket_response.ticket_info.is_some() {
+            // parse the ticket here, so we can use the correct timestamp of the `Expire` parameter
+            // take the ticket here, so the option will be `None` in the response
+            if let Some(ticket_str) = ticket_response.ticket.take() {
+                let ticket = Ticket::<ApiTicket>::parse(&ticket_str)?;
+
+                // see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#expiresdate
+                // see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Date
+                // see: https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/Cookies#expires
+                let expire =
+                    proxmox_time::epoch_to_http_date(ticket.time() + crate::TICKET_LIFETIME)?;
+
+                // this makes sure that ticket cookies:
+                // - Typically `__Host-`-prefixed: are only send to the specific domain that set
+                //   them and that scripts served via http cannot overwrite the cookie.
+                // - `Expires`: expire at the same time as the encoded timestamp in the ticket.
+                // - `Secure`: are only sent via https.
+                // - `SameSite=Lax`: are only sent on cross-site requests when the user is
+                //   navigating to the origin site from an external site.
+                // - `HttpOnly`: cookies are not readable to client-side javascript code.
+                let cookie = format!(
+                    "{host_cookie}={ticket_str}; Expires={expire}; Secure; SameSite=Lax; HttpOnly; Path=/;",
+                );
+
+                response = response.header(hyper::header::SET_COOKIE, cookie);
+            }
+        }
+
+        Ok(response.body(Body::from(json!({"data": ticket_response }).to_string()))?)
+    })
+}
+
+async fn handle_ticket_creation(
+    create_params: CreateTicket,
+    env: &RestEnvironment,
+) -> Result<CreateTicketResponse, Error> {
+    let username = create_params.username;
+    let password = create_params
+        .password
+        .ok_or(format_err!("no password provided"))?;
+
+    match authenticate_user(
+        &username,
+        &password,
+        create_params.path,
+        create_params.privs,
+        create_params.port,
+        create_params.tfa_challenge,
+        env,
+    )
+    .await
+    {
+        Ok(AuthResult::Success) => Ok(CreateTicketResponse::new(username)),
+        Ok(AuthResult::CreateTicket) => {
+            let auth_context = auth_context()?;
+            let api_ticket = ApiTicket::Full(username.clone());
+            let mut ticket = Ticket::new(auth_context.auth_prefix(), &api_ticket)?;
+            let csrfprevention_token =
+                assemble_csrf_prevention_token(auth_context.csrf_secret(), &username);
+
+            env.log_auth(username.as_str());
+
+            Ok(CreateTicketResponse {
+                username,
+                ticket: Some(ticket.sign(auth_context.keyring(), None)?),
+                ticket_info: Some(ticket.ticket_info()),
+                csrfprevention_token: Some(csrfprevention_token),
+            })
+        }
+        Ok(AuthResult::Partial(challenge)) => {
+            let auth_context = auth_context()?;
+            let api_ticket = ApiTicket::Partial(challenge);
+            let ticket = Ticket::new(auth_context.auth_prefix(), &api_ticket)?
+                .sign(auth_context.keyring(), Some(username.as_str()))?;
+
+            Ok(CreateTicketResponse {
+                username,
+                ticket: Some(ticket),
+                csrfprevention_token: Some("invalid".to_string()),
+                ticket_info: None,
+            })
         }
         Err(err) => {
             env.log_failed_auth(Some(username.to_string()), &err.to_string());

@@ -22,6 +22,7 @@ base64 = { workspace = true, optional = true }
 libc = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
+hyper = { workspace = true, optional = true }
 nix = { workspace = true, optional = true }
 openssl = { workspace = true, optional = true }
 pam-sys = { workspace = true, optional = true }
@@ -37,6 +38,7 @@ proxmox-router = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, optional = true, features = [ "api-macro", "api-types" ] }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-tfa = { workspace = true, optional = true, features = [ "api" ] }
+proxmox-time = { workspace = true, optional = true }
 
 [features]
 default = []
@@ -48,11 +50,13 @@ api = [
     "ticket",
 
     "dep:http",
+    "dep:hyper",
     "dep:serde_json",
 
     "dep:proxmox-rest-server",
     "dep:proxmox-router",
     "dep:proxmox-tfa",
+    "dep:proxmox-time",
 ]
 pam-authenticator = [ "api", "dep:libc", "dep:log", "dep:pam-sys" ]
 password-authenticator = [

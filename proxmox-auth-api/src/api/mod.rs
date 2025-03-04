@@ -18,7 +18,10 @@ mod ticket;
 use crate::ticket::Ticket;
 use access::verify_csrf_prevention_token;
 
-pub use access::{assemble_csrf_prevention_token, create_ticket, API_METHOD_CREATE_TICKET};
+pub use access::{
+    assemble_csrf_prevention_token, create_ticket, API_METHOD_CREATE_TICKET,
+    API_METHOD_CREATE_TICKET_HTTP_ONLY,
+};
 pub use ticket::{ApiTicket, PartialTicket};
 
 /// Authentication realms are used to manage users: authenticate, change password or remove.

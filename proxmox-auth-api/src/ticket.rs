@@ -227,6 +227,11 @@ where
             _type_marker: PhantomData,
         })
     }
+
+    pub fn ticket_info(&self) -> String {
+        // append a `::ticketinfo` signature to distinguish the ticket info from proper tickets
+        format!("{}::ticketinfo", self.ticket_data())
+    }
 }
 
 #[cfg(test)]
