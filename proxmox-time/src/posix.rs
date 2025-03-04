@@ -380,6 +380,15 @@ pub fn epoch_to_rfc2822(epoch: i64) -> Result<String, Error> {
     Ok(rfc2822_date)
 }
 
+/// Convert an epoch to an RFC9110 preferred HTTP Date format.
+///
+/// see: <https://httpwg.org/specs/rfc9110.html#http.date>
+pub fn epoch_to_http_date(epoch: i64) -> Result<String, Error> {
+    let gmtime = gmtime(epoch)?;
+    let locale = Locale::new(libc::LC_ALL, Locale::C)?;
+    strftime_l("%a, %d %b %Y %H:%M:%S GMT", &gmtime, &locale)
+}
+
 #[test]
 fn test_leap_seconds() {
     let convert_reconvert = |epoch| {
