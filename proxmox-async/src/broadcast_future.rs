@@ -43,7 +43,7 @@ impl<T: Clone> BroadcastData<T> {
         }
     }
 
-    pub fn listen(&mut self) -> impl Future<Output = Result<T, Error>> {
+    pub fn listen(&mut self) -> impl Future<Output = Result<T, Error>> + use<T> {
         use futures::future::{ok, Either};
 
         match &self.result {
@@ -105,7 +105,7 @@ impl<T: Clone + Send + 'static> BroadcastFuture<T> {
 
     fn spawn(
         inner: Arc<Mutex<BroadCastFutureBinding<T>>>,
-    ) -> impl Future<Output = Result<T, Error>> {
+    ) -> impl Future<Output = Result<T, Error>> + use<T> {
         let mut data = inner.lock().unwrap();
 
         if let Some(source) = data.future.take() {
@@ -122,7 +122,7 @@ impl<T: Clone + Send + 'static> BroadcastFuture<T> {
     }
 
     /// Register a listener
-    pub fn listen(&self) -> impl Future<Output = Result<T, Error>> {
+    pub fn listen(&self) -> impl Future<Output = Result<T, Error>> + use<T> {
         let inner2 = self.inner.clone();
         async move { Self::spawn(inner2).await }
     }
