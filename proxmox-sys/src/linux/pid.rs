@@ -24,7 +24,7 @@ pub const SYS_pidfd_open: libc::c_long = 434;
 pub const SYS_pidfd_send_signal: libc::c_long = 424;
 
 unsafe fn pidfd_open(pid: libc::pid_t, flags: libc::c_uint) -> libc::c_long {
-    libc::syscall(SYS_pidfd_open, pid, flags)
+    unsafe { libc::syscall(SYS_pidfd_open, pid, flags) }
 }
 
 unsafe fn pidfd_send_signal(
@@ -33,7 +33,7 @@ unsafe fn pidfd_send_signal(
     info: *mut libc::siginfo_t,
     flags: libc::c_uint,
 ) -> libc::c_long {
-    libc::syscall(SYS_pidfd_send_signal, pidfd, sig, info, flags)
+    unsafe { libc::syscall(SYS_pidfd_send_signal, pidfd, sig, info, flags) }
 }
 
 /// File descriptor reference to a process.

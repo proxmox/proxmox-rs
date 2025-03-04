@@ -201,7 +201,7 @@ impl<T: Sized + Init> SharedMemory<T> {
 /// This calls `Init::initialize`, it is up to the user to ensure this is safe. The value should
 /// not have been initialized at this point.
 pub unsafe fn initialize_subtype<T: Init>(this: &mut T) {
-    let data: &mut MaybeUninit<T> = std::mem::transmute(this);
+    let data: &mut MaybeUninit<T> = unsafe { std::mem::transmute(this) };
     Init::initialize(data);
 }
 
@@ -211,6 +211,6 @@ pub unsafe fn initialize_subtype<T: Init>(this: &mut T) {
 ///
 /// This calls `Init::check_type_magic`, it is up to the user to ensure this is safe.
 pub unsafe fn check_subtype<T: Init>(this: &T) -> Result<(), Error> {
-    let data: &MaybeUninit<T> = std::mem::transmute(this);
+    let data: &MaybeUninit<T> = unsafe { std::mem::transmute(this) };
     Init::check_type_magic(data)
 }

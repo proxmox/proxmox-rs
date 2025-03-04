@@ -79,7 +79,7 @@ impl ReadDirEntry {
     /// It is up to the user to ensure that the file name is valid utf-8 *before* calling this
     /// method.
     pub unsafe fn file_name_utf8_unchecked(&self) -> &str {
-        std::str::from_utf8_unchecked(self.file_name().to_bytes())
+        unsafe { std::str::from_utf8_unchecked(self.file_name().to_bytes()) }
     }
 }
 

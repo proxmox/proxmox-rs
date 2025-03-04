@@ -38,14 +38,16 @@ impl<T> Mmap<T> {
 
         // libc::size_t vs usize
         #[allow(clippy::useless_conversion)]
-        let data = mman::mmap(
-            None,
-            byte_len,
-            prot,
-            flags,
-            fd,
-            libc::off_t::try_from(ofs).map_err(io::Error::other)?,
-        )
+        let data = unsafe {
+            mman::mmap(
+                None,
+                byte_len,
+                prot,
+                flags,
+                fd,
+                libc::off_t::try_from(ofs).map_err(io::Error::other)?,
+            )
+        }
         .map_err(SysError::into_io_error)?;
 
         Ok(Self {
