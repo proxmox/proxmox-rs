@@ -79,7 +79,7 @@ impl Reloader {
 
     fn pre_exec(self) -> Result<(), Error> {
         for item in self.pre_exec {
-            std::env::set_var(item.name, (item.store_fn)()?);
+            unsafe { std::env::set_var(item.name, (item.store_fn)()?) };
         }
         Ok(())
     }
