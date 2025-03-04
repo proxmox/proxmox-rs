@@ -12,6 +12,7 @@ use hyper::body::{Body, HttpBody};
 use openssl::hash::MessageDigest;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use openssl::x509::{self, X509};
+use proxmox_login::Ticket;
 use serde::Serialize;
 
 use proxmox_login::ticket::Validity;
@@ -67,12 +68,20 @@ pub struct Client {
     auth: Mutex<Option<Arc<AuthenticationKind>>>,
     client: Arc<proxmox_http::client::Client>,
     pve_compat: bool,
+    cookie_name: Option<String>,
 }
 
 impl Client {
     /// Create a new client instance which will connect to the provided endpoint.
     pub fn new(api_url: Uri) -> Self {
         Client::with_client(api_url, Arc::new(proxmox_http::client::Client::new()))
+    }
+
+    pub fn new_with_cookie(api_url: Uri, cookie_name: &str) -> Self {
+        let mut client =
+            Client::with_client(api_url, Arc::new(proxmox_http::client::Client::new()));
+        client.set_cookie_name(cookie_name);
+        client
     }
 
     /// Instantiate a client for an API with a given HTTP client instance.
@@ -82,6 +91,7 @@ impl Client {
             auth: Mutex::new(None),
             client,
             pve_compat: false,
+            cookie_name: None,
         }
     }
 
@@ -172,6 +182,10 @@ impl Client {
     /// on Proxmox VE APIs which require the `new-format` option.
     pub fn set_pve_compatibility(&mut self, compatibility: bool) {
         self.pve_compat = compatibility;
+    }
+
+    pub fn set_cookie_name(&mut self, cookie_name: &str) {
+        self.cookie_name = Some(cookie_name.to_string());
     }
 
     /// Get the currently used API url.
@@ -309,7 +323,10 @@ impl Client {
         Ok(())
     }
 
-    async fn do_login_request(&self, request: proxmox_login::Request) -> Result<Vec<u8>, Error> {
+    async fn do_login_request(
+        &self,
+        request: proxmox_login::Request,
+    ) -> Result<(Option<Ticket>, Vec<u8>), Error> {
         let request = http::Request::builder()
             .method(Method::POST)
             .uri(request.url)
@@ -330,10 +347,26 @@ impl Client {
             return Err(Error::api(api_response.status(), "authentication failed"));
         }
 
-        let (_, body) = api_response.into_parts();
+        let (parts, body) = api_response.into_parts();
         let body = read_body(body).await?;
 
-        Ok(body)
+        let ticket: Option<Ticket> = self.cookie_name.as_ref().and_then(|cookie_name| {
+            parts
+                .headers
+                .get_all(http::header::SET_COOKIE)
+                .iter()
+                .filter_map(|c| c.to_str().ok())
+                .filter_map(|c| match (c.find('='), c.find(';')) {
+                    (Some(begin), Some(end)) if begin < end && &c[..begin] == cookie_name => {
+                        Some(&c[begin + 1..end])
+                    }
+                    _ => None,
+                })
+                .filter_map(|t| t.parse().ok())
+                .next()
+        });
+
+        Ok((ticket, body))
     }
 
     /// Attempt to refresh the current ticket.
@@ -349,10 +382,10 @@ impl Client {
         let login = Login::renew(self.api_url.to_string(), auth.ticket.to_string())
             .map_err(Error::Ticket)?;
 
-        let api_response = self.do_login_request(login.request()).await?;
+        let (ticket, api_response) = self.do_login_request(login.request()).await?;
 
-        match login.response(&api_response)? {
-            TicketResult::Full(auth) => {
+        match login.response_with_cookie_ticket(ticket, &api_response)? {
+            TicketResult::Full(auth) | TicketResult::HttpOnly(auth) => {
                 *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
                 Ok(())
             }
@@ -373,15 +406,17 @@ impl Client {
     pub async fn login(&self, login: Login) -> Result<Option<SecondFactorChallenge>, Error> {
         let login = login.pve_compatibility(self.pve_compat);
 
-        let api_response = self.do_login_request(login.request()).await?;
+        let (ticket, api_response) = self.do_login_request(login.request()).await?;
 
-        Ok(match login.response(&api_response)? {
-            TicketResult::TfaRequired(challenge) => Some(challenge),
-            TicketResult::Full(auth) => {
-                *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
-                None
-            }
-        })
+        Ok(
+            match login.response_with_cookie_ticket(ticket, &api_response)? {
+                TicketResult::TfaRequired(challenge) => Some(challenge),
+                TicketResult::Full(auth) | TicketResult::HttpOnly(auth) => {
+                    *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
+                    None
+                }
+            },
+        )
     }
 
     /// Attempt to finish a 2nd factor login.
@@ -393,9 +428,9 @@ impl Client {
         challenge: SecondFactorChallenge,
         challenge_response: proxmox_login::Request,
     ) -> Result<(), Error> {
-        let api_response = self.do_login_request(challenge_response).await?;
+        let (ticket, api_response) = self.do_login_request(challenge_response).await?;
 
-        let auth = challenge.response(&api_response)?;
+        let auth = challenge.response_with_cookie_ticket(ticket, &api_response)?;
         *self.auth.lock().unwrap() = Some(Arc::new(auth.into()));
         Ok(())
     }
