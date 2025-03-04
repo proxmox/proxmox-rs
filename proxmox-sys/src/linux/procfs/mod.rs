@@ -228,9 +228,10 @@ static PROC_LAST_STAT: LazyLock<RwLock<(ProcFsStat, Instant, bool)>> =
 pub fn read_proc_stat() -> Result<ProcFsStat, Error> {
     let sample_time = Instant::now();
     let update_duration;
-    let mut stat =
-        parse_proc_stat(unsafe { std::str::from_utf8_unchecked(&std::fs::read("/proc/stat")?) })
-            .unwrap();
+    let mut stat = {
+        let bytes = std::fs::read("/proc/stat")?;
+        parse_proc_stat(unsafe { std::str::from_utf8_unchecked(&bytes) }).unwrap()
+    };
 
     {
         // read lock scope
@@ -755,7 +756,8 @@ pub struct Loadavg(pub f64, pub f64, pub f64);
 impl Loadavg {
     /// Read the load avage from `/proc/loadavg`.
     pub fn read() -> Result<Self, Error> {
-        Self::parse(unsafe { std::str::from_utf8_unchecked(&std::fs::read("/proc/loadavg")?) })
+        let bytes = std::fs::read("/proc/loadavg")?;
+        Self::parse(unsafe { std::str::from_utf8_unchecked(&bytes) })
     }
 
     /// Parse the value triplet.
