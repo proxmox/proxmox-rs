@@ -222,8 +222,12 @@ impl Client {
         json_body: Option<String>,
         // send an `Accept: application/json-seq` header.
         streaming: bool,
+        cookie_name: &Option<String>,
     ) -> Result<(http::response::Parts, hyper::Body), Error> {
-        let mut request = auth.set_auth_headers(Request::builder().method(method).uri(uri));
+        let mut request = auth.set_auth_headers_with_cookie_name(
+            Request::builder().method(method).uri(uri),
+            cookie_name,
+        );
         if streaming {
             request = request.header(http::header::ACCEPT, "application/json-seq");
         }
@@ -270,9 +274,18 @@ impl Client {
         method: Method,
         uri: Uri,
         json_body: Option<String>,
+        cookie_name: &Option<String>,
     ) -> Result<HttpApiResponse, Error> {
-        let (response, body) =
-            Self::send_authenticated_request(client, auth, method, uri, json_body, false).await?;
+        let (response, body) = Self::send_authenticated_request(
+            client,
+            auth,
+            method,
+            uri,
+            json_body,
+            false,
+            cookie_name,
+        )
+        .await?;
         let body = read_body(body).await?;
 
         let content_type = match response.headers.get(http::header::CONTENT_TYPE) {
@@ -475,7 +488,7 @@ impl HttpApiClient for Client {
             let auth = self.login_auth()?;
             let uri = self.build_uri(path_and_query)?;
             let client = Arc::clone(&self.client);
-            Self::authenticated_request(client, auth, method, uri, params).await
+            Self::authenticated_request(client, auth, method, uri, params, &self.cookie_name).await
         })
     }
 
@@ -500,8 +513,16 @@ impl HttpApiClient for Client {
             let auth = self.login_auth()?;
             let uri = self.build_uri(path_and_query)?;
             let client = Arc::clone(&self.client);
-            let (response, body) =
-                Self::send_authenticated_request(client, auth, method, uri, params, true).await?;
+            let (response, body) = Self::send_authenticated_request(
+                client,
+                auth,
+                method,
+                uri,
+                params,
+                true,
+                &self.cookie_name,
+            )
+            .await?;
 
             let content_type = match response.headers.get(http::header::CONTENT_TYPE) {
                 None => None,
@@ -571,6 +592,23 @@ impl AuthenticationKind {
     pub fn set_auth_headers(&self, request: http::request::Builder) -> http::request::Builder {
         match self {
             AuthenticationKind::Ticket(auth) => auth.set_auth_headers(request),
+            AuthenticationKind::Token(auth) => auth.set_auth_headers(request),
+        }
+    }
+
+    pub fn set_auth_headers_with_cookie_name(
+        &self,
+        request: http::request::Builder,
+        cookie_name: &Option<String>,
+    ) -> http::request::Builder {
+        match self {
+            AuthenticationKind::Ticket(auth) => {
+                if let Some(name) = cookie_name {
+                    auth.set_auth_headers_with_cookie_name(request, name)
+                } else {
+                    auth.set_auth_headers(request)
+                }
+            }
             AuthenticationKind::Token(auth) => auth.set_auth_headers(request),
         }
     }
