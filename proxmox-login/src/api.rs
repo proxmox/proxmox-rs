@@ -21,7 +21,8 @@ pub struct CreateTicket {
     pub otp: Option<String>,
 
     /// The secret password. This can also be a valid ticket.
-    pub password: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub password: Option<String>,
 
     /// Verify ticket, and check if user have access 'privs' on 'path'
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -60,6 +61,12 @@ pub struct CreateTicketResponse {
     /// The ticket as is supposed to be used in the authentication header.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ticket: Option<String>,
+
+    /// A purely informational ticket that can be used to gather information about when the actual
+    /// ticket needs to be refreshed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ticket-info")]
+    pub ticket_info: Option<String>,
 
     /// The full userid with the `@realm` part.
     pub username: String,

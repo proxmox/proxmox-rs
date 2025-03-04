@@ -129,7 +129,7 @@ impl Login {
         let request = api::CreateTicket {
             new_format: self.pve_compat.then_some(true),
             username: self.userid.clone(),
-            password: self.password.clone(),
+            password: Some(self.password.clone()),
             ..Default::default()
         };
 
@@ -279,7 +279,7 @@ impl SecondFactorChallenge {
         let request = api::CreateTicket {
             new_format: self.pve_compat.then_some(true),
             username: self.userid.clone(),
-            password: data.to_string(),
+            password: Some(data.to_string()),
             tfa_challenge: Some(self.ticket.clone()),
             ..Default::default()
         };
