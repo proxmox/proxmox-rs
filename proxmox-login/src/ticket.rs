@@ -104,6 +104,10 @@ impl Ticket {
     pub fn cookie(&self) -> String {
         format!("{}AuthCookie={}", self.product(), self.data)
     }
+
+    pub fn cookie_with_name(&self, name: &str) -> String {
+        format!("{name}={}", self.data)
+    }
 }
 
 /// Whether a ticket should be refreshed or is already invalid and needs to be completely renewed.
@@ -239,19 +243,50 @@ impl Authentication {
         self.ticket.cookie()
     }
 
+    /// Get the ticket cookie in the form `<name>Ticket`.
+    pub fn cookie_with_name(&self, name: &str) -> String {
+        self.ticket.cookie_with_name(name)
+    }
+
     #[cfg(feature = "http")]
     /// Add authentication headers to a request.
     ///
     /// This is equivalent to doing:
     /// ```ignore
-    /// request
-    ///     .header(http::header::COOKIE, auth.cookie())
-    ///     .header(proxmox_login::CSRF_HEADER_NAME, &auth.csrfprevention_token)
+    /// let request = if self.ticket.is_info_only() {
+    ///     request
+    /// } else {
+    ///     request.header(http::header::COOKIE, self.cookie())
+    /// };
+    /// request.header(crate::CSRF_HEADER_NAME, &self.csrfprevention_token)
     /// ```
     pub fn set_auth_headers(&self, request: http::request::Builder) -> http::request::Builder {
-        request
-            .header(http::header::COOKIE, self.cookie())
-            .header(crate::CSRF_HEADER_NAME, &self.csrfprevention_token)
+        let request = if self.ticket.is_info_only() {
+            // don't set the cookie header if we don't have access to a full ticket
+            request
+        } else {
+            request.header(http::header::COOKIE, self.cookie())
+        };
+
+        request.header(crate::CSRF_HEADER_NAME, &self.csrfprevention_token)
+    }
+
+    #[cfg(feature = "http")]
+    /// Add authentication headers to a request and specify the name of the cookie in which the
+    /// ticket is set.
+    pub fn set_auth_headers_with_cookie_name(
+        &self,
+        request: http::request::Builder,
+        name: &str,
+    ) -> http::request::Builder {
+        let request = if self.ticket.is_info_only() {
+            // don't set the cookie header if we don't have access to a full ticket
+            request
+        } else {
+            request.header(http::header::COOKIE, self.cookie_with_name(name))
+        };
+
+        request.header(crate::CSRF_HEADER_NAME, &self.csrfprevention_token)
     }
 }
 
