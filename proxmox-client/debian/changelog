@@ -1,3 +1,11 @@
+rust-proxmox-client (0.5.2-1) bookworm; urgency=medium
+
+  * add compatibility with HttpOnly cookies
+
+  * specify cookie names for authyentication headers where possible
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 04 Mar 2025 15:00:20 +0100
+
 rust-proxmox-client (0.5.1-1) bookworm; urgency=medium
 
   * use correct error for protocol errors instead of Error::Anyhow
