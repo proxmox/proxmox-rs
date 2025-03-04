@@ -107,6 +107,12 @@ async fn handle_simple_command_future(
         ApiHandler::AsyncHttp(_) => {
             bail!("CliHandler does not support ApiHandler::AsyncHttp - internal error")
         }
+        #[cfg(feature = "server")]
+        ApiHandler::AsyncHttpBodyParameters(_) => {
+            bail!(
+                "CliHandler does not support ApiHandler::AsyncHttpBodyParameters - internal error"
+            )
+        }
     };
 
     match result {
@@ -158,6 +164,12 @@ pub(crate) fn handle_simple_command<'cli>(
         #[cfg(feature = "server")]
         ApiHandler::AsyncHttp(_) => {
             bail!("CliHandler does not support ApiHandler::AsyncHttp - internal error");
+        }
+        #[cfg(feature = "server")]
+        ApiHandler::AsyncHttpBodyParameters(_) => {
+            bail!(
+                "CliHandler does not support ApiHandler::AsyncHttpBodyParameters - internal error"
+            );
         }
     };
 

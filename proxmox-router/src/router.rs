@@ -435,6 +435,44 @@ pub type ApiAsyncHttpHandlerFn = &'static (dyn Fn(
 pub type ApiResponseFuture =
     Pin<Box<dyn Future<Output = Result<Response<Body>, anyhow::Error>> + Send>>;
 
+/// Asynchronous HTTP API handlers with parameters specified in their bodies
+///
+/// They get low level access to request and response data, but it is also possible to specify
+/// their parameters in the request body.
+///
+/// ```
+/// use serde_json::Value;
+///
+/// use hyper::{Body, Response, http::request::Parts};
+///
+/// use proxmox_router::{ApiHandler, ApiMethod, ApiResponseFuture, RpcEnvironment};
+/// use proxmox_schema::ObjectSchema;
+///
+/// fn low_level_hello(
+///    parts: Parts,
+///    param: Value,
+///    info: &ApiMethod,
+///    rpcenv: Box<dyn RpcEnvironment>,
+/// ) -> ApiResponseFuture {
+///    Box::pin(async move {
+///        let response = http::Response::builder()
+///            .status(200)
+///            .body(Body::from("Hello world!"))?;
+///        Ok(response)
+///    })
+/// }
+///
+/// const API_METHOD_LOW_LEVEL_HELLO_BODY_PARAMETER: ApiMethod = ApiMethod::new(
+///    &ApiHandler::AsyncHttpBodyParameters(&low_level_hello),
+///    &ObjectSchema::new("Hello World Example (low level)", &[])
+/// );
+/// ```
+#[cfg(feature = "server")]
+pub type ApiAsyncHttpHandlerBodyParametersFn = &'static (dyn Fn(Parts, Value, &'static ApiMethod, Box<dyn RpcEnvironment>) -> ApiResponseFuture
+              + Send
+              + Sync
+              + 'static);
+
 /// Enum for different types of API handler functions.
 #[non_exhaustive]
 pub enum ApiHandler {
@@ -446,6 +484,8 @@ pub enum ApiHandler {
     StreamAsync(StreamApiAsyncHandlerFn),
     #[cfg(feature = "server")]
     AsyncHttp(ApiAsyncHttpHandlerFn),
+    #[cfg(feature = "server")]
+    AsyncHttpBodyParameters(ApiAsyncHttpHandlerBodyParametersFn),
 }
 
 #[cfg(feature = "test-harness")]
@@ -478,6 +518,11 @@ impl PartialEq for ApiHandler {
                 (ApiHandler::AsyncHttp(l), ApiHandler::AsyncHttp(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
                 }
+                #[cfg(feature = "server")]
+                (
+                    ApiHandler::AsyncHttpBodyParameters(l),
+                    ApiHandler::AsyncHttpBodyParameters(r),
+                ) => core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r),
                 _ => false,
             }
         }

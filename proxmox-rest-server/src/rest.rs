@@ -546,6 +546,11 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
             let params = parse_query_parameters(info.parameters, "", &parts, &uri_param)?;
             (handler)(parts, req_body, params, info, Box::new(rpcenv)).await
         }
+        ApiHandler::AsyncHttpBodyParameters(handler) => {
+            let params =
+                get_request_parameters(info.parameters, &parts, req_body, uri_param).await?;
+            (handler)(parts, params, info, Box::new(rpcenv)).await
+        }
         ApiHandler::StreamSync(handler) => {
             let params =
                 get_request_parameters(info.parameters, &parts, req_body, uri_param).await?;

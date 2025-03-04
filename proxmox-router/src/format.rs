@@ -32,6 +32,12 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
                 method = if method == "GET" { "DOWNLOAD" } else { method };
             }
 
+            #[cfg(feature = "server")]
+            if let ApiHandler::AsyncHttpBodyParameters(_) = api_method.handler {
+                method = if method == "POST" { "UPLOAD" } else { method };
+                method = if method == "GET" { "DOWNLOAD" } else { method };
+            }
+
             let res = format!(
                 "**{} {}**\n\n{}{}\n\n{}",
                 method, path, description, param_descr, return_descr
