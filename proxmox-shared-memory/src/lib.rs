@@ -75,7 +75,7 @@ fn mmap_file<T: Init>(file: &mut File, initialize: bool) -> Result<Mmap<T>, Erro
         Err(err) => bail!("detected wrong types in mmaped files: {}", err),
     }
 
-    Ok(unsafe { std::mem::transmute(mmap) })
+    Ok(unsafe { std::mem::transmute::<Mmap<MaybeUninit<T>>, Mmap<T>>(mmap) })
 }
 
 impl<T: Sized + Init> SharedMemory<T> {
