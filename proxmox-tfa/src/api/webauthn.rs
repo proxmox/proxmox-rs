@@ -1,5 +1,7 @@
 //! Webauthn configuration and challenge data.
 
+use std::fmt::Display;
+
 use anyhow::{format_err, Error};
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -42,9 +44,9 @@ impl From<OriginUrl> for String {
     }
 }
 
-impl OriginUrl {
-    fn to_string(&self) -> String {
-        self.0.origin().ascii_serialization()
+impl Display for OriginUrl {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.origin().ascii_serialization())
     }
 }
 
@@ -91,7 +93,7 @@ impl WebauthnConfig {
     pub fn digest(&self) -> [u8; 32] {
         let mut data = format!("rp={:?}\nid={:?}\n", self.rp, self.id,);
         if let Some(origin) = &self.origin {
-            data.push_str(&format!("origin={}\n", origin.to_string()));
+            data.push_str(&format!("origin={}\n", origin));
         }
         openssl::sha::sha256(data.as_bytes())
     }

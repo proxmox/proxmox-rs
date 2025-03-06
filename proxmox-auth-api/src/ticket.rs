@@ -1,6 +1,7 @@
 //! Generate and verify Authentication tickets
 
 use std::borrow::Cow;
+use std::fmt::Display;
 use std::marker::PhantomData;
 
 use anyhow::{bail, format_err, Error};
@@ -14,13 +15,13 @@ use crate::TICKET_LIFETIME;
 /// Stringified ticket data must not contain colons...
 const TICKET_ASCIISET: &AsciiSet = &percent_encoding::CONTROLS.add(b':');
 
-/// An empty type implementing [`ToString`] and [`FromStr`](std::str::FromStr), used for tickets
+/// An empty type implementing [`Display`] and [`FromStr`](std::str::FromStr), used for tickets
 /// with no data.
 pub struct Empty;
 
-impl ToString for Empty {
-    fn to_string(&self) -> String {
-        String::new()
+impl Display for Empty {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "")
     }
 }
 
