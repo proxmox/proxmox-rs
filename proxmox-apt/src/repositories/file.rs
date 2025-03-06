@@ -30,6 +30,7 @@ pub trait APTRepositoryFileImpl {
     /// If the file is hidden, the path points to a directory, or the extension
     /// is usually ignored by APT (e.g. `.orig`), `Ok(None)` is returned, while
     /// invalid file names yield an error.
+    #[allow(clippy::new_ret_no_self)]
     fn new<P: AsRef<Path>>(path: P) -> Result<Option<APTRepositoryFile>, APTRepositoryFileError>;
 
     fn with_content(content: String, content_type: APTRepositoryFileType) -> Self;
