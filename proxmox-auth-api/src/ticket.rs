@@ -1,7 +1,7 @@
 //! Generate and verify Authentication tickets
 
 use std::borrow::Cow;
-use std::fmt::Display;
+use std::fmt;
 use std::marker::PhantomData;
 
 use anyhow::{bail, format_err, Error};
@@ -19,9 +19,9 @@ const TICKET_ASCIISET: &AsciiSet = &percent_encoding::CONTROLS.add(b':');
 /// with no data.
 pub struct Empty;
 
-impl Display for Empty {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "")
+impl fmt::Display for Empty {
+    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Ok(())
     }
 }
 

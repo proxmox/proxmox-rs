@@ -1,6 +1,6 @@
 //! Webauthn configuration and challenge data.
 
-use std::fmt::Display;
+use std::fmt;
 
 use anyhow::{format_err, Error};
 use serde::{Deserialize, Serialize};
@@ -44,9 +44,9 @@ impl From<OriginUrl> for String {
     }
 }
 
-impl Display for OriginUrl {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.origin().ascii_serialization())
+impl fmt::Display for OriginUrl {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0.origin().ascii_serialization())
     }
 }
 
