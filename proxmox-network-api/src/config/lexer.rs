@@ -4,6 +4,7 @@ use std::iter::Iterator;
 use std::sync::LazyLock;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum Token {
     Text,
     Comment,
