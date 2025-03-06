@@ -14,6 +14,7 @@ fn test_fsetxattr_fgetxattr() {
     let file = OpenOptions::new()
         .write(true)
         .create(true)
+        .truncate(true)
         .open(&path)
         .unwrap();
 
