@@ -51,8 +51,8 @@ impl RRDMap {
                 None => {
                     create_path(
                         path.parent().unwrap(),
-                        Some(self.config.dir_options.clone()),
-                        Some(self.config.dir_options.clone()),
+                        Some(self.config.dir_options),
+                        Some(self.config.dir_options),
                     )?;
 
                     (self.create_rrd_cb)(dst)
@@ -82,7 +82,7 @@ impl RRDMap {
         if let Some(rrd) = self.map.get(rel_path) {
             let mut path = self.config.basedir.clone();
             path.push(rel_path);
-            rrd.save(&path, self.config.file_options.clone(), true)
+            rrd.save(&path, self.config.file_options, true)
         } else {
             bail!("rrd file {} not loaded", rel_path);
         }

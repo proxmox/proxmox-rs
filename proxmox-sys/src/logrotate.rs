@@ -64,7 +64,7 @@ impl LogRotate {
         options: &CreateOptions,
     ) -> Result<(), Error> {
         let mut source = File::open(source_path)?;
-        let (fd, tmp_path) = make_tmp_file(target_path, options.clone())?;
+        let (fd, tmp_path) = make_tmp_file(target_path, *options)?;
         let target = unsafe { File::from_raw_fd(fd.into_raw_fd()) };
         let mut encoder = match zstd::stream::write::Encoder::new(target, 0) {
             Ok(encoder) => encoder,

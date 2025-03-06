@@ -127,7 +127,7 @@ impl SharedCache {
         proxmox_sys::fs::replace_file(
             &self.path,
             new_content.as_bytes(),
-            self.create_options.clone(),
+            self.create_options,
             true,
         )?;
 
@@ -137,7 +137,7 @@ impl SharedCache {
     /// Removes all items from the cache.
     pub fn delete(&self, lock_timeout: Duration) -> Result<(), Error> {
         let _lock = self.lock(lock_timeout)?;
-        proxmox_sys::fs::replace_file(&self.path, &[], self.create_options.clone(), true)?;
+        proxmox_sys::fs::replace_file(&self.path, &[], self.create_options, true)?;
 
         Ok(())
     }
@@ -145,12 +145,7 @@ impl SharedCache {
     fn lock(&self, lock_timeout: Duration) -> Result<File, Error> {
         let mut lockfile_path = self.path.clone();
         lockfile_path.set_extension("lock");
-        proxmox_sys::fs::open_file_locked(
-            lockfile_path,
-            lock_timeout,
-            true,
-            self.create_options.clone(),
-        )
+        proxmox_sys::fs::open_file_locked(lockfile_path, lock_timeout, true, self.create_options)
     }
 }
 
@@ -178,12 +173,7 @@ mod tests {
                 .group(nix::unistd::Gid::effective())
                 .perm(nix::sys::stat::Mode::from_bits_truncate(0o700));
 
-            proxmox_sys::fs::create_path(
-                &path,
-                Some(dir_options.clone()),
-                Some(dir_options.clone()),
-            )
-            .unwrap();
+            proxmox_sys::fs::create_path(&path, Some(dir_options), Some(dir_options)).unwrap();
 
             let cache = SharedCache::new(path.join("somekey"), options, keep_old).unwrap();
             Self {

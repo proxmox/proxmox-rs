@@ -112,13 +112,8 @@ impl JournalState {
         journal_path.push(RRD_JOURNAL_NAME);
 
         let flags = OFlag::O_CLOEXEC | OFlag::O_RDONLY;
-        let journal = atomic_open_or_create_file(
-            &journal_path,
-            flags,
-            &[],
-            self.config.file_options.clone(),
-            false,
-        )?;
+        let journal =
+            atomic_open_or_create_file(&journal_path, flags, &[], self.config.file_options, false)?;
         Ok(BufReader::new(journal))
     }
 
@@ -127,13 +122,8 @@ impl JournalState {
         journal_path.push(RRD_JOURNAL_NAME);
 
         let flags = OFlag::O_CLOEXEC | OFlag::O_WRONLY | OFlag::O_APPEND;
-        let journal = atomic_open_or_create_file(
-            &journal_path,
-            flags,
-            &[],
-            config.file_options.clone(),
-            false,
-        )?;
+        let journal =
+            atomic_open_or_create_file(&journal_path, flags, &[], config.file_options, false)?;
         Ok(journal)
     }
 

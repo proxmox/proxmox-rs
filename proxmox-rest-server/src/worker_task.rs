@@ -136,7 +136,6 @@ impl WorkerTaskSetup {
     fn lock_task_list_files(&self, exclusive: bool) -> Result<TaskListLockGuard, Error> {
         let options = self
             .file_opts
-            .clone()
             .perm(nix::sys::stat::Mode::from_bits_truncate(0o660));
 
         let timeout = std::time::Duration::new(15, 0);
@@ -163,7 +162,6 @@ impl WorkerTaskSetup {
         let mut path = self.log_directory(upid);
         let dir_opts = self
             .file_opts
-            .clone()
             .perm(nix::sys::stat::Mode::from_bits_truncate(0o755));
 
         create_path(&path, None, Some(dir_opts))?;
@@ -222,7 +220,6 @@ impl WorkerTaskSetup {
 
         let options = self
             .file_opts
-            .clone()
             .perm(nix::sys::stat::Mode::from_bits_truncate(0o660));
 
         replace_file(&self.active_tasks_fn, active_raw.as_bytes(), options, false)?;
@@ -237,7 +234,6 @@ impl WorkerTaskSetup {
         if !finish_list.is_empty() {
             let options = self
                 .file_opts
-                .clone()
                 .perm(nix::sys::stat::Mode::from_bits_truncate(0o660));
 
             let mut writer = atomic_open_or_create_file(
@@ -268,10 +264,9 @@ impl WorkerTaskSetup {
         try_block!({
             let dir_opts = self
                 .file_opts
-                .clone()
                 .perm(nix::sys::stat::Mode::from_bits_truncate(0o755));
 
-            create_path(&self.taskdir, Some(dir_opts.clone()), Some(dir_opts))?;
+            create_path(&self.taskdir, Some(dir_opts), Some(dir_opts))?;
             // fixme:??? create_path(pbs_buildcfg::PROXMOX_BACKUP_RUN_DIR, None, Some(opts))?;
             Ok(())
         })
@@ -901,7 +896,7 @@ impl WorkerTask {
             exclusive: true,
             prefix_time: true,
             read: true,
-            file_opts: setup.file_opts.clone(),
+            file_opts: setup.file_opts,
             ..Default::default()
         };
         let logger = FileLogger::new(path, logger_options)?;

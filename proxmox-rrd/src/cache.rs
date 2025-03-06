@@ -66,12 +66,8 @@ impl Cache {
         let file_options = file_options.unwrap_or_default();
         let dir_options = dir_options.unwrap_or_default();
 
-        create_path(
-            &basedir,
-            Some(dir_options.clone()),
-            Some(dir_options.clone()),
-        )
-        .map_err(|err: Error| format_err!("unable to create rrdb stat dir - {}", err))?;
+        create_path(&basedir, Some(dir_options), Some(dir_options))
+            .map_err(|err: Error| format_err!("unable to create rrdb stat dir - {}", err))?;
 
         let config = Arc::new(CacheConfig {
             basedir,
