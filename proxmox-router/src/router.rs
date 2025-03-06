@@ -495,6 +495,7 @@ impl Eq for ApiHandler {}
 impl PartialEq for ApiHandler {
     fn eq(&self, rhs: &Self) -> bool {
         unsafe {
+            #[allow(clippy::missing_transmute_annotations)]
             match (self, rhs) {
                 (ApiHandler::Sync(l), ApiHandler::Sync(r)) => {
                     core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
