@@ -103,12 +103,14 @@ pub fn get_tfa_entry(config: &TfaConfig, userid: &str, id: &str) -> Option<Typed
         None => return None,
     };
 
-    Some(
-        match {
+    Some({
+        let res = {
             // scope to prevent the temporary iter from borrowing across the whole match
             let entry = tfa_id_iter(user_data).find(|(_ty, _index, entry_id)| id == *entry_id);
             entry.map(|(ty, index, _)| (ty, index))
-        } {
+        };
+
+        match res {
             Some((TfaType::Recovery, _)) => match &user_data.recovery {
                 Some(recovery) => TypedTfaInfo {
                     ty: TfaType::Recovery,
@@ -133,8 +135,8 @@ pub fn get_tfa_entry(config: &TfaConfig, userid: &str, id: &str) -> Option<Typed
                 info: user_data.yubico.get(index).unwrap().info.clone(),
             },
             None => return None,
-        },
-    )
+        }
+    })
 }
 
 pub struct EntryNotFound;
@@ -154,11 +156,13 @@ pub struct EntryNotFound;
 pub fn delete_tfa(config: &mut TfaConfig, userid: &str, id: &str) -> Result<bool, EntryNotFound> {
     let user_data = config.users.get_mut(userid).ok_or(EntryNotFound)?;
 
-    match {
+    let res = {
         // scope to prevent the temporary iter from borrowing across the whole match
         let entry = tfa_id_iter(user_data).find(|(_, _, entry_id)| id == *entry_id);
         entry.map(|(ty, index, _)| (ty, index))
-    } {
+    };
+
+    match res {
         Some((TfaType::Recovery, _)) => user_data.recovery = None,
         Some((TfaType::Totp, index)) => drop(user_data.totp.remove(index)),
         Some((TfaType::Webauthn, index)) => drop(user_data.webauthn.remove(index)),
