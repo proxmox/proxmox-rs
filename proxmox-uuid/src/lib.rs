@@ -103,25 +103,25 @@ impl Uuid {
                 return Err(UuidError);
             }
             for i in 0..4 {
-                uuid[i] = hex_digit(src[2 * i])? << 4 | hex_digit(src[2 * i + 1])?;
+                uuid[i] = (hex_digit(src[2 * i])? << 4) | hex_digit(src[2 * i + 1])?;
             }
             for i in 4..6 {
-                uuid[i] = hex_digit(src[2 * i + 1])? << 4 | hex_digit(src[2 * i + 2])?;
+                uuid[i] = (hex_digit(src[2 * i + 1])? << 4) | hex_digit(src[2 * i + 2])?;
             }
             for i in 6..8 {
-                uuid[i] = hex_digit(src[2 * i + 2])? << 4 | hex_digit(src[2 * i + 3])?;
+                uuid[i] = (hex_digit(src[2 * i + 2])? << 4) | hex_digit(src[2 * i + 3])?;
             }
             for i in 8..10 {
-                uuid[i] = hex_digit(src[2 * i + 3])? << 4 | hex_digit(src[2 * i + 4])?;
+                uuid[i] = (hex_digit(src[2 * i + 3])? << 4) | hex_digit(src[2 * i + 4])?;
             }
             for i in 10..16 {
-                uuid[i] = hex_digit(src[2 * i + 4])? << 4 | hex_digit(src[2 * i + 5])?;
+                uuid[i] = (hex_digit(src[2 * i + 4])? << 4) | hex_digit(src[2 * i + 5])?;
             }
         } else if src.len() == 32 {
             let uuid: &mut [u8] = unsafe { &mut (*uuid)[..] };
             let src = src.as_bytes();
             for i in 0..16 {
-                uuid[i] = hex_digit(src[2 * i])? << 4 | hex_digit(src[2 * i + 1])?;
+                uuid[i] = (hex_digit(src[2 * i])? << 4) | hex_digit(src[2 * i + 1])?;
             }
         } else {
             return Err(UuidError);

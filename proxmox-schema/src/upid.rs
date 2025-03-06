@@ -191,7 +191,7 @@ fn unescape_id(text: &str) -> Result<String, Error> {
             }
             let h1 = hex_digit(i[2])?;
             let h0 = hex_digit(i[3])?;
-            data.push(h1 << 4 | h0);
+            data.push((h1 << 4) | h0);
             i = &i[4..]
         } else if next == b'-' {
             data.push(b'/');

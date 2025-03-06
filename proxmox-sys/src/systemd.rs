@@ -90,7 +90,7 @@ fn unescape_unit_do(text: &str) -> Result<Vec<u8>, Error> {
             }
             let h1 = parse_hex_digit(i[2])?;
             let h0 = parse_hex_digit(i[3])?;
-            data.push(h1 << 4 | h0);
+            data.push((h1 << 4) | h0);
             i = &i[4..]
         } else if next == b'-' {
             data.push(b'/');

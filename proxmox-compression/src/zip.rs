@@ -360,7 +360,7 @@ impl ZipEntry {
                 comment_len: 0,
                 start_disk: 0,
                 internal_flags: 0,
-                external_flags: (self.mode as u32) << 16 | (!self.is_file as u32) << 4,
+                external_flags: ((self.mode as u32) << 16) | ((!self.is_file as u32) << 4),
                 offset,
             },
         )
