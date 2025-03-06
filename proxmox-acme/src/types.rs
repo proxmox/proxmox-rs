@@ -38,6 +38,12 @@ pub enum AccountStatus {
     Revoked,
 }
 
+impl Default for AccountStatus {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AccountStatus {
     /// Create a new instance with state New.
     #[inline]

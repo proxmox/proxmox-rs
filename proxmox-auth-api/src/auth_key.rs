@@ -237,6 +237,12 @@ pub struct Keyring {
     public_keys: Vec<VerificationKey>,
 }
 
+impl Default for Keyring {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Keyring {
     pub fn generate_new_rsa() -> Result<Self, Error> {
         PrivateKey::generate_rsa().map(Self::with_private_key)
