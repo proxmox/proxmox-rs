@@ -47,7 +47,7 @@ impl ApiConfig {
     ///
     /// `get_index_fn` - callback to generate the root page
     /// (index). Please note that this functions gets a reference to
-    /// the [ApiConfig], so it can use [Handlebars] templates
+    /// the [ApiConfig], so it can use [handlebars::Handlebars] templates
     /// ([render_template](Self::render_template) to generate pages.
     pub fn new<B: Into<PathBuf>>(basedir: B, env_type: RpcEnvironmentType) -> Self {
         Self {
@@ -175,7 +175,7 @@ impl ApiConfig {
         self.env_type
     }
 
-    /// Register a [Handlebars] template file
+    /// Register a [handlebars::Handlebars] template file
     ///
     /// Those templates cane be use with [render_template](Self::render_template) to generate pages.
     #[cfg(feature = "templates")]

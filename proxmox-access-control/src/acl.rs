@@ -39,8 +39,7 @@ pub struct AclTree {
 /// Node representing ACLs for a certain ACL path.
 #[derive(Default)]
 pub struct AclTreeNode {
-    /// [User](pbs_api_types::User) or
-    /// [Token](pbs_api_types::ApiToken) ACLs for this node.
+    /// `User` or `Token` ACLs for this node.
     pub users: HashMap<Authid, HashMap<String, bool>>,
     /// `Group` ACLs for this node (not yet implemented)
     pub groups: HashMap<String, HashMap<String, bool>>,
@@ -60,8 +59,8 @@ impl AclTreeNode {
 
     /// Returns applicable role and their propagation status for a given [Authid].
     ///
-    /// If the `Authid` is a [User](pbs_api_types::User) that has no specific `Roles` configured on
-    /// this node, applicable `Group` roles will be returned instead.
+    /// If the `Authid` is a `User` that has no specific `Roles` configured on this node,
+    /// applicable `Group` roles will be returned instead.
     ///
     /// If `leaf` is `false`, only those roles where the propagate flag in the ACL is set to `true`
     /// are returned. Otherwise, all roles will be returned.
@@ -558,14 +557,14 @@ pub fn lock_config() -> Result<ApiLockGuard, Error> {
     open_api_lockfile(acl_config_lock(), None, true)
 }
 
-/// Reads the [`AclTree`] from the [default path](ACL_CFG_FILENAME).
+/// Reads the [`AclTree`] from `acl.cfg` in the configuration directory.
 pub fn config() -> Result<(AclTree, ConfigDigest), Error> {
     let path = acl_config();
     AclTree::load(&path)
 }
 
-/// Returns a cached [`AclTree`] or fresh copy read directly from the [default
-/// path](ACL_CFG_FILENAME)
+/// Returns a cached [`AclTree`] or a fresh copy read directly from `acl.cfg` in the configuration
+/// directory.
 ///
 /// Since the AclTree is used for every API request's permission check, this caching mechanism
 /// allows to skip reading and parsing the file again if it is unchanged.
@@ -620,7 +619,7 @@ pub fn cached_config() -> Result<Arc<AclTree>, Error> {
     Ok(config)
 }
 
-/// Saves an [`AclTree`] to the [default path](ACL_CFG_FILENAME), ensuring proper ownership and
+/// Saves an [`AclTree`] to `acl.cfg` in the configuration directory, ensuring proper ownership and
 /// file permissions.
 pub fn save_config(acl: &AclTree) -> Result<(), Error> {
     let mut raw: Vec<u8> = Vec::new();

@@ -62,7 +62,7 @@ impl TlsOptions {
     }
 }
 
-/// A Proxmox API client base backed by a [`proxmox_http::Client`].
+/// A Proxmox API client base backed by a [`proxmox_http::client::Client`].
 pub struct Client {
     api_url: Uri,
     auth: Mutex<Option<Arc<AuthenticationKind>>>,

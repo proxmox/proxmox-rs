@@ -38,9 +38,8 @@ pub async fn last_worker_future() {
     let _ = last_worker_listeners().subscribe().wait_for(|&v| v).await;
 }
 
-/// This drives the [`last_worker_listener()`] futures: if a shutdown is requested and no workers
-/// and no internal tasks are running, the [`last_worker_listener()`] futures are triggered to
-/// finish.
+/// This drives the worker listener futures: if a shutdown is requested and no workers and no
+/// internal tasks are running, the last worker listener futures are triggered to finish.
 pub fn check_last_worker() {
     if proxmox_daemon::is_shutdown_requested()
         && WORKER_COUNT.load(Ordering::Acquire) == 0
