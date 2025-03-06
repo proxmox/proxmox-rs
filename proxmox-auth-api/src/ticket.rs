@@ -15,8 +15,8 @@ use crate::TICKET_LIFETIME;
 /// Stringified ticket data must not contain colons...
 const TICKET_ASCIISET: &AsciiSet = &percent_encoding::CONTROLS.add(b':');
 
-/// An empty type implementing [`Display`] and [`FromStr`](std::str::FromStr), used for tickets
-/// with no data.
+/// An empty type implementing [`Display`](fmt::Display) and [`FromStr`](std::str::FromStr), used
+/// for tickets with no data.
 pub struct Empty;
 
 impl fmt::Display for Empty {
