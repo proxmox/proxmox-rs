@@ -291,6 +291,7 @@ where
     None
 }
 
+#[allow(clippy::ptr_arg)]
 pub fn sort_package_list(packages: &mut Vec<APTUpdateInfo>) {
     let cache = apt_pkg_native::Cache::get_singleton();
     packages.sort_by(|left, right| {
