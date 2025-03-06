@@ -117,6 +117,7 @@ impl Confirmation {
     /// let answer = Confirmation::from_str("bogus");
     /// assert!(answer.is_err());
     /// ```
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(input: &str) -> Result<Self, Error> {
         match input.trim() {
             "y" | "Y" => Ok(Self::Yes),
