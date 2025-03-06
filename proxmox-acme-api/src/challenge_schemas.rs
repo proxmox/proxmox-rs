@@ -49,6 +49,7 @@ fn load_dns_challenge_schema() -> Result<Vec<AcmeChallengeSchema>, Error> {
 }
 
 pub fn get_cached_challenge_schemas() -> Result<ChallengeSchemaWrapper, Error> {
+    #[allow(clippy::type_complexity)]
     static CACHE: LazyLock<Mutex<Option<(Arc<Vec<AcmeChallengeSchema>>, SystemTime)>>> =
         LazyLock::new(|| Mutex::new(None));
 

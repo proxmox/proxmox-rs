@@ -31,6 +31,7 @@ impl UserInformation for DummyUserInfo {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn check_auth<'a>(
     _headers: &'a HeaderMap,
     _method: &'a Method,
