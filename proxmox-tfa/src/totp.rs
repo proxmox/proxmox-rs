@@ -546,7 +546,7 @@ impl PartialEq<&str> for TotpValue {
     fn eq(&self, other: &&str) -> bool {
         // Since we use `from_str_radix` with a radix of 10 explicitly, we can check the number of
         // bytes against the number of digits.
-        if other.as_bytes().len() != (self.digits as usize) {
+        if other.len() != (self.digits as usize) {
             return false;
         }
 
