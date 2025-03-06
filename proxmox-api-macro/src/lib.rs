@@ -183,12 +183,7 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
             &::proxmox_schema::ObjectSchema::new(
                 "An example of a struct with renamed fields.",
                 &[
-                    (
-                        "test-string",
-                        false,
-                        &::proxmox_schema::StringSchema::new("A test string.").schema(),
-                    ),
-                    (
+                   (
                         "SomeOther",
                         true,
                         &::proxmox_schema::StringSchema::new(
@@ -196,6 +191,12 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
                         )
                         .schema(),
                     ),
+                    (
+                        "test-string",
+                        false,
+                        &::proxmox_schema::StringSchema::new("A test string.").schema(),
+                    ),
+
                 ],
             )
             .schema();
