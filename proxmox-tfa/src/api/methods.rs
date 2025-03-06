@@ -98,10 +98,7 @@ pub fn list_user_tfa(config: &TfaConfig, userid: &str) -> Result<Vec<TypedTfaInf
 ///
 /// In case this returns `None` a `NOT_FOUND` http error should be returned.
 pub fn get_tfa_entry(config: &TfaConfig, userid: &str, id: &str) -> Option<TypedTfaInfo> {
-    let user_data = match config.users.get(userid) {
-        Some(u) => u,
-        None => return None,
-    };
+    let user_data = config.users.get(userid)?;
 
     Some({
         let res = {

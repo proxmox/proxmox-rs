@@ -208,10 +208,7 @@ impl AclTree {
         let mut node = &self.root;
         for outer in path {
             for comp in outer.split('/') {
-                node = match node.children.get(comp) {
-                    Some(n) => n,
-                    None => return None,
-                };
+                node = node.children.get(comp)?;
             }
         }
         Some(node)
@@ -221,10 +218,7 @@ impl AclTree {
         let mut node = &mut self.root;
         for outer in path {
             for comp in outer.split('/') {
-                node = match node.children.get_mut(comp) {
-                    Some(n) => n,
-                    None => return None,
-                };
+                node = node.children.get_mut(comp)?;
             }
         }
         Some(node)
