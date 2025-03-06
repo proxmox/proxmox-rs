@@ -50,7 +50,7 @@ pub fn check_last_worker() {
 }
 
 /// Spawn a task which calls [`check_last_worker()`] in the case of a requested shutdown. This used
-/// to be implied by the [`request_shutdown()`] call when it was part of the `proxmox-rest-server`
+/// to be implied by the `request_shutdown()` call when it was part of the `proxmox-rest-server`
 /// crate, which is no longer the case.
 fn check_workers_on_shutdown() {
     tokio::spawn(async {

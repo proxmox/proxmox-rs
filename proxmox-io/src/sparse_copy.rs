@@ -26,8 +26,8 @@ pub struct SparseCopyResult {
     pub seeked_last: bool,
 }
 
-/// Copy similar to [`io::copy`](std::io::copy), but seeks the target when encountering zero bytes
-/// instead of writing them.
+/// Copy similar to [`io::copy`], but seeks the target when encountering zero bytes instead of
+/// writing them.
 ///
 /// Example use:
 /// ```

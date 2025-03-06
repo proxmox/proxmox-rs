@@ -117,7 +117,7 @@ pub fn file_read_firstline<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 }
 
 #[inline]
-/// Creates a tmpfile like [`nix::unistd::mkstemp`], but with [`nix::fctnl::Oflag`] set.
+/// Creates a tmpfile like [`nix::unistd::mkstemp`], but with [`OFlag`] set.
 ///
 /// Note that some flags are masked out since they can produce an error, see mkostemp(2) for details.
 // code is mostly copied from nix mkstemp
