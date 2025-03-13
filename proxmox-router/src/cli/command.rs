@@ -314,13 +314,11 @@ pub(crate) fn replace_aliases(
             continue;
         }
         if old[..] == args[..old.len()] {
-            let new_args: Vec<String> = new.iter().map(|s| String::from(*s)).collect();
+            let new_args = new.iter().map(|s| String::from(*s));
             let rest = args.split_off(old.len());
-            args.truncate(0);
+            args.clear();
             args.extend(new_args);
-            for arg in rest.iter() {
-                args.push(arg.clone());
-            }
+            args.extend(rest);
             return;
         }
     }
