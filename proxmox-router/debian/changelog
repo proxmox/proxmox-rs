@@ -1,3 +1,15 @@
+rust-proxmox-router (3.1.1-1) bookworm; urgency=medium
+
+  * router: allow `from_str` on Confirmation that is not for `FromStr`
+
+  * router: fix nested doc test cases to match inteded output
+
+  * router: cli: avoid unnecessary clones/allocation
+
+  * rebuild with env_logger 0.11
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 13 Mar 2025 13:55:37 +0100
+
 rust-proxmox-router (3.1.0-1) bookworm; urgency=medium
 
   * add `AsyncHttpBodyParameters` api handler type to server feature
