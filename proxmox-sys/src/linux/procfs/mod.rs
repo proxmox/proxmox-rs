@@ -417,8 +417,12 @@ pub struct ProcFsMemInfo {
 
 pub fn read_meminfo() -> Result<ProcFsMemInfo, Error> {
     let path = "/proc/meminfo";
-    let file = OpenOptions::new().read(true).open(path)?;
 
+    let meminfo_str = std::fs::read_to_string(path)?;
+    parse_proc_meminfo(&meminfo_str)
+}
+
+fn parse_proc_meminfo(text: &str) -> Result<ProcFsMemInfo, Error> {
     let mut meminfo = ProcFsMemInfo {
         memtotal: 0,
         memfree: 0,
@@ -430,9 +434,8 @@ pub fn read_meminfo() -> Result<ProcFsMemInfo, Error> {
     };
 
     let (mut buffers, mut cached) = (0, 0);
-    for line in BufReader::new(&file).lines() {
-        let content = line?;
-        let mut content_iter = content.split_whitespace();
+    for line in text.lines() {
+        let mut content_iter = line.split_whitespace();
         if let (Some(key), Some(value)) = (content_iter.next(), content_iter.next()) {
             match key {
                 "MemTotal:" => meminfo.memtotal = value.parse::<u64>()? * 1024,
