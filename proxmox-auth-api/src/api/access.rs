@@ -140,7 +140,8 @@ fn create_ticket_http_only(
             .ok_or(format_err!("detected wrong RpcEnvironment type"))?;
 
         let mut ticket_response = handle_ticket_creation(create_params, env).await?;
-        let mut response = Response::builder();
+        let mut response =
+            Response::builder().header(http::header::CONTENT_TYPE, "application/json");
 
         // if `ticket_info` is set, we want to return the ticket in a `SET_COOKIE` header and not
         // the response body
