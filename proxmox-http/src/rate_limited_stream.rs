@@ -5,7 +5,7 @@ use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use hyper::client::connect::{Connected, Connection};
+use hyper_util::client::legacy::connect::{Connected, Connection};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio::time::Sleep;
 
