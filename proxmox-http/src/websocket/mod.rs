@@ -11,11 +11,11 @@ use std::task::{Context, Poll};
 
 use anyhow::{bail, format_err, Error};
 use futures::select;
-use hyper::header::{
+use http::header::{
     HeaderMap, HeaderValue, CONNECTION, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_KEY,
     SEC_WEBSOCKET_PROTOCOL, SEC_WEBSOCKET_VERSION, UPGRADE,
 };
-use hyper::{Body, Response, StatusCode};
+use http::{Response, StatusCode};
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt, ReadBuf};
 use tokio::sync::mpsc;
 
@@ -24,6 +24,8 @@ use futures::ready;
 
 use proxmox_io::ByteBuffer;
 use proxmox_lang::io_format_err;
+
+use crate::Body;
 
 // see RFC6455 section 7.4.1
 #[derive(Debug, Clone, Copy)]

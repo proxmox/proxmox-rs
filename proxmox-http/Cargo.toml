@@ -91,7 +91,7 @@ client-trait = [ "dep:http" ]
 http-helpers = [ "dep:http", "dep:proxmox-base64", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
 websocket = [
     "dep:futures",
-    "dep:hyper",
+    "dep:http",
     "dep:openssl",
     "dep:proxmox-base64",
     "dep:proxmox-io",
@@ -101,4 +101,5 @@ websocket = [
     "proxmox-io?/tokio",
     "tokio?/io-util",
     "tokio?/sync",
+    "body",
 ]
