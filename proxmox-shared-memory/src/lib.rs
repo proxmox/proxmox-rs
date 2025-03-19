@@ -1,4 +1,5 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+#![deny(unsafe_op_in_unsafe_fn)]
 
 use std::ffi::{CStr, CString};
 use std::fs::File;
