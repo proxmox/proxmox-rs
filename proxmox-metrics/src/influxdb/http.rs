@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
 use anyhow::{bail, Error};
-use hyper::Body;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use tokio::sync::mpsc;
 
 use proxmox_http::client::Client;
-use proxmox_http::HttpOptions;
+use proxmox_http::{Body, HttpOptions};
 
 use crate::influxdb::utils;
 use crate::{Metrics, MetricsData};
@@ -174,7 +173,7 @@ impl InfluxDbHttp {
             request = request.header("Authorization", format!("Token {}", token));
         }
 
-        let request = request.body(Body::from(self.data.split_off(0)))?;
+        let request = request.body(self.data.split_off(0).into())?;
 
         let res = self.client.request(request).await?;
 
