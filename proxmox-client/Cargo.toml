@@ -13,6 +13,7 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 hex.workspace = true
+http-body-util.workspace = true
 http.workspace = true
 percent-encoding.workspace = true
 serde.workspace = true

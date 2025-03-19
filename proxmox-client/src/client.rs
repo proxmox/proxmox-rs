@@ -8,13 +8,14 @@ use http::request::Request;
 use http::uri::PathAndQuery;
 use http::Method;
 use http::{StatusCode, Uri};
-use hyper::body::{Body, HttpBody};
+use http_body_util::BodyExt;
 use openssl::hash::MessageDigest;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use openssl::x509::{self, X509};
 use proxmox_login::Ticket;
 use serde::Serialize;
 
+use proxmox_http::Body;
 use proxmox_login::ticket::Validity;
 use proxmox_login::{Login, SecondFactorChallenge, TicketResult};
 
@@ -223,7 +224,7 @@ impl Client {
         // send an `Accept: application/json-seq` header.
         streaming: bool,
         cookie_name: &Option<String>,
-    ) -> Result<(http::response::Parts, hyper::Body), Error> {
+    ) -> Result<(http::response::Parts, Body), Error> {
         let mut request = auth.set_auth_headers_with_cookie_name(
             Request::builder().method(method).uri(uri),
             cookie_name,
@@ -237,7 +238,7 @@ impl Client {
                 .header(http::header::CONTENT_TYPE, "application/json")
                 .body(body.into())
         } else {
-            request.body(Default::default())
+            request.body(Body::empty())
         }
         .map_err(|err| Error::internal("failed to build request", err))?;
 
@@ -449,12 +450,13 @@ impl Client {
     }
 }
 
-async fn read_body(mut body: Body) -> Result<Vec<u8>, Error> {
-    let mut data = Vec::<u8>::new();
-    while let Some(more) = body.data().await {
-        let more = more.map_err(|err| Error::internal("error reading response body", err))?;
-        data.extend(&more[..]);
-    }
+async fn read_body(body: Body) -> Result<Vec<u8>, Error> {
+    let data = body
+        .collect()
+        .await
+        .map_err(Error::Anyhow)?
+        .to_bytes()
+        .to_vec();
     Ok(data)
 }
 
@@ -465,7 +467,7 @@ impl HttpApiClient for Client {
     type ResponseStreamFuture<'a> =
         Pin<Box<dyn Future<Output = Result<HttpApiResponseStream<Self::Body>, Error>> + Send + 'a>>;
 
-    type Body = hyper::Body;
+    type Body = Body;
 
     fn request<'a, T>(
         &'a self,
