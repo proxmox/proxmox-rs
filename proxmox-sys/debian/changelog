@@ -1,3 +1,20 @@
+rust-proxmox-sys (0.6.6-1) bookworm; urgency=medium
+
+  * use correct pointer type for mkdtemp return value
+
+  * fs: derive `Copy` for `CreateOptions`
+
+  * docs: fix private intra-doc links
+
+  * mark extern blocks as unsafe for edition 2024 preparation
+
+  * enable #![deny(unsafe_op_in_unsafe_fn)]
+
+  * mark unsafe blocks inside unsafe fns as unsafe as edition 2024
+    preparation,
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Mar 2025 12:14:19 +0100
+
 rust-proxmox-sys (0.6.5-1) bookworm; urgency=medium
 
   * sys: fs: set CLOEXEC when creating temp files to avoid passing them to
