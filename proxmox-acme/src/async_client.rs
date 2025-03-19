@@ -2,10 +2,11 @@
 
 use anyhow::format_err;
 use bytes::Bytes;
-use hyper::{Body, Request};
+use http_body_util::BodyExt;
+use hyper::Request;
 use serde::{Deserialize, Serialize};
 
-use proxmox_http::client::Client;
+use proxmox_http::{client::Client, Body};
 
 use crate::account::AccountCreator;
 use crate::order::{Order, OrderData};
@@ -400,9 +401,11 @@ impl AcmeClient {
         let (parts, body) = response.into_parts();
 
         let status = parts.status.as_u16();
-        let body = hyper::body::to_bytes(body)
+        let body = body
+            .collect()
             .await
-            .map_err(|err| Error::Custom(format!("failed to retrieve response body: {}", err)))?;
+            .map_err(|err| Error::Custom(format!("failed to retrieve response body: {}", err)))?
+            .to_bytes();
 
         let got_nonce = if let Some(new_nonce) = parts.headers.get(crate::REPLAY_NONCE) {
             let new_nonce = new_nonce.to_str().map_err(|err| {

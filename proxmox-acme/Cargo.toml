@@ -26,6 +26,7 @@ proxmox-schema = { workspace = true, optional = true, features = [ "api-macro" ]
 proxmox-http = { workspace = true, optional = true, features = [ "client" ] }
 anyhow = { workspace = true, optional = true }
 bytes = { workspace = true, optional = true }
+http-body-util = { workspace = true, optional = true }
 hyper = { workspace = true, optional = true }
 
 [dependencies.ureq]
@@ -39,7 +40,7 @@ default = [ "impl" ]
 api-types = [ "dep:proxmox-schema" ]
 impl = [ "api-types", "dep:openssl" ]
 client = [ "impl", "dep:http", "dep:ureq"]
-async-client = [ "impl", "dep:hyper", "dep:proxmox-http", "dep:anyhow", "dep:bytes" ]
+async-client = [ "impl", "dep:http-body-util", "dep:hyper", "dep:proxmox-http", "dep:anyhow", "dep:bytes" ]
 
 [dev-dependencies]
 anyhow.workspace = true
