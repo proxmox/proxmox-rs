@@ -1,11 +1,26 @@
-use tracing::{level_filters::LevelFilter, Level};
+use tracing::level_filters::LevelFilter;
+use tracing::Level;
+use tracing::Metadata;
 use tracing_log::{AsLog, LogTracer};
-use tracing_subscriber::{filter::filter_fn, layer::SubscriberExt, Layer};
+use tracing_subscriber::layer::Context;
+use tracing_subscriber::layer::Filter;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::Layer;
 
 use crate::{
     get_env_variable, journald_or_stderr_layer, plain_stderr_layer,
     pve_task_formatter::PveTaskFormatter, tasklog_layer::TasklogLayer, LogContext,
 };
+///
+/// Filter yielding `true` *outside* of worker tasks, *unless* the level is `ERROR`.
+#[derive(Clone, Copy, Debug)]
+pub struct NoWorkerTask;
+
+impl<S> Filter<S> for NoWorkerTask {
+    fn enabled(&self, meta: &Metadata<'_>, _cx: &Context<'_, S>) -> bool {
+        !LogContext::exists() || *meta.level() == Level::ERROR
+    }
+}
 
 /// Builder-like struct to compose your logging layers.
 ///
@@ -77,9 +92,7 @@ impl Logger {
     pub fn journald_on_no_workertask(mut self) -> Logger {
         self.layer.push(
             journald_or_stderr_layer()
-                .with_filter(filter_fn(|metadata| {
-                    !LogContext::exists() || *metadata.level() == Level::ERROR
-                }))
+                .with_filter(NoWorkerTask)
                 .with_filter(self.global_log_level)
                 .boxed(),
         );
@@ -115,9 +128,7 @@ impl Logger {
     pub fn stderr_on_no_workertask(mut self) -> Logger {
         self.layer.push(
             plain_stderr_layer()
-                .with_filter(filter_fn(|metadata| {
-                    !LogContext::exists() || *metadata.level() == Level::ERROR
-                }))
+                .with_filter(NoWorkerTask)
                 .with_filter(self.global_log_level)
                 .boxed(),
         );
