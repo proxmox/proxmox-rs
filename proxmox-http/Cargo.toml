@@ -64,9 +64,10 @@ rate-limited-stream = [
     "rate-limiter",
 ]
 client = [
+    "dep:bytes",
     "dep:futures",
-    "dep:http",
-    "dep:hyper",
+    "dep:http-body",
+    "dep:http-body-util",
     "dep:hyper-util",
     "dep:openssl",
     "dep:proxmox-compression",

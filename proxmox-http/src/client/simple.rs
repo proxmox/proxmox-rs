@@ -1,20 +1,25 @@
 use anyhow::{bail, format_err, Error};
 use std::collections::HashMap;
 
+use std::fmt::Display;
+
+#[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
+use http::header::HeaderName;
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
 use std::str::FromStr;
 
 use futures::*;
-#[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
-use http::header::HeaderName;
+
 use http::{HeaderValue, Request, Response};
-use hyper::client::connect::dns::GaiResolver;
-use hyper::client::Client as HyperClient;
-use hyper::client::HttpConnector;
-use hyper::Body;
+use http_body_util::{BodyDataStream, BodyExt};
+use hyper_util::client::legacy::connect::dns::GaiResolver;
+use hyper_util::client::legacy::connect::HttpConnector;
+use hyper_util::client::legacy::Client as HyperClient;
+use hyper_util::rt::TokioExecutor;
 use openssl::ssl::{SslConnector, SslMethod};
 
 use crate::client::HttpsConnector;
+use crate::Body;
 use crate::HttpOptions;
 
 /// Asynchronous HTTP client implementation
@@ -45,7 +50,9 @@ impl Client {
         if let Some(ref proxy_config) = options.proxy_config {
             https.set_proxy(proxy_config.clone());
         }
-        let client = HyperClient::builder().build(https);
+
+        let client =
+            HyperClient::builder(TokioExecutor::new()).build::<HttpsConnector, Body>(https);
         Self { client, options }
     }
 
@@ -75,7 +82,7 @@ impl Client {
 
         request
             .headers_mut()
-            .insert(hyper::header::USER_AGENT, user_agent);
+            .insert(http::header::USER_AGENT, user_agent);
 
         self.add_proxy_headers(&mut request)?;
 
@@ -95,7 +102,7 @@ impl Client {
         let mut request = Request::builder()
             .method("POST")
             .uri(uri)
-            .header(hyper::header::CONTENT_TYPE, content_type);
+            .header(http::header::CONTENT_TYPE, content_type);
 
         if let Some(extra_headers) = extra_headers {
             for (header, value) in extra_headers {
@@ -103,9 +110,8 @@ impl Client {
             }
         }
 
-        let request = request.body(body.unwrap_or_default())?;
-
-        self.request(request).await
+        let body = body.unwrap_or(Body::empty());
+        self.request(request.body(body)?).await
     }
 
     pub async fn get_string(
@@ -146,11 +152,30 @@ impl Client {
             Ok(res) => {
                 let (parts, body) = res.into_parts();
 
-                let buf = hyper::body::to_bytes(body).await?;
+                let buf = body.collect().await?.to_bytes();
                 let new_body = String::from_utf8(buf.to_vec())
                     .map_err(|err| format_err!("Error converting HTTP result data: {}", err))?;
 
                 Ok(Response::from_parts(parts, new_body))
+            }
+            Err(err) => Err(err),
+        }
+    }
+
+    pub async fn response_body_bytes(res: Response<Body>) -> Result<Body, Error> {
+        Self::convert_body_to_bytes(Ok(res))
+            .await
+            .map(|res| res.into_body())
+    }
+
+    async fn convert_body_to_bytes(
+        response: Result<Response<Body>, Error>,
+    ) -> Result<Response<Body>, Error> {
+        match response {
+            Ok(res) => {
+                let (parts, body) = res.into_parts();
+                let buf = body.collect().await?.to_bytes();
+                Ok(Response::from_parts(parts, buf.into()))
             }
             Err(err) => Err(err),
         }
@@ -182,7 +207,9 @@ impl crate::HttpClient<Body, Body> for Client {
             }
         }
 
-        proxmox_async::runtime::block_on(self.request(req))
+        proxmox_async::runtime::block_on(async move {
+            Self::convert_body_to_bytes(self.request(req).await).await
+        })
     }
 
     fn post(
@@ -192,11 +219,16 @@ impl crate::HttpClient<Body, Body> for Client {
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<Body>, Error> {
-        proxmox_async::runtime::block_on(self.post(uri, body, content_type, extra_headers))
+        proxmox_async::runtime::block_on(async move {
+            Self::convert_body_to_bytes(self.post(uri, body, content_type, extra_headers).await)
+                .await
+        })
     }
 
     fn request(&self, request: Request<Body>) -> Result<Response<Body>, Error> {
-        proxmox_async::runtime::block_on(async move { self.request(request).await })
+        proxmox_async::runtime::block_on(async move {
+            Self::convert_body_to_bytes(self.request(request).await).await
+        })
     }
 }
 
@@ -232,7 +264,7 @@ impl crate::HttpClient<String, String> for Client {
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<Response<String>, Error> {
         proxmox_async::runtime::block_on(async move {
-            let body = body.map(|s| Body::from(s.into_bytes()));
+            let body = body.map(|s| s.into());
             Self::convert_body_to_string(self.post(uri, body, content_type, extra_headers).await)
                 .await
         })
@@ -241,25 +273,34 @@ impl crate::HttpClient<String, String> for Client {
     fn request(&self, request: Request<String>) -> Result<Response<String>, Error> {
         proxmox_async::runtime::block_on(async move {
             let (parts, body) = request.into_parts();
-            let body = Body::from(body);
+            let body = body.into();
             let request = Request::from_parts(parts, body);
             Self::convert_body_to_string(self.request(request).await).await
         })
     }
 }
 
-/// Wraps the `Body` stream in a DeflateDecoder stream if the `Content-Encoding`
+/// Wraps the `Response` contents in a DeflateDecoder stream if the `Content-Encoding`
 /// header of the response is `deflate`, otherwise returns the original
 /// response.
-async fn decode_response(mut res: Response<Body>) -> Result<Response<Body>, Error> {
-    let Some(content_encoding) = res.headers_mut().remove(&hyper::header::CONTENT_ENCODING) else {
-        return Ok(res);
+async fn decode_response<B>(mut res: Response<B>) -> Result<Response<Body>, Error>
+where
+    B: http_body::Body<Data = bytes::Bytes> + Send + Unpin + 'static,
+    <B as http_body::Body>::Error: Into<Error> + Display,
+{
+    let Some(content_encoding) = res.headers_mut().remove(&http::header::CONTENT_ENCODING) else {
+        let (parts, body) = res.into_parts();
+        let stream = BodyDataStream::new(body);
+        let body = Body::wrap_stream(stream);
+        return Ok(Response::from_parts(parts, body));
     };
 
     let encodings = content_encoding.to_str()?;
     if encodings == "deflate" {
         let (parts, body) = res.into_parts();
-        let decoder = proxmox_compression::DeflateDecoder::builder(body)
+
+        let stream = BodyDataStream::new(body);
+        let decoder = proxmox_compression::DeflateDecoder::builder(stream)
             .zlib(true)
             .build();
         let decoded_body = Body::wrap_stream(decoder);
@@ -271,6 +312,8 @@ async fn decode_response(mut res: Response<Body>) -> Result<Response<Body>, Erro
 
 #[cfg(test)]
 mod test {
+    use bytes::Bytes;
+
     use super::*;
 
     use std::io::Write;
@@ -283,10 +326,10 @@ si aliquod aeternum et infinitum impendere."#;
     #[tokio::test]
     async fn test_parse_response_deflate() {
         let encoded = encode_deflate(BODY.as_bytes()).unwrap();
-        let encoded_body = Body::from(encoded);
+        let encoded_body = Body::from(Bytes::from(encoded));
         let encoded_response = Response::builder()
-            .header(hyper::header::CONTENT_ENCODING, "deflate")
-            .body(encoded_body)
+            .header(http::header::CONTENT_ENCODING, "deflate")
+            .body::<Body>(encoded_body)
             .unwrap();
 
         let decoded_response = decode_response(encoded_response).await.unwrap();
