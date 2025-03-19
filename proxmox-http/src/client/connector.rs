@@ -5,8 +5,9 @@ use std::task::{Context, Poll};
 
 use futures::*;
 use http::Uri;
-use hyper::client::connect::dns::{GaiResolver, Name};
-use hyper::client::HttpConnector;
+use hyper_util::client::legacy::connect::dns::{GaiResolver, Name};
+use hyper_util::client::legacy::connect::HttpConnector;
+use hyper_util::rt::TokioIo;
 use openssl::ssl::SslConnector;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::TcpStream;
@@ -122,14 +123,14 @@ impl<T> HttpsConnector<T> {
     }
 }
 
-impl<T> hyper::service::Service<Uri> for HttpsConnector<T>
+impl<T> tower_service::Service<Uri> for HttpsConnector<T>
 where
     T: tower_service::Service<Name> + Clone + Send + Sync + 'static,
     T::Future: Send,
     T::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>,
     T::Response: std::iter::Iterator<Item = std::net::SocketAddr>,
 {
-    type Response = MaybeTlsStream<RateLimitedStream<TcpStream>>;
+    type Response = TokioIo<MaybeTlsStream<RateLimitedStream<TcpStream>>>;
     type Error = Error;
     #[allow(clippy::type_complexity)]
     type Future =
@@ -177,9 +178,13 @@ where
             if use_connect {
                 async move {
                     use std::fmt::Write as _;
-                    let tcp_stream = connector.call(proxy_uri).await.map_err(|err| {
-                        format_err!("error connecting to {} - {}", proxy_authority, err)
-                    })?;
+                    let tcp_stream = connector
+                        .call(proxy_uri)
+                        .await
+                        .map_err(|err| {
+                            format_err!("error connecting to {} - {}", proxy_authority, err)
+                        })?
+                        .into_inner();
 
                     let _ = set_tcp_keepalive(&tcp_stream, keepalive);
 
@@ -202,24 +207,30 @@ where
                     Self::parse_connect_response(&mut tcp_stream).await?;
 
                     if is_https {
-                        Self::secure_stream(tcp_stream, &ssl_connector, &host).await
+                        Self::secure_stream(tcp_stream, &ssl_connector, &host)
+                            .await
+                            .map(TokioIo::new)
                     } else {
-                        Ok(MaybeTlsStream::Normal(tcp_stream))
+                        Ok(TokioIo::new(MaybeTlsStream::Normal(tcp_stream)))
                     }
                 }
                 .boxed()
             } else {
                 async move {
-                    let tcp_stream = connector.call(proxy_uri).await.map_err(|err| {
-                        format_err!("error connecting to {} - {}", proxy_authority, err)
-                    })?;
+                    let tcp_stream = connector
+                        .call(proxy_uri)
+                        .await
+                        .map_err(|err| {
+                            format_err!("error connecting to {} - {}", proxy_authority, err)
+                        })?
+                        .into_inner();
 
                     let _ = set_tcp_keepalive(&tcp_stream, keepalive);
 
                     let tcp_stream =
                         RateLimitedStream::with_limiter(tcp_stream, read_limiter, write_limiter);
 
-                    Ok(MaybeTlsStream::Proxied(tcp_stream))
+                    Ok(TokioIo::new(MaybeTlsStream::Proxied(tcp_stream)))
                 }
                 .boxed()
             }
@@ -229,7 +240,8 @@ where
                 let tcp_stream = connector
                     .call(dst)
                     .await
-                    .map_err(|err| format_err!("error connecting to {} - {}", dst_str, err))?;
+                    .map_err(|err| format_err!("error connecting to {} - {}", dst_str, err))?
+                    .into_inner();
 
                 let _ = set_tcp_keepalive(&tcp_stream, keepalive);
 
@@ -237,9 +249,11 @@ where
                     RateLimitedStream::with_limiter(tcp_stream, read_limiter, write_limiter);
 
                 if is_https {
-                    Self::secure_stream(tcp_stream, &ssl_connector, &host).await
+                    Self::secure_stream(tcp_stream, &ssl_connector, &host)
+                        .await
+                        .map(TokioIo::new)
                 } else {
-                    Ok(MaybeTlsStream::Normal(tcp_stream))
+                    Ok(TokioIo::new(MaybeTlsStream::Normal(tcp_stream)))
                 }
             }
             .boxed()

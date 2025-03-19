@@ -23,7 +23,7 @@ openssl =  { version = "0.10", optional = true }
 serde_json = { workspace = true, optional = true }
 tokio = { workspace = true, features = [], optional = true }
 tokio-openssl = { workspace = true, optional = true }
-tower-service.workspace = true
+tower-service = { workspace = true, optional = true }
 ureq = { version = "3.0", features = ["native-tls"], optional = true, default-features = false }
 url = { workspace = true, optional = true }
 
@@ -55,15 +55,19 @@ client = [
     "dep:futures",
     "dep:http",
     "dep:hyper",
+    "dep:hyper-util",
     "dep:openssl",
     "dep:proxmox-compression",
     "dep:tokio",
     "dep:tokio-openssl",
+    "dep:tower-service",
     "hyper?/client",
     "hyper?/http1",
     "hyper?/http2",
-    "hyper?/stream",
-    "hyper?/tcp",
+    "hyper-util?/client",
+    "hyper-util?/client-legacy",
+    "hyper-util?/http1",
+    "hyper-util?/tokio",
     "tokio?/io-util",
     "http-helpers",
     "rate-limited-stream",
