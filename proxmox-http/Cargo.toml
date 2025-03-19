@@ -45,8 +45,8 @@ rate-limited-stream = [
     "dep:hyper",
     "dep:tokio",
     "hyper?/client",
-    "rate-limiter",
     "tokio?/time",
+    "rate-limiter",
 ]
 client = [
     "dep:futures",
@@ -56,14 +56,14 @@ client = [
     "dep:proxmox-compression",
     "dep:tokio",
     "dep:tokio-openssl",
-    "http-helpers",
     "hyper?/client",
     "hyper?/http1",
     "hyper?/http2",
     "hyper?/stream",
     "hyper?/tcp",
-    "rate-limited-stream",
     "tokio?/io-util",
+    "http-helpers",
+    "rate-limited-stream",
 ]
 client-sync = [ "client-trait", "http-helpers", "dep:ureq", "dep:native-tls" ]
 client-trait = [ "dep:http" ]
@@ -74,10 +74,10 @@ websocket = [
     "dep:openssl",
     "dep:proxmox-base64",
     "dep:proxmox-io",
-    "proxmox-io?/tokio",
     "dep:proxmox-lang",
     "dep:proxmox-sys",
     "dep:tokio",
+    "proxmox-io?/tokio",
     "tokio?/io-util",
     "tokio?/sync",
 ]
