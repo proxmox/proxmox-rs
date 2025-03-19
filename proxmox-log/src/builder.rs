@@ -15,18 +15,28 @@ use crate::{
 /// # Examples
 ///
 /// ```
+/// # use proxmox_log::{Logger, LevelFilter};
+/// # fn func() -> Result<(), anyhow::Error> {
 /// // The default PBS daemon/proxy logger
 /// Logger::from_env("PBS_LOG", LevelFilter::INFO)
 ///     .journald_on_no_workertask()
 ///     .tasklog_pbs()
 ///     .init()?;
+/// # Ok(())
+/// # }
+/// # func().expect("failed to init logger");
 /// ```
 ///
 /// ```
+/// # use proxmox_log::{Logger, LevelFilter};
+/// # fn func() -> Result<(), anyhow::Error> {
 /// // The default PBS cli logger
 /// Logger::from_env("PBS_LOG", LevelFilter::INFO)
 ///     .stderr()
 ///     .init()?;
+/// # Ok(())
+/// # }
+/// # func().expect("failed to init logger");
 /// ```
 pub struct Logger {
     global_log_level: LevelFilter,
