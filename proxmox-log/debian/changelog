@@ -1,3 +1,14 @@
+rust-proxmox-log (0.2.8-1) bookworm; urgency=medium
+
+  * introduce logging builder
+
+  * add layer for pve workertasks in perlmod crates
+
+  * add `LogContext::log_unfiltered` to bypass filters for messages expected
+    to be present in a worker task's log, such as the task result
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Mar 2025 12:18:11 +0100
+
 rust-proxmox-log (0.2.7-1) bookworm; urgency=medium
 
   * ignore to_stdout parameter, this is now handled by tracing.

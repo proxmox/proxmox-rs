@@ -2,13 +2,13 @@ Source: rust-proxmox-log
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
- rustc:native (>= 1.80) <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-nix-0.26+default-dev (>= 0.26.1-~~) <!nocheck>,
- librust-proxmox-sys-0.6+default-dev <!nocheck>,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.6-~~) <!nocheck>,
  librust-proxmox-time-2+default-dev <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+rt-multi-thread-dev (>= 1.6-~~) <!nocheck>,
@@ -31,7 +31,7 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-nix-0.26+default-dev (>= 0.26.1-~~),
- librust-proxmox-sys-0.6+default-dev,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.6-~~),
  librust-proxmox-time-2+default-dev,
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+rt-multi-thread-dev (>= 1.6-~~),
@@ -45,7 +45,7 @@ Provides:
  librust-proxmox-log-0+default-dev (= ${binary:Version}),
  librust-proxmox-log-0.2-dev (= ${binary:Version}),
  librust-proxmox-log-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-log-0.2.7-dev (= ${binary:Version}),
- librust-proxmox-log-0.2.7+default-dev (= ${binary:Version})
+ librust-proxmox-log-0.2.8-dev (= ${binary:Version}),
+ librust-proxmox-log-0.2.8+default-dev (= ${binary:Version})
 Description: Logging infrastructure for proxmox - Rust source code
  Source code for Debianized Rust crate "proxmox-log"
