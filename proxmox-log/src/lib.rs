@@ -181,4 +181,3 @@ pub fn init_cli_logger(
         .tasklog_pbs()
         .init()
 }
-

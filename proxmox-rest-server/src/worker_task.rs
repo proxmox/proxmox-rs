@@ -1029,7 +1029,7 @@ impl WorkerTask {
                 if result.is_err() {
                     eprintln!("{}", &state.result_text());
                 }
-            },
+            }
             None => error!("error writing task result to the tasklog"),
         }
 
