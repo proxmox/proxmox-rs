@@ -1003,7 +1003,7 @@ impl WorkerTask {
 
         if let Err(err) = result {
             TaskState::Error {
-                message: err.to_string(),
+                message: format!("{err:#}"),
                 endtime,
             }
         } else if warn_count > 0 {
