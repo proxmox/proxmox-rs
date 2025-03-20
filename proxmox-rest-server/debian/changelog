@@ -1,3 +1,17 @@
+rust-proxmox-rest-server (0.8.8-1) bookworm; urgency=medium
+
+  * worker task: include context in state error message
+
+  * bypass log filters when writing worker task result messages
+
+  * fix private intra doc links
+
+  * clippy lint fixups
+
+  * preparations for edition 2024
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Mar 2025 14:44:07 +0100
+
 rust-proxmox-rest-server (0.8.7-1) bookworm; urgency=medium
 
   * support new `AsyncHttpBodyParameters` from proxmox-router

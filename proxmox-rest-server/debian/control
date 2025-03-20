@@ -2,9 +2,9 @@ Source: rust-proxmox-rest-server
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
- rustc:native (>= 1.80) <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-futures-0.3+default-dev <!nocheck>,
@@ -21,13 +21,13 @@ Build-Depends: debhelper-compat (= 13),
  librust-proxmox-daemon-0.1+default-dev <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.3-~~) <!nocheck>,
  librust-proxmox-log-0.2+default-dev (>= 0.2.5-~~) <!nocheck>,
- librust-proxmox-router-3+default-dev (>= 3.1.0-~~) <!nocheck>,
+ librust-proxmox-router-3+default-dev (>= 3.1.1-~~) <!nocheck>,
  librust-proxmox-schema-4+api-macro-dev <!nocheck>,
  librust-proxmox-schema-4+default-dev <!nocheck>,
  librust-proxmox-schema-4+upid-api-impl-dev <!nocheck>,
- librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~) <!nocheck>,
- librust-proxmox-sys-0.6+logrotate-dev (>= 0.6.5-~~) <!nocheck>,
- librust-proxmox-sys-0.6+timer-dev (>= 0.6.5-~~) <!nocheck>,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.6-~~) <!nocheck>,
+ librust-proxmox-sys-0.6+logrotate-dev (>= 0.6.6-~~) <!nocheck>,
+ librust-proxmox-sys-0.6+timer-dev (>= 0.6.6-~~) <!nocheck>,
  librust-proxmox-time-2+default-dev <!nocheck>,
  librust-proxmox-worker-task-0.1+default-dev <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
@@ -70,13 +70,13 @@ Depends:
  librust-proxmox-daemon-0.1+default-dev,
  librust-proxmox-lang-1+default-dev (>= 1.3-~~),
  librust-proxmox-log-0.2+default-dev (>= 0.2.5-~~),
- librust-proxmox-router-3+default-dev (>= 3.1.0-~~),
+ librust-proxmox-router-3+default-dev (>= 3.1.1-~~),
  librust-proxmox-schema-4+api-macro-dev,
  librust-proxmox-schema-4+default-dev,
  librust-proxmox-schema-4+upid-api-impl-dev,
- librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~),
- librust-proxmox-sys-0.6+logrotate-dev (>= 0.6.5-~~),
- librust-proxmox-sys-0.6+timer-dev (>= 0.6.5-~~),
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.6-~~),
+ librust-proxmox-sys-0.6+logrotate-dev (>= 0.6.6-~~),
+ librust-proxmox-sys-0.6+timer-dev (>= 0.6.6-~~),
  librust-proxmox-time-2+default-dev,
  librust-proxmox-worker-task-0.1+default-dev,
  librust-regex-1+default-dev (>= 1.5-~~),
@@ -100,8 +100,8 @@ Provides:
  librust-proxmox-rest-server-0+default-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+default-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.7-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.7+default-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.8-dev (= ${binary:Version}),
+ librust-proxmox-rest-server-0.8.8+default-dev (= ${binary:Version})
 Description: REST server implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-rest-server"
 
@@ -116,7 +116,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+rate-limited-stream-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+rate-limited-stream-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.7+rate-limited-stream-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.8+rate-limited-stream-dev (= ${binary:Version})
 Description: REST server implementation - feature "rate-limited-stream"
  This metapackage enables feature "rate-limited-stream" for the Rust proxmox-
  rest-server crate, by pulling in any additional dependencies needed by that
@@ -132,7 +132,7 @@ Depends:
 Provides:
  librust-proxmox-rest-server-0+templates-dev (= ${binary:Version}),
  librust-proxmox-rest-server-0.8+templates-dev (= ${binary:Version}),
- librust-proxmox-rest-server-0.8.7+templates-dev (= ${binary:Version})
+ librust-proxmox-rest-server-0.8.8+templates-dev (= ${binary:Version})
 Description: REST server implementation - feature "templates"
  This metapackage enables feature "templates" for the Rust proxmox-rest-server
  crate, by pulling in any additional dependencies needed by that feature.
