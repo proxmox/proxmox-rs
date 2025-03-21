@@ -132,7 +132,7 @@ impl Endpoint for GotifyEndpoint {
             .map_err(|err| Error::NotifyFailed(self.name().to_string(), err.into()))?;
         let extra_headers = HashMap::from([
             (
-                "Authorization".into(),
+                http::header::AUTHORIZATION.to_string(),
                 format!("Bearer {}", self.private_config.token),
             ),
             ("X-Gotify-Key".into(), self.private_config.token.clone()),
