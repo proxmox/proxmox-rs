@@ -1,6 +1,6 @@
 //! Module for rendering notification templates.
 
-use std::time::Duration;
+use std::{fmt::Display, time::Duration};
 
 use handlebars::{
     Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext,
@@ -190,11 +190,29 @@ impl ValueRenderFunction {
     }
 }
 
-/// Available template types
+/// Choose between the provided `vendor` template or its by the user optionally created `override`
 #[derive(Copy, Clone)]
+pub enum TemplateSource {
+    Vendor,
+    Override,
+}
+
+impl Display for TemplateSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TemplateSource::Vendor => f.write_str("vendor"),
+            TemplateSource::Override => f.write_str("override"),
+        }
+    }
+}
+
+/// Available template types
+#[derive(Copy, Clone, PartialEq)]
 pub enum TemplateType {
     /// HTML body template
     HtmlBody,
+    /// Fallback HTML body, based on the `PlaintextBody` template
+    HtmlBodyFromPlaintext,
     /// Plaintext body template
     PlaintextBody,
     /// Subject template
@@ -205,14 +223,24 @@ impl TemplateType {
     fn file_suffix(&self) -> &'static str {
         match self {
             TemplateType::HtmlBody => "body.html.hbs",
+            TemplateType::HtmlBodyFromPlaintext => "body.txt.hbs",
             TemplateType::PlaintextBody => "body.txt.hbs",
             TemplateType::Subject => "subject.txt.hbs",
         }
     }
 
     fn postprocess(&self, mut rendered: String) -> String {
-        if let Self::Subject = self {
-            rendered = rendered.replace('\n', " ");
+        match self {
+            TemplateType::HtmlBodyFromPlaintext => {
+                rendered = format!(
+                    "<html><body><pre>{}</pre></body></html>",
+                    handlebars::html_escape(&rendered)
+                )
+            }
+            TemplateType::Subject => {
+                rendered = rendered.replace('\n', " ");
+            }
+            _ => {}
         }
 
         rendered
@@ -221,6 +249,7 @@ impl TemplateType {
     fn block_render_fns(&self) -> BlockRenderFunctions {
         match self {
             TemplateType::HtmlBody => html::block_render_functions(),
+            TemplateType::HtmlBodyFromPlaintext => plaintext::block_render_functions(),
             TemplateType::Subject => plaintext::block_render_functions(),
             TemplateType::PlaintextBody => plaintext::block_render_functions(),
         }
@@ -231,6 +260,7 @@ impl TemplateType {
             TemplateType::PlaintextBody => handlebars::no_escape,
             TemplateType::Subject => handlebars::no_escape,
             TemplateType::HtmlBody => handlebars::html_escape,
+            TemplateType::HtmlBodyFromPlaintext => handlebars::no_escape,
         }
     }
 }
@@ -250,70 +280,100 @@ impl BlockRenderFunctions {
 }
 
 fn render_template_impl(
-    template: &str,
     data: &Value,
     renderer: TemplateType,
-) -> Result<String, Error> {
-    let mut handlebars = Handlebars::new();
-    handlebars.register_escape_fn(renderer.escape_fn());
+    filename: &str,
+    source: TemplateSource,
+) -> Result<Option<String>, Error> {
+    let template_string = context::context().lookup_template(&filename, None, source)?;
 
-    let block_render_fns = renderer.block_render_fns();
-    block_render_fns.register_helpers(&mut handlebars);
+    if let Some(template_string) = template_string {
+        let mut handlebars = Handlebars::new();
+        handlebars.register_escape_fn(renderer.escape_fn());
 
-    ValueRenderFunction::register_helpers(&mut handlebars);
+        let block_render_fns = renderer.block_render_fns();
+        block_render_fns.register_helpers(&mut handlebars);
 
-    handlebars.register_helper(
-        "relative-percentage",
-        Box::new(handlebars_relative_percentage_helper),
-    );
+        ValueRenderFunction::register_helpers(&mut handlebars);
 
-    let rendered_template = handlebars
-        .render_template(template, data)
-        .map_err(|err| Error::RenderError(err.into()))?;
+        handlebars.register_helper(
+            "relative-percentage",
+            Box::new(handlebars_relative_percentage_helper),
+        );
 
-    Ok(rendered_template)
+        let rendered_template = handlebars
+            .render_template(&template_string, data)
+            .map_err(|err| Error::RenderError(err.into()))?;
+
+        let rendered_template = renderer.postprocess(rendered_template);
+
+        Ok(Some(rendered_template))
+    } else {
+        Ok(None)
+    }
 }
 
 /// Render a template string.
 ///
-/// The output format can be chosen via the `renderer` parameter (see [TemplateType]
-/// for available options).
+/// The output format is chosen via the `ty` parameter (see [TemplateType] for
+/// available options). If an override template is found and renderable, it is
+/// used instead of the vendor one. If the [TemplateType] is `HtmlBody` but no
+/// HTML template is found or renderable, it falls back to use a plaintext
+/// template encapsulated in a pre-formatted HTML block (<pre>).
 pub fn render_template(
     mut ty: TemplateType,
     template: &str,
     data: &Value,
 ) -> Result<String, Error> {
-    let filename = format!("{template}-{suffix}", suffix = ty.file_suffix());
+    let mut source = TemplateSource::Override;
 
-    let template_string = context::context().lookup_template(&filename, None)?;
+    loop {
+        let filename = format!("{template}-{suffix}", suffix = ty.file_suffix());
+        let result = render_template_impl(data, ty, &filename, source);
 
-    let (template_string, fallback) = match (template_string, ty) {
-        (None, TemplateType::HtmlBody) => {
-            ty = TemplateType::PlaintextBody;
-            let plaintext_filename = format!("{template}-{suffix}", suffix = ty.file_suffix());
-            (
-                context::context().lookup_template(&plaintext_filename, None)?,
-                true,
-            )
+        match result {
+            Ok(Some(s)) => {
+                return Ok(s);
+            }
+            Ok(None) => {}
+            Err(err) => {
+                tracing::error!("failed to render {source} template '{filename}': {err}");
+            }
         }
-        (template_string, _) => (template_string, false),
-    };
 
-    let template_string = template_string.ok_or(Error::Generic(format!(
-        "could not load template '{template}'"
-    )))?;
-
-    let mut rendered = render_template_impl(&template_string, data, ty)?;
-    rendered = ty.postprocess(rendered);
-
-    if fallback {
-        rendered = format!(
-            "<html><body><pre>{}</pre></body></html>",
-            handlebars::html_escape(&rendered)
-        );
+        match (ty, source) {
+            (
+                TemplateType::HtmlBody
+                | TemplateType::HtmlBodyFromPlaintext
+                | TemplateType::PlaintextBody
+                | TemplateType::Subject,
+                TemplateSource::Override,
+            ) => {
+                // Override template not found or renderable, try the vendor one instead
+                source = TemplateSource::Vendor;
+            }
+            (TemplateType::HtmlBody, TemplateSource::Vendor) => {
+                // Override and vendor HTML templates not found or renderable,
+                // try next the override plaintext as fallback
+                ty = TemplateType::HtmlBodyFromPlaintext;
+                source = TemplateSource::Override;
+            }
+            (
+                TemplateType::HtmlBodyFromPlaintext
+                | TemplateType::PlaintextBody
+                | TemplateType::Subject,
+                TemplateSource::Vendor,
+            ) => {
+                // Return error, no suitable templates found or renderable
+                break;
+            }
+        }
     }
 
-    Ok(rendered)
+    Err(Error::Generic(
+        "failed to render notification template, all template candidates are erroneous or missing"
+            .into(),
+    ))
 }
 
 #[cfg(test)]

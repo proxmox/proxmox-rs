@@ -7,6 +7,7 @@ use proxmox_schema::{ObjectSchema, Schema, StringSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigPlugin};
 
 use crate::context::{common, Context};
+use crate::renderer::TemplateSource;
 use crate::Error;
 
 const PBS_USER_CFG_FILENAME: &str = "/etc/proxmox-backup/user.cfg";
@@ -109,8 +110,14 @@ impl Context for PBSContext {
         &self,
         filename: &str,
         namespace: Option<&str>,
+        source: TemplateSource,
     ) -> Result<Option<String>, Error> {
-        let path = Path::new("/usr/share/proxmox-backup/templates")
+        let path = match source {
+            TemplateSource::Vendor => "/usr/share/proxmox-backup/templates",
+            TemplateSource::Override => "/etc/proxmox-backup/notification-templates",
+        };
+
+        let path = Path::new(&path)
             .join(namespace.unwrap_or("default"))
             .join(filename);
 
