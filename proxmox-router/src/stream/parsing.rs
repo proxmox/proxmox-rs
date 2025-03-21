@@ -4,9 +4,11 @@ use std::pin::Pin;
 use std::task::{ready, Poll};
 
 use anyhow::{format_err, Context as _, Error};
+use bytes::Bytes;
 use futures::io::{AsyncBufRead, AsyncBufReadExt, AsyncRead, BufReader};
-use hyper::body::{Body, Bytes};
 use serde::Deserialize;
+
+use proxmox_http::Body;
 
 use super::Record;
 
@@ -269,8 +271,7 @@ impl AsyncBufRead for BodyBufReader {
         self: Pin<&mut Self>,
         cx: &mut std::task::Context<'_>,
     ) -> Poll<io::Result<&[u8]>> {
-        use hyper::body::HttpBody;
-
+        use hyper::body::Body as HyperBody;
         let Self {
             ref mut reader,
             ref mut buf_at,
@@ -283,12 +284,17 @@ impl AsyncBufRead for BodyBufReader {
 
             let result = match reader {
                 None => return Poll::Ready(Ok(&[])),
-                Some(reader) => ready!(Pin::new(reader).poll_data(cx)),
+                Some(reader) => ready!(Pin::new(reader).poll_frame(cx)),
             };
 
             match result {
                 Some(Ok(bytes)) => {
-                    *buf_at = Some((bytes, 0));
+                    *buf_at = Some((
+                        bytes
+                            .into_data()
+                            .map_err(|_frame| io::Error::other("Failed to read frame from body"))?,
+                        0,
+                    ));
                 }
                 Some(Err(err)) => {
                     *reader = None;

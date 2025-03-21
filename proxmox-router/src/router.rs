@@ -8,9 +8,10 @@ use anyhow::Error;
 use http::request::Parts;
 #[cfg(feature = "server")]
 use http::{Method, Response};
-#[cfg(feature = "server")]
-use hyper::Body;
+use hyper::body::Incoming;
 use percent_encoding::percent_decode_str;
+#[cfg(feature = "server")]
+use proxmox_http::Body;
 use serde::Serialize;
 use serde_json::Value;
 
@@ -393,14 +394,15 @@ impl IntoRecord for Result<Record, Error> {
 /// ```
 /// # use serde_json::{json, Value};
 /// #
-/// use hyper::{Body, Response, http::request::Parts};
+/// use hyper::{Response, body::Incoming, http::request::Parts};
 ///
+/// use proxmox_http::Body;
 /// use proxmox_router::{ApiHandler, ApiMethod, ApiResponseFuture, RpcEnvironment};
 /// use proxmox_schema::ObjectSchema;
 ///
 /// fn low_level_hello(
 ///    parts: Parts,
-///    req_body: Body,
+///    req_body: Incoming,
 ///    param: Value,
 ///    info: &ApiMethod,
 ///    rpcenv: Box<dyn RpcEnvironment>,
@@ -408,7 +410,7 @@ impl IntoRecord for Result<Record, Error> {
 ///    Box::pin(async move {
 ///        let response = http::Response::builder()
 ///            .status(200)
-///            .body(Body::from("Hello world!"))?;
+///            .body(Body::from("Hello world!".to_string()))?;
 ///        Ok(response)
 ///    })
 /// }
@@ -421,7 +423,7 @@ impl IntoRecord for Result<Record, Error> {
 #[cfg(feature = "server")]
 pub type ApiAsyncHttpHandlerFn = &'static (dyn Fn(
     Parts,
-    Body,
+    Incoming,
     Value,
     &'static ApiMethod,
     Box<dyn RpcEnvironment>,
@@ -443,8 +445,9 @@ pub type ApiResponseFuture =
 /// ```
 /// use serde_json::Value;
 ///
-/// use hyper::{Body, Response, http::request::Parts};
+/// use hyper::{Response, http::request::Parts};
 ///
+/// use proxmox_http::Body;
 /// use proxmox_router::{ApiHandler, ApiMethod, ApiResponseFuture, RpcEnvironment};
 /// use proxmox_schema::ObjectSchema;
 ///
@@ -457,7 +460,7 @@ pub type ApiResponseFuture =
 ///    Box::pin(async move {
 ///        let response = http::Response::builder()
 ///            .status(200)
-///            .body(Body::from("Hello world!"))?;
+///            .body(Body::from("Hello world!".to_string()))?;
 ///        Ok(response)
 ///    })
 /// }
