@@ -7,8 +7,15 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{bail, format_err, Error};
-use hyper::{Body, Request, Response};
+use futures::TryFutureExt;
+use http::{Request, Response};
+use http_body_util::Full;
+use hyper::body::{Bytes, Incoming};
+use hyper::server::conn::http1;
+use hyper_util::rt::TokioIo;
+use std::net::{IpAddr, SocketAddr};
 use tokio::io::{AsyncBufReadExt, AsyncRead, AsyncWriteExt, BufReader};
+use tokio::net::TcpListener;
 use tokio::process::Command;
 
 use proxmox_acme::async_client::AcmeClient;
@@ -236,14 +243,14 @@ impl StandaloneServer {
 }
 
 async fn standalone_respond(
-    req: Request<Body>,
+    req: Request<Incoming>,
     path: Arc<String>,
     key_auth: Arc<String>,
-) -> Result<Response<Body>, hyper::Error> {
+) -> Result<Response<Full<Bytes>>, hyper::Error> {
     if req.method() == hyper::Method::GET && req.uri().path() == path.as_str() {
         Ok(Response::builder()
             .status(http::StatusCode::OK)
-            .body(key_auth.as_bytes().to_vec().into())
+            .body(Full::from(Bytes::from(key_auth.as_bytes().to_owned())))
             .unwrap())
     } else {
         Ok(Response::builder()
@@ -261,8 +268,7 @@ impl AcmePlugin for StandaloneServer {
         _domain: &'d AcmeDomain,
         _task: Arc<WorkerTask>,
     ) -> Pin<Box<dyn Future<Output = Result<&'c str, Error>> + Send + 'fut>> {
-        use hyper::server::conn::AddrIncoming;
-        use hyper::service::{make_service_fn, service_fn};
+        use hyper::service::service_fn;
 
         Box::pin(async move {
             self.stop();
@@ -274,21 +280,40 @@ impl AcmePlugin for StandaloneServer {
             let key_auth = Arc::new(client.key_authorization(token)?);
             let path = Arc::new(format!("/.well-known/acme-challenge/{}", token));
 
-            let service = make_service_fn(move |_| {
-                let path = Arc::clone(&path);
-                let key_auth = Arc::clone(&key_auth);
-                async move {
-                    Ok::<_, hyper::Error>(service_fn(move |request| {
-                        standalone_respond(request, Arc::clone(&path), Arc::clone(&key_auth))
-                    }))
-                }
-            });
-
             // `[::]:80` first, then `*:80`
-            let incoming = AddrIncoming::bind(&(([0u16; 8], 80).into()))
-                .or_else(|_| AddrIncoming::bind(&(([0u8; 4], 80).into())))?;
+            let dual = SocketAddr::new(IpAddr::from([0u16; 8]), 80);
+            let ipv4 = SocketAddr::new(IpAddr::from([0u8; 4]), 80);
+            let incoming = TcpListener::bind(dual)
+                .or_else(|_| TcpListener::bind(ipv4))
+                .await?;
 
-            let server = hyper::Server::builder(incoming).serve(service);
+            let server = async move {
+                loop {
+                    let key_auth = Arc::clone(&key_auth);
+                    let path = Arc::clone(&path);
+                    match incoming.accept().await {
+                        Ok((tcp, _)) => {
+                            let io = TokioIo::new(tcp);
+                            let service = service_fn(move |request| {
+                                standalone_respond(
+                                    request,
+                                    Arc::clone(&path),
+                                    Arc::clone(&key_auth),
+                                )
+                            });
+
+                            tokio::task::spawn(async move {
+                                if let Err(err) =
+                                    http1::Builder::new().serve_connection(io, service).await
+                                {
+                                    println!("Error serving connection: {err:?}");
+                                }
+                            });
+                        }
+                        Err(err) => println!("Error accepting connection: {err:?}"),
+                    }
+                }
+            };
 
             let (future, abort) = futures::future::abortable(server);
             self.abort_handle = Some(abort);
