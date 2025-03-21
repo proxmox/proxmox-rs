@@ -136,6 +136,10 @@ impl Endpoint for GotifyEndpoint {
                 format!("Bearer {}", self.private_config.token),
             ),
             ("X-Gotify-Key".into(), self.private_config.token.clone()),
+            (
+                http::header::CONTENT_LENGTH.to_string(),
+                body.len().to_string(),
+            ),
         ]);
 
         let proxy_config = context()

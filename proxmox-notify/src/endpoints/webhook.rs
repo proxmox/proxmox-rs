@@ -35,7 +35,7 @@ pub(crate) const WEBHOOK_TYPENAME: &str = "webhook";
 const HTTP_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[api]
-#[derive(Serialize, Deserialize, Clone, Copy, Default)]
+#[derive(Serialize, Deserialize, Clone, Copy, Default, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// HTTP Method to use.
 pub enum HttpMethod {
@@ -345,6 +345,23 @@ impl WebhookEndpoint {
                 })?;
 
             builder = builder.header(header.name.clone(), value);
+        }
+
+        // From https://datatracker.ietf.org/doc/html/rfc9110#name-content-length :
+        //
+        // A user agent SHOULD send Content-Length in a request when the method
+        // defines a meaning for enclosed content and it is not sending
+        // Transfer-Encoding. For example, a user agent normally sends
+        // Content-Length in a POST request even when the value is 0 (indicating
+        // empty content). A user agent SHOULD NOT send a Content-Length header
+        // field when the request message does not contain content and the
+        // method semantics do not anticipate such data.
+        //
+        // -> send the header always, unless we do a get with no body (which is the expected case
+        // for GET)
+        let content_length = body.as_bytes().len();
+        if !(self.config.method == HttpMethod::Get && content_length == 0) {
+            builder = builder.header(http::header::CONTENT_LENGTH, content_length);
         }
 
         let request = builder
