@@ -80,6 +80,10 @@ pub const OPENID_USERNAME_CLAIM_SCHEMA: Schema = StringSchema::new(
             optional: true,
             schema: SINGLE_LINE_COMMENT_SCHEMA,
         },
+        "default": {
+            optional: true,
+            default: false,
+        },
         autocreate: {
             optional: true,
             default: false,
@@ -111,6 +115,9 @@ pub struct OpenIdRealmConfig {
     pub client_key: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
+    /// True if you want this to be the default realm selected on login.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<bool>,
     /// Automatically create users if they do not exist.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub autocreate: Option<bool>,

@@ -356,18 +356,25 @@ serde_plain::derive_fromstr_from_deserialize!(RealmType);
             optional: true,
             schema: SINGLE_LINE_COMMENT_SCHEMA,
         },
+        "default": {
+            optional: true,
+            default: false,
+        },
     },
 )]
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// Basic Information about a realm
 pub struct BasicRealmInfo {
+    /// Realm name
     pub realm: String,
+    /// Realm type
     #[serde(rename = "type")]
     pub ty: RealmType,
     /// True if it is the default realm
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<bool>,
+    /// Optional comment for this realm
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
 }

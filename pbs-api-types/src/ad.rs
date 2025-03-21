@@ -16,6 +16,10 @@ use super::{
             optional: true,
             schema: SINGLE_LINE_COMMENT_SCHEMA,
         },
+        "default": {
+            optional: true,
+            default: false,
+        },
         "verify": {
             optional: true,
             default: false,
@@ -64,6 +68,9 @@ pub struct AdRealmConfig {
     /// Comment
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
+    /// True if you want this to be the default realm selected on login.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<bool>,
     /// Connection security
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<LdapMode>,
