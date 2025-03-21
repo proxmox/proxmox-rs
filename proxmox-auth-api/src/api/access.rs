@@ -3,10 +3,10 @@
 use anyhow::{bail, format_err, Error};
 use http::request::Parts;
 use http::Response;
-use hyper::Body;
 use openssl::hash::MessageDigest;
 use serde_json::{json, Value};
 
+use proxmox_http::Body;
 use proxmox_rest_server::{extract_cookie, RestEnvironment};
 use proxmox_router::{
     http_err, ApiHandler, ApiMethod, ApiResponseFuture, Permission, RpcEnvironment,
@@ -179,7 +179,7 @@ fn create_ticket_http_only(
             }
         }
 
-        Ok(response.body(Body::from(json!({"data": ticket_response }).to_string()))?)
+        Ok(response.body(json!({"data": ticket_response }).to_string().into())?)
     })
 }
 
