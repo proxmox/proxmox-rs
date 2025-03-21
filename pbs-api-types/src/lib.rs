@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 pub mod percent_encoding;
 
 use proxmox_schema::{
-    api, const_regex, ApiStringFormat, ApiType, ArraySchema, ReturnType, Schema, StringSchema,
+    api, const_regex, ApiStringFormat, ApiType, ArraySchema, EnumEntry, ReturnType, Schema,
+    StringSchema, Updater,
 };
 use proxmox_time::parse_daily_duration;
 
@@ -224,6 +225,20 @@ pub const REALM_ID_SCHEMA: Schema = StringSchema::new("Realm name.")
     .max_length(32)
     .schema();
 
+const PAM_REALM_ID_SCHEMA: Schema = StringSchema::new("Realm name.")
+    .format(&ApiStringFormat::Enum(&[EnumEntry::new(
+        "pam",
+        "Default PAM realm.",
+    )]))
+    .schema();
+
+const PBS_REALM_ID_SCHEMA: Schema = StringSchema::new("Realm name.")
+    .format(&ApiStringFormat::Enum(&[EnumEntry::new(
+        "pbs",
+        "Default PBS realm.",
+    )]))
+    .schema();
+
 pub const SUBSCRIPTION_KEY_SCHEMA: Schema =
     StringSchema::new("Proxmox Backup Server subscription key.")
         .format(&SUBSCRIPTION_KEY_FORMAT)
@@ -377,4 +392,100 @@ pub struct BasicRealmInfo {
     /// Optional comment for this realm
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
+}
+
+#[api(
+    properties: {
+        realm: {
+            schema: REALM_ID_SCHEMA,
+        },
+        "type": {
+            type: RealmType,
+        },
+        comment: {
+            optional: true,
+            schema: SINGLE_LINE_COMMENT_SCHEMA,
+        },
+        "default": {
+            optional: true,
+            default: false,
+        },
+    }
+)]
+#[derive(Serialize, Deserialize, Updater, Clone)]
+#[serde(rename_all = "kebab-case")]
+/// Built-in PAM realm configuration properties.
+pub struct PamRealmConfig {
+    /// Realm name. Always "pam".
+    #[updater(skip)]
+    pub realm: String,
+    /// Realm type. Always [`RealmType::Pam`].
+    #[updater(skip)]
+    #[serde(rename = "type")]
+    pub ty: RealmType,
+    /// Comment for this realm
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    /// True if you want this to be the default realm selected on login.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<bool>,
+}
+
+impl Default for PamRealmConfig {
+    fn default() -> Self {
+        Self {
+            realm: "pam".to_owned(),
+            ty: RealmType::Pam,
+            comment: Some("Linux PAM standard authentication".to_owned()),
+            default: None,
+        }
+    }
+}
+
+#[api(
+    properties: {
+        realm: {
+            schema: REALM_ID_SCHEMA,
+        },
+        "type": {
+            type: RealmType,
+        },
+        comment: {
+            optional: true,
+            schema: SINGLE_LINE_COMMENT_SCHEMA,
+        },
+        "default": {
+            optional: true,
+            default: false,
+        },
+    }
+)]
+#[derive(Serialize, Deserialize, Updater, Clone)]
+#[serde(rename_all = "kebab-case")]
+/// Built-in Proxmox Backup Server realm configuration properties.
+pub struct PbsRealmConfig {
+    /// Realm name. Always "pbs".
+    #[updater(skip)]
+    pub realm: String,
+    /// Realm type. Always [`RealmType::Pbs`].
+    #[updater(skip)]
+    #[serde(rename = "type")]
+    pub ty: RealmType,
+    /// Comment for this realm
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    /// True if you want this to be the default realm selected on login.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<bool>,
+}
+
+impl Default for PbsRealmConfig {
+    fn default() -> Self {
+        Self {
+            realm: "pbs".to_owned(),
+            ty: RealmType::Pbs,
+            comment: Some("Proxmox Backup authentication server".to_owned()),
+            default: None,
+        }
+    }
 }
