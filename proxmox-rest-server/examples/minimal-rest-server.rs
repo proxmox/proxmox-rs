@@ -6,8 +6,9 @@ use std::sync::{LazyLock, Mutex};
 use anyhow::{bail, format_err, Error};
 use http::request::Parts;
 use http::HeaderMap;
-use hyper::{Body, Method, Response};
+use hyper::{Method, Response};
 
+use proxmox_http::Body;
 use proxmox_router::{
     list_subdirs_api_method, Router, RpcEnvironmentType, SubdirMap, UserInformation,
 };
@@ -57,7 +58,7 @@ fn get_index(
     Box::pin(async move {
         // build an index page
         http::Response::builder()
-            .body("hello world".into())
+            .body("hello world".to_owned().into_bytes().into())
             .unwrap()
     })
 }

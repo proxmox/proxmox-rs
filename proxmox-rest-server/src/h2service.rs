@@ -6,8 +6,10 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use futures::*;
-use hyper::{Body, Request, Response, StatusCode};
+use hyper::body::Incoming;
+use hyper::{Request, Response, StatusCode};
 
+use proxmox_http::Body;
 use proxmox_router::http_err;
 use proxmox_router::{ApiResponseFuture, HttpError, Router, RpcEnvironment};
 
@@ -19,6 +21,7 @@ use crate::{normalize_path_with_components, WorkerTask};
 /// We use this kind of service to handle backup protocol
 /// connections. State is stored inside the generic ``rpcenv``. Logs
 /// goes into the ``WorkerTask`` log.
+#[derive(Clone)]
 pub struct H2Service<E> {
     router: &'static Router,
     rpcenv: E,
@@ -42,7 +45,7 @@ impl<E: RpcEnvironment + Clone> H2Service<E> {
         }
     }
 
-    fn handle_request(&self, req: Request<Body>) -> ApiResponseFuture {
+    fn handle_request(&self, req: Request<Incoming>) -> ApiResponseFuture {
         let (parts, body) = req.into_parts();
 
         let method = parts.method.clone();
@@ -103,7 +106,7 @@ impl<E: RpcEnvironment + Clone> H2Service<E> {
     }
 }
 
-impl<E: RpcEnvironment + Clone> tower_service::Service<Request<Body>> for H2Service<E> {
+impl<E: RpcEnvironment + Clone> tower_service::Service<Request<Incoming>> for H2Service<E> {
     type Response = Response<Body>;
     type Error = Error;
     #[allow(clippy::type_complexity)]
@@ -113,7 +116,7 @@ impl<E: RpcEnvironment + Clone> tower_service::Service<Request<Body>> for H2Serv
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, req: Request<Body>) -> Self::Future {
+    fn call(&mut self, req: Request<Incoming>) -> Self::Future {
         let path = req.uri().path().to_owned();
         let method = req.method().clone();
         let worker = self.worker.clone();
@@ -126,14 +129,14 @@ impl<E: RpcEnvironment + Clone> tower_service::Service<Request<Body>> for H2Serv
                 }
                 Err(err) => {
                     if let Some(apierr) = err.downcast_ref::<HttpError>() {
-                        let mut resp = Response::new(Body::from(apierr.message.clone()));
+                        let mut resp = Response::new(apierr.message.clone().into());
                         resp.extensions_mut()
                             .insert(ErrorMessageExtension(apierr.message.clone()));
                         *resp.status_mut() = apierr.code;
                         Self::log_response(worker, method, &path, &resp);
                         Ok(resp)
                     } else {
-                        let mut resp = Response::new(Body::from(err.to_string()));
+                        let mut resp = Response::new(err.to_string().into());
                         resp.extensions_mut()
                             .insert(ErrorMessageExtension(err.to_string()));
                         *resp.status_mut() = StatusCode::BAD_REQUEST;

@@ -34,7 +34,7 @@ mod environment;
 pub use environment::*;
 
 mod api_config;
-pub use api_config::{ApiConfig, AuthError, AuthHandler, IndexHandler, UnixAcceptor};
+pub use api_config::{ApiConfig, AuthError, AuthHandler, IndexHandler};
 
 mod rest;
 pub use rest::{Redirector, RestServer};

@@ -9,10 +9,12 @@ use std::task::{Context, Poll};
 use anyhow::{format_err, Error};
 use http::{HeaderMap, Method, Uri};
 use hyper::http::request::Parts;
-use hyper::{Body, Response};
+use hyper::Response;
+use hyper_util::rt::TokioIo;
 use tower_service::Service;
 
 use proxmox_daemon::command_socket::CommandSocket;
+use proxmox_http::Body;
 use proxmox_log::{FileLogOptions, FileLogger};
 use proxmox_router::{Router, RpcEnvironmentType, UserInformation};
 use proxmox_sys::fs::{create_path, CreateOptions};
@@ -107,7 +109,7 @@ impl ApiConfig {
     ) -> Response<Body> {
         match self.index_handler.as_ref() {
             Some(handler) => (handler.func)(rest_env, parts).await,
-            None => Response::builder().status(404).body("".into()).unwrap(),
+            None => Response::builder().status(404).body(Body::empty()).unwrap(),
         }
     }
 
@@ -511,7 +513,7 @@ impl From<std::os::unix::net::SocketAddr> for PrivilegedAddr {
 }
 
 impl Service<Uri> for PrivilegedAddr {
-    type Response = PrivilegedSocket;
+    type Response = TokioIo<PrivilegedSocket>;
     type Error = io::Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
@@ -527,6 +529,7 @@ impl Service<Uri> for PrivilegedAddr {
                     tokio::net::TcpStream::connect(addr)
                         .await
                         .map(PrivilegedSocket::Tcp)
+                        .map(TokioIo::new)
                 })
             }
             PrivilegedAddr::Unix(addr) => {
@@ -537,6 +540,7 @@ impl Service<Uri> for PrivilegedAddr {
                     })?)
                     .await
                     .map(PrivilegedSocket::Unix)
+                    .map(TokioIo::new)
                 })
             }
         }
@@ -607,39 +611,11 @@ impl tokio::io::AsyncWrite for PrivilegedSocket {
     }
 }
 
-impl hyper::client::connect::Connection for PrivilegedSocket {
-    fn connected(&self) -> hyper::client::connect::Connected {
+impl hyper_util::client::legacy::connect::Connection for PrivilegedSocket {
+    fn connected(&self) -> hyper_util::client::legacy::connect::Connected {
         match self {
             Self::Tcp(s) => s.connected(),
-            Self::Unix(_) => hyper::client::connect::Connected::new(),
+            Self::Unix(_) => hyper_util::client::legacy::connect::Connected::new(),
         }
-    }
-}
-
-/// Implements hyper's `Accept` for `UnixListener`s.
-pub struct UnixAcceptor {
-    listener: tokio::net::UnixListener,
-}
-
-impl From<tokio::net::UnixListener> for UnixAcceptor {
-    fn from(listener: tokio::net::UnixListener) -> Self {
-        Self { listener }
-    }
-}
-
-impl hyper::server::accept::Accept for UnixAcceptor {
-    type Conn = tokio::net::UnixStream;
-    type Error = io::Error;
-
-    fn poll_accept(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<io::Result<Self::Conn>>> {
-        Pin::new(&mut self.get_mut().listener)
-            .poll_accept(cx)
-            .map(|res| match res {
-                Ok((stream, _addr)) => Some(Ok(stream)),
-                Err(err) => Some(Err(err)),
-            })
     }
 }

@@ -10,17 +10,25 @@ use std::task::{Context, Poll};
 use anyhow::{bail, format_err, Error};
 use futures::future::FutureExt;
 use futures::stream::TryStreamExt;
-use hyper::body::HttpBody;
+use http_body_util::{BodyDataStream, BodyStream};
+use hyper::body::{Body as HyperBody, Incoming};
 use hyper::header::{self, HeaderMap};
 use hyper::http::request::Parts;
-use hyper::{Body, Request, Response, StatusCode};
+use hyper::{Request, Response, StatusCode};
+use hyper_util::rt::{TokioExecutor, TokioIo};
+use hyper_util::server::conn;
+use hyper_util::server::graceful::GracefulShutdown;
+use hyper_util::service::TowerToHyperService;
 use regex::Regex;
 use serde_json::Value;
 use tokio::fs::File;
+use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::time::Instant;
+use tokio_stream::wrappers::ReceiverStream;
 use tower_service::Service;
 use url::form_urlencoded;
 
+use proxmox_http::Body;
 use proxmox_router::{
     check_api_permission, ApiHandler, ApiMethod, HttpError, Permission, RpcEnvironment,
     RpcEnvironmentType, UserInformation,
@@ -40,6 +48,7 @@ unsafe extern "C" {
     fn tzset();
 }
 
+#[derive(Clone)]
 struct AuthStringExtension(String);
 
 pub(crate) struct EmptyUserInformation {}
@@ -76,24 +85,11 @@ impl RestServer {
             api_config: Arc::new(api_config),
         }
     }
-}
 
-impl<T: PeerAddress> Service<&T> for RestServer {
-    type Response = ApiService;
-    type Error = Error;
-    type Future = std::future::Ready<Result<ApiService, Error>>;
-
-    fn poll_ready(&mut self, _cx: &mut Context) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, ctx: &T) -> Self::Future {
-        std::future::ready(match ctx.peer_addr() {
-            Err(err) => Err(format_err!("unable to get peer address - {}", err)),
-            Ok(peer) => Ok(ApiService {
-                peer,
-                api_config: Arc::clone(&self.api_config),
-            }),
+    pub fn api_service(&self, peer: &dyn PeerAddress) -> Result<ApiService, Error> {
+        Ok(ApiService {
+            peer: peer.peer_addr()?,
+            api_config: Arc::clone(&self.api_config),
         })
     }
 }
@@ -110,25 +106,40 @@ impl Redirector {
     pub fn new() -> Self {
         Self {}
     }
-}
 
-impl<T> Service<&T> for Redirector {
-    type Response = RedirectService;
-    type Error = Error;
-    type Future = std::future::Ready<Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, _ctx: &T) -> Self::Future {
-        std::future::ready(Ok(RedirectService {}))
+    pub fn redirect_service(&self) -> RedirectService {
+        RedirectService {}
     }
 }
 
+#[derive(Clone)]
 pub struct RedirectService;
 
-impl Service<Request<Body>> for RedirectService {
+impl RedirectService {
+    pub async fn serve<S>(
+        self,
+        conn: S,
+        mut graceful: Option<Arc<GracefulShutdown>>,
+    ) -> Result<(), Error>
+    where
+        S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+    {
+        let api_service = TowerToHyperService::new(self);
+        let io = TokioIo::new(conn);
+        let api_conn = conn::auto::Builder::new(TokioExecutor::new());
+        let api_conn = api_conn.serve_connection_with_upgrades(io, api_service);
+        if let Some(graceful) = graceful.take() {
+            let api_conn = graceful.watch(api_conn);
+            drop(graceful);
+            api_conn.await
+        } else {
+            api_conn.await
+        }
+        .map_err(|err| format_err!("error serving redirect connection: {err}"))
+    }
+}
+
+impl Service<Request<Incoming>> for RedirectService {
     type Response = Response<Body>;
     type Error = anyhow::Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
@@ -137,7 +148,7 @@ impl Service<Request<Body>> for RedirectService {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, req: Request<Body>) -> Self::Future {
+    fn call(&mut self, req: Request<Incoming>) -> Self::Future {
         let future = async move {
             let header_host_value = req
                 .headers()
@@ -196,12 +207,6 @@ impl PeerAddress for tokio::net::TcpStream {
     }
 }
 
-impl PeerAddress for hyper::server::conn::AddrStream {
-    fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
-        Ok(self.remote_addr())
-    }
-}
-
 impl PeerAddress for tokio::net::UnixStream {
     fn peer_addr(&self) -> Result<std::net::SocketAddr, Error> {
         // TODO: Find a way to actually represent the vsock peer in the ApiService struct - for now
@@ -225,9 +230,34 @@ impl<T: PeerAddress> PeerAddress for proxmox_http::RateLimitedStream<T> {
 // Rust wants this type 'pub' here (else we get 'private type `ApiService`
 // in public interface'). The type is still private because the crate does
 // not export it.
+#[derive(Clone)]
 pub struct ApiService {
     pub peer: std::net::SocketAddr,
     pub api_config: Arc<ApiConfig>,
+}
+
+impl ApiService {
+    pub async fn serve<S>(
+        self,
+        conn: S,
+        mut graceful: Option<Arc<GracefulShutdown>>,
+    ) -> Result<(), Error>
+    where
+        S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+    {
+        let api_service = TowerToHyperService::new(self);
+        let io = TokioIo::new(conn);
+        let api_conn = conn::auto::Builder::new(TokioExecutor::new());
+        let api_conn = api_conn.serve_connection_with_upgrades(io, api_service);
+        if let Some(graceful) = graceful.take() {
+            let api_conn = graceful.watch(api_conn);
+            drop(graceful);
+            api_conn.await
+        } else {
+            api_conn.await
+        }
+        .map_err(|err| format_err!("error serving connection: {err}"))
+    }
 }
 
 fn log_response(
@@ -309,7 +339,7 @@ fn get_user_agent(headers: &HeaderMap) -> Option<String> {
         .ok()
 }
 
-impl Service<Request<Body>> for ApiService {
+impl Service<Request<Incoming>> for ApiService {
     type Response = Response<Body>;
     type Error = Error;
     #[allow(clippy::type_complexity)]
@@ -319,7 +349,7 @@ impl Service<Request<Body>> for ApiService {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, req: Request<Body>) -> Self::Future {
+    fn call(&mut self, req: Request<Incoming>) -> Self::Future {
         let path = req.uri().path_and_query().unwrap().as_str().to_owned();
         let method = req.method().clone();
         let user_agent = get_user_agent(req.headers());
@@ -386,7 +416,7 @@ fn parse_query_parameters<S: 'static + BuildHasher + Send>(
 async fn get_request_parameters<S: 'static + BuildHasher + Send>(
     param_schema: ParameterSchema,
     parts: &Parts,
-    req_body: Body,
+    req_body: Incoming,
     uri_param: HashMap<String, String, S>,
 ) -> Result<Value, Error> {
     let mut is_json = false;
@@ -403,12 +433,17 @@ async fn get_request_parameters<S: 'static + BuildHasher + Send>(
         }
     }
 
-    let body = TryStreamExt::map_err(req_body, |err| {
+    let stream_body = BodyStream::new(req_body);
+    let body = TryStreamExt::map_err(stream_body, |err| {
         http_err!(BAD_REQUEST, "Problems reading request body: {}", err)
     })
-    .try_fold(Vec::new(), |mut acc, chunk| async move {
-        if acc.len() + chunk.len() < MAX_REQUEST_BODY_SIZE {
-            acc.extend_from_slice(&chunk);
+    .try_fold(Vec::new(), |mut acc, frame| async move {
+        // FIXME: max request body size?
+        let frame = frame
+            .into_data()
+            .map_err(|err| format_err!("Failed to read request body frame - {err:?}"))?;
+        if acc.len() + frame.len() < MAX_REQUEST_BODY_SIZE {
+            acc.extend_from_slice(&frame);
             Ok(acc)
         } else {
             Err(http_err!(BAD_REQUEST, "Request body too large"))
@@ -438,13 +473,14 @@ async fn get_request_parameters<S: 'static + BuildHasher + Send>(
     }
 }
 
+#[derive(Clone)]
 struct NoLogExtension();
 
 async fn proxy_protected_request(
     config: &ApiConfig,
     info: &ApiMethod,
     mut parts: Parts,
-    req_body: Body,
+    req_body: Incoming,
     peer: &std::net::SocketAddr,
 ) -> Result<Response<Body>, Error> {
     let mut uri_parts = parts.uri.clone().into_parts();
@@ -464,9 +500,14 @@ async fn proxy_protected_request(
     let reload_timezone = info.reload_timezone;
 
     let mut resp = match config.privileged_addr.clone() {
-        None => hyper::client::Client::new().request(request).await?,
+        None => {
+            hyper_util::client::legacy::Client::builder(TokioExecutor::new())
+                .build_http()
+                .request(request)
+                .await?
+        }
         Some(addr) => {
-            hyper::client::Client::builder()
+            hyper_util::client::legacy::Client::builder(TokioExecutor::new())
                 .build(addr)
                 .request(request)
                 .await?
@@ -480,7 +521,7 @@ async fn proxy_protected_request(
         }
     }
 
-    Ok(resp)
+    Ok(resp.map(|b| Body::wrap_stream(BodyDataStream::new(b))))
 }
 
 fn delay_unauth_time() -> std::time::Instant {
@@ -492,22 +533,23 @@ fn access_forbidden_time() -> std::time::Instant {
 }
 
 fn handle_stream_as_json_seq(stream: proxmox_router::Stream) -> Result<Response<Body>, Error> {
-    let (mut send, body) = hyper::Body::channel();
+    let (send, body) = tokio::sync::mpsc::channel::<Result<Vec<u8>, Error>>(1);
     tokio::spawn(async move {
         use futures::StreamExt;
 
         let mut stream = stream.into_inner();
         while let Some(record) = stream.next().await {
-            if send.send_data(record.to_bytes().into()).await.is_err() {
+            if send.send(Ok(record.to_bytes())).await.is_err() {
                 break;
             }
         }
     });
 
-    Ok(Response::builder()
+    Response::builder()
         .status(http::StatusCode::OK)
         .header(http::header::CONTENT_TYPE, "application/json-seq")
-        .body(body)?)
+        .body(Body::wrap_stream(ReceiverStream::new(body)))
+        .map_err(Error::from)
 }
 
 fn handle_sync_stream_as_json_seq(
@@ -528,7 +570,7 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
     info: &'static ApiMethod,
     formatter: Option<&'static dyn OutputFormatter>,
     parts: Parts,
-    req_body: Body,
+    req_body: Incoming,
     uri_param: HashMap<String, String, S>,
 ) -> Result<Response<Body>, Error> {
     let formatter = formatter.unwrap_or(crate::formatter::DIRECT_JSON_FORMATTER);
@@ -631,9 +673,10 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment, S: 'static + BuildHa
             );
             resp.map(|body| {
                 Body::wrap_stream(
-                    DeflateEncoder::builder(TryStreamExt::map_err(body, |err| {
-                        proxmox_lang::io_format_err!("error during compression: {}", err)
-                    }))
+                    DeflateEncoder::builder(TryStreamExt::map_err(
+                        BodyDataStream::new(body),
+                        |err| proxmox_lang::io_format_err!("error during compression: {}", err),
+                    ))
                     .zlib(true)
                     .flush_window(is_streaming.then_some(64 * 1024))
                     .build(),
@@ -797,7 +840,7 @@ fn extract_compression_method(headers: &http::HeaderMap) -> Option<CompressionMe
 impl ApiConfig {
     pub async fn handle_request(
         self: Arc<ApiConfig>,
-        req: Request<Body>,
+        req: Request<Incoming>,
         peer: &std::net::SocketAddr,
     ) -> Result<Response<Body>, Error> {
         let (parts, body) = req.into_parts();
@@ -809,7 +852,7 @@ impl ApiConfig {
         if path.len() + query.len() > MAX_URI_QUERY_LENGTH {
             return Ok(Response::builder()
                 .status(StatusCode::URI_TOO_LONG)
-                .body("".into())
+                .body(Body::empty())
                 .unwrap());
         }
 
@@ -908,7 +951,7 @@ impl Action {
 
 pub struct ApiRequestData<'a> {
     parts: Parts,
-    body: Body,
+    body: Incoming,
     peer: &'a std::net::SocketAddr,
     config: &'a ApiConfig,
     full_path: &'a str,

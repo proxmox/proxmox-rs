@@ -5,12 +5,14 @@ use anyhow::Error;
 use serde_json::{json, Value};
 
 use hyper::header;
-use hyper::{Body, Response, StatusCode};
+use hyper::{Response, StatusCode};
 
+use proxmox_http::Body;
 use proxmox_router::{HttpError, RpcEnvironment, SerializableReturn};
 use proxmox_schema::ParameterError;
 
 /// Extension to set error message for server side logging
+#[derive(Clone)]
 pub(crate) struct ErrorMessageExtension(pub String);
 
 /// Methods to format data and errors
@@ -168,11 +170,11 @@ impl OutputFormatter for JsonFormatter {
 
 pub(crate) fn error_to_response(err: Error) -> Response<Body> {
     let mut response = if let Some(apierr) = err.downcast_ref::<HttpError>() {
-        let mut resp = Response::new(Body::from(apierr.message.clone()));
+        let mut resp = Response::new(apierr.message.clone().into());
         *resp.status_mut() = apierr.code;
         resp
     } else {
-        let mut resp = Response::new(Body::from(err.to_string()));
+        let mut resp = Response::new(err.to_string().into());
         *resp.status_mut() = StatusCode::BAD_REQUEST;
         resp
     };

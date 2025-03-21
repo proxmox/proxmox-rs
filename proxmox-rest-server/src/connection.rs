@@ -13,7 +13,6 @@ use std::time::Duration;
 
 use anyhow::{format_err, Context, Error};
 use futures::FutureExt;
-use hyper::server::accept;
 use openssl::ec::{EcGroup, EcKey};
 use openssl::nid::Nid;
 use openssl::pkey::{PKey, Private};
@@ -225,12 +224,13 @@ impl AcceptBuilder {
         self,
         listener: TcpListener,
         acceptor: Arc<Mutex<SslAcceptor>>,
-    ) -> impl accept::Accept<Conn = ClientStreamResult, Error = Error> {
+        // FIXME: replace return value with own trait? see now removed UnixAcceptor
+    ) -> ReceiverStream<Result<ClientStreamResult, Error>> {
         let (secure_sender, secure_receiver) = mpsc::channel(self.max_pending_accepts);
 
         tokio::spawn(self.accept_connections(listener, acceptor, secure_sender.into()));
 
-        accept::from_stream(ReceiverStream::new(secure_receiver))
+        ReceiverStream::new(secure_receiver)
     }
 
     pub fn accept_tls_optional(
@@ -238,8 +238,8 @@ impl AcceptBuilder {
         listener: TcpListener,
         acceptor: Arc<Mutex<SslAcceptor>>,
     ) -> (
-        impl accept::Accept<Conn = ClientStreamResult, Error = Error>,
-        impl accept::Accept<Conn = InsecureClientStreamResult, Error = Error>,
+        ReceiverStream<Result<ClientStreamResult, Error>>,
+        ReceiverStream<Result<InsecureClientStreamResult, Error>>,
     ) {
         let (secure_sender, secure_receiver) = mpsc::channel(self.max_pending_accepts);
         let (insecure_sender, insecure_receiver) = mpsc::channel(self.max_pending_accepts);
@@ -251,8 +251,8 @@ impl AcceptBuilder {
         ));
 
         (
-            accept::from_stream(ReceiverStream::new(secure_receiver)),
-            accept::from_stream(ReceiverStream::new(insecure_receiver)),
+            ReceiverStream::new(secure_receiver),
+            ReceiverStream::new(insecure_receiver),
         )
     }
 }
