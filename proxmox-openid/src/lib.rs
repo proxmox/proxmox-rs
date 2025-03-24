@@ -37,6 +37,7 @@ use openidconnect::{
     PkceCodeVerifier,
     RedirectUrl,
     Scope,
+    StandardClaims,
     StandardErrorResponse,
     StandardTokenResponse,
     UserInfoClaims,
@@ -235,6 +236,15 @@ impl OpenIdAuthenticator {
         code: &str,
         private_auth_state: &PrivateAuthState,
     ) -> Result<(GenericIdTokenClaims, GenericUserInfoClaims), Error> {
+        self.verify_authorization_code_userinfo(code, private_auth_state, true)
+    }
+
+    pub fn verify_authorization_code_userinfo(
+        &self,
+        code: &str,
+        private_auth_state: &PrivateAuthState,
+        query_userinfo: bool,
+    ) -> Result<(GenericIdTokenClaims, GenericUserInfoClaims), Error> {
         let code = AuthorizationCode::new(code.to_string());
         // Exchange the code with a token.
         let token_response = self
@@ -252,6 +262,14 @@ impl OpenIdAuthenticator {
             .claims(&id_token_verifier, &private_auth_state.nonce)
             .map_err(|err| format_err!("Failed to verify ID token: {}", err))?;
 
+        if !query_userinfo {
+            let empty_userinfo_claims = UserInfoClaims::new(
+                StandardClaims::new(id_token_claims.subject().clone()),
+                GenericClaims(Value::Null),
+            );
+            return Ok((id_token_claims.clone(), empty_userinfo_claims));
+        }
+
         let userinfo_claims: GenericUserInfoClaims = self
             .client
             .user_info(token_response.access_token().to_owned(), None)?
@@ -267,8 +285,18 @@ impl OpenIdAuthenticator {
         code: &str,
         private_auth_state: &PrivateAuthState,
     ) -> Result<Value, Error> {
+        self.verify_authorization_code_simple_userinfo(code, private_auth_state, true)
+    }
+
+    /// Like verify_authorization_code_simple_userinfo(), but returns claims as serde_json::Value
+    pub fn verify_authorization_code_simple_userinfo(
+        &self,
+        code: &str,
+        private_auth_state: &PrivateAuthState,
+        query_userinfo: bool,
+    ) -> Result<Value, Error> {
         let (id_token_claims, userinfo_claims) =
-            self.verify_authorization_code(code, private_auth_state)?;
+            self.verify_authorization_code_userinfo(code, private_auth_state, query_userinfo)?;
 
         let mut data = serde_json::to_value(id_token_claims)?;
 
