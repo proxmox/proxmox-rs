@@ -306,17 +306,17 @@ pub const ACL_UGID_TYPE_SCHEMA: Schema = StringSchema::new("Type of 'ugid' prope
         propagate: {
             schema: ACL_PROPAGATE_SCHEMA,
         },
-	path: {
+        path: {
             schema: ACL_PATH_SCHEMA,
         },
         ugid_type: {
             schema: ACL_UGID_TYPE_SCHEMA,
         },
-	ugid: {
+        ugid: {
             type: String,
             description: "User or Group ID.",
         },
-	roleid: {
+        roleid: {
             type: Role,
         }
     }
