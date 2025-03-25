@@ -1,20 +1,24 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::{LazyLock, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 
 use anyhow::{bail, format_err, Error};
+use futures::future;
 use http::request::Parts;
 use http::HeaderMap;
 use hyper::{Method, Response};
 
+use hyper_util::server::graceful::GracefulShutdown;
 use proxmox_http::Body;
+use proxmox_log::LevelFilter;
 use proxmox_router::{
     list_subdirs_api_method, Router, RpcEnvironmentType, SubdirMap, UserInformation,
 };
 use proxmox_schema::api;
 
 use proxmox_rest_server::{ApiConfig, AuthError, RestEnvironment, RestServer};
+use tokio::net::TcpListener;
 
 // Create a Dummy User information system
 struct DummyUserInfo;
@@ -191,27 +195,54 @@ const ROUTER: Router = Router::new()
 async fn run() -> Result<(), Error> {
     // we first have to configure the api environment (basedir etc.)
 
+    proxmox_log::Logger::from_env("RUST_LOG", LevelFilter::INFO)
+        .stderr()
+        .init()?;
+
     let config = ApiConfig::new("/var/tmp/", RpcEnvironmentType::PUBLIC)
         .default_api2_handler(&ROUTER)
         .auth_handler_func(check_auth)
         .index_handler_func(get_index);
     let rest_server = RestServer::new(config);
 
+    proxmox_daemon::catch_shutdown_signal(future::pending())?;
+
+    log::info!("creating server..");
+
     // then we have to create a daemon that listens, accepts and serves the api to clients
     proxmox_daemon::server::create_daemon(
         ([127, 0, 0, 1], 65000).into(),
-        move |listener| {
-            let incoming = hyper::server::conn::AddrIncoming::from_listener(listener)?;
-
+        move |listener: TcpListener| {
             Ok(async move {
-                hyper::Server::builder(incoming).serve(rest_server).await?;
-
+                let graceful = Arc::new(GracefulShutdown::new());
+                loop {
+                    let graceful2 = Arc::clone(&graceful);
+                    tokio::select! {
+                        incoming = listener.accept() => {
+                            log::info!("accepted new connection!");
+                            let (conn, _) = incoming?;
+                            let api_service = rest_server.api_service(&conn)?;
+                            tokio::spawn(async move { let res = api_service.serve(conn, Some(graceful2)).await; log::info!("connection finished: {res:?}") });
+                        },
+                        _shutdown = proxmox_daemon::shutdown_future() => {
+                            log::info!("shutdown future triggered!");
+                            break;
+                        }
+                    }
+                }
+                log::info!("count {}", Arc::strong_count(&graceful));
+                if let Some(shutdown) = Arc::into_inner(graceful) {
+                    log::info!("shutting down..");
+                    shutdown.shutdown().await
+                }
                 Ok(())
             })
         },
         None,
     )
     .await?;
+
+    log::info!("done - exit server");
 
     Ok(())
 }
