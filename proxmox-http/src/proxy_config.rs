@@ -4,7 +4,7 @@
 
 use anyhow::{bail, format_err, Error};
 
-use http_1::Uri;
+use http::Uri;
 
 use crate::uri::build_authority;
 

@@ -2,9 +2,8 @@ use std::collections::HashMap;
 use std::io::Read;
 use std::time::Duration;
 
-use anyhow::Context as _;
 use anyhow::Error;
-use http_1::Response;
+use http::Response;
 
 use crate::HttpClient;
 use crate::HttpOptions;
@@ -53,10 +52,10 @@ impl Client {
     }
 
     fn add_headers(
-        mut req: http_1::request::Builder,
+        mut req: http::request::Builder,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> http_1::request::Builder {
+    ) -> http::request::Builder {
         if let Some(content_type) = content_type {
             req = req.header("Content-Type", content_type);
         }
@@ -86,29 +85,6 @@ impl Client {
         let (parts, body) = res.into_parts();
         Response::from_parts(parts, Box::new(body.into_reader()))
     }
-
-    fn response_to_old<B>(response: Response<B>) -> Result<http::Response<B>, Error> {
-        let (parts, body) = response.into_parts();
-        let mut builder = http::Response::builder().status(
-            http::StatusCode::from_u16(parts.status.as_u16())
-                .context("unrecognized status code")?,
-        );
-        if parts.version == http_1::Version::HTTP_09 {
-            builder = builder.version(http::Version::HTTP_09);
-        } else if parts.version == http_1::Version::HTTP_10 {
-            builder = builder.version(http::Version::HTTP_10);
-        } else if parts.version == http_1::Version::HTTP_11 {
-            builder = builder.version(http::Version::HTTP_11);
-        } else if parts.version == http_1::Version::HTTP_2 {
-            builder = builder.version(http::Version::HTTP_2);
-        } else if parts.version == http_1::Version::HTTP_3 {
-            builder = builder.version(http::Version::HTTP_3);
-        }
-        for (name, value) in &parts.headers {
-            builder = builder.header(name.as_str(), value.as_bytes());
-        }
-        Ok(builder.body(body)?)
-    }
 }
 
 impl HttpClient<String, String> for Client {
@@ -118,7 +94,7 @@ impl HttpClient<String, String> for Client {
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<http::Response<String>, Error> {
         let agent = self.agent()?;
-        let req = http_1::Request::get(uri);
+        let req = http::Request::get(uri);
         let req = Self::add_headers(req, None, extra_headers);
         let req = req.body(ureq::SendBody::none())?;
 
@@ -126,7 +102,6 @@ impl HttpClient<String, String> for Client {
             .run(req)
             .map_err(Error::from)
             .and_then(Self::convert_response_to_string)
-            .and_then(Self::response_to_old)
     }
 
     fn post(
@@ -137,7 +112,7 @@ impl HttpClient<String, String> for Client {
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<http::Response<String>, Error> {
         let agent = self.agent()?;
-        let req = http_1::Request::post(uri);
+        let req = http::Request::post(uri);
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
@@ -146,14 +121,13 @@ impl HttpClient<String, String> for Client {
         }
         .map_err(Error::from)
         .and_then(Self::convert_response_to_string)
-        .and_then(Self::response_to_old)
     }
 
     fn request(&self, request: http::Request<String>) -> Result<http::Response<String>, Error> {
         let (parts, body) = request.into_parts();
 
         let agent = self.agent()?;
-        let mut req = http_1::Request::post(parts.method.as_str());
+        let mut req = http::Request::post(parts.method.as_str());
 
         for header in parts.headers.keys() {
             for value in parts.headers.get_all(header) {
@@ -165,7 +139,6 @@ impl HttpClient<String, String> for Client {
             .run(req.body(body)?)
             .map_err(Error::from)
             .and_then(Self::convert_response_to_string)
-            .and_then(Self::response_to_old)
     }
 }
 
@@ -176,7 +149,7 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<http::Response<Vec<u8>>, Error> {
         let agent = self.agent()?;
-        let req = http_1::Request::get(uri);
+        let req = http::Request::get(uri);
         let req = Self::add_headers(req, None, extra_headers);
         let req = req.body(ureq::SendBody::none())?;
 
@@ -184,7 +157,6 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
             .run(req)
             .map_err(Error::from)
             .and_then(Self::convert_response_to_vec)
-            .and_then(Self::response_to_old)
     }
 
     fn post(
@@ -195,7 +167,7 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<http::Response<Vec<u8>>, Error> {
         let agent = self.agent()?;
-        let req = http_1::Request::post(uri);
+        let req = http::Request::post(uri);
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
@@ -204,14 +176,13 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
         }
         .map_err(Error::from)
         .and_then(Self::convert_response_to_vec)
-        .and_then(Self::response_to_old)
     }
 
     fn request(&self, request: http::Request<&[u8]>) -> Result<http::Response<Vec<u8>>, Error> {
         let (parts, body) = request.into_parts();
 
         let agent = self.agent()?;
-        let mut req = http_1::Request::post(parts.method.as_str());
+        let mut req = http::Request::post(parts.method.as_str());
 
         for header in parts.headers.keys() {
             for value in parts.headers.get_all(header) {
@@ -223,7 +194,6 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
             .run(req.body(body)?)
             .map_err(Error::from)
             .and_then(Self::convert_response_to_vec)
-            .and_then(Self::response_to_old)
     }
 }
 
@@ -234,7 +204,7 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<http::Response<Box<dyn Read>>, Error> {
         let agent = self.agent()?;
-        let req = http_1::Request::get(uri);
+        let req = http::Request::get(uri);
         let req = Self::add_headers(req, None, extra_headers);
         let req = req.body(ureq::SendBody::none())?;
 
@@ -242,7 +212,6 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
             .run(req)
             .map_err(Error::from)
             .map(Self::convert_response_to_reader)
-            .and_then(Self::response_to_old)
     }
 
     fn post(
@@ -253,7 +222,7 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
         extra_headers: Option<&HashMap<String, String>>,
     ) -> Result<http::Response<Box<dyn Read>>, Error> {
         let agent = self.agent()?;
-        let req = http_1::Request::post(uri);
+        let req = http::Request::post(uri);
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
@@ -262,7 +231,6 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
         }
         .map_err(Error::from)
         .map(Self::convert_response_to_reader)
-        .and_then(Self::response_to_old)
     }
 
     fn request(
@@ -272,7 +240,7 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
         let (parts, body) = request.into_parts();
 
         let agent = self.agent()?;
-        let mut req = http_1::Request::post(parts.method.as_str());
+        let mut req = http::Request::post(parts.method.as_str());
 
         for header in parts.headers.keys() {
             for value in parts.headers.get_all(header) {
@@ -284,6 +252,5 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
             .run(req.body(ureq::SendBody::from_owned_reader(body))?)
             .map_err(Error::from)
             .map(Self::convert_response_to_reader)
-            .and_then(Self::response_to_old)
     }
 }

@@ -13,14 +13,17 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+bytes = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
-http_1 = { package = "http", version = "1", optional = true }
+http-body = { workspace = true, optional = true }
+http-body-util = { workspace = true, optional = true }
 hyper = { workspace = true, optional = true }
 hyper-util = { workspace = true, optional = true }
 native-tls = { workspace = true, optional = true }
 openssl =  { version = "0.10", optional = true }
 serde_json = { workspace = true, optional = true }
+sync_wrapper = { workspace = true, optional = true }
 tokio = { workspace = true, features = [], optional = true }
 tokio-openssl = { workspace = true, optional = true }
 tower-service = { workspace = true, optional = true }
@@ -41,6 +44,15 @@ flate2 = { workspace = true }
 [features]
 default = []
 
+body = [
+    "dep:bytes",
+    "dep:futures",
+    "dep:http-body",
+    "dep:http-body-util",
+    "dep:hyper",
+    "dep:sync_wrapper",
+    "sync_wrapper?/futures",
+]
 rate-limiter = ["dep:hyper"]
 rate-limited-stream = [
     "dep:tokio",
@@ -69,12 +81,13 @@ client = [
     "hyper-util?/http1",
     "hyper-util?/tokio",
     "tokio?/io-util",
+    "body",
     "http-helpers",
     "rate-limited-stream",
 ]
 client-sync = [ "client-trait", "http-helpers", "dep:ureq", "dep:native-tls" ]
 client-trait = [ "dep:http" ]
-http-helpers = [ "dep:http_1", "dep:proxmox-base64", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
+http-helpers = [ "dep:http", "dep:proxmox-base64", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
 websocket = [
     "dep:futures",
     "dep:hyper",
