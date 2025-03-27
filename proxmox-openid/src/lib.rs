@@ -15,8 +15,11 @@ pub use auth_state::*;
 use openidconnect::{
     //curl::http_client,
     core::{
-        CoreAuthDisplay, CoreAuthPrompt, CoreAuthenticationFlow, CoreClient, CoreGenderClaim,
-        CoreIdTokenClaims, CoreIdTokenVerifier, CoreProviderMetadata,
+        CoreAuthDisplay, CoreAuthPrompt, CoreAuthenticationFlow, CoreErrorResponseType,
+        CoreGenderClaim, CoreIdTokenVerifier, CoreJsonWebKey, CoreJsonWebKeyType,
+        CoreJsonWebKeyUse, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,
+        CoreProviderMetadata, CoreRevocableToken, CoreRevocationErrorResponse,
+        CoreTokenIntrospectionResponse, CoreTokenType,
     },
     AdditionalClaims,
     AuthenticationContextClass,
@@ -24,6 +27,9 @@ use openidconnect::{
     ClientId,
     ClientSecret,
     CsrfToken,
+    EmptyExtraTokenFields,
+    IdTokenClaims,
+    IdTokenFields,
     IssuerUrl,
     Nonce,
     OAuth2TokenResponse,
@@ -31,15 +37,47 @@ use openidconnect::{
     PkceCodeVerifier,
     RedirectUrl,
     Scope,
+    StandardErrorResponse,
+    StandardTokenResponse,
     UserInfoClaims,
 };
 
 /// Stores Additional Claims into a serde_json::Value;
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
 pub struct GenericClaims(Value);
 impl AdditionalClaims for GenericClaims {}
 
 pub type GenericUserInfoClaims = UserInfoClaims<GenericClaims, CoreGenderClaim>;
+pub type GenericIdTokenClaims = IdTokenClaims<GenericClaims, CoreGenderClaim>;
+
+pub type GenericIdTokenFields = IdTokenFields<
+    GenericClaims,
+    EmptyExtraTokenFields,
+    CoreGenderClaim,
+    CoreJweContentEncryptionAlgorithm,
+    CoreJwsSigningAlgorithm,
+    CoreJsonWebKeyType,
+>;
+
+pub type GenericTokenResponse = StandardTokenResponse<GenericIdTokenFields, CoreTokenType>;
+
+pub type GenericClient = openidconnect::Client<
+    GenericClaims,
+    CoreAuthDisplay,
+    CoreGenderClaim,
+    CoreJweContentEncryptionAlgorithm,
+    CoreJwsSigningAlgorithm,
+    CoreJsonWebKeyType,
+    CoreJsonWebKeyUse,
+    CoreJsonWebKey,
+    CoreAuthPrompt,
+    StandardErrorResponse<CoreErrorResponseType>,
+    GenericTokenResponse,
+    CoreTokenType,
+    CoreTokenIntrospectionResponse,
+    CoreRevocableToken,
+    CoreRevocationErrorResponse,
+>;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct OpenIdConfig {
@@ -56,7 +94,7 @@ pub struct OpenIdConfig {
 }
 
 pub struct OpenIdAuthenticator {
-    client: CoreClient,
+    client: GenericClient,
     config: OpenIdConfig,
 }
 
@@ -120,8 +158,9 @@ impl OpenIdAuthenticator {
 
         let provider_metadata = CoreProviderMetadata::discover(&issuer_url, http_client)?;
 
-        let client = CoreClient::from_provider_metadata(provider_metadata, client_id, client_key)
-            .set_redirect_uri(RedirectUrl::new(String::from(redirect_url))?);
+        let client =
+            GenericClient::from_provider_metadata(provider_metadata, client_id, client_key)
+                .set_redirect_uri(RedirectUrl::new(String::from(redirect_url))?);
 
         Ok(Self {
             client,
@@ -195,7 +234,7 @@ impl OpenIdAuthenticator {
         &self,
         code: &str,
         private_auth_state: &PrivateAuthState,
-    ) -> Result<(CoreIdTokenClaims, GenericUserInfoClaims), Error> {
+    ) -> Result<(GenericIdTokenClaims, GenericUserInfoClaims), Error> {
         let code = AuthorizationCode::new(code.to_string());
         // Exchange the code with a token.
         let token_response = self
@@ -206,7 +245,7 @@ impl OpenIdAuthenticator {
             .map_err(|err| format_err!("Failed to contact token endpoint: {}", err))?;
 
         let id_token_verifier: CoreIdTokenVerifier = self.client.id_token_verifier();
-        let id_token_claims: &CoreIdTokenClaims = token_response
+        let id_token_claims: &GenericIdTokenClaims = token_response
             .extra_fields()
             .id_token()
             .expect("Server did not return an ID token")
