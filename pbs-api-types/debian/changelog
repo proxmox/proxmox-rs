@@ -1,3 +1,11 @@
+rust-pbs-api-types (0.2.1) bookworm; urgency=medium
+
+  * metrics: relax influx organization and bucket length
+  * tape backup job: add worker threads option
+  * user: add boolean-schema for regenerate-api-token flag
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 02 Apr 2025 15:34:49 +0200
+
 rust-pbs-api-types (0.2.0) bookworm; urgency=medium
 
   * imported from proxmox-backup repository
