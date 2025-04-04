@@ -532,6 +532,10 @@ impl std::fmt::Display for SyncDirection {
 pub const RESYNC_CORRUPT_SCHEMA: Schema =
     BooleanSchema::new("If the verification failed for a local snapshot, try to pull it again.")
         .schema();
+pub const SYNC_ENCRYPTED_ONLY_SCHEMA: Schema =
+    BooleanSchema::new("Only synchronize encrypted backup snapshots, exclude others.").schema();
+pub const SYNC_VERIFIED_ONLY_SCHEMA: Schema =
+    BooleanSchema::new("Only synchronize verified backup snapshots, exclude others.").schema();
 
 #[api(
     properties: {
@@ -591,6 +595,14 @@ pub const RESYNC_CORRUPT_SCHEMA: Schema =
             schema: RESYNC_CORRUPT_SCHEMA,
             optional: true,
         },
+        "encrypted-only": {
+            schema: SYNC_ENCRYPTED_ONLY_SCHEMA,
+            optional: true,
+        },
+        "verified-only": {
+            schema: SYNC_VERIFIED_ONLY_SCHEMA,
+            optional: true,
+        },
         "sync-direction": {
             type: SyncDirection,
             optional: true,
@@ -630,6 +642,10 @@ pub struct SyncJobConfig {
     pub transfer_last: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resync_corrupt: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub encrypted_only: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verified_only: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sync_direction: Option<SyncDirection>,
 }
