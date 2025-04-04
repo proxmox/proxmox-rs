@@ -232,6 +232,13 @@ pub const GC_ATIME_CUTOFF_SCHEMA: Schema = IntegerSchema::new(
 .default(24 * 60 + 5)
 .schema();
 
+pub const GC_CACHE_CAPACITY_SCHEMA: Schema =
+    IntegerSchema::new("Garbage collection chunk digest cache capacity")
+        .minimum(0)
+        .maximum(8 * 1024 * 1024)
+        .default(1024 * 1024)
+        .schema();
+
 #[api(
     properties: {
         "chunk-order": {
@@ -250,6 +257,10 @@ pub const GC_ATIME_CUTOFF_SCHEMA: Schema = IntegerSchema::new(
             schema: GC_ATIME_CUTOFF_SCHEMA,
             optional: true,
         },
+        "gc-cache-capacity": {
+            schema: GC_CACHE_CAPACITY_SCHEMA,
+            optional: true,
+        },
     },
 )]
 #[derive(Serialize, Deserialize, Default)]
@@ -265,6 +276,8 @@ pub struct DatastoreTuning {
     pub gc_atime_safety_check: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gc_atime_cutoff: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gc_cache_capacity: Option<usize>,
 }
 
 pub const DATASTORE_TUNING_STRING_SCHEMA: Schema = StringSchema::new("Datastore tuning options")
