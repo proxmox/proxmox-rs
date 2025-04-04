@@ -1,3 +1,11 @@
+rust-proxmox-openid (0.10.4-1) bookworm; urgency=medium
+
+  * fix #4411: openid: add library code for generic id token claim support
+
+  * fix #4234: openid: add library functions for optional userinfo endpoint
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 04 Apr 2025 15:40:45 +0200
+
 rust-proxmox-openid (0.10.3-1) bookworm; urgency=medium
 
   * drop unused dependency on url
