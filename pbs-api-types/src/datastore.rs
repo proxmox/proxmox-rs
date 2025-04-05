@@ -223,6 +223,15 @@ pub enum DatastoreFSyncLevel {
     Filesystem,
 }
 
+pub const GC_ATIME_CUTOFF_SCHEMA: Schema = IntegerSchema::new(
+    "Cutoff (in minutes) for chunk cleanup atime check in garbage collection phase 2 \
+        (default 24h 5m)",
+)
+.minimum(1) // safety margin for kernel timestamp granularity, but stay within minute range
+.maximum(2 * 24 * 60)
+.default(24 * 60 + 5)
+.schema();
+
 #[api(
     properties: {
         "chunk-order": {
@@ -237,6 +246,10 @@ pub enum DatastoreFSyncLevel {
             default: true,
             type: bool,
         },
+        "gc-atime-cutoff": {
+            schema: GC_ATIME_CUTOFF_SCHEMA,
+            optional: true,
+        },
     },
 )]
 #[derive(Serialize, Deserialize, Default)]
@@ -250,6 +263,8 @@ pub struct DatastoreTuning {
     pub sync_level: Option<DatastoreFSyncLevel>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gc_atime_safety_check: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gc_atime_cutoff: Option<usize>,
 }
 
 pub const DATASTORE_TUNING_STRING_SCHEMA: Schema = StringSchema::new("Datastore tuning options")
