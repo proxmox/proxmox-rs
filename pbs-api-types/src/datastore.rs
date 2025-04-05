@@ -229,6 +229,14 @@ pub enum DatastoreFSyncLevel {
             type: ChunkOrder,
             optional: true,
         },
+        "gc-atime-safety-check": {
+            description:
+                "Check filesystem atime updates are honored during store creation and garbage \
+                collection",
+            optional: true,
+            default: true,
+            type: bool,
+        },
     },
 )]
 #[derive(Serialize, Deserialize, Default)]
@@ -240,6 +248,8 @@ pub struct DatastoreTuning {
     pub chunk_order: Option<ChunkOrder>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sync_level: Option<DatastoreFSyncLevel>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gc_atime_safety_check: Option<bool>,
 }
 
 pub const DATASTORE_TUNING_STRING_SCHEMA: Schema = StringSchema::new("Datastore tuning options")
