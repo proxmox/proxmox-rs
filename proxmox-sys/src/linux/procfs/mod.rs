@@ -405,13 +405,26 @@ fn test_read_proc_stat() {
 }
 
 #[derive(Debug, Serialize)]
+/// Memory stats relevant for Proxmox projects.
+///
+/// NOTE: Unlike the name would suggest this is not a 1:1 representation of /proc/meminfo and also
+/// includes some other metrics like KSM shared pages gathered from sysfs.
+/// Ensure this is what you want if you return this type from your code for others to consume.
 pub struct ProcFsMemInfo {
+    /// Total usable RAM, i.e. installed memory minus bad regions and kernel binary code.
     pub memtotal: u64,
+    /// Memory that's guaranteed completely unused, almost always quite a bit smaller than the
+    /// amount of memory actually available for programs.
     pub memfree: u64,
+    /// Calculated from subtracting MemAvailable from MemTotal.
     pub memused: u64,
+    /// Memory shared through the Kernel Same-Page Merging mechanism. Metric gathered from sysfs.
     pub memshared: u64,
+    /// Total amount of swap space available.
     pub swaptotal: u64,
+    //// Amount of swap space that is currently unused.
     pub swapfree: u64,
+    /// Used swap, i.e., swaptotal - swapfree.
     pub swapused: u64,
 }
 
