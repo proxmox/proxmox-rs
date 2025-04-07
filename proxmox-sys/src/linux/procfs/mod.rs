@@ -416,6 +416,9 @@ pub struct ProcFsMemInfo {
     /// Memory that's guaranteed completely unused, almost always quite a bit smaller than the
     /// amount of memory actually available for programs.
     pub memfree: u64,
+    /// The amount of memory that is available for a new workload, without pushing the system into
+    /// swap.
+    pub memavailable: u64,
     /// Calculated from subtracting MemAvailable from MemTotal.
     pub memused: u64,
     /// Memory shared through the Kernel Same-Page Merging mechanism. Metric gathered from sysfs.
@@ -439,6 +442,7 @@ fn parse_proc_meminfo(text: &str) -> Result<ProcFsMemInfo, Error> {
     let mut meminfo = ProcFsMemInfo {
         memtotal: 0,
         memfree: 0,
+        memavailable: 0,
         memused: 0,
         memshared: 0,
         swaptotal: 0,
@@ -446,15 +450,13 @@ fn parse_proc_meminfo(text: &str) -> Result<ProcFsMemInfo, Error> {
         swapused: 0,
     };
 
-    let mut mem_available = 0;
-
     for line in text.lines() {
         let mut content_iter = line.split_whitespace();
         if let (Some(key), Some(value)) = (content_iter.next(), content_iter.next()) {
             match key {
                 "MemTotal:" => meminfo.memtotal = value.parse::<u64>()? * 1024,
                 "MemFree:" => meminfo.memfree = value.parse::<u64>()? * 1024,
-                "MemAvailable:" => mem_available = value.parse::<u64>()? * 1024,
+                "MemAvailable:" => meminfo.memavailable = value.parse::<u64>()? * 1024,
                 "SwapTotal:" => meminfo.swaptotal = value.parse::<u64>()? * 1024,
                 "SwapFree:" => meminfo.swapfree = value.parse::<u64>()? * 1024,
                 _ => continue,
@@ -466,7 +468,7 @@ fn parse_proc_meminfo(text: &str) -> Result<ProcFsMemInfo, Error> {
     // available for a new workload, without pushing the system into swap, no amount of calculating
     // with BUFFER, CACHE, .. will get you there, only the kernel can know this.
     // For details see https://git.kernel.org/torvalds/c/34e431b0ae398fc54ea69ff85ec700722c9da773
-    meminfo.memused = meminfo.memtotal - mem_available;
+    meminfo.memused = meminfo.memtotal - meminfo.memavailable;
 
     meminfo.swapused = meminfo.swaptotal - meminfo.swapfree;
 
@@ -544,6 +546,7 @@ DirectMap1G:    22020096 kB
     assert_eq!(meminfo.memtotal, 33538646016);
     assert_eq!(meminfo.memused, 19917815808);
     assert_eq!(meminfo.memfree, 2156593152);
+    assert_eq!(meminfo.memavailable, 13620830208);
     assert_eq!(meminfo.swapfree, 2048);
     assert_eq!(meminfo.swaptotal, 3072);
     assert_eq!(meminfo.swapused, 1024);
