@@ -1,3 +1,16 @@
+rust-proxmox-sys (0.6.7-1) bookworm; urgency=medium
+
+  * memory info: use the MemAvailable field from /proc/meminfo to compute used
+    memory to fix overestimation of that metric and to better align with what
+    modern versions of tools like `free` do.
+
+  * add doc-comments for ProcFsMemInfo type.
+
+  * add MemAvailable field to ProcFsMemInfo to promote its usage over the
+    existing MemFree, which is almost never the right choice.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 07 Apr 2025 20:50:58 +0200
+
 rust-proxmox-sys (0.6.6-1) bookworm; urgency=medium
 
   * use correct pointer type for mkdtemp return value
