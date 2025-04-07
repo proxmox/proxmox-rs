@@ -433,24 +433,27 @@ fn parse_proc_meminfo(text: &str) -> Result<ProcFsMemInfo, Error> {
         swapused: 0,
     };
 
-    let (mut buffers, mut cached) = (0, 0);
+    let mut mem_available = 0;
+
     for line in text.lines() {
         let mut content_iter = line.split_whitespace();
         if let (Some(key), Some(value)) = (content_iter.next(), content_iter.next()) {
             match key {
                 "MemTotal:" => meminfo.memtotal = value.parse::<u64>()? * 1024,
                 "MemFree:" => meminfo.memfree = value.parse::<u64>()? * 1024,
+                "MemAvailable:" => mem_available = value.parse::<u64>()? * 1024,
                 "SwapTotal:" => meminfo.swaptotal = value.parse::<u64>()? * 1024,
                 "SwapFree:" => meminfo.swapfree = value.parse::<u64>()? * 1024,
-                "Buffers:" => buffers = value.parse::<u64>()? * 1024,
-                "Cached:" => cached = value.parse::<u64>()? * 1024,
                 _ => continue,
             }
         }
     }
 
-    meminfo.memfree += buffers + cached;
-    meminfo.memused = meminfo.memtotal - meminfo.memfree;
+    // NOTE: MemAvailable is the only metric that will actually represent how much memory is
+    // available for a new workload, without pushing the system into swap, no amount of calculating
+    // with BUFFER, CACHE, .. will get you there, only the kernel can know this.
+    // For details see https://git.kernel.org/torvalds/c/34e431b0ae398fc54ea69ff85ec700722c9da773
+    meminfo.memused = meminfo.memtotal - mem_available;
 
     meminfo.swapused = meminfo.swaptotal - meminfo.swapfree;
 
@@ -461,6 +464,76 @@ fn parse_proc_meminfo(text: &str) -> Result<ProcFsMemInfo, Error> {
     };
 
     Ok(meminfo)
+}
+
+#[test]
+fn test_read_proc_meminfo() {
+    let meminfo = parse_proc_meminfo(
+        "MemTotal:       32752584 kB
+MemFree:         2106048 kB
+MemAvailable:   13301592 kB
+Buffers:               0 kB
+Cached:           490072 kB
+SwapCached:            0 kB
+Active:           658700 kB
+Inactive:          59528 kB
+Active(anon):     191996 kB
+Inactive(anon):    49880 kB
+Active(file):     466704 kB
+Inactive(file):     9648 kB
+Unevictable:       16008 kB
+Mlocked:           12936 kB
+SwapTotal:             3 kB
+SwapFree:              2 kB
+Zswap:                 0 kB
+Zswapped:              0 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+AnonPages:        244204 kB
+Mapped:            66032 kB
+Shmem:              9960 kB
+KReclaimable:   11525744 kB
+Slab:           21002876 kB
+SReclaimable:   11525744 kB
+SUnreclaim:      9477132 kB
+KernelStack:        6816 kB
+PageTables:         4812 kB
+SecPageTables:         0 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    16376292 kB
+Committed_AS:     316368 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:      983836 kB
+VmallocChunk:          0 kB
+Percpu:            12096 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:         0 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+Unaccepted:            0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+Hugetlb:               0 kB
+DirectMap4k:      237284 kB
+DirectMap2M:    13281280 kB
+DirectMap1G:    22020096 kB
+",
+    )
+    .expect("successful parsed a sample /proc/meminfo entry");
+
+    assert_eq!(meminfo.memtotal, 33538646016);
+    assert_eq!(meminfo.memused, 19917815808);
+    assert_eq!(meminfo.memfree, 2156593152);
+    assert_eq!(meminfo.swapfree, 2048);
+    assert_eq!(meminfo.swaptotal, 3072);
+    assert_eq!(meminfo.swapused, 1024);
 }
 
 #[derive(Clone, Debug)]
