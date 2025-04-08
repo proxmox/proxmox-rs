@@ -1,3 +1,10 @@
+rust-proxmox-rest-server (0.8.9-1) UNRELEASED; urgency=medium
+
+  * increase maximal request body size fro 64 kiB to 512 kiB, similar to a
+    recent change for our perl based projects.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 08 Apr 2025 16:17:03 +0200
+
 rust-proxmox-rest-server (0.8.8-1) bookworm; urgency=medium
 
   * worker task: include context in state error message
