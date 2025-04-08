@@ -1,3 +1,11 @@
+rust-proxmox-notify (0.5.4-1) bookworm; urgency=medium
+
+  * webhook, gotify: set Content-Length header for broader compatibility
+
+  * fix #6143: notify: allow overriding notification templates
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 08 Apr 2025 12:35:18 +0200
+
 rust-proxmox-notify (0.5.3-1) bookworm; urgency=medium
 
   * fix ordering of DUMMY_USER ObjectSchema properties
