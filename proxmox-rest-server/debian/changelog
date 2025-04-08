@@ -1,4 +1,4 @@
-rust-proxmox-rest-server (0.8.9-1) UNRELEASED; urgency=medium
+rust-proxmox-rest-server (0.8.9-1) bookworm; urgency=medium
 
   * increase maximal request body size fro 64 kiB to 512 kiB, similar to a
     recent change for our perl based projects.
