@@ -65,6 +65,8 @@ pub struct RestServer {
 }
 
 const MAX_URI_QUERY_LENGTH: usize = 3072;
+const MAX_REQUEST_BODY_SIZE: usize = 512 * 1024;
+
 const CHUNK_SIZE_LIMIT: u64 = 32 * 1024;
 
 impl RestServer {
@@ -405,7 +407,7 @@ async fn get_request_parameters<S: 'static + BuildHasher + Send>(
         http_err!(BAD_REQUEST, "Problems reading request body: {}", err)
     })
     .try_fold(Vec::new(), |mut acc, chunk| async move {
-        if acc.len() + chunk.len() < 512 * 1024 {
+        if acc.len() + chunk.len() < MAX_REQUEST_BODY_SIZE {
             acc.extend_from_slice(&chunk);
             Ok(acc)
         } else {
