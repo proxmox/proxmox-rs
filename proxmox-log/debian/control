@@ -13,7 +13,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+rt-multi-thread-dev (>= 1.6-~~) <!nocheck>,
  librust-tracing-0.1+default-dev <!nocheck>,
- librust-tracing-journald-0.3+default-dev <!nocheck>,
+ librust-tracing-journald-0.3+default-dev (>= 0.3.1-~~) <!nocheck>,
  librust-tracing-log-0.2+std-dev <!nocheck>,
  librust-tracing-subscriber-0.3+default-dev (>= 0.3.16-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -36,7 +36,7 @@ Depends:
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+rt-multi-thread-dev (>= 1.6-~~),
  librust-tracing-0.1+default-dev,
- librust-tracing-journald-0.3+default-dev,
+ librust-tracing-journald-0.3+default-dev (>= 0.3.1-~~),
  librust-tracing-log-0.2+std-dev,
  librust-tracing-subscriber-0.3+default-dev (>= 0.3.16-~~)
 Provides:

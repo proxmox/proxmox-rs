@@ -6,6 +6,7 @@ use std::future::Future;
 use std::sync::{Arc, Mutex};
 
 use tokio::task::futures::TaskLocalFuture;
+use tracing_journald::{Priority, PriorityMappings};
 use tracing_subscriber::prelude::*;
 
 mod file_logger;
@@ -115,7 +116,15 @@ where
     S: for<'a> tracing_subscriber::registry::LookupSpan<'a>,
 {
     match tracing_journald::layer() {
-        Ok(layer) => layer.boxed(),
+        Ok(layer) => layer
+            .with_priority_mappings(PriorityMappings {
+                error: Priority::Error,
+                warn: Priority::Warning,
+                info: Priority::Informational,
+                debug: Priority::Debug,
+                trace: Priority::Debug,
+            })
+            .boxed(),
         Err(err) => {
             eprintln!("Unable to open syslog: {err:?}");
             plain_stderr_layer().boxed()
