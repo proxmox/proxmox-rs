@@ -45,7 +45,7 @@ Provides:
  librust-proxmox-log-0+default-dev (= ${binary:Version}),
  librust-proxmox-log-0.2-dev (= ${binary:Version}),
  librust-proxmox-log-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-log-0.2.8-dev (= ${binary:Version}),
- librust-proxmox-log-0.2.8+default-dev (= ${binary:Version})
+ librust-proxmox-log-0.2.9-dev (= ${binary:Version}),
+ librust-proxmox-log-0.2.9+default-dev (= ${binary:Version})
 Description: Logging infrastructure for proxmox - Rust source code
  Source code for Debianized Rust crate "proxmox-log"
