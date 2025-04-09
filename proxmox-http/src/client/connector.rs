@@ -6,6 +6,7 @@ use std::task::{Context, Poll};
 
 use futures::*;
 use http::Uri;
+use hyper::client::connect::dns::{GaiResolver, Name};
 use hyper::client::HttpConnector;
 use openssl::ssl::SslConnector;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
@@ -23,8 +24,8 @@ use crate::{RateLimitedStream, ShareableRateLimit};
 type SharedRateLimit = Arc<dyn ShareableRateLimit>;
 
 #[derive(Clone)]
-pub struct HttpsConnector {
-    connector: HttpConnector,
+pub struct HttpsConnector<T = GaiResolver> {
+    connector: HttpConnector<T>,
     ssl_connector: Arc<SslConnector>,
     proxy: Option<ProxyConfig>,
     tcp_keepalive: u32,
@@ -32,9 +33,9 @@ pub struct HttpsConnector {
     write_limiter: Option<SharedRateLimit>,
 }
 
-impl HttpsConnector {
+impl<T> HttpsConnector<T> {
     pub fn with_connector(
-        mut connector: HttpConnector,
+        mut connector: HttpConnector<T>,
         ssl_connector: SslConnector,
         tcp_keepalive: u32,
     ) -> Self {
@@ -122,7 +123,13 @@ impl HttpsConnector {
     }
 }
 
-impl hyper::service::Service<Uri> for HttpsConnector {
+impl<T> hyper::service::Service<Uri> for HttpsConnector<T>
+where
+    T: tower_service::Service<Name> + Clone + Send + Sync + 'static,
+    T::Future: Send,
+    T::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>,
+    T::Response: std::iter::Iterator<Item = std::net::SocketAddr>,
+{
     type Response = MaybeTlsStream<RateLimitedStream<TcpStream>>;
     type Error = Error;
     #[allow(clippy::type_complexity)]

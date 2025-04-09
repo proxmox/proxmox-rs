@@ -8,6 +8,7 @@ use futures::*;
 #[cfg(all(feature = "client-trait", feature = "proxmox-async"))]
 use http::header::HeaderName;
 use http::{HeaderValue, Request, Response};
+use hyper::client::connect::dns::GaiResolver;
 use hyper::client::Client as HyperClient;
 use hyper::client::HttpConnector;
 use hyper::Body;
@@ -18,7 +19,7 @@ use crate::HttpOptions;
 
 /// Asynchronous HTTP client implementation
 pub struct Client {
-    client: HyperClient<HttpsConnector, Body>,
+    client: HyperClient<HttpsConnector<GaiResolver>, Body>,
     options: HttpOptions,
 }
 
