@@ -285,7 +285,7 @@ fn render_template_impl(
     filename: &str,
     source: TemplateSource,
 ) -> Result<Option<String>, Error> {
-    let template_string = context::context().lookup_template(&filename, None, source)?;
+    let template_string = context::context().lookup_template(filename, None, source)?;
 
     if let Some(template_string) = template_string {
         let mut handlebars = Handlebars::new();

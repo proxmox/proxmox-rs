@@ -359,7 +359,7 @@ impl WebhookEndpoint {
         //
         // -> send the header always, unless we do a get with no body (which is the expected case
         // for GET)
-        let content_length = body.as_bytes().len();
+        let content_length = body.len();
         if !(self.config.method == HttpMethod::Get && content_length == 0) {
             builder = builder.header(http::header::CONTENT_LENGTH, content_length);
         }
