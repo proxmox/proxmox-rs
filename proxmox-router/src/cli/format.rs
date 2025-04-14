@@ -279,7 +279,7 @@ pub(crate) fn print_simple_usage_error_do<'cli>(
         &[],
         global_options_iter,
     );
-    eprint!("Error: {}\nUsage: {}", err_msg, usage);
+    eprintln!("Error: {}\nUsage: {}", err_msg, usage);
 }
 
 /// Print command usage for nested commands to ``stderr``.
