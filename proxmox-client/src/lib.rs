@@ -14,6 +14,9 @@ pub use error::Error;
 pub use proxmox_login::tfa::TfaChallenge;
 pub use proxmox_login::{Authentication, Ticket};
 
+mod api_path_builder;
+pub use api_path_builder::ApiPathBuilder;
+
 pub(crate) mod auth;
 pub use auth::{AuthenticationKind, Token};
 
