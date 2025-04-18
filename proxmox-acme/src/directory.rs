@@ -20,19 +20,23 @@ pub struct Directory {
 #[serde(rename_all = "camelCase")]
 pub struct DirectoryData {
     /// The entry point to create a new account.
-    pub new_account: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub new_account: Option<String>,
 
     /// The entry point to retrieve a new nonce, should be used with a `HEAD` request.
     pub new_nonce: String,
 
     /// URL to post new orders to.
-    pub new_order: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub new_order: Option<String>,
 
     /// URL to use for certificate revocation.
-    pub revoke_cert: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub revoke_cert: Option<String>,
 
     /// Account key rollover URL.
-    pub key_change: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub key_change: Option<String>,
 
     /// Metadata object, for additional information which aren't directly part of the API
     /// itself, such as the terms of service.
@@ -92,12 +96,12 @@ impl Directory {
         &self.data.new_nonce
     }
 
-    pub(crate) fn new_account_url(&self) -> &str {
-        &self.data.new_account
+    pub(crate) fn new_account_url(&self) -> Option<&str> {
+        self.data.new_account.as_deref()
     }
 
-    pub(crate) fn new_order_url(&self) -> &str {
-        &self.data.new_order
+    pub(crate) fn new_order_url(&self) -> Option<&str> {
+        self.data.new_order.as_deref()
     }
 
     /// Access to the in the Acme spec defined metadata structure.

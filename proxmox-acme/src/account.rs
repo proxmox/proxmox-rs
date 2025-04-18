@@ -69,7 +69,9 @@ impl Account {
             return Err(Error::EmptyOrder);
         }
 
-        let url = directory.new_order_url();
+        let url = directory
+            .new_order_url()
+            .ok_or_else(|| Error::Custom("no 'newOrder' URL specified by provider".to_string()))?;
         let body = serde_json::to_string(&Jws::new(
             &key,
             Some(self.location.clone()),
@@ -273,8 +275,10 @@ pub struct CertificateRevocation<'a> {
 impl CertificateRevocation<'_> {
     /// Create the revocation request using the specified nonce for the given directory.
     pub fn request(&self, directory: &Directory, nonce: &str) -> Result<Request, Error> {
-        self.account
-            .post_request(&directory.data.revoke_cert, nonce, &self.data)
+        let revoke_cert = directory.data.revoke_cert.as_ref().ok_or_else(|| {
+            Error::Custom("no 'revokeCert' URL specified by provider".to_string())
+        })?;
+        self.account.post_request(revoke_cert, nonce, &self.data)
     }
 }
 
@@ -362,7 +366,9 @@ impl AccountCreator {
     /// [`response`](AccountCreator::response()) will render the account unusable!
     pub fn request(&self, directory: &Directory, nonce: &str) -> Result<Request, Error> {
         let key = self.key.as_deref().ok_or(Error::MissingKey)?;
-        let url = directory.new_account_url();
+        let url = directory.new_account_url().ok_or_else(|| {
+            Error::Custom("no 'newAccount' URL specified by provider".to_string())
+        })?;
 
         let external_account_binding = self
             .eab_credentials
