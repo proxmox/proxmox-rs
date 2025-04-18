@@ -3818,6 +3818,10 @@ pub struct ProxmoxRemote {
 #[api(
     default_key: "type",
     properties: {
+        "allow-smt": {
+            default: true,
+            optional: true,
+        },
         "kernel-hashes": {
             default: false,
             optional: true,
@@ -3838,19 +3842,27 @@ pub struct ProxmoxRemote {
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct PveQemuSevFmt {
+    /// Sets policy bit to allow Simultaneous Multi Threading (SMT) (Ignored
+    /// unless for SEV-SNP)
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "allow-smt")]
+    pub allow_smt: Option<bool>,
+
     /// Add kernel hashes to guest firmware for measured linux kernel launch
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "kernel-hashes")]
     pub kernel_hashes: Option<bool>,
 
-    /// Sets policy bit 0 to 1 to disallow debugging of guest
+    /// Sets policy bit to disallow debugging of guest
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "no-debug")]
     pub no_debug: Option<bool>,
 
-    /// Sets policy bit 1 to 1 to disallow key sharing with other guests
+    /// Sets policy bit to disallow key sharing with other guests (Ignored for
+    /// SEV-SNP)
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "no-key-sharing")]
@@ -3862,7 +3874,7 @@ pub struct PveQemuSevFmt {
 
 #[api]
 /// Enable standard SEV with type='std' or enable experimental SEV-ES with the
-/// 'es' option.
+/// 'es' option or enable experimental SEV-SNP with the 'snp' option.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum PveQemuSevFmtType {
     #[serde(rename = "std")]
@@ -3871,6 +3883,9 @@ pub enum PveQemuSevFmtType {
     #[serde(rename = "es")]
     /// es.
     Es,
+    #[serde(rename = "snp")]
+    /// snp.
+    Snp,
 }
 serde_plain::derive_display_from_serialize!(PveQemuSevFmtType);
 serde_plain::derive_fromstr_from_deserialize!(PveQemuSevFmtType);
@@ -4531,9 +4546,6 @@ pub enum PveQmIdeFormat {
     #[serde(rename = "raw")]
     /// raw.
     Raw,
-    #[serde(rename = "cow")]
-    /// cow.
-    Cow,
     #[serde(rename = "qcow")]
     /// qcow.
     Qcow,
@@ -4666,6 +4678,64 @@ pub struct PveQmIpconfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ip6: Option<String>,
 }
+
+#[api(
+    default_key: "source",
+    properties: {
+        max_bytes: {
+            default: 1024,
+            optional: true,
+            type: Integer,
+        },
+        period: {
+            default: 1000,
+            optional: true,
+            type: Integer,
+        },
+        source: {
+            type: PveQmRngSource,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct PveQmRng {
+    /// Maximum bytes of entropy allowed to get injected into the guest every
+    /// 'period' milliseconds. Use `0` to disable limiting (potentially
+    /// dangerous!).
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_bytes: Option<i64>,
+
+    /// Every 'period' milliseconds the entropy-injection quota is reset,
+    /// allowing the guest to retrieve another 'max_bytes' of entropy.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub period: Option<i64>,
+
+    pub source: PveQmRngSource,
+}
+
+#[api]
+/// The file on the host to gather entropy from. Using urandom does *not*
+/// decrease security in any meaningful way, as it's still seeded from real
+/// entropy, and the bytes provided will most likely be mixed with real entropy
+/// on the guest as well. '/dev/hwrng' can be used to pass through a hardware
+/// RNG from the host.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum PveQmRngSource {
+    #[serde(rename = "/dev/urandom")]
+    /// /dev/urandom.
+    DevUrandom,
+    #[serde(rename = "/dev/random")]
+    /// /dev/random.
+    DevRandom,
+    #[serde(rename = "/dev/hwrng")]
+    /// /dev/hwrng.
+    DevHwrng,
+}
+serde_plain::derive_display_from_serialize!(PveQmRngSource);
+serde_plain::derive_fromstr_from_deserialize!(PveQmRngSource);
 
 #[api(
     properties: {
@@ -5345,7 +5415,7 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
         },
         rng0: {
-            format: &ApiStringFormat::PropertyString(&QemuConfigRng0::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&PveQmRng::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -5453,6 +5523,9 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
         },
         virtio: {
             type: QemuConfigVirtioArray,
+        },
+        virtiofs: {
+            type: QemuConfigVirtiofsArray,
         },
         vmgenid: {
             default: "1 (autogenerated)",
@@ -5842,6 +5915,11 @@ pub struct QemuConfig {
     #[serde(flatten)]
     pub virtio: QemuConfigVirtioArray,
 
+    /// Configuration for sharing a directory between host and guest using
+    /// Virtio-fs.
+    #[serde(flatten)]
+    pub virtiofs: QemuConfigVirtiofsArray,
+
     /// Set VM Generation ID. Use '1' to autogenerate on create or update, pass
     /// '0' to disable explicitly.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5993,6 +6071,16 @@ generate_array_field! {
         type: String,
     }
     virtio
+}
+generate_array_field! {
+    QemuConfigVirtiofsArray [ 10 ] :
+    r#"Configuration for sharing a directory between host and guest using Virtio-fs."#,
+    String => {
+        description: "Configuration for sharing a directory between host and guest using Virtio-fs.",
+        format: &ApiStringFormat::PropertyString(&QemuConfigVirtiofs::API_SCHEMA),
+        type: String,
+    }
+    virtiofs
 }
 
 #[api(
@@ -6389,6 +6477,14 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigLock);
 #[api(
     default_key: "type",
     properties: {
+        "enable-s3": {
+            default: false,
+            optional: true,
+        },
+        "enable-s4": {
+            default: false,
+            optional: true,
+        },
         type: {
             max_length: 40,
             optional: true,
@@ -6403,6 +6499,20 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigLock);
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct QemuConfigMachine {
+    /// Enables S3 power state. Defaults to false beginning with machine types
+    /// 9.2+pve1, true before.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "enable-s3")]
+    pub enable_s3: Option<bool>,
+
+    /// Enables S4 power state. Defaults to false beginning with machine types
+    /// 9.2+pve1, true before.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "enable-s4")]
+    pub enable_s4: Option<bool>,
+
     /// Specifies the QEMU machine type.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "type")]
@@ -6734,65 +6844,6 @@ pub enum QemuConfigOstype {
 }
 serde_plain::derive_display_from_serialize!(QemuConfigOstype);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigOstype);
-
-#[api(
-    default_key: "source",
-    properties: {
-        max_bytes: {
-            default: 1024,
-            optional: true,
-            type: Integer,
-        },
-        period: {
-            default: 1000,
-            optional: true,
-            type: Integer,
-        },
-        source: {
-            type: QemuConfigRng0Source,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct QemuConfigRng0 {
-    /// Maximum bytes of entropy allowed to get injected into the guest every
-    /// 'period' milliseconds. Prefer a lower value when using '/dev/random' as
-    /// source. Use `0` to disable limiting (potentially dangerous!).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub max_bytes: Option<i64>,
-
-    /// Every 'period' milliseconds the entropy-injection quota is reset,
-    /// allowing the guest to retrieve another 'max_bytes' of entropy.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub period: Option<i64>,
-
-    pub source: QemuConfigRng0Source,
-}
-
-#[api]
-/// The file on the host to gather entropy from. In most cases '/dev/urandom'
-/// should be preferred over '/dev/random' to avoid entropy-starvation issues on
-/// the host. Using urandom does *not* decrease security in any meaningful way,
-/// as it's still seeded from real entropy, and the bytes provided will most
-/// likely be mixed with real entropy on the guest as well. '/dev/hwrng' can be
-/// used to pass through a hardware RNG from the host.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum QemuConfigRng0Source {
-    #[serde(rename = "/dev/urandom")]
-    /// /dev/urandom.
-    DevUrandom,
-    #[serde(rename = "/dev/random")]
-    /// /dev/random.
-    DevRandom,
-    #[serde(rename = "/dev/hwrng")]
-    /// /dev/hwrng.
-    DevHwrng,
-}
-serde_plain::derive_display_from_serialize!(QemuConfigRng0Source);
-serde_plain::derive_fromstr_from_deserialize!(QemuConfigRng0Source);
 
 const_regex! {
 
@@ -8226,6 +8277,88 @@ pub struct QemuConfigVirtio {
     pub werror: Option<PveQmIdeWerror>,
 }
 
+const_regex! {
+
+QEMU_CONFIG_VIRTIOFS_DIRID_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+
+}
+
+#[api(
+    default_key: "dirid",
+    properties: {
+        cache: {
+            optional: true,
+            type: QemuConfigVirtiofsCache,
+        },
+        "direct-io": {
+            default: false,
+            optional: true,
+        },
+        dirid: {
+            format: &ApiStringFormat::Pattern(&QEMU_CONFIG_VIRTIOFS_DIRID_RE),
+            type: String,
+        },
+        "expose-acl": {
+            default: false,
+            optional: true,
+        },
+        "expose-xattr": {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct QemuConfigVirtiofs {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cache: Option<QemuConfigVirtiofsCache>,
+
+    /// Honor the O_DIRECT flag passed down by guest applications.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "direct-io")]
+    pub direct_io: Option<bool>,
+
+    /// Mapping identifier of the directory mapping to be shared with the guest.
+    /// Also used as a mount tag inside the VM.
+    pub dirid: String,
+
+    /// Enable support for POSIX ACLs (enabled ACL implies xattr) for this
+    /// mount.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "expose-acl")]
+    pub expose_acl: Option<bool>,
+
+    /// Enable support for extended attributes for this mount.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "expose-xattr")]
+    pub expose_xattr: Option<bool>,
+}
+
+#[api]
+/// The caching policy the file system should use (auto, always, metadata,
+/// never).
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum QemuConfigVirtiofsCache {
+    #[serde(rename = "auto")]
+    /// auto.
+    Auto,
+    #[serde(rename = "always")]
+    /// always.
+    Always,
+    #[serde(rename = "metadata")]
+    /// metadata.
+    Metadata,
+    #[serde(rename = "never")]
+    /// never.
+    Never,
+}
+serde_plain::derive_display_from_serialize!(QemuConfigVirtiofsCache);
+serde_plain::derive_fromstr_from_deserialize!(QemuConfigVirtiofsCache);
+
 #[api(
     properties: {
         allowed_nodes: {
@@ -8249,6 +8382,11 @@ pub struct QemuConfigVirtio {
             },
             type: Array,
         },
+        "mapped-resource-info": {
+            description: "Object of mapped resources with additional information such if they're live migratable.",
+            properties: {},
+            type: Object,
+        },
         "mapped-resources": {
             items: {
                 description: "A mapped resource",
@@ -8268,22 +8406,27 @@ pub struct QemuConfigVirtio {
 /// Object.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct QemuMigratePreconditions {
-    /// List nodes allowed for offline migration, only passed if VM is offline
+    /// List of nodes allowed for migration.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allowed_nodes: Option<Vec<String>>,
 
     /// List local disks including CD-Rom, unused and not referenced disks
     pub local_disks: Vec<QemuMigratePreconditionsLocalDisks>,
 
-    /// List local resources e.g. pci, usb
+    /// List local resources (e.g. pci, usb) that block migration.
     pub local_resources: Vec<String>,
 
-    /// List of mapped resources e.g. pci, usb
+    /// Object of mapped resources with additional information such if they're
+    /// live migratable.
+    #[serde(rename = "mapped-resource-info")]
+    pub mapped_resource_info: serde_json::Value,
+
+    /// List of mapped resources e.g. pci, usb. Deprecated, use
+    /// 'mapped-resource-info' instead.
     #[serde(rename = "mapped-resources")]
     pub mapped_resources: Vec<String>,
 
-    /// List not allowed nodes with additional information, only passed if VM is
-    /// offline
+    /// List of not allowed nodes with additional information.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub not_allowed_nodes: Option<QemuMigratePreconditionsNotAllowedNodes>,
 
@@ -8339,8 +8482,7 @@ pub struct QemuMigratePreconditionsLocalDisks {
         },
     },
 )]
-/// List not allowed nodes with additional information, only passed if VM is
-/// offline
+/// List of not allowed nodes with additional information.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct QemuMigratePreconditionsNotAllowedNodes {
     /// A list of not available storages.
@@ -8414,6 +8556,10 @@ pub struct QemuMigratePreconditionsNotAllowedNodes {
         "running-qemu": {
             optional: true,
             type: String,
+        },
+        serial: {
+            default: false,
+            optional: true,
         },
         spice: {
             default: false,
@@ -8532,6 +8678,11 @@ pub struct QemuStatus {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "running-qemu")]
     pub running_qemu: Option<String>,
+
+    /// Guest has serial device configured.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub serial: Option<bool>,
 
     /// QEMU VGA configuration supports spice.
     #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
@@ -9459,6 +9610,10 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
             optional: true,
             type: String,
         },
+        serial: {
+            default: false,
+            optional: true,
+        },
         status: {
             type: IsRunning,
         },
@@ -9561,6 +9716,11 @@ pub struct VmEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "running-qemu")]
     pub running_qemu: Option<String>,
+
+    /// Guest has serial device configured.
+    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub serial: Option<bool>,
 
     pub status: IsRunning,
 

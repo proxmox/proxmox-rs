@@ -89,9 +89,9 @@ Schema2Rust::register_enum_variant('QemuConfigEfidisk0Efitype::2m' => 'Mb2');
 Schema2Rust::register_enum_variant('QemuConfigEfidisk0Efitype::4m' => 'Mb4');
 Schema2Rust::register_enum_variant('QemuConfigHugepages::2' => 'Mb2');
 Schema2Rust::register_enum_variant('QemuConfigHugepages::1024' => 'Mb1024');
-Schema2Rust::register_enum_variant('QemuConfigRng0Source::/dev/urandom', => 'DevUrandom');
-Schema2Rust::register_enum_variant('QemuConfigRng0Source::/dev/random', => 'DevRandom');
-Schema2Rust::register_enum_variant('QemuConfigRng0Source::/dev/hwrng', => 'DevHwrng');
+Schema2Rust::register_enum_variant('PveQmRngSource::/dev/urandom', => 'DevUrandom');
+Schema2Rust::register_enum_variant('PveQmRngSource::/dev/random', => 'DevRandom');
+Schema2Rust::register_enum_variant('PveQmRngSource::/dev/hwrng', => 'DevHwrng');
 Schema2Rust::register_enum_variant('QemuConfigTpmstate0Version::v1.2' => 'V1_2');
 Schema2Rust::register_enum_variant('QemuConfigTpmstate0Version::v2.0' => 'V2_0');
 

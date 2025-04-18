@@ -80,6 +80,8 @@
 /// - /cluster/jobs/schedule-analyze
 /// - /cluster/log
 /// - /cluster/mapping
+/// - /cluster/mapping/dir
+/// - /cluster/mapping/dir/{id}
 /// - /cluster/mapping/pci
 /// - /cluster/mapping/pci/{id}
 /// - /cluster/mapping/usb
