@@ -278,6 +278,7 @@ sub print_types : prototype($) {
             for my $variant ($def->{variants}->@*) {
                 my ($orig, $named) = @$variant;
                 print {$out} "    #[serde(rename = \"$orig\")]\n" if $named ne $orig;
+                print {$out} "    #[default]\n" if $def->{default} && $def->{default} eq $named;
                 print {$out} "    /// $orig.\n";
                 print {$out} "    $named,\n";
             };
@@ -982,6 +983,7 @@ sub generate_enum : prototype($$;$) {
     if (defined($default)) {
         if (defined($rust_default)) {
             $def->{default} = $rust_default;
+            $def->{derive} = derive_default(qw(Clone Copy Default Eq PartialEq));
         } else {
             warn "non-existent default enum value '$default'\n" if !defined($rust_default);
         }

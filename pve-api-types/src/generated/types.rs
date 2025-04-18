@@ -1319,9 +1319,10 @@ pub struct ListTasksResponse {
 
 #[api]
 /// List archived, active or all tasks.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum ListTasksSource {
     #[serde(rename = "archive")]
+    #[default]
     /// archive.
     Archive,
     #[serde(rename = "active")]
@@ -1704,9 +1705,10 @@ generate_array_field! {
 
 #[api]
 /// OS architecture type.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum LxcConfigArch {
     #[serde(rename = "amd64")]
+    #[default]
     /// amd64.
     Amd64,
     #[serde(rename = "i386")]
@@ -1733,7 +1735,7 @@ serde_plain::derive_fromstr_from_deserialize!(LxcConfigArch);
 /// one of the available tty devices. By setting cmode to 'console' it tries to
 /// attach to /dev/console instead. If you set cmode to 'shell', it simply
 /// invokes a shell inside the container (no login).
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum LxcConfigCmode {
     #[serde(rename = "shell")]
     /// shell.
@@ -1742,6 +1744,7 @@ pub enum LxcConfigCmode {
     /// console.
     Console,
     #[serde(rename = "tty")]
+    #[default]
     /// tty.
     Tty,
 }
@@ -4567,12 +4570,13 @@ serde_plain::derive_fromstr_from_deserialize!(PveQmIdeFormat);
 
 #[api]
 /// The drive's media type.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum PveQmIdeMedia {
     #[serde(rename = "cdrom")]
     /// cdrom.
     Cdrom,
     #[serde(rename = "disk")]
+    #[default]
     /// disk.
     Disk,
 }
@@ -4862,9 +4866,10 @@ serde_plain::derive_fromstr_from_deserialize!(PveQmWatchdogAction);
 
 #[api]
 /// Watchdog type to emulate.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum PveQmWatchdogModel {
     #[serde(rename = "i6300esb")]
+    #[default]
     /// i6300esb.
     I6300esb,
     #[serde(rename = "ib700")]
@@ -4949,7 +4954,7 @@ pub struct PveVmCpuConf {
 /// CPU model and vendor to report to the guest. Must be a QEMU/KVM supported
 /// model. Only valid for custom CPU model definitions, default models will
 /// always report themselves to the guest OS.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "486")]
     /// 486.
@@ -5080,6 +5085,7 @@ pub enum PveVmCpuConfReportedModel {
     /// kvm32.
     Kvm32,
     #[serde(rename = "kvm64")]
+    #[default]
     /// kvm64.
     Kvm64,
     #[serde(rename = "max")]
@@ -6129,9 +6135,10 @@ pub struct QemuConfigAgent {
 
 #[api]
 /// Select the agent type
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigAgentType {
     #[serde(rename = "virtio")]
+    #[default]
     /// virtio.
     Virtio,
     #[serde(rename = "isa")]
@@ -6194,9 +6201,10 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigAudio0Device);
 
 #[api]
 /// Driver backend for the audio device.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigAudio0Driver {
     #[serde(rename = "spice")]
+    #[default]
     /// spice.
     Spice,
     #[serde(rename = "none")]
@@ -6208,9 +6216,10 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigAudio0Driver);
 
 #[api]
 /// Select BIOS implementation.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigBios {
     #[serde(rename = "seabios")]
+    #[default]
     /// seabios.
     Seabios,
     #[serde(rename = "ovmf")]
@@ -6301,9 +6310,10 @@ pub struct QemuConfigEfidisk0 {
 /// Size and type of the OVMF EFI vars. '4m' is newer and recommended, and
 /// required for Secure Boot. For backwards compatibility, '2m' is used if not
 /// otherwise specified. Ignored for VMs with arch=aarch64 (ARM).
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigEfidisk0Efitype {
     #[serde(rename = "2m")]
+    #[default]
     /// 2m.
     Mb2,
     #[serde(rename = "4m")]
@@ -7625,9 +7635,10 @@ pub struct QemuConfigScsi {
 
 #[api]
 /// SCSI controller model
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigScsihw {
     #[serde(rename = "lsi")]
+    #[default]
     /// lsi.
     Lsi,
     #[serde(rename = "lsi53c810")]
@@ -7676,9 +7687,10 @@ pub struct QemuConfigSpiceEnhancements {
 
 #[api]
 /// Enable video streaming. Uses compression for detected video streams.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigSpiceEnhancementsVideostreaming {
     #[serde(rename = "off")]
+    #[default]
     /// off.
     Off,
     #[serde(rename = "all")]
@@ -7732,9 +7744,10 @@ pub struct QemuConfigTpmstate0 {
 #[api]
 /// The TPM interface version. v2.0 is newer and should be preferred. Note that
 /// this cannot be changed later on.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigTpmstate0Version {
     #[serde(rename = "v1.2")]
+    #[default]
     /// v1.2.
     V1_2,
     #[serde(rename = "v2.0")]
@@ -7869,7 +7882,7 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigVgaClipboard);
 
 #[api]
 /// Select the VGA type. Using type 'cirrus' is not recommended.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigVgaType {
     #[serde(rename = "cirrus")]
     /// cirrus.
@@ -7902,6 +7915,7 @@ pub enum QemuConfigVgaType {
     /// serial3.
     Serial3,
     #[serde(rename = "std")]
+    #[default]
     /// std.
     Std,
     #[serde(rename = "virtio")]
@@ -8341,9 +8355,10 @@ pub struct QemuConfigVirtiofs {
 #[api]
 /// The caching policy the file system should use (auto, always, metadata,
 /// never).
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigVirtiofsCache {
     #[serde(rename = "auto")]
+    #[default]
     /// auto.
     Auto,
     #[serde(rename = "always")]
