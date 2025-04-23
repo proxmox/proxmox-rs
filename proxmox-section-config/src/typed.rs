@@ -144,8 +144,8 @@ fn to_pair(
 /// This dereferences to the section hash for convenience.
 #[derive(Debug, Clone)]
 pub struct SectionConfigData<T> {
-    pub sections: HashMap<String, T>,
-    pub order: Vec<String>,
+    sections: HashMap<String, T>,
+    order: Vec<String>,
 }
 
 impl<T> Default for SectionConfigData<T> {
@@ -154,6 +154,60 @@ impl<T> Default for SectionConfigData<T> {
             sections: HashMap::new(),
             order: Vec::new(),
         }
+    }
+}
+
+impl<T> SectionConfigData<T> {
+    /// Return a mutable reference to the value corresponding to the key.
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut T> {
+        self.sections.get_mut(key)
+    }
+
+    /// Returns an iterator over the section key-value pairs in their original order.
+    pub fn iter(&self) -> Iter<'_, T> {
+        Iter {
+            sections: &self.sections,
+            order: self.order.iter(),
+        }
+    }
+
+    /// Insert a key-value pair in the section config.
+    ///
+    /// If the key does not exist in the map, it will be added to the end of
+    /// the order vector.
+    ///
+    /// # Returns
+    ///
+    /// * Some(value) - If the key was present, returns the previous value
+    /// * None - If the key was not present
+    pub fn insert(&mut self, key: impl Into<String>, value: T) -> Option<T> {
+        let key_string = key.into();
+        let previous_value = self.sections.insert(key_string.clone(), value);
+        // If there was no previous value, this is a new key, so add it to the order
+        if previous_value.is_none() {
+            self.order.push(key_string);
+        }
+        previous_value
+    }
+
+    /// Remove a key-value pair from the section config.
+    ///
+    /// If the key existed and was removed, also remove the key from the order vector
+    /// to maintain ordering consistency.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(value)` - If the key was present, returns the value that was removed
+    /// * `None` - If the key was not present
+    pub fn remove(&mut self, key: &str) -> Option<T> {
+        let removed_value = self.sections.remove(key);
+        // only update the order vector if we actually removed something
+        if removed_value.is_some() {
+            if let Some(pos) = self.order.iter().position(|k| k == key) {
+                self.order.remove(pos);
+            }
+        }
+        removed_value
     }
 }
 
@@ -182,12 +236,6 @@ impl<T> std::ops::Deref for SectionConfigData<T> {
 
     fn deref(&self) -> &Self::Target {
         &self.sections
-    }
-}
-
-impl<T> std::ops::DerefMut for SectionConfigData<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.sections
     }
 }
 
