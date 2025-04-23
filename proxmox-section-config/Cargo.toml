@@ -19,3 +19,6 @@ serde_json.workspace = true
 proxmox-schema.workspace = true
 # FIXME: remove!
 proxmox-lang.workspace = true
+
+[dev-dependencies]
+serde = { workspace = true, features = ["derive"] }

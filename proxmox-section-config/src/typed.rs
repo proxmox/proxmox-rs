@@ -211,6 +211,35 @@ impl<T> SectionConfigData<T> {
     }
 }
 
+#[doc(hidden)]
+#[macro_export]
+macro_rules! lookup {
+    ($map:expr, $key:expr, $variant:path) => {
+        match $map.get($key) {
+            Some($variant(inner)) => Some(inner),
+            _ => None,
+        }
+    };
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! convert_to_typed_array {
+    ($map:expr, $variant:path) => {
+        $map.values()
+            .filter_map(|value| match value {
+                $variant(inner) => Some(inner),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+}
+
+#[doc(inline)]
+pub use convert_to_typed_array;
+#[doc(inline)]
+pub use lookup;
+
 impl<T: ApiSectionDataEntry + DeserializeOwned> TryFrom<RawSectionConfigData>
     for SectionConfigData<T>
 {
@@ -371,6 +400,7 @@ mod test {
     use std::sync::OnceLock;
 
     use proxmox_schema::{ApiStringFormat, EnumEntry, ObjectSchema, Schema, StringSchema};
+    use serde::{Deserialize, Serialize};
 
     use crate::{SectionConfig, SectionConfigPlugin};
 
@@ -511,5 +541,110 @@ mod test {
         let written = Entry::write_section_config(filename, &res)
             .expect("failed to write out section config");
         assert_eq!(written, raw);
+    }
+
+    #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    struct User {
+        user_id: String,
+    }
+
+    #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    struct Token {
+        token: String,
+    }
+
+    #[derive(Deserialize, Serialize)]
+    enum UserSectionConfig {
+        #[serde(rename = "user")]
+        User(User),
+        #[serde(rename = "token")]
+        Token(Token),
+    }
+
+    const USER_PROPERTIES: ObjectSchema = ObjectSchema::new(
+        "User",
+        &[("user_id", false, &StringSchema::new("Some id.").schema())],
+    );
+
+    const TOKEN_PROPERTIES: ObjectSchema = ObjectSchema::new(
+        "Token",
+        &[("token", false, &StringSchema::new("Some token.").schema())],
+    );
+
+    impl ApiSectionDataEntry for UserSectionConfig {
+        fn section_config() -> &'static SectionConfig {
+            static SC: OnceLock<SectionConfig> = OnceLock::new();
+
+            SC.get_or_init(|| {
+                let mut config = SectionConfig::new(&ID_SCHEMA);
+                config.register_plugin(SectionConfigPlugin::new(
+                    "user".to_string(),
+                    None,
+                    &USER_PROPERTIES,
+                ));
+                config.register_plugin(SectionConfigPlugin::new(
+                    "token".to_string(),
+                    None,
+                    &TOKEN_PROPERTIES,
+                ));
+                config
+            })
+        }
+
+        fn section_type(&self) -> &'static str {
+            match self {
+                UserSectionConfig::User(_) => "user",
+                UserSectionConfig::Token(_) => "token",
+            }
+        }
+    }
+
+    #[test]
+    fn test_macros() {
+        let filename = "sync.cfg";
+        let raw = "\
+            token: first\n\
+                \ttoken 1\n\
+            \n\
+            user: second\n\
+                \tuser_id 2\n\
+            \n\
+            user: third\n\
+                \tuser_id 4\n\
+        ";
+
+        let parsed = UserSectionConfig::section_config()
+            .parse(filename, raw)
+            .expect("failed to parse");
+        let config: SectionConfigData<UserSectionConfig> =
+            parsed.try_into().expect("failed to convert");
+
+        let token = lookup!(config, "first", UserSectionConfig::Token);
+        assert_eq!(token.unwrap().token, "1");
+        let user = lookup!(config, "second", UserSectionConfig::User);
+        assert_eq!(user.unwrap().user_id, "2");
+
+        let mut tokens = convert_to_typed_array!(config, UserSectionConfig::Token);
+        tokens.sort();
+        assert_eq!(
+            tokens,
+            vec![&Token {
+                token: "1".to_owned()
+            }]
+        );
+
+        let mut users = convert_to_typed_array!(config, UserSectionConfig::User);
+        users.sort();
+        assert_eq!(
+            users,
+            vec![
+                &User {
+                    user_id: "2".to_owned()
+                },
+                &User {
+                    user_id: "4".to_owned()
+                }
+            ]
+        );
     }
 }
