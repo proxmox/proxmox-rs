@@ -1,6 +1,7 @@
 //! Support for `enum` typed section configs.
 
 use std::collections::HashMap;
+use std::path::Path;
 
 use anyhow::Error;
 use serde::{de::DeserializeOwned, Serialize};
@@ -90,9 +91,10 @@ pub trait ApiSectionDataEntry: Sized {
     }
 
     /// Provided. Shortcut for `Self::section_config().write(filename, &data.try_into()?)`.
-    fn write_section_config(filename: &str, data: &SectionConfigData<Self>) -> Result<String, Error>
+    fn write_section_config<P>(filename: P, data: &SectionConfigData<Self>) -> Result<String, Error>
     where
         Self: Serialize,
+        P: AsRef<Path>,
     {
         Self::section_config().write(filename, &data.try_into()?)
     }
