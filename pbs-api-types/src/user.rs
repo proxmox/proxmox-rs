@@ -18,11 +18,10 @@ pub const EXPIRE_USER_SCHEMA: Schema = IntegerSchema::new(
 .minimum(0)
 .schema();
 
-pub const REGENERATE_TOKEN_SCHEMA: Schema = BooleanSchema::new(
-    "Regenerate token secret while keeping permissions.",
-)
-.default(false)
-.schema();
+pub const REGENERATE_TOKEN_SCHEMA: Schema =
+    BooleanSchema::new("Regenerate token secret while keeping permissions.")
+        .default(false)
+        .schema();
 
 pub const FIRST_NAME_SCHEMA: Schema = StringSchema::new("First name.")
     .format(&SINGLE_LINE_COMMENT_FORMAT)
