@@ -1,3 +1,15 @@
+rust-proxmox-section-config (3.0.0-1) bookworm; urgency=medium
+
+  * make write_- and parse_section_config parameter more generic
+
+  * drop DerefMut from typed SectionConfigData
+
+  * add typed::lookup! and typed::convert_to_typed_array! macros
+
+  * use inline named params in format macro calls
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 06 May 2025 11:27:19 +0200
+
 rust-proxmox-section-config (2.1.2-1) bookworm; urgency=medium
 
   * update to proxmox-schema 4.0, use builder pattern for ObjectSchema

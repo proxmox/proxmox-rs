@@ -2,8 +2,8 @@ Source: rust-proxmox-section-config
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
@@ -33,11 +33,11 @@ Depends:
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-section-config+default-dev (= ${binary:Version}),
- librust-proxmox-section-config-2-dev (= ${binary:Version}),
- librust-proxmox-section-config-2+default-dev (= ${binary:Version}),
- librust-proxmox-section-config-2.1-dev (= ${binary:Version}),
- librust-proxmox-section-config-2.1+default-dev (= ${binary:Version}),
- librust-proxmox-section-config-2.1.2-dev (= ${binary:Version}),
- librust-proxmox-section-config-2.1.2+default-dev (= ${binary:Version})
+ librust-proxmox-section-config-3-dev (= ${binary:Version}),
+ librust-proxmox-section-config-3+default-dev (= ${binary:Version}),
+ librust-proxmox-section-config-3.0-dev (= ${binary:Version}),
+ librust-proxmox-section-config-3.0+default-dev (= ${binary:Version}),
+ librust-proxmox-section-config-3.0.0-dev (= ${binary:Version}),
+ librust-proxmox-section-config-3.0.0+default-dev (= ${binary:Version})
 Description: Proxmox schema based section config format parsing - Rust source code
  Source code for Debianized Rust crate "proxmox-section-config"
