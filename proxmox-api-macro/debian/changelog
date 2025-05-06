@@ -1,3 +1,11 @@
+rust-proxmox-api-macro (1.3.3-1) bookworm; urgency=medium
+
+  * rebuild with section-config 3.0
+
+  * sort object schema entries
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 06 May 2025 11:46:45 +0200
+
 rust-proxmox-api-macro (1.3.2-1) bookworm; urgency=medium
 
   * mark parameter defaults as `#[allow(dead_code)]`

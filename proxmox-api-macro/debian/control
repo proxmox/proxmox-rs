@@ -2,8 +2,8 @@ Source: rust-proxmox-api-macro
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
@@ -39,7 +39,7 @@ Provides:
  librust-proxmox-api-macro-1+default-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.3-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.3+default-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.3.2-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.3.2+default-dev (= ${binary:Version})
+ librust-proxmox-api-macro-1.3.3-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-1.3.3+default-dev (= ${binary:Version})
 Description: Proxmox API macro - Rust source code
  Source code for Debianized Rust crate "proxmox-api-macro"
