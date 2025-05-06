@@ -438,14 +438,17 @@ my sub return_expr : prototype($$) ($def, $expr) {
     return $expr;
 }
 
-my sub print_url : prototype($$;$) ($out, $def, $has_query = 0) {
-    if ($has_query) {
-        print {$out} "    let url = &format!(\"/api2/extjs$def->{url}\{query}\");\n";
-    } elsif (defined($def->{url_params}) && $def->{url_params}->@*) {
-        print {$out} "    let url = &format!(\"/api2/extjs$def->{url}\");\n";
+my sub format_url : prototype($;$) ($def, $as_ref = 0) {
+    if (defined($def->{url_params}) && $def->{url_params}->@*) {
+        $as_ref = $as_ref ? '&' : '';
+        return "${as_ref}format!(\"/api2/extjs$def->{url}\")";
     } else {
-        print {$out} "    let url = \"/api2/extjs$def->{url}\";\n";
+        return "\"/api2/extjs$def->{url}\"";
     }
+}
+
+my sub print_url : prototype($$;$) ($out, $def) {
+    print {$out} "    let url = " . format_url($def, 1) . ";\n";
 }
 
 my sub print_method_without_body : prototype($$$$$) {
@@ -471,7 +474,6 @@ my sub print_method_without_body : prototype($$$$$) {
             print_default_impl($out, $name);
             return;
         }
-        print {$out} "    let (mut query, mut sep) = (String::new(), '?');\n";
         my $ty = $all_types->{$input};
         die "bad parameter type: $ty->{kind}\n" if $ty->{kind} ne 'struct';
         my $fields = $ty->{fields};
@@ -484,20 +486,22 @@ my sub print_method_without_body : prototype($$$$$) {
             print {$out} "    $rust_name: p_$rust_name,\n";
         }
         print {$out} "    } = params;\n";
+        print {$out} "\n";
+        print {$out} "    let url = &ApiPathBuilder::new(" . format_url($def) . ")\n";
         for my $name (sort keys $fields->%*) {
             my $arg = $fields->{$name};
             my $rust_name = $arg->{rust_name};
 
 
             if ($arg->{type} eq 'Option<bool>') {
-                print {$out} "    add_query_bool(&mut query, &mut sep, \"$name\", p_$rust_name);\n";
+                print {$out} "        .maybe_bool_arg(\"$name\", p_$rust_name)\n";
             } elsif ($arg->{is_string_list}) {
-                print {$out} "    add_query_arg_string_list(&mut query, &mut sep, \"$name\", &p_$rust_name);\n";
+                print {$out} "        .maybe_list_arg(\"$name\", p_$rust_name)\n";
             } else {
-                print {$out} "    add_query_arg(&mut query, &mut sep, \"$name\", &p_$rust_name);\n";
+                print {$out} "        .maybe_arg(\"$name\", &p_$rust_name)\n";
             }
         }
-        print_url($out, $def, 1);
+        print {$out} "        .build();\n";
     } elsif (defined($input = $def->{input}) && $input->@*) {
         for my $arg ($input->@*) {
             print {$out} "    $arg->{rust_name}: $arg->{type},\n";
@@ -509,19 +513,19 @@ my sub print_method_without_body : prototype($$$$$) {
         }
         # print {$out} "    // self.login().await?;\n";
         if (@$input) {
-            print {$out} "    let (mut query, mut sep) = (String::new(), '?');\n";
+            print {$out} "    let url = &ApiPathBuilder::new(" . format_url($def) . ")\n";
             for my $arg (@$input) {
                 my $name = $arg->{name};
                 my $rust_name = $arg->{rust_name};
                 if ($arg->{type} eq 'Option<bool>') {
-                    print {$out} "    add_query_bool(&mut query, &mut sep, \"$name\", $rust_name);\n";
+                    print {$out} "        .maybe_bool_arg(\"$name\", $rust_name)\n";
                 } elsif ($arg->{is_string_list}) {
-                    print {$out} "    add_query_arg_string_list(&mut query, &mut sep, \"$name\", &$rust_name);\n";
+                    print {$out} "        .maybe_list_arg(\"$name\", &$rust_name)\n";
                 } else {
-                    print {$out} "    add_query_arg(&mut query, &mut sep, \"$name\", &$rust_name);\n";
+                    print {$out} "        .maybe_arg(\"$name\", &$rust_name)\n";
                 }
             }
-            print_url($out, $def, 1);
+            print {$out} "        .build();\n";
         } else {
             print_url($out, $def);
         }

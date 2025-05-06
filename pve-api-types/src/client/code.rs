@@ -2,7 +2,7 @@
 #![allow(unused)]
 //! The generated API client code.
 
-use proxmox_client::{ApiResponseData, Error, HttpApiClient};
+use proxmox_client::{ApiPathBuilder, ApiResponseData, Error, HttpApiClient};
 
 use crate::types::*;
 

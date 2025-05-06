@@ -23,7 +23,7 @@ proxmox-schema = { workspace = true, features = [ "api-types", "api-macro" ] }
 
 # For the client feature:
 percent-encoding = { workspace = true, optional = true }
-proxmox-client = { workspace = true, optional = true }
+proxmox-client = { workspace = true, optional = true, features = ["perl-api-path-builder"] }
 
 [features]
 default = []
