@@ -662,9 +662,9 @@ where
 {
     /// Get information needed to join this cluster over the connected node.
     async fn cluster_config_join(&self, node: Option<String>) -> Result<ClusterJoinInfo, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_arg(&mut query, &mut sep, "node", &node);
-        let url = &format!("/api2/extjs/cluster/config/join{query}");
+        let url = &ApiPathBuilder::new("/api2/extjs/cluster/config/join")
+            .maybe_arg("node", &node)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -675,11 +675,11 @@ where
         local_only: Option<bool>,
         start_time: Option<i64>,
     ) -> Result<ClusterMetrics, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_bool(&mut query, &mut sep, "history", history);
-        add_query_bool(&mut query, &mut sep, "local-only", local_only);
-        add_query_arg(&mut query, &mut sep, "start-time", &start_time);
-        let url = &format!("/api2/extjs/cluster/metrics/export{query}");
+        let url = &ApiPathBuilder::new("/api2/extjs/cluster/metrics/export")
+            .maybe_bool_arg("history", history)
+            .maybe_bool_arg("local-only", local_only)
+            .maybe_arg("start-time", &start_time)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -688,9 +688,9 @@ where
         &self,
         ty: Option<ClusterResourceKind>,
     ) -> Result<Vec<ClusterResource>, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_arg(&mut query, &mut sep, "type", &ty);
-        let url = &format!("/api2/extjs/cluster/resources{query}");
+        let url = &ApiPathBuilder::new("/api2/extjs/cluster/resources")
+            .maybe_arg("type", &ty)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -724,7 +724,6 @@ where
         node: &str,
         params: ListTasks,
     ) -> Result<Vec<ListTasksResponse>, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
         let ListTasks {
             errors: p_errors,
             limit: p_limit,
@@ -737,17 +736,19 @@ where
             userfilter: p_userfilter,
             vmid: p_vmid,
         } = params;
-        add_query_bool(&mut query, &mut sep, "errors", p_errors);
-        add_query_arg(&mut query, &mut sep, "limit", &p_limit);
-        add_query_arg(&mut query, &mut sep, "since", &p_since);
-        add_query_arg(&mut query, &mut sep, "source", &p_source);
-        add_query_arg(&mut query, &mut sep, "start", &p_start);
-        add_query_arg(&mut query, &mut sep, "statusfilter", &p_statusfilter);
-        add_query_arg(&mut query, &mut sep, "typefilter", &p_typefilter);
-        add_query_arg(&mut query, &mut sep, "until", &p_until);
-        add_query_arg(&mut query, &mut sep, "userfilter", &p_userfilter);
-        add_query_arg(&mut query, &mut sep, "vmid", &p_vmid);
-        let url = &format!("/api2/extjs/nodes/{node}/tasks{query}");
+
+        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/tasks"))
+            .maybe_bool_arg("errors", p_errors)
+            .maybe_arg("limit", &p_limit)
+            .maybe_arg("since", &p_since)
+            .maybe_arg("source", &p_source)
+            .maybe_arg("start", &p_start)
+            .maybe_arg("statusfilter", &p_statusfilter)
+            .maybe_arg("typefilter", &p_typefilter)
+            .maybe_arg("until", &p_until)
+            .maybe_arg("userfilter", &p_userfilter)
+            .maybe_arg("vmid", &p_vmid)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -760,11 +761,11 @@ where
         limit: Option<u64>,
         start: Option<u64>,
     ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_bool(&mut query, &mut sep, "download", download);
-        add_query_arg(&mut query, &mut sep, "limit", &limit);
-        add_query_arg(&mut query, &mut sep, "start", &start);
-        let url = &format!("/api2/extjs/nodes/{node}/tasks/{upid}/log{query}");
+        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/tasks/{upid}/log"))
+            .maybe_bool_arg("download", download)
+            .maybe_arg("limit", &limit)
+            .maybe_arg("start", &start)
+            .build();
         self.0.get(url).await?.expect_json()
     }
 
@@ -792,9 +793,9 @@ where
         node: &str,
         ty: Option<ListNetworksType>,
     ) -> Result<Vec<NetworkInterface>, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_arg(&mut query, &mut sep, "type", &ty);
-        let url = &format!("/api2/extjs/nodes/{node}/network{query}");
+        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/network"))
+            .maybe_arg("type", &ty)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -806,9 +807,9 @@ where
 
     /// Virtual machine index (per node).
     async fn list_qemu(&self, node: &str, full: Option<bool>) -> Result<Vec<VmEntry>, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_bool(&mut query, &mut sep, "full", full);
-        let url = &format!("/api2/extjs/nodes/{node}/qemu{query}");
+        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/qemu"))
+            .maybe_bool_arg("full", full)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -822,13 +823,13 @@ where
         storage: Option<String>,
         target: Option<String>,
     ) -> Result<Vec<StorageInfo>, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_arg_string_list(&mut query, &mut sep, "content", &content);
-        add_query_bool(&mut query, &mut sep, "enabled", enabled);
-        add_query_bool(&mut query, &mut sep, "format", format);
-        add_query_arg(&mut query, &mut sep, "storage", &storage);
-        add_query_arg(&mut query, &mut sep, "target", &target);
-        let url = &format!("/api2/extjs/nodes/{node}/storage{query}");
+        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/storage"))
+            .maybe_list_arg("content", &content)
+            .maybe_bool_arg("enabled", enabled)
+            .maybe_bool_arg("format", format)
+            .maybe_arg("storage", &storage)
+            .maybe_arg("target", &target)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -840,10 +841,10 @@ where
         current: Option<bool>,
         snapshot: Option<String>,
     ) -> Result<LxcConfig, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_bool(&mut query, &mut sep, "current", current);
-        add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/config{query}");
+        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/lxc/{vmid}/config"))
+            .maybe_bool_arg("current", current)
+            .maybe_arg("snapshot", &snapshot)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -891,10 +892,10 @@ where
         current: Option<bool>,
         snapshot: Option<String>,
     ) -> Result<QemuConfig, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_bool(&mut query, &mut sep, "current", current);
-        add_query_arg(&mut query, &mut sep, "snapshot", &snapshot);
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config{query}");
+        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config"))
+            .maybe_bool_arg("current", current)
+            .maybe_arg("snapshot", &snapshot)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -911,9 +912,9 @@ where
         vmid: u32,
         target: Option<String>,
     ) -> Result<QemuMigratePreconditions, Error> {
-        let (mut query, mut sep) = (String::new(), '?');
-        add_query_arg(&mut query, &mut sep, "target", &target);
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate{query}");
+        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate"))
+            .maybe_arg("target", &target)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
