@@ -1,6 +1,8 @@
 //! Support for `enum` typed section configs.
 
+use std::borrow::Borrow;
 use std::collections::HashMap;
+use std::hash::Hash;
 use std::path::Path;
 
 use anyhow::Error;
@@ -162,7 +164,11 @@ impl<T> Default for SectionConfigData<T> {
 
 impl<T> SectionConfigData<T> {
     /// Return a mutable reference to the value corresponding to the key.
-    pub fn get_mut(&mut self, key: &str) -> Option<&mut T> {
+    pub fn get_mut<Q>(&mut self, key: &Q) -> Option<&mut T>
+    where
+        String: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
         self.sections.get_mut(key)
     }
 
@@ -202,11 +208,15 @@ impl<T> SectionConfigData<T> {
     ///
     /// * `Some(value)` - If the key was present, returns the value that was removed
     /// * `None` - If the key was not present
-    pub fn remove(&mut self, key: &str) -> Option<T> {
+    pub fn remove<Q>(&mut self, key: &Q) -> Option<T>
+    where
+        String: Borrow<Q>,
+        Q: Hash + Eq + ?Sized,
+    {
         let removed_value = self.sections.remove(key);
         // only update the order vector if we actually removed something
         if removed_value.is_some() {
-            if let Some(pos) = self.order.iter().position(|k| k == key) {
+            if let Some(pos) = self.order.iter().position(|k| k.borrow() == key) {
                 self.order.remove(pos);
             }
         }
