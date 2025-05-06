@@ -1,3 +1,13 @@
+rust-proxmox-access-control (0.2.5-1) bookworm; urgency=medium
+
+  * rebuild with section-config 3.0
+
+  * clippy fixes
+
+  * doc fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 06 May 2025 11:50:08 +0200
+
 rust-proxmox-access-control (0.2.4-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
