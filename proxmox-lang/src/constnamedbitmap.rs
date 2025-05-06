@@ -34,57 +34,39 @@
 ///     ("Priv3", PRIV3),
 /// ];
 /// ```
-#[macro_export(local_inner_macros)]
+#[macro_export]
 macro_rules! constnamedbitmap {
     (
-        $(#[$outer:meta])*
+        $(#[$doc:meta])*
         $name:ident : $type:ty => {
-            $($content:tt)+
+            $(
+                $(#[$item_doc:meta])*
+                $item_name:ident($item_text:expr);
+            )+
         }
     ) => {
-        __constnamemap_consts! {
-            ($type) (0) => $($content)+
-        }
+        $crate::constnamedbitmap!(
+            const { 1 }
+            $(
+                $(#[$item_doc])*
+                $item_name($item_text);
+            )*
+        );
 
-        $(#[$outer])*
-        pub const $name: &[(&str, $type)] =
-        __constnamemap_entries! {
-            $($content)+
-        };
-    }
-}
+        $(#[$doc])*
+        pub const $name: &[(&str, $type)] = &[
+            $( ($item_text, $item_name), )+
+        ];
+    };
+    (const { $value:expr }) => ();
+    (const { $value:expr }
+        $(#[$item_doc:meta])*
+        $item_name:ident($item_text:expr);
 
-#[doc(hidden)]
-#[macro_export(local_inner_macros)]
-macro_rules! __constnamemap_consts {
-    (($type:ty) ($counter:expr) => ) => {};
-    (
-        ($type:ty) ($counter:expr) =>
-        $(#[$outer:meta])*
-        $name:ident($text:expr);
-        $(
-            $content:tt
-        )*
-    ) => {
-        $(#[$outer])*
-        pub const $name: $type = 1 << ($counter);
-        __constnamemap_consts! {
-                ($type) (1+$counter) => $($content)*
-        }
-    }
-}
-
-#[doc(hidden)]
-#[macro_export(local_inner_macros)]
-macro_rules! __constnamemap_entries {
-    (
-        $(
-            $(#[$outer:meta])*
-            $name:ident($text:expr);
-        )*
-    ) => {
-        &[
-            $(($text,$name),)*
-        ]
-    }
+        $($rest:tt)*
+    ) => (
+        $(#[$item_doc])*
+        pub const $item_name: u64 = $value;
+        $crate::constnamedbitmap!(const {$item_name << 1} $($rest)*);
+    );
 }
