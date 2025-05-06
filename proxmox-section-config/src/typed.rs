@@ -83,11 +83,14 @@ pub trait ApiSectionDataEntry: Sized {
     }
 
     /// Provided. Shortcut for `Self::section_config().parse(filename, data)?.try_into()`.
-    fn parse_section_config(filename: &str, data: &str) -> Result<SectionConfigData<Self>, Error>
+    fn parse_section_config<P>(filename: P, data: &str) -> Result<SectionConfigData<Self>, Error>
     where
         Self: serde::de::DeserializeOwned,
+        P: AsRef<Path>,
     {
-        Ok(Self::section_config().parse(filename, data)?.try_into()?)
+        Ok(Self::section_config()
+            .parse(filename.as_ref(), data)?
+            .try_into()?)
     }
 
     /// Provided. Shortcut for `Self::section_config().write(filename, &data.try_into()?)`.
@@ -96,7 +99,7 @@ pub trait ApiSectionDataEntry: Sized {
         Self: Serialize,
         P: AsRef<Path>,
     {
-        Self::section_config().write(filename, &data.try_into()?)
+        Self::section_config().write(filename.as_ref(), &data.try_into()?)
     }
 }
 
