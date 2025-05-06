@@ -2,9 +2,9 @@ Source: rust-proxmox-acme-api
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
- rustc:native (>= 1.80) <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-proxmox-acme-0.5+api-types-dev (>= 0.5.3-~~) <!nocheck>,
@@ -47,8 +47,8 @@ Provides:
  librust-proxmox-acme-api-0+default-dev (= ${binary:Version}),
  librust-proxmox-acme-api-0.1-dev (= ${binary:Version}),
  librust-proxmox-acme-api-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1.7-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1.7+default-dev (= ${binary:Version})
+ librust-proxmox-acme-api-0.1.8-dev (= ${binary:Version}),
+ librust-proxmox-acme-api-0.1.8+default-dev (= ${binary:Version})
 Description: ACME API implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-acme-api"
 
@@ -71,12 +71,12 @@ Depends:
  librust-proxmox-acme-0.5+impl-dev (>= 0.5.3-~~),
  librust-proxmox-config-digest-0.1+default-dev,
  librust-proxmox-config-digest-0.1+openssl-dev,
- librust-proxmox-log-0.2+default-dev (>= 0.2.5-~~),
+ librust-proxmox-log-0.2+default-dev (>= 0.2.9-~~),
  librust-proxmox-product-config-0.2+default-dev,
- librust-proxmox-rest-server-0.8+default-dev,
- librust-proxmox-router-3+default-dev,
- librust-proxmox-section-config-2+default-dev (>= 2.1.0-~~),
- librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~),
+ librust-proxmox-rest-server-0.8+default-dev (>= 0.8.8-~~),
+ librust-proxmox-router-3+default-dev (>= 3.1.1-~~),
+ librust-proxmox-section-config-3+default-dev,
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.6-~~),
  librust-proxmox-time-2+default-dev,
  librust-proxmox-uuid-1+default-dev (>= 1.0.1-~~),
  librust-tokio-1+default-dev (>= 1.6-~~),
@@ -84,7 +84,7 @@ Depends:
 Provides:
  librust-proxmox-acme-api-0+impl-dev (= ${binary:Version}),
  librust-proxmox-acme-api-0.1+impl-dev (= ${binary:Version}),
- librust-proxmox-acme-api-0.1.7+impl-dev (= ${binary:Version})
+ librust-proxmox-acme-api-0.1.8+impl-dev (= ${binary:Version})
 Description: ACME API implementation - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-acme-api crate, by
  pulling in any additional dependencies needed by that feature.

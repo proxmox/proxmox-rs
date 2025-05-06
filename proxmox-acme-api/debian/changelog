@@ -1,3 +1,11 @@
+rust-proxmox-acme-api (0.1.8-1) bookworm; urgency=medium
+
+  * rebuild with section-config 3.0
+
+  * mark extern "C" blocks as unsafe to prepare for edition 2024
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 06 May 2025 11:48:08 +0200
+
 rust-proxmox-acme-api (0.1.7-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
