@@ -28,24 +28,9 @@ macro_rules! forward_deserialize_to_from_str {
             where
                 D: serde::Deserializer<'de>,
             {
-                use serde::de::Error;
-
-                struct ForwardToStrVisitor;
-
-                impl<'a> serde::de::Visitor<'a> for ForwardToStrVisitor {
-                    type Value = $typename;
-
-                    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                        formatter.write_str(concat!("a ", stringify!($typename)))
-                    }
-
-                    fn visit_str<E: Error>(self, v: &str) -> Result<$typename, E> {
-                        v.parse::<$typename>()
-                            .map_err(|err| Error::custom(err.to_string()))
-                    }
-                }
-
-                deserializer.deserialize_str(ForwardToStrVisitor)
+                std::borrow::Cow::<'de, str>::deserialize(deserializer)?
+                    .parse()
+                    .map_err(serde::de::Error::custom)
             }
         }
     };
@@ -77,7 +62,7 @@ macro_rules! forward_serialize_to_display {
             where
                 S: serde::ser::Serializer,
             {
-                serializer.serialize_str(&ToString::to_string(self))
+                serializer.collect_str(self)
             }
         }
     };
