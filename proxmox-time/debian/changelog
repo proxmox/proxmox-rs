@@ -1,3 +1,9 @@
+rust-proxmox-time (2.1.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 12 May 2025 20:10:33 +0200
+
 rust-proxmox-time (2.0.4-1) bookworm; urgency=medium
 
   * add `epoch_to_http_date` helper
