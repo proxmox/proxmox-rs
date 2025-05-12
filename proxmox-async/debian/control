@@ -2,16 +2,16 @@ Source: rust-proxmox-async
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-futures-0.3+default-dev <!nocheck>,
  librust-pin-utils-0.1+default-dev <!nocheck>,
- librust-proxmox-io-1+default-dev (>= 1.1.0-~~) <!nocheck>,
- librust-proxmox-io-1+tokio-dev (>= 1.1.0-~~) <!nocheck>,
- librust-proxmox-lang-1+default-dev (>= 1.3-~~) <!nocheck>,
+ librust-proxmox-io-1+default-dev (>= 1.2.0-~~) <!nocheck>,
+ librust-proxmox-io-1+tokio-dev (>= 1.2.0-~~) <!nocheck>,
+ librust-proxmox-lang-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+net-dev (>= 1.6-~~) <!nocheck>,
  librust-tokio-1+rt-dev (>= 1.6-~~) <!nocheck>,
@@ -35,9 +35,9 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-futures-0.3+default-dev,
  librust-pin-utils-0.1+default-dev,
- librust-proxmox-io-1+default-dev (>= 1.1.0-~~),
- librust-proxmox-io-1+tokio-dev (>= 1.1.0-~~),
- librust-proxmox-lang-1+default-dev (>= 1.3-~~),
+ librust-proxmox-io-1+default-dev (>= 1.2.0-~~),
+ librust-proxmox-io-1+tokio-dev (>= 1.2.0-~~),
+ librust-proxmox-lang-1+default-dev (>= 1.5-~~),
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+net-dev (>= 1.6-~~),
  librust-tokio-1+rt-dev (>= 1.6-~~),
@@ -49,9 +49,9 @@ Provides:
  librust-proxmox-async+default-dev (= ${binary:Version}),
  librust-proxmox-async-0-dev (= ${binary:Version}),
  librust-proxmox-async-0+default-dev (= ${binary:Version}),
- librust-proxmox-async-0.4-dev (= ${binary:Version}),
- librust-proxmox-async-0.4+default-dev (= ${binary:Version}),
- librust-proxmox-async-0.4.3-dev (= ${binary:Version}),
- librust-proxmox-async-0.4.3+default-dev (= ${binary:Version})
+ librust-proxmox-async-0.5-dev (= ${binary:Version}),
+ librust-proxmox-async-0.5+default-dev (= ${binary:Version}),
+ librust-proxmox-async-0.5.0-dev (= ${binary:Version}),
+ librust-proxmox-async-0.5.0+default-dev (= ${binary:Version})
 Description: Proxmox async/tokio helpers - Rust source code
  Source code for Debianized Rust crate "proxmox-async"

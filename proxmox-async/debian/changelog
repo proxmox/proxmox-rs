@@ -1,3 +1,9 @@
+rust-proxmox-async (0.5.0) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 12 May 2025 22:06:59 +0200
+
 rust-proxmox-async (0.4.3) bookworm; urgency=medium
 
   * remove deprecated use of `io_err_other`
