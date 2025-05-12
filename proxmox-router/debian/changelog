@@ -1,3 +1,9 @@
+rust-proxmox-router (3.2.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 12 May 2025 22:09:23 +0200
+
 rust-proxmox-router (3.1.1-1) bookworm; urgency=medium
 
   * router: allow `from_str` on Confirmation that is not for `FromStr`

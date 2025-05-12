@@ -1,7 +1,7 @@
 [package]
 name = "proxmox-router"
 description = "proxmox API Router and CLI utilities"
-version = "3.1.1"
+version = "3.2.0"
 
 authors.workspace = true
 edition.workspace = true
@@ -23,7 +23,7 @@ env_logger = { workspace = true, optional = true }
 futures.workspace = true
 http = { workspace = true, optional = true }
 hyper = { workspace = true, features = [ "full" ], optional = true }
-nix.workspace = true
+nix = { workspace = true, features = [ "dir" ] }
 percent-encoding.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
 serde_json.workspace = true
@@ -31,7 +31,7 @@ serde_plain.workspace = true
 unicode-width ="0.1.8"
 
 # cli:
-rustyline = { version = "9", optional = true }
+rustyline = { version = "14", optional = true }
 libc = { workspace = true, optional = true }
 
 proxmox-http-error.workspace = true
