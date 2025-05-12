@@ -92,7 +92,7 @@ libc = "0.2.107"
 log = "0.4.17"
 mail-parser = "0.8.2"
 native-tls = "0.2"
-nix = "0.26.1"
+nix = "0.29"
 openssl = "0.10"
 pam-sys = "0.5"
 percent-encoding = "2.1"
@@ -138,7 +138,7 @@ proxmox-product-config = { version = "0.2.0", path = "proxmox-product-config" }
 proxmox-config-digest = { version = "0.1.0", path = "proxmox-config-digest" }
 proxmox-rest-server = { version = "0.8.8", path = "proxmox-rest-server" }
 proxmox-router = { version = "3.1.1", path = "proxmox-router" }
-proxmox-schema = { version = "4.0.0", path = "proxmox-schema" }
+proxmox-schema = { version = "4.1.0", path = "proxmox-schema" }
 proxmox-section-config = { version = "3.0.0", path = "proxmox-section-config" }
 proxmox-sendmail = { version = "0.1.0", path = "proxmox-sendmail" }
 proxmox-serde = { version = "0.1.1", path = "proxmox-serde", features = [ "serde_json" ] }
