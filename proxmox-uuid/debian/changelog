@@ -1,3 +1,9 @@
+rust-proxmox-uuid (1.1.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 12 May 2025 20:32:52 +0200
+
 rust-proxmox-uuid (1.0.3-1) bookworm; urgency=medium
 
   * remove unused dependency on libc
