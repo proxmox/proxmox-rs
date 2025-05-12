@@ -1,3 +1,9 @@
+rust-proxmox-lang (1.5.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 12 May 2025 21:34:15 +0200
+
 rust-proxmox-lang (1.4.0-1) bookworm; urgency=medium
 
   * deprecate io_err_other in favor of std::io::Error::other

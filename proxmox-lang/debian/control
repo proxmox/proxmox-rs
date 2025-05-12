@@ -2,8 +2,8 @@ Source: rust-proxmox-lang
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -23,9 +23,9 @@ Provides:
  librust-proxmox-lang+default-dev (= ${binary:Version}),
  librust-proxmox-lang-1-dev (= ${binary:Version}),
  librust-proxmox-lang-1+default-dev (= ${binary:Version}),
- librust-proxmox-lang-1.4-dev (= ${binary:Version}),
- librust-proxmox-lang-1.4+default-dev (= ${binary:Version}),
- librust-proxmox-lang-1.4.0-dev (= ${binary:Version}),
- librust-proxmox-lang-1.4.0+default-dev (= ${binary:Version})
+ librust-proxmox-lang-1.5-dev (= ${binary:Version}),
+ librust-proxmox-lang-1.5+default-dev (= ${binary:Version}),
+ librust-proxmox-lang-1.5.0-dev (= ${binary:Version}),
+ librust-proxmox-lang-1.5.0+default-dev (= ${binary:Version})
 Description: Simple rust language utilities such as try_block, which have no dependencies - Rust source code
  Source code for Debianized Rust crate "proxmox-lang"
