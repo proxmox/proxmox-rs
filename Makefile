@@ -79,7 +79,7 @@ update:
 	    dcmd --deb rust-$*_*.changes \
 	    | grep -v '.changes$$' \
 	    | tar -cf "$@.tar" -T-; \
-	    cat "$@.tar" | ssh -X repoman@repo.proxmox.com upload --product devel --dist bookworm
+	    cat "$@.tar" | ssh -X repoman@repo.proxmox.com upload --product devel --dist trixie
 
 %-install:
 	rm -rf build/install/$*
