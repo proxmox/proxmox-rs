@@ -10,7 +10,7 @@ pub fn complete_file_name(arg: &str, _param: &HashMap<String, String>) -> Vec<St
 
     let mut dirname = PathBuf::from(if arg.is_empty() { "./" } else { arg });
 
-    let is_dir = match fstatat(libc::AT_FDCWD, &dirname, AtFlags::empty()) {
+    let is_dir = match fstatat(Some(libc::AT_FDCWD), &dirname, AtFlags::empty()) {
         Ok(stat) => (stat.st_mode & libc::S_IFMT) == libc::S_IFDIR,
         Err(_) => false,
     };
@@ -21,7 +21,12 @@ pub fn complete_file_name(arg: &str, _param: &HashMap<String, String>) -> Vec<St
         }
     }
 
-    let mut dir = match Dir::openat(libc::AT_FDCWD, &dirname, OFlag::O_DIRECTORY, Mode::empty()) {
+    let mut dir = match Dir::openat(
+        Some(libc::AT_FDCWD),
+        &dirname,
+        OFlag::O_DIRECTORY,
+        Mode::empty(),
+    ) {
         Ok(d) => d,
         Err(_) => return result,
     };
@@ -34,7 +39,7 @@ pub fn complete_file_name(arg: &str, _param: &HashMap<String, String>) -> Vec<St
             let mut newpath = dirname.clone();
             newpath.push(name);
 
-            if let Ok(stat) = fstatat(libc::AT_FDCWD, &newpath, AtFlags::empty()) {
+            if let Ok(stat) = fstatat(Some(libc::AT_FDCWD), &newpath, AtFlags::empty()) {
                 if (stat.st_mode & libc::S_IFMT) == libc::S_IFDIR {
                     newpath.push("");
                     if let Some(newpath) = newpath.to_str() {
