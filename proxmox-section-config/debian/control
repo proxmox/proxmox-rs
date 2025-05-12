@@ -8,8 +8,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-hex-0.4+default-dev <!nocheck>,
- librust-proxmox-lang-1+default-dev (>= 1.3-~~) <!nocheck>,
- librust-proxmox-schema-4+default-dev <!nocheck>,
+ librust-proxmox-lang-1+default-dev (>= 1.5-~~) <!nocheck>,
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -27,17 +27,17 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-hex-0.4+default-dev,
- librust-proxmox-lang-1+default-dev (>= 1.3-~~),
- librust-proxmox-schema-4+default-dev,
+ librust-proxmox-lang-1+default-dev (>= 1.5-~~),
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-section-config+default-dev (= ${binary:Version}),
  librust-proxmox-section-config-3-dev (= ${binary:Version}),
  librust-proxmox-section-config-3+default-dev (= ${binary:Version}),
- librust-proxmox-section-config-3.0-dev (= ${binary:Version}),
- librust-proxmox-section-config-3.0+default-dev (= ${binary:Version}),
- librust-proxmox-section-config-3.0.0-dev (= ${binary:Version}),
- librust-proxmox-section-config-3.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-section-config-3.1-dev (= ${binary:Version}),
+ librust-proxmox-section-config-3.1+default-dev (= ${binary:Version}),
+ librust-proxmox-section-config-3.1.0-dev (= ${binary:Version}),
+ librust-proxmox-section-config-3.1.0+default-dev (= ${binary:Version})
 Description: Proxmox schema based section config format parsing - Rust source code
  Source code for Debianized Rust crate "proxmox-section-config"

@@ -1,3 +1,9 @@
+rust-proxmox-section-config (3.1.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 12 May 2025 21:37:10 +0200
+
 rust-proxmox-section-config (3.0.0-1) bookworm; urgency=medium
 
   * make write_- and parse_section_config parameter more generic

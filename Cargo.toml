@@ -139,7 +139,7 @@ proxmox-config-digest = { version = "0.1.0", path = "proxmox-config-digest" }
 proxmox-rest-server = { version = "0.8.8", path = "proxmox-rest-server" }
 proxmox-router = { version = "3.1.1", path = "proxmox-router" }
 proxmox-schema = { version = "4.1.0", path = "proxmox-schema" }
-proxmox-section-config = { version = "3.0.0", path = "proxmox-section-config" }
+proxmox-section-config = { version = "3.1.0", path = "proxmox-section-config" }
 proxmox-sendmail = { version = "0.1.0", path = "proxmox-sendmail" }
 proxmox-serde = { version = "0.1.1", path = "proxmox-serde", features = [ "serde_json" ] }
 proxmox-shared-memory = { version = "0.3.0", path = "proxmox-shared-memory" }
