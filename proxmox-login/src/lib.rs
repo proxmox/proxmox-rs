@@ -5,8 +5,6 @@
 
 use serde::{Deserialize, Serialize};
 
-pub mod parse;
-
 pub mod api;
 pub mod error;
 pub mod tfa;

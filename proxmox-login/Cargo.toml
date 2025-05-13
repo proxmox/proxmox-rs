@@ -16,6 +16,7 @@ base64.workspace = true
 percent-encoding.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
 serde_json.workspace = true
+proxmox-serde = { workspace = true, features = [ "perl" ] }
 
 # For webauthn types
 webauthn-rs = { workspace = true, optional = true }

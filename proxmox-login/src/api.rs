@@ -11,7 +11,7 @@ pub struct CreateTicket {
     /// With webauthn the format of half-authenticated tickts changed. New
     /// clients should pass 1 here and not worry about the old format. The old
     /// format is deprecated and will be retired with PVE-8.0
-    #[serde(deserialize_with = "crate::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "new-format")]
     pub new_format: Option<bool>,
