@@ -8,6 +8,9 @@ pub mod serde_macros;
 #[cfg(feature = "serde_json")]
 pub mod json;
 
+#[cfg(feature = "perl")]
+pub mod perl;
+
 /// Serialize Unix epoch (i64) as RFC3339.
 ///
 /// Usage example:
