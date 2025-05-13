@@ -173,10 +173,10 @@ pub struct ApiResponseData<T> {
 
 #[derive(serde::Deserialize)]
 struct RawApiResponse<T> {
-    #[serde(default, deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(default, deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     status: Option<u16>,
     message: Option<String>,
-    #[serde(default, deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(default, deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     success: Option<bool>,
     data: Option<T>,
 

@@ -27,6 +27,8 @@ proxmox-login = { workspace = true, features = [ "http" ] }
 proxmox-http = { workspace = true, optional = true, features = [ "client" ] }
 hyper = { workspace = true, optional = true }
 
+proxmox-serde = { workspace = true, features = [ "perl" ] }
+
 [dev-dependencies]
 serde_plain.workspace = true
 
