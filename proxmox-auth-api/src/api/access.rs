@@ -60,7 +60,13 @@ pub async fn create_ticket(
         .downcast_ref::<RestEnvironment>()
         .ok_or_else(|| format_err!("detected wrong RpcEnvironment type"))?;
 
-    handle_ticket_creation(create_params, env).await
+    handle_ticket_creation(create_params, env)
+        .await
+        // remove the superfluous ticket_info to not confuse clients
+        .map(|mut info| {
+            info.ticket_info = None;
+            info
+        })
 }
 
 pub const API_METHOD_LOGOUT: ApiMethod = ApiMethod::new(
