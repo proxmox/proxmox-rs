@@ -1,0 +1,24 @@
+[package]
+name = "proxmox-base64"
+version = "1.0.0"
+description = "API-stable wrapper for the base64 crate with serde support"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+
+[dependencies]
+# We don't use a workspace dependency here. This crate explicitly wraps the
+# base64 API and this is the version we currently use behind the scenes.
+base64 = "0.22"
+
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+serde = { workspace = true, features = [ "derive" ] }
+serde_json.workspace = true
+
+[features]
+default = []
+serde = ["dep:serde"]

@@ -8,6 +8,7 @@ members = [
     "proxmox-apt-api-types",
     "proxmox-async",
     "proxmox-auth-api",
+    "proxmox-base64",
     "proxmox-borrow",
     "proxmox-client",
     "proxmox-compression",
@@ -70,7 +71,7 @@ rust-version = "1.82"
 # external dependencies
 anyhow = "1.0"
 base32 = "0.4"
-base64 = "0.13"
+base64 = "0.22"
 bitflags = "2.4"
 bytes = "1.0"
 const_format = "0.2"

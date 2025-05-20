@@ -1,0 +1,5 @@
+rust-proxmox-base64 (1.0.0) trixie; urgency=medium
+
+  * initial release
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 20 May 2025 14:46:47 +0200
