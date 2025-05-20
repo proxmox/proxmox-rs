@@ -1,3 +1,9 @@
+rust-proxmox-compression (1.0.0-1) bookworm; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 20 May 2025 12:42:36 +0200
+
 rust-proxmox-compression (0.2.4-1) bookworm; urgency=medium
 
   * make `DeflateDecoderBuilder` and `DeflateEncoderBuilder` public
