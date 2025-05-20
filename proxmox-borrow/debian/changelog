@@ -1,3 +1,9 @@
+rust-proxmox-borrow (1.1.0-1) UNRELEASED; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 20 May 2025 17:04:35 +0200
+
 rust-proxmox-borrow (1.0.1-1) stable; urgency=medium
 
   * update to new std features, fixup (currently unused) into_boxed_inner

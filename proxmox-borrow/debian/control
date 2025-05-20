@@ -2,8 +2,8 @@ Source: rust-proxmox-borrow
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -25,9 +25,9 @@ Provides:
  librust-proxmox-borrow+default-dev (= ${binary:Version}),
  librust-proxmox-borrow-1-dev (= ${binary:Version}),
  librust-proxmox-borrow-1+default-dev (= ${binary:Version}),
- librust-proxmox-borrow-1.0-dev (= ${binary:Version}),
- librust-proxmox-borrow-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-borrow-1.0.1-dev (= ${binary:Version}),
- librust-proxmox-borrow-1.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-borrow-1.1-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1.1+default-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1.1.0-dev (= ${binary:Version}),
+ librust-proxmox-borrow-1.1.0+default-dev (= ${binary:Version})
 Description: Contains the Tied type to tie a value with a lifetime to the value it borrows from - Rust source code
  Source code for Debianized Rust crate "proxmox-borrow"
