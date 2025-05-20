@@ -55,48 +55,22 @@ pub mod epoch_as_rfc3339 {
     }
 }
 
-/// Serialize `Vec<u8>` as base64 encoded string.
-///
-/// Usage example:
-/// ```
-/// use serde::{Deserialize, Serialize};
-///
-/// # #[derive(Debug)]
-/// #[derive(Deserialize, PartialEq, Serialize)]
-/// struct Foo {
-///     #[serde(with = "proxmox_serde::bytes_as_base64")]
-///     data: Vec<u8>,
-/// }
-///
-/// let obj = Foo { data: vec![1, 2, 3, 4] };
-/// let json = serde_json::to_string(&obj).unwrap();
-/// assert_eq!(json, r#"{"data":"AQIDBA=="}"#);
-///
-/// let deserialized: Foo = serde_json::from_str(&json).unwrap();
-/// assert_eq!(obj, deserialized);
-/// ```
-pub mod bytes_as_base64 {
-    use serde::{Deserialize, Deserializer, Serializer};
+/// Mostly for backward compat and convenience, as one can normally use the newer [`proxmox_base64`]
+/// directly.
+pub use proxmox_base64::url::as_base64_no_pad_indifferent as bytes_as_base64url_nopad;
 
-    pub fn serialize<S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        T: AsRef<[u8]>,
-        S: Serializer,
-    {
-        serializer.serialize_str(&base64::encode(data.as_ref()))
-    }
+/// Mostly for backward compat and convenience, as one can normally use the newer [`proxmox_base64`]
+/// directly.
+pub use proxmox_base64::url::as_base64_no_pad_indifferent as string_as_base64url_nopad;
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error;
-        String::deserialize(deserializer)
-            .and_then(|string| base64::decode(string).map_err(|err| Error::custom(err.to_string())))
-    }
-}
+/// Mostly for backward compat and convenience, as one can normally use the newer [`proxmox_base64`]
+/// directly.
+pub use proxmox_base64::as_base64 as bytes_as_base64;
 
 /// Serialize `String` or `Option<String>` as base64 encoded.
+///
+/// If you do not need the convenience of handling both String and Option transparently, you could
+/// also use [`proxmox_base64`] directly.
 ///
 /// Usage example:
 /// ```
@@ -129,7 +103,7 @@ pub mod string_as_base64 {
     fn finish_deserializing<'de, D: Deserializer<'de>>(string: String) -> Result<String, D::Error> {
         use serde::de::Error;
 
-        let bytes = base64::decode(string).map_err(|err| {
+        let bytes = proxmox_base64::decode(string).map_err(|err| {
             let msg = format!("base64 decode: {}", err);
             Error::custom(msg)
         })?;
@@ -142,7 +116,7 @@ pub mod string_as_base64 {
 
     impl StrAsBase64 for String {
         fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-            serializer.serialize_str(&base64::encode(self.as_bytes()))
+            serializer.serialize_str(&proxmox_base64::encode(self.as_bytes()))
         }
 
         fn de<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
@@ -180,86 +154,5 @@ pub mod string_as_base64 {
         T: StrAsBase64,
     {
         <T as StrAsBase64>::de::<'de, D>(deserializer)
-    }
-}
-
-/// Serialize `Vec<u8>` as base64url encoded string without padding.
-///
-/// Usage example:
-/// ```
-/// use serde::{Deserialize, Serialize};
-///
-/// # #[derive(Debug)]
-/// #[derive(Deserialize, PartialEq, Serialize)]
-/// struct Foo {
-///     #[serde(with = "proxmox_serde::bytes_as_base64url_nopad")]
-///     data: Vec<u8>,
-/// }
-///
-/// let obj = Foo { data: vec![1, 2, 3, 4] };
-/// let json = serde_json::to_string(&obj).unwrap();
-/// assert_eq!(json, r#"{"data":"AQIDBA"}"#);
-///
-/// let deserialized: Foo = serde_json::from_str(&json).unwrap();
-/// assert_eq!(obj, deserialized);
-/// ```
-pub mod bytes_as_base64url_nopad {
-    use serde::{Deserialize, Deserializer, Serializer};
-
-    pub fn serialize<S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        T: AsRef<[u8]>,
-        S: Serializer,
-    {
-        serializer.serialize_str(&base64::encode_config(
-            data.as_ref(),
-            base64::URL_SAFE_NO_PAD,
-        ))
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error;
-        String::deserialize(deserializer).and_then(|string| {
-            base64::decode_config(string, base64::URL_SAFE_NO_PAD)
-                .map_err(|err| Error::custom(err.to_string()))
-        })
-    }
-}
-
-/// Serialize `String` as base64url encoded string without padding.
-///
-/// Usage example:
-/// ```
-/// use serde::{Deserialize, Serialize};
-///
-/// # #[derive(Debug)]
-/// #[derive(Deserialize, PartialEq, Serialize)]
-/// struct Foo {
-///     #[serde(with = "proxmox_serde::string_as_base64url_nopad")]
-///     data: String,
-/// }
-///
-/// let obj = Foo { data: "FOO".to_string() };
-/// let json = serde_json::to_string(&obj).unwrap();
-/// assert_eq!(json, r#"{"data":"Rk9P"}"#);
-///
-/// let deserialized: Foo = serde_json::from_str(&json).unwrap();
-/// assert_eq!(obj, deserialized);
-/// ```
-pub mod string_as_base64url_nopad {
-    use serde::Deserializer;
-
-    pub use super::bytes_as_base64::serialize;
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<String, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error;
-        let bytes = super::bytes_as_base64::deserialize::<'de, D>(deserializer)?;
-        String::from_utf8(bytes).map_err(|err| Error::custom(err.to_string()))
     }
 }
