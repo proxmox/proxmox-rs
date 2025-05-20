@@ -1,0 +1,50 @@
+Source: rust-proxmox-base64
+Section: rust
+Priority: optional
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-base64-0.22+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.7.0
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-base64
+Rules-Requires-Root: no
+
+Package: librust-proxmox-base64-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-base64-0.22+default-dev
+Suggests:
+ librust-proxmox-base64+serde-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-base64+default-dev (= ${binary:Version}),
+ librust-proxmox-base64-1-dev (= ${binary:Version}),
+ librust-proxmox-base64-1+default-dev (= ${binary:Version}),
+ librust-proxmox-base64-1.0-dev (= ${binary:Version}),
+ librust-proxmox-base64-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-base64-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-base64-1.0.0+default-dev (= ${binary:Version})
+Description: API-stable wrapper for the base64 crate with serde support - Rust source code
+ Source code for Debianized Rust crate "proxmox-base64"
+
+Package: librust-proxmox-base64+serde-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-base64-dev (= ${binary:Version}),
+ librust-serde-1+default-dev
+Provides:
+ librust-proxmox-base64-1+serde-dev (= ${binary:Version}),
+ librust-proxmox-base64-1.0+serde-dev (= ${binary:Version}),
+ librust-proxmox-base64-1.0.0+serde-dev (= ${binary:Version})
+Description: API-stable wrapper for the base64 crate with serde support - feature "serde"
+ This metapackage enables feature "serde" for the Rust proxmox-base64 crate, by
+ pulling in any additional dependencies needed by that feature.

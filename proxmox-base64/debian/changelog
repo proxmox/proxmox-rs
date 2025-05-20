@@ -1,4 +1,4 @@
-rust-proxmox-base64 (1.0.0) trixie; urgency=medium
+rust-proxmox-base64 (1.0.0-1) trixie; urgency=medium
 
   * initial release
 
