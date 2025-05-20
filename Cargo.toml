@@ -117,7 +117,7 @@ tracing-subscriber = "0.3.16"
 url = "2.2"
 walkdir = "2"
 webauthn-rs = "0.3"
-zstd = { version = "0.12", features = [ "bindgen" ] }
+zstd = "0.13"
 
 # workspace dependencies
 proxmox-acme = {  version = "0.5.3", path = "proxmox-acme", default-features = false }
