@@ -2,13 +2,14 @@ Source: rust-proxmox-serde
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-base64-0.13+default-dev <!nocheck>,
- librust-proxmox-time-2+default-dev <!nocheck>,
+ librust-proxmox-base64-1+default-dev <!nocheck>,
+ librust-proxmox-base64-1+serde-dev <!nocheck>,
+ librust-proxmox-time-2+default-dev (>= 2.1.0-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  uuid-dev <!nocheck>
@@ -26,8 +27,9 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-base64-0.13+default-dev,
- librust-proxmox-time-2+default-dev,
+ librust-proxmox-base64-1+default-dev,
+ librust-proxmox-base64-1+serde-dev,
+ librust-proxmox-time-2+default-dev (>= 2.1.0-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  uuid-dev
@@ -35,12 +37,16 @@ Suggests:
  librust-proxmox-serde+serde-json-dev (= ${binary:Version})
 Provides:
  librust-proxmox-serde+default-dev (= ${binary:Version}),
- librust-proxmox-serde-0-dev (= ${binary:Version}),
- librust-proxmox-serde-0+default-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1.2-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1.2+default-dev (= ${binary:Version})
+ librust-proxmox-serde+perl-dev (= ${binary:Version}),
+ librust-proxmox-serde-1-dev (= ${binary:Version}),
+ librust-proxmox-serde-1+default-dev (= ${binary:Version}),
+ librust-proxmox-serde-1+perl-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0+perl-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0.0+default-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0.0+perl-dev (= ${binary:Version})
 Description: Serde formatting tools - Rust source code
  Source code for Debianized Rust crate "proxmox-serde"
 
@@ -52,9 +58,9 @@ Depends:
  librust-proxmox-serde-dev (= ${binary:Version}),
  librust-serde-json-1+default-dev
 Provides:
- librust-proxmox-serde-0+serde-json-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1+serde-json-dev (= ${binary:Version}),
- librust-proxmox-serde-0.1.2+serde-json-dev (= ${binary:Version})
+ librust-proxmox-serde-1+serde-json-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0+serde-json-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0.0+serde-json-dev (= ${binary:Version})
 Description: Serde formatting tools - feature "serde_json"
  This metapackage enables feature "serde_json" for the Rust proxmox-serde crate,
  by pulling in any additional dependencies needed by that feature.

@@ -1,3 +1,13 @@
+rust-proxmox-serde (1.0.0) bookworm; urgency=medium
+
+  * smaller doc fixes.
+
+  * simplify forwarded implementations.
+
+  * add parsing helpers for perl "types", moved over from proxmox-login.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 20 May 2025 16:03:03 +0200
+
 rust-proxmox-serde (0.1.2) bookworm; urgency=medium
 
   * upgrade proxmox-time to 2.0
