@@ -1,3 +1,9 @@
+rust-proxmox-log (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 18:02:06 +0200
+
 rust-proxmox-log (0.2.9-1) stable; urgency=medium
 
   * set up custom priority mapping for tracing-journald
