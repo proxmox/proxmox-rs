@@ -33,11 +33,11 @@ Depends:
  librust-serde-1+default-dev
 Provides:
  librust-proxmox-human-byte+default-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0+default-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0.1-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0.1.4-dev (= ${binary:Version}),
- librust-proxmox-human-byte-0.1.4+default-dev (= ${binary:Version})
+ librust-proxmox-human-byte-1-dev (= ${binary:Version}),
+ librust-proxmox-human-byte-1+default-dev (= ${binary:Version}),
+ librust-proxmox-human-byte-1.0-dev (= ${binary:Version}),
+ librust-proxmox-human-byte-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-human-byte-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-human-byte-1.0.0+default-dev (= ${binary:Version})
 Description: Proxmox library for formatting byte sizes (IEC or SI) - Rust source code
  Source code for Debianized Rust crate "proxmox-human-byte"
