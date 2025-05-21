@@ -1,3 +1,9 @@
+rust-proxmox-syslog-api (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 17:20:33 +0200
+
 rust-proxmox-syslog-api (0.1.2-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0

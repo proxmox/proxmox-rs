@@ -35,12 +35,12 @@ Suggests:
  librust-proxmox-syslog-api+impl-dev (= ${binary:Version})
 Provides:
  librust-proxmox-syslog-api+default-dev (= ${binary:Version}),
- librust-proxmox-syslog-api-0-dev (= ${binary:Version}),
- librust-proxmox-syslog-api-0+default-dev (= ${binary:Version}),
- librust-proxmox-syslog-api-0.1-dev (= ${binary:Version}),
- librust-proxmox-syslog-api-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-syslog-api-0.1.2-dev (= ${binary:Version}),
- librust-proxmox-syslog-api-0.1.2+default-dev (= ${binary:Version})
+ librust-proxmox-syslog-api-1-dev (= ${binary:Version}),
+ librust-proxmox-syslog-api-1+default-dev (= ${binary:Version}),
+ librust-proxmox-syslog-api-1.0-dev (= ${binary:Version}),
+ librust-proxmox-syslog-api-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-syslog-api-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-syslog-api-1.0.0+default-dev (= ${binary:Version})
 Description: Syslog Management API implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-syslog-api"
 
@@ -52,9 +52,9 @@ Depends:
  librust-proxmox-syslog-api-dev (= ${binary:Version}),
  librust-log-0.4+default-dev (>= 0.4.17-~~)
 Provides:
- librust-proxmox-syslog-api-0+impl-dev (= ${binary:Version}),
- librust-proxmox-syslog-api-0.1+impl-dev (= ${binary:Version}),
- librust-proxmox-syslog-api-0.1.2+impl-dev (= ${binary:Version})
+ librust-proxmox-syslog-api-1+impl-dev (= ${binary:Version}),
+ librust-proxmox-syslog-api-1.0+impl-dev (= ${binary:Version}),
+ librust-proxmox-syslog-api-1.0.0+impl-dev (= ${binary:Version})
 Description: Syslog Management API implementation - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-syslog-api crate,
  by pulling in any additional dependencies needed by that feature.
