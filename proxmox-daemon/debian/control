@@ -53,11 +53,11 @@ Depends:
  librust-tokio-1+sync-dev (>= 1.6-~~)
 Provides:
  librust-proxmox-daemon+default-dev (= ${binary:Version}),
- librust-proxmox-daemon-0-dev (= ${binary:Version}),
- librust-proxmox-daemon-0+default-dev (= ${binary:Version}),
- librust-proxmox-daemon-0.1-dev (= ${binary:Version}),
- librust-proxmox-daemon-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-daemon-0.1.2-dev (= ${binary:Version}),
- librust-proxmox-daemon-0.1.2+default-dev (= ${binary:Version})
+ librust-proxmox-daemon-1-dev (= ${binary:Version}),
+ librust-proxmox-daemon-1+default-dev (= ${binary:Version}),
+ librust-proxmox-daemon-1.0-dev (= ${binary:Version}),
+ librust-proxmox-daemon-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-daemon-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-daemon-1.0.0+default-dev (= ${binary:Version})
 Description: Daemon state handling (catching reload signals, registering commands with the command socket, ...) - Rust source code
  Source code for Debianized Rust crate "proxmox-daemon"

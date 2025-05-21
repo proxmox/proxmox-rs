@@ -1,3 +1,12 @@
+rust-proxmox-daemon (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+  * update to newer nix, proxmox-sys & proxmox-systemd crate versions from
+    workspace.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 11:53:11 +0200
+
 rust-proxmox-daemon (0.1.2-1) bookworm; urgency=medium
 
   * try to remove existing unix socket in bind directly, as there we can tell
