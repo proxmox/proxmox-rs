@@ -19,7 +19,7 @@ serde_json.workspace = true
 openssl = { workspace = true, optional = true }
 
 # For the client
-native-tls = { workspace = true, optional = true }
+http = { version = "1", optional = true }
 
 proxmox-base64 = { workspace = true, features = [ "serde" ] }
 proxmox-schema = { workspace = true, optional = true, features = [ "api-macro" ] }
@@ -38,7 +38,7 @@ features = [ "native-tls", "gzip" ]
 default = [ "impl" ]
 api-types = [ "dep:proxmox-schema" ]
 impl = [ "api-types", "dep:openssl" ]
-client = [ "impl", "dep:ureq", "dep:native-tls"]
+client = [ "impl", "dep:http", "dep:ureq"]
 async-client = [ "impl", "dep:hyper", "dep:proxmox-http", "dep:anyhow", "dep:bytes" ]
 
 [dev-dependencies]

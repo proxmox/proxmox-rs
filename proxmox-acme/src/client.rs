@@ -1,7 +1,6 @@
 //! A blocking higher-level ACME client implementation using 'curl'.
 
 use std::io::Read;
-use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
@@ -82,21 +81,26 @@ struct Inner {
 impl Inner {
     fn agent(&mut self) -> Result<&mut ureq::Agent, Error> {
         if self.agent.is_none() {
-            let connector = Arc::new(
-                native_tls::TlsConnector::new()
-                    .map_err(|err| format_err!("failed to create tls connector: {}", err))?,
-            );
-
-            let mut builder = ureq::AgentBuilder::new().tls_connector(connector);
+            let mut builder = ureq::Agent::config_builder()
+                .tls_config(
+                    ureq::tls::TlsConfig::builder()
+                        .provider(ureq::tls::TlsProvider::NativeTls)
+                        .root_certs(ureq::tls::RootCerts::PlatformVerifier)
+                        .build(),
+                )
+                .user_agent(concat!(
+                    "proxmox-acme-sync-client/",
+                    env!("CARGO_PKG_VERSION")
+                ));
 
             if let Some(proxy) = self.proxy.as_deref() {
-                builder = builder.proxy(
+                builder = builder.proxy(Some(
                     ureq::Proxy::new(proxy)
                         .map_err(|err| format_err!("failed to set proxy: {}", err))?,
-                );
+                ));
             }
 
-            self.agent = Some(builder.build());
+            self.agent = Some(builder.build().into());
         }
 
         Ok(self.agent.as_mut().unwrap())
@@ -118,41 +122,57 @@ impl Inner {
     ) -> Result<HttpResponse, Error> {
         let agent = self.agent()?;
         let req = match method {
-            b"POST" => agent.post(url),
-            b"GET" => agent.get(url),
-            b"HEAD" => agent.head(url),
+            b"POST" => http::Request::post(url),
+            b"GET" => http::Request::get(url),
+            b"HEAD" => http::Request::head(url),
             other => bail!("invalid http method: {:?}", other),
         };
 
         let response = if let Some((content_type, body)) = request_body {
-            req.set("Content-Type", content_type)
-                .set("Content-Length", &body.len().to_string())
-                .send_bytes(body)
+            agent.run(
+                req.header("Content-Type", content_type)
+                    .body(body)
+                    .map_err(|err| format_err!("error building http request: {err:#}"))?,
+            )
         } else {
-            req.call()
+            agent.run(
+                req.body(ureq::SendBody::none())
+                    .map_err(|err| format_err!("error building http request: {err:#}"))?,
+            )
         }
-        .map_err(|err| format_err!("http request failed: {}", err))?;
+        .map_err(|err| format_err!("http request failed: {err:#}"))?;
 
         let mut headers = Headers::default();
-        if let Some(value) = response.header(crate::LOCATION) {
-            headers.location = Some(value.to_owned());
+        if let Some(value) = response.headers().get(crate::LOCATION) {
+            headers.location = Some(
+                value
+                    .to_str()
+                    .map_err(|_| format_err!("unexpected binary data in location header"))?
+                    .to_owned(),
+            );
         }
 
-        if let Some(value) = response.header(crate::REPLAY_NONCE) {
-            headers.nonce = Some(value.to_owned());
+        if let Some(value) = response.headers().get(crate::REPLAY_NONCE) {
+            headers.nonce = Some(
+                value
+                    .to_str()
+                    .map_err(|_| format_err!("unexpected binary data in nonce header"))?
+                    .to_owned(),
+            );
         }
 
         let status = response.status();
 
         let mut body = Vec::new();
         response
+            .into_body()
             .into_reader()
             .take(16 * 1024 * 1024) // arbitrary limit
             .read_to_end(&mut body)
-            .map_err(|err| format_err!("failed to read response body: {}", err))?;
+            .map_err(|err| format_err!("failed to read response body: {err:#}"))?;
 
         Ok(HttpResponse {
-            status,
+            status: status.into(),
             headers,
             body,
         })
