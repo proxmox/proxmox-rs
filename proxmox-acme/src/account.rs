@@ -324,7 +324,7 @@ impl AccountCreator {
     /// Set the EAB credentials for the account registration
     pub fn set_eab_credentials(mut self, kid: String, hmac_key: String) -> Result<Self, Error> {
         let hmac_key = if hmac_key.contains('+') || hmac_key.contains('/') {
-            base64::decode(hmac_key)?
+            proxmox_base64::decode(hmac_key)?
         } else {
             b64u::decode(&hmac_key)?
         };

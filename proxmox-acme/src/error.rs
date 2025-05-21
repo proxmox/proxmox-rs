@@ -60,7 +60,7 @@ pub enum Error {
     Json(serde_json::Error),
 
     /// Failed to parse
-    BadBase64(base64::DecodeError),
+    BadBase64(proxmox_base64::DecodeError),
 
     /// Can be used by the user for textual error messages without having to downcast to regular
     /// acme errors.
@@ -147,8 +147,8 @@ impl From<crate::request::ErrorResponse> for Error {
     }
 }
 
-impl From<base64::DecodeError> for Error {
-    fn from(e: base64::DecodeError) -> Self {
+impl From<proxmox_base64::DecodeError> for Error {
+    fn from(e: proxmox_base64::DecodeError) -> Self {
         Error::BadBase64(e)
     }
 }

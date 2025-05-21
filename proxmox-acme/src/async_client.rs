@@ -289,7 +289,7 @@ impl AcmeClient {
 
     /// Finalize an Order via its `finalize` URL property and the DER encoded CSR.
     pub async fn finalize(&mut self, url: &str, csr: &[u8]) -> Result<(), anyhow::Error> {
-        let csr = base64::encode_config(csr, base64::URL_SAFE_NO_PAD);
+        let csr = proxmox_base64::url::encode_no_pad(csr);
         let data = serde_json::json!({ "csr": csr });
         self.post(url, &data).await?;
         Ok(())
