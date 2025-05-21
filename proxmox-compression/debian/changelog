@@ -1,4 +1,4 @@
-rust-proxmox-compression (1.0.0-1) bookworm; urgency=medium
+rust-proxmox-compression (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
 
