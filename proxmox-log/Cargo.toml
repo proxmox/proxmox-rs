@@ -19,5 +19,6 @@ tracing-journald.workspace = true
 tracing-subscriber.workspace = true
 tracing-log = { workspace = true, features = ["std"] }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
+
 proxmox-time.workspace = true
 proxmox-sys.workspace = true
