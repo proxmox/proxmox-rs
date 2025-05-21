@@ -1,3 +1,9 @@
+rust-proxmox-product-config (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 15:06:59 +0200
+
 rust-proxmox-product-config (0.2.2-1) bookworm; urgency=medium
 
   * drop unused dependencies `hex` and `log`
