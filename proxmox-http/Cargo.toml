@@ -50,6 +50,7 @@ rate-limited-stream = [
 ]
 client = [
     "dep:futures",
+    "dep:http",
     "dep:hyper",
     "dep:openssl",
     "dep:proxmox-compression",
