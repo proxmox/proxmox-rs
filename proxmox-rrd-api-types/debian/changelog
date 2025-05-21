@@ -1,3 +1,9 @@
+rust-proxmox-rrd-api-types (1.1.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 17:48:15 +0200
+
 rust-proxmox-rrd-api-types (1.0.3-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
