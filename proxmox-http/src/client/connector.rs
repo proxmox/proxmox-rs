@@ -1,5 +1,4 @@
 use anyhow::{bail, format_err, Error};
-use std::os::unix::io::AsRawFd;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
@@ -182,7 +181,7 @@ where
                         format_err!("error connecting to {} - {}", proxy_authority, err)
                     })?;
 
-                    let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
+                    let _ = set_tcp_keepalive(&tcp_stream, keepalive);
 
                     let mut tcp_stream =
                         RateLimitedStream::with_limiter(tcp_stream, read_limiter, write_limiter);
@@ -192,7 +191,7 @@ where
                         let _ = write!(
                             connect_request,
                             "Proxy-Authorization: Basic {}\r\n",
-                            base64::encode(authorization)
+                            proxmox_base64::encode(authorization)
                         );
                     }
                     let _ = write!(connect_request, "Host: {0}:{1}\r\n\r\n", host, port);
@@ -215,7 +214,7 @@ where
                         format_err!("error connecting to {} - {}", proxy_authority, err)
                     })?;
 
-                    let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
+                    let _ = set_tcp_keepalive(&tcp_stream, keepalive);
 
                     let tcp_stream =
                         RateLimitedStream::with_limiter(tcp_stream, read_limiter, write_limiter);
@@ -232,7 +231,7 @@ where
                     .await
                     .map_err(|err| format_err!("error connecting to {} - {}", dst_str, err))?;
 
-                let _ = set_tcp_keepalive(tcp_stream.as_raw_fd(), keepalive);
+                let _ = set_tcp_keepalive(&tcp_stream, keepalive);
 
                 let tcp_stream =
                     RateLimitedStream::with_limiter(tcp_stream, read_limiter, write_limiter);

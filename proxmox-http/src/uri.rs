@@ -3,7 +3,7 @@
 use anyhow::bail;
 use anyhow::format_err;
 use anyhow::Error;
-use http::uri::{Authority, InvalidUri};
+use http_1::uri::{Authority, InvalidUri};
 use serde_json::Value;
 
 // Build an [`Authority`](http::uri::Authority) from a combination of `host` and `port`, ensuring that

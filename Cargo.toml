@@ -152,3 +152,7 @@ proxmox-tfa = { version = "5.0.0", path = "proxmox-tfa" }
 proxmox-time = { version = "2.1.0", path = "proxmox-time" }
 proxmox-uuid = { version = "1.1.0", path = "proxmox-uuid" }
 proxmox-worker-task = { version = "1.0.0", path = "proxmox-worker-task" }
+
+[workspace.dependencies.http_1]
+package = "http"
+version = "1"

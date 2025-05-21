@@ -15,6 +15,7 @@ rust-version.workspace = true
 anyhow.workspace = true
 futures = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
+http_1 = { package = "http", version = "1", optional = true }
 hyper = { workspace = true, optional = true }
 native-tls = { workspace = true, optional = true }
 openssl =  { version = "0.10", optional = true }
@@ -65,7 +66,7 @@ client = [
 ]
 client-sync = [ "client-trait", "http-helpers", "dep:ureq", "dep:native-tls" ]
 client-trait = [ "dep:http" ]
-http-helpers = [ "dep:http", "dep:proxmox-base64", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
+http-helpers = [ "dep:http_1", "dep:proxmox-base64", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
 websocket = [
     "dep:futures",
     "dep:hyper",

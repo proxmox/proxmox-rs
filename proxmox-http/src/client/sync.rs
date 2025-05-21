@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::io::Read;
-use std::sync::Arc;
 use std::time::Duration;
 
+use anyhow::Context as _;
 use anyhow::Error;
-use http::Response;
+use http_1::Response;
 
 use crate::HttpClient;
 use crate::HttpOptions;
@@ -32,87 +32,82 @@ impl Client {
     }
 
     fn agent(&self) -> Result<ureq::Agent, Error> {
-        let mut builder = ureq::AgentBuilder::new();
-
-        if let Some(timeout) = self.timeout {
-            builder = builder.timeout(timeout);
-        };
-
-        let connector = Arc::new(native_tls::TlsConnector::new()?);
-        builder = builder.tls_connector(connector);
-
-        builder = builder.user_agent(self.options.user_agent.as_deref().unwrap_or(concat!(
-            "proxmox-sync-http-client/",
-            env!("CARGO_PKG_VERSION")
-        )));
+        let mut builder = ureq::Agent::config_builder()
+            .tls_config(
+                ureq::tls::TlsConfig::builder()
+                    .provider(ureq::tls::TlsProvider::NativeTls)
+                    .root_certs(ureq::tls::RootCerts::PlatformVerifier)
+                    .build(),
+            )
+            .user_agent(self.options.user_agent.as_deref().unwrap_or(concat!(
+                "proxmox-sync-http-client/",
+                env!("CARGO_PKG_VERSION")
+            )))
+            .timeout_global(self.timeout);
 
         if let Some(proxy_config) = &self.options.proxy_config {
-            builder = builder.proxy(ureq::Proxy::new(proxy_config.to_proxy_string()?)?);
+            builder = builder.proxy(Some(ureq::Proxy::new(&proxy_config.to_proxy_string()?)?));
         }
 
-        Ok(builder.build())
-    }
-
-    fn call(req: ureq::Request) -> Result<ureq::Response, Error> {
-        req.call().map_err(Into::into)
-    }
-
-    fn send<R>(req: ureq::Request, body: R) -> Result<ureq::Response, Error>
-    where
-        R: Read,
-    {
-        req.send(body).map_err(Into::into)
-    }
-
-    fn convert_response(res: &ureq::Response) -> Result<http::response::Builder, Error> {
-        let mut builder = http::response::Builder::new()
-            .status(http::status::StatusCode::from_u16(res.status())?);
-
-        for header in res.headers_names() {
-            if let Some(value) = res.header(&header) {
-                builder = builder.header(header, value);
-            }
-        }
-
-        Ok(builder)
+        Ok(builder.build().into())
     }
 
     fn add_headers(
-        mut req: ureq::Request,
+        mut req: http_1::request::Builder,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> ureq::Request {
+    ) -> http_1::request::Builder {
         if let Some(content_type) = content_type {
-            req = req.set("Content-Type", content_type);
+            req = req.header("Content-Type", content_type);
         }
 
         if let Some(extra_headers) = extra_headers {
             for (header, value) in extra_headers {
-                req = req.set(header, value);
+                req = req.header(header, value);
             }
         }
 
         req
     }
 
-    fn convert_response_to_string(res: ureq::Response) -> Result<Response<String>, Error> {
-        let builder = Self::convert_response(&res)?;
-        let body = res.into_string()?;
-        builder.body(body).map_err(Into::into)
+    fn convert_response_to_string(res: Response<ureq::Body>) -> Result<Response<String>, Error> {
+        let (parts, mut body) = res.into_parts();
+        let body = body.read_to_string()?;
+        Ok(Response::from_parts(parts, body))
     }
 
-    fn convert_response_to_vec(res: ureq::Response) -> Result<Response<Vec<u8>>, Error> {
-        let builder = Self::convert_response(&res)?;
-        let mut body = Vec::new();
-        res.into_reader().read_to_end(&mut body)?;
-        builder.body(body).map_err(Into::into)
+    fn convert_response_to_vec(res: Response<ureq::Body>) -> Result<Response<Vec<u8>>, Error> {
+        let (parts, mut body) = res.into_parts();
+        let body = body.read_to_vec()?;
+        Ok(Response::from_parts(parts, body))
     }
 
-    fn convert_response_to_reader(res: ureq::Response) -> Result<Response<Box<dyn Read>>, Error> {
-        let builder = Self::convert_response(&res)?;
-        let reader = res.into_reader();
-        let boxed: Box<dyn Read> = Box::new(reader);
-        builder.body(boxed).map_err(Into::into)
+    fn convert_response_to_reader(res: Response<ureq::Body>) -> Response<Box<dyn Read>> {
+        let (parts, body) = res.into_parts();
+        Response::from_parts(parts, Box::new(body.into_reader()))
+    }
+
+    fn response_to_old<B>(response: Response<B>) -> Result<http::Response<B>, Error> {
+        let (parts, body) = response.into_parts();
+        let mut builder = http::Response::builder().status(
+            http::StatusCode::from_u16(parts.status.as_u16())
+                .context("unrecognized status code")?,
+        );
+        if parts.version == http_1::Version::HTTP_09 {
+            builder = builder.version(http::Version::HTTP_09);
+        } else if parts.version == http_1::Version::HTTP_10 {
+            builder = builder.version(http::Version::HTTP_10);
+        } else if parts.version == http_1::Version::HTTP_11 {
+            builder = builder.version(http::Version::HTTP_11);
+        } else if parts.version == http_1::Version::HTTP_2 {
+            builder = builder.version(http::Version::HTTP_2);
+        } else if parts.version == http_1::Version::HTTP_3 {
+            builder = builder.version(http::Version::HTTP_3);
+        }
+        for (name, value) in &parts.headers {
+            builder = builder.header(name.as_str(), value.as_bytes());
+        }
+        Ok(builder.body(body)?)
     }
 }
 
@@ -121,11 +116,17 @@ impl HttpClient<String, String> for Client {
         &self,
         uri: &str,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<String>, Error> {
-        let req = self.agent()?.get(uri);
+    ) -> Result<http::Response<String>, Error> {
+        let agent = self.agent()?;
+        let req = http_1::Request::get(uri);
         let req = Self::add_headers(req, None, extra_headers);
+        let req = req.body(ureq::SendBody::none())?;
 
-        Self::call(req).and_then(Self::convert_response_to_string)
+        agent
+            .run(req)
+            .map_err(Error::from)
+            .and_then(Self::convert_response_to_string)
+            .and_then(Self::response_to_old)
     }
 
     fn post(
@@ -134,31 +135,37 @@ impl HttpClient<String, String> for Client {
         body: Option<String>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<String>, Error> {
-        let req = self.agent()?.post(uri);
+    ) -> Result<http::Response<String>, Error> {
+        let agent = self.agent()?;
+        let req = http_1::Request::post(uri);
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
-            Some(body) => Self::send(req, body.as_bytes()),
-            None => Self::call(req),
+            Some(body) => agent.run(req.body(body)?),
+            None => agent.run(req.body(ureq::SendBody::none())?),
         }
+        .map_err(Error::from)
         .and_then(Self::convert_response_to_string)
+        .and_then(Self::response_to_old)
     }
 
-    fn request(&self, request: http::Request<String>) -> Result<Response<String>, Error> {
-        let mut req = self
-            .agent()?
-            .request(request.method().as_str(), &request.uri().to_string());
+    fn request(&self, request: http::Request<String>) -> Result<http::Response<String>, Error> {
+        let (parts, body) = request.into_parts();
 
-        let orig_headers = request.headers();
+        let agent = self.agent()?;
+        let mut req = http_1::Request::post(parts.method.as_str());
 
-        for header in orig_headers.keys() {
-            for value in orig_headers.get_all(header) {
-                req = req.set(header.as_str(), value.to_str()?);
+        for header in parts.headers.keys() {
+            for value in parts.headers.get_all(header) {
+                req = req.header(header.as_str(), value.to_str()?);
             }
         }
 
-        Self::send(req, request.body().as_bytes()).and_then(Self::convert_response_to_string)
+        agent
+            .run(req.body(body)?)
+            .map_err(Error::from)
+            .and_then(Self::convert_response_to_string)
+            .and_then(Self::response_to_old)
     }
 }
 
@@ -167,11 +174,17 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
         &self,
         uri: &str,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<Vec<u8>>, Error> {
-        let req = self.agent()?.get(uri);
+    ) -> Result<http::Response<Vec<u8>>, Error> {
+        let agent = self.agent()?;
+        let req = http_1::Request::get(uri);
         let req = Self::add_headers(req, None, extra_headers);
+        let req = req.body(ureq::SendBody::none())?;
 
-        Self::call(req).and_then(Self::convert_response_to_vec)
+        agent
+            .run(req)
+            .map_err(Error::from)
+            .and_then(Self::convert_response_to_vec)
+            .and_then(Self::response_to_old)
     }
 
     fn post(
@@ -180,31 +193,37 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
         body: Option<&[u8]>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<Vec<u8>>, Error> {
-        let req = self.agent()?.post(uri);
+    ) -> Result<http::Response<Vec<u8>>, Error> {
+        let agent = self.agent()?;
+        let req = http_1::Request::post(uri);
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
-            Some(body) => Self::send(req, body),
-            None => Self::call(req),
+            Some(body) => agent.run(req.body(body)?),
+            None => agent.run(req.body(ureq::SendBody::none())?),
         }
+        .map_err(Error::from)
         .and_then(Self::convert_response_to_vec)
+        .and_then(Self::response_to_old)
     }
 
-    fn request(&self, request: http::Request<&[u8]>) -> Result<Response<Vec<u8>>, Error> {
-        let mut req = self
-            .agent()?
-            .request(request.method().as_str(), &request.uri().to_string());
+    fn request(&self, request: http::Request<&[u8]>) -> Result<http::Response<Vec<u8>>, Error> {
+        let (parts, body) = request.into_parts();
 
-        let orig_headers = request.headers();
+        let agent = self.agent()?;
+        let mut req = http_1::Request::post(parts.method.as_str());
 
-        for header in orig_headers.keys() {
-            for value in orig_headers.get_all(header) {
-                req = req.set(header.as_str(), value.to_str()?);
+        for header in parts.headers.keys() {
+            for value in parts.headers.get_all(header) {
+                req = req.header(header.as_str(), value.to_str()?);
             }
         }
 
-        Self::send(req, *request.body()).and_then(Self::convert_response_to_vec)
+        agent
+            .run(req.body(body)?)
+            .map_err(Error::from)
+            .and_then(Self::convert_response_to_vec)
+            .and_then(Self::response_to_old)
     }
 }
 
@@ -213,11 +232,17 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
         &self,
         uri: &str,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<Box<dyn Read>>, Error> {
-        let req = self.agent()?.get(uri);
+    ) -> Result<http::Response<Box<dyn Read>>, Error> {
+        let agent = self.agent()?;
+        let req = http_1::Request::get(uri);
         let req = Self::add_headers(req, None, extra_headers);
+        let req = req.body(ureq::SendBody::none())?;
 
-        Self::call(req).and_then(Self::convert_response_to_reader)
+        agent
+            .run(req)
+            .map_err(Error::from)
+            .map(Self::convert_response_to_reader)
+            .and_then(Self::response_to_old)
     }
 
     fn post(
@@ -226,32 +251,39 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
         body: Option<Box<dyn Read>>,
         content_type: Option<&str>,
         extra_headers: Option<&HashMap<String, String>>,
-    ) -> Result<Response<Box<dyn Read>>, Error> {
-        let req = self.agent()?.post(uri);
+    ) -> Result<http::Response<Box<dyn Read>>, Error> {
+        let agent = self.agent()?;
+        let req = http_1::Request::post(uri);
         let req = Self::add_headers(req, content_type, extra_headers);
 
         match body {
-            Some(body) => Self::send(req, body),
-            None => Self::call(req),
+            Some(body) => agent.run(req.body(ureq::SendBody::from_owned_reader(body))?),
+            None => agent.run(req.body(ureq::SendBody::none())?),
         }
-        .and_then(Self::convert_response_to_reader)
+        .map_err(Error::from)
+        .map(Self::convert_response_to_reader)
+        .and_then(Self::response_to_old)
     }
 
     fn request(
         &self,
-        mut request: http::Request<Box<dyn Read>>,
-    ) -> Result<Response<Box<dyn Read>>, Error> {
-        let mut req = self
-            .agent()?
-            .request(request.method().as_str(), &request.uri().to_string());
-        let orig_headers = request.headers();
+        request: http::Request<Box<dyn Read>>,
+    ) -> Result<http::Response<Box<dyn Read>>, Error> {
+        let (parts, body) = request.into_parts();
 
-        for header in orig_headers.keys() {
-            for value in orig_headers.get_all(header) {
-                req = req.set(header.as_str(), value.to_str()?);
+        let agent = self.agent()?;
+        let mut req = http_1::Request::post(parts.method.as_str());
+
+        for header in parts.headers.keys() {
+            for value in parts.headers.get_all(header) {
+                req = req.header(header.as_str(), value.to_str()?);
             }
         }
 
-        Self::send(req, Box::new(request.body_mut())).and_then(Self::convert_response_to_reader)
+        agent
+            .run(req.body(ureq::SendBody::from_owned_reader(body))?)
+            .map_err(Error::from)
+            .map(Self::convert_response_to_reader)
+            .and_then(Self::response_to_old)
     }
 }
