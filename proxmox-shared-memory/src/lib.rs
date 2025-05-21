@@ -59,7 +59,7 @@ fn mmap_file<T: Init>(file: &mut File, initialize: bool) -> Result<Mmap<T>, Erro
     // map it as MaybeUninit
     let mut mmap: Mmap<MaybeUninit<T>> = unsafe {
         Mmap::map_fd(
-            file.as_raw_fd(),
+            file,
             0,
             1,
             ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
@@ -145,7 +145,7 @@ impl<T: Sized + Init> SharedMemory<T> {
         let size = std::mem::size_of::<T>();
         let size = up_to_page_size(size);
 
-        nix::unistd::ftruncate(file.as_raw_fd(), size as i64)?;
+        nix::unistd::ftruncate(&file, size as i64)?;
 
         // link the file into place:
         let proc_path = format!("/proc/self/fd/{}\0", file.as_raw_fd());
