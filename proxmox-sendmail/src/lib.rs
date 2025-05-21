@@ -55,7 +55,11 @@ impl Recipient {
     fn format_recipient(&self) -> String {
         if let Some(name) = &self.name {
             if !name.is_ascii() {
-                format!("=?utf-8?B?{}?= <{}>", proxmox_base64::encode(name), self.email)
+                format!(
+                    "=?utf-8?B?{}?= <{}>",
+                    proxmox_base64::encode(name),
+                    self.email
+                )
             } else {
                 format!("{name} <{}>", self.email)
             }
