@@ -3,7 +3,7 @@ name = "proxmox-systemd"
 description = """
 Utilities for dealing with systemd unit files and communicating with systemd.
 """
-version = "0.1.0"
+version = "1.0.0"
 
 authors.workspace = true
 edition.workspace = true

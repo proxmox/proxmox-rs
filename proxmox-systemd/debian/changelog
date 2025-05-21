@@ -1,3 +1,9 @@
+rust-proxmox-systemd (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 11:05:13 +0200
+
 rust-proxmox-systemd (0.1.0-1) bookworm; urgency=medium
 
   * initial split out of proxmox-sys

@@ -2,8 +2,8 @@ Source: rust-proxmox-systemd
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
@@ -25,11 +25,11 @@ Depends:
  libsystemd-dev
 Provides:
  librust-proxmox-systemd+default-dev (= ${binary:Version}),
- librust-proxmox-systemd-0-dev (= ${binary:Version}),
- librust-proxmox-systemd-0+default-dev (= ${binary:Version}),
- librust-proxmox-systemd-0.1-dev (= ${binary:Version}),
- librust-proxmox-systemd-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-systemd-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-systemd-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-systemd-1-dev (= ${binary:Version}),
+ librust-proxmox-systemd-1+default-dev (= ${binary:Version}),
+ librust-proxmox-systemd-1.0-dev (= ${binary:Version}),
+ librust-proxmox-systemd-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-systemd-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-systemd-1.0.0+default-dev (= ${binary:Version})
 Description: Utilities for dealing with systemd unit files and communicating with systemd - Rust source code
  Source code for Debianized Rust crate "proxmox-systemd"
