@@ -7,9 +7,9 @@ Build-Depends: debhelper-compat (= 13),
  rustc:native (>= 1.80) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-base64-0.13+default-dev <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
- librust-proxmox-time-2+default-dev <!nocheck>
+ librust-proxmox-base64-1+default-dev <!nocheck>,
+ librust-proxmox-time-2+default-dev (>= 2.1.0-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -24,8 +24,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-base64-0.13+default-dev,
  librust-percent-encoding-2+default-dev (>= 2.1-~~),
+ librust-proxmox-base64-1+default-dev,
  librust-proxmox-time-2+default-dev
 Provides:
  librust-proxmox-sendmail+default-dev (= ${binary:Version}),

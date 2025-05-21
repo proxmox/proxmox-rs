@@ -55,7 +55,7 @@ impl Recipient {
     fn format_recipient(&self) -> String {
         if let Some(name) = &self.name {
             if !name.is_ascii() {
-                format!("=?utf-8?B?{}?= <{}>", base64::encode(name), self.email)
+                format!("=?utf-8?B?{}?= <{}>", proxmox_base64::encode(name), self.email)
             } else {
                 format!("{name} <{}>", self.email)
             }
@@ -96,7 +96,7 @@ impl Attachment<'_> {
         // base64 encode the attachment and hard-wrap the base64 encoded string every 72
         // characters. this improves compatability.
         attachment.push_str(
-            &base64::encode(self.content)
+            &proxmox_base64::encode(self.content)
                 .chars()
                 .enumerate()
                 .flat_map(|(i, c)| {
@@ -399,7 +399,7 @@ impl<'a> Mail<'a> {
             writeln!(
                 header,
                 "Subject: =?utf-8?B?{}?=",
-                base64::encode(&self.subject)
+                proxmox_base64::encode(&self.subject)
             )?;
         } else {
             writeln!(header, "Subject: {}", self.subject)?;
@@ -409,7 +409,7 @@ impl<'a> Mail<'a> {
             writeln!(
                 header,
                 "From: =?utf-8?B?{}?= <{}>",
-                base64::encode(&self.mail_author),
+                proxmox_base64::encode(&self.mail_author),
                 self.mail_from
             )?;
         } else {
