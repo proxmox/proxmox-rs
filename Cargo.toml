@@ -127,7 +127,7 @@ proxmox-apt-api-types = { version = "1.0.2", path = "proxmox-apt-api-types" }
 proxmox-auth-api = { version = "0.4.0", path = "proxmox-auth-api" }
 proxmox-async = { version = "0.5.0", path = "proxmox-async" }
 proxmox-base64 = {  version = "1.0.0", path = "proxmox-base64" }
-proxmox-compression = { version = "0.2.4", path = "proxmox-compression" }
+proxmox-compression = { version = "1.0.0", path = "proxmox-compression" }
 proxmox-daemon = { version = "0.1.0", path = "proxmox-daemon" }
 proxmox-http = { version = "0.9.5", path = "proxmox-http" }
 proxmox-http-error = { version = "1.0.0", path = "proxmox-http-error" }
@@ -147,7 +147,7 @@ proxmox-serde = { version = "1.0.0", path = "proxmox-serde", features = [ "serde
 proxmox-shared-memory = { version = "0.3.0", path = "proxmox-shared-memory" }
 proxmox-sortable-macro = { version = "0.1.3", path = "proxmox-sortable-macro" }
 proxmox-sys = { version = "1.0.0", path = "proxmox-sys" }
-proxmox-systemd = { version = "0.1.0", path = "proxmox-systemd" }
+proxmox-systemd = { version = "1.0.0", path = "proxmox-systemd" }
 proxmox-tfa = { version = "5.0.0", path = "proxmox-tfa" }
 proxmox-time = { version = "2.1.0", path = "proxmox-time" }
 proxmox-uuid = { version = "1.1.0", path = "proxmox-uuid" }
