@@ -3,7 +3,8 @@
 use std::convert::TryFrom;
 use std::mem::MaybeUninit;
 use std::num::NonZeroUsize;
-use std::os::unix::io::RawFd;
+use std::os::fd::AsFd;
+use std::ptr::NonNull;
 use std::{io, mem};
 
 use nix::sys::mman;
@@ -13,7 +14,7 @@ use proxmox_lang::io_format_err;
 use crate::error::SysError;
 
 pub struct Mmap<T> {
-    data: *mut T,
+    data: NonNull<T>,
     len: usize,
 }
 
@@ -26,8 +27,8 @@ impl<T> Mmap<T> {
     /// # Safety
     ///
     /// `fd` must refer to a valid file descriptor.
-    pub unsafe fn map_fd(
-        fd: RawFd,
+    pub unsafe fn map_fd<F: AsFd>(
+        fd: F,
         ofs: u64,
         count: usize,
         prot: mman::ProtFlags,
@@ -51,7 +52,7 @@ impl<T> Mmap<T> {
         .map_err(SysError::into_io_error)?;
 
         Ok(Self {
-            data: data as *mut T,
+            data: data.cast::<T>(),
             len: count,
         })
     }
@@ -62,14 +63,14 @@ impl<T> std::ops::Deref for Mmap<T> {
 
     #[inline]
     fn deref(&self) -> &[T] {
-        unsafe { std::slice::from_raw_parts(self.data, self.len) }
+        unsafe { NonNull::slice_from_raw_parts(self.data, self.len).as_ref() }
     }
 }
 
 impl<T> std::ops::DerefMut for Mmap<T> {
     #[inline]
     fn deref_mut(&mut self) -> &mut [T] {
-        unsafe { std::slice::from_raw_parts_mut(self.data, self.len) }
+        unsafe { NonNull::slice_from_raw_parts(self.data, self.len).as_mut() }
     }
 }
 
@@ -80,7 +81,7 @@ impl<T> Drop for Mmap<T> {
             // unmapping a smaller region inside a bigger one, causing it to become split into 2
             // regions. But then we have bigger problems already anyway, so we'll just ignore this.
             let _ = mman::munmap(
-                self.data as *mut libc::c_void,
+                self.data.cast::<core::ffi::c_void>(),
                 self.len * mem::size_of::<T>(),
             );
         }
@@ -105,7 +106,7 @@ impl<T> Mmap<MaybeUninit<T>> {
     /// [`MaybeUninit::assume_init`](std::mem::MaybeUninit::assume_init).
     pub unsafe fn assume_init(self) -> Mmap<T> {
         let out = Mmap {
-            data: self.data as *mut T,
+            data: self.data.cast::<T>(),
             len: self.len,
         };
         std::mem::forget(self);

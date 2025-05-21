@@ -39,9 +39,7 @@ pub fn nodename() -> &'static str {
     &NODENAME
 }
 
-/// Safe wrapper for `nix::unistd::pipe2` defaulting to `O_CLOEXEC`
-/// and guarding the file descriptors.
+/// Wrapper for `nix::unistd::pipe2` defaulting to `O_CLOEXEC`.
 pub fn pipe() -> Result<(OwnedFd, OwnedFd), nix::Error> {
-    let (pin, pout) = nix::unistd::pipe2(nix::fcntl::OFlag::O_CLOEXEC)?;
-    Ok(unsafe { (OwnedFd::from_raw_fd(pin), OwnedFd::from_raw_fd(pout)) })
+    nix::unistd::pipe2(nix::fcntl::OFlag::O_CLOEXEC)
 }

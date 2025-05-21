@@ -175,7 +175,7 @@ fn create_path_at_do(
                     .and_then(|o| o.perm)
                     .unwrap_or(stat::Mode::from_bits_truncate(0o755));
 
-                created = match stat::mkdirat(at.as_raw_fd(), path, mode) {
+                created = match stat::mkdirat(Some(at.as_raw_fd()), path, mode) {
                     Err(Errno::EEXIST) => false,
                     Err(e) => return Err(e.into()),
                     Ok(_) => true,

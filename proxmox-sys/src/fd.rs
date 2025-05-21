@@ -17,7 +17,7 @@ pub fn fd_change_cloexec(fd: RawFd, on: bool) -> Result<(), anyhow::Error> {
 
 /// Change the `O_CLOEXEC` flag of an existing file descriptor.
 pub fn change_cloexec(fd: RawFd, on: bool) -> Result<(), anyhow::Error> {
-    let mut flags = unsafe { FdFlag::from_bits_unchecked(fcntl(fd, F_GETFD)?) };
+    let mut flags = FdFlag::from_bits_retain(fcntl(fd, F_GETFD)?);
     flags.set(FdFlag::FD_CLOEXEC, on);
     fcntl(fd, F_SETFD(flags))?;
     Ok(())
@@ -39,6 +39,6 @@ where
     D: AsRawFd,
     P: ?Sized + NixPath,
 {
-    nix::fcntl::openat(dirfd.as_raw_fd(), path, oflag, mode)
+    nix::fcntl::openat(Some(dirfd.as_raw_fd()), path, oflag, mode)
         .map(|fd| unsafe { OwnedFd::from_raw_fd(fd) })
 }

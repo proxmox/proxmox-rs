@@ -1,4 +1,4 @@
-use std::os::unix::io::RawFd;
+use std::os::fd::AsFd;
 
 use nix::sys::socket::setsockopt;
 use nix::sys::socket::sockopt::{KeepAlive, TcpKeepIdle};
@@ -7,9 +7,8 @@ use nix::sys::socket::sockopt::{KeepAlive, TcpKeepIdle};
 ///
 /// See "man 7 tcp" for details.
 ///
-/// The default on Linux is 7200 (2 hours) which is far too long for
-/// many of our use cases.
-pub fn set_tcp_keepalive(socket_fd: RawFd, tcp_keepalive_time: u32) -> nix::Result<()> {
+/// The default on Linux is 7200 seconds (2 hours) which is far too long for many of our use cases.
+pub fn set_tcp_keepalive<F: AsFd>(socket_fd: &F, tcp_keepalive_time: u32) -> nix::Result<()> {
     setsockopt(socket_fd, KeepAlive, &true)?;
     setsockopt(socket_fd, TcpKeepIdle, &tcp_keepalive_time)?;
 

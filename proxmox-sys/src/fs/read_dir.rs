@@ -108,7 +108,7 @@ impl Iterator for ReadDir {
 /// Create an iterator over sub directory entries.
 /// This uses `openat` on `dirfd`, so `path` can be relative to that or an absolute path.
 pub fn read_subdir<P: ?Sized + nix::NixPath>(dirfd: RawFd, path: &P) -> nix::Result<ReadDir> {
-    let dir = Dir::openat(dirfd, path, OFlag::O_RDONLY, Mode::empty())?;
+    let dir = Dir::openat(Some(dirfd), path, OFlag::O_RDONLY, Mode::empty())?;
     let fd = dir.as_raw_fd();
     let iter = dir.into_iter();
     Ok(ReadDir { iter, dir_fd: fd })
@@ -345,7 +345,11 @@ pub fn get_file_type<P: ?Sized + nix::NixPath>(
     parent_fd: RawFd,
     path: &P,
 ) -> Result<nix::dir::Type, Error> {
-    let stat = nix::sys::stat::fstatat(parent_fd, path, nix::fcntl::AtFlags::AT_SYMLINK_NOFOLLOW)?;
+    let stat = nix::sys::stat::fstatat(
+        Some(parent_fd),
+        path,
+        nix::fcntl::AtFlags::AT_SYMLINK_NOFOLLOW,
+    )?;
     let file_type =
         file_type_from_file_stat(&stat).ok_or_else(|| format_err!("unable to detect file type"))?;
     Ok(file_type)
