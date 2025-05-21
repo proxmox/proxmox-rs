@@ -388,15 +388,13 @@ where
     Ok(())
 }
 
-/// safe wrapper for `nix::sys::socket::socketpair` defaulting to `O_CLOEXEC` and guarding the file
-/// descriptors.
+/// Wrapper for `nix::sys::socket::socketpair` defaulting to `O_CLOEXEC`.
 fn socketpair() -> Result<(OwnedFd, OwnedFd), Error> {
     use nix::sys::socket;
-    let (pa, pb) = socket::socketpair(
+    Ok(socket::socketpair(
         socket::AddressFamily::Unix,
         socket::SockType::Stream,
         None,
         socket::SockFlag::SOCK_CLOEXEC,
-    )?;
-    Ok(unsafe { (OwnedFd::from_raw_fd(pa), OwnedFd::from_raw_fd(pb)) })
+    )?)
 }

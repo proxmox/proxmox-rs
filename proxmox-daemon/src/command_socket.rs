@@ -2,7 +2,7 @@ use anyhow::{bail, format_err, Error};
 
 use std::collections::HashMap;
 use std::future::Future;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::io::AsFd;
 use std::path::{Path, PathBuf};
 use std::pin::pin;
 use std::sync::Arc;
@@ -77,7 +77,7 @@ where
             };
 
             let opt = socket::sockopt::PeerCredentials;
-            let cred = match socket::getsockopt(conn.as_raw_fd(), opt) {
+            let cred = match socket::getsockopt(&conn.as_fd(), opt) {
                 Ok(cred) => cred,
                 Err(err) => {
                     log::error!("no permissions - unable to read peer credential - {}", err);
