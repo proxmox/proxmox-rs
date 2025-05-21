@@ -134,9 +134,9 @@ proxmox-http-error = { version = "1.0.0", path = "proxmox-http-error" }
 proxmox-human-byte = { version = "1.0.0", path = "proxmox-human-byte" }
 proxmox-io = { version = "1.2.0", path = "proxmox-io" }
 proxmox-lang = { version = "1.5", path = "proxmox-lang" }
-proxmox-log= { version = "0.2.9", path = "proxmox-log" }
+proxmox-log = { version = "1.0.0", path = "proxmox-log" }
 proxmox-login = { version = "0.2.0", path = "proxmox-login" }
-proxmox-product-config = { version = "0.2.0", path = "proxmox-product-config" }
+proxmox-product-config = { version = "1.0.0", path = "proxmox-product-config" }
 proxmox-config-digest = { version = "1.0.0", path = "proxmox-config-digest" }
 proxmox-rest-server = { version = "0.8.8", path = "proxmox-rest-server" }
 proxmox-router = { version = "3.2.0", path = "proxmox-router" }
