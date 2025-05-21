@@ -52,6 +52,7 @@ Depends:
  librust-proxmox-http+http-helpers-dev (= ${binary:Version}),
  librust-proxmox-http+rate-limited-stream-dev (= ${binary:Version}),
  librust-futures-0.3+default-dev,
+ librust-http-0.2+default-dev,
  librust-hyper-0.14+client-dev (>= 0.14.5-~~),
  librust-hyper-0.14+default-dev (>= 0.14.5-~~),
  librust-hyper-0.14+http1-dev (>= 0.14.5-~~),

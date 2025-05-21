@@ -4,7 +4,7 @@ rust-proxmox-http (1.0.0-1) trixie; urgency=medium
 
   * update sync client to ureq version 3
 
- -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 14:45:52 +0200
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 15:16:26 +0200
 
 rust-proxmox-http (0.9.5-1) stable; urgency=medium
 
