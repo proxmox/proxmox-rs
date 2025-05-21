@@ -1,3 +1,11 @@
+rust-proxmox-acme (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+  * update client to use ureq version 3
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 14:51:54 +0200
+
 rust-proxmox-acme (0.5.4-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
