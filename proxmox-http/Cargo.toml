@@ -13,7 +13,6 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-base64 = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 http = { workspace = true, optional = true }
 hyper = { workspace = true, optional = true }
@@ -27,6 +26,7 @@ ureq = { version = "2.4", features = ["native-certs", "native-tls"], optional = 
 url = { workspace = true, optional = true }
 
 proxmox-async = { workspace = true, optional = true }
+proxmox-base64 = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-io = { workspace = true, optional = true }
 proxmox-lang = { workspace = true, optional = true }
@@ -65,16 +65,16 @@ client = [
 ]
 client-sync = [ "client-trait", "http-helpers", "dep:ureq", "dep:native-tls" ]
 client-trait = [ "dep:http" ]
-http-helpers = [ "dep:base64", "dep:http", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
+http-helpers = [ "dep:http", "dep:proxmox-base64", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
 websocket = [
-    "dep:base64",
     "dep:futures",
     "dep:hyper",
     "dep:openssl",
-    "dep:proxmox-sys",
+    "dep:proxmox-base64",
     "dep:proxmox-io",
     "proxmox-io?/tokio",
     "dep:proxmox-lang",
+    "dep:proxmox-sys",
     "dep:tokio",
     "tokio?/io-util",
     "tokio?/sync",

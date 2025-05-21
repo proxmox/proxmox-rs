@@ -682,7 +682,7 @@ impl WebSocket {
         let mut sha1 = openssl::sha::Sha1::new();
         let data = format!("{}{}", key, MAGIC_WEBSOCKET_GUID);
         sha1.update(data.as_bytes());
-        let response_key = base64::encode(sha1.finish());
+        let response_key = proxmox_base64::encode(sha1.finish());
 
         let mut response = Response::builder()
             .status(StatusCode::SWITCHING_PROTOCOLS)
