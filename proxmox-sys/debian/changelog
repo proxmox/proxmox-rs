@@ -1,3 +1,11 @@
+rust-proxmox-sys (1.0.0-1) bookworm; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+  * update nix to 0.29.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 20 May 2025 17:21:01 +0200
+
 rust-proxmox-sys (0.6.7-1) bookworm; urgency=medium
 
   * memory info: use the MemAvailable field from /proc/meminfo to compute used
