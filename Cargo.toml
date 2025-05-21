@@ -129,7 +129,7 @@ proxmox-async = { version = "0.5.0", path = "proxmox-async" }
 proxmox-base64 = {  version = "1.0.0", path = "proxmox-base64" }
 proxmox-compression = { version = "1.0.0", path = "proxmox-compression" }
 proxmox-daemon = { version = "1.0.0", path = "proxmox-daemon" }
-proxmox-http = { version = "0.9.5", path = "proxmox-http" }
+proxmox-http = { version = "1.0.0", path = "proxmox-http" }
 proxmox-http-error = { version = "1.0.0", path = "proxmox-http-error" }
 proxmox-human-byte = { version = "0.1.0", path = "proxmox-human-byte" }
 proxmox-io = { version = "1.2.0", path = "proxmox-io" }
