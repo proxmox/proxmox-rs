@@ -1,7 +1,7 @@
 [package]
 name = "proxmox-http"
 description = "Proxmox HTTP library"
-version = "0.9.5"
+version = "1.0.0"
 
 authors.workspace = true
 edition.workspace = true
@@ -23,7 +23,7 @@ serde_json = { workspace = true, optional = true }
 tokio = { workspace = true, features = [], optional = true }
 tokio-openssl = { workspace = true, optional = true }
 tower-service.workspace = true
-ureq = { version = "2.4", features = ["native-certs", "native-tls"], optional = true, default-features = false }
+ureq = { version = "3.0", features = ["native-tls"], optional = true, default-features = false }
 url = { workspace = true, optional = true }
 
 proxmox-async = { workspace = true, optional = true }
