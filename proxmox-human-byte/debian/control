@@ -2,15 +2,15 @@ Source: rust-proxmox-human-byte
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-proxmox-schema-4+api-macro-dev <!nocheck>,
- librust-proxmox-schema-4+default-dev <!nocheck>,
- librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~) <!nocheck>,
- librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-serde-1+default-dev <!nocheck>,
+ librust-proxmox-serde-1+serde-json-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.0
@@ -26,10 +26,10 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-proxmox-schema-4+api-macro-dev,
- librust-proxmox-schema-4+default-dev,
- librust-proxmox-serde-0.1+default-dev (>= 0.1.1-~~),
- librust-proxmox-serde-0.1+serde-json-dev (>= 0.1.1-~~),
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
+ librust-proxmox-serde-1+default-dev,
+ librust-proxmox-serde-1+serde-json-dev,
  librust-serde-1+default-dev
 Provides:
  librust-proxmox-human-byte+default-dev (= ${binary:Version}),
