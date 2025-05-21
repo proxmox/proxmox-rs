@@ -2,8 +2,8 @@ Source: rust-proxmox-worker-task
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>
@@ -23,11 +23,11 @@ Depends:
  librust-anyhow-1+default-dev
 Provides:
  librust-proxmox-worker-task+default-dev (= ${binary:Version}),
- librust-proxmox-worker-task-0-dev (= ${binary:Version}),
- librust-proxmox-worker-task-0+default-dev (= ${binary:Version}),
- librust-proxmox-worker-task-0.1-dev (= ${binary:Version}),
- librust-proxmox-worker-task-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-worker-task-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-worker-task-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-worker-task-1-dev (= ${binary:Version}),
+ librust-proxmox-worker-task-1+default-dev (= ${binary:Version}),
+ librust-proxmox-worker-task-1.0-dev (= ${binary:Version}),
+ librust-proxmox-worker-task-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-worker-task-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-worker-task-1.0.0+default-dev (= ${binary:Version})
 Description: Worker task functionality - Rust source code
  Source code for Debianized Rust crate "proxmox-worker-task"

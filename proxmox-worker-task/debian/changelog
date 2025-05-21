@@ -1,3 +1,9 @@
+rust-proxmox-worker-task (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 09:52:38 +0200
+
 rust-proxmox-worker-task (0.1.0-1) bookworm; urgency=medium
 
   * Initial release
