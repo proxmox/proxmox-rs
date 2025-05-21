@@ -2,12 +2,12 @@ Source: rust-proxmox-rrd-api-types
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-proxmox-schema-4+api-macro-dev <!nocheck>,
- librust-proxmox-schema-4+default-dev <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
@@ -24,8 +24,8 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-proxmox-schema-4+api-macro-dev,
- librust-proxmox-schema-4+default-dev,
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-plain-1+default-dev
