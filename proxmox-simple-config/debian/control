@@ -35,11 +35,11 @@ Depends:
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-simple-config+default-dev (= ${binary:Version}),
- librust-proxmox-simple-config-0-dev (= ${binary:Version}),
- librust-proxmox-simple-config-0+default-dev (= ${binary:Version}),
- librust-proxmox-simple-config-0.1-dev (= ${binary:Version}),
- librust-proxmox-simple-config-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-simple-config-0.1.2-dev (= ${binary:Version}),
- librust-proxmox-simple-config-0.1.2+default-dev (= ${binary:Version})
+ librust-proxmox-simple-config-1-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-1+default-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-1.0-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-simple-config-1.0.0+default-dev (= ${binary:Version})
 Description: Simple key/value format for configuration files - Rust source code
  Source code for Debianized Rust crate "proxmox-simple-config"

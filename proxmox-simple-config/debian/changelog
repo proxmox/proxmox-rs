@@ -1,3 +1,9 @@
+rust-proxmox-simple-config (1.0.0-1) bookworm; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 May 2025 14:06:29 +0200
+
 rust-proxmox-simple-config (0.1.2-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
