@@ -2,9 +2,9 @@ Source: rust-proxmox-sendmail
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
- rustc:native (>= 1.80) <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
@@ -26,18 +26,18 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-percent-encoding-2+default-dev (>= 2.1-~~),
  librust-proxmox-base64-1+default-dev,
- librust-proxmox-time-2+default-dev
+ librust-proxmox-time-2+default-dev (>= 2.1.0-~~)
 Provides:
  librust-proxmox-sendmail+default-dev (= ${binary:Version}),
  librust-proxmox-sendmail+mail-forwarder-dev (= ${binary:Version}),
- librust-proxmox-sendmail-0-dev (= ${binary:Version}),
- librust-proxmox-sendmail-0+default-dev (= ${binary:Version}),
- librust-proxmox-sendmail-0+mail-forwarder-dev (= ${binary:Version}),
- librust-proxmox-sendmail-0.1-dev (= ${binary:Version}),
- librust-proxmox-sendmail-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-sendmail-0.1+mail-forwarder-dev (= ${binary:Version}),
- librust-proxmox-sendmail-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-sendmail-0.1.0+default-dev (= ${binary:Version}),
- librust-proxmox-sendmail-0.1.0+mail-forwarder-dev (= ${binary:Version})
+ librust-proxmox-sendmail-1-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1+default-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1+mail-forwarder-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1.0-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1.0+mail-forwarder-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1.0.0+default-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1.0.0+mail-forwarder-dev (= ${binary:Version})
 Description: Rust crate "proxmox-sendmail" - Rust source code
  Source code for Debianized Rust crate "proxmox-sendmail"
