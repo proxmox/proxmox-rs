@@ -151,6 +151,38 @@ macro_rules! implement_kind {
         }
         */
 
+        /// Decode
+        #[$kind]
+        /// data with *optional* padding into a byte vector.
+        pub fn decode_to_vec<T>(data: T, output: &mut Vec<u8>) -> Result<(), DecodeError>
+        where
+            T: AsRef<[u8]>,
+        {
+            DECODE_ENGINE_INDIFFERENT_PAD
+                .decode_vec(data, output)
+                .convert_error()
+        }
+
+        /// Decode
+        #[$kind]
+        /// data which *must* be padded into a byte vector.
+        pub fn decode_to_vec_pad<T>(data: T, output: &mut Vec<u8>) -> Result<(), DecodeError>
+        where
+            T: AsRef<[u8]>,
+        {
+            ENGINE_MUST_PAD.decode_vec(data, output).convert_error()
+        }
+
+        /// Decode
+        #[$kind]
+        /// data which *must not* be padded into a byte vector.
+        pub fn decode_to_vec_no_pad<T>(data: T, output: &mut Vec<u8>) -> Result<(), DecodeError>
+        where
+            T: AsRef<[u8]>,
+        {
+            ENGINE_MUST_NOT_PAD.decode_vec(data, output).convert_error()
+        }
+
         /// A formatting wrapper producing
         #[$kind]
         /// data with padding.
