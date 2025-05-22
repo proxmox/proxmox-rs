@@ -1,3 +1,11 @@
+rust-proxmox-network-api (1.0.0-1) trixie; urgency=medium
+
+  * update to nix 0.29
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 16:50:53 +0200
+
 rust-proxmox-network-api (0.1.4-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
