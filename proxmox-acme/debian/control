@@ -70,7 +70,8 @@ Depends:
  librust-proxmox-acme+impl-dev (= ${binary:Version}),
  librust-anyhow-1+default-dev,
  librust-bytes-1+default-dev,
- librust-hyper-0.14+default-dev (>= 0.14.5-~~),
+ librust-http-body-util-0.1+default-dev,
+ librust-hyper-1+default-dev,
  librust-proxmox-http-1+client-dev,
  librust-proxmox-http-1+default-dev
 Provides:

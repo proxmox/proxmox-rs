@@ -1,3 +1,9 @@
+rust-proxmox-acme (1.0.0-2) trixie; urgency=medium
+
+  * update to http/hyper 1.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 15:34:38 +0200
+
 rust-proxmox-acme (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
