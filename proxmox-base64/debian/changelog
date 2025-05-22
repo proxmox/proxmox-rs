@@ -1,3 +1,9 @@
+rust-proxmox-base64 (1.0.1-1) trixie; urgency=medium
+
+  * add string specific serde deserializers and serde modules
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 16:22:30 +0200
+
 rust-proxmox-base64 (1.0.0-1) trixie; urgency=medium
 
   * initial release
