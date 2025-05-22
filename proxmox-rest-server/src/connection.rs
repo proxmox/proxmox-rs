@@ -5,8 +5,7 @@
 use std::io;
 use std::mem::ManuallyDrop;
 use std::net::SocketAddr;
-use std::os::fd::FromRawFd;
-use std::os::unix::io::AsRawFd;
+use std::os::unix::io::AsFd;
 use std::path::PathBuf;
 use std::pin::{pin, Pin};
 use std::sync::{Arc, Mutex};
@@ -365,7 +364,7 @@ impl AcceptBuilder {
             .set_nodelay(true)
             .with_context(|| format!("[{peer}] error while setting TCP_NODELAY on socket"))?;
 
-        proxmox_sys::linux::socket::set_tcp_keepalive(socket.as_raw_fd(), self.tcp_keepalive_time)
+        proxmox_sys::linux::socket::set_tcp_keepalive(&socket.as_fd(), self.tcp_keepalive_time)
             .with_context(|| format!("[{peer}] error while setting SO_KEEPALIVE on socket"))?;
 
         #[cfg(feature = "rate-limited-stream")]
@@ -481,6 +480,8 @@ impl AcceptBuilder {
             incoming_stream
                 .async_io(tokio::io::Interest::READABLE, || {
                     let mut buf = [0; HANDSHAKE_BYTES_LEN];
+
+                    use std::os::fd::{AsRawFd, FromRawFd};
 
                     // Convert to standard lib TcpStream so we can peek without interfering
                     // with tokio's internals. Wrap the stream in ManuallyDrop in order to prevent
