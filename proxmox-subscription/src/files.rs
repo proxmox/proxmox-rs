@@ -21,7 +21,7 @@ fn parse_subscription_file(raw: &str) -> Result<Option<SubscriptionInfo>, Error>
     };
     // second line is checksum of encoded data
     let checksum = if let Some(csum) = cfg.next() {
-        base64::decode(csum)?
+        proxmox_base64::decode(csum)?
     } else {
         return Ok(None);
     };
@@ -35,7 +35,7 @@ fn parse_subscription_file(raw: &str) -> Result<Option<SubscriptionInfo>, Error>
     let mut encoded = encoded_with_newlines.clone();
     encoded.retain(|c| c != '\n');
 
-    let decoded = base64::decode(&encoded)?;
+    let decoded = proxmox_base64::decode(&encoded)?;
     let decoded = std::str::from_utf8(&decoded)?;
 
     let info: SubscriptionInfo = serde_json::from_str(decoded)?;
@@ -116,14 +116,14 @@ pub fn write_subscription<P: AsRef<Path>>(
     } else if let SubscriptionStatus::New = info.status {
         format!("{}\n", info.key.as_ref().unwrap())
     } else {
-        let encoded = base64::encode(serde_json::to_string(&info)?);
+        let encoded = proxmox_base64::encode(serde_json::to_string(&info)?);
         let csum = format!(
             "{}{}{}",
             info.checktime.unwrap_or(0),
             encoded,
             SHARED_KEY_DATA
         );
-        let csum = base64::encode(md5sum(csum.as_bytes())?);
+        let csum = proxmox_base64::encode(md5sum(csum.as_bytes())?);
         format!("{}\n{}\n{}\n", info.key.as_ref().unwrap(), csum, encoded)
     };
 
