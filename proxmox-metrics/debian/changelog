@@ -1,3 +1,9 @@
+rust-proxmox-metrics (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 15:36:48 +0200
+
 rust-proxmox-metrics (0.3.1-1) bookworm; urgency=medium
 
   * metrics: url-encode influxdb 'org' and 'bucket' parameters
