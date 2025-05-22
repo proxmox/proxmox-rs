@@ -2,16 +2,16 @@ Source: rust-proxmox-dns-api
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
- rustc:native (>= 1.80) <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
- librust-proxmox-config-digest-0.1+default-dev <!nocheck>,
- librust-proxmox-schema-4+api-macro-dev <!nocheck>,
- librust-proxmox-schema-4+api-types-dev <!nocheck>,
- librust-proxmox-schema-4+default-dev <!nocheck>,
+ librust-proxmox-config-digest-1+default-dev <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>
@@ -30,10 +30,10 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-const-format-0.2+default-dev,
- librust-proxmox-config-digest-0.1+default-dev,
- librust-proxmox-schema-4+api-macro-dev,
- librust-proxmox-schema-4+api-types-dev,
- librust-proxmox-schema-4+default-dev,
+ librust-proxmox-config-digest-1+default-dev,
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev
@@ -41,12 +41,12 @@ Suggests:
  librust-proxmox-dns-api+impl-dev (= ${binary:Version})
 Provides:
  librust-proxmox-dns-api+default-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0+default-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0.1-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0.1.5-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0.1.5+default-dev (= ${binary:Version})
+ librust-proxmox-dns-api-1-dev (= ${binary:Version}),
+ librust-proxmox-dns-api-1+default-dev (= ${binary:Version}),
+ librust-proxmox-dns-api-1.0-dev (= ${binary:Version}),
+ librust-proxmox-dns-api-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-dns-api-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-dns-api-1.0.0+default-dev (= ${binary:Version})
 Description: DNS Management API implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-dns-api"
 
@@ -56,12 +56,12 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-dns-api-dev (= ${binary:Version}),
- librust-proxmox-config-digest-0.1+openssl-dev,
- librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~)
+ librust-proxmox-config-digest-1+openssl-dev,
+ librust-proxmox-sys-1+default-dev
 Provides:
- librust-proxmox-dns-api-0+impl-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0.1+impl-dev (= ${binary:Version}),
- librust-proxmox-dns-api-0.1.5+impl-dev (= ${binary:Version})
+ librust-proxmox-dns-api-1+impl-dev (= ${binary:Version}),
+ librust-proxmox-dns-api-1.0+impl-dev (= ${binary:Version}),
+ librust-proxmox-dns-api-1.0.0+impl-dev (= ${binary:Version})
 Description: DNS Management API implementation - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-dns-api crate, by
  pulling in any additional dependencies needed by that feature.

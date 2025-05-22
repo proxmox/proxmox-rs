@@ -1,3 +1,9 @@
+rust-proxmox-dns-api (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 16:53:42 +0200
+
 rust-proxmox-dns-api (0.1.5-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
