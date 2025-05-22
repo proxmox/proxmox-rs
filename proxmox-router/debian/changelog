@@ -1,3 +1,9 @@
+rust-proxmox-router (3.2.0-2) trixie; urgency=medium
+
+  * update to hyper 1.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 15:36:20 +0200
+
 rust-proxmox-router (3.2.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
