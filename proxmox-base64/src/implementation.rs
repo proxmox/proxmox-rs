@@ -17,6 +17,13 @@ macro_rules! implement_kind {
         #[$doc_serde_with_no_pad_indifferent:meta]
         #[$doc_serde_with_must_pad:meta]
         #[$doc_serde_with_must_not_pad:meta]
+        #[$doc_deserialize_string:meta]
+        #[$doc_deserialize_string_pad:meta]
+        #[$doc_deserialize_string_no_pad:meta]
+        #[$doc_serde_with_string:meta]
+        #[$doc_serde_with_string_no_pad_indifferent:meta]
+        #[$doc_serde_with_string_must_pad:meta]
+        #[$doc_serde_with_string_must_not_pad:meta]
     ) => {
         use std::fmt;
 
@@ -289,6 +296,42 @@ macro_rules! implement_kind {
             Ok(T::from(data))
         }
 
+        /// Deserialize a string from a
+        #[$kind]
+        /// encoded string with *optional* padding.
+        ///
+        /// Usage example:
+        /// ```
+        /// # use serde::{Deserialize, Serialize};
+        ///
+        /// # #[derive(Debug)]
+        /// #[derive(Deserialize, PartialEq)]
+        /// struct Foo {
+        #[$doc_deserialize_string]
+        ///     data: String,
+        /// }
+        ///
+        #[$doc_serialize_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        ///
+        /// // padding is optional:
+        #[$doc_serialize_no_pad_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        /// ```
+        #[cfg(feature = "serde")]
+        pub fn deserialize_string_from_base64<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+        where
+            D: Deserializer<'de>,
+            T: From<String>,
+        {
+            let data = Cow::<str>::deserialize(deserializer)?;
+            let data = decode(data.as_bytes()).map_err(::serde::de::Error::custom)?;
+            let data = String::from_utf8(data).map_err(::serde::de::Error::custom)?;
+            Ok(T::from(data))
+        }
+
         /// Deserialize from a
         #[$kind]
         /// encoded string which *must* be padded.
@@ -319,6 +362,40 @@ macro_rules! implement_kind {
         {
             let data = Cow::<str>::deserialize(deserializer)?;
             let data = decode_pad(data.as_bytes()).map_err(serde::de::Error::custom)?;
+            Ok(T::from(data))
+        }
+
+        /// Deserialize a string from a
+        #[$kind]
+        /// encoded string which *must* be padded.
+        ///
+        /// Usage example:
+        /// ```
+        /// # use serde::{Deserialize, Serialize};
+        ///
+        /// # #[derive(Debug)]
+        /// #[derive(Deserialize, PartialEq)]
+        /// struct Foo {
+        #[$doc_deserialize_string_pad]
+        ///     data: String,
+        /// }
+        ///
+        #[$doc_serialize_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        ///
+        #[$doc_serialize_no_pad_json]
+        /// serde_json::from_str::<Foo>(&encoded).expect_err("expected to fail decoding unpadded data");
+        /// ```
+        #[cfg(feature = "serde")]
+        pub fn deserialize_string_from_base64_pad<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+        where
+            D: Deserializer<'de>,
+            T: From<String>,
+        {
+            let data = Cow::<str>::deserialize(deserializer)?;
+            let data = decode_pad(data.as_bytes()).map_err(serde::de::Error::custom)?;
+            let data = String::from_utf8(data).map_err(::serde::de::Error::custom)?;
             Ok(T::from(data))
         }
 
@@ -354,6 +431,44 @@ macro_rules! implement_kind {
             let data = Cow::<str>::deserialize(deserializer)?;
             let data =
                 decode_no_pad(data.as_bytes()).map_err(|err| Error::custom(err.to_string()))?;
+            Ok(T::from(data))
+        }
+
+        /// Deserialize a string from a
+        #[$kind]
+        /// encoded string which *must not* be padded.
+        ///
+        /// Usage example:
+        /// ```
+        /// # use serde::{Deserialize, Serialize};
+        ///
+        /// # #[derive(Debug)]
+        /// #[derive(Deserialize, PartialEq)]
+        /// struct Foo {
+        #[$doc_deserialize_string_no_pad]
+        ///     data: String,
+        /// }
+        ///
+        #[$doc_serialize_no_pad_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        ///
+        #[$doc_serialize_json]
+        /// serde_json::from_str::<Foo>(&encoded).expect_err("expected to fail decoding padded data");
+        /// ```
+        #[cfg(feature = "serde")]
+        pub fn deserialize_string_from_base64_no_pad<'de, D, T>(
+            deserializer: D,
+        ) -> Result<T, D::Error>
+        where
+            D: Deserializer<'de>,
+            T: From<String>,
+        {
+            use serde::de::Error;
+            let data = Cow::<str>::deserialize(deserializer)?;
+            let data =
+                decode_no_pad(data.as_bytes()).map_err(|err| Error::custom(err.to_string()))?;
+            let data = String::from_utf8(data).map_err(::serde::de::Error::custom)?;
             Ok(T::from(data))
         }
 
@@ -393,6 +508,42 @@ macro_rules! implement_kind {
             pub use super::serialize_as_base64 as serialize;
         }
 
+        /// Serialize and deserialize a string from a
+        #[$kind]
+        /// encoded string.
+        /// The output will be padded, the input *may* be padded.
+        ///
+        /// Usage example:
+        /// ```
+        /// use serde::{Deserialize, Serialize};
+        ///
+        /// # #[derive(Debug)]
+        /// #[derive(Deserialize, PartialEq, Serialize)]
+        /// struct Foo {
+        #[$doc_serde_with_string]
+        ///     data: String,
+        /// }
+        ///
+        /// let obj = Foo { data: "1~~2".to_string() };
+        /// let json = serde_json::to_string(&obj).unwrap();
+        #[$doc_serialize_json]
+        /// assert_eq!(json, encoded);
+        ///
+        #[$doc_serialize_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        ///
+        /// // the padding is optional:
+        #[$doc_serialize_no_pad_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        /// ```
+        #[cfg(feature = "serde")]
+        pub mod string_as_base64 {
+            pub use super::deserialize_string_from_base64 as deserialize;
+            pub use super::serialize_as_base64 as serialize;
+        }
+
         /// Serialize and deserialize from a
         #[$kind]
         /// encoded string.
@@ -426,6 +577,42 @@ macro_rules! implement_kind {
         #[cfg(feature = "serde")]
         pub mod as_base64_no_pad_indifferent {
             pub use super::deserialize_from_base64 as deserialize;
+            pub use super::serialize_as_base64_no_pad as serialize;
+        }
+
+        /// Serialize and deserialize a string from a
+        #[$kind]
+        /// encoded string.
+        /// The output will *not* be padded, the input *may* be padded.
+        ///
+        /// Usage example:
+        /// ```
+        /// use serde::{Deserialize, Serialize};
+        ///
+        /// # #[derive(Debug)]
+        /// #[derive(Deserialize, PartialEq, Serialize)]
+        /// struct Foo {
+        #[$doc_serde_with_string_no_pad_indifferent]
+        ///     data: String,
+        /// }
+        ///
+        /// let obj = Foo { data: "1~~2".to_string() };
+        /// let json = serde_json::to_string(&obj).unwrap();
+        #[$doc_serialize_no_pad_json]
+        /// assert_eq!(json, encoded);
+        ///
+        #[$doc_serialize_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        ///
+        /// // the padding is optional:
+        #[$doc_serialize_no_pad_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        /// ```
+        #[cfg(feature = "serde")]
+        pub mod string_as_base64_no_pad_indifferent {
+            pub use super::deserialize_string_from_base64 as deserialize;
             pub use super::serialize_as_base64_no_pad as serialize;
         }
 
@@ -463,6 +650,40 @@ macro_rules! implement_kind {
             pub use super::serialize_as_base64 as serialize;
         }
 
+        /// Serialize and deserialize a string from a
+        #[$kind]
+        /// encoded string.
+        /// The output will be padded, the input *must* be padded.
+        ///
+        /// Usage example:
+        /// ```
+        /// use serde::{Deserialize, Serialize};
+        ///
+        /// # #[derive(Debug)]
+        /// #[derive(Deserialize, PartialEq, Serialize)]
+        /// struct Foo {
+        #[$doc_serde_with_string_must_pad]
+        ///     data: String,
+        /// }
+        ///
+        /// let obj = Foo { data: "1~~2".to_string() };
+        /// let json = serde_json::to_string(&obj).unwrap();
+        #[$doc_serialize_json]
+        /// assert_eq!(json, encoded);
+        ///
+        #[$doc_serialize_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        ///
+        #[$doc_serialize_no_pad_json]
+        /// serde_json::from_str::<Foo>(&encoded).expect_err("expected to fail decoding unpadded data");
+        /// ```
+        #[cfg(feature = "serde")]
+        pub mod string_as_base64_must_pad {
+            pub use super::deserialize_string_from_base64_pad as deserialize;
+            pub use super::serialize_as_base64 as serialize;
+        }
+
         /// Serialize and deserialize from a
         #[$kind]
         /// encoded string.
@@ -494,6 +715,40 @@ macro_rules! implement_kind {
         #[cfg(feature = "serde")]
         pub mod as_base64_must_not_pad {
             pub use super::deserialize_from_base64_no_pad as deserialize;
+            pub use super::serialize_as_base64_no_pad as serialize;
+        }
+        ///
+        /// Serialize and deserialize a string from a
+        #[$kind]
+        /// encoded string.
+        /// The output will *not* be padded, the input *must not* be padded.
+        ///
+        /// Usage example:
+        /// ```
+        /// use serde::{Deserialize, Serialize};
+        ///
+        /// # #[derive(Debug)]
+        /// #[derive(Deserialize, PartialEq, Serialize)]
+        /// struct Foo {
+        #[$doc_serde_with_string_must_not_pad]
+        ///     data: String,
+        /// }
+        ///
+        /// let obj = Foo { data: "1~~2".to_string() };
+        /// let json = serde_json::to_string(&obj).unwrap();
+        #[$doc_serialize_no_pad_json]
+        /// assert_eq!(json, encoded);
+        ///
+        #[$doc_serialize_no_pad_json]
+        /// let deserialized: Foo = serde_json::from_str(&encoded).unwrap();
+        /// assert_eq!(deserialized, Foo { data: "1~~2".to_string() });
+        ///
+        #[$doc_serialize_json]
+        /// serde_json::from_str::<Foo>(&encoded).expect_err("expected to fail decoding unpadded data");
+        /// ```
+        #[cfg(feature = "serde")]
+        pub mod string_as_base64_must_not_pad {
+            pub use super::deserialize_string_from_base64_no_pad as deserialize;
             pub use super::serialize_as_base64_no_pad as serialize;
         }
     };

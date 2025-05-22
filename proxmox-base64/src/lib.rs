@@ -29,6 +29,13 @@ implement_kind!(
     ///    #[serde(with = "proxmox_base64::as_base64_no_pad_indifferent")]
     ///    #[serde(with = "proxmox_base64::as_base64_must_pad")]
     ///    #[serde(with = "proxmox_base64::as_base64_must_not_pad")]
+    ///    #[serde(deserialize_with = "proxmox_base64::deserialize_string_from_base64")]
+    ///    #[serde(deserialize_with = "proxmox_base64::deserialize_string_from_base64_pad")]
+    ///    #[serde(deserialize_with = "proxmox_base64::deserialize_string_from_base64_no_pad")]
+    ///    #[serde(with = "proxmox_base64::string_as_base64")]
+    ///    #[serde(with = "proxmox_base64::string_as_base64_no_pad_indifferent")]
+    ///    #[serde(with = "proxmox_base64::string_as_base64_must_pad")]
+    ///    #[serde(with = "proxmox_base64::string_as_base64_must_not_pad")]
 );
 
 pub mod url {
@@ -54,5 +61,12 @@ pub mod url {
         ///    #[serde(with = "proxmox_base64::url::as_base64_no_pad_indifferent")]
         ///    #[serde(with = "proxmox_base64::url::as_base64_must_pad")]
         ///    #[serde(with = "proxmox_base64::url::as_base64_must_not_pad")]
+        ///    #[serde(deserialize_with = "proxmox_base64::url::deserialize_string_from_base64")]
+        ///    #[serde(deserialize_with = "proxmox_base64::url::deserialize_string_from_base64_pad")]
+        ///    #[serde(deserialize_with = "proxmox_base64::url::deserialize_string_from_base64_no_pad")]
+        ///    #[serde(with = "proxmox_base64::url::string_as_base64")]
+        ///    #[serde(with = "proxmox_base64::url::string_as_base64_no_pad_indifferent")]
+        ///    #[serde(with = "proxmox_base64::url::string_as_base64_must_pad")]
+        ///    #[serde(with = "proxmox_base64::url::string_as_base64_must_not_pad")]
     );
 }
