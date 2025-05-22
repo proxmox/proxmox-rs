@@ -1,3 +1,9 @@
+rust-proxmox-ldap (1.0.0-1) bookworm; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 16:44:53 +0200
+
 rust-proxmox-ldap (0.2.2-1) bookworm; urgency=medium
 
   * ldap: avoid superfluous allocation when calling .search()

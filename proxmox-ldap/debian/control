@@ -2,8 +2,8 @@ Source: rust-proxmox-ldap
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
@@ -31,11 +31,11 @@ Depends:
  librust-serde-1+derive-dev
 Provides:
  librust-proxmox-ldap+default-dev (= ${binary:Version}),
- librust-proxmox-ldap-0-dev (= ${binary:Version}),
- librust-proxmox-ldap-0+default-dev (= ${binary:Version}),
- librust-proxmox-ldap-0.2-dev (= ${binary:Version}),
- librust-proxmox-ldap-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-ldap-0.2.2-dev (= ${binary:Version}),
- librust-proxmox-ldap-0.2.2+default-dev (= ${binary:Version})
+ librust-proxmox-ldap-1-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1+default-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1.0-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1.0.0+default-dev (= ${binary:Version})
 Description: Proxmox library for LDAP authentication/synchronization - Rust source code
  Source code for Debianized Rust crate "proxmox-ldap"

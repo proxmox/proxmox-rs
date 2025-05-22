@@ -1,7 +1,7 @@
 [package]
 name = "proxmox-ldap"
 description = "Proxmox library for LDAP authentication/synchronization"
-version = "0.2.2"
+version = "1.0.0"
 
 authors.workspace = true
 edition.workspace = true
