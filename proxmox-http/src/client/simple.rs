@@ -171,14 +171,9 @@ impl Client {
     async fn convert_body_to_bytes(
         response: Result<Response<Body>, Error>,
     ) -> Result<Response<Body>, Error> {
-        match response {
-            Ok(res) => {
-                let (parts, body) = res.into_parts();
-                let buf = body.collect().await?.to_bytes();
-                Ok(Response::from_parts(parts, buf.into()))
-            }
-            Err(err) => Err(err),
-        }
+        let (parts, body) = response?.into_parts();
+        let buf = body.collect().await?.to_bytes();
+        Ok(Response::from_parts(parts, buf.into()))
     }
 }
 
