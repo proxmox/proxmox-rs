@@ -19,7 +19,7 @@ serde_json.workspace = true
 openssl = { workspace = true, optional = true }
 
 # For the client
-http = { version = "1", optional = true }
+http = { workspace = true, optional = true }
 
 proxmox-base64 = { workspace = true, features = [ "serde" ] }
 proxmox-schema = { workspace = true, optional = true, features = [ "api-macro" ] }
