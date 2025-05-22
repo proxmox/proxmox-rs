@@ -191,7 +191,7 @@ const SUBDIRS: SubdirMap = &[
 const ROUTER: Router = Router::new()
     .get(&list_subdirs_api_method!(SUBDIRS))
     .subdirs(SUBDIRS);
-
+                                e
 async fn run() -> Result<(), Error> {
     // we first have to configure the api environment (basedir etc.)
 
@@ -214,15 +214,15 @@ async fn run() -> Result<(), Error> {
         ([127, 0, 0, 1], 65000).into(),
         move |listener: TcpListener| {
             Ok(async move {
-                let graceful = Arc::new(GracefulShutdown::new());
+                let graceful = GracefulShutdown::new();
                 loop {
-                    let graceful2 = Arc::clone(&graceful);
                     tokio::select! {
                         incoming = listener.accept() => {
                             log::info!("accepted new connection!");
                             let (conn, _) = incoming?;
                             let api_service = rest_server.api_service(&conn)?;
-                            tokio::spawn(async move { let res = api_service.serve(conn, Some(graceful2)).await; log::info!("connection finished: {res:?}") });
+                            let watcher = graceful.watcher();
+                            tokio::spawn(async move { let res = api_service.serve(conn, Some(watcher)).await; log::info!("connection finished: {res:?}") });
                         },
                         _shutdown = proxmox_daemon::shutdown_future() => {
                             log::info!("shutdown future triggered!");
@@ -230,11 +230,8 @@ async fn run() -> Result<(), Error> {
                         }
                     }
                 }
-                log::info!("count {}", Arc::strong_count(&graceful));
-                if let Some(shutdown) = Arc::into_inner(graceful) {
-                    log::info!("shutting down..");
-                    shutdown.shutdown().await
-                }
+                log::info!("shutting down..");
+                shutdown.shutdown().await
                 Ok(())
             })
         },

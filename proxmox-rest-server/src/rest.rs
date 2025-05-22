@@ -17,7 +17,7 @@ use hyper::http::request::Parts;
 use hyper::{Request, Response, StatusCode};
 use hyper_util::rt::{TokioExecutor, TokioIo};
 use hyper_util::server::conn;
-use hyper_util::server::graceful::GracefulShutdown;
+use hyper_util::server::graceful;
 use hyper_util::service::TowerToHyperService;
 use regex::Regex;
 use serde_json::Value;
@@ -119,7 +119,7 @@ impl RedirectService {
     pub async fn serve<S>(
         self,
         conn: S,
-        mut graceful: Option<Arc<GracefulShutdown>>,
+        mut graceful: Option<graceful::Watcher>,
     ) -> Result<(), Error>
     where
         S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
@@ -130,7 +130,6 @@ impl RedirectService {
         let api_conn = api_conn.serve_connection_with_upgrades(io, api_service);
         if let Some(graceful) = graceful.take() {
             let api_conn = graceful.watch(api_conn);
-            drop(graceful);
             api_conn.await
         } else {
             api_conn.await
@@ -240,7 +239,7 @@ impl ApiService {
     pub async fn serve<S>(
         self,
         conn: S,
-        mut graceful: Option<Arc<GracefulShutdown>>,
+        mut graceful: Option<graceful::Watcher>,
     ) -> Result<(), Error>
     where
         S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
@@ -251,7 +250,6 @@ impl ApiService {
         let api_conn = api_conn.serve_connection_with_upgrades(io, api_service);
         if let Some(graceful) = graceful.take() {
             let api_conn = graceful.watch(api_conn);
-            drop(graceful);
             api_conn.await
         } else {
             api_conn.await
