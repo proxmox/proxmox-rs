@@ -1,3 +1,11 @@
+rust-proxmox-http (1.0.0-2) trixie; urgency=medium
+
+  * update to hyper 1.0
+
+  * fully replace http 0.2 with http 1.0 across the API
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 15:17:46 +0200
+
 rust-proxmox-http (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.

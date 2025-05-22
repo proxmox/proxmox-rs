@@ -6,8 +6,7 @@ Build-Depends: debhelper-compat (= 13),
 Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-anyhow-1+default-dev <!nocheck>,
- librust-tower-service-0.3+default-dev <!nocheck>
+ librust-anyhow-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -21,9 +20,9 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-anyhow-1+default-dev,
- librust-tower-service-0.3+default-dev
+ librust-anyhow-1+default-dev
 Suggests:
+ librust-proxmox-http+body-dev (= ${binary:Version}),
  librust-proxmox-http+client-dev (= ${binary:Version}),
  librust-proxmox-http+client-sync-dev (= ${binary:Version}),
  librust-proxmox-http+client-trait-dev (= ${binary:Version}),
@@ -43,27 +42,54 @@ Provides:
 Description: Proxmox HTTP library - Rust source code
  Source code for Debianized Rust crate "proxmox-http"
 
+Package: librust-proxmox-http+body-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-http-dev (= ${binary:Version}),
+ librust-bytes-1+default-dev,
+ librust-futures-0.3+default-dev,
+ librust-http-body-1+default-dev,
+ librust-http-body-util-0.1+default-dev,
+ librust-hyper-1+default-dev,
+ librust-sync-wrapper-1+default-dev,
+ librust-sync-wrapper-1+futures-dev
+Provides:
+ librust-proxmox-http-1+body-dev (= ${binary:Version}),
+ librust-proxmox-http-1.0+body-dev (= ${binary:Version}),
+ librust-proxmox-http-1.0.0+body-dev (= ${binary:Version})
+Description: Proxmox HTTP library - feature "body"
+ This metapackage enables feature "body" for the Rust proxmox-http crate, by
+ pulling in any additional dependencies needed by that feature.
+
 Package: librust-proxmox-http+client-dev
 Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
+ librust-proxmox-http+body-dev (= ${binary:Version}),
  librust-proxmox-http+http-helpers-dev (= ${binary:Version}),
  librust-proxmox-http+rate-limited-stream-dev (= ${binary:Version}),
+ librust-bytes-1+default-dev,
  librust-futures-0.3+default-dev,
- librust-http-0.2+default-dev,
- librust-hyper-0.14+client-dev (>= 0.14.5-~~),
- librust-hyper-0.14+default-dev (>= 0.14.5-~~),
- librust-hyper-0.14+http1-dev (>= 0.14.5-~~),
- librust-hyper-0.14+http2-dev (>= 0.14.5-~~),
- librust-hyper-0.14+stream-dev (>= 0.14.5-~~),
- librust-hyper-0.14+tcp-dev (>= 0.14.5-~~),
+ librust-http-body-1+default-dev,
+ librust-http-body-util-0.1+default-dev,
+ librust-hyper-1+client-dev,
+ librust-hyper-1+http1-dev,
+ librust-hyper-1+http2-dev,
+ librust-hyper-util-0.1+client-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+client-legacy-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+default-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+http1-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+tokio-dev (>= 0.1.12-~~),
  librust-openssl-0.10+default-dev,
  librust-proxmox-compression-1+default-dev,
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+io-util-dev (>= 1.6-~~),
- librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~)
+ librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~),
+ librust-tower-service-0.3+default-dev
 Provides:
  librust-proxmox-http-1+client-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+client-dev (= ${binary:Version}),
@@ -96,7 +122,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
- librust-http-0.2+default-dev
+ librust-http-1+default-dev
 Provides:
  librust-proxmox-http-1+client-trait-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+client-trait-dev (= ${binary:Version}),
@@ -146,8 +172,10 @@ Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
  librust-proxmox-http+rate-limiter-dev (= ${binary:Version}),
- librust-hyper-0.14+client-dev (>= 0.14.5-~~),
- librust-hyper-0.14+default-dev (>= 0.14.5-~~),
+ librust-hyper-util-0.1+client-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+client-legacy-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+default-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+http1-dev (>= 0.1.12-~~),
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+time-dev (>= 1.6-~~)
 Provides:
@@ -164,7 +192,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
- librust-hyper-0.14+default-dev (>= 0.14.5-~~)
+ librust-hyper-1+default-dev
 Provides:
  librust-proxmox-http-1+rate-limiter-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+rate-limiter-dev (= ${binary:Version}),
@@ -179,8 +207,9 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
+ librust-proxmox-http+body-dev (= ${binary:Version}),
  librust-futures-0.3+default-dev,
- librust-hyper-0.14+default-dev (>= 0.14.5-~~),
+ librust-http-1+default-dev,
  librust-openssl-0.10+default-dev,
  librust-proxmox-base64-1+default-dev,
  librust-proxmox-io-1+default-dev (>= 1.2.0-~~),
