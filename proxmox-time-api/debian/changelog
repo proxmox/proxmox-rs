@@ -1,3 +1,9 @@
+rust-proxmox-time-api (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 17:01:53 +0200
+
 rust-proxmox-time-api (0.1.4-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
