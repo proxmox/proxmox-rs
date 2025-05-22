@@ -1,3 +1,13 @@
+rust-proxmox-acme-api (1.0.0-1) trixie; urgency=medium
+
+  * update to hyper 1.0
+
+  * switch to proxmox-base64
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 16:37:12 +0200
+
 rust-proxmox-acme-api (0.1.8-1) bookworm; urgency=medium
 
   * rebuild with section-config 3.0
