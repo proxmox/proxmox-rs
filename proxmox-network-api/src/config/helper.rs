@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::os::unix::io::{AsRawFd, FromRawFd, OwnedFd};
+use std::os::unix::io::AsRawFd;
 use std::path::Path;
 use std::process::Command;
 use std::sync::LazyLock;
@@ -137,24 +137,20 @@ pub(crate) fn get_network_interfaces() -> Result<HashMap<String, bool>, Error> {
 
     let lines = raw.lines();
 
-    let sock = unsafe {
-        OwnedFd::from_raw_fd(
-            socket(
-                AddressFamily::Inet,
-                SockType::Datagram,
-                SockFlag::empty(),
-                None,
-            )
-            .or_else(|_| {
-                socket(
-                    AddressFamily::Inet6,
-                    SockType::Datagram,
-                    SockFlag::empty(),
-                    None,
-                )
-            })?,
+    let sock = socket(
+        AddressFamily::Inet,
+        SockType::Datagram,
+        SockFlag::empty(),
+        None,
+    )
+    .or_else(|_| {
+        socket(
+            AddressFamily::Inet6,
+            SockType::Datagram,
+            SockFlag::empty(),
+            None,
         )
-    };
+    })?;
 
     let mut interface_list = HashMap::new();
 
