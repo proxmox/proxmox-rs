@@ -1,3 +1,11 @@
+rust-proxmox-subscription (1.0.0-1) trixie; urgency=medium
+
+  * switch to proxmox-base64
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 16:56:42 +0200
+
 rust-proxmox-subscription (0.5.1-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
