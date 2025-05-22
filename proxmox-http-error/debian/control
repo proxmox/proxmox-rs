@@ -7,7 +7,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-http-0.2+default-dev <!nocheck>,
+ librust-http-1+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.0
@@ -23,7 +23,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-http-0.2+default-dev,
+ librust-http-1+default-dev,
  librust-serde-1+default-dev
 Provides:
  librust-proxmox-http-error+default-dev (= ${binary:Version}),
