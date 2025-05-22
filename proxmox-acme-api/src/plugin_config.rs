@@ -16,10 +16,8 @@ static CONFIG: LazyLock<SectionConfig> = LazyLock::new(init);
 
 impl DnsPlugin {
     pub fn decode_data(&self, output: &mut Vec<u8>) -> Result<(), Error> {
-        Ok(base64::decode_config_buf(
-            &self.data,
-            base64::URL_SAFE_NO_PAD,
-            output,
+        Ok(proxmox_base64::url::decode_to_vec_no_pad(
+            &self.data, output,
         )?)
     }
 }

@@ -40,7 +40,7 @@ pub fn add_plugin(r#type: String, core: DnsPluginCore, data: String) -> Result<(
         param_bail!("type", "invalid ACME plugin type: {:?}", r#type);
     }
 
-    let data = String::from_utf8(base64::decode(data)?)
+    let data = String::from_utf8(proxmox_base64::decode(data)?)
         .map_err(|_| format_err!("data must be valid UTF-8"))?;
 
     let id = core.id.clone();
@@ -70,7 +70,7 @@ pub fn update_plugin(
 ) -> Result<(), Error> {
     let data = data
         .as_deref()
-        .map(base64::decode)
+        .map(proxmox_base64::decode)
         .transpose()?
         .map(String::from_utf8)
         .transpose()
@@ -151,7 +151,7 @@ fn modify_cfg_for_api(id: &str, ty: &str, data: &Value) -> PluginConfig {
     // case we leave the unmodified string in the Value for now. This will be handled with an error
     // later.
     if let Some(Value::String(ref mut data)) = obj.get_mut("data") {
-        if let Ok(new) = base64::decode_config(&data, base64::URL_SAFE_NO_PAD) {
+        if let Ok(new) = proxmox_base64::url::decode_no_pad(&data) {
             if let Ok(utf8) = String::from_utf8(new) {
                 *data = utf8;
             }
