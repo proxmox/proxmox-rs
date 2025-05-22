@@ -1,4 +1,10 @@
-rust-proxmox-serde (1.0.0) bookworm; urgency=medium
+rust-proxmox-serde (1.0.0-1) trixie; urgency=medium
+
+  * fixup string_as_base64_no_pad mapping
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 22 May 2025 16:26:37 +0200
+
+rust-proxmox-serde (1.0.0) trixie; urgency=medium
 
   * smaller doc fixes.
 
