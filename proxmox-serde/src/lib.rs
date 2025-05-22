@@ -61,7 +61,7 @@ pub use proxmox_base64::url::as_base64_no_pad_indifferent as bytes_as_base64url_
 
 /// Mostly for backward compat and convenience, as one can normally use the newer [`proxmox_base64`]
 /// directly.
-pub use proxmox_base64::url::as_base64_no_pad_indifferent as string_as_base64url_nopad;
+pub use proxmox_base64::url::string_as_base64_no_pad_indifferent as string_as_base64url_nopad;
 
 /// Mostly for backward compat and convenience, as one can normally use the newer [`proxmox_base64`]
 /// directly.
