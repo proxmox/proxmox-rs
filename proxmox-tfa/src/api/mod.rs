@@ -7,12 +7,12 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{bail, format_err, Context as _, Error};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use url::Url;
 
-use webauthn_rs::{proto::UserVerificationPolicy, Webauthn};
+use webauthn_rs::{Webauthn, WebauthnBuilder};
 
 use crate::totp::Totp;
 use crate::types::bool_is_false;
@@ -28,7 +28,6 @@ pub mod methods;
 
 pub use recovery::RecoveryState;
 pub use u2f::U2fConfig;
-use webauthn::WebauthnConfigInstance;
 pub use webauthn::{WebauthnConfig, WebauthnCredential};
 
 #[cfg(feature = "api-types")]
@@ -137,27 +136,43 @@ fn check_u2f(u2f: &Option<U2fConfig>) -> Result<u2f::U2f, Error> {
 
 /// Helper to get a `Webauthn` instance from a `WebauthnConfig`, or `None` if there isn't one
 /// configured.
-fn get_webauthn<'a, 'config: 'a, 'origin: 'a>(
-    waconfig: &'config Option<WebauthnConfig>,
-    origin: Option<&'origin Url>,
-) -> Option<Webauthn<WebauthnConfigInstance<'a>>> {
-    match waconfig.as_ref()?.instantiate(origin) {
-        Ok(wa) => Some(Webauthn::new(wa)),
+fn get_webauthn(
+    waconfig: &Option<WebauthnConfig>,
+    origin: Option<&Url>,
+) -> Result<Option<Webauthn>, Error> {
+    let Some(waconfig) = waconfig.as_ref() else {
+        return Ok(None);
+    };
+
+    let wa = match waconfig.instantiate(origin) {
+        Ok(wa) => wa,
         Err(err) => {
             log::error!("webauthn error: {err}");
-            None
+            return Ok(None);
         }
-    }
+    };
+    Ok(Some(
+        WebauthnBuilder::new(wa.id, wa.origin)
+            .context("failed to begin webauthn context instantiation")?
+            .danger_set_user_presence_only_security_keys(true)
+            .allow_subdomains(wa.allow_subdomains)
+            .rp_name(wa.rp)
+            .build()
+            .context("failed to instantiate webauthn context")?,
+    ))
 }
 
-/// Helper to get a `WebauthnConfigInstance` from a `WebauthnConfig`
+/// Helper to get a [`WebauthnConfigInstance`] from a `WebauthnConfig`
 ///
 /// This is outside of `TfaConfig` to not borrow its `&self`.
-fn check_webauthn<'a, 'config: 'a, 'origin: 'a>(
-    waconfig: &'config Option<WebauthnConfig>,
-    origin: Option<&'origin Url>,
-) -> Result<Webauthn<WebauthnConfigInstance<'a>>, Error> {
-    get_webauthn(waconfig, origin).ok_or_else(|| format_err!("no webauthn configuration available"))
+///
+/// [`WebauthnConfigInstance`] [webauthn::WebauthnConfigInstance]
+fn check_webauthn(
+    waconfig: &Option<WebauthnConfig>,
+    origin: Option<&Url>,
+) -> Result<Webauthn, Error> {
+    get_webauthn(waconfig, origin)?
+        .ok_or_else(|| format_err!("no webauthn configuration available"))
 }
 
 impl TfaConfig {
@@ -281,7 +296,7 @@ impl TfaConfig {
     ) -> Result<String, Error> {
         let webauthn = check_webauthn(&self.webauthn, origin)?;
 
-        let response: webauthn_rs::proto::RegisterPublicKeyCredential =
+        let response: webauthn_rs_core::proto::RegisterPublicKeyCredential =
             serde_json::from_str(response)
                 .map_err(|err| format_err!("error parsing challenge response: {}", err))?;
 
@@ -334,7 +349,7 @@ impl TfaConfig {
             Some(udata) => udata.challenge(
                 access,
                 userid,
-                get_webauthn(&self.webauthn, origin),
+                get_webauthn(&self.webauthn, origin)?,
                 get_u2f(&self.u2f).as_ref(),
             ),
             None => Ok(None),
@@ -677,7 +692,7 @@ impl TfaUserData {
     fn webauthn_registration_challenge<A: ?Sized + OpenUserChallengeData>(
         &mut self,
         access: &A,
-        webauthn: Webauthn<WebauthnConfigInstance>,
+        webauthn: Webauthn,
         userid: &str,
         description: String,
     ) -> Result<String, Error> {
@@ -686,16 +701,16 @@ impl TfaUserData {
             .map(|cred| cred.cred_id.clone())
             .collect();
 
-        let (challenge, state) = webauthn.generate_challenge_register_options(
-            userid.as_bytes().to_vec(),
-            userid.to_owned(),
-            userid.to_owned(),
+        let (challenge, state) = webauthn.start_securitykey_registration(
+            webauthn_rs::prelude::Uuid::new_v4(),
+            userid,
+            userid,
             Some(cred_ids),
-            Some(UserVerificationPolicy::Discouraged),
+            None,
             None,
         )?;
 
-        let challenge_string = challenge.public_key.challenge.to_string();
+        let challenge_string = proxmox_base64::url::encode_no_pad(&challenge.public_key.challenge);
         let challenge = serde_json::to_string(&challenge)?;
 
         let mut data = access.open(userid)?;
@@ -716,10 +731,10 @@ impl TfaUserData {
     fn webauthn_registration_finish<A: ?Sized + OpenUserChallengeData>(
         &mut self,
         access: &A,
-        webauthn: Webauthn<WebauthnConfigInstance>,
+        webauthn: Webauthn,
         userid: &str,
         challenge: &str,
-        response: webauthn_rs::proto::RegisterPublicKeyCredential,
+        response: webauthn_rs_core::proto::RegisterPublicKeyCredential,
     ) -> Result<String, Error> {
         let mut data = access.open(userid)?;
         let entry = data.get_mut().webauthn_registration_finish(
@@ -840,7 +855,7 @@ impl TfaUserData {
         &mut self,
         access: &A,
         userid: &str,
-        webauthn: Option<Webauthn<WebauthnConfigInstance>>,
+        webauthn: Option<Webauthn>,
         u2f: Option<&u2f::U2f>,
     ) -> Result<Option<TfaChallenge>, Error> {
         if self.is_empty() {
@@ -898,13 +913,13 @@ impl TfaUserData {
         &mut self,
         access: &A,
         userid: &str,
-        webauthn: Webauthn<WebauthnConfigInstance>,
-    ) -> Result<Option<webauthn_rs::proto::RequestChallengeResponse>, Error> {
+        webauthn: Webauthn,
+    ) -> Result<Option<webauthn_rs_core::proto::RequestChallengeResponse>, Error> {
         if self.webauthn.is_empty() {
             return Ok(None);
         }
 
-        let creds: Vec<_> = self
+        let creds: Vec<webauthn_rs::prelude::SecurityKey> = self
             .enabled_webauthn_entries()
             .map(|cred| cred.clone().into())
             .collect();
@@ -913,9 +928,9 @@ impl TfaUserData {
             return Ok(None);
         }
 
-        let (challenge, state) = webauthn.generate_challenge_authenticate(creds)?;
+        let (challenge, state) = webauthn.start_securitykey_authentication(&creds)?;
 
-        let challenge_string = challenge.public_key.challenge.to_string();
+        let challenge_string = proxmox_base64::url::encode_no_pad(&challenge.public_key.challenge);
         let mut data = access.open(userid)?;
         data.get_mut()
             .webauthn_auths
@@ -1030,8 +1045,9 @@ impl TfaUserData {
             _ => bail!("invalid challenge data in response"),
         };
 
-        let response: webauthn_rs::proto::PublicKeyCredential = serde_json::from_value(response)
-            .map_err(|err| format_err!("invalid webauthn response: {}", err))?;
+        let response: webauthn_rs_core::proto::PublicKeyCredential =
+            serde_json::from_value(response)
+                .map_err(|err| format_err!("invalid webauthn response: {}", err))?;
 
         let mut data = match access.open_no_create(userid)? {
             Some(data) => data,
@@ -1054,7 +1070,7 @@ impl TfaUserData {
         data.save()
             .map_err(|err| format_err!("failed to save challenge file: {}", err))?;
 
-        webauthn.authenticate_credential(&response, &challenge.state)?;
+        webauthn.finish_securitykey_authentication(&response, &challenge.state)?;
 
         Ok(())
     }
@@ -1249,7 +1265,7 @@ pub struct TfaChallenge {
     /// If the user has any webauthn credentials registered, this will contain the corresponding
     /// challenge data.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub webauthn: Option<webauthn_rs::proto::RequestChallengeResponse>,
+    pub webauthn: Option<webauthn_rs_core::proto::RequestChallengeResponse>,
 
     /// True if the user has yubico keys configured.
     #[serde(skip_serializing_if = "bool_is_false", default)]
@@ -1407,9 +1423,9 @@ impl TfaUserChallenges {
     /// `webauthn_registration_challenge`. The response should come directly from the client.
     fn webauthn_registration_finish(
         &mut self,
-        webauthn: Webauthn<WebauthnConfigInstance>,
+        webauthn: Webauthn,
         challenge: &str,
-        response: webauthn_rs::proto::RegisterPublicKeyCredential,
+        response: webauthn_rs_core::proto::RegisterPublicKeyCredential,
         existing_registrations: &[TfaEntry<WebauthnCredential>],
     ) -> Result<TfaEntry<WebauthnCredential>, Error> {
         let expire_before = proxmox_time::epoch_i64() - CHALLENGE_TIMEOUT_SECS;
@@ -1425,12 +1441,13 @@ impl TfaUserChallenges {
             bail!("no such challenge");
         }
 
-        let (credential, _authenticator) =
-            webauthn.register_credential(&response, &reg.state, |id| -> Result<bool, ()> {
-                Ok(existing_registrations
-                    .iter()
-                    .any(|cred| cred.entry.cred_id == *id))
-            })?;
+        let credential = webauthn.finish_securitykey_registration(&response, &reg.state)?;
+
+        for cred in existing_registrations {
+            if cred.entry.cred_id == *credential.cred_id() {
+                bail!("credential id already present");
+            }
+        }
 
         Ok(TfaEntry::new(reg.description, credential.into()))
     }

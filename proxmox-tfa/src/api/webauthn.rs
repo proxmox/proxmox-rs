@@ -5,7 +5,9 @@ use std::fmt;
 use anyhow::{format_err, Error};
 use serde::{Deserialize, Serialize};
 use url::Url;
-use webauthn_rs::proto::{COSEKey, Credential, CredentialID, UserVerificationPolicy};
+use webauthn_rs::prelude::SecurityKeyAuthentication;
+use webauthn_rs::prelude::SecurityKeyRegistration;
+use webauthn_rs_core::proto::{COSEKey, CredentialID, UserVerificationPolicy};
 
 #[cfg(feature = "api-types")]
 use proxmox_schema::{api, Updater, UpdaterType};
@@ -115,32 +117,10 @@ impl WebauthnConfig {
 }
 
 pub(super) struct WebauthnConfigInstance<'a> {
-    rp: &'a str,
-    origin: &'a Url,
-    id: &'a str,
-    allow_subdomains: bool,
-}
-
-/// For now we just implement this on the configuration this way.
-///
-/// Note that we may consider changing this so `get_origin` returns the `Host:` header provided by
-/// the connecting client.
-impl webauthn_rs::WebauthnConfig for WebauthnConfigInstance<'_> {
-    fn get_relying_party_name(&self) -> &str {
-        self.rp
-    }
-
-    fn get_origin(&self) -> &Url {
-        self.origin
-    }
-
-    fn get_relying_party_id(&self) -> &str {
-        self.id
-    }
-
-    fn allow_subdomains_origin(&self) -> bool {
-        self.allow_subdomains
-    }
+    pub rp: &'a str,
+    pub origin: &'a Url,
+    pub id: &'a str,
+    pub allow_subdomains: bool,
 }
 
 /// A webauthn registration challenge.
@@ -148,9 +128,9 @@ impl webauthn_rs::WebauthnConfig for WebauthnConfigInstance<'_> {
 #[serde(deny_unknown_fields)]
 pub struct WebauthnRegistrationChallenge {
     /// Server side registration state data.
-    pub(super) state: webauthn_rs::RegistrationState,
+    pub(super) state: SecurityKeyRegistration,
 
-    /// While this is basically the content of a `RegistrationState`, the webauthn-rs crate doesn't
+    /// While this is basically the content of a `SecurityKeyRegistration`, the webauthn-rs crate doesn't
     /// make this public.
     pub(super) challenge: String,
 
@@ -162,11 +142,7 @@ pub struct WebauthnRegistrationChallenge {
 }
 
 impl WebauthnRegistrationChallenge {
-    pub fn new(
-        state: webauthn_rs::RegistrationState,
-        challenge: String,
-        description: String,
-    ) -> Self {
+    pub fn new(state: SecurityKeyRegistration, challenge: String, description: String) -> Self {
         Self {
             state,
             challenge,
@@ -187,9 +163,9 @@ impl IsExpired for WebauthnRegistrationChallenge {
 #[serde(deny_unknown_fields)]
 pub struct WebauthnAuthChallenge {
     /// Server side authentication state.
-    pub(super) state: webauthn_rs::AuthenticationState,
+    pub(super) state: SecurityKeyAuthentication,
 
-    /// While this is basically the content of a `AuthenticationState`, the webauthn-rs crate
+    /// While this is basically the content of a `SecurityKeyAuthentication`, the webauthn-rs crate
     /// doesn't make this public.
     pub(super) challenge: String,
 
@@ -198,7 +174,7 @@ pub struct WebauthnAuthChallenge {
 }
 
 impl WebauthnAuthChallenge {
-    pub fn new(state: webauthn_rs::AuthenticationState, challenge: String) -> Self {
+    pub fn new(state: SecurityKeyAuthentication, challenge: String) -> Self {
         Self {
             state,
             challenge,
@@ -224,11 +200,23 @@ pub struct WebauthnCredential {
     pub counter: u32,
 }
 
+impl From<webauthn_rs::prelude::SecurityKey> for WebauthnCredential {
+    fn from(cred: webauthn_rs::prelude::SecurityKey) -> Self {
+        Self::from(webauthn_rs_core::proto::Credential::from(cred))
+    }
+}
+
+impl From<WebauthnCredential> for webauthn_rs::prelude::SecurityKey {
+    fn from(cred: WebauthnCredential) -> Self {
+        Self::from(webauthn_rs_core::proto::Credential::from(cred))
+    }
+}
+
 /// ignores verified and registration_policy fields for now
-impl From<Credential> for WebauthnCredential {
-    fn from(cred: Credential) -> Self {
+impl From<webauthn_rs_core::proto::Credential> for WebauthnCredential {
+    fn from(cred: webauthn_rs_core::proto::Credential) -> Self {
         Self {
-            cred_id: cred.cred_id,
+            cred_id: cred.cred_id.into(),
             cred: cred.cred,
             counter: cred.counter,
         }
@@ -236,14 +224,23 @@ impl From<Credential> for WebauthnCredential {
 }
 
 /// always sets verified to false and registration_policy to Discouraged for now
-impl From<WebauthnCredential> for Credential {
-    fn from(val: WebauthnCredential) -> Self {
-        Credential {
-            cred_id: val.cred_id,
-            cred: val.cred,
-            counter: val.counter,
-            verified: false,
-            registration_policy: UserVerificationPolicy::Discouraged,
+impl From<WebauthnCredential> for webauthn_rs_core::proto::Credential {
+    fn from(cred: WebauthnCredential) -> Self {
+        Self {
+            cred_id: cred.cred_id.into(),
+            cred: cred.cred,
+            counter: cred.counter,
+            transports: None,
+            user_verified: false,
+            backup_eligible: false,
+            backup_state: false,
+            registration_policy: UserVerificationPolicy::Discouraged_DO_NOT_USE,
+            extensions: webauthn_rs_core::proto::RegisteredExtensions::none(),
+            attestation: webauthn_rs_core::proto::ParsedAttestation {
+                data: webauthn_rs_core::proto::ParsedAttestationData::None,
+                metadata: webauthn_rs_core::proto::AttestationMetadata::None,
+            },
+            attestation_format: webauthn_rs_core::proto::AttestationFormat::None,
         }
     }
 }
