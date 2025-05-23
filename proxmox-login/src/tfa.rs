@@ -24,7 +24,7 @@ pub struct TfaChallenge {
     /// If the user has any webauthn credentials registered, this will contain the corresponding
     /// challenge data.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub webauthn: Option<webauthn_rs::proto::RequestChallengeResponse>,
+    pub webauthn: Option<webauthn_rs_proto::RequestChallengeResponse>,
 
     /// If the user has any webauthn credentials registered, this will contain the corresponding
     /// challenge data as a json string.

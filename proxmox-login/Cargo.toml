@@ -19,7 +19,7 @@ serde_json.workspace = true
 proxmox-serde = { workspace = true, features = [ "perl" ] }
 
 # For webauthn types
-webauthn-rs = { workspace = true, optional = true }
+webauthn-rs-proto = { version = "0.5", optional = true }
 
 # For `Authentication::set_auth_headers`
 http = { workspace = true, optional = true }
@@ -29,5 +29,5 @@ js-sys = "0.3.55"
 
 [features]
 default = []
-webauthn = [ "dep:webauthn-rs" ]
+webauthn = [ "dep:webauthn-rs-proto" ]
 http = ["dep:http"]
