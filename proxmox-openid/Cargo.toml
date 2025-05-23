@@ -14,16 +14,15 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-# until oauth2 and openidconnect are updated
-http.version = "0.2"
+http.version = "1"
 nix.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 thiserror = "1"
 native-tls.workspace = true
 
-openidconnect = { version = "2.4", default-features = false, features = ["accept-rfc3339-timestamps"] }
-ureq = { version = "2.4", default-features = false, features = ["native-tls", "gzip"] }
+openidconnect = { version = "4", default-features = false, features = ["accept-rfc3339-timestamps"] }
+ureq = { version = "3", default-features = false, features = ["native-tls", "gzip"] }
 
 proxmox-time.workspace = true
 proxmox-sys = { workspace = true, features = ["timer"] }

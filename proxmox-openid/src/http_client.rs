@@ -1,9 +1,7 @@
 use std::env;
-use std::sync::Arc;
+use std::io::Read;
 
-use http::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use http::method::Method;
-use http::status::StatusCode;
 
 use openidconnect::{HttpRequest, HttpResponse};
 
@@ -38,14 +36,37 @@ pub enum Error {
 }
 
 fn ureq_agent() -> Result<ureq::Agent, Error> {
-    let mut agent =
-        ureq::AgentBuilder::new().tls_connector(Arc::new(native_tls::TlsConnector::new()?));
+    let mut config = ureq::Agent::config_builder();
     if let Ok(val) = env::var("all_proxy").or_else(|_| env::var("ALL_PROXY")) {
-        let proxy = ureq::Proxy::new(val).map_err(Box::new)?;
-        agent = agent.proxy(proxy);
+        let proxy = ureq::Proxy::new(&val).map_err(Box::new)?;
+        config = config.proxy(Some(proxy));
     }
+    let agent = ureq::Agent::with_parts(
+        config.build(),
+        ureq::unversioned::transport::NativeTlsConnector::default(),
+        ureq::unversioned::resolver::DefaultResolver::default(),
+    );
 
-    Ok(agent.build())
+    Ok(agent)
+}
+
+fn add_headers<T>(
+    mut ureq_req: ureq::RequestBuilder<T>,
+    oidc_req: &HttpRequest,
+) -> Result<ureq::RequestBuilder<T>, Error> {
+    for (name, value) in oidc_req.headers() {
+        ureq_req = ureq_req.header(
+            name,
+            value.to_str().map_err(|_| {
+                Error::Other(format!(
+                    "invalid {} header value {:?}",
+                    name,
+                    value.as_bytes()
+                ))
+            })?,
+        );
+    }
+    Ok(ureq_req)
 }
 
 ///
@@ -53,48 +74,24 @@ fn ureq_agent() -> Result<ureq::Agent, Error> {
 ///
 pub fn http_client(request: HttpRequest) -> Result<HttpResponse, Error> {
     let agent = ureq_agent()?;
-    let mut req = if let Method::POST = request.method {
-        agent.post(request.url.as_ref())
-    } else {
-        agent.get(request.url.as_ref())
-    };
-
-    for (name, value) in request.headers {
-        if let Some(name) = name {
-            req = req.set(
-                name.as_ref(),
-                value.to_str().map_err(|_| {
-                    Error::Other(format!(
-                        "invalid {} header value {:?}",
-                        name,
-                        value.as_bytes()
-                    ))
-                })?,
-            );
-        }
-    }
-
-    let response = if let Method::POST = request.method {
-        // send_bytes makes sure that Content-Length is set. This is important, because some
+    let response = if let &Method::POST = request.method() {
+        let mut ureq_req = agent.post(request.uri());
+        ureq_req = add_headers(ureq_req, &request)?;
+        // sending a slice makes sure that Content-Length is set. This is important, because some
         // endpoints don't accept `Transfer-Encoding: chunked`, which would otherwise be set.
-        // see https://docs.rs/ureq/2.4.0/ureq/index.html#content-length-and-transfer-encoding
-        req.send_bytes(request.body.as_slice())
+        // see https://docs.rs/ureq/3.0.0/ureq/#transfer-encoding-chunked
+        ureq_req.send(request.body().as_slice())
     } else {
-        req.call()
+        let mut ureq_req = agent.get(request.uri());
+        ureq_req = add_headers(ureq_req, &request)?;
+        ureq_req.call()
     }
     .map_err(Box::new)?;
 
-    let status_code =
-        StatusCode::from_u16(response.status()).map_err(|err| Error::Http(err.into()))?;
+    let mut bytes: Vec<u8> = Vec::new();
 
-    let content_type =
-        HeaderValue::from_str(response.content_type()).map_err(|err| Error::Http(err.into()))?;
+    let (parts, mut body) = response.into_parts();
+    body.as_reader().read_to_end(&mut bytes)?;
 
-    Ok(HttpResponse {
-        status_code,
-        headers: vec![(CONTENT_TYPE, content_type)]
-            .into_iter()
-            .collect::<HeaderMap>(),
-        body: response.into_string()?.as_bytes().into(),
-    })
+    Ok(http::Response::from_parts(parts, bytes))
 }
