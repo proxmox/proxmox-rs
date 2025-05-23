@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use handlebars::{
     Context as HandlebarsContext, Handlebars, Helper, HelperResult, Output, RenderContext,
-    RenderError as HandlebarsRenderError, RenderErrorReason,
+    RenderErrorReason,
 };
 use http::Request;
 use percent_encoding::AsciiSet;
@@ -430,7 +430,7 @@ fn handlebars_percent_encode(
     let param0 = h
         .param(0)
         .and_then(|v| v.value().as_str())
-        .ok_or_else(|| HandlebarsRenderError::new("url-encode: missing parameter"))?;
+        .ok_or_else(|| RenderErrorReason::ParamNotFoundForIndex("url-encode", 0))?;
 
     // See https://developer.mozilla.org/en-US/docs/Glossary/Percent-encoding
     const FRAGMENT: &AsciiSet = &percent_encoding::CONTROLS
@@ -471,7 +471,7 @@ fn handlebars_json(
     let param0 = h
         .param(0)
         .map(|v| v.value())
-        .ok_or_else(|| HandlebarsRenderError::new("json: missing parameter"))?;
+        .ok_or_else(|| RenderErrorReason::ParamNotFoundForIndex("json", 0))?;
 
     let json =
         serde_json::to_string(param0).map_err(|err| RenderErrorReason::NestedError(err.into()))?;
@@ -490,7 +490,7 @@ fn handlebars_escape(
     let text = h
         .param(0)
         .and_then(|v| v.value().as_str())
-        .ok_or_else(|| HandlebarsRenderError::new("escape: missing text parameter"))?;
+        .ok_or_else(|| RenderErrorReason::ParamNotFoundForIndex("escape", 0))?;
 
     let val = Value::String(text.to_string());
     let json =

@@ -1,6 +1,5 @@
 use handlebars::{
-    Context, Handlebars, Helper, HelperResult, Output, RenderContext,
-    RenderError as HandlebarsRenderError, RenderErrorReason,
+    Context, Handlebars, Helper, HelperResult, Output, RenderContext, RenderErrorReason,
 };
 use serde_json::Value;
 
@@ -16,7 +15,7 @@ fn render_html_table(
 ) -> HelperResult {
     let param = h
         .param(0)
-        .ok_or_else(|| HandlebarsRenderError::new("parameter not found"))?;
+        .ok_or_else(|| RenderErrorReason::ParamNotFoundForIndex("table", 0))?;
 
     let value = param.value();
 
@@ -68,7 +67,7 @@ fn render_object(
 ) -> HelperResult {
     let param = h
         .param(0)
-        .ok_or_else(|| HandlebarsRenderError::new("parameter not found"))?;
+        .ok_or_else(|| RenderErrorReason::ParamNotFoundForIndex("object", 0))?;
 
     let value = param.value();
 

@@ -3,8 +3,7 @@
 use std::{fmt::Display, time::Duration};
 
 use handlebars::{
-    Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext,
-    RenderError as HandlebarsRenderError,
+    Context, Handlebars, Helper, HelperDef, HelperResult, Output, RenderContext, RenderErrorReason,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -84,11 +83,11 @@ fn handlebars_relative_percentage_helper(
     let param0 = h
         .param(0)
         .and_then(|v| v.value().as_f64())
-        .ok_or_else(|| HandlebarsRenderError::new("relative-percentage: param0 not found"))?;
+        .ok_or_else(|| RenderErrorReason::ParamNotFoundForIndex("relative-percentage", 0))?;
     let param1 = h
         .param(1)
         .and_then(|v| v.value().as_f64())
-        .ok_or_else(|| HandlebarsRenderError::new("relative-percentage: param1 not found"))?;
+        .ok_or_else(|| RenderErrorReason::ParamNotFoundForIndex("relative-percentage", 1))?;
 
     if param1 == 0.0 {
         out.write("-")?;
@@ -149,36 +148,24 @@ impl ValueRenderFunction {
     }
 
     fn register_helpers(handlebars: &mut Handlebars) {
-        ValueRenderFunction::HumanBytes.register_handlebars_helper(handlebars);
-        ValueRenderFunction::Duration.register_handlebars_helper(handlebars);
-        ValueRenderFunction::Timestamp.register_handlebars_helper(handlebars);
+        ValueRenderFunction::HumanBytes.register_handlebars_helper("human-bytes", handlebars);
+        ValueRenderFunction::Duration.register_handlebars_helper("duration", handlebars);
+        ValueRenderFunction::Timestamp.register_handlebars_helper("timestamp", handlebars);
     }
 
-    fn register_handlebars_helper(&'static self, handlebars: &mut Handlebars) {
-        // Use serde to get own kebab-case representation that is later used
-        // to register the helper, e.g. HumanBytes -> human-bytes
-        let tag = serde_json::to_string(self)
-            .expect("serde failed to serialize ValueRenderFunction enum");
-
-        // But as it's a string value, the generated string is quoted,
-        // so remove leading/trailing double quotes
-        let tag = tag
-            .strip_prefix('\"')
-            .and_then(|t| t.strip_suffix('\"'))
-            .expect("serde serialized string representation was not contained in double quotes");
-
+    fn register_handlebars_helper(&'static self, name: &'static str, handlebars: &mut Handlebars) {
         handlebars.register_helper(
-            tag,
+            name,
             Box::new(
-                |h: &Helper,
-                 _r: &Handlebars,
-                 _: &Context,
-                 _rc: &mut RenderContext,
-                 out: &mut dyn Output|
-                 -> HelperResult {
+                move |h: &Helper,
+                      _r: &Handlebars,
+                      _: &Context,
+                      _rc: &mut RenderContext,
+                      out: &mut dyn Output|
+                      -> HelperResult {
                     let param = h
                         .param(0)
-                        .ok_or(HandlebarsRenderError::new("parameter not found"))?;
+                        .ok_or_else(|| RenderErrorReason::ParamNotFoundForIndex(name, 0))?;
 
                     let value = param.value();
                     out.write(&self.render(value))?;
