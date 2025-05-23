@@ -121,7 +121,6 @@ tracing-log = { version = "0.2", default-features = false }
 tracing-subscriber = "0.3.16"
 url = "2.2"
 walkdir = "2"
-webauthn-rs = "0.5"
 zstd = "0.13"
 
 # workspace dependencies

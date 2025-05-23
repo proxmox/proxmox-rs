@@ -24,11 +24,20 @@ percent-encoding = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 serde_plain = { workspace = true, optional = true }
 url = { workspace = true, optional = true }
-webauthn-rs = { workspace = true, optional = true }
+webauthn-rs-core = { version = "0.5", optional = true }
 
 proxmox-schema = { workspace = true, features = [ "api-macro" ], optional = true }
 proxmox-time = { workspace = true, optional = true }
 proxmox-uuid = { workspace = true, optional = true }
+
+[dependencies.webauthn-rs]
+version = "0.5"
+optional = true
+features = [
+    "danger-allow-state-serialisation",
+    "danger-credential-internals", # Allow From<SecurityKey> for Credential so we can store it.
+    "danger-user-presence-only-security-keys",
+]
 
 [features]
 default = [ "totp" ]
@@ -44,6 +53,7 @@ api = [
     "dep:proxmox-uuid",
     "dep:url",
     "dep:webauthn-rs",
+    "dep:webauthn-rs-core",
 ]
 api-types = [ "types", "dep:proxmox-schema" ]
 totp = [ "dep:base32", "dep:hex", "dep:openssl", "dep:percent-encoding", "dep:serde_plain" ]
