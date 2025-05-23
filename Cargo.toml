@@ -152,7 +152,7 @@ proxmox-shared-memory = { version = "1.0.0", path = "proxmox-shared-memory" }
 proxmox-sortable-macro = { version = "0.1.3", path = "proxmox-sortable-macro" }
 proxmox-sys = { version = "1.0.0", path = "proxmox-sys" }
 proxmox-systemd = { version = "1.0.0", path = "proxmox-systemd" }
-proxmox-tfa = { version = "5.0.0", path = "proxmox-tfa" }
+proxmox-tfa = { version = "6.0.0", path = "proxmox-tfa" }
 proxmox-time = { version = "2.1.0", path = "proxmox-time" }
 proxmox-uuid = { version = "1.1.0", path = "proxmox-uuid" }
 proxmox-worker-task = { version = "1.0.0", path = "proxmox-worker-task" }
