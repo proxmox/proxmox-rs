@@ -467,6 +467,14 @@ fn test_standard_repositories() -> Result<(), Error> {
 fn test_get_current_release_codename() -> Result<(), Error> {
     let codename = get_current_release_codename()?;
 
+    // If this fails due to you building on another release, e.g. when bootstrapping the next major
+    // release, you can changes this but should at least ensure that:
+    //
+    // - The defined standard repos match what's available for that target release.
+    // - The format to write out repos is matching the default format of that release. E.g. deb822
+    //   .sources for trixie and newer, single line entries .list for older releases.
+    // - All known DebianCodenames are implemented.
+
     assert!(codename == DebianCodename::Trixie);
 
     Ok(())
