@@ -15,6 +15,8 @@ pub enum DebianCodename {
     Bullseye,
     Bookworm,
     Trixie,
+    Forky,
+    Duke,
 }
 
 impl DebianCodename {
@@ -40,7 +42,9 @@ impl TryFrom<&str> for DebianCodename {
             "bullseye" => Ok(DebianCodename::Bullseye),
             "bookworm" => Ok(DebianCodename::Bookworm),
             "trixie" => Ok(DebianCodename::Trixie),
-            _ => bail!("unknown Debian code name '{}'", string),
+            "forky" => Ok(DebianCodename::Forky),
+            "duke" => Ok(DebianCodename::Duke),
+            _ => bail!("unknown Debian code name '{string}'"),
         }
     }
 }
@@ -59,7 +63,9 @@ impl TryFrom<u8> for DebianCodename {
             11 => Ok(DebianCodename::Bullseye),
             12 => Ok(DebianCodename::Bookworm),
             13 => Ok(DebianCodename::Trixie),
-            _ => bail!("unknown Debian release number '{}'", number),
+            14 => Ok(DebianCodename::Forky),
+            15 => Ok(DebianCodename::Duke),
+            _ => bail!("unknown Debian release number '{number}'"),
         }
     }
 }
@@ -76,6 +82,8 @@ impl Display for DebianCodename {
             DebianCodename::Bullseye => write!(f, "bullseye"),
             DebianCodename::Bookworm => write!(f, "bookworm"),
             DebianCodename::Trixie => write!(f, "trixie"),
+            DebianCodename::Forky => write!(f, "forky"),
+            DebianCodename::Duke => write!(f, "duke"),
         }
     }
 }
