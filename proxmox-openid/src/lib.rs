@@ -16,10 +16,9 @@ use openidconnect::{
     //curl::http_client,
     core::{
         CoreAuthDisplay, CoreAuthPrompt, CoreAuthenticationFlow, CoreErrorResponseType,
-        CoreGenderClaim, CoreIdTokenVerifier, CoreJsonWebKey, CoreJsonWebKeyType,
-        CoreJsonWebKeyUse, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,
-        CoreProviderMetadata, CoreRevocableToken, CoreRevocationErrorResponse,
-        CoreTokenIntrospectionResponse, CoreTokenType,
+        CoreGenderClaim, CoreIdTokenVerifier, CoreJsonWebKey, CoreJweContentEncryptionAlgorithm,
+        CoreJwsSigningAlgorithm, CoreProviderMetadata, CoreRevocableToken,
+        CoreRevocationErrorResponse, CoreTokenIntrospectionResponse, CoreTokenType,
     },
     AdditionalClaims,
     AuthenticationContextClass,
@@ -28,6 +27,9 @@ use openidconnect::{
     ClientSecret,
     CsrfToken,
     EmptyExtraTokenFields,
+    EndpointMaybeSet,
+    EndpointNotSet,
+    EndpointSet,
     IdTokenClaims,
     IdTokenFields,
     IssuerUrl,
@@ -57,7 +59,6 @@ pub type GenericIdTokenFields = IdTokenFields<
     CoreGenderClaim,
     CoreJweContentEncryptionAlgorithm,
     CoreJwsSigningAlgorithm,
-    CoreJsonWebKeyType,
 >;
 
 pub type GenericTokenResponse = StandardTokenResponse<GenericIdTokenFields, CoreTokenType>;
@@ -67,17 +68,19 @@ pub type GenericClient = openidconnect::Client<
     CoreAuthDisplay,
     CoreGenderClaim,
     CoreJweContentEncryptionAlgorithm,
-    CoreJwsSigningAlgorithm,
-    CoreJsonWebKeyType,
-    CoreJsonWebKeyUse,
     CoreJsonWebKey,
     CoreAuthPrompt,
     StandardErrorResponse<CoreErrorResponseType>,
     GenericTokenResponse,
-    CoreTokenType,
     CoreTokenIntrospectionResponse,
     CoreRevocableToken,
     CoreRevocationErrorResponse,
+    EndpointSet,
+    EndpointNotSet,
+    EndpointNotSet,
+    EndpointNotSet,
+    EndpointMaybeSet,
+    EndpointMaybeSet,
 >;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -157,7 +160,7 @@ impl OpenIdAuthenticator {
         let client_key = config.client_key.clone().map(ClientSecret::new);
         let issuer_url = IssuerUrl::new(config.issuer_url.clone())?;
 
-        let provider_metadata = CoreProviderMetadata::discover(&issuer_url, http_client)?;
+        let provider_metadata = CoreProviderMetadata::discover(&issuer_url, &http_client)?;
 
         let client =
             GenericClient::from_provider_metadata(provider_metadata, client_id, client_key)
@@ -250,8 +253,9 @@ impl OpenIdAuthenticator {
         let token_response = self
             .client
             .exchange_code(code)
+            .map_err(|err| format_err!("Configuration error for token endpoint: {}", err))?
             .set_pkce_verifier(private_auth_state.pkce_verifier())
-            .request(http_client)
+            .request(&http_client)
             .map_err(|err| format_err!("Failed to contact token endpoint: {}", err))?;
 
         let id_token_verifier: CoreIdTokenVerifier = self.client.id_token_verifier();
@@ -273,7 +277,7 @@ impl OpenIdAuthenticator {
         let userinfo_claims: GenericUserInfoClaims = self
             .client
             .user_info(token_response.access_token().to_owned(), None)?
-            .request(http_client)
+            .request(&http_client)
             .map_err(|err| format_err!("Failed to contact userinfo endpoint: {}", err))?;
 
         Ok((id_token_claims.clone(), userinfo_claims))
