@@ -12,6 +12,9 @@ use openssl::sha;
 use openssl::x509::X509;
 use serde::{Deserialize, Serialize};
 
+use proxmox_base64::url::decode_no_pad as decode;
+use proxmox_base64::url::encode_no_pad as encode;
+
 const CHALLENGE_LEN: usize = 32;
 const U2F_VERSION: &str = "U2F_V2";
 
@@ -65,7 +68,7 @@ macro_rules! bail {
 pub struct RegisteredKey {
     /// Identifies the key handle on the client side. Used to create authentication challenges, so
     /// the client knows which key to use. Must be remembered.
-    #[serde(with = "bytes_as_base64url_nopad")]
+    #[serde(with = "proxmox_base64::url::as_base64_no_pad_indifferent")]
     pub key_handle: Vec<u8>,
 
     pub version: String,
@@ -81,14 +84,14 @@ pub struct Registration {
 
     /// Public part of the client key identified via the `key_handle`. Required to verify future
     /// authentication responses. Must be remembered.
-    #[serde(with = "bytes_as_base64")]
+    #[serde(with = "proxmox_base64::as_base64")]
     pub public_key: Vec<u8>,
 
     /// Attestation certificate (in DER format) from which we originally copied the `key_handle`.
     /// Not necessary for authentication, unless the hardware tokens should be restricted to
     /// specific provider identities. Optional.
     #[serde(
-        with = "bytes_as_base64",
+        with = "proxmox_base64::as_base64",
         default,
         skip_serializing_if = "Vec::is_empty"
     )]
@@ -161,7 +164,7 @@ pub struct AuthChallenge {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthResponse {
-    #[serde(with = "bytes_as_base64url_nopad")]
+    #[serde(with = "proxmox_base64::url::as_base64_no_pad_indifferent")]
     pub key_handle: Vec<u8>,
     pub client_data: String,
     pub signature_data: String,
@@ -343,20 +346,6 @@ impl U2f {
             Err(err) => bail!("openssl error while verifying signature: {}", err),
         }
     }
-}
-
-/// base64url encoding
-fn encode(data: &[u8]) -> String {
-    let mut out = base64::encode_config(data, base64::URL_SAFE_NO_PAD);
-    while out.ends_with('=') {
-        out.pop();
-    }
-    out
-}
-
-/// base64url decoding
-fn decode(data: &str) -> Result<Vec<u8>, base64::DecodeError> {
-    base64::decode_config(data, base64::URL_SAFE_NO_PAD)
 }
 
 /// produce a challenge, which is just a bunch of random data
@@ -597,35 +586,5 @@ mod test {
             res.is_some(),
             "test authentication signature fails verification"
         );
-    }
-}
-
-mod bytes_as_base64 {
-    use serde::{Deserialize, Deserializer, Serializer};
-
-    pub fn serialize<S: Serializer>(data: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&base64::encode(data))
-    }
-
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
-        use serde::de::Error;
-        String::deserialize(deserializer)
-            .and_then(|string| base64::decode(string).map_err(|err| Error::custom(err.to_string())))
-    }
-}
-
-mod bytes_as_base64url_nopad {
-    use serde::{Deserialize, Deserializer, Serializer};
-
-    pub fn serialize<S: Serializer>(data: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&base64::encode_config(data, base64::URL_SAFE_NO_PAD))
-    }
-
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
-        use serde::de::Error;
-        String::deserialize(deserializer).and_then(|string| {
-            base64::decode_config(string, base64::URL_SAFE_NO_PAD)
-                .map_err(|err| Error::custom(err.to_string()))
-        })
     }
 }
