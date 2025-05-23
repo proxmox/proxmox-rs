@@ -65,22 +65,10 @@ impl RecoveryState {
 pub struct RegisteredKey {
     /// Identifies the key handle on the client side. Used to create authentication challenges, so
     /// the client knows which key to use. Must be remembered.
-    #[serde(with = "bytes_as_base64url_nopad")]
+    #[serde(with = "proxmox_base64::url::as_base64_must_not_pad")]
     pub key_handle: Vec<u8>,
 
     pub version: String,
-}
-
-mod bytes_as_base64url_nopad {
-    use serde::{Deserialize, Deserializer};
-
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
-        use serde::de::Error;
-        String::deserialize(deserializer).and_then(|string| {
-            base64::decode_config(string, base64::URL_SAFE_NO_PAD)
-                .map_err(|err| Error::custom(err.to_string()))
-        })
-    }
 }
 
 /// A user's response to a TFA challenge.
