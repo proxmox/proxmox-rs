@@ -1,15 +1,16 @@
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::{LazyLock, Mutex};
 
 use anyhow::{bail, format_err, Error};
 use futures::future;
 use http::request::Parts;
 use http::HeaderMap;
 use hyper::{Method, Response};
-
 use hyper_util::server::graceful::GracefulShutdown;
+use tokio::net::TcpListener;
+
 use proxmox_http::Body;
 use proxmox_log::LevelFilter;
 use proxmox_router::{
@@ -18,7 +19,6 @@ use proxmox_router::{
 use proxmox_schema::api;
 
 use proxmox_rest_server::{ApiConfig, AuthError, RestEnvironment, RestServer};
-use tokio::net::TcpListener;
 
 // Create a Dummy User information system
 struct DummyUserInfo;
@@ -191,7 +191,7 @@ const SUBDIRS: SubdirMap = &[
 const ROUTER: Router = Router::new()
     .get(&list_subdirs_api_method!(SUBDIRS))
     .subdirs(SUBDIRS);
-                                e
+
 async fn run() -> Result<(), Error> {
     // we first have to configure the api environment (basedir etc.)
 
@@ -231,7 +231,7 @@ async fn run() -> Result<(), Error> {
                     }
                 }
                 log::info!("shutting down..");
-                shutdown.shutdown().await
+                graceful.shutdown().await;
                 Ok(())
             })
         },
