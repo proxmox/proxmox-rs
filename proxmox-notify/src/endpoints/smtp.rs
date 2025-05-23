@@ -376,3 +376,35 @@ fn build_forwarded_message(
 
     Ok(message)
 }
+
+#[cfg(all(test, feature = "mail-forwarder"))]
+mod tests {
+    use lettre::message::header::Date;
+
+    use super::*;
+
+    #[test]
+    fn test_forward_message_from_raw() {
+        let input = "testdata/test1.msg";
+        let reference = "testdata/test_forward_message_from_raw.ref";
+
+        let mut email_builder =
+            Message::builder().from("Sender <sender@example.com>".parse().unwrap());
+
+        email_builder = email_builder.to("Recipient <recipient@example.com>".parse().unwrap());
+
+        let raw_mail = std::fs::read(input).unwrap();
+        let mut message = build_forwarded_message(email_builder, "test", &raw_mail).unwrap();
+
+        // The Date header contains the current time, let's just remove it
+        // for this test.
+        message.headers_mut().remove::<Date>();
+
+        let formatted = message.formatted();
+
+        // Uncomment to update the reference file.
+        // std::fs::write(reference, &formatted).unwrap();
+
+        assert_eq!(formatted, std::fs::read(reference).unwrap());
+    }
+}
