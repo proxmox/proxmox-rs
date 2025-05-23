@@ -232,7 +232,8 @@ impl Notification {
     }
     #[cfg(feature = "mail-forwarder")]
     pub fn new_forwarded_mail(raw_mail: &[u8], uid: Option<u32>) -> Result<Self, Error> {
-        let message = mail_parser::Message::parse(raw_mail)
+        let message = mail_parser::MessageParser::default()
+            .parse(raw_mail)
             .ok_or_else(|| Error::Generic("could not parse forwarded email".to_string()))?;
 
         let title = message.subject().unwrap_or_default().into();

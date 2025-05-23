@@ -293,17 +293,16 @@ fn build_forwarded_message(
     use lettre::message::Body;
     use tracing::error;
 
-    let parsed_message = mail_parser::Message::parse(raw)
+    let parsed_message = mail_parser::MessageParser::default()
+        .parse(raw)
         .ok_or_else(|| Error::Generic("could not parse forwarded email".to_string()))?;
 
     let root_part = parsed_message
         .part(0)
         .ok_or_else(|| Error::Generic("root message part not present".to_string()))?;
 
-    let raw_body = parsed_message
-        .raw_message()
-        .get(root_part.offset_body..root_part.offset_end)
-        .ok_or_else(|| Error::Generic("could not get raw body content".to_string()))?;
+    let raw_body = &parsed_message.raw_message()
+        [root_part.offset_body as usize..root_part.offset_end as usize];
 
     // We assume that the original message content is already properly
     // encoded, thus we add the original message body in 'Binary' encoding.
@@ -345,7 +344,8 @@ fn build_forwarded_message(
                         use std::fmt::Write;
 
                         for attribute in attributes {
-                            let _ = write!(&mut value, "; {}=\"{}\"", attribute.0, attribute.1);
+                            let _ =
+                                write!(&mut value, "; {}=\"{}\"", attribute.name, attribute.value);
                         }
                     }
                     Some(value)
