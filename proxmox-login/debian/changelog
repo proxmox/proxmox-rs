@@ -1,3 +1,13 @@
+rust-proxmox-login (1.0.0-1) trixie; urgency=medium
+
+  * switch to proxmox-base64
+
+  * switch from webauthn-rs 0.3 to webauthn-rs-proto 0.5
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 23 May 2025 15:08:25 +0200
+
 rust-proxmox-login (0.2.0-1) bookworm; urgency=medium
 
   * make password optional in Login requests

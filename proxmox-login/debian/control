@@ -2,13 +2,16 @@ Source: rust-proxmox-login
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
- rustc:native (>= 1.80) <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-base64-0.13+default-dev <!nocheck>,
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~) <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
+ librust-proxmox-base64-1+default-dev <!nocheck>,
+ librust-proxmox-serde-1+default-dev <!nocheck>,
+ librust-proxmox-serde-1+perl-dev <!nocheck>,
+ librust-proxmox-serde-1+serde-json-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
@@ -25,9 +28,12 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-base64-0.13+default-dev,
  librust-js-sys-0.3+default-dev (>= 0.3.55-~~),
  librust-percent-encoding-2+default-dev (>= 2.1-~~),
+ librust-proxmox-base64-1+default-dev,
+ librust-proxmox-serde-1+default-dev,
+ librust-proxmox-serde-1+perl-dev,
+ librust-proxmox-serde-1+serde-json-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
@@ -36,12 +42,12 @@ Suggests:
  librust-proxmox-login+webauthn-dev (= ${binary:Version})
 Provides:
  librust-proxmox-login+default-dev (= ${binary:Version}),
- librust-proxmox-login-0-dev (= ${binary:Version}),
- librust-proxmox-login-0+default-dev (= ${binary:Version}),
- librust-proxmox-login-0.2-dev (= ${binary:Version}),
- librust-proxmox-login-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-login-0.2.0-dev (= ${binary:Version}),
- librust-proxmox-login-0.2.0+default-dev (= ${binary:Version})
+ librust-proxmox-login-1-dev (= ${binary:Version}),
+ librust-proxmox-login-1+default-dev (= ${binary:Version}),
+ librust-proxmox-login-1.0-dev (= ${binary:Version}),
+ librust-proxmox-login-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-login-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-login-1.0.0+default-dev (= ${binary:Version})
 Description: Proxmox product authentication api - Rust source code
  Source code for Debianized Rust crate "proxmox-login"
 
@@ -51,11 +57,11 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-login-dev (= ${binary:Version}),
- librust-http-0.2+default-dev (>= 0.2.4-~~)
+ librust-http-1+default-dev
 Provides:
- librust-proxmox-login-0+http-dev (= ${binary:Version}),
- librust-proxmox-login-0.2+http-dev (= ${binary:Version}),
- librust-proxmox-login-0.2.0+http-dev (= ${binary:Version})
+ librust-proxmox-login-1+http-dev (= ${binary:Version}),
+ librust-proxmox-login-1.0+http-dev (= ${binary:Version}),
+ librust-proxmox-login-1.0.0+http-dev (= ${binary:Version})
 Description: Proxmox product authentication api - feature "http"
  This metapackage enables feature "http" for the Rust proxmox-login crate, by
  pulling in any additional dependencies needed by that feature.
@@ -66,11 +72,11 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-login-dev (= ${binary:Version}),
- librust-webauthn-rs-0.3+default-dev
+ librust-webauthn-rs-proto-0.5+default-dev
 Provides:
- librust-proxmox-login-0+webauthn-dev (= ${binary:Version}),
- librust-proxmox-login-0.2+webauthn-dev (= ${binary:Version}),
- librust-proxmox-login-0.2.0+webauthn-dev (= ${binary:Version})
+ librust-proxmox-login-1+webauthn-dev (= ${binary:Version}),
+ librust-proxmox-login-1.0+webauthn-dev (= ${binary:Version}),
+ librust-proxmox-login-1.0.0+webauthn-dev (= ${binary:Version})
 Description: Proxmox product authentication api - feature "webauthn"
  This metapackage enables feature "webauthn" for the Rust proxmox-login crate,
  by pulling in any additional dependencies needed by that feature.
