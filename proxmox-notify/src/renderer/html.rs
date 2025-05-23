@@ -1,6 +1,6 @@
 use handlebars::{
     Context, Handlebars, Helper, HelperResult, Output, RenderContext,
-    RenderError as HandlebarsRenderError,
+    RenderError as HandlebarsRenderError, RenderErrorReason,
 };
 use serde_json::Value;
 
@@ -20,7 +20,8 @@ fn render_html_table(
 
     let value = param.value();
 
-    let table: Table = serde_json::from_value(value.clone())?;
+    let table: Table = serde_json::from_value(value.clone())
+        .map_err(|err| RenderErrorReason::NestedError(err.into()))?;
 
     out.write("<table style=\"border: 1px solid\";border-style=\"collapse\">\n")?;
 
@@ -72,7 +73,10 @@ fn render_object(
     let value = param.value();
 
     out.write("\n<pre>")?;
-    out.write(&serde_json::to_string_pretty(&value)?)?;
+    out.write(
+        &serde_json::to_string_pretty(&value)
+            .map_err(|err| RenderErrorReason::NestedError(err.into()))?,
+    )?;
     out.write("\n</pre>\n")?;
 
     Ok(())

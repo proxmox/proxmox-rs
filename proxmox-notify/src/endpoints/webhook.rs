@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use handlebars::{
     Context as HandlebarsContext, Handlebars, Helper, HelperResult, Output, RenderContext,
-    RenderError as HandlebarsRenderError,
+    RenderError as HandlebarsRenderError, RenderErrorReason,
 };
 use http::Request;
 use percent_encoding::AsciiSet;
@@ -473,7 +473,8 @@ fn handlebars_json(
         .map(|v| v.value())
         .ok_or_else(|| HandlebarsRenderError::new("json: missing parameter"))?;
 
-    let json = serde_json::to_string(param0)?;
+    let json =
+        serde_json::to_string(param0).map_err(|err| RenderErrorReason::NestedError(err.into()))?;
     out.write(&json)?;
 
     Ok(())
@@ -492,7 +493,8 @@ fn handlebars_escape(
         .ok_or_else(|| HandlebarsRenderError::new("escape: missing text parameter"))?;
 
     let val = Value::String(text.to_string());
-    let json = serde_json::to_string(&val)?;
+    let json =
+        serde_json::to_string(&val).map_err(|err| RenderErrorReason::NestedError(err.into()))?;
     out.write(&json[1..json.len() - 1])?;
 
     Ok(())
