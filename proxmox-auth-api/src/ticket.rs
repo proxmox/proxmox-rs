@@ -125,7 +125,7 @@ where
         write!(
             &mut output,
             "::{}",
-            base64::encode_config(&signature, base64::STANDARD_NO_PAD),
+            proxmox_base64::encode_no_pad(&signature),
         )?;
 
         self.signature = Some(signature);
@@ -217,7 +217,7 @@ where
         if !remainder.starts_with(':') {
             bail!("ticket without signature separator");
         }
-        let signature = base64::decode_config(&remainder[1..], base64::STANDARD_NO_PAD)
+        let signature = proxmox_base64::decode_no_pad(&remainder[1..])
             .map_err(|err| format_err!("ticket with bad signature: {}", err))?;
 
         Ok(Self {

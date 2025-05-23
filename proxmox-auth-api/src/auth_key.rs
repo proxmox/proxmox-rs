@@ -154,7 +154,7 @@ impl HMACKey {
     }
 
     pub fn from_base64(string: &str) -> Result<Self, Error> {
-        let bytes = base64::decode_config(string, base64::STANDARD_NO_PAD)
+        let bytes = proxmox_base64::decode_no_pad(string)
             .map_err(|e| format_err!("could not decode base64 hmac key - {e}"))?;
 
         Self::from_bytes(&bytes)
@@ -202,7 +202,7 @@ impl HMACKey {
             .raw_private_key()
             .map_err(|e| format_err!("could not get key as raw bytes - {e}"))?;
 
-        Ok(base64::encode_config(bytes, base64::STANDARD_NO_PAD))
+        Ok(proxmox_base64::encode_no_pad(bytes))
     }
 
     // This is needed for legacy CSRF token verifyication.

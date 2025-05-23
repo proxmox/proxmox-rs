@@ -355,10 +355,8 @@ pub fn assemble_csrf_prevention_token(secret: &HMACKey, userid: &Userid) -> Stri
     let epoch = crate::time::epoch_i64();
 
     let data = csrf_token_data(epoch, userid);
-    let digest = base64::encode_config(
-        secret.sign(MessageDigest::sha3_256(), &data).unwrap(),
-        base64::STANDARD_NO_PAD,
-    );
+    let digest =
+        proxmox_base64::encode_no_pad(secret.sign(MessageDigest::sha3_256(), &data).unwrap());
     format!("{:08X}:{}", epoch, digest)
 }
 
@@ -389,7 +387,7 @@ fn verify_csrf_prevention_token_do(
         .filter(|(_, sig)| !sig.contains(':'))
         .ok_or_else(|| format_err!("format error - wrong number of parts."))?;
 
-    let sig = base64::decode_config(sig, base64::STANDARD_NO_PAD)
+    let sig = proxmox_base64::decode_no_pad(sig)
         .map_err(|e| format_err!("could not base64 decode csrf signature - {e}"))?;
 
     let ttime = i64::from_str_radix(timestamp, 16)
@@ -460,12 +458,12 @@ fn test_verify_legacy_csrf_tokens() {
     let data = format!("{:08X}:{}:", epoch, userid);
     hasher.update(data.as_bytes());
     hasher.update(&key);
-    let old_digest = base64::encode_config(hasher.finish(), base64::STANDARD_NO_PAD);
+    let old_digest = proxmox_base64::encode_no_pad(hasher.finish());
 
     let token = format!("{:08X}:{}", epoch, old_digest);
 
     // load key into new hmackey wrapper and verify
-    let string = base64::encode_config(key.clone(), base64::STANDARD_NO_PAD);
+    let string = proxmox_base64::encode_no_pad(key.clone());
     let secret =
         HMACKey::from_base64(&string).expect("could not create HMAC key from base64 for testing");
     verify_csrf_prevention_token(&secret, &userid, &token, -300, 300).unwrap();
