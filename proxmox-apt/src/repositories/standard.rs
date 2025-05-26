@@ -52,29 +52,6 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 "This repository contains the latest packages and is primarily used for test labs \
                 and by developers to test new features."
             }
-            APTRepositoryHandle::CephQuincyEnterprise => {
-                "This repository holds the production-ready Proxmox Ceph Quincy packages."
-            }
-            APTRepositoryHandle::CephQuincyNoSubscription => {
-                "This repository holds the Proxmox Ceph Quincy packages intended for \
-                non-production use. The deprecated 'main' repository is an alias for this in \
-                Proxmox VE 8."
-            }
-            APTRepositoryHandle::CephQuincyTest => {
-                "This repository contains the Ceph Quincy packages before they are moved to the \
-                main repository."
-            }
-            APTRepositoryHandle::CephReefEnterprise => {
-                "This repository holds the production-ready Proxmox Ceph Reef packages."
-            }
-            APTRepositoryHandle::CephReefNoSubscription => {
-                "This repository holds the Proxmox Ceph Reef packages intended for \
-                non-production use."
-            }
-            APTRepositoryHandle::CephReefTest => {
-                "This repository contains the Ceph Reef packages before they are moved to the \
-                main repository."
-            }
             APTRepositoryHandle::CephSquidEnterprise => {
                 "This repository holds the production-ready Proxmox Ceph Squid packages."
             }
@@ -95,12 +72,6 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             APTRepositoryHandle::Enterprise => "Enterprise",
             APTRepositoryHandle::NoSubscription => "No-Subscription",
             APTRepositoryHandle::Test => "Test",
-            APTRepositoryHandle::CephQuincyEnterprise => "Ceph Quincy Enterprise",
-            APTRepositoryHandle::CephQuincyNoSubscription => "Ceph Quincy No-Subscription",
-            APTRepositoryHandle::CephQuincyTest => "Ceph Quincy Test",
-            APTRepositoryHandle::CephReefEnterprise => "Ceph Reef Enterprise",
-            APTRepositoryHandle::CephReefNoSubscription => "Ceph Reef No-Subscription",
-            APTRepositoryHandle::CephReefTest => "Ceph Reef Test",
             APTRepositoryHandle::CephSquidEnterprise => "Ceph Squid Enterprise",
             APTRepositoryHandle::CephSquidNoSubscription => "Ceph Squid No-Subscription",
             APTRepositoryHandle::CephSquidTest => "Ceph Squid Test",
@@ -115,13 +86,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             }
             APTRepositoryHandle::NoSubscription => "/etc/apt/sources.list".to_string(),
             APTRepositoryHandle::Test => "/etc/apt/sources.list".to_string(),
-            APTRepositoryHandle::CephQuincyEnterprise
-            | APTRepositoryHandle::CephQuincyNoSubscription
-            | APTRepositoryHandle::CephQuincyTest
-            | APTRepositoryHandle::CephReefEnterprise
-            | APTRepositoryHandle::CephReefNoSubscription
-            | APTRepositoryHandle::CephReefTest
-            | APTRepositoryHandle::CephSquidEnterprise
+            APTRepositoryHandle::CephSquidEnterprise
             | APTRepositoryHandle::CephSquidNoSubscription
             | APTRepositoryHandle::CephSquidTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
         }
@@ -164,36 +129,6 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                     "pdm" => format!("{}-test", product),
                     _ => format!("{}test", product),
                 },
-            ),
-            APTRepositoryHandle::CephQuincyEnterprise => (
-                APTRepositoryPackageType::Deb,
-                vec!["https://enterprise.proxmox.com/debian/ceph-quincy".to_string()],
-                "enterprise".to_string(),
-            ),
-            APTRepositoryHandle::CephQuincyNoSubscription => (
-                APTRepositoryPackageType::Deb,
-                vec!["http://download.proxmox.com/debian/ceph-quincy".to_string()],
-                "no-subscription".to_string(),
-            ),
-            APTRepositoryHandle::CephQuincyTest => (
-                APTRepositoryPackageType::Deb,
-                vec!["http://download.proxmox.com/debian/ceph-quincy".to_string()],
-                "test".to_string(),
-            ),
-            APTRepositoryHandle::CephReefEnterprise => (
-                APTRepositoryPackageType::Deb,
-                vec!["https://enterprise.proxmox.com/debian/ceph-reef".to_string()],
-                "enterprise".to_string(),
-            ),
-            APTRepositoryHandle::CephReefNoSubscription => (
-                APTRepositoryPackageType::Deb,
-                vec!["http://download.proxmox.com/debian/ceph-reef".to_string()],
-                "no-subscription".to_string(),
-            ),
-            APTRepositoryHandle::CephReefTest => (
-                APTRepositoryPackageType::Deb,
-                vec!["http://download.proxmox.com/debian/ceph-reef".to_string()],
-                "test".to_string(),
             ),
             APTRepositoryHandle::CephSquidEnterprise => (
                 APTRepositoryPackageType::Deb,
