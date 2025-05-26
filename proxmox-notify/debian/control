@@ -77,9 +77,9 @@ Suggests:
  librust-proxmox-notify+smtp-dev (= ${binary:Version}),
  librust-proxmox-notify+webhook-dev (= ${binary:Version})
 Provides:
- librust-proxmox-notify-0-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5-dev (= ${binary:Version})
+ librust-proxmox-notify-1-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0.0-dev (= ${binary:Version})
 Description: Notification base and plugins - Rust source code
  Source code for Debianized Rust crate "proxmox-notify"
 
@@ -94,9 +94,9 @@ Depends:
  librust-proxmox-notify+smtp-dev (= ${binary:Version}),
  librust-proxmox-notify+webhook-dev (= ${binary:Version})
 Provides:
- librust-proxmox-notify-0+default-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+default-dev (= ${binary:Version})
+ librust-proxmox-notify-1+default-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0.0+default-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "default"
  This metapackage enables feature "default" for the Rust proxmox-notify crate,
  by pulling in any additional dependencies needed by that feature.
@@ -111,9 +111,9 @@ Depends:
  librust-proxmox-http-1+client-sync-dev,
  librust-proxmox-http-1+default-dev
 Provides:
- librust-proxmox-notify-0+gotify-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5+gotify-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+gotify-dev (= ${binary:Version})
+ librust-proxmox-notify-1+gotify-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0+gotify-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0.0+gotify-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "gotify"
  This metapackage enables feature "gotify" for the Rust proxmox-notify crate, by
  pulling in any additional dependencies needed by that feature.
@@ -128,9 +128,9 @@ Depends:
  librust-proxmox-sendmail-1+mail-forwarder-dev,
  librust-proxmox-sys-1+default-dev
 Provides:
- librust-proxmox-notify-0+mail-forwarder-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5+mail-forwarder-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+mail-forwarder-dev (= ${binary:Version})
+ librust-proxmox-notify-1+mail-forwarder-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0+mail-forwarder-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0.0+mail-forwarder-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "mail-forwarder"
  This metapackage enables feature "mail-forwarder" for the Rust proxmox-notify
  crate, by pulling in any additional dependencies needed by that feature.
@@ -144,12 +144,12 @@ Depends:
  librust-proxmox-sys-1+default-dev
 Provides:
  librust-proxmox-notify+pve-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0+pbs-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0+pve-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5+pbs-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5+pve-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+pbs-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+pve-context-dev (= ${binary:Version})
+ librust-proxmox-notify-1+pbs-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-1+pve-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0+pbs-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0+pve-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0.0+pbs-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0.0+pve-context-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "pbs-context" and 1 more
  This metapackage enables feature "pbs-context" for the Rust proxmox-notify
  crate, by pulling in any additional dependencies needed by that feature.
@@ -165,9 +165,9 @@ Depends:
  librust-proxmox-sendmail-1+default-dev,
  librust-proxmox-sys-1+default-dev
 Provides:
- librust-proxmox-notify-0+sendmail-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5+sendmail-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+sendmail-dev (= ${binary:Version})
+ librust-proxmox-notify-1+sendmail-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0+sendmail-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0.0+sendmail-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "sendmail"
  This metapackage enables feature "sendmail" for the Rust proxmox-notify crate,
  by pulling in any additional dependencies needed by that feature.
@@ -180,9 +180,9 @@ Depends:
  librust-proxmox-notify-dev (= ${binary:Version}),
  librust-lettre-0.11+default-dev (>= 0.11.1-~~)
 Provides:
- librust-proxmox-notify-0+smtp-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5+smtp-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+smtp-dev (= ${binary:Version})
+ librust-proxmox-notify-1+smtp-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0+smtp-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0.0+smtp-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "smtp"
  This metapackage enables feature "smtp" for the Rust proxmox-notify crate, by
  pulling in any additional dependencies needed by that feature.
@@ -199,9 +199,9 @@ Depends:
  librust-proxmox-http-1+client-sync-dev,
  librust-proxmox-http-1+default-dev
 Provides:
- librust-proxmox-notify-0+webhook-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5+webhook-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+webhook-dev (= ${binary:Version})
+ librust-proxmox-notify-1+webhook-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0+webhook-dev (= ${binary:Version}),
+ librust-proxmox-notify-1.0.0+webhook-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "webhook"
  This metapackage enables feature "webhook" for the Rust proxmox-notify crate,
  by pulling in any additional dependencies needed by that feature.

@@ -1,3 +1,16 @@
+rust-proxmox-notify (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+  * remove legacy filters and groups; these where only exposed to users of our
+    testing repo for a brief period of time before a bigger rework to the
+    current system that was then officially announced in the Proxmox VE 8.1
+    point release.
+
+  * migrate to handlebars 5
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 26 May 2025 14:36:09 +0200
+
 rust-proxmox-notify (0.5.5-1) bookworm; urgency=medium
 
   * rebuild with section-config 3.0
