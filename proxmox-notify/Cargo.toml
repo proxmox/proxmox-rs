@@ -13,7 +13,6 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-base64 = { workspace = true, optional = true }
 const_format.workspace = true
 handlebars = { workspace = true }
 http = { workspace = true, optional = true }
@@ -26,6 +25,7 @@ regex.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 
+proxmox-base64 = { workspace = true, optional = true }
 proxmox-http = { workspace = true, features = ["client-sync"], optional = true }
 proxmox-http-error.workspace = true
 proxmox-human-byte.workspace = true
@@ -40,9 +40,9 @@ proxmox-uuid = { workspace = true, features = ["serde"] }
 [features]
 default = ["sendmail", "gotify", "smtp", "webhook"]
 mail-forwarder = ["dep:mail-parser", "dep:proxmox-sys", "proxmox-sendmail/mail-forwarder"]
-sendmail = ["dep:proxmox-sys", "dep:base64", "dep:proxmox-sendmail"]
+sendmail = ["dep:proxmox-sys", "dep:proxmox-sendmail"]
 gotify = ["dep:proxmox-http", "dep:http"]
 pve-context = ["dep:proxmox-sys"]
 pbs-context = ["dep:proxmox-sys"]
 smtp = ["dep:lettre"]
-webhook = ["dep:base64", "dep:http", "dep:percent-encoding", "dep:proxmox-http"]
+webhook = ["dep:http", "dep:percent-encoding", "dep:proxmox-base64", "dep:proxmox-http"]

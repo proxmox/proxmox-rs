@@ -294,8 +294,6 @@ mod tests {
     use super::*;
     use crate::{api::test_helpers::empty_config, endpoints::webhook::HttpMethod};
 
-    use base64::encode;
-
     pub fn add_default_webhook_endpoint(config: &mut Config) -> Result<(), HttpError> {
         add_endpoint(
             config,
@@ -308,7 +306,7 @@ mod tests {
                     "application/json",
                 )
                 .into()],
-                body: Some(encode("this is the body")),
+                body: Some(proxmox_base64::encode("this is the body")),
                 comment: Some("comment".into()),
                 disable: Some(false),
                 secret: vec![KeyAndBase64Val::new_with_plain_value("token", "secret").into()],
@@ -388,9 +386,9 @@ mod tests {
             .secret;
 
         assert_eq!(secrets[1].name, "token".to_string());
-        assert_eq!(secrets[1].value, Some(encode("secret")));
+        assert_eq!(secrets[1].value, Some(proxmox_base64::encode("secret")));
         assert_eq!(secrets[0].name, "token2".to_string());
-        assert_eq!(secrets[0].value, Some(encode("newsecret")));
+        assert_eq!(secrets[0].value, Some(proxmox_base64::encode("newsecret")));
 
         // Test property deletion
         update_endpoint(

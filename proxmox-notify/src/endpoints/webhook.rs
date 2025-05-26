@@ -200,7 +200,7 @@ pub struct KeyAndBase64Val {
 impl KeyAndBase64Val {
     #[cfg(test)]
     pub fn new_with_plain_value(name: &str, value: &str) -> Self {
-        let value = base64::encode(value);
+        let value = proxmox_base64::encode(value);
 
         Self {
             name: name.into(),
@@ -214,7 +214,7 @@ impl KeyAndBase64Val {
     /// text.
     pub fn decode_value(&self) -> Result<String, Error> {
         let value = self.value.as_deref().unwrap_or_default();
-        let bytes = base64::decode(value).map_err(|_| {
+        let bytes = proxmox_base64::decode(value).map_err(|_| {
             Error::Generic(format!(
                 "could not decode base64 value with key '{}'",
                 self.name
@@ -374,7 +374,7 @@ impl WebhookEndpoint {
 
     fn base64_decode(&self, s: &str) -> Result<String, Error> {
         // Also here, TODO: revisit Error variants for the *whole* crate.
-        let s = base64::decode(s)
+        let s = proxmox_base64::decode(s)
             .map_err(|err| Error::Generic(format!("could not decode base64 value: {err}")))?;
 
         String::from_utf8(s).map_err(|err| {
@@ -547,7 +547,7 @@ hello%20world
                 header: vec![
                     KeyAndBase64Val::new_with_plain_value("X-Severity", "{{ severity }}").into(),
                 ],
-                body: Some(base64::encode(body_template)),
+                body: Some(proxmox_base64::encode(body_template)),
                 ..Default::default()
             },
             private_config: WebhookPrivateConfig {
