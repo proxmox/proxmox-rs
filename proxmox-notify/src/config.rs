@@ -1,12 +1,8 @@
 use std::sync::OnceLock;
 
-use tracing::warn;
-
 use proxmox_schema::{ApiType, ObjectSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
 
-use crate::filter::{FilterConfig, FILTER_TYPENAME};
-use crate::group::{GroupConfig, GROUP_TYPENAME};
 use crate::matcher::{MatcherConfig, MATCHER_TYPENAME};
 use crate::schema::BACKEND_NAME_SCHEMA;
 use crate::Error;
@@ -78,20 +74,6 @@ fn config_init() -> SectionConfig {
         MATCHER_SCHEMA,
     ));
 
-    const GROUP_SCHEMA: &ObjectSchema = GroupConfig::API_SCHEMA.unwrap_object_schema();
-    config.register_plugin(SectionConfigPlugin::new(
-        GROUP_TYPENAME.to_string(),
-        Some(String::from("name")),
-        GROUP_SCHEMA,
-    ));
-
-    const FILTER_SCHEMA: &ObjectSchema = FilterConfig::API_SCHEMA.unwrap_object_schema();
-    config.register_plugin(SectionConfigPlugin::new(
-        FILTER_TYPENAME.to_string(),
-        Some(String::from("name")),
-        FILTER_SCHEMA,
-    ));
-
     config
 }
 
@@ -140,31 +122,9 @@ fn private_config_init() -> SectionConfig {
 
 pub fn config(raw_config: &str) -> Result<(SectionConfigData, [u8; 32]), Error> {
     let digest = openssl::sha::sha256(raw_config.as_bytes());
-    let mut data = config_parser()
+    let data = config_parser()
         .parse("notifications.cfg", raw_config)
         .map_err(|err| Error::ConfigDeserialization(err.into()))?;
-
-    // TODO: Remove this once this has been in production for a while.
-    // 'group' and 'filter' sections are remnants of the 'old'
-    // notification routing approach that already hit pvetest...
-    // This mechanism cleans out left-over entries.
-    let entries: Vec<GroupConfig> = data.convert_to_typed_array("group").unwrap_or_default();
-    if !entries.is_empty() {
-        warn!("clearing left-over 'group' entries from notifications.cfg");
-    }
-
-    for entry in entries {
-        data.sections.remove(&entry.name);
-    }
-
-    let entries: Vec<FilterConfig> = data.convert_to_typed_array("filter").unwrap_or_default();
-    if !entries.is_empty() {
-        warn!("clearing left-over 'filter' entries from notifications.cfg");
-    }
-
-    for entry in entries {
-        data.sections.remove(&entry.name);
-    }
 
     Ok((data, digest))
 }

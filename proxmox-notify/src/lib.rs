@@ -22,8 +22,6 @@ pub mod api;
 pub mod config;
 pub mod context;
 pub mod endpoints;
-pub mod filter;
-pub mod group;
 pub mod renderer;
 pub mod schema;
 
