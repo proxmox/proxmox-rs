@@ -31,7 +31,7 @@ dinstall:
 	touch $@
 
 %-dsc:
-	BUILDCMD='dpkg-buildpackage -S -us -uc -d' ./build.sh $*
+	BUILDCMD='dpkg-buildpackage -S -us -uc -d' NOTEST=1 ./build.sh $*
 	touch $@
 
 %-autopkgtest:
