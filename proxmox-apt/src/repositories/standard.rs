@@ -151,6 +151,12 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
     fn to_repository(self, product: &str, suite: &str) -> APTRepository {
         let (package_type, uris, component) = self.info(product);
 
+        use crate::repositories::DebianCodename;
+        let file_type = match DebianCodename::try_from(suite) {
+            Ok(codename) if codename >= DebianCodename::Trixie => APTRepositoryFileType::Sources,
+            _ => APTRepositoryFileType::List,
+        };
+
         APTRepository {
             types: vec![package_type],
             uris: vec![uris.into_iter().next().unwrap()],
@@ -158,7 +164,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             components: vec![component],
             options: vec![],
             comment: String::new(),
-            file_type: APTRepositoryFileType::List,
+            file_type,
             enabled: true,
         }
     }
