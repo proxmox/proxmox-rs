@@ -1,3 +1,16 @@
+rust-proxmox-apt (0.99.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+  * apt: update expected codename for build host in tests to Trixie.
+
+  * apt: add future release codenames for Forky (14) and Duke (15).
+
+  * apt: drop the Ceph repos for Quincy and Reef, which both will not be
+    supported anymore in our Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 26 May 2025 18:40:47 +0200
+
 rust-proxmox-apt (0.11.7-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
