@@ -277,20 +277,9 @@ pub enum APTRepositoryHandle {
     NoSubscription,
     /// The test repository.
     Test,
-    /// Ceph Quincy enterprise repository.
-    CephQuincyEnterprise,
-    /// Ceph Quincy no-subscription repository.
-    CephQuincyNoSubscription,
-    /// Ceph Quincy test repository.
-    CephQuincyTest,
     // TODO: Add separate enum for ceph releases and use something like
     // `CephTest(CephReleaseCodename),` once the API macro supports it.
-    /// Ceph Reef enterprise repository.
-    CephReefEnterprise,
-    /// Ceph Reef no-subscription repository.
-    CephReefNoSubscription,
-    /// Ceph Reef test repository.
-    CephReefTest,
+    // Or create dedicated product type where ceph (or ceph$release) are entries.
     /// Ceph Squid enterprise repository.
     CephSquidEnterprise,
     /// Ceph Squid no-subscription repository.
