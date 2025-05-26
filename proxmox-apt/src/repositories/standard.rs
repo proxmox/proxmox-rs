@@ -82,7 +82,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
     fn path(self, product: &str) -> String {
         match self {
             APTRepositoryHandle::Enterprise => {
-                format!("/etc/apt/sources.list.d/{}-enterprise.list", product)
+                format!("/etc/apt/sources.list.d/{product}-enterprise.list")
             }
             APTRepositoryHandle::NoSubscription => "/etc/apt/sources.list".to_string(),
             APTRepositoryHandle::Test => "/etc/apt/sources.list".to_string(),
@@ -101,9 +101,9 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                         "https://enterprise.proxmox.com/debian/pve".to_string(),
                         "https://enterprise.proxmox.com/debian".to_string(),
                     ],
-                    _ => vec![format!("https://enterprise.proxmox.com/debian/{}", product)],
+                    _ => vec![format!("https://enterprise.proxmox.com/debian/{product}")],
                 },
-                format!("{}-enterprise", product),
+                format!("{product}-enterprise"),
             ),
             APTRepositoryHandle::NoSubscription => (
                 APTRepositoryPackageType::Deb,
@@ -112,9 +112,9 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                         "http://download.proxmox.com/debian/pve".to_string(),
                         "http://download.proxmox.com/debian".to_string(),
                     ],
-                    _ => vec![format!("http://download.proxmox.com/debian/{}", product)],
+                    _ => vec![format!("http://download.proxmox.com/debian/{product}")],
                 },
-                format!("{}-no-subscription", product),
+                format!("{product}-no-subscription"),
             ),
             APTRepositoryHandle::Test => (
                 APTRepositoryPackageType::Deb,
@@ -123,11 +123,11 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                         "http://download.proxmox.com/debian/pve".to_string(),
                         "http://download.proxmox.com/debian".to_string(),
                     ],
-                    _ => vec![format!("http://download.proxmox.com/debian/{}", product)],
+                    _ => vec![format!("http://download.proxmox.com/debian/{product}")],
                 },
                 match product {
-                    "pdm" => format!("{}-test", product),
-                    _ => format!("{}test", product),
+                    "pdm" => format!("{product}-test"),
+                    _ => format!("{product}test"),
                 },
             ),
             APTRepositoryHandle::CephSquidEnterprise => (
