@@ -490,6 +490,24 @@ impl<'a> Mail<'a> {
 mod test {
     use super::*;
 
+    /// Compare two multi-line strings, ignoring any line that starts with 'Date:'.
+    ///
+    /// The `Date` header is formatted in the local timezone, which means our
+    /// tests are sensitive to the timezone of the machine running the tests.
+    /// Simplest solution is to just ignore the date header.
+    fn assert_lines_equal_ignore_date(s1: &str, s2: &str) {
+        let lines1 = s1.lines();
+        let lines2 = s2.lines();
+
+        for (line1, line2) in lines1.zip(lines2) {
+            if !(line1.starts_with("Date:") && line2.starts_with("Date:")) {
+                assert_eq!(line1, line2);
+            }
+        }
+
+        assert_eq!(s1.lines().count(), s2.lines().count());
+    }
+
     #[test]
     fn email_without_recipients_fails() {
         let result = Mail::new("Sender", "mail@example.com", "hi", "body").send();
@@ -515,8 +533,8 @@ mod test {
 
         let body = mail.format_mail(0).expect("could not format mail");
 
-        assert_eq!(
-            body,
+        assert_lines_equal_ignore_date(
+            &body,
             r#"Subject: Subject Line
 From: Sender Name <mailfrom@example.com>
 To: Receiver Name <receiver@example.com>
@@ -527,7 +545,7 @@ Content-Type: text/plain;
 Content-Transfer-Encoding: 8bit
 
 This is just ascii text.
-Nothing too special."#
+Nothing too special."#,
         )
     }
 
@@ -545,8 +563,8 @@ Nothing too special."#
 
         let body = mail.format_mail(0).expect("could not format mail");
 
-        assert_eq!(
-            body,
+        assert_lines_equal_ignore_date(
+            &body,
             r#"Subject: Subject Line
 From: Sender Name <mailfrom@example.com>
 To: Undisclosed <noreply>
@@ -557,7 +575,7 @@ Content-Type: text/plain;
 Content-Transfer-Encoding: 8bit
 
 This is just ascii text.
-Nothing too special."#
+Nothing too special."#,
         )
     }
 
@@ -576,8 +594,8 @@ Nothing too special."#
 
         let body = mail.format_mail(0).expect("could not format mail");
 
-        assert_eq!(
-            body,
+        assert_lines_equal_ignore_date(
+            &body,
             r#"MIME-Version: 1.0
 Subject: Subject Line
 From: Sender Name <mailfrom@example.com>
@@ -589,7 +607,7 @@ Content-Type: text/plain;
 Content-Transfer-Encoding: 8bit
 
 This is just ascii text.
-Nothing too special."#
+Nothing too special."#,
         )
     }
 
@@ -605,8 +623,8 @@ Nothing too special."#
 
         let body = mail.format_mail(1732806251).expect("could not format mail");
 
-        assert_eq!(
-            body,
+        assert_lines_equal_ignore_date(
+            &body,
             r#"MIME-Version: 1.0
 Subject: =?utf-8?B?U3ViamVjdCBMaW5lIPCfp5E=?=
 From: =?utf-8?B?VVRGLTggU2VuZGVyIE5hbWUg8J+Tpw==?= <differentfrom@example.com>
@@ -620,7 +638,7 @@ Content-Transfer-Encoding: 8bit
 This utf-8 email should handle emojis
 🧑📧
 and weird german characters: öäüß
-and more."#
+and more."#,
         )
     }
 
@@ -635,8 +653,8 @@ and more."#
         .with_recipient("receiver@example.com")
         .with_html_alt("<html lang=\"de-at\"><head></head><body>\n\t<pre>\n\t\tLorem Ipsum Dolor Sit Amet\n\t</pre>\n</body></html>");
         let body = mail.format_mail(1732806251).expect("could not format mail");
-        assert_eq!(
-            body,
+        assert_lines_equal_ignore_date(
+            &body,
             r#"Content-Type: multipart/alternative;
 	boundary="----_=_NextPart_002_1732806251"
 MIME-Version: 1.0
@@ -665,7 +683,7 @@ Content-Transfer-Encoding: 8bit
 		Lorem Ipsum Dolor Sit Amet
 	</pre>
 </body></html>
-------_=_NextPart_002_1732806251--"#
+------_=_NextPart_002_1732806251--"#,
         )
     }
 
@@ -689,8 +707,8 @@ Content-Transfer-Encoding: 8bit
         .with_attachment("deadbeef.bin", "application/octet-stream", &bin);
 
         let body = mail.format_mail(1732806251).expect("could not format mail");
-        assert_eq!(
-            body,
+        assert_lines_equal_ignore_date(
+            &body,
             r#"Content-Type: multipart/mixed;
 	boundary="----_=_NextPart_001_1732806251"
 MIME-Version: 1.0
@@ -716,7 +734,7 @@ Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
 3q2+796tvu8=
-------_=_NextPart_001_1732806251--"#
+------_=_NextPart_001_1732806251--"#,
         )
     }
 
@@ -743,8 +761,8 @@ Content-Transfer-Encoding: base64
 
         let body = mail.format_mail(1732806251).expect("could not format mail");
 
-        assert_eq!(
-            body,
+        assert_lines_equal_ignore_date(
+            &body,
             r#"Content-Type: multipart/mixed;
 	boundary="----_=_NextPart_001_1732806251"
 MIME-Version: 1.0
@@ -792,7 +810,7 @@ Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
 3q2+796tvu8=
-------_=_NextPart_001_1732806251--"#
+------_=_NextPart_001_1732806251--"#,
         )
     }
 
@@ -809,8 +827,8 @@ Content-Transfer-Encoding: base64
 
         let body = mail.format_mail(1718977850).expect("could not format mail");
 
-        assert_eq!(
-            body,
+        assert_lines_equal_ignore_date(
+            &body,
             r#"Content-Type: multipart/alternative;
 	boundary="----_=_NextPart_002_1718977850"
 MIME-Version: 1.0
@@ -834,7 +852,7 @@ Content-Type: text/html;
 Content-Transfer-Encoding: 8bit
 
 <body>This is the HTML body</body>
-------_=_NextPart_002_1718977850--"#
+------_=_NextPart_002_1718977850--"#,
         );
     }
 }
