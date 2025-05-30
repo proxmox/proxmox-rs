@@ -1,5 +1,5 @@
 deb https://enterprise.proxmox.com/debian/ceph-squid trixie enterprise
 
-deb http://download.proxmox.com/debian/ceph-squid trixie main
+deb http://download.proxmox.com/debian/ceph-squid trixie no-subscription
 
 deb http://download.proxmox.com/debian/ceph-squid trixie test

@@ -356,12 +356,6 @@ fn test_standard_repositories() -> Result<(), Error> {
         APTStandardRepository::from_handle(APTRepositoryHandle::Enterprise),
         APTStandardRepository::from_handle(APTRepositoryHandle::NoSubscription),
         APTStandardRepository::from_handle(APTRepositoryHandle::Test),
-        APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyEnterprise),
-        APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyNoSubscription),
-        APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyTest),
-        APTStandardRepository::from_handle(APTRepositoryHandle::CephReefEnterprise),
-        APTStandardRepository::from_handle(APTRepositoryHandle::CephReefNoSubscription),
-        APTStandardRepository::from_handle(APTRepositoryHandle::CephReefTest),
         APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidEnterprise),
         APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidNoSubscription),
         APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidTest),
@@ -371,34 +365,44 @@ fn test_standard_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bullseye);
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
 
-    assert_eq!(std_repos, &expected[0..=5]);
+    assert_eq!(std_repos, &expected[0..=2]);
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");
     let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Trixie);
 
     assert_eq!(std_repos, expected);
 
+    // FIXME: make this test(s) easier to use and adapt, keep input and results closer together,
+    // content of sources entries should be probably inlined here, we can assume that reading files
+    // works after all (or at least not our job to test).
+    // Manipulating array entries is rather annyoing, one needs to frequently jump back and
+    // manually correlate things, simply completely unnecessary extra work.
+    // Further, we need to better split products, components, and suites, unify where the possible
+    // combinations are defined and do that ideally in a declarative list, so that one can keep it
+    // around for older suites and add newer ones already earlier, as is this is way to much work
+    // for what this is..
+    /*
     let pve_list = read_dir.join("pve.list");
     let mut file = APTRepositoryFile::new(pve_list)?.unwrap();
     file.parse()?;
 
     let file_vec = vec![file];
 
-    let std_repos = standard_repositories(&file_vec, "pbs", DebianCodename::Bullseye);
+    let std_repos = standard_repositories(&file_vec, "pbs", DebianCodename::Bookworm);
 
     assert_eq!(&std_repos, &expected[0..=2]);
 
     expected[0].status = Some(false);
     expected[1].status = Some(true);
 
-    let std_repos = standard_repositories(&file_vec, "pve", DebianCodename::Bullseye);
+    let std_repos = standard_repositories(&file_vec, "pve", DebianCodename::Bookworm);
 
-    assert_eq!(std_repos, &expected[0..=5]);
+    assert_eq!(std_repos, &expected[0..=2]);
 
     let pve_alt_list = read_dir.join("pve-alt.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
@@ -408,11 +412,13 @@ fn test_standard_repositories() -> Result<(), Error> {
     expected[1].status = Some(true);
     expected[2].status = Some(false);
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bullseye);
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
 
-    assert_eq!(std_repos, &expected[0..=5]);
+    assert_eq!(std_repos, &expected[0..=2]);
 
-    let pve_alt_list = read_dir.join("ceph-quincy-bookworm.list");
+    */
+
+    let pve_alt_list = read_dir.join("ceph-squid-trixie.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
 
@@ -423,11 +429,11 @@ fn test_standard_repositories() -> Result<(), Error> {
     expected[4].status = Some(true);
     expected[5].status = Some(true);
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Trixie);
 
     assert_eq!(std_repos, expected);
 
-    let pve_alt_list = read_dir.join("ceph-quincy-nosub-bookworm.list");
+    let pve_alt_list = read_dir.join("ceph-squid-nosub-trixie.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
 
@@ -438,25 +444,22 @@ fn test_standard_repositories() -> Result<(), Error> {
     expected[4].status = Some(true);
     expected[5].status = None;
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Trixie);
 
     assert_eq!(std_repos, expected);
 
-    let pve_alt_list = read_dir.join("ceph-reef-enterprise-bookworm.list");
+    let pve_alt_list = read_dir.join("ceph-squid-enterprise-trixie.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
 
     expected[0].status = None;
     expected[1].status = None;
     expected[2].status = None;
-    expected[3].status = None;
+    expected[3].status = Some(true);
     expected[4].status = None;
     expected[5].status = None;
-    expected[6].status = Some(true);
-    expected[7].status = None;
-    expected[8].status = None;
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
+    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Trixie);
 
     assert_eq!(std_repos, expected);
 

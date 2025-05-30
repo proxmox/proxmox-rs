@@ -91,16 +91,8 @@ pub fn standard_repositories(
     ];
 
     if product == "pve" {
-        result.append(&mut vec![
-            APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyEnterprise),
-            APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyNoSubscription),
-            APTStandardRepository::from_handle(APTRepositoryHandle::CephQuincyTest),
-        ]);
-        if suite == DebianCodename::Bookworm {
+        if suite == DebianCodename::Trixie {
             result.append(&mut vec![
-                APTStandardRepository::from_handle(APTRepositoryHandle::CephReefEnterprise),
-                APTStandardRepository::from_handle(APTRepositoryHandle::CephReefNoSubscription),
-                APTStandardRepository::from_handle(APTRepositoryHandle::CephReefTest),
                 APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidEnterprise),
                 APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidNoSubscription),
                 APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidTest),
