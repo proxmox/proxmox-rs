@@ -8,10 +8,14 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-hex-0.4+default-dev <!nocheck>,
- librust-http-0.2+default-dev <!nocheck>,
+ librust-http-1+default-dev <!nocheck>,
+ librust-http-body-util-0.1+default-dev <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
- librust-proxmox-login-0.2+default-dev <!nocheck>,
- librust-proxmox-login-0.2+http-dev <!nocheck>,
+ librust-proxmox-login-1+default-dev <!nocheck>,
+ librust-proxmox-login-1+http-dev <!nocheck>,
+ librust-proxmox-serde-1+default-dev <!nocheck>,
+ librust-proxmox-serde-1+perl-dev <!nocheck>,
+ librust-proxmox-serde-1+serde-json-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -29,10 +33,14 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-hex-0.4+default-dev,
- librust-http-0.2+default-dev,
+ librust-http-1+default-dev,
+ librust-http-body-util-0.1+default-dev,
  librust-percent-encoding-2+default-dev (>= 2.1-~~),
- librust-proxmox-login-0.2+default-dev,
- librust-proxmox-login-0.2+http-dev,
+ librust-proxmox-login-1+default-dev,
+ librust-proxmox-login-1+http-dev,
+ librust-proxmox-serde-1+default-dev,
+ librust-proxmox-serde-1+perl-dev,
+ librust-proxmox-serde-1+serde-json-dev,
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev
 Suggests:
@@ -59,11 +67,11 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-client-dev (= ${binary:Version}),
- librust-hyper-0.14+default-dev (>= 0.14.5-~~),
+ librust-hyper-1+default-dev,
  librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-openssl-0.10+default-dev,
- librust-proxmox-http-0.9+client-dev (>= 0.9.5-~~),
- librust-proxmox-http-0.9+default-dev (>= 0.9.5-~~)
+ librust-proxmox-http-1+client-dev,
+ librust-proxmox-http-1+default-dev
 Provides:
  librust-proxmox-client-0+hyper-client-dev (= ${binary:Version}),
  librust-proxmox-client-0.5+hyper-client-dev (= ${binary:Version}),
@@ -78,8 +86,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-client-dev (= ${binary:Version}),
- librust-proxmox-login-0.2+http-dev,
- librust-proxmox-login-0.2+webauthn-dev
+ librust-proxmox-login-1+http-dev,
+ librust-proxmox-login-1+webauthn-dev
 Provides:
  librust-proxmox-client-0+webauthn-dev (= ${binary:Version}),
  librust-proxmox-client-0.5+webauthn-dev (= ${binary:Version}),
