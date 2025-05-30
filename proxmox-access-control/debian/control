@@ -35,12 +35,12 @@ Suggests:
  librust-proxmox-access-control+impl-dev (= ${binary:Version})
 Provides:
  librust-proxmox-access-control+default-dev (= ${binary:Version}),
- librust-proxmox-access-control-0-dev (= ${binary:Version}),
- librust-proxmox-access-control-0+default-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2.5-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2.5+default-dev (= ${binary:Version})
+ librust-proxmox-access-control-1-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1+default-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.0-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.0.0+default-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - Rust source code
  Source code for Debianized Rust crate "proxmox-access-control"
 
@@ -62,9 +62,9 @@ Depends:
  librust-proxmox-sys-1+default-dev,
  librust-serde-json-1+default-dev
 Provides:
- librust-proxmox-access-control-0+impl-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2+impl-dev (= ${binary:Version}),
- librust-proxmox-access-control-0.2.5+impl-dev (= ${binary:Version})
+ librust-proxmox-access-control-1+impl-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.0+impl-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.0.0+impl-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-access-control
  crate, by pulling in any additional dependencies needed by that feature.

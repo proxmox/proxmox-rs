@@ -1,3 +1,9 @@
+rust-proxmox-access-control (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 30 May 2025 18:46:19 +0200
+
 rust-proxmox-access-control (0.2.5-1) bookworm; urgency=medium
 
   * rebuild with section-config 3.0
