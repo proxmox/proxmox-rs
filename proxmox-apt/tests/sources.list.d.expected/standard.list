@@ -4,4 +4,3 @@ deb http://ftp.at.debian.org/debian bullseye-updates main contrib
 
 # security updates
 deb http://security.debian.org bullseye-security main contrib
-

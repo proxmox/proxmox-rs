@@ -316,7 +316,7 @@ fn quote_for_one_line(string: &str) -> String {
     }
 }
 
-/// Writes a repository in one-line format followed by a blank line.
+/// Writes a repository in one-line format.
 ///
 /// Expects that `repo.file_type == APTRepositoryFileType::List`.
 ///
@@ -360,12 +360,10 @@ fn write_one_line(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> 
         .join(" ");
     writeln!(w, "{components}")?;
 
-    writeln!(w)?;
-
     Ok(())
 }
 
-/// Writes a single stanza followed by a blank line.
+/// Writes a single stanza.
 ///
 /// Expects that `repo.file_type == APTRepositoryFileType::Sources`.
 fn write_stanza(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> {
@@ -395,8 +393,6 @@ fn write_stanza(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> {
     for option in repo.options.iter() {
         writeln!(w, "{}: {}", option.key, option.values.join(" "))?;
     }
-
-    writeln!(w)?;
 
     Ok(())
 }

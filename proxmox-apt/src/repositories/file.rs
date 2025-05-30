@@ -232,12 +232,18 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
                 .map_err(|err| self.err(format_err!("unable to remove file - {}", err)));
         }
 
+        use std::io::Write;
         let mut content = vec![];
 
         for (n, repo) in self.repositories.iter().enumerate() {
             repo.basic_check()
                 .map_err(|err| self.err(format_err!("check for repository {} - {}", n + 1, err)))?;
 
+            if !content.is_empty() {
+                writeln!(content).map_err(|err| {
+                    self.err(format_err!("internal error for repository {entry} - {err}",))
+                })?;
+            }
             repo.write(&mut content)
                 .map_err(|err| self.err(format_err!("writing repository {} - {}", n + 1, err)))?;
         }

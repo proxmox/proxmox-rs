@@ -3,4 +3,3 @@ deb [ lang=it,de arch=amd64 ] http://ftp.at.debian.org/debian bullseye main cont
 
 # non-free :(
 deb [ lang=it,de arch=amd64 lang+=fr lang-=de ] http://ftp.at.debian.org/debian bullseye non-free
-

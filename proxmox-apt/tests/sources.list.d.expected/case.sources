@@ -13,4 +13,3 @@ Types: deb deb-src
 URIs: http://ftp.at.debian.org/debian
 Suites: bullseye
 Components: main contrib
-
