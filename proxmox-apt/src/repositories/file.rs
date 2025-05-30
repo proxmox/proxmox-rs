@@ -197,7 +197,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
 
         for (n, repo) in repos.iter().enumerate() {
             repo.basic_check()
-                .map_err(|err| self.err(format_err!("check for repository {} - {}", n + 1, err)))?;
+                .map_err(|err| self.err(format_err!("check for repository {} - {err}", n + 1)))?;
         }
 
         self.repositories = repos;
@@ -229,15 +229,16 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
 
         if self.repositories.is_empty() {
             return std::fs::remove_file(path)
-                .map_err(|err| self.err(format_err!("unable to remove file - {}", err)));
+                .map_err(|err| self.err(format_err!("unable to remove file - {err}")));
         }
 
         use std::io::Write;
         let mut content = vec![];
 
         for (n, repo) in self.repositories.iter().enumerate() {
+            let entry = n + 1;
             repo.basic_check()
-                .map_err(|err| self.err(format_err!("check for repository {} - {}", n + 1, err)))?;
+                .map_err(|err| self.err(format_err!("check for repository {entry} - {err}")))?;
 
             if !content.is_empty() {
                 writeln!(content).map_err(|err| {
@@ -245,7 +246,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
                 })?;
             }
             repo.write(&mut content)
-                .map_err(|err| self.err(format_err!("writing repository {} - {}", n + 1, err)))?;
+                .map_err(|err| self.err(format_err!("writing repository {entry} - {err}")))?;
         }
 
         let path = PathBuf::from(&path);
@@ -255,7 +256,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
         };
 
         std::fs::create_dir_all(dir)
-            .map_err(|err| self.err(format_err!("unable to create parent dir - {}", err)))?;
+            .map_err(|err| self.err(format_err!("unable to create parent dir - {err}")))?;
 
         let pid = std::process::id();
         let mut tmp_path = path.clone();
@@ -264,12 +265,12 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
 
         if let Err(err) = std::fs::write(&tmp_path, content) {
             let _ = std::fs::remove_file(&tmp_path);
-            return Err(self.err(format_err!("writing {:?} failed - {}", path, err)));
+            return Err(self.err(format_err!("writing {path:?} failed - {err}")));
         }
 
         if let Err(err) = std::fs::rename(&tmp_path, &path) {
             let _ = std::fs::remove_file(&tmp_path);
-            return Err(self.err(format_err!("rename failed for {:?} - {}", path, err)));
+            return Err(self.err(format_err!("rename failed for {path:?} - {err}")));
         }
 
         Ok(())
