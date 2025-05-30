@@ -1,3 +1,9 @@
+rust-proxmox-openid (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 30 May 2025 18:41:50 +0200
+
 rust-proxmox-openid (0.10.4-1) bookworm; urgency=medium
 
   * fix #4411: openid: add library code for generic id token claim support

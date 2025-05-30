@@ -49,11 +49,11 @@ Depends:
  librust-ureq-3+native-tls-dev
 Provides:
  librust-proxmox-openid+default-dev (= ${binary:Version}),
- librust-proxmox-openid-0-dev (= ${binary:Version}),
- librust-proxmox-openid-0+default-dev (= ${binary:Version}),
- librust-proxmox-openid-0.10-dev (= ${binary:Version}),
- librust-proxmox-openid-0.10+default-dev (= ${binary:Version}),
- librust-proxmox-openid-0.10.4-dev (= ${binary:Version}),
- librust-proxmox-openid-0.10.4+default-dev (= ${binary:Version})
+ librust-proxmox-openid-1-dev (= ${binary:Version}),
+ librust-proxmox-openid-1+default-dev (= ${binary:Version}),
+ librust-proxmox-openid-1.0-dev (= ${binary:Version}),
+ librust-proxmox-openid-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-openid-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-openid-1.0.0+default-dev (= ${binary:Version})
 Description: Base for openid authentication in proxmox products - Rust source code
  Source code for Debianized Rust crate "proxmox-openid"

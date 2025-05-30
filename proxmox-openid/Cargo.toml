@@ -1,7 +1,7 @@
 [package]
 name = "proxmox-openid"
 description = "base for openid authentication in proxmox products"
-version = "0.10.4"
+version = "1.0.0"
 
 exclude = [ "build", "debian" ]
 
