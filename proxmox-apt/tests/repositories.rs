@@ -85,7 +85,7 @@ fn test_parse_write_dir(read_dir: &str) -> Result<(), Error> {
 
         assert_eq!(
             expected_contents, actual_contents,
-            "Use\n\ndiff {:?} {:?}\n\nif you're not fluent in byte decimals",
+            "Use\n\ndiff -u {:?} {:?}\n\nif you're not fluent in byte decimals",
             expected_path, actual_path
         );
     }
