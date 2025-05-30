@@ -1,3 +1,9 @@
+rust-proxmox-client (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 30 May 2025 18:31:31 +0200
+
 rust-proxmox-client (0.5.3-1) bookworm; urgency=medium
 
   * add query builder ApiPathBuilder
