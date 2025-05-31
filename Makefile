@@ -1,7 +1,7 @@
 # Shortcut for common operations:
 
 # see proxmox-backup if we ever want to support other prefixes
-CRATES != echo proxmox-*/Cargo.toml | sed -e 's|/Cargo.toml||g'
+CRATES != echo pbs-*/Cargo.toml proxmox-*/Cargo.toml | sed -e 's|/Cargo.toml||g'
 
 # By default we just run checks:
 .PHONY: all
