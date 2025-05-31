@@ -228,15 +228,15 @@ macro_rules! criteria_struct {
             )*
         }
 
-        ::lazy_static::lazy_static! {
-            static ref $criteria_name: $crate::topsis::Criteria<$count_name> =
+        static $criteria_name: std::sync::LazyLock<$crate::topsis::Criteria<$count_name>> =
+            std::sync::LazyLock::new(|| {
                 $crate::topsis::Criteria::new([
                     $(
                         $crate::topsis::Criterion::new($crit_name.to_string(), $crit_weight),
                     )*
                 ])
-                .unwrap();
-        }
+                .unwrap()
+            });
 
         impl From<$name> for [f64; $count_name] {
             fn from(alternative: $name) -> Self {

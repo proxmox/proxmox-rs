@@ -7,7 +7,6 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-lazy-static-1+default-dev (>= 1.4-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -24,7 +23,6 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-lazy-static-1+default-dev (>= 1.4-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev
 Provides:
