@@ -13,7 +13,7 @@ Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox-resource-scheduling.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox-resource-scheduling.git
-Homepage: https://www.proxmox.com
+Homepage: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-resource-scheduling
 Rules-Requires-Root: no
 

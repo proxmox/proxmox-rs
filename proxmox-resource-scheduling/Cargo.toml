@@ -1,17 +1,13 @@
 [package]
 name = "proxmox-resource-scheduling"
 version = "0.3.0"
-authors = [
-    "Fiona Ebner <f.ebner@proxmox.com>",
-    "Proxmox Support Team <support@proxmox.com>",
-]
-edition = "2021"
-license = "AGPL-3"
 description = "Proxmox library for resource scheduling"
-homepage = "https://www.proxmox.com"
-
-exclude = [ "debian" ]
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
 
 [dependencies]
-anyhow = "1.0"
-serde = { version = "1.0", features = ["derive"] }
+anyhow.workspace = true
+serde = { workspace = true, features = [ "derive" ] }
