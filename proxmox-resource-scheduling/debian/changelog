@@ -1,3 +1,9 @@
+rust-proxmox-resource-scheduling (1.0.0-1) trixie; urgency=medium
+
+  * re-build for Debian Trixie based releases.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 31 May 2025 15:45:25 +0200
+
 rust-proxmox-resource-scheduling (0.3.0-1) bookworm; urgency=medium
 
   * re-build for Debian 12 Bookworm based Proxmox VE 8.x release series
