@@ -1,9 +1,9 @@
 Source: rust-proxmox-resource-scheduling
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
- cargo:native <!nocheck>,
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
@@ -11,7 +11,7 @@ Build-Depends: debhelper (>= 12),
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox-resource-scheduling.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox-resource-scheduling.git
 Homepage: https://www.proxmox.com
@@ -36,5 +36,4 @@ Provides:
  librust-proxmox-resource-scheduling-0.3.0-dev (= ${binary:Version}),
  librust-proxmox-resource-scheduling-0.3.0+default-dev (= ${binary:Version})
 Description: Proxmox library for resource scheduling - Rust source code
- This package contains the source for the Rust proxmox-resource-scheduling
- crate, packaged by debcargo for use with cargo and dh-cargo.
+ Source code for Debianized Rust crate "proxmox-resource-scheduling"
