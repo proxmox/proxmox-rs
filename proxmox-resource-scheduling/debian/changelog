@@ -1,0 +1,25 @@
+rust-proxmox-resource-scheduling (0.3.0-1) bookworm; urgency=medium
+
+  * re-build for Debian 12 Bookworm based Proxmox VE 8.x release series
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 08 May 2023 14:50:18 +0200
+
+rust-proxmox-resource-scheduling (0.2.1-1) stable; urgency=medium
+
+  * pve static-resource scheduler: add one to scoring to avoid boosting
+    tiny relative differences
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Mar 2023 17:54:29 +0100
+
+rust-proxmox-resource-scheduling (0.2.0-1) stable; urgency=medium
+
+  * pve ha: fix scoring issue when a node is overcommitted compared to others,
+    that have the same stats by using a nonlinear averaging method.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Mar 2023 14:54:09 +0100
+
+rust-proxmox-resource-scheduling (0.1.0-1) stable; urgency=medium
+
+  * Initial release.
+
+ --  Proxmox Support Team <support@proxmox.com>  Mon, 24 Oct 2022 11:32:11 +0200
