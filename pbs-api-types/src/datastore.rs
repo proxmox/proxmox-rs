@@ -1426,6 +1426,16 @@ pub struct TypeCounts {
     pub snapshots: u64,
 }
 
+#[api()]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+/// Garbage collection cache statistics
+pub struct GarbageCollectionCacheStats {
+    /// Number of atime update cache hits
+    pub hits: usize,
+    /// Number of atime update cache misses
+    pub misses: usize,
+}
+
 #[api(
     properties: {
         "upid": {
@@ -1459,6 +1469,9 @@ pub struct GarbageCollectionStatus {
     pub removed_bad: usize,
     /// Number of chunks still marked as .bad after garbage collection.
     pub still_bad: usize,
+    /// Statistics of atime update cache
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cache_stats: Option<GarbageCollectionCacheStats>,
 }
 
 #[api(
