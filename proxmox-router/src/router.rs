@@ -8,6 +8,7 @@ use anyhow::Error;
 use http::request::Parts;
 #[cfg(feature = "server")]
 use http::{Method, Response};
+#[cfg(feature = "server")]
 use hyper::body::Incoming;
 use percent_encoding::percent_decode_str;
 #[cfg(feature = "server")]
