@@ -193,9 +193,6 @@ Optional parameters:
 ``--optional-arg`` ``<boolean>   (default=false)``
   Optional boolean argument.
 
-
-----
-
 ----
 
 Options available for command group ``clicmd l0sub``:

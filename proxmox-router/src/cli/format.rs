@@ -376,9 +376,6 @@ fn generate_nested_usage_do<'cli>(
 
     let globals = state.describe_current(prefix, format);
     if !globals.is_empty() {
-        if format == DocumentationFormat::ReST {
-            usage.push_str("----\n\n");
-        }
         usage.push_str(&globals);
     }
 
@@ -400,11 +397,12 @@ fn generate_nested_usage_do<'cli>(
             format!("{} {}", prefix, cmd)
         };
 
+        if !usage.is_empty() && format == DocumentationFormat::ReST {
+            usage.push_str("----\n\n"); // add transition for better visual separation
+        }
+
         match def.commands.get(cmd).unwrap() {
             CommandLineInterface::Simple(cli_cmd) => {
-                if !usage.is_empty() && format == DocumentationFormat::ReST {
-                    usage.push_str("----\n\n");
-                }
                 usage.push_str(&generate_usage_str_do(
                     &new_prefix,
                     cli_cmd,
@@ -415,9 +413,6 @@ fn generate_nested_usage_do<'cli>(
                 ));
             }
             CommandLineInterface::Nested(map) => {
-                if format == DocumentationFormat::ReST {
-                    usage.push_str("\n----\n\n");
-                }
                 usage.push_str(&generate_nested_usage_do(state, &new_prefix, map, format));
             }
         }
