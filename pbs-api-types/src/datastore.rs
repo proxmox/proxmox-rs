@@ -567,6 +567,7 @@ impl DataStoreConfig {
             Some(MaintenanceType::Unmount) => {
                 /* used to reset it after failed unmount, or alternative for aborting unmount task */
             }
+            Some(MaintenanceType::S3Refresh) => { /* used to reset state after refresh finished */ }
             Some(MaintenanceType::Delete) => {
                 match new_type {
                     Some(MaintenanceType::Delete) => { /* allow to delete a deleted storage */ }

@@ -49,6 +49,8 @@ pub enum MaintenanceType {
     Delete,
     /// The (removable) datastore is being unmounted.
     Unmount,
+    /// The S3 cache store is being refreshed.
+    S3Refresh,
 }
 serde_plain::derive_display_from_serialize!(MaintenanceType);
 serde_plain::derive_fromstr_from_deserialize!(MaintenanceType);
@@ -100,6 +102,8 @@ impl MaintenanceMode {
             bail!("datastore is being unmounted");
         } else if self.ty == MaintenanceType::Offline {
             bail!("offline maintenance mode: {}", message);
+        } else if self.ty == MaintenanceType::S3Refresh {
+            bail!("S3 refresh maintenance mode: {}", message);
         } else if self.ty == MaintenanceType::ReadOnly {
             if let Some(Operation::Write) = operation {
                 bail!("read-only maintenance mode: {}", message);
