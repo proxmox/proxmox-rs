@@ -402,9 +402,9 @@ pub struct DataStoreConfig {
 pub enum NotificationMode {
     /// Send notifications via the system's sendmail command to the user
     /// configured in `notify-user`
-    #[default]
     LegacySendmail,
     /// Emit notification events to the notification system
+    #[default]
     NotificationSystem,
 }
 
