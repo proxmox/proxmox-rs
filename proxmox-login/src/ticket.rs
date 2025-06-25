@@ -49,6 +49,7 @@ pub struct Ticket {
     data: Box<str>,
     timestamp: i64,
     product_len: u16,
+    userid_start: u16,
     userid_len: u16,
     // timestamp_len: u16,
 }
@@ -66,7 +67,7 @@ impl Ticket {
 
     /// The userid contained in the ticket.
     pub fn userid(&self) -> &str {
-        let start = usize::from(self.product_len) + 1;
+        let start = usize::from(self.userid_start);
         let len = usize::from(self.userid_len);
         &self.data[start..(start + len)]
     }
@@ -138,12 +139,17 @@ impl std::str::FromStr for Ticket {
         let data = s;
 
         // get product:
-        let product_len = s.find(':').ok_or(TicketError)?;
+        let mut product_len = s.find(':').ok_or(TicketError)?;
         if product_len >= 10 {
             // weird product
             return Err(TicketError);
         }
-        let s = &s[(product_len + 1)..];
+        let userid_start = product_len + 1;
+        // work around PMG quarantine tickets
+        if &s[..product_len] == "PMGQUAR" {
+            product_len = 3;
+        }
+        let s = &s[userid_start..];
 
         // get userid:
         let userid_len = s.find(':').ok_or(TicketError)?;
@@ -165,6 +171,7 @@ impl std::str::FromStr for Ticket {
 
         Ok(Self {
             product_len: u16::try_from(product_len).map_err(|_| TicketError)?,
+            userid_start: u16::try_from(userid_start).map_err(|_| TicketError)?,
             userid_len: u16::try_from(userid_len).map_err(|_| TicketError)?,
             //timestamp_len: u16::try_from(timestamp_len).map_err(|_| TicketError)?,
             timestamp,
