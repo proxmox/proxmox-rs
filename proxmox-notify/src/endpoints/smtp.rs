@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::time::Duration;
 
 use lettre::message::header::{HeaderName, HeaderValue};
@@ -213,8 +214,10 @@ impl Endpoint for SmtpEndpoint {
             .clone()
             .unwrap_or_else(|| context().default_sendmail_author());
 
+        let quoted_author = quote_name_if_needed(&author);
+
         let mut email_builder =
-            Message::builder().from(parse_address(&format!("{author} <{mail_from}>"))?);
+            Message::builder().from(parse_address(&format!("{quoted_author} <{mail_from}>"))?);
 
         for recipient in recipients {
             email_builder = email_builder.to(parse_address(&recipient)?);
@@ -377,14 +380,61 @@ fn build_forwarded_message(
     Ok(message)
 }
 
-#[cfg(all(test, feature = "mail-forwarder"))]
+/// Quote mail name if required by RFC5322.
+fn quote_name_if_needed(name: &str) -> Cow<str> {
+    // See https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
+    let needs_quotes = name.chars().any(|c| {
+        matches!(
+            c,
+            '(' | ')' | '<' | '>' | '@' | ',' | ';' | ':' | '\\' | '"' | '[' | ']' | '='
+        )
+    });
+
+    if needs_quotes {
+        // Quoted strings may contain all printable chars except \ and ", they need to be
+        // escaped. Non-ASCII UTF-8 characters are later encoded by lettre, we do not
+        // need to care about them here.
+        let mut result = name.replace(r#"\"#, r#"\\"#);
+        result = result.replace(r#"""#, r#"\""#);
+        Cow::Owned(format!("\"{result}\""))
+    } else {
+        Cow::Borrowed(name)
+    }
+}
+
+#[cfg(test)]
 mod tests {
-    use lettre::message::header::Date;
 
     use super::*;
 
     #[test]
+    fn test_quote_mail_name() {
+        assert_eq!(
+            &quote_name_if_needed("Firstname Lastname"),
+            "Firstname Lastname"
+        );
+
+        assert_eq!(
+            &quote_name_if_needed("Firstname \"Nickname\" Lastname"),
+            "\"Firstname \\\"Nickname\\\" Lastname\""
+        );
+
+        assert_eq!(
+            &quote_name_if_needed("Proxmox VE (somehost)"),
+            "\"Proxmox VE (somehost)\""
+        );
+
+        assert_eq!(
+            &quote_name_if_needed("Firstname \\ Lastname"),
+            "\"Firstname \\\\ Lastname\""
+        );
+    }
+
+    #[cfg(feature = "mail-forwarder")]
+    #[test]
     fn test_forward_message_from_raw() {
+        use lettre::message::header::Date;
+
         let input = "testdata/test1.msg";
         let reference = "testdata/test_forward_message_from_raw.ref";
 
