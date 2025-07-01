@@ -1127,18 +1127,18 @@ my sub array_type : prototype($$$) {
 }
 
 my %serde_num = (
-    usize => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_usize")]',
-    isize => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_isize")]',
-    u8 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_u8")]',
-    u16 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]',
-    u32 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]',
-    u64 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]',
-    i8 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_i8")]',
-    i16 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_i16")]',
-    i32 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_i32")]',
-    i64 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]',
-    f32 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_f32")]',
-    f64 => '#[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]',
+    usize => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_usize")]',
+    isize => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_isize")]',
+    u8 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]',
+    u16 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]',
+    u32 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]',
+    u64 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]',
+    i8 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_i8")]',
+    i16 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_i16")]',
+    i32 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_i32")]',
+    i64 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]',
+    f32 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_f32")]',
+    f64 => '#[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]',
 );
 
 sub handle_def : prototype($$$) {
@@ -1169,7 +1169,7 @@ sub handle_def : prototype($$$) {
     } elsif ($type eq 'boolean') {
         $def->{type} = 'bool';
         push $def->{attrs}->@*,
-            "#[serde(deserialize_with = \"proxmox_login::parse::deserialize_bool\")]";
+            "#[serde(deserialize_with = \"proxmox_serde::perl::deserialize_bool\")]";
         $def->{api}->{default} = bool(delete $schema->{default});
     } elsif ($type eq 'number') {
         $def->{api}->{default} = delete $schema->{default};

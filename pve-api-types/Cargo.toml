@@ -18,7 +18,7 @@ serde_json.workspace = true
 serde_plain.workspace = true
 #
 proxmox-api-macro.workspace = true
-proxmox-login.workspace = true
+proxmox-serde.workspace = true
 proxmox-schema = { workspace = true, features = [ "api-types", "api-macro" ] }
 
 # For the client feature:
