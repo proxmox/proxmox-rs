@@ -97,7 +97,7 @@ impl Uuid {
         if src.len() == 36 {
             // Unfortunately the manpage of `uuid_parse(3)` states that it technically requires a
             // terminating null byte at the end, which we don't have, so do this manually:
-            let uuid: &mut [u8] = unsafe { &mut (*uuid)[..] };
+            let uuid: &mut [u8] = unsafe { &mut (&mut *uuid)[..] };
             let src = src.as_bytes();
             if src[8] != b'-' || src[13] != b'-' || src[18] != b'-' || src[23] != b'-' {
                 return Err(UuidError);
@@ -118,7 +118,7 @@ impl Uuid {
                 uuid[i] = (hex_digit(src[2 * i + 4])? << 4) | hex_digit(src[2 * i + 5])?;
             }
         } else if src.len() == 32 {
-            let uuid: &mut [u8] = unsafe { &mut (*uuid)[..] };
+            let uuid: &mut [u8] = unsafe { &mut (&mut *uuid)[..] };
             let src = src.as_bytes();
             for i in 0..16 {
                 uuid[i] = (hex_digit(src[2 * i])? << 4) | hex_digit(src[2 * i + 1])?;
