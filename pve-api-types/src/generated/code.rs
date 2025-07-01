@@ -321,7 +321,6 @@
 /// - /nodes/{node}/rrddata
 /// - /nodes/{node}/scan
 /// - /nodes/{node}/scan/cifs
-/// - /nodes/{node}/scan/glusterfs
 /// - /nodes/{node}/scan/iscsi
 /// - /nodes/{node}/scan/lvm
 /// - /nodes/{node}/scan/lvmthin

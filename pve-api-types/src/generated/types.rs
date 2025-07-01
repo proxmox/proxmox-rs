@@ -182,7 +182,7 @@ pub struct ClusterJoinInfoNodelist {
     pub name: String,
 
     /// Node id for this node.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nodeid: Option<u64>,
 
@@ -191,7 +191,7 @@ pub struct ClusterJoinInfoNodelist {
     /// Certificate SHA 256 fingerprint.
     pub pve_fp: String,
 
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     pub quorum_votes: u64,
 
     /// Address and priority information of a single corosync link. (up to 8
@@ -228,7 +228,7 @@ pub struct ClusterJoinInfoNodelistRing0Addr {
     /// The priority for the link when knet is used in 'passive' mode (default).
     /// Lower value means higher priority. Only valid for cluster create,
     /// ignored on node add.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u8")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub priority: Option<u8>,
 }
@@ -277,14 +277,14 @@ pub struct ClusterMetricsData {
     pub metric: String,
 
     /// Time at which this metric was observed
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub timestamp: i64,
 
     #[serde(rename = "type")]
     pub ty: ClusterMetricsDataType,
 
     /// Metric value.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     pub value: f64,
 }
 
@@ -350,7 +350,7 @@ CLUSTER_NODE_INDEX_RESPONSE_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct ClusterNodeIndexResponse {
     /// CPU utilization.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu: Option<f64>,
 
@@ -359,17 +359,17 @@ pub struct ClusterNodeIndexResponse {
     pub level: Option<String>,
 
     /// Number of available CPUs.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxcpu: Option<i64>,
 
     /// Number of available memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
     /// Used memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<i64>,
 
@@ -383,7 +383,7 @@ pub struct ClusterNodeIndexResponse {
     pub status: ClusterNodeIndexResponseStatus,
 
     /// Node uptime in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
 }
@@ -468,30 +468,30 @@ pub struct ClusterNodeStatus {
     pub level: Option<String>,
 
     /// [node] Indicates if this is the responding node.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub local: Option<bool>,
 
     pub name: String,
 
     /// [node] ID of the node from the corosync configuration.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nodeid: Option<i64>,
 
     /// [cluster] Nodes count, including offline nodes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nodes: Option<i64>,
 
     /// [node] Indicates if the node is online or offline.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub online: Option<bool>,
 
     /// [cluster] Indicates if there is a majority of nodes online to make
     /// decisions
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quorate: Option<bool>,
 
@@ -499,7 +499,7 @@ pub struct ClusterNodeStatus {
     pub ty: ClusterNodeStatusType,
 
     /// [cluster] Current version of the corosync configuration file.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<i64>,
 }
@@ -649,7 +649,7 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct ClusterResource {
     /// The cgroup mode the node operates under (for type 'node').
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "cgroup-mode")]
     pub cgroup_mode: Option<i64>,
@@ -660,27 +660,27 @@ pub struct ClusterResource {
     pub content: Option<Vec<StorageContent>>,
 
     /// CPU utilization (for types 'node', 'qemu' and 'lxc').
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu: Option<f64>,
 
     /// Used disk space in bytes (for type 'storage'), used root image space for
     /// VMs (for types 'qemu' and 'lxc').
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub disk: Option<u64>,
 
     /// The amount of bytes the guest read from its block devices since the
     /// guest was started. This info is not available for all storage types.
     /// (for types 'qemu' and 'lxc')
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskread: Option<i64>,
 
     /// The amount of bytes the guest wrote to its block devices since the guest
     /// was started. This info is not available for all storage types. (for
     /// types 'qemu' and 'lxc')
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskwrite: Option<i64>,
 
@@ -700,24 +700,24 @@ pub struct ClusterResource {
     pub lock: Option<String>,
 
     /// Number of available CPUs (for types 'node', 'qemu' and 'lxc').
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxcpu: Option<f64>,
 
     /// Storage size in bytes (for type 'storage'), root image size for VMs (for
     /// types 'qemu' and 'lxc').
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxdisk: Option<u64>,
 
     /// Number of available memory in bytes (for types 'node', 'qemu' and
     /// 'lxc').
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
     /// Used memory in bytes (for types 'node', 'qemu' and 'lxc').
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<u64>,
 
@@ -727,13 +727,13 @@ pub struct ClusterResource {
 
     /// The amount of traffic in bytes that was sent to the guest over the
     /// network since it was started. (for types 'qemu' and 'lxc')
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netin: Option<i64>,
 
     /// The amount of traffic in bytes that was sent from the guest over the
     /// network since it was started. (for types 'qemu' and 'lxc')
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netout: Option<i64>,
 
@@ -762,7 +762,7 @@ pub struct ClusterResource {
     pub tags: Option<String>,
 
     /// Determines if the guest is a template. (for types 'qemu' and 'lxc')
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<bool>,
 
@@ -771,12 +771,12 @@ pub struct ClusterResource {
 
     /// Uptime of node or virtual guest in seconds (for types 'node', 'qemu' and
     /// 'lxc').
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
 
     /// The numerical vmid (for types 'qemu' and 'lxc').
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vmid: Option<u32>,
 }
@@ -856,13 +856,13 @@ pub struct CreateToken {
 
     /// API token expiration date (seconds since epoch). '0' means no expiration
     /// date.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expire: Option<u64>,
 
     /// Restrict API token privileges with separate ACLs (default), or give full
     /// privileges of corresponding user.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub privsep: Option<bool>,
 }
@@ -919,13 +919,13 @@ pub struct CreateTokenResponseInfo {
 
     /// API token expiration date (seconds since epoch). '0' means no expiration
     /// date.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expire: Option<u64>,
 
     /// Restrict API token privileges with separate ACLs (default), or give full
     /// privileges of corresponding user.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub privsep: Option<bool>,
 }
@@ -1195,17 +1195,17 @@ LIST_TASKS_STATUSFILTER_RE = r##"^(?i:ok|error|warning|unknown)$"##;
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct ListTasks {
     /// Only list tasks with a status of ERROR.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub errors: Option<bool>,
 
     /// Only list this amount of tasks.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,
 
     /// Only list tasks since this UNIX epoch.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub since: Option<i64>,
 
@@ -1213,7 +1213,7 @@ pub struct ListTasks {
     pub source: Option<ListTasksSource>,
 
     /// List tasks beginning from this offset.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub start: Option<u64>,
 
@@ -1226,7 +1226,7 @@ pub struct ListTasks {
     pub typefilter: Option<String>,
 
     /// Only list tasks until this UNIX epoch.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub until: Option<i64>,
 
@@ -1235,7 +1235,7 @@ pub struct ListTasks {
     pub userfilter: Option<String>,
 
     /// Only list tasks for this VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vmid: Option<u32>,
 }
@@ -1289,7 +1289,7 @@ pub struct ListTasks {
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct ListTasksResponse {
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub endtime: Option<i64>,
 
@@ -1297,13 +1297,13 @@ pub struct ListTasksResponse {
 
     pub node: String,
 
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub pid: i64,
 
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub pstart: i64,
 
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub starttime: i64,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1512,13 +1512,13 @@ pub struct LxcConfig {
     pub cmode: Option<LxcConfigCmode>,
 
     /// Attach a console device (/dev/console) to the container.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub console: Option<bool>,
 
     /// The number of cores assigned to the container. A container can use all
     /// available cores by default.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cores: Option<u16>,
 
@@ -1526,18 +1526,18 @@ pub struct LxcConfig {
     ///
     /// NOTE: If the computer has 2 CPUs, it has a total of '2' CPU time. Value
     /// '0' indicates no CPU limit.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpulimit: Option<f64>,
 
     /// CPU weight for a container, will be clamped to [1, 10000] in cgroup v2.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpuunits: Option<u32>,
 
     /// Try to be more verbose. For now this only enables debug log-level on
     /// start.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub debug: Option<bool>,
 
@@ -1576,7 +1576,7 @@ pub struct LxcConfig {
     pub lxc: Option<Vec<Vec<String>>>,
 
     /// Amount of RAM for the container in MB.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memory: Option<u64>,
 
@@ -1596,7 +1596,7 @@ pub struct LxcConfig {
     pub net: LxcConfigNetArray,
 
     /// Specifies whether a container will be started during system bootup.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub onboot: Option<bool>,
 
@@ -1605,7 +1605,7 @@ pub struct LxcConfig {
 
     /// Sets the protection flag of the container. This will prevent the CT or
     /// CT's disk remove/update operation.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub protection: Option<bool>,
 
@@ -1627,7 +1627,7 @@ pub struct LxcConfig {
     pub startup: Option<String>,
 
     /// Amount of SWAP for the container in MB.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub swap: Option<u64>,
 
@@ -1636,7 +1636,7 @@ pub struct LxcConfig {
     pub tags: Option<String>,
 
     /// Enable/disable Template.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<bool>,
 
@@ -1647,13 +1647,13 @@ pub struct LxcConfig {
     pub timezone: Option<String>,
 
     /// Specify the number of tty available to the container
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u8")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tty: Option<u8>,
 
     /// Makes the container run as unprivileged user. (Should not be modified
     /// manually.)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unprivileged: Option<bool>,
 
@@ -1783,13 +1783,13 @@ serde_plain::derive_fromstr_from_deserialize!(LxcConfigCmode);
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct LxcConfigDev {
     /// Deny the container to write to the device
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "deny-write")]
     pub deny_write: Option<bool>,
 
     /// Group ID to be assigned to the device node
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub gid: Option<u64>,
 
@@ -1802,7 +1802,7 @@ pub struct LxcConfigDev {
     pub path: Option<String>,
 
     /// User ID to be assigned to the device node
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uid: Option<u64>,
 }
@@ -1840,13 +1840,13 @@ pub struct LxcConfigDev {
 pub struct LxcConfigFeatures {
     /// Mount /sys in unprivileged containers as `rw` instead of `mixed`. This
     /// can break networking under newer (>= v245) systemd-network use.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub force_rw_sys: Option<bool>,
 
     /// Allow using 'fuse' file systems in a container. Note that interactions
     /// between fuse and the freezer cgroup can potentially cause I/O deadlocks.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fuse: Option<bool>,
 
@@ -1857,14 +1857,14 @@ pub struct LxcConfigFeatures {
     /// fatal error when some keyctl() operations are denied by the kernel due
     /// to lacking permissions. Essentially, you can choose between running
     /// systemd-networkd or docker.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub keyctl: Option<bool>,
 
     /// Allow unprivileged containers to use mknod() to add certain device
     /// nodes. This requires a kernel with seccomp trap to user space support
     /// (5.3 or newer). This is experimental.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mknod: Option<bool>,
 
@@ -1880,7 +1880,7 @@ pub struct LxcConfigFeatures {
     /// Allow nesting. Best used with unprivileged containers with additional id
     /// mapping. Note that this will expose procfs and sysfs contents of the
     /// host to the guest.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nesting: Option<bool>,
 }
@@ -1979,12 +1979,12 @@ LXC_CONFIG_MP_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct LxcConfigMp {
     /// Explicitly enable or disable ACL support.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub acl: Option<bool>,
 
     /// Whether to include the mount point in backups.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backup: Option<bool>,
 
@@ -1998,23 +1998,23 @@ pub struct LxcConfigMp {
 
     /// Enable user quotas inside the container (not supported with zfs
     /// subvolumes)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quota: Option<bool>,
 
     /// Will include this volume to a storage replica job.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replicate: Option<bool>,
 
     /// Read-only mount point
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ro: Option<bool>,
 
     /// Mark this non-volume mount point as available on multiple nodes (see
     /// 'nodes')
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shared: Option<bool>,
 
@@ -2104,7 +2104,7 @@ pub struct LxcConfigNet {
     pub bridge: Option<String>,
 
     /// Controls whether this interface's firewall rules should be used.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub firewall: Option<bool>,
 
@@ -2131,12 +2131,12 @@ pub struct LxcConfigNet {
     pub ip6: Option<String>,
 
     /// Whether this interface should be disconnected (like pulling the plug).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub link_down: Option<bool>,
 
     /// Maximum transfer unit of the interface. (lxc.network.mtu)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mtu: Option<u16>,
 
@@ -2145,12 +2145,12 @@ pub struct LxcConfigNet {
     pub name: String,
 
     /// Apply rate limiting to the interface
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rate: Option<f64>,
 
     /// VLAN tag for this interface.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tag: Option<u16>,
 
@@ -2266,7 +2266,7 @@ LXC_CONFIG_ROOTFS_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct LxcConfigRootfs {
     /// Explicitly enable or disable ACL support.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub acl: Option<bool>,
 
@@ -2276,23 +2276,23 @@ pub struct LxcConfigRootfs {
 
     /// Enable user quotas inside the container (not supported with zfs
     /// subvolumes)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quota: Option<bool>,
 
     /// Will include this volume to a storage replica job.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replicate: Option<bool>,
 
     /// Read-only mount point
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ro: Option<bool>,
 
     /// Mark this non-volume mount point as available on multiple nodes (see
     /// 'nodes')
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shared: Option<bool>,
 
@@ -2393,31 +2393,31 @@ pub struct LxcConfigUnused {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct LxcEntry {
     /// Current CPU usage.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu: Option<f64>,
 
     /// Maximum usable CPUs.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpus: Option<f64>,
 
     /// Root disk image space-usage in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub disk: Option<u64>,
 
     /// The amount of bytes the guest read from it's block devices since the
     /// guest was started. (Note: This info is not available for all storage
     /// types.)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskread: Option<i64>,
 
     /// The amount of bytes the guest wrote from it's block devices since the
     /// guest was started. (Note: This info is not available for all storage
     /// types.)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskwrite: Option<i64>,
 
@@ -2426,22 +2426,22 @@ pub struct LxcEntry {
     pub lock: Option<String>,
 
     /// Root disk image size in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxdisk: Option<i64>,
 
     /// Maximum memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
     /// Maximum SWAP memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxswap: Option<i64>,
 
     /// Currently used memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<i64>,
 
@@ -2451,13 +2451,13 @@ pub struct LxcEntry {
 
     /// The amount of traffic in bytes that was sent to the guest over the
     /// network since it was started.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netin: Option<i64>,
 
     /// The amount of traffic in bytes that was sent from the guest over the
     /// network since it was started.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netout: Option<i64>,
 
@@ -2468,17 +2468,17 @@ pub struct LxcEntry {
     pub tags: Option<String>,
 
     /// Determines if the guest is a template.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<bool>,
 
     /// Uptime in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
 
     /// The (unique) ID of the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     pub vmid: u32,
 }
 
@@ -2560,31 +2560,31 @@ pub struct LxcEntry {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct LxcStatus {
     /// Current CPU usage.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu: Option<f64>,
 
     /// Maximum usable CPUs.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpus: Option<f64>,
 
     /// Root disk image space-usage in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub disk: Option<u64>,
 
     /// The amount of bytes the guest read from it's block devices since the
     /// guest was started. (Note: This info is not available for all storage
     /// types.)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskread: Option<i64>,
 
     /// The amount of bytes the guest wrote from it's block devices since the
     /// guest was started. (Note: This info is not available for all storage
     /// types.)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskwrite: Option<i64>,
 
@@ -2596,22 +2596,22 @@ pub struct LxcStatus {
     pub lock: Option<String>,
 
     /// Root disk image size in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxdisk: Option<i64>,
 
     /// Maximum memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
     /// Maximum SWAP memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxswap: Option<i64>,
 
     /// Currently used memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<i64>,
 
@@ -2621,13 +2621,13 @@ pub struct LxcStatus {
 
     /// The amount of traffic in bytes that was sent to the guest over the
     /// network since it was started.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netin: Option<i64>,
 
     /// The amount of traffic in bytes that was sent from the guest over the
     /// network since it was started.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netout: Option<i64>,
 
@@ -2638,17 +2638,17 @@ pub struct LxcStatus {
     pub tags: Option<String>,
 
     /// Determines if the guest is a template.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<bool>,
 
     /// Uptime in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
 
     /// The (unique) ID of the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     pub vmid: u32,
 }
 
@@ -2692,17 +2692,17 @@ MIGRATE_LXC_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct MigrateLxc {
     /// Override I/O bandwidth limit (in KiB/s).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bwlimit: Option<f64>,
 
     /// Use online/live migration.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub online: Option<bool>,
 
     /// Use restart migration
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub restart: Option<bool>,
 
@@ -2717,7 +2717,7 @@ pub struct MigrateLxc {
     pub target_storage: Option<String>,
 
     /// Timeout in seconds for shutdown for restart migration
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout: Option<i64>,
 }
@@ -2771,13 +2771,13 @@ MIGRATE_QEMU_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct MigrateQemu {
     /// Override I/O bandwidth limit (in KiB/s).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bwlimit: Option<u64>,
 
     /// Allow to migrate VMs which use local devices. Only root may use this
     /// option.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub force: Option<bool>,
 
@@ -2789,7 +2789,7 @@ pub struct MigrateQemu {
     pub migration_type: Option<StartQemuMigrationType>,
 
     /// Use online/live migration if VM is running. Ignored if VM is stopped.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub online: Option<bool>,
 
@@ -2803,7 +2803,7 @@ pub struct MigrateQemu {
     pub targetstorage: Option<String>,
 
     /// Enable live storage migration for local disk
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "with-local-disks")]
     pub with_local_disks: Option<bool>,
@@ -3058,7 +3058,7 @@ NETWORK_INTERFACE_VLAN_RAW_DEVICE_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct NetworkInterface {
     /// Set to true if the interface is active.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active: Option<bool>,
 
@@ -3071,7 +3071,7 @@ pub struct NetworkInterface {
     pub address6: Option<String>,
 
     /// Automatically start interface on boot.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub autostart: Option<bool>,
 
@@ -3087,31 +3087,31 @@ pub struct NetworkInterface {
     pub bond_xmit_hash_policy: Option<NetworkInterfaceBondXmitHashPolicy>,
 
     /// The bridge port access VLAN.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "bridge-access")]
     pub bridge_access: Option<i64>,
 
     /// Bridge port ARP/ND suppress flag.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "bridge-arp-nd-suppress")]
     pub bridge_arp_nd_suppress: Option<bool>,
 
     /// Bridge port learning flag.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "bridge-learning")]
     pub bridge_learning: Option<bool>,
 
     /// Bridge port multicast flood flag.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "bridge-multicast-flood")]
     pub bridge_multicast_flood: Option<bool>,
 
     /// Bridge port unicast flood flag.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "bridge-unicast-flood")]
     pub bridge_unicast_flood: Option<bool>,
@@ -3126,7 +3126,7 @@ pub struct NetworkInterface {
     pub bridge_vids: Option<String>,
 
     /// Enable bridge vlan support.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bridge_vlan_aware: Option<bool>,
 
@@ -3147,7 +3147,7 @@ pub struct NetworkInterface {
     pub comments6: Option<String>,
 
     /// Set to true if the interface physically exists.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub exists: Option<bool>,
 
@@ -3178,7 +3178,7 @@ pub struct NetworkInterface {
     pub method6: Option<NetworkInterfaceMethod>,
 
     /// MTU.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mtu: Option<u16>,
 
@@ -3187,7 +3187,7 @@ pub struct NetworkInterface {
     pub netmask: Option<String>,
 
     /// Network mask.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u8")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netmask6: Option<u8>,
 
@@ -3217,12 +3217,12 @@ pub struct NetworkInterface {
     pub ovs_ports: Option<String>,
 
     /// Specify a VLan tag (used by OVSPort, OVSIntPort, OVSBond)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ovs_tag: Option<u16>,
 
     /// The order of the interface.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub priority: Option<i64>,
 
@@ -3239,7 +3239,7 @@ pub struct NetworkInterface {
     pub uplink_id: Option<String>,
 
     /// vlan-id for a custom named vlan interface (ifupdown2 only).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "vlan-id")]
     pub vlan_id: Option<u16>,
@@ -3254,7 +3254,7 @@ pub struct NetworkInterface {
     pub vlan_raw_device: Option<String>,
 
     /// The VXLAN ID.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "vxlan-id")]
     pub vxlan_id: Option<i64>,
@@ -3461,7 +3461,7 @@ pub struct NodeStatus {
     pub boot_info: NodeStatusBootInfo,
 
     /// The current cpu usage.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     pub cpu: f64,
 
     pub cpuinfo: NodeStatusCpuinfo,
@@ -3501,7 +3501,7 @@ pub struct NodeStatusBootInfo {
     pub mode: NodeStatusBootInfoMode,
 
     /// System is booted in secure mode, only applicable for the "efi" mode.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub secureboot: Option<bool>,
 }
@@ -3540,18 +3540,18 @@ serde_plain::derive_fromstr_from_deserialize!(NodeStatusBootInfoMode);
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct NodeStatusCpuinfo {
     /// The number of physical cores of the CPU.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub cores: i64,
 
     /// The number of logical threads of the CPU.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub cpus: i64,
 
     /// The CPU model
     pub model: String,
 
     /// The number of logical threads of the CPU.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub sockets: i64,
 }
 
@@ -3604,15 +3604,15 @@ pub struct NodeStatusCurrentKernel {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct NodeStatusMemory {
     /// The free memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub free: i64,
 
     /// The total memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub total: i64,
 
     /// The used memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub used: i64,
 }
 
@@ -3636,19 +3636,19 @@ pub struct NodeStatusMemory {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct NodeStatusRootfs {
     /// The available bytes in the root filesystem.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub avail: i64,
 
     /// The free bytes on the root filesystem.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub free: i64,
 
     /// The total size of the root filesystem in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub total: i64,
 
     /// The used bytes in the root filesystem.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub used: i64,
 }
 
@@ -3707,7 +3707,7 @@ pub struct NodeStatusRootfs {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct NodeSubscriptionInfo {
     /// Timestamp of the last check done.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub checktime: Option<i64>,
 
@@ -3744,7 +3744,7 @@ pub struct NodeSubscriptionInfo {
     pub signature: Option<String>,
 
     /// The number of sockets for this host.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sockets: Option<i64>,
 
@@ -3813,7 +3813,7 @@ pub struct ProxmoxRemote {
     pub host: String,
 
     /// Port to connect to
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub port: Option<i64>,
 }
@@ -3847,26 +3847,26 @@ pub struct ProxmoxRemote {
 pub struct PveQemuSevFmt {
     /// Sets policy bit to allow Simultaneous Multi Threading (SMT) (Ignored
     /// unless for SEV-SNP)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "allow-smt")]
     pub allow_smt: Option<bool>,
 
     /// Add kernel hashes to guest firmware for measured linux kernel launch
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "kernel-hashes")]
     pub kernel_hashes: Option<bool>,
 
     /// Sets policy bit to disallow debugging of guest
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "no-debug")]
     pub no_debug: Option<bool>,
 
     /// Sets policy bit to disallow key sharing with other guests (Ignored for
     /// SEV-SNP)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "no-key-sharing")]
     pub no_key_sharing: Option<bool>,
@@ -4063,7 +4063,7 @@ pub struct PveQmHostpci {
     /// Pass this device in legacy IGD mode, making it the primary and exclusive
     /// graphics device in the VM. Requires 'pc-i440fx' machine type and VGA set
     /// to 'none'.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "legacy-igd")]
     pub legacy_igd: Option<bool>,
@@ -4080,13 +4080,13 @@ pub struct PveQmHostpci {
     pub mdev: Option<String>,
 
     /// Choose the PCI-express bus (needs the 'q35' machine model).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pcie: Option<bool>,
 
     /// Specify whether or not the device's ROM will be visible in the guest's
     /// memory map.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rombar: Option<bool>,
 
@@ -4110,7 +4110,7 @@ pub struct PveQmHostpci {
     pub vendor_id: Option<String>,
 
     /// Enable vfio-vga device support.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "x-vga")]
     pub x_vga: Option<bool>,
@@ -4295,37 +4295,37 @@ pub struct PveQmIde {
     pub aio: Option<PveQmIdeAio>,
 
     /// Whether the drive should be included when making backups.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backup: Option<bool>,
 
     /// Maximum r/w speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps: Option<i64>,
 
     /// Maximum length of I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_max_length: Option<u64>,
 
     /// Maximum read speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_rd: Option<i64>,
 
     /// Maximum length of read I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_rd_max_length: Option<u64>,
 
     /// Maximum write speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_wr: Option<i64>,
 
     /// Maximum length of write I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_wr_max_length: Option<u64>,
 
@@ -4333,12 +4333,12 @@ pub struct PveQmIde {
     pub cache: Option<PveQmIdeCache>,
 
     /// Force the drive's physical geometry to have a specific cylinder count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cyls: Option<i64>,
 
     /// Controls whether to detect and try to optimize writes of zeroes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detect_zeroes: Option<bool>,
 
@@ -4352,82 +4352,82 @@ pub struct PveQmIde {
     pub format: Option<PveQmIdeFormat>,
 
     /// Force the drive's physical geometry to have a specific head count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heads: Option<i64>,
 
     /// Maximum r/w I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops: Option<i64>,
 
     /// Maximum unthrottled r/w I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_max: Option<i64>,
 
     /// Maximum length of I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_max_length: Option<u64>,
 
     /// Maximum read I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd: Option<i64>,
 
     /// Maximum unthrottled read I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd_max: Option<i64>,
 
     /// Maximum length of read I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd_max_length: Option<u64>,
 
     /// Maximum write I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr: Option<i64>,
 
     /// Maximum unthrottled write I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr_max: Option<i64>,
 
     /// Maximum length of write I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr_max_length: Option<u64>,
 
     /// Maximum r/w speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps: Option<f64>,
 
     /// Maximum unthrottled r/w pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_max: Option<f64>,
 
     /// Maximum read speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd: Option<f64>,
 
     /// Maximum unthrottled read pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd_max: Option<f64>,
 
     /// Maximum write speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr: Option<f64>,
 
     /// Maximum unthrottled write pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr_max: Option<f64>,
 
@@ -4439,7 +4439,7 @@ pub struct PveQmIde {
     pub model: Option<String>,
 
     /// Whether the drive should considered for replication jobs.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replicate: Option<bool>,
 
@@ -4447,7 +4447,7 @@ pub struct PveQmIde {
     pub rerror: Option<PveQmIdeRerror>,
 
     /// Force the drive's physical geometry to have a specific sector count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub secs: Option<i64>,
 
@@ -4456,7 +4456,7 @@ pub struct PveQmIde {
     pub serial: Option<String>,
 
     /// Mark this locally-managed volume as available on all nodes
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shared: Option<bool>,
 
@@ -4466,13 +4466,13 @@ pub struct PveQmIde {
 
     /// Controls qemu's snapshot mode feature. If activated, changes made to the
     /// disk are temporary and will be discarded when the VM is shutdown.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub snapshot: Option<bool>,
 
     /// Whether to expose this drive as an SSD, rather than a rotational hard
     /// disk.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ssd: Option<bool>,
 
@@ -4707,13 +4707,13 @@ pub struct PveQmRng {
     /// Maximum bytes of entropy allowed to get injected into the guest every
     /// 'period' milliseconds. Use `0` to disable limiting (potentially
     /// dangerous!).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_bytes: Option<i64>,
 
     /// Every 'period' milliseconds the entropy-injection quota is reset,
     /// allowing the guest to retrieve another 'max_bytes' of entropy.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub period: Option<i64>,
 
@@ -4781,7 +4781,7 @@ serde_plain::derive_fromstr_from_deserialize!(PveQmRngSource);
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct PveQmSmbios1 {
     /// Flag to indicate that the SMBIOS values are base64 encoded
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub base64: Option<bool>,
 
@@ -4927,7 +4927,7 @@ pub struct PveVmCpuConf {
     pub flags: Option<String>,
 
     /// Do not identify as a KVM virtual machine.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hidden: Option<bool>,
 
@@ -5554,7 +5554,7 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct QemuConfig {
     /// Enable/disable ACPI.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub acpi: Option<bool>,
 
@@ -5585,13 +5585,13 @@ pub struct QemuConfig {
     pub audio0: Option<String>,
 
     /// Automatic restart after crash (currently ignored).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub autostart: Option<bool>,
 
     /// Amount of target RAM for the VM in MiB. Using zero disables the ballon
     /// driver.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub balloon: Option<u64>,
 
@@ -5627,7 +5627,7 @@ pub struct QemuConfig {
     pub citype: Option<QemuConfigCitype>,
 
     /// cloud-init: do an automatic package upgrade after the first boot.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ciupgrade: Option<bool>,
 
@@ -5637,7 +5637,7 @@ pub struct QemuConfig {
     pub ciuser: Option<String>,
 
     /// The number of cores per socket.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cores: Option<u64>,
 
@@ -5646,12 +5646,12 @@ pub struct QemuConfig {
     pub cpu: Option<String>,
 
     /// Limit of CPU usage.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpulimit: Option<f64>,
 
     /// CPU weight for a VM, will be clamped to [1, 10000] in cgroup v2.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpuunits: Option<u32>,
 
@@ -5669,7 +5669,7 @@ pub struct QemuConfig {
     pub efidisk0: Option<String>,
 
     /// Freeze CPU at startup (use 'c' monitor command to start execution).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub freeze: Option<bool>,
 
@@ -5720,7 +5720,7 @@ pub struct QemuConfig {
 
     /// Use together with hugepages. If enabled, hugepages will not not be
     /// deleted after VM shutdown and can be used for subsequent starts.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub keephugepages: Option<bool>,
 
@@ -5728,13 +5728,13 @@ pub struct QemuConfig {
     pub keyboard: Option<QemuConfigKeyboard>,
 
     /// Enable/disable KVM hardware virtualization.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kvm: Option<bool>,
 
     /// Set the real time clock (RTC) to local time. This is enabled by default
     /// if the `ostype` indicates a Microsoft Windows OS.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub localtime: Option<bool>,
 
@@ -5753,12 +5753,12 @@ pub struct QemuConfig {
     /// migration not be able to converge in the very end, because too much
     /// newly dirtied RAM needs to be transferred, the limit will be increased
     /// automatically step-by-step until migration can converge.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migrate_downtime: Option<f64>,
 
     /// Set maximum speed (in MB/s) for migrations. Value 0 is no limit.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migrate_speed: Option<u64>,
 
@@ -5777,7 +5777,7 @@ pub struct QemuConfig {
     pub net: QemuConfigNetArray,
 
     /// Enable/disable NUMA.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub numa: Option<bool>,
 
@@ -5786,7 +5786,7 @@ pub struct QemuConfig {
     pub numa_array: QemuConfigNumaArray,
 
     /// Specifies whether a VM will be started during system bootup.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub onboot: Option<bool>,
 
@@ -5799,12 +5799,12 @@ pub struct QemuConfig {
 
     /// Sets the protection flag of the VM. This will disable the remove VM and
     /// remove disk operations.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub protection: Option<bool>,
 
     /// Allow reboot. If set to '0' the VM exit on reboot.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reboot: Option<bool>,
 
@@ -5837,7 +5837,7 @@ pub struct QemuConfig {
     /// the more memory this VM gets. Number is relative to weights of all other
     /// running VMs. Using zero disables auto-ballooning. Auto-ballooning is
     /// done by pvestatd.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shares: Option<u16>,
 
@@ -5846,12 +5846,12 @@ pub struct QemuConfig {
     pub smbios1: Option<String>,
 
     /// The number of CPUs. Please use option -sockets instead.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub smp: Option<u64>,
 
     /// The number of CPU sockets.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sockets: Option<u64>,
 
@@ -5876,7 +5876,7 @@ pub struct QemuConfig {
     pub startup: Option<String>,
 
     /// Enable/disable the USB tablet device.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tablet: Option<bool>,
 
@@ -5885,12 +5885,12 @@ pub struct QemuConfig {
     pub tags: Option<String>,
 
     /// Enable/disable time drift fix.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tdf: Option<bool>,
 
     /// Enable/disable Template.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<bool>,
 
@@ -5909,7 +5909,7 @@ pub struct QemuConfig {
     pub usb: QemuConfigUsbArray,
 
     /// Number of hotplugged vcpus.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vcpus: Option<u64>,
 
@@ -6114,17 +6114,17 @@ generate_array_field! {
 pub struct QemuConfigAgent {
     /// Enable/disable communication with a QEMU Guest Agent (QGA) running in
     /// the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     pub enabled: bool,
 
     /// Freeze/thaw guest filesystems on backup for consistency.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "freeze-fs-on-backup")]
     pub freeze_fs_on_backup: Option<bool>,
 
     /// Run fstrim after moving a disk or migrating the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fstrim_cloned_disks: Option<bool>,
 
@@ -6296,7 +6296,7 @@ pub struct QemuConfigEfidisk0 {
     /// Standard keys enrolled, if used with 'efitype=4m'. Note that this will
     /// enable Secure Boot by default, though it can still be turned off from
     /// within the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "pre-enrolled-keys")]
     pub pre_enrolled_keys: Option<bool>,
@@ -6361,7 +6361,7 @@ pub struct QemuConfigIvshmem {
     pub name: Option<String>,
 
     /// The size of the file in MB.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     pub size: u64,
 }
 
@@ -6511,14 +6511,14 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigLock);
 pub struct QemuConfigMachine {
     /// Enables S3 power state. Defaults to false beginning with machine types
     /// 9.2+pve1, true before.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "enable-s3")]
     pub enable_s3: Option<bool>,
 
     /// Enables S4 power state. Defaults to false beginning with machine types
     /// 9.2+pve1, true before.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "enable-s4")]
     pub enable_s4: Option<bool>,
@@ -6562,7 +6562,7 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigMachineViommu);
 pub struct QemuConfigMemory {
     /// Current amount of online RAM for the VM in MiB. This is the maximum
     /// available memory when you use the balloon device.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     pub current: u64,
 }
 
@@ -6664,12 +6664,12 @@ pub struct QemuConfigNet {
     pub bridge: Option<String>,
 
     /// Whether this interface should be protected by the firewall.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub firewall: Option<bool>,
 
     /// Whether this interface should be disconnected (like pulling the plug).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub link_down: Option<bool>,
 
@@ -6681,22 +6681,22 @@ pub struct QemuConfigNet {
     pub model: QemuConfigNetModel,
 
     /// Force MTU, for VirtIO only. Set to '1' to use the bridge MTU
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mtu: Option<u16>,
 
     /// Number of packet queues to be used on the device.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u8")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub queues: Option<u8>,
 
     /// Rate limit in mbps (megabytes per second) as floating point number.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rate: Option<f64>,
 
     /// VLAN tag to apply to packets on this interface.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tag: Option<u16>,
 
@@ -6783,7 +6783,7 @@ pub struct QemuConfigNuma {
     pub hostnodes: Option<String>,
 
     /// Amount of memory this NUMA node provides.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memory: Option<f64>,
 
@@ -7027,37 +7027,37 @@ pub struct QemuConfigSata {
     pub aio: Option<PveQmIdeAio>,
 
     /// Whether the drive should be included when making backups.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backup: Option<bool>,
 
     /// Maximum r/w speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps: Option<i64>,
 
     /// Maximum length of I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_max_length: Option<u64>,
 
     /// Maximum read speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_rd: Option<i64>,
 
     /// Maximum length of read I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_rd_max_length: Option<u64>,
 
     /// Maximum write speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_wr: Option<i64>,
 
     /// Maximum length of write I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_wr_max_length: Option<u64>,
 
@@ -7065,12 +7065,12 @@ pub struct QemuConfigSata {
     pub cache: Option<PveQmIdeCache>,
 
     /// Force the drive's physical geometry to have a specific cylinder count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cyls: Option<i64>,
 
     /// Controls whether to detect and try to optimize writes of zeroes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detect_zeroes: Option<bool>,
 
@@ -7084,82 +7084,82 @@ pub struct QemuConfigSata {
     pub format: Option<PveQmIdeFormat>,
 
     /// Force the drive's physical geometry to have a specific head count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heads: Option<i64>,
 
     /// Maximum r/w I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops: Option<i64>,
 
     /// Maximum unthrottled r/w I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_max: Option<i64>,
 
     /// Maximum length of I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_max_length: Option<u64>,
 
     /// Maximum read I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd: Option<i64>,
 
     /// Maximum unthrottled read I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd_max: Option<i64>,
 
     /// Maximum length of read I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd_max_length: Option<u64>,
 
     /// Maximum write I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr: Option<i64>,
 
     /// Maximum unthrottled write I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr_max: Option<i64>,
 
     /// Maximum length of write I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr_max_length: Option<u64>,
 
     /// Maximum r/w speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps: Option<f64>,
 
     /// Maximum unthrottled r/w pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_max: Option<f64>,
 
     /// Maximum read speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd: Option<f64>,
 
     /// Maximum unthrottled read pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd_max: Option<f64>,
 
     /// Maximum write speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr: Option<f64>,
 
     /// Maximum unthrottled write pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr_max: Option<f64>,
 
@@ -7167,7 +7167,7 @@ pub struct QemuConfigSata {
     pub media: Option<PveQmIdeMedia>,
 
     /// Whether the drive should considered for replication jobs.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replicate: Option<bool>,
 
@@ -7175,7 +7175,7 @@ pub struct QemuConfigSata {
     pub rerror: Option<PveQmIdeRerror>,
 
     /// Force the drive's physical geometry to have a specific sector count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub secs: Option<i64>,
 
@@ -7184,7 +7184,7 @@ pub struct QemuConfigSata {
     pub serial: Option<String>,
 
     /// Mark this locally-managed volume as available on all nodes
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shared: Option<bool>,
 
@@ -7194,13 +7194,13 @@ pub struct QemuConfigSata {
 
     /// Controls qemu's snapshot mode feature. If activated, changes made to the
     /// disk are temporary and will be discarded when the VM is shutdown.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub snapshot: Option<bool>,
 
     /// Whether to expose this drive as an SSD, rather than a rotational hard
     /// disk.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ssd: Option<bool>,
 
@@ -7413,37 +7413,37 @@ pub struct QemuConfigScsi {
     pub aio: Option<PveQmIdeAio>,
 
     /// Whether the drive should be included when making backups.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backup: Option<bool>,
 
     /// Maximum r/w speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps: Option<i64>,
 
     /// Maximum length of I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_max_length: Option<u64>,
 
     /// Maximum read speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_rd: Option<i64>,
 
     /// Maximum length of read I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_rd_max_length: Option<u64>,
 
     /// Maximum write speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_wr: Option<i64>,
 
     /// Maximum length of write I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_wr_max_length: Option<u64>,
 
@@ -7451,12 +7451,12 @@ pub struct QemuConfigScsi {
     pub cache: Option<PveQmIdeCache>,
 
     /// Force the drive's physical geometry to have a specific cylinder count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cyls: Option<i64>,
 
     /// Controls whether to detect and try to optimize writes of zeroes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detect_zeroes: Option<bool>,
 
@@ -7470,87 +7470,87 @@ pub struct QemuConfigScsi {
     pub format: Option<PveQmIdeFormat>,
 
     /// Force the drive's physical geometry to have a specific head count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heads: Option<i64>,
 
     /// Maximum r/w I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops: Option<i64>,
 
     /// Maximum unthrottled r/w I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_max: Option<i64>,
 
     /// Maximum length of I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_max_length: Option<u64>,
 
     /// Maximum read I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd: Option<i64>,
 
     /// Maximum unthrottled read I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd_max: Option<i64>,
 
     /// Maximum length of read I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd_max_length: Option<u64>,
 
     /// Maximum write I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr: Option<i64>,
 
     /// Maximum unthrottled write I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr_max: Option<i64>,
 
     /// Maximum length of write I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr_max_length: Option<u64>,
 
     /// Whether to use iothreads for this drive
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iothread: Option<bool>,
 
     /// Maximum r/w speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps: Option<f64>,
 
     /// Maximum unthrottled r/w pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_max: Option<f64>,
 
     /// Maximum read speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd: Option<f64>,
 
     /// Maximum unthrottled read pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd_max: Option<f64>,
 
     /// Maximum write speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr: Option<f64>,
 
     /// Maximum unthrottled write pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr_max: Option<f64>,
 
@@ -7562,12 +7562,12 @@ pub struct QemuConfigScsi {
     pub product: Option<String>,
 
     /// Number of queues.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub queues: Option<u64>,
 
     /// Whether the drive should considered for replication jobs.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replicate: Option<bool>,
 
@@ -7575,7 +7575,7 @@ pub struct QemuConfigScsi {
     pub rerror: Option<PveQmIdeRerror>,
 
     /// Whether the drive is read-only.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ro: Option<bool>,
 
@@ -7583,12 +7583,12 @@ pub struct QemuConfigScsi {
     ///
     /// WARNING: can lead to I/O errors in combination with low memory or high
     /// memory fragmentation on host
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scsiblock: Option<bool>,
 
     /// Force the drive's physical geometry to have a specific sector count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub secs: Option<i64>,
 
@@ -7597,7 +7597,7 @@ pub struct QemuConfigScsi {
     pub serial: Option<String>,
 
     /// Mark this locally-managed volume as available on all nodes
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shared: Option<bool>,
 
@@ -7607,13 +7607,13 @@ pub struct QemuConfigScsi {
 
     /// Controls qemu's snapshot mode feature. If activated, changes made to the
     /// disk are temporary and will be discarded when the VM is shutdown.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub snapshot: Option<bool>,
 
     /// Whether to expose this drive as an SSD, rather than a rotational hard
     /// disk.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ssd: Option<bool>,
 
@@ -7677,7 +7677,7 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigScsihw);
 pub struct QemuConfigSpiceEnhancements {
     /// Enable folder sharing via SPICE. Needs Spice-WebDAV daemon installed in
     /// the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub foldersharing: Option<bool>,
 
@@ -7828,7 +7828,7 @@ pub struct QemuConfigUsb {
     /// modern guests (machine version >= 7.1 and ostype l26 and windows > 7),
     /// this flag is irrelevant (all devices are plugged into a xhci
     /// controller).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub usb3: Option<bool>,
 }
@@ -7859,7 +7859,7 @@ pub struct QemuConfigVga {
     pub clipboard: Option<QemuConfigVgaClipboard>,
 
     /// Sets the VGA memory (in MiB). Has no effect with serial display.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u16")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memory: Option<u16>,
 
@@ -8103,37 +8103,37 @@ pub struct QemuConfigVirtio {
     pub aio: Option<PveQmIdeAio>,
 
     /// Whether the drive should be included when making backups.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backup: Option<bool>,
 
     /// Maximum r/w speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps: Option<i64>,
 
     /// Maximum length of I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_max_length: Option<u64>,
 
     /// Maximum read speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_rd: Option<i64>,
 
     /// Maximum length of read I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_rd_max_length: Option<u64>,
 
     /// Maximum write speed in bytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_wr: Option<i64>,
 
     /// Maximum length of write I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bps_wr_max_length: Option<u64>,
 
@@ -8141,12 +8141,12 @@ pub struct QemuConfigVirtio {
     pub cache: Option<PveQmIdeCache>,
 
     /// Force the drive's physical geometry to have a specific cylinder count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cyls: Option<i64>,
 
     /// Controls whether to detect and try to optimize writes of zeroes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detect_zeroes: Option<bool>,
 
@@ -8160,87 +8160,87 @@ pub struct QemuConfigVirtio {
     pub format: Option<PveQmIdeFormat>,
 
     /// Force the drive's physical geometry to have a specific head count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub heads: Option<i64>,
 
     /// Maximum r/w I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops: Option<i64>,
 
     /// Maximum unthrottled r/w I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_max: Option<i64>,
 
     /// Maximum length of I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_max_length: Option<u64>,
 
     /// Maximum read I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd: Option<i64>,
 
     /// Maximum unthrottled read I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd_max: Option<i64>,
 
     /// Maximum length of read I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_rd_max_length: Option<u64>,
 
     /// Maximum write I/O in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr: Option<i64>,
 
     /// Maximum unthrottled write I/O pool in operations per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr_max: Option<i64>,
 
     /// Maximum length of write I/O bursts in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iops_wr_max_length: Option<u64>,
 
     /// Whether to use iothreads for this drive
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub iothread: Option<bool>,
 
     /// Maximum r/w speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps: Option<f64>,
 
     /// Maximum unthrottled r/w pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_max: Option<f64>,
 
     /// Maximum read speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd: Option<f64>,
 
     /// Maximum unthrottled read pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_rd_max: Option<f64>,
 
     /// Maximum write speed in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr: Option<f64>,
 
     /// Maximum unthrottled write pool in megabytes per second.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mbps_wr_max: Option<f64>,
 
@@ -8248,7 +8248,7 @@ pub struct QemuConfigVirtio {
     pub media: Option<PveQmIdeMedia>,
 
     /// Whether the drive should considered for replication jobs.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replicate: Option<bool>,
 
@@ -8256,12 +8256,12 @@ pub struct QemuConfigVirtio {
     pub rerror: Option<PveQmIdeRerror>,
 
     /// Whether the drive is read-only.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ro: Option<bool>,
 
     /// Force the drive's physical geometry to have a specific sector count.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub secs: Option<i64>,
 
@@ -8270,7 +8270,7 @@ pub struct QemuConfigVirtio {
     pub serial: Option<String>,
 
     /// Mark this locally-managed volume as available on all nodes
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shared: Option<bool>,
 
@@ -8280,7 +8280,7 @@ pub struct QemuConfigVirtio {
 
     /// Controls qemu's snapshot mode feature. If activated, changes made to the
     /// disk are temporary and will be discarded when the VM is shutdown.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub snapshot: Option<bool>,
 
@@ -8329,7 +8329,7 @@ pub struct QemuConfigVirtiofs {
     pub cache: Option<QemuConfigVirtiofsCache>,
 
     /// Honor the O_DIRECT flag passed down by guest applications.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "direct-io")]
     pub direct_io: Option<bool>,
@@ -8340,13 +8340,13 @@ pub struct QemuConfigVirtiofs {
 
     /// Enable support for POSIX ACLs (enabled ACL implies xattr) for this
     /// mount.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "expose-acl")]
     pub expose_acl: Option<bool>,
 
     /// Enable support for extended attributes for this mount.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "expose-xattr")]
     pub expose_xattr: Option<bool>,
@@ -8446,7 +8446,7 @@ pub struct QemuMigratePreconditions {
     pub not_allowed_nodes: Option<QemuMigratePreconditionsNotAllowedNodes>,
 
     /// Determines if the VM is running.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     pub running: bool,
 }
 
@@ -8470,15 +8470,15 @@ pub struct QemuMigratePreconditions {
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct QemuMigratePreconditionsLocalDisks {
     /// True if the disk is a cdrom.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     pub cdrom: bool,
 
     /// True if the disk is unused.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     pub is_unused: bool,
 
     /// The size of the disk in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub size: i64,
 
     /// The volid of the disk.
@@ -8606,7 +8606,7 @@ pub struct QemuMigratePreconditionsNotAllowedNodes {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct QemuStatus {
     /// QEMU Guest Agent is enabled in config.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub agent: Option<bool>,
 
@@ -8614,26 +8614,26 @@ pub struct QemuStatus {
     pub clipboard: Option<QemuConfigVgaClipboard>,
 
     /// Current CPU usage.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu: Option<f64>,
 
     /// Maximum usable CPUs.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpus: Option<f64>,
 
     /// The amount of bytes the guest read from it's block devices since the
     /// guest was started. (Note: This info is not available for all storage
     /// types.)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskread: Option<i64>,
 
     /// The amount of bytes the guest wrote from it's block devices since the
     /// guest was started. (Note: This info is not available for all storage
     /// types.)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskwrite: Option<i64>,
 
@@ -8645,17 +8645,17 @@ pub struct QemuStatus {
     pub lock: Option<String>,
 
     /// Root disk size in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxdisk: Option<i64>,
 
     /// Maximum memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
     /// Currently used memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<i64>,
 
@@ -8665,18 +8665,18 @@ pub struct QemuStatus {
 
     /// The amount of traffic in bytes that was sent to the guest over the
     /// network since it was started.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netin: Option<i64>,
 
     /// The amount of traffic in bytes that was sent from the guest over the
     /// network since it was started.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netout: Option<i64>,
 
     /// PID of the QEMU process, if the VM is running.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pid: Option<i64>,
 
@@ -8695,12 +8695,12 @@ pub struct QemuStatus {
     pub running_qemu: Option<String>,
 
     /// Guest has serial device configured.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub serial: Option<bool>,
 
     /// QEMU VGA configuration supports spice.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spice: Option<bool>,
 
@@ -8711,17 +8711,17 @@ pub struct QemuStatus {
     pub tags: Option<String>,
 
     /// Determines if the guest is a template.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<bool>,
 
     /// Uptime in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
 
     /// The (unique) ID of the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     pub vmid: u32,
 }
 
@@ -8772,24 +8772,24 @@ pub struct QemuStatus {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct RemoteMigrateLxc {
     /// Override I/O bandwidth limit (in KiB/s).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bwlimit: Option<f64>,
 
     /// Delete the original CT and related data after successful migration. By
     /// default the original CT is kept on the source cluster in a stopped
     /// state.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub delete: Option<bool>,
 
     /// Use online/live migration.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub online: Option<bool>,
 
     /// Use restart migration
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub restart: Option<bool>,
 
@@ -8810,13 +8810,13 @@ pub struct RemoteMigrateLxc {
     pub target_storage: String,
 
     /// The (unique) ID of the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "target-vmid")]
     pub target_vmid: Option<u32>,
 
     /// Timeout in seconds for shutdown for restart migration
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout: Option<i64>,
 }
@@ -8860,19 +8860,19 @@ pub struct RemoteMigrateLxc {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct RemoteMigrateQemu {
     /// Override I/O bandwidth limit (in KiB/s).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bwlimit: Option<u64>,
 
     /// Delete the original VM and related data after successful migration. By
     /// default the original VM is kept on the source cluster in a stopped
     /// state.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub delete: Option<bool>,
 
     /// Use online/live migration if VM is running. Ignored if VM is stopped.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub online: Option<bool>,
 
@@ -8893,7 +8893,7 @@ pub struct RemoteMigrateQemu {
     pub target_storage: String,
 
     /// The (unique) ID of the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "target-vmid")]
     pub target_vmid: Option<u32>,
@@ -9012,13 +9012,13 @@ mod storage_info_content {
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct ShutdownLxc {
     /// Make sure the Container stops.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "forceStop")]
     pub force_stop: Option<bool>,
 
     /// Wait maximal timeout seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u64>,
 }
@@ -9048,24 +9048,24 @@ pub struct ShutdownLxc {
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct ShutdownQemu {
     /// Make sure the VM stops.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "forceStop")]
     pub force_stop: Option<bool>,
 
     /// Do not deactivate storage volumes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "keepActive")]
     pub keep_active: Option<bool>,
 
     /// Ignore locks - only root is allowed to use this option.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skiplock: Option<bool>,
 
     /// Wait maximal timeout seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u64>,
 }
@@ -9086,12 +9086,12 @@ pub struct ShutdownQemu {
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct StartLxc {
     /// If set, enables very verbose debug log-level on start.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub debug: Option<bool>,
 
     /// Ignore locks - only root is allowed to use this option.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skiplock: Option<bool>,
 }
@@ -9173,7 +9173,7 @@ pub struct StartQemu {
     pub migration_type: Option<StartQemuMigrationType>,
 
     /// Ignore locks - only root is allowed to use this option.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skiplock: Option<bool>,
 
@@ -9188,7 +9188,7 @@ pub struct StartQemu {
     pub targetstorage: Option<String>,
 
     /// Wait maximal timeout seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u64>,
 }
@@ -9224,13 +9224,13 @@ serde_plain::derive_fromstr_from_deserialize!(StartQemuMigrationType);
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct StopLxc {
     /// Try to abort active 'vzshutdown' tasks before stopping.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "overrule-shutdown")]
     pub overrule_shutdown: Option<bool>,
 
     /// Ignore locks - only root is allowed to use this option.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skiplock: Option<bool>,
 }
@@ -9271,7 +9271,7 @@ STOP_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct StopQemu {
     /// Do not deactivate storage volumes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "keepActive")]
     pub keep_active: Option<bool>,
@@ -9281,18 +9281,18 @@ pub struct StopQemu {
     pub migratedfrom: Option<String>,
 
     /// Try to abort active 'qmshutdown' tasks before stopping.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "overrule-shutdown")]
     pub overrule_shutdown: Option<bool>,
 
     /// Ignore locks - only root is allowed to use this option.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub skiplock: Option<bool>,
 
     /// Wait maximal timeout seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u64>,
 }
@@ -9378,12 +9378,12 @@ STORAGE_INFO_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct StorageInfo {
     /// Set when storage is accessible.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub active: Option<bool>,
 
     /// Available storage space in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub avail: Option<i64>,
 
@@ -9392,12 +9392,12 @@ pub struct StorageInfo {
     pub content: Vec<StorageContent>,
 
     /// Set when storage is enabled (not disabled).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
 
     /// Shared flag from storage configuration.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shared: Option<bool>,
 
@@ -9405,7 +9405,7 @@ pub struct StorageInfo {
     pub storage: String,
 
     /// Total storage space in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub total: Option<i64>,
 
@@ -9414,12 +9414,12 @@ pub struct StorageInfo {
     pub ty: String,
 
     /// Used storage space in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub used: Option<i64>,
 
     /// Used fraction (used/total).
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub used_fraction: Option<f64>,
 }
@@ -9438,7 +9438,7 @@ pub struct StorageInfo {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct TaskLogLine {
     /// Line number
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub n: i64,
 
     /// Line text
@@ -9499,13 +9499,13 @@ pub struct TaskStatus {
 
     pub node: String,
 
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub pid: i64,
 
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub pstart: i64,
 
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub starttime: i64,
 
     pub status: IsRunning,
@@ -9655,26 +9655,26 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct VmEntry {
     /// Current CPU usage.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpu: Option<f64>,
 
     /// Maximum usable CPUs.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_f64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cpus: Option<f64>,
 
     /// The amount of bytes the guest read from it's block devices since the
     /// guest was started. (Note: This info is not available for all storage
     /// types.)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskread: Option<i64>,
 
     /// The amount of bytes the guest wrote from it's block devices since the
     /// guest was started. (Note: This info is not available for all storage
     /// types.)
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskwrite: Option<i64>,
 
@@ -9683,17 +9683,17 @@ pub struct VmEntry {
     pub lock: Option<String>,
 
     /// Root disk size in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxdisk: Option<i64>,
 
     /// Maximum memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
     /// Currently used memory in bytes.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<i64>,
 
@@ -9703,18 +9703,18 @@ pub struct VmEntry {
 
     /// The amount of traffic in bytes that was sent to the guest over the
     /// network since it was started.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netin: Option<i64>,
 
     /// The amount of traffic in bytes that was sent from the guest over the
     /// network since it was started.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netout: Option<i64>,
 
     /// PID of the QEMU process, if the VM is running.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pid: Option<i64>,
 
@@ -9733,7 +9733,7 @@ pub struct VmEntry {
     pub running_qemu: Option<String>,
 
     /// Guest has serial device configured.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub serial: Option<bool>,
 
@@ -9744,16 +9744,16 @@ pub struct VmEntry {
     pub tags: Option<String>,
 
     /// Determines if the guest is a template.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_bool")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub template: Option<bool>,
 
     /// Uptime in seconds.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_i64")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub uptime: Option<i64>,
 
     /// The (unique) ID of the VM.
-    #[serde(deserialize_with = "proxmox_login::parse::deserialize_u32")]
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     pub vmid: u32,
 }
