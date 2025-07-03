@@ -28,6 +28,7 @@ members = [
     "proxmox-notify",
     "proxmox-openid",
     "proxmox-product-config",
+    "proxmox-resource-scheduling",
     "proxmox-rest-server",
     "proxmox-router",
     "proxmox-rrd",
