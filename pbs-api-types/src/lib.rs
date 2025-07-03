@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 pub mod percent_encoding;
 
 use proxmox_schema::{
-    api, const_regex, ApiStringFormat, ApiType, ArraySchema, EnumEntry, ReturnType, Schema,
-    StringSchema, Updater,
+    api, const_regex, ApiStringFormat, ApiType, ArraySchema, ReturnType, Schema, StringSchema,
+    Updater,
 };
 use proxmox_time::parse_daily_duration;
 
@@ -223,20 +223,6 @@ pub const REALM_ID_SCHEMA: Schema = StringSchema::new("Realm name.")
     .format(&PROXMOX_SAFE_ID_FORMAT)
     .min_length(2)
     .max_length(32)
-    .schema();
-
-const PAM_REALM_ID_SCHEMA: Schema = StringSchema::new("Realm name.")
-    .format(&ApiStringFormat::Enum(&[EnumEntry::new(
-        "pam",
-        "Default PAM realm.",
-    )]))
-    .schema();
-
-const PBS_REALM_ID_SCHEMA: Schema = StringSchema::new("Realm name.")
-    .format(&ApiStringFormat::Enum(&[EnumEntry::new(
-        "pbs",
-        "Default PBS realm.",
-    )]))
     .schema();
 
 pub const SUBSCRIPTION_KEY_SCHEMA: Schema =
