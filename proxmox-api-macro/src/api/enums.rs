@@ -253,6 +253,7 @@ fn handle_section_config_enum(
                         match &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA {
                             ::proxmox_schema::Schema::Object(schema) => schema,
                             ::proxmox_schema::Schema::OneOf(schema) => schema,
+                            ::proxmox_schema::Schema::AllOf(schema) => schema,
                             _ => panic!("enum requires an object schema"),
                         }
                     }
