@@ -3,6 +3,8 @@ use proxmox_apt_api_types::{
     APTStandardRepository,
 };
 
+use crate::repositories::DebianCodename;
+
 pub trait APTStandardRepositoryImpl {
     fn from_handle(handle: APTRepositoryHandle) -> APTStandardRepository;
 }
@@ -24,7 +26,7 @@ pub trait APTRepositoryHandleImpl {
     /// Get the display name of the repository.
     fn name(self) -> String;
     /// Get the standard file path for the repository referenced by the handle.
-    fn path(self, product: &str) -> String;
+    fn path(self, product: &str, suite: &str) -> String;
     /// Get package type, possible URIs and the component associated with the handle.
     ///
     /// The first URI is the preferred one.
@@ -79,16 +81,33 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
         .to_string()
     }
 
-    fn path(self, product: &str) -> String {
-        match self {
-            APTRepositoryHandle::Enterprise => {
-                format!("/etc/apt/sources.list.d/{product}-enterprise.list")
-            }
-            APTRepositoryHandle::NoSubscription => "/etc/apt/sources.list".to_string(),
-            APTRepositoryHandle::Test => "/etc/apt/sources.list".to_string(),
-            APTRepositoryHandle::CephSquidEnterprise
-            | APTRepositoryHandle::CephSquidNoSubscription
-            | APTRepositoryHandle::CephSquidTest => "/etc/apt/sources.list.d/ceph.list".to_string(),
+    fn path(self, product: &str, suite: &str) -> String {
+        match DebianCodename::try_from(suite) {
+            Ok(codename) if codename >= DebianCodename::Trixie => match self {
+                APTRepositoryHandle::Enterprise => {
+                    format!("/etc/apt/sources.list.d/{product}-enterprise.sources")
+                }
+                APTRepositoryHandle::NoSubscription | APTRepositoryHandle::Test => {
+                    "/etc/apt/sources.list.d/proxmox.sources".to_string()
+                }
+                APTRepositoryHandle::CephSquidEnterprise
+                | APTRepositoryHandle::CephSquidNoSubscription
+                | APTRepositoryHandle::CephSquidTest => {
+                    "/etc/apt/sources.list.d/ceph.sources".to_string()
+                }
+            },
+            _ => match self {
+                APTRepositoryHandle::Enterprise => {
+                    format!("/etc/apt/sources.list.d/{product}-enterprise.list")
+                }
+                APTRepositoryHandle::NoSubscription => "/etc/apt/sources.list".to_string(),
+                APTRepositoryHandle::Test => "/etc/apt/sources.list".to_string(),
+                APTRepositoryHandle::CephSquidEnterprise
+                | APTRepositoryHandle::CephSquidNoSubscription
+                | APTRepositoryHandle::CephSquidTest => {
+                    "/etc/apt/sources.list.d/ceph.list".to_string()
+                }
+            },
         }
     }
 
@@ -148,7 +167,6 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
     fn to_repository(self, product: &str, suite: &str) -> APTRepository {
         let (package_type, uris, component) = self.info(product);
 
-        use crate::repositories::DebianCodename;
         let file_type = match DebianCodename::try_from(suite) {
             Ok(codename) if codename >= DebianCodename::Trixie => APTRepositoryFileType::Sources,
             _ => APTRepositoryFileType::List,

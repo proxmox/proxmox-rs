@@ -71,8 +71,10 @@ pub fn get_standard_repository(
     product: &str,
     suite: DebianCodename,
 ) -> (APTRepository, String) {
-    let repo = handle.to_repository(product, &suite.to_string());
-    let path = handle.path(product);
+    let suite = suite.to_string();
+
+    let repo = handle.to_repository(product, &suite);
+    let path = handle.path(product, &suite);
 
     (repo, path)
 }
