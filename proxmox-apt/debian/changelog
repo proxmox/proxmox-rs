@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.99.1-1) trixie; urgency=medium
+
+  * standard repos: use correct path for deb822 sources.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 08 Jul 2025 17:57:41 +0200
+
 rust-proxmox-apt (0.99.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
