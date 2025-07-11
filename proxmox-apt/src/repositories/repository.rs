@@ -122,7 +122,7 @@ impl APTRepositoryImpl for APTRepository {
         product: &str,
         suite: &str,
     ) -> bool {
-        let (package_type, handle_uris, component) = handle.info(product);
+        let (package_type, handle_uris, component, _key) = handle.info(product);
 
         let mut found_uri = false;
 

@@ -1,6 +1,6 @@
 use proxmox_apt_api_types::{
-    APTRepository, APTRepositoryFileType, APTRepositoryHandle, APTRepositoryPackageType,
-    APTStandardRepository,
+    APTRepository, APTRepositoryFileType, APTRepositoryHandle, APTRepositoryOption,
+    APTRepositoryPackageType, APTStandardRepository,
 };
 
 use crate::repositories::DebianCodename;
@@ -27,10 +27,11 @@ pub trait APTRepositoryHandleImpl {
     fn name(self) -> String;
     /// Get the standard file path for the repository referenced by the handle.
     fn path(self, product: &str, suite: &str) -> String;
-    /// Get package type, possible URIs and the component associated with the handle.
+    /// Get package type, possible URIs, the component associated with the handle and the
+    /// associated signing key.
     ///
     /// The first URI is the preferred one.
-    fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String);
+    fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String, &str);
     /// Get the standard repository referenced by the handle.
     ///
     /// An URI in the result is not '/'-terminated (under the assumption that no valid
@@ -111,7 +112,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
         }
     }
 
-    fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String) {
+    fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String, &str) {
         match self {
             APTRepositoryHandle::Enterprise => (
                 APTRepositoryPackageType::Deb,
@@ -123,6 +124,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                     _ => vec![format!("https://enterprise.proxmox.com/debian/{product}")],
                 },
                 format!("{product}-enterprise"),
+                "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
             APTRepositoryHandle::NoSubscription => (
                 APTRepositoryPackageType::Deb,
@@ -134,6 +136,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                     _ => vec![format!("http://download.proxmox.com/debian/{product}")],
                 },
                 format!("{product}-no-subscription"),
+                "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
             APTRepositoryHandle::Test => (
                 APTRepositoryPackageType::Deb,
@@ -145,27 +148,31 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                     _ => vec![format!("http://download.proxmox.com/debian/{product}")],
                 },
                 format!("{product}-test"),
+                "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
             APTRepositoryHandle::CephSquidEnterprise => (
                 APTRepositoryPackageType::Deb,
                 vec!["https://enterprise.proxmox.com/debian/ceph-squid".to_string()],
                 "enterprise".to_string(),
+                "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
             APTRepositoryHandle::CephSquidNoSubscription => (
                 APTRepositoryPackageType::Deb,
                 vec!["http://download.proxmox.com/debian/ceph-squid".to_string()],
                 "no-subscription".to_string(),
+                "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
             APTRepositoryHandle::CephSquidTest => (
                 APTRepositoryPackageType::Deb,
                 vec!["http://download.proxmox.com/debian/ceph-squid".to_string()],
                 "test".to_string(),
+                "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
         }
     }
 
     fn to_repository(self, product: &str, suite: &str) -> APTRepository {
-        let (package_type, uris, component) = self.info(product);
+        let (package_type, uris, component, key) = self.info(product);
 
         let file_type = match DebianCodename::try_from(suite) {
             Ok(codename) if codename >= DebianCodename::Trixie => APTRepositoryFileType::Sources,
@@ -177,7 +184,10 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             uris: vec![uris.into_iter().next().unwrap()],
             suites: vec![suite.to_string()],
             components: vec![component],
-            options: vec![],
+            options: vec![APTRepositoryOption {
+                key: "Signed-By".into(),
+                values: vec![key.to_string()],
+            }],
             comment: String::new(),
             file_type,
             enabled: true,
