@@ -26,9 +26,13 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~) <!nocheck>,
  librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~) <!nocheck>,
  librust-proxmox-schema-4+default-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-serde-1+default-dev <!nocheck>,
+ librust-proxmox-serde-1+serde-json-dev <!nocheck>,
+ librust-proxmox-time-2+default-dev (>= 2.1.0-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
- librust-tracing-0.1+default-dev <!nocheck>
+ librust-tracing-0.1+default-dev <!nocheck>,
+ librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -62,9 +66,13 @@ Depends:
  librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
  librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~),
  librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
+ librust-proxmox-serde-1+default-dev,
+ librust-proxmox-serde-1+serde-json-dev,
+ librust-proxmox-time-2+default-dev (>= 2.1.0-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
- librust-tracing-0.1+default-dev
+ librust-tracing-0.1+default-dev,
+ librust-url-2+default-dev (>= 2.2-~~)
 Provides:
  librust-proxmox-s3-client+default-dev (= ${binary:Version}),
  librust-proxmox-s3-client+impl-dev (= ${binary:Version}),

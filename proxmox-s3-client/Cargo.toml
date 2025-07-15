@@ -22,10 +22,13 @@ openssl.workspace = true
 regex.workspace = true
 serde.workspace = true
 tracing.workspace = true
+url.workspace = true
 
 proxmox-base64.workspace = true
 proxmox-http = { workspace = true, features = [ "body", "client", "client-trait", "rate-limiter" ] }
 proxmox-schema = { workspace = true, features = [ "api-macro", "api-types" ] }
+proxmox-serde.workspace = true
+proxmox-time.workspace = true
 
 [features]
 default = []
