@@ -26,7 +26,7 @@ fn register_subscription<C: HttpClient<String, String>>(
 ) -> Result<(String, String), Error> {
     // WHCMS sample code feeds the key into this, but it's just a challenge, so keep it simple
     let rand = hex::encode(proxmox_sys::linux::random_data(16)?);
-    let challenge = format!("{}{}", checktime, rand);
+    let challenge = format!("{checktime}{rand}");
 
     let params = json!({
         "licensekey": key,
@@ -101,15 +101,11 @@ fn parse_register_response(
     }
 
     if let SubscriptionStatus::Active = info.status {
-        let response_raw = format!("{}{}", SHARED_KEY_DATA, challenge);
+        let response_raw = format!("{SHARED_KEY_DATA}{challenge}");
         let expected = hex::encode(md5sum(response_raw.as_bytes())?);
 
         if expected != md5hash {
-            bail!(
-                "Subscription API challenge failed, expected {} != got {}",
-                expected,
-                md5hash
-            );
+            bail!("Subscription API challenge failed, expected {expected} != got {md5hash}");
         }
     }
     Ok(info)
@@ -218,8 +214,8 @@ pub fn check_subscription<C: HttpClient<String, String>>(
     let now = proxmox_time::epoch_i64();
 
     let (response, challenge) = register_subscription(&key, &server_id, now, http_client)
-        .map_err(|err| format_err!("Error checking subscription: {}", err))?;
+        .map_err(|err| format_err!("Error checking subscription: {err}"))?;
 
     parse_register_response(&response, key, server_id, now, &challenge, product_url)
-        .map_err(|err| format_err!("Error parsing subscription check response: {}", err))
+        .map_err(|err| format_err!("Error parsing subscription check response: {err}"))
 }
