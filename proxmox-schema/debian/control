@@ -54,7 +54,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-schema-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1+default-dev (>= 1.3.2-~~)
+ librust-proxmox-api-macro-1+default-dev (>= 1.4.0-~~)
 Provides:
  librust-proxmox-schema-4+api-macro-dev (= ${binary:Version}),
  librust-proxmox-schema-4.1+api-macro-dev (= ${binary:Version}),
