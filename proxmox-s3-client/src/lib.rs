@@ -13,7 +13,7 @@ pub use aws_sign_v4::uri_decode;
 #[cfg(feature = "impl")]
 mod client;
 #[cfg(feature = "impl")]
-pub use client::{S3Client, S3ClientOptions};
+pub use client::{S3Client, S3ClientOptions, S3PathPrefix};
 #[cfg(feature = "impl")]
 mod timestamps;
 #[cfg(feature = "impl")]
@@ -22,3 +22,5 @@ pub use timestamps::*;
 mod object_key;
 #[cfg(feature = "impl")]
 pub use object_key::S3ObjectKey;
+#[cfg(feature = "impl")]
+mod response_reader;

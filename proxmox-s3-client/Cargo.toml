@@ -13,16 +13,23 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+bytes.workspace = true
+futures.workspace = true
 const_format.workspace = true
 hex = { workspace = true, features = [ "serde" ] }
 http-body-util.workspace = true
 hyper-util = { workspace = true, features = [ "client-legacy", "tokio", "http1" ] }
 hyper.workspace = true
 iso8601.workspace = true
+md5.workspace = true
 openssl.workspace = true
+quick-xml = { workspace = true, features = [ "async-tokio" ] }
 regex.workspace = true
 serde.workspace = true
 serde_plain.workspace = true
+serde-xml-rs.workspace = true
+tokio.workspace = true
+tokio-util = { workspace = true, features = [ "compat" ] }
 tracing.workspace = true
 url.workspace = true
 
