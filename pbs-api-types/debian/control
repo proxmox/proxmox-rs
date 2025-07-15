@@ -62,7 +62,7 @@ Provides:
  librust-pbs-api-types-1+default-dev (= ${binary:Version}),
  librust-pbs-api-types-1.0-dev (= ${binary:Version}),
  librust-pbs-api-types-1.0+default-dev (= ${binary:Version}),
- librust-pbs-api-types-1.0.0-dev (= ${binary:Version}),
- librust-pbs-api-types-1.0.0+default-dev (= ${binary:Version})
+ librust-pbs-api-types-1.0.1-dev (= ${binary:Version}),
+ librust-pbs-api-types-1.0.1+default-dev (= ${binary:Version})
 Description: API types for Proxmox Backup Server - Rust source code
  Source code for Debianized Rust crate "pbs-api-types"
