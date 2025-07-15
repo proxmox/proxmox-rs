@@ -85,7 +85,8 @@ Depends:
  ${misc:Depends},
  librust-proxmox-schema-dev (= ${binary:Version}),
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
- librust-nix-0.29+default-dev
+ librust-nix-0.29+default-dev,
+ librust-nix-0.29+feature-dev
 Provides:
  librust-proxmox-schema-4+upid-api-impl-dev (= ${binary:Version}),
  librust-proxmox-schema-4.1+upid-api-impl-dev (= ${binary:Version}),

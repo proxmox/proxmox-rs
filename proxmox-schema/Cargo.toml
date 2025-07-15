@@ -21,7 +21,7 @@ textwrap = "0.16"
 
 # the upid type needs this for 'getpid'
 libc = { workspace = true, optional = true }
-nix = { workspace = true, optional = true }
+nix = { workspace = true, optional = true, features = [ "feature" ] }
 
 proxmox-api-macro = { workspace = true, optional = true }
 
