@@ -16,6 +16,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-hyper-util-0.1+default-dev (>= 0.1.12-~~) <!nocheck>,
  librust-hyper-util-0.1+http1-dev (>= 0.1.12-~~) <!nocheck>,
  librust-hyper-util-0.1+tokio-dev (>= 0.1.12-~~) <!nocheck>,
+ librust-iso8601-0.6+default-dev (>= 0.6.1-~~) <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-proxmox-base64-1+default-dev <!nocheck>,
  librust-proxmox-http-1+body-dev <!nocheck>,
@@ -31,6 +32,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
+ librust-serde-plain-1+default-dev <!nocheck>,
  librust-tracing-0.1+default-dev <!nocheck>,
  librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -56,6 +58,7 @@ Depends:
  librust-hyper-util-0.1+default-dev (>= 0.1.12-~~),
  librust-hyper-util-0.1+http1-dev (>= 0.1.12-~~),
  librust-hyper-util-0.1+tokio-dev (>= 0.1.12-~~),
+ librust-iso8601-0.6+default-dev (>= 0.6.1-~~),
  librust-openssl-0.10+default-dev,
  librust-proxmox-base64-1+default-dev,
  librust-proxmox-http-1+body-dev,
@@ -71,6 +74,7 @@ Depends:
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
+ librust-serde-plain-1+default-dev,
  librust-tracing-0.1+default-dev,
  librust-url-2+default-dev (>= 2.2-~~)
 Provides:

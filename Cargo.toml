@@ -92,6 +92,7 @@ http-body = "1"
 http-body-util = "0.1"
 hyper = "1"
 hyper-util = "0.1.12"
+iso8601 = "0.6.1"
 ldap3 = { version = "0.11", default-features = false }
 lettre = "0.11.1"
 libc = "0.2.107"

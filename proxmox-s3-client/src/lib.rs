@@ -15,6 +15,10 @@ mod client;
 #[cfg(feature = "impl")]
 pub use client::{S3Client, S3ClientOptions};
 #[cfg(feature = "impl")]
+mod timestamps;
+#[cfg(feature = "impl")]
+pub use timestamps::*;
+#[cfg(feature = "impl")]
 mod object_key;
 #[cfg(feature = "impl")]
 pub use object_key::S3ObjectKey;

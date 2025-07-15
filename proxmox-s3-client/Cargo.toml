@@ -18,9 +18,11 @@ hex = { workspace = true, features = [ "serde" ] }
 http-body-util.workspace = true
 hyper-util = { workspace = true, features = [ "client-legacy", "tokio", "http1" ] }
 hyper.workspace = true
+iso8601.workspace = true
 openssl.workspace = true
 regex.workspace = true
 serde.workspace = true
+serde_plain.workspace = true
 tracing.workspace = true
 url.workspace = true
 
