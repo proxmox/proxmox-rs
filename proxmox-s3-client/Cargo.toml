@@ -42,3 +42,7 @@ proxmox-time.workspace = true
 [features]
 default = []
 impl = []
+
+[[example]]
+name = "s3_client"
+test = false

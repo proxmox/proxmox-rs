@@ -1,4 +1,11 @@
 //! Low level REST API client for AWS S3 compatible object stores
+//!
+//! # Example
+//! A basic example on how to use the client can be found in
+//! `proxmox-s3-client/examples/s3_client.rs` and run via
+//! `cargo run --example s3_client --features impl` from the main
+//! repository folder.
+
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![deny(missing_docs)]
