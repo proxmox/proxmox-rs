@@ -1,0 +1,5 @@
+rust-proxmox-s3-client (1.0.0-1) bookworm; urgency=medium
+
+  * initial packaging
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 07 Jul 2025 09:33:10 +0200

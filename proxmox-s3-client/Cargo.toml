@@ -1,0 +1,32 @@
+[package]
+name = "proxmox-s3-client"
+description = "low level REST API client for AWS S3 compatible object stores"
+version = "1.0.0"
+
+authors.workspace = true
+edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+const_format.workspace = true
+hex = { workspace = true, features = [ "serde" ] }
+http-body-util.workspace = true
+hyper-util = { workspace = true, features = [ "client-legacy", "tokio", "http1" ] }
+hyper.workspace = true
+openssl.workspace = true
+regex.workspace = true
+serde.workspace = true
+tracing.workspace = true
+
+proxmox-base64.workspace = true
+proxmox-http = { workspace = true, features = [ "body", "client", "client-trait", "rate-limiter" ] }
+proxmox-schema = { workspace = true, features = [ "api-macro", "api-types" ] }
+
+[features]
+default = []
+impl = []

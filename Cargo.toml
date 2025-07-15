@@ -33,6 +33,7 @@ members = [
     "proxmox-router",
     "proxmox-rrd",
     "proxmox-rrd-api-types",
+    "proxmox-s3-client",
     "proxmox-schema",
     "proxmox-section-config",
     "proxmox-sendmail",

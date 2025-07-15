@@ -1,0 +1,81 @@
+Source: rust-proxmox-s3-client
+Section: rust
+Priority: optional
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native (>= 1.82) <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-const-format-0.2+default-dev <!nocheck>,
+ librust-hex-0.4+default-dev <!nocheck>,
+ librust-hex-0.4+serde-dev <!nocheck>,
+ librust-http-body-util-0.1+default-dev <!nocheck>,
+ librust-hyper-1+default-dev <!nocheck>,
+ librust-hyper-util-0.1+client-legacy-dev (>= 0.1.12-~~) <!nocheck>,
+ librust-hyper-util-0.1+default-dev (>= 0.1.12-~~) <!nocheck>,
+ librust-hyper-util-0.1+http1-dev (>= 0.1.12-~~) <!nocheck>,
+ librust-hyper-util-0.1+tokio-dev (>= 0.1.12-~~) <!nocheck>,
+ librust-openssl-0.10+default-dev <!nocheck>,
+ librust-proxmox-base64-1+default-dev <!nocheck>,
+ librust-proxmox-http-1+body-dev <!nocheck>,
+ librust-proxmox-http-1+client-dev <!nocheck>,
+ librust-proxmox-http-1+client-trait-dev <!nocheck>,
+ librust-proxmox-http-1+default-dev <!nocheck>,
+ librust-proxmox-http-1+rate-limiter-dev <!nocheck>,
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-tracing-0.1+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.7.0
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
+X-Cargo-Crate: proxmox-s3-client
+Rules-Requires-Root: no
+
+Package: librust-proxmox-s3-client-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-const-format-0.2+default-dev,
+ librust-hex-0.4+default-dev,
+ librust-hex-0.4+serde-dev,
+ librust-http-body-util-0.1+default-dev,
+ librust-hyper-1+default-dev,
+ librust-hyper-util-0.1+client-legacy-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+default-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+http1-dev (>= 0.1.12-~~),
+ librust-hyper-util-0.1+tokio-dev (>= 0.1.12-~~),
+ librust-openssl-0.10+default-dev,
+ librust-proxmox-base64-1+default-dev,
+ librust-proxmox-http-1+body-dev,
+ librust-proxmox-http-1+client-dev,
+ librust-proxmox-http-1+client-trait-dev,
+ librust-proxmox-http-1+default-dev,
+ librust-proxmox-http-1+rate-limiter-dev,
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
+ librust-regex-1+default-dev (>= 1.5-~~),
+ librust-serde-1+default-dev,
+ librust-tracing-0.1+default-dev
+Provides:
+ librust-proxmox-s3-client+default-dev (= ${binary:Version}),
+ librust-proxmox-s3-client+impl-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1+default-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1+impl-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0+impl-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0.0+default-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0.0+impl-dev (= ${binary:Version})
+Description: Low level REST API client for AWS S3 compatible object stores - Rust source code
+ Source code for Debianized Rust crate "proxmox-s3-client"
