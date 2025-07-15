@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.99.2-1) trixie; urgency=medium
+
+  * output signed-by release-key option for Proxmox repositories.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 15 Jul 2025 23:22:11 +0200
+
 rust-proxmox-apt (0.99.1-1) trixie; urgency=medium
 
   * standard repos: use correct path for deb822 sources.
