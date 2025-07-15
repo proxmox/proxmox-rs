@@ -14,3 +14,7 @@ pub use aws_sign_v4::uri_decode;
 mod client;
 #[cfg(feature = "impl")]
 pub use client::{S3Client, S3ClientOptions};
+#[cfg(feature = "impl")]
+mod object_key;
+#[cfg(feature = "impl")]
+pub use object_key::S3ObjectKey;
