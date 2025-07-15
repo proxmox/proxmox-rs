@@ -1,3 +1,9 @@
+rust-proxmox-acme (0.5.5-1) bookworm; urgency=medium
+
+  * directory: make non-required url fields optional
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 15 Jul 2025 23:50:38 +0200
+
 rust-proxmox-acme (0.5.4-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
