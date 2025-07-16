@@ -48,9 +48,9 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-network-types-dev (= ${binary:Version}),
- librust-proxmox-schema-4+api-macro-dev,
- librust-proxmox-schema-4+api-types-dev,
- librust-proxmox-schema-4+default-dev,
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
  librust-regex-1+default-dev (>= 1.5-~~)
 Provides:
  librust-proxmox-network-types-0+api-types-dev (= ${binary:Version}),
