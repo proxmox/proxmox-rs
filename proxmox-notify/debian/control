@@ -79,7 +79,7 @@ Suggests:
 Provides:
  librust-proxmox-notify-0-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5-dev (= ${binary:Version})
+ librust-proxmox-notify-0.5.6-dev (= ${binary:Version})
 Description: Notification base and plugins - Rust source code
  Source code for Debianized Rust crate "proxmox-notify"
 
@@ -96,7 +96,7 @@ Depends:
 Provides:
  librust-proxmox-notify-0+default-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5+default-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+default-dev (= ${binary:Version})
+ librust-proxmox-notify-0.5.6+default-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "default"
  This metapackage enables feature "default" for the Rust proxmox-notify crate,
  by pulling in any additional dependencies needed by that feature.
@@ -113,7 +113,7 @@ Depends:
 Provides:
  librust-proxmox-notify-0+gotify-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5+gotify-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+gotify-dev (= ${binary:Version})
+ librust-proxmox-notify-0.5.6+gotify-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "gotify"
  This metapackage enables feature "gotify" for the Rust proxmox-notify crate, by
  pulling in any additional dependencies needed by that feature.
@@ -130,7 +130,7 @@ Depends:
 Provides:
  librust-proxmox-notify-0+mail-forwarder-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5+mail-forwarder-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+mail-forwarder-dev (= ${binary:Version})
+ librust-proxmox-notify-0.5.6+mail-forwarder-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "mail-forwarder"
  This metapackage enables feature "mail-forwarder" for the Rust proxmox-notify
  crate, by pulling in any additional dependencies needed by that feature.
@@ -148,8 +148,8 @@ Provides:
  librust-proxmox-notify-0+pve-context-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5+pbs-context-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5+pve-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+pbs-context-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+pve-context-dev (= ${binary:Version})
+ librust-proxmox-notify-0.5.6+pbs-context-dev (= ${binary:Version}),
+ librust-proxmox-notify-0.5.6+pve-context-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "pbs-context" and 1 more
  This metapackage enables feature "pbs-context" for the Rust proxmox-notify
  crate, by pulling in any additional dependencies needed by that feature.
@@ -168,7 +168,7 @@ Depends:
 Provides:
  librust-proxmox-notify-0+sendmail-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5+sendmail-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+sendmail-dev (= ${binary:Version})
+ librust-proxmox-notify-0.5.6+sendmail-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "sendmail"
  This metapackage enables feature "sendmail" for the Rust proxmox-notify crate,
  by pulling in any additional dependencies needed by that feature.
@@ -183,7 +183,7 @@ Depends:
 Provides:
  librust-proxmox-notify-0+smtp-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5+smtp-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+smtp-dev (= ${binary:Version})
+ librust-proxmox-notify-0.5.6+smtp-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "smtp"
  This metapackage enables feature "smtp" for the Rust proxmox-notify crate, by
  pulling in any additional dependencies needed by that feature.
@@ -202,7 +202,7 @@ Depends:
 Provides:
  librust-proxmox-notify-0+webhook-dev (= ${binary:Version}),
  librust-proxmox-notify-0.5+webhook-dev (= ${binary:Version}),
- librust-proxmox-notify-0.5.5+webhook-dev (= ${binary:Version})
+ librust-proxmox-notify-0.5.6+webhook-dev (= ${binary:Version})
 Description: Notification base and plugins - feature "webhook"
  This metapackage enables feature "webhook" for the Rust proxmox-notify crate,
  by pulling in any additional dependencies needed by that feature.
