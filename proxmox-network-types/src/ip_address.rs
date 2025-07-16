@@ -11,6 +11,132 @@ use proxmox_schema::{ApiType, Schema, UpdaterType};
 #[cfg(feature = "api-types")]
 use proxmox_schema::api_types::{CIDR_SCHEMA, CIDR_V4_SCHEMA, CIDR_V6_SCHEMA};
 
+#[cfg(feature = "api-types")]
+pub mod api_types {
+    use std::net::AddrParseError;
+    use std::ops::{Deref, DerefMut};
+
+    use proxmox_schema::api_types::IP_V6_SCHEMA;
+    use proxmox_schema::{api_types::IP_V4_SCHEMA, ApiType, UpdaterType};
+    use serde_with::{DeserializeFromStr, SerializeDisplay};
+
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        Eq,
+        PartialEq,
+        Ord,
+        PartialOrd,
+        DeserializeFromStr,
+        SerializeDisplay,
+        Hash,
+    )]
+    #[repr(transparent)]
+    pub struct Ipv4Addr(pub std::net::Ipv4Addr);
+
+    impl ApiType for Ipv4Addr {
+        const API_SCHEMA: proxmox_schema::Schema = IP_V4_SCHEMA;
+    }
+
+    impl UpdaterType for Ipv4Addr {
+        type Updater = Option<Ipv4Addr>;
+    }
+
+    impl Deref for Ipv4Addr {
+        type Target = std::net::Ipv4Addr;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl DerefMut for Ipv4Addr {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl std::str::FromStr for Ipv4Addr {
+        type Err = AddrParseError;
+
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            let ip_address = std::net::Ipv4Addr::from_str(value)?;
+            Ok(Self(ip_address))
+        }
+    }
+
+    impl std::fmt::Display for Ipv4Addr {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    impl From<std::net::Ipv4Addr> for Ipv4Addr {
+        fn from(value: std::net::Ipv4Addr) -> Self {
+            Self(value)
+        }
+    }
+
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        Eq,
+        PartialEq,
+        Ord,
+        PartialOrd,
+        DeserializeFromStr,
+        SerializeDisplay,
+        Hash,
+    )]
+    #[repr(transparent)]
+    pub struct Ipv6Addr(pub std::net::Ipv6Addr);
+
+    impl ApiType for Ipv6Addr {
+        const API_SCHEMA: proxmox_schema::Schema = IP_V6_SCHEMA;
+    }
+
+    impl UpdaterType for Ipv6Addr {
+        type Updater = Option<Ipv6Addr>;
+    }
+
+    impl Deref for Ipv6Addr {
+        type Target = std::net::Ipv6Addr;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl DerefMut for Ipv6Addr {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl std::str::FromStr for Ipv6Addr {
+        type Err = AddrParseError;
+
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            let ip_address = std::net::Ipv6Addr::from_str(value)?;
+            Ok(Self(ip_address))
+        }
+    }
+
+    impl std::fmt::Display for Ipv6Addr {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    impl From<std::net::Ipv6Addr> for Ipv6Addr {
+        fn from(value: std::net::Ipv6Addr) -> Self {
+            Self(value)
+        }
+    }
+}
+
 /// The family (v4 or v6)  of an IP address or CIDR prefix
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Family {
