@@ -25,6 +25,7 @@ members = [
     "proxmox-login",
     "proxmox-metrics",
     "proxmox-network-api",
+    "proxmox-network-types",
     "proxmox-notify",
     "proxmox-openid",
     "proxmox-product-config",

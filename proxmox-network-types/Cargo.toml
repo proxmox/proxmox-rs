@@ -1,0 +1,21 @@
+[package]
+name = "proxmox-network-types"
+description = "Rust types for common networking entities"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+exclude.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+regex = { workspace = true, optional = true}
+serde = { workspace = true, features = [ "derive", "std" ] }
+serde_with = "3.8.1"
+thiserror = "2"
+
+proxmox-schema = { workspace = true, features = [ "api-macro", "api-types" ], optional = true}
+
+[features]
+default = []
