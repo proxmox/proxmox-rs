@@ -1,3 +1,9 @@
+rust-proxmox-api-macro (1.4.1-1) trixie; urgency=medium
+
+  * add allOf schema as possible enum variant.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 16 Jul 2025 23:49:35 +0200
+
 rust-proxmox-api-macro (1.4.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.

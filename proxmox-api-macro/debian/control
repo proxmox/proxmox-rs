@@ -39,7 +39,7 @@ Provides:
  librust-proxmox-api-macro-1+default-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.4-dev (= ${binary:Version}),
  librust-proxmox-api-macro-1.4+default-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.4.0-dev (= ${binary:Version}),
- librust-proxmox-api-macro-1.4.0+default-dev (= ${binary:Version})
+ librust-proxmox-api-macro-1.4.1-dev (= ${binary:Version}),
+ librust-proxmox-api-macro-1.4.1+default-dev (= ${binary:Version})
 Description: Proxmox API macro - Rust source code
  Source code for Debianized Rust crate "proxmox-api-macro"

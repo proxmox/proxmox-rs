@@ -134,7 +134,7 @@ zstd = "0.13"
 # workspace dependencies
 proxmox-access-control = { version = "0.2.5", path = "proxmox-access-control" }
 proxmox-acme = {  version = "1.0.0", path = "proxmox-acme", default-features = false }
-proxmox-api-macro = { version = "1.4.0", path = "proxmox-api-macro" }
+proxmox-api-macro = { version = "1.4.1", path = "proxmox-api-macro" }
 proxmox-apt-api-types = { version = "2.0.0", path = "proxmox-apt-api-types" }
 proxmox-auth-api = { version = "1.0.0", path = "proxmox-auth-api" }
 proxmox-async = { version = "0.5.0", path = "proxmox-async" }
