@@ -5,6 +5,12 @@ use std::net::{AddrParseError, IpAddr, Ipv4Addr, Ipv6Addr};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use thiserror::Error;
 
+#[cfg(feature = "api-types")]
+use proxmox_schema::{ApiType, Schema, UpdaterType};
+
+#[cfg(feature = "api-types")]
+use proxmox_schema::api_types::{CIDR_SCHEMA, CIDR_V4_SCHEMA, CIDR_V6_SCHEMA};
+
 /// The family (v4 or v6)  of an IP address or CIDR prefix
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Family {
@@ -46,6 +52,16 @@ pub enum CidrError {
 pub enum Cidr {
     Ipv4(Ipv4Cidr),
     Ipv6(Ipv6Cidr),
+}
+
+#[cfg(feature = "api-types")]
+impl ApiType for Cidr {
+    const API_SCHEMA: Schema = CIDR_SCHEMA;
+}
+
+#[cfg(feature = "api-types")]
+impl UpdaterType for Cidr {
+    type Updater = Option<Cidr>;
 }
 
 impl Cidr {
@@ -139,6 +155,16 @@ pub struct Ipv4Cidr {
     mask: u8,
 }
 
+#[cfg(feature = "api-types")]
+impl ApiType for Ipv4Cidr {
+    const API_SCHEMA: Schema = CIDR_V4_SCHEMA;
+}
+
+#[cfg(feature = "api-types")]
+impl UpdaterType for Ipv4Cidr {
+    type Updater = Option<Ipv4Cidr>;
+}
+
 impl Ipv4Cidr {
     pub fn new(addr: impl Into<Ipv4Addr>, mask: u8) -> Result<Self, CidrError> {
         if mask > IPV4_LENGTH {
@@ -212,6 +238,16 @@ const IPV6_LENGTH: u8 = 128;
 pub struct Ipv6Cidr {
     addr: Ipv6Addr,
     mask: u8,
+}
+
+#[cfg(feature = "api-types")]
+impl ApiType for Ipv6Cidr {
+    const API_SCHEMA: Schema = CIDR_V6_SCHEMA;
+}
+
+#[cfg(feature = "api-types")]
+impl UpdaterType for Ipv6Cidr {
+    type Updater = Option<Ipv6Cidr>;
 }
 
 impl Ipv6Cidr {

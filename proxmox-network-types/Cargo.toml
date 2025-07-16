@@ -19,3 +19,4 @@ proxmox-schema = { workspace = true, features = [ "api-macro", "api-types" ], op
 
 [features]
 default = []
+api-types = ["dep:proxmox-schema", "dep:regex"]

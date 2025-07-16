@@ -4,6 +4,9 @@ use std::net::Ipv6Addr;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use thiserror::Error;
 
+#[cfg(feature = "api-types")]
+use proxmox_schema::{const_regex, ApiStringFormat, ApiType, Schema, StringSchema, UpdaterType};
+
 #[derive(Error, Debug)]
 pub enum MacAddressError {
     #[error("the hostname must be from 1 to 63 characters long")]
@@ -12,11 +15,33 @@ pub enum MacAddressError {
     InvalidSymbols,
 }
 
+#[cfg(feature = "api-types")]
+const_regex! {
+    pub MAC_ADDRESS_REGEX = r"([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}";
+}
+
+#[cfg(feature = "api-types")]
+pub const MAC_ADDRESS_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&MAC_ADDRESS_REGEX);
+
 /// EUI-48 MAC Address
 #[derive(
     Clone, Copy, Debug, DeserializeFromStr, SerializeDisplay, PartialEq, Eq, Hash, PartialOrd, Ord,
 )]
 pub struct MacAddress([u8; 6]);
+
+#[cfg(feature = "api-types")]
+impl ApiType for MacAddress {
+    const API_SCHEMA: Schema = StringSchema::new("MAC address")
+        .min_length(17)
+        .max_length(17)
+        .format(&MAC_ADDRESS_FORMAT)
+        .schema();
+}
+
+#[cfg(feature = "api-types")]
+impl UpdaterType for MacAddress {
+    type Updater = Option<MacAddress>;
+}
 
 static LOCAL_PART: [u8; 8] = [0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
 static EUI64_MIDDLE_PART: [u8; 2] = [0xFF, 0xFE];
