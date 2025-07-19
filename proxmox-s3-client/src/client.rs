@@ -585,8 +585,36 @@ impl S3Client {
         Ok(delete_errors)
     }
 
-    /// Upload the given object via the S3 api, retrying up to 3 times in case of error.
-    pub async fn upload_with_retry(
+    /// Upload the given object via the S3 api, not replacing it if already present in the object
+    /// store.
+    /// Retrying up to 3 times in case of error.
+    #[inline(always)]
+    pub async fn upload_no_replace_with_retry(
+        &self,
+        object_key: S3ObjectKey,
+        object_data: Bytes,
+    ) -> Result<bool, Error> {
+        let replace = false;
+        self.do_upload_with_retry(object_key, object_data, replace)
+            .await
+    }
+
+    /// Upload the given object via the S3 api, replacing it if already present in the object store.
+    /// Retrying up to 3 times in case of error.
+    #[inline(always)]
+    pub async fn upload_replace_with_retry(
+        &self,
+        object_key: S3ObjectKey,
+        object_data: Bytes,
+    ) -> Result<bool, Error> {
+        let replace = true;
+        self.do_upload_with_retry(object_key, object_data, replace)
+            .await
+    }
+
+    /// Helper to perform the object upload and retry, wrapped by the corresponding methods
+    /// to mask the `replace` flag.
+    async fn do_upload_with_retry(
         &self,
         object_key: S3ObjectKey,
         object_data: Bytes,
