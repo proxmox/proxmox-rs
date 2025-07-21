@@ -1,4 +1,10 @@
-rust-proxmox-s3-client (1.0.0-1) bookworm; urgency=medium
+rust-proxmox-s3-client (1.0.1-1) trixie; urgency=medium
+
+  * refacout out wrap upload with retry into dedicated methods
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 21 Jul 2025 17:26:37 +0200
+
+rust-proxmox-s3-client (1.0.0-1) trixie; urgency=medium
 
   * initial packaging
 
