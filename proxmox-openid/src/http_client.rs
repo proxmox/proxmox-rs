@@ -37,7 +37,12 @@ pub enum Error {
 }
 
 fn ureq_agent() -> Result<ureq::Agent, Error> {
-    let mut config = ureq::Agent::config_builder();
+    let mut config = ureq::Agent::config_builder().tls_config(
+        ureq::tls::TlsConfig::builder()
+            .provider(ureq::tls::TlsProvider::NativeTls)
+            .root_certs(ureq::tls::RootCerts::PlatformVerifier)
+            .build(),
+    );
     if let Ok(val) = env::var("all_proxy").or_else(|_| env::var("ALL_PROXY")) {
         let proxy = ureq::Proxy::new(&val).map_err(Box::new)?;
         config = config.proxy(Some(proxy));
