@@ -4,7 +4,6 @@ use std::io::Read;
 use http::method::Method;
 
 use openidconnect::{HttpRequest, HttpResponse};
-use ureq::unversioned::transport::Connector;
 
 // Copied from OAuth2 create, because we want to use ureq with
 // native-tls. But current OAuth2 crate pulls in rustls, so we cannot
@@ -47,15 +46,7 @@ fn ureq_agent() -> Result<ureq::Agent, Error> {
         let proxy = ureq::Proxy::new(&val).map_err(Box::new)?;
         config = config.proxy(Some(proxy));
     }
-    let agent = ureq::Agent::with_parts(
-        config.build(),
-        ureq::unversioned::transport::ConnectProxyConnector::default()
-            .chain(ureq::unversioned::transport::TcpConnector::default())
-            .chain(ureq::unversioned::transport::NativeTlsConnector::default()),
-        ureq::unversioned::resolver::DefaultResolver::default(),
-    );
-
-    Ok(agent)
+    Ok(config.build().into())
 }
 
 fn add_headers<T>(
