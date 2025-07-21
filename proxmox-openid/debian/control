@@ -53,7 +53,7 @@ Provides:
  librust-proxmox-openid-1+default-dev (= ${binary:Version}),
  librust-proxmox-openid-1.0-dev (= ${binary:Version}),
  librust-proxmox-openid-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-openid-1.0.1-dev (= ${binary:Version}),
- librust-proxmox-openid-1.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-openid-1.0.2-dev (= ${binary:Version}),
+ librust-proxmox-openid-1.0.2+default-dev (= ${binary:Version})
 Description: Base for openid authentication in proxmox products - Rust source code
  Source code for Debianized Rust crate "proxmox-openid"

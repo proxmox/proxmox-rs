@@ -1,3 +1,11 @@
+rust-proxmox-openid (1.0.2-1) trixie; urgency=medium
+
+  * http client: avoid unversioned ureq module.
+  * http client: use TlS platform verifier to ensure the trust DB from the
+    system is actually used.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 21 Jul 2025 18:54:12 +0200
+
 rust-proxmox-openid (1.0.1-1) trixie; urgency=medium
 
   * fix #6541: add missing connector chains for http-client to avoid a panic
