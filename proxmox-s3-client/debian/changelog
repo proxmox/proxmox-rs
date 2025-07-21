@@ -1,3 +1,9 @@
+rust-proxmox-s3-client (1.0.2-1) trixie; urgency=medium
+
+  * check the maximum allowed length of the S3 object key property.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 21 Jul 2025 20:35:36 +0200
+
 rust-proxmox-s3-client (1.0.1-1) trixie; urgency=medium
 
   * refacout out wrap upload with retry into dedicated methods
