@@ -536,6 +536,8 @@ pub const SYNC_ENCRYPTED_ONLY_SCHEMA: Schema =
     BooleanSchema::new("Only synchronize encrypted backup snapshots, exclude others.").schema();
 pub const SYNC_VERIFIED_ONLY_SCHEMA: Schema =
     BooleanSchema::new("Only synchronize verified backup snapshots, exclude others.").schema();
+pub const RUN_SYNC_ON_MOUNT_SCHEMA: Schema =
+    BooleanSchema::new("Run this job when a relevant datastore is mounted.").schema();
 
 #[api(
     properties: {
@@ -603,6 +605,10 @@ pub const SYNC_VERIFIED_ONLY_SCHEMA: Schema =
             schema: SYNC_VERIFIED_ONLY_SCHEMA,
             optional: true,
         },
+        "run-on-mount": {
+            schema: RUN_SYNC_ON_MOUNT_SCHEMA,
+            optional: true,
+        },
         "sync-direction": {
             type: SyncDirection,
             optional: true,
@@ -646,6 +652,8 @@ pub struct SyncJobConfig {
     pub encrypted_only: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub verified_only: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub run_on_mount: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sync_direction: Option<SyncDirection>,
 }
