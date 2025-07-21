@@ -46,7 +46,7 @@ async fn run() -> Result<(), anyhow::Error> {
     // Check if the bucket can be accessed
     s3_client.head_bucket().await?;
 
-    let rel_object_key = S3ObjectKey::from("object.txt");
+    let rel_object_key = S3ObjectKey::try_from("object.txt")?;
     let body = proxmox_http::Body::empty();
     let replace_existing_key = true;
     let _response = s3_client
@@ -63,7 +63,7 @@ async fn run() -> Result<(), anyhow::Error> {
         .await?;
 
     // Delete a single object
-    let rel_object_key = S3ObjectKey::from("object.txt");
+    let rel_object_key = S3ObjectKey::try_from("object.txt")?;
     let _response = s3_client.delete_object(rel_object_key).await?;
     Ok(())
 }

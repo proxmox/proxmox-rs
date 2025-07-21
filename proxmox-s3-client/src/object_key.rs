@@ -1,4 +1,8 @@
-use anyhow::Error;
+use anyhow::{bail, Error};
+
+/// Byte limit for s3 object keys.
+/// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html
+const S3_OBJECT_KEY_MAX_LENGTH: usize = 1024;
 
 #[derive(Clone, Debug)]
 /// S3 Object Key
@@ -9,13 +13,21 @@ pub enum S3ObjectKey {
     Relative(String),
 }
 
-impl core::convert::From<&str> for S3ObjectKey {
-    fn from(s: &str) -> Self {
-        if let Some(s) = s.strip_prefix("/") {
-            Self::Full(s.to_string())
+impl core::convert::TryFrom<&str> for S3ObjectKey {
+    type Error = Error;
+
+    fn try_from(s: &str) -> Result<Self, Error> {
+        let (key, key_byte_length) = if let Some(s) = s.strip_prefix("/") {
+            (Self::Full(s.to_string()), s.as_bytes().len())
         } else {
-            Self::Relative(s.to_string())
+            (Self::Relative(s.to_string()), s.as_bytes().len())
+        };
+        if key_byte_length > S3_OBJECT_KEY_MAX_LENGTH {
+            bail!(
+                "Object key length of {key_byte_length} exceeds limit of {S3_OBJECT_KEY_MAX_LENGTH}",
+            );
         }
+        Ok(key)
     }
 }
 impl S3ObjectKey {
@@ -56,7 +68,7 @@ impl std::str::FromStr for S3ObjectKey {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self::from(s))
+        Self::try_from(s)
     }
 }
 
