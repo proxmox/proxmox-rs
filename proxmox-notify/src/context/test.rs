@@ -6,8 +6,14 @@ use crate::Error;
 pub struct TestContext;
 
 impl Context for TestContext {
-    fn lookup_email_for_user(&self, _user: &str) -> Option<String> {
-        Some("test@example.com".into())
+    fn lookup_email_for_user(&self, user: &str) -> Option<String> {
+        user.split_once('@').and_then(|(user, realm)| {
+            if realm == "pve" {
+                Some(format!("{user}@example.com"))
+            } else {
+                None
+            }
+        })
     }
 
     fn default_sendmail_author(&self) -> String {
