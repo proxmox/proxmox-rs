@@ -19,7 +19,7 @@ http = { workspace = true, optional = true }
 http-body = { workspace = true, optional = true }
 http-body-util = { workspace = true, optional = true }
 hyper = { workspace = true, optional = true }
-hyper-util = { workspace = true, optional = true }
+hyper-util = { workspace = true, optional = true, features = ["http2"] }
 native-tls = { workspace = true, optional = true }
 openssl =  { version = "0.10", optional = true }
 serde_json = { workspace = true, optional = true }
