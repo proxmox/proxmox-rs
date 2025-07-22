@@ -32,7 +32,7 @@ impl RestEnvironment {
     }
 
     pub fn log_auth(&self, auth_id: &str) {
-        let msg = format!("successful auth for user '{}'", auth_id);
+        let msg = format!("successful auth for user '{auth_id}'");
         log::debug!("{}", msg); // avoid noisy syslog, admins can already check the auth log
         if let Some(auth_logger) = self.api.get_auth_log() {
             auth_logger.lock().unwrap().log(&msg);
@@ -42,25 +42,19 @@ impl RestEnvironment {
     pub fn log_failed_auth(&self, failed_auth_id: Option<String>, msg: &str) {
         let msg = match (self.client_ip, failed_auth_id) {
             (Some(peer), Some(user)) => {
-                format!(
-                    "authentication failure; rhost={} user={} msg={}",
-                    peer, user, msg
-                )
+                format!("authentication failure; rhost={peer} user={user} msg={msg}")
             }
             (Some(peer), None) => {
-                format!("authentication failure; rhost={} msg={}", peer, msg)
+                format!("authentication failure; rhost={peer} msg={msg}")
             }
             (None, Some(user)) => {
-                format!(
-                    "authentication failure; rhost=unknown user={} msg={}",
-                    user, msg
-                )
+                format!("authentication failure; rhost=unknown user={user} msg={msg}")
             }
             (None, None) => {
-                format!("authentication failure; rhost=unknown msg={}", msg)
+                format!("authentication failure; rhost=unknown msg={msg}")
             }
         };
-        log::error!("{}", msg);
+        log::error!("{msg}");
         if let Some(auth_logger) = self.api.get_auth_log() {
             auth_logger.lock().unwrap().log(&msg);
         }
