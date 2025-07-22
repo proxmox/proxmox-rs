@@ -1,3 +1,14 @@
+rust-pbs-api-types (1.0.2-1) trixie; urgency=medium
+
+  * extend datastore config by optional backend property enum, for new S3
+    backed datastores.
+
+  * add new maintenance mode S3 refresh.
+
+  * add run-on-mount flag to sync job config for removable datastores.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 22 Jul 2025 21:45:43 +0200
+
 rust-pbs-api-types (1.0.1-1) trixie; urgency=medium
 
   * change default notification mode to 'notification-system'
