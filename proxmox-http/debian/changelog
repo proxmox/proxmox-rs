@@ -1,3 +1,9 @@
+rust-proxmox-http (1.0.1-1) trixie; urgency=medium
+
+  * enable http2 feature for hyper-util.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 22 Jul 2025 16:23:12 +0200
+
 rust-proxmox-http (1.0.0-2) trixie; urgency=medium
 
   * update to hyper 1.0
