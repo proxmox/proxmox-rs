@@ -22,7 +22,7 @@ use proxmox_http::client::HttpsConnector;
 use proxmox_http::{Body, RateLimit, RateLimiter};
 use proxmox_schema::api_types::CERT_FINGERPRINT_SHA256_SCHEMA;
 
-use crate::api_types::{S3ClientConfig, S3ClientSecretsConfig};
+use crate::api_types::S3ClientConfig;
 use crate::aws_sign_v4::AWS_SIGN_V4_DATETIME_FORMAT;
 use crate::aws_sign_v4::{aws_sign_v4_signature, aws_sign_v4_uri_encode};
 use crate::object_key::S3ObjectKey;
@@ -75,7 +75,6 @@ impl S3ClientOptions {
     /// Construct options for the S3 client give the provided configuration parameters.
     pub fn from_config(
         config: S3ClientConfig,
-        secrets: S3ClientSecretsConfig,
         bucket: String,
         common_prefix: String,
     ) -> Self {
@@ -88,7 +87,7 @@ impl S3ClientOptions {
             region: config.region.unwrap_or("us-west-1".to_string()),
             fingerprint: config.fingerprint,
             access_key: config.access_key,
-            secret_key: secrets.secret_key,
+            secret_key: config.secret_key,
             put_rate_limit: config.put_rate_limit,
         }
     }
