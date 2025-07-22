@@ -75,6 +75,7 @@ impl S3ClientOptions {
     /// Construct options for the S3 client give the provided configuration parameters.
     pub fn from_config(
         config: S3ClientConfig,
+        secret_key: String,
         bucket: String,
         common_prefix: String,
     ) -> Self {
@@ -87,7 +88,7 @@ impl S3ClientOptions {
             region: config.region.unwrap_or("us-west-1".to_string()),
             fingerprint: config.fingerprint,
             access_key: config.access_key,
-            secret_key: config.secret_key,
+            secret_key,
             put_rate_limit: config.put_rate_limit,
         }
     }

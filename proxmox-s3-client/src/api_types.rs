@@ -82,9 +82,6 @@ pub const S3_BUCKET_NAME_SCHEMA: Schema = StringSchema::new("Bucket name for S3 
 
 #[api(
     properties: {
-        id: {
-            schema: S3_CLIENT_ID_SCHEMA,
-        },
         endpoint: {
             schema: S3_ENDPOINT_SCHEMA,
         },
@@ -103,9 +100,6 @@ pub const S3_BUCKET_NAME_SCHEMA: Schema = StringSchema::new("Bucket name for S3 
         "access-key": {
             type: String,
         },
-        "secret-key": {
-            type: String,
-        },
         "path-style": {
             type: bool,
             optional: true,
@@ -115,15 +109,12 @@ pub const S3_BUCKET_NAME_SCHEMA: Schema = StringSchema::new("Bucket name for S3 
             type: u64,
             optional: true,
         },
-    }
+    },
 )]
 #[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// S3 client configuration properties.
 pub struct S3ClientConfig {
-    /// ID to identify s3 client config.
-    #[updater(skip)]
-    pub id: String,
     /// Endpoint to access S3 object store.
     pub endpoint: String,
     /// Port to access S3 object store.
@@ -137,8 +128,6 @@ pub struct S3ClientConfig {
     pub fingerprint: Option<String>,
     /// Access key for S3 object store.
     pub access_key: String,
-    /// Secret key for S3 object store.
-    pub secret_key: String,
     /// Use path style bucket addressing over vhost style.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub path_style: Option<bool>,
@@ -153,4 +142,53 @@ impl S3ClientConfig {
         // Needs permissions on root path
         Vec::new()
     }
+}
+
+#[api(
+    properties: {
+        id: {
+            schema: S3_CLIENT_ID_SCHEMA,
+        },
+        config: {
+            type: S3ClientConfig,
+        },
+        "secret-key": {
+            type: String,
+        },
+    },
+)]
+#[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+/// S3 client configuration.
+pub struct S3ClientConf {
+    /// ID to identify s3 client config.
+    #[updater(skip)]
+    pub id: String,
+    /// S3 client config.
+    #[serde(flatten)]
+    pub config: S3ClientConfig,
+    /// Secret key for S3 object store.
+    pub secret_key: String,
+}
+
+
+#[api(
+    properties: {
+        id: {
+            schema: S3_CLIENT_ID_SCHEMA,
+        },
+        config: {
+            type: S3ClientConfig,
+        },
+    },
+)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+/// S3 client configuration properties without secret.
+pub struct S3ClientConfigWithoutSecret {
+    /// ID to identify s3 client config.
+    pub id: String,
+    /// S3 client config.
+    #[serde(flatten)]
+    pub config: S3ClientConfig,
 }
