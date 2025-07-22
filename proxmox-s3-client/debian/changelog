@@ -1,3 +1,11 @@
+rust-proxmox-s3-client (1.0.3-1) trixie; urgency=medium
+
+  * merge secrets config with client config
+
+  * split config api type into 3 config structs
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 22 Jul 2025 21:42:10 +0200
+
 rust-proxmox-s3-client (1.0.2-1) trixie; urgency=medium
 
   * check the maximum allowed length of the S3 object key property.

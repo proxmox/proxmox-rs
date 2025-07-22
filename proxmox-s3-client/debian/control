@@ -104,8 +104,8 @@ Provides:
  librust-proxmox-s3-client-1.0-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.0+default-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.0+impl-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.0.2-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.0.2+default-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.0.2+impl-dev (= ${binary:Version})
+ librust-proxmox-s3-client-1.0.3-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0.3+default-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0.3+impl-dev (= ${binary:Version})
 Description: Low level REST API client for AWS S3 compatible object stores - Rust source code
  Source code for Debianized Rust crate "proxmox-s3-client"
