@@ -1,3 +1,9 @@
+rust-proxmox-acme (1.0.2-1) trixie; urgency=medium
+
+  * disable accidentally enabled padding in base64 encoding
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 22 Jul 2025 09:53:30 +0200
+
 rust-proxmox-acme (1.0.1-1) trixie; urgency=medium
 
   *  directory: make non-required url fields optional.
