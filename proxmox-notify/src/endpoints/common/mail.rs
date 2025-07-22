@@ -10,8 +10,14 @@ pub(crate) fn get_recipients(email_addrs: &[String], users: &[String]) -> HashSe
     }
 
     for user in users {
-        if let Some(addr) = context::context().lookup_email_for_user(user) {
-            recipients.insert(addr);
+        match context::context().lookup_email_for_user(user) {
+            Some(address) => {
+                recipients.insert(address);
+            }
+            None => tracing::warn!(
+                "'{user}' does not have a configured email address in the user configuration - \
+                not sending an email to this user"
+            ),
         }
     }
     recipients
