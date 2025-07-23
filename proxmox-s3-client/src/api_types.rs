@@ -171,7 +171,6 @@ pub struct S3ClientConf {
     pub secret_key: String,
 }
 
-
 #[api(
     properties: {
         id: {
