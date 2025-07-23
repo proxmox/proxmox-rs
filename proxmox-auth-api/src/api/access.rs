@@ -6,7 +6,6 @@ use http::Response;
 use openssl::hash::MessageDigest;
 use serde_json::{json, Value};
 
-use proxmox_http::Body;
 use proxmox_rest_server::{extract_cookie, RestEnvironment};
 use proxmox_router::{
     http_err, ApiHandler, ApiMethod, ApiResponseFuture, Permission, RpcEnvironment,
@@ -93,7 +92,11 @@ fn logout_handler(
 
         Ok(Response::builder()
             .header(hyper::header::SET_COOKIE, host_cookie)
-            .body(Body::empty())?)
+            .body(
+                json!({"data": {}, "status": 200, "success": true })
+                    .to_string()
+                    .into(),
+            )?)
     })
 }
 
@@ -179,7 +182,11 @@ fn create_ticket_http_only(
             }
         }
 
-        Ok(response.body(json!({"data": ticket_response }).to_string().into())?)
+        Ok(response.body(
+            json!({"data": ticket_response, "status": 200, "success": true })
+                .to_string()
+                .into(),
+        )?)
     })
 }
 
