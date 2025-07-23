@@ -1,3 +1,12 @@
+rust-proxmox-s3-client (1.0.4-1) trixie; urgency=medium
+
+  * fix invalid request for empty delete-objects call.
+
+  * log error response body for invalid request status codes to help
+    debugging.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 23 Jul 2025 13:04:33 +0200
+
 rust-proxmox-s3-client (1.0.3-1) trixie; urgency=medium
 
   * merge secrets config with client config
