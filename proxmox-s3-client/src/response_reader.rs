@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anyhow::{anyhow, bail, Context, Error};
 use http_body_util::BodyExt;
-use hyper::body::Incoming;
+use hyper::body::{Bytes, Incoming};
 use hyper::header::HeaderName;
 use hyper::http::header;
 use hyper::http::StatusCode;
@@ -166,11 +166,7 @@ impl ResponseReader {
             StatusCode::OK => (),
             StatusCode::NOT_FOUND => bail!("bucket does not exist"),
             status_code => {
-                if let Ok(body) = String::from_utf8(body.to_vec()) {
-                    if !body.is_empty() {
-                        tracing::error!("{body}");
-                    }
-                }
+                Self::log_error_response_utf8(body);
                 bail!("unexpected status code {status_code}")
             }
         }
@@ -193,11 +189,7 @@ impl ResponseReader {
             StatusCode::OK => (),
             StatusCode::NOT_FOUND => return Ok(None),
             status_code => {
-                if let Ok(body) = String::from_utf8(body.to_vec()) {
-                    if !body.is_empty() {
-                        tracing::error!("{body}");
-                    }
-                }
+                Self::log_error_response_utf8(body);
                 bail!("unexpected status code {status_code}")
             }
         }
@@ -229,11 +221,7 @@ impl ResponseReader {
             StatusCode::FORBIDDEN => bail!("object is archived and inaccessible until restored"),
             status_code => {
                 let body = content.collect().await?.to_bytes();
-                if let Ok(body) = String::from_utf8(body.to_vec()) {
-                    if !body.is_empty() {
-                        tracing::error!("{body}");
-                    }
-                }
+                Self::log_error_response_utf8(body);
                 bail!("unexpected status code {status_code}")
             }
         }
@@ -264,11 +252,7 @@ impl ResponseReader {
             StatusCode::CONFLICT => return Ok(PutObjectResponse::NeedsRetry),
             StatusCode::BAD_REQUEST => bail!("invalid request"),
             status_code => {
-                if let Ok(body) = String::from_utf8(body.to_vec()) {
-                    if !body.is_empty() {
-                        tracing::error!("{body}");
-                    }
-                }
+                Self::log_error_response_utf8(body);
                 bail!("unexpected status code {status_code}")
             }
         };
@@ -301,11 +285,7 @@ impl ResponseReader {
             StatusCode::OK => (),
             StatusCode::BAD_REQUEST => bail!("invalid request"),
             status_code => {
-                if let Ok(body) = String::from_utf8(body.to_vec()) {
-                    if !body.is_empty() {
-                        tracing::error!("{body}");
-                    }
-                }
+                Self::log_error_response_utf8(body);
                 bail!("unexpected status code {status_code}")
             }
         };
@@ -327,11 +307,7 @@ impl ResponseReader {
             StatusCode::NOT_FOUND => bail!("object not found"),
             StatusCode::FORBIDDEN => bail!("the source object is not in the active tier"),
             status_code => {
-                if let Ok(body) = String::from_utf8(body.to_vec()) {
-                    if !body.is_empty() {
-                        tracing::error!("{body}");
-                    }
-                }
+                Self::log_error_response_utf8(body);
                 bail!("unexpected status code {status_code}")
             }
         }
@@ -355,6 +331,14 @@ impl ResponseReader {
             copy_object_result,
             x_amz_version_id,
         })
+    }
+
+    fn log_error_response_utf8(body: Bytes) {
+        if let Ok(body) = String::from_utf8(body.to_vec()) {
+            if !body.is_empty() {
+                tracing::error!("{body}");
+            }
+        }
     }
 
     fn parse_header<T: FromStr>(name: HeaderName, headers: &HeaderMap) -> Result<T, Error>
