@@ -107,7 +107,7 @@ pub enum PutObjectResponse {
 
 /// Subset of the delete objects response
 /// https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html#API_DeleteObjects_ResponseElements
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "PascalCase")]
 pub struct DeleteObjectsResponse {
     pub deleted: Option<Vec<DeletedObject>>,

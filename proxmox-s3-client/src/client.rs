@@ -423,6 +423,10 @@ impl S3Client {
         &self,
         object_keys: &[S3ObjectKey],
     ) -> Result<DeleteObjectsResponse, Error> {
+        if object_keys.is_empty() {
+            return Ok(DeleteObjectsResponse::default());
+        }
+
         let mut body = String::from(r#"<Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/">"#);
         for object_key in object_keys {
             body.push_str("<Object><Key>");
