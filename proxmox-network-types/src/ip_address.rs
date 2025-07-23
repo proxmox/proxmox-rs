@@ -322,6 +322,15 @@ impl Ipv4Cidr {
         self.mask
     }
 
+    /// Get the canonical representation of a IPv4 CIDR address.
+    ///
+    /// This normalizes the address, so we get the first address of a CIDR subnet (e.g.
+    /// 2.2.2.200/24 -> 2.2.2.0) we do this by using a bitwise AND operation over the address and
+    /// the u32::MAX (all ones) shifted by the mask.
+    fn normalize(addr: u32, mask: u8) -> u32 {
+        addr & u32::MAX.checked_shl((32 - mask).into()).unwrap_or(0)
+    }
+
     /// Checks if the two CIDRs overlap.
     ///
     /// CIDRs are always disjoint so we only need to check if one CIDR contains
@@ -329,14 +338,20 @@ impl Ipv4Cidr {
     pub fn overlaps(&self, other: &Ipv4Cidr) -> bool {
         // we normalize by the smallest mask, so the larger of the two subnets.
         let min_mask = self.mask().min(other.mask());
-        // this normalizes the address, so we get the first address of a CIDR
-        // (e.g. 2.2.2.200/24 -> 2.2.2.0) we do this by using a bitwise AND
-        // operation over the address and the u32::MAX (all ones) shifted by
-        // the mask.
-        let normalize =
-            |addr: u32| addr & u32::MAX.checked_shl((32 - min_mask).into()).unwrap_or(0);
         // if the prefix is the same we have an overlap
-        normalize(self.address().to_bits()) == normalize(other.address().to_bits())
+        Self::normalize(self.address().to_bits(), min_mask)
+            == Self::normalize(other.address().to_bits(), min_mask)
+    }
+
+    /// Get the canonical version of the CIDR.
+    ///
+    /// A canonicalized CIDR is a the normalized address, so the first address in the subnet
+    /// (sometimes also called "network address"). E.g. 2.2.2.5/24 -> 2.2.2.0/24
+    pub fn canonical(&self) -> Self {
+        Self {
+            addr: Ipv4Addr::from_bits(Self::normalize(self.addr.to_bits(), self.mask())),
+            mask: self.mask(),
+        }
     }
 }
 
@@ -424,6 +439,15 @@ impl Ipv6Cidr {
         self.mask
     }
 
+    /// Get the canonical representation of a IPv6 CIDR address.
+    ///
+    /// This normalizes the address, so we get the first address of a CIDR subnet (e.g.
+    /// 2001:db8::4/64 -> 2001:db8::0/64) we do this by using a bitwise AND operation over the address and
+    /// the u128::MAX (all ones) shifted by the mask.
+    fn normalize(addr: u128, mask: u8) -> u128 {
+        addr & u128::MAX.checked_shl((128 - mask).into()).unwrap_or(0)
+    }
+
     /// Checks if the two CIDRs overlap.
     ///
     /// CIDRs are always disjoint so we only need to check if one CIDR contains
@@ -431,14 +455,20 @@ impl Ipv6Cidr {
     pub fn overlaps(&self, other: &Ipv6Cidr) -> bool {
         // we normalize by the smallest mask, so the larger of the two subnets.
         let min_mask = self.mask().min(other.mask());
-        // this normalizes the address, so we get the first address of a CIDR
-        // (e.g. 2001:db8::200/64 -> 2001:db8::0) we do this by using a bitwise AND
-        // operation over the address and the u128::MAX (all ones) shifted by
-        // the mask.
-        let normalize =
-            |addr: u128| addr & u128::MAX.checked_shl((128 - min_mask).into()).unwrap_or(0);
         // if the prefix is the same we have an overlap
-        normalize(self.address().to_bits()) == normalize(other.address().to_bits())
+        Self::normalize(self.address().to_bits(), min_mask)
+            == Self::normalize(other.address().to_bits(), min_mask)
+    }
+
+    /// Get the canonical version of the CIDR.
+    ///
+    /// A canonicalized CIDR is a the normalized address, so the first address in the subnet
+    /// (sometimes also called "network address"). E.g. 2001:db8::5/64 -> 2001:db8::0/64
+    pub fn canonical(&self) -> Self {
+        Self {
+            addr: Ipv6Addr::from_bits(Self::normalize(self.addr.to_bits(), self.mask())),
+            mask: self.mask(),
+        }
     }
 }
 
@@ -1854,5 +1884,156 @@ mod tests {
                     .unwrap()
                 )
         );
+    }
+
+    #[test]
+    fn test_ipv4_canonical() {
+        let cidr = Ipv4Cidr::new("192.168.1.100".parse::<Ipv4Addr>().unwrap(), 24).unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(canonical.addr, Ipv4Addr::new(192, 168, 1, 0));
+        assert_eq!(canonical.mask, 24);
+
+        let cidr = Ipv4Cidr::new("10.50.75.200".parse::<Ipv4Addr>().unwrap(), 16).unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(canonical.addr, Ipv4Addr::new(10, 50, 0, 0));
+        assert_eq!(canonical.mask, 16);
+
+        let cidr = Ipv4Cidr::new("172.16.100.50".parse::<Ipv4Addr>().unwrap(), 8).unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(canonical.addr, Ipv4Addr::new(172, 0, 0, 0));
+        assert_eq!(canonical.mask, 8);
+
+        let cidr = Ipv4Cidr::new("192.168.1.1".parse::<Ipv4Addr>().unwrap(), 32).unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(canonical.addr, Ipv4Addr::new(192, 168, 1, 1));
+        assert_eq!(canonical.mask, 32);
+
+        let cidr = Ipv4Cidr::new("255.255.255.255".parse::<Ipv4Addr>().unwrap(), 0).unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(canonical.addr, Ipv4Addr::new(0, 0, 0, 0));
+        assert_eq!(canonical.mask, 0);
+
+        let cidr = Ipv4Cidr::new("192.168.1.103".parse::<Ipv4Addr>().unwrap(), 30).unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(canonical.addr, Ipv4Addr::new(192, 168, 1, 100));
+        assert_eq!(canonical.mask, 30);
+
+        let cidr = Ipv4Cidr::new("10.10.15.128".parse::<Ipv4Addr>().unwrap(), 23).unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(canonical.addr, Ipv4Addr::new(10, 10, 14, 0));
+        assert_eq!(canonical.mask, 23);
+
+        let cidr = Ipv4Cidr::new("203.0.113.99".parse::<Ipv4Addr>().unwrap(), 25).unwrap();
+        let canonical1 = cidr.canonical();
+        let canonical2 = canonical1.canonical();
+        assert_eq!(canonical1.addr, canonical2.addr);
+        assert_eq!(canonical1.mask, canonical2.mask);
+    }
+
+    #[test]
+    fn test_ipv6_canonical() {
+        let cidr = Ipv6Cidr::new(
+            "2001:db8:85a3::8a2e:370:7334".parse::<Ipv6Addr>().unwrap(),
+            64,
+        )
+        .unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(
+            canonical.addr,
+            Ipv6Addr::new(0x2001, 0xdb8, 0x85a3, 0, 0, 0, 0, 0)
+        );
+        assert_eq!(canonical.mask, 64);
+
+        let cidr = Ipv6Cidr::new(
+            "2001:db8:1234:5678:9abc:def0:1234:5678"
+                .parse::<Ipv6Addr>()
+                .unwrap(),
+            48,
+        )
+        .unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(
+            canonical.addr,
+            Ipv6Addr::new(0x2001, 0xdb8, 0x1234, 0, 0, 0, 0, 0)
+        );
+        assert_eq!(canonical.mask, 48);
+
+        let cidr = Ipv6Cidr::new(
+            "2001:db8:abcd:ef01:2345:6789:abcd:ef01"
+                .parse::<Ipv6Addr>()
+                .unwrap(),
+            32,
+        )
+        .unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(
+            canonical.addr,
+            Ipv6Addr::new(0x2001, 0xdb8, 0, 0, 0, 0, 0, 0)
+        );
+        assert_eq!(canonical.mask, 32);
+
+        let cidr = Ipv6Cidr::new("2001:db8::1".parse::<Ipv6Addr>().unwrap(), 128).unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(
+            canonical.addr,
+            Ipv6Addr::new(0x2001, 0xdb8, 0, 0, 0, 0, 0, 1)
+        );
+        assert_eq!(canonical.mask, 128);
+
+        let cidr = Ipv6Cidr::new(
+            "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+                .parse::<Ipv6Addr>()
+                .unwrap(),
+            0,
+        )
+        .unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(canonical.addr, Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0));
+        assert_eq!(canonical.mask, 0);
+
+        let cidr = Ipv6Cidr::new(
+            "2001:db8:1234:5600:ffff:ffff:ffff:ffff"
+                .parse::<Ipv6Addr>()
+                .unwrap(),
+            56,
+        )
+        .unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(
+            canonical.addr,
+            Ipv6Addr::new(0x2001, 0xdb8, 0x1234, 0x5600, 0, 0, 0, 0)
+        );
+        assert_eq!(canonical.mask, 56);
+
+        let cidr = Ipv6Cidr::new(
+            "2001:db8:1234:5678:9abc:def0:ffff:ffff"
+                .parse::<Ipv6Addr>()
+                .unwrap(),
+            96,
+        )
+        .unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(
+            canonical.addr,
+            Ipv6Addr::new(0x2001, 0xdb8, 0x1234, 0x5678, 0x9abc, 0xdef0, 0, 0)
+        );
+        assert_eq!(canonical.mask, 96);
+
+        let cidr = Ipv6Cidr::new(
+            "2001:db8:cafe:face:dead:beef:1234:5678"
+                .parse::<Ipv6Addr>()
+                .unwrap(),
+            80,
+        )
+        .unwrap();
+        let canonical1 = cidr.canonical();
+        let canonical2 = canonical1.canonical();
+        assert_eq!(canonical1.addr, canonical2.addr);
+        assert_eq!(canonical1.mask, canonical2.mask);
+
+        let cidr = Ipv6Cidr::new("fe80::1".parse::<Ipv6Addr>().unwrap(), 64).unwrap();
+        let canonical = cidr.canonical();
+        assert_eq!(canonical.addr, Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 0));
+        assert_eq!(canonical.mask, 64);
     }
 }
