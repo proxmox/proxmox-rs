@@ -250,7 +250,10 @@ impl ResponseReader {
             StatusCode::OK => (),
             StatusCode::PRECONDITION_FAILED => return Ok(PutObjectResponse::PreconditionFailed),
             StatusCode::CONFLICT => return Ok(PutObjectResponse::NeedsRetry),
-            StatusCode::BAD_REQUEST => bail!("invalid request"),
+            StatusCode::BAD_REQUEST => {
+                Self::log_error_response_utf8(body);
+                bail!("invalid request");
+            }
             status_code => {
                 Self::log_error_response_utf8(body);
                 bail!("unexpected status code {status_code}")
@@ -283,7 +286,10 @@ impl ResponseReader {
 
         match parts.status {
             StatusCode::OK => (),
-            StatusCode::BAD_REQUEST => bail!("invalid request"),
+            StatusCode::BAD_REQUEST => {
+                Self::log_error_response_utf8(body);
+                bail!("invalid request");
+            }
             status_code => {
                 Self::log_error_response_utf8(body);
                 bail!("unexpected status code {status_code}")
