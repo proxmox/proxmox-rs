@@ -158,25 +158,18 @@ fn create_ticket_http_only(
             // parse the ticket here, so we can use the correct timestamp of the `Expire` parameter
             // take the ticket here, so the option will be `None` in the response
             if let Some(ticket_str) = ticket_response.ticket.take() {
-                let ticket = Ticket::<ApiTicket>::parse(&ticket_str)?;
-
-                // see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#expiresdate
-                // see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Date
-                // see: https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/Cookies#expires
-                let expire =
-                    proxmox_time::epoch_to_http_date(ticket.time() + crate::TICKET_LIFETIME)?;
-
                 // this makes sure that ticket cookies:
                 // - Typically `__Host-`-prefixed: are only send to the specific domain that set
                 //   them and that scripts served via http cannot overwrite the cookie.
-                // - `Expires`: expire at the same time as the encoded timestamp in the ticket.
                 // - `Secure`: are only sent via https.
                 // - `SameSite=Lax`: are only sent on cross-site requests when the user is
                 //   navigating to the origin site from an external site.
                 // - `HttpOnly`: cookies are not readable to client-side javascript code.
-                let cookie = format!(
-                    "{host_cookie}={ticket_str}; Expires={expire}; Secure; SameSite=Lax; HttpOnly; Path=/;",
-                );
+                // - don't set `Expire` to keep cookie a session cookie. otherwise, we may break
+                //   security assumptions made by users previously. the expiration limit is still
+                //   enforced server side.
+                let cookie =
+                    format!("{host_cookie}={ticket_str}; Secure; SameSite=Lax; HttpOnly; Path=/;");
 
                 response = response.header(hyper::header::SET_COOKIE, cookie);
             }
