@@ -33,6 +33,9 @@ pub struct ApiConfig {
     auth_handler: Option<AuthHandler>,
     index_handler: Option<IndexHandler>,
     pub(crate) privileged_addr: Option<PrivilegedAddr>,
+    // Name of the auth cookie that should be unset on 401 request. If `None` no cookie will be
+    // removed.
+    pub(crate) auth_cookie_name: Option<String>,
 
     #[cfg(feature = "templates")]
     templates: templates::Templates,
@@ -62,6 +65,7 @@ impl ApiConfig {
             auth_handler: None,
             index_handler: None,
             privileged_addr: None,
+            auth_cookie_name: None,
 
             #[cfg(feature = "templates")]
             templates: templates::Templates::with_escape_fn(),
@@ -80,6 +84,11 @@ impl ApiConfig {
         Func: for<'a> Fn(&'a HeaderMap, &'a Method) -> CheckAuthFuture<'a> + Send + Sync + 'static,
     {
         self.auth_handler(AuthHandler::from_fn(func))
+    }
+
+    pub fn auth_cookie_name(mut self, auth_cookie_name: String) -> Self {
+        self.auth_cookie_name = Some(auth_cookie_name);
+        self
     }
 
     /// This is used for `protected` API calls to proxy to a more privileged service.

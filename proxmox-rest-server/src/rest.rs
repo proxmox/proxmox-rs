@@ -357,8 +357,21 @@ impl Service<Request<Incoming>> for ApiService {
             Some(proxied_peer) => proxied_peer,
             None => self.peer,
         };
+
+        let header = self.api_config
+            .auth_cookie_name
+            .as_ref()
+            .map(|name|{
+                let host_cookie = format!("{name}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; SameSite=Lax; HttpOnly; Path=/;");
+
+                // SAFETY: this can only fail if the cookie name is not valid in http headers.
+                // since this is about an authentication cookie, this should never happen.
+                hyper::header::HeaderValue::from_str(&host_cookie)
+                    .expect("auth cookie name has characters that are not valid for http headers")
+             });
+
         async move {
-            let response = match Arc::clone(&config).handle_request(req, &peer).await {
+            let mut response = match Arc::clone(&config).handle_request(req, &peer).await {
                 Ok(response) => response,
                 Err(err) => {
                     let (err, code) = match err.downcast_ref::<HttpError>() {
@@ -371,6 +384,16 @@ impl Service<Request<Incoming>> for ApiService {
                         .body(err.into())?
                 }
             };
+
+            if let Some(cookie_header) = header {
+                // remove auth cookies that javascript based clients can not unset
+                if response.status() == StatusCode::UNAUTHORIZED {
+                    response
+                        .headers_mut()
+                        .insert(hyper::header::SET_COOKIE, cookie_header);
+                }
+            }
+
             let logger = config.get_access_log();
             log_response(logger, &peer, method, &path, &response, user_agent);
             Ok(response)
