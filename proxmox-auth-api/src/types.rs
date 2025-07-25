@@ -678,7 +678,7 @@ impl TryFrom<String> for Authid {
 
 #[api]
 /// The parameter object for creating new ticket.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct CreateTicket {
     /// User name
     pub username: Userid,

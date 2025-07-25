@@ -59,7 +59,7 @@ pub async fn create_ticket(
         .downcast_ref::<RestEnvironment>()
         .ok_or_else(|| format_err!("detected wrong RpcEnvironment type"))?;
 
-    handle_ticket_creation(create_params, env)
+    handle_ticket_creation(create_params, true, env)
         .await
         // remove the superfluous ticket_info to not confuse clients
         .map(|mut info| {
@@ -121,6 +121,7 @@ fn create_ticket_http_only(
         let auth_context = auth_context()?;
         let host_cookie = auth_context.prefixed_auth_cookie_name();
         let mut create_params: CreateTicket = serde_json::from_value(param)?;
+        let password = create_params.password.take();
 
         // previously to refresh a ticket, the old ticket was provided as a password via this
         // endpoint's parameters. however, once the ticket is set as an HttpOnly cookie, some
@@ -139,16 +140,22 @@ fn create_ticket_http_only(
             // after this only `__Host-{Cookie Name}` cookies are in the iterator
             .filter_map(|c| extract_cookie(c, host_cookie))
             // so this should just give us the first one if it exists
-            .next()
-            // if not use the parameter
-            .or(create_params.password);
+            .next();
 
         let env: &RestEnvironment = rpcenv
             .as_any()
             .downcast_ref::<RestEnvironment>()
             .ok_or(format_err!("detected wrong RpcEnvironment type"))?;
 
-        let mut ticket_response = handle_ticket_creation(create_params, env).await?;
+        let mut ticket_response = handle_ticket_creation(create_params.clone(), true, env).await;
+
+        if ticket_response.is_err() && password.is_some() {
+            create_params.password = password;
+            ticket_response = handle_ticket_creation(create_params, false, env).await;
+        }
+
+        let mut ticket_response = ticket_response?;
+
         let mut response =
             Response::builder().header(http::header::CONTENT_TYPE, "application/json");
 
@@ -185,6 +192,7 @@ fn create_ticket_http_only(
 
 async fn handle_ticket_creation(
     create_params: CreateTicket,
+    allow_ticket_refresh: bool,
     env: &RestEnvironment,
 ) -> Result<CreateTicketResponse, Error> {
     let username = create_params.username;
@@ -199,6 +207,7 @@ async fn handle_ticket_creation(
         create_params.privs,
         create_params.port,
         create_params.tfa_challenge,
+        allow_ticket_refresh,
         env,
     )
     .await
@@ -240,6 +249,7 @@ async fn handle_ticket_creation(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn authenticate_user(
     userid: &Userid,
     password: &str,
@@ -247,6 +257,7 @@ async fn authenticate_user(
     privs: Option<String>,
     port: Option<u16>,
     tfa_challenge: Option<String>,
+    allow_ticket_refresh: bool,
     rpcenv: &RestEnvironment,
 ) -> Result<AuthResult, Error> {
     let auth_context = auth_context()?;
@@ -261,21 +272,24 @@ async fn authenticate_user(
         return authenticate_2nd(userid, &tfa_challenge, password);
     }
 
-    if password.starts_with(prefix) && password.as_bytes().get(prefix.len()).copied() == Some(b':')
-    {
-        if let Ok(ticket_userid) = Ticket::<Userid>::parse(password)
-            .and_then(|ticket| ticket.verify(auth_context.keyring(), prefix, None))
+    if allow_ticket_refresh {
+        if password.starts_with(prefix)
+            && password.as_bytes().get(prefix.len()).copied() == Some(b':')
         {
-            if *userid == ticket_userid {
-                return Ok(AuthResult::CreateTicket);
+            if let Ok(ticket_userid) = Ticket::<Userid>::parse(password)
+                .and_then(|ticket| ticket.verify(auth_context.keyring(), prefix, None))
+            {
+                if *userid == ticket_userid {
+                    return Ok(AuthResult::CreateTicket);
+                }
+                bail!("ticket login failed - wrong userid");
             }
-            bail!("ticket login failed - wrong userid");
-        }
-    } else if let Some(((path, privs), port)) = path.zip(privs).zip(port) {
-        match auth_context.check_path_ticket(userid, password, path, privs, port)? {
-            None => (), // no path based tickets supported, just fall through.
-            Some(true) => return Ok(AuthResult::Success),
-            Some(false) => bail!("No such privilege"),
+        } else if let Some(((path, privs), port)) = path.zip(privs).zip(port) {
+            match auth_context.check_path_ticket(userid, password, path, privs, port)? {
+                None => (), // no path based tickets supported, just fall through.
+                Some(true) => return Ok(AuthResult::Success),
+                Some(false) => bail!("No such privilege"),
+            }
         }
     }
 
