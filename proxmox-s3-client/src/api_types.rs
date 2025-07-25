@@ -22,8 +22,8 @@ const_regex! {
     pub S3_BUCKET_NAME_REGEX = r"^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$";
     /// Regex to match S3 endpoints including template patterns.
     pub S3_ENDPOINT_REGEX = concatcp!(r"^(?:", S3_ENDPOINT_NAME_STR, "|",  IPRE_STR, r")$");
-    /// Regex to match S3 regions.
-    pub S3_REGION_REGEX = r"(^auto$)|(^[a-z]{2,}(?:-[a-z\d]+)+$)";
+    /// Regex to match S3 regions, similar to SAFE_ID_REGEX but only lower case and without dot.
+    pub S3_REGION_REGEX = r"^[_a-z\d][-_a-z\d]+$";
 }
 
 /// S3 REST API endpoint format.
