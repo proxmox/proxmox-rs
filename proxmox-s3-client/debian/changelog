@@ -1,3 +1,10 @@
+rust-proxmox-s3-client (1.0.5-1) trixie; urgency=medium
+
+  * api types: make regex for S3 region more flexible, to allow e.g. accessing
+    Hetzner S3 object storage.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 25 Jul 2025 15:27:20 +0200
+
 rust-proxmox-s3-client (1.0.4-1) trixie; urgency=medium
 
   * fix invalid request for empty delete-objects call.
