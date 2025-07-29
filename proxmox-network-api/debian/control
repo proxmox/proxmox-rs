@@ -2,18 +2,20 @@ Source: rust-proxmox-network-api
 Section: rust
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
- dh-sequence-cargo,
- cargo:native <!nocheck>,
- rustc:native (>= 1.80) <!nocheck>,
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
  librust-proxmox-schema-4+api-macro-dev <!nocheck>,
  librust-proxmox-schema-4+api-types-dev <!nocheck>,
  librust-proxmox-schema-4+default-dev <!nocheck>,
+ librust-proxmox-ve-config-0.2+default-dev (>= 0.2.3-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
- librust-serde-1+derive-dev <!nocheck>
+ librust-serde-1+derive-dev <!nocheck>,
+ librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -32,9 +34,11 @@ Depends:
  librust-proxmox-schema-4+api-macro-dev,
  librust-proxmox-schema-4+api-types-dev,
  librust-proxmox-schema-4+default-dev,
+ librust-proxmox-ve-config-0.2+default-dev (>= 0.2.3-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
- librust-serde-1+derive-dev
+ librust-serde-1+derive-dev,
+ librust-serde-json-1+default-dev
 Suggests:
  librust-proxmox-network-api+impl-dev (= ${binary:Version})
 Provides:
@@ -59,7 +63,7 @@ Depends:
  librust-proxmox-config-digest-0.1+default-dev,
  librust-proxmox-config-digest-0.1+openssl-dev,
  librust-proxmox-product-config-0.2+default-dev,
- librust-proxmox-sys-0.6+default-dev (>= 0.6.5-~~)
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.6-~~)
 Provides:
  librust-proxmox-network-api-0+impl-dev (= ${binary:Version}),
  librust-proxmox-network-api-0.1+impl-dev (= ${binary:Version}),

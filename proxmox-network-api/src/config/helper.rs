@@ -1,17 +1,15 @@
 use std::collections::HashMap;
-use std::os::unix::io::{AsRawFd, FromRawFd, OwnedFd};
 use std::path::Path;
 use std::process::Command;
 use std::sync::LazyLock;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{bail, format_err, Context, Error};
 use const_format::concatcp;
-use nix::ioctl_read_bad;
-use nix::sys::socket::{socket, AddressFamily, SockFlag, SockType};
 use regex::Regex;
 
 use proxmox_schema::api_types::IPV4RE_STR;
 use proxmox_schema::api_types::IPV6RE_STR;
+use proxmox_ve_config::guest::vm::MacAddress;
 
 pub static IPV4_REVERSE_MASK: &[&str] = &[
     "0.0.0.0",
@@ -119,76 +117,110 @@ pub(crate) fn parse_address_or_cidr(cidr: &str) -> Result<(String, Option<u8>, b
     }
 }
 
-pub(crate) fn get_network_interfaces() -> Result<HashMap<String, bool>, Error> {
-    const PROC_NET_DEV: &str = "/proc/net/dev";
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Deserialize)]
+pub struct SlaveData {
+    perm_hw_addr: Option<MacAddress>,
+}
 
-    #[repr(C)]
-    pub struct ifreq {
-        ifr_name: [libc::c_uchar; libc::IFNAMSIZ],
-        ifru_flags: libc::c_short,
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Deserialize)]
+pub struct LinkInfo {
+    info_slave_data: Option<SlaveData>,
+    info_kind: Option<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Deserialize)]
+pub struct IpLink {
+    ifname: String,
+    #[serde(default)]
+    altnames: Vec<String>,
+    ifindex: i64,
+    link_type: String,
+    address: MacAddress,
+    linkinfo: Option<LinkInfo>,
+    operstate: String,
+}
+
+impl IpLink {
+    pub fn index(&self) -> i64 {
+        self.ifindex
     }
 
-    ioctl_read_bad!(get_interface_flags, libc::SIOCGIFFLAGS, ifreq);
+    pub fn is_physical(&self) -> bool {
+        self.link_type == "ether"
+            && (self.linkinfo.is_none() || self.linkinfo.as_ref().unwrap().info_kind.is_none())
+    }
 
-    static IFACE_LINE_REGEX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"^\s*([^:\s]+):").unwrap());
-    let raw = std::fs::read_to_string(PROC_NET_DEV)
-        .map_err(|err| format_err!("unable to read {} - {}", PROC_NET_DEV, err))?;
+    pub fn name(&self) -> &str {
+        &self.ifname
+    }
 
-    let lines = raw.lines();
-
-    let sock = unsafe {
-        OwnedFd::from_raw_fd(
-            socket(
-                AddressFamily::Inet,
-                SockType::Datagram,
-                SockFlag::empty(),
-                None,
-            )
-            .or_else(|_| {
-                socket(
-                    AddressFamily::Inet6,
-                    SockType::Datagram,
-                    SockFlag::empty(),
-                    None,
-                )
-            })?,
-        )
-    };
-
-    let mut interface_list = HashMap::new();
-
-    for line in lines {
-        if let Some(cap) = IFACE_LINE_REGEX.captures(line) {
-            let ifname = &cap[1];
-
-            let mut req = ifreq {
-                ifr_name: *b"0000000000000000",
-                ifru_flags: 0,
-            };
-            for (i, b) in std::ffi::CString::new(ifname)?
-                .as_bytes_with_nul()
-                .iter()
-                .enumerate()
-            {
-                if i < (libc::IFNAMSIZ - 1) {
-                    req.ifr_name[i] = *b as libc::c_uchar;
+    pub fn permanent_mac(&self) -> MacAddress {
+        if let Some(link_info) = &self.linkinfo {
+            if let Some(info_slave_data) = &link_info.info_slave_data {
+                if let Some(perm_hw_addr) = info_slave_data.perm_hw_addr {
+                    return perm_hw_addr;
                 }
             }
-            let res = unsafe { get_interface_flags(sock.as_raw_fd(), &mut req)? };
-            if res != 0 {
-                bail!(
-                    "ioctl get_interface_flags for '{}' failed ({})",
-                    ifname,
-                    res
-                );
-            }
-            let is_up = (req.ifru_flags & (libc::IFF_UP as libc::c_short)) != 0;
-            interface_list.insert(ifname.to_string(), is_up);
         }
+
+        self.address
     }
 
-    Ok(interface_list)
+    pub fn altnames(&self) -> impl Iterator<Item = &String> {
+        self.altnames.iter()
+    }
+
+    pub fn active(&self) -> bool {
+        self.operstate == "UP"
+    }
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct AltnameMapping {
+    mapping: HashMap<String, String>,
+}
+
+impl std::ops::Deref for AltnameMapping {
+    type Target = HashMap<String, String>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.mapping
+    }
+}
+
+impl FromIterator<IpLink> for AltnameMapping {
+    fn from_iter<T: IntoIterator<Item = IpLink>>(iter: T) -> Self {
+        let mut mapping = HashMap::new();
+
+        for iface in iter.into_iter() {
+            for altname in iface.altnames {
+                mapping.insert(altname, iface.ifname.clone());
+            }
+        }
+
+        Self { mapping }
+    }
+}
+
+pub fn get_network_interfaces() -> Result<HashMap<String, IpLink>, Error> {
+    let output = std::process::Command::new("ip")
+        .arg("-details")
+        .arg("-json")
+        .arg("link")
+        .arg("show")
+        .stdout(std::process::Stdio::piped())
+        .output()
+        .with_context(|| "could not obtain ip link output")?;
+
+    if !output.status.success() {
+        bail!("ip link returned non-zero exit code")
+    }
+
+    Ok(serde_json::from_slice::<Vec<IpLink>>(&output.stdout)
+        .with_context(|| "could not deserialize ip link output")?
+        .into_iter()
+        .map(|ip_link| (ip_link.ifname.clone(), ip_link))
+        .collect())
 }
 
 pub(crate) fn compute_file_diff(filename: &str, shadow: &str) -> Result<String, Error> {
