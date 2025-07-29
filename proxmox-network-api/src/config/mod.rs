@@ -267,6 +267,86 @@ impl NetworkConfig {
         Ok(interface)
     }
 
+    fn map_interface_name(iface_name: String, mapping: &HashMap<String, String>) -> String {
+        if let Some(mapping) = mapping.get(&iface_name) {
+            return mapping.clone();
+        }
+
+        if let (Some(name), Some(id)) = (
+            parse_vlan_raw_device_from_name(&iface_name),
+            parse_vlan_id_from_name(&iface_name),
+        ) {
+            if let Some(mapping) = mapping.get(name) {
+                return format!("{mapping}.{id}");
+            }
+        }
+
+        iface_name
+    }
+
+    fn handle_interface(mut interface: Interface, mapping: &HashMap<String, String>) -> Interface {
+        interface.bridge_ports = interface.bridge_ports.map(|bridge_ports| {
+            bridge_ports
+                .into_iter()
+                .map(|interface| Self::map_interface_name(interface, mapping))
+                .collect::<Vec<String>>()
+        });
+
+        interface.vlan_raw_device = interface
+            .vlan_raw_device
+            .map(|interface| Self::map_interface_name(interface, mapping));
+
+        interface.slaves = interface.slaves.map(|slaves| {
+            slaves
+                .into_iter()
+                .map(|interface| Self::map_interface_name(interface, mapping))
+                .collect::<Vec<String>>()
+        });
+
+        interface.bond_primary = interface
+            .bond_primary
+            .map(|interface| Self::map_interface_name(interface, mapping));
+
+        interface
+    }
+
+    pub fn rename_interfaces(
+        mut self,
+        mapping: &HashMap<String, String>,
+    ) -> Result<NetworkConfig, Error> {
+        let mut new_config = NetworkConfig::new();
+
+        for entry in self.order {
+            match entry {
+                NetworkOrderEntry::Iface(ref iface_name) => {
+                    if let Some(mut interface) = self.interfaces.remove(iface_name) {
+                        interface.name = Self::map_interface_name(interface.name, mapping);
+
+                        interface = Self::handle_interface(interface, mapping);
+
+                        new_config.order.push(entry);
+                        new_config
+                            .interfaces
+                            .insert(interface.name.clone(), interface);
+                    }
+                }
+                _ => new_config.order.push(entry),
+            }
+        }
+
+        for (name, mut interface) in self.interfaces.into_iter() {
+            interface.name = Self::map_interface_name(name, mapping);
+
+            interface = Self::handle_interface(interface, mapping);
+
+            new_config
+                .interfaces
+                .insert(interface.name.clone(), interface);
+        }
+
+        Ok(new_config)
+    }
+
     /// Check that there is no other gateway.
     ///
     /// The gateway property is only allowed on passed 'iface'. This should be
