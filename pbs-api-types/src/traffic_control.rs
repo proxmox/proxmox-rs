@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 use proxmox_human_byte::HumanByte;
 use proxmox_schema::{api, ApiType, Schema, StringSchema, Updater};
 
-use crate::{
-    CIDR_SCHEMA, DAILY_DURATION_FORMAT, PROXMOX_SAFE_ID_FORMAT, SINGLE_LINE_COMMENT_SCHEMA,
-};
+use proxmox_schema::api_types::CIDR_SCHEMA;
+
+use crate::{DAILY_DURATION_FORMAT, PROXMOX_SAFE_ID_FORMAT, SINGLE_LINE_COMMENT_SCHEMA};
 
 pub const TRAFFIC_CONTROL_TIMEFRAME_SCHEMA: Schema =
     StringSchema::new("Timeframe to specify when the rule is active.")
