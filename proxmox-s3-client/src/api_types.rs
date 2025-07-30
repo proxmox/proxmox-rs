@@ -191,3 +191,18 @@ pub struct S3ClientConfigWithoutSecret {
     #[serde(flatten)]
     pub config: S3ClientConfig,
 }
+
+#[api(
+    properties: {
+        name: {
+            schema: S3_BUCKET_NAME_SCHEMA,
+        },
+    },
+)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+/// S3 bucket list item.
+pub struct S3BucketListItem {
+    /// S3 bucket name.
+    pub name: String,
+}
