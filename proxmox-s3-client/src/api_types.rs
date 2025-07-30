@@ -11,7 +11,7 @@ use proxmox_schema::{api, const_regex, ApiStringFormat, Schema, StringSchema, Up
 /// Regex to match S3 endpoint full qualified domain names, including template patterns for bucket
 /// name or region.
 pub const S3_ENDPOINT_NAME_STR: &str = concatcp!(
-    r"(?:(?:(", DNS_LABEL_STR, r"|\{\{bucket\}\}|\{\{region\}\})\.)*", DNS_LABEL_STR, ")"
+    r"(^\{\{bucket\}\}\.)*(?:(?:(", DNS_LABEL_STR, r"|\{\{region\}\})\.)*", DNS_LABEL_STR, ")"
 );
 
 const_regex! {
