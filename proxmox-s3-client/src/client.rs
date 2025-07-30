@@ -28,7 +28,7 @@ use crate::aws_sign_v4::{aws_sign_v4_signature, aws_sign_v4_uri_encode};
 use crate::object_key::S3ObjectKey;
 use crate::response_reader::{
     CopyObjectResponse, DeleteObjectsResponse, GetObjectResponse, HeadObjectResponse,
-    ListObjectsV2Response, PutObjectResponse, ResponseReader,
+    ListBucketsResponse, ListObjectsV2Response, PutObjectResponse, ResponseReader,
 };
 
 const S3_HTTP_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
@@ -310,6 +310,18 @@ impl S3Client {
         }
 
         Ok(())
+    }
+
+    /// List all buckets owned by the user authenticated via the access key.
+    /// See reference docs: https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html
+    pub async fn list_buckets(&self) -> Result<ListBucketsResponse, Error> {
+        let request = Request::builder()
+            .method(Method::GET)
+            .uri(self.build_uri("/", &[])?)
+            .body(Body::empty())?;
+        let response = self.send(request).await?;
+        let response_reader = ResponseReader::new(response);
+        response_reader.list_buckets_response().await
     }
 
     /// Fetch metadata from an object without returning the object itself.

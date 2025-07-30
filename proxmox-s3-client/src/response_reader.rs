@@ -153,6 +153,38 @@ pub struct CopyObjectResult {
     pub last_modified: LastModifiedTimestamp,
 }
 
+/// Subset of the list buckets response
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html#API_ListBuckets_ResponseElements
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct ListBucketsResponse {
+    pub buckets: Vec<Bucket>,
+}
+/// Subset of the list buckets response
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html#API_ListBuckets_ResponseElements
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct ListAllMyBucketsResult {
+    pub buckets: Option<Buckets>,
+}
+
+/// Subset used to deserialize the list buckets response
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct Buckets {
+    bucket: Vec<Bucket>,
+}
+
+/// Subset used to deserialize the list buckets response
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub struct Bucket {
+    pub name: String,
+    pub bucket_arn: Option<String>,
+    pub bucket_region: Option<String>,
+    pub creation_date: LastModifiedTimestamp,
+}
+
 impl ResponseReader {
     pub(crate) fn new(response: Response<Incoming>) -> Self {
         Self { response }
@@ -337,6 +369,30 @@ impl ResponseReader {
             copy_object_result,
             x_amz_version_id,
         })
+    }
+
+    pub(crate) async fn list_buckets_response(self) -> Result<ListBucketsResponse, Error> {
+        let (parts, body) = self.response.into_parts();
+        let body = body.collect().await?.to_bytes();
+
+        match parts.status {
+            StatusCode::OK => (),
+            status_code => {
+                Self::log_error_response_utf8(body);
+                bail!("unexpected status code {status_code}")
+            }
+        };
+
+        let body = String::from_utf8(body.to_vec())?;
+
+        let list_buckets_result: ListAllMyBucketsResult =
+            serde_xml_rs::from_str(&body).context("failed to parse response body")?;
+
+        let buckets = match list_buckets_result.buckets {
+            Some(buckets) => buckets.bucket,
+            None => Vec::new(),
+        };
+        Ok(ListBucketsResponse { buckets })
     }
 
     fn log_error_response_utf8(body: Bytes) {
