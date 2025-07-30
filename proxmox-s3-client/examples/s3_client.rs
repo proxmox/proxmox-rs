@@ -28,7 +28,7 @@ async fn run() -> Result<(), anyhow::Error> {
         // Must match the port the api is listening on
         port: Some(7480),
         // Name of the bucket to be used
-        bucket: "testbucket".to_string(),
+        bucket: Some("testbucket".to_string()),
         common_prefix: "teststore".to_string(),
         path_style: false,
         access_key: "<your-access-key>".to_string(),

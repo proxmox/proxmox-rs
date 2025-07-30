@@ -54,7 +54,7 @@ pub struct S3ClientOptions {
     /// Port to access S3 object store.
     pub port: Option<u16>,
     /// Bucket to access S3 object store.
-    pub bucket: String,
+    pub bucket: Option<String>,
     /// Common prefix within bucket to use for objects keys for this client instance.
     pub common_prefix: String,
     /// Use path style bucket addressing over vhost style.
@@ -76,7 +76,7 @@ impl S3ClientOptions {
     pub fn from_config(
         config: S3ClientConfig,
         secret_key: String,
-        bucket: String,
+        bucket: Option<String>,
         common_prefix: String,
     ) -> Self {
         Self {
@@ -154,9 +154,16 @@ impl S3Client {
         } else {
             options.endpoint.clone()
         };
+
         let authority = authority_template
-            .replace("{{bucket}}", &options.bucket)
             .replace("{{region}}", &options.region);
+
+        let authority = if let Some(bucket) = &options.bucket {
+            authority.replace("{{bucket}}", bucket)
+        } else {
+            authority.replace("{{bucket}}.", "")
+        };
+
         let authority = Authority::try_from(authority)?;
 
         let put_rate_limiter = options.put_rate_limit.map(|limit| {
@@ -464,8 +471,12 @@ impl S3Client {
         source_key: S3ObjectKey,
         destination_key: S3ObjectKey,
     ) -> Result<CopyObjectResponse, Error> {
+        let bucket = match &self.options.bucket {
+            Some(bucket) => bucket,
+            None => bail!("missing bucket name for copy source"),
+        };
         let copy_source =
-            source_key.to_copy_source_key(&self.options.bucket, &self.options.common_prefix);
+            source_key.to_copy_source_key(bucket, &self.options.common_prefix);
         let copy_source = aws_sign_v4_uri_encode(&copy_source, true);
         let destination_key = destination_key.to_full_key(&self.options.common_prefix);
         let destination_key = aws_sign_v4_uri_encode(&destination_key, true);
@@ -664,7 +675,11 @@ impl S3Client {
         }
         let path = aws_sign_v4_uri_encode(path, true);
         let mut path_and_query = if self.options.path_style {
-            format!("/{bucket}/{path}", bucket = self.options.bucket)
+            if let Some(bucket) = &self.options.bucket {
+                format!("/{bucket}/{path}")
+            } else {
+                format!("/{path}")
+            }
         } else {
             format!("/{path}")
         };
