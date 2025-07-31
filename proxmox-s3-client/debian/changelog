@@ -1,3 +1,15 @@
+rust-proxmox-s3-client (1.0.6-1) trixie; urgency=medium
+
+  * restrict bucket template pattern to start of endpoint url.
+
+  * implement list buckets method.
+
+  * make bucket name optional in S3 client options.
+
+  * api types: add bucket list item type.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 31 Jul 2025 14:38:45 +0200
+
 rust-proxmox-s3-client (1.0.5-1) trixie; urgency=medium
 
   * api types: make regex for S3 region more flexible, to allow e.g. accessing
