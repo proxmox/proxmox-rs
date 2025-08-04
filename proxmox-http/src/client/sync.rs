@@ -127,7 +127,9 @@ impl HttpClient<String, String> for Client {
         let (parts, body) = request.into_parts();
 
         let agent = self.agent()?;
-        let mut req = http::Request::post(parts.method.as_str());
+        let mut req = http::Request::builder()
+            .method(parts.method.as_str())
+            .uri(parts.uri);
 
         for header in parts.headers.keys() {
             for value in parts.headers.get_all(header) {
@@ -182,7 +184,9 @@ impl HttpClient<&[u8], Vec<u8>> for Client {
         let (parts, body) = request.into_parts();
 
         let agent = self.agent()?;
-        let mut req = http::Request::post(parts.method.as_str());
+        let mut req = http::Request::builder()
+            .method(parts.method.as_str())
+            .uri(parts.uri);
 
         for header in parts.headers.keys() {
             for value in parts.headers.get_all(header) {
@@ -240,7 +244,9 @@ impl HttpClient<Box<dyn Read>, Box<dyn Read>> for Client {
         let (parts, body) = request.into_parts();
 
         let agent = self.agent()?;
-        let mut req = http::Request::post(parts.method.as_str());
+        let mut req = http::Request::builder()
+            .method(parts.method.as_str())
+            .uri(parts.uri);
 
         for header in parts.headers.keys() {
             for value in parts.headers.get_all(header) {
