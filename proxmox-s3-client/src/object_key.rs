@@ -4,7 +4,7 @@ use anyhow::{bail, Error};
 /// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html
 const S3_OBJECT_KEY_MAX_LENGTH: usize = 1024;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 /// S3 Object Key
 pub enum S3ObjectKey {
     /// Object key which will not be prefixed any further by the client

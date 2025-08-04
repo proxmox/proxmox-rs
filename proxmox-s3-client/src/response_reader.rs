@@ -79,7 +79,7 @@ impl ListObjectsV2ResponseBody {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 /// Subset of contents used to deserialize the listed object contents of a list objects v2 respsonse.
 /// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html#API_ListObjectsV2_ResponseSyntax
@@ -231,7 +231,7 @@ pub struct Buckets {
     bucket: Vec<Bucket>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 /// Subset of contents used to deserialize individual buckets for response of a list buckets api
 /// call.
@@ -510,4 +510,113 @@ impl ResponseReader {
             .with_context(|| format!("failed to parse header '{name}'"))?;
         Ok(value)
     }
+}
+
+#[test]
+fn parse_list_objects_v2_response_test() {
+    let response_body = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <ListBucketResult>
+            <Name>bucket0</Name>
+            <Prefix>.cnt</Prefix>
+            <KeyCount>2</KeyCount>
+            <MaxKeys>1000</MaxKeys>
+            <IsTruncated>false</IsTruncated>
+            <Contents>
+                <Key>.cnt/key0</Key>
+                <LastModified>2011-02-26T01:56:20.000Z</LastModified>
+                <ETag>"bf1d737a4d46a19f3bced6905cc8b902"</ETag>
+                <Size>10</Size>
+                <StorageClass>STANDARD</StorageClass>
+            </Contents>
+            <Contents>
+                <Key>.cnt/key1</Key>
+                <LastModified>2011-02-26T01:56:20.000Z</LastModified>
+                <ETag>"9b2cf535f27731c974343645a3985328"</ETag>
+                <Size>20</Size>
+                <StorageClass>STANDARD</StorageClass>
+            </Contents>
+        </ListBucketResult>
+    "#;
+    let result: ListObjectsV2ResponseBody = serde_xml_rs::from_str(&response_body).unwrap();
+    assert_eq!(result.name, "bucket0");
+    assert_eq!(result.prefix, ".cnt");
+    assert_eq!(result.key_count, 2);
+    assert_eq!(result.max_keys, 1000);
+    assert_eq!(result.is_truncated, false);
+    assert_eq!(
+        result.contents.unwrap(),
+        vec![
+            ListObjectsV2Contents {
+                key: S3ObjectKey::try_from("/.cnt/key0").unwrap(),
+                last_modified: LastModifiedTimestamp::from_str("2011-02-26T01:56:20.000Z").unwrap(),
+                e_tag: "\"bf1d737a4d46a19f3bced6905cc8b902\"".to_string(),
+                size: 10,
+                storage_class: "STANDARD".to_string(),
+            },
+            ListObjectsV2Contents {
+                key: S3ObjectKey::try_from("/.cnt/key1").unwrap(),
+                last_modified: LastModifiedTimestamp::from_str("2011-02-26T01:56:20.000Z").unwrap(),
+                e_tag: "\"9b2cf535f27731c974343645a3985328\"".to_string(),
+                size: 20,
+                storage_class: "STANDARD".to_string(),
+            },
+        ]
+    );
+}
+
+#[test]
+fn parse_copy_object_response_test() {
+    let response_body = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <CopyObjectResult>
+            <LastModified>2009-10-12T17:50:30.000Z</LastModified>
+            <ETag>"9b2cf535f27731c974343645a3985328"</ETag>
+        </CopyObjectResult>
+    "#;
+    let result: CopyObjectResult = serde_xml_rs::from_str(&response_body).unwrap();
+    assert_eq!(
+        result.last_modified,
+        LastModifiedTimestamp::from_str("2009-10-12T17:50:30.000Z").unwrap()
+    );
+    assert_eq!(
+        result.e_tag,
+        "\"9b2cf535f27731c974343645a3985328\"".to_string()
+    );
+}
+
+#[test]
+fn parse_list_buckets_response_test() {
+    let response_body = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <ListAllMyBucketsResult>
+            <Buckets>
+                <Bucket>
+                    <CreationDate>2019-12-11T23:32:47+00:00</CreationDate>
+                    <Name>bucket0</Name>
+                </Bucket>
+                <Bucket>
+                    <CreationDate>2019-11-10T23:32:13+00:00</CreationDate>
+                    <Name>bucket1</Name>
+                </Bucket>
+            </Buckets>
+        </ListAllMyBucketsResult>
+    "#;
+    let result: ListAllMyBucketsResult = serde_xml_rs::from_str(&response_body).unwrap();
+    assert_eq!(
+        result.buckets.unwrap().bucket,
+        vec![
+            Bucket {
+                name: "bucket0".to_string(),
+                creation_date: LastModifiedTimestamp::from_str("2019-12-11T23:32:47+00:00")
+                    .unwrap(),
+                bucket_arn: None,
+                bucket_region: None,
+            },
+            Bucket {
+                name: "bucket1".to_string(),
+                creation_date: LastModifiedTimestamp::from_str("2019-11-10T23:32:13+00:00")
+                    .unwrap(),
+                bucket_arn: None,
+                bucket_region: None,
+            },
+        ]
+    );
 }

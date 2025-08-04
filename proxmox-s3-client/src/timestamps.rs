@@ -5,7 +5,7 @@ const VALID_MONTHS: [&str; 12] = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// Last modified timestamp as obtained from API response http headers.
 pub struct LastModifiedTimestamp {
     _datetime: iso8601::DateTime,
