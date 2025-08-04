@@ -385,10 +385,10 @@ impl ResponseReader {
         let list_buckets_result: ListAllMyBucketsResult =
             serde_xml_rs::from_str(&body).context("failed to parse response body")?;
 
-        let buckets = match list_buckets_result.buckets {
-            Some(buckets) => buckets.bucket,
-            None => Vec::new(),
-        };
+        let buckets = list_buckets_result
+            .buckets
+            .map(|b| b.bucket)
+            .unwrap_or_default();
         Ok(ListBucketsResponse { buckets })
     }
 
