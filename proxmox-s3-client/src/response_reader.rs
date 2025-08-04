@@ -186,10 +186,15 @@ pub struct Bucket {
 }
 
 impl ResponseReader {
+    /// Create a new response reader to parse given response.
     pub(crate) fn new(response: Response<Incoming>) -> Self {
         Self { response }
     }
 
+    /// Read and parse the list object v2 response.
+    ///
+    /// Returns with error if the bucket cannot be found, an unexpected status code is encountered
+    /// or the response body cannot be parsed.
     pub(crate) async fn list_objects_v2_response(self) -> Result<ListObjectsV2Response, Error> {
         let (parts, body) = self.response.into_parts();
         let body = body.collect().await?.to_bytes();
@@ -213,6 +218,10 @@ impl ResponseReader {
         Ok(response.with_date(date))
     }
 
+    /// Read and parse the head object response.
+    ///
+    /// Returns with error if an unexpected status code is encountered or the response headers or
+    /// body cannot be parsed.
     pub(crate) async fn head_object_response(self) -> Result<Option<HeadObjectResponse>, Error> {
         let (parts, body) = self.response.into_parts();
         let body = body.collect().await?.to_bytes();
@@ -244,6 +253,10 @@ impl ResponseReader {
         }))
     }
 
+    /// Read and parse the get object response.
+    ///
+    /// Returns with error if the object is not accessible, an unexpected status code is encountered
+    /// or the response headers or body cannot be parsed.
     pub(crate) async fn get_object_response(self) -> Result<Option<GetObjectResponse>, Error> {
         let (parts, content) = self.response.into_parts();
 
@@ -274,6 +287,10 @@ impl ResponseReader {
         }))
     }
 
+    /// Read and parse the put object response.
+    ///
+    /// Returns with error on bad request, an unexpected status code is encountered or the response
+    /// headers or body cannot be parsed.
     pub(crate) async fn put_object_response(self) -> Result<PutObjectResponse, Error> {
         let (parts, body) = self.response.into_parts();
         let body = body.collect().await?.to_bytes();
@@ -301,6 +318,9 @@ impl ResponseReader {
         Ok(PutObjectResponse::Success(e_tag))
     }
 
+    /// Read and parse the delete object response.
+    ///
+    /// Returns with error if an unexpected status code is encountered.
     pub(crate) async fn delete_object_response(self) -> Result<(), Error> {
         let (parts, _body) = self.response.into_parts();
 
@@ -312,6 +332,10 @@ impl ResponseReader {
         Ok(())
     }
 
+    /// Read and parse the delete objects response.
+    ///
+    /// Returns with error on bad request, an unexpected status code is encountered or the response
+    /// body cannot be parsed.
     pub(crate) async fn delete_objects_response(self) -> Result<DeleteObjectsResponse, Error> {
         let (parts, body) = self.response.into_parts();
         let body = body.collect().await?.to_bytes();
@@ -336,6 +360,10 @@ impl ResponseReader {
         Ok(delete_objects_response)
     }
 
+    /// Read and parse the copy object response.
+    ///
+    /// Returns with error if the source object cannot be found or is in-accessible, an unexpected
+    /// status code is encountered or the response headers or body cannot be parsed.
     pub(crate) async fn copy_object_response(self) -> Result<CopyObjectResponse, Error> {
         let (parts, body) = self.response.into_parts();
         let body = body.collect().await?.to_bytes();
@@ -371,6 +399,10 @@ impl ResponseReader {
         })
     }
 
+    /// Read and parse the list buckets response.
+    ///
+    /// Returns with error if an unexpected status code is encountered or the response body cannot
+    /// be parsed.
     pub(crate) async fn list_buckets_response(self) -> Result<ListBucketsResponse, Error> {
         let (parts, body) = self.response.into_parts();
         let body = body.collect().await?.to_bytes();
