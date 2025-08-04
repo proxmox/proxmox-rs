@@ -1,3 +1,9 @@
+rust-proxmox-http (1.0.2-1) trixie; urgency=medium
+
+  * client-sync: don't wrongly change request methods to POST
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 04 Aug 2025 10:41:48 +0200
+
 rust-proxmox-http (1.0.1-1) trixie; urgency=medium
 
   * enable http2 feature for hyper-util.
