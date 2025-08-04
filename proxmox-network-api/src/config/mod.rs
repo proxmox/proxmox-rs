@@ -2,7 +2,7 @@ mod helper;
 mod lexer;
 mod parser;
 
-pub use helper::{assert_ifupdown2_installed, network_reload, parse_cidr};
+pub use helper::{assert_ifupdown2_installed, network_reload, parse_cidr, AltnameMapping, IpLink};
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::Write;
@@ -17,7 +17,7 @@ use super::{
 };
 
 use helper::compute_file_diff;
-use helper::get_network_interfaces;
+pub use helper::get_network_interfaces;
 use parser::NetworkParser;
 
 use proxmox_config_digest::ConfigDigest;

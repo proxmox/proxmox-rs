@@ -1,4 +1,4 @@
-use crate::VLAN_INTERFACE_REGEX;
+use crate::{PHYSICAL_NIC_REGEX, VLAN_INTERFACE_REGEX};
 
 use std::collections::{HashMap, HashSet};
 use std::io::BufRead;
@@ -502,7 +502,7 @@ impl<R: BufRead> NetworkParser<R> {
 
     pub fn parse_interfaces(
         &mut self,
-        existing_interfaces: Option<&HashMap<String, bool>>,
+        existing_interfaces: Option<&HashMap<String, IpLink>>,
     ) -> Result<NetworkConfig, Error> {
         self.do_parse_interfaces(existing_interfaces)
             .map_err(|err| format_err!("line {}: {}", self.line_nr, err))
@@ -510,7 +510,7 @@ impl<R: BufRead> NetworkParser<R> {
 
     fn do_parse_interfaces(
         &mut self,
-        existing_interfaces: Option<&HashMap<String, bool>>,
+        existing_interfaces: Option<&HashMap<String, IpLink>>,
     ) -> Result<NetworkConfig, Error> {
         let mut config = NetworkConfig::new();
 
@@ -555,20 +555,22 @@ impl<R: BufRead> NetworkParser<R> {
             LazyLock::new(|| Regex::new(r"^\S+:\d+$").unwrap());
 
         if let Some(existing_interfaces) = existing_interfaces {
-            for (iface, active) in existing_interfaces.iter() {
+            for (iface, ip_link) in existing_interfaces.iter() {
                 if let Some(interface) = config.interfaces.get_mut(iface) {
-                    interface.active = *active;
+                    interface.active = ip_link.active();
                     if interface.interface_type == NetworkInterfaceType::Unknown
-                        && super::is_physical_nic(iface)
+                        && ip_link.is_physical()
                     {
                         interface.interface_type = NetworkInterfaceType::Eth;
                     }
-                } else if super::is_physical_nic(iface) {
+
+                    interface.altnames = ip_link.altnames().cloned().collect();
+                } else if ip_link.is_physical() {
                     // also add all physical NICs
                     let mut interface = Interface::new(iface.clone());
                     set_method_v4(&mut interface, NetworkConfigMethod::Manual)?;
                     interface.interface_type = NetworkInterfaceType::Eth;
-                    interface.active = *active;
+                    interface.active = ip_link.active();
                     config.interfaces.insert(interface.name.clone(), interface);
                     config
                         .order
@@ -593,9 +595,24 @@ impl<R: BufRead> NetworkParser<R> {
                 interface.interface_type = NetworkInterfaceType::Vlan;
                 continue;
             }
-            if super::is_physical_nic(name) {
-                interface.interface_type = NetworkInterfaceType::Eth;
-                continue;
+
+            match existing_interfaces {
+                Some(existing_interfaces) => {
+                    let is_physical = existing_interfaces
+                        .get(name)
+                        .map(|iface| iface.is_physical())
+                        .unwrap_or(false);
+
+                    if is_physical {
+                        interface.interface_type = NetworkInterfaceType::Eth;
+                        continue;
+                    }
+                }
+                None if PHYSICAL_NIC_REGEX.is_match(name) => {
+                    interface.interface_type = NetworkInterfaceType::Eth;
+                    continue;
+                }
+                _ => {}
             }
         }
 

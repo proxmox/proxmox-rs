@@ -225,6 +225,14 @@ pub const NETWORK_INTERFACE_LIST_SCHEMA: Schema =
             type: BondXmitHashPolicy,
             optional: true,
         },
+        altnames: {
+            description: "List of altnames for this interface",
+            type: Array,
+            items: {
+                description: "altname",
+                type: String,
+            },
+        },
     }
 )]
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -291,6 +299,9 @@ pub struct Interface {
     pub bond_primary: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bond_xmit_hash_policy: Option<BondXmitHashPolicy>,
+
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub altnames: Vec<String>,
 }
 
 impl Interface {
@@ -319,6 +330,7 @@ impl Interface {
             bond_mode: None,
             bond_primary: None,
             bond_xmit_hash_policy: None,
+            altnames: Vec::new(),
         }
     }
 
