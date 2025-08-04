@@ -106,9 +106,6 @@ pub use key_derivation::{Kdf, KeyInfo};
 mod maintenance;
 pub use maintenance::*;
 
-mod network;
-pub use network::*;
-
 mod node;
 pub use node::*;
 
