@@ -375,13 +375,10 @@ impl ResponseReader {
         let (parts, body) = self.response.into_parts();
         let body = body.collect().await?.to_bytes();
 
-        match parts.status {
-            StatusCode::OK => (),
-            status_code => {
-                Self::log_error_response_utf8(body);
-                bail!("unexpected status code {status_code}")
-            }
-        };
+        if !matches!(parts.status, StatusCode::OK) {
+            Self::log_error_response_utf8(body);
+            bail!("unexpected status code {}", parts.status);
+        }
 
         let body = String::from_utf8(body.to_vec())?;
 
