@@ -11,6 +11,8 @@ use proxmox_schema::api_types::IPV4RE_STR;
 use proxmox_schema::api_types::IPV6RE_STR;
 use proxmox_ve_config::guest::vm::MacAddress;
 
+use crate::config::PHYSICAL_NIC_REGEX;
+
 pub static IPV4_REVERSE_MASK: &[&str] = &[
     "0.0.0.0",
     "128.0.0.0",
@@ -146,8 +148,9 @@ impl IpLink {
     }
 
     pub fn is_physical(&self) -> bool {
-        self.link_type == "ether"
-            && (self.linkinfo.is_none() || self.linkinfo.as_ref().unwrap().info_kind.is_none())
+        (self.link_type == "ether"
+            && (self.linkinfo.is_none() || self.linkinfo.as_ref().unwrap().info_kind.is_none()))
+            || PHYSICAL_NIC_REGEX.is_match(&self.ifname)
     }
 
     pub fn name(&self) -> &str {
