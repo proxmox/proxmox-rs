@@ -12,37 +12,54 @@ use serde::Deserialize;
 use crate::S3ObjectKey;
 use crate::{HttpDate, LastModifiedTimestamp};
 
+/// Response reader to check S3 api response status codes and parse response body, if any.
 pub(crate) struct ResponseReader {
     response: Response<Incoming>,
 }
 
 #[derive(Debug)]
-/// Subset of the list object v2 response including some header values
-/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html#API_CopyObject_ResponseSyntax
+/// Response contents of list objects v2 api calls.
 pub struct ListObjectsV2Response {
+    /// Parsed http date header from response.
     pub date: HttpDate,
+    /// Bucket name.
     pub name: String,
+    /// Requested key prefix.
     pub prefix: String,
+    /// Number of keys returned in this response.
     pub key_count: u64,
+    /// Number of max keys the response can contain.
     pub max_keys: u64,
+    /// Flag indication if response was truncated because of key limits.
     pub is_truncated: bool,
+    /// Token used for this request to get further keys in truncated responses.
     pub continuation_token: Option<String>,
+    /// Allows to fetch the next set of keys for truncated responses.
     pub next_continuation_token: Option<String>,
+    /// List of response objects, including their object key.
     pub contents: Vec<ListObjectsV2Contents>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-/// Subset of items used to deserialize a list objects v2 respsonse
-/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html#API_CopyObject_ResponseSyntax
+/// Subset of items used to deserialize a list objects v2 respsonse.
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html#API_ListObjectsV2_ResponseSyntax
 struct ListObjectsV2ResponseBody {
+    /// Bucket name.
     pub name: String,
+    /// Requested key prefix.
     pub prefix: String,
+    /// Number of keys returned in this response.
     pub key_count: u64,
+    /// Number of max keys the response can contain.
     pub max_keys: u64,
+    /// Flag indication if response was truncated because of key limits.
     pub is_truncated: bool,
+    /// Token used for this request to get further keys in truncated responses.
     pub continuation_token: Option<String>,
+    /// Allows to fetch the next set of keys for truncated responses.
     pub next_continuation_token: Option<String>,
+    /// List of response objects, including their object key.
     pub contents: Option<Vec<ListObjectsV2Contents>>,
 }
 
@@ -64,124 +81,169 @@ impl ListObjectsV2ResponseBody {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-/// Subset used to deserialize the contents of a list objects v2 respsonse
-/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html#API_CopyObject_ResponseSyntax
+/// Subset of contents used to deserialize the listed object contents of a list objects v2 respsonse.
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html#API_ListObjectsV2_ResponseSyntax
 pub struct ListObjectsV2Contents {
+    /// Object key.
     pub key: S3ObjectKey,
+    /// Object last modified timestamp.
     pub last_modified: LastModifiedTimestamp,
+    /// Entity tag for object.
     pub e_tag: String,
+    /// Content size of object.
     pub size: u64,
+    /// Storage class the object is stored on.
     pub storage_class: String,
 }
 
 #[derive(Debug)]
-/// Subset of the head object response (headers only, there is no body)
+/// Subset of contents for the head object response (headers only, there is no body).
 /// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html#API_HeadObject_ResponseSyntax
 pub struct HeadObjectResponse {
+    /// Content length header.
     pub content_length: u64,
+    /// Content type header.
     pub content_type: String,
+    /// Http date header.
     pub date: HttpDate,
+    /// Entity tag header.
     pub e_tag: String,
+    /// Last modified http header.
     pub last_modified: HttpDate,
 }
 
-/// Subset of the get object response including some headers
+/// Response contents of the get object api call.
 /// https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html#API_GetObject_ResponseSyntax
 pub struct GetObjectResponse {
+    /// Content length header.
     pub content_length: u64,
+    /// Content type header.
     pub content_type: String,
+    /// Http date header.
     pub date: HttpDate,
+    /// Entity tag header.
     pub e_tag: String,
+    /// Last modified http header.
     pub last_modified: HttpDate,
+    /// Object content in http response body.
     pub content: Incoming,
 }
 
-/// Subset of the put object response
-/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_ResponseSyntax
 #[derive(Debug)]
+/// Variants to distinguish object upload response states.
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_ResponseSyntax
 pub enum PutObjectResponse {
+    /// Object upload failed because of conflicting operation, upload should be retried.
     NeedsRetry,
+    /// Object was not uploaded because the provided pre-condition
+    /// (e.g. If-None-Match header) failed.
     PreconditionFailed,
+    /// Object was uploaded with success with the contained entity tag.
     Success(String),
 }
 
-/// Subset of the delete objects response
-/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html#API_DeleteObjects_ResponseElements
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "PascalCase")]
+/// Response contents of the delete objects api call.
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html#API_DeleteObjects_ResponseElements
 pub struct DeleteObjectsResponse {
+    /// List of deleted objects, if any.
     pub deleted: Option<Vec<DeletedObject>>,
+    /// List of errors, if deletion failed for some objects.
     pub error: Option<Vec<DeleteObjectError>>,
 }
 
-/// Subset used to deserialize the deleted objects of a delete objects v2 respsonse
-/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeletedObject.html
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
+/// Subset of contents used to deserialize the deleted objects of a delete objects v2 respsonse.
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeletedObject.html
 pub struct DeletedObject {
+    /// Indicates whether the version of the object was a delete marker before deletion.
     pub delete_marker: Option<bool>,
+    /// Version ID of the delete marker created as result of the delete operation.
     pub delete_marker_version_id: Option<String>,
+    /// Key of the deleted object.
     pub key: Option<S3ObjectKey>,
+    /// Version ID of the deleted object.
     pub version_id: Option<String>,
 }
 
-/// Subset used to deserialize the deleted object errors of a delete objects v2 respsonse
-/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_Error.html
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
+/// Subset of contents used to deserialize the deleted object errors of a delete objects v2 respsonse
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_Error.html
 pub struct DeleteObjectError {
+    /// Error code identifying the error condition.
     pub code: Option<String>,
+    /// Object key for which the error occurred.
     pub key: Option<S3ObjectKey>,
+    /// Generic error description.
     pub message: Option<String>,
+    /// Version ID of error.
     pub version_id: Option<String>,
 }
 
 #[derive(Debug)]
-/// Subset used to deserialize the copy object response
+/// Response contents of the copy object api calls.
 /// https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html#API_CopyObject_ResponseSyntax
 pub struct CopyObjectResponse {
+    /// Result contents of the copy object operation.
     pub copy_object_result: CopyObjectResult,
+    /// Version ID of the newly created object copy.
     pub x_amz_version_id: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
-/// Subset used to deserialize the copy object result of a copy object respsonse
+/// Subset of contents used to deserialize the copy object result of a copy object respsonse.
 /// https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html#API_CopyObject_ResponseSyntax
 pub struct CopyObjectResult {
+    /// Entity tag.
     pub e_tag: String,
+    /// Last modified timestamp.
     pub last_modified: LastModifiedTimestamp,
 }
 
-/// Subset of the list buckets response
-/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html#API_ListBuckets_ResponseElements
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
+/// Response contents of the list buckets api calls.
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html#API_ListBuckets_ResponseElements
 pub struct ListBucketsResponse {
+    /// List of buckets accessible given caller's access key.
     pub buckets: Vec<Bucket>,
 }
-/// Subset of the list buckets response
-/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html#API_ListBuckets_ResponseElements
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
+/// Subset of contents used to deserialize the response of a list buckets api call.
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html#API_ListBuckets_ResponseElements
 pub struct ListAllMyBucketsResult {
+    /// List Bucket contents.
     pub buckets: Option<Buckets>,
 }
 
-/// Subset used to deserialize the list buckets response
+/// Subset of contents used to deserialize the list of buckets for response of a list buckets api
+/// call.
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html#API_ListBuckets_ResponseElements
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Buckets {
+    /// List of individual bucket contents.
     bucket: Vec<Bucket>,
 }
 
-/// Subset used to deserialize the list buckets response
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
+/// Subset of contents used to deserialize individual buckets for response of a list buckets api
+/// call.
+/// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html#API_ListBuckets_ResponseElements
 pub struct Bucket {
+    /// Bucket name.
     pub name: String,
+    // Bucket ARN.
     pub bucket_arn: Option<String>,
+    /// Bucket region.
     pub bucket_region: Option<String>,
+    /// Bucket creation timestamp.
     pub creation_date: LastModifiedTimestamp,
 }
 
