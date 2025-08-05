@@ -22,7 +22,7 @@ use proxmox_http::client::HttpsConnector;
 use proxmox_http::{Body, RateLimit, RateLimiter};
 use proxmox_schema::api_types::CERT_FINGERPRINT_SHA256_SCHEMA;
 
-use crate::api_types::S3ClientConfig;
+use crate::api_types::{ProviderQuirks, S3ClientConfig};
 use crate::aws_sign_v4::AWS_SIGN_V4_DATETIME_FORMAT;
 use crate::aws_sign_v4::{aws_sign_v4_signature, aws_sign_v4_uri_encode};
 use crate::object_key::S3ObjectKey;
@@ -69,6 +69,8 @@ pub struct S3ClientOptions {
     pub fingerprint: Option<String>,
     /// Rate limit for put requests given as #reqest/s.
     pub put_rate_limit: Option<u64>,
+    /// Provider implementation specific features and limitations
+    pub provider_quirks: Vec<ProviderQuirks>,
 }
 
 impl S3ClientOptions {
@@ -90,6 +92,7 @@ impl S3ClientOptions {
             access_key: config.access_key,
             secret_key,
             put_rate_limit: config.put_rate_limit,
+            provider_quirks: config.provider_quirks.unwrap_or_default(),
         }
     }
 }
@@ -411,7 +414,15 @@ impl S3Client {
             .header(header::CONTENT_TYPE, "binary/octet");
 
         if !replace {
-            request = request.header(header::IF_NONE_MATCH, "*");
+            // Some providers not implement this and fails with error if the header is set,
+            // see https://forum.proxmox.com/threads/168834/post-786278
+            if !self
+                .options
+                .provider_quirks
+                .contains(&ProviderQuirks::SkipIfNoneMatchHeader)
+            {
+                request = request.header(header::IF_NONE_MATCH, "*");
+            }
         }
 
         let request = request.body(object_data)?;

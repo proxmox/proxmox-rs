@@ -38,6 +38,7 @@ async fn run() -> Result<(), anyhow::Error> {
         // `openssl s_client -connect testbucket.s3.pve-c1.local:7480 < /dev/null | openssl x509 -fingerprint -sha256 -noout`
         fingerprint: Some("<s3-api-fingerprint>".to_string()),
         put_rate_limit: None,
+        provider_quirks: Vec::new(),
     };
 
     // Creating a client instance and connect to api endpoint

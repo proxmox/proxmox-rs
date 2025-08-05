@@ -80,6 +80,17 @@ pub const S3_BUCKET_NAME_SCHEMA: Schema = StringSchema::new("Bucket name for S3 
     .max_length(63)
     .schema();
 
+#[api]
+#[derive(Copy, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+/// Provider specific feature implementation quirks.
+pub enum ProviderQuirks {
+    /// Prvider does not support the If-None-Match http header
+    SkipIfNoneMatchHeader,
+}
+serde_plain::derive_display_from_serialize!(ProviderQuirks);
+serde_plain::derive_fromstr_from_deserialize!(ProviderQuirks);
+
 #[api(
     properties: {
         endpoint: {
@@ -109,6 +120,13 @@ pub const S3_BUCKET_NAME_SCHEMA: Schema = StringSchema::new("Bucket name for S3 
             type: u64,
             optional: true,
         },
+        "provider-quirks": {
+            type: Array,
+            optional: true,
+            items: {
+                type: ProviderQuirks,
+            },
+        },
     },
 )]
 #[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
@@ -134,6 +152,9 @@ pub struct S3ClientConfig {
     /// Rate limit for put requests given as #reqest/s.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub put_rate_limit: Option<u64>,
+    /// List of provider specific feature implementation quirks.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub provider_quirks: Option<Vec<ProviderQuirks>>,
 }
 
 impl S3ClientConfig {
