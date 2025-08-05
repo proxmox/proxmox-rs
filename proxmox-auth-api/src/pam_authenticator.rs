@@ -64,7 +64,7 @@ impl crate::api::Authenticator for Pam {
             handle.result =
                 pam_sys::wrapped::authenticate(handle.handle, pam_sys::types::PamFlag::NONE);
             if handle.result != PamReturnCode::SUCCESS {
-                bail!("authentication error - {err}");
+                bail!("authentication error - {}", handle.result);
             }
 
             Ok(())
