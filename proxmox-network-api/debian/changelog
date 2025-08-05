@@ -1,3 +1,16 @@
+rust-proxmox-network-api (1.0.1-1) UNRELEASED; urgency=medium
+
+  * reexport network schema types
+
+  * use `ip link` for querying interface information
+
+  * add NetworkConfig::rename_interfaces() method
+
+  * fall back to PHYSICAL_NIC_REGEX in IpLink::is_physical() for backward
+    compatibility
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 05 Aug 2025 11:47:30 +0200
+
 rust-proxmox-network-api (1.0.0-1) trixie; urgency=medium
 
   * update to nix 0.29
