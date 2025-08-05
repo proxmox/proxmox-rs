@@ -6,14 +6,15 @@ use serde::{Deserialize, Serialize};
 
 use regex::Regex;
 
-pub use proxmox_schema::api;
-pub use proxmox_schema::api_types::SAFE_ID_REGEX;
-pub use proxmox_schema::api_types::{CIDR_SCHEMA, CIDR_V4_SCHEMA, CIDR_V6_SCHEMA};
-pub use proxmox_schema::api_types::{IP_V4_SCHEMA, IP_V6_SCHEMA};
+use proxmox_schema::api_types::SAFE_ID_REGEX;
 use proxmox_schema::ApiStringFormat;
 use proxmox_schema::ArraySchema;
 use proxmox_schema::Schema;
 use proxmox_schema::StringSchema;
+
+pub use proxmox_schema::api;
+pub use proxmox_schema::api_types::{CIDR_SCHEMA, CIDR_V4_SCHEMA, CIDR_V6_SCHEMA};
+pub use proxmox_schema::api_types::{IP_V4_SCHEMA, IP_V6_SCHEMA};
 
 pub static PHYSICAL_NIC_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap());
