@@ -121,7 +121,7 @@ impl ApiPathBuilder {
     /// perl's `split_list()` call.
     ///
     /// ```rust
-    /// use proxmox_client::api_path_builder::ApiPathBuilder;
+    /// use proxmox_client::ApiPathBuilder;
     ///
     /// let content = vec!["backup", "images"];
     /// let node = "my_node";
