@@ -1,3 +1,11 @@
+rust-pbs-api-types (0.2.3) bookworm; urgency=medium
+
+  * drop types which have been moved to proxmox-network-api
+
+  * remove unused imports and (non-public) constants
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 05 Aug 2025 10:48:46 +0200
+
 rust-pbs-api-types (0.2.2) bookworm; urgency=medium
 
   * add garbage collection atime safety check flag.
