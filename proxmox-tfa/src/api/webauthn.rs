@@ -214,6 +214,16 @@ pub struct WebauthnCredential {
     pub cred: COSEKey,
     /// The counter for this credential
     pub counter: u32,
+    /// The eligibility for createing backups.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub backup_eligible: bool,
+    /// The backup state.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub backup_state: bool,
+}
+
+fn is_false(b: &bool) -> bool {
+    !b
 }
 
 impl From<webauthn_rs::prelude::SecurityKey> for WebauthnCredential {
@@ -235,6 +245,8 @@ impl From<webauthn_rs_core::proto::Credential> for WebauthnCredential {
             cred_id: cred.cred_id.into(),
             cred: cred.cred,
             counter: cred.counter,
+            backup_eligible: cred.backup_eligible,
+            backup_state: cred.backup_state,
         }
     }
 }
@@ -248,8 +260,8 @@ impl From<WebauthnCredential> for webauthn_rs_core::proto::Credential {
             counter: cred.counter,
             transports: None,
             user_verified: false,
-            backup_eligible: true,
-            backup_state: false,
+            backup_eligible: cred.backup_eligible,
+            backup_state: cred.backup_state,
             registration_policy: UserVerificationPolicy::Discouraged_DO_NOT_USE,
             extensions: webauthn_rs_core::proto::RegisteredExtensions::none(),
             attestation: webauthn_rs_core::proto::ParsedAttestation {
