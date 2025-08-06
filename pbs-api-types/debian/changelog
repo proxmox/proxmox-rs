@@ -1,3 +1,13 @@
+rust-pbs-api-types (1.0.3-1) trixie; urgency=medium
+
+  * only include api-types from s3 client crate as dependency to avoid that
+    our users need to pull in the whole tokio et al. stack, which is not
+    possible for the WASM based Yew UIs.
+
+  * move code over to common proxmox-network-api types.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 06 Aug 2025 19:14:54 +0200
+
 rust-pbs-api-types (1.0.2-1) trixie; urgency=medium
 
   * extend datastore config by optional backend property enum, for new S3
