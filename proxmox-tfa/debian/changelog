@@ -1,3 +1,13 @@
+rust-proxmox-tfa (6.0.2-1) trixie; urgency=medium
+
+  * store backup-eligible and backup-state values with user credentials for
+    future webauthn-rs crate shenanigans
+
+  * force-allow eligibility upgrade by modifying the webauthn-rs' internal
+    auth state
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 06 Aug 2025 16:04:05 +0200
+
 rust-proxmox-tfa (6.0.1-1) trixie; urgency=medium
 
   * enable backup eligibility on converted credentials - this should fix an
