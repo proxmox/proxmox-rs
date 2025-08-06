@@ -7,43 +7,15 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native (>= 1.82) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-bytes-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
- librust-futures-0.3+default-dev <!nocheck>,
- librust-hex-0.4+default-dev <!nocheck>,
- librust-hex-0.4+serde-dev <!nocheck>,
- librust-http-body-util-0.1+default-dev <!nocheck>,
- librust-hyper-1+default-dev <!nocheck>,
- librust-hyper-util-0.1+client-legacy-dev (>= 0.1.12-~~) <!nocheck>,
- librust-hyper-util-0.1+default-dev (>= 0.1.12-~~) <!nocheck>,
- librust-hyper-util-0.1+http1-dev (>= 0.1.12-~~) <!nocheck>,
- librust-hyper-util-0.1+tokio-dev (>= 0.1.12-~~) <!nocheck>,
- librust-iso8601-0.6+default-dev (>= 0.6.1-~~) <!nocheck>,
- librust-md5-0.7+default-dev <!nocheck>,
- librust-openssl-0.10+default-dev <!nocheck>,
- librust-proxmox-base64-1+default-dev <!nocheck>,
- librust-proxmox-http-1+body-dev (>= 1.0.2-~~) <!nocheck>,
- librust-proxmox-http-1+client-dev (>= 1.0.2-~~) <!nocheck>,
- librust-proxmox-http-1+client-trait-dev (>= 1.0.2-~~) <!nocheck>,
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~) <!nocheck>,
- librust-proxmox-http-1+rate-limiter-dev (>= 1.0.2-~~) <!nocheck>,
  librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~) <!nocheck>,
  librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~) <!nocheck>,
  librust-proxmox-schema-4+default-dev (>= 4.1.0-~~) <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
- librust-proxmox-time-2+default-dev (>= 2.1.0-~~) <!nocheck>,
- librust-quick-xml-0.36+async-tokio-dev (>= 0.36.1-~~) <!nocheck>,
- librust-quick-xml-0.36+default-dev (>= 0.36.1-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
- librust-serde-plain-1+default-dev <!nocheck>,
- librust-serde-xml-rs-0.5+default-dev <!nocheck>,
- librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
- librust-tokio-util-0.7+compat-dev <!nocheck>,
- librust-tokio-util-0.7+default-dev <!nocheck>,
- librust-tracing-0.1+default-dev <!nocheck>,
- librust-url-2+default-dev (>= 2.2-~~) <!nocheck>
+ librust-serde-plain-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.0
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -58,8 +30,39 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-bytes-1+default-dev,
  librust-const-format-0.2+default-dev,
+ librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
+ librust-proxmox-serde-1+default-dev,
+ librust-proxmox-serde-1+serde-json-dev,
+ librust-regex-1+default-dev (>= 1.5-~~),
+ librust-serde-1+default-dev,
+ librust-serde-plain-1+default-dev
+Suggests:
+ librust-proxmox-s3-client+impl-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-s3-client+api-types-dev (= ${binary:Version}),
+ librust-proxmox-s3-client+default-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1+api-types-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1+default-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0+api-types-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0.7-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0.7+api-types-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.0.7+default-dev (= ${binary:Version})
+Description: Low level REST API client for AWS S3 compatible object stores - Rust source code
+ Source code for Debianized Rust crate "proxmox-s3-client"
+
+Package: librust-proxmox-s3-client+impl-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-s3-client-dev (= ${binary:Version}),
+ librust-bytes-1+default-dev,
  librust-futures-0.3+default-dev,
  librust-hex-0.4+default-dev,
  librust-hex-0.4+serde-dev,
@@ -78,17 +81,9 @@ Depends:
  librust-proxmox-http-1+client-trait-dev (>= 1.0.2-~~),
  librust-proxmox-http-1+default-dev (>= 1.0.2-~~),
  librust-proxmox-http-1+rate-limiter-dev (>= 1.0.2-~~),
- librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
- librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~),
- librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
- librust-proxmox-serde-1+default-dev,
- librust-proxmox-serde-1+serde-json-dev,
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~),
  librust-quick-xml-0.36+async-tokio-dev (>= 0.36.1-~~),
  librust-quick-xml-0.36+default-dev (>= 0.36.1-~~),
- librust-regex-1+default-dev (>= 1.5-~~),
- librust-serde-1+default-dev,
- librust-serde-plain-1+default-dev,
  librust-serde-xml-rs-0.5+default-dev,
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-util-0.7+compat-dev,
@@ -96,16 +91,9 @@ Depends:
  librust-tracing-0.1+default-dev,
  librust-url-2+default-dev (>= 2.2-~~)
 Provides:
- librust-proxmox-s3-client+default-dev (= ${binary:Version}),
- librust-proxmox-s3-client+impl-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1+default-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1+impl-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.0-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.0+default-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.0+impl-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.0.7-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.0.7+default-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.0.7+impl-dev (= ${binary:Version})
-Description: Low level REST API client for AWS S3 compatible object stores - Rust source code
- Source code for Debianized Rust crate "proxmox-s3-client"
+Description: Low level REST API client for AWS S3 compatible object stores - feature "impl"
+ This metapackage enables feature "impl" for the Rust proxmox-s3-client crate,
+ by pulling in any additional dependencies needed by that feature.
