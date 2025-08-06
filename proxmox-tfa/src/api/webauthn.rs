@@ -232,7 +232,7 @@ impl From<WebauthnCredential> for webauthn_rs_core::proto::Credential {
             counter: cred.counter,
             transports: None,
             user_verified: false,
-            backup_eligible: false,
+            backup_eligible: true,
             backup_state: false,
             registration_policy: UserVerificationPolicy::Discouraged_DO_NOT_USE,
             extensions: webauthn_rs_core::proto::RegisteredExtensions::none(),
