@@ -1,3 +1,10 @@
+rust-proxmox-tfa (6.0.1-1) trixie; urgency=medium
+
+  * enable backup eligibility on converted credentials - this should fix an
+    issue with passkeys from the bitwarden plugin
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 06 Aug 2025 13:59:21 +0200
+
 rust-proxmox-tfa (6.0.0-1) trixie; urgency=medium
 
   * clippy fixes
