@@ -1,3 +1,12 @@
+rust-proxmox-s3-client (1.1.0-1) trixie; urgency=medium
+
+  * don't discriminate 403 status code for get-object response, it's meaning
+    is provider dependent and cannot be derived in a generic fashion.
+
+  * conditionally compile by `api-types` feature.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 06 Aug 2025 19:11:08 +0200
+
 rust-proxmox-s3-client (1.0.7-1) trixie; urgency=medium
 
   * extend client config and options by optional provider specific S3 protocol
