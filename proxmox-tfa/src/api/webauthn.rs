@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use anyhow::{format_err, Error};
+use anyhow::{format_err, Context as _, Error};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use webauthn_rs::prelude::SecurityKeyAuthentication;
@@ -174,12 +174,14 @@ pub struct WebauthnAuthChallenge {
 }
 
 impl WebauthnAuthChallenge {
-    pub fn new(state: SecurityKeyAuthentication, challenge: String) -> Self {
-        Self {
+    pub fn new(mut state: SecurityKeyAuthentication, challenge: String) -> Result<Self, Error> {
+        state = force_allow_backup_eligibility(state)?;
+
+        Ok(Self {
             state,
             challenge,
             created: proxmox_time::epoch_i64(),
-        }
+        })
     }
 }
 
@@ -187,6 +189,20 @@ impl IsExpired for WebauthnAuthChallenge {
     fn is_expired(&self, at_epoch: i64) -> bool {
         self.created < at_epoch
     }
+}
+
+fn force_allow_backup_eligibility(
+    state: SecurityKeyAuthentication,
+) -> Result<SecurityKeyAuthentication, Error> {
+    let mut state =
+        serde_json::to_value(&state).context("failed to convert authentication state to json")?;
+    if let Some(obj) = state.get_mut("ast") {
+        if let Some(allow) = obj.get_mut("allow_backup_eligible_upgrade") {
+            *allow = serde_json::Value::Bool(true);
+        }
+    }
+
+    serde_json::from_value(state).context("failed to convert json back to authentication state")
 }
 
 /// A webauthn credential

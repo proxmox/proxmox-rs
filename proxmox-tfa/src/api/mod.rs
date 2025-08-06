@@ -934,7 +934,7 @@ impl TfaUserData {
         let mut data = access.open(userid)?;
         data.get_mut()
             .webauthn_auths
-            .push(WebauthnAuthChallenge::new(state, challenge_string));
+            .push(WebauthnAuthChallenge::new(state, challenge_string)?);
         data.save()?;
 
         Ok(Some(challenge))
