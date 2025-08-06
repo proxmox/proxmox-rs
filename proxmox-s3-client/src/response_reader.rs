@@ -325,7 +325,6 @@ impl ResponseReader {
         match parts.status {
             StatusCode::OK => (),
             StatusCode::NOT_FOUND => return Ok(None),
-            StatusCode::FORBIDDEN => bail!("object is archived and inaccessible until restored"),
             status_code => {
                 let body = content.collect().await?.to_bytes();
                 Self::log_error_response_utf8(body);
