@@ -20,7 +20,7 @@ proxmox-auth-api = { workspace = true, features = [ "api-types" ] }
 proxmox-apt-api-types.workspace = true
 proxmox-human-byte.workspace = true
 proxmox-lang.workspace=true
-proxmox-s3-client.workspace = true
+proxmox-s3-client = { workspace = true, features = [ "api-types" ] }
 proxmox-schema = { workspace = true, features = [ "api-macro" ] }
 proxmox-serde.workspace = true
 proxmox-time.workspace = true
