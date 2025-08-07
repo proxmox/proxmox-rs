@@ -1,3 +1,11 @@
+rust-proxmox-tfa (6.0.3-1) trixie; urgency=medium
+
+  * copy backup eligibility and state values from the signed response into the
+    auth state - this should cause the webauthn-rs crate's backup checks to
+    always succeed
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 Aug 2025 10:15:19 +0200
+
 rust-proxmox-tfa (6.0.2-1) trixie; urgency=medium
 
   * store backup-eligible and backup-state values with user credentials for
