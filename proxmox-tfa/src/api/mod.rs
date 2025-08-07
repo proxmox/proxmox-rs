@@ -1070,7 +1070,11 @@ impl TfaUserData {
         data.save()
             .map_err(|err| format_err!("failed to save challenge file: {}", err))?;
 
-        webauthn.finish_securitykey_authentication(&response, &challenge.state)?;
+        let backup_flags = webauthn::BackupFlags::from_pubkey_credentials(&response);
+        let (state, changed) = backup_flags.apply_to_authentication(challenge.state)?;
+        let _ = changed; // TODO: Add mechanism to trigger upgrade of user credentials in auth api.
+
+        webauthn.finish_securitykey_authentication(&response, &state)?;
 
         Ok(())
     }
