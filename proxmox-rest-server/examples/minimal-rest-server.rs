@@ -218,11 +218,22 @@ async fn run() -> Result<(), Error> {
                 loop {
                     tokio::select! {
                         incoming = listener.accept() => {
-                            log::info!("accepted new connection!");
-                            let (conn, _) = incoming?;
-                            let api_service = rest_server.api_service(&conn)?;
-                            let watcher = graceful.watcher();
-                            tokio::spawn(async move { let res = api_service.serve(conn, Some(watcher)).await; log::info!("connection finished: {res:?}") });
+                            match incoming {
+                                Ok((conn, _)) => {
+                                    log::info!("accepted new connection!");
+                                    match rest_server.api_service(&conn) {
+                                        Ok(api_service) => {
+                                            let watcher = graceful.watcher();
+                                            tokio::spawn(async move {
+                                                let res = api_service.serve(conn, Some(watcher)).await;
+                                                log::info!("connection finished: {res:?}");
+                                            });
+                                        }
+                                        Err(err) => log::warn!("Failed to get api service: {err:?}"),
+                                    }
+                                },
+                                Err(err) => log::warn!("Failed to accept connection: {err:?}"),
+                            };
                         },
                         _shutdown = proxmox_daemon::shutdown_future() => {
                             log::info!("shutdown future triggered!");
