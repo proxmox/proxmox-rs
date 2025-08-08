@@ -130,14 +130,49 @@ pub struct LinkInfo {
     info_kind: Option<String>,
 }
 
+/// The fields specific to an interface of type `ether`.
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Deserialize)]
+pub struct EtherLink {
+    address: MacAddress,
+}
+
+/// Catch all variant for all unknown link types.
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Deserialize)]
+pub struct UnknownLink {
+    // required, since otherwise the tagged enum will fail to parse, due to the tag of [`Link`]
+    // being link_type.
+    link_type: String,
+}
+
+/// Enum abstracting the fields that are specific to a given link type.
+///
+/// The JSON returned by `ip -details -json link show` returns different fields for different link
+/// types. Depending on the type, fields with the same name can contain different types. This enum
+/// is used to handle the fields that vary between the different link types.
+///
+/// The last variant is a catch all variant, that should capture everything else, so we do not get
+/// deserialization errors in any case.
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Deserialize)]
+#[serde(tag = "link_type", rename_all = "lowercase")]
+pub enum Link {
+    Ether(EtherLink),
+    #[serde(untagged)]
+    Unknown(UnknownLink),
+}
+
+/// An IpLink entry, as returned by `ip -details -json link show`.
+///
+/// For now this parses only the fields that are used throughout our stack, the fields of this
+/// struct are incomplete. To abstract fields that are specific to a link type, this struct uses
+/// [`Link`].
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Deserialize)]
 pub struct IpLink {
     ifname: String,
     #[serde(default)]
     altnames: Vec<String>,
     ifindex: i64,
-    link_type: String,
-    address: MacAddress,
+    #[serde(flatten)]
+    link_type: Link,
     linkinfo: Option<LinkInfo>,
     operstate: String,
 }
@@ -147,26 +182,49 @@ impl IpLink {
         self.ifindex
     }
 
+    /// Whether this is a physical or virtual interface.
+    ///
+    /// For ethernet interfaces, this checks whether info_kind is set in link_info,
+    /// since virtual 'physical' interfaces (e.g. bridges) have link type ether as well.
+    ///
+    /// Otherwise, we fall back to [`PHYSICAL_NIC_REGEX`], which was the sole method for
+    /// determining whether an interface is physical or not before. This should cover other types of
+    /// non-ethernet physical interfaces (e.g. Infiniband), that have not been manually renamed.
     pub fn is_physical(&self) -> bool {
-        (self.link_type == "ether"
-            && (self.linkinfo.is_none() || self.linkinfo.as_ref().unwrap().info_kind.is_none()))
-            || PHYSICAL_NIC_REGEX.is_match(&self.ifname)
+        if let Link::Ether(_) = self.link_type {
+            if let Some(linkinfo) = &self.linkinfo {
+                if linkinfo.info_kind.is_none() {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+
+        PHYSICAL_NIC_REGEX.is_match(&self.ifname)
     }
 
     pub fn name(&self) -> &str {
         &self.ifname
     }
 
-    pub fn permanent_mac(&self) -> MacAddress {
-        if let Some(link_info) = &self.linkinfo {
-            if let Some(info_slave_data) = &link_info.info_slave_data {
-                if let Some(perm_hw_addr) = info_slave_data.perm_hw_addr {
-                    return perm_hw_addr;
+    /// Returns the MAC address of the physical device, even if the interface is enslaved.
+    ///
+    /// Some interfaces can change their MAC address if they are enslaved to bonds or bridges. This
+    /// method returns the permanent MAC address of a link, independent of whether they are
+    /// enslaved or not.
+    pub fn permanent_mac(&self) -> Option<MacAddress> {
+        if let Link::Ether(ether) = &self.link_type {
+            if let Some(link_info) = &self.linkinfo {
+                if let Some(info_slave_data) = &link_info.info_slave_data {
+                    return info_slave_data.perm_hw_addr;
                 }
             }
+
+            return Some(ether.address);
         }
 
-        self.address
+        None
     }
 
     pub fn altnames(&self) -> impl Iterator<Item = &String> {
@@ -259,4 +317,190 @@ pub fn network_reload() -> Result<(), Error> {
         .map_err(|err| format_err!("ifreload failed: {}", err))?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_deserialize_ipv6_to_ipv4_tunnel() {
+        let interface = r#"{
+  "ifindex": 7,
+  "link": null,
+  "ifname": "sit0",
+  "flags": [
+    "NOARP"
+  ],
+  "mtu": 1480,
+  "qdisc": "noop",
+  "operstate": "DOWN",
+  "linkmode": "DEFAULT",
+  "group": "default",
+  "txqlen": 1000,
+  "link_type": "sit",
+  "address": "0.0.0.0",
+  "broadcast": "0.0.0.0",
+  "promiscuity": 0,
+  "allmulti": 0,
+  "min_mtu": 1280,
+  "max_mtu": 65555,
+  "linkinfo": {
+    "info_kind": "sit",
+    "info_data": {
+      "proto": "ip6ip",
+      "remote": "any",
+      "local": "any",
+      "ttl": 64,
+      "pmtudisc": false,
+      "prefix": "2002::",
+      "prefixlen": 16
+    }
+  },
+  "inet6_addr_gen_mode": "eui64",
+  "num_tx_queues": 1,
+  "num_rx_queues": 1,
+  "gso_max_size": 65536,
+  "gso_max_segs": 65535,
+  "tso_max_size": 65536,
+  "tso_max_segs": 65535,
+  "gro_max_size": 65536,
+  "gso_ipv4_max_size": 65536,
+  "gro_ipv4_max_size": 65536
+}"#;
+
+        serde_json::from_str::<IpLink>(interface).unwrap();
+    }
+
+    #[test]
+    fn test_deserialize_ethernet_interface() {
+        let interface = r#"{
+    "ifindex": 2,
+    "ifname": "eth1",
+    "flags": [
+      "BROADCAST",
+      "MULTICAST",
+      "UP",
+      "LOWER_UP"
+    ],
+    "mtu": 1500,
+    "qdisc": "fq_codel",
+    "master": "vmbr0",
+    "operstate": "UP",
+    "linkmode": "DEFAULT",
+    "group": "default",
+    "txqlen": 1000,
+    "link_type": "ether",
+    "address": "bc:24:11:ca:ff:ee",
+    "broadcast": "ff:ff:ff:ff:ff:ff",
+    "promiscuity": 1,
+    "allmulti": 1,
+    "min_mtu": 68,
+    "max_mtu": 9194,
+    "linkinfo": {
+      "info_slave_kind": "bridge",
+      "info_slave_data": {
+        "state": "forwarding",
+        "priority": 32,
+        "cost": 5,
+        "hairpin": false,
+        "guard": false,
+        "root_block": false,
+        "fastleave": false,
+        "learning": true,
+        "flood": true,
+        "id": "0x8001",
+        "no": "0x1",
+        "designated_port": 32769,
+        "designated_cost": 0,
+        "bridge_id": "8000.bc:24:11:00:00:00",
+        "root_id": "8000.bc:24:11:00:00:00",
+        "hold_timer": 0.00,
+        "message_age_timer": 0.00,
+        "forward_delay_timer": 0.00,
+        "topology_change_ack": 0,
+        "config_pending": 0,
+        "proxy_arp": false,
+        "proxy_arp_wifi": false,
+        "multicast_router": 1,
+        "mcast_flood": true,
+        "bcast_flood": true,
+        "mcast_to_unicast": false,
+        "neigh_suppress": false,
+        "neigh_vlan_suppress": false,
+        "group_fwd_mask": "0",
+        "group_fwd_mask_str": "0x0",
+        "vlan_tunnel": false,
+        "isolated": false,
+        "locked": false,
+        "mab": false
+      }
+    },
+    "inet6_addr_gen_mode": "eui64",
+    "num_tx_queues": 1,
+    "num_rx_queues": 1,
+    "gso_max_size": 64000,
+    "gso_max_segs": 64,
+    "tso_max_size": 64000,
+    "tso_max_segs": 64,
+    "gro_max_size": 65536,
+    "gso_ipv4_max_size": 64000,
+    "gro_ipv4_max_size": 65536,
+    "parentbus": "pci",
+    "parentdev": "0000:01:00.0",
+    "altnames": [
+      "enxbc2411aabbcc"
+    ]
+}"#;
+
+        serde_json::from_str::<IpLink>(interface).unwrap();
+    }
+
+    #[test]
+    fn test_deserialize_tailscale_interface() {
+        let interface = r#"{
+    "ifindex": 3,
+    "ifname": "tailscale0",
+    "flags": [
+      "POINTOPOINT",
+      "MULTICAST",
+      "NOARP",
+      "UP",
+      "LOWER_UP"
+    ],
+    "mtu": 1280,
+    "qdisc": "fq_codel",
+    "operstate": "UNKNOWN",
+    "linkmode": "DEFAULT",
+    "group": "default",
+    "txqlen": 500,
+    "link_type": "none",
+    "promiscuity": 0,
+    "allmulti": 0,
+    "min_mtu": 68,
+    "max_mtu": 65535,
+    "linkinfo": {
+      "info_kind": "tun",
+      "info_data": {
+        "type": "tun",
+        "pi": false,
+        "vnet_hdr": true,
+        "multi_queue": false,
+        "persist": false
+      }
+    },
+    "inet6_addr_gen_mode": "random",
+    "num_tx_queues": 1,
+    "num_rx_queues": 1,
+    "gso_max_size": 65536,
+    "gso_max_segs": 65535,
+    "tso_max_size": 65536,
+    "tso_max_segs": 65535,
+    "gro_max_size": 65536,
+    "gso_ipv4_max_size": 65536,
+    "gro_ipv4_max_size": 65536
+}"#;
+
+        serde_json::from_str::<IpLink>(interface).unwrap();
+    }
 }
