@@ -28,7 +28,7 @@ serde_plain::derive_deserialize_from_fromstr!(LastModifiedTimestamp, "last modif
 /// https://datatracker.ietf.org/doc/html/rfc2616#section-3.3
 /// https://datatracker.ietf.org/doc/html/rfc1123#section-5.2.14
 /// https://datatracker.ietf.org/doc/html/rfc822#section-5
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct HttpDate {
     _epoch: i64,
 }

@@ -632,3 +632,27 @@ fn parse_list_buckets_response_test() {
         ]
     );
 }
+
+#[test]
+fn test_optional_date_header_parsing() {
+    let mut header_map = HeaderMap::new();
+
+    let expected_date = "Wed, 12 Oct 2009 17:50:00 GMT";
+    header_map.insert(header::DATE, expected_date.parse().unwrap());
+    let parsed_date = ResponseReader::parse_optional_date_header(&header_map).unwrap();
+    assert!(parsed_date.is_some());
+    assert_eq!(
+        parsed_date.unwrap(),
+        HttpDate::from_str(expected_date).unwrap(),
+    );
+
+    header_map.clear();
+    let invalid_date_format = "2019-11-10";
+    header_map.insert(header::DATE, invalid_date_format.parse().unwrap());
+    assert!(ResponseReader::parse_optional_date_header(&header_map).is_err());
+
+    header_map.clear();
+    assert!(ResponseReader::parse_optional_date_header(&header_map)
+        .unwrap()
+        .is_none());
+}
