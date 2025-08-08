@@ -119,11 +119,13 @@ pub(crate) fn parse_address_or_cidr(cidr: &str) -> Result<(String, Option<u8>, b
     }
 }
 
+/// Struct representing the info_slave_data field inside link_info, as returned by `ip -details -json link show`.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Deserialize)]
 pub struct SlaveData {
     perm_hw_addr: Option<MacAddress>,
 }
 
+/// Struct representing the link_info field, as returned by `ip -details -json link show`.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, serde::Deserialize)]
 pub struct LinkInfo {
     info_slave_data: Option<SlaveData>,
@@ -178,6 +180,7 @@ pub struct IpLink {
 }
 
 impl IpLink {
+    /// The index of the interface.
     pub fn index(&self) -> i64 {
         self.ifindex
     }
@@ -204,6 +207,7 @@ impl IpLink {
         PHYSICAL_NIC_REGEX.is_match(&self.ifname)
     }
 
+    /// The name of the interface (ifname / IFLA_IFNAME).
     pub fn name(&self) -> &str {
         &self.ifname
     }
@@ -227,15 +231,18 @@ impl IpLink {
         None
     }
 
+    /// Returns an iterator over the altnames of an interface.
     pub fn altnames(&self) -> impl Iterator<Item = &String> {
         self.altnames.iter()
     }
 
+    /// Returns whether the interface is currently in an UP state.
     pub fn active(&self) -> bool {
         self.operstate == "UP"
     }
 }
 
+/// A mapping of altnames to the interfaces' ifname.
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct AltnameMapping {
     mapping: HashMap<String, String>,
@@ -263,6 +270,10 @@ impl FromIterator<IpLink> for AltnameMapping {
     }
 }
 
+/// Returns a list of all network interfaces currently available on the host.
+///
+/// This parses the output of `ip -details -json link show` and returns a map of the ifname to the
+/// [`IpLink`] for that interface.
 pub fn get_network_interfaces() -> Result<HashMap<String, IpLink>, Error> {
     let output = std::process::Command::new("ip")
         .arg("-details")
