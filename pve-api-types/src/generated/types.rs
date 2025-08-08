@@ -588,6 +588,11 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
             type: Integer,
         },
+        memhost: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
         name: {
             optional: true,
             type: String,
@@ -720,6 +725,12 @@ pub struct ClusterResource {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<u64>,
+
+    /// Used memory in bytes from the point of view of the host (for types
+    /// 'qemu').
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub memhost: Option<u64>,
 
     /// Name of the resource.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1058,6 +1069,9 @@ pub enum ListNetworksType {
     #[serde(rename = "vlan")]
     /// vlan.
     Vlan,
+    #[serde(rename = "fabric")]
+    /// fabric.
+    Fabric,
     #[serde(rename = "OVSBridge")]
     /// OVSBridge.
     OvsBridge,
@@ -1079,6 +1093,9 @@ pub enum ListNetworksType {
     #[serde(rename = "any_local_bridge")]
     /// any_local_bridge.
     AnyLocalBridge,
+    #[serde(rename = "include_sdn")]
+    /// include_sdn.
+    IncludeSdn,
 }
 serde_plain::derive_display_from_serialize!(ListNetworksType);
 serde_plain::derive_fromstr_from_deserialize!(ListNetworksType);
@@ -2461,6 +2478,31 @@ pub struct LxcEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netout: Option<i64>,
 
+    /// CPU Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurecpusome: Option<f64>,
+
+    /// IO Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressureiofull: Option<f64>,
+
+    /// IO Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressureiosome: Option<f64>,
+
+    /// Memory Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurememoryfull: Option<f64>,
+
+    /// Memory Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurememorysome: Option<f64>,
+
     pub status: IsRunning,
 
     /// The current configured tags, if any.
@@ -2631,6 +2673,31 @@ pub struct LxcStatus {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netout: Option<i64>,
 
+    /// CPU Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurecpusome: Option<f64>,
+
+    /// IO Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressureiofull: Option<f64>,
+
+    /// IO Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressureiosome: Option<f64>,
+
+    /// Memory Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurememoryfull: Option<f64>,
+
+    /// Memory Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurememorysome: Option<f64>,
+
     pub status: IsRunning,
 
     /// The current configured tags, if any.
@@ -2761,6 +2828,10 @@ MIGRATE_QEMU_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
             optional: true,
             type: String,
         },
+        "with-conntrack-state": {
+            default: false,
+            optional: true,
+        },
         "with-local-disks": {
             default: false,
             optional: true,
@@ -2801,6 +2872,12 @@ pub struct MigrateQemu {
     /// '1' will map each source storage to itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub targetstorage: Option<String>,
+
+    /// Whether to migrate conntrack entries for running VMs.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "with-conntrack-state")]
+    pub with_conntrack_state: Option<bool>,
 
     /// Enable live storage migration for local disk
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
@@ -3387,6 +3464,9 @@ pub enum NetworkInterfaceType {
     #[serde(rename = "vlan")]
     /// vlan.
     Vlan,
+    #[serde(rename = "fabric")]
+    /// fabric.
+    Fabric,
     #[serde(rename = "OVSBridge")]
     /// OVSBridge.
     Ovsbridge,
@@ -3589,6 +3669,9 @@ pub struct NodeStatusCurrentKernel {
 
 #[api(
     properties: {
+        available: {
+            type: Integer,
+        },
         free: {
             type: Integer,
         },
@@ -3603,6 +3686,10 @@ pub struct NodeStatusCurrentKernel {
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct NodeStatusMemory {
+    /// The available memory in bytes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub available: i64,
+
     /// The free memory in bytes.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub free: i64,
@@ -4166,10 +4253,6 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: PveQmIdeCache,
         },
-        cyls: {
-            optional: true,
-            type: Integer,
-        },
         detect_zeroes: {
             default: false,
             optional: true,
@@ -4185,10 +4268,6 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         format: {
             optional: true,
             type: PveQmIdeFormat,
-        },
-        heads: {
-            optional: true,
-            type: Integer,
         },
         iops: {
             optional: true,
@@ -4247,10 +4326,6 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: PveQmIdeRerror,
         },
-        secs: {
-            optional: true,
-            type: Integer,
-        },
         serial: {
             format: &ApiStringFormat::Pattern(&PVE_QM_IDE_SERIAL_RE),
             max_length: 60,
@@ -4273,10 +4348,6 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         ssd: {
             default: false,
             optional: true,
-        },
-        trans: {
-            optional: true,
-            type: PveQmIdeTrans,
         },
         werror: {
             optional: true,
@@ -4332,11 +4403,6 @@ pub struct PveQmIde {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cache: Option<PveQmIdeCache>,
 
-    /// Force the drive's physical geometry to have a specific cylinder count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cyls: Option<i64>,
-
     /// Controls whether to detect and try to optimize writes of zeroes.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4350,11 +4416,6 @@ pub struct PveQmIde {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<PveQmIdeFormat>,
-
-    /// Force the drive's physical geometry to have a specific head count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub heads: Option<i64>,
 
     /// Maximum r/w I/O in operations per second.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
@@ -4446,11 +4507,6 @@ pub struct PveQmIde {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rerror: Option<PveQmIdeRerror>,
 
-    /// Force the drive's physical geometry to have a specific sector count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub secs: Option<i64>,
-
     /// The drive's reported serial number, url-encoded, up to 20 bytes long.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub serial: Option<String>,
@@ -4475,9 +4531,6 @@ pub struct PveQmIde {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ssd: Option<bool>,
-
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub trans: Option<PveQmIdeTrans>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub werror: Option<PveQmIdeWerror>,
@@ -4599,23 +4652,6 @@ pub enum PveQmIdeRerror {
 }
 serde_plain::derive_display_from_serialize!(PveQmIdeRerror);
 serde_plain::derive_fromstr_from_deserialize!(PveQmIdeRerror);
-
-#[api]
-/// Force disk geometry bios translation mode.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum PveQmIdeTrans {
-    #[serde(rename = "none")]
-    /// none.
-    None,
-    #[serde(rename = "lba")]
-    /// lba.
-    Lba,
-    #[serde(rename = "auto")]
-    /// auto.
-    Auto,
-}
-serde_plain::derive_display_from_serialize!(PveQmIdeTrans);
-serde_plain::derive_fromstr_from_deserialize!(PveQmIdeTrans);
 
 #[api]
 /// Write error action.
@@ -6680,7 +6716,8 @@ pub struct QemuConfigNet {
 
     pub model: QemuConfigNetModel,
 
-    /// Force MTU, for VirtIO only. Set to '1' to use the bridge MTU
+    /// Force MTU of network device (VirtIO only). Setting to '1' or empty will
+    /// use the bridge MTU
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mtu: Option<u16>,
@@ -6904,10 +6941,6 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: PveQmIdeCache,
         },
-        cyls: {
-            optional: true,
-            type: Integer,
-        },
         detect_zeroes: {
             default: false,
             optional: true,
@@ -6923,10 +6956,6 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         format: {
             optional: true,
             type: PveQmIdeFormat,
-        },
-        heads: {
-            optional: true,
-            type: Integer,
         },
         iops: {
             optional: true,
@@ -6979,10 +7008,6 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: PveQmIdeRerror,
         },
-        secs: {
-            optional: true,
-            type: Integer,
-        },
         serial: {
             format: &ApiStringFormat::Pattern(&QEMU_CONFIG_SATA_SERIAL_RE),
             max_length: 60,
@@ -7005,10 +7030,6 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         ssd: {
             default: false,
             optional: true,
-        },
-        trans: {
-            optional: true,
-            type: PveQmIdeTrans,
         },
         werror: {
             optional: true,
@@ -7064,11 +7085,6 @@ pub struct QemuConfigSata {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cache: Option<PveQmIdeCache>,
 
-    /// Force the drive's physical geometry to have a specific cylinder count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cyls: Option<i64>,
-
     /// Controls whether to detect and try to optimize writes of zeroes.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -7082,11 +7098,6 @@ pub struct QemuConfigSata {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<PveQmIdeFormat>,
-
-    /// Force the drive's physical geometry to have a specific head count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub heads: Option<i64>,
 
     /// Maximum r/w I/O in operations per second.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
@@ -7174,11 +7185,6 @@ pub struct QemuConfigSata {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rerror: Option<PveQmIdeRerror>,
 
-    /// Force the drive's physical geometry to have a specific sector count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub secs: Option<i64>,
-
     /// The drive's reported serial number, url-encoded, up to 20 bytes long.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub serial: Option<String>,
@@ -7203,9 +7209,6 @@ pub struct QemuConfigSata {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ssd: Option<bool>,
-
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub trans: Option<PveQmIdeTrans>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub werror: Option<PveQmIdeWerror>,
@@ -7265,10 +7268,6 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: PveQmIdeCache,
         },
-        cyls: {
-            optional: true,
-            type: Integer,
-        },
         detect_zeroes: {
             default: false,
             optional: true,
@@ -7284,10 +7283,6 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         format: {
             optional: true,
             type: PveQmIdeFormat,
-        },
-        heads: {
-            optional: true,
-            type: Integer,
         },
         iops: {
             optional: true,
@@ -7361,10 +7356,6 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
-        secs: {
-            optional: true,
-            type: Integer,
-        },
         serial: {
             format: &ApiStringFormat::Pattern(&QEMU_CONFIG_SCSI_SERIAL_RE),
             max_length: 60,
@@ -7387,10 +7378,6 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         ssd: {
             default: false,
             optional: true,
-        },
-        trans: {
-            optional: true,
-            type: PveQmIdeTrans,
         },
         vendor: {
             optional: true,
@@ -7450,11 +7437,6 @@ pub struct QemuConfigScsi {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cache: Option<PveQmIdeCache>,
 
-    /// Force the drive's physical geometry to have a specific cylinder count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cyls: Option<i64>,
-
     /// Controls whether to detect and try to optimize writes of zeroes.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -7468,11 +7450,6 @@ pub struct QemuConfigScsi {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<PveQmIdeFormat>,
-
-    /// Force the drive's physical geometry to have a specific head count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub heads: Option<i64>,
 
     /// Maximum r/w I/O in operations per second.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
@@ -7587,11 +7564,6 @@ pub struct QemuConfigScsi {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scsiblock: Option<bool>,
 
-    /// Force the drive's physical geometry to have a specific sector count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub secs: Option<i64>,
-
     /// The drive's reported serial number, url-encoded, up to 20 bytes long.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub serial: Option<String>,
@@ -7616,9 +7588,6 @@ pub struct QemuConfigScsi {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ssd: Option<bool>,
-
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub trans: Option<PveQmIdeTrans>,
 
     /// The drive's vendor name, up to 8 bytes long.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -7980,10 +7949,6 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             optional: true,
             type: PveQmIdeCache,
         },
-        cyls: {
-            optional: true,
-            type: Integer,
-        },
         detect_zeroes: {
             default: false,
             optional: true,
@@ -7999,10 +7964,6 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         format: {
             optional: true,
             type: PveQmIdeFormat,
-        },
-        heads: {
-            optional: true,
-            type: Integer,
         },
         iops: {
             optional: true,
@@ -8063,10 +8024,6 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
             default: false,
             optional: true,
         },
-        secs: {
-            optional: true,
-            type: Integer,
-        },
         serial: {
             format: &ApiStringFormat::Pattern(&QEMU_CONFIG_VIRTIO_SERIAL_RE),
             max_length: 60,
@@ -8085,10 +8042,6 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
         snapshot: {
             default: false,
             optional: true,
-        },
-        trans: {
-            optional: true,
-            type: PveQmIdeTrans,
         },
         werror: {
             optional: true,
@@ -8140,11 +8093,6 @@ pub struct QemuConfigVirtio {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cache: Option<PveQmIdeCache>,
 
-    /// Force the drive's physical geometry to have a specific cylinder count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cyls: Option<i64>,
-
     /// Controls whether to detect and try to optimize writes of zeroes.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8158,11 +8106,6 @@ pub struct QemuConfigVirtio {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<PveQmIdeFormat>,
-
-    /// Force the drive's physical geometry to have a specific head count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub heads: Option<i64>,
 
     /// Maximum r/w I/O in operations per second.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
@@ -8260,11 +8203,6 @@ pub struct QemuConfigVirtio {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ro: Option<bool>,
 
-    /// Force the drive's physical geometry to have a specific sector count.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub secs: Option<i64>,
-
     /// The drive's reported serial number, url-encoded, up to 20 bytes long.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub serial: Option<String>,
@@ -8283,9 +8221,6 @@ pub struct QemuConfigVirtio {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub snapshot: Option<bool>,
-
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub trans: Option<PveQmIdeTrans>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub werror: Option<PveQmIdeWerror>,
@@ -8384,6 +8319,17 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigVirtiofsCache);
             optional: true,
             type: Array,
         },
+        "dependent-ha-resources": {
+            items: {
+                description: "The '<ty>:<id>' resource IDs of a HA resource with a positive affinity rule to this VM.",
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        "has-dbus-vmstate": {
+            default: false,
+        },
         local_disks: {
             items: {
                 type: QemuMigratePreconditionsLocalDisks,
@@ -8424,6 +8370,18 @@ pub struct QemuMigratePreconditions {
     /// List of nodes allowed for migration.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub allowed_nodes: Option<Vec<String>>,
+
+    /// HA resources, which will be migrated to the same target node as the VM,
+    /// because these are in positive affinity with the VM.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "dependent-ha-resources")]
+    pub dependent_ha_resources: Option<Vec<String>>,
+
+    /// Whether the VM host supports migrating additional VM state, such as
+    /// conntrack entries.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(rename = "has-dbus-vmstate")]
+    pub has_dbus_vmstate: bool,
 
     /// List local disks including CD-Rom, unused and not referenced disks
     pub local_disks: Vec<QemuMigratePreconditionsLocalDisks>,
@@ -8487,6 +8445,13 @@ pub struct QemuMigratePreconditionsLocalDisks {
 
 #[api(
     properties: {
+        "blocking-ha-resources": {
+            items: {
+                type: QemuMigratePreconditionsNotAllowedNodesBlockingHaResources,
+            },
+            optional: true,
+            type: Array,
+        },
         unavailable_storages: {
             items: {
                 description: "A storage",
@@ -8500,10 +8465,50 @@ pub struct QemuMigratePreconditionsLocalDisks {
 /// List of not allowed nodes with additional information.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct QemuMigratePreconditionsNotAllowedNodes {
+    /// HA resources, which are blocking the VM from being migrated to the node.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "blocking-ha-resources")]
+    pub blocking_ha_resources:
+        Option<Vec<QemuMigratePreconditionsNotAllowedNodesBlockingHaResources>>,
+
     /// A list of not available storages.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unavailable_storages: Option<Vec<String>>,
 }
+
+#[api(
+    properties: {
+        cause: {
+            type: QemuMigratePreconditionsNotAllowedNodesBlockingHaResourcesCause,
+        },
+        sid: {
+            type: String,
+        },
+    },
+)]
+/// A blocking HA resource
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct QemuMigratePreconditionsNotAllowedNodesBlockingHaResources {
+    pub cause: QemuMigratePreconditionsNotAllowedNodesBlockingHaResourcesCause,
+
+    /// The blocking HA resource id
+    pub sid: String,
+}
+
+#[api]
+/// The reason why the HA resource is blocking the migration.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum QemuMigratePreconditionsNotAllowedNodesBlockingHaResourcesCause {
+    #[serde(rename = "resource-affinity")]
+    /// resource-affinity.
+    ResourceAffinity,
+}
+serde_plain::derive_display_from_serialize!(
+    QemuMigratePreconditionsNotAllowedNodesBlockingHaResourcesCause
+);
+serde_plain::derive_fromstr_from_deserialize!(
+    QemuMigratePreconditionsNotAllowedNodesBlockingHaResourcesCause
+);
 
 #[api(
     properties: {
@@ -8541,6 +8546,10 @@ pub struct QemuMigratePreconditionsNotAllowedNodes {
             type: Integer,
         },
         mem: {
+            optional: true,
+            type: Integer,
+        },
+        memhost: {
             optional: true,
             type: Integer,
         },
@@ -8659,6 +8668,11 @@ pub struct QemuStatus {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<i64>,
 
+    /// Current memory usage on the host.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub memhost: Option<i64>,
+
     /// VM (host)name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -8679,6 +8693,36 @@ pub struct QemuStatus {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pid: Option<i64>,
+
+    /// CPU Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurecpufull: Option<f64>,
+
+    /// CPU Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurecpusome: Option<f64>,
+
+    /// IO Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressureiofull: Option<f64>,
+
+    /// IO Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressureiosome: Option<f64>,
+
+    /// Memory Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurememoryfull: Option<f64>,
+
+    /// Memory Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurememorysome: Option<f64>,
 
     /// VM run state from the 'query-status' QMP monitor command.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9147,6 +9191,10 @@ START_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
             optional: true,
             type: Integer,
         },
+        "with-conntrack-state": {
+            default: false,
+            optional: true,
+        },
     },
 )]
 /// Object.
@@ -9191,6 +9239,12 @@ pub struct StartQemu {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u64>,
+
+    /// Whether to migrate conntrack entries for running VMs.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "with-conntrack-state")]
+    pub with_conntrack_state: Option<bool>,
 }
 
 #[api]
@@ -9597,6 +9651,10 @@ serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
             optional: true,
             type: Integer,
         },
+        memhost: {
+            optional: true,
+            type: Integer,
+        },
         name: {
             optional: true,
             type: String,
@@ -9697,6 +9755,11 @@ pub struct VmEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<i64>,
 
+    /// Current memory usage on the host.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub memhost: Option<i64>,
+
     /// VM (host)name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -9717,6 +9780,36 @@ pub struct VmEntry {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pid: Option<i64>,
+
+    /// CPU Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurecpufull: Option<f64>,
+
+    /// CPU Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurecpusome: Option<f64>,
+
+    /// IO Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressureiofull: Option<f64>,
+
+    /// IO Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressureiosome: Option<f64>,
+
+    /// Memory Full pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurememoryfull: Option<f64>,
+
+    /// Memory Some pressure stall average over the last 10 seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressurememorysome: Option<f64>,
 
     /// VM run state from the 'query-status' QMP monitor command.
     #[serde(default, skip_serializing_if = "Option::is_none")]

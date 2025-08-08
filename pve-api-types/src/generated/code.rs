@@ -71,6 +71,8 @@
 /// - /cluster/ha/resources/{sid}
 /// - /cluster/ha/resources/{sid}/migrate
 /// - /cluster/ha/resources/{sid}/relocate
+/// - /cluster/ha/rules
+/// - /cluster/ha/rules/{rule}
 /// - /cluster/ha/status
 /// - /cluster/ha/status/current
 /// - /cluster/ha/status/manager_status
@@ -115,9 +117,18 @@
 /// - /cluster/sdn/controllers/{controller}
 /// - /cluster/sdn/dns
 /// - /cluster/sdn/dns/{dns}
+/// - /cluster/sdn/fabrics
+/// - /cluster/sdn/fabrics/all
+/// - /cluster/sdn/fabrics/fabric
+/// - /cluster/sdn/fabrics/fabric/{id}
+/// - /cluster/sdn/fabrics/node
+/// - /cluster/sdn/fabrics/node/{fabric_id}
+/// - /cluster/sdn/fabrics/node/{fabric_id}/{node_id}
 /// - /cluster/sdn/ipams
 /// - /cluster/sdn/ipams/{ipam}
 /// - /cluster/sdn/ipams/{ipam}/status
+/// - /cluster/sdn/lock
+/// - /cluster/sdn/rollback
 /// - /cluster/sdn/vnets
 /// - /cluster/sdn/vnets/{vnet}
 /// - /cluster/sdn/vnets/{vnet}/firewall
@@ -141,6 +152,7 @@
 /// - /nodes/{node}/capabilities/qemu
 /// - /nodes/{node}/capabilities/qemu/cpu
 /// - /nodes/{node}/capabilities/qemu/machines
+/// - /nodes/{node}/capabilities/qemu/migration
 /// - /nodes/{node}/ceph
 /// - /nodes/{node}/ceph/cfg
 /// - /nodes/{node}/ceph/cfg/db
@@ -274,6 +286,7 @@
 /// - /nodes/{node}/qemu/{vmid}/clone
 /// - /nodes/{node}/qemu/{vmid}/cloudinit
 /// - /nodes/{node}/qemu/{vmid}/cloudinit/dump
+/// - /nodes/{node}/qemu/{vmid}/dbus-vmstate
 /// - /nodes/{node}/qemu/{vmid}/feature
 /// - /nodes/{node}/qemu/{vmid}/firewall
 /// - /nodes/{node}/qemu/{vmid}/firewall/aliases
