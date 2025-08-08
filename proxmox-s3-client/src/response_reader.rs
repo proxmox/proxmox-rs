@@ -9,8 +9,7 @@ use hyper::http::StatusCode;
 use hyper::{HeaderMap, Response};
 use serde::Deserialize;
 
-use crate::S3ObjectKey;
-use crate::{HttpDate, LastModifiedTimestamp};
+use crate::{HttpDate, LastModifiedTimestamp, S3ObjectKey};
 
 /// Response reader to check S3 api response status codes and parse response body, if any.
 pub(crate) struct ResponseReader {
@@ -21,7 +20,7 @@ pub(crate) struct ResponseReader {
 /// Response contents of list objects v2 api calls.
 pub struct ListObjectsV2Response {
     /// Parsed http date header from response.
-    pub date: HttpDate,
+    pub date: Option<HttpDate>,
     /// Bucket name.
     pub name: String,
     /// Requested key prefix.
@@ -64,7 +63,7 @@ struct ListObjectsV2ResponseBody {
 }
 
 impl ListObjectsV2ResponseBody {
-    fn with_date(self, date: HttpDate) -> ListObjectsV2Response {
+    fn with_optional_date(self, date: Option<HttpDate>) -> ListObjectsV2Response {
         ListObjectsV2Response {
             date,
             name: self.name,
@@ -105,7 +104,7 @@ pub struct HeadObjectResponse {
     /// Content type header.
     pub content_type: String,
     /// Http date header.
-    pub date: HttpDate,
+    pub date: Option<HttpDate>,
     /// Entity tag header.
     pub e_tag: String,
     /// Last modified http header.
@@ -120,7 +119,7 @@ pub struct GetObjectResponse {
     /// Content type header.
     pub content_type: String,
     /// Http date header.
-    pub date: HttpDate,
+    pub date: Option<HttpDate>,
     /// Entity tag header.
     pub e_tag: String,
     /// Last modified http header.
@@ -272,12 +271,12 @@ impl ResponseReader {
 
         let body = String::from_utf8(body.to_vec())?;
 
-        let date: HttpDate = Self::parse_header(header::DATE, &parts.headers)?;
+        let date = Self::parse_optional_date_header(&parts.headers)?;
 
         let response: ListObjectsV2ResponseBody =
             serde_xml_rs::from_str(&body).context("failed to parse response body")?;
 
-        Ok(response.with_date(date))
+        Ok(response.with_optional_date(date))
     }
 
     /// Read and parse the head object response.
@@ -303,7 +302,7 @@ impl ResponseReader {
         let content_length: u64 = Self::parse_header(header::CONTENT_LENGTH, &parts.headers)?;
         let content_type = Self::parse_header(header::CONTENT_TYPE, &parts.headers)?;
         let e_tag = Self::parse_header(header::ETAG, &parts.headers)?;
-        let date = Self::parse_header(header::DATE, &parts.headers)?;
+        let date = Self::parse_optional_date_header(&parts.headers)?;
         let last_modified = Self::parse_header(header::LAST_MODIFIED, &parts.headers)?;
 
         Ok(Some(HeadObjectResponse {
@@ -335,7 +334,7 @@ impl ResponseReader {
         let content_length: u64 = Self::parse_header(header::CONTENT_LENGTH, &parts.headers)?;
         let content_type = Self::parse_header(header::CONTENT_TYPE, &parts.headers)?;
         let e_tag = Self::parse_header(header::ETAG, &parts.headers)?;
-        let date = Self::parse_header(header::DATE, &parts.headers)?;
+        let date = Self::parse_optional_date_header(&parts.headers)?;
         let last_modified = Self::parse_header(header::LAST_MODIFIED, &parts.headers)?;
 
         Ok(Some(GetObjectResponse {
@@ -508,6 +507,20 @@ impl ResponseReader {
             .parse()
             .with_context(|| format!("failed to parse header '{name}'"))?;
         Ok(value)
+    }
+
+    fn parse_optional_date_header(headers: &HeaderMap) -> Result<Option<HttpDate>, Error> {
+        let header_value = match headers.get(header::DATE) {
+            Some(value) => value,
+            None => return Ok(None),
+        };
+        let header_str = header_value
+            .to_str()
+            .with_context(|| format!("non UTF-8 header '{}'", header::DATE))?;
+        let date: HttpDate = header_str
+            .parse()
+            .with_context(|| format!("failed to parse header '{}'", header::DATE))?;
+        Ok(Some(date))
     }
 }
 
