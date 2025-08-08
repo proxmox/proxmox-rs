@@ -1098,6 +1098,10 @@ my sub string_type : prototype($$$$) {
     return 'String';
 }
 
+my sub is_basic_type : prototype($) ($ty) {
+    return 1 if !defined($ty) || $ty eq 'String' || $ty eq 'Integer';
+}
+
 my sub array_type : prototype($$$) {
     my ($schema, $api_props, $name_hint) = @_;
 
@@ -1119,8 +1123,12 @@ my sub array_type : prototype($$$) {
 
     $api_props->{type} = 'Array';
     $api_props->{items} = $def->{api};
-    if ($description && !$items->{description}) {
-	$api_props->{items}->{description} = quote_string($description);
+    if (
+        $description
+        && !$items->{description}
+        && is_basic_type($api_props->{items}->{type})
+    ) {
+        $api_props->{items}->{description} = quote_string($description);
     }
 
     return "Vec<$def->{type}>";
