@@ -1,3 +1,9 @@
+rust-proxmox-s3-client (1.1.1-1) stable; urgency=medium
+
+  * s3-client: fix non-optional date header for api response parsing
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 11 Aug 2025 14:21:37 +0200
+
 rust-proxmox-s3-client (1.1.0-1) trixie; urgency=medium
 
   * don't discriminate 403 status code for get-object response, it's meaning
