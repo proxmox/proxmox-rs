@@ -134,7 +134,7 @@ proxmox-io = { version = "1.1.0", path = "proxmox-io" }
 proxmox-lang = { version = "1.3", path = "proxmox-lang" }
 proxmox-log= { version = "0.2.9", path = "proxmox-log" }
 proxmox-login = { version = "0.2.0", path = "proxmox-login" }
-proxmox-network-api = { version = "0.1.4", path = "proxmox-network-api" }
+proxmox-network-api = { version = "0.1.6", path = "proxmox-network-api" }
 proxmox-product-config = { version = "0.2.0", path = "proxmox-product-config" }
 proxmox-config-digest = { version = "0.1.0", path = "proxmox-config-digest" }
 proxmox-rest-server = { version = "0.8.8", path = "proxmox-rest-server" }

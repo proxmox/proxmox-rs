@@ -1,3 +1,11 @@
+rust-proxmox-network-api (0.1.6-1) bookworm; urgency=medium
+
+  * network-api: only depend on proxmox-ve-config with 'impl' feature
+
+  * network-api: properly parse ip link output based on link_type
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 13 Aug 2025 10:51:49 +0200
+
 rust-proxmox-network-api (0.1.5-1) bookworm; urgency=medium
 
   * reexport network schema types
