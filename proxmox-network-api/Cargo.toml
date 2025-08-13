@@ -25,7 +25,7 @@ proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
 proxmox-config-digest = { workspace = true, optional = true }
 proxmox-product-config = { workspace = true, optional = true }
-proxmox-ve-config = "0.2.3"
+proxmox-ve-config = { version = "0.2.3", optional = true }
 
 [features]
 default = []
@@ -36,4 +36,5 @@ impl = [
     "dep:nix",
     "dep:libc",
     "dep:proxmox-sys",
+    "dep:proxmox-ve-config",
 ]
