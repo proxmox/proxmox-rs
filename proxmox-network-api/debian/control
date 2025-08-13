@@ -11,7 +11,6 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-schema-4+api-macro-dev <!nocheck>,
  librust-proxmox-schema-4+api-types-dev <!nocheck>,
  librust-proxmox-schema-4+default-dev <!nocheck>,
- librust-proxmox-ve-config-0.2+default-dev (>= 0.2.3-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
@@ -34,7 +33,6 @@ Depends:
  librust-proxmox-schema-4+api-macro-dev,
  librust-proxmox-schema-4+api-types-dev,
  librust-proxmox-schema-4+default-dev,
- librust-proxmox-ve-config-0.2+default-dev (>= 0.2.3-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
@@ -47,8 +45,8 @@ Provides:
  librust-proxmox-network-api-0+default-dev (= ${binary:Version}),
  librust-proxmox-network-api-0.1-dev (= ${binary:Version}),
  librust-proxmox-network-api-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-network-api-0.1.5-dev (= ${binary:Version}),
- librust-proxmox-network-api-0.1.5+default-dev (= ${binary:Version})
+ librust-proxmox-network-api-0.1.6-dev (= ${binary:Version}),
+ librust-proxmox-network-api-0.1.6+default-dev (= ${binary:Version})
 Description: Network Management API implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-network-api"
 
@@ -63,11 +61,12 @@ Depends:
  librust-proxmox-config-digest-0.1+default-dev,
  librust-proxmox-config-digest-0.1+openssl-dev,
  librust-proxmox-product-config-0.2+default-dev,
- librust-proxmox-sys-0.6+default-dev (>= 0.6.6-~~)
+ librust-proxmox-sys-0.6+default-dev (>= 0.6.6-~~),
+ librust-proxmox-ve-config-0.2+default-dev (>= 0.2.3-~~)
 Provides:
  librust-proxmox-network-api-0+impl-dev (= ${binary:Version}),
  librust-proxmox-network-api-0.1+impl-dev (= ${binary:Version}),
- librust-proxmox-network-api-0.1.5+impl-dev (= ${binary:Version})
+ librust-proxmox-network-api-0.1.6+impl-dev (= ${binary:Version})
 Description: Network Management API implementation - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-network-api crate,
  by pulling in any additional dependencies needed by that feature.
