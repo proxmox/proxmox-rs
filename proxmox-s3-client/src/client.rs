@@ -35,6 +35,8 @@ const S3_HTTP_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const S3_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
 const S3_TCP_KEEPALIVE_TIME: u32 = 120;
 const MAX_S3_UPLOAD_RETRY: usize = 3;
+// Assumed minimum upload rate of 1 KiB/s for dynamic put object request timeout calculation.
+const S3_MIN_ASSUMED_UPLOAD_RATE: u64 = 1024;
 
 /// S3 object key path prefix without the context prefix as defined by the client options.
 ///
@@ -413,6 +415,7 @@ impl S3Client {
         &self,
         object_key: S3ObjectKey,
         object_data: Body,
+        timeout: Option<Duration>,
         replace: bool,
     ) -> Result<PutObjectResponse, Error> {
         let object_key = object_key.to_full_key(&self.options.common_prefix);
@@ -435,7 +438,7 @@ impl S3Client {
 
         let request = request.body(object_data)?;
 
-        let response = self.send(request, Some(S3_HTTP_REQUEST_TIMEOUT)).await?;
+        let response = self.send(request, timeout).await?;
         let response_reader = ResponseReader::new(response);
         response_reader.put_object_response().await
     }
@@ -664,9 +667,17 @@ impl S3Client {
         object_data: Bytes,
         replace: bool,
     ) -> Result<bool, Error> {
+        let content_size = object_data.len() as u64;
+        let timeout_secs = content_size
+            .div_ceil(S3_MIN_ASSUMED_UPLOAD_RATE)
+            .max(S3_HTTP_REQUEST_TIMEOUT.as_secs());
+        let timeout = Some(Duration::from_secs(timeout_secs));
         for retry in 0..MAX_S3_UPLOAD_RETRY {
             let body = Body::from(object_data.clone());
-            match self.put_object(object_key.clone(), body, replace).await {
+            match self
+                .put_object(object_key.clone(), body, timeout, replace)
+                .await
+            {
                 Ok(PutObjectResponse::Success(_response_body)) => return Ok(false),
                 Ok(PutObjectResponse::PreconditionFailed) => return Ok(true),
                 Ok(PutObjectResponse::NeedsRetry) => {

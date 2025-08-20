@@ -50,8 +50,9 @@ async fn run() -> Result<(), anyhow::Error> {
     let rel_object_key = S3ObjectKey::try_from("object.txt")?;
     let body = proxmox_http::Body::empty();
     let replace_existing_key = true;
+    let request_timeout = Some(std::time::Duration::from_secs(60));
     let _response = s3_client
-        .put_object(rel_object_key, body, replace_existing_key)
+        .put_object(rel_object_key, body, request_timeout, replace_existing_key)
         .await?;
 
     // List object, limiting to ones matching the given prefix. Since the api limits the response
