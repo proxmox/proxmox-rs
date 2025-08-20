@@ -31,8 +31,10 @@ use crate::response_reader::{
     ListBucketsResponse, ListObjectsV2Response, PutObjectResponse, ResponseReader,
 };
 
+/// Default timeout for s3 api requests.
+pub const S3_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
+
 const S3_HTTP_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
-const S3_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
 const S3_TCP_KEEPALIVE_TIME: u32 = 120;
 const MAX_S3_UPLOAD_RETRY: usize = 3;
 // Assumed minimum upload rate of 1 KiB/s for dynamic put object request timeout calculation.
