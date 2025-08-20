@@ -283,7 +283,11 @@ impl S3Client {
     }
 
     /// Send API request to the configured endpoint using the inner https client.
-    async fn send(&self, request: Request<Body>) -> Result<Response<Incoming>, Error> {
+    async fn send(
+        &self,
+        request: Request<Body>,
+        timeout: Option<Duration>,
+    ) -> Result<Response<Incoming>, Error> {
         let request = self.prepare(request).await?;
         if request.method() == Method::PUT {
             if let Some(limiter) = &self.put_rate_limiter {
@@ -294,9 +298,13 @@ impl S3Client {
                 tokio::time::sleep(sleep).await;
             }
         }
-        let response = tokio::time::timeout(S3_HTTP_REQUEST_TIMEOUT, self.client.request(request))
-            .await
-            .context("request timeout")??;
+        let response = if let Some(timeout) = timeout {
+            tokio::time::timeout(timeout, self.client.request(request))
+                .await
+                .context("request timeout")??
+        } else {
+            self.client.request(request).await?
+        };
         Ok(response)
     }
 
@@ -307,7 +315,7 @@ impl S3Client {
             .method(Method::HEAD)
             .uri(self.build_uri("/", &[])?)
             .body(Body::empty())?;
-        let response = self.send(request).await?;
+        let response = self.send(request, Some(S3_HTTP_REQUEST_TIMEOUT)).await?;
         let (parts, _body) = response.into_parts();
 
         match parts.status {
@@ -328,7 +336,7 @@ impl S3Client {
             .method(Method::GET)
             .uri(self.build_uri("/", &[])?)
             .body(Body::empty())?;
-        let response = self.send(request).await?;
+        let response = self.send(request, Some(S3_HTTP_REQUEST_TIMEOUT)).await?;
         let response_reader = ResponseReader::new(response);
         response_reader.list_buckets_response().await
     }
@@ -344,7 +352,7 @@ impl S3Client {
             .method(Method::HEAD)
             .uri(self.build_uri(&object_key, &[])?)
             .body(Body::empty())?;
-        let response = self.send(request).await?;
+        let response = self.send(request, Some(S3_HTTP_REQUEST_TIMEOUT)).await?;
         let response_reader = ResponseReader::new(response);
         response_reader.head_object_response().await
     }
@@ -361,7 +369,7 @@ impl S3Client {
             .uri(self.build_uri(&object_key, &[])?)
             .body(Body::empty())?;
 
-        let response = self.send(request).await?;
+        let response = self.send(request, Some(S3_HTTP_REQUEST_TIMEOUT)).await?;
         let response_reader = ResponseReader::new(response);
         response_reader.get_object_response().await
     }
@@ -391,7 +399,7 @@ impl S3Client {
             .uri(self.build_uri("/", &query)?)
             .body(Body::empty())?;
 
-        let response = self.send(request).await?;
+        let response = self.send(request, Some(S3_HTTP_REQUEST_TIMEOUT)).await?;
         let response_reader = ResponseReader::new(response);
         response_reader.list_objects_v2_response().await
     }
@@ -427,7 +435,7 @@ impl S3Client {
 
         let request = request.body(object_data)?;
 
-        let response = self.send(request).await?;
+        let response = self.send(request, Some(S3_HTTP_REQUEST_TIMEOUT)).await?;
         let response_reader = ResponseReader::new(response);
         response_reader.put_object_response().await
     }
@@ -441,7 +449,7 @@ impl S3Client {
             .uri(self.build_uri(&object_key, &[])?)
             .body(Body::empty())?;
 
-        let response = self.send(request).await?;
+        let response = self.send(request, None).await?;
         let response_reader = ResponseReader::new(response);
         response_reader.delete_object_response().await
     }
@@ -468,7 +476,7 @@ impl S3Client {
             .uri(self.build_uri("/", &[("delete", "")])?)
             .body(Body::from(body))?;
 
-        let response = self.send(request).await?;
+        let response = self.send(request, Some(S3_HTTP_REQUEST_TIMEOUT)).await?;
         let response_reader = ResponseReader::new(response);
         response_reader.delete_objects_response().await
     }
@@ -499,7 +507,7 @@ impl S3Client {
             )
             .body(Body::empty())?;
 
-        let response = self.send(request).await?;
+        let response = self.send(request, Some(S3_HTTP_REQUEST_TIMEOUT)).await?;
         let response_reader = ResponseReader::new(response);
         response_reader.copy_object_response().await
     }
