@@ -698,10 +698,10 @@ impl S3Client {
             // No further input validation as http::uri::Builder will check path and query
             let mut query_iter = query.iter().peekable();
             while let Some((key, value)) = query_iter.next() {
-                let key = aws_sign_v4_uri_encode(key, true);
+                let key = aws_sign_v4_uri_encode(key, false);
                 path_and_query.push_str(&key);
                 if !value.is_empty() {
-                    let value = aws_sign_v4_uri_encode(value, true);
+                    let value = aws_sign_v4_uri_encode(value, false);
                     path_and_query.push('=');
                     path_and_query.push_str(&value);
                 }
