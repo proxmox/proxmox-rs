@@ -47,7 +47,6 @@ pub const S3_ENDPOINT_SCHEMA: Schema = StringSchema::new("Endpoint to access S3 
 /// Region to access S3 object store.
 pub const S3_REGION_SCHEMA: Schema = StringSchema::new("Region to access S3 object store.")
     .format(&S3_REGION_FORMAT)
-    .min_length(3)
     .max_length(32)
     .schema();
 
