@@ -121,7 +121,7 @@ fn create_ticket_http_only(
         let auth_context = auth_context()?;
         let host_cookie = auth_context.prefixed_auth_cookie_name();
         let mut create_params: CreateTicket = serde_json::from_value(param)?;
-        let password = create_params.password.take();
+        let mut password = create_params.password.take();
 
         // previously to refresh a ticket, the old ticket was provided as a password via this
         // endpoint's parameters. however, once the ticket is set as an HttpOnly cookie, some
@@ -140,7 +140,9 @@ fn create_ticket_http_only(
             // after this only `__Host-{Cookie Name}` cookies are in the iterator
             .filter_map(|c| extract_cookie(c, host_cookie))
             // so this should just give us the first one if it exists
-            .next();
+            .next()
+            // if nothing was provided via the cookie, fall back to the requests body again
+            .or_else(|| password.take());
 
         let env: &RestEnvironment = rpcenv
             .as_any()
@@ -149,6 +151,9 @@ fn create_ticket_http_only(
 
         let mut ticket_response = handle_ticket_creation(create_params.clone(), true, env).await;
 
+        // if authentication failed via the cookie parameter, try the password from the body here.
+        // don't allow ticket refresh, though. this should only be done via the cookie if the
+        // client uses cookies for tickets.
         if ticket_response.is_err() && password.is_some() {
             create_params.password = password;
             ticket_response = handle_ticket_creation(create_params, false, env).await;
