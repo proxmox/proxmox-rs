@@ -153,7 +153,7 @@ proxmox-product-config = { version = "1.0.0", path = "proxmox-product-config" }
 proxmox-config-digest = { version = "1.0.0", path = "proxmox-config-digest" }
 proxmox-rest-server = { version = "1.0.0", path = "proxmox-rest-server" }
 proxmox-router = { version = "3.2.2", path = "proxmox-router" }
-proxmox-s3-client = { version = "1.1.1", path = "proxmox-s3-client" }
+proxmox-s3-client = { version = "1.2", path = "proxmox-s3-client" }
 proxmox-schema = { version = "4.1.0", path = "proxmox-schema" }
 proxmox-section-config = { version = "3.1.0", path = "proxmox-section-config" }
 proxmox-sendmail = { version = "1.0.0", path = "proxmox-sendmail" }

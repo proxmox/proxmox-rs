@@ -1,3 +1,17 @@
+rust-proxmox-s3-client (1.2.0-1) stable; urgency=medium
+
+  * expose default timeout for s3 api requests
+
+  * dynamically calculate put request timeout based on payload
+
+  * allow setting custom timeout when sending requests
+
+  * properly uri encode request query parameters
+
+  * drop to restrictive minimum length check in region schema
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 25 Aug 2025 14:16:46 +0200
+
 rust-proxmox-s3-client (1.1.1-1) stable; urgency=medium
 
   * s3-client: fix non-optional date header for api response parsing
