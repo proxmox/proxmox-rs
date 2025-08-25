@@ -35,6 +35,14 @@ impl Body {
         }
     }
 
+    /// Returns the body contents as `Bytes` it is a "full" body, None otherwise.
+    pub fn bytes(&self) -> Option<Bytes> {
+        match self.inner {
+            InnerBody::Full(ref bytes) => Some(bytes.clone()),
+            InnerBody::Streaming(_) => None,
+        }
+    }
+
     pub fn wrap_stream<S>(stream: S) -> Body
     where
         S: futures::stream::TryStream + Send + 'static,
