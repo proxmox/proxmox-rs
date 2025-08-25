@@ -32,7 +32,7 @@ use crate::response_reader::{
 };
 
 /// Default timeout for s3 api requests.
-pub const S3_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(60);
+pub const S3_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 
 const S3_HTTP_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 const S3_TCP_KEEPALIVE_TIME: u32 = 120;
