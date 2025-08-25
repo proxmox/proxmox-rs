@@ -39,6 +39,8 @@ const S3_TCP_KEEPALIVE_TIME: u32 = 120;
 const MAX_S3_UPLOAD_RETRY: usize = 3;
 // Assumed minimum upload rate of 1 KiB/s for dynamic put object request timeout calculation.
 const S3_MIN_ASSUMED_UPLOAD_RATE: u64 = 1024;
+const MAX_S3_HTTP_REQUEST_RETRY: usize = 3;
+const S3_HTTP_REQUEST_RETRY_BACKOFF_DEFAULT: Duration = Duration::from_secs(1);
 
 /// S3 object key path prefix without the context prefix as defined by the client options.
 ///
@@ -293,23 +295,53 @@ impl S3Client {
         timeout: Option<Duration>,
     ) -> Result<Response<Incoming>, Error> {
         let request = self.prepare(request).await?;
-        if request.method() == Method::PUT {
-            if let Some(limiter) = &self.put_rate_limiter {
-                let sleep = {
-                    let mut limiter = limiter.lock().unwrap();
-                    limiter.register_traffic(Instant::now(), 1)
-                };
-                tokio::time::sleep(sleep).await;
+
+        let (parts, body) = request.into_parts();
+        let body_bytes = body
+            .bytes()
+            .ok_or_else(|| format_err!("cannot prepare request with streaming body"))?;
+
+        let deadline = timeout.map(|timeout| tokio::time::Instant::now() + timeout);
+
+        for retry in 0..MAX_S3_HTTP_REQUEST_RETRY {
+            let request = Request::from_parts(parts.clone(), Body::from(body_bytes.clone()));
+            if parts.method == Method::PUT {
+                if let Some(limiter) = &self.put_rate_limiter {
+                    let sleep = {
+                        let mut limiter = limiter.lock().unwrap();
+                        limiter.register_traffic(Instant::now(), 1)
+                    };
+                    tokio::time::sleep(sleep).await;
+                }
+            }
+
+            if retry > 0 {
+                let backoff_secs = S3_HTTP_REQUEST_RETRY_BACKOFF_DEFAULT * 3_u32.pow(retry as u32);
+                tokio::time::sleep(backoff_secs).await;
+            }
+
+            let response = if let Some(deadline) = deadline {
+                tokio::time::timeout_at(deadline, self.client.request(request)).await
+            } else {
+                Ok(self.client.request(request).await)
+            };
+
+            match response {
+                Ok(Ok(response)) => return Ok(response),
+                Ok(Err(err)) => {
+                    if retry >= MAX_S3_HTTP_REQUEST_RETRY - 1 {
+                        return Err(err.into());
+                    }
+                }
+                Err(_elapsed) => {
+                    if retry >= MAX_S3_HTTP_REQUEST_RETRY - 1 {
+                        bail!("request timed out exceeding retries");
+                    }
+                }
             }
         }
-        let response = if let Some(timeout) = timeout {
-            tokio::time::timeout(timeout, self.client.request(request))
-                .await
-                .context("request timeout")??
-        } else {
-            self.client.request(request).await?
-        };
-        Ok(response)
+
+        bail!("failed to send request exceeding retries");
     }
 
     /// Check if bucket exists and got permissions to access it.
