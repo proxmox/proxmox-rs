@@ -684,7 +684,7 @@ impl S3Client {
                 Ok(PutObjectResponse::PreconditionFailed) => return Ok(true),
                 Ok(PutObjectResponse::NeedsRetry) => {
                     if retry >= MAX_S3_UPLOAD_RETRY - 1 {
-                        bail!("concurrent operation, upload failed")
+                        bail!("concurrent operation, upload failed");
                     }
                 }
                 Err(err) => {
@@ -692,7 +692,7 @@ impl S3Client {
                         return Err(err.context("upload failed"));
                     }
                 }
-            };
+            }
         }
         Ok(false)
     }
