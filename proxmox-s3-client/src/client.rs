@@ -35,7 +35,7 @@ use crate::response_reader::{
 pub const S3_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 
 const S3_HTTP_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
-const S3_TCP_KEEPALIVE_TIME: u32 = 120;
+const S3_TCP_KEEPIDLE_TIME: u32 = 120;
 const MAX_S3_UPLOAD_RETRY: usize = 3;
 // Assumed minimum upload rate of 1 KiB/s for dynamic put object request timeout calculation.
 const S3_MIN_ASSUMED_UPLOAD_RATE: u64 = 1024;
@@ -154,7 +154,7 @@ impl S3Client {
         let https_connector = HttpsConnector::with_connector(
             http_connector,
             ssl_connector_builder.build(),
-            S3_TCP_KEEPALIVE_TIME,
+            S3_TCP_KEEPIDLE_TIME,
         );
         let client = Client::builder(TokioExecutor::new()).build::<_, Body>(https_connector);
 
