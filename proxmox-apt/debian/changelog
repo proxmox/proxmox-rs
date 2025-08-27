@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.99.3-1) trixie; urgency=medium
+
+  * add fix up for debian trixie security repository
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 27 Aug 2025 23:52:49 +0200
+
 rust-proxmox-apt (0.99.2-1) trixie; urgency=medium
 
   * output signed-by release-key option for Proxmox repositories.
