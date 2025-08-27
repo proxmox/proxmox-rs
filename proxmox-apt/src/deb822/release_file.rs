@@ -350,7 +350,10 @@ impl TryFrom<ReleaseFileRaw> for ReleaseFile {
         // Fixup bullseye+-security release files which have invalid components
         let codename = parsed.codename.as_deref();
         if parsed.label.as_deref() == Some("Debian-Security")
-            && (codename == Some("bullseye-security") || codename == Some("bookworm-security"))
+            && matches!(
+                codename,
+                Some("bullseye-security") | Some("bookworm-security") | Some("trixie-security")
+            )
         {
             parsed.components = parsed
                 .components
