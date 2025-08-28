@@ -1441,7 +1441,7 @@ impl Schema {
                         if let Some(key) = default_key {
                             param_list.push((key.to_string(), value.into_owned()));
                         } else {
-                            bail!("Value without key, but schema does not define a default key.");
+                            bail!("Value '{value}' without key, but schema does not define a default key.");
                         }
                     }
                 }
