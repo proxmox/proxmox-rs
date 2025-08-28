@@ -1,3 +1,12 @@
+rust-proxmox-access-control (1.1.0-1) trixie; urgency=medium
+
+  * add more types to prepare for api feature
+  * add acl api feature
+  * add generic roles endpoint to `api` feature
+  * api: refactor extract_acl_node_data to be non-recursive
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 28 Aug 2025 22:00:08 +0200
+
 rust-proxmox-access-control (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
