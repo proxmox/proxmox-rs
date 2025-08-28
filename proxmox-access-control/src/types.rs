@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
 
+use const_format::concatcp;
+
 use proxmox_auth_api::types::{Authid, Userid, PROXMOX_TOKEN_ID_SCHEMA};
 use proxmox_schema::{
     api,
-    api_types::{COMMENT_SCHEMA, SINGLE_LINE_COMMENT_FORMAT},
-    BooleanSchema, IntegerSchema, Schema, StringSchema, Updater,
+    api_types::{COMMENT_SCHEMA, SAFE_ID_REGEX_STR, SINGLE_LINE_COMMENT_FORMAT},
+    const_regex, ApiStringFormat, BooleanSchema, IntegerSchema, Schema, StringSchema, Updater,
 };
 
 pub const ENABLE_USER_SCHEMA: Schema = BooleanSchema::new(
@@ -37,6 +39,23 @@ pub const EMAIL_SCHEMA: Schema = StringSchema::new("E-Mail Address.")
     .min_length(2)
     .max_length(64)
     .schema();
+
+const_regex! {
+    pub ACL_PATH_REGEX = concatcp!(r"^(?:/|", r"(?:/", SAFE_ID_REGEX_STR, ")+", r")$");
+}
+
+pub const ACL_PATH_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&ACL_PATH_REGEX);
+
+pub const ACL_PATH_SCHEMA: Schema = StringSchema::new("Access control path.")
+    .format(&ACL_PATH_FORMAT)
+    .min_length(1)
+    .max_length(128)
+    .schema();
+
+pub const ACL_PROPAGATE_SCHEMA: Schema =
+    BooleanSchema::new("Allow to propagate (inherit) permissions.")
+        .default(true)
+        .schema();
 
 #[api(
     properties: {
@@ -191,4 +210,40 @@ impl User {
         }
         true
     }
+}
+
+#[api]
+/// Type of the 'ugid' property in the ACL entry list.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum AclUgidType {
+    /// An entry for a user (or token).
+    User,
+    /// An entry for a group.
+    Group,
+}
+
+serde_plain::derive_display_from_serialize!(AclUgidType);
+serde_plain::derive_fromstr_from_deserialize!(AclUgidType);
+
+#[api(
+    properties: {
+        propagate: { schema: ACL_PROPAGATE_SCHEMA, },
+        path: { schema: ACL_PATH_SCHEMA, },
+        ugid_type: { type: AclUgidType },
+        ugid: {
+            type: String,
+            description: "User or Group ID.",
+        },
+    }
+)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Hash)]
+/// Access control list entry.
+pub struct AclListItem {
+    pub path: String,
+    pub ugid: String,
+    pub ugid_type: AclUgidType,
+    pub propagate: bool,
+    /// A role represented as a string.
+    pub roleid: String,
 }
