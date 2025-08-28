@@ -95,6 +95,14 @@ pub trait AccessControlConfig: Send + Sync {
         let _ = path;
         Ok(())
     }
+
+    /// Whether the API endpoints to inspect the ACL should use partial permission matching or not.
+    ///
+    /// Override this if the product in question uses more than one bit to specify permissions (so,
+    /// in case it is *not* using a bitmap) and the match between permissions needs to be exact.
+    fn allow_partial_permission_match(&self) -> bool {
+        true
+    }
 }
 
 pub fn init<P: AsRef<Path>>(

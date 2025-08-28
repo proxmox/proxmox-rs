@@ -48,13 +48,17 @@ pub fn read_acl(
         .ok_or_else(|| format_err!("endpoint called without an auth id"))?
         .parse()?;
 
-    let top_level_privs = CachedUserInfo::new()?.lookup_privs(&auth_id, &["access", "acl"]);
+    // if a user does not have enough permissions to see all entries, we need to filter them
+    let filter_entries = CachedUserInfo::new()?
+        .check_privs(
+            &auth_id,
+            &["access", "acl"],
+            access_conf().acl_audit_privileges(),
+            access_conf().allow_partial_permission_match(),
+        )
+        .is_err();
 
-    let filter = if top_level_privs & access_conf().acl_audit_privileges() == 0 {
-        Some(auth_id)
-    } else {
-        None
-    };
+    let filter = if filter_entries { Some(auth_id) } else { None };
 
     let (mut tree, digest) = crate::acl::config()?;
 
@@ -136,34 +140,52 @@ pub fn update_acl(
         .expect("auth id could not be determined")
         .parse()?;
 
-    let user_info = CachedUserInfo::new()?;
-    let top_level_privs = user_info.lookup_privs(&current_auth_id, &["access", "acl"]);
+    let unprivileged_user = CachedUserInfo::new()?
+        .check_privs(
+            &current_auth_id,
+            &["access", "acl"],
+            access_conf.acl_modify_privileges(),
+            access_conf.allow_partial_permission_match(),
+        )
+        .is_err();
 
-    if top_level_privs & access_conf.acl_modify_privileges() == 0 {
-        if group.is_some() {
-            bail!("Unprivileged users are not allowed to create group ACL item.");
+    if unprivileged_user {
+        if group.is_none()
+            && !current_auth_id.is_token()
+            && auth_id
+                .as_ref()
+                .map(|id| id.is_token() && current_auth_id.user() == id.user())
+                .unwrap_or_default()
+        {
+            // a user is directly editing the privileges of their own tokens, this is always
+            // allowed
+        } else {
+            if group.is_some() {
+                bail!("Unprivileged users are not allowed to create group ACL item.");
+            }
+
+            let auth_id = auth_id.as_ref().ok_or_else(|| {
+                format_err!("Unprivileged user needs to provide auth_id to update ACL item.")
+            })?;
+
+            if current_auth_id.is_token() {
+                bail!("Unprivileged API tokens can't set ACL items.");
+            }
+
+            if !auth_id.is_token() {
+                bail!("Unprivileged users can only set ACL items for API tokens.");
+            }
+
+            if current_auth_id.user() != auth_id.user() {
+                bail!("Unprivileged users can only set ACL items for their own API tokens.");
+            }
+
+            // this should not be reachable, but just in case, bail here
+            bail!("Unprivileged user is trying to set an invalid ACL item.")
         }
-
-        match &auth_id {
-            Some(auth_id) => {
-                if current_auth_id.is_token() {
-                    bail!("Unprivileged API tokens can't set ACL items.");
-                } else if !auth_id.is_token() {
-                    bail!("Unprivileged users can only set ACL items for API tokens.");
-                } else if auth_id.user() != current_auth_id.user() {
-                    bail!("Unprivileged users can only set ACL items for their own API tokens.");
-                }
-            }
-            None => {
-                bail!("Unprivileged user needs to provide auth_id to update ACL item.");
-            }
-        };
     }
 
-    // FIXME: add support for group
-    if group.is_some() {
-        bail!("parameter 'group' - groups are currently not supported");
-    } else if let Some(auth_id) = &auth_id {
+    if let Some(auth_id) = &auth_id {
         // only allow deleting non-existing auth id's, not adding them
         if !delete {
             let exists = crate::user::cached_config()?
@@ -178,6 +200,9 @@ pub fn update_acl(
                 }
             }
         }
+    } else if group.is_some() {
+        // FIXME: add support for groups
+        bail!("parameter 'group' - groups are currently not supported");
     } else {
         // FIXME: suggest groups here once they exist
         bail!("missing 'userid' parameter");
