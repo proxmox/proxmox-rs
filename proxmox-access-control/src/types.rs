@@ -247,3 +247,31 @@ pub struct AclListItem {
     /// A role represented as a string.
     pub roleid: String,
 }
+
+#[api(
+    properties: {
+        privs: {
+            type: Array,
+            description: "List of Privileges",
+            items: {
+                type: String,
+                description: "A Privilege",
+            },
+        },
+        comment: {
+            schema: COMMENT_SCHEMA,
+            optional: true,
+        }
+    }
+)]
+/// A struct that the describes a role and shows the associated privileges.
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
+pub struct RoleInfo {
+    /// The id of the role
+    pub roleid: String,
+    /// The privileges the role holds
+    pub privs: Vec<String>,
+    /// A comment describing the role
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+}

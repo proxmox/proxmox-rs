@@ -7,7 +7,7 @@ use proxmox_schema::api;
 
 use crate::acl::AclTreeNode;
 use crate::init::access_conf;
-use crate::types::{AclListItem, AclUgidType, ACL_PATH_SCHEMA, ACL_PROPAGATE_SCHEMA};
+use crate::types::{AclListItem, AclUgidType, RoleInfo, ACL_PATH_SCHEMA, ACL_PROPAGATE_SCHEMA};
 use crate::CachedUserInfo;
 
 #[api(
@@ -276,3 +276,44 @@ fn extract_acl_node_data(
 pub const ACL_ROUTER: Router = Router::new()
     .get(&API_METHOD_READ_ACL)
     .put(&API_METHOD_UPDATE_ACL);
+
+#[api(
+    returns: {
+        description: "List of roles.",
+        type: Array,
+        items: {
+            type: RoleInfo,
+        }
+    },
+    access: {
+        permission: &Permission::Anybody,
+    }
+)]
+/// A list of available roles
+fn list_roles() -> Result<Vec<RoleInfo>, Error> {
+    let list = access_conf()
+        .roles()
+        .iter()
+        .map(|(role, (privs, comment))| {
+            let priv_list = access_conf()
+                .privileges()
+                .iter()
+                .filter_map(|(name, privilege)| {
+                    if privs & privilege > 0 {
+                        Some(name.to_string())
+                    } else {
+                        None
+                    }
+                });
+
+            RoleInfo {
+                roleid: role.to_string(),
+                privs: priv_list.collect(),
+                comment: Some(comment.to_string()),
+            }
+        });
+
+    Ok(list.collect())
+}
+
+pub const ROLE_ROUTER: Router = Router::new().get(&API_METHOD_LIST_ROLES);
