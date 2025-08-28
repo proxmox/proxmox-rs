@@ -251,51 +251,56 @@ fn extract_acl_node_data(
         }
     }
 
-    let mut list = Vec::new();
-    let path_str = path.unwrap_or("/");
+    let mut to_return = Vec::new();
+    let mut nodes = vec![(path.unwrap_or("").to_string(), node)];
 
-    for (user, roles) in &node.users {
-        if let Some(auth_id_filter) = auth_id_filter {
-            if !user.is_token() || user.user() != auth_id_filter.user() {
-                continue;
+    while let Some((path, node)) = nodes.pop() {
+        let path_str = if path.is_empty() { "/" } else { &path };
+
+        for (user, roles) in &node.users {
+            if let Some(auth_id_filter) = auth_id_filter {
+                if !user.is_token() || user.user() != auth_id_filter.user() {
+                    continue;
+                }
+            }
+
+            for (role, propagate) in roles {
+                to_return.push(AclListItem {
+                    path: path_str.to_owned(),
+                    propagate: *propagate,
+                    ugid_type: AclUgidType::User,
+                    ugid: user.to_string(),
+                    roleid: role.to_string(),
+                });
             }
         }
 
-        for (role, propagate) in roles {
-            list.push(AclListItem {
-                path: path_str.to_owned(),
-                propagate: *propagate,
-                ugid_type: AclUgidType::User,
-                ugid: user.to_string(),
-                roleid: role.to_string(),
-            });
+        for (group, roles) in &node.groups {
+            if auth_id_filter.is_some() {
+                continue;
+            }
+
+            for (role, propagate) in roles {
+                to_return.push(AclListItem {
+                    path: path_str.to_owned(),
+                    propagate: *propagate,
+                    ugid_type: AclUgidType::Group,
+                    ugid: group.to_string(),
+                    roleid: role.to_string(),
+                });
+            }
+        }
+
+        if !exact {
+            nodes.extend(
+                node.children
+                    .iter()
+                    .map(|(comp, child)| (format!("{}/{comp}", path), child)),
+            );
         }
     }
 
-    for (group, roles) in &node.groups {
-        if auth_id_filter.is_some() {
-            continue;
-        }
-
-        for (role, propagate) in roles {
-            list.push(AclListItem {
-                path: path_str.to_owned(),
-                propagate: *propagate,
-                ugid_type: AclUgidType::Group,
-                ugid: group.to_string(),
-                roleid: role.to_string(),
-            });
-        }
-    }
-
-    if !exact {
-        list.extend(node.children.iter().flat_map(|(comp, child)| {
-            let new_path = format!("{}/{comp}", path.unwrap_or(""));
-            extract_acl_node_data(child, Some(&new_path), exact, auth_id_filter)
-        }));
-    }
-
-    list
+    to_return
 }
 
 pub const ACL_ROUTER: Router = Router::new()
