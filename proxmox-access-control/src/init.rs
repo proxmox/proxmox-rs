@@ -72,6 +72,28 @@ pub trait AccessControlConfig: Send + Sync {
         let _ = config;
         Ok(())
     }
+
+    /// This is used to determined what access control list entries a user is allowed to read.
+    ///
+    /// Override this if you want to use the `api` feature.
+    fn acl_audit_privileges(&self) -> u64 {
+        0
+    }
+
+    /// This is used to determine what privileges are needed to modify the access control list.
+    ///
+    /// Override this if you want to use the `api` feature.
+    fn acl_modify_privileges(&self) -> u64 {
+        0
+    }
+
+    /// Used to determine which paths are valid in a given `AclTree`.
+    ///
+    /// Override this if you want to use the `api` feature.
+    fn check_acl_path(&self, path: &str) -> Result<(), Error> {
+        let _ = path;
+        Ok(())
+    }
 }
 
 pub fn init<P: AsRef<Path>>(

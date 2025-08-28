@@ -5,6 +5,9 @@ pub mod types;
 #[cfg(feature = "impl")]
 pub mod acl;
 
+#[cfg(feature = "api")]
+pub mod api;
+
 #[cfg(feature = "impl")]
 pub mod init;
 
