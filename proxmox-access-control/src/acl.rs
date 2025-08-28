@@ -647,11 +647,11 @@ mod test {
 
     #[derive(Debug)]
     struct TestAcmConfig<'a> {
-        roles: HashMap<&'a str, u64>,
+        roles: HashMap<&'a str, (u64, &'a str)>,
     }
 
     impl AccessControlConfig for TestAcmConfig<'_> {
-        fn roles(&self) -> &HashMap<&str, u64> {
+        fn roles(&self) -> &HashMap<&str, (u64, &str)> {
             &self.roles
         }
 
@@ -672,10 +672,10 @@ mod test {
         static ACL_CONFIG: OnceLock<TestAcmConfig> = OnceLock::new();
         let config = ACL_CONFIG.get_or_init(|| {
             let mut roles = HashMap::new();
-            roles.insert("NoAccess", 0);
-            roles.insert("Admin", u64::MAX);
-            roles.insert("DatastoreBackup", 4);
-            roles.insert("DatastoreReader", 8);
+            roles.insert("NoAccess", (0, "comment"));
+            roles.insert("Admin", (u64::MAX, "comment"));
+            roles.insert("DatastoreBackup", (4, "comment"));
+            roles.insert("DatastoreReader", (8, "comment"));
 
             TestAcmConfig { roles }
         });

@@ -150,7 +150,7 @@ impl CachedUserInfo {
         if self.is_superuser(auth_id) {
             let acm_config = access_conf();
             if let Some(admin) = acm_config.role_admin() {
-                if let Some(admin) = acm_config.roles().get(admin) {
+                if let Some((admin, _)) = acm_config.roles().get(admin) {
                     return (*admin, *admin);
                 }
             }
@@ -160,7 +160,7 @@ impl CachedUserInfo {
         let mut privs: u64 = 0;
         let mut propagated_privs: u64 = 0;
         for (role, propagate) in roles {
-            if let Some(role_privs) = access_conf().roles().get(role.as_str()) {
+            if let Some((role_privs, _)) = access_conf().roles().get(role.as_str()) {
                 if propagate {
                     propagated_privs |= role_privs;
                 }

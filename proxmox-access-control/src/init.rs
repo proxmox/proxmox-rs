@@ -16,8 +16,9 @@ pub trait AccessControlConfig: Send + Sync {
     /// Returns a mapping of all recognized privileges and their corresponding `u64` value.
     fn privileges(&self) -> &HashMap<&str, u64>;
 
-    /// Returns a mapping of all recognized roles and their corresponding `u64` value.
-    fn roles(&self) -> &HashMap<&str, u64>;
+    /// Returns a mapping of all recognized roles and their corresponding `u64` value as well as
+    /// a comment.
+    fn roles(&self) -> &HashMap<&str, (u64, &str)>;
 
     /// Checks whether an `Authid` has super user privileges or not.
     ///
