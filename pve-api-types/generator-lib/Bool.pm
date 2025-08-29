@@ -15,8 +15,8 @@ sub bool : prototype($) {
     bless \$v, __PACKAGE__;
 }
 
-sub true : prototype() { bool(1) }
-sub false : prototype() { bool(0) }
+sub true : prototype() { bool(!!1) }
+sub false : prototype() { bool(!!0) }
 
 sub TO_API_SCHEMA {
     my ($self) = @_;
