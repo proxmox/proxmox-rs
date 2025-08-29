@@ -264,6 +264,35 @@ Schema2Rust::derive('NetworkInterface' => 'Clone', 'PartialEq');
 api(GET => '/nodes/{node}/storage', 'list_storages', 'return-name' => 'StorageInfo');
 Schema2Rust::derive('StorageInfo' => 'Clone', 'PartialEq');
 
+# FIXME: PVE9 introduced a new non optional property, but that does not
+# exist in PVE8, so make it optional here for older PVEs to work
+Schema2Rust::generate_struct(
+    'NodeStatusMemory',
+    {
+        type => 'object',
+        properties => {
+            'available' => {
+                type => 'integer',
+                description => 'The available memory in bytes.',
+                optional => 1,
+            },
+            'free' => {
+                type => 'integer',
+                description => 'The free memory in bytes.',
+            },
+            'total' => {
+                type => 'integer',
+                description => 'The total memory in bytes.',
+            },
+            'used' => {
+                type => 'integer',
+                description => 'The used memory in bytes.',
+            },
+        },
+    },
+    {},
+    {},
+);
 api(GET => '/nodes/{node}/status', 'node_status', 'return-name' => 'NodeStatus');
 
 Schema2Rust::register_api_override('ClusterMetrics', '/properties/data/items', { type => "ClusterMetricsData"});
