@@ -3670,6 +3670,7 @@ pub struct NodeStatusCurrentKernel {
 #[api(
     properties: {
         available: {
+            optional: true,
             type: Integer,
         },
         free: {
@@ -3688,7 +3689,8 @@ pub struct NodeStatusCurrentKernel {
 pub struct NodeStatusMemory {
     /// The available memory in bytes.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    pub available: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub available: Option<i64>,
 
     /// The free memory in bytes.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
