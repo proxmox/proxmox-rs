@@ -4929,6 +4929,12 @@ serde_plain::derive_fromstr_from_deserialize!(PveQmWatchdogModel);
             optional: true,
             type: String,
         },
+        "guest-phys-bits": {
+            maximum: 64,
+            minimum: 32,
+            optional: true,
+            type: Integer,
+        },
         hidden: {
             default: false,
             optional: true,
@@ -4963,6 +4969,12 @@ pub struct PveVmCpuConf {
     /// amd-no-ssb, pdpe1gb, md-clear, hv-tlbflush, hv-evmcs, aes
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub flags: Option<String>,
+
+    /// Number of physical address bits available to the guest.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "guest-phys-bits")]
+    pub guest_phys_bits: Option<u8>,
 
     /// Do not identify as a KVM virtual machine.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
