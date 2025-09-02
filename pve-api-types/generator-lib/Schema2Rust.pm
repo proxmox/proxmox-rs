@@ -7,11 +7,10 @@ use v5.36;
 use Carp qw(confess carp croak cluck);
 use Data::Dumper;
 
-use PVE::JSONSchema;
-
 use Bool;
 
 our $API = 1;
+our $LOOKUP_FORMAT = sub { die "lookup_format not initialized!\n" };
 
 my %__derive_default = (
     Debug => 1,
@@ -817,7 +816,7 @@ my sub get_format : prototype($$) {
         }
 
         $format_name = $format;
-        my $f = PVE::JSONSchema::get_format($format);
+        my $f = $LOOKUP_FORMAT->($format);
         die "missing format '$format'\n" if !$f;
         $format = $f;
     }
@@ -1801,8 +1800,8 @@ sub collect_paths : prototype($$) {
 
 # Initialize access to an API. Should be a PVE or PMG API root.
 # Also sets up the `__DIE__` and `__WARN__` signals to include context.
-sub init_api : prototype($) {
-    my ($root) = @_;
+sub init_api : prototype($$) ($root, $lookup_format) {
+    $LOOKUP_FORMAT = $lookup_format;
     $API_ROOT = $root;
     collect_paths({ children => $API_ROOT }, '');
 

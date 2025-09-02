@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 
-use strict;
-use warnings;
+use v5.36;
 
 use Carp;
 use IPC::Open2;
@@ -9,17 +8,9 @@ use IPC::Open2;
 use Data::Dumper;
 $Data::Dumper::Indent = 1;
 
-# Load api components
-use PVE::API2;
-use PVE::API2::AccessControl;
-use PVE::API2::Nodes;
-use PVE::API2::NodeConfig;
-
-# This is used to build the pve-storage-content enum:
-use PVE::Storage::Plugin;
-
 use lib './generator-lib';
 use Schema2Rust;
+use ApiDump;
 
 my $output_dir = shift(@ARGV) // die "usage: $0 <output-directory>\n";
 
@@ -27,11 +18,15 @@ sub sq : prototype($) {
     return Schema2Rust::quote_string($_[0]);
 }
 
-# Dump api:
-my $__API_ROOT = PVE::API2->api_dump(undef, 1);
+# Load API dump:
+my $pve_api = ApiDump::load_api('pve-api.json');
+
+my sub lookup_format :prototype($) ($format) {
+    return $pve_api->{formats}->{$format} // die "missing format: '$format'\n";
+}
 
 # Initialize:
-Schema2Rust::init_api($__API_ROOT);
+Schema2Rust::init_api($pve_api->{root}, \&lookup_format);
 
 # From JSONSchema.pm, but we can't use perl-re directly, particularly `qr//`...
 my $CONFIGID_RE = '^(?i:[a-z][a-z0-9_-]+)$';
@@ -167,12 +162,11 @@ Schema2Rust::register_api_extensions('ClusterResource', {
     '/properties/id' => { description => sq("Resource id.") },
 });
 
-# pve-storage-content uses verify_
-my $storage_content_types = [sort keys PVE::Storage::Plugin::valid_content_types('dir')->%*];
+# pve-storage-content uses verify()
 Schema2Rust::generate_enum('StorageContent', {
     type => 'string',
     description => 'Storage content type.',
-    enum => $storage_content_types,
+    enum => $pve_api->{'storage-content-types'},
 });
 
 sub api : prototype($$$;%) {
