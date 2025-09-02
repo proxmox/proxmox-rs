@@ -93,14 +93,14 @@ pub const BACKUP_NAMESPACE_SCHEMA: Schema = StringSchema::new("Namespace.")
 pub const NS_MAX_DEPTH_SCHEMA: Schema =
     IntegerSchema::new("How many levels of namespaces should be operated on (0 == no recursion)")
         .minimum(0)
-        .maximum(MAX_NAMESPACE_DEPTH as isize)
-        .default(MAX_NAMESPACE_DEPTH as isize)
+        .maximum(MAX_NAMESPACE_DEPTH as i64)
+        .default(MAX_NAMESPACE_DEPTH as i64)
         .schema();
 
 pub const NS_MAX_DEPTH_REDUCED_SCHEMA: Schema =
 IntegerSchema::new("How many levels of namespaces should be operated on (0 == no recursion, empty == automatic full recursion, namespace depths reduce maximum allowed value)")
     .minimum(0)
-    .maximum(MAX_NAMESPACE_DEPTH as isize)
+    .maximum(MAX_NAMESPACE_DEPTH as i64)
     .schema();
 
 pub const DATASTORE_SCHEMA: Schema = StringSchema::new("Datastore name.")
