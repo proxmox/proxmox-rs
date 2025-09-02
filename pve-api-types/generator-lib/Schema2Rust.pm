@@ -496,8 +496,10 @@ my sub print_method_without_body : prototype($$$$$) {
                 print {$out} "        .maybe_bool_arg(\"$name\", p_$rust_name)\n";
             } elsif ($arg->{is_string_list}) {
                 print {$out} "        .maybe_list_arg(\"$name\", p_$rust_name)\n";
-            } else {
+            } elsif ($arg->{optional}) {
                 print {$out} "        .maybe_arg(\"$name\", &p_$rust_name)\n";
+            } else {
+                print {$out} "        .arg(\"$name\", &p_$rust_name)\n";
             }
         }
         print {$out} "        .build();\n";
@@ -516,12 +518,15 @@ my sub print_method_without_body : prototype($$$$$) {
             for my $arg (@$input) {
                 my $name = $arg->{name};
                 my $rust_name = $arg->{rust_name};
+
                 if ($arg->{type} eq 'Option<bool>') {
                     print {$out} "        .maybe_bool_arg(\"$name\", $rust_name)\n";
                 } elsif ($arg->{is_string_list}) {
                     print {$out} "        .maybe_list_arg(\"$name\", &$rust_name)\n";
-                } else {
+                } elsif ($arg->{optional}) {
                     print {$out} "        .maybe_arg(\"$name\", &$rust_name)\n";
+                } else {
+                    print {$out} "        .arg(\"$name\", &$rust_name)\n";
                 }
             }
             print {$out} "        .build();\n";
