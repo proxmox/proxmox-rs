@@ -173,8 +173,7 @@ impl<'de> de::Deserializer<'de> for SchemaDeserializer<'de, '_> {
                     .map_err(|_| Error::msg(format!("not a boolean: {:?}", self.input)))?,
             ),
             Schema::Integer(schema) => {
-                // FIXME: isize vs explicit i64, needs fixing in schema check_constraints api
-                let value: isize = self
+                let value: i64 = self
                     .input
                     .parse()
                     .map_err(|_| Error::msg(format!("not an integer: {:?}", self.input)))?;

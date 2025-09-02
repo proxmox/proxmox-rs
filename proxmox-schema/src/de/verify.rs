@@ -170,7 +170,7 @@ impl<'de> de::Visitor<'de> for Visitor {
 
     fn visit_i64<E: de::Error>(self, v: i64) -> Result<Self::Value, E> {
         match self.0 {
-            Schema::Integer(schema) => match schema.check_constraints(v as isize) {
+            Schema::Integer(schema) => match schema.check_constraints(v) {
                 Ok(()) => Ok(Verifier),
                 Err(err) => Err(E::custom(err)),
             },
@@ -180,10 +180,13 @@ impl<'de> de::Visitor<'de> for Visitor {
 
     fn visit_u64<E: de::Error>(self, v: u64) -> Result<Self::Value, E> {
         match self.0 {
-            Schema::Integer(schema) => match schema.check_constraints(v as isize) {
-                Ok(()) => Ok(Verifier),
-                Err(err) => Err(E::custom(err)),
-            },
+            Schema::Integer(schema) => {
+                let val = v.try_into().or_else(|err| Err(E::custom(err)))?;
+                match schema.check_constraints(val) {
+                    Ok(()) => Ok(Verifier),
+                    Err(err) => Err(E::custom(err)),
+                }
+            }
             _ => Err(E::invalid_type(Unexpected::Unsigned(v), &self)),
         }
     }

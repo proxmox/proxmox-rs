@@ -228,11 +228,11 @@ impl BooleanSchema {
 pub struct IntegerSchema {
     pub description: &'static str,
     /// Optional minimum.
-    pub minimum: Option<isize>,
+    pub minimum: Option<i64>,
     /// Optional maximum.
-    pub maximum: Option<isize>,
+    pub maximum: Option<i64>,
     /// Optional default.
-    pub default: Option<isize>,
+    pub default: Option<i64>,
 }
 
 impl IntegerSchema {
@@ -250,17 +250,17 @@ impl IntegerSchema {
         self
     }
 
-    pub const fn default(mut self, default: isize) -> Self {
+    pub const fn default(mut self, default: i64) -> Self {
         self.default = Some(default);
         self
     }
 
-    pub const fn minimum(mut self, minimum: isize) -> Self {
+    pub const fn minimum(mut self, minimum: i64) -> Self {
         self.minimum = Some(minimum);
         self
     }
 
-    pub const fn maximum(mut self, maximum: isize) -> Self {
+    pub const fn maximum(mut self, maximum: i64) -> Self {
         self.maximum = Some(maximum);
         self
     }
@@ -269,7 +269,7 @@ impl IntegerSchema {
         Schema::Integer(self)
     }
 
-    pub fn check_constraints(&self, value: isize) -> Result<(), Error> {
+    pub fn check_constraints(&self, value: i64) -> Result<(), Error> {
         if let Some(minimum) = self.minimum {
             if value < minimum {
                 bail!(
@@ -296,7 +296,7 @@ impl IntegerSchema {
     /// Verify JSON value using an `IntegerSchema`.
     pub fn verify_json(&self, data: &Value) -> Result<(), Error> {
         if let Some(value) = data.as_i64() {
-            self.check_constraints(value as isize)
+            self.check_constraints(value)
         } else {
             bail!("Expected integer value.");
         }
@@ -1406,7 +1406,7 @@ impl Schema {
                 Value::Bool(res)
             }
             Schema::Integer(integer_schema) => {
-                let res: isize = value_str.parse()?;
+                let res: i64 = value_str.parse()?;
                 integer_schema.check_constraints(res)?;
                 Value::Number(res.into())
             }
