@@ -324,6 +324,10 @@ Schema2Rust::derive('ListRealm' => 'Clone', 'PartialEq');
 api(POST => '/access/users/{userid}/token/{tokenid}', 'create_token', 'param-name' => 'CreateToken');
 Schema2Rust::derive('CreateToken' => 'Default');
 
+api(GET => '/nodes/{node}/apt/update', 'list_available_updates', 'return-name' => 'AptUpdateInfo');
+api(POST => '/nodes/{node}/apt/update', 'update_apt_database', 'output-type' => 'PveUpid', 'param-name' => 'AptUpdateParams');
+api(GET => '/nodes/{node}/apt/changelog', 'get_package_changelog', 'output-type' => 'String');
+
 # NOW DUMP THE CODE:
 #
 # We generate one file for API types, and one for API method calls.
