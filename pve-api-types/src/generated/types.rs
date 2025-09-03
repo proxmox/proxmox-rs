@@ -1,3 +1,111 @@
+#[api(
+    properties: {
+        Arch: {
+            type: String,
+        },
+        Description: {
+            type: String,
+        },
+        NotifyStatus: {
+            optional: true,
+            type: String,
+        },
+        OldVersion: {
+            optional: true,
+            type: String,
+        },
+        Origin: {
+            type: String,
+        },
+        Package: {
+            type: String,
+        },
+        Priority: {
+            type: String,
+        },
+        Section: {
+            type: String,
+        },
+        Title: {
+            type: String,
+        },
+        Version: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct AptUpdateInfo {
+    /// Package Architecture.
+    #[serde(rename = "Arch")]
+    pub arch: String,
+
+    /// Human-readable package description.
+    #[serde(rename = "Description")]
+    pub description: String,
+
+    /// Version for which PVE has already sent an update notification for.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "NotifyStatus")]
+    pub notify_status: Option<String>,
+
+    /// Old version currently installed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "OldVersion")]
+    pub old_version: Option<String>,
+
+    /// Package origin.
+    #[serde(rename = "Origin")]
+    pub origin: String,
+
+    /// Package name.
+    #[serde(rename = "Package")]
+    pub package: String,
+
+    /// Package priority in human-readable form.
+    #[serde(rename = "Priority")]
+    pub priority: String,
+
+    /// Package section.
+    #[serde(rename = "Section")]
+    pub section: String,
+
+    /// Package title.
+    #[serde(rename = "Title")]
+    pub title: String,
+
+    /// New version to be updated to.
+    #[serde(rename = "Version")]
+    pub version: String,
+}
+
+#[api(
+    properties: {
+        notify: {
+            default: false,
+            optional: true,
+        },
+        quiet: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct AptUpdateParams {
+    /// Send notification about new packages.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub notify: Option<bool>,
+
+    /// Only produces output suitable for logging, omitting progress indicators.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quiet: Option<bool>,
+}
+
 const CLUSTER_RESOURCE_CONTENT: Schema =
     proxmox_schema::ArraySchema::new("list", &StorageContent::API_SCHEMA).schema();
 
@@ -675,14 +783,14 @@ pub struct ClusterResource {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub disk: Option<u64>,
 
-    /// The amount of bytes the guest read from its block devices since the
+    /// The number of bytes the guest read from its block devices since the
     /// guest was started. This info is not available for all storage types.
     /// (for types 'qemu' and 'lxc')
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diskread: Option<i64>,
 
-    /// The amount of bytes the guest wrote to its block devices since the guest
+    /// The number of bytes the guest wrote to its block devices since the guest
     /// was started. This info is not available for all storage types. (for
     /// types 'qemu' and 'lxc')
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
@@ -1216,7 +1324,7 @@ pub struct ListTasks {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub errors: Option<bool>,
 
-    /// Only list this amount of tasks.
+    /// Only list this number of tasks.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub limit: Option<u64>,

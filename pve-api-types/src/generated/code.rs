@@ -144,9 +144,7 @@
 /// - /nodes/{node}
 /// - /nodes/{node}/aplinfo
 /// - /nodes/{node}/apt
-/// - /nodes/{node}/apt/changelog
 /// - /nodes/{node}/apt/repositories
-/// - /nodes/{node}/apt/update
 /// - /nodes/{node}/apt/versions
 /// - /nodes/{node}/capabilities
 /// - /nodes/{node}/capabilities/qemu
@@ -424,6 +422,16 @@ pub trait PveClient {
         Err(Error::Other("create_token not implemented"))
     }
 
+    /// Get package changelogs.
+    async fn get_package_changelog(
+        &self,
+        node: &str,
+        name: String,
+        version: Option<String>,
+    ) -> Result<String, Error> {
+        Err(Error::Other("get_package_changelog not implemented"))
+    }
+
     /// Read subscription info.
     async fn get_subscription(&self, node: &str) -> Result<NodeSubscriptionInfo, Error> {
         Err(Error::Other("get_subscription not implemented"))
@@ -453,6 +461,11 @@ pub trait PveClient {
     /// Read task status.
     async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
         Err(Error::Other("get_task_status not implemented"))
+    }
+
+    /// List available updates.
+    async fn list_available_updates(&self, node: &str) -> Result<Vec<AptUpdateInfo>, Error> {
+        Err(Error::Other("list_available_updates not implemented"))
     }
 
     /// Authentication domain index.
@@ -659,6 +672,16 @@ pub trait PveClient {
         Err(Error::Other("stop_task not implemented"))
     }
 
+    /// This is used to resynchronize the package index files from their sources
+    /// (apt-get update).
+    async fn update_apt_database(
+        &self,
+        node: &str,
+        params: AptUpdateParams,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("update_apt_database not implemented"))
+    }
+
     /// API version details, including some parts of the global datacenter
     /// config.
     async fn version(&self) -> Result<VersionResponse, Error> {
@@ -724,6 +747,20 @@ where
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
+    /// Get package changelogs.
+    async fn get_package_changelog(
+        &self,
+        node: &str,
+        name: String,
+        version: Option<String>,
+    ) -> Result<String, Error> {
+        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/apt/changelog"))
+            .arg("name", &name)
+            .maybe_arg("version", &version)
+            .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Read subscription info.
     async fn get_subscription(&self, node: &str) -> Result<NodeSubscriptionInfo, Error> {
         let url = &format!("/api2/extjs/nodes/{node}/subscription");
@@ -784,6 +821,12 @@ where
     /// Read task status.
     async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
         let url = &format!("/api2/extjs/nodes/{node}/tasks/{upid}/status");
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List available updates.
+    async fn list_available_updates(&self, node: &str) -> Result<Vec<AptUpdateInfo>, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/apt/update");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1030,6 +1073,17 @@ where
     async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
         let url = &format!("/api2/extjs/nodes/{node}/tasks/{upid}");
         self.0.delete(url).await?.nodata()
+    }
+
+    /// This is used to resynchronize the package index files from their sources
+    /// (apt-get update).
+    async fn update_apt_database(
+        &self,
+        node: &str,
+        params: AptUpdateParams,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/apt/update");
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// API version details, including some parts of the global datacenter
