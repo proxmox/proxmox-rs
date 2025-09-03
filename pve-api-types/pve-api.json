@@ -47733,7 +47733,50 @@
                                  "proxyto": "node",
                                  "returns": {
                                     "items": {
-                                       "properties": {},
+                                       "properties": {
+                                          "Arch": {
+                                             "description": "Package Architecture.",
+                                             "type": "string"
+                                          },
+                                          "Description": {
+                                             "description": "Human-readable package description.",
+                                             "type": "string"
+                                          },
+                                          "NotifyStatus": {
+                                             "description": "Version for which PVE has already sent an update notification for.",
+                                             "optional": 1,
+                                             "type": "string"
+                                          },
+                                          "OldVersion": {
+                                             "description": "Old version currently installed.",
+                                             "optional": 1,
+                                             "type": "string"
+                                          },
+                                          "Origin": {
+                                             "description": "Package origin.",
+                                             "type": "string"
+                                          },
+                                          "Package": {
+                                             "description": "Package name.",
+                                             "type": "string"
+                                          },
+                                          "Priority": {
+                                             "description": "Package priority in human-readable form.",
+                                             "type": "string"
+                                          },
+                                          "Section": {
+                                             "description": "Package section.",
+                                             "type": "string"
+                                          },
+                                          "Title": {
+                                             "description": "Package title.",
+                                             "type": "string"
+                                          },
+                                          "Version": {
+                                             "description": "New version to be updated to.",
+                                             "type": "string"
+                                          }
+                                       },
                                        "type": "object"
                                     },
                                     "type": "array"
