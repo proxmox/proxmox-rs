@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-time-api"
-version = "1.0.0"
+version = "1.0.1"
 description = "Time Management API implementation"
 
 authors.workspace = true
