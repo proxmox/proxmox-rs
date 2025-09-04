@@ -1,3 +1,11 @@
+rust-proxmox-auth-api (1.0.4-1) trixie; urgency=medium
+
+  * allow logging in with tickets provided via password field only
+
+  * update schema to 5.0.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 10:38:40 +0200
+
 rust-proxmox-auth-api (1.0.3-1) trixie; urgency=medium
 
   * log the actual result from `authenticate` if it fails, not the previous
