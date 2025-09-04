@@ -11955,7 +11955,77 @@
                                     "user": "all"
                                  },
                                  "returns": {
-                                    "type": "object"
+                                    "properties": {
+                                       "alias": {
+                                          "description": "Alias name of the VNet.",
+                                          "maxLength": 256,
+                                          "optional": 1,
+                                          "pattern": ("Regex")["(?^i:[\\(\\)-_.\\w\\d\\s]{0,256})"],
+                                          "type": "string"
+                                       },
+                                       "digest": {
+                                          "description": "Digest of the VNet section.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "isolate-ports": {
+                                          "description": "If true, sets the isolated property for all interfaces on the bridge of this VNet.",
+                                          "optional": 1,
+                                          "type": "boolean"
+                                       },
+                                       "pending": {
+                                          "description": "Changes that have not yet been applied to the running configuration.",
+                                          "optional": 1,
+                                          "properties": {
+                                             "alias": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/alias"],
+                                             "isolate-ports": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/isolate-ports"],
+                                             "tag": {
+                                                "description": "VLAN Tag (for VLAN or QinQ zones) or VXLAN VNI (for VXLAN or EVPN zones).",
+                                                "maximum": 16777215,
+                                                "minimum": 1,
+                                                "optional": 1,
+                                                "type": "integer"
+                                             },
+                                             "vlanaware": {
+                                                "description": "Allow VLANs to pass through this VNet.",
+                                                "optional": 1,
+                                                "type": "boolean"
+                                             },
+                                             "zone": {
+                                                "description": "Name of the zone this VNet belongs to.",
+                                                "optional": 1,
+                                                "type": "string"
+                                             }
+                                          },
+                                          "type": "object"
+                                       },
+                                       "state": {
+                                          "description": "State of the SDN configuration object.",
+                                          "enum": [
+                                             "new",
+                                             "changed",
+                                             "deleted"
+                                          ],
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "tag": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/pending/properties/tag"],
+                                       "type": {
+                                          "description": "Type of the VNet.",
+                                          "enum": [
+                                             "vnet"
+                                          ],
+                                          "optional": 0,
+                                          "type": "string"
+                                       },
+                                       "vlanaware": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/pending/properties/vlanaware"],
+                                       "vnet": {
+                                          "description": "Name of the VNet.",
+                                          "optional": 0,
+                                          "type": "string"
+                                       },
+                                       "zone": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/pending/properties/zone"]
+                                    }
                                  }
                               },
                               "PUT": {
@@ -11967,7 +12037,7 @@
                                     "additionalProperties": 0,
                                     "properties": {
                                        "alias": {
-                                          "description": "alias name of the vnet",
+                                          "description": "Alias name of the VNet.",
                                           "maxLength": 256,
                                           "optional": 1,
                                           "pattern": ("Regex")["(?^i:[\\(\\)-_.\\w\\d\\s]{0,256})"],
@@ -11987,7 +12057,7 @@
                                           "type": "string"
                                        },
                                        "isolate-ports": {
-                                          "description": "If true, sets the isolated property for all members of this VNet",
+                                          "description": "If true, sets the isolated property for all interfaces on the bridge of this VNet.",
                                           "optional": 1,
                                           "type": "boolean"
                                        },
@@ -11997,12 +12067,14 @@
                                           "type": "string"
                                        },
                                        "tag": {
-                                          "description": "vlan or vxlan id",
+                                          "description": "VLAN Tag (for VLAN or QinQ zones) or VXLAN VNI (for VXLAN or EVPN zones).",
+                                          "maximum": 16777215,
+                                          "minimum": 1,
                                           "optional": 1,
                                           "type": "integer"
                                        },
                                        "vlanaware": {
-                                          "description": "Allow vm VLANs to pass through this vnet.",
+                                          "description": "Allow VLANs to pass through this vnet.",
                                           "optional": 1,
                                           "type": "boolean"
                                        },
@@ -12013,7 +12085,7 @@
                                           "type": "string"
                                        },
                                        "zone": {
-                                          "description": "zone id",
+                                          "description": "Name of the zone this VNet belongs to.",
                                           "optional": 1,
                                           "type": "string"
                                        }
@@ -12062,7 +12134,43 @@
                            },
                            "returns": {
                               "items": {
-                                 "properties": {},
+                                 "properties": {
+                                    "alias": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/alias"],
+                                    "digest": {
+                                       "description": "Digest of the VNet section.",
+                                       "optional": 1,
+                                       "type": "string"
+                                    },
+                                    "isolate-ports": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/isolate-ports"],
+                                    "pending": {
+                                       "description": "Changes that have not yet been applied to the running configuration.",
+                                       "optional": 1,
+                                       "properties": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/pending/properties"],
+                                       "type": "object"
+                                    },
+                                    "state": {
+                                       "description": "State of the SDN configuration object.",
+                                       "enum": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/state/enum"],
+                                       "optional": 1,
+                                       "type": "string"
+                                    },
+                                    "tag": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/pending/properties/tag"],
+                                    "type": {
+                                       "description": "Type of the VNet.",
+                                       "enum": [
+                                          "vnet"
+                                       ],
+                                       "optional": 0,
+                                       "type": "string"
+                                    },
+                                    "vlanaware": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/pending/properties/vlanaware"],
+                                    "vnet": {
+                                       "description": "Name of the VNet.",
+                                       "optional": 0,
+                                       "type": "string"
+                                    },
+                                    "zone": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/pending/properties/zone"]
+                                 },
                                  "type": "object"
                               },
                               "links": [
@@ -12091,7 +12199,7 @@
                                  },
                                  "tag": ("Ref")["/root/0/children/12/children/0/children/0/info/PUT/parameters/properties/tag"],
                                  "type": {
-                                    "description": "Type",
+                                    "description": "Type of the VNet.",
                                     "enum": [
                                        "vnet"
                                     ],
@@ -12101,7 +12209,7 @@
                                  "vlanaware": ("Ref")["/root/0/children/12/children/0/children/0/info/PUT/parameters/properties/vlanaware"],
                                  "vnet": ("Ref")["/root/0/children/12/children/0/children/0/info/PUT/parameters/properties/vnet"],
                                  "zone": {
-                                    "description": "zone id",
+                                    "description": "Name of the zone this VNet belongs to.",
                                     "optional": 0,
                                     "type": "string"
                                  }
@@ -12201,7 +12309,192 @@
                                     ]
                                  },
                                  "returns": {
-                                    "type": "object"
+                                    "properties": {
+                                       "advertise-subnets": {
+                                          "description": "Advertise IP prefixes (Type-5 routes) instead of MAC/IP pairs (Type-2 routes). EVPN zone only.",
+                                          "optional": 1,
+                                          "type": "boolean"
+                                       },
+                                       "bridge": {
+                                          "description": "the bridge for which VLANs should be managed. VLAN & QinQ zone only.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "bridge-disable-mac-learning": {
+                                          "description": "Disable auto mac learning. VLAN zone only.",
+                                          "optional": 1,
+                                          "type": "boolean"
+                                       },
+                                       "controller": {
+                                          "description": "ID of the controller for this zone. EVPN zone only.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "dhcp": {
+                                          "description": "Name of DHCP server backend for this zone.",
+                                          "enum": [
+                                             "dnsmasq"
+                                          ],
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "digest": {
+                                          "description": "Digest of the controller section.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "disable-arp-nd-suppression": {
+                                          "description": "Suppress IPv4 ARP && IPv6 Neighbour Discovery messages. EVPN zone only.",
+                                          "optional": 1,
+                                          "type": "boolean"
+                                       },
+                                       "dns": {
+                                          "description": "ID of the DNS server for this zone.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "dnszone": {
+                                          "description": "Domain name for this zone.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "exitnodes": {
+                                          "description": "List of PVE Nodes that should act as exit node for this zone. EVPN zone only.",
+                                          "format": "pve-node-list",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "exitnodes-local-routing": {
+                                          "description": "Create routes on the exit nodes, so they can connect to EVPN guests. EVPN zone only.",
+                                          "optional": 1,
+                                          "type": "boolean"
+                                       },
+                                       "exitnodes-primary": {
+                                          "description": "Force traffic through this exitnode first. EVPN zone only.",
+                                          "format": "pve-node",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "ipam": {
+                                          "description": "ID of the IPAM for this zone.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "mac": {
+                                          "description": "MAC address of the anycast router for this zone.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "mtu": {
+                                          "description": "MTU of the zone, will be used for the created VNet bridges.",
+                                          "optional": 1,
+                                          "type": "integer"
+                                       },
+                                       "nodes": {
+                                          "description": "Nodes where this zone should be created.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "peers": {
+                                          "description": "Comma-separated list of peers, that are part of the VXLAN zone. Usually the IPs of the nodes. VXLAN zone only.",
+                                          "format": "ip-list",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "pending": {
+                                          "description": "Changes that have not yet been applied to the running configuration.",
+                                          "optional": 1,
+                                          "properties": {
+                                             "advertise-subnets": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/advertise-subnets"],
+                                             "bridge": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/bridge"],
+                                             "bridge-disable-mac-learning": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/bridge-disable-mac-learning"],
+                                             "controller": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/controller"],
+                                             "dhcp": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/dhcp"],
+                                             "disable-arp-nd-suppression": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/disable-arp-nd-suppression"],
+                                             "dns": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/dns"],
+                                             "dnszone": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/dnszone"],
+                                             "exitnodes": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/exitnodes"],
+                                             "exitnodes-local-routing": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/exitnodes-local-routing"],
+                                             "exitnodes-primary": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/exitnodes-primary"],
+                                             "ipam": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/ipam"],
+                                             "mac": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/mac"],
+                                             "mtu": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/mtu"],
+                                             "nodes": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/nodes"],
+                                             "peers": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/peers"],
+                                             "reversedns": {
+                                                "description": "ID of the reverse DNS server for this zone.",
+                                                "optional": 1,
+                                                "type": "string"
+                                             },
+                                             "rt-import": {
+                                                "description": "Route-Targets that should be imported into the VRF of this zone via BGP. EVPN zone only.",
+                                                "format": "pve-sdn-bgp-rt-list",
+                                                "optional": 1,
+                                                "type": "string"
+                                             },
+                                             "tag": {
+                                                "description": "Service-VLAN Tag (outer VLAN). QinQ zone only",
+                                                "minimum": 0,
+                                                "optional": 1,
+                                                "type": "integer"
+                                             },
+                                             "vlan-protocol": {
+                                                "default": "802.1q",
+                                                "description": "VLAN protocol for the creation of the QinQ zone. QinQ zone only.",
+                                                "enum": [
+                                                   "802.1q",
+                                                   "802.1ad"
+                                                ],
+                                                "optional": 1,
+                                                "type": "string"
+                                             },
+                                             "vrf-vxlan": {
+                                                "description": "VNI for the zone VRF. EVPN zone only.",
+                                                "maximum": 16777215,
+                                                "minimum": 1,
+                                                "optional": 1,
+                                                "type": "integer"
+                                             },
+                                             "vxlan-port": {
+                                                "default": 4789,
+                                                "description": "UDP port that should be used for the VXLAN tunnel (default 4789). VXLAN zone only.",
+                                                "maximum": 65536,
+                                                "minimum": 1,
+                                                "optional": 1,
+                                                "type": "integer"
+                                             }
+                                          },
+                                          "type": "object"
+                                       },
+                                       "reversedns": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/reversedns"],
+                                       "rt-import": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/rt-import"],
+                                       "state": {
+                                          "description": "State of the SDN configuration object.",
+                                          "enum": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/state/enum"],
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "tag": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/tag"],
+                                       "type": {
+                                          "description": "Type of the zone.",
+                                          "enum": [
+                                             "evpn",
+                                             "faucet",
+                                             "qinq",
+                                             "simple",
+                                             "vlan",
+                                             "vxlan"
+                                          ],
+                                          "type": "string"
+                                       },
+                                       "vlan-protocol": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/vlan-protocol"],
+                                       "vrf-vxlan": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/vrf-vxlan"],
+                                       "vxlan-port": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/vxlan-port"],
+                                       "zone": {
+                                          "description": "Name of the zone.",
+                                          "type": "string"
+                                       }
+                                    }
                                  }
                               },
                               "PUT": {
@@ -12213,11 +12506,12 @@
                                     "additionalProperties": 0,
                                     "properties": {
                                        "advertise-subnets": {
-                                          "description": "Advertise evpn subnets if you have silent hosts",
+                                          "description": "Advertise IP prefixes (Type-5 routes) instead of MAC/IP pairs (Type-2 routes).",
                                           "optional": 1,
                                           "type": "boolean"
                                        },
                                        "bridge": {
+                                          "description": "The bridge for which VLANs should be managed.",
                                           "optional": 1,
                                           "type": "string"
                                        },
@@ -12227,7 +12521,7 @@
                                           "type": "boolean"
                                        },
                                        "controller": {
-                                          "description": "Frr router name",
+                                          "description": "Controller for this zone.",
                                           "optional": 1,
                                           "type": "string"
                                        },
@@ -12253,7 +12547,7 @@
                                           "type": "string"
                                        },
                                        "disable-arp-nd-suppression": {
-                                          "description": "Disable ipv4 arp && ipv6 neighbour discovery suppression",
+                                          "description": "Suppress IPv4 ARP && IPv6 Neighbour Discovery messages.",
                                           "optional": 1,
                                           "type": "boolean"
                                        },
@@ -12280,12 +12574,12 @@
                                           "type": "string"
                                        },
                                        "exitnodes-local-routing": {
-                                          "description": "Allow exitnodes to connect to evpn guests",
+                                          "description": "Allow exitnodes to connect to EVPN guests.",
                                           "optional": 1,
                                           "type": "boolean"
                                        },
                                        "exitnodes-primary": {
-                                          "description": "Force traffic to this exitnode first.",
+                                          "description": "Force traffic through this exitnode first.",
                                           "format": "pve-node",
                                           "optional": 1,
                                           "type": "string"
@@ -12307,13 +12601,13 @@
                                           "type": "string"
                                        },
                                        "mac": {
-                                          "description": "Anycast logical router mac address",
+                                          "description": "Anycast logical router mac address.",
                                           "format": "mac-addr",
                                           "optional": 1,
                                           "type": "string"
                                        },
                                        "mtu": {
-                                          "description": "MTU",
+                                          "description": "MTU of the zone, will be used for the created VNet bridges.",
                                           "optional": 1,
                                           "type": "integer"
                                        },
@@ -12324,7 +12618,7 @@
                                           "type": "string"
                                        },
                                        "peers": {
-                                          "description": "peers address list.",
+                                          "description": "Comma-separated list of peers, that are part of the VXLAN zone. Usually the IPs of the nodes.",
                                           "format": "ip-list",
                                           "optional": 1,
                                           "type": "string"
@@ -12335,19 +12629,20 @@
                                           "type": "string"
                                        },
                                        "rt-import": {
-                                          "description": "Route-Target import",
+                                          "description": "List of Route Targets that should be imported into the VRF of the zone.",
                                           "format": "pve-sdn-bgp-rt-list",
                                           "optional": 1,
                                           "type": "string"
                                        },
                                        "tag": {
-                                          "description": "Service-VLAN Tag",
+                                          "description": "Service-VLAN Tag (outer VLAN)",
                                           "minimum": 0,
                                           "optional": 1,
                                           "type": "integer"
                                        },
                                        "vlan-protocol": {
                                           "default": "802.1q",
+                                          "description": "Which VLAN protocol should be used for the creation of the QinQ zone.",
                                           "enum": [
                                              "802.1q",
                                              "802.1ad"
@@ -12356,12 +12651,15 @@
                                           "type": "string"
                                        },
                                        "vrf-vxlan": {
-                                          "description": "l3vni.",
+                                          "description": "VNI for the zone VRF.",
+                                          "maximum": 16777215,
+                                          "minimum": 1,
                                           "optional": 1,
                                           "type": "integer"
                                        },
                                        "vxlan-port": {
-                                          "description": "Vxlan tunnel udp port (default 4789).",
+                                          "default": 4789,
+                                          "description": "UDP port that should be used for the VXLAN tunnel (default 4789).",
                                           "maximum": 65536,
                                           "minimum": 1,
                                           "optional": 1,
@@ -12437,46 +12735,59 @@
                            "returns": {
                               "items": {
                                  "properties": {
-                                    "dhcp": {
+                                    "advertise-subnets": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/advertise-subnets"],
+                                    "bridge": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/bridge"],
+                                    "bridge-disable-mac-learning": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/bridge-disable-mac-learning"],
+                                    "controller": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/controller"],
+                                    "dhcp": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/dhcp"],
+                                    "digest": {
+                                       "description": "Digest of the controller section.",
                                        "optional": 1,
                                        "type": "string"
                                     },
-                                    "dns": {
-                                       "optional": 1,
-                                       "type": "string"
-                                    },
-                                    "dnszone": {
-                                       "optional": 1,
-                                       "type": "string"
-                                    },
-                                    "ipam": {
-                                       "optional": 1,
-                                       "type": "string"
-                                    },
-                                    "mtu": {
-                                       "optional": 1,
-                                       "type": "integer"
-                                    },
-                                    "nodes": {
-                                       "optional": 1,
-                                       "type": "string"
-                                    },
+                                    "disable-arp-nd-suppression": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/disable-arp-nd-suppression"],
+                                    "dns": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/dns"],
+                                    "dnszone": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/dnszone"],
+                                    "exitnodes": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/exitnodes"],
+                                    "exitnodes-local-routing": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/exitnodes-local-routing"],
+                                    "exitnodes-primary": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/exitnodes-primary"],
+                                    "ipam": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/ipam"],
+                                    "mac": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/mac"],
+                                    "mtu": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/mtu"],
+                                    "nodes": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/nodes"],
+                                    "peers": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/peers"],
                                     "pending": {
+                                       "description": "Changes that have not yet been applied to the running configuration.",
                                        "optional": 1,
-                                       "type": "boolean"
+                                       "properties": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties"],
+                                       "type": "object"
                                     },
-                                    "reversedns": {
-                                       "optional": 1,
-                                       "type": "string"
-                                    },
+                                    "reversedns": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/reversedns"],
+                                    "rt-import": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/rt-import"],
                                     "state": {
+                                       "description": "State of the SDN configuration object.",
+                                       "enum": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/state/enum"],
                                        "optional": 1,
                                        "type": "string"
                                     },
+                                    "tag": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/tag"],
                                     "type": {
+                                       "description": "Type of the zone.",
+                                       "enum": [
+                                          "evpn",
+                                          "faucet",
+                                          "qinq",
+                                          "simple",
+                                          "vlan",
+                                          "vxlan"
+                                       ],
                                        "type": "string"
                                     },
+                                    "vlan-protocol": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/vlan-protocol"],
+                                    "vrf-vxlan": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/vrf-vxlan"],
+                                    "vxlan-port": ("Ref")["/root/0/children/12/children/1/children/0/info/GET/returns/properties/pending/properties/vxlan-port"],
                                     "zone": {
+                                       "description": "Name of the zone.",
                                        "type": "string"
                                     }
                                  },
@@ -12638,7 +12949,104 @@
                                     ]
                                  },
                                  "returns": {
-                                    "type": "object"
+                                    "properties": {
+                                       "asn": {
+                                          "description": "The local ASN of the controller. BGP & EVPN only.",
+                                          "maximum": 4294967295,
+                                          "minimum": 0,
+                                          "optional": 1,
+                                          "type": "integer"
+                                       },
+                                       "bgp-multipath-as-relax": {
+                                          "description": "Consider different AS paths of equal length for multipath computation. BGP only.",
+                                          "optional": 1,
+                                          "type": "boolean"
+                                       },
+                                       "controller": {
+                                          "description": "Name of the controller.",
+                                          "type": "string"
+                                       },
+                                       "digest": {
+                                          "description": "Digest of the controller section.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "ebgp": {
+                                          "description": "Enable eBGP (remote-as external). BGP only.",
+                                          "optional": 1,
+                                          "type": "boolean"
+                                       },
+                                       "ebgp-multihop": {
+                                          "description": "Set maximum amount of hops for eBGP peers. Needs ebgp set to 1. BGP only.",
+                                          "optional": 1,
+                                          "type": "integer"
+                                       },
+                                       "isis-domain": {
+                                          "description": "Name of the IS-IS domain. IS-IS only.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "isis-ifaces": {
+                                          "description": "Comma-separated list of interfaces where IS-IS should be active. IS-IS only.",
+                                          "format": "pve-iface-list",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "isis-net": {
+                                          "description": "Network Entity title for this node in the IS-IS network. IS-IS only.",
+                                          "format": "pve-sdn-isis-net",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "loopback": {
+                                          "description": "Name of the loopback/dummy interface that provides the Router-IP. BGP only.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "node": {
+                                          "description": "Node(s) where this controller is active.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "peers": {
+                                          "description": "Comma-separated list of the peers IP addresses.",
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "pending": {
+                                          "description": "Changes that have not yet been applied to the running configuration.",
+                                          "optional": 1,
+                                          "properties": {
+                                             "asn": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/asn"],
+                                             "bgp-multipath-as-relax": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/bgp-multipath-as-relax"],
+                                             "ebgp": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/ebgp"],
+                                             "ebgp-multihop": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/ebgp-multihop"],
+                                             "isis-domain": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/isis-domain"],
+                                             "isis-ifaces": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/isis-ifaces"],
+                                             "isis-net": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/isis-net"],
+                                             "loopback": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/loopback"],
+                                             "node": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/node"],
+                                             "peers": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/peers"]
+                                          },
+                                          "type": "object"
+                                       },
+                                       "state": {
+                                          "description": "State of the SDN configuration object.",
+                                          "enum": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/state/enum"],
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "type": {
+                                          "description": "Type of the controller",
+                                          "enum": [
+                                             "bgp",
+                                             "evpn",
+                                             "faucet",
+                                             "isis"
+                                          ],
+                                          "type": "string"
+                                       }
+                                    }
                                  }
                               },
                               "PUT": {
@@ -12651,12 +13059,13 @@
                                     "properties": {
                                        "asn": {
                                           "description": "autonomous system number",
-                                          "maximum": 4294967296,
+                                          "maximum": 4294967295,
                                           "minimum": 0,
                                           "optional": 1,
                                           "type": "integer"
                                        },
                                        "bgp-multipath-as-path-relax": {
+                                          "description": "Consider different AS paths of equal length for multipath computation.",
                                           "optional": 1,
                                           "type": "boolean"
                                        },
@@ -12680,11 +13089,12 @@
                                           "type": "string"
                                        },
                                        "ebgp": {
-                                          "description": "Enable ebgp. (remote-as external)",
+                                          "description": "Enable eBGP (remote-as external).",
                                           "optional": 1,
                                           "type": "boolean"
                                        },
                                        "ebgp-multihop": {
+                                          "description": "Set maximum amount of hops for eBGP peers.",
                                           "optional": 1,
                                           "type": "integer"
                                        },
@@ -12695,18 +13105,18 @@
                                           "type": "string"
                                        },
                                        "isis-domain": {
-                                          "description": "ISIS domain.",
+                                          "description": "Name of the IS-IS domain.",
                                           "optional": 1,
                                           "type": "string"
                                        },
                                        "isis-ifaces": {
-                                          "description": "ISIS interface.",
+                                          "description": "Comma-separated list of interfaces where IS-IS should be active.",
                                           "format": "pve-iface-list",
                                           "optional": 1,
                                           "type": "string"
                                        },
                                        "isis-net": {
-                                          "description": "ISIS network entity title.",
+                                          "description": "Network Entity title for this node in the IS-IS network.",
                                           "format": "pve-sdn-isis-net",
                                           "optional": 1,
                                           "type": "string"
@@ -12717,7 +13127,7 @@
                                           "type": "string"
                                        },
                                        "loopback": {
-                                          "description": "source loopback interface.",
+                                          "description": "Name of the loopback/dummy interface that provides the Router-IP.",
                                           "optional": 1,
                                           "type": "string"
                                        },
@@ -12795,18 +13205,45 @@
                            "returns": {
                               "items": {
                                  "properties": {
+                                    "asn": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/asn"],
+                                    "bgp-multipath-as-relax": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/bgp-multipath-as-relax"],
                                     "controller": {
+                                       "description": "Name of the controller.",
                                        "type": "string"
                                     },
-                                    "pending": {
+                                    "digest": {
+                                       "description": "Digest of the controller section.",
                                        "optional": 1,
-                                       "type": "boolean"
+                                       "type": "string"
+                                    },
+                                    "ebgp": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/ebgp"],
+                                    "ebgp-multihop": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/ebgp-multihop"],
+                                    "isis-domain": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/isis-domain"],
+                                    "isis-ifaces": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/isis-ifaces"],
+                                    "isis-net": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/isis-net"],
+                                    "loopback": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/loopback"],
+                                    "node": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/node"],
+                                    "peers": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/peers"],
+                                    "pending": {
+                                       "description": "Changes that have not yet been applied to the running configuration.",
+                                       "optional": 1,
+                                       "properties": ("Ref")["/root/0/children/12/children/2/children/0/info/GET/returns/properties/pending/properties"],
+                                       "type": "object"
                                     },
                                     "state": {
+                                       "description": "State of the SDN configuration object.",
+                                       "enum": ("Ref")["/root/0/children/12/children/0/children/0/info/GET/returns/properties/state/enum"],
                                        "optional": 1,
                                        "type": "string"
                                     },
                                     "type": {
+                                       "description": "Type of the controller",
+                                       "enum": [
+                                          "bgp",
+                                          "evpn",
+                                          "faucet",
+                                          "isis"
+                                       ],
                                        "type": "string"
                                     }
                                  },
@@ -50847,24 +51284,8 @@
                            "parameters": {
                               "additionalProperties": 0,
                               "properties": {
-                                 "cmd": {
-                                    "default": "login",
-                                    "description": "Run specific command or default to login (requires 'root@pam')",
-                                    "enum": [
-                                       "ceph_install",
-                                       "login",
-                                       "upgrade"
-                                    ],
-                                    "optional": 1,
-                                    "type": "string"
-                                 },
-                                 "cmd-opts": {
-                                    "default": "",
-                                    "description": "Add parameters to a command. Encoded as null terminated strings.",
-                                    "optional": 1,
-                                    "requires": "cmd",
-                                    "type": "string"
-                                 },
+                                 "cmd": ("Ref")["/root/1/children/0/children/28/info/POST/parameters/properties/cmd"],
+                                 "cmd-opts": ("Ref")["/root/1/children/0/children/28/info/POST/parameters/properties/cmd-opts"],
                                  "node": {
                                     "description": "The cluster node name.",
                                     "format": "pve-node",
@@ -50967,24 +51388,8 @@
                            "parameters": {
                               "additionalProperties": 0,
                               "properties": {
-                                 "cmd": {
-                                    "default": "login",
-                                    "description": "Run specific command or default to login (requires 'root@pam')",
-                                    "enum": [
-                                       "ceph_install",
-                                       "login",
-                                       "upgrade"
-                                    ],
-                                    "optional": 1,
-                                    "type": "string"
-                                 },
-                                 "cmd-opts": {
-                                    "default": "",
-                                    "description": "Add parameters to a command. Encoded as null terminated strings.",
-                                    "optional": 1,
-                                    "requires": "cmd",
-                                    "type": "string"
-                                 },
+                                 "cmd": ("Ref")["/root/1/children/0/children/28/info/POST/parameters/properties/cmd"],
+                                 "cmd-opts": ("Ref")["/root/1/children/0/children/28/info/POST/parameters/properties/cmd-opts"],
                                  "node": {
                                     "description": "The cluster node name.",
                                     "format": "pve-node",
