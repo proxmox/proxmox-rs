@@ -1,3 +1,9 @@
+rust-proxmox-s3-client (1.2.1-1) trixie; urgency=medium
+
+  * update proxmox-schema to 5.0.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 10:44:40 +0200
+
 rust-proxmox-s3-client (1.2.0-1) stable; urgency=medium
 
   * expose default timeout for s3 api requests
