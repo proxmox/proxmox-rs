@@ -110,6 +110,7 @@ Schema2Rust::register_format('pve-vlan-id-or-range' => { code => 'verifiers::ver
 Schema2Rust::register_format('pve-sdn-bgp-rt' => { code => 'verifiers::verify_sdn_bgp_rt' });
 Schema2Rust::register_format('pve-sdn-controller-id' => { code => 'verifiers::verify_sdn_controller_id' });
 Schema2Rust::register_format('pve-sdn-isis-net' => { regex => '^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F0-9]{2}$' });
+Schema2Rust::register_format('pve-sdn-fabric-id' => { code => 'verifiers::verify_sdn_id' });
 
 # This is used as both a task status and guest status.
 Schema2Rust::generate_enum('IsRunning', {
@@ -346,6 +347,12 @@ Schema2Rust::derive('SdnZone' => 'Clone', 'PartialEq');
 Schema2Rust::derive('SdnZonePending' => 'Clone', 'PartialEq');
 api(POST => '/cluster/sdn/zones', 'create_zone', 'param-name' => 'CreateZone');
 Schema2Rust::derive('CreateZone' => 'Clone', 'PartialEq');
+
+api(GET => '/cluster/sdn/controllers', 'list_controllers', 'return-name' => 'SdnController');
+Schema2Rust::derive('SdnController' => 'Clone', 'PartialEq');
+Schema2Rust::derive('SdnControllerPending' => 'Clone', 'PartialEq');
+api(POST => '/cluster/sdn/controllers', 'create_controller', 'param-name' => 'CreateController');
+Schema2Rust::derive('CreateController' => 'Clone', 'PartialEq');
 
 api(GET => '/cluster/sdn/vnets', 'list_vnets', 'return-name' => 'SdnVnet');
 Schema2Rust::derive('SdnVnet' => 'Clone', 'PartialEq');
