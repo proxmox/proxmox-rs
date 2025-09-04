@@ -1,3 +1,9 @@
+rust-proxmox-access-control (1.1.1-1) trixie; urgency=medium
+
+  * update schema to 5.0.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 11:14:16 +0200
+
 rust-proxmox-access-control (1.1.0-1) trixie; urgency=medium
 
   * add more types to prepare for api feature
