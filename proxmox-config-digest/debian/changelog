@@ -1,3 +1,9 @@
+rust-proxmox-config-digest (1.0.1-1) trixie; urgency=medium
+
+  * update schema to 5.0.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 10:40:10 +0200
+
 rust-proxmox-config-digest (1.0.0-1) bookworm; urgency=medium
 
   * re-build for Debian Trixie based releases.

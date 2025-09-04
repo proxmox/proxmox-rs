@@ -8,8 +8,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-hex-0.4+default-dev <!nocheck>,
- librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~) <!nocheck>,
- librust-proxmox-schema-4+default-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev <!nocheck>,
+ librust-proxmox-schema-5+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -27,8 +27,8 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-hex-0.4+default-dev,
- librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~),
- librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-5+api-types-dev,
+ librust-proxmox-schema-5+default-dev,
  librust-serde-1+default-dev,
  librust-serde-plain-1+default-dev
 Suggests:
@@ -39,8 +39,8 @@ Provides:
  librust-proxmox-config-digest-1+default-dev (= ${binary:Version}),
  librust-proxmox-config-digest-1.0-dev (= ${binary:Version}),
  librust-proxmox-config-digest-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-config-digest-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-config-digest-1.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-config-digest-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-config-digest-1.0.1+default-dev (= ${binary:Version})
 Description: Configuration file digest API type - Rust source code
  Source code for Debianized Rust crate "proxmox-config-digest"
 
@@ -54,7 +54,7 @@ Depends:
 Provides:
  librust-proxmox-config-digest-1+openssl-dev (= ${binary:Version}),
  librust-proxmox-config-digest-1.0+openssl-dev (= ${binary:Version}),
- librust-proxmox-config-digest-1.0.0+openssl-dev (= ${binary:Version})
+ librust-proxmox-config-digest-1.0.1+openssl-dev (= ${binary:Version})
 Description: Configuration file digest API type - feature "openssl"
  This metapackage enables feature "openssl" for the Rust proxmox-config-digest
  crate, by pulling in any additional dependencies needed by that feature.
