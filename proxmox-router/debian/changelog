@@ -1,3 +1,11 @@
+rust-proxmox-router (3.2.3-1) trixie; urgency=medium
+
+  * update to proxmox-schema 5
+
+  * update unicode-width to 0.2
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 10:29:59 +0200
+
 rust-proxmox-router (3.2.2-1) trixie; urgency=medium
 
   * synopsis generation: avoid outputting transition at start of section for
