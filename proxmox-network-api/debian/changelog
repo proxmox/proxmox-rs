@@ -1,3 +1,9 @@
+rust-proxmox-network-api (1.0.4-1) trixie; urgency=medium
+
+  * update proxmox-schema to 5.0.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 11:50:40 +0200
+
 rust-proxmox-network-api (1.0.3-1) stable; urgency=medium
 
   * network-api: properly parse ip link output based on link_type
