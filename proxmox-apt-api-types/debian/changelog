@@ -1,3 +1,9 @@
+rust-proxmox-apt-api-types (2.0.1-1) trixie; urgency=medium
+
+  * update schema to 5.0.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 10:41:39 +0200
+
 rust-proxmox-apt-api-types (2.0.0-1) trixie; urgency=medium
 
   * drop Ceph Reef and Ceph Quincy from repo type, those releases will not be
