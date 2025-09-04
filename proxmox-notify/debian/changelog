@@ -1,3 +1,9 @@
+rust-proxmox-notify (1.0.3-1) trixie; urgency=medium
+
+  * update proxmox-schema to 5.0.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 11:52:13 +0200
+
 rust-proxmox-notify (1.0.2-1) trixie; urgency=medium
 
   * warn if a user referred to by 'mailto-user' does not have an email address
