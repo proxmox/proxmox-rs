@@ -37,8 +37,8 @@ Provides:
  librust-proxmox-network-types-0+default-dev (= ${binary:Version}),
  librust-proxmox-network-types-0.1-dev (= ${binary:Version}),
  librust-proxmox-network-types-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-network-types-0.1.1-dev (= ${binary:Version}),
- librust-proxmox-network-types-0.1.1+default-dev (= ${binary:Version})
+ librust-proxmox-network-types-0.1.2-dev (= ${binary:Version}),
+ librust-proxmox-network-types-0.1.2+default-dev (= ${binary:Version})
 Description: Rust types for common networking entities - Rust source code
  Source code for Debianized Rust crate "proxmox-network-types"
 
@@ -48,14 +48,14 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-network-types-dev (= ${binary:Version}),
- librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
- librust-proxmox-schema-4+api-types-dev (>= 4.1.0-~~),
- librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-5+api-macro-dev,
+ librust-proxmox-schema-5+api-types-dev,
+ librust-proxmox-schema-5+default-dev,
  librust-regex-1+default-dev (>= 1.5-~~)
 Provides:
  librust-proxmox-network-types-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-network-types-0.1+api-types-dev (= ${binary:Version}),
- librust-proxmox-network-types-0.1.1+api-types-dev (= ${binary:Version})
+ librust-proxmox-network-types-0.1.2+api-types-dev (= ${binary:Version})
 Description: Rust types for common networking entities - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-network-types
  crate, by pulling in any additional dependencies needed by that feature.
