@@ -29,7 +29,7 @@ percent-encoding.workspace = true
 serde = { workspace = true, features = [ "derive" ] }
 serde_json.workspace = true
 serde_plain.workspace = true
-unicode-width ="0.1.8"
+unicode-width ="0.2"
 
 # cli:
 rustyline = { version = "14", optional = true }
