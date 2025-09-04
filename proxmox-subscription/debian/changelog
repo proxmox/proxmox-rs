@@ -1,3 +1,10 @@
+rust-proxmox-subscription (1.0.1-1) trixie; urgency=medium
+
+  * update proxmox-schema to 5.0.0
+  * inline some variables into format strings
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 11:57:08 +0200
+
 rust-proxmox-subscription (1.0.0-1) trixie; urgency=medium
 
   * switch to proxmox-base64
