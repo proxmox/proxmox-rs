@@ -1,3 +1,12 @@
+rust-proxmox-schema (5.0.0-1) trixie; urgency=medium
+
+  * change minimum, maximum and default integer values from isize to i64 to
+    better support wasm (as it is 32-bits)
+
+  * include value in property string parsing error message
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 10:13:30 +0200
+
 rust-proxmox-schema (4.1.1-1) trixie; urgency=medium
 
   * schema: add nix "feature" feature to fix dependencies for optional crate
