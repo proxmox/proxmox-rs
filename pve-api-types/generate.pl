@@ -80,6 +80,7 @@ Schema2Rust::register_format('bridge-pair' => { code => 'verifiers::verify_bridg
 Schema2Rust::register_format('pve-task-status-type' => { regex => '^(?i:ok|error|warning|unknown)$' });
 
 Schema2Rust::register_format('pve-sdn-zone-id' => { code => 'verifiers::verify_sdn_id' });
+Schema2Rust::register_format('pve-sdn-vnet-id' => { code => 'verifiers::verify_sdn_id' });
 
 Schema2Rust::register_enum_variant('PveVmCpuConfReportedModel::486' => 'I486');
 Schema2Rust::register_enum_variant('QemuConfigEfidisk0Efitype::2m' => 'Mb2');
@@ -345,6 +346,12 @@ Schema2Rust::derive('SdnZone' => 'Clone', 'PartialEq');
 Schema2Rust::derive('SdnZonePending' => 'Clone', 'PartialEq');
 api(POST => '/cluster/sdn/zones', 'create_zone', 'param-name' => 'CreateZone');
 Schema2Rust::derive('CreateZone' => 'Clone', 'PartialEq');
+
+api(GET => '/cluster/sdn/vnets', 'list_vnets', 'return-name' => 'SdnVnet');
+Schema2Rust::derive('SdnVnet' => 'Clone', 'PartialEq');
+Schema2Rust::derive('SdnVnetPending' => 'Clone', 'PartialEq');
+api(POST => '/cluster/sdn/vnets', 'create_vnet', 'param-name' => 'CreateVnet');
+Schema2Rust::derive('CreateVnet' => 'Clone', 'PartialEq');
 
 # NOW DUMP THE CODE:
 #
