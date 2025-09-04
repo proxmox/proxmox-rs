@@ -181,7 +181,7 @@ impl<'de> de::Visitor<'de> for Visitor {
     fn visit_u64<E: de::Error>(self, v: u64) -> Result<Self::Value, E> {
         match self.0 {
             Schema::Integer(schema) => {
-                let val = v.try_into().or_else(|err| Err(E::custom(err)))?;
+                let val = v.try_into().map_err(E::custom)?;
                 match schema.check_constraints(val) {
                     Ok(()) => Ok(Verifier),
                     Err(err) => Err(E::custom(err)),
