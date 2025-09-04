@@ -29,6 +29,12 @@ pub IFACE_RE = r##"^(?i)[a-z][a-z0-9_]{1,20}([:\.]\d+)?$"##;
 
 pub VLAN_ID_OR_RANGE = r##"^(\d+)(?:-(\d+))?$"##;
 
+pub SDN_ID = r##"^(?i)[a-z][a-z0-9]+$"##;
+
+pub SDN_CONTROLLER_ID = r##"^(?i)[a-z][a-z0-9_-]*[a-z0-9]$"##;
+
+pub SDN_BGP_RT = r##"^(\d+):(\d+)$"##;
+
 }
 
 pub fn verify_volume_id(s: &str) -> Result<(), Error> {
@@ -224,6 +230,56 @@ pub fn verify_vlan_id_or_range(s: &str) -> Result<(), Error> {
             check_vid(vid.as_str().parse()?)?;
         }
         (None, _) => bail!("invalid VLAN configuration '{s}"),
+    }
+
+    Ok(())
+}
+
+pub fn verify_sdn_id(s: &str) -> Result<(), Error> {
+    if s.len() > 8 {
+        bail!("SDN ID cannot be longer than 8 characters")
+    }
+
+    if !SDN_ID.is_match(s) {
+        bail!("SDN ID contains illegal characters");
+    }
+
+    Ok(())
+}
+
+pub fn verify_sdn_controller_id(s: &str) -> Result<(), Error> {
+    if s.len() > 64 {
+        bail!("SDN controller ID cannot be longer than 64 characters")
+    }
+
+    if !SDN_CONTROLLER_ID.is_match(s) {
+        bail!("SDN controller ID contains illegal characters");
+    }
+
+    Ok(())
+}
+
+pub fn verify_sdn_bgp_rt(s: &str) -> Result<(), Error> {
+    let captures = SDN_BGP_RT
+        .captures(s)
+        .ok_or_else(|| format_err!("invalid BGP RT: '{s}"))?;
+
+    match (captures.get(1), captures.get(2)) {
+        (Some(asn), Some(vni)) => {
+            asn.as_str()
+                .parse::<u32>()
+                .map_err(|_| format_err!("Invalid ASN in BGP RT: {s}"))?;
+
+            let vni: u32 = vni
+                .as_str()
+                .parse()
+                .map_err(|_| format_err!("Invalid VNI in BGP RT: {s}"))?;
+
+            if vni > 16_777_215 {
+                bail!("invalid VNI in BGP RT: '{s}'")
+            }
+        }
+        _ => bail!("invalid BGP RT: '{s}"),
     }
 
     Ok(())

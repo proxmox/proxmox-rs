@@ -79,6 +79,8 @@ Schema2Rust::register_format('bridge-pair' => { code => 'verifiers::verify_bridg
 
 Schema2Rust::register_format('pve-task-status-type' => { regex => '^(?i:ok|error|warning|unknown)$' });
 
+Schema2Rust::register_format('pve-sdn-zone-id' => { code => 'verifiers::verify_sdn_id' });
+
 Schema2Rust::register_enum_variant('PveVmCpuConfReportedModel::486' => 'I486');
 Schema2Rust::register_enum_variant('QemuConfigEfidisk0Efitype::2m' => 'Mb2');
 Schema2Rust::register_enum_variant('QemuConfigEfidisk0Efitype::4m' => 'Mb4');
@@ -103,6 +105,10 @@ Schema2Rust::register_format('pve-ipv6-config' => { code => 'verifiers::verify_i
 Schema2Rust::register_format('pve-iface' => { regex => '^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$' });
 
 Schema2Rust::register_format('pve-vlan-id-or-range' => { code => 'verifiers::verify_vlan_id_or_range' });
+
+Schema2Rust::register_format('pve-sdn-bgp-rt' => { code => 'verifiers::verify_sdn_bgp_rt' });
+Schema2Rust::register_format('pve-sdn-controller-id' => { code => 'verifiers::verify_sdn_controller_id' });
+Schema2Rust::register_format('pve-sdn-isis-net' => { regex => '^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F0-9]{2}$' });
 
 # This is used as both a task status and guest status.
 Schema2Rust::generate_enum('IsRunning', {
@@ -327,6 +333,18 @@ Schema2Rust::derive('CreateToken' => 'Default');
 api(GET => '/nodes/{node}/apt/update', 'list_available_updates', 'return-name' => 'AptUpdateInfo');
 api(POST => '/nodes/{node}/apt/update', 'update_apt_database', 'output-type' => 'PveUpid', 'param-name' => 'AptUpdateParams');
 api(GET => '/nodes/{node}/apt/changelog', 'get_package_changelog', 'output-type' => 'String');
+
+Schema2Rust::generate_enum('SdnObjectState', {
+    type => 'string',
+    description => "The state of an SDN object.",
+    enum => ['new', 'deleted', 'changed'],
+});
+
+api(GET => '/cluster/sdn/zones', 'list_zones', 'return-name' => 'SdnZone');
+Schema2Rust::derive('SdnZone' => 'Clone', 'PartialEq');
+Schema2Rust::derive('SdnZonePending' => 'Clone', 'PartialEq');
+api(POST => '/cluster/sdn/zones', 'create_zone', 'param-name' => 'CreateZone');
+Schema2Rust::derive('CreateZone' => 'Clone', 'PartialEq');
 
 # NOW DUMP THE CODE:
 #
