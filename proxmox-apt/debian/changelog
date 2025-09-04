@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.99.4-1) trixie; urgency=medium
+
+  * update proxmox-schema to 5.0.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 11:28:59 +0200
+
 rust-proxmox-apt (0.99.3-1) trixie; urgency=medium
 
   * add fix up for debian trixie security repository
