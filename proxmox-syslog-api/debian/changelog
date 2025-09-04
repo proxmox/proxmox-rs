@@ -1,3 +1,9 @@
+rust-proxmox-syslog-api (1.0.1-1) trixie; urgency=medium
+
+  * update proxmox-schema to 5.0.0
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 04 Sep 2025 11:58:19 +0200
+
 rust-proxmox-syslog-api (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
