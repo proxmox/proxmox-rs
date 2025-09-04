@@ -949,6 +949,166 @@ pub enum ClusterResourceType {
 serde_plain::derive_display_from_serialize!(ClusterResourceType);
 serde_plain::derive_fromstr_from_deserialize!(ClusterResourceType);
 
+const_regex! {
+
+CREATE_CONTROLLER_ISIS_IFACES_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+CREATE_CONTROLLER_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F0-9]{2}$"##;
+CREATE_CONTROLLER_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+
+}
+
+#[api(
+    properties: {
+        asn: {
+            maximum: 4294967295,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        "bgp-multipath-as-path-relax": {
+            default: false,
+            optional: true,
+        },
+        controller: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_controller_id),
+            type: String,
+        },
+        ebgp: {
+            default: false,
+            optional: true,
+        },
+        "ebgp-multihop": {
+            optional: true,
+            type: Integer,
+        },
+        fabric: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_id),
+            optional: true,
+            type: String,
+        },
+        "isis-domain": {
+            optional: true,
+            type: String,
+        },
+        "isis-ifaces": {
+            format: &ApiStringFormat::Pattern(&CREATE_CONTROLLER_ISIS_IFACES_RE),
+            optional: true,
+            type: String,
+        },
+        "isis-net": {
+            format: &ApiStringFormat::Pattern(&CREATE_CONTROLLER_ISIS_NET_RE),
+            optional: true,
+            type: String,
+        },
+        "lock-token": {
+            optional: true,
+            type: String,
+        },
+        loopback: {
+            optional: true,
+            type: String,
+        },
+        node: {
+            format: &ApiStringFormat::Pattern(&CREATE_CONTROLLER_NODE_RE),
+            optional: true,
+            type: String,
+        },
+        peers: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+            optional: true,
+            type: String,
+        },
+        type: {
+            type: ListControllersType,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CreateController {
+    /// autonomous system number
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub asn: Option<u32>,
+
+    /// Consider different AS paths of equal length for multipath computation.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bgp-multipath-as-path-relax")]
+    pub bgp_multipath_as_path_relax: Option<bool>,
+
+    /// The SDN controller object identifier.
+    pub controller: String,
+
+    /// Enable eBGP (remote-as external).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ebgp: Option<bool>,
+
+    /// Set maximum amount of hops for eBGP peers.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ebgp-multihop")]
+    pub ebgp_multihop: Option<i64>,
+
+    /// SDN fabric to use as underlay for this EVPN controller.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fabric: Option<String>,
+
+    /// Name of the IS-IS domain.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isis-domain")]
+    pub isis_domain: Option<String>,
+
+    /// Comma-separated list of interfaces where IS-IS should be active.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isis-ifaces")]
+    pub isis_ifaces: Option<String>,
+
+    /// Network Entity title for this node in the IS-IS network.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isis-net")]
+    pub isis_net: Option<String>,
+
+    /// the token for unlocking the global SDN configuration
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "lock-token")]
+    pub lock_token: Option<String>,
+
+    /// Name of the loopback/dummy interface that provides the Router-IP.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loopback: Option<String>,
+
+    /// The cluster node name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node: Option<String>,
+
+    /// peers address list.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peers: Option<String>,
+
+    #[serde(rename = "type")]
+    pub ty: ListControllersType,
+}
+
+#[api(
+    properties: {
+        "allow-pending": {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateSdnLock {
+    /// if true, allow acquiring lock even though there are pending changes
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "allow-pending")]
+    pub allow_pending: Option<bool>,
+}
+
 #[api(
     properties: {
         comment: {
@@ -1047,6 +1207,349 @@ pub struct CreateTokenResponseInfo {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub privsep: Option<bool>,
+}
+
+#[api(
+    properties: {
+        alias: {
+            max_length: 256,
+            optional: true,
+            type: String,
+        },
+        "isolate-ports": {
+            default: false,
+            optional: true,
+        },
+        "lock-token": {
+            optional: true,
+            type: String,
+        },
+        tag: {
+            maximum: 16777215,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        type: {
+            optional: true,
+            type: SdnVnetType,
+        },
+        vlanaware: {
+            default: false,
+            optional: true,
+        },
+        vnet: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_id),
+            type: String,
+        },
+        zone: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CreateVnet {
+    /// Alias name of the VNet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alias: Option<String>,
+
+    /// If true, sets the isolated property for all interfaces on the bridge of
+    /// this VNet.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isolate-ports")]
+    pub isolate_ports: Option<bool>,
+
+    /// the token for unlocking the global SDN configuration
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "lock-token")]
+    pub lock_token: Option<String>,
+
+    /// VLAN Tag (for VLAN or QinQ zones) or VXLAN VNI (for VXLAN or EVPN
+    /// zones).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<u32>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "type")]
+    pub ty: Option<SdnVnetType>,
+
+    /// Allow VLANs to pass through this vnet.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vlanaware: Option<bool>,
+
+    /// The SDN vnet object identifier.
+    pub vnet: String,
+
+    /// Name of the zone this VNet belongs to.
+    pub zone: String,
+}
+
+const_regex! {
+
+CREATE_ZONE_EXITNODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+CREATE_ZONE_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+CREATE_ZONE_MAC_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
+CREATE_ZONE_NODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+
+}
+
+#[api(
+    properties: {
+        "advertise-subnets": {
+            default: false,
+            optional: true,
+        },
+        bridge: {
+            optional: true,
+            type: String,
+        },
+        "bridge-disable-mac-learning": {
+            default: false,
+            optional: true,
+        },
+        controller: {
+            optional: true,
+            type: String,
+        },
+        dhcp: {
+            optional: true,
+            type: SdnZoneDhcp,
+        },
+        "disable-arp-nd-suppression": {
+            default: false,
+            optional: true,
+        },
+        dns: {
+            optional: true,
+            type: String,
+        },
+        dnszone: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_dns_name),
+            optional: true,
+            type: String,
+        },
+        "dp-id": {
+            optional: true,
+            type: Integer,
+        },
+        exitnodes: {
+            format: &ApiStringFormat::Pattern(&CREATE_ZONE_EXITNODES_RE),
+            optional: true,
+            type: String,
+        },
+        "exitnodes-local-routing": {
+            default: false,
+            optional: true,
+        },
+        "exitnodes-primary": {
+            format: &ApiStringFormat::Pattern(&CREATE_ZONE_EXITNODES_PRIMARY_RE),
+            optional: true,
+            type: String,
+        },
+        fabric: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_id),
+            optional: true,
+            type: String,
+        },
+        ipam: {
+            optional: true,
+            type: String,
+        },
+        "lock-token": {
+            optional: true,
+            type: String,
+        },
+        mac: {
+            format: &ApiStringFormat::Pattern(&CREATE_ZONE_MAC_RE),
+            optional: true,
+            type: String,
+        },
+        mtu: {
+            optional: true,
+            type: Integer,
+        },
+        nodes: {
+            format: &ApiStringFormat::Pattern(&CREATE_ZONE_NODES_RE),
+            optional: true,
+            type: String,
+        },
+        peers: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+            optional: true,
+            type: String,
+        },
+        reversedns: {
+            optional: true,
+            type: String,
+        },
+        "rt-import": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_bgp_rt),
+            optional: true,
+            type: String,
+        },
+        tag: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        type: {
+            type: ListZonesType,
+        },
+        "vlan-protocol": {
+            optional: true,
+            type: NetworkInterfaceVlanProtocol,
+        },
+        "vrf-vxlan": {
+            maximum: 16777215,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        "vxlan-port": {
+            default: 4789,
+            maximum: 65536,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        zone: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_id),
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CreateZone {
+    /// Advertise IP prefixes (Type-5 routes) instead of MAC/IP pairs (Type-2
+    /// routes).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "advertise-subnets")]
+    pub advertise_subnets: Option<bool>,
+
+    /// The bridge for which VLANs should be managed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge: Option<String>,
+
+    /// Disable auto mac learning.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bridge-disable-mac-learning")]
+    pub bridge_disable_mac_learning: Option<bool>,
+
+    /// Controller for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub controller: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dhcp: Option<SdnZoneDhcp>,
+
+    /// Suppress IPv4 ARP && IPv6 Neighbour Discovery messages.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "disable-arp-nd-suppression")]
+    pub disable_arp_nd_suppression: Option<bool>,
+
+    /// dns api server
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dns: Option<String>,
+
+    /// dns domain zone  ex: mydomain.com
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dnszone: Option<String>,
+
+    /// Faucet dataplane id
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "dp-id")]
+    pub dp_id: Option<i64>,
+
+    /// List of cluster node names.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exitnodes: Option<String>,
+
+    /// Allow exitnodes to connect to EVPN guests.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "exitnodes-local-routing")]
+    pub exitnodes_local_routing: Option<bool>,
+
+    /// Force traffic through this exitnode first.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "exitnodes-primary")]
+    pub exitnodes_primary: Option<String>,
+
+    /// SDN fabric to use as underlay for this VXLAN zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fabric: Option<String>,
+
+    /// use a specific ipam
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ipam: Option<String>,
+
+    /// the token for unlocking the global SDN configuration
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "lock-token")]
+    pub lock_token: Option<String>,
+
+    /// Anycast logical router mac address.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mac: Option<String>,
+
+    /// MTU of the zone, will be used for the created VNet bridges.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mtu: Option<i64>,
+
+    /// List of cluster node names.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodes: Option<String>,
+
+    /// Comma-separated list of peers, that are part of the VXLAN zone. Usually
+    /// the IPs of the nodes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peers: Option<String>,
+
+    /// reverse dns api server
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reversedns: Option<String>,
+
+    /// List of Route Targets that should be imported into the VRF of the zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "rt-import")]
+    pub rt_import: Option<String>,
+
+    /// Service-VLAN Tag (outer VLAN)
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<u64>,
+
+    #[serde(rename = "type")]
+    pub ty: ListZonesType,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vlan-protocol")]
+    pub vlan_protocol: Option<NetworkInterfaceVlanProtocol>,
+
+    /// VNI for the zone VRF.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vrf-vxlan")]
+    pub vrf_vxlan: Option<u32>,
+
+    /// UDP port that should be used for the VXLAN tunnel (default 4789).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vxlan-port")]
+    pub vxlan_port: Option<u32>,
+
+    /// The SDN zone object identifier.
+    pub zone: String,
 }
 
 #[api]
@@ -1157,6 +1660,26 @@ mod list_storages_content {
         T::de(deserializer)
     }
 }
+
+#[api]
+/// Only list sdn controllers of specific type
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ListControllersType {
+    #[serde(rename = "bgp")]
+    /// bgp.
+    Bgp,
+    #[serde(rename = "evpn")]
+    /// evpn.
+    Evpn,
+    #[serde(rename = "faucet")]
+    /// faucet.
+    Faucet,
+    #[serde(rename = "isis")]
+    /// isis.
+    Isis,
+}
+serde_plain::derive_display_from_serialize!(ListControllersType);
+serde_plain::derive_fromstr_from_deserialize!(ListControllersType);
 
 #[api]
 /// Only list specific interface types.
@@ -1459,6 +1982,32 @@ pub enum ListTasksSource {
 }
 serde_plain::derive_display_from_serialize!(ListTasksSource);
 serde_plain::derive_fromstr_from_deserialize!(ListTasksSource);
+
+#[api]
+/// Only list SDN zones of specific type
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ListZonesType {
+    #[serde(rename = "evpn")]
+    /// evpn.
+    Evpn,
+    #[serde(rename = "faucet")]
+    /// faucet.
+    Faucet,
+    #[serde(rename = "qinq")]
+    /// qinq.
+    Qinq,
+    #[serde(rename = "simple")]
+    /// simple.
+    Simple,
+    #[serde(rename = "vlan")]
+    /// vlan.
+    Vlan,
+    #[serde(rename = "vxlan")]
+    /// vxlan.
+    Vxlan,
+}
+serde_plain::derive_display_from_serialize!(ListZonesType);
+serde_plain::derive_fromstr_from_deserialize!(ListZonesType);
 
 const_regex! {
 
@@ -8893,6 +9442,60 @@ pub struct QemuStatus {
 
 #[api(
     properties: {
+        force: {
+            default: false,
+            optional: true,
+        },
+        "lock-token": {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ReleaseSdnLock {
+    /// if true, allow releasing lock without providing the token
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub force: Option<bool>,
+
+    /// the token for unlocking the global SDN configuration
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "lock-token")]
+    pub lock_token: Option<String>,
+}
+
+#[api(
+    properties: {
+        "lock-token": {
+            optional: true,
+            type: String,
+        },
+        "release-lock": {
+            default: true,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ReloadSdn {
+    /// the token for unlocking the global SDN configuration
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "lock-token")]
+    pub lock_token: Option<String>,
+
+    /// When lock-token has been provided and configuration successfully
+    /// commited, release the lock automatically afterwards
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "release-lock")]
+    pub release_lock: Option<bool>,
+}
+
+#[api(
+    properties: {
         bwlimit: {
             minimum: 0.0,
             optional: true,
@@ -9065,6 +9668,34 @@ pub struct RemoteMigrateQemu {
     pub target_vmid: Option<u32>,
 }
 
+#[api(
+    properties: {
+        "lock-token": {
+            optional: true,
+            type: String,
+        },
+        "release-lock": {
+            default: true,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct RollbackSdn {
+    /// the token for unlocking the global SDN configuration
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "lock-token")]
+    pub lock_token: Option<String>,
+
+    /// When lock-token has been provided and configuration successfully
+    /// rollbacked, release the lock automatically afterwards
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "release-lock")]
+    pub release_lock: Option<bool>,
+}
+
 const STORAGE_INFO_CONTENT: Schema =
     proxmox_schema::ArraySchema::new("list", &StorageContent::API_SCHEMA).schema();
 
@@ -9158,6 +9789,932 @@ mod storage_info_content {
     {
         T::de(deserializer)
     }
+}
+
+const_regex! {
+
+SDN_CONTROLLER_ISIS_IFACES_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+SDN_CONTROLLER_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F0-9]{2}$"##;
+
+}
+
+#[api(
+    properties: {
+        asn: {
+            maximum: 4294967295,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        "bgp-multipath-as-relax": {
+            default: false,
+            optional: true,
+        },
+        controller: {
+            type: String,
+        },
+        digest: {
+            optional: true,
+            type: String,
+        },
+        ebgp: {
+            default: false,
+            optional: true,
+        },
+        "ebgp-multihop": {
+            optional: true,
+            type: Integer,
+        },
+        "isis-domain": {
+            optional: true,
+            type: String,
+        },
+        "isis-ifaces": {
+            format: &ApiStringFormat::Pattern(&SDN_CONTROLLER_ISIS_IFACES_RE),
+            optional: true,
+            type: String,
+        },
+        "isis-net": {
+            format: &ApiStringFormat::Pattern(&SDN_CONTROLLER_ISIS_NET_RE),
+            optional: true,
+            type: String,
+        },
+        loopback: {
+            optional: true,
+            type: String,
+        },
+        node: {
+            optional: true,
+            type: String,
+        },
+        peers: {
+            optional: true,
+            type: String,
+        },
+        pending: {
+            optional: true,
+            type: SdnControllerPending,
+        },
+        state: {
+            optional: true,
+            type: SdnObjectState,
+        },
+        type: {
+            type: ListControllersType,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct SdnController {
+    /// The local ASN of the controller. BGP & EVPN only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub asn: Option<u32>,
+
+    /// Consider different AS paths of equal length for multipath computation.
+    /// BGP only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bgp-multipath-as-relax")]
+    pub bgp_multipath_as_relax: Option<bool>,
+
+    /// Name of the controller.
+    pub controller: String,
+
+    /// Digest of the controller section.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Enable eBGP (remote-as external). BGP only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ebgp: Option<bool>,
+
+    /// Set maximum amount of hops for eBGP peers. Needs ebgp set to 1. BGP
+    /// only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ebgp-multihop")]
+    pub ebgp_multihop: Option<i64>,
+
+    /// Name of the IS-IS domain. IS-IS only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isis-domain")]
+    pub isis_domain: Option<String>,
+
+    /// Comma-separated list of interfaces where IS-IS should be active. IS-IS
+    /// only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isis-ifaces")]
+    pub isis_ifaces: Option<String>,
+
+    /// Network Entity title for this node in the IS-IS network. IS-IS only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isis-net")]
+    pub isis_net: Option<String>,
+
+    /// Name of the loopback/dummy interface that provides the Router-IP. BGP
+    /// only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loopback: Option<String>,
+
+    /// Node(s) where this controller is active.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node: Option<String>,
+
+    /// Comma-separated list of the peers IP addresses.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peers: Option<String>,
+
+    /// Changes that have not yet been applied to the running configuration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending: Option<SdnControllerPending>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<SdnObjectState>,
+
+    #[serde(rename = "type")]
+    pub ty: ListControllersType,
+}
+
+const_regex! {
+
+SDN_CONTROLLER_PENDING_ISIS_IFACES_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+SDN_CONTROLLER_PENDING_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F0-9]{2}$"##;
+
+}
+
+#[api(
+    properties: {
+        asn: {
+            maximum: 4294967295,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        "bgp-multipath-as-relax": {
+            default: false,
+            optional: true,
+        },
+        ebgp: {
+            default: false,
+            optional: true,
+        },
+        "ebgp-multihop": {
+            optional: true,
+            type: Integer,
+        },
+        "isis-domain": {
+            optional: true,
+            type: String,
+        },
+        "isis-ifaces": {
+            format: &ApiStringFormat::Pattern(&SDN_CONTROLLER_PENDING_ISIS_IFACES_RE),
+            optional: true,
+            type: String,
+        },
+        "isis-net": {
+            format: &ApiStringFormat::Pattern(&SDN_CONTROLLER_PENDING_ISIS_NET_RE),
+            optional: true,
+            type: String,
+        },
+        loopback: {
+            optional: true,
+            type: String,
+        },
+        node: {
+            optional: true,
+            type: String,
+        },
+        peers: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Changes that have not yet been applied to the running configuration.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct SdnControllerPending {
+    /// The local ASN of the controller. BGP & EVPN only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub asn: Option<u32>,
+
+    /// Consider different AS paths of equal length for multipath computation.
+    /// BGP only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bgp-multipath-as-relax")]
+    pub bgp_multipath_as_relax: Option<bool>,
+
+    /// Enable eBGP (remote-as external). BGP only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ebgp: Option<bool>,
+
+    /// Set maximum amount of hops for eBGP peers. Needs ebgp set to 1. BGP
+    /// only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ebgp-multihop")]
+    pub ebgp_multihop: Option<i64>,
+
+    /// Name of the IS-IS domain. IS-IS only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isis-domain")]
+    pub isis_domain: Option<String>,
+
+    /// Comma-separated list of interfaces where IS-IS should be active. IS-IS
+    /// only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isis-ifaces")]
+    pub isis_ifaces: Option<String>,
+
+    /// Network Entity title for this node in the IS-IS network. IS-IS only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isis-net")]
+    pub isis_net: Option<String>,
+
+    /// Name of the loopback/dummy interface that provides the Router-IP. BGP
+    /// only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub loopback: Option<String>,
+
+    /// Node(s) where this controller is active.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node: Option<String>,
+
+    /// Comma-separated list of the peers IP addresses.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peers: Option<String>,
+}
+
+#[api]
+/// The state of an SDN object.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum SdnObjectState {
+    #[serde(rename = "new")]
+    /// new.
+    New,
+    #[serde(rename = "deleted")]
+    /// deleted.
+    Deleted,
+    #[serde(rename = "changed")]
+    /// changed.
+    Changed,
+}
+serde_plain::derive_display_from_serialize!(SdnObjectState);
+serde_plain::derive_fromstr_from_deserialize!(SdnObjectState);
+
+#[api(
+    properties: {
+        alias: {
+            max_length: 256,
+            optional: true,
+            type: String,
+        },
+        digest: {
+            optional: true,
+            type: String,
+        },
+        "isolate-ports": {
+            default: false,
+            optional: true,
+        },
+        pending: {
+            optional: true,
+            type: SdnVnetPending,
+        },
+        state: {
+            optional: true,
+            type: SdnObjectState,
+        },
+        tag: {
+            maximum: 16777215,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        type: {
+            type: SdnVnetType,
+        },
+        vlanaware: {
+            default: false,
+            optional: true,
+        },
+        vnet: {
+            type: String,
+        },
+        zone: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct SdnVnet {
+    /// Alias name of the VNet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alias: Option<String>,
+
+    /// Digest of the VNet section.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// If true, sets the isolated property for all interfaces on the bridge of
+    /// this VNet.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isolate-ports")]
+    pub isolate_ports: Option<bool>,
+
+    /// Changes that have not yet been applied to the running configuration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending: Option<SdnVnetPending>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<SdnObjectState>,
+
+    /// VLAN Tag (for VLAN or QinQ zones) or VXLAN VNI (for VXLAN or EVPN
+    /// zones).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<u32>,
+
+    #[serde(rename = "type")]
+    pub ty: SdnVnetType,
+
+    /// Allow VLANs to pass through this VNet.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vlanaware: Option<bool>,
+
+    /// Name of the VNet.
+    pub vnet: String,
+
+    /// Name of the zone this VNet belongs to.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zone: Option<String>,
+}
+
+#[api(
+    properties: {
+        alias: {
+            max_length: 256,
+            optional: true,
+            type: String,
+        },
+        "isolate-ports": {
+            default: false,
+            optional: true,
+        },
+        tag: {
+            maximum: 16777215,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        vlanaware: {
+            default: false,
+            optional: true,
+        },
+        zone: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Changes that have not yet been applied to the running configuration.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct SdnVnetPending {
+    /// Alias name of the VNet.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alias: Option<String>,
+
+    /// If true, sets the isolated property for all interfaces on the bridge of
+    /// this VNet.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "isolate-ports")]
+    pub isolate_ports: Option<bool>,
+
+    /// VLAN Tag (for VLAN or QinQ zones) or VXLAN VNI (for VXLAN or EVPN
+    /// zones).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<u32>,
+
+    /// Allow VLANs to pass through this VNet.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vlanaware: Option<bool>,
+
+    /// Name of the zone this VNet belongs to.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zone: Option<String>,
+}
+
+#[api]
+/// Type of the VNet.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum SdnVnetType {
+    #[serde(rename = "vnet")]
+    /// vnet.
+    Vnet,
+}
+serde_plain::derive_display_from_serialize!(SdnVnetType);
+serde_plain::derive_fromstr_from_deserialize!(SdnVnetType);
+
+const_regex! {
+
+SDN_ZONE_EXITNODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+SDN_ZONE_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+
+}
+
+#[api(
+    properties: {
+        "advertise-subnets": {
+            default: false,
+            optional: true,
+        },
+        bridge: {
+            optional: true,
+            type: String,
+        },
+        "bridge-disable-mac-learning": {
+            default: false,
+            optional: true,
+        },
+        controller: {
+            optional: true,
+            type: String,
+        },
+        dhcp: {
+            optional: true,
+            type: SdnZoneDhcp,
+        },
+        digest: {
+            optional: true,
+            type: String,
+        },
+        "disable-arp-nd-suppression": {
+            default: false,
+            optional: true,
+        },
+        dns: {
+            optional: true,
+            type: String,
+        },
+        dnszone: {
+            optional: true,
+            type: String,
+        },
+        exitnodes: {
+            format: &ApiStringFormat::Pattern(&SDN_ZONE_EXITNODES_RE),
+            optional: true,
+            type: String,
+        },
+        "exitnodes-local-routing": {
+            default: false,
+            optional: true,
+        },
+        "exitnodes-primary": {
+            format: &ApiStringFormat::Pattern(&SDN_ZONE_EXITNODES_PRIMARY_RE),
+            optional: true,
+            type: String,
+        },
+        ipam: {
+            optional: true,
+            type: String,
+        },
+        mac: {
+            optional: true,
+            type: String,
+        },
+        mtu: {
+            optional: true,
+            type: Integer,
+        },
+        nodes: {
+            optional: true,
+            type: String,
+        },
+        peers: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+            optional: true,
+            type: String,
+        },
+        pending: {
+            optional: true,
+            type: SdnZonePending,
+        },
+        reversedns: {
+            optional: true,
+            type: String,
+        },
+        "rt-import": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_bgp_rt),
+            optional: true,
+            type: String,
+        },
+        state: {
+            optional: true,
+            type: SdnObjectState,
+        },
+        tag: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        type: {
+            type: ListZonesType,
+        },
+        "vlan-protocol": {
+            optional: true,
+            type: NetworkInterfaceVlanProtocol,
+        },
+        "vrf-vxlan": {
+            maximum: 16777215,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        "vxlan-port": {
+            default: 4789,
+            maximum: 65536,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        zone: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct SdnZone {
+    /// Advertise IP prefixes (Type-5 routes) instead of MAC/IP pairs (Type-2
+    /// routes). EVPN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "advertise-subnets")]
+    pub advertise_subnets: Option<bool>,
+
+    /// the bridge for which VLANs should be managed. VLAN & QinQ zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge: Option<String>,
+
+    /// Disable auto mac learning. VLAN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bridge-disable-mac-learning")]
+    pub bridge_disable_mac_learning: Option<bool>,
+
+    /// ID of the controller for this zone. EVPN zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub controller: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dhcp: Option<SdnZoneDhcp>,
+
+    /// Digest of the controller section.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Suppress IPv4 ARP && IPv6 Neighbour Discovery messages. EVPN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "disable-arp-nd-suppression")]
+    pub disable_arp_nd_suppression: Option<bool>,
+
+    /// ID of the DNS server for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dns: Option<String>,
+
+    /// Domain name for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dnszone: Option<String>,
+
+    /// List of PVE Nodes that should act as exit node for this zone. EVPN zone
+    /// only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exitnodes: Option<String>,
+
+    /// Create routes on the exit nodes, so they can connect to EVPN guests.
+    /// EVPN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "exitnodes-local-routing")]
+    pub exitnodes_local_routing: Option<bool>,
+
+    /// Force traffic through this exitnode first. EVPN zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "exitnodes-primary")]
+    pub exitnodes_primary: Option<String>,
+
+    /// ID of the IPAM for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ipam: Option<String>,
+
+    /// MAC address of the anycast router for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mac: Option<String>,
+
+    /// MTU of the zone, will be used for the created VNet bridges.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mtu: Option<i64>,
+
+    /// Nodes where this zone should be created.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodes: Option<String>,
+
+    /// Comma-separated list of peers, that are part of the VXLAN zone. Usually
+    /// the IPs of the nodes. VXLAN zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peers: Option<String>,
+
+    /// Changes that have not yet been applied to the running configuration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending: Option<SdnZonePending>,
+
+    /// ID of the reverse DNS server for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reversedns: Option<String>,
+
+    /// Route-Targets that should be imported into the VRF of this zone via BGP.
+    /// EVPN zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "rt-import")]
+    pub rt_import: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<SdnObjectState>,
+
+    /// Service-VLAN Tag (outer VLAN). QinQ zone only
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<u64>,
+
+    #[serde(rename = "type")]
+    pub ty: ListZonesType,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vlan-protocol")]
+    pub vlan_protocol: Option<NetworkInterfaceVlanProtocol>,
+
+    /// VNI for the zone VRF. EVPN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vrf-vxlan")]
+    pub vrf_vxlan: Option<u32>,
+
+    /// UDP port that should be used for the VXLAN tunnel (default 4789). VXLAN
+    /// zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vxlan-port")]
+    pub vxlan_port: Option<u32>,
+
+    /// Name of the zone.
+    pub zone: String,
+}
+
+#[api]
+/// Name of DHCP server backend for this zone.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum SdnZoneDhcp {
+    #[serde(rename = "dnsmasq")]
+    /// dnsmasq.
+    Dnsmasq,
+}
+serde_plain::derive_display_from_serialize!(SdnZoneDhcp);
+serde_plain::derive_fromstr_from_deserialize!(SdnZoneDhcp);
+
+const_regex! {
+
+SDN_ZONE_PENDING_EXITNODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+
+}
+
+#[api(
+    properties: {
+        "advertise-subnets": {
+            default: false,
+            optional: true,
+        },
+        bridge: {
+            optional: true,
+            type: String,
+        },
+        "bridge-disable-mac-learning": {
+            default: false,
+            optional: true,
+        },
+        controller: {
+            optional: true,
+            type: String,
+        },
+        dhcp: {
+            optional: true,
+            type: SdnZoneDhcp,
+        },
+        "disable-arp-nd-suppression": {
+            default: false,
+            optional: true,
+        },
+        dns: {
+            optional: true,
+            type: String,
+        },
+        dnszone: {
+            optional: true,
+            type: String,
+        },
+        exitnodes: {
+            format: &ApiStringFormat::Pattern(&SDN_ZONE_PENDING_EXITNODES_RE),
+            optional: true,
+            type: String,
+        },
+        "exitnodes-local-routing": {
+            default: false,
+            optional: true,
+        },
+        "exitnodes-primary": {
+            format: &ApiStringFormat::Pattern(&SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE),
+            optional: true,
+            type: String,
+        },
+        ipam: {
+            optional: true,
+            type: String,
+        },
+        mac: {
+            optional: true,
+            type: String,
+        },
+        mtu: {
+            optional: true,
+            type: Integer,
+        },
+        nodes: {
+            optional: true,
+            type: String,
+        },
+        peers: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+            optional: true,
+            type: String,
+        },
+        reversedns: {
+            optional: true,
+            type: String,
+        },
+        "rt-import": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_bgp_rt),
+            optional: true,
+            type: String,
+        },
+        tag: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        "vlan-protocol": {
+            optional: true,
+            type: NetworkInterfaceVlanProtocol,
+        },
+        "vrf-vxlan": {
+            maximum: 16777215,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        "vxlan-port": {
+            default: 4789,
+            maximum: 65536,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Changes that have not yet been applied to the running configuration.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct SdnZonePending {
+    /// Advertise IP prefixes (Type-5 routes) instead of MAC/IP pairs (Type-2
+    /// routes). EVPN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "advertise-subnets")]
+    pub advertise_subnets: Option<bool>,
+
+    /// the bridge for which VLANs should be managed. VLAN & QinQ zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bridge: Option<String>,
+
+    /// Disable auto mac learning. VLAN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bridge-disable-mac-learning")]
+    pub bridge_disable_mac_learning: Option<bool>,
+
+    /// ID of the controller for this zone. EVPN zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub controller: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dhcp: Option<SdnZoneDhcp>,
+
+    /// Suppress IPv4 ARP && IPv6 Neighbour Discovery messages. EVPN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "disable-arp-nd-suppression")]
+    pub disable_arp_nd_suppression: Option<bool>,
+
+    /// ID of the DNS server for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dns: Option<String>,
+
+    /// Domain name for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dnszone: Option<String>,
+
+    /// List of PVE Nodes that should act as exit node for this zone. EVPN zone
+    /// only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub exitnodes: Option<String>,
+
+    /// Create routes on the exit nodes, so they can connect to EVPN guests.
+    /// EVPN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "exitnodes-local-routing")]
+    pub exitnodes_local_routing: Option<bool>,
+
+    /// Force traffic through this exitnode first. EVPN zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "exitnodes-primary")]
+    pub exitnodes_primary: Option<String>,
+
+    /// ID of the IPAM for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ipam: Option<String>,
+
+    /// MAC address of the anycast router for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mac: Option<String>,
+
+    /// MTU of the zone, will be used for the created VNet bridges.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mtu: Option<i64>,
+
+    /// Nodes where this zone should be created.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodes: Option<String>,
+
+    /// Comma-separated list of peers, that are part of the VXLAN zone. Usually
+    /// the IPs of the nodes. VXLAN zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peers: Option<String>,
+
+    /// ID of the reverse DNS server for this zone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reversedns: Option<String>,
+
+    /// Route-Targets that should be imported into the VRF of this zone via BGP.
+    /// EVPN zone only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "rt-import")]
+    pub rt_import: Option<String>,
+
+    /// Service-VLAN Tag (outer VLAN). QinQ zone only
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<u64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vlan-protocol")]
+    pub vlan_protocol: Option<NetworkInterfaceVlanProtocol>,
+
+    /// VNI for the zone VRF. EVPN zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vrf-vxlan")]
+    pub vrf_vxlan: Option<u32>,
+
+    /// UDP port that should be used for the VXLAN tunnel (default 4789). VXLAN
+    /// zone only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vxlan-port")]
+    pub vxlan_port: Option<u32>,
 }
 
 #[api(

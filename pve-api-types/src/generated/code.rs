@@ -112,8 +112,6 @@
 /// - /cluster/options
 /// - /cluster/replication
 /// - /cluster/replication/{id}
-/// - /cluster/sdn
-/// - /cluster/sdn/controllers
 /// - /cluster/sdn/controllers/{controller}
 /// - /cluster/sdn/dns
 /// - /cluster/sdn/dns/{dns}
@@ -127,9 +125,6 @@
 /// - /cluster/sdn/ipams
 /// - /cluster/sdn/ipams/{ipam}
 /// - /cluster/sdn/ipams/{ipam}/status
-/// - /cluster/sdn/lock
-/// - /cluster/sdn/rollback
-/// - /cluster/sdn/vnets
 /// - /cluster/sdn/vnets/{vnet}
 /// - /cluster/sdn/vnets/{vnet}/firewall
 /// - /cluster/sdn/vnets/{vnet}/firewall/options
@@ -138,7 +133,6 @@
 /// - /cluster/sdn/vnets/{vnet}/ips
 /// - /cluster/sdn/vnets/{vnet}/subnets
 /// - /cluster/sdn/vnets/{vnet}/subnets/{subnet}
-/// - /cluster/sdn/zones
 /// - /cluster/sdn/zones/{zone}
 /// - /cluster/tasks
 /// - /nodes/{node}
@@ -383,6 +377,11 @@
 /// ```
 #[async_trait::async_trait]
 pub trait PveClient {
+    /// Acquire global lock for SDN configuration
+    async fn acquire_sdn_lock(&self, params: CreateSdnLock) -> Result<String, Error> {
+        Err(Error::Other("acquire_sdn_lock not implemented"))
+    }
+
     /// Get information needed to join this cluster over the connected node.
     async fn cluster_config_join(&self, node: Option<String>) -> Result<ClusterJoinInfo, Error> {
         Err(Error::Other("cluster_config_join not implemented"))
@@ -411,6 +410,11 @@ pub trait PveClient {
         Err(Error::Other("cluster_status not implemented"))
     }
 
+    /// Create a new sdn controller object.
+    async fn create_controller(&self, params: CreateController) -> Result<(), Error> {
+        Err(Error::Other("create_controller not implemented"))
+    }
+
     /// Generate a new API token for a specific user. NOTE: returns API token
     /// value, which needs to be stored as it cannot be retrieved afterwards!
     async fn create_token(
@@ -420,6 +424,16 @@ pub trait PveClient {
         params: CreateToken,
     ) -> Result<CreateTokenResponse, Error> {
         Err(Error::Other("create_token not implemented"))
+    }
+
+    /// Create a new sdn vnet object.
+    async fn create_vnet(&self, params: CreateVnet) -> Result<(), Error> {
+        Err(Error::Other("create_vnet not implemented"))
+    }
+
+    /// Create a new sdn zone object.
+    async fn create_zone(&self, params: CreateZone) -> Result<(), Error> {
+        Err(Error::Other("create_zone not implemented"))
     }
 
     /// Get package changelogs.
@@ -468,6 +482,16 @@ pub trait PveClient {
         Err(Error::Other("list_available_updates not implemented"))
     }
 
+    /// SDN controllers index.
+    async fn list_controllers(
+        &self,
+        pending: Option<bool>,
+        running: Option<bool>,
+        ty: Option<ListControllersType>,
+    ) -> Result<Vec<SdnController>, Error> {
+        Err(Error::Other("list_controllers not implemented"))
+    }
+
     /// Authentication domain index.
     async fn list_domains(&self) -> Result<Vec<ListRealm>, Error> {
         Err(Error::Other("list_domains not implemented"))
@@ -508,6 +532,25 @@ pub trait PveClient {
         target: Option<String>,
     ) -> Result<Vec<StorageInfo>, Error> {
         Err(Error::Other("list_storages not implemented"))
+    }
+
+    /// SDN vnets index.
+    async fn list_vnets(
+        &self,
+        pending: Option<bool>,
+        running: Option<bool>,
+    ) -> Result<Vec<SdnVnet>, Error> {
+        Err(Error::Other("list_vnets not implemented"))
+    }
+
+    /// SDN zones index.
+    async fn list_zones(
+        &self,
+        pending: Option<bool>,
+        running: Option<bool>,
+        ty: Option<ListZonesType>,
+    ) -> Result<Vec<SdnZone>, Error> {
+        Err(Error::Other("list_zones not implemented"))
     }
 
     /// Get container configuration.
@@ -579,6 +622,11 @@ pub trait PveClient {
         Err(Error::Other("qemu_migrate_preconditions not implemented"))
     }
 
+    /// Release global lock for SDN configuration
+    async fn release_sdn_lock(&self, params: ReleaseSdnLock) -> Result<(), Error> {
+        Err(Error::Other("release_sdn_lock not implemented"))
+    }
+
     /// Migrate the container to another cluster. Creates a new migration task.
     /// EXPERIMENTAL feature!
     async fn remote_migrate_lxc(
@@ -599,6 +647,16 @@ pub trait PveClient {
         params: RemoteMigrateQemu,
     ) -> Result<PveUpid, Error> {
         Err(Error::Other("remote_migrate_qemu not implemented"))
+    }
+
+    /// Rollback pending changes to SDN configuration
+    async fn rollback_sdn_changes(&self, params: RollbackSdn) -> Result<(), Error> {
+        Err(Error::Other("rollback_sdn_changes not implemented"))
+    }
+
+    /// Apply sdn controller changes && reload.
+    async fn sdn_apply(&self, params: ReloadSdn) -> Result<PveUpid, Error> {
+        Err(Error::Other("sdn_apply not implemented"))
     }
 
     /// Shutdown the container. This will trigger a clean shutdown of the
@@ -695,6 +753,12 @@ where
     T: HttpApiClient + Send + Sync,
     for<'a> <T as HttpApiClient>::ResponseFuture<'a>: Send,
 {
+    /// Acquire global lock for SDN configuration
+    async fn acquire_sdn_lock(&self, params: CreateSdnLock) -> Result<String, Error> {
+        let url = "/api2/extjs/cluster/sdn/lock";
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
     /// Get information needed to join this cluster over the connected node.
     async fn cluster_config_join(&self, node: Option<String>) -> Result<ClusterJoinInfo, Error> {
         let url = &ApiPathBuilder::new("/api2/extjs/cluster/config/join")
@@ -735,6 +799,12 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// Create a new sdn controller object.
+    async fn create_controller(&self, params: CreateController) -> Result<(), Error> {
+        let url = "/api2/extjs/cluster/sdn/controllers";
+        self.0.post(url, &params).await?.nodata()
+    }
+
     /// Generate a new API token for a specific user. NOTE: returns API token
     /// value, which needs to be stored as it cannot be retrieved afterwards!
     async fn create_token(
@@ -745,6 +815,18 @@ where
     ) -> Result<CreateTokenResponse, Error> {
         let url = &format!("/api2/extjs/access/users/{userid}/token/{tokenid}");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Create a new sdn vnet object.
+    async fn create_vnet(&self, params: CreateVnet) -> Result<(), Error> {
+        let url = "/api2/extjs/cluster/sdn/vnets";
+        self.0.post(url, &params).await?.nodata()
+    }
+
+    /// Create a new sdn zone object.
+    async fn create_zone(&self, params: CreateZone) -> Result<(), Error> {
+        let url = "/api2/extjs/cluster/sdn/zones";
+        self.0.post(url, &params).await?.nodata()
     }
 
     /// Get package changelogs.
@@ -830,6 +912,21 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// SDN controllers index.
+    async fn list_controllers(
+        &self,
+        pending: Option<bool>,
+        running: Option<bool>,
+        ty: Option<ListControllersType>,
+    ) -> Result<Vec<SdnController>, Error> {
+        let url = &ApiPathBuilder::new("/api2/extjs/cluster/sdn/controllers")
+            .maybe_bool_arg("pending", pending)
+            .maybe_bool_arg("running", running)
+            .maybe_arg("type", &ty)
+            .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Authentication domain index.
     async fn list_domains(&self) -> Result<Vec<ListRealm>, Error> {
         let url = "/api2/extjs/access/domains";
@@ -884,6 +981,34 @@ where
             .maybe_bool_arg("format", format)
             .maybe_arg("storage", &storage)
             .maybe_arg("target", &target)
+            .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// SDN vnets index.
+    async fn list_vnets(
+        &self,
+        pending: Option<bool>,
+        running: Option<bool>,
+    ) -> Result<Vec<SdnVnet>, Error> {
+        let url = &ApiPathBuilder::new("/api2/extjs/cluster/sdn/vnets")
+            .maybe_bool_arg("pending", pending)
+            .maybe_bool_arg("running", running)
+            .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// SDN zones index.
+    async fn list_zones(
+        &self,
+        pending: Option<bool>,
+        running: Option<bool>,
+        ty: Option<ListZonesType>,
+    ) -> Result<Vec<SdnZone>, Error> {
+        let url = &ApiPathBuilder::new("/api2/extjs/cluster/sdn/zones")
+            .maybe_bool_arg("pending", pending)
+            .maybe_bool_arg("running", running)
+            .maybe_arg("type", &ty)
             .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
@@ -973,6 +1098,20 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// Release global lock for SDN configuration
+    async fn release_sdn_lock(&self, params: ReleaseSdnLock) -> Result<(), Error> {
+        let ReleaseSdnLock {
+            force: p_force,
+            lock_token: p_lock_token,
+        } = params;
+
+        let url = &ApiPathBuilder::new("/api2/extjs/cluster/sdn/lock")
+            .maybe_bool_arg("force", p_force)
+            .maybe_arg("lock-token", &p_lock_token)
+            .build();
+        self.0.delete(url).await?.nodata()
+    }
+
     /// Migrate the container to another cluster. Creates a new migration task.
     /// EXPERIMENTAL feature!
     async fn remote_migrate_lxc(
@@ -995,6 +1134,18 @@ where
     ) -> Result<PveUpid, Error> {
         let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/remote_migrate");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Rollback pending changes to SDN configuration
+    async fn rollback_sdn_changes(&self, params: RollbackSdn) -> Result<(), Error> {
+        let url = "/api2/extjs/cluster/sdn/rollback";
+        self.0.post(url, &params).await?.nodata()
+    }
+
+    /// Apply sdn controller changes && reload.
+    async fn sdn_apply(&self, params: ReloadSdn) -> Result<PveUpid, Error> {
+        let url = "/api2/extjs/cluster/sdn";
+        Ok(self.0.put(url, &params).await?.expect_json()?.data)
     }
 
     /// Shutdown the container. This will trigger a clean shutdown of the
