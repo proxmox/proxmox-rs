@@ -6,8 +6,8 @@ Build-Depends: debhelper-compat (= 13),
 Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~) <!nocheck>,
- librust-proxmox-schema-4+default-dev (>= 4.1.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev <!nocheck>,
+ librust-proxmox-schema-5+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
@@ -24,8 +24,8 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-proxmox-schema-4+api-macro-dev (>= 4.1.0-~~),
- librust-proxmox-schema-4+default-dev (>= 4.1.0-~~),
+ librust-proxmox-schema-5+api-macro-dev,
+ librust-proxmox-schema-5+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-plain-1+default-dev
@@ -35,7 +35,7 @@ Provides:
  librust-proxmox-rrd-api-types-1+default-dev (= ${binary:Version}),
  librust-proxmox-rrd-api-types-1.1-dev (= ${binary:Version}),
  librust-proxmox-rrd-api-types-1.1+default-dev (= ${binary:Version}),
- librust-proxmox-rrd-api-types-1.1.0-dev (= ${binary:Version}),
- librust-proxmox-rrd-api-types-1.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-rrd-api-types-1.1.1-dev (= ${binary:Version}),
+ librust-proxmox-rrd-api-types-1.1.1+default-dev (= ${binary:Version})
 Description: Types for RRD values - Rust source code
  Source code for Debianized Rust crate "proxmox-rrd-api-types"
