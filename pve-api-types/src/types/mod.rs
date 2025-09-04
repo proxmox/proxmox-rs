@@ -211,4 +211,8 @@ impl TaskStatus {
     pub fn is_running(&self) -> bool {
         self.status.is_running()
     }
+
+    pub fn finished_successfully(&self) -> Option<bool> {
+        self.exitstatus.as_ref().map(|status| status == "OK")
+    }
 }
