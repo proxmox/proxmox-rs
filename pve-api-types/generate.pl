@@ -360,6 +360,12 @@ Schema2Rust::derive('SdnVnetPending' => 'Clone', 'PartialEq');
 api(POST => '/cluster/sdn/vnets', 'create_vnet', 'param-name' => 'CreateVnet');
 Schema2Rust::derive('CreateVnet' => 'Clone', 'PartialEq');
 
+api(POST => '/cluster/sdn/lock', 'acquire_sdn_lock', 'param-name' => 'CreateSdnLock', 'output-type' => 'String');
+api(DELETE => '/cluster/sdn/lock', 'release_sdn_lock', 'param-name' => 'ReleaseSdnLock');
+
+api(PUT => '/cluster/sdn', 'sdn_apply', 'param-name' => 'ReloadSdn', 'output-type' => 'PveUpid');
+api(POST => '/cluster/sdn/rollback', 'rollback_sdn_changes', 'param-name' => 'RollbackSdn');
+
 # NOW DUMP THE CODE:
 #
 # We generate one file for API types, and one for API method calls.
