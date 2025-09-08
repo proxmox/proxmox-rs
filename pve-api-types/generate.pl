@@ -266,6 +266,8 @@ Schema2Rust::derive('NetworkInterface' => 'Clone', 'PartialEq');
 api(GET => '/nodes/{node}/storage', 'list_storages', 'return-name' => 'StorageInfo');
 Schema2Rust::derive('StorageInfo' => 'Clone', 'PartialEq');
 
+api(GET => '/nodes/{node}/storage/{storage}/status', 'storage_status', 'return-name' => 'StorageStatus');
+
 # FIXME: PVE9 introduced a new non optional property, but that does not
 # exist in PVE8, so make it optional here for older PVEs to work
 Schema2Rust::generate_struct(
