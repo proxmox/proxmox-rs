@@ -357,7 +357,6 @@
 /// - /nodes/{node}/storage/{storage}/prunebackups
 /// - /nodes/{node}/storage/{storage}/rrd
 /// - /nodes/{node}/storage/{storage}/rrddata
-/// - /nodes/{node}/storage/{storage}/status
 /// - /nodes/{node}/storage/{storage}/upload
 /// - /nodes/{node}/suspendall
 /// - /nodes/{node}/syslog
@@ -728,6 +727,11 @@ pub trait PveClient {
     /// Stop a task.
     async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
         Err(Error::Other("stop_task not implemented"))
+    }
+
+    /// Read storage status.
+    async fn storage_status(&self, node: &str, storage: &str) -> Result<StorageStatus, Error> {
+        Err(Error::Other("storage_status not implemented"))
     }
 
     /// This is used to resynchronize the package index files from their sources
@@ -1224,6 +1228,12 @@ where
     async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
         let url = &format!("/api2/extjs/nodes/{node}/tasks/{upid}");
         self.0.delete(url).await?.nodata()
+    }
+
+    /// Read storage status.
+    async fn storage_status(&self, node: &str, storage: &str) -> Result<StorageStatus, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/storage/{storage}/status");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// This is used to resynchronize the package index files from their sources

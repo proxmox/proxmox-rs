@@ -2325,8 +2325,9 @@ pub struct LxcConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tty: Option<u8>,
 
-    /// Makes the container run as unprivileged user. (Should not be modified
-    /// manually.)
+    /// Makes the container run as unprivileged user. For creation, the default
+    /// is 1. For restore, the default is the value from the backup. (Should not
+    /// be modified manually.)
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unprivileged: Option<bool>,
@@ -6132,6 +6133,10 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
             type: String,
         },
+        "running-nets-host-mtu": {
+            optional: true,
+            type: String,
+        },
         sata: {
             type: QemuConfigSataArray,
         },
@@ -6518,6 +6523,13 @@ pub struct QemuConfig {
     /// Configure a VirtIO-based Random Number Generator.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rng0: Option<String>,
+
+    /// List of VirtIO network devices and their effective host_mtu setting. A
+    /// value of 0 means that the host_mtu parameter is to be avoided for the
+    /// corresponding device. This is used internally for snapshots.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "running-nets-host-mtu")]
+    pub running_nets_host_mtu: Option<String>,
 
     /// Use volume as SATA hard disk or CD-ROM (n is 0 to 5).
     #[serde(flatten)]
@@ -9791,6 +9803,101 @@ mod storage_info_content {
     }
 }
 
+const STORAGE_STATUS_CONTENT: Schema =
+    proxmox_schema::ArraySchema::new("list", &StorageContent::API_SCHEMA).schema();
+
+mod storage_status_content {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    #[doc(hidden)]
+    pub trait Ser: Sized {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>;
+    }
+
+    impl<T: Serialize + for<'a> Deserialize<'a>> Ser for Vec<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            super::stringlist::serialize(&self[..], serializer, &super::STORAGE_STATUS_CONTENT)
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            super::stringlist::deserialize(deserializer, &super::STORAGE_STATUS_CONTENT)
+        }
+    }
+
+    impl<T: Ser> Ser for Option<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            match self {
+                None => serializer.serialize_none(),
+                Some(inner) => inner.ser(serializer),
+            }
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            use std::fmt;
+            use std::marker::PhantomData;
+
+            struct V<T: Ser>(PhantomData<T>);
+
+            impl<'de, T: Ser> serde::de::Visitor<'de> for V<T> {
+                type Value = Option<T>;
+
+                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("an optional string")
+                }
+
+                fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                    Ok(None)
+                }
+
+                fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+                where
+                    D: Deserializer<'de>,
+                {
+                    T::de(deserializer).map(Some)
+                }
+
+                fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
+                    use serde::de::IntoDeserializer;
+                    T::de(value.into_deserializer()).map(Some)
+                }
+            }
+
+            deserializer.deserialize_option(V::<T>(PhantomData))
+        }
+    }
+
+    pub fn serialize<T, S>(this: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: Ser,
+    {
+        this.ser(serializer)
+    }
+
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+        T: Ser,
+    {
+        T::de(deserializer)
+    }
+}
+
 const_regex! {
 
 SDN_CONTROLLER_ISIS_IFACES_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
@@ -10850,6 +10957,10 @@ START_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
             optional: true,
             type: StartQemuMigrationType,
         },
+        "nets-host-mtu": {
+            optional: true,
+            type: String,
+        },
         skiplock: {
             default: false,
             optional: true,
@@ -10898,6 +11009,14 @@ pub struct StartQemu {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migration_type: Option<StartQemuMigrationType>,
+
+    /// Used for migration compat. List of VirtIO network devices and their
+    /// effective host_mtu setting according to the QEMU object model on the
+    /// source side of the migration. A value of 0 means that the host_mtu
+    /// parameter is to be avoided for the corresponding device.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "nets-host-mtu")]
+    pub nets_host_mtu: Option<String>,
 
     /// Ignore locks - only root is allowed to use this option.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
@@ -11155,6 +11274,83 @@ pub struct StorageInfo {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub used_fraction: Option<f64>,
+}
+
+#[api(
+    properties: {
+        active: {
+            default: false,
+            optional: true,
+        },
+        avail: {
+            optional: true,
+            type: Integer,
+        },
+        content: {
+            format: &ApiStringFormat::PropertyString(&STORAGE_STATUS_CONTENT),
+            type: String,
+        },
+        enabled: {
+            default: false,
+            optional: true,
+        },
+        shared: {
+            default: false,
+            optional: true,
+        },
+        total: {
+            optional: true,
+            type: Integer,
+        },
+        type: {
+            type: String,
+        },
+        used: {
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct StorageStatus {
+    /// Set when storage is accessible.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active: Option<bool>,
+
+    /// Available storage space in bytes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub avail: Option<i64>,
+
+    /// Allowed storage content types.
+    #[serde(with = "storage_status_content")]
+    pub content: Vec<StorageContent>,
+
+    /// Set when storage is enabled (not disabled).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+
+    /// Shared flag from storage configuration.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared: Option<bool>,
+
+    /// Total storage space in bytes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub total: Option<i64>,
+
+    /// Storage type.
+    #[serde(rename = "type")]
+    pub ty: String,
+
+    /// Used storage space in bytes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub used: Option<i64>,
 }
 
 #[api(
