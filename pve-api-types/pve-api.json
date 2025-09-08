@@ -18960,7 +18960,7 @@
                                                       "description": "The command as a list of program + arguments.",
                                                       "items": {
                                                          "description": "A single part of the program + arguments.",
-                                                         "format": "string"
+                                                         "type": "string"
                                                       },
                                                       "type": "array"
                                                    },
@@ -20291,6 +20291,12 @@
                                                 "description": "Configure a VirtIO-based Random Number Generator.",
                                                 "format": "pve-qm-rng",
                                                 "optional": 1,
+                                                "type": "string"
+                                             },
+                                             "running-nets-host-mtu": {
+                                                "description": "List of VirtIO network devices and their effective host_mtu setting. A value of 0 means that the host_mtu parameter is to be avoided for the corresponding device. This is used internally for snapshots.",
+                                                "optional": 1,
+                                                "pattern": "net\\d+=\\d+(,net\\d+=\\d+)*",
                                                 "type": "string"
                                              },
                                              "sata0": {
@@ -21733,6 +21739,7 @@
                                                 "type": "string"
                                              },
                                              "rng0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/rng0"],
+                                             "running-nets-host-mtu": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/running-nets-host-mtu"],
                                              "sata0": {
                                                 "description": "Use volume as SATA hard disk or CD-ROM (n is 0 to 5). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.",
                                                 "format": {
@@ -23248,6 +23255,7 @@
                                                 "type": "string"
                                              },
                                              "rng0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/rng0"],
+                                             "running-nets-host-mtu": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/running-nets-host-mtu"],
                                              "sata0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
                                              "sata1": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
                                              "sata2": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
@@ -24463,6 +24471,12 @@
                                                          "insecure"
                                                       ],
                                                       "optional": 1,
+                                                      "type": "string"
+                                                   },
+                                                   "nets-host-mtu": {
+                                                      "description": "Used for migration compat. List of VirtIO network devices and their effective host_mtu setting according to the QEMU object model on the source side of the migration. A value of 0 means that the host_mtu parameter is to be avoided for the corresponding device.",
+                                                      "optional": 1,
+                                                      "pattern": "net\\d+=\\d+(,net\\d+=\\d+)*",
                                                       "type": "string"
                                                    },
                                                    "node": {
@@ -27542,6 +27556,7 @@
                                  "protection": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/protection"],
                                  "reboot": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/reboot"],
                                  "rng0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/rng0"],
+                                 "running-nets-host-mtu": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/running-nets-host-mtu"],
                                  "sata0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
                                  "sata1": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
                                  "sata2": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
@@ -31718,7 +31733,7 @@
                                              },
                                              "unprivileged": {
                                                 "default": 0,
-                                                "description": "Makes the container run as unprivileged user. (Should not be modified manually.)",
+                                                "description": "Makes the container run as unprivileged user. For creation, the default is 1. For restore, the default is the value from the backup. (Should not be modified manually.)",
                                                 "optional": 1,
                                                 "type": "boolean"
                                              },
@@ -41965,6 +41980,7 @@
                                              "type": "object"
                                           },
                                           "bytes_used": {
+                                             "renderer": "bytes",
                                              "title": "Used",
                                              "type": "integer"
                                           },
@@ -46287,7 +46303,50 @@
                                        "protected": 1,
                                        "proxyto": "node",
                                        "returns": {
-                                          "properties": {},
+                                          "properties": {
+                                             "active": {
+                                                "description": "Set when storage is accessible.",
+                                                "optional": 1,
+                                                "type": "boolean"
+                                             },
+                                             "avail": {
+                                                "description": "Available storage space in bytes.",
+                                                "optional": 1,
+                                                "renderer": "bytes",
+                                                "type": "integer"
+                                             },
+                                             "content": {
+                                                "description": "Allowed storage content types.",
+                                                "format": "pve-storage-content-list",
+                                                "type": "string"
+                                             },
+                                             "enabled": {
+                                                "description": "Set when storage is enabled (not disabled).",
+                                                "optional": 1,
+                                                "type": "boolean"
+                                             },
+                                             "shared": {
+                                                "description": "Shared flag from storage configuration.",
+                                                "optional": 1,
+                                                "type": "boolean"
+                                             },
+                                             "total": {
+                                                "description": "Total storage space in bytes.",
+                                                "optional": 1,
+                                                "renderer": "bytes",
+                                                "type": "integer"
+                                             },
+                                             "type": {
+                                                "description": "Storage type.",
+                                                "type": "string"
+                                             },
+                                             "used": {
+                                                "description": "Used storage space in bytes.",
+                                                "optional": 1,
+                                                "renderer": "bytes",
+                                                "type": "integer"
+                                             }
+                                          },
                                           "type": "object"
                                        }
                                     }
