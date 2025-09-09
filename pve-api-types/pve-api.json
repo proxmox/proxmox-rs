@@ -15734,6 +15734,11 @@
                                  "optional": 1,
                                  "type": "string"
                               },
+                              "sdn": {
+                                 "description": "The name of an SDN entity (for type 'sdn')",
+                                 "optional": 1,
+                                 "type": "string"
+                              },
                               "status": {
                                  "description": "Resource type dependent status.",
                                  "optional": 1,
