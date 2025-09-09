@@ -726,6 +726,10 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
             optional: true,
             type: String,
         },
+        sdn: {
+            optional: true,
+            type: String,
+        },
         status: {
             optional: true,
             type: String,
@@ -867,6 +871,10 @@ pub struct ClusterResource {
     /// The pool name (for types 'pool', 'qemu' and 'lxc').
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pool: Option<String>,
+
+    /// The name of an SDN entity (for type 'sdn')
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sdn: Option<String>,
 
     /// Resource type dependent status.
     #[serde(default, skip_serializing_if = "Option::is_none")]
