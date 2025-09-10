@@ -473,7 +473,7 @@ pub enum DeletableInterfaceProperty {
             mtu: {
                 description: "Maximum Transmission Unit.",
                 optional: true,
-                minimum: 46,
+                minimum: 68,
                 maximum: 65535,
                 default: 1500,
             },
