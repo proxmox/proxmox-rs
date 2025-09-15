@@ -50,9 +50,9 @@ Provides:
  librust-proxmox-s3-client-1.2-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.2+api-types-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.2+default-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.1-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.1+api-types-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.1+default-dev (= ${binary:Version})
+ librust-proxmox-s3-client-1.2.2-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.2.2+api-types-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.2.2+default-dev (= ${binary:Version})
 Description: Low level REST API client for AWS S3 compatible object stores - Rust source code
  Source code for Debianized Rust crate "proxmox-s3-client"
 
@@ -76,11 +76,11 @@ Depends:
  librust-md5-0.7+default-dev,
  librust-openssl-0.10+default-dev,
  librust-proxmox-base64-1+default-dev,
- librust-proxmox-http-1+body-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+client-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+client-trait-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+rate-limiter-dev (>= 1.0.2-~~),
+ librust-proxmox-http-1+body-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+client-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+client-trait-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+rate-limiter-dev (>= 1.0.3-~~),
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~),
  librust-quick-xml-0.36+async-tokio-dev (>= 0.36.1-~~),
  librust-quick-xml-0.36+default-dev (>= 0.36.1-~~),
@@ -93,7 +93,7 @@ Depends:
 Provides:
  librust-proxmox-s3-client-1+impl-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.2+impl-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.1+impl-dev (= ${binary:Version})
+ librust-proxmox-s3-client-1.2.2+impl-dev (= ${binary:Version})
 Description: Low level REST API client for AWS S3 compatible object stores - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-s3-client crate,
  by pulling in any additional dependencies needed by that feature.

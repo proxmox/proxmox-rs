@@ -1,3 +1,14 @@
+rust-proxmox-s3-client (1.2.2-1) trixie; urgency=medium
+
+  * drop non-ambiguous mention of chunks in error message.
+  * bump s3 request timeout from 1 minute to 30 minutes, which would allow an
+    average download rate of about 2.3 KiB/s for a 4 MiB data blob, which is
+    about the maximum we currently download in one go.
+  * add retry logic for transient client errors using an exponentially
+    increasing backoff time and a maximum of 3 tries for the retries.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 15 Sep 2025 21:15:36 +0200
+
 rust-proxmox-s3-client (1.2.1-1) trixie; urgency=medium
 
   * update proxmox-schema to 5.0.0
