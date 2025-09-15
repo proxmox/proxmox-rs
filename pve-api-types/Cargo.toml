@@ -1,6 +1,7 @@
 [package]
 name = "pve-api-types"
-# For the version we probably want to track the PVE version.
+# For the major part of the version we probably want to track the lowest PVE
+# version we fully support.
 version = "8.0.0"
 description = "Proxmox VE API types"
 
