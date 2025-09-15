@@ -1,3 +1,9 @@
+rust-proxmox-http (1.0.3-1) trixie; urgency=medium
+
+  * add `bytes` method to get full body as contiguous bytes.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 15 Sep 2025 21:00:21 +0200
+
 rust-proxmox-http (1.0.2-1) trixie; urgency=medium
 
   * client-sync: don't wrongly change request methods to POST
