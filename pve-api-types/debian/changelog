@@ -1,0 +1,6 @@
+rust-pve-api-types (8.0.0-1) trixie; urgency=medium
+
+  * initial packaging after having been split out from proxmox-api-types.git.
+    This was used purely as git submodule before now.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 15 Sep 2025 20:02:18 +0200
