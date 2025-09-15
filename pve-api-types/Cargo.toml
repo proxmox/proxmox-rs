@@ -1,0 +1,32 @@
+[package]
+name = "pve-api-types"
+# For the version we probably want to track the PVE version.
+version = "8.0.0"
+description = "Proxmox VE API types"
+
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+async-trait = "0.1"
+regex.workspace = true
+serde = { workspace = true, features = [ "derive" ] }
+serde_json.workspace = true
+serde_plain.workspace = true
+#
+proxmox-api-macro.workspace = true
+proxmox-serde = { workspace = true, features = [ "perl" ] }
+proxmox-schema = { workspace = true, features = [ "api-types", "api-macro" ] }
+
+# For the client feature:
+percent-encoding = { workspace = true, optional = true }
+proxmox-client = { version = "1", optional = true, features = ["perl-api-path-builder"] }
+
+[features]
+default = []
+client-util = [ "dep:percent-encoding" ]
+client = [ "client-util", "dep:proxmox-client" ]
