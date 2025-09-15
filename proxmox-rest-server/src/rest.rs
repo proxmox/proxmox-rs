@@ -304,15 +304,12 @@ fn log_response(
             .unwrap_or_else(|_| "-".to_string());
 
         logfile.lock().unwrap().log(format!(
-            "{} - {} [{}] \"{} {}\" {} {} {}",
-            peer.ip(),
-            auth_id,
-            datetime,
-            method.as_str(),
-            path,
-            status.as_str(),
-            resp.body().size_hint().lower(),
-            user_agent.unwrap_or_else(|| "-".to_string()),
+            "{ip} - {auth_id} [{datetime}] \"{method} {path}\" {status} {size} {user_agent}",
+            ip = peer.ip(),
+            method = method.as_str(),
+            status = status.as_str(),
+            size = resp.body().size_hint().lower(),
+            user_agent = user_agent.unwrap_or_else(|| "-".to_string()),
         ));
     }
 }
