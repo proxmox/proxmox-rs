@@ -13,8 +13,30 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 ldap3 = { workspace = true, default-features = false, features = ["tls"] }
+log = { workspace = true, optional = true }
 serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true, optional = true }
 native-tls.workspace = true
+
+proxmox-access-control = { workspace = true, optional = true, features = ["impl"] }
+proxmox-auth-api = { workspace = true, optional = true }
+proxmox-product-config = { workspace = true, optional = true }
+proxmox-schema = { workspace = true, optional = true }
+proxmox-section-config = { workspace = true, optional = true }
 
 [dev-dependencies]
 proxmox-async.workspace = true
+
+[features]
+default = []
+types = [ ]
+sync = [
+    "types",
+    "dep:log",
+    "dep:serde_json",
+    "dep:proxmox-access-control",
+    "dep:proxmox-auth-api",
+    "dep:proxmox-product-config",
+    "dep:proxmox-section-config",
+    "dep:proxmox-schema"
+]

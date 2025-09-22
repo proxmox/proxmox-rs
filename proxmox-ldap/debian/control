@@ -29,13 +29,42 @@ Depends:
  librust-native-tls-0.2+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev
+Suggests:
+ librust-proxmox-ldap+sync-dev (= ${binary:Version})
 Provides:
  librust-proxmox-ldap+default-dev (= ${binary:Version}),
+ librust-proxmox-ldap+types-dev (= ${binary:Version}),
  librust-proxmox-ldap-1-dev (= ${binary:Version}),
  librust-proxmox-ldap-1+default-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1+types-dev (= ${binary:Version}),
  librust-proxmox-ldap-1.0-dev (= ${binary:Version}),
  librust-proxmox-ldap-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1.0+types-dev (= ${binary:Version}),
  librust-proxmox-ldap-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-ldap-1.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-ldap-1.0.0+default-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1.0.0+types-dev (= ${binary:Version})
 Description: Proxmox library for LDAP authentication/synchronization - Rust source code
  Source code for Debianized Rust crate "proxmox-ldap"
+
+Package: librust-proxmox-ldap+sync-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-ldap-dev (= ${binary:Version}),
+ librust-proxmox-ldap+types-dev (= ${binary:Version}),
+ librust-log-0.4+default-dev (>= 0.4.17-~~),
+ librust-proxmox-access-control-1+default-dev (>= 1.1.1-~~),
+ librust-proxmox-access-control-1+impl-dev (>= 1.1.1-~~),
+ librust-proxmox-auth-api-1+default-dev,
+ librust-proxmox-product-config-1+default-dev,
+ librust-proxmox-schema-5+default-dev,
+ librust-proxmox-section-config-3+default-dev (>= 3.1.0-~~),
+ librust-serde-json-1+default-dev
+Provides:
+ librust-proxmox-ldap-1+sync-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1.0+sync-dev (= ${binary:Version}),
+ librust-proxmox-ldap-1.0.0+sync-dev (= ${binary:Version})
+Description: Proxmox library for LDAP authentication/synchronization - feature "sync"
+ This metapackage enables feature "sync" for the Rust proxmox-ldap crate, by
+ pulling in any additional dependencies needed by that feature.

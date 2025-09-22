@@ -14,6 +14,12 @@ use ldap3::{Ldap, LdapConnAsync, LdapConnSettings, LdapResult, Scope, SearchEntr
 use native_tls::{Certificate, TlsConnector, TlsConnectorBuilder};
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "sync")]
+pub mod sync;
+
+#[cfg(feature = "types")]
+pub mod types;
+
 #[derive(PartialEq, Eq, Clone, Copy, Serialize, Deserialize, Debug)]
 /// LDAP connection security
 pub enum ConnectionMode {
