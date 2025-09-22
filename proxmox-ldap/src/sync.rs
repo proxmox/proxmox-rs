@@ -94,7 +94,7 @@ impl LdapRealmSyncJob {
     /// Perform realm synchronization
     pub async fn sync(&self) -> Result<(), Error> {
         if self.dry_run {
-            log::info!("this is a DRY RUN - changes will not be persisted");
+            log::info!("this is a DRY RUN. Changes will not be persisted.");
         }
 
         let ldap = Connection::new(self.ldap_config.clone());
@@ -107,6 +107,10 @@ impl LdapRealmSyncJob {
 
         let users = ldap.search_entities(&parameters).await?;
         self.update_user_config(&users)?;
+
+        if self.dry_run {
+            log::info!("this was a DRY RUN. Changes were not persisted.");
+        }
 
         Ok(())
     }
@@ -196,19 +200,25 @@ impl LdapRealmSyncJob {
         let new_or_updated_user =
             self.construct_or_update_user(result, userid, existing_user.as_ref());
 
+        let user_id = new_or_updated_user.userid.as_str();
+
         if let Some(existing_user) = existing_user {
             if existing_user != new_or_updated_user {
-                log::info!("updating user {}", new_or_updated_user.userid.as_str());
+                if self.dry_run {
+                    log::info!("would update user {user_id}");
+                } else {
+                    log::info!("updating user {user_id}");
+                }
             }
         } else {
-            log::info!("creating user {}", new_or_updated_user.userid.as_str());
+            if self.dry_run {
+                log::info!("would create user {user_id}");
+            } else {
+                log::info!("creating user {user_id}");
+            }
         }
 
-        user_config.set_data(
-            new_or_updated_user.userid.as_str(),
-            "user",
-            &new_or_updated_user,
-        )?;
+        user_config.set_data(user_id, "user", &new_or_updated_user)?;
         Ok(())
     }
 
@@ -302,7 +312,11 @@ impl LdapRealmSyncJob {
         to_delete: &[Userid],
     ) -> Result<(), Error> {
         for userid in to_delete {
-            log::info!("deleting user {}", userid.as_str());
+            if self.dry_run {
+                log::info!("would delet user {}", userid.as_str());
+            } else {
+                log::info!("deleting user {}", userid.as_str());
+            }
 
             // Delete the user
             user_config.sections.remove(userid.as_str());
