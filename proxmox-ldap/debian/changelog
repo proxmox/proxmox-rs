@@ -1,3 +1,11 @@
+rust-proxmox-ldap (1.1.0-1) bookworm; urgency=medium
+
+  * add types and sync features. Allow sharing the implementation of the basic
+    types and the feature to synchronize users from a LDAP/AD instance across
+    our projects.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 22 Sep 2025 20:17:24 +0200
+
 rust-proxmox-ldap (1.0.0-1) bookworm; urgency=medium
 
   * re-build for Debian Trixie based releases.
