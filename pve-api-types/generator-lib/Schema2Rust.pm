@@ -1580,13 +1580,13 @@ my sub method_parameters : prototype($$$$$) {
 
     my $url_params = url_parameters($api_url);
 
-    my $parameters = $api_method->{parameters};
+    my $parameters = $api_method->{parameters} // {};
 
     #print "URL PARAMETERS: ".join(', ', $url_params->@*)."\n";
 
     # Clone to avoid modifying the duplicate.
     $parameters = { $parameters->%* };
-    my $properties = { $parameters->{properties}->%* };
+    my $properties = { ($parameters->{properties} // {})->%* };
     $parameters->{properties} = $properties;
 
     # Handle URL parameter types. These should only be strings or integers.
