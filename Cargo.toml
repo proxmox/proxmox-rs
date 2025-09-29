@@ -53,6 +53,7 @@ members = [
     "proxmox-uuid",
     "proxmox-worker-task",
     "pbs-api-types",
+    "pve-api-types",
 ]
 exclude = [
     "build",
