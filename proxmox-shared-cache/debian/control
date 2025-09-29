@@ -15,7 +15,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
  librust-serde-json-1+raw-value-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.7.0
+Standards-Version: 4.7.2
 Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/proxmox-shared-cache]
 Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/proxmox-shared-cache
 Homepage: https://proxmox.com

@@ -15,7 +15,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.7.0
+Standards-Version: 4.7.2
 Vcs-Git: 
 Vcs-Browser: 
 Homepage: https://proxmox.com

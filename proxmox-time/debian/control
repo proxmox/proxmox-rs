@@ -13,7 +13,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-libc-0.2+extra-traits-dev (>= 0.2.107-~~) <!nocheck>,
  librust-nom-7+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.7.0
+Standards-Version: 4.7.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com

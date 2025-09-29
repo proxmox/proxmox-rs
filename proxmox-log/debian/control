@@ -17,7 +17,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-tracing-log-0.2+std-dev <!nocheck>,
  librust-tracing-subscriber-0.3+default-dev (>= 0.3.16-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.7.0
+Standards-Version: 4.7.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com

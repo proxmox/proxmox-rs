@@ -17,11 +17,11 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
- librust-thiserror-1+default-dev <!nocheck>,
+ librust-thiserror-2+default-dev <!nocheck>,
  librust-ureq-3+gzip-dev <!nocheck>,
  librust-ureq-3+native-tls-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.7.0
+Standards-Version: 4.7.2
 Vcs-Git: 
 Vcs-Browser: 
 Homepage: https://proxmox.com
@@ -44,7 +44,7 @@ Depends:
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev,
- librust-thiserror-1+default-dev,
+ librust-thiserror-2+default-dev,
  librust-ureq-3+gzip-dev,
  librust-ureq-3+native-tls-dev
 Provides:
