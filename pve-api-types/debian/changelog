@@ -1,3 +1,9 @@
+rust-pve-api-types (8.0.1-1) trixie; urgency=medium
+
+  * generate MAX constant for array types
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 29 Sep 2025 14:46:23 +0200
+
 rust-pve-api-types (8.0.0-1) trixie; urgency=medium
 
   * initial packaging after having been split out from proxmox-api-types.git.
