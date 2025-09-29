@@ -464,29 +464,22 @@ pub fn upid_read_status(upid: &UPID) -> Result<TaskState, Error> {
         data.pop();
     }
 
-    let last_line = match data.iter().rposition(|c| *c == b'\n') {
-        Some(start) if data.len() > (start + 1) => &data[start + 1..],
-        Some(_) => &data, // should not happen, since we removed all trailing newlines
-        None => &data,
-    };
-
-    let last_line = std::str::from_utf8(last_line)
-        .map_err(|err| format_err!("upid_read_status: utf8 parse failed: {}", err))?;
-
-    let mut endtime = upid.starttime; // as fallback
-    let mut iter = last_line.splitn(2, ": ");
-    if let Some(time_str) = iter.next() {
-        if let Ok(parsed_endtime) = proxmox_time::parse_rfc3339(time_str) {
-            endtime = parsed_endtime; // save last found time for when the state cannot be parsed
-            if let Some(rest) = iter.next().and_then(|rest| rest.strip_prefix("TASK ")) {
-                if let Ok(state) = TaskState::from_endtime_and_message(parsed_endtime, rest) {
-                    return Ok(state);
-                }
-            }
+    let state = data.rsplit(|&c| c == b'\n').find_map(|line| {
+        let line_str = std::str::from_utf8(line).ok()?;
+        let mut parts = line_str.splitn(2, ": ");
+        let time_str = parts.next()?;
+        let endtime = proxmox_time::parse_rfc3339(time_str).ok()?;
+        if let Some(rest) = parts.next().and_then(|rest| rest.strip_prefix("TASK ")) {
+            Some(TaskState::from_endtime_and_message(endtime, rest).ok()?)
+        } else {
+            // no last line with both, end-time and task-state, found.
+            Some(TaskState::Unknown { endtime })
         }
-    }
+    });
 
-    Ok(TaskState::Unknown { endtime }) // no last line with both, end-time and task-state, found.
+    Ok(state.unwrap_or(TaskState::Unknown {
+        endtime: upid.starttime,
+    }))
 }
 
 static WORKER_TASK_LIST: LazyLock<Mutex<HashMap<usize, Arc<WorkerTask>>>> =
