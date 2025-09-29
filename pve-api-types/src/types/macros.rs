@@ -10,6 +10,10 @@ macro_rules! generate_array_field {
             inner: crate::array::ArrayMap<$field_type, { $array_len }>,
         }
 
+        impl $type_name {
+            pub const MAX: usize = $array_len;
+        }
+
         impl ::proxmox_schema::ApiType for $type_name {
             const API_SCHEMA: ::proxmox_schema::Schema =
                 ::proxmox_api_macro::json_schema! $api_def ;
