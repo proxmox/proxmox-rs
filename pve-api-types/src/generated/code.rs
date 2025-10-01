@@ -391,6 +391,7 @@ pub trait PveClient {
         &self,
         history: Option<bool>,
         local_only: Option<bool>,
+        node_list: Option<String>,
         start_time: Option<i64>,
     ) -> Result<ClusterMetrics, Error> {
         Err(Error::Other("cluster_metrics_export not implemented"))
@@ -776,11 +777,13 @@ where
         &self,
         history: Option<bool>,
         local_only: Option<bool>,
+        node_list: Option<String>,
         start_time: Option<i64>,
     ) -> Result<ClusterMetrics, Error> {
         let url = &ApiPathBuilder::new("/api2/extjs/cluster/metrics/export")
             .maybe_bool_arg("history", history)
             .maybe_bool_arg("local-only", local_only)
+            .maybe_arg("node-list", &node_list)
             .maybe_arg("start-time", &start_time)
             .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
