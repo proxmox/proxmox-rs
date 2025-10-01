@@ -221,7 +221,7 @@
       "pve-qm-bootdisk": ("Code")[],
       "pve-qm-cicustom": {
          "meta": {
-            "description": "Specify a custom file containing all meta data passed to the VM via\"\n\t    .\" cloud-init. This is provider specific meaning configdrive2 and nocloud differ.",
+            "description": "Specify a custom file containing all meta data passed to the VM via cloud-init. This is provider specific meaning configdrive2 and nocloud differ.",
             "format": "pve-volume-id",
             "format_description": "volume",
             "optional": 1,
@@ -1642,6 +1642,11 @@
                                     "description": "Only return metrics for the current node instead of the whole cluster",
                                     "optional": 1,
                                     "type": "boolean"
+                                 },
+                                 "node-list": {
+                                    "description": "Only return metrics from nodes passed as comma-separated list",
+                                    "optional": 1,
+                                    "type": "string"
                                  },
                                  "start-time": {
                                     "default": 0,
@@ -19950,6 +19955,14 @@
                                              "machine": {
                                                 "description": "Specify the QEMU machine.",
                                                 "format": {
+                                                   "aw-bits": {
+                                                      "description": "Specifies the vIOMMU address space bit width.",
+                                                      "maximum": 64,
+                                                      "minimum": 32,
+                                                      "optional": 1,
+                                                      "type": "number",
+                                                      "verbose_description": "Specifies the vIOMMU address space bit width.\n\nIntel vIOMMU supports a bit width of either 39 or 48 bits and VirtIO vIOMMU supports any bit width between 32 and 64 bits."
+                                                   },
                                                    "enable-s3": {
                                                       "description": "Enables S3 power state. Defaults to false beginning with machine types 9.2+pve1, true before.",
                                                       "optional": 1,
@@ -19990,6 +20003,25 @@
                                                       "default_key": 1,
                                                       "description": "Current amount of online RAM for the VM in MiB. This is the maximum available memory when you use the balloon device.",
                                                       "minimum": 16,
+                                                      "type": "integer"
+                                                   }
+                                                },
+                                                "optional": 1,
+                                                "type": "string"
+                                             },
+                                             "meta": {
+                                                "description": "Some (read-only) meta-information about this guest.",
+                                                "format": {
+                                                   "creation-qemu": {
+                                                      "description": "The QEMU (machine) version from the time this VM was created.",
+                                                      "optional": 1,
+                                                      "pattern": "\\d+(\\.\\d+)+",
+                                                      "type": "string"
+                                                   },
+                                                   "ctime": {
+                                                      "description": "The guest creation timestamp as UNIX epoch time",
+                                                      "minimum": 0,
+                                                      "optional": 1,
                                                       "type": "integer"
                                                    }
                                                 },
@@ -20280,6 +20312,13 @@
                                              },
                                              "parallel1": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/parallel0"],
                                              "parallel2": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/parallel0"],
+                                             "parent": {
+                                                "description": "Parent snapshot name. This is used internally, and should not be modified.",
+                                                "format": "pve-configid",
+                                                "maxLength": 40,
+                                                "optional": 1,
+                                                "type": "string"
+                                             },
                                              "protection": {
                                                 "default": 0,
                                                 "description": "Sets the protection flag of the VM. This will disable the remove VM and remove disk operations.",
@@ -20302,6 +20341,19 @@
                                                 "description": "List of VirtIO network devices and their effective host_mtu setting. A value of 0 means that the host_mtu parameter is to be avoided for the corresponding device. This is used internally for snapshots.",
                                                 "optional": 1,
                                                 "pattern": "net\\d+=\\d+(,net\\d+=\\d+)*",
+                                                "type": "string"
+                                             },
+                                             "runningcpu": {
+                                                "description": "Specifies the QEMU '-cpu' parameter of the running vm. This is used internally for snapshots.",
+                                                "format_description": "QEMU -cpu parameter",
+                                                "optional": 1,
+                                                "pattern": ("Regex")["(?^:^((?>[+-]?[\\w\\-\\._=]+,?)+)$)"],
+                                                "type": "string"
+                                             },
+                                             "runningmachine": {
+                                                "description": "Specifies the QEMU machine type of the running vm. This is used internally for snapshots.",
+                                                "format": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/machine/format"],
+                                                "optional": 1,
                                                 "type": "string"
                                              },
                                              "sata0": {
@@ -20523,6 +20575,12 @@
                                                 "default": 1,
                                                 "description": "The number of CPUs. Please use option -sockets instead.",
                                                 "minimum": 1,
+                                                "optional": 1,
+                                                "type": "integer"
+                                             },
+                                             "snaptime": {
+                                                "description": "Timestamp for snapshots.",
+                                                "minimum": 0,
                                                 "optional": 1,
                                                 "type": "integer"
                                              },
@@ -21175,6 +21233,12 @@
                                                 "type": "string",
                                                 "verbose_description": "The VM generation ID (vmgenid) device exposes a 128-bit integer value identifier to the guest OS. This allows to notify the guest operating system when the virtual machine is executed with a different configuration (e.g. snapshot execution or creation from a template). The guest operating system notices the change, and is then able to react as appropriate by marking its copies of distributed databases as dirty, re-initializing its random number generator, etc.\nNote that auto-creation only works when done through API/CLI create or update methods, but not when manually editing the config file."
                                              },
+                                             "vmstate": {
+                                                "description": "Reference to a volume which stores the VM state. This is used internally for snapshots.",
+                                                "format": "pve-volume-id",
+                                                "optional": 1,
+                                                "type": "string"
+                                             },
                                              "vmstatestorage": {
                                                 "description": "Default storage for VM state volumes/files.",
                                                 "format": "pve-storage-id",
@@ -21744,7 +21808,6 @@
                                                 "type": "string"
                                              },
                                              "rng0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/rng0"],
-                                             "running-nets-host-mtu": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/running-nets-host-mtu"],
                                              "sata0": {
                                                 "description": "Use volume as SATA hard disk or CD-ROM (n is 0 to 5). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.",
                                                 "format": {
@@ -23260,7 +23323,6 @@
                                                 "type": "string"
                                              },
                                              "rng0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/rng0"],
-                                             "running-nets-host-mtu": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/running-nets-host-mtu"],
                                              "sata0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
                                              "sata1": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
                                              "sata2": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
@@ -25247,7 +25309,7 @@
                                                 "type": "boolean"
                                              },
                                              "digest": {
-                                                "description": "Prevent changes if current configuration file has different SHA1\"\n\t\t    .\" digest. This can be used to prevent concurrent modifications.",
+                                                "description": "Prevent changes if current configuration file has different SHA1 digest. This can be used to prevent concurrent modifications.",
                                                 "maxLength": 40,
                                                 "optional": 1,
                                                 "type": "string"
@@ -25597,7 +25659,7 @@
                                                 "type": "string"
                                              },
                                              "target-digest": {
-                                                "description": "Prevent changes if the current config file of the target VM has a\"\n\t\t    .\" different SHA1 digest. This can be used to detect concurrent modifications.",
+                                                "description": "Prevent changes if the current config file of the target VM has a different SHA1 digest. This can be used to detect concurrent modifications.",
                                                 "maxLength": 40,
                                                 "optional": 1,
                                                 "type": "string"
@@ -27561,7 +27623,6 @@
                                  "protection": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/protection"],
                                  "reboot": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/reboot"],
                                  "rng0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/rng0"],
-                                 "running-nets-host-mtu": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/running-nets-host-mtu"],
                                  "sata0": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
                                  "sata1": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
                                  "sata2": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/POST/parameters/properties/sata0"],
@@ -45458,7 +45519,7 @@
                                        "returns": {
                                           "additionalProperties": 0,
                                           "properties": {
-                                             "dbus-vmstate": {
+                                             "has-dbus-vmstate": {
                                                 "description": "Whether the host supports live-migrating additional VM state via the dbus-vmstate helper.",
                                                 "type": "boolean"
                                              }
