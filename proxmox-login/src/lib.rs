@@ -198,22 +198,24 @@ impl Login {
             ));
         }
 
-        // `ticket_info` is set when the server sets the ticket via an HttpOnly cookie. this also
-        // means we do not have access to the cookie itself which happens for example in a browser.
-        // assume that the cookie is handled properly by the context (browser) and don't worry
-        // about handling it ourselves.
-        if let Some(ref ticket) = response.ticket_info {
-            let ticket = ticket.parse()?;
-            return Ok(TicketResult::HttpOnly(
-                self.authentication_for(ticket, response)?,
-            ));
-        }
-
         // old authentication flow where we needed to handle the ticket ourselves even in the
         // browser etc.
         let ticket: TicketResponse = match response.ticket {
             Some(ref ticket) => ticket.parse()?,
-            None => return Err("no ticket information in response".into()),
+            None => {
+                // `ticket_info` is set when the server sets the ticket via a HttpOnly cookie. this
+                // also means we do not have access to the cookie itself which happens for example
+                // in a browser. assume that the cookie is handled properly by the context
+                // (browser) and don't worry about handling it ourselves.
+                if let Some(ref ticket) = response.ticket_info {
+                    let ticket = ticket.parse()?;
+                    return Ok(TicketResult::HttpOnly(
+                        self.authentication_for(ticket, response)?,
+                    ));
+                }
+
+                return Err("no ticket information in response".into());
+            }
         };
 
         Ok(match ticket {
@@ -384,15 +386,15 @@ impl SecondFactorChallenge {
 
         // get the ticket from:
         // 1. the cookie if possible -> new HttpOnly authentication outside of the browser
-        // 2. just the `ticket_info` -> new HttpOnly authentication inside a browser context or
-        //    similar, assume the ticket is handle by that
-        // 3. the `ticket` field -> old authentication flow where we handle the ticket ourselves
+        // 2. the `ticket` field -> old authentication flow where we handle the ticket ourselves
+        // 3. if there is no `ticket` field, check if we have a `ticket_info` field -> new HttpOnly
+        //    authentication inside of a browser (or similar context) that handles the ticket for us
         let ticket: Ticket = cookie_ticket
             .ok_or(ResponseError::from("no ticket in response"))
             .or_else(|e| {
                 response
-                    .ticket_info
-                    .or(response.ticket)
+                    .ticket
+                    .or(response.ticket_info)
                     .ok_or(e)
                     .and_then(|t| t.parse().map_err(|e: TicketError| e.into()))
             })?;
