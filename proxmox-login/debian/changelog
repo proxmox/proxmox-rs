@@ -1,3 +1,10 @@
+rust-proxmox-login (1.0.2-1) trixie; urgency=medium
+
+  * use `ticket` if both it and `ticket_info` are provided to fix handling
+    some PBS 3 versions that falsly signal HttpOnly cookie support.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 03 Oct 2025 21:39:49 +0200
+
 rust-proxmox-login (1.0.1-1) trixie; urgency=medium
 
   * recognize the special PMG spam quarantine tickets as PMG product.
