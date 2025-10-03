@@ -1,21 +1,12 @@
 use std::collections::HashMap;
 
 use anyhow::{bail, format_err, Error};
-use serde::{Deserialize, Serialize};
 use serde_json::{from_value, Value};
 
 use proxmox_auth_api::types::Authid;
 use proxmox_product_config::{open_api_lockfile, replace_config, ApiLockGuard};
 
 use crate::init::{token_shadow, token_shadow_lock};
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-/// ApiToken id / secret pair
-pub struct ApiTokenSecret {
-    pub tokenid: Authid,
-    pub secret: String,
-}
 
 // Get exclusive lock
 fn lock_config() -> Result<ApiLockGuard, Error> {

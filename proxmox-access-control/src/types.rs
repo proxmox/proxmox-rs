@@ -147,6 +147,16 @@ impl ApiToken {
     }
 }
 
+#[api]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+/// ApiToken id / secret pair
+pub struct ApiTokenSecret {
+    pub tokenid: Authid,
+    /// The secret associated with the token.
+    pub secret: String,
+}
+
 #[api(
     properties: {
         userid: {
