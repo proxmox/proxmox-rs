@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use const_format::concatcp;
 
-use proxmox_auth_api::types::{Authid, Userid, PROXMOX_TOKEN_ID_SCHEMA};
+use proxmox_auth_api::types::{Authid, Tokenname, Userid, PROXMOX_TOKEN_ID_SCHEMA};
 use proxmox_schema::{
     api,
     api_types::{COMMENT_SCHEMA, SAFE_ID_REGEX_STR, SINGLE_LINE_COMMENT_FORMAT},
@@ -154,7 +154,24 @@ impl ApiToken {
 pub struct ApiTokenSecret {
     pub tokenid: Authid,
     /// The secret associated with the token.
+    // rename to `value` as that is what it is called in the api
+    #[serde(rename = "value")]
     pub secret: String,
+}
+
+#[api(
+    properties: {
+        token: { type: ApiToken },
+    }
+)]
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+/// A Token Entry that contains the token-name
+pub struct TokenApiEntry {
+    /// The Token name
+    pub token_name: Tokenname,
+    #[serde(flatten)]
+    pub token: ApiToken,
 }
 
 #[api(
@@ -285,3 +302,17 @@ pub struct RoleInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
 }
+
+#[api()]
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+/// The set of properties that can be deleted from a token.
+pub enum DeletableTokenProperty {
+    /// Delete the comment property.
+    Comment,
+}
+
+pub const REGENERATE_TOKEN_SCHEMA: Schema =
+    BooleanSchema::new("Regenerate token secret while keeping permissions.")
+        .default(false)
+        .schema();

@@ -73,3 +73,11 @@ pub fn delete_secret(tokenid: &Authid) -> Result<(), Error> {
 
     Ok(())
 }
+
+/// Generates a new secret for the given tokenid / API token, sets it then returns it.
+/// The secret is stored as salted hash.
+pub fn generate_and_set_secret(tokenid: &Authid) -> Result<String, Error> {
+    let secret = format!("{:x}", proxmox_uuid::Uuid::generate());
+    set_secret(tokenid, &secret)?;
+    Ok(secret)
+}
