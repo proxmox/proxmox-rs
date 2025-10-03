@@ -18,7 +18,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-section-config
-Rules-Requires-Root: no
 
 Package: librust-proxmox-section-config-dev
 Architecture: any

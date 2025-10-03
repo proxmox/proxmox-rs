@@ -18,8 +18,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-nix-0.29+dir-dev <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
  librust-proxmox-async-0.5+default-dev <!nocheck>,
- librust-proxmox-http-1+body-dev (>= 1.0.2-~~) <!nocheck>,
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~) <!nocheck>,
+ librust-proxmox-http-1+body-dev (>= 1.0.3-~~) <!nocheck>,
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~) <!nocheck>,
  librust-proxmox-http-error-1+default-dev <!nocheck>,
  librust-proxmox-schema-5+default-dev <!nocheck>,
  librust-rustyline-14+default-dev <!nocheck>,
@@ -34,7 +34,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-router
-Rules-Requires-Root: no
 
 Package: librust-proxmox-router-dev
 Architecture: any
@@ -111,8 +110,8 @@ Depends:
  librust-http-1+default-dev,
  librust-hyper-1+default-dev,
  librust-hyper-1+full-dev,
- librust-proxmox-http-1+body-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~)
+ librust-proxmox-http-1+body-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~)
 Provides:
  librust-proxmox-router-3+server-dev (= ${binary:Version}),
  librust-proxmox-router-3.2+server-dev (= ${binary:Version}),
@@ -130,8 +129,8 @@ Depends:
  librust-bytes-1+default-dev,
  librust-hyper-1+default-dev,
  librust-hyper-1+full-dev,
- librust-proxmox-http-1+body-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~)
+ librust-proxmox-http-1+body-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~)
 Provides:
  librust-proxmox-router-3+stream-dev (= ${binary:Version}),
  librust-proxmox-router-3.2+stream-dev (= ${binary:Version}),

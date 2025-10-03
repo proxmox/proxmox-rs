@@ -26,7 +26,6 @@ Vcs-Git:
 Vcs-Browser: 
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-openid
-Rules-Requires-Root: no
 
 Package: librust-proxmox-openid-dev
 Architecture: any

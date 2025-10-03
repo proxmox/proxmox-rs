@@ -12,7 +12,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-lang
-Rules-Requires-Root: no
 
 Package: librust-proxmox-lang-dev
 Architecture: any

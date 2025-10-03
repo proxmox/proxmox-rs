@@ -32,7 +32,6 @@ Standards-Version: 4.7.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: pbs-api-types
-Rules-Requires-Root: no
 
 Package: librust-pbs-api-types-dev
 Architecture: any

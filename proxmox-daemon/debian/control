@@ -27,7 +27,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-daemon
-Rules-Requires-Root: no
 
 # FIXME (packages."(name)".section) debcargo auto-generated summary for librust-proxmox-daemon-dev is very long, consider overriding
 

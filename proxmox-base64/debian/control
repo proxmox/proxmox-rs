@@ -13,7 +13,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-base64
-Rules-Requires-Root: no
 
 Package: librust-proxmox-base64-dev
 Architecture: any

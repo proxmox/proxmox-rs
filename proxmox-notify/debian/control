@@ -14,8 +14,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-percent-encoding-2+default-dev (>= 2.1-~~) <!nocheck>,
  librust-proxmox-base64-1+default-dev <!nocheck>,
- librust-proxmox-http-1+client-sync-dev (>= 1.0.2-~~) <!nocheck>,
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~) <!nocheck>,
+ librust-proxmox-http-1+client-sync-dev (>= 1.0.3-~~) <!nocheck>,
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~) <!nocheck>,
  librust-proxmox-http-error-1+default-dev <!nocheck>,
  librust-proxmox-human-byte-1+default-dev <!nocheck>,
  librust-proxmox-schema-5+api-macro-dev <!nocheck>,
@@ -40,7 +40,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-notify
-Rules-Requires-Root: no
 
 Package: librust-proxmox-notify-dev
 Architecture: any
@@ -108,8 +107,8 @@ Depends:
  ${misc:Depends},
  librust-proxmox-notify-dev (= ${binary:Version}),
  librust-http-1+default-dev,
- librust-proxmox-http-1+client-sync-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~)
+ librust-proxmox-http-1+client-sync-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~)
 Provides:
  librust-proxmox-notify-1+gotify-dev (= ${binary:Version}),
  librust-proxmox-notify-1.0+gotify-dev (= ${binary:Version}),
@@ -196,8 +195,8 @@ Depends:
  librust-http-1+default-dev,
  librust-percent-encoding-2+default-dev (>= 2.1-~~),
  librust-proxmox-base64-1+default-dev,
- librust-proxmox-http-1+client-sync-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~)
+ librust-proxmox-http-1+client-sync-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~)
 Provides:
  librust-proxmox-notify-1+webhook-dev (= ${binary:Version}),
  librust-proxmox-notify-1.0+webhook-dev (= ${binary:Version}),

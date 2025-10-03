@@ -20,7 +20,6 @@ Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/proxmox-share
 Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/proxmox-shared-cache
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-shared-cache
-Rules-Requires-Root: no
 
 Package: librust-proxmox-shared-cache-dev
 Architecture: any

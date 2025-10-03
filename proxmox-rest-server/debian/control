@@ -29,8 +29,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-async-0.5+default-dev <!nocheck>,
  librust-proxmox-compression-1+default-dev <!nocheck>,
  librust-proxmox-daemon-1+default-dev <!nocheck>,
- librust-proxmox-http-1+body-dev (>= 1.0.2-~~) <!nocheck>,
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~) <!nocheck>,
+ librust-proxmox-http-1+body-dev (>= 1.0.3-~~) <!nocheck>,
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~) <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-proxmox-log-1+default-dev <!nocheck>,
  librust-proxmox-router-3+default-dev (>= 3.2.2-~~) <!nocheck>,
@@ -61,7 +61,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-rest-server
-Rules-Requires-Root: no
 
 Package: librust-proxmox-rest-server-dev
 Architecture: any
@@ -91,8 +90,8 @@ Depends:
  librust-proxmox-async-0.5+default-dev,
  librust-proxmox-compression-1+default-dev,
  librust-proxmox-daemon-1+default-dev,
- librust-proxmox-http-1+body-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~),
+ librust-proxmox-http-1+body-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~),
  librust-proxmox-lang-1+default-dev (>= 1.5-~~),
  librust-proxmox-log-1+default-dev,
  librust-proxmox-router-3+default-dev (>= 3.2.2-~~),
@@ -137,8 +136,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-rest-server-dev (= ${binary:Version}),
- librust-proxmox-http-1+body-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+rate-limited-stream-dev (>= 1.0.2-~~)
+ librust-proxmox-http-1+body-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+rate-limited-stream-dev (>= 1.0.3-~~)
 Provides:
  librust-proxmox-rest-server-1+rate-limited-stream-dev (= ${binary:Version}),
  librust-proxmox-rest-server-1.0+rate-limited-stream-dev (= ${binary:Version}),

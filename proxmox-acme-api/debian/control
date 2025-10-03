@@ -22,7 +22,6 @@ Vcs-Git:
 Vcs-Browser: 
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-acme-api
-Rules-Requires-Root: no
 
 Package: librust-proxmox-acme-api-dev
 Architecture: any

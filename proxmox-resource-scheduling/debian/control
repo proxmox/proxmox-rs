@@ -15,7 +15,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox-resource-scheduling.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox-resource-scheduling.git
 Homepage: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: proxmox-resource-scheduling
-Rules-Requires-Root: no
 
 Package: librust-proxmox-resource-scheduling-dev
 Architecture: any

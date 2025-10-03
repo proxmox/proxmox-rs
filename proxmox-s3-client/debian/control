@@ -22,7 +22,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-s3-client
-Rules-Requires-Root: no
 
 Package: librust-proxmox-s3-client-dev
 Architecture: any

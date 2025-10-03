@@ -20,7 +20,6 @@ Vcs-Git:
 Vcs-Browser: 
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-acme
-Rules-Requires-Root: no
 
 Package: librust-proxmox-acme-dev
 Architecture: any
@@ -72,8 +71,8 @@ Depends:
  librust-bytes-1+default-dev,
  librust-http-body-util-0.1+default-dev,
  librust-hyper-1+default-dev,
- librust-proxmox-http-1+client-dev (>= 1.0.2-~~),
- librust-proxmox-http-1+default-dev (>= 1.0.2-~~)
+ librust-proxmox-http-1+client-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~)
 Provides:
  librust-proxmox-acme-1+async-client-dev (= ${binary:Version}),
  librust-proxmox-acme-1.0+async-client-dev (= ${binary:Version}),

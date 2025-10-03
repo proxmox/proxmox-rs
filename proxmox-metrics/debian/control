@@ -13,8 +13,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-hyper-1+default-dev <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-proxmox-async-0.5+default-dev <!nocheck>,
- librust-proxmox-http-1+client-dev <!nocheck>,
- librust-proxmox-http-1+default-dev <!nocheck>,
+ librust-proxmox-http-1+client-dev (>= 1.0.3-~~) <!nocheck>,
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
  librust-tokio-1+default-dev (>= 1.6-~~) <!nocheck>,
@@ -26,7 +26,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-metrics
-Rules-Requires-Root: no
 
 Package: librust-proxmox-metrics-dev
 Architecture: any
@@ -40,8 +39,8 @@ Depends:
  librust-hyper-1+default-dev,
  librust-openssl-0.10+default-dev,
  librust-proxmox-async-0.5+default-dev,
- librust-proxmox-http-1+client-dev,
- librust-proxmox-http-1+default-dev,
+ librust-proxmox-http-1+client-dev (>= 1.0.3-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.3-~~),
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev,
  librust-tokio-1+default-dev (>= 1.6-~~),

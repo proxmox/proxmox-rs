@@ -25,7 +25,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-async
-Rules-Requires-Root: no
 
 Package: librust-proxmox-async-dev
 Architecture: any
