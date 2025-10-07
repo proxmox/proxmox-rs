@@ -512,7 +512,7 @@ async fn proxy_protected_request(
     let mut request = Request::from_parts(parts, req_body);
     request.headers_mut().insert(
         header::FORWARDED,
-        format!("for=\"{}\";", peer).parse().unwrap(),
+        format!("for=\"{peer}\";").parse().unwrap(),
     );
 
     let reload_timezone = info.reload_timezone;

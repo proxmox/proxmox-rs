@@ -55,7 +55,7 @@ impl<E: RpcEnvironment + Clone> H2Service<E> {
             Err(err) => return future::err(http_err!(BAD_REQUEST, "{}", err)).boxed(),
         };
 
-        self.debug(format!("{} {}", method, path));
+        self.debug(format!("{method} {path}"));
 
         let mut uri_param = HashMap::new();
 

@@ -631,8 +631,8 @@ impl TaskState {
 
     fn result_text(&self) -> String {
         match self {
-            TaskState::Error { message, .. } => format!("TASK ERROR: {}", message),
-            other => format!("TASK {}", other),
+            TaskState::Error { message, .. } => format!("TASK ERROR: {message}"),
+            other => format!("TASK {other}"),
         }
     }
 
@@ -675,8 +675,8 @@ impl std::fmt::Display for TaskState {
         match self {
             TaskState::Unknown { .. } => write!(f, "unknown"),
             TaskState::OK { .. } => write!(f, "OK"),
-            TaskState::Warning { count, .. } => write!(f, "WARNINGS: {}", count),
-            TaskState::Error { message, .. } => write!(f, "{}", message),
+            TaskState::Warning { count, .. } => write!(f, "WARNINGS: {count}"),
+            TaskState::Error { message, .. } => write!(f, "{message}"),
         }
     }
 }
