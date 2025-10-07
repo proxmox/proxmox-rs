@@ -110,17 +110,10 @@ impl WorkerTaskSetup {
         let mut taskdir = basedir;
         taskdir.push("tasks");
 
-        let mut task_lock_fn = taskdir.clone();
-        task_lock_fn.push(".active.lock");
-
-        let mut active_tasks_fn = taskdir.clone();
-        active_tasks_fn.push("active");
-
-        let mut task_index_fn = taskdir.clone();
-        task_index_fn.push("index");
-
-        let mut task_archive_fn = taskdir.clone();
-        task_archive_fn.push("archive");
+        let task_lock_fn = taskdir.join(".active.lock");
+        let active_tasks_fn = taskdir.join("active");
+        let task_index_fn = taskdir.join("index");
+        let task_archive_fn = taskdir.join("archive");
 
         Self {
             file_opts,
@@ -146,9 +139,7 @@ impl WorkerTaskSetup {
     }
 
     fn log_directory(&self, upid: &UPID) -> std::path::PathBuf {
-        let mut path = self.taskdir.clone();
-        path.push(format!("{:02X}", upid.pstart & 255));
-        path
+        self.taskdir.join(format!("{:02X}", upid.pstart & 255))
     }
 
     fn log_path(&self, upid: &UPID) -> std::path::PathBuf {
@@ -381,8 +372,7 @@ pub fn cleanup_old_tasks(compressed: bool) -> Result<(), Error> {
         .ok_or_else(|| format_err!("could not calculate cutoff time"))?;
 
         for i in 0..256 {
-            let mut path = setup.taskdir.clone();
-            path.push(format!("{:02X}", i));
+            let path = setup.taskdir.join(format!("{i:02X}"));
             let files = match std::fs::read_dir(path) {
                 Ok(files) => files,
                 Err(err) if err.kind() == std::io::ErrorKind::NotFound => continue,
