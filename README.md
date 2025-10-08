@@ -19,11 +19,14 @@ way to install all the main packages of this workspace is to run:
 
 # Steps for Releases
 
-- Run `./bump.sh <CRATE> [patch|minor|major|<VERSION>]`
-  - Fill out changelog
-  - Confirm bump commit
-- Build packages with `make <crate>-deb`.
-  - Don't forget to commit updated d/control!
+1. Run `./bump.sh <CRATE> [patch|minor|major|<VERSION>]`
+   - Fill out changelog
+   - Confirm bump commit
+2. Build the debian source control package with `make <crate>-dsc` to refresh
+   `debian/control`.
+   - Don't forget to `git commit --amend` apply the updated d/control to the
+     bump commit.
+3. Build the actual packages with `make clean <crate>-deb`.
 
 # Adding Crates
 
