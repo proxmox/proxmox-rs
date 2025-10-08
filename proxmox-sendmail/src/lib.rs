@@ -41,6 +41,24 @@ const RFC5987SET: &AsciiSet = &CONTROLS
     .add(b'{')
     .add(b'}');
 
+// base64 encode and hard-wrap the base64 encoded string every 72 characters. this improves
+// compatibility.
+fn encode_base64_formatted<T: AsRef<[u8]>>(raw: T) -> String {
+    proxmox_base64::encode(raw)
+        .chars()
+        .enumerate()
+        .flat_map(|(i, c)| {
+            if i != 0 && i % 72 == 0 {
+                Some('\n')
+            } else {
+                None
+            }
+            .into_iter()
+            .chain(std::iter::once(c))
+        })
+        .collect::<String>()
+}
+
 struct Recipient {
     name: Option<String>,
     email: String,
@@ -100,25 +118,9 @@ impl Attachment<'_> {
             "Content-Disposition: attachment; filename=\"{encoded_filename}\"; filename*=UTF-8''{}",
             utf8_percent_encode(&self.filename, RFC5987SET)
         );
-        attachment.push_str("Content-Transfer-Encoding: base64\n\n");
 
-        // base64 encode the attachment and hard-wrap the base64 encoded string every 72
-        // characters. this improves compatability.
-        attachment.push_str(
-            &proxmox_base64::encode(self.content)
-                .chars()
-                .enumerate()
-                .flat_map(|(i, c)| {
-                    if i != 0 && i % 72 == 0 {
-                        Some('\n')
-                    } else {
-                        None
-                    }
-                    .into_iter()
-                    .chain(std::iter::once(c))
-                })
-                .collect::<String>(),
-        );
+        attachment.push_str("Content-Transfer-Encoding: base64\n\n");
+        attachment.push_str(&encode_base64_formatted(self.content));
 
         attachment
     }
@@ -400,7 +402,11 @@ impl<'a> Mail<'a> {
             header.push_str("Content-Type: multipart/alternative;\n");
             writeln!(header, "\tboundary=\"{html_boundary}\"")?;
             header.push_str("MIME-Version: 1.0\n");
-        } else if !self.subject.is_ascii() || !self.mail_author.is_ascii() || encoded_to {
+        } else if !self.subject.is_ascii()
+            || !self.mail_author.is_ascii()
+            || !self.body_txt.is_ascii()
+            || encoded_to
+        {
             header.push_str("MIME-Version: 1.0\n");
         }
 
@@ -475,15 +481,28 @@ impl<'a> Mail<'a> {
 
         body.push_str("Content-Type: text/plain;\n");
         body.push_str("\tcharset=\"UTF-8\"\n");
-        body.push_str("Content-Transfer-Encoding: 8bit\n\n");
-        body.push_str(&self.body_txt);
+
+        if self.body_txt.is_ascii() {
+            body.push_str("Content-Transfer-Encoding: 7bit\n\n");
+            body.push_str(&self.body_txt);
+        } else {
+            body.push_str("Content-Transfer-Encoding: base64\n\n");
+            body.push_str(&encode_base64_formatted(&self.body_txt));
+        }
 
         if let Some(html) = &self.body_html {
             writeln!(body, "\n--{html_boundary}")?;
             body.push_str("Content-Type: text/html;\n");
             body.push_str("\tcharset=\"UTF-8\"\n");
-            body.push_str("Content-Transfer-Encoding: 8bit\n\n");
-            body.push_str(html);
+
+            if html.is_ascii() {
+                body.push_str("Content-Transfer-Encoding: 7bit\n\n");
+                body.push_str(html);
+            } else {
+                body.push_str("Content-Transfer-Encoding: base64\n\n");
+                body.push_str(&encode_base64_formatted(html));
+            }
+
             write!(body, "\n--{html_boundary}--")?;
         }
 
@@ -547,7 +566,7 @@ Date: Thu, 01 Jan 1970 01:00:00 +0100
 Auto-Submitted: auto-generated;
 Content-Type: text/plain;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 This is just ascii text.
 Nothing too special."#,
@@ -577,7 +596,7 @@ Date: Thu, 01 Jan 1970 01:00:00 +0100
 Auto-Submitted: auto-generated;
 Content-Type: text/plain;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 This is just ascii text.
 Nothing too special."#,
@@ -609,7 +628,7 @@ Date: Thu, 01 Jan 1970 01:00:00 +0100
 Auto-Submitted: auto-generated;
 Content-Type: text/plain;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 This is just ascii text.
 Nothing too special."#,
@@ -638,12 +657,10 @@ Date: Thu, 28 Nov 2024 16:04:11 +0100
 Auto-Submitted: auto-generated;
 Content-Type: text/plain;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 
-This utf-8 email should handle emojis
-🧑📧
-and weird german characters: öäüß
-and more."#,
+VGhpcyB1dGYtOCBlbWFpbCBzaG91bGQgaGFuZGxlIGVtb2ppcwrwn6eR8J+TpwphbmQgd2Vp
+cmQgZ2VybWFuIGNoYXJhY3RlcnM6IMO2w6TDvMOfCmFuZCBtb3JlLg=="#,
         )
     }
 
@@ -674,14 +691,14 @@ This is a multi-part message in MIME format.
 ------_=_NextPart_002_1732806251
 Content-Type: text/plain;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 Lorem Ipsum Dolor Sit
 Amet
 ------_=_NextPart_002_1732806251
 Content-Type: text/html;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 <html lang="de-at"><head></head><body>
 	<pre>
@@ -728,7 +745,7 @@ This is a multi-part message in MIME format.
 ------_=_NextPart_001_1732806251
 Content-Type: text/plain;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 Lorem Ipsum Dolor Sit
 Amet
@@ -786,14 +803,14 @@ MIME-Version: 1.0
 ------_=_NextPart_002_1732806251
 Content-Type: text/plain;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 Lorem Ipsum Dolor Sit
 Amet
 ------_=_NextPart_002_1732806251
 Content-Type: text/html;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 <html lang="de-at"><head></head><body>
 	<pre>
@@ -848,13 +865,13 @@ This is a multi-part message in MIME format.
 ------_=_NextPart_002_1718977850
 Content-Type: text/plain;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 This is the plain body
 ------_=_NextPart_002_1718977850
 Content-Type: text/html;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 <body>This is the HTML body</body>
 ------_=_NextPart_002_1718977850--"#,
@@ -875,12 +892,12 @@ Content-Transfer-Encoding: 8bit
             "Sender Näme",
             "from@example.com",
             "Subject Linë",
-            "Lorem Ipsum Dolor Sit\nAmet",
+            "Lorem Ipsum Dolor Sit\nAmët",
         )
         .with_recipient_and_name("Receiver Näme", "receiver@example.com")
         .with_attachment("deadbeef.bin", "application/octet-stream", &bin)
         .with_attachment("🐄💀.bin", "image/bmp", &bin)
-        .with_html_alt("<html lang=\"de-at\"><head></head><body>\n\t<pre>\n\t\tLorem Ipsum Dolor Sit Amet\n\t</pre>\n</body></html>");
+        .with_html_alt("<html lang=\"de-at\"><head></head><body>\n\t<pre>\n\t\tLorem Ipsum Dölor Sit Amet\n\t</pre>\n</body></html>");
 
         let body = mail.format_mail(1732806251).expect("could not format mail");
 
@@ -906,20 +923,16 @@ MIME-Version: 1.0
 ------_=_NextPart_002_1732806251
 Content-Type: text/plain;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 
-Lorem Ipsum Dolor Sit
-Amet
+TG9yZW0gSXBzdW0gRG9sb3IgU2l0CkFtw6t0
 ------_=_NextPart_002_1732806251
 Content-Type: text/html;
 	charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 
-<html lang="de-at"><head></head><body>
-	<pre>
-		Lorem Ipsum Dolor Sit Amet
-	</pre>
-</body></html>
+PGh0bWwgbGFuZz0iZGUtYXQiPjxoZWFkPjwvaGVhZD48Ym9keT4KCTxwcmU+CgkJTG9yZW0g
+SXBzdW0gRMO2bG9yIFNpdCBBbWV0Cgk8L3ByZT4KPC9ib2R5PjwvaHRtbD4=
 ------_=_NextPart_002_1732806251--
 ------_=_NextPart_001_1732806251
 Content-Type: application/octet-stream; name="deadbeef.bin"
