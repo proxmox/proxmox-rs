@@ -6,6 +6,70 @@ the Rust programming language and employed in various Proxmox projects.
 The main upstream git repository is hosted at
 [git.proxmox.com](https://git.proxmox.com/?p=proxmox.git;a=summary).
 
+## Overview
+
+Most of the crates here are smaller and more specific; however, there are a few
+larger ones, some of which may be split up in the future (e.g. `proxmox-sys`).
+
+At Proxmox, we primarily use Debian package repositories to distribute and
+install build dependencies; these packages are all available through our [devel
+repos].
+
+To avoid the need to replicate and update all Rust-level dependency information
+from `Cargo.toml` – the main Rust crate configuration – to `debian/control`,
+the main Debian packaging configuration, we use the `debcargo` tool, which was
+created by the main Rust packaging team at Debian.
+
+When working on these crates, you will rarely need to interact directly with
+`debcargo` or Debian's packaging tools, such as `dpkg-buildpackage`, as the
+top-level `build.sh` script and the `Makefile` offer convenient commands for
+most common basic tasks.
+
+[devel repos]: https://pve.proxmox.com/wiki/Developer_Documentation#Development_Package_Repository
+[debcargo]: https://salsa.debian.org/rust-team/debcargo
+
+## Installing Build Dependencies
+
+To install the required build dependencies from our [devel repos], use the
+`mk-build-deps` CLI tool provided by the `devscripts` Debian package. Install
+the devscripts package using [apt].
+
+The most convenient invocation to build a meta package depending on the
+build-dependencies, installing that package and then removing any file
+artefacts from all that is using:
+
+    sudo mk-build-deps -ir proxmox-rest-server/debian/control
+
+If your shell's working directory is already inside a crate directory (e.g.,
+`proxmox-rest-server/` in the above example) you can also omit passing the full
+path to the `debian/control` file and simply execute:
+
+    sudo mk-build-deps -ir
+
+[apt]: https://manpages.debian.org/stable/apt/apt.8.en.html
+
+## Updating Build Dependencies
+
+You might need to refresh the `debian/control` file if a workspace dependency
+changes or a crate from the workspace is updated. This ensures that the file
+contains up-to-date package information, including build dependencies and
+version constraints.
+
+The simplest way to do this is to use the `dsc` (Debian Source Control)
+targets.
+Unlike the `deb` target, the `dsc` targets do not require the build
+dependencies to be installed. Thus, one can avoid the chicken-and-egg problem
+with `dsc`.
+
+Since the Makefile contains the wildcard target `%-dsc`, you can autocomplete
+the directory name in your shell, followed by adding `-dsc` to create a valid
+make target for a crate. For example:
+
+    make proxmox-rest-server-dsc
+
+After that, the `debian/control` file of the crate (`proxmox-rest-server` in
+the above example) should be updated.
+
 ## Local cargo config
 
 This repository ships with a `.cargo/config.toml` that replaces the crates.io
