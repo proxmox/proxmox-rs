@@ -136,6 +136,7 @@ pub struct Mail<'a> {
     body_html: Option<String>,
     attachments: Vec<Attachment<'a>>,
     mask_participants: bool,
+    noreply: Option<Recipient>,
 }
 
 impl<'a> Mail<'a> {
@@ -153,6 +154,7 @@ impl<'a> Mail<'a> {
             body_html: None,
             attachments: Vec::new(),
             mask_participants: true,
+            noreply: None,
         }
     }
 
@@ -262,6 +264,22 @@ impl<'a> Mail<'a> {
     /// to see all recipients of a mail can be helpful in, for example, notification scenarios.
     pub fn with_unmasked_recipients(mut self) -> Self {
         self.unmask_recipients();
+        self
+    }
+
+    /// Set the receiver that is used when the mail is send in masked mode. `Undisclosed <noreply>`
+    /// by default.
+    pub fn set_masked_mail_and_name(&mut self, name: &str, email: &str) {
+        self.noreply = Some(Recipient {
+            email: email.to_owned(),
+            name: Some(name.to_owned()),
+        });
+    }
+
+    /// Builder-style method to set the receiver when the mail is send in masked mode. `Undisclosed
+    /// <noreply>` by default.
+    pub fn with_masked_receiver(mut self, name: &str, email: &str) -> Self {
+        self.set_masked_mail_and_name(name, email);
         self
     }
 
@@ -433,12 +451,16 @@ impl<'a> Mail<'a> {
 
         let to = if self.to.len() > 1 && self.mask_participants {
             // don't disclose all recipients if the mail goes out to multiple
-            let recipient = Recipient {
-                name: Some("Undisclosed".to_string()),
-                email: "noreply".to_string(),
-            };
-
-            recipient.format_recipient()
+            self.noreply
+                .as_ref()
+                .map(|f| f.format_recipient())
+                .unwrap_or_else(|| {
+                    Recipient {
+                        name: Some("Undisclosed".to_string()),
+                        email: "noreply".to_string(),
+                    }
+                    .format_recipient()
+                })
         } else {
             self.to
                 .iter()
@@ -624,6 +646,37 @@ Nothing too special."#,
 Subject: Subject Line
 From: Sender Name <mailfrom@example.com>
 To: Receiver Name <receiver@example.com>, two@example.com, =?utf-8?B?bcOkeCBtw7xzdGVybcOkbm4=?= <mm@example.com>
+Date: Thu, 01 Jan 1970 01:00:00 +0100
+Auto-Submitted: auto-generated;
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+This is just ascii text.
+Nothing too special."#,
+        )
+    }
+
+    #[test]
+    fn multiple_receiver_custom_masked() {
+        let mail = Mail::new(
+            "Sender Name",
+            "mailfrom@example.com",
+            "Subject Line",
+            "This is just ascii text.\nNothing too special.",
+        )
+        .with_recipient_and_name("Receiver Name", "receiver@example.com")
+        .with_recipient("two@example.com")
+        .with_recipient_and_name("mäx müstermänn", "mm@example.com")
+        .with_masked_receiver("Example Receiver", "noanswer@example.com");
+
+        let body = mail.format_mail(0).expect("could not format mail");
+
+        assert_lines_equal_ignore_date(
+            &body,
+            r#"Subject: Subject Line
+From: Sender Name <mailfrom@example.com>
+To: Example Receiver <noanswer@example.com>
 Date: Thu, 01 Jan 1970 01:00:00 +0100
 Auto-Submitted: auto-generated;
 Content-Type: text/plain;
