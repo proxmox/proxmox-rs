@@ -1,0 +1,45 @@
+Source: rust-proxmox-oci
+Section: rust
+Priority: optional
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native (>= 1.82) <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-flate2-1+default-dev <!nocheck>,
+ librust-oci-spec-0.8+default-dev (>= 0.8.3-~~) <!nocheck>,
+ librust-proxmox-io-1+default-dev (>= 1.2.0-~~) <!nocheck>,
+ librust-sha2-0.10+default-dev <!nocheck>,
+ librust-tar-0.4+default-dev <!nocheck>,
+ librust-thiserror-1+default-dev <!nocheck>,
+ librust-zstd-0.13+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.7.0
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
+X-Cargo-Crate: proxmox-oci
+Rules-Requires-Root: no
+
+Package: librust-proxmox-oci-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-flate2-1+default-dev,
+ librust-oci-spec-0.8+default-dev (>= 0.8.3-~~),
+ librust-proxmox-io-1+default-dev (>= 1.2.0-~~),
+ librust-sha2-0.10+default-dev,
+ librust-tar-0.4+default-dev,
+ librust-thiserror-1+default-dev,
+ librust-zstd-0.13+default-dev
+Provides:
+ librust-proxmox-oci+default-dev (= ${binary:Version}),
+ librust-proxmox-oci-0-dev (= ${binary:Version}),
+ librust-proxmox-oci-0+default-dev (= ${binary:Version}),
+ librust-proxmox-oci-0.1-dev (= ${binary:Version}),
+ librust-proxmox-oci-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-oci-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-oci-0.1.0+default-dev (= ${binary:Version})
+Description: OCI image parsing and extraction - Rust source code
+ Source code for Debianized Rust crate "proxmox-oci"

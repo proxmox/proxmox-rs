@@ -1,0 +1,22 @@
+[package]
+name = "proxmox-oci"
+description = "OCI image parsing and extraction"
+version = "0.1.0"
+
+authors.workspace = true
+edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+flate2.workspace = true
+oci-spec = "0.8.3"
+sha2 = "0.10"
+tar.workspace = true
+thiserror = "1"
+zstd.workspace = true
+
+proxmox-io.workspace = true

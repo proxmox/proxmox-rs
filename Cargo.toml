@@ -28,6 +28,7 @@ members = [
     "proxmox-network-types",
     "proxmox-node-status",
     "proxmox-notify",
+    "proxmox-oci",
     "proxmox-openid",
     "proxmox-product-config",
     "proxmox-resource-scheduling",

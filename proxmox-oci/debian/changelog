@@ -1,0 +1,5 @@
+rust-proxmox-oci (0.1.0-1) bookworm; urgency=medium
+
+  * Initial release.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 28 Apr 2025 12:34:56 +0200
