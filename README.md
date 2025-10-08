@@ -1,4 +1,12 @@
-# Local cargo config
+# Proxmox Workspace for Common Rust Crates
+
+This repository contains most of the commonly used library crates written in
+the Rust programming language and employed in various Proxmox projects.
+
+The main upstream git repository is hosted at
+[git.proxmox.com](https://git.proxmox.com/?p=proxmox.git;a=summary).
+
+## Local cargo config
 
 This repository ships with a `.cargo/config.toml` that replaces the crates.io
 registry with packaged crates located in `/usr/share/cargo/registry`.
@@ -10,14 +18,14 @@ checksums are not compatible.
 To reference new dependencies (or updated versions) that are not yet packaged,
 the dependency needs to point directly to a path or git source.
 
-# Quickly installing all packages from apt
+## Quickly installing all packages from apt
 
 To a void too many manual installations when `mk-build-deps` etc. fail, a quick
 way to install all the main packages of this workspace is to run:
 
     # apt install $(make list-packages)
 
-# Steps for Releases
+## Steps for Releases
 
 1. Run `./bump.sh <CRATE> [patch|minor|major|<VERSION>]`
    - Fill out changelog
@@ -28,7 +36,7 @@ way to install all the main packages of this workspace is to run:
      bump commit.
 3. Build the actual packages with `make clean <crate>-deb`.
 
-# Adding Crates
+## Adding Crates
 
 1. At the top level:
    - Generate the crate: `cargo new --lib the-name`
@@ -60,7 +68,7 @@ way to install all the main packages of this workspace is to run:
        #![deny(unsafe_op_in_unsafe_fn)]
        #![deny(missing_docs)]
 
-# Adding a new Dependency
+## Adding a new Dependency
 
 1. At the top level:
    - Add it to `[workspace.dependencies]` specifying the version and any
@@ -71,13 +79,13 @@ way to install all the main packages of this workspace is to run:
    - If this member requires additional features, add only the extra features
      to the member dependency.
 
-# Updating a Dependency\'s Version
+## Updating a Dependency\'s Version
 
 1. At the top level:
    - Bump the version in `[workspace.dependencies]` as desired.
    - Check for deprecations or breakage throughout the workspace.
 
-# Notes on Workspace Inheritance
+## Notes on Workspace Inheritance
 
 Common metadata (like authors, license, ..) are inherited throughout the
 workspace. If new fields are added that are identical for all crates, they
@@ -99,7 +107,7 @@ Some restrictions apply:
   - if needed, the `optional` flag needs to be set at the member level when
     using a workspace dependency
 
-# Working with *other* projects while changing to *single crates here*
+## Working with *other* projects while changing to *single crates here*
 
 When crates from this workspace need changes caused by requirements in projects
 *outside* of this repository, it can often be annoying to keep building and
@@ -116,7 +124,7 @@ Eg. turn `5.0.0` into `5.0.0+test8`.
 
 There are 2 faster ways:
 
-## Adding a `#[patch.crates-io]` section to the other project.
+### Adding a `#[patch.crates-io]` section to the other project.
 
 Note, however, that this requires *ALL* crates from this workspace to be listed,
 otherwise multiple conflicting versions of the same crate AND even the same
@@ -125,7 +133,7 @@ numerical *version* might be built, causing *weird* errors.
 The advantage, however, is that `cargo` will pick up on file changes and rebuild
 the crate on changes.
 
-## An in-between: system extensions
+### An in-between: system extensions
 
 An easy way to quickly get the new package "installed" *temporarily*, such that
 real apt package upgrades are unaffected is as a system-extension.
