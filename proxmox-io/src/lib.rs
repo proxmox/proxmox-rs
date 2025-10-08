@@ -6,6 +6,9 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
+mod range_reader;
+pub use range_reader::RangeReader;
+
 mod read;
 pub use read::ReadExt;
 
