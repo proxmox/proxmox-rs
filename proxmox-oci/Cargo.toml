@@ -20,3 +20,6 @@ thiserror = "1"
 zstd.workspace = true
 
 proxmox-io.workspace = true
+
+[dev-dependencies]
+proxmox-sys.workspace = true
