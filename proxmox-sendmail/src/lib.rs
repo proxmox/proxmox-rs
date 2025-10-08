@@ -81,18 +81,23 @@ impl Attachment<'_> {
 
         let mut attachment = String::new();
 
+        let encoded_filename = if self.filename.is_ascii() {
+            &self.filename
+        } else {
+            &format!("=?utf-8?B?{}?=", proxmox_base64::encode(&self.filename))
+        };
+
         let _ = writeln!(attachment, "\n--{file_boundary}");
         let _ = writeln!(
             attachment,
-            "Content-Type: {}; name=\"{}\"",
-            self.mime, self.filename
+            "Content-Type: {}; name=\"{encoded_filename}\"",
+            self.mime,
         );
 
         // both `filename` and `filename*` are included for additional compatability
         let _ = writeln!(
             attachment,
-            "Content-Disposition: attachment; filename=\"{}\"; filename*=UTF-8''{}",
-            self.filename,
+            "Content-Disposition: attachment; filename=\"{encoded_filename}\"; filename*=UTF-8''{}",
             utf8_percent_encode(&self.filename, RFC5987SET)
         );
         attachment.push_str("Content-Transfer-Encoding: base64\n\n");
@@ -804,8 +809,8 @@ Content-Transfer-Encoding: base64
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
 3q2+796tvu8=
 ------_=_NextPart_001_1732806251
-Content-Type: image/bmp; name="🐄💀.bin"
-Content-Disposition: attachment; filename="🐄💀.bin"; filename*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
+Content-Type: image/bmp; name="=?utf-8?B?8J+QhPCfkoAuYmlu?="
+Content-Disposition: attachment; filename="=?utf-8?B?8J+QhPCfkoAuYmlu?="; filename*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
@@ -854,5 +859,83 @@ Content-Transfer-Encoding: 8bit
 <body>This is the HTML body</body>
 ------_=_NextPart_002_1718977850--"#,
         );
+    }
+
+    #[test]
+    fn multipart_plain_text_html_alternative_attachments_ascii_compat() {
+        let bin: [u8; 62] = [
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+        ];
+
+        let mail = Mail::new(
+            "Sender Näme",
+            "from@example.com",
+            "Subject Linë",
+            "Lorem Ipsum Dolor Sit\nAmet",
+        )
+        .with_recipient_and_name("Receiver Näme", "receiver@example.com")
+        .with_attachment("deadbeef.bin", "application/octet-stream", &bin)
+        .with_attachment("🐄💀.bin", "image/bmp", &bin)
+        .with_html_alt("<html lang=\"de-at\"><head></head><body>\n\t<pre>\n\t\tLorem Ipsum Dolor Sit Amet\n\t</pre>\n</body></html>");
+
+        let body = mail.format_mail(1732806251).expect("could not format mail");
+
+        assert!(body.is_ascii());
+
+        assert_lines_equal_ignore_date(
+            &body,
+            r#"Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_1732806251"
+MIME-Version: 1.0
+Subject: =?utf-8?B?U3ViamVjdCBMaW7Dqw==?=
+From: =?utf-8?B?U2VuZGVyIE7DpG1l?= <from@example.com>
+To: =?utf-8?B?UmVjZWl2ZXIgTsOkbWU=?= <receiver@example.com>
+Date: Thu, 28 Nov 2024 16:04:11 +0100
+Auto-Submitted: auto-generated;
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_1732806251
+Content-Type: multipart/alternative; boundary="----_=_NextPart_002_1732806251"
+MIME-Version: 1.0
+
+------_=_NextPart_002_1732806251
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+
+Lorem Ipsum Dolor Sit
+Amet
+------_=_NextPart_002_1732806251
+Content-Type: text/html;
+	charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+
+<html lang="de-at"><head></head><body>
+	<pre>
+		Lorem Ipsum Dolor Sit Amet
+	</pre>
+</body></html>
+------_=_NextPart_002_1732806251--
+------_=_NextPart_001_1732806251
+Content-Type: application/octet-stream; name="deadbeef.bin"
+Content-Disposition: attachment; filename="deadbeef.bin"; filename*=UTF-8''deadbeef.bin
+Content-Transfer-Encoding: base64
+
+3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
+3q2+796tvu8=
+------_=_NextPart_001_1732806251
+Content-Type: image/bmp; name="=?utf-8?B?8J+QhPCfkoAuYmlu?="
+Content-Disposition: attachment; filename="=?utf-8?B?8J+QhPCfkoAuYmlu?="; filename*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
+Content-Transfer-Encoding: base64
+
+3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
+3q2+796tvu8=
+------_=_NextPart_001_1732806251--"#,
+        )
     }
 }
