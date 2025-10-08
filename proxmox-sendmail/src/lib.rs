@@ -115,7 +115,7 @@ impl Attachment<'_> {
         // both `filename` and `filename*` are included for additional compatability
         let _ = writeln!(
             attachment,
-            "Content-Disposition: attachment; filename=\"{encoded_filename}\"; filename*=UTF-8''{}",
+            "Content-Disposition: attachment; filename=\"{encoded_filename}\";\n\tfilename*=UTF-8''{}",
             utf8_percent_encode(&self.filename, RFC5987SET)
         );
 
@@ -751,7 +751,8 @@ Lorem Ipsum Dolor Sit
 Amet
 ------_=_NextPart_001_1732806251
 Content-Type: application/octet-stream; name="deadbeef.bin"
-Content-Disposition: attachment; filename="deadbeef.bin"; filename*=UTF-8''deadbeef.bin
+Content-Disposition: attachment; filename="deadbeef.bin";
+	filename*=UTF-8''deadbeef.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
@@ -820,14 +821,16 @@ Content-Transfer-Encoding: 7bit
 ------_=_NextPart_002_1732806251--
 ------_=_NextPart_001_1732806251
 Content-Type: application/octet-stream; name="deadbeef.bin"
-Content-Disposition: attachment; filename="deadbeef.bin"; filename*=UTF-8''deadbeef.bin
+Content-Disposition: attachment; filename="deadbeef.bin";
+	filename*=UTF-8''deadbeef.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
 3q2+796tvu8=
 ------_=_NextPart_001_1732806251
 Content-Type: image/bmp; name="=?utf-8?B?8J+QhPCfkoAuYmlu?="
-Content-Disposition: attachment; filename="=?utf-8?B?8J+QhPCfkoAuYmlu?="; filename*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
+Content-Disposition: attachment; filename="=?utf-8?B?8J+QhPCfkoAuYmlu?=";
+	filename*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
@@ -936,14 +939,16 @@ SXBzdW0gRMO2bG9yIFNpdCBBbWV0Cgk8L3ByZT4KPC9ib2R5PjwvaHRtbD4=
 ------_=_NextPart_002_1732806251--
 ------_=_NextPart_001_1732806251
 Content-Type: application/octet-stream; name="deadbeef.bin"
-Content-Disposition: attachment; filename="deadbeef.bin"; filename*=UTF-8''deadbeef.bin
+Content-Disposition: attachment; filename="deadbeef.bin";
+	filename*=UTF-8''deadbeef.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
 3q2+796tvu8=
 ------_=_NextPart_001_1732806251
 Content-Type: image/bmp; name="=?utf-8?B?8J+QhPCfkoAuYmlu?="
-Content-Disposition: attachment; filename="=?utf-8?B?8J+QhPCfkoAuYmlu?="; filename*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
+Content-Disposition: attachment; filename="=?utf-8?B?8J+QhPCfkoAuYmlu?=";
+	filename*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
