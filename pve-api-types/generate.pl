@@ -195,6 +195,7 @@ Schema2Rust::generate_enum(
     }
 );
 api(GET => '/cluster/resources', 'cluster_resources', 'return-name' => 'ClusterResource');
+Schema2Rust::derive('ClusterResource' => 'Clone', 'PartialEq');
 
 api(GET => '/nodes', 'list_nodes', 'return-name' => 'ClusterNodeIndexResponse');
 Schema2Rust::derive('ClusterNodeIndexResponse' => 'Clone', 'PartialEq');

@@ -763,7 +763,7 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
     },
 )]
 /// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct ClusterResource {
     /// The cgroup mode the node operates under (for type 'node').
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
