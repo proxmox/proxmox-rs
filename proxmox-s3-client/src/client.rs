@@ -268,10 +268,18 @@ impl S3Client {
             "x-amz-content-sha256",
             HeaderValue::from_str(&payload_digest)?,
         );
-        request.headers_mut().insert(
-            header::CONTENT_LENGTH,
-            HeaderValue::from_str(&payload_len.to_string())?,
-        );
+
+        let set_content_length_header = match request.method() {
+            &Method::PUT | &Method::POST => true,
+            &Method::DELETE if payload_len > 0 => true,
+            _ => false,
+        };
+        if set_content_length_header {
+            request.headers_mut().insert(
+                header::CONTENT_LENGTH,
+                HeaderValue::from_str(&payload_len.to_string())?,
+            );
+        }
         if payload_len > 0 {
             let md5_digest = proxmox_base64::encode(*payload_md5);
             request
