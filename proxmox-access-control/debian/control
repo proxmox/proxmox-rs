@@ -12,6 +12,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-auth-api-1+default-dev <!nocheck>,
  librust-proxmox-schema-5+default-dev <!nocheck>,
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~) <!nocheck>,
+ librust-proxmox-uuid-1+default-dev (>= 1.1.0-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
@@ -33,6 +34,7 @@ Depends:
  librust-proxmox-auth-api-1+default-dev,
  librust-proxmox-schema-5+default-dev,
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~),
+ librust-proxmox-uuid-1+default-dev (>= 1.1.0-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-plain-1+default-dev
@@ -43,10 +45,10 @@ Provides:
  librust-proxmox-access-control+default-dev (= ${binary:Version}),
  librust-proxmox-access-control-1-dev (= ${binary:Version}),
  librust-proxmox-access-control-1+default-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.1-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.1+default-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.1.1-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.1.1+default-dev (= ${binary:Version})
+ librust-proxmox-access-control-1.2-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.2+default-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.2.0-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.2.0+default-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - Rust source code
  Source code for Debianized Rust crate "proxmox-access-control"
 
@@ -60,8 +62,8 @@ Depends:
  librust-hex-0.4+default-dev
 Provides:
  librust-proxmox-access-control-1+api-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.1+api-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.1.1+api-dev (= ${binary:Version})
+ librust-proxmox-access-control-1.2+api-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.2.0+api-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - feature "api"
  This metapackage enables feature "api" for the Rust proxmox-access-control
  crate, by pulling in any additional dependencies needed by that feature.
@@ -85,8 +87,8 @@ Depends:
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-access-control-1+impl-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.1+impl-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.1.1+impl-dev (= ${binary:Version})
+ librust-proxmox-access-control-1.2+impl-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.2.0+impl-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-access-control
  crate, by pulling in any additional dependencies needed by that feature.

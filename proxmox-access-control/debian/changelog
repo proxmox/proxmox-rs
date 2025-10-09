@@ -1,3 +1,13 @@
+rust-proxmox-access-control (1.2.0-1) trixie; urgency=medium
+
+  * refactor api module to be more hierarchical.
+
+  * move `ApiTokenSecret` to types module.
+
+  * add api endpoints for handling tokens.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 09 Oct 2025 19:23:25 +0200
+
 rust-proxmox-access-control (1.1.1-1) trixie; urgency=medium
 
   * update schema to 5.0.0
