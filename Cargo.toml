@@ -134,7 +134,7 @@ walkdir = "2"
 zstd = "0.13"
 
 # workspace dependencies
-proxmox-access-control = { version = "1.1.1", path = "proxmox-access-control" }
+proxmox-access-control = { version = "1.2.0", path = "proxmox-access-control" }
 proxmox-acme = {  version = "1.0.0", path = "proxmox-acme", default-features = false }
 proxmox-api-macro = { version = "1.4.1", path = "proxmox-api-macro" }
 proxmox-apt-api-types = { version = "2.0.0", path = "proxmox-apt-api-types" }
