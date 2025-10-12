@@ -35,8 +35,8 @@ Provides:
  librust-proxmox-sendmail-1.0-dev (= ${binary:Version}),
  librust-proxmox-sendmail-1.0+default-dev (= ${binary:Version}),
  librust-proxmox-sendmail-1.0+mail-forwarder-dev (= ${binary:Version}),
- librust-proxmox-sendmail-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-sendmail-1.0.0+default-dev (= ${binary:Version}),
- librust-proxmox-sendmail-1.0.0+mail-forwarder-dev (= ${binary:Version})
+ librust-proxmox-sendmail-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1.0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-sendmail-1.0.1+mail-forwarder-dev (= ${binary:Version})
 Description: Rust crate "proxmox-sendmail" - Rust source code
  Source code for Debianized Rust crate "proxmox-sendmail"

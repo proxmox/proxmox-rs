@@ -1,3 +1,16 @@
+rust-proxmox-sendmail (1.0.1-1) trixie; urgency=medium
+
+  * encode non-ascii filenames to improve compatibility.
+
+  * move filename in content disposition headers for attachments to a
+    dedicated line to better accommodate longer filenames.
+
+  * allow specifying the masked (noreply) receiver.
+
+  * base64 encode: more efficient line-wrapping implementation.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 12 Oct 2025 16:18:45 +0200
+
 rust-proxmox-sendmail (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
