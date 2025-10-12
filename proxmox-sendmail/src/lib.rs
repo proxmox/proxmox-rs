@@ -541,6 +541,7 @@ mod test {
     /// The `Date` header is formatted in the local timezone, which means our
     /// tests are sensitive to the timezone of the machine running the tests.
     /// Simplest solution is to just ignore the date header.
+    #[track_caller]
     fn assert_lines_equal_ignore_date(s1: &str, s2: &str) {
         let lines1 = s1.lines();
         let lines2 = s2.lines();
