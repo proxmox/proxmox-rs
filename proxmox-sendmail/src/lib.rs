@@ -545,9 +545,9 @@ mod test {
         let lines1 = s1.lines();
         let lines2 = s2.lines();
 
-        for (line1, line2) in lines1.zip(lines2) {
+        for ((i, line1), line2) in lines1.enumerate().zip(lines2) {
             if !(line1.starts_with("Date:") && line2.starts_with("Date:")) {
-                assert_eq!(line1, line2);
+                assert_eq!(line1, line2, "lines at {i} do not match");
             }
         }
 
