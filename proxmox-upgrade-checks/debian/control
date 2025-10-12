@@ -14,12 +14,11 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-termcolor-1+default-dev (>= 1.1.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
-Standards-Version: 4.7.0
+Standards-Version: 4.7.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://proxmox.com
 X-Cargo-Crate: proxmox-upgrade-checks
-Rules-Requires-Root: no
 
 Package: librust-proxmox-upgrade-checks-dev
 Architecture: any
@@ -41,5 +40,5 @@ Provides:
  librust-proxmox-upgrade-checks-1.0+default-dev (= ${binary:Version}),
  librust-proxmox-upgrade-checks-1.0.0-dev (= ${binary:Version}),
  librust-proxmox-upgrade-checks-1.0.0+default-dev (= ${binary:Version})
-Description: Helpers to implement upgrade checks for Proxmox products - Rust source code
+Description: Helpers to implement checks to help with (major) upgrades of Proxmox products - Rust source code
  Source code for Debianized Rust crate "proxmox-upgrade-checks"

@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-upgrade-checks"
-description = "Helpers to implement upgrade checks for Proxmox products."
+description = "Helpers to implement checks to help with (major) upgrades of Proxmox products."
 version = "1.0.0"
 
 authors.workspace = true
