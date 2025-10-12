@@ -44,19 +44,24 @@ const RFC5987SET: &AsciiSet = &CONTROLS
 // base64 encode and hard-wrap the base64 encoded string every 72 characters. this improves
 // compatibility.
 fn encode_base64_formatted<T: AsRef<[u8]>>(raw: T) -> String {
-    proxmox_base64::encode(raw)
-        .chars()
-        .enumerate()
-        .flat_map(|(i, c)| {
-            if i != 0 && i % 72 == 0 {
-                Some('\n')
-            } else {
-                None
-            }
-            .into_iter()
-            .chain(std::iter::once(c))
-        })
-        .collect::<String>()
+    const TEXT_WIDTH: usize = 72;
+
+    let encoded = proxmox_base64::encode(raw);
+    let bytes = encoded.as_bytes();
+
+    let lines = (bytes.len() + TEXT_WIDTH - 1) / TEXT_WIDTH;
+    let mut out = Vec::with_capacity(bytes.len() + lines - 1); // account for 1 newline per line
+
+    for (line, chunk) in bytes.chunks(TEXT_WIDTH).enumerate() {
+        out.extend_from_slice(chunk);
+        if line + 1 != lines {
+            // do not ned last linew with newline to give caller control over doing so.
+            out.push(b'\n');
+        }
+    }
+
+    // SAFETY: base64 encoded, which is 7-bit chars (ASCII) and thus always valid UTF8
+    unsafe { String::from_utf8_unchecked(out) }
 }
 
 struct Recipient {
