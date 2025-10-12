@@ -117,7 +117,7 @@ impl Attachment<'_> {
             self.mime,
         );
 
-        // both `filename` and `filename*` are included for additional compatability
+        // both `filename` and `filename*` are included for additional compatibility
         let _ = writeln!(
             attachment,
             "Content-Disposition: attachment; filename=\"{encoded_filename}\";\n\tfilename*=UTF-8''{}",
@@ -230,7 +230,7 @@ impl<'a> Mail<'a> {
     /// Builder-style method to conveniently add an attachment with a specific filename and
     /// mime-type to an email.
     ///
-    /// Note: Adding attachements triggers `multipart/mixed` mode.
+    /// Note: Adding attachments triggers `multipart/mixed` mode.
     pub fn with_attachment(mut self, filename: &str, mime_type: &str, content: &'a [u8]) -> Self {
         self.add_attachment(filename, mime_type, content);
         self

@@ -87,7 +87,7 @@ const_regex! {
     ///
     /// This
     /// [article](https://dwheeler.com/essays/fixing-unix-linux-filenames.html)
-    /// contains further information why it is reasonable to restict
+    /// contains further information why it is reasonable to restrict
     /// names this way. This is not only useful for filenames, but for
     /// any identifier command line tools work with.
     pub SAFE_ID_REGEX = concatcp!(r"^", SAFE_ID_REGEX_STR, r"$");

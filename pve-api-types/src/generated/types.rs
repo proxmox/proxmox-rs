@@ -2277,7 +2277,7 @@ pub struct LxcConfig {
     #[serde(flatten)]
     pub net: LxcConfigNetArray,
 
-    /// Specifies whether a container will be started during system bootup.
+    /// Specifies whether a container will be started during system boot-up.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub onboot: Option<bool>,
@@ -6540,7 +6540,7 @@ pub struct QemuConfig {
     #[serde(flatten)]
     pub numa_array: QemuConfigNumaArray,
 
-    /// Specifies whether a VM will be started during system bootup.
+    /// Specifies whether a VM will be started during system boot-up.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub onboot: Option<bool>,
@@ -9605,7 +9605,7 @@ pub struct ReloadSdn {
     pub lock_token: Option<String>,
 
     /// When lock-token has been provided and configuration successfully
-    /// commited, release the lock automatically afterwards
+    /// committed, release the lock automatically afterwards
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "release-lock")]

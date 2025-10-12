@@ -6,7 +6,7 @@ use proxmox_uuid::Uuid;
 use crate::{MediaLocation, MediaStatus, UUID_FORMAT};
 
 pub const MEDIA_SET_UUID_SCHEMA: Schema = StringSchema::new(
-    "MediaSet Uuid (We use the all-zero Uuid to reseve an empty media for a specific pool).",
+    "MediaSet Uuid (We use the all-zero Uuid to reserve an empty media for a specific pool).",
 )
 .format(&UUID_FORMAT)
 .schema();

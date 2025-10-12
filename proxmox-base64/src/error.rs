@@ -60,7 +60,7 @@ impl StdError for EncodeError {}
 /// A base64 decoding error.
 ///
 /// Apart from the case where the output slice is too small, the exact error is not directly
-/// availabe as an enum variant.
+/// available as an enum variant.
 pub struct DecodeError(DecodeErrorImpl);
 
 impl fmt::Debug for DecodeError {

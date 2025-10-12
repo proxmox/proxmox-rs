@@ -270,7 +270,7 @@ impl From<WebauthnCredential> for webauthn_rs_core::proto::Credential {
 
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 pub struct BackupFlags {
-    /// The eligibility for createing backups.
+    /// The eligibility for creating backups.
     #[serde(default)]
     pub backup_eligible: bool,
     /// The backup state.

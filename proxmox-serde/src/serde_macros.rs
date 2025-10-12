@@ -84,7 +84,7 @@ macro_rules! forward_serialize_to_display {
 /// enum AnEnum {
 ///     Apples,
 ///     Bananas,
-///     Tomatos,
+///     Tomatoes,
 /// }
 ///
 /// forward_from_str_to_deserialize!(AnEnum);
@@ -115,7 +115,7 @@ macro_rules! forward_from_str_to_deserialize {
 /// enum AnEnum {
 ///     Apples,
 ///     Bananas,
-///     Tomatos,
+///     Tomatoes,
 /// }
 ///
 /// forward_display_to_serialize!(AnEnum);

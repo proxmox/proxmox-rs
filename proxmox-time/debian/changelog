@@ -99,7 +99,7 @@ rust-proxmox-time (1.1.0-1) stable; urgency=medium
 
   * proxmox-time: remove custom error type
 
-  * proxmox-time: added time related fuctions from proxmox-systemd crate
+  * proxmox-time: added time related functions from proxmox-systemd crate
 
  -- Proxmox Support Team <support@proxmox.com>  Wed, 17 Nov 2021 11:36:15 +0100
 

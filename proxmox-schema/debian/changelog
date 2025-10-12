@@ -31,7 +31,7 @@ rust-proxmox-schema (4.0.0-1) bookworm; urgency=medium
   * add `unwrap_*_schema_cloned()` to schema types as const fn to get a copy
     of a schema which can be manipulated in const contexts
 
-  * impl UpdaterType fro PropertyString<T> as Option<Self>
+  * impl UpdaterType from PropertyString<T> as Option<Self>
 
   * fix a pointer vs length confusion in the property string deserializer when
     using static strings
@@ -81,7 +81,7 @@ rust-proxmox-schema (3.1.2-1) bookworm; urgency=medium
 
   * wrap_text now works by paragraphs
 
-  * drop trailing newline in proeprty descriptions
+  * drop trailing newline in property descriptions
 
   * use const blocks in thread_local! calls
 

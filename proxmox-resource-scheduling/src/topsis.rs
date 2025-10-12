@@ -88,12 +88,12 @@ impl<const N: usize> Criteria<N> {
 pub struct Matrix<const N_CRITERIA: usize>(Vec<[f64; N_CRITERIA]>);
 
 impl<const N: usize> Matrix<N> {
-    /// Values of the matrix for the fixed critierion with index `index`.
+    /// Values of the matrix for the fixed criterion with index `index`.
     fn fixed_criterion(&self, index: usize) -> impl Iterator<Item = f64> + Clone + '_ {
         self.0.iter().map(move |alternative| alternative[index])
     }
 
-    /// Mutable values of the matrix for the fixed critierion with index `index`.
+    /// Mutable values of the matrix for the fixed criterion with index `index`.
     fn fixed_criterion_mut(&mut self, index: usize) -> impl Iterator<Item = &mut f64> {
         self.0
             .iter_mut()
@@ -133,7 +133,7 @@ struct IdealAlternatives<const N_CRITERIA: usize> {
 
 impl<const N: usize> IdealAlternatives<N> {
     /// Compute the idealized alternatives from the given `matrix`. The `criteria` are required to know
-    /// if a critierion should be maximized or minimized.
+    /// if a criterion should be maximized or minimized.
     fn compute(matrix: &Matrix<N>, criteria: &Criteria<N>) -> Self {
         let criteria = &criteria.0;
 

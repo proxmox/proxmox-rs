@@ -20,7 +20,7 @@ rust-proxmox-lang (1.3.0-1) bookworm; urgency=medium
 
 rust-proxmox-lang (1.2.0-1) bookworm; urgency=medium
 
-  * mosty code and clippy fixups
+  * mostly code and clippy fixups
 
   * c_str! should now work in const context
 

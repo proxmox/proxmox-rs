@@ -18,7 +18,7 @@ use proxmox_sys::fs::CreateOptions;
 
 type BoxedStoreFunc = Box<dyn FnOnce() -> Result<String, Error> + UnwindSafe + Send>;
 
-// Helper trait to "store" something in the environment to be re-used after re-executing the
+// Helper trait to "store" something in the environment to be reused after re-executing the
 // service on a reload.
 #[doc(hidden)] // not public api
 pub trait Reloadable: Sized {

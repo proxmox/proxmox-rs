@@ -247,7 +247,7 @@ pub fn atomic_open_or_create_file<P: AsRef<Path>>(
             Ok(fd) => return Ok(unsafe { File::from_raw_fd(fd) }),
             Err(err) => {
                 if err.not_found() {
-                    // fall thrue -  try to create the file
+                    // fall through -  try to create the file
                 } else {
                     bail!("open {:?} failed - {}", path, err);
                 }

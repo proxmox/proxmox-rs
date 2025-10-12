@@ -7,7 +7,7 @@ rust-proxmox-apt-api-types (2.0.1-1) trixie; urgency=medium
 rust-proxmox-apt-api-types (2.0.0-1) trixie; urgency=medium
 
   * drop Ceph Reef and Ceph Quincy from repo type, those releases will not be
-    supported for the upcomming Debian Trixie based releases anymore.
+    supported for the upcoming Debian Trixie based releases anymore.
 
  -- Proxmox Support Team <support@proxmox.com>  Mon, 26 May 2025 18:51:52 +0200
 

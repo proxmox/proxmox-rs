@@ -87,7 +87,7 @@ rust-proxmox-apt (0.11.0-1) stable; urgency=medium
 
   * add 'cache' feature and api functions to manipulate the pat cache state
 
-  * remove the global APTConfig and instead pass the path previously confgured
+  * remove the global APTConfig and instead pass the path previously configured
     there as parameter
 
  -- Proxmox Support Team <support@proxmox.com>  Mon, 08 Jul 2024 15:19:42 +0200
@@ -108,7 +108,7 @@ rust-proxmox-apt (0.10.8-1) bookworm; urgency=medium
 
   * document status property for standard repositories
 
-  * add skip_serializing_if attirbutes to api types
+  * add skip_serializing_if attributes to api types
 
   * add missing #[serde(default)] annotations
 

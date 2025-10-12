@@ -787,7 +787,7 @@ impl WebSocket {
     /// and receives WebSocket frames, while 'downstream' only expects and sends raw data.
     ///
     /// This method takes care of copying the data between endpoints, and sending correct responses
-    /// for control frames (e.g. a Pont to a Ping).
+    /// for control frames (e.g. a Point to a Ping).
     pub async fn serve_connection<S, L>(&self, upstream: S, downstream: L) -> Result<(), Error>
     where
         S: AsyncRead + AsyncWrite + Unpin + Send + 'static,

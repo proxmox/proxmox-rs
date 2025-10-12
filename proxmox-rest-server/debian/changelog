@@ -27,7 +27,7 @@ rust-proxmox-rest-server (1.0.0-1) trixie; urgency=medium
 
 rust-proxmox-rest-server (0.8.9-1) bookworm; urgency=medium
 
-  * increase maximal request body size fro 64 kiB to 512 kiB, similar to a
+  * increase maximal request body size from 64 kiB to 512 kiB, similar to a
     recent change for our perl based projects.
 
  -- Proxmox Support Team <support@proxmox.com>  Tue, 08 Apr 2025 16:17:03 +0200
@@ -77,7 +77,7 @@ rust-proxmox-rest-server (0.8.5-1) bookworm; urgency=medium
 
 rust-proxmox-rest-server (0.8.4-1) bookworm; urgency=medium
 
-  * add custom handlebars escape fn and skip escaping the '=' charater. This
+  * add custom handlebars escape fn and skip escaping the '=' character. This
     is required to support base64 encoded values.
 
  -- Proxmox Support Team <support@proxmox.com>  Mon, 25 Nov 2024 17:14:25 +0100

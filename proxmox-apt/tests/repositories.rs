@@ -380,7 +380,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     // FIXME: make this test(s) easier to use and adapt, keep input and results closer together,
     // content of sources entries should be probably inlined here, we can assume that reading files
     // works after all (or at least not our job to test).
-    // Manipulating array entries is rather annyoing, one needs to frequently jump back and
+    // Manipulating array entries is rather annoying, one needs to frequently jump back and
     // manually correlate things, simply completely unnecessary extra work.
     // Further, we need to better split products, components, and suites, unify where the possible
     // combinations are defined and do that ideally in a declarative list, so that one can keep it

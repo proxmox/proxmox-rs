@@ -186,7 +186,7 @@ pub enum ChunkOrder {
 pub enum DataStoreMountStatus {
     /// Removable datastore is currently mounted correctly.
     Mounted,
-    /// Removable datastore is currebtly not mounted.
+    /// Removable datastore is currently not mounted.
     NotMounted,
     /// Datastore is not removable, so there is no mount status.
     #[default]

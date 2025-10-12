@@ -21,7 +21,7 @@ rust-proxmox-subscription (0.5.1-1) bookworm; urgency=medium
 
 rust-proxmox-subscription (0.5.0-1) bookworm; urgency=medium
 
-   * move most of the implmentation into `impl` feature
+   * move most of the implementation into `impl` feature
 
  -- Proxmox Support Team <support@proxmox.com>  Thu, 07 Nov 2024 12:31:46 +0100
 

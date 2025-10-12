@@ -44,7 +44,7 @@ const S3_HTTP_REQUEST_RETRY_BACKOFF_DEFAULT: Duration = Duration::from_secs(1);
 
 /// S3 object key path prefix without the context prefix as defined by the client options.
 ///
-/// The client option's context prefix will be pre-pended by the various client methods before
+/// The client option's context prefix will be prepended by the various client methods before
 /// sending api requests.
 pub enum S3PathPrefix {
     /// Path prefix relative to client's context prefix
@@ -73,7 +73,7 @@ pub struct S3ClientOptions {
     pub region: String,
     /// API certificate fingerprint for self signed certificates.
     pub fingerprint: Option<String>,
-    /// Rate limit for put requests given as #reqest/s.
+    /// Rate limit for put requests given as #request/s.
     pub put_rate_limit: Option<u64>,
     /// Provider implementation specific features and limitations
     pub provider_quirks: Vec<ProviderQuirks>,

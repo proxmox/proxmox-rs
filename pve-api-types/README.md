@@ -72,7 +72,7 @@ Since `QemuConfig` has a member named `efidisk0` which is a "property string", a
 
     struct QemuConfigEfidisk0 { ... }
 
-In there, an `enum` is encounted for the `efitype` property. For this enum, a
+In there, an `enum` is encountered for the `efitype` property. For this enum, a
 rust `enum` will be created named:
 
     enum QemuConfigEfidisk0Efitype {}

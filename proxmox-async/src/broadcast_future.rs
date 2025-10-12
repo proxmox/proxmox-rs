@@ -8,7 +8,7 @@ use anyhow::{format_err, Error};
 use futures::future::{FutureExt, TryFutureExt};
 use tokio::sync::oneshot;
 
-/// Broadcast results to registered listeners using asnyc oneshot channels
+/// Broadcast results to registered listeners using async oneshot channels
 #[derive(Default)]
 pub struct BroadcastData<T> {
     result: Option<Result<T, String>>,

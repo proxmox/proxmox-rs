@@ -148,7 +148,7 @@ pub struct S3ClientConfig {
     /// Use path style bucket addressing over vhost style.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub path_style: Option<bool>,
-    /// Rate limit for put requests given as #reqest/s.
+    /// Rate limit for put requests given as #request/s.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub put_rate_limit: Option<u64>,
     /// List of provider specific feature implementation quirks.

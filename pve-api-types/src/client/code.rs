@@ -1,4 +1,4 @@
-// Supress warnings about unused function parameter in the default impl of the trait methods.
+// Suppress warnings about unused function parameter in the default impl of the trait methods.
 #![allow(unused)]
 //! The generated API client code.
 

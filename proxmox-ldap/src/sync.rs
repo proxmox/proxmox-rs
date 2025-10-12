@@ -313,7 +313,7 @@ impl LdapRealmSyncJob {
     ) -> Result<(), Error> {
         for userid in to_delete {
             if self.dry_run {
-                log::info!("would delet user {}", userid.as_str());
+                log::info!("would delete user {}", userid.as_str());
             } else {
                 log::info!("deleting user {}", userid.as_str());
             }
