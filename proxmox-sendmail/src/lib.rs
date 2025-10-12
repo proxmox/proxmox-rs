@@ -41,8 +41,8 @@ const RFC5987SET: &AsciiSet = &CONTROLS
     .add(b'{')
     .add(b'}');
 
-// base64 encode and hard-wrap the base64 encoded string every 72 characters. this improves
-// compatibility.
+/// base64 encode and hard-wrap the base64 encoded string every 72 characters. this improves
+/// compatibility.
 fn encode_base64_formatted<T: AsRef<[u8]>>(raw: T) -> String {
     const TEXT_WIDTH: usize = 72;
 
@@ -55,7 +55,7 @@ fn encode_base64_formatted<T: AsRef<[u8]>>(raw: T) -> String {
     for (line, chunk) in bytes.chunks(TEXT_WIDTH).enumerate() {
         out.extend_from_slice(chunk);
         if line + 1 != lines {
-            // do not ned last linew with newline to give caller control over doing so.
+            // do not end last line with newline to give caller control over doing so.
             out.push(b'\n');
         }
     }
