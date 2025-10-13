@@ -8,17 +8,29 @@ use serde::de::Unexpected;
 
 pub trait FromBool: Sized + Default {
     fn from_bool(value: bool) -> Self;
+    fn from_none<E: serde::de::Error>() -> Result<Self, E>;
 }
 
 impl FromBool for bool {
     fn from_bool(value: bool) -> Self {
         value
     }
+
+    fn from_none<E: serde::de::Error>() -> Result<Self, E> {
+        Err(E::invalid_type(
+            serde::de::Unexpected::Option,
+            &"a bool-ish...",
+        ))
+    }
 }
 
 impl FromBool for Option<bool> {
     fn from_bool(value: bool) -> Self {
         Some(value)
+    }
+
+    fn from_none<E: serde::de::Error>() -> Result<Self, E> {
+        Ok(None)
     }
 }
 
@@ -59,6 +71,13 @@ where
         f.write_str("a boolean-ish...")
     }
 
+    fn visit_unit<E>(self) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        T::from_none()
+    }
+
     fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -66,8 +85,8 @@ where
         deserializer.deserialize_any(self)
     }
 
-    fn visit_none<E>(self) -> Result<Self::Value, E> {
-        Ok(Default::default())
+    fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+        T::from_none()
     }
 
     fn visit_bool<E: serde::de::Error>(self, value: bool) -> Result<Self::Value, E> {
@@ -118,19 +137,31 @@ where
 macro_rules! integer_helper {
     ($ty:ident, $deserialize_name:ident, $trait: ident, $from_name:ident, $visitor:ident) => {
         #[doc(hidden)]
-        pub trait $trait: Sized + Default {
+        pub trait $trait: Sized {
             fn $from_name(value: $ty) -> Self;
+            fn from_none<E: serde::de::Error>() -> Result<Self, E>;
         }
 
         impl $trait for $ty {
             fn $from_name(value: $ty) -> Self {
                 value
             }
+
+            fn from_none<E: serde::de::Error>() -> Result<Self, E> {
+                Err(E::invalid_type(
+                    serde::de::Unexpected::Option,
+                    &concat!("a ", stringify!($ty), "-ish..."),
+                ))
+            }
         }
 
         impl $trait for Option<$ty> {
             fn $from_name(value: $ty) -> Self {
                 Some(value)
+            }
+
+            fn from_none<E: serde::de::Error>() -> Result<Self, E> {
+                Ok(None)
             }
         }
 
@@ -171,6 +202,10 @@ macro_rules! integer_helper {
                 f.write_str(concat!("a ", stringify!($ty), "-ish..."))
             }
 
+            fn visit_unit<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                T::from_none()
+            }
+
             fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
             where
                 D: serde::Deserializer<'de>,
@@ -178,8 +213,8 @@ macro_rules! integer_helper {
                 deserializer.deserialize_any(self)
             }
 
-            fn visit_none<E>(self) -> Result<Self::Value, E> {
-                Ok(Default::default())
+            fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                T::from_none()
             }
 
             fn visit_i128<E: serde::de::Error>(self, value: i128) -> Result<Self::Value, E> {
@@ -282,6 +317,10 @@ macro_rules! float_helper {
                 f.write_str(concat!("a ", stringify!($ty), "-ish..."))
             }
 
+            fn visit_unit<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                T::from_none()
+            }
+
             fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
             where
                 D: serde::Deserializer<'de>,
@@ -289,8 +328,8 @@ macro_rules! float_helper {
                 deserializer.deserialize_any(self)
             }
 
-            fn visit_none<E>(self) -> Result<Self::Value, E> {
-                Ok(Default::default())
+            fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                T::from_none()
             }
 
             fn visit_f64<E: serde::de::Error>(self, value: f64) -> Result<Self::Value, E> {
@@ -344,14 +383,22 @@ macro_rules! float_helper {
 }
 
 #[doc(hidden)]
-pub trait FromF64: Sized + Default {
+pub trait FromF64: Sized {
     fn from_f64(value: f64) -> Self;
+    fn from_none<E: serde::de::Error>() -> Result<Self, E>;
 }
 
 impl FromF64 for f32 {
     #[inline(always)]
     fn from_f64(f: f64) -> f32 {
         f as f32
+    }
+
+    fn from_none<E: serde::de::Error>() -> Result<Self, E> {
+        Err(E::invalid_type(
+            serde::de::Unexpected::Option,
+            &concat!("a f32-ish..."),
+        ))
     }
 }
 
@@ -360,6 +407,13 @@ impl FromF64 for f64 {
     fn from_f64(f: f64) -> f64 {
         f
     }
+
+    fn from_none<E: serde::de::Error>() -> Result<Self, E> {
+        Err(E::invalid_type(
+            serde::de::Unexpected::Option,
+            &concat!("an f64-ish..."),
+        ))
+    }
 }
 
 impl<T: FromF64> FromF64 for Option<T> {
@@ -367,7 +421,70 @@ impl<T: FromF64> FromF64 for Option<T> {
     fn from_f64(f: f64) -> Option<T> {
         Some(T::from_f64(f))
     }
+
+    fn from_none<E: serde::de::Error>() -> Result<Self, E> {
+        Ok(None)
+    }
 }
 
 float_helper!(f32, deserialize_f32, F32Visitor);
 float_helper!(f64, deserialize_f64, F64Visitor);
+
+#[test]
+fn test_deserializers() {
+    #[derive(PartialEq, Debug, serde::Deserialize)]
+    struct PerlStuff {
+        #[serde(deserialize_with = "deserialize_i64")]
+        int: i64,
+        #[serde(default, deserialize_with = "deserialize_i64")]
+        opt_int: Option<i64>,
+        #[serde(default, deserialize_with = "deserialize_i64")]
+        opt_int_on: Option<i64>,
+        #[serde(default, deserialize_with = "deserialize_i64")]
+        opt_int_explicit_null: Option<i64>,
+
+        #[serde(deserialize_with = "deserialize_f64")]
+        float: f64,
+        #[serde(default, deserialize_with = "deserialize_f64")]
+        opt_float: Option<f64>,
+        #[serde(default, deserialize_with = "deserialize_f64")]
+        opt_float_on: Option<f64>,
+        #[serde(default, deserialize_with = "deserialize_f64")]
+        opt_float_explicit_null: Option<f64>,
+
+        #[serde(deserialize_with = "deserialize_bool")]
+        bool_: bool,
+        #[serde(default, deserialize_with = "deserialize_bool")]
+        opt_bool: Option<bool>,
+        #[serde(default, deserialize_with = "deserialize_bool")]
+        opt_bool_on: Option<bool>,
+        #[serde(default, deserialize_with = "deserialize_bool")]
+        opt_bool_explicit_null: Option<bool>,
+    }
+
+    let stuff: PerlStuff = serde_json::from_str(
+        r#"{
+        "int": "1", "opt_int_on": "2", "opt_int_explicit_null": null,
+        "float": "1.1", "opt_float_on": "2.2", "opt_float_explicit_null": null,
+        "bool_": true, "opt_bool_on": "0", "opt_bool_explicit_null": null
+    }"#,
+    )
+    .expect("failed to parse json object");
+    assert_eq!(
+        stuff,
+        PerlStuff {
+            int: 1,
+            opt_int: None,
+            opt_int_on: Some(2),
+            opt_int_explicit_null: None,
+            float: 1.1,
+            opt_float: None,
+            opt_float_on: Some(2.2),
+            opt_float_explicit_null: None,
+            bool_: true,
+            opt_bool: None,
+            opt_bool_on: Some(false),
+            opt_bool_explicit_null: None,
+        }
+    );
+}
