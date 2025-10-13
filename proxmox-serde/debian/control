@@ -43,9 +43,9 @@ Provides:
  librust-proxmox-serde-1.0-dev (= ${binary:Version}),
  librust-proxmox-serde-1.0+default-dev (= ${binary:Version}),
  librust-proxmox-serde-1.0+perl-dev (= ${binary:Version}),
- librust-proxmox-serde-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-serde-1.0.0+default-dev (= ${binary:Version}),
- librust-proxmox-serde-1.0.0+perl-dev (= ${binary:Version})
+ librust-proxmox-serde-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-serde-1.0.1+perl-dev (= ${binary:Version})
 Description: Serde formatting tools - Rust source code
  Source code for Debianized Rust crate "proxmox-serde"
 
@@ -59,7 +59,7 @@ Depends:
 Provides:
  librust-proxmox-serde-1+serde-json-dev (= ${binary:Version}),
  librust-proxmox-serde-1.0+serde-json-dev (= ${binary:Version}),
- librust-proxmox-serde-1.0.0+serde-json-dev (= ${binary:Version})
+ librust-proxmox-serde-1.0.1+serde-json-dev (= ${binary:Version})
 Description: Serde formatting tools - feature "serde_json"
  This metapackage enables feature "serde_json" for the Rust proxmox-serde crate,
  by pulling in any additional dependencies needed by that feature.
