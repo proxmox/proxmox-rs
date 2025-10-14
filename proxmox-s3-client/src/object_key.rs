@@ -18,9 +18,9 @@ impl core::convert::TryFrom<&str> for S3ObjectKey {
 
     fn try_from(s: &str) -> Result<Self, Error> {
         let (key, key_byte_length) = if let Some(s) = s.strip_prefix("/") {
-            (Self::Full(s.to_string()), s.as_bytes().len())
+            (Self::Full(s.to_string()), s.len())
         } else {
-            (Self::Relative(s.to_string()), s.as_bytes().len())
+            (Self::Relative(s.to_string()), s.len())
         };
         if key_byte_length > S3_OBJECT_KEY_MAX_LENGTH {
             bail!(
