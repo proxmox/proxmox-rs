@@ -210,12 +210,10 @@ impl LdapRealmSyncJob {
                     log::info!("updating user {user_id}");
                 }
             }
+        } else if self.dry_run {
+            log::info!("would create user {user_id}");
         } else {
-            if self.dry_run {
-                log::info!("would create user {user_id}");
-            } else {
-                log::info!("creating user {user_id}");
-            }
+            log::info!("creating user {user_id}");
         }
 
         user_config.set_data(user_id, "user", &new_or_updated_user)?;

@@ -92,14 +92,12 @@ pub fn standard_repositories(
         APTStandardRepository::from_handle(APTRepositoryHandle::Test),
     ];
 
-    if product == "pve" {
-        if suite == DebianCodename::Trixie {
-            result.append(&mut vec![
-                APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidEnterprise),
-                APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidNoSubscription),
-                APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidTest),
-            ]);
-        }
+    if product == "pve" && suite == DebianCodename::Trixie {
+        result.append(&mut vec![
+            APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidEnterprise),
+            APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidNoSubscription),
+            APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidTest),
+        ]);
     }
 
     for file in files.iter() {
