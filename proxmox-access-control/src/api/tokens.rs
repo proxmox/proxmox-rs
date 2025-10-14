@@ -161,7 +161,6 @@ pub fn generate_token(
 /// Update user's API token metadata. If regenerate is set to true, the token and it's new secret
 /// will be returned.
 #[allow(clippy::too_many_arguments)]
-
 pub fn update_token(
     userid: Userid,
     token_name: Tokenname,
