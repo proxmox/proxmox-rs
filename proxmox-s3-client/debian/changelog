@@ -1,3 +1,9 @@
+rust-proxmox-s3-client (1.2.3-1) stable; urgency=medium
+
+  * fix #6906: s3-client: conditionally set Content-Length header
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 14 Oct 2025 15:06:38 +0200
+
 rust-proxmox-s3-client (1.2.2-1) trixie; urgency=medium
 
   * drop non-ambiguous mention of chunks in error message.
