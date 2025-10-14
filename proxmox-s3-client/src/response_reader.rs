@@ -554,7 +554,7 @@ fn parse_list_objects_v2_response_test() {
     assert_eq!(result.prefix, ".cnt");
     assert_eq!(result.key_count, 2);
     assert_eq!(result.max_keys, 1000);
-    assert_eq!(result.is_truncated, false);
+    assert!(!result.is_truncated);
     assert_eq!(
         result.contents.unwrap(),
         vec![
