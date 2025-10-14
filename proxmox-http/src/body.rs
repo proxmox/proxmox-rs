@@ -100,7 +100,7 @@ impl HyperBody for Body {
             }
             InnerBody::Streaming(ref mut body) => Poll::Ready(
                 ready!(Pin::new(body).poll_frame(cx))
-                    .map(|opt_chunk| opt_chunk.map_err(Error::from)),
+                    .map(|opt_chunk| opt_chunk),
             ),
         }
     }

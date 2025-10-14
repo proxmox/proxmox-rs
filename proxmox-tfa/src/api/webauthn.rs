@@ -235,7 +235,7 @@ impl From<WebauthnCredential> for webauthn_rs::prelude::SecurityKey {
 impl From<webauthn_rs_core::proto::Credential> for WebauthnCredential {
     fn from(cred: webauthn_rs_core::proto::Credential) -> Self {
         Self {
-            cred_id: cred.cred_id.into(),
+            cred_id: cred.cred_id,
             cred: cred.cred,
             counter: cred.counter,
             backup: BackupFlags {
@@ -250,7 +250,7 @@ impl From<webauthn_rs_core::proto::Credential> for WebauthnCredential {
 impl From<WebauthnCredential> for webauthn_rs_core::proto::Credential {
     fn from(cred: WebauthnCredential) -> Self {
         Self {
-            cred_id: cred.cred_id.into(),
+            cred_id: cred.cred_id,
             cred: cred.cred,
             counter: cred.counter,
             transports: None,
