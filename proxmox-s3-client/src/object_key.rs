@@ -37,7 +37,7 @@ impl S3ObjectKey {
         match self {
             Self::Full(ref key) => Self::Full(key.to_string()),
             Self::Relative(ref key) => {
-                let prefix = prefix.strip_prefix("/").unwrap_or(&prefix);
+                let prefix = prefix.strip_prefix("/").unwrap_or(prefix);
                 Self::Full(format!("{prefix}/{key}"))
             }
         }
@@ -90,7 +90,7 @@ impl S3ObjectKey {
         match self {
             Self::Full(key) => Self::Full(format!("{source_bucket}{key}")),
             Self::Relative(key) => {
-                let prefix = prefix.strip_prefix("/").unwrap_or(&prefix);
+                let prefix = prefix.strip_prefix("/").unwrap_or(prefix);
                 Self::Full(format!("{source_bucket}/{prefix}/{key}"))
             }
         }

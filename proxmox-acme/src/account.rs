@@ -173,7 +173,7 @@ impl Account {
     pub fn dns_01_txt_value(&self, token: &str) -> Result<String, Error> {
         let key_authorization = self.key_authorization(token)?;
         let digest = openssl::sha::sha256(key_authorization.as_bytes());
-        Ok(b64u::encode(&digest))
+        Ok(b64u::encode(digest))
     }
 
     /// Prepare a request to update account data.

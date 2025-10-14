@@ -549,7 +549,7 @@ fn parse_list_objects_v2_response_test() {
             </Contents>
         </ListBucketResult>
     "#;
-    let result: ListObjectsV2ResponseBody = serde_xml_rs::from_str(&response_body).unwrap();
+    let result: ListObjectsV2ResponseBody = serde_xml_rs::from_str(response_body).unwrap();
     assert_eq!(result.name, "bucket0");
     assert_eq!(result.prefix, ".cnt");
     assert_eq!(result.key_count, 2);
@@ -584,7 +584,7 @@ fn parse_copy_object_response_test() {
             <ETag>"9b2cf535f27731c974343645a3985328"</ETag>
         </CopyObjectResult>
     "#;
-    let result: CopyObjectResult = serde_xml_rs::from_str(&response_body).unwrap();
+    let result: CopyObjectResult = serde_xml_rs::from_str(response_body).unwrap();
     assert_eq!(
         result.last_modified,
         LastModifiedTimestamp::from_str("2009-10-12T17:50:30.000Z").unwrap()
@@ -611,7 +611,7 @@ fn parse_list_buckets_response_test() {
             </Buckets>
         </ListAllMyBucketsResult>
     "#;
-    let result: ListAllMyBucketsResult = serde_xml_rs::from_str(&response_body).unwrap();
+    let result: ListAllMyBucketsResult = serde_xml_rs::from_str(response_body).unwrap();
     assert_eq!(
         result.buckets.unwrap().bucket,
         vec![

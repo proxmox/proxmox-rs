@@ -364,7 +364,7 @@ fn challenge() -> Result<String, Error> {
         }
         data.assume_init()
     };
-    Ok(encode(&data))
+    Ok(encode(data))
 }
 
 /// Used while parsing the binary registration response. The slices point directly into the
