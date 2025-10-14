@@ -66,6 +66,6 @@ async fn run() -> Result<(), anyhow::Error> {
 
     // Delete a single object
     let rel_object_key = S3ObjectKey::try_from("object.txt")?;
-    let _response = s3_client.delete_object(rel_object_key).await?;
+    s3_client.delete_object(rel_object_key).await?;
     Ok(())
 }
