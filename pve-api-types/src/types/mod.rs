@@ -4,10 +4,10 @@
 
 use std::collections::HashMap;
 
-use anyhow::{Error, bail};
+use anyhow::{bail, Error};
 use serde_json::Value;
 
-use proxmox_schema::{ApiStringFormat, ApiType, Schema, StringSchema, api, const_regex};
+use proxmox_schema::{api, const_regex, ApiStringFormat, ApiType, Schema, StringSchema};
 
 mod macros;
 use macros::generate_array_field;

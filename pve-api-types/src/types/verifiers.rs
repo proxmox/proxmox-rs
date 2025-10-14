@@ -1,6 +1,6 @@
 //! Verifier functions for the schema.
 
-use anyhow::{Error, bail, format_err};
+use anyhow::{bail, format_err, Error};
 
 use proxmox_schema::const_regex;
 
