@@ -180,9 +180,6 @@ impl<'de> de::Deserializer<'de> for SchemaDeserializer<'de, '_> {
 
                 schema.check_constraints(value).map_err(Error::invalid)?;
 
-                let value: i64 = i64::try_from(value)
-                    .map_err(|_| Error::invalid("isize did not fit into i64"))?;
-
                 if let Ok(value) = u64::try_from(value) {
                     visitor.visit_u64(value)
                 } else {
