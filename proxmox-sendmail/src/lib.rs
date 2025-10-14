@@ -49,7 +49,7 @@ fn encode_base64_formatted<T: AsRef<[u8]>>(raw: T) -> String {
     let encoded = proxmox_base64::encode(raw);
     let bytes = encoded.as_bytes();
 
-    let lines = (bytes.len() + TEXT_WIDTH - 1) / TEXT_WIDTH;
+    let lines = bytes.len().div_ceil(TEXT_WIDTH);
     let mut out = Vec::with_capacity(bytes.len() + lines - 1); // account for 1 newline per line
 
     for (line, chunk) in bytes.chunks(TEXT_WIDTH).enumerate() {
