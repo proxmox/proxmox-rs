@@ -93,9 +93,9 @@ impl HyperBody for Body {
             InnerBody::Full(ref mut bytes) => {
                 let res = bytes.split_off(0);
                 if res.is_empty() {
-                    return Poll::Ready(None);
+                    Poll::Ready(None)
                 } else {
-                    return Poll::Ready(Some(Ok(Frame::data(res))));
+                    Poll::Ready(Some(Ok(Frame::data(res))))
                 }
             }
             InnerBody::Streaming(ref mut body) => Poll::Ready(
