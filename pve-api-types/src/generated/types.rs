@@ -207,6 +207,11 @@ CLUSTER_JOIN_INFO_PREFERRED_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?
 
 }
 
+#[test]
+fn test_regex_compilation_1() {
+    use regex::Regex;
+    let _: &Regex = &CLUSTER_JOIN_INFO_PREFERRED_NODE_RE;
+}
 #[api(
     properties: {
         config_digest: {
@@ -250,6 +255,11 @@ CLUSTER_JOIN_INFO_NODELIST_NAME_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)
 
 }
 
+#[test]
+fn test_regex_compilation_2() {
+    use regex::Regex;
+    let _: &Regex = &CLUSTER_JOIN_INFO_NODELIST_NAME_RE;
+}
 #[api(
     additional_properties: "additional_properties",
     properties: {
@@ -419,6 +429,11 @@ CLUSTER_NODE_INDEX_RESPONSE_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?
 
 }
 
+#[test]
+fn test_regex_compilation_3() {
+    use regex::Regex;
+    let _: &Regex = &CLUSTER_NODE_INDEX_RESPONSE_NODE_RE;
+}
 #[api(
     properties: {
         level: {
@@ -634,6 +649,12 @@ CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_4() {
+    use regex::Regex;
+    let _: &Regex = &CLUSTER_RESOURCE_NODE_RE;
+    let _: &Regex = &CLUSTER_RESOURCE_STORAGE_RE;
+}
 #[api(
     properties: {
         "cgroup-mode": {
@@ -965,6 +986,13 @@ CREATE_CONTROLLER_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_5() {
+    use regex::Regex;
+    let _: &Regex = &CREATE_CONTROLLER_ISIS_IFACES_RE;
+    let _: &Regex = &CREATE_CONTROLLER_ISIS_NET_RE;
+    let _: &Regex = &CREATE_CONTROLLER_NODE_RE;
+}
 #[api(
     properties: {
         asn: {
@@ -1305,6 +1333,14 @@ CREATE_ZONE_NODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_6() {
+    use regex::Regex;
+    let _: &Regex = &CREATE_ZONE_EXITNODES_RE;
+    let _: &Regex = &CREATE_ZONE_EXITNODES_PRIMARY_RE;
+    let _: &Regex = &CREATE_ZONE_MAC_RE;
+    let _: &Regex = &CREATE_ZONE_NODES_RE;
+}
 #[api(
     properties: {
         "advertise-subnets": {
@@ -1796,6 +1832,11 @@ LIST_TASKS_STATUSFILTER_RE = r##"^(?i:ok|error|warning|unknown)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_7() {
+    use regex::Regex;
+    let _: &Regex = &LIST_TASKS_STATUSFILTER_RE;
+}
 #[api(
     properties: {
         errors: {
@@ -2024,6 +2065,12 @@ LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_8() {
+    use regex::Regex;
+    let _: &Regex = &LXC_CONFIG_TAGS_RE;
+    let _: &Regex = &LXC_CONFIG_TIMEZONE_RE;
+}
 #[api(
     properties: {
         arch: {
@@ -2612,6 +2659,11 @@ LXC_CONFIG_MP_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_9() {
+    use regex::Regex;
+    let _: &Regex = &LXC_CONFIG_MP_SIZE_RE;
+}
 #[api(
     default_key: "volume",
     properties: {
@@ -2715,6 +2767,11 @@ LXC_CONFIG_NET_HWADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_10() {
+    use regex::Regex;
+    let _: &Regex = &LXC_CONFIG_NET_HWADDR_RE;
+}
 #[api(
     properties: {
         bridge: {
@@ -2907,6 +2964,11 @@ LXC_CONFIG_ROOTFS_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_11() {
+    use regex::Regex;
+    let _: &Regex = &LXC_CONFIG_ROOTFS_SIZE_RE;
+}
 #[api(
     default_key: "volume",
     properties: {
@@ -3391,6 +3453,11 @@ MIGRATE_LXC_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_12() {
+    use regex::Regex;
+    let _: &Regex = &MIGRATE_LXC_TARGET_RE;
+}
 #[api(
     properties: {
         bwlimit: {
@@ -3461,6 +3528,11 @@ MIGRATE_QEMU_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_13() {
+    use regex::Regex;
+    let _: &Regex = &MIGRATE_QEMU_TARGET_RE;
+}
 #[api(
     properties: {
         bwlimit: {
@@ -3565,6 +3637,18 @@ NETWORK_INTERFACE_VLAN_RAW_DEVICE_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)
 
 }
 
+#[test]
+fn test_regex_compilation_14() {
+    use regex::Regex;
+    let _: &Regex = &NETWORK_INTERFACE_BOND_PRIMARY_RE;
+    let _: &Regex = &NETWORK_INTERFACE_BRIDGE_PORTS_RE;
+    let _: &Regex = &NETWORK_INTERFACE_IFACE_RE;
+    let _: &Regex = &NETWORK_INTERFACE_OVS_BONDS_RE;
+    let _: &Regex = &NETWORK_INTERFACE_OVS_BRIDGE_RE;
+    let _: &Regex = &NETWORK_INTERFACE_OVS_PORTS_RE;
+    let _: &Regex = &NETWORK_INTERFACE_SLAVES_RE;
+    let _: &Regex = &NETWORK_INTERFACE_VLAN_RAW_DEVICE_RE;
+}
 #[api(
     properties: {
         active: {
@@ -4742,6 +4826,11 @@ PVE_QM_HOSTPCI_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_15() {
+    use regex::Regex;
+    let _: &Regex = &PVE_QM_HOSTPCI_MAPPING_RE;
+}
 #[api(
     default_key: "host",
     properties: {
@@ -4879,6 +4968,13 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_16() {
+    use regex::Regex;
+    let _: &Regex = &PVE_QM_IDE_MODEL_RE;
+    let _: &Regex = &PVE_QM_IDE_SERIAL_RE;
+    let _: &Regex = &PVE_QM_IDE_SIZE_RE;
+}
 #[api(
     default_key: "file",
     properties: {
@@ -5904,6 +6000,16 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_17() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_CONFIG_AFFINITY_RE;
+    let _: &Regex = &QEMU_CONFIG_BOOTDISK_RE;
+    let _: &Regex = &QEMU_CONFIG_PARENT_RE;
+    let _: &Regex = &QEMU_CONFIG_SSHKEYS_RE;
+    let _: &Regex = &QEMU_CONFIG_TAGS_RE;
+    let _: &Regex = &QEMU_CONFIG_VMSTATESTORAGE_RE;
+}
 #[api(
     properties: {
         acpi: {
@@ -7041,6 +7147,11 @@ QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_18() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_CONFIG_EFIDISK0_SIZE_RE;
+}
 #[api(
     default_key: "file",
     properties: {
@@ -7398,6 +7509,12 @@ QEMU_CONFIG_NET_MACADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_19() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_CONFIG_NET_BRIDGE_RE;
+    let _: &Regex = &QEMU_CONFIG_NET_MACADDR_RE;
+}
 #[api(
     default_key: "model",
     key_alias_info: proxmox_schema::KeyAliasInfo::new(
@@ -7688,6 +7805,12 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_20() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_CONFIG_SATA_SERIAL_RE;
+    let _: &Regex = &QEMU_CONFIG_SATA_SIZE_RE;
+}
 #[api(
     default_key: "file",
     properties: {
@@ -8015,6 +8138,12 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_21() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_CONFIG_SCSI_SERIAL_RE;
+    let _: &Regex = &QEMU_CONFIG_SCSI_SIZE_RE;
+}
 #[api(
     default_key: "file",
     properties: {
@@ -8467,6 +8596,11 @@ QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_22() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_CONFIG_TPMSTATE0_SIZE_RE;
+}
 #[api(
     default_key: "file",
     properties: {
@@ -8537,6 +8671,11 @@ QEMU_CONFIG_USB_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_23() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_CONFIG_USB_MAPPING_RE;
+}
 #[api(
     default_key: "host",
     properties: {
@@ -8696,6 +8835,12 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_24() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_CONFIG_VIRTIO_SERIAL_RE;
+    let _: &Regex = &QEMU_CONFIG_VIRTIO_SIZE_RE;
+}
 #[api(
     default_key: "file",
     properties: {
@@ -9021,6 +9166,11 @@ QEMU_CONFIG_VIRTIOFS_DIRID_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_25() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_CONFIG_VIRTIOFS_DIRID_RE;
+}
 #[api(
     default_key: "dirid",
     properties: {
@@ -10011,6 +10161,12 @@ SDN_CONTROLLER_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F
 
 }
 
+#[test]
+fn test_regex_compilation_26() {
+    use regex::Regex;
+    let _: &Regex = &SDN_CONTROLLER_ISIS_IFACES_RE;
+    let _: &Regex = &SDN_CONTROLLER_ISIS_NET_RE;
+}
 #[api(
     properties: {
         asn: {
@@ -10158,6 +10314,12 @@ SDN_CONTROLLER_PENDING_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\
 
 }
 
+#[test]
+fn test_regex_compilation_27() {
+    use regex::Regex;
+    let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_IFACES_RE;
+    let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_NET_RE;
+}
 #[api(
     properties: {
         asn: {
@@ -10447,6 +10609,12 @@ SDN_ZONE_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_28() {
+    use regex::Regex;
+    let _: &Regex = &SDN_ZONE_EXITNODES_RE;
+    let _: &Regex = &SDN_ZONE_EXITNODES_PRIMARY_RE;
+}
 #[api(
     properties: {
         "advertise-subnets": {
@@ -10715,6 +10883,12 @@ SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9]
 
 }
 
+#[test]
+fn test_regex_compilation_29() {
+    use regex::Regex;
+    let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_RE;
+    let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE;
+}
 #[api(
     properties: {
         "advertise-subnets": {
@@ -11038,6 +11212,11 @@ START_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_30() {
+    use regex::Regex;
+    let _: &Regex = &START_QEMU_MIGRATEDFROM_RE;
+}
 #[api(
     properties: {
         "force-cpu": {
@@ -11199,6 +11378,11 @@ STOP_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_31() {
+    use regex::Regex;
+    let _: &Regex = &STOP_QEMU_MIGRATEDFROM_RE;
+}
 #[api(
     properties: {
         keepActive: {
@@ -11293,6 +11477,11 @@ STORAGE_INFO_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 
 }
 
+#[test]
+fn test_regex_compilation_32() {
+    use regex::Regex;
+    let _: &Regex = &STORAGE_INFO_STORAGE_RE;
+}
 #[api(
     properties: {
         active: {
