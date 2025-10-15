@@ -58,7 +58,9 @@ fn normalize_url(mut api_url: String) -> String {
 }
 
 fn check_ticket_userid(ticket_userid: &str, expected_userid: &str) -> Result<(), ResponseError> {
-    if ticket_userid != expected_userid.trim_end_matches("@quarantine") {
+    if ticket_userid.trim_end_matches("@quarantine")
+        != expected_userid.trim_end_matches("@quarantine")
+    {
         return Err("returned ticket contained unexpected userid".into());
     }
     Ok(())
@@ -186,9 +188,7 @@ impl Login {
         let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_slice(body)?;
         let response = response.data.ok_or("missing response data")?;
 
-        if response.username != self.userid {
-            return Err("ticket response contained unexpected userid".into());
-        }
+        check_ticket_userid(&response.username, &self.userid)?;
 
         // if a ticket was provided via a cookie, use it like a normal ticket
         if let Some(ticket) = cookie_ticket {
@@ -380,9 +380,7 @@ impl SecondFactorChallenge {
         let response: api::ApiResponse<api::CreateTicketResponse> = serde_json::from_slice(body)?;
         let response = response.data.ok_or("missing response data")?;
 
-        if response.username != self.userid {
-            return Err("ticket response contained unexpected userid".into());
-        }
+        check_ticket_userid(&response.username, &self.userid)?;
 
         // get the ticket from:
         // 1. the cookie if possible -> new HttpOnly authentication outside of the browser
