@@ -26,7 +26,6 @@ Vcs-Git: git://git.proxmox.com/git/proxmox.git
 Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
 Homepage: https://git.proxmox.com/?p=proxmox.git
 X-Cargo-Crate: pve-api-types
-Rules-Requires-Root: no
 
 Package: librust-pve-api-types-dev
 Architecture: any
@@ -56,8 +55,8 @@ Provides:
  librust-pve-api-types-8+default-dev (= ${binary:Version}),
  librust-pve-api-types-8.0-dev (= ${binary:Version}),
  librust-pve-api-types-8.0+default-dev (= ${binary:Version}),
- librust-pve-api-types-8.0.2-dev (= ${binary:Version}),
- librust-pve-api-types-8.0.2+default-dev (= ${binary:Version})
+ librust-pve-api-types-8.0.3-dev (= ${binary:Version}),
+ librust-pve-api-types-8.0.3+default-dev (= ${binary:Version})
 Description: Proxmox VE API types - Rust source code
  Source code for Debianized Rust crate "pve-api-types"
 
@@ -73,7 +72,7 @@ Depends:
 Provides:
  librust-pve-api-types-8+client-dev (= ${binary:Version}),
  librust-pve-api-types-8.0+client-dev (= ${binary:Version}),
- librust-pve-api-types-8.0.2+client-dev (= ${binary:Version})
+ librust-pve-api-types-8.0.3+client-dev (= ${binary:Version})
 Description: Proxmox VE API types - feature "client"
  This metapackage enables feature "client" for the Rust pve-api-types crate, by
  pulling in any additional dependencies needed by that feature.
@@ -88,7 +87,7 @@ Depends:
 Provides:
  librust-pve-api-types-8+client-util-dev (= ${binary:Version}),
  librust-pve-api-types-8.0+client-util-dev (= ${binary:Version}),
- librust-pve-api-types-8.0.2+client-util-dev (= ${binary:Version})
+ librust-pve-api-types-8.0.3+client-util-dev (= ${binary:Version})
 Description: Proxmox VE API types - feature "client-util"
  This metapackage enables feature "client-util" for the Rust pve-api-types
  crate, by pulling in any additional dependencies needed by that feature.
