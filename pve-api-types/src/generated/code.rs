@@ -295,7 +295,6 @@
 /// - /nodes/{node}/qemu/{vmid}/move_disk
 /// - /nodes/{node}/qemu/{vmid}/mtunnel
 /// - /nodes/{node}/qemu/{vmid}/mtunnelwebsocket
-/// - /nodes/{node}/qemu/{vmid}/pending
 /// - /nodes/{node}/qemu/{vmid}/resize
 /// - /nodes/{node}/qemu/{vmid}/rrd
 /// - /nodes/{node}/qemu/{vmid}/rrddata
@@ -605,6 +604,16 @@ pub trait PveClient {
         snapshot: Option<String>,
     ) -> Result<QemuConfig, Error> {
         Err(Error::Other("qemu_get_config not implemented"))
+    }
+
+    /// Get the virtual machine configuration with both current and pending
+    /// values.
+    async fn qemu_get_pending(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<QemuPendingConfigValue>, Error> {
+        Err(Error::Other("qemu_get_pending not implemented"))
     }
 
     /// Get virtual machine status.
@@ -1083,6 +1092,17 @@ where
             .maybe_bool_arg("current", current)
             .maybe_arg("snapshot", &snapshot)
             .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get the virtual machine configuration with both current and pending
+    /// values.
+    async fn qemu_get_pending(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<QemuPendingConfigValue>, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/pending");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 

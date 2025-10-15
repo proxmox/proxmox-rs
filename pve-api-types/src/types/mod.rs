@@ -216,3 +216,32 @@ impl TaskStatus {
         self.exitstatus.as_ref().map(|status| status == "OK")
     }
 }
+
+// Note: The PVE APi defines everything as String, because there is no notation for Value
+// in the perl API. So we manually define it here.
+#[api(
+    properties: {
+        delete: {
+            maximum: 2,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+#[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
+/// Get the virtual machine configuration with both current and pending values.
+///
+/// (`GET /api2/json/nodes/{node}/qemu/{vmid}/pending) -> Vec<QemuPendingConfigValue>`
+pub struct QemuPendingConfigValue {
+    /// Configuration option name.
+    pub key: String,
+    /// Indicates a pending delete request if present and not 0. The value 2 indicates a force-delete request.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<u8>,
+    /// Current value.
+    pub value: Option<Value>,
+    /// Pending value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending: Option<Value>,
+}

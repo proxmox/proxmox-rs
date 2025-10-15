@@ -221,6 +221,7 @@ api(DELETE => '/nodes/{node}/tasks/{upid}',     'stop_task');
 
 api(GET => '/nodes/{node}/qemu', 'list_qemu', 'param-name' => 'FixmeListQemu', 'return-name' => 'VmEntry');
 api(GET => '/nodes/{node}/qemu/{vmid}/config', 'qemu_get_config', 'param-name' => 'FixmeQemuGetConfig', 'return-name' => 'QemuConfig');
+api(GET => '/nodes/{node}/qemu/{vmid}/pending', 'qemu_get_pending', 'param-name' => 'FixmeQemuGetPending', 'output-type' => 'Vec<QemuPendingConfigValue>');
 api(GET => '/nodes/{node}/qemu/{vmid}/status/current', 'qemu_get_status', 'return-name' => 'QemuStatus');
 # api(POST => '/nodes/{node}/qemu/{vmid}/config', 'qemu_update_config_async', 'param-name' => 'UpdateQemuConfig');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/start',    'start_qemu_async',    'output-type' => 'PveUpid', 'param-name' => 'StartQemu');
