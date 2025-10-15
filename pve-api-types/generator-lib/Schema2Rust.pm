@@ -87,14 +87,16 @@ my sub api_to_string : prototype($$$$$);
 # $derive_optional => For structs only, if an api entry contains *only* the 'optional' flag then
 #     we can just leave out the schema completely.
 sub api_to_string : prototype($$$$$) {
-    my ($indent, $out, $api, $derive_optional, $regexes_fh) = @_;
+    my ($indent, $out, $api, $derive_optional, $regexes_out) = @_;
 
     return if !$API || !$api->%*;
 
     $derive_optional //= '';
 
     if (my $regexes = $api->{-regexes}) {
+        my $regexes_fh = $regexes_out->{fh};
         for my $name (sort keys %$regexes) {
+            push $regexes_out->{names}->@*, $name;
             my $value = $regexes->{$name};
             if (ref($value) eq 'ARRAY') {
                 my $comma = '';
@@ -150,7 +152,7 @@ sub api_to_string : prototype($$$$$) {
             if ($value->%*) {
                 my $inner_str = '';
                 open(my $inner_fh, '>', \$inner_str);
-                api_to_string("$indent    ", $inner_fh, $value, $next_derive_optional, $regexes_fh);
+                api_to_string("$indent    ", $inner_fh, $value, $next_derive_optional, $regexes_out);
                 close($inner_fh);
 
                 if (length($inner_str)) {
@@ -176,6 +178,7 @@ sub api_to_string : prototype($$$$$) {
     }
 }
 
+our $regex_test_count = 0;
 my sub print_api_string : prototype($$$$) {
     my ($out, $api, $kind, $rust_type_name) = @_;
     return '' if !$API;
@@ -186,13 +189,23 @@ my sub print_api_string : prototype($$$$) {
     my $regexes_str = '';
     open(my $api_str_fh, '>', \$api_str);
     open(my $regexes_fh, '>', \$regexes_str);
-    api_to_string("    ", $api_str_fh, $api, $kind, $regexes_fh);
+    my $regexes_out = { fh => $regexes_fh, names => [] };
+    api_to_string("    ", $api_str_fh, $api, $kind, $regexes_out);
     close($regexes_fh);
     close($api_str_fh);
     if (length($regexes_str)) {
         print {$out} "const_regex! {\n\n";
         print {$out} $regexes_str;
         print {$out} "\n}\n\n";
+
+        ++$regex_test_count;
+        print {$out} "#[test]\n";
+        print {$out} "fn test_regex_compilation_${regex_test_count}() {\n";
+        print {$out} "    use regex::Regex;\n";
+        for my $name ($regexes_out->{names}->@*) {
+            print {$out} "    let _: &Regex = &$name;\n";
+        }
+        print {$out} "}\n";
     }
     if (length($api_str)) {
         print {$out} "#[api(\n${api_str})]\n";
@@ -235,8 +248,6 @@ my sub print_struct : prototype($$$) {
     }
     print {$out} "}\n";
 
-    my $regexes_str = '';
-
     for my $array (@arrays) {
         my $type_name = $array->{array_type_name};
         next if $done_array_types->{$type_name};
@@ -248,8 +259,10 @@ my sub print_struct : prototype($$$) {
         my $api_str = '';
         if ($API) {
             open(my $api_str_fh, '>', \$api_str);
+            my $regexes_str = '';
             open(my $regexes_fh, '>', \$regexes_str);
-            api_to_string(' 'x8, $api_str_fh, $array->{api}, 'array-field', $regexes_fh);
+            my $regexes_out = { fh => $regexes_fh, names => [] };
+            api_to_string(' 'x8, $api_str_fh, $array->{api}, 'array-field', $regexes_out);
         }
         print {$out} "    $array->{'field-type'} => {\n${api_str}";
         print {$out} "    }\n"; # field type and its api doc
