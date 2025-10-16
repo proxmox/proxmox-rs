@@ -5,6 +5,7 @@
 use std::collections::HashMap;
 
 use anyhow::{bail, Error};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use proxmox_schema::{api, const_regex, ApiStringFormat, ApiType, Schema, StringSchema};
