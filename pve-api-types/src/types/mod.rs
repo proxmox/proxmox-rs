@@ -217,18 +217,6 @@ impl TaskStatus {
     }
 }
 
-// Note: The PVE APi defines everything as String, because there is no notation for Value
-// in the perl API. So we manually define it here.
-#[api(
-    properties: {
-        delete: {
-            maximum: 2,
-            minimum: 0,
-            optional: true,
-            type: Integer,
-        },
-    },
-)]
 #[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
 /// Get the virtual machine configuration with both current and pending values.
 ///
