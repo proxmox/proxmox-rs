@@ -631,6 +631,16 @@ pub trait PveClient {
         Err(Error::Other("qemu_migrate_preconditions not implemented"))
     }
 
+    /// Set virtual machine options (asynchronous API).
+    async fn qemu_update_config_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateQemuConfig,
+    ) -> Result<Option<PveUpid>, Error> {
+        Err(Error::Other("qemu_update_config_async not implemented"))
+    }
+
     /// Release global lock for SDN configuration
     async fn release_sdn_lock(&self, params: ReleaseSdnLock) -> Result<(), Error> {
         Err(Error::Other("release_sdn_lock not implemented"))
@@ -1123,6 +1133,17 @@ where
             .maybe_arg("target", &target)
             .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Set virtual machine options (asynchronous API).
+    async fn qemu_update_config_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateQemuConfig,
+    ) -> Result<Option<PveUpid>, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config");
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Release global lock for SDN configuration

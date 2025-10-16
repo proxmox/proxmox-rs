@@ -11742,6 +11742,2592 @@ pub struct TaskStatus {
     pub user: String,
 }
 
+const_regex! {
+
+UPDATE_QEMU_CONFIG_AFFINITY_RE = r##"^(\s*\d+(-\d+)?\s*)(,\s*\d+(-\d+)?\s*)?$"##;
+UPDATE_QEMU_CONFIG_BOOTDISK_RE = r##"^(ide|sata|scsi|virtio|efidisk|tpmstate)\d+$"##;
+UPDATE_QEMU_CONFIG_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+UPDATE_QEMU_CONFIG_IMPORT_WORKING_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
+UPDATE_QEMU_CONFIG_REVERT_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+UPDATE_QEMU_CONFIG_SSHKEYS_RE = r##"^[-%a-zA-Z0-9_.!~*'()]*$"##;
+UPDATE_QEMU_CONFIG_TAGS_RE = r##"^(?i)[a-z0-9_][a-z0-9_\-+.]*$"##;
+UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_33() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_AFFINITY_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_BOOTDISK_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_DELETE_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_IMPORT_WORKING_STORAGE_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_REVERT_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_SSHKEYS_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_TAGS_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE;
+}
+#[api(
+    properties: {
+        acpi: {
+            default: true,
+            optional: true,
+        },
+        affinity: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_AFFINITY_RE),
+            optional: true,
+            type: String,
+        },
+        agent: {
+            format: &ApiStringFormat::PropertyString(&QemuConfigAgent::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        "amd-sev": {
+            format: &ApiStringFormat::PropertyString(&PveQemuSevFmt::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        arch: {
+            optional: true,
+            type: QemuConfigArch,
+        },
+        args: {
+            optional: true,
+            type: String,
+        },
+        audio0: {
+            format: &ApiStringFormat::PropertyString(&QemuConfigAudio0::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        autostart: {
+            default: false,
+            optional: true,
+        },
+        background_delay: {
+            maximum: 30,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        balloon: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        bios: {
+            optional: true,
+            type: QemuConfigBios,
+        },
+        boot: {
+            format: &ApiStringFormat::PropertyString(&PveQmBoot::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        bootdisk: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_BOOTDISK_RE),
+            optional: true,
+            type: String,
+        },
+        cdrom: {
+            format: &ApiStringFormat::PropertyString(&PveQmIde::API_SCHEMA),
+            optional: true,
+            type: String,
+            type_text: "<volume>",
+        },
+        cicustom: {
+            format: &ApiStringFormat::PropertyString(&PveQmCicustom::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        cipassword: {
+            optional: true,
+            type: String,
+        },
+        citype: {
+            optional: true,
+            type: QemuConfigCitype,
+        },
+        ciupgrade: {
+            default: true,
+            optional: true,
+        },
+        ciuser: {
+            optional: true,
+            type: String,
+        },
+        cores: {
+            default: 1,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        cpu: {
+            format: &ApiStringFormat::PropertyString(&PveVmCpuConf::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        cpulimit: {
+            default: 0.0,
+            maximum: 128.0,
+            minimum: 0.0,
+            optional: true,
+        },
+        cpuunits: {
+            default: 1024,
+            maximum: 262144,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        delete: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_DELETE_RE),
+            optional: true,
+            type: String,
+        },
+        description: {
+            max_length: 8192,
+            optional: true,
+            type: String,
+        },
+        digest: {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        efidisk0: {
+            format: &ApiStringFormat::PropertyString(&UpdateQemuConfigEfidisk0::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        force: {
+            default: false,
+            optional: true,
+        },
+        freeze: {
+            default: false,
+            optional: true,
+        },
+        hookscript: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_volume_id),
+            optional: true,
+            type: String,
+        },
+        hostpci: {
+            type: UpdateQemuConfigHostpciArray,
+        },
+        hotplug: {
+            default: "network,disk,usb",
+            optional: true,
+            type: String,
+        },
+        hugepages: {
+            optional: true,
+            type: QemuConfigHugepages,
+        },
+        ide: {
+            type: UpdateQemuConfigIdeArray,
+        },
+        "import-working-storage": {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_IMPORT_WORKING_STORAGE_RE),
+            optional: true,
+            type: String,
+        },
+        ipconfig: {
+            type: UpdateQemuConfigIpconfigArray,
+        },
+        ivshmem: {
+            format: &ApiStringFormat::PropertyString(&QemuConfigIvshmem::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        keephugepages: {
+            default: false,
+            optional: true,
+        },
+        keyboard: {
+            optional: true,
+            type: QemuConfigKeyboard,
+        },
+        kvm: {
+            default: true,
+            optional: true,
+        },
+        localtime: {
+            default: false,
+            optional: true,
+        },
+        lock: {
+            optional: true,
+            type: QemuConfigLock,
+        },
+        machine: {
+            format: &ApiStringFormat::PropertyString(&QemuConfigMachine::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        memory: {
+            format: &ApiStringFormat::PropertyString(&QemuConfigMemory::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        migrate_downtime: {
+            default: 0.1,
+            minimum: 0.0,
+            optional: true,
+        },
+        migrate_speed: {
+            default: 0,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        name: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_dns_name),
+            optional: true,
+            type: String,
+        },
+        nameserver: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_address),
+            optional: true,
+            type: String,
+        },
+        net: {
+            type: UpdateQemuConfigNetArray,
+        },
+        numa: {
+            default: false,
+            optional: true,
+        },
+        numa_array: {
+            type: UpdateQemuConfigNumaArray,
+        },
+        onboot: {
+            default: false,
+            optional: true,
+        },
+        ostype: {
+            optional: true,
+            type: QemuConfigOstype,
+        },
+        parallel: {
+            type: UpdateQemuConfigParallelArray,
+        },
+        protection: {
+            default: false,
+            optional: true,
+        },
+        reboot: {
+            default: true,
+            optional: true,
+        },
+        revert: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_REVERT_RE),
+            optional: true,
+            type: String,
+        },
+        rng0: {
+            format: &ApiStringFormat::PropertyString(&PveQmRng::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        sata: {
+            type: UpdateQemuConfigSataArray,
+        },
+        scsi: {
+            type: UpdateQemuConfigScsiArray,
+        },
+        scsihw: {
+            optional: true,
+            type: QemuConfigScsihw,
+        },
+        searchdomain: {
+            optional: true,
+            type: String,
+        },
+        serial: {
+            type: UpdateQemuConfigSerialArray,
+        },
+        shares: {
+            default: 1000,
+            maximum: 50000,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        skiplock: {
+            default: false,
+            optional: true,
+        },
+        smbios1: {
+            format: &ApiStringFormat::PropertyString(&PveQmSmbios1::API_SCHEMA),
+            max_length: 512,
+            optional: true,
+            type: String,
+        },
+        smp: {
+            default: 1,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        sockets: {
+            default: 1,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        spice_enhancements: {
+            format: &ApiStringFormat::PropertyString(&QemuConfigSpiceEnhancements::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        sshkeys: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_SSHKEYS_RE),
+            optional: true,
+            type: String,
+        },
+        startdate: {
+            default: "now",
+            optional: true,
+            type: String,
+            type_text: "(now | YYYY-MM-DD | YYYY-MM-DDTHH:MM:SS)",
+        },
+        startup: {
+            optional: true,
+            type: String,
+            type_text: "[[order=]\\d+] [,up=\\d+] [,down=\\d+] ",
+        },
+        tablet: {
+            default: true,
+            optional: true,
+        },
+        tags: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_TAGS_RE),
+            optional: true,
+            type: String,
+        },
+        tdf: {
+            default: false,
+            optional: true,
+        },
+        template: {
+            default: false,
+            optional: true,
+        },
+        tpmstate0: {
+            format: &ApiStringFormat::PropertyString(&UpdateQemuConfigTpmstate0::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        unused: {
+            type: UpdateQemuConfigUnusedArray,
+        },
+        usb: {
+            type: UpdateQemuConfigUsbArray,
+        },
+        vcpus: {
+            default: 0,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        vga: {
+            format: &ApiStringFormat::PropertyString(&QemuConfigVga::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        virtio: {
+            type: UpdateQemuConfigVirtioArray,
+        },
+        virtiofs: {
+            type: UpdateQemuConfigVirtiofsArray,
+        },
+        vmgenid: {
+            default: "1 (autogenerated)",
+            optional: true,
+            type: String,
+        },
+        vmstatestorage: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE),
+            optional: true,
+            type: String,
+        },
+        watchdog: {
+            format: &ApiStringFormat::PropertyString(&PveQmWatchdog::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateQemuConfig {
+    /// Enable/disable ACPI.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub acpi: Option<bool>,
+
+    /// List of host cores used to execute guest processes, for example:
+    /// 0,5,8-11
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub affinity: Option<String>,
+
+    /// Enable/disable communication with the QEMU Guest Agent and its
+    /// properties.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub agent: Option<String>,
+
+    /// Secure Encrypted Virtualization (SEV) features by AMD CPUs
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "amd-sev")]
+    pub amd_sev: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arch: Option<QemuConfigArch>,
+
+    /// Arbitrary arguments passed to kvm.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub args: Option<String>,
+
+    /// Configure a audio device, useful in combination with QXL/Spice.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audio0: Option<String>,
+
+    /// Automatic restart after crash (currently ignored).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub autostart: Option<bool>,
+
+    /// Time to wait for the task to finish. We return 'null' if the task finish
+    /// within that time.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub background_delay: Option<u8>,
+
+    /// Amount of target RAM for the VM in MiB. Using zero disables the ballon
+    /// driver.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub balloon: Option<u64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bios: Option<QemuConfigBios>,
+
+    /// Specify guest boot order. Use the 'order=' sub-property as usage with no
+    /// key or 'legacy=' is deprecated.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub boot: Option<String>,
+
+    /// Enable booting from specified disk. Deprecated: Use 'boot:
+    /// order=foo;bar' instead.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bootdisk: Option<String>,
+
+    /// This is an alias for option -ide2
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cdrom: Option<String>,
+
+    /// cloud-init: Specify custom files to replace the automatically generated
+    /// ones at start.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cicustom: Option<String>,
+
+    /// cloud-init: Password to assign the user. Using this is generally not
+    /// recommended. Use ssh keys instead. Also note that older cloud-init
+    /// versions do not support hashed passwords.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cipassword: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub citype: Option<QemuConfigCitype>,
+
+    /// cloud-init: do an automatic package upgrade after the first boot.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ciupgrade: Option<bool>,
+
+    /// cloud-init: User name to change ssh keys and password for instead of the
+    /// image's configured default user.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ciuser: Option<String>,
+
+    /// The number of cores per socket.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cores: Option<u64>,
+
+    /// Emulated CPU type.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpu: Option<String>,
+
+    /// Limit of CPU usage.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpulimit: Option<f64>,
+
+    /// CPU weight for a VM, will be clamped to [1, 10000] in cgroup v2.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpuunits: Option<u32>,
+
+    /// A list of settings you want to delete.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<String>,
+
+    /// Description for the VM. Shown in the web-interface VM's summary. This is
+    /// saved as comment inside the configuration file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    /// Prevent changes if current configuration file has different SHA1 digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Configure a disk for storing EFI vars. Use the special syntax
+    /// STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Note that SIZE_IN_GiB
+    /// is ignored here and that the default EFI vars are copied to the volume
+    /// instead. Use STORAGE_ID:0 and the 'import-from' parameter to import from
+    /// an existing volume.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub efidisk0: Option<String>,
+
+    /// Force physical removal. Without this, we simple remove the disk from the
+    /// config file and create an additional configuration entry called
+    /// 'unused[n]', which contains the volume ID. Unlink of unused[n] always
+    /// cause physical removal.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub force: Option<bool>,
+
+    /// Freeze CPU at startup (use 'c' monitor command to start execution).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub freeze: Option<bool>,
+
+    /// Script that will be executed during various steps in the vms lifetime.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hookscript: Option<String>,
+
+    /// Map host PCI devices into guest.
+    #[serde(flatten)]
+    pub hostpci: UpdateQemuConfigHostpciArray,
+
+    /// Selectively enable hotplug features. This is a comma separated list of
+    /// hotplug features: 'network', 'disk', 'cpu', 'memory', 'usb' and
+    /// 'cloudinit'. Use '0' to disable hotplug completely. Using '1' as value
+    /// is an alias for the default `network,disk,usb`. USB hotplugging is
+    /// possible for guests with machine version >= 7.1 and ostype l26 or
+    /// windows > 7.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hotplug: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hugepages: Option<QemuConfigHugepages>,
+
+    /// Use volume as IDE hard disk or CD-ROM (n is 0 to 3). Use the special
+    /// syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0
+    /// and the 'import-from' parameter to import from an existing volume.
+    #[serde(flatten)]
+    pub ide: UpdateQemuConfigIdeArray,
+
+    /// A file-based storage with 'images' content-type enabled, which is used
+    /// as an intermediary extraction storage during import. Defaults to the
+    /// source storage.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "import-working-storage")]
+    pub import_working_storage: Option<String>,
+
+    /// cloud-init: Specify IP addresses and gateways for the corresponding
+    /// interface.
+    ///
+    /// IP addresses use CIDR notation, gateways are optional but need an IP of
+    /// the same type specified.
+    ///
+    /// The special string 'dhcp' can be used for IP addresses to use DHCP, in
+    /// which case no explicit gateway should be provided.
+    /// For IPv6 the special string 'auto' can be used to use stateless
+    /// autoconfiguration. This requires cloud-init 19.4 or newer.
+    ///
+    /// If cloud-init is enabled and neither an IPv4 nor an IPv6 address is
+    /// specified, it defaults to using dhcp on IPv4.
+    #[serde(flatten)]
+    pub ipconfig: UpdateQemuConfigIpconfigArray,
+
+    /// Inter-VM shared memory. Useful for direct communication between VMs, or
+    /// to the host.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ivshmem: Option<String>,
+
+    /// Use together with hugepages. If enabled, hugepages will not not be
+    /// deleted after VM shutdown and can be used for subsequent starts.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub keephugepages: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub keyboard: Option<QemuConfigKeyboard>,
+
+    /// Enable/disable KVM hardware virtualization.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kvm: Option<bool>,
+
+    /// Set the real time clock (RTC) to local time. This is enabled by default
+    /// if the `ostype` indicates a Microsoft Windows OS.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub localtime: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lock: Option<QemuConfigLock>,
+
+    /// Specify the QEMU machine.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub machine: Option<String>,
+
+    /// Memory properties.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub memory: Option<String>,
+
+    /// Set maximum tolerated downtime (in seconds) for migrations. Should the
+    /// migration not be able to converge in the very end, because too much
+    /// newly dirtied RAM needs to be transferred, the limit will be increased
+    /// automatically step-by-step until migration can converge.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migrate_downtime: Option<f64>,
+
+    /// Set maximum speed (in MB/s) for migrations. Value 0 is no limit.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migrate_speed: Option<u64>,
+
+    /// Set a name for the VM. Only used on the configuration web interface.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+
+    /// cloud-init: Sets DNS server IP address for a container. Create will
+    /// automatically use the setting from the host if neither searchdomain nor
+    /// nameserver are set.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nameserver: Option<String>,
+
+    /// Specify network devices.
+    #[serde(flatten)]
+    pub net: UpdateQemuConfigNetArray,
+
+    /// Enable/disable NUMA.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub numa: Option<bool>,
+
+    /// NUMA topology.
+    #[serde(flatten)]
+    pub numa_array: UpdateQemuConfigNumaArray,
+
+    /// Specifies whether a VM will be started during system bootup.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub onboot: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ostype: Option<QemuConfigOstype>,
+
+    /// Map host parallel devices (n is 0 to 2).
+    #[serde(flatten)]
+    pub parallel: UpdateQemuConfigParallelArray,
+
+    /// Sets the protection flag of the VM. This will disable the remove VM and
+    /// remove disk operations.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection: Option<bool>,
+
+    /// Allow reboot. If set to '0' the VM exit on reboot.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reboot: Option<bool>,
+
+    /// Revert a pending change.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub revert: Option<String>,
+
+    /// Configure a VirtIO-based Random Number Generator.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rng0: Option<String>,
+
+    /// Use volume as SATA hard disk or CD-ROM (n is 0 to 5). Use the special
+    /// syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0
+    /// and the 'import-from' parameter to import from an existing volume.
+    #[serde(flatten)]
+    pub sata: UpdateQemuConfigSataArray,
+
+    /// Use volume as SCSI hard disk or CD-ROM (n is 0 to 30). Use the special
+    /// syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0
+    /// and the 'import-from' parameter to import from an existing volume.
+    #[serde(flatten)]
+    pub scsi: UpdateQemuConfigScsiArray,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scsihw: Option<QemuConfigScsihw>,
+
+    /// cloud-init: Sets DNS search domains for a container. Create will
+    /// automatically use the setting from the host if neither searchdomain nor
+    /// nameserver are set.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub searchdomain: Option<String>,
+
+    /// Create a serial device inside the VM (n is 0 to 3)
+    #[serde(flatten)]
+    pub serial: UpdateQemuConfigSerialArray,
+
+    /// Amount of memory shares for auto-ballooning. The larger the number is,
+    /// the more memory this VM gets. Number is relative to weights of all other
+    /// running VMs. Using zero disables auto-ballooning. Auto-ballooning is
+    /// done by pvestatd.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shares: Option<u16>,
+
+    /// Ignore locks - only root is allowed to use this option.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skiplock: Option<bool>,
+
+    /// Specify SMBIOS type 1 fields.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smbios1: Option<String>,
+
+    /// The number of CPUs. Please use option -sockets instead.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smp: Option<u64>,
+
+    /// The number of CPU sockets.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sockets: Option<u64>,
+
+    /// Configure additional enhancements for SPICE.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub spice_enhancements: Option<String>,
+
+    /// cloud-init: Setup public SSH keys (one key per line, OpenSSH format).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sshkeys: Option<String>,
+
+    /// Set the initial date of the real time clock. Valid format for date
+    /// are:'now' or '2006-06-17T16:01:21' or '2006-06-17'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub startdate: Option<String>,
+
+    /// Startup and shutdown behavior. Order is a non-negative number defining
+    /// the general startup order. Shutdown in done with reverse ordering.
+    /// Additionally you can set the 'up' or 'down' delay in seconds, which
+    /// specifies a delay to wait before the next VM is started or stopped.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub startup: Option<String>,
+
+    /// Enable/disable the USB tablet device.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tablet: Option<bool>,
+
+    /// Tags of the VM. This is only meta information.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tags: Option<String>,
+
+    /// Enable/disable time drift fix.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tdf: Option<bool>,
+
+    /// Enable/disable Template.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<bool>,
+
+    /// Configure a Disk for storing TPM state. The format is fixed to 'raw'.
+    /// Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume.
+    /// Note that SIZE_IN_GiB is ignored here and 4 MiB will be used instead.
+    /// Use STORAGE_ID:0 and the 'import-from' parameter to import from an
+    /// existing volume.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tpmstate0: Option<String>,
+
+    /// Reference to unused volumes. This is used internally, and should not be
+    /// modified manually.
+    #[serde(flatten)]
+    pub unused: UpdateQemuConfigUnusedArray,
+
+    /// Configure an USB device (n is 0 to 4, for machine version >= 7.1 and
+    /// ostype l26 or windows > 7, n can be up to 14).
+    #[serde(flatten)]
+    pub usb: UpdateQemuConfigUsbArray,
+
+    /// Number of hotplugged vcpus.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vcpus: Option<u64>,
+
+    /// Configure the VGA hardware.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vga: Option<String>,
+
+    /// Use volume as VIRTIO hard disk (n is 0 to 15). Use the special syntax
+    /// STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and
+    /// the 'import-from' parameter to import from an existing volume.
+    #[serde(flatten)]
+    pub virtio: UpdateQemuConfigVirtioArray,
+
+    /// Configuration for sharing a directory between host and guest using
+    /// Virtio-fs.
+    #[serde(flatten)]
+    pub virtiofs: UpdateQemuConfigVirtiofsArray,
+
+    /// Set VM Generation ID. Use '1' to autogenerate on create or update, pass
+    /// '0' to disable explicitly.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vmgenid: Option<String>,
+
+    /// Default storage for VM state volumes/files.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vmstatestorage: Option<String>,
+
+    /// Create a virtual hardware watchdog device.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub watchdog: Option<String>,
+}
+generate_array_field! {
+    UpdateQemuConfigHostpciArray [ 16 ] :
+    r#"Map host PCI devices into guest."#,
+    String => {
+        description: "Map host PCI devices into guest.",
+        format: &ApiStringFormat::PropertyString(&PveQmHostpci::API_SCHEMA),
+        type: String,
+    }
+    hostpci
+}
+generate_array_field! {
+    UpdateQemuConfigIdeArray [ 4 ] :
+    r#"Use volume as IDE hard disk or CD-ROM (n is 0 to 3). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume."#,
+    String => {
+        description: "Use volume as IDE hard disk or CD-ROM (n is 0 to 3). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.",
+        format: &ApiStringFormat::PropertyString(&UpdateQemuConfigIde::API_SCHEMA),
+        type: String,
+    }
+    ide
+}
+generate_array_field! {
+    UpdateQemuConfigIpconfigArray [ 32 ] :
+    r#"cloud-init: Specify IP addresses and gateways for the corresponding interface.
+
+IP addresses use CIDR notation, gateways are optional but need an IP of the same type specified.
+
+The special string 'dhcp' can be used for IP addresses to use DHCP, in which case no explicit
+gateway should be provided.
+For IPv6 the special string 'auto' can be used to use stateless autoconfiguration. This requires
+cloud-init 19.4 or newer.
+
+If cloud-init is enabled and neither an IPv4 nor an IPv6 address is specified, it defaults to using
+dhcp on IPv4."#,
+    String => {
+        description: "cloud-init: Specify IP addresses and gateways for the corresponding interface.
+
+IP addresses use CIDR notation, gateways are optional but need an IP of the same type specified.
+
+The special string 'dhcp' can be used for IP addresses to use DHCP, in which case no explicit
+gateway should be provided.
+For IPv6 the special string 'auto' can be used to use stateless autoconfiguration. This requires
+cloud-init 19.4 or newer.
+
+If cloud-init is enabled and neither an IPv4 nor an IPv6 address is specified, it defaults to using
+dhcp on IPv4.
+",
+        format: &ApiStringFormat::PropertyString(&PveQmIpconfig::API_SCHEMA),
+        type: String,
+    }
+    ipconfig
+}
+generate_array_field! {
+    UpdateQemuConfigNetArray [ 32 ] :
+    r#"Specify network devices."#,
+    String => {
+        description: "Specify network devices.",
+        format: &ApiStringFormat::PropertyString(&QemuConfigNet::API_SCHEMA),
+        type: String,
+    }
+    net
+}
+generate_array_field! {
+    UpdateQemuConfigNumaArray [ 8 ] :
+    r#"NUMA topology."#,
+    String => {
+        description: "NUMA topology.",
+        format: &ApiStringFormat::PropertyString(&QemuConfigNuma::API_SCHEMA),
+        type: String,
+    }
+    numa_array
+}
+generate_array_field! {
+    UpdateQemuConfigParallelArray [ 3 ] :
+    r#"Map host parallel devices (n is 0 to 2)."#,
+    String => {
+        description: "Map host parallel devices (n is 0 to 2).",
+        type: String,
+    }
+    parallel
+}
+generate_array_field! {
+    UpdateQemuConfigSataArray [ 6 ] :
+    r#"Use volume as SATA hard disk or CD-ROM (n is 0 to 5). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume."#,
+    String => {
+        description: "Use volume as SATA hard disk or CD-ROM (n is 0 to 5). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.",
+        format: &ApiStringFormat::PropertyString(&UpdateQemuConfigSata::API_SCHEMA),
+        type: String,
+    }
+    sata
+}
+generate_array_field! {
+    UpdateQemuConfigScsiArray [ 31 ] :
+    r#"Use volume as SCSI hard disk or CD-ROM (n is 0 to 30). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume."#,
+    String => {
+        description: "Use volume as SCSI hard disk or CD-ROM (n is 0 to 30). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.",
+        format: &ApiStringFormat::PropertyString(&UpdateQemuConfigScsi::API_SCHEMA),
+        type: String,
+    }
+    scsi
+}
+generate_array_field! {
+    UpdateQemuConfigSerialArray [ 4 ] :
+    r#"Create a serial device inside the VM (n is 0 to 3)"#,
+    String => {
+        description: "Create a serial device inside the VM (n is 0 to 3)",
+        type: String,
+    }
+    serial
+}
+generate_array_field! {
+    UpdateQemuConfigUnusedArray [ 256 ] :
+    r#"Reference to unused volumes. This is used internally, and should not be modified manually."#,
+    String => {
+        description: "Reference to unused volumes. This is used internally, and should not be modified manually.",
+        format: &ApiStringFormat::PropertyString(&QemuConfigUnused::API_SCHEMA),
+        type: String,
+    }
+    unused
+}
+generate_array_field! {
+    UpdateQemuConfigUsbArray [ 14 ] :
+    r#"Configure an USB device (n is 0 to 4, for machine version >= 7.1 and ostype l26 or windows > 7, n can be up to 14)."#,
+    String => {
+        description: "Configure an USB device (n is 0 to 4, for machine version >= 7.1 and ostype l26 or windows > 7, n can be up to 14).",
+        format: &ApiStringFormat::PropertyString(&QemuConfigUsb::API_SCHEMA),
+        type: String,
+    }
+    usb
+}
+generate_array_field! {
+    UpdateQemuConfigVirtioArray [ 16 ] :
+    r#"Use volume as VIRTIO hard disk (n is 0 to 15). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume."#,
+    String => {
+        description: "Use volume as VIRTIO hard disk (n is 0 to 15). Use the special syntax STORAGE_ID:SIZE_IN_GiB to allocate a new volume. Use STORAGE_ID:0 and the 'import-from' parameter to import from an existing volume.",
+        format: &ApiStringFormat::PropertyString(&UpdateQemuConfigVirtio::API_SCHEMA),
+        type: String,
+    }
+    virtio
+}
+generate_array_field! {
+    UpdateQemuConfigVirtiofsArray [ 10 ] :
+    r#"Configuration for sharing a directory between host and guest using Virtio-fs."#,
+    String => {
+        description: "Configuration for sharing a directory between host and guest using Virtio-fs.",
+        format: &ApiStringFormat::PropertyString(&QemuConfigVirtiofs::API_SCHEMA),
+        type: String,
+    }
+    virtiofs
+}
+
+const_regex! {
+
+UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_34() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE;
+}
+#[api(
+    default_key: "file",
+    properties: {
+        efitype: {
+            optional: true,
+            type: QemuConfigEfidisk0Efitype,
+        },
+        file: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
+            type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
+        },
+        "import-from": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_absolute_path),
+            optional: true,
+            type: String,
+        },
+        "pre-enrolled-keys": {
+            default: false,
+            optional: true,
+        },
+        size: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE),
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateQemuConfigEfidisk0 {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub efitype: Option<QemuConfigEfidisk0Efitype>,
+
+    /// The drive's backing volume.
+    pub file: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<PveQmIdeFormat>,
+
+    /// Create a new disk, importing from this source (volume ID or absolute
+    /// path). When an absolute path is specified, it's up to you to ensure that
+    /// the source is not actively used by another process during the import!
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "import-from")]
+    pub import_from: Option<String>,
+
+    /// Use am EFI vars template with distribution-specific and Microsoft
+    /// Standard keys enrolled, if used with 'efitype=4m'. Note that this will
+    /// enable Secure Boot by default, though it can still be turned off from
+    /// within the VM.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "pre-enrolled-keys")]
+    pub pre_enrolled_keys: Option<bool>,
+
+    /// Disk size. This is purely informational and has no effect.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+}
+
+const_regex! {
+
+UPDATE_QEMU_CONFIG_IDE_MODEL_RE = r##"^[-%a-zA-Z0-9_.!~*'()]*$"##;
+UPDATE_QEMU_CONFIG_IDE_SERIAL_RE = r##"^[-%a-zA-Z0-9_.!~*'()]*$"##;
+UPDATE_QEMU_CONFIG_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_35() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_MODEL_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SERIAL_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SIZE_RE;
+}
+#[api(
+    default_key: "file",
+    properties: {
+        aio: {
+            optional: true,
+            type: PveQmIdeAio,
+        },
+        backup: {
+            default: false,
+            optional: true,
+        },
+        bps: {
+            optional: true,
+            type: Integer,
+        },
+        bps_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        bps_rd: {
+            optional: true,
+            type: Integer,
+        },
+        bps_rd_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        bps_wr: {
+            optional: true,
+            type: Integer,
+        },
+        bps_wr_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        cache: {
+            optional: true,
+            type: PveQmIdeCache,
+        },
+        detect_zeroes: {
+            default: false,
+            optional: true,
+        },
+        discard: {
+            optional: true,
+            type: PveQmIdeDiscard,
+        },
+        file: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
+            type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
+        },
+        "import-from": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_absolute_path),
+            optional: true,
+            type: String,
+        },
+        iops: {
+            optional: true,
+            type: Integer,
+        },
+        iops_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iops_rd: {
+            optional: true,
+            type: Integer,
+        },
+        iops_rd_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_rd_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iops_wr: {
+            optional: true,
+            type: Integer,
+        },
+        iops_wr_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_wr_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        media: {
+            optional: true,
+            type: PveQmIdeMedia,
+        },
+        model: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_IDE_MODEL_RE),
+            max_length: 120,
+            optional: true,
+            type: String,
+        },
+        replicate: {
+            default: true,
+            optional: true,
+        },
+        rerror: {
+            optional: true,
+            type: PveQmIdeRerror,
+        },
+        serial: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_IDE_SERIAL_RE),
+            max_length: 60,
+            optional: true,
+            type: String,
+        },
+        shared: {
+            default: false,
+            optional: true,
+        },
+        size: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_IDE_SIZE_RE),
+            optional: true,
+            type: String,
+        },
+        snapshot: {
+            default: false,
+            optional: true,
+        },
+        ssd: {
+            default: false,
+            optional: true,
+        },
+        werror: {
+            optional: true,
+            type: PveQmIdeWerror,
+        },
+        wwn: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateQemuConfigIde {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub aio: Option<PveQmIdeAio>,
+
+    /// Whether the drive should be included when making backups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backup: Option<bool>,
+
+    /// Maximum r/w speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps: Option<i64>,
+
+    /// Maximum length of I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_max_length: Option<u64>,
+
+    /// Maximum read speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_rd: Option<i64>,
+
+    /// Maximum length of read I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_rd_max_length: Option<u64>,
+
+    /// Maximum write speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_wr: Option<i64>,
+
+    /// Maximum length of write I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_wr_max_length: Option<u64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cache: Option<PveQmIdeCache>,
+
+    /// Controls whether to detect and try to optimize writes of zeroes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detect_zeroes: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub discard: Option<PveQmIdeDiscard>,
+
+    /// The drive's backing volume.
+    pub file: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<PveQmIdeFormat>,
+
+    /// Create a new disk, importing from this source (volume ID or absolute
+    /// path). When an absolute path is specified, it's up to you to ensure that
+    /// the source is not actively used by another process during the import!
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "import-from")]
+    pub import_from: Option<String>,
+
+    /// Maximum r/w I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops: Option<i64>,
+
+    /// Maximum unthrottled r/w I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_max: Option<i64>,
+
+    /// Maximum length of I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_max_length: Option<u64>,
+
+    /// Maximum read I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd: Option<i64>,
+
+    /// Maximum unthrottled read I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd_max: Option<i64>,
+
+    /// Maximum length of read I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd_max_length: Option<u64>,
+
+    /// Maximum write I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr: Option<i64>,
+
+    /// Maximum unthrottled write I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr_max: Option<i64>,
+
+    /// Maximum length of write I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr_max_length: Option<u64>,
+
+    /// Maximum r/w speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps: Option<f64>,
+
+    /// Maximum unthrottled r/w pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_max: Option<f64>,
+
+    /// Maximum read speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_rd: Option<f64>,
+
+    /// Maximum unthrottled read pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_rd_max: Option<f64>,
+
+    /// Maximum write speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_wr: Option<f64>,
+
+    /// Maximum unthrottled write pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_wr_max: Option<f64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub media: Option<PveQmIdeMedia>,
+
+    /// The drive's reported model name, url-encoded, up to 40 bytes long.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+
+    /// Whether the drive should considered for replication jobs.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub replicate: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rerror: Option<PveQmIdeRerror>,
+
+    /// The drive's reported serial number, url-encoded, up to 20 bytes long.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub serial: Option<String>,
+
+    /// Mark this locally-managed volume as available on all nodes
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared: Option<bool>,
+
+    /// Disk size. This is purely informational and has no effect.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+
+    /// Controls qemu's snapshot mode feature. If activated, changes made to the
+    /// disk are temporary and will be discarded when the VM is shutdown.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<bool>,
+
+    /// Whether to expose this drive as an SSD, rather than a rotational hard
+    /// disk.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ssd: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub werror: Option<PveQmIdeWerror>,
+
+    /// The drive's worldwide name, encoded as 16 bytes hex string, prefixed by
+    /// '0x'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wwn: Option<String>,
+}
+
+const_regex! {
+
+UPDATE_QEMU_CONFIG_SATA_SERIAL_RE = r##"^[-%a-zA-Z0-9_.!~*'()]*$"##;
+UPDATE_QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_36() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SERIAL_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SIZE_RE;
+}
+#[api(
+    default_key: "file",
+    properties: {
+        aio: {
+            optional: true,
+            type: PveQmIdeAio,
+        },
+        backup: {
+            default: false,
+            optional: true,
+        },
+        bps: {
+            optional: true,
+            type: Integer,
+        },
+        bps_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        bps_rd: {
+            optional: true,
+            type: Integer,
+        },
+        bps_rd_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        bps_wr: {
+            optional: true,
+            type: Integer,
+        },
+        bps_wr_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        cache: {
+            optional: true,
+            type: PveQmIdeCache,
+        },
+        detect_zeroes: {
+            default: false,
+            optional: true,
+        },
+        discard: {
+            optional: true,
+            type: PveQmIdeDiscard,
+        },
+        file: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
+            type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
+        },
+        "import-from": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_absolute_path),
+            optional: true,
+            type: String,
+        },
+        iops: {
+            optional: true,
+            type: Integer,
+        },
+        iops_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iops_rd: {
+            optional: true,
+            type: Integer,
+        },
+        iops_rd_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_rd_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iops_wr: {
+            optional: true,
+            type: Integer,
+        },
+        iops_wr_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_wr_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        media: {
+            optional: true,
+            type: PveQmIdeMedia,
+        },
+        replicate: {
+            default: true,
+            optional: true,
+        },
+        rerror: {
+            optional: true,
+            type: PveQmIdeRerror,
+        },
+        serial: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_SATA_SERIAL_RE),
+            max_length: 60,
+            optional: true,
+            type: String,
+        },
+        shared: {
+            default: false,
+            optional: true,
+        },
+        size: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_SATA_SIZE_RE),
+            optional: true,
+            type: String,
+        },
+        snapshot: {
+            default: false,
+            optional: true,
+        },
+        ssd: {
+            default: false,
+            optional: true,
+        },
+        werror: {
+            optional: true,
+            type: PveQmIdeWerror,
+        },
+        wwn: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateQemuConfigSata {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub aio: Option<PveQmIdeAio>,
+
+    /// Whether the drive should be included when making backups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backup: Option<bool>,
+
+    /// Maximum r/w speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps: Option<i64>,
+
+    /// Maximum length of I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_max_length: Option<u64>,
+
+    /// Maximum read speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_rd: Option<i64>,
+
+    /// Maximum length of read I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_rd_max_length: Option<u64>,
+
+    /// Maximum write speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_wr: Option<i64>,
+
+    /// Maximum length of write I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_wr_max_length: Option<u64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cache: Option<PveQmIdeCache>,
+
+    /// Controls whether to detect and try to optimize writes of zeroes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detect_zeroes: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub discard: Option<PveQmIdeDiscard>,
+
+    /// The drive's backing volume.
+    pub file: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<PveQmIdeFormat>,
+
+    /// Create a new disk, importing from this source (volume ID or absolute
+    /// path). When an absolute path is specified, it's up to you to ensure that
+    /// the source is not actively used by another process during the import!
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "import-from")]
+    pub import_from: Option<String>,
+
+    /// Maximum r/w I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops: Option<i64>,
+
+    /// Maximum unthrottled r/w I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_max: Option<i64>,
+
+    /// Maximum length of I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_max_length: Option<u64>,
+
+    /// Maximum read I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd: Option<i64>,
+
+    /// Maximum unthrottled read I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd_max: Option<i64>,
+
+    /// Maximum length of read I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd_max_length: Option<u64>,
+
+    /// Maximum write I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr: Option<i64>,
+
+    /// Maximum unthrottled write I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr_max: Option<i64>,
+
+    /// Maximum length of write I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr_max_length: Option<u64>,
+
+    /// Maximum r/w speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps: Option<f64>,
+
+    /// Maximum unthrottled r/w pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_max: Option<f64>,
+
+    /// Maximum read speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_rd: Option<f64>,
+
+    /// Maximum unthrottled read pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_rd_max: Option<f64>,
+
+    /// Maximum write speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_wr: Option<f64>,
+
+    /// Maximum unthrottled write pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_wr_max: Option<f64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub media: Option<PveQmIdeMedia>,
+
+    /// Whether the drive should considered for replication jobs.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub replicate: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rerror: Option<PveQmIdeRerror>,
+
+    /// The drive's reported serial number, url-encoded, up to 20 bytes long.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub serial: Option<String>,
+
+    /// Mark this locally-managed volume as available on all nodes
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared: Option<bool>,
+
+    /// Disk size. This is purely informational and has no effect.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+
+    /// Controls qemu's snapshot mode feature. If activated, changes made to the
+    /// disk are temporary and will be discarded when the VM is shutdown.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<bool>,
+
+    /// Whether to expose this drive as an SSD, rather than a rotational hard
+    /// disk.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ssd: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub werror: Option<PveQmIdeWerror>,
+
+    /// The drive's worldwide name, encoded as 16 bytes hex string, prefixed by
+    /// '0x'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wwn: Option<String>,
+}
+
+const_regex! {
+
+UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE = r##"^[-%a-zA-Z0-9_.!~*'()]*$"##;
+UPDATE_QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_37() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SIZE_RE;
+}
+#[api(
+    default_key: "file",
+    properties: {
+        aio: {
+            optional: true,
+            type: PveQmIdeAio,
+        },
+        backup: {
+            default: false,
+            optional: true,
+        },
+        bps: {
+            optional: true,
+            type: Integer,
+        },
+        bps_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        bps_rd: {
+            optional: true,
+            type: Integer,
+        },
+        bps_rd_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        bps_wr: {
+            optional: true,
+            type: Integer,
+        },
+        bps_wr_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        cache: {
+            optional: true,
+            type: PveQmIdeCache,
+        },
+        detect_zeroes: {
+            default: false,
+            optional: true,
+        },
+        discard: {
+            optional: true,
+            type: PveQmIdeDiscard,
+        },
+        file: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
+            type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
+        },
+        "import-from": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_absolute_path),
+            optional: true,
+            type: String,
+        },
+        iops: {
+            optional: true,
+            type: Integer,
+        },
+        iops_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iops_rd: {
+            optional: true,
+            type: Integer,
+        },
+        iops_rd_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_rd_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iops_wr: {
+            optional: true,
+            type: Integer,
+        },
+        iops_wr_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_wr_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iothread: {
+            default: false,
+            optional: true,
+        },
+        media: {
+            optional: true,
+            type: PveQmIdeMedia,
+        },
+        product: {
+            optional: true,
+            type: String,
+        },
+        queues: {
+            minimum: 2,
+            optional: true,
+            type: Integer,
+        },
+        replicate: {
+            default: true,
+            optional: true,
+        },
+        rerror: {
+            optional: true,
+            type: PveQmIdeRerror,
+        },
+        ro: {
+            default: false,
+            optional: true,
+        },
+        scsiblock: {
+            default: false,
+            optional: true,
+        },
+        serial: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE),
+            max_length: 60,
+            optional: true,
+            type: String,
+        },
+        shared: {
+            default: false,
+            optional: true,
+        },
+        size: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_SCSI_SIZE_RE),
+            optional: true,
+            type: String,
+        },
+        snapshot: {
+            default: false,
+            optional: true,
+        },
+        ssd: {
+            default: false,
+            optional: true,
+        },
+        vendor: {
+            optional: true,
+            type: String,
+        },
+        werror: {
+            optional: true,
+            type: PveQmIdeWerror,
+        },
+        wwn: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateQemuConfigScsi {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub aio: Option<PveQmIdeAio>,
+
+    /// Whether the drive should be included when making backups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backup: Option<bool>,
+
+    /// Maximum r/w speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps: Option<i64>,
+
+    /// Maximum length of I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_max_length: Option<u64>,
+
+    /// Maximum read speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_rd: Option<i64>,
+
+    /// Maximum length of read I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_rd_max_length: Option<u64>,
+
+    /// Maximum write speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_wr: Option<i64>,
+
+    /// Maximum length of write I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_wr_max_length: Option<u64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cache: Option<PveQmIdeCache>,
+
+    /// Controls whether to detect and try to optimize writes of zeroes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detect_zeroes: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub discard: Option<PveQmIdeDiscard>,
+
+    /// The drive's backing volume.
+    pub file: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<PveQmIdeFormat>,
+
+    /// Create a new disk, importing from this source (volume ID or absolute
+    /// path). When an absolute path is specified, it's up to you to ensure that
+    /// the source is not actively used by another process during the import!
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "import-from")]
+    pub import_from: Option<String>,
+
+    /// Maximum r/w I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops: Option<i64>,
+
+    /// Maximum unthrottled r/w I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_max: Option<i64>,
+
+    /// Maximum length of I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_max_length: Option<u64>,
+
+    /// Maximum read I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd: Option<i64>,
+
+    /// Maximum unthrottled read I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd_max: Option<i64>,
+
+    /// Maximum length of read I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd_max_length: Option<u64>,
+
+    /// Maximum write I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr: Option<i64>,
+
+    /// Maximum unthrottled write I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr_max: Option<i64>,
+
+    /// Maximum length of write I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr_max_length: Option<u64>,
+
+    /// Whether to use iothreads for this drive
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iothread: Option<bool>,
+
+    /// Maximum r/w speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps: Option<f64>,
+
+    /// Maximum unthrottled r/w pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_max: Option<f64>,
+
+    /// Maximum read speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_rd: Option<f64>,
+
+    /// Maximum unthrottled read pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_rd_max: Option<f64>,
+
+    /// Maximum write speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_wr: Option<f64>,
+
+    /// Maximum unthrottled write pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_wr_max: Option<f64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub media: Option<PveQmIdeMedia>,
+
+    /// The drive's product name, up to 16 bytes long.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub product: Option<String>,
+
+    /// Number of queues.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub queues: Option<u64>,
+
+    /// Whether the drive should considered for replication jobs.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub replicate: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rerror: Option<PveQmIdeRerror>,
+
+    /// Whether the drive is read-only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ro: Option<bool>,
+
+    /// whether to use scsi-block for full passthrough of host block device
+    ///
+    /// WARNING: can lead to I/O errors in combination with low memory or high
+    /// memory fragmentation on host
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scsiblock: Option<bool>,
+
+    /// The drive's reported serial number, url-encoded, up to 20 bytes long.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub serial: Option<String>,
+
+    /// Mark this locally-managed volume as available on all nodes
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared: Option<bool>,
+
+    /// Disk size. This is purely informational and has no effect.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+
+    /// Controls qemu's snapshot mode feature. If activated, changes made to the
+    /// disk are temporary and will be discarded when the VM is shutdown.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<bool>,
+
+    /// Whether to expose this drive as an SSD, rather than a rotational hard
+    /// disk.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ssd: Option<bool>,
+
+    /// The drive's vendor name, up to 8 bytes long.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vendor: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub werror: Option<PveQmIdeWerror>,
+
+    /// The drive's worldwide name, encoded as 16 bytes hex string, prefixed by
+    /// '0x'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wwn: Option<String>,
+}
+
+const_regex! {
+
+UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_38() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE;
+}
+#[api(
+    default_key: "file",
+    properties: {
+        file: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
+            type: String,
+        },
+        "import-from": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_absolute_path),
+            optional: true,
+            type: String,
+        },
+        size: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE),
+            optional: true,
+            type: String,
+        },
+        version: {
+            optional: true,
+            type: QemuConfigTpmstate0Version,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateQemuConfigTpmstate0 {
+    /// The drive's backing volume.
+    pub file: String,
+
+    /// Create a new disk, importing from this source (volume ID or absolute
+    /// path). When an absolute path is specified, it's up to you to ensure that
+    /// the source is not actively used by another process during the import!
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "import-from")]
+    pub import_from: Option<String>,
+
+    /// Disk size. This is purely informational and has no effect.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<QemuConfigTpmstate0Version>,
+}
+
+const_regex! {
+
+UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE = r##"^[-%a-zA-Z0-9_.!~*'()]*$"##;
+UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_39() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE;
+    let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE;
+}
+#[api(
+    default_key: "file",
+    properties: {
+        aio: {
+            optional: true,
+            type: PveQmIdeAio,
+        },
+        backup: {
+            default: false,
+            optional: true,
+        },
+        bps: {
+            optional: true,
+            type: Integer,
+        },
+        bps_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        bps_rd: {
+            optional: true,
+            type: Integer,
+        },
+        bps_rd_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        bps_wr: {
+            optional: true,
+            type: Integer,
+        },
+        bps_wr_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        cache: {
+            optional: true,
+            type: PveQmIdeCache,
+        },
+        detect_zeroes: {
+            default: false,
+            optional: true,
+        },
+        discard: {
+            optional: true,
+            type: PveQmIdeDiscard,
+        },
+        file: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
+            type: String,
+        },
+        format: {
+            optional: true,
+            type: PveQmIdeFormat,
+        },
+        "import-from": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_absolute_path),
+            optional: true,
+            type: String,
+        },
+        iops: {
+            optional: true,
+            type: Integer,
+        },
+        iops_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iops_rd: {
+            optional: true,
+            type: Integer,
+        },
+        iops_rd_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_rd_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iops_wr: {
+            optional: true,
+            type: Integer,
+        },
+        iops_wr_max: {
+            optional: true,
+            type: Integer,
+        },
+        iops_wr_max_length: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        iothread: {
+            default: false,
+            optional: true,
+        },
+        media: {
+            optional: true,
+            type: PveQmIdeMedia,
+        },
+        replicate: {
+            default: true,
+            optional: true,
+        },
+        rerror: {
+            optional: true,
+            type: PveQmIdeRerror,
+        },
+        ro: {
+            default: false,
+            optional: true,
+        },
+        serial: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE),
+            max_length: 60,
+            optional: true,
+            type: String,
+        },
+        shared: {
+            default: false,
+            optional: true,
+        },
+        size: {
+            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE),
+            optional: true,
+            type: String,
+        },
+        snapshot: {
+            default: false,
+            optional: true,
+        },
+        werror: {
+            optional: true,
+            type: PveQmIdeWerror,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateQemuConfigVirtio {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub aio: Option<PveQmIdeAio>,
+
+    /// Whether the drive should be included when making backups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backup: Option<bool>,
+
+    /// Maximum r/w speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps: Option<i64>,
+
+    /// Maximum length of I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_max_length: Option<u64>,
+
+    /// Maximum read speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_rd: Option<i64>,
+
+    /// Maximum length of read I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_rd_max_length: Option<u64>,
+
+    /// Maximum write speed in bytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_wr: Option<i64>,
+
+    /// Maximum length of write I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bps_wr_max_length: Option<u64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cache: Option<PveQmIdeCache>,
+
+    /// Controls whether to detect and try to optimize writes of zeroes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detect_zeroes: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub discard: Option<PveQmIdeDiscard>,
+
+    /// The drive's backing volume.
+    pub file: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<PveQmIdeFormat>,
+
+    /// Create a new disk, importing from this source (volume ID or absolute
+    /// path). When an absolute path is specified, it's up to you to ensure that
+    /// the source is not actively used by another process during the import!
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "import-from")]
+    pub import_from: Option<String>,
+
+    /// Maximum r/w I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops: Option<i64>,
+
+    /// Maximum unthrottled r/w I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_max: Option<i64>,
+
+    /// Maximum length of I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_max_length: Option<u64>,
+
+    /// Maximum read I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd: Option<i64>,
+
+    /// Maximum unthrottled read I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd_max: Option<i64>,
+
+    /// Maximum length of read I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_rd_max_length: Option<u64>,
+
+    /// Maximum write I/O in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr: Option<i64>,
+
+    /// Maximum unthrottled write I/O pool in operations per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr_max: Option<i64>,
+
+    /// Maximum length of write I/O bursts in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iops_wr_max_length: Option<u64>,
+
+    /// Whether to use iothreads for this drive
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iothread: Option<bool>,
+
+    /// Maximum r/w speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps: Option<f64>,
+
+    /// Maximum unthrottled r/w pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_max: Option<f64>,
+
+    /// Maximum read speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_rd: Option<f64>,
+
+    /// Maximum unthrottled read pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_rd_max: Option<f64>,
+
+    /// Maximum write speed in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_wr: Option<f64>,
+
+    /// Maximum unthrottled write pool in megabytes per second.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mbps_wr_max: Option<f64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub media: Option<PveQmIdeMedia>,
+
+    /// Whether the drive should considered for replication jobs.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub replicate: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rerror: Option<PveQmIdeRerror>,
+
+    /// Whether the drive is read-only.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ro: Option<bool>,
+
+    /// The drive's reported serial number, url-encoded, up to 20 bytes long.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub serial: Option<String>,
+
+    /// Mark this locally-managed volume as available on all nodes
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared: Option<bool>,
+
+    /// Disk size. This is purely informational and has no effect.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+
+    /// Controls qemu's snapshot mode feature. If activated, changes made to the
+    /// disk are temporary and will be discarded when the VM is shutdown.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub werror: Option<PveQmIdeWerror>,
+}
+
 #[api(
     properties: {
         console: {
