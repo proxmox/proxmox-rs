@@ -64,6 +64,7 @@ Schema2Rust::register_format('pve-storage-content' => { type => 'StorageContent'
 Schema2Rust::register_format('pve-tag' => { regex => '^(?i)[a-z0-9_][a-z0-9_\-+.]*$' });
 Schema2Rust::register_format('pve-volume-id' => { code => 'verifiers::verify_volume_id' });
 Schema2Rust::register_format('pve-volume-id-or-qm-path' => { code => 'verifiers::verify_pve_volume_id_or_qm_path' });
+Schema2Rust::register_format('pve-volume-id-or-absolute-path' => { code => 'verifiers::verify_pve_volume_id_or_absolute_path' });
 ## Schema2Rust::register_format('pve-volume-id-or-absolute-path' => { code => 'verify_pve_volume_id_or_absolute_path' });
 Schema2Rust::register_format('urlencoded' => { regex => '^[-%a-zA-Z0-9_.!~*\'()]*$' });
 Schema2Rust::register_format('pve-cpuset' => { regex => '^(\s*\d+(-\d+)?\s*)(,\s*\d+(-\d+)?\s*)?$' });

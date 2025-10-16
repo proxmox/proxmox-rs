@@ -12,6 +12,14 @@ pub fn verify_pve_volume_id_or_qm_path(s: &str) -> Result<(), Error> {
     verify_volume_id(s)
 }
 
+pub fn verify_pve_volume_id_or_absolute_path(s: &str) -> Result<(), Error> {
+    if s.starts_with('/') {
+        return Ok(());
+    }
+
+    verify_volume_id(s)
+}
+
 #[rustfmt::skip]
 macro_rules! DNS_NAMERE { () => (r##"([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)"##) }
 #[rustfmt::skip]
