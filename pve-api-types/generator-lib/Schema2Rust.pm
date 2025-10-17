@@ -1250,9 +1250,13 @@ my sub make_struct_field : prototype($$$$) {
     return $def;
 }
 
-my sub make_struct_array_field : prototype($$$$$) {
-    my ($struct_name, $base_name, $base_rust_name, $count, $inout_schema) = @_;
+my sub make_struct_array_field : prototype($$$$$$) {
+    my ($struct_name, $base_name, $base_rust_name, $count, $inout_schema, $dedup_key) = @_;
     local $__err_path = "$__err_path.${base_name}[]";
+
+    if (defined(my $deduped = $dedup_array_types->{$dedup_key})) {
+        return $deduped;
+    }
 
     my $array_type_name = namify_type(
         namify_field($struct_name) . '_' . namify_field($base_name) . '_array'
@@ -1283,11 +1287,6 @@ my sub make_struct_array_field : prototype($$$$$) {
 
     handle_def($def, $inout_schema, namify_type($struct_name, $base_name));
 
-    my $array_dedup_key = "$struct_name\0$base_name\0$count\0$def->{type}\0";
-    if (defined(my $module = $dedup_array_types->{$array_dedup_key})) {
-        $array_type_name = $module;
-    }
-    $dedup_array_types->{$array_dedup_key} = $array_type_name;
     $def->{array_type_name} = $array_type_name;
 
     #$def->{type} = "Option<$def->{type}>";
@@ -1297,6 +1296,7 @@ my sub make_struct_array_field : prototype($$$$$) {
     $def->{optional} = true;
     push $def->{attrs}->@*, "#[serde(flatten)]";
 
+    $dedup_array_types->{$dedup_key} = $def;
     return $def;
 }
 
@@ -1431,13 +1431,20 @@ sub generate_struct : prototype($$$$) {
             push @array_bases, qr/^\Q$base\E\d+$/;
 
             my $field_rust_name = namify_field($base);
-            my $field_schema = { $properties->{$field_name}->%* };
+            my $original_field = $properties->{$field_name};
+            my $field_schema = { $original_field->%* };
             $properties->{$field_name} = $field_schema;
             if (delete $field_schema->{default_key}) {
                 die "default key points to array element '$field_name'\n";
             }
-            my $field =
-                make_struct_array_field($name_hint, $base, $field_rust_name, $count, \$field_schema);
+            my $field = make_struct_array_field(
+                $name_hint,
+                $base,
+                $field_rust_name,
+                $count,
+                \$field_schema,
+                $original_field,
+            );
             die "duplicate field name '$field_name'\n" if exists($def->{fields}->{$field_name});
             if (exists($properties->{$base})) {
                 warn "schema has flattened array as well as a field named '$base', '$field_name'...\n";
