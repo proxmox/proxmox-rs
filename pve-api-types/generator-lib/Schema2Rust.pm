@@ -1316,8 +1316,7 @@ sub is_array : prototype($$) {
         $max = $1 if $1 > $max;
     }
 
-    $indices = [ sort keys $indices->%* ];
-    my $count = scalar($indices->@*);
+    my $count = scalar(keys $indices->%*);
     return if $count <= 1 || ($count != ($max + 1));
 
     return ($base, $count);
