@@ -92,7 +92,7 @@ pub struct ListObjectsV2Contents {
     /// Content size of object.
     pub size: u64,
     /// Storage class the object is stored on.
-    pub storage_class: String,
+    pub storage_class: Option<String>,
 }
 
 #[derive(Debug)]
@@ -563,14 +563,14 @@ fn parse_list_objects_v2_response_test() {
                 last_modified: LastModifiedTimestamp::from_str("2011-02-26T01:56:20.000Z").unwrap(),
                 e_tag: "\"bf1d737a4d46a19f3bced6905cc8b902\"".to_string(),
                 size: 10,
-                storage_class: "STANDARD".to_string(),
+                storage_class: Some("STANDARD".to_string()),
             },
             ListObjectsV2Contents {
                 key: S3ObjectKey::try_from("/.cnt/key1").unwrap(),
                 last_modified: LastModifiedTimestamp::from_str("2011-02-26T01:56:20.000Z").unwrap(),
                 e_tag: "\"9b2cf535f27731c974343645a3985328\"".to_string(),
                 size: 20,
-                storage_class: "STANDARD".to_string(),
+                storage_class: Some("STANDARD".to_string()),
             },
         ]
     );
