@@ -1,3 +1,10 @@
+rust-proxmox-login (1.0.3-1) trixie; urgency=medium
+
+  * fix userid check for the special PMG quarantine tickets where the encoded
+    userid has a '@quarantine' suffix.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 21 Oct 2025 20:36:09 +0200
+
 rust-proxmox-login (1.0.2-1) trixie; urgency=medium
 
   * use `ticket` if both it and `ticket_info` are provided to fix handling
