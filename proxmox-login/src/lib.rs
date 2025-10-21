@@ -433,4 +433,25 @@ mod test {
         assert!(check_ticket_userid("user@quarantine", "user@quarantine@quarantine").is_ok());
         assert!(check_ticket_userid("user@quarantine", "user@ldap@quarantine").is_err());
     }
+
+    #[test]
+    fn url_normalization() {
+        use super::normalize_url;
+
+        let test_eq =
+            |input: &str, expected: &str| assert_eq!(normalize_url(input.to_string()), expected);
+
+        test_eq("https://example.com/", "https://example.com");
+        test_eq("https://example.com//////////", "https://example.com");
+        test_eq("https://example.com", "https://example.com");
+        test_eq(
+            "https://example.com:8443/foo/",
+            "https://example.com:8443/foo",
+        );
+
+        assert_ne!(
+            normalize_url("https://example.com/".to_string()),
+            "https://example.org"
+        );
+    }
 }
