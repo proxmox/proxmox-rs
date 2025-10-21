@@ -28,6 +28,8 @@ impl std::str::FromStr for TicketResponse {
                     let raw_challenge: Value =
                         serde_json::from_slice(&challenge).map_err(|_| TicketError)?;
                     let webauthn_raw = raw_challenge["webauthn"].clone();
+                    // FIXME: relay actual error, as "invalid ticket" is really not helpful in such
+                    // cases; at least logging it would be good..
                     let mut challenge: TfaChallenge =
                         serde_json::from_value(raw_challenge).map_err(|_| TicketError)?;
                     if !webauthn_raw.is_null() {
