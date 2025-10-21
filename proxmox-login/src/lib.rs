@@ -410,3 +410,27 @@ impl SecondFactorChallenge {
         })
     }
 }
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn ticket_userid() {
+        use super::check_ticket_userid;
+
+        assert!(check_ticket_userid("root@pam", "root@pam").is_ok()); // trivially equal
+
+        assert!(check_ticket_userid("root@pam", "test@pam").is_err()); // trivially non-equal
+
+        // some special cases for PMG quarantine
+        assert!(check_ticket_userid("user@ldap@quarantine", "user@ldap@quarantine").is_ok());
+        assert!(check_ticket_userid("user@ldap@quarantine", "user@ldap").is_ok());
+        assert!(check_ticket_userid("user@ldap", "user@ldap@quarantine").is_ok());
+
+        // test odd realm name
+        assert!(
+            check_ticket_userid("user@quarantine@quarantine", "user@quarantine@quarantine").is_ok()
+        );
+        assert!(check_ticket_userid("user@quarantine", "user@quarantine@quarantine").is_ok());
+        assert!(check_ticket_userid("user@quarantine", "user@ldap@quarantine").is_err());
+    }
+}
