@@ -454,4 +454,70 @@ mod test {
             "https://example.org"
         );
     }
+
+    #[test]
+    fn login_response() {
+        use super::{Login, TicketResult};
+
+        let login = Login::new("https://example.com:8443/", "user@foo", "******");
+
+        let request = login.request();
+
+        assert_eq!(
+            request.url,
+            "https://example.com:8443/api2/json/access/ticket"
+        );
+        assert_eq!(request.content_type, "application/json");
+        assert_eq!(request.content_length, 43);
+        assert_eq!(
+            request.body,
+            "{\"password\":\"******\",\"username\":\"user@foo\"}"
+        );
+
+        // adapted and shortened from a real PVE ticket response
+        let ticket_ok_response = r##"{ "success": 1, "data": {
+            "username": "user@foo",
+            "cap": {
+                "nodes": { "Sys.Audit": 1, "Sys.Modify": 1, "Sys.Console": 1 },
+                "access": { "Permissions.Modify": 1, "User.Modify": 1, "Group.Allocate": 1 },
+                "vms": { "VM.Audit": 1, "VM.PowerMgmt": 1, "VM.Config.Disk": 1 }
+            },
+            "CSRFPreventionToken": "68F7BB38:dGVzdCBjc3JmIHRva2Vu",
+            "ticket": "PVE:user@foo:68F7BB38::ZHVtbXkgdGVzdA=="
+        }}"##;
+
+        match login.response(ticket_ok_response) {
+            Err(err) => panic!("unexpected login error - {err}"),
+            Ok(TicketResult::TfaRequired(_)) => panic!("unexpected second factor"),
+            Ok(TicketResult::HttpOnly(_)) => panic!("unexpected HttpOnly"),
+            Ok(TicketResult::Full(auth)) => {
+                assert_eq!(auth.userid, "user@foo");
+                assert_eq!(auth.ticket.to_string(), "PVE:user@foo:68F7BB38::ZHVtbXkgdGVzdA==");
+                assert_eq!(auth.clustername, None);
+                assert_eq!(auth.csrfprevention_token, "68F7BB38:dGVzdCBjc3JmIHRva2Vu");
+            }
+        }
+
+        let ticket_tfa_response = r##"{ "success": 1, "data": {
+            "username": "user@foo",
+            "CSRFPreventionToken": "68F7BB2C:dGVzdCBjc3JmIHRva2Vu",
+            "ticket": "PVE:!tfa!{\"totp\"%3Atrue,\"webauthn\"%3A{\"publicKey\"%3A{\"challenge\"%3A\"dGVzdCBjaGFsbGVuZ2U=\",\"timeout\"%3A300000,\"rpId\"%3A\"example.com\",\"allowCredentials\"%3A[{\"type\"%3A\"public-key\",\"id\"%3A\"dDE=\"},{\"type\"%3A\"public-key\",\"id\"%3A\"dDI=\"}],\"userVerification\"%3A\"discouraged\",\"hints\"%3A[\"securitykey\"]}}}:68F7BB2C::dGVzdCBoYWxmLXRpY2tldA==",
+            "NeedTFA": 1
+        }}"##;
+        match login.response(ticket_tfa_response) {
+            Err(err) => panic!("unexpected login error - {err}"),
+            Ok(TicketResult::HttpOnly(_)) => panic!("unexpected HttpOnly"),
+            Ok(TicketResult::Full(_)) => panic!("unexpected second factor"),
+            Ok(TicketResult::TfaRequired(tfa)) => {
+                assert_eq!(tfa.userid, "user@foo");
+                assert_eq!(tfa.userid, "user@foo");
+                assert!(tfa.challenge.totp);
+                assert!(!tfa.challenge.yubico);
+                assert!(tfa.challenge.recovery.is_unavailable());
+                #[cfg(feature = "webauthn")]
+                assert!(tfa.challenge.webauthn.is_some());
+                assert_eq!(tfa.challenge.webauthn_raw.map(|v| v.len()), Some(234));
+            }
+        }
+    }
 }
