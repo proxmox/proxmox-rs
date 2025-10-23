@@ -126,8 +126,8 @@ sub api_to_string : prototype($$$$$) {
 
         local $API_TYPE_POS = "$API_TYPE_POS/$key";
 
-        # We need to quote keys with hyphens:
-        my $safe_key = ($key =~ /-/) ? "\"$key\"" : $key;
+        # We need to quote keys with hyphens or reserved keywords:
+        my $safe_key = (($key =~ /-/) || ($key eq 'macro')) ? "\"$key\"" : $key;
 
         if (exists($API_TYPE_OVERRIDES{$API_TYPE_POS})) {
             $value = $API_TYPE_OVERRIDES{$API_TYPE_POS};
@@ -172,7 +172,7 @@ sub api_to_string : prototype($$$$$) {
                 warn "api type extension for $API_TYPE_POS.$key already in schema, skipping\n";
                 next;
             }
-            my $safe_key = ($key =~ /-/) ? "\"$key\"" : $key;
+            my $safe_key = (($key =~ /-/) || ($key eq 'macro')) ? "\"$key\"" : $key;
             my $value = $extra->{$key};
             print {$out} "${indent}$safe_key: $value,\n";
         }
@@ -726,6 +726,7 @@ sub namify_field : prototype($) {
     }
 
     return 'ty' if $out eq 'type';
+    return 'r#macro' if $out eq 'macro';
 
     return $out;
 }
