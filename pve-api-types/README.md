@@ -27,12 +27,17 @@ This code has unfortunately "grown organically" a lot as more and more cases
 have been uncovered by generating data for more API calls and is probably in
 need of a cleanup...
 
+## `pve-api.json`
+
+This is a PVE API dump with references preserved. This is generated from
+*installed* PVE packages and should not be modified manually.
+This is the source used by the generator to produce types and code.
+
 ## Using the `generator-lib`
 
 The actual generation is triggered by `pve-api-types/generate.pl`.
 
-1. This file loads the entire API (and therefore needs to be executed on an actual
-   PVE host).
+1. This file loads the entire API from `pve-api.json`.
 2. Then it calls `Schema2Rust::init_api()` to "set up" the API "router".
 3. Finally its `api()` sub is used to cause an API path to be turned into a
    *method* of the pve `Client` type in rust.
