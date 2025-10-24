@@ -31,6 +31,9 @@ Schema2Rust::init_api($pve_api->{root}, \&lookup_format);
 # From JSONSchema.pm, but we can't use perl-re directly, particularly `qr//`...
 my $CONFIGID_RE = '^(?i:[a-z][a-z0-9_-]+)$';
 
+my $STORAGEID_RE = '(?i:[a-z][a-z0-9\-_.]*[a-z0-9])';
+my $BRIDGEID_RE = '[-_.\w\d]+';
+
 # Disable `#[api]` generation for now, it's incomplete/untested.
 #$Schema2Rust::API = 0;
 
@@ -41,7 +44,7 @@ Schema2Rust::register_format('ipv4mask' => { code => 'verifiers::verify_ipv4_mas
 Schema2Rust::register_format('mac-addr' => { regex => '^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$' });
 ## Schema2Rust::register_format('pve-acme-alias' => { code => 'verify_pve_acme_alias' });
 ## Schema2Rust::register_format('pve-acme-domain' => { code => 'verify_pve_acme_domain' });
-Schema2Rust::register_format('pve-bridge-id' => { regex => '^[-_.\w\d]+$' });
+Schema2Rust::register_format('pve-bridge-id' => { regex => '^'.$BRIDGEID_RE.'$' });
 Schema2Rust::register_format('pve-configid' => { regex => $CONFIGID_RE });
 ## Schema2Rust::register_format('pve-groupid' => { code => 'verify_pve_groupid' });
 Schema2Rust::register_format('pve-userid' => { code => 'verify_pve_userid' });
@@ -59,7 +62,7 @@ Schema2Rust::register_format('pve-qm-bootdev' => { unchecked => 1 });
 Schema2Rust::register_format('pve-qm-bootdisk' => { regex => '^(ide|sata|scsi|virtio|efidisk|tpmstate)\d+$' });
 Schema2Rust::register_format('pve-qm-usb-device' => { unchecked => 1 });
 Schema2Rust::register_format('pve-startup-order' => { unchecked => 1 });
-Schema2Rust::register_format('pve-storage-id' => { regex => '^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$' });
+Schema2Rust::register_format('pve-storage-id' => { regex => '^'.$STORAGEID_RE.'$' });
 Schema2Rust::register_format('pve-storage-content' => { type => 'StorageContent' });
 Schema2Rust::register_format('pve-tag' => { regex => '^(?i)[a-z0-9_][a-z0-9_\-+.]*$' });
 Schema2Rust::register_format('pve-volume-id' => { code => 'verifiers::verify_volume_id' });
@@ -75,8 +78,8 @@ Schema2Rust::register_format('lxc-ip-with-ll-iface' => { code => 'verifiers::ver
 Schema2Rust::register_format('pve-ct-timezone' => { regex => '^.*/.*$' });
 Schema2Rust::register_format('pve-lxc-dev-string' => { code => 'verifiers::verify_pve_lxc_dev_string' });
 ##
-Schema2Rust::register_format('storage-pair' => { code => 'verifiers::verify_storage_pair' });
-Schema2Rust::register_format('bridge-pair' => { code => 'verifiers::verify_bridge_pair' });
+Schema2Rust::register_format('storage-pair' => { regex => '^'.$STORAGEID_RE.':'.$STORAGEID_RE.'|'.$STORAGEID_RE.'|1$' });
+Schema2Rust::register_format('bridge-pair' => { regex => '^'.$BRIDGEID_RE.':'.$BRIDGEID_RE.'|'.$BRIDGEID_RE.'|1$' });
 
 Schema2Rust::register_format('pve-task-status-type' => { regex => '^(?i:ok|error|warning|unknown)$' });
 
