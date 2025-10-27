@@ -17,7 +17,7 @@ use std::time::SystemTime;
 use anyhow::{format_err, Error, Result};
 use endian_trait::Endian;
 use futures::ready;
-use libc::{S_IFDIR, S_IFREG};
+use libc::{S_IFDIR, S_IFLNK, S_IFREG};
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt, ReadBuf};
 
 use crc32fast::Hasher;
@@ -76,6 +76,7 @@ fn epoch_to_dos(epoch: i64) -> (u16, u16) {
 pub enum FileType {
     Directory,
     Regular,
+    Symlink,
 }
 
 #[derive(Endian)]
@@ -236,6 +237,7 @@ impl ZipEntry {
         mode |= match file_type {
             FileType::Regular => S_IFREG,
             FileType::Directory => S_IFDIR,
+            FileType::Symlink => S_IFLNK,
         } as u16;
 
         Self {
@@ -656,7 +658,8 @@ where
         let encoder = &mut encoder;
 
         let entry = async move {
-            let entry_path_no_base = entry.path().strip_prefix(base_path)?;
+            let entrypath = entry.path();
+            let entry_path_no_base = entrypath.strip_prefix(base_path)?;
             let metadata = entry.metadata()?;
             let mtime = match metadata
                 .modified()
@@ -669,13 +672,18 @@ where
             let mode = metadata.mode() as u16;
 
             if entry.file_type().is_file() {
-                let file = tokio::fs::File::open(entry.path()).await?;
+                let file = Box::new(tokio::fs::File::open(entrypath).await?);
                 let ze = ZipEntry::new(entry_path_no_base, mtime, mode, FileType::Regular);
-                Ok(Some((ze, Some(file))))
+                Ok(Some((ze, Some::<Box<dyn AsyncRead + Send + Unpin>>(file))))
             } else if entry.file_type().is_dir() {
                 let ze = ZipEntry::new(entry_path_no_base, mtime, mode, FileType::Directory);
-                let content: Option<tokio::fs::File> = None;
-                Ok(Some((ze, content)))
+                Ok(Some((ze, None)))
+            } else if entry.file_type().is_symlink() {
+                let target: Box<dyn AsyncRead + Send + Unpin> = Box::new(io::Cursor::new(
+                    entrypath.read_link()?.into_os_string().into_encoded_bytes(),
+                ));
+                let ze = ZipEntry::new(entry_path_no_base, mtime, mode, FileType::Symlink);
+                Ok(Some((ze, Some(target))))
             } else {
                 // ignore other file types
                 Ok::<_, Error>(None)
