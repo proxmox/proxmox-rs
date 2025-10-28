@@ -148,7 +148,7 @@
       "pve-fw-protocol-spec": ("Code")[],
       "pve-fw-sport-spec": ("Code")[],
       "pve-groupid": ("Code")[],
-      "pve-ha-group-node": ("Code")[],
+      "pve-ha-node": ("Code")[],
       "pve-ha-resource-id": ("Code")[],
       "pve-ha-resource-or-vm-id": ("Code")[],
       "pve-hotplug-features": ("Code")[],
@@ -1085,26 +1085,9 @@
                               "user": "all"
                            },
                            "returns": {
-                              "type": "object"
-                           }
-                        },
-                        "PUT": {
-                           "allowtoken": 1,
-                           "description": "Update replication job configuration.",
-                           "method": "PUT",
-                           "name": "update",
-                           "parameters": {
-                              "additionalProperties": 0,
                               "properties": {
                                  "comment": {
                                     "description": "Description.",
-                                    "maxLength": 4096,
-                                    "optional": 1,
-                                    "type": "string"
-                                 },
-                                 "delete": {
-                                    "description": "A list of settings you want to delete.",
-                                    "format": "pve-configid-list",
                                     "maxLength": 4096,
                                     "optional": 1,
                                     "type": "string"
@@ -1120,11 +1103,19 @@
                                     "optional": 1,
                                     "type": "boolean"
                                  },
+                                 "guest": {
+                                    "description": "Guest ID.",
+                                    "type": "integer"
+                                 },
                                  "id": {
                                     "description": "Replication Job ID. The ID is composed of a Guest ID and a job number, separated by a hyphen, i.e. '<GUEST>-<JOBNUM>'.",
                                     "format": "pve-replication-job-id",
                                     "pattern": "[1-9][0-9]{2,8}-\\d{1,9}",
                                     "type": "string"
+                                 },
+                                 "jobnum": {
+                                    "description": "Unique, sequential ID assigned to each job.",
+                                    "type": "integer"
                                  },
                                  "rate": {
                                     "description": "Rate limit in mbps (megabytes per second) as floating point number.",
@@ -1154,7 +1145,52 @@
                                     "format": "pve-node",
                                     "optional": 1,
                                     "type": "string"
+                                 },
+                                 "target": {
+                                    "description": "Target node.",
+                                    "format": "pve-node",
+                                    "optional": 0,
+                                    "type": "string"
+                                 },
+                                 "type": {
+                                    "description": "Section type.",
+                                    "enum": [
+                                       "local"
+                                    ],
+                                    "type": "string"
                                  }
+                              },
+                              "type": "object"
+                           }
+                        },
+                        "PUT": {
+                           "allowtoken": 1,
+                           "description": "Update replication job configuration.",
+                           "method": "PUT",
+                           "name": "update",
+                           "parameters": {
+                              "additionalProperties": 0,
+                              "properties": {
+                                 "comment": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/comment"],
+                                 "delete": {
+                                    "description": "A list of settings you want to delete.",
+                                    "format": "pve-configid-list",
+                                    "maxLength": 4096,
+                                    "optional": 1,
+                                    "type": "string"
+                                 },
+                                 "digest": {
+                                    "description": "Prevent changes if current configuration file has a different digest. This can be used to prevent concurrent modifications.",
+                                    "maxLength": 64,
+                                    "optional": 1,
+                                    "type": "string"
+                                 },
+                                 "disable": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/disable"],
+                                 "id": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/id"],
+                                 "rate": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/rate"],
+                                 "remove_job": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/remove_job"],
+                                 "schedule": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/schedule"],
+                                 "source": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/source"]
                               },
                               "type": "object"
                            },
@@ -1189,7 +1225,19 @@
                      },
                      "returns": {
                         "items": {
-                           "properties": {},
+                           "properties": {
+                              "comment": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/comment"],
+                              "disable": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/disable"],
+                              "guest": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/guest"],
+                              "id": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/id"],
+                              "jobnum": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/jobnum"],
+                              "rate": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/rate"],
+                              "remove_job": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/remove_job"],
+                              "schedule": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/schedule"],
+                              "source": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/source"],
+                              "target": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/target"],
+                              "type": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/type"]
+                           },
                            "type": "object"
                         },
                         "links": [
@@ -1209,26 +1257,20 @@
                      "parameters": {
                         "additionalProperties": 0,
                         "properties": {
-                           "comment": ("Ref")["/root/0/children/0/children/0/info/PUT/parameters/properties/comment"],
-                           "disable": ("Ref")["/root/0/children/0/children/0/info/PUT/parameters/properties/disable"],
-                           "id": ("Ref")["/root/0/children/0/children/0/info/PUT/parameters/properties/id"],
-                           "rate": ("Ref")["/root/0/children/0/children/0/info/PUT/parameters/properties/rate"],
-                           "remove_job": ("Ref")["/root/0/children/0/children/0/info/PUT/parameters/properties/remove_job"],
-                           "schedule": ("Ref")["/root/0/children/0/children/0/info/PUT/parameters/properties/schedule"],
-                           "source": ("Ref")["/root/0/children/0/children/0/info/PUT/parameters/properties/source"],
+                           "comment": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/comment"],
+                           "disable": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/disable"],
+                           "id": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/id"],
+                           "rate": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/rate"],
+                           "remove_job": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/remove_job"],
+                           "schedule": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/schedule"],
+                           "source": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/source"],
                            "target": {
                               "description": "Target node.",
                               "format": "pve-node",
                               "optional": 0,
                               "type": "string"
                            },
-                           "type": {
-                              "description": "Section type.",
-                              "enum": [
-                                 "local"
-                              ],
-                              "type": "string"
-                           }
+                           "type": ("Ref")["/root/0/children/0/children/0/info/GET/returns/properties/type"]
                         },
                         "type": "object"
                      },
@@ -7714,11 +7756,11 @@
                                        },
                                        "nodes": {
                                           "description": "List of cluster node names with optional priority.",
-                                          "format": "pve-ha-group-node-list",
+                                          "format": "pve-ha-node-list",
                                           "optional": 1,
                                           "type": "string",
                                           "typetext": "<node>[:<pri>]{,<node>[:<pri>]}*",
-                                          "verbose_description": "List of cluster node members, where a priority can be given to each node. A resource bound to a group will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the services will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority."
+                                          "verbose_description": "List of cluster node members, where a priority can be given to each node. A resource will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the resources will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority."
                                        },
                                        "nofailback": {
                                           "default": 0,
@@ -7805,11 +7847,11 @@
                                  "group": ("Ref")["/root/0/children/7/children/1/children/0/info/PUT/parameters/properties/group"],
                                  "nodes": {
                                     "description": "List of cluster node names with optional priority.",
-                                    "format": "pve-ha-group-node-list",
+                                    "format": "pve-ha-node-list",
                                     "optional": 0,
                                     "type": "string",
                                     "typetext": "<node>[:<pri>]{,<node>[:<pri>]}*",
-                                    "verbose_description": "List of cluster node members, where a priority can be given to each node. A resource bound to a group will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the services will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority."
+                                    "verbose_description": "List of cluster node members, where a priority can be given to each node. A resource will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the resources will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority."
                                  },
                                  "nofailback": ("Ref")["/root/0/children/7/children/1/children/0/info/PUT/parameters/properties/nofailback"],
                                  "restricted": ("Ref")["/root/0/children/7/children/1/children/0/info/PUT/parameters/properties/restricted"],
@@ -7969,7 +8011,7 @@
                                        "nodes": {
                                           "completion": ("Code")[],
                                           "description": "List of cluster node names with optional priority.",
-                                          "format": "pve-ha-group-node-list",
+                                          "format": "pve-ha-node-list",
                                           "instance-types": [
                                              "node-affinity"
                                           ],
@@ -7977,7 +8019,7 @@
                                           "type": "string",
                                           "type-property": "type",
                                           "typetext": "<node>[:<pri>]{,<node>[:<pri>]}*",
-                                          "verbose_description": "List of cluster node members, where a priority can be given to each node. A resource bound to a group will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the services will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority."
+                                          "verbose_description": "List of cluster node members, where a priority can be given to each node. A resource will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the resources will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority."
                                        },
                                        "resources": {
                                           "completion": ("Code")[],
@@ -8121,7 +8163,7 @@
                                  "nodes": {
                                     "completion": ("Code")[],
                                     "description": "List of cluster node names with optional priority.",
-                                    "format": "pve-ha-group-node-list",
+                                    "format": "pve-ha-node-list",
                                     "instance-types": [
                                        "node-affinity"
                                     ],
@@ -8129,7 +8171,7 @@
                                     "type": "string",
                                     "type-property": "type",
                                     "typetext": "<node>[:<pri>]{,<node>[:<pri>]}*",
-                                    "verbose_description": "List of cluster node members, where a priority can be given to each node. A resource bound to a group will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the services will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority."
+                                    "verbose_description": "List of cluster node members, where a priority can be given to each node. A resource will run on the available nodes with the highest priority. If there are more nodes in the highest priority class, the resources will get distributed to those nodes. The priorities have a relative meaning only. The higher the number, the higher the priority."
                                  },
                                  "resources": {
                                     "completion": ("Code")[],
@@ -8453,15 +8495,6 @@
                                  },
                                  "protected": 1,
                                  "returns": {
-                                    "type": "object"
-                                 }
-                              },
-                              "PUT": {
-                                 "allowtoken": 1,
-                                 "description": "Update ACME plugin configuration.",
-                                 "method": "PUT",
-                                 "name": "update_plugin",
-                                 "parameters": {
                                     "additionalProperties": 0,
                                     "properties": {
                                        "api": {
@@ -8633,19 +8666,6 @@
                                           "optional": 1,
                                           "type": "string"
                                        },
-                                       "delete": {
-                                          "description": "A list of settings you want to delete.",
-                                          "format": "pve-configid-list",
-                                          "maxLength": 4096,
-                                          "optional": 1,
-                                          "type": "string"
-                                       },
-                                       "digest": {
-                                          "description": "Prevent changes if current configuration file has a different digest. This can be used to prevent concurrent modifications.",
-                                          "maxLength": 64,
-                                          "optional": 1,
-                                          "type": "string"
-                                       },
                                        "disable": {
                                           "description": "Flag to disable the config.",
                                           "optional": 1,
@@ -8662,6 +8682,14 @@
                                           "optional": 1,
                                           "type": "string"
                                        },
+                                       "type": {
+                                          "description": "ACME challenge type.",
+                                          "enum": [
+                                             "dns",
+                                             "standalone"
+                                          ],
+                                          "type": "string"
+                                       },
                                        "validation-delay": {
                                           "default": 30,
                                           "description": "Extra delay in seconds to wait before requesting validation. Allows to cope with a long TTL of DNS records.",
@@ -8670,6 +8698,37 @@
                                           "optional": 1,
                                           "type": "integer"
                                        }
+                                    },
+                                    "type": "object"
+                                 }
+                              },
+                              "PUT": {
+                                 "allowtoken": 1,
+                                 "description": "Update ACME plugin configuration.",
+                                 "method": "PUT",
+                                 "name": "update_plugin",
+                                 "parameters": {
+                                    "additionalProperties": 0,
+                                    "properties": {
+                                       "api": ("Ref")["/root/0/children/8/children/0/children/0/info/GET/returns/properties/api"],
+                                       "data": ("Ref")["/root/0/children/8/children/0/children/0/info/GET/returns/properties/data"],
+                                       "delete": {
+                                          "description": "A list of settings you want to delete.",
+                                          "format": "pve-configid-list",
+                                          "maxLength": 4096,
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "digest": {
+                                          "description": "Prevent changes if current configuration file has a different digest. This can be used to prevent concurrent modifications.",
+                                          "maxLength": 64,
+                                          "optional": 1,
+                                          "type": "string"
+                                       },
+                                       "disable": ("Ref")["/root/0/children/8/children/0/children/0/info/GET/returns/properties/disable"],
+                                       "id": ("Ref")["/root/0/children/8/children/0/children/0/info/GET/returns/properties/id"],
+                                       "nodes": ("Ref")["/root/0/children/8/children/0/children/0/info/GET/returns/properties/nodes"],
+                                       "validation-delay": ("Ref")["/root/0/children/8/children/0/children/0/info/GET/returns/properties/validation-delay"]
                                     },
                                     "type": "object"
                                  },
@@ -8724,16 +8783,7 @@
                            },
                            "protected": 1,
                            "returns": {
-                              "items": {
-                                 "properties": {
-                                    "plugin": {
-                                       "description": "Unique identifier for ACME plugin instance.",
-                                       "format": "pve-configid",
-                                       "type": "string"
-                                    }
-                                 },
-                                 "type": "object"
-                              },
+                              "items": ("Ref")["/root/0/children/8/children/0/children/0/info/GET/returns"],
                               "links": [
                                  {
                                     "href": "{plugin}",
@@ -8748,26 +8798,7 @@
                            "description": "Add ACME plugin configuration.",
                            "method": "POST",
                            "name": "add_plugin",
-                           "parameters": {
-                              "additionalProperties": 0,
-                              "properties": {
-                                 "api": ("Ref")["/root/0/children/8/children/0/children/0/info/PUT/parameters/properties/api"],
-                                 "data": ("Ref")["/root/0/children/8/children/0/children/0/info/PUT/parameters/properties/data"],
-                                 "disable": ("Ref")["/root/0/children/8/children/0/children/0/info/PUT/parameters/properties/disable"],
-                                 "id": ("Ref")["/root/0/children/8/children/0/children/0/info/PUT/parameters/properties/id"],
-                                 "nodes": ("Ref")["/root/0/children/8/children/0/children/0/info/PUT/parameters/properties/nodes"],
-                                 "type": {
-                                    "description": "ACME challenge type.",
-                                    "enum": [
-                                       "dns",
-                                       "standalone"
-                                    ],
-                                    "type": "string"
-                                 },
-                                 "validation-delay": ("Ref")["/root/0/children/8/children/0/children/0/info/PUT/parameters/properties/validation-delay"]
-                              },
-                              "type": "object"
-                           },
+                           "parameters": ("Ref")["/root/0/children/8/children/0/children/0/info/GET/returns"],
                            "permissions": {
                               "check": [
                                  "perm",
@@ -15573,6 +15604,7 @@
                         }
                      },
                      "permissions": {
+                        "description": "The user needs 'Sys.Syslog' on '/' in order to get all logs.",
                         "user": "all"
                      },
                      "returns": {
@@ -20283,6 +20315,7 @@
                                                 "type": "boolean"
                                              },
                                              "ostype": {
+                                                "default": "other",
                                                 "description": "Specify guest operating system.",
                                                 "enum": [
                                                    "other",
@@ -43059,7 +43092,89 @@
                                        "protected": 1,
                                        "proxyto": "node",
                                        "returns": {
-                                          "properties": {},
+                                          "properties": {
+                                             "active-state": {
+                                                "description": "Current state of the service process (systemd ActiveState).",
+                                                "enum": [
+                                                   "active",
+                                                   "inactive",
+                                                   "failed",
+                                                   "activating",
+                                                   "deactivating",
+                                                   "maintenance",
+                                                   "reloading",
+                                                   "refreshing",
+                                                   "unknown"
+                                                ],
+                                                "type": "string"
+                                             },
+                                             "desc": {
+                                                "description": "Description of the service.",
+                                                "type": "string"
+                                             },
+                                             "name": {
+                                                "description": "Short identifier for the service (e.g., \"pveproxy\").",
+                                                "type": "string"
+                                             },
+                                             "service": {
+                                                "description": "Systemd unit name (e.g., pveproxy).",
+                                                "type": "string"
+                                             },
+                                             "state": {
+                                                "description": "Execution status of the service (systemd SubState).",
+                                                "enum": [
+                                                   "dead",
+                                                   "condition",
+                                                   "start-pre",
+                                                   "start",
+                                                   "start-post",
+                                                   "running",
+                                                   "exited",
+                                                   "reload",
+                                                   "reload-signal",
+                                                   "reload-notify",
+                                                   "mounting",
+                                                   "stop",
+                                                   "stop-watchdog",
+                                                   "stop-sigterm",
+                                                   "stop-sigkill",
+                                                   "stop-post",
+                                                   "final-watchdog",
+                                                   "final-sigterm",
+                                                   "final-sigkill",
+                                                   "failed",
+                                                   "dead-before-auto-restart",
+                                                   "failed-before-auto-restart",
+                                                   "dead-resources-pinned",
+                                                   "auto-restart",
+                                                   "auto-restart-queued",
+                                                   "cleaning",
+                                                   "unknown"
+                                                ],
+                                                "type": "string"
+                                             },
+                                             "unit-state": {
+                                                "description": "Whether the service is enabled (systemd UnitFileState).",
+                                                "enum": [
+                                                   "enabled",
+                                                   "enabled-runtime",
+                                                   "linked",
+                                                   "linked-runtime",
+                                                   "alias",
+                                                   "masked",
+                                                   "masked-runtime",
+                                                   "static",
+                                                   "disabled",
+                                                   "indirect",
+                                                   "generated",
+                                                   "transient",
+                                                   "bad",
+                                                   "not-found",
+                                                   "unknown"
+                                                ],
+                                                "type": "string"
+                                             }
+                                          },
                                           "type": "object"
                                        }
                                     }
@@ -43300,7 +43415,7 @@
                            "proxyto": "node",
                            "returns": {
                               "items": {
-                                 "properties": {},
+                                 "properties": ("Ref")["/root/1/children/0/children/4/children/0/children/0/info/GET/returns/properties"],
                                  "type": "object"
                               },
                               "links": [
@@ -48298,10 +48413,18 @@
                                        "properties": {
                                           "Arch": {
                                              "description": "Package Architecture.",
+                                             "enum": [
+                                                "armhf",
+                                                "arm64",
+                                                "amd64",
+                                                "ppc64el",
+                                                "risc64",
+                                                "s390x"
+                                             ],
                                              "type": "string"
                                           },
                                           "Description": {
-                                             "description": "Human-readable package description.",
+                                             "description": "Package description.",
                                              "type": "string"
                                           },
                                           "NotifyStatus": {
@@ -48315,7 +48438,7 @@
                                              "type": "string"
                                           },
                                           "Origin": {
-                                             "description": "Package origin.",
+                                             "description": "Package origin, e.g., 'Proxmox' or 'Debian'.",
                                              "type": "string"
                                           },
                                           "Package": {
@@ -48323,7 +48446,7 @@
                                              "type": "string"
                                           },
                                           "Priority": {
-                                             "description": "Package priority in human-readable form.",
+                                             "description": "Package priority.",
                                              "type": "string"
                                           },
                                           "Section": {
@@ -48772,7 +48895,40 @@
                                  "proxyto": "node",
                                  "returns": {
                                     "items": {
-                                       "properties": {},
+                                       "properties": {
+                                          "Arch": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/Arch"],
+                                          "CurrentState": {
+                                             "description": "Current state of the package installed on the system.",
+                                             "enum": [
+                                                "Installed",
+                                                "NotInstalled",
+                                                "UnPacked",
+                                                "HalfConfigured",
+                                                "HalfInstalled",
+                                                "ConfigFiles"
+                                             ],
+                                             "type": "string"
+                                          },
+                                          "Description": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/Description"],
+                                          "ManagerVersion": {
+                                             "description": "Version of the currently running pve-manager API server.",
+                                             "optional": 1,
+                                             "type": "string"
+                                          },
+                                          "NotifyStatus": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/NotifyStatus"],
+                                          "OldVersion": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/OldVersion"],
+                                          "Origin": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/Origin"],
+                                          "Package": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/Package"],
+                                          "Priority": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/Priority"],
+                                          "RunningKernel": {
+                                             "description": "Kernel release, only for package 'proxmox-ve'.",
+                                             "optional": 1,
+                                             "type": "string"
+                                          },
+                                          "Section": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/Section"],
+                                          "Title": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/Title"],
+                                          "Version": ("Ref")["/root/1/children/0/children/13/children/0/info/GET/returns/items/properties/Version"]
+                                       },
                                        "type": "object"
                                     },
                                     "type": "array"
@@ -52642,6 +52798,20 @@
                               "optional": 1,
                               "type": "boolean"
                            },
+                           "saferemove-stepsize": {
+                              "default": 32,
+                              "description": "Wipe step size in MiB. It will be capped to the maximum supported by the storage.",
+                              "enum": [
+                                 "1",
+                                 "2",
+                                 "4",
+                                 "8",
+                                 "16",
+                                 "32"
+                              ],
+                              "optional": 1,
+                              "type": "integer"
+                           },
                            "saferemove_throughput": {
                               "description": "Wipe throughput (cstream -t parameter value).",
                               "optional": 1,
@@ -52735,11 +52905,11 @@
                         "properties": {
                            "config": {
                               "additionalProperties": 1,
-                              "description": "Partial, possible server generated, configuration properties.",
+                              "description": "Partial, possibly server generated, configuration properties.",
                               "optional": 1,
                               "properties": {
                                  "encryption-key": {
-                                    "description": "The, possible auto-generated, encryption-key.",
+                                    "description": "The, possibly auto-generated, encryption-key.",
                                     "optional": 1,
                                     "type": "string"
                                  }
@@ -52898,6 +53068,7 @@
                      "preallocation": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/preallocation"],
                      "prune-backups": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/prune-backups"],
                      "saferemove": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/saferemove"],
+                     "saferemove-stepsize": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/saferemove-stepsize"],
                      "saferemove_throughput": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/saferemove_throughput"],
                      "server": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/server"],
                      "share": {
@@ -52970,11 +53141,11 @@
                   "properties": {
                      "config": {
                         "additionalProperties": 1,
-                        "description": "Partial, possible server generated, configuration properties.",
+                        "description": "Partial, possibly server generated, configuration properties.",
                         "optional": 1,
                         "properties": {
                            "encryption-key": {
-                              "description": "The, possible auto-generated, encryption-key.",
+                              "description": "The, possibly auto-generated, encryption-key.",
                               "optional": 1,
                               "type": "string"
                            }
