@@ -1531,7 +1531,7 @@ EOF
         #
         # Default is 1 so warn...
         # If it's explicit we die (below).
-        warn "struct with arbitrary additional properties currently not supported\n";
+        #warn "struct with arbitrary additional properties currently not supported\n";
     } elsif ($additional) {
         if (ref($additional)) {
             # FIXME: proxmox_schema doesn't support this yet.
