@@ -510,8 +510,12 @@ my sub print_method_without_body : prototype($$$$$) {
                 print {$out} "        .maybe_bool_arg(\"$name\", p_$rust_name)\n";
             } elsif ($arg->{is_string_list}) {
                 print {$out} "        .maybe_list_arg(\"$name\", p_$rust_name)\n";
-            } elsif ($arg->{is_option_vec}) {
-                print {$out} "        .maybe_list_arg(\"$name\", &p_$rust_name)\n";
+            } elsif ($arg->{is_string_list_as_array}) {
+                if ($arg->{optional}) {
+                    print {$out} "        .maybe_list_arg(\"$name\", &p_$rust_name)\n";
+                } else {
+                    print {$out} "        .list_arg(\"$name\", &p_$rust_name)\n";
+                }
             } elsif ($arg->{optional}) {
                 print {$out} "        .maybe_arg(\"$name\", &p_$rust_name)\n";
             } else {
@@ -537,8 +541,14 @@ my sub print_method_without_body : prototype($$$$$) {
 
                 if ($arg->{type} eq 'Option<bool>') {
                     print {$out} "        .maybe_bool_arg(\"$name\", $rust_name)\n";
-                } elsif ($arg->{is_string_list} || $arg->{is_option_vec}) {
+                } elsif ($arg->{is_string_list}) {
                     print {$out} "        .maybe_list_arg(\"$name\", &$rust_name)\n";
+                } elsif ($arg->{is_string_list_as_array}) {
+                    if ($arg->{optional}) {
+                        print {$out} "        .maybe_list_arg(\"$name\", &$rust_name)\n";
+                    } else {
+                        print {$out} "        .list_arg(\"$name\", &$rust_name)\n";
+                    }
                 } elsif ($arg->{optional}) {
                     print {$out} "        .maybe_arg(\"$name\", &$rust_name)\n";
                 } else {
@@ -812,26 +822,6 @@ my sub type_of : prototype($) {
     my ($schema) = @_;
 
     my $kind = $schema->{type};
-
-    # If type is 'string' but format ends with `-list`, treat as array
-    # but only for inputs to endpoints.
-    #
-    # We want a typed Vec<String>, and since [1] the PVE API does accept
-    # actual arrays for parameters with a format ending in `-list`.
-    # This is only for inputs though, so we can only have Vec's for
-    # inputs, returns are still string lists.
-    #
-    # [1] pve-common 69d9edcc ("section config: implement array support")
-    if (
-        $kind eq 'string'
-        && defined($schema->{format})
-        && !ref($schema->{format})
-        && $schema->{format} =~ /-list$/
-    ) {
-        if ($__list_format_as_array) {
-            return 'array';
-        }
-    }
 
     return $kind if $kind;
 
@@ -1235,7 +1225,25 @@ sub handle_def : prototype($$$) {
             push $def->{attrs}->@*, $serde;
         }
     } elsif ($type eq 'string') {
-        $def->{type} = string_type($schema, $def->{api}, $name_hint, $def);
+        # If type is 'string' but format ends with `-list`, treat as array
+        # but only for inputs to endpoints.
+        #
+        # We want a typed Vec<String>, and since [1] the PVE API does accept
+        # actual arrays for parameters with a format ending in `-list`.
+        # This is only for inputs though, so we can only have Vec's for
+        # inputs, returns are still string lists.
+        #
+        # [1] pve-common 69d9edcc ("section config: implement array support")
+        if ($__list_format_as_array
+            && defined($schema->{format})
+            && !ref($schema->{format})
+            && $schema->{format} =~ /-list$/
+        ) {
+            $def->{type} = array_type($schema, $def->{api}, $name_hint);
+            $def->{is_string_list_as_array} = true;
+        } else {
+            $def->{type} = string_type($schema, $def->{api}, $name_hint, $def);
+        }
     } elsif ($type eq 'object') {
         $def->{type} = generate_struct($name_hint, $orig_schema, {}, $def->{api});
         # generate_struct uses the original schema and warns by itself
@@ -1274,7 +1282,6 @@ my sub make_struct_field : prototype($$$$) {
     #my $schema = $$inout_schema;
     # (in case the type was already an option type, don't duplicate the `Option<>`)
     if ($optional && !$def->{optional}) {
-        $def->{is_option_vec} = ($def->{type} =~ /^Vec<.*>$/) ? 1 : 0;
         $def->{type} = "Option<$def->{type}>";
         $def->{api}->{optional} = $def->{optional} = true;
         push $def->{attrs}->@*, "#[serde(default, skip_serializing_if = \"Option::is_none\")]";
@@ -1646,7 +1653,6 @@ my sub method_parameters : prototype($$$$$) {
         }
 
         if ($def->{optional}) {
-            $def->{is_option_vec} = ($def->{type} =~ /^Vec<.*>$/) ? 1 : 0;
             $def->{type} = "Option<$def->{type}>";
         }
 
@@ -1674,7 +1680,6 @@ my sub method_parameters : prototype($$$$$) {
 
             handle_def($def, \$schema, namify_type($rust_method_name, $param));
             if ($def->{optional}) {
-                $def->{is_option_vec} = ($def->{type} =~ /^Vec<.*>$/) ? 1 : 0;
                 $def->{type} = "Option<$def->{type}>";
             }
             push @$input, $def;
