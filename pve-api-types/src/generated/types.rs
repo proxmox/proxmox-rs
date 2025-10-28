@@ -1,7 +1,7 @@
 #[api(
     properties: {
         Arch: {
-            type: String,
+            type: AptUpdateInfoArch,
         },
         Description: {
             type: String,
@@ -37,11 +37,10 @@
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct AptUpdateInfo {
-    /// Package Architecture.
     #[serde(rename = "Arch")]
-    pub arch: String,
+    pub arch: AptUpdateInfoArch,
 
-    /// Human-readable package description.
+    /// Package description.
     #[serde(rename = "Description")]
     pub description: String,
 
@@ -55,7 +54,7 @@ pub struct AptUpdateInfo {
     #[serde(rename = "OldVersion")]
     pub old_version: Option<String>,
 
-    /// Package origin.
+    /// Package origin, e.g., 'Proxmox' or 'Debian'.
     #[serde(rename = "Origin")]
     pub origin: String,
 
@@ -63,7 +62,7 @@ pub struct AptUpdateInfo {
     #[serde(rename = "Package")]
     pub package: String,
 
-    /// Package priority in human-readable form.
+    /// Package priority.
     #[serde(rename = "Priority")]
     pub priority: String,
 
@@ -79,6 +78,32 @@ pub struct AptUpdateInfo {
     #[serde(rename = "Version")]
     pub version: String,
 }
+
+#[api]
+/// Package Architecture.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum AptUpdateInfoArch {
+    #[serde(rename = "armhf")]
+    /// armhf.
+    Armhf,
+    #[serde(rename = "arm64")]
+    /// arm64.
+    Arm64,
+    #[serde(rename = "amd64")]
+    /// amd64.
+    Amd64,
+    #[serde(rename = "ppc64el")]
+    /// ppc64el.
+    Ppc64el,
+    #[serde(rename = "risc64")]
+    /// risc64.
+    Risc64,
+    #[serde(rename = "s390x")]
+    /// s390x.
+    S390x,
+}
+serde_plain::derive_display_from_serialize!(AptUpdateInfoArch);
+serde_plain::derive_fromstr_from_deserialize!(AptUpdateInfoArch);
 
 #[api(
     properties: {
@@ -7753,9 +7778,10 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigNumaPolicy);
 
 #[api]
 /// Specify guest operating system.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigOstype {
     #[serde(rename = "other")]
+    #[default]
     /// other.
     Other,
     #[serde(rename = "wxp")]
