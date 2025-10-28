@@ -1052,9 +1052,13 @@ fn test_regex_compilation_5() {
             type: String,
         },
         "isis-ifaces": {
-            format: &ApiStringFormat::Pattern(&CREATE_CONTROLLER_ISIS_IFACES_RE),
+            items: {
+                description: "List item of type pve-iface.",
+                format: &ApiStringFormat::Pattern(&CREATE_CONTROLLER_ISIS_IFACES_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         "isis-net": {
             format: &ApiStringFormat::Pattern(&CREATE_CONTROLLER_ISIS_NET_RE),
@@ -1075,9 +1079,13 @@ fn test_regex_compilation_5() {
             type: String,
         },
         peers: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+            items: {
+                description: "List item of type ip.",
+                format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         type: {
             type: ListControllersType,
@@ -1124,7 +1132,7 @@ pub struct CreateController {
     /// Comma-separated list of interfaces where IS-IS should be active.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "isis-ifaces")]
-    pub isis_ifaces: Option<String>,
+    pub isis_ifaces: Option<Vec<String>>,
 
     /// Network Entity title for this node in the IS-IS network.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1146,7 +1154,7 @@ pub struct CreateController {
 
     /// peers address list.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub peers: Option<String>,
+    pub peers: Option<Vec<String>>,
 
     #[serde(rename = "type")]
     pub ty: ListControllersType,
@@ -1406,9 +1414,13 @@ fn test_regex_compilation_6() {
             type: Integer,
         },
         exitnodes: {
-            format: &ApiStringFormat::Pattern(&CREATE_ZONE_EXITNODES_RE),
+            items: {
+                description: "List item of type pve-node.",
+                format: &ApiStringFormat::Pattern(&CREATE_ZONE_EXITNODES_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         "exitnodes-local-routing": {
             default: false,
@@ -1442,23 +1454,35 @@ fn test_regex_compilation_6() {
             type: Integer,
         },
         nodes: {
-            format: &ApiStringFormat::Pattern(&CREATE_ZONE_NODES_RE),
+            items: {
+                description: "List item of type pve-node.",
+                format: &ApiStringFormat::Pattern(&CREATE_ZONE_NODES_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         peers: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+            items: {
+                description: "List item of type ip.",
+                format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         reversedns: {
             optional: true,
             type: String,
         },
         "rt-import": {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_bgp_rt),
+            items: {
+                description: "List item of type pve-sdn-bgp-rt.",
+                format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_bgp_rt),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         tag: {
             minimum: 0,
@@ -1540,7 +1564,7 @@ pub struct CreateZone {
 
     /// List of cluster node names.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub exitnodes: Option<String>,
+    pub exitnodes: Option<Vec<String>>,
 
     /// Allow exitnodes to connect to EVPN guests.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
@@ -1577,12 +1601,12 @@ pub struct CreateZone {
 
     /// List of cluster node names.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub nodes: Option<String>,
+    pub nodes: Option<Vec<String>>,
 
     /// Comma-separated list of peers, that are part of the VXLAN zone. Usually
     /// the IPs of the nodes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub peers: Option<String>,
+    pub peers: Option<Vec<String>>,
 
     /// reverse dns api server
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1591,7 +1615,7 @@ pub struct CreateZone {
     /// List of Route Targets that should be imported into the VRF of the zone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "rt-import")]
-    pub rt_import: Option<String>,
+    pub rt_import: Option<Vec<String>>,
 
     /// Service-VLAN Tag (outer VLAN)
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
@@ -1634,101 +1658,6 @@ pub enum IsRunning {
 }
 serde_plain::derive_display_from_serialize!(IsRunning);
 serde_plain::derive_fromstr_from_deserialize!(IsRunning);
-
-const LIST_STORAGES_CONTENT: Schema =
-    proxmox_schema::ArraySchema::new("list", &StorageContent::API_SCHEMA).schema();
-
-mod list_storages_content {
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-
-    #[doc(hidden)]
-    pub trait Ser: Sized {
-        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
-        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>;
-    }
-
-    impl<T: Serialize + for<'a> Deserialize<'a>> Ser for Vec<T> {
-        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            super::stringlist::serialize(&self[..], serializer, &super::LIST_STORAGES_CONTENT)
-        }
-
-        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
-        {
-            super::stringlist::deserialize(deserializer, &super::LIST_STORAGES_CONTENT)
-        }
-    }
-
-    impl<T: Ser> Ser for Option<T> {
-        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            match self {
-                None => serializer.serialize_none(),
-                Some(inner) => inner.ser(serializer),
-            }
-        }
-
-        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
-        {
-            use std::fmt;
-            use std::marker::PhantomData;
-
-            struct V<T: Ser>(PhantomData<T>);
-
-            impl<'de, T: Ser> serde::de::Visitor<'de> for V<T> {
-                type Value = Option<T>;
-
-                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                    f.write_str("an optional string")
-                }
-
-                fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
-                    Ok(None)
-                }
-
-                fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
-                where
-                    D: Deserializer<'de>,
-                {
-                    T::de(deserializer).map(Some)
-                }
-
-                fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
-                    use serde::de::IntoDeserializer;
-                    T::de(value.into_deserializer()).map(Some)
-                }
-            }
-
-            deserializer.deserialize_option(V::<T>(PhantomData))
-        }
-    }
-
-    pub fn serialize<T, S>(this: &T, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-        T: Ser,
-    {
-        this.ser(serializer)
-    }
-
-    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<T, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-        T: Ser,
-    {
-        T::de(deserializer)
-    }
-}
 
 #[api]
 /// Only list sdn controllers of specific type
@@ -1889,9 +1818,13 @@ fn test_regex_compilation_7() {
             type: Integer,
         },
         statusfilter: {
-            format: &ApiStringFormat::Pattern(&LIST_TASKS_STATUSFILTER_RE),
+            items: {
+                description: "List item of type pve-task-status-type.",
+                format: &ApiStringFormat::Pattern(&LIST_TASKS_STATUSFILTER_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         typefilter: {
             optional: true,
@@ -1941,7 +1874,7 @@ pub struct ListTasks {
 
     /// List of Task States that should be returned.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub statusfilter: Option<String>,
+    pub statusfilter: Option<Vec<String>>,
 
     /// Only list tasks of this type (e.g., vzstart, vzdump).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3475,6 +3408,7 @@ pub struct LxcStatus {
 const_regex! {
 
 MIGRATE_LXC_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+MIGRATE_LXC_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|1$"##;
 
 }
 
@@ -3482,6 +3416,7 @@ MIGRATE_LXC_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 fn test_regex_compilation_12() {
     use regex::Regex;
     let _: &Regex = &MIGRATE_LXC_TARGET_RE;
+    let _: &Regex = &MIGRATE_LXC_TARGET_STORAGE_RE;
 }
 #[api(
     properties: {
@@ -3502,9 +3437,13 @@ fn test_regex_compilation_12() {
             type: String,
         },
         "target-storage": {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_storage_pair),
+            items: {
+                description: "List item of type storage-pair.",
+                format: &ApiStringFormat::Pattern(&MIGRATE_LXC_TARGET_STORAGE_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         timeout: {
             default: 180,
@@ -3539,7 +3478,7 @@ pub struct MigrateLxc {
     /// '1' will map each source storage to itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "target-storage")]
-    pub target_storage: Option<String>,
+    pub target_storage: Option<Vec<String>>,
 
     /// Timeout in seconds for shutdown for restart migration
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
@@ -3550,6 +3489,7 @@ pub struct MigrateLxc {
 const_regex! {
 
 MIGRATE_QEMU_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+MIGRATE_QEMU_TARGETSTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|1$"##;
 
 }
 
@@ -3557,6 +3497,7 @@ MIGRATE_QEMU_TARGET_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 fn test_regex_compilation_13() {
     use regex::Regex;
     let _: &Regex = &MIGRATE_QEMU_TARGET_RE;
+    let _: &Regex = &MIGRATE_QEMU_TARGETSTORAGE_RE;
 }
 #[api(
     properties: {
@@ -3587,9 +3528,13 @@ fn test_regex_compilation_13() {
             type: String,
         },
         targetstorage: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_storage_pair),
+            items: {
+                description: "List item of type storage-pair.",
+                format: &ApiStringFormat::Pattern(&MIGRATE_QEMU_TARGETSTORAGE_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         "with-conntrack-state": {
             default: false,
@@ -3634,7 +3579,7 @@ pub struct MigrateQemu {
     /// ID maps all source storages to that storage. Providing the special value
     /// '1' will map each source storage to itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub targetstorage: Option<String>,
+    pub targetstorage: Option<Vec<String>>,
 
     /// Whether to migrate conntrack entries for running VMs.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
@@ -9788,6 +9733,19 @@ pub struct ReloadSdn {
     pub release_lock: Option<bool>,
 }
 
+const_regex! {
+
+REMOTE_MIGRATE_LXC_TARGET_BRIDGE_RE = r##"^[-_.\w\d]+:[-_.\w\d]+|[-_.\w\d]+|1$"##;
+REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|1$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_26() {
+    use regex::Regex;
+    let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_BRIDGE_RE;
+    let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE;
+}
 #[api(
     properties: {
         bwlimit: {
@@ -9807,16 +9765,24 @@ pub struct ReloadSdn {
             optional: true,
         },
         "target-bridge": {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_bridge_pair),
-            type: String,
+            items: {
+                description: "List item of type bridge-pair.",
+                format: &ApiStringFormat::Pattern(&REMOTE_MIGRATE_LXC_TARGET_BRIDGE_RE),
+                type: String,
+            },
+            type: Array,
         },
         "target-endpoint": {
             format: &ApiStringFormat::PropertyString(&ProxmoxRemote::API_SCHEMA),
             type: String,
         },
         "target-storage": {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_storage_pair),
-            type: String,
+            items: {
+                description: "List item of type storage-pair.",
+                format: &ApiStringFormat::Pattern(&REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE),
+                type: String,
+            },
+            type: Array,
         },
         "target-vmid": {
             maximum: 999999999,
@@ -9860,7 +9826,7 @@ pub struct RemoteMigrateLxc {
     /// maps all source bridges to that bridge. Providing the special value '1'
     /// will map each source bridge to itself.
     #[serde(rename = "target-bridge")]
-    pub target_bridge: String,
+    pub target_bridge: Vec<String>,
 
     /// Remote target endpoint
     #[serde(rename = "target-endpoint")]
@@ -9870,7 +9836,7 @@ pub struct RemoteMigrateLxc {
     /// ID maps all source storages to that storage. Providing the special value
     /// '1' will map each source storage to itself.
     #[serde(rename = "target-storage")]
-    pub target_storage: String,
+    pub target_storage: Vec<String>,
 
     /// The (unique) ID of the VM.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
@@ -9884,6 +9850,19 @@ pub struct RemoteMigrateLxc {
     pub timeout: Option<i64>,
 }
 
+const_regex! {
+
+REMOTE_MIGRATE_QEMU_TARGET_BRIDGE_RE = r##"^[-_.\w\d]+:[-_.\w\d]+|[-_.\w\d]+|1$"##;
+REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|1$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_27() {
+    use regex::Regex;
+    let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_BRIDGE_RE;
+    let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE;
+}
 #[api(
     properties: {
         bwlimit: {
@@ -9900,16 +9879,24 @@ pub struct RemoteMigrateLxc {
             optional: true,
         },
         "target-bridge": {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_bridge_pair),
-            type: String,
+            items: {
+                description: "List item of type bridge-pair.",
+                format: &ApiStringFormat::Pattern(&REMOTE_MIGRATE_QEMU_TARGET_BRIDGE_RE),
+                type: String,
+            },
+            type: Array,
         },
         "target-endpoint": {
             format: &ApiStringFormat::PropertyString(&ProxmoxRemote::API_SCHEMA),
             type: String,
         },
         "target-storage": {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_storage_pair),
-            type: String,
+            items: {
+                description: "List item of type storage-pair.",
+                format: &ApiStringFormat::Pattern(&REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE),
+                type: String,
+            },
+            type: Array,
         },
         "target-vmid": {
             maximum: 999999999,
@@ -9943,7 +9930,7 @@ pub struct RemoteMigrateQemu {
     /// maps all source bridges to that bridge. Providing the special value '1'
     /// will map each source bridge to itself.
     #[serde(rename = "target-bridge")]
-    pub target_bridge: String,
+    pub target_bridge: Vec<String>,
 
     /// Remote target endpoint
     #[serde(rename = "target-endpoint")]
@@ -9953,7 +9940,7 @@ pub struct RemoteMigrateQemu {
     /// ID maps all source storages to that storage. Providing the special value
     /// '1' will map each source storage to itself.
     #[serde(rename = "target-storage")]
-    pub target_storage: String,
+    pub target_storage: Vec<String>,
 
     /// The (unique) ID of the VM.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
@@ -10188,7 +10175,7 @@ SDN_CONTROLLER_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F
 }
 
 #[test]
-fn test_regex_compilation_26() {
+fn test_regex_compilation_28() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_ISIS_NET_RE;
@@ -10341,7 +10328,7 @@ SDN_CONTROLLER_PENDING_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\
 }
 
 #[test]
-fn test_regex_compilation_27() {
+fn test_regex_compilation_29() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_NET_RE;
@@ -10636,7 +10623,7 @@ SDN_ZONE_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_28() {
+fn test_regex_compilation_30() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_EXITNODES_PRIMARY_RE;
@@ -10910,7 +10897,7 @@ SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_29() {
+fn test_regex_compilation_31() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE;
@@ -11235,13 +11222,15 @@ pub struct StartLxc {
 const_regex! {
 
 START_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+START_QEMU_TARGETSTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|(?i:[a-z][a-z0-9\-_.]*[a-z0-9])|1$"##;
 
 }
 
 #[test]
-fn test_regex_compilation_30() {
+fn test_regex_compilation_32() {
     use regex::Regex;
     let _: &Regex = &START_QEMU_MIGRATEDFROM_RE;
+    let _: &Regex = &START_QEMU_TARGETSTORAGE_RE;
 }
 #[api(
     properties: {
@@ -11282,9 +11271,13 @@ fn test_regex_compilation_30() {
             type: String,
         },
         targetstorage: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_storage_pair),
+            items: {
+                description: "List item of type storage-pair.",
+                format: &ApiStringFormat::Pattern(&START_QEMU_TARGETSTORAGE_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         timeout: {
             default: 30,
@@ -11342,7 +11335,7 @@ pub struct StartQemu {
     /// ID maps all source storages to that storage. Providing the special value
     /// '1' will map each source storage to itself.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub targetstorage: Option<String>,
+    pub targetstorage: Option<Vec<String>>,
 
     /// Wait maximal timeout seconds.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
@@ -11405,7 +11398,7 @@ STOP_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_31() {
+fn test_regex_compilation_33() {
     use regex::Regex;
     let _: &Regex = &STOP_QEMU_MIGRATEDFROM_RE;
 }
@@ -11504,7 +11497,7 @@ STORAGE_INFO_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_32() {
+fn test_regex_compilation_34() {
     use regex::Regex;
     let _: &Regex = &STORAGE_INFO_STORAGE_RE;
 }
@@ -11782,7 +11775,7 @@ UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_33() {
+fn test_regex_compilation_35() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_BOOTDISK_RE;
@@ -11908,9 +11901,13 @@ fn test_regex_compilation_33() {
             type: Integer,
         },
         delete: {
-            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_DELETE_RE),
+            items: {
+                description: "List item of type pve-configid.",
+                format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_DELETE_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         description: {
             max_length: 8192,
@@ -12015,9 +12012,13 @@ fn test_regex_compilation_33() {
             type: String,
         },
         nameserver: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_address),
+            items: {
+                description: "List item of type address.",
+                format: &ApiStringFormat::VerifyFn(verifiers::verify_address),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         net: {
             type: QemuConfigNetArray,
@@ -12049,9 +12050,13 @@ fn test_regex_compilation_33() {
             optional: true,
         },
         revert: {
-            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_REVERT_RE),
+            items: {
+                description: "List item of type pve-configid.",
+                format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_REVERT_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         rng0: {
             format: &ApiStringFormat::PropertyString(&PveQmRng::API_SCHEMA),
@@ -12130,9 +12135,13 @@ fn test_regex_compilation_33() {
             optional: true,
         },
         tags: {
-            format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_TAGS_RE),
+            items: {
+                description: "List item of type pve-tag.",
+                format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_TAGS_RE),
+                type: String,
+            },
             optional: true,
-            type: String,
+            type: Array,
         },
         tdf: {
             default: false,
@@ -12300,7 +12309,7 @@ pub struct UpdateQemuConfig {
 
     /// A list of settings you want to delete.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub delete: Option<String>,
+    pub delete: Option<Vec<String>>,
 
     /// Description for the VM. Shown in the web-interface VM's summary. This is
     /// saved as comment inside the configuration file.
@@ -12439,7 +12448,7 @@ pub struct UpdateQemuConfig {
     /// automatically use the setting from the host if neither searchdomain nor
     /// nameserver are set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub nameserver: Option<String>,
+    pub nameserver: Option<Vec<String>>,
 
     /// Specify network devices.
     #[serde(flatten)]
@@ -12479,7 +12488,7 @@ pub struct UpdateQemuConfig {
 
     /// Revert a pending change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub revert: Option<String>,
+    pub revert: Option<Vec<String>>,
 
     /// Configure a VirtIO-based Random Number Generator.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -12564,7 +12573,7 @@ pub struct UpdateQemuConfig {
 
     /// Tags of the VM. This is only meta information.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub tags: Option<String>,
+    pub tags: Option<Vec<String>>,
 
     /// Enable/disable time drift fix.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
@@ -12675,7 +12684,7 @@ UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_34() {
+fn test_regex_compilation_36() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -12752,7 +12761,7 @@ UPDATE_QEMU_CONFIG_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_35() {
+fn test_regex_compilation_37() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_MODEL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SERIAL_RE;
@@ -13108,7 +13117,7 @@ UPDATE_QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_36() {
+fn test_regex_compilation_38() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SIZE_RE;
@@ -13453,7 +13462,7 @@ UPDATE_QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_37() {
+fn test_regex_compilation_39() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SIZE_RE;
@@ -13853,7 +13862,7 @@ UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_38() {
+fn test_regex_compilation_40() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -13909,7 +13918,7 @@ UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_39() {
+fn test_regex_compilation_41() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE;

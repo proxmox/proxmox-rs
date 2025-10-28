@@ -900,7 +900,7 @@ where
             .maybe_arg("since", &p_since)
             .maybe_arg("source", &p_source)
             .maybe_arg("start", &p_start)
-            .maybe_arg("statusfilter", &p_statusfilter)
+            .maybe_list_arg("statusfilter", &p_statusfilter)
             .maybe_arg("typefilter", &p_typefilter)
             .maybe_arg("until", &p_until)
             .maybe_arg("userfilter", &p_userfilter)
