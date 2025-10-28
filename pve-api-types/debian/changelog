@@ -1,3 +1,13 @@
+rust-pve-api-types (8.0.5-1) trixie; urgency=medium
+
+  * implement array deduplication
+  * schema2rust: handle missing properties hash in parameters
+  * update json schema
+  * generate arrays for types with '-list' format
+  * add regex for storage and bridge pair
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 28 Oct 2025 13:35:41 +0100
+
 rust-pve-api-types (8.0.4-1) trixie; urgency=medium
 
   * add qemu_update_config_async api
