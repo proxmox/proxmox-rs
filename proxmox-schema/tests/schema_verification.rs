@@ -108,7 +108,7 @@ fn compare_error(expected: &[(&str, &str)], err: Error) -> Result<(), Error> {
     })();
 
     if result.is_err() {
-        println!("GOT: {:?}", err);
+        println!("GOT: {err:?}");
     }
 
     result

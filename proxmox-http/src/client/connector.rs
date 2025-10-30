@@ -191,7 +191,7 @@ where
                     let mut tcp_stream =
                         RateLimitedStream::with_limiter(tcp_stream, read_limiter, write_limiter);
 
-                    let mut connect_request = format!("CONNECT {0}:{1} HTTP/1.1\r\n", host, port);
+                    let mut connect_request = format!("CONNECT {host}:{port} HTTP/1.1\r\n");
                     if let Some(authorization) = authorization {
                         let _ = write!(
                             connect_request,
@@ -199,7 +199,7 @@ where
                             proxmox_base64::encode(authorization)
                         );
                     }
-                    let _ = write!(connect_request, "Host: {0}:{1}\r\n\r\n", host, port);
+                    let _ = write!(connect_request, "Host: {host}:{port}\r\n\r\n");
 
                     tcp_stream.write_all(connect_request.as_bytes()).await?;
                     tcp_stream.flush().await?;

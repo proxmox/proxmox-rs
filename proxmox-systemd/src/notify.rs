@@ -30,7 +30,7 @@ impl SystemdNotify {
                 &cs
             }
             SystemdNotify::MainPid(pid) => {
-                cs = CString::new(format!("MAINPID={}", pid))?;
+                cs = CString::new(format!("MAINPID={pid}"))?;
                 &cs
             }
         };

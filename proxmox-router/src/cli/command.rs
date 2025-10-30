@@ -70,7 +70,7 @@ fn parse_arguments<'cli>(
     };
 
     if !remaining.is_empty() {
-        let err_msg = format!("got additional arguments: {:?}", remaining);
+        let err_msg = format!("got additional arguments: {remaining:?}");
         print_simple_usage_error_do(prefix, cli_cmd, &err_msg, global_options_iter);
         return Err(format_err!("{}", err_msg));
     }
@@ -211,7 +211,7 @@ fn parse_nested_command<'a>(
                 s
             });
 
-            let err_msg = format!("no command specified.\nPossible commands: {}", list);
+            let err_msg = format!("no command specified.\nPossible commands: {list}");
             print_nested_usage_error(prefix, map, &err_msg);
             return Err(format_err!("{}", err_msg));
         }
@@ -221,13 +221,13 @@ fn parse_nested_command<'a>(
         let (_, sub_cmd) = match map.find_command(&command) {
             Some(cmd) => cmd,
             None => {
-                let err_msg = format!("no such command '{}'", command);
+                let err_msg = format!("no such command '{command}'");
                 print_nested_usage_error(prefix, map, &err_msg);
                 return Err(format_err!("{}", err_msg));
             }
         };
 
-        *prefix = format!("{} {}", prefix, command);
+        *prefix = format!("{prefix} {command}");
 
         match sub_cmd {
             CommandLineInterface::Simple(cli_cmd) => {
@@ -413,7 +413,7 @@ where
                     generate_nested_usage(&prefix, map, DocumentationFormat::ReST)
                 }
             };
-            println!("{}", usage);
+            println!("{usage}");
             std::process::exit(0);
         }
     }

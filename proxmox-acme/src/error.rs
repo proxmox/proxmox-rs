@@ -101,23 +101,23 @@ impl fmt::Display for Error {
                 Some(detail) => write!(f, "{}: {}", err.ty, detail),
                 None => fmt::Display::fmt(&err.ty, f),
             },
-            Error::InvalidApi(err) => write!(f, "Acme Server API misbehaved: {}", err),
+            Error::InvalidApi(err) => write!(f, "Acme Server API misbehaved: {err}"),
             Error::BadNonce => f.write_str("bad nonce, please retry with a new nonce"),
-            Error::UserActionRequired(err) => write!(f, "user action required: {}", err),
+            Error::UserActionRequired(err) => write!(f, "user action required: {err}"),
             Error::MissingKey => f.write_str("cannot build an account without a key"),
             Error::MissingContactInfo => f.write_str("account requires contact info"),
             Error::EmptyOrder => f.write_str("cannot make an empty order"),
             Error::UnsupportedKeyType => f.write_str("unsupported key type"),
             Error::UnsupportedGroup => f.write_str("unsupported EC group"),
             Error::BadAccountData(err) => {
-                write!(f, "bad response to account query or creation: {}", err)
+                write!(f, "bad response to account query or creation: {err}")
             }
             Error::BadOrderData(err) => {
-                write!(f, "bad response to new-order query or creation: {}", err)
+                write!(f, "bad response to new-order query or creation: {err}")
             }
             Error::RawSsl(err) => fmt::Display::fmt(err, f),
             Error::Ssl(context, err) => {
-                write!(f, "{}: {}", context, err)
+                write!(f, "{context}: {err}")
             }
             Error::Json(err) => fmt::Display::fmt(err, f),
             Error::Custom(err) => fmt::Display::fmt(err, f),

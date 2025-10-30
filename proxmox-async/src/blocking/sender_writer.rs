@@ -17,7 +17,7 @@ impl SenderWriter {
         if let Err(err) = self.sender.blocking_send(Ok(buf.to_vec())) {
             return Err(io::Error::new(
                 io::ErrorKind::UnexpectedEof,
-                format!("could not send: {}", err),
+                format!("could not send: {err}"),
             ));
         }
 

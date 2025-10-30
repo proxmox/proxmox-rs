@@ -83,7 +83,7 @@ impl ParameterError {
                 self.extend(
                     param_err
                         .into_iter()
-                        .map(|(key, err)| (format!("{}/{}", prefix, key), err)),
+                        .map(|(key, err)| (format!("{prefix}/{key}"), err)),
                 );
             }
             Err(err) => self.push(prefix.to_string(), err),
@@ -108,7 +108,7 @@ impl fmt::Display for ParameterError {
             } else {
                 msg.push_str("parameter verification failed:\n");
                 for (name, err) in self.error_list.iter() {
-                    let _ = writeln!(msg, "- '{}': {}", name, err);
+                    let _ = writeln!(msg, "- '{name}': {err}");
                 }
             }
         }
@@ -1819,10 +1819,10 @@ impl ApiStringFormat {
 impl std::fmt::Debug for ApiStringFormat {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ApiStringFormat::VerifyFn(fnptr) => write!(f, "VerifyFn({:p}", fnptr),
-            ApiStringFormat::Enum(variants) => write!(f, "Enum({:?}", variants),
-            ApiStringFormat::Pattern(regex) => write!(f, "Pattern({:?}", regex),
-            ApiStringFormat::PropertyString(schema) => write!(f, "PropertyString({:?}", schema),
+            ApiStringFormat::VerifyFn(fnptr) => write!(f, "VerifyFn({fnptr:p}"),
+            ApiStringFormat::Enum(variants) => write!(f, "Enum({variants:?}"),
+            ApiStringFormat::Pattern(regex) => write!(f, "Pattern({regex:?}"),
+            ApiStringFormat::PropertyString(schema) => write!(f, "PropertyString({schema:?}"),
         }
     }
 }

@@ -46,7 +46,7 @@ fn handle_error(mut item: TokenStream, data: Result<TokenStream, Error>) -> Toke
                 item.extend(err.to_compile_error());
                 item
             }
-            Err(err) => panic!("error in api/router macro: {}", err),
+            Err(err) => panic!("error in api/router macro: {err}"),
         },
     };
     data.extend(take_non_fatal_errors());

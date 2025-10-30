@@ -50,10 +50,10 @@ pub fn format_and_print_result_full(
         println!("{}", serde_json::to_string(&result).unwrap());
     } else if output_format == "text" {
         if let Err(err) = value_to_text(std::io::stdout(), result, return_type.schema, options) {
-            eprintln!("unable to format result: {}", err);
+            eprintln!("unable to format result: {err}");
         }
     } else {
-        eprintln!("undefined output format '{}'", output_format);
+        eprintln!("undefined output format '{output_format}'");
     }
 }
 
@@ -118,7 +118,7 @@ pub(crate) fn generate_usage_str_do<'cli>(
 
                 done_hash.insert(positional_arg);
             }
-            None => panic!("no such property '{}' in schema", positional_arg),
+            None => panic!("no such property '{positional_arg}' in schema"),
         }
     }
 
@@ -279,13 +279,13 @@ pub(crate) fn print_simple_usage_error_do<'cli>(
         &[],
         global_options_iter,
     );
-    eprintln!("Error: {}\nUsage: {}", err_msg, usage);
+    eprintln!("Error: {err_msg}\nUsage: {usage}");
 }
 
 /// Print command usage for nested commands to ``stderr``.
 pub fn print_nested_usage_error(prefix: &str, def: &CliCommandMap, err_msg: &str) {
     let usage = generate_nested_usage(prefix, def, DocumentationFormat::Short);
-    eprintln!("Error: {}\n\nUsage:\n\n{}", err_msg, usage);
+    eprintln!("Error: {err_msg}\n\nUsage:\n\n{usage}");
 }
 
 /// While going through nested commands, this keeps track of the available global options.
@@ -394,7 +394,7 @@ fn generate_nested_usage_do<'cli>(
         let new_prefix = if prefix.is_empty() {
             String::from(cmd)
         } else {
-            format!("{} {}", prefix, cmd)
+            format!("{prefix} {cmd}")
         };
 
         if !usage.is_empty() && format == DocumentationFormat::ReST {

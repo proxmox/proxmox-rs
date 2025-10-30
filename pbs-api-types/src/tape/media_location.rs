@@ -52,10 +52,10 @@ impl std::fmt::Display for MediaLocation {
                 write!(f, "offline")
             }
             MediaLocation::Online(changer) => {
-                write!(f, "online-{}", changer)
+                write!(f, "online-{changer}")
             }
             MediaLocation::Vault(vault) => {
-                write!(f, "vault-{}", vault)
+                write!(f, "vault-{vault}")
             }
         }
     }

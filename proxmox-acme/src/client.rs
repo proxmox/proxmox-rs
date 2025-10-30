@@ -251,7 +251,7 @@ impl Inner {
     /// Update the Nonce.
     fn new_nonce(&mut self, new_nonce_url: &str) -> Result<(), Error> {
         let mut response = self.execute(b"HEAD", new_nonce_url, None).map_err(|err| {
-            Error::InvalidApi(format!("failed to get HEAD of newNonce URL: {}", err))
+            Error::InvalidApi(format!("failed to get HEAD of newNonce URL: {err}"))
         })?;
 
         if !response.is_success() {
@@ -324,7 +324,7 @@ impl Client {
 
         let response = inner
             .execute(b"GET", directory_url, None)
-            .map_err(|err| Error::InvalidApi(format!("failed to get directory info: {}", err)))?;
+            .map_err(|err| Error::InvalidApi(format!("failed to get directory info: {err}")))?;
 
         if !response.is_success() {
             bail!(

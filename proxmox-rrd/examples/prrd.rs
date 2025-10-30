@@ -178,7 +178,7 @@ pub fn first_update_time(path: String, rra_index: usize) -> Result<(), Error> {
     let duration = (rra.data.len() as u64) * rra.resolution;
     let first = rra.slot_start_time((rrd.source.last_update as u64).saturating_sub(duration));
 
-    println!("{}", first);
+    println!("{first}");
     Ok(())
 }
 
@@ -248,7 +248,7 @@ pub fn create_rrd(dst: DataSourceType, path: String, rra: Vec<String>) -> Result
     for item in rra.iter() {
         let rra: RRAConfig =
             serde_json::from_value(RRAConfig::API_SCHEMA.parse_property_string(item)?)?;
-        println!("GOT {:?}", rra);
+        println!("GOT {rra:?}");
         rra_list.push(Archive::new(rra.cf, rra.r, rra.n as usize));
     }
 
@@ -382,7 +382,7 @@ fn main() -> Result<(), Error> {
         );
 
     let mut rpcenv = CliEnvironment::new();
-    rpcenv.set_auth_id(Some(format!("{}@pam", username)));
+    rpcenv.set_auth_id(Some(format!("{username}@pam")));
 
     run_cli_command(cmd_def, rpcenv, None);
 

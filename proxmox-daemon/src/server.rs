@@ -189,7 +189,7 @@ impl Reloader {
                 });
 
                 if let Some(pid_fn) = pid_fn {
-                    let pid_str = format!("{}\n", child);
+                    let pid_str = format!("{child}\n");
                     proxmox_sys::fs::replace_file(
                         pid_fn,
                         pid_str.as_bytes(),

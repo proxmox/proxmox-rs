@@ -14,7 +14,7 @@ fn load_auth_state_locked(
     default: Option<Value>,
 ) -> Result<(PathBuf, std::fs::File, Vec<Value>), Error> {
     let mut lock_path = state_dir.to_owned();
-    lock_path.push(format!("proxmox-openid-auth-state-{}.lck", realm));
+    lock_path.push(format!("proxmox-openid-auth-state-{realm}.lck"));
 
     let lock = open_file_locked(
         lock_path,
@@ -24,7 +24,7 @@ fn load_auth_state_locked(
     )?;
 
     let mut path = state_dir.to_owned();
-    path.push(format!("proxmox-openid-auth-state-{}", realm));
+    path.push(format!("proxmox-openid-auth-state-{realm}"));
 
     let now = epoch_i64();
 

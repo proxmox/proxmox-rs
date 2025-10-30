@@ -134,7 +134,7 @@ impl InfluxDbHttp {
         let mut request = http::Request::builder().method("GET").uri(&self.healthuri);
 
         if let Some(token) = &self.token {
-            request = request.header("Authorization", format!("Token {}", token));
+            request = request.header("Authorization", format!("Token {token}"));
         }
 
         let res = self.client.request(request.body(Body::empty())?).await?;
@@ -170,7 +170,7 @@ impl InfluxDbHttp {
         let mut request = http::Request::builder().method("POST").uri(&self.writeuri);
 
         if let Some(token) = &self.token {
-            request = request.header("Authorization", format!("Token {}", token));
+            request = request.header("Authorization", format!("Token {token}"));
         }
 
         let request = request.body(self.data.split_off(0).into())?;

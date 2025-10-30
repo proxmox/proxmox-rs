@@ -126,10 +126,10 @@ where
 
                         let response = match line.parse::<Value>() {
                             Ok(param) => match func(param) {
-                                Ok(res) => format!("OK: {}\n", res),
-                                Err(err) => format!("ERROR: {}\n", err),
+                                Ok(res) => format!("OK: {res}\n"),
+                                Err(err) => format!("ERROR: {err}\n"),
                             },
-                            Err(err) => format!("ERROR: {}\n", err),
+                            Err(err) => format!("ERROR: {err}\n"),
                         };
 
                         if let Err(err) = tx.write_all(response.as_bytes()).await {

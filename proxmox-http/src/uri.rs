@@ -13,9 +13,9 @@ pub fn build_authority(host: &str, port: u16) -> Result<Authority, InvalidUri> {
     let len = bytes.len();
     let authority =
         if len > 3 && bytes.contains(&b':') && bytes[0] != b'[' && bytes[len - 1] != b']' {
-            format!("[{}]:{}", host, port).parse()?
+            format!("[{host}]:{port}").parse()?
         } else {
-            format!("{}:{}", host, port).parse()?
+            format!("{host}:{port}").parse()?
         };
     Ok(authority)
 }

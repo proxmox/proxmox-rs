@@ -417,7 +417,7 @@ impl<R: BufRead> NetworkParser<R> {
                 } else {
                     use std::fmt::Write as _;
                     check_netmask(netmask, is_v6)?;
-                    let _ = write!(cidr, "/{}", netmask);
+                    let _ = write!(cidr, "/{netmask}");
                 }
                 if is_v6 {
                     set_cidr_v6(interface, cidr)?;

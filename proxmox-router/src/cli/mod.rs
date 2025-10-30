@@ -520,7 +520,7 @@ impl<'cli> CommandLineParseState<'cli> {
             cmds.sort();
             let list = cmds.join(", ");
 
-            let err_msg = format!("no command specified.\nPossible commands: {}", list);
+            let err_msg = format!("no command specified.\nPossible commands: {list}");
             print_nested_usage_error(&self.prefix, cli, &err_msg);
             return Err(format_err!("{}", err_msg));
         }

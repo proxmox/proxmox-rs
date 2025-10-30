@@ -261,7 +261,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
         let pid = std::process::id();
         let mut tmp_path = path.clone();
         tmp_path.set_extension("tmp");
-        tmp_path.set_extension(format!("{}", pid));
+        tmp_path.set_extension(format!("{pid}"));
 
         if let Err(err) = std::fs::write(&tmp_path, content) {
             let _ = std::fs::remove_file(&tmp_path);
@@ -315,9 +315,9 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
                 })
             };
 
-            let message_old = |suite| format!("old suite '{}' configured!", suite);
+            let message_old = |suite| format!("old suite '{suite}' configured!");
             let message_new =
-                |suite| format!("suite '{}' should not be used in production!", suite);
+                |suite| format!("suite '{suite}' should not be used in production!");
             let message_stable = "use the name of the stable distribution instead of 'stable'!";
 
             for suite in repo.suites.iter() {
@@ -355,7 +355,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
                     if suffix != require_suffix {
                         add_info(
                             "warning",
-                            format!("expected suite '{}{}'", current_codename, require_suffix),
+                            format!("expected suite '{current_codename}{require_suffix}'"),
                         );
                     }
                 }

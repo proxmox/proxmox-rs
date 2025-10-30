@@ -1827,9 +1827,9 @@ pub fn print_ns_and_snapshot(ns: &BackupNamespace, dir: &BackupDir) -> String {
 /// Prints a Datastore name and [`BackupNamespace`] for logs/errors.
 pub fn print_store_and_ns(store: &str, ns: &BackupNamespace) -> String {
     if ns.is_root() {
-        format!("datastore '{}', root namespace", store)
+        format!("datastore '{store}', root namespace")
     } else {
-        format!("datastore '{}', namespace '{}'", store, ns)
+        format!("datastore '{store}', namespace '{ns}'")
     }
 }
 

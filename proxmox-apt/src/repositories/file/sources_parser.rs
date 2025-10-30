@@ -86,13 +86,13 @@ impl<R: BufRead> APTSourcesFileParser<R> {
 
                 if value_str.is_empty() {
                     // ignored by APT
-                    eprintln!("option has no value: '{}'", line);
+                    eprintln!("option has no value: '{line}'");
                     continue;
                 }
 
                 if !Self::valid_key(key) {
                     // ignored by APT
-                    eprintln!("option with invalid key '{}'", key);
+                    eprintln!("option with invalid key '{key}'");
                     continue;
                 }
 

@@ -142,7 +142,7 @@ fn test_broadcast_future() {
             CHECKSUM.fetch_add(res, Ordering::SeqCst);
         })
         .map_err(|err| {
-            panic!("got error {}", err);
+            panic!("got error {err}");
         })
         .map(|_| ());
 
@@ -152,7 +152,7 @@ fn test_broadcast_future() {
             CHECKSUM.fetch_add(res * 2, Ordering::SeqCst);
         })
         .map_err(|err| {
-            panic!("got error {}", err);
+            panic!("got error {err}");
         })
         .map(|_| ());
 
@@ -178,7 +178,7 @@ fn test_broadcast_future() {
                 CHECKSUM.fetch_add(res * 4, Ordering::SeqCst);
             })
             .map_err(|err| {
-                panic!("got error {}", err);
+                panic!("got error {err}");
             })
             .map(|_| ()),
     );

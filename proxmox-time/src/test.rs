@@ -4,7 +4,7 @@ use super::*;
 
 fn test_event(v: &'static str) -> Result<(), Error> {
     match v.parse::<CalendarEvent>() {
-        Ok(event) => println!("CalendarEvent '{}' => {:?}", v, event),
+        Ok(event) => println!("CalendarEvent '{v}' => {event:?}"),
         Err(err) => bail!("parsing '{}' failed - {}", v, err),
     }
 
@@ -19,7 +19,7 @@ const fn make_test_time(mday: i32, hour: i32, min: i32) -> i64 {
 #[allow(clippy::identity_op)]
 fn test_compute_next_event() -> Result<(), Error> {
     let test_value = |v: &'static str, last: i64, expect: i64| -> Result<i64, Error> {
-        let event: CalendarEvent = match format!("{} UTC", v).parse() {
+        let event: CalendarEvent = match format!("{v} UTC").parse() {
             Ok(event) => event,
             Err(err) => bail!("parsing '{}' failed - {}", v, err),
         };
@@ -27,7 +27,7 @@ fn test_compute_next_event() -> Result<(), Error> {
         match event.compute_next_event(last) {
             Ok(Some(next)) => {
                 if next == expect {
-                    println!("next {:?} => {}", event, next);
+                    println!("next {event:?} => {next}");
                 } else {
                     bail!(
                         "next {:?} failed\nnext:  {:?}\nexpect: {:?}",
@@ -45,7 +45,7 @@ fn test_compute_next_event() -> Result<(), Error> {
     };
 
     let test_never = |v: &'static str, last: i64| -> Result<(), Error> {
-        let event: CalendarEvent = match format!("{} UTC", v).parse() {
+        let event: CalendarEvent = match format!("{v} UTC").parse() {
             Ok(event) => event,
             Err(err) => bail!("parsing '{}' failed - {}", v, err),
         };
@@ -227,7 +227,7 @@ fn test_calendar_event_weekday() -> Result<(), Error> {
 fn test_time_span_parser() -> Result<(), Error> {
     let test_value = |ts_str: &str, expect: f64| -> Result<(), Error> {
         let ts: TimeSpan = ts_str.parse()?;
-        assert_eq!(f64::from(ts), expect, "{}", ts_str);
+        assert_eq!(f64::from(ts), expect, "{ts_str}");
         Ok(())
     };
 

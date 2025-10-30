@@ -151,7 +151,7 @@ fn object_to_writer(output: &mut dyn Write, object: &Object) -> Result<(), Error
     // special key `description` for multi-line notes, must be written before everything else
     if let Some(Value::String(description)) = object.get("description") {
         for lines in description.lines() {
-            writeln!(output, "#{}", lines)?;
+            writeln!(output, "#{lines}")?;
         }
     }
 
@@ -159,14 +159,14 @@ fn object_to_writer(output: &mut dyn Write, object: &Object) -> Result<(), Error
         match value {
             _ if key == "description" => continue, // skip description as we handle it above
             Value::Null => continue,               // delete this entry
-            Value::Bool(v) => writeln!(output, "{}: {}", key, v)?,
+            Value::Bool(v) => writeln!(output, "{key}: {v}")?,
             Value::String(v) => {
                 if v.as_bytes().contains(&b'\n') {
                     bail!("value for {} contains newlines", key);
                 }
-                writeln!(output, "{}: {}", key, v)?
+                writeln!(output, "{key}: {v}")?
             }
-            Value::Number(v) => writeln!(output, "{}: {}", key, v)?,
+            Value::Number(v) => writeln!(output, "{key}: {v}")?,
             Value::Array(_) => bail!("arrays are not supported in config files"),
             Value::Object(_) => bail!("complex objects are not supported in config files"),
         }

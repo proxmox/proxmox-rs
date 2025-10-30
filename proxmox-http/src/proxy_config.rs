@@ -83,8 +83,8 @@ impl ProxyConfig {
     pub fn to_proxy_string(&self) -> Result<String, Error> {
         let authority = build_authority(&self.host, self.port)?;
         Ok(match self.authorization {
-            None => format!("http://{}", authority),
-            Some(ref authorization) => format!("http://{}@{}", authorization, authority),
+            None => format!("http://{authority}"),
+            Some(ref authorization) => format!("http://{authorization}@{authority}"),
         })
     }
 }

@@ -14,7 +14,7 @@ use serde_json::Value;
 )]
 /// Print the given message.
 pub fn hello(message: String) -> Result<(), Error> {
-    println!("Hello there. {}", message);
+    println!("Hello there. {message}");
     Ok(())
 }
 

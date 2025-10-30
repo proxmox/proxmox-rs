@@ -89,7 +89,7 @@ pub fn dump_journal(filter: JournalFilter) -> Result<Vec<String>, Error> {
 
     if let Some(lastentries) = filter.lastentries {
         args.push(String::from("-n"));
-        args.push(format!("{}", lastentries));
+        args.push(format!("{lastentries}"));
     }
 
     if let Some(since) = filter.since {

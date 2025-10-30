@@ -751,7 +751,7 @@ fn extract_normal_parameter(
             if let Some(def) = &default_value {
                 let name_uc = name.as_ident().to_string().to_uppercase();
                 let name = Ident::new(
-                    &format!("API_METHOD_{}_PARAM_DEFAULT_{}", func_uc, name_uc),
+                    &format!("API_METHOD_{func_uc}_PARAM_DEFAULT_{name_uc}"),
                     span,
                 );
 

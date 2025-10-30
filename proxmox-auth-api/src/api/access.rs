@@ -376,11 +376,11 @@ pub fn assemble_csrf_prevention_token(secret: &HMACKey, userid: &Userid) -> Stri
     let data = csrf_token_data(epoch, userid);
     let digest =
         proxmox_base64::encode_no_pad(secret.sign(MessageDigest::sha3_256(), &data).unwrap());
-    format!("{:08X}:{}", epoch, digest)
+    format!("{epoch:08X}:{digest}")
 }
 
 fn csrf_token_data(timestamp: i64, userid: &Userid) -> Vec<u8> {
-    format!("{:08X}:{}:", timestamp, userid).as_bytes().to_vec()
+    format!("{timestamp:08X}:{userid}:").as_bytes().to_vec()
 }
 
 pub(crate) fn verify_csrf_prevention_token(
@@ -422,7 +422,7 @@ fn verify_csrf_prevention_token_do(
         // legacy token verification code
         // TODO: remove once all dependent products had a major version release (PBS)
         let mut hasher = openssl::sha::Sha256::new();
-        let data = format!("{:08X}:{}:", ttime, userid);
+        let data = format!("{ttime:08X}:{userid}:");
         hasher.update(data.as_bytes());
         hasher.update(&secret.as_bytes()?);
         let old_digest = hasher.finish();
@@ -474,12 +474,12 @@ fn test_verify_legacy_csrf_tokens() {
     let epoch = crate::time::epoch_i64();
 
     let mut hasher = openssl::sha::Sha256::new();
-    let data = format!("{:08X}:{}:", epoch, userid);
+    let data = format!("{epoch:08X}:{userid}:");
     hasher.update(data.as_bytes());
     hasher.update(&key);
     let old_digest = proxmox_base64::encode_no_pad(hasher.finish());
 
-    let token = format!("{:08X}:{}", epoch, old_digest);
+    let token = format!("{epoch:08X}:{old_digest}");
 
     // load key into new hmackey wrapper and verify
     let string = proxmox_base64::encode_no_pad(key.clone());

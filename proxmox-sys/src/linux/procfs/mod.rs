@@ -45,8 +45,7 @@ impl PidStat {
     /// Retrieve the `stat` file contents of a process.
     pub fn read_from_pid(pid: Pid) -> Result<Self, Error> {
         let stat = Self::parse(std::str::from_utf8(&std::fs::read(format!(
-            "/proc/{}/stat",
-            pid
+            "/proc/{pid}/stat"
         ))?)?)?;
         if stat.pid != pid {
             bail!(

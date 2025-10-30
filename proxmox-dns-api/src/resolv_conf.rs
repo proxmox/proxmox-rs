@@ -114,19 +114,19 @@ pub fn update_dns(
 
     use std::fmt::Write as _;
     if let Some(search) = config.search {
-        let _ = writeln!(data, "search {}", search);
+        let _ = writeln!(data, "search {search}");
     }
 
     if let Some(dns1) = config.dns1 {
-        let _ = writeln!(data, "nameserver {}", dns1);
+        let _ = writeln!(data, "nameserver {dns1}");
     }
 
     if let Some(dns2) = config.dns2 {
-        let _ = writeln!(data, "nameserver {}", dns2);
+        let _ = writeln!(data, "nameserver {dns2}");
     }
 
     if let Some(dns3) = config.dns3 {
-        let _ = writeln!(data, "nameserver {}", dns3);
+        let _ = writeln!(data, "nameserver {dns3}");
     }
 
     if let Some(options) = config.options {

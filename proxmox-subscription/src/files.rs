@@ -149,7 +149,7 @@ pub fn update_apt_auth<P: AsRef<Path>>(
 ) -> Result<(), Error> {
     match (key, password) {
         (Some(key), Some(password)) => {
-            let conf = format!("machine {url}\n login {}\n password {}\n", key, password,);
+            let conf = format!("machine {url}\n login {key}\n password {password}\n",);
 
             // we use a namespaced .conf file, so just overwrite..
             replace_file(path, conf.as_bytes(), file_opts, true)

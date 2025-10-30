@@ -625,7 +625,7 @@ impl SectionConfig {
         section_id: &str,
         _data: &Value,
     ) -> Result<String, Error> {
-        Ok(format!("{}: {}\n", type_name, section_id))
+        Ok(format!("{type_name}: {section_id}\n"))
     }
 
     fn default_format_section_content(
@@ -667,7 +667,7 @@ impl SectionConfig {
             );
         }
 
-        Ok(format!("\t{} {}\n", key, text))
+        Ok(format!("\t{key} {text}\n"))
     }
 
     fn default_parse_section_content(line: &str) -> Option<(String, String)> {
@@ -739,7 +739,7 @@ impl SectionConfig {
             bail!("gut unexpected section type");
         }
 
-        Ok(format!("[{}]\n", section_id))
+        Ok(format!("[{section_id}]\n"))
     }
 
     fn systemd_format_section_content(
@@ -781,7 +781,7 @@ impl SectionConfig {
             );
         }
 
-        Ok(format!("{}={}\n", key, text))
+        Ok(format!("{key}={text}\n"))
     }
 
     fn systemd_parse_section_content(line: &str) -> Option<(String, String)> {
@@ -880,7 +880,7 @@ lvmthin: local-lvm2
 ";
 
     let res = config.parse(filename, raw);
-    println!("RES: {:?}", res);
+    println!("RES: {res:?}");
     let raw = config.write(filename, &res.unwrap());
     println!("CONFIG:\n{}", raw.unwrap());
 }
@@ -951,7 +951,7 @@ group: mygroup
 ";
 
     let res = config.parse(filename, raw);
-    println!("RES: {:?}", res);
+    println!("RES: {res:?}");
     let raw = config.write(filename, &res.unwrap());
     println!("CONFIG:\n{}", raw.unwrap());
 }
@@ -1000,11 +1000,11 @@ lvmthin: local-lvm2
 ";
 
     let res = config.parse(filename, raw);
-    println!("RES: {:?}", res);
+    println!("RES: {res:?}");
     let created = config
         .write(filename, &res.unwrap())
         .expect("failed to write config");
-    println!("CONFIG:\n{}", raw);
+    println!("CONFIG:\n{raw}");
 
     assert_eq!(raw, created);
 }
@@ -1062,7 +1062,7 @@ user: root@pam
 ";
 
     let res = config_with_additional.parse(filename, raw);
-    println!("RES: {:?}", res);
+    println!("RES: {res:?}");
     let written = config_with_additional.write(filename, &res.unwrap());
     println!("CONFIG:\n{}", written.unwrap());
 
@@ -1129,14 +1129,14 @@ token: asdf@pbs!asdftoken
     };
 
     let res = config.parse(filename, raw).unwrap();
-    println!("RES: {:?}", res);
+    println!("RES: {res:?}");
     let written = config.write(filename, &res);
     println!("CONFIG:\n{}", written.as_ref().unwrap());
 
     check(res);
 
     let res = config.parse(filename, &written.unwrap()).unwrap();
-    println!("RES second time: {:?}", res);
+    println!("RES second time: {res:?}");
 
     check(res);
 
@@ -1212,21 +1212,21 @@ sync: s-6c32330a-6204
     };
 
     let res = config.parse(filename, raw).unwrap();
-    println!("RES: {:?}", res);
+    println!("RES: {res:?}");
     let written = config.write(filename, &res).unwrap();
-    println!("CONFIG:\n{}", written);
+    println!("CONFIG:\n{written}");
 
     check(res);
 
     let res = config.parse(filename, &written).unwrap();
-    println!("RES (second time): {:?}", res);
+    println!("RES (second time): {res:?}");
 
     check(res);
 
     let res_unknown = config_unknown.parse(filename, raw).unwrap();
-    println!("RES (unknown): {:?}", res_unknown);
+    println!("RES (unknown): {res_unknown:?}");
     let written_unknown = config_unknown.write(filename, &res_unknown).unwrap();
-    println!("CONFIG (unknown):\n{}", written_unknown);
+    println!("CONFIG (unknown):\n{written_unknown}");
 
     check(res_unknown);
 

@@ -95,7 +95,7 @@ impl WebauthnConfig {
     pub fn digest(&self) -> [u8; 32] {
         let mut data = format!("rp={:?}\nid={:?}\n", self.rp, self.id,);
         if let Some(origin) = &self.origin {
-            data.push_str(&format!("origin={}\n", origin));
+            data.push_str(&format!("origin={origin}\n"));
         }
         openssl::sha::sha256(data.as_bytes())
     }

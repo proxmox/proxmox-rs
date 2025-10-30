@@ -184,7 +184,7 @@ fn escape_id(unit: &str) -> String {
             || !matches!(c, b'_' | b'.' | b'0'..=b'9' | b'a'..=b'z' | b'A'..=b'Z')
         {
             // unwrap: writing to a String
-            write!(escaped, "\\x{:02x}", c).unwrap();
+            write!(escaped, "\\x{c:02x}").unwrap();
         } else {
             escaped.push(char::from(c));
         }

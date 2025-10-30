@@ -154,10 +154,10 @@ pub fn parse_arguments<T: AsRef<str>>(
                     last_arg_param_is_array = true;
                 }
             } else if optional {
-                panic!("positional argument '{}' may not be optional", name);
+                panic!("positional argument '{name}' may not be optional");
             }
         } else {
-            panic!("no such property '{}' in schema", name);
+            panic!("no such property '{name}' in schema");
         }
     }
 

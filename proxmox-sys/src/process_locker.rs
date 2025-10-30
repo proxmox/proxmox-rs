@@ -56,7 +56,7 @@ impl Drop for ProcessLockSharedGuard {
             if let Err(err) =
                 nix::fcntl::fcntl(data.file.as_raw_fd(), nix::fcntl::FcntlArg::F_SETLKW(&op))
             {
-                panic!("unable to drop writer lock - {}", err);
+                panic!("unable to drop writer lock - {err}");
             }
         }
         if data.writers > 0 {
@@ -96,7 +96,7 @@ impl Drop for ProcessLockExclusiveGuard {
         if let Err(err) =
             nix::fcntl::fcntl(data.file.as_raw_fd(), nix::fcntl::FcntlArg::F_SETLKW(&op))
         {
-            panic!("unable to drop exclusive lock - {}", err);
+            panic!("unable to drop exclusive lock - {err}");
         }
 
         data.exclusive = false;

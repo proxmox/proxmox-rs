@@ -239,7 +239,7 @@ pub fn create_self_signed_cert(
 
     let mut subject_name = openssl::x509::X509NameBuilder::new()?;
     subject_name.append_entry_by_text("O", product_name)?;
-    subject_name.append_entry_by_text("OU", &format!("{:X}", uuid))?;
+    subject_name.append_entry_by_text("OU", &format!("{uuid:X}"))?;
     subject_name.append_entry_by_text("CN", &fqdn)?;
     let subject_name = subject_name.build();
 

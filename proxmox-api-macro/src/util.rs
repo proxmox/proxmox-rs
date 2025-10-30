@@ -586,7 +586,7 @@ where
     let mut text = String::new();
     let mut sep = "";
     for i in iter {
-        text = format!("{}{}{}", text, sep, i);
+        text = format!("{text}{sep}{i}");
         sep = separator;
     }
     text
@@ -600,7 +600,7 @@ where
     let mut text = String::new();
     let mut sep = "";
     for i in iter {
-        text = format!("{}{}{:?}", text, sep, i);
+        text = format!("{text}{sep}{i:?}");
         sep = separator;
     }
     text

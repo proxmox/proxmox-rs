@@ -295,7 +295,7 @@ fn extract_acl_node_data(
             nodes.extend(
                 node.children
                     .iter()
-                    .map(|(comp, child)| (format!("{}/{comp}", path), child)),
+                    .map(|(comp, child)| (format!("{path}/{comp}"), child)),
             );
         }
     }

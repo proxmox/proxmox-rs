@@ -104,12 +104,12 @@ pub mod string_as_base64 {
         use serde::de::Error;
 
         let bytes = proxmox_base64::decode(string).map_err(|err| {
-            let msg = format!("base64 decode: {}", err);
+            let msg = format!("base64 decode: {err}");
             Error::custom(msg)
         })?;
 
         String::from_utf8(bytes).map_err(|err| {
-            let msg = format!("utf8 decode: {}", err);
+            let msg = format!("utf8 decode: {err}");
             Error::custom(msg)
         })
     }

@@ -23,7 +23,7 @@ pub fn read_etc_localtime() -> Result<String, Error> {
 }
 
 pub fn set_timezone(timezone: String) -> Result<(), Error> {
-    let path = std::path::PathBuf::from(format!("/usr/share/zoneinfo/{}", timezone));
+    let path = std::path::PathBuf::from(format!("/usr/share/zoneinfo/{timezone}"));
 
     if !path.exists() {
         bail!("No such timezone.");

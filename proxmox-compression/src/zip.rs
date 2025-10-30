@@ -635,7 +635,7 @@ where
         let entry = match entry {
             Ok(entry) => entry,
             Err(err) => {
-                eprintln!("zip: error reading directory entry: {}", err);
+                eprintln!("zip: error reading directory entry: {err}");
                 continue;
             }
         };

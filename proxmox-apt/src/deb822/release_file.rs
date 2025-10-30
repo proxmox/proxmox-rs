@@ -621,5 +621,5 @@ pub fn test_deb_release_file_insecure() {
     let parsed: Result<ReleaseFile, Error> = deserialized.try_into();
     assert!(parsed.is_err());
 
-    println!("{:?}", parsed);
+    println!("{parsed:?}");
 }

@@ -79,7 +79,7 @@ fn write_iface_attributes(iface: &Interface, w: &mut dyn Write) -> Result<(), Er
             writeln!(w, "\tbond-mode {mode}")?;
             if let Some(primary) = &iface.bond_primary {
                 if mode == LinuxBondMode::ActiveBackup {
-                    writeln!(w, "\tbond-primary {}", primary)?;
+                    writeln!(w, "\tbond-primary {primary}")?;
                 }
             }
 
@@ -108,7 +108,7 @@ fn write_iface_attributes(iface: &Interface, w: &mut dyn Write) -> Result<(), Er
     }
 
     if let Some(mtu) = iface.mtu {
-        writeln!(w, "\tmtu {}", mtu)?;
+        writeln!(w, "\tmtu {mtu}")?;
     }
 
     Ok(())
@@ -122,20 +122,20 @@ fn write_iface_attributes_v4(
 ) -> Result<(), Error> {
     if method == NetworkConfigMethod::Static {
         if let Some(address) = &iface.cidr {
-            writeln!(w, "\taddress {}", address)?;
+            writeln!(w, "\taddress {address}")?;
         }
         if let Some(gateway) = &iface.gateway {
-            writeln!(w, "\tgateway {}", gateway)?;
+            writeln!(w, "\tgateway {gateway}")?;
         }
     }
 
     for option in &iface.options {
-        writeln!(w, "\t{}", option)?;
+        writeln!(w, "\t{option}")?;
     }
 
     if let Some(ref comments) = iface.comments {
         for comment in comments.lines() {
-            writeln!(w, "#{}", comment)?;
+            writeln!(w, "#{comment}")?;
         }
     }
 
@@ -150,20 +150,20 @@ fn write_iface_attributes_v6(
 ) -> Result<(), Error> {
     if method == NetworkConfigMethod::Static {
         if let Some(address) = &iface.cidr6 {
-            writeln!(w, "\taddress {}", address)?;
+            writeln!(w, "\taddress {address}")?;
         }
         if let Some(gateway) = &iface.gateway6 {
-            writeln!(w, "\tgateway {}", gateway)?;
+            writeln!(w, "\tgateway {gateway}")?;
         }
     }
 
     for option in &iface.options6 {
-        writeln!(w, "\t{}", option)?;
+        writeln!(w, "\t{option}")?;
     }
 
     if let Some(ref comments) = iface.comments6 {
         for comment in comments.lines() {
-            writeln!(w, "#{}", comment)?;
+            writeln!(w, "#{comment}")?;
         }
     }
 
@@ -523,7 +523,7 @@ impl NetworkConfig {
         for entry in self.order.iter() {
             match entry {
                 NetworkOrderEntry::Comment(comment) => {
-                    writeln!(w, "#{}", comment)?;
+                    writeln!(w, "#{comment}")?;
                     last_entry_was_comment = true;
                 }
                 NetworkOrderEntry::Option(option) => {
@@ -531,7 +531,7 @@ impl NetworkConfig {
                         writeln!(w)?;
                     }
                     last_entry_was_comment = false;
-                    writeln!(w, "{}", option)?;
+                    writeln!(w, "{option}")?;
                     writeln!(w)?;
                 }
                 NetworkOrderEntry::Iface(name) => {
@@ -637,7 +637,7 @@ pub fn complete_port_list(arg: &str, _param: &HashMap<String, String>) -> Vec<St
     };
     ports
         .iter()
-        .map(|port| format!("{}{}", prefix, port))
+        .map(|port| format!("{prefix}{port}"))
         .collect()
 }
 

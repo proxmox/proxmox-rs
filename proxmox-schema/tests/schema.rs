@@ -22,7 +22,7 @@ fn parse_query_string<T: Into<ParameterSchema>>(
 fn test_schema1() {
     let schema = ObjectSchema::new("TEST", &[]).schema();
 
-    println!("TEST Schema: {:?}", schema);
+    println!("TEST Schema: {schema:?}");
 }
 
 #[test]

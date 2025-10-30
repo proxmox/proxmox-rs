@@ -159,8 +159,7 @@ impl DnsPlugin {
             Err(err) => {
                 if let Err(err) = child.kill().await {
                     task.log_message(format!(
-                        "failed to kill '{} {}' command: {}",
-                        PROXMOX_ACME_SH_PATH, action, err
+                        "failed to kill '{PROXMOX_ACME_SH_PATH} {action}' command: {err}"
                     ));
                 }
                 bail!("'{}' failed: {}", PROXMOX_ACME_SH_PATH, err);
@@ -197,8 +196,7 @@ impl AcmePlugin for DnsPlugin {
             let validation_delay = self.core.validation_delay.unwrap_or(30) as u64;
             if validation_delay > 0 {
                 task.log_message(format!(
-                    "Sleeping {} seconds to wait for TXT record propagation",
-                    validation_delay
+                    "Sleeping {validation_delay} seconds to wait for TXT record propagation"
                 ));
                 tokio::time::sleep(Duration::from_secs(validation_delay)).await;
             }
@@ -278,7 +276,7 @@ impl AcmePlugin for StandaloneServer {
                 .token()
                 .ok_or_else(|| format_err!("missing token in challenge"))?;
             let key_auth = Arc::new(client.key_authorization(token)?);
-            let path = Arc::new(format!("/.well-known/acme-challenge/{}", token));
+            let path = Arc::new(format!("/.well-known/acme-challenge/{token}"));
 
             // `[::]:80` first, then `*:80`
             let dual = SocketAddr::new(IpAddr::from([0u16; 8]), 80);

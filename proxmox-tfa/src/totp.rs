@@ -360,7 +360,7 @@ impl Totp {
             Some(issuer) => {
                 let issuer = percent_encode(issuer.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
                     .to_string();
-                write!(out, "{}:", issuer).map_err(Error::msg)?;
+                write!(out, "{issuer}:").map_err(Error::msg)?;
                 Some(issuer)
             }
             None => None,
@@ -378,7 +378,7 @@ impl Totp {
         write!(out, "&period={}", self.period).map_err(Error::msg)?;
 
         if let Some(issuer) = issuer {
-            write!(out, "&issuer={}", issuer).map_err(Error::msg)?;
+            write!(out, "&issuer={issuer}").map_err(Error::msg)?;
         }
 
         Ok(out)

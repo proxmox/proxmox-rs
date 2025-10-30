@@ -51,7 +51,7 @@ impl fmt::Display for ApiTicket {
             ApiTicket::Full(userid) => fmt::Display::fmt(userid, f),
             ApiTicket::Partial(partial) => {
                 let data = serde_json::to_string(partial).map_err(|_| fmt::Error)?;
-                write!(f, "!tfa!{}", data)
+                write!(f, "!tfa!{data}")
             }
         }
     }

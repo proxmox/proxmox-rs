@@ -39,8 +39,7 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
             }
 
             let res = format!(
-                "**{} {}**\n\n{}{}\n\n{}",
-                method, path, description, param_descr, return_descr
+                "**{method} {path}**\n\n{description}{param_descr}\n\n{return_descr}"
             );
             Some(res)
         }
@@ -61,7 +60,7 @@ pub fn dump_api(
             if pos > 0 {
                 writeln!(output, "-----\n")?;
             }
-            writeln!(output, "{}", text)?;
+            writeln!(output, "{text}")?;
             pos += 1;
         }
         Ok(())
@@ -76,9 +75,9 @@ pub fn dump_api(
         None => return Ok(()),
         Some(SubRoute::MatchAll { router, param_name }) => {
             let sub_path = if path == "." {
-                format!("<{}>", param_name)
+                format!("<{param_name}>")
             } else {
-                format!("{}/<{}>", path, param_name)
+                format!("{path}/<{param_name}>")
             };
             dump_api(output, router, &sub_path, pos)?;
         }
@@ -89,7 +88,7 @@ pub fn dump_api(
                 let sub_path = if path == "." {
                     (*key).to_string()
                 } else {
-                    format!("{}/{}", path, key)
+                    format!("{path}/{key}")
                 };
                 dump_api(output, sub_router, &sub_path, pos)?;
             }

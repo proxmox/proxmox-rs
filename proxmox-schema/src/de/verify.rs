@@ -77,7 +77,7 @@ fn join_path(a: &str, b: &str) -> String {
     if a.is_empty() {
         b.to_string()
     } else {
-        format!("{}/{}", a, b)
+        format!("{a}/{b}")
     }
 }
 

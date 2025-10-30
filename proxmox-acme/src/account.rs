@@ -165,7 +165,7 @@ impl Account {
     pub fn key_authorization(&self, token: &str) -> Result<String, Error> {
         let key = PKey::private_key_from_pem(self.private_key.as_bytes())?;
         let thumbprint = PublicKey::try_from(&*key)?.thumbprint()?;
-        Ok(format!("{}.{}", token, thumbprint))
+        Ok(format!("{token}.{thumbprint}"))
     }
 
     /// Get the TXT field value for a dns-01 token. This is the base64url encoded sha256 digest of
@@ -315,7 +315,7 @@ impl AccountCreator {
 
     /// Append an email address to the contact list.
     pub fn email(self, email: String) -> Self {
-        self.contact(format!("mailto:{}", email))
+        self.contact(format!("mailto:{email}"))
     }
 
     /// Change whether the account agrees to the terms of service. Use the directory's or client's

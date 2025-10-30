@@ -313,7 +313,7 @@ impl CommandLineInterface {
         let (_start, completions) = self.get_completions(&cmdline, true);
 
         for item in completions {
-            println!("{}", item);
+            println!("{item}");
         }
     }
 

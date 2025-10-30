@@ -693,29 +693,29 @@ impl ConsoleOutput {
             LogLevel::Pass => {
                 self.counters.pass += 1;
                 self.set_color(Color::Green, false)?;
-                writeln!(&mut self.stream, "PASS: {}", message)?;
+                writeln!(&mut self.stream, "PASS: {message}")?;
             }
             LogLevel::Info => {
-                writeln!(&mut self.stream, "INFO: {}", message)?;
+                writeln!(&mut self.stream, "INFO: {message}")?;
             }
             LogLevel::Skip => {
                 self.counters.skip += 1;
-                writeln!(&mut self.stream, "SKIP: {}", message)?;
+                writeln!(&mut self.stream, "SKIP: {message}")?;
             }
             LogLevel::Notice => {
                 self.counters.notice += 1;
                 self.set_color(Color::White, true)?;
-                writeln!(&mut self.stream, "NOTICE: {}", message)?;
+                writeln!(&mut self.stream, "NOTICE: {message}")?;
             }
             LogLevel::Warn => {
                 self.counters.warn += 1;
                 self.set_color(Color::Yellow, false)?;
-                writeln!(&mut self.stream, "WARN: {}", message)?;
+                writeln!(&mut self.stream, "WARN: {message}")?;
             }
             LogLevel::Fail => {
                 self.counters.fail += 1;
                 self.set_color(Color::Red, true)?;
-                writeln!(&mut self.stream, "FAIL: {}", message)?;
+                writeln!(&mut self.stream, "FAIL: {message}")?;
             }
         }
         self.reset()?;

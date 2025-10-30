@@ -182,7 +182,7 @@ impl MountInfo {
 
     /// Read the mount point information of a specific pid.
     pub fn read_for_pid(pid: Pid) -> Result<Self, Error> {
-        Self::parse(&std::fs::read(format!("/proc/{}/mountinfo", pid))?)
+        Self::parse(&std::fs::read(format!("/proc/{pid}/mountinfo"))?)
     }
 
     /// Parse a `mountinfo` file.

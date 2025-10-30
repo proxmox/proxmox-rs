@@ -73,11 +73,11 @@ fn data_to_text(data: &Value, schema: &Schema) -> Result<String, Error> {
             None => bail!("got unexpected data (expected bool)."),
         },
         Schema::Integer(_) => match data.as_i64() {
-            Some(value) => Ok(format!("{}", value)),
+            Some(value) => Ok(format!("{value}")),
             None => bail!("got unexpected data (expected integer)."),
         },
         Schema::Number(_) => match data.as_f64() {
-            Some(value) => Ok(format!("{}", value)),
+            Some(value) => Ok(format!("{value}")),
             None => bail!("got unexpected data (expected number)."),
         },
         Schema::String(_) => match data.as_str() {

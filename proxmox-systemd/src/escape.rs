@@ -35,7 +35,7 @@ fn escape_unit_bytes(mut unit: &[u8], is_path: bool) -> String {
                 || (*c >= b'a' && *c <= b'z'))
         {
             use std::fmt::Write as _;
-            let _ = write!(escaped, "\\x{:02x}", c);
+            let _ = write!(escaped, "\\x{c:02x}");
         } else {
             escaped.push(*c as char);
         }

@@ -133,7 +133,7 @@ impl JournalState {
 
         let mut new_name = journal_path.clone();
         let now = proxmox_time::epoch_i64();
-        new_name.set_extension(format!("journal-{:08x}", now));
+        new_name.set_extension(format!("journal-{now:08x}"));
         std::fs::rename(journal_path, &new_name)?;
 
         self.journal = Self::open_journal_writer(&self.config)?;
@@ -176,7 +176,7 @@ impl JournalState {
                         if let Ok(time) = u64::from_str_radix(rest, 16) {
                             list.push(JournalFileInfo {
                                 time,
-                                name: format!("rrd.{}", extension),
+                                name: format!("rrd.{extension}"),
                                 path: path.to_owned(),
                             });
                         }

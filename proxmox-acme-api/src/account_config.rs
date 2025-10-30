@@ -118,7 +118,7 @@ where
 pub(crate) fn mark_account_deactivated(account_name: &str) -> Result<(), Error> {
     let from = account_config_filename(account_name);
     for i in 0..100 {
-        let to = account_config_filename(&format!("_deactivated_{}_{}", account_name, i));
+        let to = account_config_filename(&format!("_deactivated_{account_name}_{i}"));
         if !Path::new(&to).exists() {
             return std::fs::rename(&from, &to).map_err(|err| {
                 format_err!(

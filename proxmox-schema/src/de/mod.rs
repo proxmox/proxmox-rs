@@ -57,7 +57,7 @@ impl Error {
     }
 
     fn invalid<T: fmt::Display>(msg: T) -> Self {
-        Self::msg(format!("schema validation failed: {}", msg))
+        Self::msg(format!("schema validation failed: {msg}"))
     }
 }
 
@@ -272,13 +272,11 @@ impl<'de> de::Deserializer<'de> for SchemaDeserializer<'de, '_> {
                     self.deserialize_property_string(visitor, schema)
                 }
                 _ => Err(Error::msg(format!(
-                    "cannot deserialize struct '{}' with a string schema",
-                    name
+                    "cannot deserialize struct '{name}' with a string schema"
                 ))),
             },
             _ => Err(Error::msg(format!(
-                "cannot deserialize struct '{}' with non-object schema",
-                name,
+                "cannot deserialize struct '{name}' with non-object schema",
             ))),
         }
     }
@@ -331,8 +329,7 @@ impl<'de> de::Deserializer<'de> for SchemaDeserializer<'de, '_> {
         match self.schema {
             Schema::String(_) => visitor.visit_enum(self.input.into_deserializer()),
             _ => Err(Error::msg(format!(
-                "cannot deserialize enum '{}' with non-string schema",
-                name,
+                "cannot deserialize enum '{name}' with non-string schema",
             ))),
         }
     }

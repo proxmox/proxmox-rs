@@ -15,7 +15,7 @@ use crate::types::{AccountEntry, AccountInfo, AcmeAccountName};
 
 fn account_contact_from_string(s: &str) -> Vec<String> {
     s.split(&[' ', ';', ',', '\0'][..])
-        .map(|s| format!("mailto:{}", s))
+        .map(|s| format!("mailto:{s}"))
         .collect()
 }
 

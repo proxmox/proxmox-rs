@@ -299,7 +299,7 @@ impl<W: AsyncWrite + Unpin> AsyncWrite for WebSocketWriter<W> {
                     }
                 }
                 Err(err) => {
-                    eprintln!("error in writer: {}", err);
+                    eprintln!("error in writer: {err}");
                     return Poll::Ready(Err(err));
                 }
             }
@@ -393,7 +393,7 @@ impl FrameHeader {
             other => {
                 return Err(WebSocketError::new(
                     WebSocketErrorKind::ProtocolError,
-                    &format!("Unknown OpCode {}", other),
+                    &format!("Unknown OpCode {other}"),
                 ));
             }
         };
@@ -599,7 +599,7 @@ impl<R: AsyncRead + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
                             let mut data = read_buffer.remove_data(header.payload_len);
                             mask_bytes(header.mask, &mut data);
                             if let Err(err) = this.sender.send(Ok((header.frametype, data))) {
-                                eprintln!("error sending control frame: {}", err);
+                                eprintln!("error sending control frame: {err}");
                             }
 
                             this.state = if read_buffer.is_empty() {
@@ -682,7 +682,7 @@ impl WebSocket {
         // we ignore extensions
 
         let mut sha1 = openssl::sha::Sha1::new();
-        let data = format!("{}{}", key, MAGIC_WEBSOCKET_GUID);
+        let data = format!("{key}{MAGIC_WEBSOCKET_GUID}");
         sha1.update(data.as_bytes());
         let response_key = proxmox_base64::encode(sha1.finish());
 

@@ -261,7 +261,7 @@ mod tests {
             match do_test(v, size, unit, as_str) {
                 Ok(_) => true,
                 Err(err) => {
-                    eprintln!("{}", err); // makes debugging easier
+                    eprintln!("{err}"); // makes debugging easier
                     false
                 }
             }
@@ -274,16 +274,16 @@ mod tests {
         assert!(test("14.4567", 14.4567, SizeUnit::Byte, "14.457 B"));
 
         let h: HumanByte = "1.2345678".parse()?;
-        assert_eq!(&format!("{:.0}", h), "1 B");
+        assert_eq!(&format!("{h:.0}"), "1 B");
         assert_eq!(&format!("{:.0}", h.as_f64()), "1"); // use as_f64 to get raw bytes without unit
-        assert_eq!(&format!("{:.1}", h), "1.2 B");
-        assert_eq!(&format!("{:.2}", h), "1.23 B");
-        assert_eq!(&format!("{:.3}", h), "1.235 B");
-        assert_eq!(&format!("{:.4}", h), "1.2346 B");
-        assert_eq!(&format!("{:.5}", h), "1.23457 B");
-        assert_eq!(&format!("{:.6}", h), "1.234568 B");
-        assert_eq!(&format!("{:.7}", h), "1.2345678 B");
-        assert_eq!(&format!("{:.8}", h), "1.2345678 B");
+        assert_eq!(&format!("{h:.1}"), "1.2 B");
+        assert_eq!(&format!("{h:.2}"), "1.23 B");
+        assert_eq!(&format!("{h:.3}"), "1.235 B");
+        assert_eq!(&format!("{h:.4}"), "1.2346 B");
+        assert_eq!(&format!("{h:.5}"), "1.23457 B");
+        assert_eq!(&format!("{h:.6}"), "1.234568 B");
+        assert_eq!(&format!("{h:.7}"), "1.2345678 B");
+        assert_eq!(&format!("{h:.8}"), "1.2345678 B");
 
         assert!(test(
             "987654321",

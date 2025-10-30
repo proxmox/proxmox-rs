@@ -324,7 +324,7 @@ impl AclTree {
 
         for (group, roles) in &node.groups {
             for (role, propagate) in roles {
-                let group = format!("@{}", group);
+                let group = format!("@{group}");
                 if *propagate {
                     role_ug_map1.entry(role).or_default().insert(group);
                 } else {
@@ -395,7 +395,7 @@ impl AclTree {
         }
 
         for (name, child) in node.children.iter() {
-            let child_path = format!("{}/{}", path, name);
+            let child_path = format!("{path}/{name}");
             Self::write_node_config(child, &child_path, w)?;
         }
 
@@ -696,8 +696,7 @@ mod test {
 
         assert_eq!(
             roles, expected_roles,
-            "\nat check_roles for '{}' on '{}'",
-            auth_id, path
+            "\nat check_roles for '{auth_id}' on '{path}'"
         );
     }
 

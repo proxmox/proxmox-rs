@@ -97,7 +97,7 @@ impl RRDMap {
         start: Option<u64>,
         end: Option<u64>,
     ) -> Result<Option<Entry>, Error> {
-        match self.map.get(&format!("{}/{}", base, name)) {
+        match self.map.get(&format!("{base}/{name}")) {
             Some(rrd) => Ok(Some(rrd.extract_data(cf, resolution, start, end)?)),
             None => Ok(None),
         }

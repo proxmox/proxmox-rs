@@ -156,7 +156,7 @@ fn escape_id(unit: &str) -> String {
             || !matches!(c, b'_' | b'.' | b'0'..=b'9' | b'a'..=b'z' | b'A'..=b'Z')
         {
             // unwrap: writing to a String
-            write!(escaped, "\\x{:02x}", c).unwrap();
+            write!(escaped, "\\x{c:02x}").unwrap();
         } else {
             escaped.push(char::from(c));
         }
@@ -258,7 +258,7 @@ mod upid_impl {
     }
 
     fn get_pid_start(pid: libc::pid_t) -> Result<u64, Error> {
-        let statstr = String::from_utf8(std::fs::read(format!("/proc/{}/stat", pid))?)?;
+        let statstr = String::from_utf8(std::fs::read(format!("/proc/{pid}/stat"))?)?;
         let cmdend = statstr
             .rfind(')')
             .ok_or_else(|| format_err!("missing ')' in /proc/PID/stat"))?;
