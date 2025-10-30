@@ -195,8 +195,7 @@ where
 }
 
 // A callback for a specific command socket.
-type CommandSocketFn =
-    Box<(dyn Fn(Option<&Value>) -> Result<Value, Error> + Send + Sync + 'static)>;
+type CommandSocketFn = Box<dyn Fn(Option<&Value>) -> Result<Value, Error> + Send + Sync + 'static>;
 
 /// Tooling to get a single control command socket where one can
 /// register multiple commands dynamically.

@@ -127,7 +127,7 @@ impl<T> tower_service::Service<Uri> for HttpsConnector<T>
 where
     T: tower_service::Service<Name> + Clone + Send + Sync + 'static,
     T::Future: Send,
-    T::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>,
+    T::Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
     T::Response: std::iter::Iterator<Item = std::net::SocketAddr>,
 {
     type Response = TokioIo<MaybeTlsStream<RateLimitedStream<TcpStream>>>;

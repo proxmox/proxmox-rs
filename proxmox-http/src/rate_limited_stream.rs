@@ -101,7 +101,7 @@ impl<S> RateLimitedStream<S> {
     }
 }
 
-fn register_traffic(limiter: &(dyn ShareableRateLimit), count: usize) -> Option<Pin<Box<Sleep>>> {
+fn register_traffic(limiter: &dyn ShareableRateLimit, count: usize) -> Option<Pin<Box<Sleep>>> {
     const MIN_DELAY: Duration = Duration::from_millis(10);
 
     let now = Instant::now();
