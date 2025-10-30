@@ -3,7 +3,7 @@ use proxmox_schema::{const_regex, ApiStringFormat, ApiType, Schema, StringSchema
 use serde::{Deserialize, Serialize};
 
 const_regex! {
-     pub PATH_PATTERN_REGEX = concat!(r"^.+[^\\]$");
+     pub PATH_PATTERN_REGEX = "^.+[^\\\\]$";
 }
 
 pub const PATH_PATTERN_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&PATH_PATTERN_REGEX);

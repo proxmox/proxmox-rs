@@ -397,7 +397,7 @@ impl FromF64 for f32 {
     fn from_none<E: serde::de::Error>() -> Result<Self, E> {
         Err(E::invalid_type(
             serde::de::Unexpected::Option,
-            &concat!("a f32-ish..."),
+            &"a f32-ish...",
         ))
     }
 }
@@ -411,7 +411,7 @@ impl FromF64 for f64 {
     fn from_none<E: serde::de::Error>() -> Result<Self, E> {
         Err(E::invalid_type(
             serde::de::Unexpected::Option,
-            &concat!("an f64-ish..."),
+            &"an f64-ish...",
         ))
     }
 }

@@ -171,7 +171,7 @@ const_regex! {
         "):)?(?:([0-9]{1,5}):)?(", PROXMOX_SAFE_ID_REGEX_STR, r")$"
     );
 
-     pub SUBSCRIPTION_KEY_REGEX = concat!(r"^pbs(?:[cbsp])-[0-9a-f]{10}$");
+     pub SUBSCRIPTION_KEY_REGEX = "^pbs(?:[cbsp])-[0-9a-f]{10}$";
 }
 
 pub const PVE_CONFIG_DIGEST_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&SHA256_HEX_REGEX);
