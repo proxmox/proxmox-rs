@@ -37,7 +37,7 @@ impl Iterator for SplitQuoteWord {
         let mut start = None;
         let mut wait_for = None;
 
-        for (n, c) in rest.chars().enumerate() {
+        for (n, c) in rest.char_indices() {
             self.position += 1;
 
             if let Some(wait_for_char) = wait_for {
