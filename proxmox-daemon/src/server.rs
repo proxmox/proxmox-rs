@@ -300,9 +300,9 @@ impl Listenable for tokio::net::UnixListener {
 
     fn bind(addr: &Self::Address) -> Pin<Box<dyn Future<Output = io::Result<Self>> + Send + '_>> {
         Box::pin(async move {
-            let addr = addr.as_pathname().ok_or_else(|| {
-                io::Error::new(io::ErrorKind::Other, "missing path for unix socket")
-            })?;
+            let addr = addr
+                .as_pathname()
+                .ok_or_else(|| io::Error::other("missing path for unix socket"))?;
             match std::fs::remove_file(addr) {
                 Ok(()) => (),
                 Err(err) if err.kind() == io::ErrorKind::NotFound => (),

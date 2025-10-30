@@ -401,15 +401,12 @@ impl Database {
                 buffer_size as i64,
                 nix::fcntl::PosixFadviseAdvice::POSIX_FADV_DONTNEED,
             )
-            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))?;
+            .map_err(|err| std::io::Error::other(err.to_string()))?;
         }
 
         match Self::from_raw(&raw) {
             Ok(rrd) => Ok(rrd),
-            Err(err) => Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                err.to_string(),
-            )),
+            Err(err) => Err(std::io::Error::other(err.to_string())),
         }
     }
 

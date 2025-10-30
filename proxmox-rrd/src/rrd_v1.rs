@@ -110,7 +110,7 @@ impl RRDv1 {
 
         if raw.len() != expected_len {
             let msg = format!("wrong data size ({} != {})", raw.len(), expected_len);
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, msg));
+            return Err(std::io::Error::other(msg));
         }
 
         let mut rrd: RRDv1 = unsafe { std::mem::zeroed() };
@@ -122,7 +122,7 @@ impl RRDv1 {
 
         if rrd.magic != PROXMOX_RRD_MAGIC_1_0 {
             let msg = "wrong magic number".to_string();
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, msg));
+            return Err(std::io::Error::other(msg));
         }
 
         Ok(rrd)

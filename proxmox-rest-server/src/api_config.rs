@@ -544,9 +544,10 @@ impl Service<Uri> for PrivilegedAddr {
             PrivilegedAddr::Unix(addr) => {
                 let addr = addr.clone();
                 Box::pin(async move {
-                    tokio::net::UnixStream::connect(addr.as_pathname().ok_or_else(|| {
-                        io::Error::new(io::ErrorKind::Other, "empty path for unix socket")
-                    })?)
+                    tokio::net::UnixStream::connect(
+                        addr.as_pathname()
+                            .ok_or_else(|| io::Error::other("empty path for unix socket"))?,
+                    )
                     .await
                     .map(PrivilegedSocket::Unix)
                     .map(TokioIo::new)

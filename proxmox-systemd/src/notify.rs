@@ -64,10 +64,7 @@ pub fn store_fd<F: AsFd + ?Sized>(name: &str, fds: &F) -> Result<(), io::Error> 
 fn validate_name(name: &str) -> Result<(), io::Error> {
     for b in name.as_bytes() {
         if *b == b':' || b.is_ascii_control() {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "invalid file descriptor name",
-            ));
+            return Err(io::Error::other("invalid file descriptor name"));
         }
     }
     Ok(())

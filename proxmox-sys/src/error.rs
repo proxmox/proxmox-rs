@@ -94,9 +94,7 @@ impl SysError for nix::Error {
     #[inline]
     fn into_io_error(self) -> io::Error {
         match self {
-            Errno::UnknownErrno => {
-                io::Error::new(io::ErrorKind::Other, "unknown error".to_string())
-            }
+            Errno::UnknownErrno => io::Error::other("unknown error".to_string()),
             other => io::Error::from_raw_os_error(other as _),
         }
     }

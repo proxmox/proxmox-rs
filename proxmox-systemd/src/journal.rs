@@ -10,12 +10,8 @@ pub fn stream_fd<I: AsRef<OsStr>>(
     priority: c_int,
     level_prefix: bool,
 ) -> Result<OwnedFd, io::Error> {
-    let ident = CString::new(identifier.as_ref().as_bytes()).map_err(|_| {
-        io::Error::new(
-            io::ErrorKind::Other,
-            "invalid identifier for journal stream",
-        )
-    })?;
+    let ident = CString::new(identifier.as_ref().as_bytes())
+        .map_err(|_| io::Error::other("invalid identifier for journal stream"))?;
     let fd = unsafe {
         sys::sd_journal_stream_fd(ident.as_bytes().as_ptr(), priority, level_prefix as c_int)
     };

@@ -18,7 +18,7 @@ impl<E: ToString> Write for StdChannelWriter<E> {
     fn write(&mut self, buf: &[u8]) -> Result<usize, std::io::Error> {
         self.0
             .send(Ok(buf.to_vec()))
-            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))
+            .map_err(|err| std::io::Error::other(err.to_string()))
             .and(Ok(buf.len()))
     }
 

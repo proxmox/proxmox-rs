@@ -8,7 +8,7 @@ use std::io;
 /// A more convenient way is to use the `io_format_err!` macro.
 #[deprecated = "use std::io::Error::other instead to box the original error"]
 pub fn io_err_other<E: ToString>(e: E) -> io::Error {
-    io::Error::new(std::io::ErrorKind::Other, e.to_string())
+    io::Error::other(e.to_string())
 }
 
 /// Like anyhow's `format_err` but producing a `std::io::Error`.
