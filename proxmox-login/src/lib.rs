@@ -492,7 +492,10 @@ mod test {
             Ok(TicketResult::HttpOnly(_)) => panic!("unexpected HttpOnly"),
             Ok(TicketResult::Full(auth)) => {
                 assert_eq!(auth.userid, "user@foo");
-                assert_eq!(auth.ticket.to_string(), "PVE:user@foo:68F7BB38::ZHVtbXkgdGVzdA==");
+                assert_eq!(
+                    auth.ticket.to_string(),
+                    "PVE:user@foo:68F7BB38::ZHVtbXkgdGVzdA=="
+                );
                 assert_eq!(auth.clustername, None);
                 assert_eq!(auth.csrfprevention_token, "68F7BB38:dGVzdCBjc3JmIHRva2Vu");
             }

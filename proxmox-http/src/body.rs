@@ -98,10 +98,9 @@ impl HyperBody for Body {
                     Poll::Ready(Some(Ok(Frame::data(res))))
                 }
             }
-            InnerBody::Streaming(ref mut body) => Poll::Ready(
-                ready!(Pin::new(body).poll_frame(cx))
-                    .map(|opt_chunk| opt_chunk),
-            ),
+            InnerBody::Streaming(ref mut body) => {
+                Poll::Ready(ready!(Pin::new(body).poll_frame(cx)).map(|opt_chunk| opt_chunk))
+            }
         }
     }
 
