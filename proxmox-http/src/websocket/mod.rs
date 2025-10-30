@@ -768,7 +768,7 @@ impl WebSocket {
                     eof = true;
                 }
             }
-            if buf.len() > 0 {
+            if !buf.is_empty() {
                 let bytes = writer.write(&buf).await?;
                 if bytes == 0 {
                     eof = true;
