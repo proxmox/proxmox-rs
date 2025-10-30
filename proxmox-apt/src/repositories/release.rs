@@ -21,10 +21,7 @@ pub enum DebianCodename {
 
 impl DebianCodename {
     pub fn next(&self) -> Option<Self> {
-        match (*self as u8 + 1).try_into() {
-            Ok(codename) => Some(codename),
-            Err(_) => None,
-        }
+        (*self as u8 + 1).try_into().ok()
     }
 }
 
