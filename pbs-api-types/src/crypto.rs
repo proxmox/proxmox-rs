@@ -112,7 +112,7 @@ pub mod bytes_as_fingerprint {
                 }
 
                 let mut out = [0u8; 32];
-                hex::decode_to_slice(&filtered, &mut out).map_err(serde::de::Error::custom)?;
+                hex::decode_to_slice(filtered, &mut out).map_err(serde::de::Error::custom)?;
                 Ok(out)
             }
         }
@@ -171,7 +171,7 @@ mod tests {
     #[test]
     fn deserialize_too_long() {
         let s = &"00:".repeat(33);
-        let parsed = serde_plain::from_str::<Fingerprint>(&s);
+        let parsed = serde_plain::from_str::<Fingerprint>(s);
         assert!(parsed.is_err());
     }
 }
