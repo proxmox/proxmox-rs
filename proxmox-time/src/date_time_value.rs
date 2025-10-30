@@ -16,7 +16,7 @@ impl DateTimeValue {
                 if value >= *start {
                     if *repetition > 0 {
                         let offset = value - start;
-                        let res = offset % repetition == 0;
+                        let res = offset.is_multiple_of(*repetition);
                         if let Some(end) = opt_end {
                             res && value <= *end
                         } else {

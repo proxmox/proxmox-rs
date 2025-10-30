@@ -67,7 +67,7 @@ fn sort_data(data: TokenStream) -> Result<TokenStream, Error> {
     let mut array: syn::ExprArray = syn::parse2(data)?;
     let span = array.span();
 
-    let mut fields: Vec<syn::Expr> = mem::replace(&mut array.elems, Punctuated::new())
+    let mut fields: Vec<syn::Expr> = std::mem::take(&mut array.elems)
         .into_iter()
         .collect();
 
