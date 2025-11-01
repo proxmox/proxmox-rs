@@ -234,6 +234,7 @@ api(GET => '/nodes/{node}/qemu/{vmid}/pending', 'qemu_get_pending', 'param-name'
 api(GET => '/nodes/{node}/qemu/{vmid}/status/current', 'qemu_get_status', 'return-name' => 'QemuStatus');
 api(POST => '/nodes/{node}/qemu/{vmid}/config', 'qemu_update_config_async', 'param-name' => 'UpdateQemuConfig', 'output-type' => 'Option<PveUpid>');
 api(POST => '/nodes/{node}/qemu/{vmid}/move_disk', 'qemu_move_disk', 'param-name' => 'QemuMoveDisk', 'output-type' => 'PveUpid');
+api(PUT => '/nodes/{node}/qemu/{vmid}/resize', 'qemu_resize', 'param-name' => 'QemuResize', 'output-type' => 'PveUpid');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/start',    'start_qemu_async',    'output-type' => 'PveUpid', 'param-name' => 'StartQemu');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/stop',     'stop_qemu_async',     'output-type' => 'PveUpid', 'param-name' => 'StopQemu');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/shutdown', 'shutdown_qemu_async', 'output-type' => 'PveUpid', 'param-name' => 'ShutdownQemu');
