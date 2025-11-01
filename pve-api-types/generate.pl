@@ -138,6 +138,9 @@ Schema2Rust::register_api_override('StartQemu', '/properties/timeout/default', 3
 Schema2Rust::register_api_override('RemoteMigrateQemu', '/properties/bwlimit/default', undef);
 Schema2Rust::register_api_override('RemoteMigrateLxc', '/properties/bwlimit/default', undef);
 
+# We have a textual description of the default value in there, simply set to undef
+Schema2Rust::register_api_override('QemuMoveDisk', '/properties/bwlimit/default', undef);
+
 # Token api is missing some descriptions and has textual defaults for integers
 Schema2Rust::register_api_extensions('CreateTokenResponseInfo', {
     '/properties/comment' => { description => sq("Description of the Token") },
@@ -230,6 +233,7 @@ api(GET => '/nodes/{node}/qemu/{vmid}/config', 'qemu_get_config', 'param-name' =
 api(GET => '/nodes/{node}/qemu/{vmid}/pending', 'qemu_get_pending', 'param-name' => 'FixmeQemuGetPending', 'output-type' => 'Vec<QemuPendingConfigValue>');
 api(GET => '/nodes/{node}/qemu/{vmid}/status/current', 'qemu_get_status', 'return-name' => 'QemuStatus');
 api(POST => '/nodes/{node}/qemu/{vmid}/config', 'qemu_update_config_async', 'param-name' => 'UpdateQemuConfig', 'output-type' => 'Option<PveUpid>');
+api(POST => '/nodes/{node}/qemu/{vmid}/move_disk', 'qemu_move_disk', 'param-name' => 'QemuMoveDisk', 'output-type' => 'PveUpid');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/start',    'start_qemu_async',    'output-type' => 'PveUpid', 'param-name' => 'StartQemu');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/stop',     'stop_qemu_async',     'output-type' => 'PveUpid', 'param-name' => 'StopQemu');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/shutdown', 'shutdown_qemu_async', 'output-type' => 'PveUpid', 'param-name' => 'ShutdownQemu');
