@@ -95,7 +95,7 @@ pub const PROXMOX_GROUP_ID_SCHEMA: Schema = StringSchema::new("Group ID")
 pub const PROXMOX_AUTH_REALM_STRING_SCHEMA: StringSchema =
     StringSchema::new("Authentication domain ID")
         .format(&proxmox_schema::api_types::SAFE_ID_FORMAT)
-        .min_length(3)
+        .min_length(2)
         .max_length(32);
 pub const PROXMOX_AUTH_REALM_SCHEMA: Schema = PROXMOX_AUTH_REALM_STRING_SCHEMA.schema();
 
@@ -789,6 +789,72 @@ fn test_token_id() {
         TokennameRef::new("bar").as_str()
     );
     assert_eq!(auth_id.to_string(), "test@pam!bar".to_string());
+}
+
+#[test]
+fn test_realm_validation() {
+    let empty_realm: Result<Realm, _> = "".to_string().try_into();
+    let one_char_realm: Result<Realm, _> = "a".to_string().try_into();
+    let two_char_realm: Result<Realm, _> = "aa".to_string().try_into();
+    let long_realm: Result<Realm, _> = "a".repeat(33).try_into();
+    let valid_realm: Result<Realm, _> = "pam".to_string().try_into();
+
+    assert!(empty_realm.is_err(), "Empty realm should fail validation");
+    assert!(
+        one_char_realm.is_err(),
+        "1-char realm should fail validation"
+    );
+    assert!(
+        two_char_realm.is_ok(),
+        "2-char realm should pass validation"
+    );
+    assert!(valid_realm.is_ok(), "Typical realm should pass validation");
+    assert!(
+        long_realm.is_err(),
+        "Realm >32 chars should fail validation"
+    );
+}
+
+#[test]
+fn test_userid_validation() {
+    let empty_str: Result<Userid, _> = "".parse();
+    let invalid_no_realm: Result<Userid, _> = "user".parse();
+    let invalid_empty_realm: Result<Userid, _> = "user@".parse();
+    let invalid_one_char_realm: Result<Userid, _> = "user@a".parse();
+    let valid_two_char_realm: Result<Userid, _> = "user@aa".parse();
+    let valid_long_realm: Result<Userid, _> = "user@pam".parse();
+    let invalid_long_realm: Result<Userid, _> = format!("user@{}", "a".repeat(33)).parse();
+    let invalid_empty_username: Result<Userid, _> = "@aa".parse();
+
+    assert!(empty_str.is_err(), "Empty userid should fail");
+    assert!(
+        invalid_no_realm.is_err(),
+        "Userid without realm should fail"
+    );
+    assert!(
+        invalid_empty_realm.is_err(),
+        "Userid with empty realm should fail"
+    );
+    assert!(
+        invalid_one_char_realm.is_err(),
+        "Userid with 1-char realm should fail"
+    );
+    assert!(
+        valid_two_char_realm.is_ok(),
+        "Userid with 2-char realm should pass"
+    );
+    assert!(
+        valid_long_realm.is_ok(),
+        "Userid with normal realm should pass"
+    );
+    assert!(
+        invalid_long_realm.is_err(),
+        "Userid with realm >32 chars should fail"
+    );
+    assert!(
+        invalid_empty_username.is_err(),
+        "Userid with empty username should fail"
+    );
 }
 
 serde_plain::derive_deserialize_from_fromstr!(Userid, "valid user id");
