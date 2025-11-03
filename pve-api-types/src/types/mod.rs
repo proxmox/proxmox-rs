@@ -234,3 +234,16 @@ pub struct QemuPendingConfigValue {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending: Option<Value>,
 }
+
+#[api]
+#[derive(Deserialize, Serialize, PartialEq, Clone)]
+/// Qemu CPU model info (GET /api2/json/nodes/{node}/capabilities/qemu/cpu
+pub struct QemuCpuModel {
+    /// True if this is a custom CPU model.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub custom: bool,
+    /// Name of the CPU model. Identifies it for subsequent API calls. Prefixed with 'custom-' for custom models.
+    pub name: String,
+    /// CPU vendor visible to the guest when this model is selected. Vendor of 'reported-model' in case of custom models.
+    pub vendor: String,
+}

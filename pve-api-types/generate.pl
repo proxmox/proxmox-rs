@@ -312,6 +312,9 @@ Schema2Rust::generate_struct(
 );
 api(GET => '/nodes/{node}/status', 'node_status', 'return-name' => 'NodeStatus');
 
+api(GET => '/nodes/{node}/capabilities/qemu/cpu', 'qemu_cpu_capabilities', 'output-type' => 'Vec<QemuCpuModel>');
+
+
 Schema2Rust::register_api_override('ClusterMetrics', '/properties/data/items', { type => "ClusterMetricsData"});
 api(GET => '/cluster/metrics/export', 'cluster_metrics_export', 'return-name' => 'ClusterMetrics');
 
