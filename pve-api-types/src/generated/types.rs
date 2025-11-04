@@ -9420,6 +9420,1303 @@ serde_plain::derive_fromstr_from_deserialize!(
     QemuMigratePreconditionsNotAllowedNodesBlockingHaResourcesCause
 );
 
+const_regex! {
+
+QEMU_MOVE_DISK_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_26() {
+    use regex::Regex;
+    let _: &Regex = &QEMU_MOVE_DISK_STORAGE_RE;
+}
+#[api(
+    properties: {
+        bwlimit: {
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        delete: {
+            default: false,
+            optional: true,
+        },
+        digest: {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        disk: {
+            type: QemuMoveDiskDisk,
+        },
+        format: {
+            optional: true,
+            type: QemuMoveDiskFormat,
+        },
+        storage: {
+            format: &ApiStringFormat::Pattern(&QEMU_MOVE_DISK_STORAGE_RE),
+            optional: true,
+            type: String,
+        },
+        "target-digest": {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        "target-disk": {
+            optional: true,
+            type: QemuMoveDiskDisk,
+        },
+        "target-vmid": {
+            maximum: 999999999,
+            minimum: 100,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct QemuMoveDisk {
+    /// Override I/O bandwidth limit (in KiB/s).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bwlimit: Option<u64>,
+
+    /// Delete the original disk after successful copy. By default the original
+    /// disk is kept as unused disk.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<bool>,
+
+    /// Prevent changes if current configuration file has different SHA1 digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    pub disk: QemuMoveDiskDisk,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<QemuMoveDiskFormat>,
+
+    /// Target storage.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub storage: Option<String>,
+
+    /// Prevent changes if the current config file of the target VM has a
+    /// different SHA1 digest. This can be used to detect concurrent
+    /// modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-digest")]
+    pub target_digest: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-disk")]
+    pub target_disk: Option<QemuMoveDiskDisk>,
+
+    /// The (unique) ID of the VM.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-vmid")]
+    pub target_vmid: Option<u32>,
+}
+
+#[api]
+/// The disk you want to move.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum QemuMoveDiskDisk {
+    #[serde(rename = "ide0")]
+    /// ide0.
+    Ide0,
+    #[serde(rename = "ide1")]
+    /// ide1.
+    Ide1,
+    #[serde(rename = "ide2")]
+    /// ide2.
+    Ide2,
+    #[serde(rename = "ide3")]
+    /// ide3.
+    Ide3,
+    #[serde(rename = "scsi0")]
+    /// scsi0.
+    Scsi0,
+    #[serde(rename = "scsi1")]
+    /// scsi1.
+    Scsi1,
+    #[serde(rename = "scsi2")]
+    /// scsi2.
+    Scsi2,
+    #[serde(rename = "scsi3")]
+    /// scsi3.
+    Scsi3,
+    #[serde(rename = "scsi4")]
+    /// scsi4.
+    Scsi4,
+    #[serde(rename = "scsi5")]
+    /// scsi5.
+    Scsi5,
+    #[serde(rename = "scsi6")]
+    /// scsi6.
+    Scsi6,
+    #[serde(rename = "scsi7")]
+    /// scsi7.
+    Scsi7,
+    #[serde(rename = "scsi8")]
+    /// scsi8.
+    Scsi8,
+    #[serde(rename = "scsi9")]
+    /// scsi9.
+    Scsi9,
+    #[serde(rename = "scsi10")]
+    /// scsi10.
+    Scsi10,
+    #[serde(rename = "scsi11")]
+    /// scsi11.
+    Scsi11,
+    #[serde(rename = "scsi12")]
+    /// scsi12.
+    Scsi12,
+    #[serde(rename = "scsi13")]
+    /// scsi13.
+    Scsi13,
+    #[serde(rename = "scsi14")]
+    /// scsi14.
+    Scsi14,
+    #[serde(rename = "scsi15")]
+    /// scsi15.
+    Scsi15,
+    #[serde(rename = "scsi16")]
+    /// scsi16.
+    Scsi16,
+    #[serde(rename = "scsi17")]
+    /// scsi17.
+    Scsi17,
+    #[serde(rename = "scsi18")]
+    /// scsi18.
+    Scsi18,
+    #[serde(rename = "scsi19")]
+    /// scsi19.
+    Scsi19,
+    #[serde(rename = "scsi20")]
+    /// scsi20.
+    Scsi20,
+    #[serde(rename = "scsi21")]
+    /// scsi21.
+    Scsi21,
+    #[serde(rename = "scsi22")]
+    /// scsi22.
+    Scsi22,
+    #[serde(rename = "scsi23")]
+    /// scsi23.
+    Scsi23,
+    #[serde(rename = "scsi24")]
+    /// scsi24.
+    Scsi24,
+    #[serde(rename = "scsi25")]
+    /// scsi25.
+    Scsi25,
+    #[serde(rename = "scsi26")]
+    /// scsi26.
+    Scsi26,
+    #[serde(rename = "scsi27")]
+    /// scsi27.
+    Scsi27,
+    #[serde(rename = "scsi28")]
+    /// scsi28.
+    Scsi28,
+    #[serde(rename = "scsi29")]
+    /// scsi29.
+    Scsi29,
+    #[serde(rename = "scsi30")]
+    /// scsi30.
+    Scsi30,
+    #[serde(rename = "virtio0")]
+    /// virtio0.
+    Virtio0,
+    #[serde(rename = "virtio1")]
+    /// virtio1.
+    Virtio1,
+    #[serde(rename = "virtio2")]
+    /// virtio2.
+    Virtio2,
+    #[serde(rename = "virtio3")]
+    /// virtio3.
+    Virtio3,
+    #[serde(rename = "virtio4")]
+    /// virtio4.
+    Virtio4,
+    #[serde(rename = "virtio5")]
+    /// virtio5.
+    Virtio5,
+    #[serde(rename = "virtio6")]
+    /// virtio6.
+    Virtio6,
+    #[serde(rename = "virtio7")]
+    /// virtio7.
+    Virtio7,
+    #[serde(rename = "virtio8")]
+    /// virtio8.
+    Virtio8,
+    #[serde(rename = "virtio9")]
+    /// virtio9.
+    Virtio9,
+    #[serde(rename = "virtio10")]
+    /// virtio10.
+    Virtio10,
+    #[serde(rename = "virtio11")]
+    /// virtio11.
+    Virtio11,
+    #[serde(rename = "virtio12")]
+    /// virtio12.
+    Virtio12,
+    #[serde(rename = "virtio13")]
+    /// virtio13.
+    Virtio13,
+    #[serde(rename = "virtio14")]
+    /// virtio14.
+    Virtio14,
+    #[serde(rename = "virtio15")]
+    /// virtio15.
+    Virtio15,
+    #[serde(rename = "sata0")]
+    /// sata0.
+    Sata0,
+    #[serde(rename = "sata1")]
+    /// sata1.
+    Sata1,
+    #[serde(rename = "sata2")]
+    /// sata2.
+    Sata2,
+    #[serde(rename = "sata3")]
+    /// sata3.
+    Sata3,
+    #[serde(rename = "sata4")]
+    /// sata4.
+    Sata4,
+    #[serde(rename = "sata5")]
+    /// sata5.
+    Sata5,
+    #[serde(rename = "efidisk0")]
+    /// efidisk0.
+    Efidisk0,
+    #[serde(rename = "tpmstate0")]
+    /// tpmstate0.
+    Tpmstate0,
+    #[serde(rename = "unused0")]
+    /// unused0.
+    Unused0,
+    #[serde(rename = "unused1")]
+    /// unused1.
+    Unused1,
+    #[serde(rename = "unused2")]
+    /// unused2.
+    Unused2,
+    #[serde(rename = "unused3")]
+    /// unused3.
+    Unused3,
+    #[serde(rename = "unused4")]
+    /// unused4.
+    Unused4,
+    #[serde(rename = "unused5")]
+    /// unused5.
+    Unused5,
+    #[serde(rename = "unused6")]
+    /// unused6.
+    Unused6,
+    #[serde(rename = "unused7")]
+    /// unused7.
+    Unused7,
+    #[serde(rename = "unused8")]
+    /// unused8.
+    Unused8,
+    #[serde(rename = "unused9")]
+    /// unused9.
+    Unused9,
+    #[serde(rename = "unused10")]
+    /// unused10.
+    Unused10,
+    #[serde(rename = "unused11")]
+    /// unused11.
+    Unused11,
+    #[serde(rename = "unused12")]
+    /// unused12.
+    Unused12,
+    #[serde(rename = "unused13")]
+    /// unused13.
+    Unused13,
+    #[serde(rename = "unused14")]
+    /// unused14.
+    Unused14,
+    #[serde(rename = "unused15")]
+    /// unused15.
+    Unused15,
+    #[serde(rename = "unused16")]
+    /// unused16.
+    Unused16,
+    #[serde(rename = "unused17")]
+    /// unused17.
+    Unused17,
+    #[serde(rename = "unused18")]
+    /// unused18.
+    Unused18,
+    #[serde(rename = "unused19")]
+    /// unused19.
+    Unused19,
+    #[serde(rename = "unused20")]
+    /// unused20.
+    Unused20,
+    #[serde(rename = "unused21")]
+    /// unused21.
+    Unused21,
+    #[serde(rename = "unused22")]
+    /// unused22.
+    Unused22,
+    #[serde(rename = "unused23")]
+    /// unused23.
+    Unused23,
+    #[serde(rename = "unused24")]
+    /// unused24.
+    Unused24,
+    #[serde(rename = "unused25")]
+    /// unused25.
+    Unused25,
+    #[serde(rename = "unused26")]
+    /// unused26.
+    Unused26,
+    #[serde(rename = "unused27")]
+    /// unused27.
+    Unused27,
+    #[serde(rename = "unused28")]
+    /// unused28.
+    Unused28,
+    #[serde(rename = "unused29")]
+    /// unused29.
+    Unused29,
+    #[serde(rename = "unused30")]
+    /// unused30.
+    Unused30,
+    #[serde(rename = "unused31")]
+    /// unused31.
+    Unused31,
+    #[serde(rename = "unused32")]
+    /// unused32.
+    Unused32,
+    #[serde(rename = "unused33")]
+    /// unused33.
+    Unused33,
+    #[serde(rename = "unused34")]
+    /// unused34.
+    Unused34,
+    #[serde(rename = "unused35")]
+    /// unused35.
+    Unused35,
+    #[serde(rename = "unused36")]
+    /// unused36.
+    Unused36,
+    #[serde(rename = "unused37")]
+    /// unused37.
+    Unused37,
+    #[serde(rename = "unused38")]
+    /// unused38.
+    Unused38,
+    #[serde(rename = "unused39")]
+    /// unused39.
+    Unused39,
+    #[serde(rename = "unused40")]
+    /// unused40.
+    Unused40,
+    #[serde(rename = "unused41")]
+    /// unused41.
+    Unused41,
+    #[serde(rename = "unused42")]
+    /// unused42.
+    Unused42,
+    #[serde(rename = "unused43")]
+    /// unused43.
+    Unused43,
+    #[serde(rename = "unused44")]
+    /// unused44.
+    Unused44,
+    #[serde(rename = "unused45")]
+    /// unused45.
+    Unused45,
+    #[serde(rename = "unused46")]
+    /// unused46.
+    Unused46,
+    #[serde(rename = "unused47")]
+    /// unused47.
+    Unused47,
+    #[serde(rename = "unused48")]
+    /// unused48.
+    Unused48,
+    #[serde(rename = "unused49")]
+    /// unused49.
+    Unused49,
+    #[serde(rename = "unused50")]
+    /// unused50.
+    Unused50,
+    #[serde(rename = "unused51")]
+    /// unused51.
+    Unused51,
+    #[serde(rename = "unused52")]
+    /// unused52.
+    Unused52,
+    #[serde(rename = "unused53")]
+    /// unused53.
+    Unused53,
+    #[serde(rename = "unused54")]
+    /// unused54.
+    Unused54,
+    #[serde(rename = "unused55")]
+    /// unused55.
+    Unused55,
+    #[serde(rename = "unused56")]
+    /// unused56.
+    Unused56,
+    #[serde(rename = "unused57")]
+    /// unused57.
+    Unused57,
+    #[serde(rename = "unused58")]
+    /// unused58.
+    Unused58,
+    #[serde(rename = "unused59")]
+    /// unused59.
+    Unused59,
+    #[serde(rename = "unused60")]
+    /// unused60.
+    Unused60,
+    #[serde(rename = "unused61")]
+    /// unused61.
+    Unused61,
+    #[serde(rename = "unused62")]
+    /// unused62.
+    Unused62,
+    #[serde(rename = "unused63")]
+    /// unused63.
+    Unused63,
+    #[serde(rename = "unused64")]
+    /// unused64.
+    Unused64,
+    #[serde(rename = "unused65")]
+    /// unused65.
+    Unused65,
+    #[serde(rename = "unused66")]
+    /// unused66.
+    Unused66,
+    #[serde(rename = "unused67")]
+    /// unused67.
+    Unused67,
+    #[serde(rename = "unused68")]
+    /// unused68.
+    Unused68,
+    #[serde(rename = "unused69")]
+    /// unused69.
+    Unused69,
+    #[serde(rename = "unused70")]
+    /// unused70.
+    Unused70,
+    #[serde(rename = "unused71")]
+    /// unused71.
+    Unused71,
+    #[serde(rename = "unused72")]
+    /// unused72.
+    Unused72,
+    #[serde(rename = "unused73")]
+    /// unused73.
+    Unused73,
+    #[serde(rename = "unused74")]
+    /// unused74.
+    Unused74,
+    #[serde(rename = "unused75")]
+    /// unused75.
+    Unused75,
+    #[serde(rename = "unused76")]
+    /// unused76.
+    Unused76,
+    #[serde(rename = "unused77")]
+    /// unused77.
+    Unused77,
+    #[serde(rename = "unused78")]
+    /// unused78.
+    Unused78,
+    #[serde(rename = "unused79")]
+    /// unused79.
+    Unused79,
+    #[serde(rename = "unused80")]
+    /// unused80.
+    Unused80,
+    #[serde(rename = "unused81")]
+    /// unused81.
+    Unused81,
+    #[serde(rename = "unused82")]
+    /// unused82.
+    Unused82,
+    #[serde(rename = "unused83")]
+    /// unused83.
+    Unused83,
+    #[serde(rename = "unused84")]
+    /// unused84.
+    Unused84,
+    #[serde(rename = "unused85")]
+    /// unused85.
+    Unused85,
+    #[serde(rename = "unused86")]
+    /// unused86.
+    Unused86,
+    #[serde(rename = "unused87")]
+    /// unused87.
+    Unused87,
+    #[serde(rename = "unused88")]
+    /// unused88.
+    Unused88,
+    #[serde(rename = "unused89")]
+    /// unused89.
+    Unused89,
+    #[serde(rename = "unused90")]
+    /// unused90.
+    Unused90,
+    #[serde(rename = "unused91")]
+    /// unused91.
+    Unused91,
+    #[serde(rename = "unused92")]
+    /// unused92.
+    Unused92,
+    #[serde(rename = "unused93")]
+    /// unused93.
+    Unused93,
+    #[serde(rename = "unused94")]
+    /// unused94.
+    Unused94,
+    #[serde(rename = "unused95")]
+    /// unused95.
+    Unused95,
+    #[serde(rename = "unused96")]
+    /// unused96.
+    Unused96,
+    #[serde(rename = "unused97")]
+    /// unused97.
+    Unused97,
+    #[serde(rename = "unused98")]
+    /// unused98.
+    Unused98,
+    #[serde(rename = "unused99")]
+    /// unused99.
+    Unused99,
+    #[serde(rename = "unused100")]
+    /// unused100.
+    Unused100,
+    #[serde(rename = "unused101")]
+    /// unused101.
+    Unused101,
+    #[serde(rename = "unused102")]
+    /// unused102.
+    Unused102,
+    #[serde(rename = "unused103")]
+    /// unused103.
+    Unused103,
+    #[serde(rename = "unused104")]
+    /// unused104.
+    Unused104,
+    #[serde(rename = "unused105")]
+    /// unused105.
+    Unused105,
+    #[serde(rename = "unused106")]
+    /// unused106.
+    Unused106,
+    #[serde(rename = "unused107")]
+    /// unused107.
+    Unused107,
+    #[serde(rename = "unused108")]
+    /// unused108.
+    Unused108,
+    #[serde(rename = "unused109")]
+    /// unused109.
+    Unused109,
+    #[serde(rename = "unused110")]
+    /// unused110.
+    Unused110,
+    #[serde(rename = "unused111")]
+    /// unused111.
+    Unused111,
+    #[serde(rename = "unused112")]
+    /// unused112.
+    Unused112,
+    #[serde(rename = "unused113")]
+    /// unused113.
+    Unused113,
+    #[serde(rename = "unused114")]
+    /// unused114.
+    Unused114,
+    #[serde(rename = "unused115")]
+    /// unused115.
+    Unused115,
+    #[serde(rename = "unused116")]
+    /// unused116.
+    Unused116,
+    #[serde(rename = "unused117")]
+    /// unused117.
+    Unused117,
+    #[serde(rename = "unused118")]
+    /// unused118.
+    Unused118,
+    #[serde(rename = "unused119")]
+    /// unused119.
+    Unused119,
+    #[serde(rename = "unused120")]
+    /// unused120.
+    Unused120,
+    #[serde(rename = "unused121")]
+    /// unused121.
+    Unused121,
+    #[serde(rename = "unused122")]
+    /// unused122.
+    Unused122,
+    #[serde(rename = "unused123")]
+    /// unused123.
+    Unused123,
+    #[serde(rename = "unused124")]
+    /// unused124.
+    Unused124,
+    #[serde(rename = "unused125")]
+    /// unused125.
+    Unused125,
+    #[serde(rename = "unused126")]
+    /// unused126.
+    Unused126,
+    #[serde(rename = "unused127")]
+    /// unused127.
+    Unused127,
+    #[serde(rename = "unused128")]
+    /// unused128.
+    Unused128,
+    #[serde(rename = "unused129")]
+    /// unused129.
+    Unused129,
+    #[serde(rename = "unused130")]
+    /// unused130.
+    Unused130,
+    #[serde(rename = "unused131")]
+    /// unused131.
+    Unused131,
+    #[serde(rename = "unused132")]
+    /// unused132.
+    Unused132,
+    #[serde(rename = "unused133")]
+    /// unused133.
+    Unused133,
+    #[serde(rename = "unused134")]
+    /// unused134.
+    Unused134,
+    #[serde(rename = "unused135")]
+    /// unused135.
+    Unused135,
+    #[serde(rename = "unused136")]
+    /// unused136.
+    Unused136,
+    #[serde(rename = "unused137")]
+    /// unused137.
+    Unused137,
+    #[serde(rename = "unused138")]
+    /// unused138.
+    Unused138,
+    #[serde(rename = "unused139")]
+    /// unused139.
+    Unused139,
+    #[serde(rename = "unused140")]
+    /// unused140.
+    Unused140,
+    #[serde(rename = "unused141")]
+    /// unused141.
+    Unused141,
+    #[serde(rename = "unused142")]
+    /// unused142.
+    Unused142,
+    #[serde(rename = "unused143")]
+    /// unused143.
+    Unused143,
+    #[serde(rename = "unused144")]
+    /// unused144.
+    Unused144,
+    #[serde(rename = "unused145")]
+    /// unused145.
+    Unused145,
+    #[serde(rename = "unused146")]
+    /// unused146.
+    Unused146,
+    #[serde(rename = "unused147")]
+    /// unused147.
+    Unused147,
+    #[serde(rename = "unused148")]
+    /// unused148.
+    Unused148,
+    #[serde(rename = "unused149")]
+    /// unused149.
+    Unused149,
+    #[serde(rename = "unused150")]
+    /// unused150.
+    Unused150,
+    #[serde(rename = "unused151")]
+    /// unused151.
+    Unused151,
+    #[serde(rename = "unused152")]
+    /// unused152.
+    Unused152,
+    #[serde(rename = "unused153")]
+    /// unused153.
+    Unused153,
+    #[serde(rename = "unused154")]
+    /// unused154.
+    Unused154,
+    #[serde(rename = "unused155")]
+    /// unused155.
+    Unused155,
+    #[serde(rename = "unused156")]
+    /// unused156.
+    Unused156,
+    #[serde(rename = "unused157")]
+    /// unused157.
+    Unused157,
+    #[serde(rename = "unused158")]
+    /// unused158.
+    Unused158,
+    #[serde(rename = "unused159")]
+    /// unused159.
+    Unused159,
+    #[serde(rename = "unused160")]
+    /// unused160.
+    Unused160,
+    #[serde(rename = "unused161")]
+    /// unused161.
+    Unused161,
+    #[serde(rename = "unused162")]
+    /// unused162.
+    Unused162,
+    #[serde(rename = "unused163")]
+    /// unused163.
+    Unused163,
+    #[serde(rename = "unused164")]
+    /// unused164.
+    Unused164,
+    #[serde(rename = "unused165")]
+    /// unused165.
+    Unused165,
+    #[serde(rename = "unused166")]
+    /// unused166.
+    Unused166,
+    #[serde(rename = "unused167")]
+    /// unused167.
+    Unused167,
+    #[serde(rename = "unused168")]
+    /// unused168.
+    Unused168,
+    #[serde(rename = "unused169")]
+    /// unused169.
+    Unused169,
+    #[serde(rename = "unused170")]
+    /// unused170.
+    Unused170,
+    #[serde(rename = "unused171")]
+    /// unused171.
+    Unused171,
+    #[serde(rename = "unused172")]
+    /// unused172.
+    Unused172,
+    #[serde(rename = "unused173")]
+    /// unused173.
+    Unused173,
+    #[serde(rename = "unused174")]
+    /// unused174.
+    Unused174,
+    #[serde(rename = "unused175")]
+    /// unused175.
+    Unused175,
+    #[serde(rename = "unused176")]
+    /// unused176.
+    Unused176,
+    #[serde(rename = "unused177")]
+    /// unused177.
+    Unused177,
+    #[serde(rename = "unused178")]
+    /// unused178.
+    Unused178,
+    #[serde(rename = "unused179")]
+    /// unused179.
+    Unused179,
+    #[serde(rename = "unused180")]
+    /// unused180.
+    Unused180,
+    #[serde(rename = "unused181")]
+    /// unused181.
+    Unused181,
+    #[serde(rename = "unused182")]
+    /// unused182.
+    Unused182,
+    #[serde(rename = "unused183")]
+    /// unused183.
+    Unused183,
+    #[serde(rename = "unused184")]
+    /// unused184.
+    Unused184,
+    #[serde(rename = "unused185")]
+    /// unused185.
+    Unused185,
+    #[serde(rename = "unused186")]
+    /// unused186.
+    Unused186,
+    #[serde(rename = "unused187")]
+    /// unused187.
+    Unused187,
+    #[serde(rename = "unused188")]
+    /// unused188.
+    Unused188,
+    #[serde(rename = "unused189")]
+    /// unused189.
+    Unused189,
+    #[serde(rename = "unused190")]
+    /// unused190.
+    Unused190,
+    #[serde(rename = "unused191")]
+    /// unused191.
+    Unused191,
+    #[serde(rename = "unused192")]
+    /// unused192.
+    Unused192,
+    #[serde(rename = "unused193")]
+    /// unused193.
+    Unused193,
+    #[serde(rename = "unused194")]
+    /// unused194.
+    Unused194,
+    #[serde(rename = "unused195")]
+    /// unused195.
+    Unused195,
+    #[serde(rename = "unused196")]
+    /// unused196.
+    Unused196,
+    #[serde(rename = "unused197")]
+    /// unused197.
+    Unused197,
+    #[serde(rename = "unused198")]
+    /// unused198.
+    Unused198,
+    #[serde(rename = "unused199")]
+    /// unused199.
+    Unused199,
+    #[serde(rename = "unused200")]
+    /// unused200.
+    Unused200,
+    #[serde(rename = "unused201")]
+    /// unused201.
+    Unused201,
+    #[serde(rename = "unused202")]
+    /// unused202.
+    Unused202,
+    #[serde(rename = "unused203")]
+    /// unused203.
+    Unused203,
+    #[serde(rename = "unused204")]
+    /// unused204.
+    Unused204,
+    #[serde(rename = "unused205")]
+    /// unused205.
+    Unused205,
+    #[serde(rename = "unused206")]
+    /// unused206.
+    Unused206,
+    #[serde(rename = "unused207")]
+    /// unused207.
+    Unused207,
+    #[serde(rename = "unused208")]
+    /// unused208.
+    Unused208,
+    #[serde(rename = "unused209")]
+    /// unused209.
+    Unused209,
+    #[serde(rename = "unused210")]
+    /// unused210.
+    Unused210,
+    #[serde(rename = "unused211")]
+    /// unused211.
+    Unused211,
+    #[serde(rename = "unused212")]
+    /// unused212.
+    Unused212,
+    #[serde(rename = "unused213")]
+    /// unused213.
+    Unused213,
+    #[serde(rename = "unused214")]
+    /// unused214.
+    Unused214,
+    #[serde(rename = "unused215")]
+    /// unused215.
+    Unused215,
+    #[serde(rename = "unused216")]
+    /// unused216.
+    Unused216,
+    #[serde(rename = "unused217")]
+    /// unused217.
+    Unused217,
+    #[serde(rename = "unused218")]
+    /// unused218.
+    Unused218,
+    #[serde(rename = "unused219")]
+    /// unused219.
+    Unused219,
+    #[serde(rename = "unused220")]
+    /// unused220.
+    Unused220,
+    #[serde(rename = "unused221")]
+    /// unused221.
+    Unused221,
+    #[serde(rename = "unused222")]
+    /// unused222.
+    Unused222,
+    #[serde(rename = "unused223")]
+    /// unused223.
+    Unused223,
+    #[serde(rename = "unused224")]
+    /// unused224.
+    Unused224,
+    #[serde(rename = "unused225")]
+    /// unused225.
+    Unused225,
+    #[serde(rename = "unused226")]
+    /// unused226.
+    Unused226,
+    #[serde(rename = "unused227")]
+    /// unused227.
+    Unused227,
+    #[serde(rename = "unused228")]
+    /// unused228.
+    Unused228,
+    #[serde(rename = "unused229")]
+    /// unused229.
+    Unused229,
+    #[serde(rename = "unused230")]
+    /// unused230.
+    Unused230,
+    #[serde(rename = "unused231")]
+    /// unused231.
+    Unused231,
+    #[serde(rename = "unused232")]
+    /// unused232.
+    Unused232,
+    #[serde(rename = "unused233")]
+    /// unused233.
+    Unused233,
+    #[serde(rename = "unused234")]
+    /// unused234.
+    Unused234,
+    #[serde(rename = "unused235")]
+    /// unused235.
+    Unused235,
+    #[serde(rename = "unused236")]
+    /// unused236.
+    Unused236,
+    #[serde(rename = "unused237")]
+    /// unused237.
+    Unused237,
+    #[serde(rename = "unused238")]
+    /// unused238.
+    Unused238,
+    #[serde(rename = "unused239")]
+    /// unused239.
+    Unused239,
+    #[serde(rename = "unused240")]
+    /// unused240.
+    Unused240,
+    #[serde(rename = "unused241")]
+    /// unused241.
+    Unused241,
+    #[serde(rename = "unused242")]
+    /// unused242.
+    Unused242,
+    #[serde(rename = "unused243")]
+    /// unused243.
+    Unused243,
+    #[serde(rename = "unused244")]
+    /// unused244.
+    Unused244,
+    #[serde(rename = "unused245")]
+    /// unused245.
+    Unused245,
+    #[serde(rename = "unused246")]
+    /// unused246.
+    Unused246,
+    #[serde(rename = "unused247")]
+    /// unused247.
+    Unused247,
+    #[serde(rename = "unused248")]
+    /// unused248.
+    Unused248,
+    #[serde(rename = "unused249")]
+    /// unused249.
+    Unused249,
+    #[serde(rename = "unused250")]
+    /// unused250.
+    Unused250,
+    #[serde(rename = "unused251")]
+    /// unused251.
+    Unused251,
+    #[serde(rename = "unused252")]
+    /// unused252.
+    Unused252,
+    #[serde(rename = "unused253")]
+    /// unused253.
+    Unused253,
+    #[serde(rename = "unused254")]
+    /// unused254.
+    Unused254,
+    #[serde(rename = "unused255")]
+    /// unused255.
+    Unused255,
+}
+serde_plain::derive_display_from_serialize!(QemuMoveDiskDisk);
+serde_plain::derive_fromstr_from_deserialize!(QemuMoveDiskDisk);
+
+#[api]
+/// Target Format.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum QemuMoveDiskFormat {
+    #[serde(rename = "raw")]
+    /// raw.
+    Raw,
+    #[serde(rename = "qcow2")]
+    /// qcow2.
+    Qcow2,
+    #[serde(rename = "vmdk")]
+    /// vmdk.
+    Vmdk,
+}
+serde_plain::derive_display_from_serialize!(QemuMoveDiskFormat);
+serde_plain::derive_fromstr_from_deserialize!(QemuMoveDiskFormat);
+
+#[api(
+    properties: {
+        digest: {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        disk: {
+            type: QemuResizeDisk,
+        },
+        size: {
+            type: String,
+        },
+        skiplock: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct QemuResize {
+    /// Prevent changes if current configuration file has different SHA1 digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    pub disk: QemuResizeDisk,
+
+    /// The new size. With the `+` sign the value is added to the actual size of
+    /// the volume and without it, the value is taken as an absolute one.
+    /// Shrinking disk size is not supported.
+    pub size: String,
+
+    /// Ignore locks - only root is allowed to use this option.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skiplock: Option<bool>,
+}
+
+#[api]
+/// The disk you want to resize.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum QemuResizeDisk {
+    #[serde(rename = "ide0")]
+    /// ide0.
+    Ide0,
+    #[serde(rename = "ide1")]
+    /// ide1.
+    Ide1,
+    #[serde(rename = "ide2")]
+    /// ide2.
+    Ide2,
+    #[serde(rename = "ide3")]
+    /// ide3.
+    Ide3,
+    #[serde(rename = "scsi0")]
+    /// scsi0.
+    Scsi0,
+    #[serde(rename = "scsi1")]
+    /// scsi1.
+    Scsi1,
+    #[serde(rename = "scsi2")]
+    /// scsi2.
+    Scsi2,
+    #[serde(rename = "scsi3")]
+    /// scsi3.
+    Scsi3,
+    #[serde(rename = "scsi4")]
+    /// scsi4.
+    Scsi4,
+    #[serde(rename = "scsi5")]
+    /// scsi5.
+    Scsi5,
+    #[serde(rename = "scsi6")]
+    /// scsi6.
+    Scsi6,
+    #[serde(rename = "scsi7")]
+    /// scsi7.
+    Scsi7,
+    #[serde(rename = "scsi8")]
+    /// scsi8.
+    Scsi8,
+    #[serde(rename = "scsi9")]
+    /// scsi9.
+    Scsi9,
+    #[serde(rename = "scsi10")]
+    /// scsi10.
+    Scsi10,
+    #[serde(rename = "scsi11")]
+    /// scsi11.
+    Scsi11,
+    #[serde(rename = "scsi12")]
+    /// scsi12.
+    Scsi12,
+    #[serde(rename = "scsi13")]
+    /// scsi13.
+    Scsi13,
+    #[serde(rename = "scsi14")]
+    /// scsi14.
+    Scsi14,
+    #[serde(rename = "scsi15")]
+    /// scsi15.
+    Scsi15,
+    #[serde(rename = "scsi16")]
+    /// scsi16.
+    Scsi16,
+    #[serde(rename = "scsi17")]
+    /// scsi17.
+    Scsi17,
+    #[serde(rename = "scsi18")]
+    /// scsi18.
+    Scsi18,
+    #[serde(rename = "scsi19")]
+    /// scsi19.
+    Scsi19,
+    #[serde(rename = "scsi20")]
+    /// scsi20.
+    Scsi20,
+    #[serde(rename = "scsi21")]
+    /// scsi21.
+    Scsi21,
+    #[serde(rename = "scsi22")]
+    /// scsi22.
+    Scsi22,
+    #[serde(rename = "scsi23")]
+    /// scsi23.
+    Scsi23,
+    #[serde(rename = "scsi24")]
+    /// scsi24.
+    Scsi24,
+    #[serde(rename = "scsi25")]
+    /// scsi25.
+    Scsi25,
+    #[serde(rename = "scsi26")]
+    /// scsi26.
+    Scsi26,
+    #[serde(rename = "scsi27")]
+    /// scsi27.
+    Scsi27,
+    #[serde(rename = "scsi28")]
+    /// scsi28.
+    Scsi28,
+    #[serde(rename = "scsi29")]
+    /// scsi29.
+    Scsi29,
+    #[serde(rename = "scsi30")]
+    /// scsi30.
+    Scsi30,
+    #[serde(rename = "virtio0")]
+    /// virtio0.
+    Virtio0,
+    #[serde(rename = "virtio1")]
+    /// virtio1.
+    Virtio1,
+    #[serde(rename = "virtio2")]
+    /// virtio2.
+    Virtio2,
+    #[serde(rename = "virtio3")]
+    /// virtio3.
+    Virtio3,
+    #[serde(rename = "virtio4")]
+    /// virtio4.
+    Virtio4,
+    #[serde(rename = "virtio5")]
+    /// virtio5.
+    Virtio5,
+    #[serde(rename = "virtio6")]
+    /// virtio6.
+    Virtio6,
+    #[serde(rename = "virtio7")]
+    /// virtio7.
+    Virtio7,
+    #[serde(rename = "virtio8")]
+    /// virtio8.
+    Virtio8,
+    #[serde(rename = "virtio9")]
+    /// virtio9.
+    Virtio9,
+    #[serde(rename = "virtio10")]
+    /// virtio10.
+    Virtio10,
+    #[serde(rename = "virtio11")]
+    /// virtio11.
+    Virtio11,
+    #[serde(rename = "virtio12")]
+    /// virtio12.
+    Virtio12,
+    #[serde(rename = "virtio13")]
+    /// virtio13.
+    Virtio13,
+    #[serde(rename = "virtio14")]
+    /// virtio14.
+    Virtio14,
+    #[serde(rename = "virtio15")]
+    /// virtio15.
+    Virtio15,
+    #[serde(rename = "sata0")]
+    /// sata0.
+    Sata0,
+    #[serde(rename = "sata1")]
+    /// sata1.
+    Sata1,
+    #[serde(rename = "sata2")]
+    /// sata2.
+    Sata2,
+    #[serde(rename = "sata3")]
+    /// sata3.
+    Sata3,
+    #[serde(rename = "sata4")]
+    /// sata4.
+    Sata4,
+    #[serde(rename = "sata5")]
+    /// sata5.
+    Sata5,
+    #[serde(rename = "efidisk0")]
+    /// efidisk0.
+    Efidisk0,
+    #[serde(rename = "tpmstate0")]
+    /// tpmstate0.
+    Tpmstate0,
+}
+serde_plain::derive_display_from_serialize!(QemuResizeDisk);
+serde_plain::derive_fromstr_from_deserialize!(QemuResizeDisk);
+
 #[api(
     properties: {
         agent: {
@@ -9741,7 +11038,7 @@ REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:
 }
 
 #[test]
-fn test_regex_compilation_26() {
+fn test_regex_compilation_27() {
     use regex::Regex;
     let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_BRIDGE_RE;
     let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE;
@@ -9858,7 +11155,7 @@ REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i
 }
 
 #[test]
-fn test_regex_compilation_27() {
+fn test_regex_compilation_28() {
     use regex::Regex;
     let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_BRIDGE_RE;
     let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE;
@@ -10175,7 +11472,7 @@ SDN_CONTROLLER_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F
 }
 
 #[test]
-fn test_regex_compilation_28() {
+fn test_regex_compilation_29() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_ISIS_NET_RE;
@@ -10328,7 +11625,7 @@ SDN_CONTROLLER_PENDING_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\
 }
 
 #[test]
-fn test_regex_compilation_29() {
+fn test_regex_compilation_30() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_NET_RE;
@@ -10623,7 +11920,7 @@ SDN_ZONE_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_30() {
+fn test_regex_compilation_31() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_EXITNODES_PRIMARY_RE;
@@ -10897,7 +12194,7 @@ SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_31() {
+fn test_regex_compilation_32() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE;
@@ -11227,7 +12524,7 @@ START_QEMU_TARGETSTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z
 }
 
 #[test]
-fn test_regex_compilation_32() {
+fn test_regex_compilation_33() {
     use regex::Regex;
     let _: &Regex = &START_QEMU_MIGRATEDFROM_RE;
     let _: &Regex = &START_QEMU_TARGETSTORAGE_RE;
@@ -11398,7 +12695,7 @@ STOP_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_33() {
+fn test_regex_compilation_34() {
     use regex::Regex;
     let _: &Regex = &STOP_QEMU_MIGRATEDFROM_RE;
 }
@@ -11497,7 +12794,7 @@ STORAGE_INFO_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_34() {
+fn test_regex_compilation_35() {
     use regex::Regex;
     let _: &Regex = &STORAGE_INFO_STORAGE_RE;
 }
@@ -11775,7 +13072,7 @@ UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_35() {
+fn test_regex_compilation_36() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_BOOTDISK_RE;
@@ -12684,7 +13981,7 @@ UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_36() {
+fn test_regex_compilation_37() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -12761,7 +14058,7 @@ UPDATE_QEMU_CONFIG_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_37() {
+fn test_regex_compilation_38() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_MODEL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SERIAL_RE;
@@ -13117,7 +14414,7 @@ UPDATE_QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_38() {
+fn test_regex_compilation_39() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SIZE_RE;
@@ -13462,7 +14759,7 @@ UPDATE_QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_39() {
+fn test_regex_compilation_40() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SIZE_RE;
@@ -13862,7 +15159,7 @@ UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_40() {
+fn test_regex_compilation_41() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -13918,7 +15215,7 @@ UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_41() {
+fn test_regex_compilation_42() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE;

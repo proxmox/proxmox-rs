@@ -142,7 +142,6 @@
 /// - /nodes/{node}/apt/versions
 /// - /nodes/{node}/capabilities
 /// - /nodes/{node}/capabilities/qemu
-/// - /nodes/{node}/capabilities/qemu/cpu
 /// - /nodes/{node}/capabilities/qemu/machines
 /// - /nodes/{node}/capabilities/qemu/migration
 /// - /nodes/{node}/ceph
@@ -292,10 +291,8 @@
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/qemu/{vmid}/monitor
-/// - /nodes/{node}/qemu/{vmid}/move_disk
 /// - /nodes/{node}/qemu/{vmid}/mtunnel
 /// - /nodes/{node}/qemu/{vmid}/mtunnelwebsocket
-/// - /nodes/{node}/qemu/{vmid}/resize
 /// - /nodes/{node}/qemu/{vmid}/rrd
 /// - /nodes/{node}/qemu/{vmid}/rrddata
 /// - /nodes/{node}/qemu/{vmid}/sendkey
@@ -593,6 +590,11 @@ pub trait PveClient {
         Err(Error::Other("node_status not implemented"))
     }
 
+    /// List all custom and default CPU models.
+    async fn qemu_cpu_capabilities(&self, node: &str) -> Result<Vec<QemuCpuModel>, Error> {
+        Err(Error::Other("qemu_cpu_capabilities not implemented"))
+    }
+
     /// Get the virtual machine configuration with pending configuration changes
     /// applied. Set the 'current' parameter to get the current configuration
     /// instead.
@@ -629,6 +631,26 @@ pub trait PveClient {
         target: Option<String>,
     ) -> Result<QemuMigratePreconditions, Error> {
         Err(Error::Other("qemu_migrate_preconditions not implemented"))
+    }
+
+    /// Move volume to different storage or to a different VM.
+    async fn qemu_move_disk(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: QemuMoveDisk,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("qemu_move_disk not implemented"))
+    }
+
+    /// Extend volume size.
+    async fn qemu_resize(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: QemuResize,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("qemu_resize not implemented"))
     }
 
     /// Set virtual machine options (asynchronous API).
@@ -1088,6 +1110,12 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// List all custom and default CPU models.
+    async fn qemu_cpu_capabilities(&self, node: &str) -> Result<Vec<QemuCpuModel>, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/capabilities/qemu/cpu");
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Get the virtual machine configuration with pending configuration changes
     /// applied. Set the 'current' parameter to get the current configuration
     /// instead.
@@ -1133,6 +1161,28 @@ where
             .maybe_arg("target", &target)
             .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Move volume to different storage or to a different VM.
+    async fn qemu_move_disk(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: QemuMoveDisk,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/move_disk");
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Extend volume size.
+    async fn qemu_resize(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: QemuResize,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/resize");
+        Ok(self.0.put(url, &params).await?.expect_json()?.data)
     }
 
     /// Set virtual machine options (asynchronous API).
