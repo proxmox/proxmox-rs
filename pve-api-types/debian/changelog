@@ -1,3 +1,11 @@
+rust-pve-api-types (8.0.6-1) trixie; urgency=medium
+
+  * add qemu_cpu_capabilities api
+  * add qemu_resize api
+  * add qemu_move_disk api
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 04 Nov 2025 07:46:01 +0100
+
 rust-pve-api-types (8.0.5-1) trixie; urgency=medium
 
   * implement array deduplication
