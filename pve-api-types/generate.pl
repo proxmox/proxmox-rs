@@ -125,6 +125,7 @@ Schema2Rust::generate_enum('IsRunning', {
 
 # We have a textual description of the default value in there, just pick the cgroupv2 one:
 Schema2Rust::register_api_override('UpdateQemuConfig', '/properties/cpuunits/default', 1024);
+Schema2Rust::register_api_override('UpdateQemuConfigAsync', '/properties/cpuunits/default', 1024);
 
 Schema2Rust::register_api_override('QemuConfig', '/properties/cpuunits/default', 1024);
 Schema2Rust::register_api_override('LxcConfig', '/properties/cpuunits/default', 1024);
@@ -232,7 +233,8 @@ api(GET => '/nodes/{node}/qemu', 'list_qemu', 'param-name' => 'FixmeListQemu', '
 api(GET => '/nodes/{node}/qemu/{vmid}/config', 'qemu_get_config', 'param-name' => 'FixmeQemuGetConfig', 'return-name' => 'QemuConfig');
 api(GET => '/nodes/{node}/qemu/{vmid}/pending', 'qemu_get_pending', 'param-name' => 'FixmeQemuGetPending', 'output-type' => 'Vec<QemuPendingConfigValue>');
 api(GET => '/nodes/{node}/qemu/{vmid}/status/current', 'qemu_get_status', 'return-name' => 'QemuStatus');
-api(POST => '/nodes/{node}/qemu/{vmid}/config', 'qemu_update_config_async', 'param-name' => 'UpdateQemuConfig', 'output-type' => 'Option<PveUpid>');
+api(PUT => '/nodes/{node}/qemu/{vmid}/config', 'qemu_update_config', 'param-name' => 'UpdateQemuConfig');
+api(POST => '/nodes/{node}/qemu/{vmid}/config', 'qemu_update_config_async', 'param-name' => 'UpdateQemuConfigAsync', 'output-type' => 'Option<PveUpid>');
 api(POST => '/nodes/{node}/qemu/{vmid}/move_disk', 'qemu_move_disk', 'param-name' => 'QemuMoveDisk', 'output-type' => 'PveUpid');
 api(PUT => '/nodes/{node}/qemu/{vmid}/resize', 'qemu_resize', 'param-name' => 'QemuResize', 'output-type' => 'PveUpid');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/start',    'start_qemu_async',    'output-type' => 'PveUpid', 'param-name' => 'StartQemu');
