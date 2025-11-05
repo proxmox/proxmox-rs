@@ -821,4 +821,71 @@ impl WebSocket {
             }
         }
     }
+
+    /// Takes two websocket endpoints and connects them by re-encoding the data.
+    ///
+    /// This method takes care of copying the data between endpoints, and sending correct responses
+    /// for control frames (e.g. a Point to a Ping).
+    ///
+    /// The `preamble` allows injecting initial handshake data into the proxying.
+    pub async fn proxy_connection<S, L>(
+        &self,
+        upstream: S,
+        downstream: L,
+        preamble: &[u8],
+    ) -> Result<(), Error>
+    where
+        S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+        L: AsyncRead + AsyncWrite + Unpin + Send + 'static,
+    {
+        // unmasked as the spec requires
+        let server_socket = WebSocket { mask: None };
+
+        // split to allow duplex transfer
+        let (upstream_raw_reader, upstream_raw_writer) = tokio::io::split(upstream);
+        let (downstream_raw_reader, downstream_raw_writer) = tokio::io::split(downstream);
+
+        // wire up WS handling for upstream connection
+        let (upstream_control_tx, mut upstream_control_rx) = mpsc::unbounded_channel();
+        let mut upstream_ws_reader = WebSocketReader::new(upstream_raw_reader, upstream_control_tx);
+        let mut upstream_ws_writer = WebSocketWriter::new(server_socket.mask, upstream_raw_writer);
+
+        // wire up WS handling for downstream connection
+        let (downstream_control_tx, mut downstream_control_rx) = mpsc::unbounded_channel();
+        let mut downstream_ws_reader =
+            WebSocketReader::new(downstream_raw_reader, downstream_control_tx);
+        let mut downstream_ws_writer = WebSocketWriter::new(self.mask, downstream_raw_writer);
+
+        // send preamble downstream via WS
+        if !preamble.is_empty() {
+            downstream_ws_writer.write_all(preamble).await?;
+        }
+
+        // read from upstream, write to downstream while handling control frames received from
+        // downstream
+        let downstream_future = server_socket.copy_to_websocket(
+            &mut upstream_ws_reader,
+            &mut downstream_ws_writer,
+            &mut downstream_control_rx,
+        );
+
+        // read from downstream, write to upstream while handling control frames received from
+        // upstream
+        let upstream_future = self.copy_to_websocket(
+            &mut downstream_ws_reader,
+            &mut upstream_ws_writer,
+            &mut upstream_control_rx,
+        );
+
+        select! {
+            res = downstream_future.fuse() => match res {
+                Ok(_) => Ok(()),
+                Err(err) => Err(Error::from(err)),
+            },
+            res = upstream_future.fuse() => match res {
+                Ok(_) => Ok(()),
+                Err(err) => Err(Error::from(err)),
+            },
+        }
+    }
 }
