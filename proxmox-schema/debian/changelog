@@ -1,3 +1,14 @@
+rust-proxmox-schema (5.0.1-1) trixie; urgency=medium
+
+  * drop now-unnecessary check for integer schema fitting into i64
+  * allow marking the format of string schemas optional (they are then for
+    documentation-only), so that enums can have an untagged 'Other(String)'
+    variant for forward/backward compatibility
+  * various clippy fixes
+  * docs: fix typos
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 05 Nov 2025 14:45:44 +0100
+
 rust-proxmox-schema (5.0.0-1) trixie; urgency=medium
 
   * change minimum, maximum and default integer values from isize to i64 to
