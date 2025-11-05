@@ -1,3 +1,10 @@
+rust-pve-api-types (8.0.7-1) trixie; urgency=medium
+
+  * include latest pve-storage changes: add StorageInfoFormats
+  * expose sync qemu_update_config
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 05 Nov 2025 12:10:55 +0100
+
 rust-pve-api-types (8.0.6-1) trixie; urgency=medium
 
   * add qemu_cpu_capabilities api
