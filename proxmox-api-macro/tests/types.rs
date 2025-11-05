@@ -232,3 +232,45 @@ fn additional_properties_test() {
 
     assert_eq!(TEST_UNSPECIFIED, UnspecifiedData::API_SCHEMA);
 }
+
+#[api]
+/// An enum with an "other"/fallback value.
+#[derive(Debug, PartialEq, Eq, Deserialize)]
+pub enum WithOther {
+    /// First value.
+    First,
+
+    /// Second value.
+    Second,
+
+    /// Unknown values.
+    #[serde(untagged)]
+    Other(String),
+}
+
+#[test]
+fn enum_with_other() {
+    const WITH_OTHER_SCHEMA: ::proxmox_schema::Schema =
+        ::proxmox_schema::StringSchema::new("An enum with an \"other\"/fallback value.")
+            .format(&::proxmox_schema::ApiStringFormat::Enum(&[
+                EnumEntry::new("First", "First value."),
+                EnumEntry::new("Second", "Second value."),
+            ]))
+            .format_is_optional(true)
+            .schema();
+
+    assert_eq!(WITH_OTHER_SCHEMA, WithOther::API_SCHEMA);
+
+    let other: WithOther = serde_json::from_str("\"First\"").expect("failed to parse `WithOther`");
+    assert_eq!(other, WithOther::First);
+    let other: WithOther = serde_json::from_str("\"Second\"").expect("failed to parse `WithOther`");
+    assert_eq!(other, WithOther::Second);
+    let other: WithOther = serde_json::from_str("\"first\"").expect("failed to parse `WithOther`");
+    assert_eq!(other, WithOther::Other("first".into()));
+    let other: WithOther = serde_json::from_str("\"any\"").expect("failed to parse `WithOther`");
+    assert_eq!(other, WithOther::Other("any".into()));
+    let schema = const { WITH_OTHER_SCHEMA.unwrap_string_schema() };
+    schema
+        .check_constraints("any string")
+        .expect("check_constraints on 'other' value failed");
+}

@@ -13,42 +13,53 @@ use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
 
 /// Enums, provided they're simple enums, simply get an enum string schema attached to them.
 pub fn handle_enum(attribs: JSONObject, enum_ty: syn::ItemEnum) -> Result<TokenStream, Error> {
-    let mut first_unit = None;
-    let mut first_unnamed = None;
-    let mut first_named = None;
+    let mut unit_variants = 0;
+    let mut unnamed_variants = 0;
+    let mut untagged_variants = false;
     for variant in &enum_ty.variants {
+        let attrs = serde::VariantAttrib::try_from(&variant.attrs[..])?;
+        if attrs.untagged.is_some() {
+            if untagged_variants {
+                error!(
+                    variant.fields.span(),
+                    "api type enum with multiple untagged variants not supported"
+                );
+            }
+            untagged_variants = true;
+        }
         match &variant.fields {
-            syn::Fields::Unit => first_unit = Some(variant.fields.span()),
-            syn::Fields::Unnamed(_) => first_unnamed = Some(variant.fields.span()),
-            syn::Fields::Named(_) => first_named = Some(variant.fields.span()),
+            syn::Fields::Unit => {
+                if let Some(untagged) = attrs.untagged.clone() {
+                    error!(untagged, "untagged unit variants not supported");
+                }
+                unit_variants += 1;
+            }
+            syn::Fields::Unnamed(_) => {
+                unnamed_variants += 1;
+            }
+            syn::Fields::Named(_) => {
+                bail!(
+                    variant.fields.span(),
+                    "api type enums with named fields are not allowed"
+                )
+            }
         }
     }
 
-    if first_unit.is_some() {
-        if let Some(conflict) = first_unnamed.or(first_named) {
-            bail!(
-                conflict,
-                "enums must be either with only unit types or only newtypes"
-            );
-        }
+    if unnamed_variants == 0 {
         return handle_string_enum(attribs, enum_ty);
     }
 
-    if first_unnamed.is_some() {
-        if let Some(conflict) = first_unit.or(first_named) {
-            bail!(
-                conflict,
-                "enums must be either with only unit types or only newtypes"
-            );
-        }
+    if unit_variants == 0 {
         return handle_section_config_enum(attribs, enum_ty);
     }
 
-    if let Some(bad) = first_named {
-        bail!(bad, "api type enums with named fields are not allowed");
+    if unnamed_variants == 1 && untagged_variants {
+        // we allow a single untagged unnamed variant
+        return handle_string_enum(attribs, enum_ty);
     }
 
-    bail!(enum_ty => "api type enums must not be empty");
+    bail!(enum_ty => "mixed unnamed and unit variant enums not supported");
 }
 
 /// Enums, provided they're simple enums, simply get an enum string schema attached to them.
@@ -93,9 +104,20 @@ fn handle_string_enum(
     let mut default_value = None;
 
     let mut variants = TokenStream::new();
+    let mut has_untagged_other = false;
     for variant in &mut enum_ty.variants {
+        let attrs = serde::VariantAttrib::try_from(&variant.attrs[..])?;
+
         match &variant.fields {
             syn::Fields::Unit => (),
+            syn::Fields::Unnamed(_) => {
+                if attrs.untagged.is_some() {
+                    has_untagged_other = true;
+                    continue;
+                } else {
+                    bail!(variant => "unnamed variants not supported in string enums");
+                }
+            }
             _ => bail!(variant => "api macro does not support enums with fields"),
         }
 
@@ -105,7 +127,6 @@ fn handle_string_enum(
             comment = "<missing description>".to_string();
         }
 
-        let attrs = serde::VariantAttrib::try_from(&variant.attrs[..])?;
         let variant_string = if let Some(renamed) = attrs.rename {
             renamed
         } else if let Some(rename_all) = container_attrs.rename_all {
@@ -146,6 +167,12 @@ fn handle_string_enum(
         None => TokenStream::new(),
     };
 
+    let format_is_optional = if has_untagged_other {
+        quote::quote! { .format_is_optional(true) }
+    } else {
+        TokenStream::new()
+    };
+
     Ok(quote_spanned! { name.span() =>
         #enum_ty
 
@@ -153,6 +180,7 @@ fn handle_string_enum(
             const API_SCHEMA: ::proxmox_schema::Schema =
                 #schema
                 .format(&::proxmox_schema::ApiStringFormat::Enum(&[#variants]))
+                #format_is_optional
                 #default_value
                 .schema();
         }

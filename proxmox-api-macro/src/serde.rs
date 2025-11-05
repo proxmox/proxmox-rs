@@ -254,6 +254,7 @@ impl TryFrom<&[syn::Attribute]> for FieldAttrib {
 /// `serde` variant attributes we support
 #[derive(Default)]
 pub struct VariantAttrib {
+    pub untagged: Option<Span>,
     pub rename: Option<syn::LitStr>,
 }
 
@@ -281,6 +282,14 @@ impl VariantAttrib {
                     }
                     value => error!(value => "'rename' value must be a string literal"),
                 }
+            } else if path.is_ident("untagged") {
+                self.untagged = Some(match arg.require_path_only() {
+                    Ok(path) => path.span(),
+                    Err(_) => {
+                        error!(arg => "'untagged' attribute with value not supported");
+                        Span::call_site()
+                    }
+                });
             }
         }
 
