@@ -390,21 +390,6 @@ impl Parse for JSONMapEntry {
     }
 }
 
-/// We get macro attributes like `#[doc = "TEXT"]` with the `=` included.
-pub struct BareAssignment<T: Parse> {
-    pub _token: Token![=],
-    pub _content: T,
-}
-
-impl<T: Parse> Parse for BareAssignment<T> {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        Ok(Self {
-            _token: input.parse()?,
-            _content: input.parse()?,
-        })
-    }
-}
-
 pub fn get_doc_comments(attributes: &[syn::Attribute]) -> Result<(String, Span), syn::Error> {
     let mut doc_comment = String::new();
     let doc_span = Span::call_site(); // FIXME: set to first doc comment
@@ -671,7 +656,7 @@ impl<T> From<Maybe<T>> for Option<T> {
 }
 
 /// Helper to iterate over all the `#[derive(...)]` types found in an attribute list.
-pub fn derived_items(attributes: &[syn::Attribute]) -> DerivedItems {
+pub fn derived_items(attributes: &[syn::Attribute]) -> DerivedItems<'_> {
     DerivedItems {
         attributes: attributes.iter(),
         current: None,
