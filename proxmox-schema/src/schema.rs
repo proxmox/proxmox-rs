@@ -419,6 +419,9 @@ pub struct StringSchema {
     pub max_length: Option<usize>,
     /// Optional microformat.
     pub format: Option<&'static ApiStringFormat>,
+    /// Declares the `format` to be a hint for documentation purposes, but other values will be
+    /// accepted for backward/forward compatibility purposes.
+    pub format_is_optional: bool,
     /// A text representation of the format/type (used to generate documentation).
     pub type_text: Option<&'static str>,
 }
@@ -431,6 +434,7 @@ impl StringSchema {
             min_length: None,
             max_length: None,
             format: None,
+            format_is_optional: false,
             type_text: None,
         }
     }
@@ -465,6 +469,11 @@ impl StringSchema {
         self
     }
 
+    pub const fn format_is_optional(mut self, is_optional: bool) -> Self {
+        self.format_is_optional = is_optional;
+        self
+    }
+
     pub const fn schema(self) -> Schema {
         Schema::String(self)
     }
@@ -487,6 +496,10 @@ impl StringSchema {
 
     pub fn check_constraints(&self, value: &str) -> Result<(), Error> {
         self.check_length(value.chars().count())?;
+
+        if self.format_is_optional {
+            return Ok(());
+        }
 
         if let Some(ref format) = self.format {
             match format {
