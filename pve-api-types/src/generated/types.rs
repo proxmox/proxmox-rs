@@ -4224,6 +4224,82 @@ serde_plain::derive_display_from_serialize!(NetworkInterfaceVlanProtocol);
 serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceVlanProtocol);
 
 #[api(
+    properties: {
+        cmd: {
+            optional: true,
+            type: NodeShellTermproxyCmd,
+        },
+        "cmd-opts": {
+            default: "",
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeShellTermproxy {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cmd: Option<NodeShellTermproxyCmd>,
+
+    /// Add parameters to a command. Encoded as null terminated strings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "cmd-opts")]
+    pub cmd_opts: Option<String>,
+}
+
+#[api]
+/// Run specific command or default to login (requires 'root@pam')
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NodeShellTermproxyCmd {
+    #[serde(rename = "ceph_install")]
+    /// ceph_install.
+    CephInstall,
+    #[serde(rename = "login")]
+    #[default]
+    /// login.
+    Login,
+    #[serde(rename = "upgrade")]
+    /// upgrade.
+    Upgrade,
+}
+serde_plain::derive_display_from_serialize!(NodeShellTermproxyCmd);
+serde_plain::derive_fromstr_from_deserialize!(NodeShellTermproxyCmd);
+
+#[api(
+    properties: {
+        port: {
+            type: Integer,
+        },
+        ticket: {
+            type: String,
+        },
+        upid: {
+            type: String,
+        },
+        user: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeShellTicket {
+    /// port used to bind termproxy to
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub port: i64,
+
+    /// ticket used to verifiy websocket connection
+    pub ticket: String,
+
+    /// UPID for termproxy worker task
+    pub upid: String,
+
+    /// user
+    pub user: String,
+}
+
+#[api(
     additional_properties: "additional_properties",
     properties: {
         "boot-info": {

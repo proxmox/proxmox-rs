@@ -51649,15 +51649,19 @@
                               "additionalProperties": 0,
                               "properties": {
                                  "port": {
+                                    "description": "port used to bind termproxy to",
                                     "type": "integer"
                                  },
                                  "ticket": {
+                                    "description": "VNC ticket used to verifiy websocket connection",
                                     "type": "string"
                                  },
                                  "upid": {
+                                    "description": "UPID for termproxy worker task",
                                     "type": "string"
                                  },
                                  "user": {
+                                    "description": "user/token that generated the VNC ticket in `ticket`",
                                     "type": "string"
                                  }
                               }

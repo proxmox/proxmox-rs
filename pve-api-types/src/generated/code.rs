@@ -356,7 +356,6 @@
 /// - /nodes/{node}/storage/{storage}/upload
 /// - /nodes/{node}/suspendall
 /// - /nodes/{node}/syslog
-/// - /nodes/{node}/termproxy
 /// - /nodes/{node}/time
 /// - /nodes/{node}/version
 /// - /nodes/{node}/vncshell
@@ -583,6 +582,15 @@ pub trait PveClient {
         params: MigrateQemu,
     ) -> Result<PveUpid, Error> {
         Err(Error::Other("migrate_qemu not implemented"))
+    }
+
+    /// Creates a VNC Shell proxy.
+    async fn node_shell_termproxy(
+        &self,
+        node: &str,
+        params: NodeShellTermproxy,
+    ) -> Result<NodeShellTicket, Error> {
+        Err(Error::Other("node_shell_termproxy not implemented"))
     }
 
     /// Read node status
@@ -1113,6 +1121,16 @@ where
         params: MigrateQemu,
     ) -> Result<PveUpid, Error> {
         let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate");
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Creates a VNC Shell proxy.
+    async fn node_shell_termproxy(
+        &self,
+        node: &str,
+        params: NodeShellTermproxy,
+    ) -> Result<NodeShellTicket, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/termproxy");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 

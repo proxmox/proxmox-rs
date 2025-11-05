@@ -387,6 +387,8 @@ api(DELETE => '/cluster/sdn/lock', 'release_sdn_lock', 'param-name' => 'ReleaseS
 api(PUT => '/cluster/sdn', 'sdn_apply', 'param-name' => 'ReloadSdn', 'output-type' => 'PveUpid');
 api(POST => '/cluster/sdn/rollback', 'rollback_sdn_changes', 'param-name' => 'RollbackSdn');
 
+api(POST => '/nodes/{node}/termproxy', 'node_shell_termproxy', 'param-name' => 'NodeShellTermproxy', 'return-name' => 'NodeShellTicket');
+
 # NOW DUMP THE CODE:
 #
 # We generate one file for API types, and one for API method calls.
