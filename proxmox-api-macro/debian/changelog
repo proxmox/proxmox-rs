@@ -1,3 +1,10 @@
+rust-proxmox-api-macro (1.4.3-1) trixie; urgency=medium
+
+  * support untagged 'other' string-enum variant
+  * various clippy and documentation typo fixes
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 05 Nov 2025 14:48:51 +0100
+
 rust-proxmox-api-macro (1.4.2-1) trixie; urgency=medium
 
   * rebuild with proxmox-schema 5.0.0
