@@ -280,6 +280,7 @@ Schema2Rust::derive('NetworkInterface' => 'Clone', 'PartialEq');
 
 api(GET => '/nodes/{node}/storage', 'list_storages', 'return-name' => 'StorageInfo');
 Schema2Rust::derive('StorageInfo' => 'Clone', 'PartialEq');
+Schema2Rust::derive('StorageInfoFormats' => 'Clone', 'PartialEq');
 
 api(GET => '/nodes/{node}/storage/{storage}/status', 'storage_status', 'return-name' => 'StorageStatus');
 
