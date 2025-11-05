@@ -43,7 +43,7 @@ impl<'a> Iterator for PropertyIterator<'a> {
 type NextProperty<'a> = (Option<&'a str>, Cow<'a, str>, &'a str);
 
 /// Returns an optional key, its value, and the remainder of `data`.
-pub(crate) fn next_property(mut data: &str) -> Option<Result<NextProperty, Error>> {
+pub(crate) fn next_property(mut data: &str) -> Option<Result<NextProperty<'_>, Error>> {
     if data.is_empty() {
         return None;
     }
