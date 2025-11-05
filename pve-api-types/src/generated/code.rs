@@ -653,12 +653,24 @@ pub trait PveClient {
         Err(Error::Other("qemu_resize not implemented"))
     }
 
+    /// Set virtual machine options (synchronous API) - You should consider
+    /// using the POST method instead for any actions involving hotplug or
+    /// storage allocation.
+    async fn qemu_update_config(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateQemuConfig,
+    ) -> Result<(), Error> {
+        Err(Error::Other("qemu_update_config not implemented"))
+    }
+
     /// Set virtual machine options (asynchronous API).
     async fn qemu_update_config_async(
         &self,
         node: &str,
         vmid: u32,
-        params: UpdateQemuConfig,
+        params: UpdateQemuConfigAsync,
     ) -> Result<Option<PveUpid>, Error> {
         Err(Error::Other("qemu_update_config_async not implemented"))
     }
@@ -1185,12 +1197,25 @@ where
         Ok(self.0.put(url, &params).await?.expect_json()?.data)
     }
 
+    /// Set virtual machine options (synchronous API) - You should consider
+    /// using the POST method instead for any actions involving hotplug or
+    /// storage allocation.
+    async fn qemu_update_config(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateQemuConfig,
+    ) -> Result<(), Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config");
+        self.0.put(url, &params).await?.nodata()
+    }
+
     /// Set virtual machine options (asynchronous API).
     async fn qemu_update_config_async(
         &self,
         node: &str,
         vmid: u32,
-        params: UpdateQemuConfig,
+        params: UpdateQemuConfigAsync,
     ) -> Result<Option<PveUpid>, Error> {
         let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config");
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
