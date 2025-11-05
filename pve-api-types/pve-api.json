@@ -19953,7 +19953,33 @@
                                              "keyboard": {
                                                 "default": null,
                                                 "description": "Keyboard layout for VNC server. This option is generally not required and is often better handled from within the guest OS.",
-                                                "enum": ("Ref")["/root/0/children/16/info/PUT/parameters/properties/keyboard/enum"],
+                                                "enum": [
+                                                   "de",
+                                                   "de-ch",
+                                                   "da",
+                                                   "en-gb",
+                                                   "en-us",
+                                                   "es",
+                                                   "fi",
+                                                   "fr",
+                                                   "fr-be",
+                                                   "fr-ca",
+                                                   "fr-ch",
+                                                   "hu",
+                                                   "is",
+                                                   "it",
+                                                   "ja",
+                                                   "lt",
+                                                   "mk",
+                                                   "nl",
+                                                   "no",
+                                                   "pl",
+                                                   "pt",
+                                                   "pt-br",
+                                                   "sv",
+                                                   "sl",
+                                                   "tr"
+                                                ],
                                                 "optional": 1,
                                                 "type": "string"
                                              },
@@ -47132,6 +47158,41 @@
                                        "optional": 1,
                                        "type": "boolean"
                                     },
+                                    "formats": {
+                                       "description": "Lists the supported and default format. Use 'formats' instead. Only included if 'format' parameter is set.",
+                                       "optional": 1,
+                                       "properties": {
+                                          "default": {
+                                             "description": "The default format of the storage.",
+                                             "enum": [
+                                                "qcow2",
+                                                "raw",
+                                                "subvol",
+                                                "vmdk"
+                                             ],
+                                             "type": "string"
+                                          },
+                                          "supported": {
+                                             "description": "The list of supported formats",
+                                             "items": {
+                                                "enum": [
+                                                   "qcow2",
+                                                   "raw",
+                                                   "subvol",
+                                                   "vmdk"
+                                                ],
+                                                "type": "string"
+                                             },
+                                             "type": "array"
+                                          }
+                                       },
+                                       "type": "object"
+                                    },
+                                    "select_existing": {
+                                       "description": "Instead of creating new volumes, one must select one that is already existing. Only included if 'format' parameter is set.",
+                                       "optional": 1,
+                                       "type": "boolean"
+                                    },
                                     "shared": {
                                        "description": "Shared flag from storage configuration.",
                                        "optional": 1,
@@ -52757,12 +52818,6 @@
                               "optional": 1,
                               "type": "string"
                            },
-                           "path": {
-                              "description": "File system path.",
-                              "format": "pve-storage-path",
-                              "optional": 1,
-                              "type": "string"
-                           },
                            "pool": {
                               "description": "Pool.",
                               "optional": 1,
@@ -52935,7 +52990,6 @@
                                  "nfs",
                                  "pbs",
                                  "rbd",
-                                 "xfsrs-example",
                                  "zfs",
                                  "zfspool"
                               ],
@@ -53056,7 +53110,12 @@
                      "nowritecache": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/nowritecache"],
                      "options": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/options"],
                      "password": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/password"],
-                     "path": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/path"],
+                     "path": {
+                        "description": "File system path.",
+                        "format": "pve-storage-path",
+                        "optional": 1,
+                        "type": "string"
+                     },
                      "pool": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/pool"],
                      "port": ("Ref")["/root/2/children/0/info/PUT/parameters/properties/port"],
                      "portal": {
@@ -53110,7 +53169,6 @@
                            "nfs",
                            "pbs",
                            "rbd",
-                           "xfsrs-example",
                            "zfs",
                            "zfspool"
                         ],
