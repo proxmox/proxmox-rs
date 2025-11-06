@@ -1,3 +1,12 @@
+rust-proxmox-compression (1.0.1-1) trixie; urgency=medium
+
+  * zip: add a FileType enum for more telling differentiation between
+    directories and normal files.
+
+  * zip: add support for symlinks
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 06 Nov 2025 19:27:03 +0100
+
 rust-proxmox-compression (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.

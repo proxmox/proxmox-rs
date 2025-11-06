@@ -58,7 +58,7 @@ Provides:
  librust-proxmox-compression-1+default-dev (= ${binary:Version}),
  librust-proxmox-compression-1.0-dev (= ${binary:Version}),
  librust-proxmox-compression-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-compression-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-compression-1.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-compression-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-compression-1.0.1+default-dev (= ${binary:Version})
 Description: Contains compression utilitites (such as an Zip Encoder for async rust) - Rust source code
  Source code for Debianized Rust crate "proxmox-compression"
