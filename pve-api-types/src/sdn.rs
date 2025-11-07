@@ -1,4 +1,4 @@
-use crate::{SdnController, SdnVnet, SdnZone};
+use crate::{ClusterResourceNetworkType, SdnController, SdnVnet, SdnZone};
 
 impl SdnVnet {
     /// returns the tag from the pending property if it has a value, otherwise it returns self.tag
@@ -29,5 +29,14 @@ impl SdnController {
             .as_ref()
             .and_then(|pending| pending.asn)
             .or(self.asn)
+    }
+}
+
+impl ClusterResourceNetworkType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            ClusterResourceNetworkType::Fabric => "fabric",
+            ClusterResourceNetworkType::Zone => "zone",
+        }
     }
 }
