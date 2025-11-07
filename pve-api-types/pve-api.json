@@ -15755,6 +15755,20 @@
                                  "renderer": "bytes",
                                  "type": "integer"
                               },
+                              "network": {
+                                 "description": "The name of a Network entity (for type 'network').",
+                                 "optional": 1,
+                                 "type": "string"
+                              },
+                              "network-type": {
+                                 "description": "The type of network resource (for type 'network').",
+                                 "enum": [
+                                    "fabric",
+                                    "zone"
+                                 ],
+                                 "optional": 1,
+                                 "type": "string"
+                              },
                               "node": {
                                  "description": "The cluster node name (for types 'node', 'storage', 'qemu', and 'lxc').",
                                  "format": "pve-node",
@@ -15768,6 +15782,11 @@
                               },
                               "pool": {
                                  "description": "The pool name (for types 'pool', 'qemu' and 'lxc').",
+                                 "optional": 1,
+                                 "type": "string"
+                              },
+                              "protocol": {
+                                 "description": "The protocol of a fabric (for type 'network', network-type 'fabric').",
                                  "optional": 1,
                                  "type": "string"
                               },
@@ -15808,7 +15827,8 @@
                                     "qemu",
                                     "lxc",
                                     "openvz",
-                                    "sdn"
+                                    "sdn",
+                                    "network"
                                  ],
                                  "type": "string"
                               },
@@ -15825,6 +15845,11 @@
                                  "minimum": 100,
                                  "optional": 1,
                                  "type": "integer"
+                              },
+                              "zone_type": {
+                                 "description": "The type of an SDN zone (for type 'sdn').",
+                                 "optional": 1,
+                                 "type": "string"
                               }
                            },
                            "type": "object"
