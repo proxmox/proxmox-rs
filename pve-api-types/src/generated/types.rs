@@ -759,6 +759,14 @@ fn test_regex_compilation_4() {
             optional: true,
             type: Integer,
         },
+        network: {
+            optional: true,
+            type: String,
+        },
+        "network-type": {
+            optional: true,
+            type: ClusterResourceNetworkType,
+        },
         node: {
             format: &ApiStringFormat::Pattern(&CLUSTER_RESOURCE_NODE_RE),
             optional: true,
@@ -769,6 +777,10 @@ fn test_regex_compilation_4() {
             type: String,
         },
         pool: {
+            optional: true,
+            type: String,
+        },
+        protocol: {
             optional: true,
             type: String,
         },
@@ -805,6 +817,10 @@ fn test_regex_compilation_4() {
             minimum: 100,
             optional: true,
             type: Integer,
+        },
+        zone_type: {
+            optional: true,
+            type: String,
         },
     },
 )]
@@ -906,6 +922,14 @@ pub struct ClusterResource {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub netout: Option<i64>,
 
+    /// The name of a Network entity (for type 'network').
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub network: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "network-type")]
+    pub network_type: Option<ClusterResourceNetworkType>,
+
     /// The cluster node name (for types 'node', 'storage', 'qemu', and 'lxc').
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub node: Option<String>,
@@ -917,6 +941,10 @@ pub struct ClusterResource {
     /// The pool name (for types 'pool', 'qemu' and 'lxc').
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pool: Option<String>,
+
+    /// The protocol of a fabric (for type 'network', network-type 'fabric').
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protocol: Option<String>,
 
     /// The name of an SDN entity (for type 'sdn')
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -952,6 +980,10 @@ pub struct ClusterResource {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub vmid: Option<u32>,
+
+    /// The type of an SDN zone (for type 'sdn').
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zone_type: Option<String>,
 }
 
 #[api]
@@ -973,6 +1005,20 @@ pub enum ClusterResourceKind {
 }
 serde_plain::derive_display_from_serialize!(ClusterResourceKind);
 serde_plain::derive_fromstr_from_deserialize!(ClusterResourceKind);
+
+#[api]
+/// The type of network resource (for type 'network').
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterResourceNetworkType {
+    #[serde(rename = "fabric")]
+    /// fabric.
+    Fabric,
+    #[serde(rename = "zone")]
+    /// zone.
+    Zone,
+}
+serde_plain::derive_display_from_serialize!(ClusterResourceNetworkType);
+serde_plain::derive_fromstr_from_deserialize!(ClusterResourceNetworkType);
 
 #[api]
 /// Resource type.
@@ -999,6 +1045,9 @@ pub enum ClusterResourceType {
     #[serde(rename = "sdn")]
     /// sdn.
     Sdn,
+    #[serde(rename = "network")]
+    /// network.
+    Network,
 }
 serde_plain::derive_display_from_serialize!(ClusterResourceType);
 serde_plain::derive_fromstr_from_deserialize!(ClusterResourceType);
