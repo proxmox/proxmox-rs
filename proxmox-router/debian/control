@@ -21,7 +21,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-http-1+body-dev (>= 1.0.3-~~) <!nocheck>,
  librust-proxmox-http-1+default-dev (>= 1.0.3-~~) <!nocheck>,
  librust-proxmox-http-error-1+default-dev <!nocheck>,
- librust-proxmox-schema-5+default-dev <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
  librust-rustyline-14+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
@@ -47,7 +47,7 @@ Depends:
  librust-percent-encoding-2+default-dev (>= 2.1-~~),
  librust-proxmox-async-0.5+default-dev,
  librust-proxmox-http-error-1+default-dev,
- librust-proxmox-schema-5+default-dev,
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev,
@@ -145,7 +145,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-router-dev (= ${binary:Version}),
- librust-proxmox-schema-5+test-harness-dev
+ librust-proxmox-schema-5+test-harness-dev (>= 5.0.1-~~)
 Provides:
  librust-proxmox-router-3+test-harness-dev (= ${binary:Version}),
  librust-proxmox-router-3.2+test-harness-dev (= ${binary:Version}),

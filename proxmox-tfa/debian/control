@@ -73,8 +73,8 @@ Depends:
  ${misc:Depends},
  librust-proxmox-tfa-dev (= ${binary:Version}),
  librust-proxmox-tfa+types-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-macro-dev,
- librust-proxmox-schema-5+default-dev
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~)
 Provides:
  librust-proxmox-tfa-6+api-types-dev (= ${binary:Version}),
  librust-proxmox-tfa-6.0+api-types-dev (= ${binary:Version}),

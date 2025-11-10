@@ -55,8 +55,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-subscription-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-macro-dev,
- librust-proxmox-schema-5+default-dev
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~)
 Provides:
  librust-proxmox-subscription-1+api-types-dev (= ${binary:Version}),
  librust-proxmox-subscription-1.0+api-types-dev (= ${binary:Version}),

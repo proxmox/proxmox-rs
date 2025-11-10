@@ -57,7 +57,7 @@ Depends:
  librust-proxmox-access-control-1+impl-dev (>= 1.2.0-~~),
  librust-proxmox-auth-api-1+default-dev,
  librust-proxmox-product-config-1+default-dev,
- librust-proxmox-schema-5+default-dev,
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
  librust-proxmox-section-config-3+default-dev (>= 3.1.0-~~),
  librust-serde-json-1+default-dev
 Provides:

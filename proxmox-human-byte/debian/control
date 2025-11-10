@@ -7,8 +7,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev <!nocheck>,
- librust-proxmox-schema-5+default-dev <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>
@@ -25,8 +25,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-proxmox-schema-5+api-macro-dev,
- librust-proxmox-schema-5+default-dev,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
  librust-proxmox-serde-1+default-dev,
  librust-proxmox-serde-1+serde-json-dev,
  librust-serde-1+default-dev

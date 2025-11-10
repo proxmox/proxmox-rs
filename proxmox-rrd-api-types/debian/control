@@ -6,8 +6,8 @@ Build-Depends: debhelper-compat (= 13),
 Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev <!nocheck>,
- librust-proxmox-schema-5+default-dev <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
@@ -23,8 +23,8 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-proxmox-schema-5+api-macro-dev,
- librust-proxmox-schema-5+default-dev,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-plain-1+default-dev

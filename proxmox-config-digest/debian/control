@@ -8,8 +8,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-hex-0.4+default-dev <!nocheck>,
- librust-proxmox-schema-5+api-types-dev <!nocheck>,
- librust-proxmox-schema-5+default-dev <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -26,8 +26,8 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-hex-0.4+default-dev,
- librust-proxmox-schema-5+api-types-dev,
- librust-proxmox-schema-5+default-dev,
+ librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
  librust-serde-1+default-dev,
  librust-serde-plain-1+default-dev
 Suggests:

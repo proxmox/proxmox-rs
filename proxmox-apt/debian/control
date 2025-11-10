@@ -62,7 +62,7 @@ Depends:
  librust-apt-pkg-native-0.3+default-dev (>= 0.3.2-~~),
  librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-nix-0.29+default-dev,
- librust-proxmox-schema-5+default-dev,
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
  librust-regex-1+default-dev (>= 1.5-~~)
 Provides:
  librust-proxmox-apt-0+cache-dev (= ${binary:Version}),

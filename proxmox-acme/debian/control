@@ -9,8 +9,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-proxmox-base64-1+default-dev <!nocheck>,
  librust-proxmox-base64-1+serde-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev <!nocheck>,
- librust-proxmox-schema-5+default-dev <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
@@ -50,8 +50,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-acme-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-macro-dev,
- librust-proxmox-schema-5+default-dev
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~)
 Provides:
  librust-proxmox-acme-1+api-types-dev (= ${binary:Version}),
  librust-proxmox-acme-1.0+api-types-dev (= ${binary:Version}),
