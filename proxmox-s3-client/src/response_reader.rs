@@ -21,14 +21,6 @@ pub(crate) struct ResponseReader {
 pub struct ListObjectsV2Response {
     /// Parsed http date header from response.
     pub date: Option<HttpDate>,
-    /// Bucket name.
-    pub name: String,
-    /// Requested key prefix.
-    pub prefix: String,
-    /// Number of keys returned in this response.
-    pub key_count: u64,
-    /// Number of max keys the response can contain.
-    pub max_keys: u64,
     /// Flag indication if response was truncated because of key limits.
     pub is_truncated: bool,
     /// Token used for this request to get further keys in truncated responses.
@@ -44,14 +36,6 @@ pub struct ListObjectsV2Response {
 /// Subset of items used to deserialize a list objects v2 respsonse.
 /// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html#API_ListObjectsV2_ResponseSyntax
 struct ListObjectsV2ResponseBody {
-    /// Bucket name.
-    pub name: String,
-    /// Requested key prefix.
-    pub prefix: String,
-    /// Number of keys returned in this response.
-    pub key_count: u64,
-    /// Number of max keys the response can contain.
-    pub max_keys: u64,
     /// Flag indication if response was truncated because of key limits.
     pub is_truncated: bool,
     /// Token used for this request to get further keys in truncated responses.
@@ -66,10 +50,6 @@ impl ListObjectsV2ResponseBody {
     fn with_optional_date(self, date: Option<HttpDate>) -> ListObjectsV2Response {
         ListObjectsV2Response {
             date,
-            name: self.name,
-            prefix: self.prefix,
-            key_count: self.key_count,
-            max_keys: self.max_keys,
             is_truncated: self.is_truncated,
             continuation_token: self.continuation_token,
             next_continuation_token: self.next_continuation_token,
@@ -550,10 +530,6 @@ fn parse_list_objects_v2_response_test() {
         </ListBucketResult>
     "#;
     let result: ListObjectsV2ResponseBody = serde_xml_rs::from_str(response_body).unwrap();
-    assert_eq!(result.name, "bucket0");
-    assert_eq!(result.prefix, ".cnt");
-    assert_eq!(result.key_count, 2);
-    assert_eq!(result.max_keys, 1000);
     assert!(!result.is_truncated);
     assert_eq!(
         result.contents.unwrap(),
