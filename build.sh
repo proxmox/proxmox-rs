@@ -34,6 +34,6 @@ rm -f debian/source/format.debcargo.hint
 ${BUILDCMD}
 
 # needs all crates build-dependencies, which can be more than what debcargo assembles.
-[ "x$NOTEST" = "x" ] && $CARGO test --all-features --all-targets
+[ "x$NOTEST" = "x" ] && $CARGO test --all-features --all-targets --release
 
 [ "x$NOCONTROL" = "x" ] && cp debian/control "$CONTROL"
