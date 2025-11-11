@@ -150,7 +150,7 @@ proxmox-daemon = { version = "1.0.0", path = "proxmox-daemon" }
 proxmox-http = { version = "1.0.3", path = "proxmox-http" }
 proxmox-http-error = { version = "1.0.0", path = "proxmox-http-error" }
 proxmox-human-byte = { version = "1.0.0", path = "proxmox-human-byte" }
-proxmox-io = { version = "1.2.0", path = "proxmox-io" }
+proxmox-io = { version = "1.2.1", path = "proxmox-io" }
 proxmox-lang = { version = "1.5", path = "proxmox-lang" }
 proxmox-log = { version = "1.0.0", path = "proxmox-log" }
 proxmox-login = { version = "1.0.0", path = "proxmox-login" }

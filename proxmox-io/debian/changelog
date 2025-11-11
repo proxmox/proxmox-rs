@@ -1,3 +1,10 @@
+rust-proxmox-io (1.2.1-1) trixie; urgency=medium
+
+  * introduce RangeReader for bounded reads on a sub-range of an underlying
+    `Read + Seek`.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 11 Nov 2025 15:35:32 +0100
+
 rust-proxmox-io (1.2.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
