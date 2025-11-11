@@ -1,7 +1,9 @@
 use std::ffi::OsStr;
 
-use proxmox_schema::*;
 use serde::{Deserialize, Serialize};
+
+use proxmox_auth_api::types::Authid;
+use proxmox_schema::*;
 
 use crate::StorageStatus;
 
@@ -159,4 +161,36 @@ pub struct NodeStatus {
     pub info: NodeInformation,
     /// Current boot mode
     pub boot_info: BootModeInformation,
+}
+
+#[api(
+    properties: {
+        port: {
+            type: Integer,
+        },
+        ticket: {
+            type: String,
+        },
+        upid: {
+            type: String,
+        },
+        user: {
+            type: String,
+        },
+    },
+)]
+/// Ticket used for authenticating a VNC websocket upgrade request.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeShellTicket {
+    /// port used to bind termproxy to
+    pub port: u16,
+
+    /// ticket used to verifiy websocket connection
+    pub ticket: String,
+
+    /// UPID for termproxy worker task
+    pub upid: String,
+
+    /// user or authid encoded in the ticket
+    pub user: Authid,
 }
