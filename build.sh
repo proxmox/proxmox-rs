@@ -8,6 +8,7 @@ export RUSTC=/usr/bin/rustc
 CRATE=$1
 BUILDCMD=${BUILDCMD:-"dpkg-buildpackage -b -uc -us"}
 BUILDDIR="${BUILDDIR:-"build"}"
+TEST_CMD="${TEST_CMD:-"$CARGO test --all-features --all-targets --release"}"
 
 mkdir -p "${BUILDDIR}"
 echo system >"${BUILDDIR}"/rust-toolchain
@@ -34,6 +35,6 @@ rm -f debian/source/format.debcargo.hint
 ${BUILDCMD}
 
 # needs all crates build-dependencies, which can be more than what debcargo assembles.
-[ "x$NOTEST" = "x" ] && $CARGO test --all-features --all-targets --release
+[ "x$NOTEST" = "x" ] && ${TEST_CMD}
 
 [ "x$NOCONTROL" = "x" ] && cp debian/control "$CONTROL"
