@@ -290,7 +290,7 @@ async fn authenticate_user(
                 bail!("ticket login failed - wrong userid");
             }
         } else if let Some(((path, privs), port)) = path.zip(privs).zip(port) {
-            match auth_context.check_path_ticket(userid, password, path, privs, port)? {
+            match auth_context.check_path_ticket(&auth_id, password, path, privs, port)? {
                 None => (), // no path based tickets supported, just fall through.
                 Some(true) => return Ok(AuthResult::Success),
                 Some(false) => bail!("No such privilege"),

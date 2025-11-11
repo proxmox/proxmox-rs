@@ -78,13 +78,13 @@ pub trait AuthContext: Send + Sync {
     /// Check path based tickets. (Used for terminal tickets).
     fn check_path_ticket(
         &self,
-        userid: &Userid,
+        auth_id: &Authid,
         password: &str,
         path: String,
         privs: String,
         port: u16,
     ) -> Result<Option<bool>, Error> {
-        let _ = (userid, password, path, privs, port);
+        let _ = (auth_id, password, path, privs, port);
         Ok(None)
     }
 
