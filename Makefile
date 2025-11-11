@@ -30,6 +30,10 @@ dinstall:
 	./build.sh $*
 	touch $@
 
+proxmox-oci-deb:
+	TEST_CMD="fakeroot cargo test --all-features --all-targets --release" ./build.sh proxmox-oci
+	touch $@
+
 %-dsc:
 	BUILDCMD='dpkg-buildpackage -S -us -uc -d' NOTEST=1 ./build.sh $*
 	touch $@
