@@ -707,6 +707,28 @@ pub struct CreateTicket {
 }
 
 #[api]
+/// The parameter object for verifying a VNC ticket.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct VerifyVNCTicket {
+    /// Userid or Token
+    pub authid: Authid,
+
+    /// The VNC ticket
+    #[serde(default)]
+    pub vncticket: String,
+
+    /// Verify ticket, and check if user have access 'privs' on 'path'.
+    pub path: String,
+
+    /// Verify ticket, and check if user have access 'privs' on 'path'.
+    pub privs: String,
+
+    /// Port for verifying terminal tickets.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port: Option<u16>,
+}
+
+#[api]
 /// The API response for a ticket call.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateTicketResponse {

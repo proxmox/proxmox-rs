@@ -16,7 +16,7 @@ use proxmox_tfa::api::TfaChallenge;
 use super::ApiTicket;
 use super::{auth_context, HMACKey};
 use crate::ticket::Ticket;
-use crate::types::{Authid, CreateTicket, CreateTicketResponse, Userid};
+use crate::types::{Authid, CreateTicket, CreateTicketResponse, Userid, VerifyVNCTicket};
 
 #[allow(clippy::large_enum_variant)]
 enum AuthResult {
@@ -66,6 +66,36 @@ pub async fn create_ticket(
             info.ticket_info = None;
             info
         })
+}
+
+#[api(
+    input: {
+        properties: {
+            verify_params: {
+                type: VerifyVNCTicket,
+                flatten: true,
+            }
+        },
+    },
+    protected: true,
+    access: {
+        permission: &Permission::World,
+    },
+)]
+/// Verify that a VNC ticket is valid for a given Authid, path and privilege(s).
+pub async fn verify_vnc_ticket(verify_params: VerifyVNCTicket) -> Result<(), Error> {
+    let auth_context = auth_context()?;
+    match auth_context.check_path_ticket(
+        &verify_params.authid,
+        &verify_params.vncticket,
+        verify_params.path,
+        verify_params.privs,
+        verify_params.port.unwrap_or_default(),
+    )? {
+        None => bail!("Checking VNC ticket failed"), // no path based tickets supported, just fall through.
+        Some(true) => return Ok(()),
+        Some(false) => bail!("No such privilege"),
+    }
 }
 
 pub const API_METHOD_LOGOUT: ApiMethod = ApiMethod::new(

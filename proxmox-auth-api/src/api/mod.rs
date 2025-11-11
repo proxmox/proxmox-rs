@@ -19,8 +19,8 @@ use crate::ticket::Ticket;
 use access::verify_csrf_prevention_token;
 
 pub use access::{
-    assemble_csrf_prevention_token, create_ticket, API_METHOD_CREATE_TICKET,
-    API_METHOD_CREATE_TICKET_HTTP_ONLY, API_METHOD_LOGOUT,
+    assemble_csrf_prevention_token, create_ticket, verify_vnc_ticket, API_METHOD_CREATE_TICKET,
+    API_METHOD_CREATE_TICKET_HTTP_ONLY, API_METHOD_LOGOUT, API_METHOD_VERIFY_VNC_TICKET,
 };
 pub use ticket::{ApiTicket, PartialTicket};
 
