@@ -1,3 +1,9 @@
+rust-proxmox-oci (0.2.0-1) bookworm; urgency=medium
+
+  * build for Debian Trixie based Proxmox projects like Proxmox VE 9.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 11 Nov 2025 15:06:52 +0100
+
 rust-proxmox-oci (0.1.0-1) bookworm; urgency=medium
 
   * Initial release.
