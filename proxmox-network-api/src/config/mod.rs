@@ -635,10 +635,7 @@ pub fn complete_port_list(arg: &str, _param: &HashMap<String, String>) -> Vec<St
     } else {
         ""
     };
-    ports
-        .iter()
-        .map(|port| format!("{prefix}{port}"))
-        .collect()
+    ports.iter().map(|port| format!("{prefix}{port}")).collect()
 }
 
 #[cfg(test)]

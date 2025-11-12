@@ -1,4 +1,3 @@
-
 #[cfg(feature = "api")]
 mod api;
 #[cfg(feature = "api")]

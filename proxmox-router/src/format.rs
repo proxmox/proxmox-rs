@@ -38,9 +38,8 @@ fn dump_method_definition(method: &str, path: &str, def: Option<&ApiMethod>) -> 
                 method = if method == "GET" { "DOWNLOAD" } else { method };
             }
 
-            let res = format!(
-                "**{method} {path}**\n\n{description}{param_descr}\n\n{return_descr}"
-            );
+            let res =
+                format!("**{method} {path}**\n\n{description}{param_descr}\n\n{return_descr}");
             Some(res)
         }
     }

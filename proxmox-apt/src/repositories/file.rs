@@ -316,8 +316,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
             };
 
             let message_old = |suite| format!("old suite '{suite}' configured!");
-            let message_new =
-                |suite| format!("suite '{suite}' should not be used in production!");
+            let message_new = |suite| format!("suite '{suite}' should not be used in production!");
             let message_stable = "use the name of the stable distribution instead of 'stable'!";
 
             for suite in repo.suites.iter() {
