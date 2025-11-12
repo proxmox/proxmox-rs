@@ -159,6 +159,7 @@ proxmox-login = { version = "1.0.0", path = "proxmox-login" }
 proxmox-network-types = { version = "0.1.0", path = "proxmox-network-types" }
 proxmox-product-config = { version = "1.0.0", path = "proxmox-product-config" }
 proxmox-config-digest = { version = "1.0.0", path = "proxmox-config-digest" }
+proxmox-rate-limiter = { version = "1.0.0", path = "proxmox-rate-limiter" }
 proxmox-rest-server = { version = "1.0.0", path = "proxmox-rest-server" }
 proxmox-router = { version = "3.2.2", path = "proxmox-router" }
 proxmox-s3-client = { version = "1.2", path = "proxmox-s3-client" }

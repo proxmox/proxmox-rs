@@ -32,6 +32,7 @@ url = { workspace = true, optional = true }
 
 proxmox-async = { workspace = true, optional = true }
 proxmox-base64 = { workspace = true, optional = true }
+proxmox-rate-limiter = { workspace = true, optional = true, features = [ "rate-limiter" ] }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-io = { workspace = true, optional = true }
 proxmox-lang = { workspace = true, optional = true }
@@ -53,7 +54,6 @@ body = [
     "dep:sync_wrapper",
     "sync_wrapper?/futures",
 ]
-rate-limiter = ["dep:hyper"]
 rate-limited-stream = [
     "dep:tokio",
     "dep:hyper-util",
@@ -61,7 +61,7 @@ rate-limited-stream = [
     "hyper-util?/client-legacy",
     "hyper-util?/http1",
     "tokio?/time",
-    "rate-limiter",
+    "dep:proxmox-rate-limiter",
 ]
 client = [
     "dep:bytes",

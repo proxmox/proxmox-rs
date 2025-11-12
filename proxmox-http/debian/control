@@ -28,7 +28,6 @@ Suggests:
  librust-proxmox-http+http-helpers-dev (= ${binary:Version}),
  librust-proxmox-http+proxmox-async-dev (= ${binary:Version}),
  librust-proxmox-http+rate-limited-stream-dev (= ${binary:Version}),
- librust-proxmox-http+rate-limiter-dev (= ${binary:Version}),
  librust-proxmox-http+websocket-dev (= ${binary:Version})
 Provides:
  librust-proxmox-http+default-dev (= ${binary:Version}),
@@ -171,12 +170,13 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
- librust-proxmox-http+rate-limiter-dev (= ${binary:Version}),
  librust-hyper-util-0.1+client-dev (>= 0.1.12-~~),
  librust-hyper-util-0.1+client-legacy-dev (>= 0.1.12-~~),
  librust-hyper-util-0.1+default-dev (>= 0.1.12-~~),
  librust-hyper-util-0.1+http1-dev (>= 0.1.12-~~),
  librust-hyper-util-0.1+http2-dev (>= 0.1.12-~~),
+ librust-proxmox-rate-limiter-1+default-dev,
+ librust-proxmox-rate-limiter-1+rate-limiter-dev,
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+time-dev (>= 1.6-~~)
 Provides:
@@ -186,21 +186,6 @@ Provides:
 Description: Proxmox HTTP library - feature "rate-limited-stream"
  This metapackage enables feature "rate-limited-stream" for the Rust proxmox-
  http crate, by pulling in any additional dependencies needed by that feature.
-
-Package: librust-proxmox-http+rate-limiter-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-http-dev (= ${binary:Version}),
- librust-hyper-1+default-dev
-Provides:
- librust-proxmox-http-1+rate-limiter-dev (= ${binary:Version}),
- librust-proxmox-http-1.0+rate-limiter-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+rate-limiter-dev (= ${binary:Version})
-Description: Proxmox HTTP library - feature "rate-limiter"
- This metapackage enables feature "rate-limiter" for the Rust proxmox-http
- crate, by pulling in any additional dependencies needed by that feature.
 
 Package: librust-proxmox-http+websocket-dev
 Architecture: any
