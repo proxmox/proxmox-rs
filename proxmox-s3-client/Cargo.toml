@@ -22,6 +22,7 @@ hyper-util = { workspace = true, features = [ "client-legacy", "tokio", "http1" 
 hyper = { workspace = true, optional = true }
 iso8601 = { workspace = true, optional = true }
 md5 = { workspace = true, optional = true }
+nix = { workspace = true, optional = true }
 openssl = { workspace = true, optional = true }
 quick-xml = { workspace = true, features = [ "async-tokio" ], optional = true }
 regex.workspace = true
@@ -34,7 +35,9 @@ tracing = { workspace = true, optional = true }
 url = {workspace = true, optional = true }
 
 proxmox-base64 = { workspace = true, optional = true }
-proxmox-http = { workspace = true, features = [ "body", "client", "client-trait", "rate-limiter" ], optional = true }
+proxmox-http = { workspace = true, features = [ "body", "client", "client-trait" ], optional = true }
+proxmox-human-byte.workspace = true
+proxmox-rate-limiter = { workspace = true, features = [ "rate-limiter", "shared-rate-limiter" ], optional = true }
 proxmox-schema = { workspace = true, features = [ "api-macro", "api-types" ] }
 proxmox-serde.workspace = true
 proxmox-time = {workspace = true, optional = true }
@@ -51,6 +54,7 @@ impl = [
     "dep:hyper",
     "dep:iso8601",
     "dep:md5",
+    "dep:nix",
     "dep:openssl",
     "dep:quick-xml",
     "dep:serde-xml-rs",
@@ -60,6 +64,7 @@ impl = [
     "dep:url",
     "dep:proxmox-base64",
     "dep:proxmox-http",
+    "dep:proxmox-rate-limiter",
     "dep:proxmox-time",
 ]
 

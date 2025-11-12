@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -12,6 +12,7 @@ use hyper::{Request, Response};
 use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::client::legacy::Client;
 use hyper_util::rt::TokioExecutor;
+use nix::unistd::User;
 use openssl::hash::MessageDigest;
 use openssl::sha::Sha256;
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
@@ -19,7 +20,8 @@ use openssl::x509::X509StoreContextRef;
 use tracing::error;
 
 use proxmox_http::client::HttpsConnector;
-use proxmox_http::{Body, RateLimit, RateLimiter};
+use proxmox_http::Body;
+use proxmox_rate_limiter::{RateLimit, RateLimiter, SharedRateLimiter};
 use proxmox_schema::api_types::CERT_FINGERPRINT_SHA256_SCHEMA;
 
 use crate::api_types::{ProviderQuirks, S3ClientConfig};
@@ -53,6 +55,25 @@ pub enum S3PathPrefix {
     None,
 }
 
+/// Options for the https connector's rate limiter
+pub struct S3RateLimiterOptions {
+    /// ID for the shared rate limiter.
+    pub id: String,
+    /// Base path for the shared memory mapped file
+    pub base_path: PathBuf,
+    /// User for the to be created shared memory mapped file and folders
+    pub user: User,
+}
+
+/// Configuration  for the https connector's rate limiter
+pub struct S3RateLimiterConfig {
+    options: S3RateLimiterOptions,
+    rate_in: Option<u64>,
+    burst_in: Option<u64>,
+    rate_out: Option<u64>,
+    burst_out: Option<u64>,
+}
+
 /// Configuration options for client
 pub struct S3ClientOptions {
     /// Endpoint to access S3 object store.
@@ -77,6 +98,8 @@ pub struct S3ClientOptions {
     pub put_rate_limit: Option<u64>,
     /// Provider implementation specific features and limitations
     pub provider_quirks: Vec<ProviderQuirks>,
+    /// Configuration options for the shared rate limiter.
+    pub rate_limiter_config: Option<S3RateLimiterConfig>,
 }
 
 impl S3ClientOptions {
@@ -86,7 +109,15 @@ impl S3ClientOptions {
         secret_key: String,
         bucket: Option<String>,
         common_prefix: String,
+        rate_limiter_options: Option<S3RateLimiterOptions>,
     ) -> Self {
+        let rate_limiter_config = rate_limiter_options.map(|options| S3RateLimiterConfig {
+            options,
+            rate_in: config.rate_in.map(|human_bytes| human_bytes.as_u64()),
+            burst_in: config.burst_in.map(|human_bytes| human_bytes.as_u64()),
+            rate_out: config.rate_out.map(|human_bytes| human_bytes.as_u64()),
+            burst_out: config.burst_out.map(|human_bytes| human_bytes.as_u64()),
+        });
         Self {
             endpoint: config.endpoint,
             port: config.port,
@@ -99,6 +130,7 @@ impl S3ClientOptions {
             secret_key,
             put_rate_limit: config.put_rate_limit,
             provider_quirks: config.provider_quirks.unwrap_or_default(),
+            rate_limiter_config,
         }
     }
 }
@@ -151,11 +183,36 @@ impl S3Client {
         // want communication to object store backend api to always use https
         http_connector.enforce_http(false);
         http_connector.set_connect_timeout(Some(S3_HTTP_CONNECT_TIMEOUT));
-        let https_connector = HttpsConnector::with_connector(
+        let mut https_connector = HttpsConnector::with_connector(
             http_connector,
             ssl_connector_builder.build(),
             S3_TCP_KEEPIDLE_TIME,
         );
+
+        if let Some(limiter_config) = &options.rate_limiter_config {
+            if let Some(limit) = limiter_config.rate_in {
+                let limiter = SharedRateLimiter::mmap_shmem(
+                    &format!("{}.in", limiter_config.options.id),
+                    limit,
+                    limiter_config.burst_in.unwrap_or(limit),
+                    limiter_config.options.user.clone(),
+                    limiter_config.options.base_path.clone(),
+                )?;
+                https_connector.set_read_limiter(Some(Arc::new(limiter)));
+            }
+
+            if let Some(limit) = limiter_config.rate_out {
+                let limiter = SharedRateLimiter::mmap_shmem(
+                    &format!("{}.out", limiter_config.options.id),
+                    limit,
+                    limiter_config.burst_out.unwrap_or(limit),
+                    limiter_config.options.user.clone(),
+                    limiter_config.options.base_path.clone(),
+                )?;
+                https_connector.set_write_limiter(Some(Arc::new(limiter)));
+            }
+        }
+
         let client = Client::builder(TokioExecutor::new()).build::<_, Body>(https_connector);
 
         let authority_template = if let Some(port) = options.port {
