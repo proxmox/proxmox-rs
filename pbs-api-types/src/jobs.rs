@@ -569,6 +569,9 @@ pub const SYNC_VERIFIED_ONLY_SCHEMA: Schema =
     BooleanSchema::new("Only synchronize verified backup snapshots, exclude others.").schema();
 pub const RUN_SYNC_ON_MOUNT_SCHEMA: Schema =
     BooleanSchema::new("Run this job when a relevant datastore is mounted.").schema();
+pub const UNMOUNT_ON_SYNC_DONE_SCHEMA: Schema =
+    BooleanSchema::new("Unmount involved removable datastore after the sync job finishes. Requires 'run-on-mount' to be enabled.")
+        .schema();
 
 #[api(
     properties: {
@@ -640,6 +643,10 @@ pub const RUN_SYNC_ON_MOUNT_SCHEMA: Schema =
             schema: RUN_SYNC_ON_MOUNT_SCHEMA,
             optional: true,
         },
+        "unmount-on-done": {
+            schema: UNMOUNT_ON_SYNC_DONE_SCHEMA,
+            optional: true,
+        },
         "sync-direction": {
             type: SyncDirection,
             optional: true,
@@ -685,6 +692,8 @@ pub struct SyncJobConfig {
     pub verified_only: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub run_on_mount: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unmount_on_done: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sync_direction: Option<SyncDirection>,
 }
