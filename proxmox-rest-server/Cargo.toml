@@ -44,6 +44,7 @@ proxmox-daemon.workspace = true
 proxmox-http = { workspace = true, features = ["body"] }
 proxmox-lang.workspace = true
 proxmox-log.workspace = true
+proxmox-rate-limiter = { workspace = true, optional = true, features = [ "shared-rate-limiter" ] }
 proxmox-router.workspace = true
 proxmox-schema = { workspace = true, features = [ "api-macro", "upid-api-impl" ] }
 proxmox-sys = { workspace = true, features = [ "logrotate", "timer" ] }
@@ -54,5 +55,6 @@ proxmox-worker-task.workspace = true
 default = []
 templates = ["dep:handlebars"]
 rate-limited-stream = [
+    "dep:proxmox-rate-limiter",
     "proxmox-http/rate-limited-stream",
 ]

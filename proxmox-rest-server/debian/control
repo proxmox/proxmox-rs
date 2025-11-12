@@ -137,7 +137,9 @@ Depends:
  ${misc:Depends},
  librust-proxmox-rest-server-dev (= ${binary:Version}),
  librust-proxmox-http-1+body-dev (>= 1.0.3-~~),
- librust-proxmox-http-1+rate-limited-stream-dev (>= 1.0.3-~~)
+ librust-proxmox-http-1+rate-limited-stream-dev (>= 1.0.3-~~),
+ librust-proxmox-rate-limiter-1+default-dev,
+ librust-proxmox-rate-limiter-1+shared-rate-limiter-dev
 Provides:
  librust-proxmox-rest-server-1+rate-limited-stream-dev (= ${binary:Version}),
  librust-proxmox-rest-server-1.0+rate-limited-stream-dev (= ${binary:Version}),

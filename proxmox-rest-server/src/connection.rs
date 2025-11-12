@@ -24,7 +24,9 @@ use tokio_openssl::SslStream;
 use tokio_stream::wrappers::ReceiverStream;
 
 #[cfg(feature = "rate-limited-stream")]
-use proxmox_http::{RateLimitedStream, ShareableRateLimit};
+use proxmox_http::RateLimitedStream;
+#[cfg(feature = "rate-limited-stream")]
+use proxmox_rate_limiter::ShareableRateLimit;
 
 #[cfg(feature = "rate-limited-stream")]
 pub type SharedRateLimit = Arc<dyn ShareableRateLimit>;
