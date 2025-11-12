@@ -72,6 +72,9 @@ impl TbfState {
         if self.consumed_tokens <= bucket_size {
             return Self::NO_DELAY;
         }
+        if rate == 0 {
+            return Self::NO_DELAY;
+        }
         Duration::from_nanos(
             (self.consumed_tokens - bucket_size).saturating_mul(1_000_000_000) / rate,
         )
