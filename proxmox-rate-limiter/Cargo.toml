@@ -1,0 +1,29 @@
+[package]
+name = "proxmox-rate-limiter"
+description = "Token bucket based traffic rate limiter implementation"
+version = "1.0.0"
+
+authors.workspace = true
+edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+hyper = { workspace = true, optional = true }
+nix = { workspace = true, optional = true }
+
+proxmox-shared-memory = { workspace = true, optional = true }
+proxmox-sys = { workspace = true, optional = true }
+
+[features]
+default = []
+rate-limiter = ["dep:hyper"]
+shared-rate-limiter = [
+    "dep:nix",
+    "dep:proxmox-shared-memory",
+    "dep:proxmox-sys",
+]
