@@ -2,7 +2,7 @@
 name = "pve-api-types"
 # For the major part of the version we probably want to track the lowest PVE
 # version we fully support.
-version = "8.0.7"
+version = "8.0.8"
 description = "Proxmox VE API types"
 
 authors.workspace = true

@@ -1,3 +1,12 @@
+rust-pve-api-types (8.0.8-1) trixie; urgency=medium
+
+  * add termproxy api call and types.
+  * update /cluster/resources endpoint to incorporate new network,
+    network-type, protocol and zone-type properties.
+  * 
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 12 Nov 2025 21:57:26 +0100
+
 rust-pve-api-types (8.0.7-1) trixie; urgency=medium
 
   * include latest pve-storage changes: add StorageInfoFormats
