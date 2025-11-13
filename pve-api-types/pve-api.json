@@ -15846,7 +15846,7 @@
                                  "optional": 1,
                                  "type": "integer"
                               },
-                              "zone_type": {
+                              "zone-type": {
                                  "description": "The type of an SDN zone (for type 'sdn').",
                                  "optional": 1,
                                  "type": "string"
