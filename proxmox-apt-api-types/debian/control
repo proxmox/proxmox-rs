@@ -36,7 +36,7 @@ Provides:
  librust-proxmox-apt-api-types-2+default-dev (= ${binary:Version}),
  librust-proxmox-apt-api-types-2.0-dev (= ${binary:Version}),
  librust-proxmox-apt-api-types-2.0+default-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0.1-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-apt-api-types-2.0.2-dev (= ${binary:Version}),
+ librust-proxmox-apt-api-types-2.0.2+default-dev (= ${binary:Version})
 Description: APT API type definitions - Rust source code
  Source code for Debianized Rust crate "proxmox-apt-api-types"

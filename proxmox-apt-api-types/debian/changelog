@@ -1,3 +1,11 @@
+rust-proxmox-apt-api-types (2.0.2-1) trixie; urgency=medium
+
+  * apt update info: make the old_version field optional, as it only exists
+    for upgrades. But packages can also get newly installed on upgrade, for
+    example if a more recent version of a package has a new dependency.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 13 Nov 2025 11:01:46 +0100
+
 rust-proxmox-apt-api-types (2.0.1-1) trixie; urgency=medium
 
   * update schema to 5.0.0
