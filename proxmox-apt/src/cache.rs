@@ -277,10 +277,7 @@ where
                 description: long_desc,
                 origin: origin_res,
                 version: candidate_version.clone(),
-                old_version: match current_version {
-                    Some(vers) => vers,
-                    None => "".to_owned(),
-                },
+                old_version: current_version,
                 priority: priority_res,
                 section: section_res,
                 extra_info: None,
@@ -295,8 +292,9 @@ where
 pub fn sort_package_list(packages: &mut Vec<APTUpdateInfo>) {
     let cache = apt_pkg_native::Cache::get_singleton();
     packages.sort_by(|left, right| {
-        cache
-            .compare_versions(&left.old_version, &right.old_version)
-            .reverse()
+        match (left.old_version.as_ref(), right.old_version.as_ref()) {
+            (Some(left), Some(right)) => cache.compare_versions(left, right).reverse(),
+            (left, right) => left.cmp(&right), // Option's natural ordering: None < Some
+        }
     });
 }

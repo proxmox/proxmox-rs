@@ -123,7 +123,7 @@ pub fn get_package_versions(
             arch: "unknown".into(),
             description: "unknown".into(),
             version: "unknown".into(),
-            old_version: "unknown".into(),
+            old_version: None, // it's unknown if there is any old version, but None isn't wrong.
             origin: "unknown".into(),
             priority: "unknown".into(),
             section: "unknown".into(),
