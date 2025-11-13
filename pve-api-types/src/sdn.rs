@@ -33,10 +33,11 @@ impl SdnController {
 }
 
 impl ClusterResourceNetworkType {
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             ClusterResourceNetworkType::Fabric => "fabric",
             ClusterResourceNetworkType::Zone => "zone",
+            ClusterResourceNetworkType::UnknownEnumValue(value) => value.as_str(),
         }
     }
 }
