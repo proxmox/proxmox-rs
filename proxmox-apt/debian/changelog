@@ -1,3 +1,11 @@
+rust-proxmox-apt (0.99.5-1) trixie; urgency=medium
+
+  * update to old_version field of APTUpdateInfo struct becoming an Option in
+    newer apt-api-types. This change was required to reflect that upgrades can
+    pull in new packages that have then no old_version.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 13 Nov 2025 12:08:41 +0100
+
 rust-proxmox-apt (0.99.4-1) trixie; urgency=medium
 
   * update proxmox-schema to 5.0.0
