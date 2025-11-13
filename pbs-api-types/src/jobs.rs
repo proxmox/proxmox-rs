@@ -342,11 +342,8 @@ pub struct VerificationJobStatus {
             optional: true,
         },
         "worker-threads": {
-            type: Integer,
+            schema: TAPE_JOB_THREADS_SCHEMA,
             optional: true,
-            minimum: 1,
-            maximum: 32,
-            default: 1,
         },
     }
 )]
@@ -374,7 +371,6 @@ pub struct TapeBackupJobSetup {
     pub ns: Option<BackupNamespace>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub max_depth: Option<usize>,
-    /// Set the number of worker threads to use for the job
     #[serde(skip_serializing_if = "Option::is_none")]
     pub worker_threads: Option<u64>,
 }
