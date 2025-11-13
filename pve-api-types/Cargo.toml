@@ -1,8 +1,10 @@
 [package]
 name = "pve-api-types"
 # For the major part of the version we probably want to track the lowest PVE
-# version we fully support.
-version = "8.0.9"
+# version we fully support. The minor part can be bumped if there are breaking
+# changes in the crate and type API code here, and minor for all new things and
+# fixes.
+version = "8.1.0"
 description = "Proxmox VE API types"
 
 authors.workspace = true

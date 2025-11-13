@@ -1,3 +1,23 @@
+rust-pve-api-types (8.1.0-1) trixie; urgency=medium
+
+  * add FixedString type as a custom, immutable, string type, that main
+    feature is being Copy, but is limited to up to 23 characters.
+
+  * generate fallback variant for enums using the new FixedString type to
+    store the name of such an unknown variant, allow more telling error
+    messages or the use site to even decide that they can still work with that
+    variant without an error in certain cases.
+    This avoids that a use site breaks down completely if it gets send a
+    unknown variant. The most common case this can happen is a newer backend
+    for an older frontend (or vice versa), or special projects like PDM, which
+    should be able to consume multiple product APIs over multiple versions.
+
+  * regenerate types.
+
+  * sdn: handle fallback variant.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 13 Nov 2025 22:01:11 +0100
+
 rust-pve-api-types (8.0.9-1) trixie; urgency=medium
 
   * update /cluster/resources endpoint as zone-type is now kebab-cased as
