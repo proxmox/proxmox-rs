@@ -295,6 +295,9 @@ sub print_types : prototype($) {
                 print {$out} "    /// $orig.\n";
                 print {$out} "    $named,\n";
             };
+            print {$out} "    /// Unknown variants for forward compatibility.\n";
+            print {$out} "    #[serde(untagged)]\n";
+            print {$out} "    UnknownEnumValue(FixedString)\n";
             print {$out} "}\n";
             print {$out} "serde_plain::derive_display_from_serialize!($def->{name});\n";
             print {$out} "serde_plain::derive_fromstr_from_deserialize!($def->{name});\n";
