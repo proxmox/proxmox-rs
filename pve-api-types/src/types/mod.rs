@@ -17,6 +17,9 @@ pub mod array;
 pub mod stringlist;
 pub mod verifiers;
 
+mod fixed_string;
+pub use fixed_string::{FixedString, TooLongError};
+
 include!("../generated/types.rs");
 
 /// A PVE Upid, contrary to a PBS Upid, contains no 'task-id' number.
