@@ -818,7 +818,7 @@ fn test_regex_compilation_4() {
             optional: true,
             type: Integer,
         },
-        zone_type: {
+        "zone-type": {
             optional: true,
             type: String,
         },
@@ -983,6 +983,7 @@ pub struct ClusterResource {
 
     /// The type of an SDN zone (for type 'sdn').
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "zone-type")]
     pub zone_type: Option<String>,
 }
 
