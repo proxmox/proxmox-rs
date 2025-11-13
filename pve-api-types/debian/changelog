@@ -1,3 +1,10 @@
+rust-pve-api-types (8.0.9-1) trixie; urgency=medium
+
+  * update /cluster/resources endpoint as zone-type is now kebab-cased as
+    well, instead of snake_cased.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 13 Nov 2025 21:08:23 +0100
+
 rust-pve-api-types (8.0.8-1) trixie; urgency=medium
 
   * add termproxy api call and types.
