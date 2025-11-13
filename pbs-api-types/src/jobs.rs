@@ -224,6 +224,14 @@ pub const VERIFICATION_OUTDATED_AFTER_SCHEMA: Schema =
             optional: true,
             schema: crate::NS_MAX_DEPTH_SCHEMA,
         },
+        "read-threads": {
+            schema: VERIFY_JOB_READ_THREADS_SCHEMA,
+            optional: true,
+        },
+        "verify-threads": {
+            schema: VERIFY_JOB_VERIFY_THREADS_SCHEMA,
+            optional: true,
+        },
     }
 )]
 #[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
@@ -254,6 +262,12 @@ pub struct VerificationJobConfig {
     /// how deep the verify should go from the `ns` level downwards. Passing 0 verifies only the
     /// snapshots on the same level as the passed `ns`, or the datastore root if none.
     pub max_depth: Option<usize>,
+    /// The number of read threads to use for the job.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub read_threads: Option<usize>,
+    /// The number of verification threads to use for the job.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verify_threads: Option<usize>,
 }
 
 impl VerificationJobConfig {
