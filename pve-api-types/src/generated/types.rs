@@ -101,6 +101,9 @@ pub enum AptUpdateInfoArch {
     #[serde(rename = "s390x")]
     /// s390x.
     S390x,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(AptUpdateInfoArch);
 serde_plain::derive_fromstr_from_deserialize!(AptUpdateInfoArch);
@@ -444,6 +447,9 @@ pub enum ClusterMetricsDataType {
     #[serde(rename = "derive")]
     /// derive.
     Derive,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ClusterMetricsDataType);
 serde_plain::derive_fromstr_from_deserialize!(ClusterMetricsDataType);
@@ -549,6 +555,9 @@ pub enum ClusterNodeIndexResponseStatus {
     #[serde(rename = "offline")]
     /// offline.
     Offline,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ClusterNodeIndexResponseStatus);
 serde_plain::derive_fromstr_from_deserialize!(ClusterNodeIndexResponseStatus);
@@ -663,6 +672,9 @@ pub enum ClusterNodeStatusType {
     #[serde(rename = "node")]
     /// node.
     Node,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ClusterNodeStatusType);
 serde_plain::derive_fromstr_from_deserialize!(ClusterNodeStatusType);
@@ -1003,6 +1015,9 @@ pub enum ClusterResourceKind {
     #[serde(rename = "sdn")]
     /// sdn.
     Sdn,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ClusterResourceKind);
 serde_plain::derive_fromstr_from_deserialize!(ClusterResourceKind);
@@ -1017,6 +1032,9 @@ pub enum ClusterResourceNetworkType {
     #[serde(rename = "zone")]
     /// zone.
     Zone,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ClusterResourceNetworkType);
 serde_plain::derive_fromstr_from_deserialize!(ClusterResourceNetworkType);
@@ -1049,6 +1067,9 @@ pub enum ClusterResourceType {
     #[serde(rename = "network")]
     /// network.
     Network,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ClusterResourceType);
 serde_plain::derive_fromstr_from_deserialize!(ClusterResourceType);
@@ -1705,6 +1726,9 @@ pub enum IsRunning {
     #[serde(rename = "stopped")]
     /// stopped.
     Stopped,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(IsRunning);
 serde_plain::derive_fromstr_from_deserialize!(IsRunning);
@@ -1725,6 +1749,9 @@ pub enum ListControllersType {
     #[serde(rename = "isis")]
     /// isis.
     Isis,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ListControllersType);
 serde_plain::derive_fromstr_from_deserialize!(ListControllersType);
@@ -1775,6 +1802,9 @@ pub enum ListNetworksType {
     #[serde(rename = "include_sdn")]
     /// include_sdn.
     IncludeSdn,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ListNetworksType);
 serde_plain::derive_fromstr_from_deserialize!(ListNetworksType);
@@ -1826,6 +1856,9 @@ pub enum ListRealmTfa {
     #[serde(rename = "oath")]
     /// oath.
     Oath,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ListRealmTfa);
 serde_plain::derive_fromstr_from_deserialize!(ListRealmTfa);
@@ -2036,6 +2069,9 @@ pub enum ListTasksSource {
     #[serde(rename = "all")]
     /// all.
     All,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ListTasksSource);
 serde_plain::derive_fromstr_from_deserialize!(ListTasksSource);
@@ -2062,6 +2098,9 @@ pub enum ListZonesType {
     #[serde(rename = "vxlan")]
     /// vxlan.
     Vxlan,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(ListZonesType);
 serde_plain::derive_fromstr_from_deserialize!(ListZonesType);
@@ -2464,6 +2503,9 @@ pub enum LxcConfigArch {
     #[serde(rename = "riscv64")]
     /// riscv64.
     Riscv64,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(LxcConfigArch);
 serde_plain::derive_fromstr_from_deserialize!(LxcConfigArch);
@@ -2485,6 +2527,9 @@ pub enum LxcConfigCmode {
     #[default]
     /// tty.
     Tty,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(LxcConfigCmode);
 serde_plain::derive_fromstr_from_deserialize!(LxcConfigCmode);
@@ -2657,6 +2702,9 @@ pub enum LxcConfigLock {
     #[serde(rename = "snapshot-delete")]
     /// snapshot-delete.
     SnapshotDelete,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(LxcConfigLock);
 serde_plain::derive_fromstr_from_deserialize!(LxcConfigLock);
@@ -2918,6 +2966,9 @@ pub enum LxcConfigNetType {
     #[serde(rename = "veth")]
     /// veth.
     Veth,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(LxcConfigNetType);
 serde_plain::derive_fromstr_from_deserialize!(LxcConfigNetType);
@@ -2962,6 +3013,9 @@ pub enum LxcConfigOstype {
     #[serde(rename = "unmanaged")]
     /// unmanaged.
     Unmanaged,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(LxcConfigOstype);
 serde_plain::derive_fromstr_from_deserialize!(LxcConfigOstype);
@@ -4156,6 +4210,9 @@ pub enum NetworkInterfaceBondMode {
     #[serde(rename = "lacp-balance-tcp")]
     /// lacp-balance-tcp.
     LacpBalanceTcp,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(NetworkInterfaceBondMode);
 serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceBondMode);
@@ -4174,6 +4231,9 @@ pub enum NetworkInterfaceBondXmitHashPolicy {
     #[serde(rename = "layer3+4")]
     /// layer3+4.
     Layer3_4,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(NetworkInterfaceBondXmitHashPolicy);
 serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceBondXmitHashPolicy);
@@ -4188,6 +4248,9 @@ pub enum NetworkInterfaceFamilies {
     #[serde(rename = "inet6")]
     /// inet6.
     Inet6,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(NetworkInterfaceFamilies);
 serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceFamilies);
@@ -4211,6 +4274,9 @@ pub enum NetworkInterfaceMethod {
     #[serde(rename = "auto")]
     /// auto.
     Auto,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(NetworkInterfaceMethod);
 serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceMethod);
@@ -4255,6 +4321,9 @@ pub enum NetworkInterfaceType {
     #[serde(rename = "unknown")]
     /// unknown.
     Unknown,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(NetworkInterfaceType);
 serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceType);
@@ -4269,6 +4338,9 @@ pub enum NetworkInterfaceVlanProtocol {
     #[serde(rename = "802.1q")]
     /// 802.1q.
     Ieee802_1q,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(NetworkInterfaceVlanProtocol);
 serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceVlanProtocol);
@@ -4312,6 +4384,9 @@ pub enum NodeShellTermproxyCmd {
     #[serde(rename = "upgrade")]
     /// upgrade.
     Upgrade,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(NodeShellTermproxyCmd);
 serde_plain::derive_fromstr_from_deserialize!(NodeShellTermproxyCmd);
@@ -4442,6 +4517,9 @@ pub enum NodeStatusBootInfoMode {
     #[serde(rename = "legacy-bios")]
     /// legacy-bios.
     LegacyBios,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(NodeStatusBootInfoMode);
 serde_plain::derive_fromstr_from_deserialize!(NodeStatusBootInfoMode);
@@ -4712,6 +4790,9 @@ pub enum NodeSubscriptionInfoStatus {
     #[serde(rename = "suspended")]
     /// suspended.
     Suspended,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(NodeSubscriptionInfoStatus);
 serde_plain::derive_fromstr_from_deserialize!(NodeSubscriptionInfoStatus);
@@ -4824,6 +4905,9 @@ pub enum PveQemuSevFmtType {
     #[serde(rename = "snp")]
     /// snp.
     Snp,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQemuSevFmtType);
 serde_plain::derive_fromstr_from_deserialize!(PveQemuSevFmtType);
@@ -5414,6 +5498,9 @@ pub enum PveQmIdeAio {
     #[serde(rename = "io_uring")]
     /// io_uring.
     IoUring,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmIdeAio);
 serde_plain::derive_fromstr_from_deserialize!(PveQmIdeAio);
@@ -5437,6 +5524,9 @@ pub enum PveQmIdeCache {
     #[serde(rename = "directsync")]
     /// directsync.
     Directsync,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmIdeCache);
 serde_plain::derive_fromstr_from_deserialize!(PveQmIdeCache);
@@ -5451,6 +5541,9 @@ pub enum PveQmIdeDiscard {
     #[serde(rename = "on")]
     /// on.
     On,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmIdeDiscard);
 serde_plain::derive_fromstr_from_deserialize!(PveQmIdeDiscard);
@@ -5477,6 +5570,9 @@ pub enum PveQmIdeFormat {
     #[serde(rename = "cloop")]
     /// cloop.
     Cloop,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmIdeFormat);
 serde_plain::derive_fromstr_from_deserialize!(PveQmIdeFormat);
@@ -5492,6 +5588,9 @@ pub enum PveQmIdeMedia {
     #[default]
     /// disk.
     Disk,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmIdeMedia);
 serde_plain::derive_fromstr_from_deserialize!(PveQmIdeMedia);
@@ -5509,6 +5608,9 @@ pub enum PveQmIdeRerror {
     #[serde(rename = "stop")]
     /// stop.
     Stop,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmIdeRerror);
 serde_plain::derive_fromstr_from_deserialize!(PveQmIdeRerror);
@@ -5529,6 +5631,9 @@ pub enum PveQmIdeWerror {
     #[serde(rename = "stop")]
     /// stop.
     Stop,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmIdeWerror);
 serde_plain::derive_fromstr_from_deserialize!(PveQmIdeWerror);
@@ -5633,6 +5738,9 @@ pub enum PveQmRngSource {
     #[serde(rename = "/dev/hwrng")]
     /// /dev/hwrng.
     DevHwrng,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmRngSource);
 serde_plain::derive_fromstr_from_deserialize!(PveQmRngSource);
@@ -5756,6 +5864,9 @@ pub enum PveQmWatchdogAction {
     #[serde(rename = "none")]
     /// none.
     None,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmWatchdogAction);
 serde_plain::derive_fromstr_from_deserialize!(PveQmWatchdogAction);
@@ -5771,6 +5882,9 @@ pub enum PveQmWatchdogModel {
     #[serde(rename = "ib700")]
     /// ib700.
     Ib700,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveQmWatchdogModel);
 serde_plain::derive_fromstr_from_deserialize!(PveQmWatchdogModel);
@@ -6081,6 +6195,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "Westmere-IBRS")]
     /// Westmere-IBRS.
     WestmereIbrs,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(PveVmCpuConfReportedModel);
 serde_plain::derive_fromstr_from_deserialize!(PveVmCpuConfReportedModel);
@@ -7133,6 +7250,9 @@ pub enum QemuConfigAgentType {
     #[serde(rename = "isa")]
     /// isa.
     Isa,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigAgentType);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigAgentType);
@@ -7147,6 +7267,9 @@ pub enum QemuConfigArch {
     #[serde(rename = "aarch64")]
     /// aarch64.
     Aarch64,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigArch);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigArch);
@@ -7184,6 +7307,9 @@ pub enum QemuConfigAudio0Device {
     #[serde(rename = "AC97")]
     /// AC97.
     Ac97,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigAudio0Device);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigAudio0Device);
@@ -7199,6 +7325,9 @@ pub enum QemuConfigAudio0Driver {
     #[serde(rename = "none")]
     /// none.
     None,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigAudio0Driver);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigAudio0Driver);
@@ -7214,6 +7343,9 @@ pub enum QemuConfigBios {
     #[serde(rename = "ovmf")]
     /// ovmf.
     Ovmf,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigBios);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigBios);
@@ -7233,6 +7365,9 @@ pub enum QemuConfigCitype {
     #[serde(rename = "opennebula")]
     /// opennebula.
     Opennebula,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigCitype);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigCitype);
@@ -7313,6 +7448,9 @@ pub enum QemuConfigEfidisk0Efitype {
     #[serde(rename = "4m")]
     /// 4m.
     Mb4,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigEfidisk0Efitype);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigEfidisk0Efitype);
@@ -7330,6 +7468,9 @@ pub enum QemuConfigHugepages {
     #[serde(rename = "1024")]
     /// 1024.
     Mb1024,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigHugepages);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigHugepages);
@@ -7439,6 +7580,9 @@ pub enum QemuConfigKeyboard {
     #[serde(rename = "tr")]
     /// tr.
     Tr,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigKeyboard);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigKeyboard);
@@ -7474,6 +7618,9 @@ pub enum QemuConfigLock {
     #[serde(rename = "suspended")]
     /// suspended.
     Suspended,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigLock);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigLock);
@@ -7548,6 +7695,9 @@ pub enum QemuConfigMachineViommu {
     #[serde(rename = "virtio")]
     /// virtio.
     Virtio,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigMachineViommu);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigMachineViommu);
@@ -7792,6 +7942,9 @@ pub enum QemuConfigNetModel {
     #[serde(rename = "vmxnet3")]
     /// vmxnet3.
     Vmxnet3,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigNetModel);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigNetModel);
@@ -7843,6 +7996,9 @@ pub enum QemuConfigNumaPolicy {
     #[serde(rename = "interleave")]
     /// interleave.
     Interleave,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigNumaPolicy);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigNumaPolicy);
@@ -7891,6 +8047,9 @@ pub enum QemuConfigOstype {
     #[serde(rename = "solaris")]
     /// solaris.
     Solaris,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigOstype);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigOstype);
@@ -8640,6 +8799,9 @@ pub enum QemuConfigScsihw {
     #[serde(rename = "pvscsi")]
     /// pvscsi.
     Pvscsi,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigScsihw);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigScsihw);
@@ -8683,6 +8845,9 @@ pub enum QemuConfigSpiceEnhancementsVideostreaming {
     #[serde(rename = "filter")]
     /// filter.
     Filter,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigSpiceEnhancementsVideostreaming);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigSpiceEnhancementsVideostreaming);
@@ -8742,6 +8907,9 @@ pub enum QemuConfigTpmstate0Version {
     #[serde(rename = "v2.0")]
     /// v2.0.
     V2_0,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigTpmstate0Version);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigTpmstate0Version);
@@ -8870,6 +9038,9 @@ pub enum QemuConfigVgaClipboard {
     #[serde(rename = "vnc")]
     /// vnc.
     Vnc,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigVgaClipboard);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigVgaClipboard);
@@ -8921,6 +9092,9 @@ pub enum QemuConfigVgaType {
     #[serde(rename = "vmware")]
     /// vmware.
     Vmware,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigVgaType);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigVgaType);
@@ -9341,6 +9515,9 @@ pub enum QemuConfigVirtiofsCache {
     #[serde(rename = "never")]
     /// never.
     Never,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuConfigVirtiofsCache);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigVirtiofsCache);
@@ -9538,6 +9715,9 @@ pub enum QemuMigratePreconditionsNotAllowedNodesBlockingHaResourcesCause {
     #[serde(rename = "resource-affinity")]
     /// resource-affinity.
     ResourceAffinity,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(
     QemuMigratePreconditionsNotAllowedNodesBlockingHaResourcesCause
@@ -10597,6 +10777,9 @@ pub enum QemuMoveDiskDisk {
     #[serde(rename = "unused255")]
     /// unused255.
     Unused255,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuMoveDiskDisk);
 serde_plain::derive_fromstr_from_deserialize!(QemuMoveDiskDisk);
@@ -10614,6 +10797,9 @@ pub enum QemuMoveDiskFormat {
     #[serde(rename = "vmdk")]
     /// vmdk.
     Vmdk,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuMoveDiskFormat);
 serde_plain::derive_fromstr_from_deserialize!(QemuMoveDiskFormat);
@@ -10839,6 +11025,9 @@ pub enum QemuResizeDisk {
     #[serde(rename = "tpmstate0")]
     /// tpmstate0.
     Tpmstate0,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(QemuResizeDisk);
 serde_plain::derive_fromstr_from_deserialize!(QemuResizeDisk);
@@ -11874,6 +12063,9 @@ pub enum SdnObjectState {
     #[serde(rename = "changed")]
     /// changed.
     Changed,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(SdnObjectState);
 serde_plain::derive_fromstr_from_deserialize!(SdnObjectState);
@@ -12034,6 +12226,9 @@ pub enum SdnVnetType {
     #[serde(rename = "vnet")]
     /// vnet.
     Vnet,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(SdnVnetType);
 serde_plain::derive_fromstr_from_deserialize!(SdnVnetType);
@@ -12308,6 +12503,9 @@ pub enum SdnZoneDhcp {
     #[serde(rename = "dnsmasq")]
     /// dnsmasq.
     Dnsmasq,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(SdnZoneDhcp);
 serde_plain::derive_fromstr_from_deserialize!(SdnZoneDhcp);
@@ -12783,6 +12981,9 @@ pub enum StartQemuMigrationType {
     #[serde(rename = "insecure")]
     /// insecure.
     Insecure,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(StartQemuMigrationType);
 serde_plain::derive_fromstr_from_deserialize!(StartQemuMigrationType);
@@ -12909,6 +13110,9 @@ pub enum StorageContent {
     #[serde(rename = "vztmpl")]
     /// vztmpl.
     Vztmpl,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(StorageContent);
 serde_plain::derive_fromstr_from_deserialize!(StorageContent);
@@ -13071,6 +13275,9 @@ pub enum StorageInfoFormatsDefault {
     #[serde(rename = "vmdk")]
     /// vmdk.
     Vmdk,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(StorageInfoFormatsDefault);
 serde_plain::derive_fromstr_from_deserialize!(StorageInfoFormatsDefault);
@@ -16638,6 +16845,9 @@ pub enum VersionResponseConsole {
     #[serde(rename = "xtermjs")]
     /// xtermjs.
     Xtermjs,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(VersionResponseConsole);
 serde_plain::derive_fromstr_from_deserialize!(VersionResponseConsole);
