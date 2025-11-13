@@ -64,6 +64,27 @@ pub const REMOVE_VANISHED_BACKUPS_SCHEMA: Schema = BooleanSchema::new(
 .default(false)
 .schema();
 
+const fn threads_schema(description: &'static str, default: i64) -> Schema {
+    IntegerSchema::new(description)
+        .minimum(1)
+        .maximum(32)
+        .default(default)
+        .schema()
+}
+
+pub const TAPE_JOB_THREADS_SCHEMA: Schema =
+    threads_schema("The number of threads to use for the tape backup job.", 1);
+
+pub const VERIFY_JOB_READ_THREADS_SCHEMA: Schema = threads_schema(
+    "The number of threads to use for reading chunks in verify job.",
+    1,
+);
+
+pub const VERIFY_JOB_VERIFY_THREADS_SCHEMA: Schema = threads_schema(
+    "The number of threads to use for verifying chunks in verify job.",
+    4,
+);
+
 #[api(
     properties: {
         "next-run": {
