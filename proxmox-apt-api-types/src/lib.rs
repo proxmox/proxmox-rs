@@ -307,7 +307,8 @@ pub struct APTUpdateInfo {
     /// New version to be updated to
     pub version: String,
     /// Old version currently installed
-    pub old_version: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub old_version: Option<String>,
     /// Package origin
     pub origin: String,
     /// Package priority in human-readable form
