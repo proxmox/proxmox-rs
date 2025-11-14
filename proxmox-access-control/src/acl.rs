@@ -30,7 +30,7 @@ pub fn split_acl_path(path: &str) -> Vec<&str> {
 }
 
 /// Tree representing a parsed acl.cfg
-#[derive(Default)]
+#[derive(Default, Debug, PartialEq)]
 pub struct AclTree {
     /// Root node of the tree.
     ///
@@ -40,7 +40,7 @@ pub struct AclTree {
 }
 
 /// Node representing ACLs for a certain ACL path.
-#[derive(Default)]
+#[derive(Default, Debug, PartialEq)]
 pub struct AclTreeNode {
     /// `User` or `Token` ACLs for this node.
     pub users: HashMap<Authid, HashMap<String, bool>>,
