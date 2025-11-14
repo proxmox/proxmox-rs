@@ -414,6 +414,102 @@ impl AclTree {
 
         Ok(res)
     }
+
+    pub fn check_privs(
+        &self,
+        auth_id: &Authid,
+        path: &[&str],
+        required_privs: u64,
+        partial: bool,
+    ) -> Result<(), Error> {
+        let privs = self.lookup_privs(auth_id, path);
+        let allowed = if partial {
+            (privs & required_privs) != 0
+        } else {
+            (privs & required_privs) == required_privs
+        };
+        if !allowed {
+            // printing the path doesn't leak any information as long as we
+            // always check privilege before resource existence
+            let priv_names = privs_to_priv_names(required_privs);
+            let priv_names = if partial {
+                priv_names.join("|")
+            } else {
+                priv_names.join("&")
+            };
+            bail!(
+                "missing permissions '{priv_names}' on '/{}'",
+                path.join("/")
+            );
+        }
+        Ok(())
+    }
+
+    pub fn lookup_privs(&self, auth_id: &Authid, path: &[&str]) -> u64 {
+        let (privs, _) = self.lookup_privs_details(auth_id, path);
+        privs
+    }
+
+    pub fn lookup_privs_details(&self, auth_id: &Authid, path: &[&str]) -> (u64, u64) {
+        if access_conf().is_superuser(auth_id) {
+            let acm_config = access_conf();
+            if let Some(admin) = acm_config.role_admin() {
+                if let Some((admin, _)) = acm_config.roles().get(admin) {
+                    return (*admin, *admin);
+                }
+            }
+        }
+
+        let roles = self.roles(auth_id, path);
+        let mut privs: u64 = 0;
+        let mut propagated_privs: u64 = 0;
+        for (role, propagate) in roles {
+            if let Some((role_privs, _)) = access_conf().roles().get(role.as_str()) {
+                if propagate {
+                    propagated_privs |= role_privs;
+                }
+                privs |= role_privs;
+            }
+        }
+
+        if auth_id.is_token() {
+            // limit privs to that of owning user
+            let user_auth_id = Authid::from(auth_id.user().clone());
+            let (owner_privs, owner_propagated_privs) =
+                self.lookup_privs_details(&user_auth_id, path);
+            privs &= owner_privs;
+            propagated_privs &= owner_propagated_privs;
+        }
+
+        (privs, propagated_privs)
+    }
+
+    /// Checks whether the `auth_id` has any of the privileges `privs` on any object below `path`.
+    pub fn any_privs_below(
+        &self,
+        auth_id: &Authid,
+        path: &[&str],
+        privs: u64,
+    ) -> Result<bool, Error> {
+        // if the anchor path itself has matching propagated privs, we skip checking children
+        let (_privs, propagated_privs) = self.lookup_privs_details(auth_id, path);
+        if propagated_privs & privs != 0 {
+            return Ok(true);
+        }
+
+        // get all sub-paths with roles defined for `auth_id`
+        let paths = self.get_child_paths(auth_id, path)?;
+
+        for path in paths.iter() {
+            // early return if any sub-path has any of the privs we are looking for
+            if privs & self.lookup_privs(auth_id, &[path.as_str()]) != 0 {
+                return Ok(true);
+            }
+        }
+
+        // no paths or no matching paths
+        Ok(false)
+    }
 }
 
 #[cfg(feature = "impl")]
@@ -649,6 +745,18 @@ mod impl_feature {
 
         Ok(())
     }
+}
+
+fn privs_to_priv_names(privs: u64) -> Vec<&'static str> {
+    access_conf()
+        .privileges()
+        .iter()
+        .fold(Vec::new(), |mut priv_names, (name, value)| {
+            if value & privs != 0 {
+                priv_names.push(name);
+            }
+            priv_names
+        })
 }
 
 #[cfg(test)]
