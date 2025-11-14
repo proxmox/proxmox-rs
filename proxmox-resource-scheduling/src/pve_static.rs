@@ -27,6 +27,12 @@ impl StaticNodeUsage {
     }
 }
 
+impl AsRef<StaticNodeUsage> for StaticNodeUsage {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
 /// Calculate new CPU usage in percent.
 /// `add` being `0.0` means "unlimited" and results in `max` being added.
 fn add_cpu_usage(old: f64, max: f64, add: f64) -> f64 {
@@ -69,8 +75,8 @@ criteria_struct! {
 ///
 /// Returns a vector of (nodename, score) pairs. Scores are between 0.0 and 1.0 and a higher score
 /// is better.
-pub fn score_nodes_to_start_service(
-    nodes: &[&StaticNodeUsage],
+pub fn score_nodes_to_start_service<T: AsRef<StaticNodeUsage>>(
+    nodes: &[T],
     service: &StaticServiceUsage,
 ) -> Result<Vec<(String, f64)>, Error> {
     let len = nodes.len();
@@ -86,6 +92,7 @@ pub fn score_nodes_to_start_service(
             let mut squares_mem = 0.0;
 
             for (index, node) in nodes.iter().enumerate() {
+                let node = node.as_ref();
                 let new_cpu = if index == target_index {
                     add_cpu_usage(node.cpu, node.maxcpu as f64, service.maxcpu)
                 } else {
@@ -122,6 +129,6 @@ pub fn score_nodes_to_start_service(
     Ok(scores
         .into_iter()
         .enumerate()
-        .map(|(n, score)| (nodes[n].name.clone(), score))
+        .map(|(n, score)| (nodes[n].as_ref().name.clone(), score))
         .collect())
 }
