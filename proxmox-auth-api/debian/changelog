@@ -1,3 +1,13 @@
+rust-proxmox-auth-api (1.0.5-1) trixie; urgency=medium
+
+  * use Authid for path ticket validation
+
+  * add vncticket verification endpoint and type
+
+  * fix #6913: auth-api: fix user ID parsing for 2-character realms
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 14 Nov 2025 11:11:15 +0100
+
 rust-proxmox-auth-api (1.0.4-1) trixie; urgency=medium
 
   * allow logging in with tickets provided via password field only

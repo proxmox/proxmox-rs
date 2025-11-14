@@ -32,8 +32,8 @@ Provides:
  librust-proxmox-auth-api-1+default-dev (= ${binary:Version}),
  librust-proxmox-auth-api-1.0-dev (= ${binary:Version}),
  librust-proxmox-auth-api-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-auth-api-1.0.4-dev (= ${binary:Version}),
- librust-proxmox-auth-api-1.0.4+default-dev (= ${binary:Version})
+ librust-proxmox-auth-api-1.0.5-dev (= ${binary:Version}),
+ librust-proxmox-auth-api-1.0.5+default-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - Rust source code
  Source code for Debianized Rust crate "proxmox-auth-api"
 
@@ -58,7 +58,7 @@ Depends:
 Provides:
  librust-proxmox-auth-api-1+api-dev (= ${binary:Version}),
  librust-proxmox-auth-api-1.0+api-dev (= ${binary:Version}),
- librust-proxmox-auth-api-1.0.4+api-dev (= ${binary:Version})
+ librust-proxmox-auth-api-1.0.5+api-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - feature "api"
  This metapackage enables feature "api" for the Rust proxmox-auth-api crate, by
  pulling in any additional dependencies needed by that feature.
@@ -80,7 +80,7 @@ Depends:
 Provides:
  librust-proxmox-auth-api-1+api-types-dev (= ${binary:Version}),
  librust-proxmox-auth-api-1.0+api-types-dev (= ${binary:Version}),
- librust-proxmox-auth-api-1.0.4+api-types-dev (= ${binary:Version})
+ librust-proxmox-auth-api-1.0.5+api-types-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-auth-api
  crate, by pulling in any additional dependencies needed by that feature.
@@ -98,7 +98,7 @@ Depends:
 Provides:
  librust-proxmox-auth-api-1+pam-authenticator-dev (= ${binary:Version}),
  librust-proxmox-auth-api-1.0+pam-authenticator-dev (= ${binary:Version}),
- librust-proxmox-auth-api-1.0.4+pam-authenticator-dev (= ${binary:Version})
+ librust-proxmox-auth-api-1.0.5+pam-authenticator-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - feature "pam-authenticator"
  This metapackage enables feature "pam-authenticator" for the Rust proxmox-auth-
  api crate, by pulling in any additional dependencies needed by that feature.
@@ -118,7 +118,7 @@ Depends:
 Provides:
  librust-proxmox-auth-api-1+password-authenticator-dev (= ${binary:Version}),
  librust-proxmox-auth-api-1.0+password-authenticator-dev (= ${binary:Version}),
- librust-proxmox-auth-api-1.0.4+password-authenticator-dev (= ${binary:Version})
+ librust-proxmox-auth-api-1.0.5+password-authenticator-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - feature "password-authenticator"
  This metapackage enables feature "password-authenticator" for the Rust proxmox-
  auth-api crate, by pulling in any additional dependencies needed by that
@@ -136,7 +136,7 @@ Depends:
 Provides:
  librust-proxmox-auth-api-1+ticket-dev (= ${binary:Version}),
  librust-proxmox-auth-api-1.0+ticket-dev (= ${binary:Version}),
- librust-proxmox-auth-api-1.0.4+ticket-dev (= ${binary:Version})
+ librust-proxmox-auth-api-1.0.5+ticket-dev (= ${binary:Version})
 Description: Tickets, API and Realm handling - feature "ticket"
  This metapackage enables feature "ticket" for the Rust proxmox-auth-api crate,
  by pulling in any additional dependencies needed by that feature.
