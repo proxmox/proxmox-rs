@@ -1,3 +1,12 @@
+rust-pbs-api-types (1.0.6-1) stable; urgency=medium
+
+  * add schema for {worker, read, verify}-threads.
+  * jobs: add {read, verify}-threads to VerificationJobConfig.
+  * use worker-threads schema for TapeBackupJobSetup.
+  * add 'unmount-on-done' field to sync job config.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 14 Nov 2025 22:28:34 +0100
+
 rust-pbs-api-types (1.0.5-1) stable; urgency=medium
 
   * crypto: improve deserialization for Fingerprint with custom visitor
