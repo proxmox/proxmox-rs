@@ -35,17 +35,20 @@ proxmox-uuid = { workspace = true }
 
 [features]
 default = []
+acl = [
+    "dep:proxmox-section-config",
+]
 api = [
     "impl",
     "dep:hex",
 ]
 impl = [
+    "acl",
     "dep:nix",
     "dep:openssl",
     "dep:proxmox-config-digest",
     "dep:proxmox-product-config",
     "dep:proxmox-router",
-    "dep:proxmox-section-config",
     "dep:proxmox-shared-memory",
     "dep:proxmox-sys",
     "dep:serde_json",

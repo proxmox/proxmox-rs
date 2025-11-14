@@ -6,7 +6,7 @@ use serde_json::{from_value, Value};
 use proxmox_auth_api::types::Authid;
 use proxmox_product_config::{open_api_lockfile, replace_config, ApiLockGuard};
 
-use crate::init::{token_shadow, token_shadow_lock};
+use crate::init::impl_feature::{token_shadow, token_shadow_lock};
 
 // Get exclusive lock
 fn lock_config() -> Result<ApiLockGuard, Error> {

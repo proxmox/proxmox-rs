@@ -1,15 +1,18 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+#[cfg(feature = "impl")]
+use std::collections::BTreeSet;
+use std::collections::{BTreeMap, HashMap};
+#[cfg(feature = "impl")]
 use std::io::Write;
+#[cfg(feature = "impl")]
 use std::path::Path;
-use std::sync::{Arc, OnceLock, RwLock};
 
 use anyhow::{bail, Error};
 
 use proxmox_auth_api::types::{Authid, Userid};
+#[cfg(feature = "impl")]
 use proxmox_config_digest::ConfigDigest;
-use proxmox_product_config::{open_api_lockfile, replace_privileged_config, ApiLockGuard};
 
-use crate::init::{access_conf, acl_config, acl_config_lock};
+use crate::init::access_conf;
 
 pub fn split_acl_path(path: &str) -> Vec<&str> {
     let items = path.split('/');
@@ -302,6 +305,120 @@ impl AclTree {
         node.insert_user_role(auth_id.to_owned(), role.to_string(), propagate);
     }
 
+    fn parse_acl_line(&mut self, line: &str) -> Result<(), Error> {
+        let items: Vec<&str> = line.split(':').collect();
+
+        if items.len() != 5 {
+            bail!("wrong number of items.");
+        }
+
+        if items[0] != "acl" {
+            bail!("line does not start with 'acl'.");
+        }
+
+        let propagate = if items[1] == "0" {
+            false
+        } else if items[1] == "1" {
+            true
+        } else {
+            bail!("expected '0' or '1' for propagate flag.");
+        };
+
+        let path_str = items[2];
+        let path = split_acl_path(path_str);
+        let node = self.get_or_insert_node(&path);
+
+        let uglist: Vec<&str> = items[3].split(',').map(|v| v.trim()).collect();
+
+        let rolelist: Vec<&str> = items[4].split(',').map(|v| v.trim()).collect();
+
+        for user_or_group in &uglist {
+            for role in &rolelist {
+                if !access_conf().roles().contains_key(role) {
+                    bail!("unknown role '{}'", role);
+                }
+                if let Some(group) = user_or_group.strip_prefix('@') {
+                    node.insert_group_role(group.to_string(), role.to_string(), propagate);
+                } else {
+                    node.insert_user_role(user_or_group.parse()?, role.to_string(), propagate);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// This is used for testing
+    pub fn from_raw(raw: &str) -> Result<Self, Error> {
+        let mut tree = Self::new();
+        for (linenr, line) in raw.lines().enumerate() {
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            if let Err(err) = tree.parse_acl_line(line) {
+                bail!(
+                    "unable to parse acl config data, line {} - {}",
+                    linenr + 1,
+                    err
+                );
+            }
+        }
+        Ok(tree)
+    }
+
+    /// Returns a map of role name and propagation status for a given `auth_id` and `path`.
+    ///
+    /// This will collect role mappings according to the following algorithm:
+    /// - iterate over all intermediate nodes along `path` and collect roles with `propagate` set
+    /// - get all (propagating and non-propagating) roles for last component of path
+    /// - more specific role maps replace less specific role maps
+    ///   -- user/token is more specific than group at each level
+    ///   -- roles lower in the tree are more specific than those higher up along the path
+    pub fn roles(&self, auth_id: &Authid, path: &[&str]) -> HashMap<String, bool> {
+        let mut node = &self.root;
+        let mut role_map = node.extract_roles(auth_id, path.is_empty());
+
+        let mut comp_iter = path.iter().peekable();
+
+        while let Some(comp) = comp_iter.next() {
+            let last_comp = comp_iter.peek().is_none();
+
+            let mut sub_comp_iter = comp.split('/').peekable();
+
+            while let Some(sub_comp) = sub_comp_iter.next() {
+                let last_sub_comp = last_comp && sub_comp_iter.peek().is_none();
+
+                node = match node.children.get(sub_comp) {
+                    Some(n) => n,
+                    None => return role_map, // path not found
+                };
+
+                let new_map = node.extract_roles(auth_id, last_sub_comp);
+                if !new_map.is_empty() {
+                    // overwrite previous mappings
+                    role_map = new_map;
+                }
+            }
+        }
+
+        role_map
+    }
+
+    pub fn get_child_paths(&self, auth_id: &Authid, path: &[&str]) -> Result<Vec<String>, Error> {
+        let mut res = Vec::new();
+
+        if let Some(node) = self.get_node(path) {
+            let path = path.join("/");
+            node.get_child_paths(path, auth_id, &mut res)?;
+        }
+
+        Ok(res)
+    }
+}
+
+#[cfg(feature = "impl")]
+impl AclTree {
     fn write_node_config(node: &AclTreeNode, path: &str, w: &mut dyn Write) -> Result<(), Error> {
         let mut role_ug_map0: HashMap<_, BTreeSet<_>> = HashMap::new();
         let mut role_ug_map1: HashMap<_, BTreeSet<_>> = HashMap::new();
@@ -406,49 +523,6 @@ impl AclTree {
         Self::write_node_config(&self.root, "", w)
     }
 
-    fn parse_acl_line(&mut self, line: &str) -> Result<(), Error> {
-        let items: Vec<&str> = line.split(':').collect();
-
-        if items.len() != 5 {
-            bail!("wrong number of items.");
-        }
-
-        if items[0] != "acl" {
-            bail!("line does not start with 'acl'.");
-        }
-
-        let propagate = if items[1] == "0" {
-            false
-        } else if items[1] == "1" {
-            true
-        } else {
-            bail!("expected '0' or '1' for propagate flag.");
-        };
-
-        let path_str = items[2];
-        let path = split_acl_path(path_str);
-        let node = self.get_or_insert_node(&path);
-
-        let uglist: Vec<&str> = items[3].split(',').map(|v| v.trim()).collect();
-
-        let rolelist: Vec<&str> = items[4].split(',').map(|v| v.trim()).collect();
-
-        for user_or_group in &uglist {
-            for role in &rolelist {
-                if !access_conf().roles().contains_key(role) {
-                    bail!("unknown role '{}'", role);
-                }
-                if let Some(group) = user_or_group.strip_prefix('@') {
-                    node.insert_group_role(group.to_string(), role.to_string(), propagate);
-                } else {
-                    node.insert_user_role(user_or_group.parse()?, role.to_string(), propagate);
-                }
-            }
-        }
-
-        Ok(())
-    }
-
     fn load(filename: &Path) -> Result<(Self, ConfigDigest), Error> {
         let mut tree = Self::new();
 
@@ -482,156 +556,106 @@ impl AclTree {
 
         Ok((tree, digest))
     }
+}
 
-    /// This is used for testing
-    pub fn from_raw(raw: &str) -> Result<Self, Error> {
-        let mut tree = Self::new();
-        for (linenr, line) in raw.lines().enumerate() {
-            let line = line.trim();
-            if line.is_empty() {
-                continue;
-            }
-            if let Err(err) = tree.parse_acl_line(line) {
-                bail!(
-                    "unable to parse acl config data, line {} - {}",
-                    linenr + 1,
-                    err
-                );
-            }
-        }
-        Ok(tree)
+#[cfg(feature = "impl")]
+pub use impl_feature::{cached_config, config, lock_config, save_config};
+
+#[cfg(feature = "impl")]
+mod impl_feature {
+    use std::sync::{Arc, OnceLock, RwLock};
+
+    use anyhow::{bail, Error};
+
+    use proxmox_config_digest::ConfigDigest;
+    use proxmox_product_config::{open_api_lockfile, replace_privileged_config, ApiLockGuard};
+
+    use crate::acl::AclTree;
+    use crate::init::access_conf;
+    use crate::init::impl_feature::{acl_config, acl_config_lock};
+
+    /// Get exclusive lock
+    pub fn lock_config() -> Result<ApiLockGuard, Error> {
+        open_api_lockfile(acl_config_lock(), None, true)
     }
 
-    /// Returns a map of role name and propagation status for a given `auth_id` and `path`.
+    /// Reads the [`AclTree`] from `acl.cfg` in the configuration directory.
+    pub fn config() -> Result<(AclTree, ConfigDigest), Error> {
+        let path = acl_config();
+        AclTree::load(&path)
+    }
+
+    /// Returns a cached [`AclTree`] or a fresh copy read directly from `acl.cfg` in the configuration
+    /// directory.
     ///
-    /// This will collect role mappings according to the following algorithm:
-    /// - iterate over all intermediate nodes along `path` and collect roles with `propagate` set
-    /// - get all (propagating and non-propagating) roles for last component of path
-    /// - more specific role maps replace less specific role maps
-    ///   -- user/token is more specific than group at each level
-    ///   -- roles lower in the tree are more specific than those higher up along the path
-    pub fn roles(&self, auth_id: &Authid, path: &[&str]) -> HashMap<String, bool> {
-        let mut node = &self.root;
-        let mut role_map = node.extract_roles(auth_id, path.is_empty());
-
-        let mut comp_iter = path.iter().peekable();
-
-        while let Some(comp) = comp_iter.next() {
-            let last_comp = comp_iter.peek().is_none();
-
-            let mut sub_comp_iter = comp.split('/').peekable();
-
-            while let Some(sub_comp) = sub_comp_iter.next() {
-                let last_sub_comp = last_comp && sub_comp_iter.peek().is_none();
-
-                node = match node.children.get(sub_comp) {
-                    Some(n) => n,
-                    None => return role_map, // path not found
-                };
-
-                let new_map = node.extract_roles(auth_id, last_sub_comp);
-                if !new_map.is_empty() {
-                    // overwrite previous mappings
-                    role_map = new_map;
-                }
-            }
+    /// Since the AclTree is used for every API request's permission check, this caching mechanism
+    /// allows to skip reading and parsing the file again if it is unchanged.
+    pub fn cached_config() -> Result<Arc<AclTree>, Error> {
+        struct ConfigCache {
+            data: Option<Arc<AclTree>>,
+            last_mtime: i64,
+            last_mtime_nsec: i64,
         }
 
-        role_map
-    }
+        static CACHED_CONFIG: OnceLock<RwLock<ConfigCache>> = OnceLock::new();
+        let cached_conf = CACHED_CONFIG.get_or_init(|| {
+            RwLock::new(ConfigCache {
+                data: None,
+                last_mtime: 0,
+                last_mtime_nsec: 0,
+            })
+        });
 
-    pub fn get_child_paths(&self, auth_id: &Authid, path: &[&str]) -> Result<Vec<String>, Error> {
-        let mut res = Vec::new();
+        let conf = acl_config();
+        let stat = match nix::sys::stat::stat(&conf) {
+            Ok(stat) => Some(stat),
+            Err(nix::errno::Errno::ENOENT) => None,
+            Err(err) => bail!("unable to stat '{}' - {err}", conf.display()),
+        };
 
-        if let Some(node) = self.get_node(path) {
-            let path = path.join("/");
-            node.get_child_paths(path, auth_id, &mut res)?;
-        }
-
-        Ok(res)
-    }
-}
-
-/// Get exclusive lock
-pub fn lock_config() -> Result<ApiLockGuard, Error> {
-    open_api_lockfile(acl_config_lock(), None, true)
-}
-
-/// Reads the [`AclTree`] from `acl.cfg` in the configuration directory.
-pub fn config() -> Result<(AclTree, ConfigDigest), Error> {
-    let path = acl_config();
-    AclTree::load(&path)
-}
-
-/// Returns a cached [`AclTree`] or a fresh copy read directly from `acl.cfg` in the configuration
-/// directory.
-///
-/// Since the AclTree is used for every API request's permission check, this caching mechanism
-/// allows to skip reading and parsing the file again if it is unchanged.
-pub fn cached_config() -> Result<Arc<AclTree>, Error> {
-    struct ConfigCache {
-        data: Option<Arc<AclTree>>,
-        last_mtime: i64,
-        last_mtime_nsec: i64,
-    }
-
-    static CACHED_CONFIG: OnceLock<RwLock<ConfigCache>> = OnceLock::new();
-    let cached_conf = CACHED_CONFIG.get_or_init(|| {
-        RwLock::new(ConfigCache {
-            data: None,
-            last_mtime: 0,
-            last_mtime_nsec: 0,
-        })
-    });
-
-    let conf = acl_config();
-    let stat = match nix::sys::stat::stat(&conf) {
-        Ok(stat) => Some(stat),
-        Err(nix::errno::Errno::ENOENT) => None,
-        Err(err) => bail!("unable to stat '{}' - {err}", conf.display()),
-    };
-
-    {
-        // limit scope
-        let cache = cached_conf.read().unwrap();
-        if let Some(ref config) = cache.data {
-            if let Some(stat) = stat {
-                if stat.st_mtime == cache.last_mtime && stat.st_mtime_nsec == cache.last_mtime_nsec
-                {
+        {
+            // limit scope
+            let cache = cached_conf.read().unwrap();
+            if let Some(ref config) = cache.data {
+                if let Some(stat) = stat {
+                    if stat.st_mtime == cache.last_mtime
+                        && stat.st_mtime_nsec == cache.last_mtime_nsec
+                    {
+                        return Ok(config.clone());
+                    }
+                } else if cache.last_mtime == 0 && cache.last_mtime_nsec == 0 {
                     return Ok(config.clone());
                 }
-            } else if cache.last_mtime == 0 && cache.last_mtime_nsec == 0 {
-                return Ok(config.clone());
             }
         }
+
+        let (config, _digest) = config()?;
+        let config = Arc::new(config);
+
+        let mut cache = cached_conf.write().unwrap();
+        if let Some(stat) = stat {
+            cache.last_mtime = stat.st_mtime;
+            cache.last_mtime_nsec = stat.st_mtime_nsec;
+        }
+        cache.data = Some(config.clone());
+
+        Ok(config)
     }
 
-    let (config, _digest) = config()?;
-    let config = Arc::new(config);
+    /// Saves an [`AclTree`] to `acl.cfg` in the configuration directory, ensuring proper ownership and
+    /// file permissions.
+    pub fn save_config(acl: &AclTree) -> Result<(), Error> {
+        let mut raw: Vec<u8> = Vec::new();
+        acl.write_config(&mut raw)?;
 
-    let mut cache = cached_conf.write().unwrap();
-    if let Some(stat) = stat {
-        cache.last_mtime = stat.st_mtime;
-        cache.last_mtime_nsec = stat.st_mtime_nsec;
+        let conf = acl_config();
+        replace_privileged_config(conf, &raw)?;
+
+        // increase cache generation so we reload it next time we access it
+        access_conf().increment_cache_generation()?;
+
+        Ok(())
     }
-    cache.data = Some(config.clone());
-
-    Ok(config)
-}
-
-/// Saves an [`AclTree`] to `acl.cfg` in the configuration directory, ensuring proper ownership and
-/// file permissions.
-pub fn save_config(acl: &AclTree) -> Result<(), Error> {
-    let mut raw: Vec<u8> = Vec::new();
-    acl.write_config(&mut raw)?;
-
-    let conf = acl_config();
-    replace_privileged_config(conf, &raw)?;
-
-    // increase cache generation so we reload it next time we access it
-    access_conf().increment_cache_generation()?;
-
-    Ok(())
 }
 
 #[cfg(test)]

@@ -9,7 +9,8 @@ use proxmox_product_config::{open_api_lockfile, replace_privileged_config, ApiLo
 use proxmox_schema::*;
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
 
-use crate::init::{access_conf, user_config, user_config_lock};
+use crate::init::access_conf;
+use crate::init::impl_feature::{user_config, user_config_lock};
 use crate::types::{ApiToken, User};
 
 fn get_or_init_config() -> &'static SectionConfig {

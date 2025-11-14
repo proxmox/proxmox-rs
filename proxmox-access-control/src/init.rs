@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 use anyhow::{format_err, Error};
@@ -8,7 +7,6 @@ use proxmox_auth_api::types::{Authid, Userid};
 use proxmox_section_config::SectionConfigData;
 
 static ACCESS_CONF: OnceLock<&'static dyn AccessControlConfig> = OnceLock::new();
-static ACCESS_CONF_DIR: OnceLock<PathBuf> = OnceLock::new();
 
 /// This trait specifies the functions a product needs to implement to get ACL tree based access
 /// control management from this plugin.
@@ -105,21 +103,7 @@ pub trait AccessControlConfig: Send + Sync {
     }
 }
 
-pub fn init<P: AsRef<Path>>(
-    acm_config: &'static dyn AccessControlConfig,
-    config_dir: P,
-) -> Result<(), Error> {
-    init_access_config(acm_config)?;
-    init_access_config_dir(config_dir)
-}
-
-pub(crate) fn init_access_config_dir<P: AsRef<Path>>(config_dir: P) -> Result<(), Error> {
-    ACCESS_CONF_DIR
-        .set(config_dir.as_ref().to_owned())
-        .map_err(|_e| format_err!("cannot initialize acl tree config twice!"))
-}
-
-pub(crate) fn init_access_config(config: &'static dyn AccessControlConfig) -> Result<(), Error> {
+pub fn init_access_config(config: &'static dyn AccessControlConfig) -> Result<(), Error> {
     ACCESS_CONF
         .set(config)
         .map_err(|_e| format_err!("cannot initialize acl tree config twice!"))
@@ -131,32 +115,61 @@ pub(crate) fn access_conf() -> &'static dyn AccessControlConfig {
         .expect("please initialize the acm config before using it!")
 }
 
-fn conf_dir() -> &'static PathBuf {
-    ACCESS_CONF_DIR
-        .get()
-        .expect("please initialize acm config dir before using it!")
-}
+#[cfg(feature = "impl")]
+pub use impl_feature::init;
 
-pub(crate) fn acl_config() -> PathBuf {
-    conf_dir().join("acl.cfg")
-}
+#[cfg(feature = "impl")]
+pub(crate) mod impl_feature {
+    use std::path::{Path, PathBuf};
+    use std::sync::OnceLock;
 
-pub(crate) fn acl_config_lock() -> PathBuf {
-    conf_dir().join(".acl.lck")
-}
+    use anyhow::{format_err, Error};
 
-pub(crate) fn user_config() -> PathBuf {
-    conf_dir().join("user.cfg")
-}
+    use crate::init::{init_access_config, AccessControlConfig};
 
-pub(crate) fn user_config_lock() -> PathBuf {
-    conf_dir().join(".user.lck")
-}
+    static ACCESS_CONF_DIR: OnceLock<PathBuf> = OnceLock::new();
 
-pub(crate) fn token_shadow() -> PathBuf {
-    conf_dir().join("token.shadow")
-}
+    pub fn init<P: AsRef<Path>>(
+        acm_config: &'static dyn AccessControlConfig,
+        config_dir: P,
+    ) -> Result<(), Error> {
+        init_access_config(acm_config)?;
+        init_access_config_dir(config_dir)
+    }
 
-pub(crate) fn token_shadow_lock() -> PathBuf {
-    conf_dir().join("token.shadow.lock")
+    pub(crate) fn init_access_config_dir<P: AsRef<Path>>(config_dir: P) -> Result<(), Error> {
+        ACCESS_CONF_DIR
+            .set(config_dir.as_ref().to_owned())
+            .map_err(|_e| format_err!("cannot initialize acl tree config twice!"))
+    }
+
+    fn conf_dir() -> &'static PathBuf {
+        ACCESS_CONF_DIR
+            .get()
+            .expect("please initialize acm config dir before using it!")
+    }
+
+    pub(crate) fn acl_config() -> PathBuf {
+        conf_dir().join("acl.cfg")
+    }
+
+    pub(crate) fn acl_config_lock() -> PathBuf {
+        conf_dir().join(".acl.lck")
+    }
+
+    pub(crate) fn user_config() -> PathBuf {
+        conf_dir().join("user.cfg")
+    }
+
+    pub(crate) fn user_config_lock() -> PathBuf {
+        conf_dir().join(".user.lck")
+    }
+
+    pub(crate) fn token_shadow() -> PathBuf {
+        conf_dir().join("token.shadow")
+    }
+
+    pub(crate) fn token_shadow_lock() -> PathBuf {
+        conf_dir().join("token.shadow.lock")
+    }
 }

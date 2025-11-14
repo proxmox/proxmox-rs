@@ -2,13 +2,13 @@
 
 pub mod types;
 
-#[cfg(feature = "impl")]
+#[cfg(feature = "acl")]
 pub mod acl;
 
 #[cfg(feature = "api")]
 pub mod api;
 
-#[cfg(feature = "impl")]
+#[cfg(feature = "acl")]
 pub mod init;
 
 #[cfg(feature = "impl")]
