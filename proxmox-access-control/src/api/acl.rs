@@ -23,6 +23,12 @@ use crate::CachedUserInfo;
                 optional: true,
                 default: false,
             },
+            "all-for-authid": {
+                description: "Whether to return all ACL entries for the exact current authid only.",
+                type: bool,
+                optional: true,
+                default: false,
+            }
         },
     },
     returns: {
@@ -34,13 +40,17 @@ use crate::CachedUserInfo;
     },
     access: {
         permission: &Permission::Anybody,
-        description: "Returns all ACLs if user has sufficient privileges on this endpoint, otherwise it is limited to the user's API tokens.",
+        description: "Returns all ACLs if a user has sufficient privileges on this endpoint. \
+            Otherwise it is limited to the user's API tokens. However, if `all-for-authid` is \
+            specified, all ACLs of the current Authid will be returned, whether the Authid has \
+            privileges to list other ACLs here or not.",
     },
 )]
 /// Get ACL entries, can be filter by path.
 pub fn read_acl(
     path: Option<String>,
     exact: bool,
+    all_for_authid: bool,
     rpcenv: &mut dyn RpcEnvironment,
 ) -> Result<Vec<AclListItem>, Error> {
     let auth_id = rpcenv
@@ -58,7 +68,11 @@ pub fn read_acl(
         )
         .is_err();
 
-    let filter = if filter_entries { Some(auth_id) } else { None };
+    let filter = if filter_entries || all_for_authid {
+        Some(auth_id)
+    } else {
+        None
+    };
 
     let (mut tree, digest) = crate::acl::config()?;
 
@@ -74,7 +88,13 @@ pub fn read_acl(
 
     rpcenv["digest"] = hex::encode(digest).into();
 
-    Ok(extract_acl_node_data(node, path.as_deref(), exact, &filter))
+    Ok(extract_acl_node_data(
+        node,
+        path.as_deref(),
+        all_for_authid,
+        exact,
+        &filter,
+    ))
 }
 
 #[api(
@@ -241,6 +261,7 @@ pub fn update_acl(
 fn extract_acl_node_data(
     node: &AclTreeNode,
     path: Option<&str>,
+    all_for_authid: bool,
     exact: bool,
     auth_id_filter: &Option<Authid>,
 ) -> Vec<AclListItem> {
@@ -257,37 +278,57 @@ fn extract_acl_node_data(
     while let Some((path, node)) = nodes.pop() {
         let path_str = if path.is_empty() { "/" } else { &path };
 
-        for (user, roles) in &node.users {
-            if let Some(auth_id_filter) = auth_id_filter {
-                if !user.is_token() || user.user() != auth_id_filter.user() {
-                    continue;
+        if all_for_authid {
+            if let Some(auth_id) = auth_id_filter {
+                // this will extract all roles for `auth_id_filer` from the node. group acls will
+                // be handled according to the acl trees implementation. we mask them here as user
+                // ACLs to avoid disclosing more information than necessary.
+                //
+                // by setting `leaf` to true we always get all roles for this `auth_id` on the
+                // current node.
+                for (role, propagate) in node.extract_roles(auth_id, true) {
+                    to_return.push(AclListItem {
+                        path: path_str.to_owned(),
+                        propagate,
+                        ugid_type: AclUgidType::User,
+                        ugid: auth_id.to_string(),
+                        roleid: role.to_string(),
+                    })
+                }
+            }
+        } else {
+            for (user, roles) in &node.users {
+                if let Some(auth_id_filter) = auth_id_filter {
+                    if !user.is_token() || user.user() != auth_id_filter.user() {
+                        continue;
+                    }
+                }
+
+                for (role, propagate) in roles {
+                    to_return.push(AclListItem {
+                        path: path_str.to_owned(),
+                        propagate: *propagate,
+                        ugid_type: AclUgidType::User,
+                        ugid: user.to_string(),
+                        roleid: role.to_string(),
+                    });
                 }
             }
 
-            for (role, propagate) in roles {
-                to_return.push(AclListItem {
-                    path: path_str.to_owned(),
-                    propagate: *propagate,
-                    ugid_type: AclUgidType::User,
-                    ugid: user.to_string(),
-                    roleid: role.to_string(),
-                });
-            }
-        }
+            for (group, roles) in &node.groups {
+                if auth_id_filter.is_some() {
+                    continue;
+                }
 
-        for (group, roles) in &node.groups {
-            if auth_id_filter.is_some() {
-                continue;
-            }
-
-            for (role, propagate) in roles {
-                to_return.push(AclListItem {
-                    path: path_str.to_owned(),
-                    propagate: *propagate,
-                    ugid_type: AclUgidType::Group,
-                    ugid: group.to_string(),
-                    roleid: role.to_string(),
-                });
+                for (role, propagate) in roles {
+                    to_return.push(AclListItem {
+                        path: path_str.to_owned(),
+                        propagate: *propagate,
+                        ugid_type: AclUgidType::Group,
+                        ugid: group.to_string(),
+                        roleid: role.to_string(),
+                    });
+                }
             }
         }
 
