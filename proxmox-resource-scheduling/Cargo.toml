@@ -1,6 +1,6 @@
 [package]
 name = "proxmox-resource-scheduling"
-version = "1.0.0"
+version = "1.0.1"
 description = "Proxmox library for resource scheduling"
 authors.workspace = true
 edition.workspace = true

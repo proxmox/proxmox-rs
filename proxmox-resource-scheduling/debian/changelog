@@ -1,3 +1,9 @@
+rust-proxmox-resource-scheduling (1.0.1-1) trixie; urgency=medium
+
+  * allow owned nodes slice for score_nodes_to_start_service.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 14 Nov 2025 13:08:14 +0100
+
 rust-proxmox-resource-scheduling (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
