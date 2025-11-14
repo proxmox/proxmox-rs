@@ -335,7 +335,7 @@ impl AclTree {
         for user_or_group in &uglist {
             for role in &rolelist {
                 if !access_conf().roles().contains_key(role) {
-                    bail!("unknown role '{}'", role);
+                    bail!("unknown role '{role}'");
                 }
                 if let Some(group) = user_or_group.strip_prefix('@') {
                     node.insert_group_role(group.to_string(), role.to_string(), propagate);
@@ -358,9 +358,8 @@ impl AclTree {
             }
             if let Err(err) = tree.parse_acl_line(line) {
                 bail!(
-                    "unable to parse acl config data, line {} - {}",
+                    "unable to parse acl config data, line {} - {err}",
                     linenr + 1,
-                    err
                 );
             }
         }
@@ -493,10 +492,8 @@ impl AclTree {
             let role_list = role_list(roles);
             writeln!(
                 w,
-                "acl:0:{}:{}:{}",
+                "acl:0:{}:{uglist}:{role_list}",
                 if path.is_empty() { "/" } else { path },
-                uglist,
-                role_list
             )?;
         }
 
@@ -504,10 +501,8 @@ impl AclTree {
             let role_list = role_list(roles);
             writeln!(
                 w,
-                "acl:1:{}:{}:{}",
+                "acl:1:{}:{uglist}:{role_list}",
                 if path.is_empty() { "/" } else { path },
-                uglist,
-                role_list
             )?;
         }
 
@@ -532,7 +527,7 @@ impl AclTree {
                 if err.kind() == std::io::ErrorKind::NotFound {
                     String::new()
                 } else {
-                    bail!("unable to read acl config {:?} - {}", filename, err);
+                    bail!("unable to read acl config {filename:?} - {err}");
                 }
             }
         };
@@ -546,10 +541,8 @@ impl AclTree {
             }
             if let Err(err) = tree.parse_acl_line(line) {
                 bail!(
-                    "unable to parse acl config {:?}, line {} - {}",
-                    filename,
-                    linenr + 1,
-                    err
+                    "unable to parse acl config {filename:?}, line {} - {err}",
+                    linenr + 1
                 );
             }
         }
