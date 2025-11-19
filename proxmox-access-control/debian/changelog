@@ -1,3 +1,20 @@
+rust-proxmox-access-control (1.3.0-1) trixie; urgency=medium
+
+  * add acl feature to only expose types and the AclTree, which can be useful,
+    when an application wants to only handle an acl tree without depending on
+    more complex features provided by the rest of the `impl` feature or its
+    bigger dependencies (e.g. openssl).
+
+  * move functions querying privileges to the AclTree, making them accessible
+    to the new acl feature.
+
+  * derive Debug and PartialEq on AclTree and AclTreeNode.
+
+  * allow one to opt-into reading all ACLs of the current authid, even if they
+    come from groups.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 19 Nov 2025 19:37:09 +0100
+
 rust-proxmox-access-control (1.2.0-1) trixie; urgency=medium
 
   * refactor api module to be more hierarchical.
