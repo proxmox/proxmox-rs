@@ -10,7 +10,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
  librust-proxmox-apt-0.99+cache-dev <!nocheck>,
  librust-proxmox-apt-0.99+default-dev <!nocheck>,
- librust-proxmox-apt-api-types-2+default-dev <!nocheck>,
+ librust-proxmox-apt-api-types-2+default-dev (>= 2.0.2-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-termcolor-1+default-dev (>= 1.1.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -29,7 +29,7 @@ Depends:
  librust-const-format-0.2+default-dev,
  librust-proxmox-apt-0.99+cache-dev,
  librust-proxmox-apt-0.99+default-dev,
- librust-proxmox-apt-api-types-2+default-dev,
+ librust-proxmox-apt-api-types-2+default-dev (>= 2.0.2-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-termcolor-1+default-dev (>= 1.1.2-~~)
 Provides:
