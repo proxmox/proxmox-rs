@@ -24,7 +24,11 @@ use crate::CachedUserInfo;
                 default: false,
             },
             "all-for-authid": {
-                description: "Whether to return all ACL entries for the exact current authid only.",
+                description: "Whether to return all ACL entries for the exact current authid only. \
+                    All ACL entries will appear as `AclUgidType::User` ACLs, regardles of whether \
+                    they are stored as user or group entries. Hence, when using this parameter this \
+                    endpoint cannot be used to retrieve information for updating the ACL tree \
+                    directly.",
                 type: bool,
                 optional: true,
                 default: false,
