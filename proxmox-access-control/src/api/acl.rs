@@ -269,10 +269,12 @@ fn extract_acl_node_data(
     exact: bool,
     auth_id_filter: &Option<Authid>,
 ) -> Vec<AclListItem> {
-    // tokens can't have tokens, so we can early return
-    if let Some(auth_id_filter) = auth_id_filter {
-        if auth_id_filter.is_token() {
-            return Vec::new();
+    if !all_for_authid {
+        // tokens can't have tokens, so we can early return
+        if let Some(auth_id_filter) = auth_id_filter {
+            if auth_id_filter.is_token() {
+                return Vec::new();
+            }
         }
     }
 
