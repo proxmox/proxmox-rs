@@ -826,6 +826,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "impl")]
     fn test_acl_line_compression() {
         setup_acl_tree_config();
 
@@ -911,6 +912,7 @@ mod test {
     }
 
     #[test]
+    #[cfg(feature = "impl")]
     fn test_role_add_delete() -> Result<(), Error> {
         setup_acl_tree_config();
 
