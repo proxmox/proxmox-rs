@@ -214,6 +214,10 @@ impl Cache {
         dst: DataSourceType,
         new_only: bool,
     ) -> Result<(), Error> {
+        if rel_path.contains("../") {
+            bail!("invalid path when trying to update value: {rel_path}");
+        }
+
         let journal_applied = self.apply_journal()?;
 
         self.state
