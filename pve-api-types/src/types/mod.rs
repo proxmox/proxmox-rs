@@ -17,8 +17,7 @@ pub mod array;
 pub mod stringlist;
 pub mod verifiers;
 
-mod fixed_string;
-pub use fixed_string::{FixedString, TooLongError};
+use proxmox_fixed_string::FixedString;
 
 pub use proxmox_apt_api_types::APTRepositoriesResult;
 

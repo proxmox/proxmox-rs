@@ -23,6 +23,7 @@ serde_plain.workspace = true
 #
 proxmox-api-macro.workspace = true
 proxmox-apt-api-types.workspace = true
+proxmox-fixed-string.workspace = true
 proxmox-serde = { workspace = true, features = [ "perl" ] }
 proxmox-schema = { workspace = true, features = [ "api-types", "api-macro" ] }
 
