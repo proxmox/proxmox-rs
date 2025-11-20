@@ -2,6 +2,9 @@
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::{
     api, ApiStringFormat, ArraySchema, IntegerSchema, Schema, StringSchema, Updater,
 };
@@ -102,6 +105,9 @@ pub enum MtxEntryKind {
     Slot,
     /// Import/Export Slot
     ImportExport,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api(

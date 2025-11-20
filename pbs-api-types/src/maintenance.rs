@@ -2,6 +2,9 @@ use anyhow::{bail, Error};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::{api, const_regex, ApiStringFormat, Schema, StringSchema};
 
 const_regex! {
@@ -51,6 +54,9 @@ pub enum MaintenanceType {
     Unmount,
     /// The S3 cache store is being refreshed.
     S3Refresh,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(MaintenanceType);
 serde_plain::derive_fromstr_from_deserialize!(MaintenanceType);

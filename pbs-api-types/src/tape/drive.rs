@@ -2,6 +2,9 @@
 use anyhow::{bail, Error};
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::{api, IntegerSchema, Schema, StringSchema, Updater};
 
 use crate::{OptionalDeviceIdentification, CHANGER_NAME_SCHEMA, PROXMOX_SAFE_ID_FORMAT};
@@ -136,6 +139,9 @@ pub enum TapeDensity {
     LTO8,
     /// LTO9
     LTO9,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 impl TryFrom<u8> for TapeDensity {
@@ -321,6 +327,9 @@ pub enum DeviceActivity {
     ReadingEncrypted,
     /// Writing encrypted data
     WritingEncrypted,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 impl TryFrom<u8> for DeviceActivity {

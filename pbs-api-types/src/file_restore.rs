@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::api;
 
 #[api]
@@ -27,4 +30,7 @@ pub enum FileRestoreFormat {
     Zip,
     /// TAR archive
     Tar,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }

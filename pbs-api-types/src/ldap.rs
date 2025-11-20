@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::{api, ApiStringFormat, ApiType, ArraySchema, Schema, StringSchema, Updater};
 
 use super::{REALM_ID_SCHEMA, SINGLE_LINE_COMMENT_SCHEMA};
@@ -18,6 +21,9 @@ pub enum LdapMode {
     /// Secure LDAPS connection
     #[serde(rename = "ldaps")]
     Ldaps,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api(
@@ -145,6 +151,9 @@ pub enum RemoveVanished {
     Entry,
     /// Remove vanished properties from users (e.g. email)
     Properties,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 pub const LDAP_DOMAIN_SCHEMA: Schema = StringSchema::new("LDAP Domain").schema();

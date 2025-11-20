@@ -3,6 +3,10 @@ use serde::{Deserialize, Serialize};
 use crate::{
     HOST_PORT_SCHEMA, HTTP_URL_SCHEMA, PROXMOX_SAFE_ID_FORMAT, SINGLE_LINE_COMMENT_SCHEMA,
 };
+
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::{api, Schema, StringSchema, Updater};
 
 pub const METRIC_SERVER_ID_SCHEMA: Schema = StringSchema::new("Metrics Server ID.")
@@ -156,6 +160,9 @@ pub enum MetricServerType {
     /// InfluxDB UDP
     #[serde(rename = "influxdb-udp")]
     InfluxDbUdp,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api(
@@ -249,6 +256,9 @@ pub enum MetricDataType {
     Counter,
     /// derive.
     Derive,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 serde_plain::derive_display_from_serialize!(MetricDataType);

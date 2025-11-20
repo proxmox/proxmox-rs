@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::api;
 
 #[api()]
@@ -18,4 +21,7 @@ pub enum MediaStatus {
     Damaged,
     /// Media is marked as retired
     Retired,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }

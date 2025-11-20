@@ -13,6 +13,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-apt-api-types-2+default-dev (>= 2.0.2-~~) <!nocheck>,
  librust-proxmox-auth-api-1+api-types-dev (>= 1.0.5-~~) <!nocheck>,
  librust-proxmox-auth-api-1+default-dev (>= 1.0.5-~~) <!nocheck>,
+ librust-proxmox-fixed-string-0.1+default-dev <!nocheck>,
  librust-proxmox-human-byte-1+default-dev <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-proxmox-s3-client-1+api-types-dev (>= 1.2-~~) <!nocheck>,
@@ -45,6 +46,7 @@ Depends:
  librust-proxmox-apt-api-types-2+default-dev (>= 2.0.2-~~),
  librust-proxmox-auth-api-1+api-types-dev (>= 1.0.5-~~),
  librust-proxmox-auth-api-1+default-dev (>= 1.0.5-~~),
+ librust-proxmox-fixed-string-0.1+default-dev,
  librust-proxmox-human-byte-1+default-dev,
  librust-proxmox-lang-1+default-dev (>= 1.5-~~),
  librust-proxmox-s3-client-1+api-types-dev (>= 1.2-~~),
@@ -61,11 +63,15 @@ Depends:
  librust-serde-plain-1+default-dev
 Provides:
  librust-pbs-api-types+default-dev (= ${binary:Version}),
+ librust-pbs-api-types+enum-fallback-dev (= ${binary:Version}),
  librust-pbs-api-types-1-dev (= ${binary:Version}),
  librust-pbs-api-types-1+default-dev (= ${binary:Version}),
+ librust-pbs-api-types-1+enum-fallback-dev (= ${binary:Version}),
  librust-pbs-api-types-1.0-dev (= ${binary:Version}),
  librust-pbs-api-types-1.0+default-dev (= ${binary:Version}),
+ librust-pbs-api-types-1.0+enum-fallback-dev (= ${binary:Version}),
  librust-pbs-api-types-1.0.8-dev (= ${binary:Version}),
- librust-pbs-api-types-1.0.8+default-dev (= ${binary:Version})
+ librust-pbs-api-types-1.0.8+default-dev (= ${binary:Version}),
+ librust-pbs-api-types-1.0.8+enum-fallback-dev (= ${binary:Version})
 Description: API types for Proxmox Backup Server - Rust source code
  Source code for Debianized Rust crate "pbs-api-types"

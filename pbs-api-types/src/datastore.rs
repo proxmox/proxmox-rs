@@ -8,6 +8,9 @@ use anyhow::{bail, format_err, Error};
 use const_format::concatcp;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_human_byte::HumanByte;
 use proxmox_schema::{
     api, const_regex, ApiStringFormat, ApiType, ArraySchema, EnumEntry, IntegerSchema, ReturnType,
@@ -178,6 +181,9 @@ pub enum ChunkOrder {
     /// Iterate chunks in inode order
     #[default]
     Inode,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api]
@@ -192,6 +198,9 @@ pub enum DataStoreMountStatus {
     /// Datastore is not removable, so there is no mount status.
     #[default]
     NonRemovable,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api]
@@ -223,6 +232,9 @@ pub enum DatastoreFSyncLevel {
     /// and consistency.
     #[default]
     Filesystem,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 pub const GC_ATIME_CUTOFF_SCHEMA: Schema = IntegerSchema::new(
@@ -310,6 +322,9 @@ pub enum DatastoreBackendType {
     Filesystem,
     /// S3 object store
     S3,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 serde_plain::derive_display_from_serialize!(DatastoreBackendType);
 serde_plain::derive_fromstr_from_deserialize!(DatastoreBackendType);
@@ -394,6 +409,10 @@ impl FromStr for DatastoreBackendConfig {
                 if backend_config.bucket.is_none() {
                     bail!("missing option bucket, required for backend type s3");
                 }
+            }
+            #[cfg(feature = "enum-fallback")]
+            DatastoreBackendType::UnknownEnumValue(s) => {
+                bail!("unknown backend type: {s}");
             }
         }
         Ok(backend_config)
@@ -529,6 +548,9 @@ pub enum NotificationMode {
     /// Emit notification events to the notification system
     #[default]
     NotificationSystem,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 impl DataStoreConfig {
@@ -588,6 +610,10 @@ impl DataStoreConfig {
                         bail!("datastore is being deleted")
                     }
                 }
+            }
+            #[cfg(feature = "enum-fallback")]
+            Some(MaintenanceType::UnknownEnumValue(s)) => {
+                bail!("unknown maintenance type: {s}")
             }
             None => { /* always OK  */ }
         }
@@ -710,6 +736,9 @@ pub enum VerifyState {
     Ok,
     /// Verification reported one or more errors
     Failed,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api(
@@ -1071,6 +1100,9 @@ pub enum BackupType {
 
     /// "Host" backups.
     Host,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
     // NOTE: if you add new types, don't forget to adapt the iter below!
 }
 
@@ -1080,6 +1112,8 @@ impl BackupType {
             BackupType::Vm => "vm",
             BackupType::Ct => "ct",
             BackupType::Host => "host",
+            #[cfg(feature = "enum-fallback")]
+            BackupType::UnknownEnumValue(_) => "unknown backup type",
         }
     }
 
@@ -1089,6 +1123,8 @@ impl BackupType {
             BackupType::Ct => 0,
             BackupType::Host => 1,
             BackupType::Vm => 2,
+            #[cfg(feature = "enum-fallback")]
+            BackupType::UnknownEnumValue(_) => u8::MAX,
         }
     }
 

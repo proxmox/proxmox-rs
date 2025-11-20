@@ -5,6 +5,9 @@ use const_format::concatcp;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::*;
 
 use crate::{
@@ -134,6 +137,9 @@ pub enum Notify {
     Always,
     /// Send notifications for failed jobs only
     Error,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api(
@@ -549,6 +555,9 @@ pub enum SyncDirection {
     Pull,
     /// Sync direction push
     Push,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 impl std::fmt::Display for SyncDirection {
@@ -556,6 +565,10 @@ impl std::fmt::Display for SyncDirection {
         match self {
             SyncDirection::Pull => f.write_str("pull"),
             SyncDirection::Push => f.write_str("push"),
+            #[cfg(feature = "enum-fallback")]
+            SyncDirection::UnknownEnumValue(s) => {
+                write!(f, "unknown sync direction: {s}")
+            }
         }
     }
 }

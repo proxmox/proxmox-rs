@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
 use proxmox_schema::*;
 
 const_regex! {
@@ -35,6 +37,9 @@ pub enum ZfsCompressionType {
     On,
     /// Disable compression.
     Off,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api()]
@@ -54,6 +59,9 @@ pub enum ZfsRaidLevel {
     RaidZ2,
     /// RaidZ3
     RaidZ3,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api()]

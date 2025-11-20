@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::api;
 
 use crate::CERT_FINGERPRINT_SHA256_SCHEMA;
@@ -15,6 +18,9 @@ pub enum Kdf {
     Scrypt,
     /// Encrtypt the Key with a password using PBKDF2
     PBKDF2,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 impl Default for Kdf {

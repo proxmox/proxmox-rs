@@ -3,6 +3,9 @@ use std::fmt::{self, Display};
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 use proxmox_schema::api;
 
 #[api(default: "encrypt")]
@@ -16,6 +19,9 @@ pub enum CryptMode {
     Encrypt,
     /// Only sign.
     SignOnly,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Deserialize, Serialize)]

@@ -3,6 +3,8 @@ use std::ffi::OsStr;
 use serde::{Deserialize, Serialize};
 
 use proxmox_auth_api::types::Authid;
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
 use proxmox_schema::*;
 
 use crate::StorageStatus;
@@ -86,6 +88,9 @@ pub enum BootMode {
     Efi,
     /// The BootMode is Legacy BIOS
     LegacyBios,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api]

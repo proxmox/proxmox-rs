@@ -13,6 +13,9 @@ use proxmox_time::parse_daily_duration;
 
 use proxmox_auth_api::types::{APITOKEN_ID_REGEX_STR, USER_ID_REGEX_STR};
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 pub use proxmox_schema::api_types::SAFE_ID_FORMAT as PROXMOX_SAFE_ID_FORMAT;
 pub use proxmox_schema::api_types::SAFE_ID_REGEX as PROXMOX_SAFE_ID_REGEX;
 pub use proxmox_schema::api_types::SAFE_ID_REGEX_STR as PROXMOX_SAFE_ID_REGEX_STR;
@@ -269,6 +272,9 @@ pub enum NodePowerCommand {
     Reboot,
     /// Shutdown the server
     Shutdown,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api()]
@@ -284,6 +290,9 @@ pub enum TaskStateType {
     Error,
     /// Unknown
     Unknown,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 #[api(
@@ -337,6 +346,9 @@ pub enum RealmType {
     Ldap,
     /// An Active Directory (AD) realm
     Ad,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
 }
 
 serde_plain::derive_display_from_serialize!(RealmType);
