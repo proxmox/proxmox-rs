@@ -2,6 +2,7 @@ use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 use std::str::FromStr;
 
@@ -151,6 +152,12 @@ impl AsRef<[u8]> for FixedString {
 impl Borrow<str> for FixedString {
     fn borrow(&self) -> &str {
         self.as_str()
+    }
+}
+
+impl Hash for FixedString {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_bytes().hash(state);
     }
 }
 
