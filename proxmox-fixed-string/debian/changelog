@@ -1,0 +1,5 @@
+rust-proxmox-fixed-string (0.1.0) trixie; urgency=medium
+
+  * Initial release.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 20 Nov 2025 13:09:14 +0100

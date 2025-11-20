@@ -16,6 +16,7 @@ members = [
     "proxmox-daemon",
     "proxmox-deb-version",
     "proxmox-dns-api",
+    "proxmox-fixed-string",
     "proxmox-http",
     "proxmox-http-error",
     "proxmox-human-byte",
@@ -150,6 +151,7 @@ proxmox-async = { version = "0.5.0", path = "proxmox-async" }
 proxmox-base64 = {  version = "1.0.0", path = "proxmox-base64" }
 proxmox-compression = { version = "1.0.0", path = "proxmox-compression" }
 proxmox-daemon = { version = "1.0.0", path = "proxmox-daemon" }
+proxmox-fixed-string = { version = "0.1.0", path = "proxmox-fixed-string" }
 proxmox-http = { version = "1.0.5", path = "proxmox-http" }
 proxmox-http-error = { version = "1.0.0", path = "proxmox-http-error" }
 proxmox-human-byte = { version = "1.0.0", path = "proxmox-human-byte" }

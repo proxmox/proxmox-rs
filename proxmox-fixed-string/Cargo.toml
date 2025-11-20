@@ -1,0 +1,14 @@
+[package]
+name = "proxmox-fixed-string"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+exclude.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_plain.workspace = true
