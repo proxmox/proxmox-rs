@@ -2,6 +2,7 @@ use anyhow::bail;
 use const_format::concatcp;
 use serde::{Deserialize, Serialize};
 
+use proxmox_human_byte::HumanByte;
 use proxmox_schema::api_types::{
     CERT_FINGERPRINT_SHA256_SCHEMA, DNS_LABEL_STR, IPRE_STR, SAFE_ID_FORMAT,
 };
@@ -126,6 +127,22 @@ serde_plain::derive_fromstr_from_deserialize!(ProviderQuirks);
                 type: ProviderQuirks,
             },
         },
+        "rate-in": {
+            type: HumanByte,
+            optional: true,
+        },
+        "burst-in": {
+            type: HumanByte,
+            optional: true,
+        },
+        "rate-out": {
+            type: HumanByte,
+            optional: true,
+        },
+        "burst-out": {
+            type: HumanByte,
+            optional: true,
+        },
     },
 )]
 #[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
@@ -154,6 +171,18 @@ pub struct S3ClientConfig {
     /// List of provider specific feature implementation quirks.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub provider_quirks: Option<Vec<ProviderQuirks>>,
+    /// Download rate limit.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rate_in: Option<HumanByte>,
+    /// Download burst.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub burst_in: Option<HumanByte>,
+    /// Upload rate limit.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rate_out: Option<HumanByte>,
+    /// Upload burst
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub burst_out: Option<HumanByte>,
 }
 
 impl S3ClientConfig {

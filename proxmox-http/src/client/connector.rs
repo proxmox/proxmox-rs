@@ -13,13 +13,14 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio_openssl::SslStream;
 
+use proxmox_rate_limiter::ShareableRateLimit;
 use proxmox_sys::linux::socket::set_tcp_keepalive;
 
 use crate::proxy_config::ProxyConfig;
 use crate::uri::build_authority;
 
 use super::tls::MaybeTlsStream;
-use crate::{RateLimitedStream, ShareableRateLimit};
+use crate::RateLimitedStream;
 
 type SharedRateLimit = Arc<dyn ShareableRateLimit>;
 

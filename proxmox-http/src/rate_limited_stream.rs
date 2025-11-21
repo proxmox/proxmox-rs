@@ -12,7 +12,7 @@ use tokio::time::Sleep;
 
 use std::task::{Context, Poll};
 
-use super::{RateLimiter, ShareableRateLimit};
+use proxmox_rate_limiter::{RateLimiter, ShareableRateLimit};
 
 type SharedRateLimit = Arc<dyn ShareableRateLimit>;
 

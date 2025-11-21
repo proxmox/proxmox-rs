@@ -1,0 +1,5 @@
+rust-proxmox-rate-limiter (1.0.0-1) bookworm; urgency=medium
+
+  * initial packaging
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 16 Sep 2025 11:06:23 +0200
