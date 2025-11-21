@@ -51,9 +51,9 @@ Provides:
  librust-proxmox-s3-client-1.2-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.2+api-types-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.2+default-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.3-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.3+api-types-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.3+default-dev (= ${binary:Version})
+ librust-proxmox-s3-client-1.2.4-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.2.4+api-types-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.2.4+default-dev (= ${binary:Version})
 Description: Low level REST API client for AWS S3 compatible object stores - Rust source code
  Source code for Debianized Rust crate "proxmox-s3-client"
 
@@ -97,7 +97,7 @@ Depends:
 Provides:
  librust-proxmox-s3-client-1+impl-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.2+impl-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.3+impl-dev (= ${binary:Version})
+ librust-proxmox-s3-client-1.2.4+impl-dev (= ${binary:Version})
 Description: Low level REST API client for AWS S3 compatible object stores - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-s3-client crate,
  by pulling in any additional dependencies needed by that feature.

@@ -1,3 +1,14 @@
+rust-proxmox-s3-client (1.2.4-1) stable; urgency=medium
+
+  * make storage class in list objects v2 response optional, as some providers
+    (e.g. Google cloud) do not include this field.
+
+  * fix #7008: drop unused optional object list v2 response fields.
+
+  * add shared rate-limiter via https connector.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 21 Nov 2025 19:10:01 +0100
+
 rust-proxmox-s3-client (1.2.3-1) stable; urgency=medium
 
   * fix #6906: s3-client: conditionally set Content-Length header
