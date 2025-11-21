@@ -29,6 +29,12 @@ use tower_service::Service;
 use url::form_urlencoded;
 
 use proxmox_http::Body;
+#[cfg(feature = "rate-limited-stream")]
+use proxmox_http::{RateLimiterTag, RateLimiterTags, RateLimiterTagsHandle};
+#[cfg(not(feature = "rate-limited-stream"))]
+type RateLimiterTags = ();
+#[cfg(not(feature = "rate-limited-stream"))]
+type RateLimiterTagsHandle = ();
 use proxmox_router::{
     check_api_permission, ApiHandler, ApiMethod, HttpError, Permission, RpcEnvironment,
     RpcEnvironmentType, UserInformation,
@@ -86,10 +92,26 @@ impl RestServer {
         }
     }
 
-    pub fn api_service(&self, peer: &dyn PeerAddress) -> Result<ApiService, Error> {
+    #[cfg(not(feature = "rate-limited-stream"))]
+    pub fn api_service<T>(&self, peer: &T) -> Result<ApiService, Error>
+    where
+        T: PeerAddress + ?Sized,
+    {
         Ok(ApiService {
             peer: peer.peer_addr()?,
             api_config: Arc::clone(&self.api_config),
+        })
+    }
+
+    #[cfg(feature = "rate-limited-stream")]
+    pub fn api_service<T>(&self, peer: &T) -> Result<ApiService, Error>
+    where
+        T: PeerAddress + PeerRateLimitTags + ?Sized,
+    {
+        Ok(ApiService {
+            peer: peer.peer_addr()?,
+            api_config: Arc::clone(&self.api_config),
+            rate_limit_tags: peer.rate_limiter_tag_handle(),
         })
     }
 }
@@ -185,6 +207,11 @@ pub trait PeerAddress {
     fn peer_addr(&self) -> Result<std::net::SocketAddr, Error>;
 }
 
+#[cfg(feature = "rate-limited-stream")]
+pub trait PeerRateLimitTags {
+    fn rate_limiter_tag_handle(&self) -> Option<RateLimiterTagsHandle>;
+}
+
 // tokio_openssl's SslStream requires the stream to be pinned in order to accept it, and we need to
 // accept before the peer address is requested, so let's just generally implement this for
 // Pin<Box<T>>
@@ -221,6 +248,41 @@ impl<T: PeerAddress> PeerAddress for proxmox_http::RateLimitedStream<T> {
     }
 }
 
+#[cfg(feature = "rate-limited-stream")]
+impl<T: PeerRateLimitTags> PeerRateLimitTags for Pin<Box<T>> {
+    fn rate_limiter_tag_handle(&self) -> Option<RateLimiterTagsHandle> {
+        T::rate_limiter_tag_handle(&**self)
+    }
+}
+
+#[cfg(feature = "rate-limited-stream")]
+impl<T: PeerRateLimitTags> PeerRateLimitTags for tokio_openssl::SslStream<T> {
+    fn rate_limiter_tag_handle(&self) -> Option<RateLimiterTagsHandle> {
+        self.get_ref().rate_limiter_tag_handle()
+    }
+}
+
+#[cfg(feature = "rate-limited-stream")]
+impl PeerRateLimitTags for tokio::net::TcpStream {
+    fn rate_limiter_tag_handle(&self) -> Option<RateLimiterTagsHandle> {
+        None
+    }
+}
+
+#[cfg(feature = "rate-limited-stream")]
+impl PeerRateLimitTags for tokio::net::UnixStream {
+    fn rate_limiter_tag_handle(&self) -> Option<RateLimiterTagsHandle> {
+        None
+    }
+}
+
+#[cfg(feature = "rate-limited-stream")]
+impl<T> PeerRateLimitTags for proxmox_http::RateLimitedStream<T> {
+    fn rate_limiter_tag_handle(&self) -> Option<RateLimiterTagsHandle> {
+        self.rate_limiter_tags_handle().cloned()
+    }
+}
+
 // Helper [Service] containing the peer Address
 //
 // The lower level connection [Service] implementation on
@@ -233,6 +295,8 @@ impl<T: PeerAddress> PeerAddress for proxmox_http::RateLimitedStream<T> {
 pub struct ApiService {
     pub peer: std::net::SocketAddr,
     pub api_config: Arc<ApiConfig>,
+    #[cfg(feature = "rate-limited-stream")]
+    pub rate_limit_tags: Option<RateLimiterTagsHandle>,
 }
 
 impl ApiService {
@@ -354,6 +418,10 @@ impl Service<Request<Incoming>> for ApiService {
             Some(proxied_peer) => proxied_peer,
             None => self.peer,
         };
+        #[cfg(feature = "rate-limited-stream")]
+        let rate_limit_tags = self.rate_limit_tags.clone();
+        #[cfg(not(feature = "rate-limited-stream"))]
+        let rate_limit_tags: Option<RateLimiterTagsHandle> = None;
 
         let header = self.api_config
             .auth_cookie_name
@@ -368,7 +436,15 @@ impl Service<Request<Incoming>> for ApiService {
              });
 
         async move {
-            let mut response = match Arc::clone(&config).handle_request(req, &peer).await {
+            #[cfg(feature = "rate-limited-stream")]
+            if let Some(handle) = rate_limit_tags.as_ref() {
+                handle.set_tags(Vec::new());
+            }
+
+            let mut response = match Arc::clone(&config)
+                .handle_request(req, &peer, rate_limit_tags.clone())
+                .await
+            {
                 Ok(response) => response,
                 Err(err) => {
                     let (err, code) = match err.downcast_ref::<HttpError>() {
@@ -860,6 +936,8 @@ impl ApiConfig {
         self: Arc<ApiConfig>,
         req: Request<Incoming>,
         peer: &std::net::SocketAddr,
+        #[cfg_attr(not(feature = "rate-limited-stream"), allow(unused_variables))]
+        rate_limit_tags: Option<RateLimiterTagsHandle>,
     ) -> Result<Response<Body>, Error> {
         let (parts, body) = req.into_parts();
         let method = parts.method.clone();
@@ -890,6 +968,8 @@ impl ApiConfig {
                     full_path: &path,
                     relative_path_components,
                     rpcenv,
+                    #[cfg(feature = "rate-limited-stream")]
+                    rate_limit_tags: rate_limit_tags.clone(),
                 })
                 .await;
         }
@@ -901,13 +981,27 @@ impl ApiConfig {
         if components.is_empty() {
             match self.check_auth(&parts.headers, &method).await {
                 Ok((auth_id, _user_info)) => {
-                    rpcenv.set_auth_id(Some(auth_id));
+                    rpcenv.set_auth_id(Some(auth_id.clone()));
+                    #[cfg(feature = "rate-limited-stream")]
+                    if let Some(handle) = rate_limit_tags.as_ref() {
+                        handle.set_tags(vec![RateLimiterTag::User(auth_id)]);
+                    }
                     return Ok(self.get_index(rpcenv, parts).await);
                 }
                 Err(AuthError::Generic(_)) => {
+                    #[cfg(feature = "rate-limited-stream")]
+                    if let Some(handle) = rate_limit_tags.as_ref() {
+                        handle.set_tags(Vec::new());
+                    }
                     tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
                 }
-                Err(AuthError::NoData) => {}
+                Err(AuthError::NoData) =>
+                {
+                    #[cfg(feature = "rate-limited-stream")]
+                    if let Some(handle) = rate_limit_tags.as_ref() {
+                        handle.set_tags(Vec::new());
+                    }
+                }
             }
             Ok(self.get_index(rpcenv, parts).await)
         } else {
@@ -975,6 +1069,8 @@ pub struct ApiRequestData<'a> {
     full_path: &'a str,
     relative_path_components: &'a [&'a str],
     rpcenv: RestEnvironment,
+    #[cfg(feature = "rate-limited-stream")]
+    rate_limit_tags: Option<RateLimiterTagsHandle>,
 }
 
 pub(crate) struct Formatted {
@@ -992,6 +1088,8 @@ impl Formatted {
             full_path,
             relative_path_components,
             mut rpcenv,
+            #[cfg(feature = "rate-limited-stream")]
+            rate_limit_tags,
         }: ApiRequestData<'_>,
     ) -> Result<Response<Body>, Error> {
         if relative_path_components.is_empty() {
@@ -1026,10 +1124,18 @@ impl Formatted {
         if auth_required {
             match config.check_auth(&parts.headers, &parts.method).await {
                 Ok((authid, info)) => {
+                    #[cfg(feature = "rate-limited-stream")]
+                    if let Some(handle) = rate_limit_tags.as_ref() {
+                        handle.set_tags(vec![RateLimiterTag::User(authid.clone())]);
+                    }
                     rpcenv.set_auth_id(Some(authid));
                     user_info = info;
                 }
                 Err(auth_err) => {
+                    #[cfg(feature = "rate-limited-stream")]
+                    if let Some(handle) = rate_limit_tags.as_ref() {
+                        handle.set_tags(Vec::new());
+                    }
                     let err = match auth_err {
                         AuthError::Generic(err) => err,
                         AuthError::NoData => {
@@ -1044,6 +1150,11 @@ impl Formatted {
                     tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
                     return Err(err);
                 }
+            }
+        } else {
+            #[cfg(feature = "rate-limited-stream")]
+            if let Some(handle) = rate_limit_tags.as_ref() {
+                handle.set_tags(Vec::new());
             }
         }
 
@@ -1108,6 +1219,8 @@ impl Unformatted {
             full_path,
             relative_path_components,
             mut rpcenv,
+            #[cfg(feature = "rate-limited-stream")]
+            rate_limit_tags,
         }: ApiRequestData<'_>,
     ) -> Result<Response<Body>, Error> {
         if relative_path_components.is_empty() {
@@ -1133,10 +1246,18 @@ impl Unformatted {
         if auth_required {
             match config.check_auth(&parts.headers, &parts.method).await {
                 Ok((authid, info)) => {
+                    #[cfg(feature = "rate-limited-stream")]
+                    if let Some(handle) = rate_limit_tags.as_ref() {
+                        handle.set_tags(vec![RateLimiterTag::User(authid.clone())]);
+                    }
                     rpcenv.set_auth_id(Some(authid));
                     user_info = info;
                 }
                 Err(auth_err) => {
+                    #[cfg(feature = "rate-limited-stream")]
+                    if let Some(handle) = rate_limit_tags.as_ref() {
+                        handle.set_tags(Vec::new());
+                    }
                     let err = match auth_err {
                         AuthError::Generic(err) => err,
                         AuthError::NoData => {
@@ -1153,6 +1274,10 @@ impl Unformatted {
                 }
             }
         } else {
+            #[cfg(feature = "rate-limited-stream")]
+            if let Some(handle) = rate_limit_tags.as_ref() {
+                handle.set_tags(Vec::new());
+            }
             user_info = Box::new(EmptyUserInformation {});
         }
 

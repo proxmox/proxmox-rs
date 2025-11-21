@@ -24,7 +24,7 @@ use tokio_openssl::SslStream;
 use tokio_stream::wrappers::ReceiverStream;
 
 #[cfg(feature = "rate-limited-stream")]
-use proxmox_http::{RateLimitedStream, ShareableRateLimit};
+use proxmox_http::{RateLimitedStream, RateLimiterTag, ShareableRateLimit};
 
 #[cfg(feature = "rate-limited-stream")]
 pub type SharedRateLimit = Arc<dyn ShareableRateLimit>;
@@ -165,7 +165,10 @@ type InsecureClientStreamResult = Pin<Box<InsecureClientStream>>;
 type ClientStreamResult = Pin<Box<SslStream<InsecureClientStream>>>;
 
 #[cfg(feature = "rate-limited-stream")]
-type LookupRateLimiter = dyn Fn(std::net::SocketAddr) -> (Option<SharedRateLimit>, Option<SharedRateLimit>)
+type LookupRateLimiter = dyn Fn(
+        std::net::SocketAddr,
+        &[RateLimiterTag],
+    ) -> (Option<SharedRateLimit>, Option<SharedRateLimit>)
     + Send
     + Sync
     + 'static;
@@ -369,7 +372,9 @@ impl AcceptBuilder {
 
         #[cfg(feature = "rate-limited-stream")]
         let socket = match self.lookup_rate_limiter.clone() {
-            Some(lookup) => RateLimitedStream::with_limiter_update_cb(socket, move || lookup(peer)),
+            Some(lookup) => {
+                RateLimitedStream::with_limiter_update_cb(socket, move |tags| lookup(peer, tags))
+            }
             None => RateLimitedStream::with_limiter(socket, None, None),
         };
 
