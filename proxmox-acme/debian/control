@@ -71,8 +71,8 @@ Depends:
  librust-bytes-1+default-dev,
  librust-http-body-util-0.1+default-dev,
  librust-hyper-1+default-dev,
- librust-proxmox-http-1+client-dev (>= 1.0.3-~~),
- librust-proxmox-http-1+default-dev (>= 1.0.3-~~)
+ librust-proxmox-http-1+client-dev (>= 1.0.5-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.5-~~)
 Provides:
  librust-proxmox-acme-1+async-client-dev (= ${binary:Version}),
  librust-proxmox-acme-1.0+async-client-dev (= ${binary:Version}),
