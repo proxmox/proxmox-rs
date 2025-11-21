@@ -34,7 +34,9 @@ pub use rate_limiter::{RateLimit, RateLimiter, RateLimiterVec, ShareableRateLimi
 #[cfg(feature = "rate-limited-stream")]
 mod rate_limited_stream;
 #[cfg(feature = "rate-limited-stream")]
-pub use rate_limited_stream::RateLimitedStream;
+pub use rate_limited_stream::{
+    RateLimitedStream, RateLimiterTag, RateLimiterTags, RateLimiterTagsHandle,
+};
 
 #[cfg(feature = "body")]
 mod body;
