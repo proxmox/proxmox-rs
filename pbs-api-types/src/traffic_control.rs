@@ -5,6 +5,7 @@ use proxmox_schema::{api, ApiType, Schema, StringSchema, Updater};
 
 use proxmox_schema::api_types::CIDR_SCHEMA;
 
+use crate::Userid;
 use crate::{DAILY_DURATION_FORMAT, PROXMOX_SAFE_ID_FORMAT, SINGLE_LINE_COMMENT_SCHEMA};
 
 pub const TRAFFIC_CONTROL_TIMEFRAME_SCHEMA: Schema =
@@ -125,6 +126,11 @@ pub struct ClientRateLimitConfig {
             },
             optional: true,
         },
+        users: {
+            type: Array,
+            items: { type: Userid },
+            optional: true,
+        },
     },
 )]
 #[derive(Clone, Serialize, Deserialize, PartialEq, Updater)]
@@ -146,6 +152,9 @@ pub struct TrafficControlRule {
     /// Enable the rule at specific times
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeframe: Option<Vec<String>>,
+    /// Rule applies to authenticated API requests of any of these users (overrides IP-only rules)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub users: Option<Vec<Userid>>,
 }
 
 #[api(
