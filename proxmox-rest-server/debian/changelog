@@ -1,3 +1,14 @@
+rust-proxmox-rest-server (1.0.3-1) trixie; urgency=medium
+
+  * fix #5946: worker task log: detect task status on multi-line message.
+
+  * propagate rate-limit tags from authenticated users to shared rate-limiter
+    stream.
+
+  * switch the rate limiter with newly factored out implementation.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 21 Nov 2025 19:17:53 +0100
+
 rust-proxmox-rest-server (1.0.2-1) trixie; urgency=medium
 
   * update schema to 5.0.0
