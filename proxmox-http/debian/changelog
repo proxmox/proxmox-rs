@@ -1,3 +1,11 @@
+rust-proxmox-http (1.0.5-1) trixie; urgency=medium
+
+  * track user tag updates on rate-limited streams.
+
+  * re-use factored out common rate limiter implementation.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 21 Nov 2025 18:53:43 +0100
+
 rust-proxmox-http (1.0.4-1) trixie; urgency=medium
 
   * websocket: add connection-proxy helper

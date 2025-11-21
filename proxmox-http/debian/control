@@ -35,8 +35,8 @@ Provides:
  librust-proxmox-http-1+default-dev (= ${binary:Version}),
  librust-proxmox-http-1.0-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+default-dev (= ${binary:Version})
+ librust-proxmox-http-1.0.5-dev (= ${binary:Version}),
+ librust-proxmox-http-1.0.5+default-dev (= ${binary:Version})
 Description: Proxmox HTTP library - Rust source code
  Source code for Debianized Rust crate "proxmox-http"
 
@@ -56,7 +56,7 @@ Depends:
 Provides:
  librust-proxmox-http-1+body-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+body-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+body-dev (= ${binary:Version})
+ librust-proxmox-http-1.0.5+body-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "body"
  This metapackage enables feature "body" for the Rust proxmox-http crate, by
  pulling in any additional dependencies needed by that feature.
@@ -92,7 +92,7 @@ Depends:
 Provides:
  librust-proxmox-http-1+client-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+client-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+client-dev (= ${binary:Version})
+ librust-proxmox-http-1.0.5+client-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "client"
  This metapackage enables feature "client" for the Rust proxmox-http crate, by
  pulling in any additional dependencies needed by that feature.
@@ -110,7 +110,7 @@ Depends:
 Provides:
  librust-proxmox-http-1+client-sync-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+client-sync-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+client-sync-dev (= ${binary:Version})
+ librust-proxmox-http-1.0.5+client-sync-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "client-sync"
  This metapackage enables feature "client-sync" for the Rust proxmox-http crate,
  by pulling in any additional dependencies needed by that feature.
@@ -125,7 +125,7 @@ Depends:
 Provides:
  librust-proxmox-http-1+client-trait-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+client-trait-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+client-trait-dev (= ${binary:Version})
+ librust-proxmox-http-1.0.5+client-trait-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "client-trait"
  This metapackage enables feature "client-trait" for the Rust proxmox-http
  crate, by pulling in any additional dependencies needed by that feature.
@@ -144,7 +144,7 @@ Depends:
 Provides:
  librust-proxmox-http-1+http-helpers-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+http-helpers-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+http-helpers-dev (= ${binary:Version})
+ librust-proxmox-http-1.0.5+http-helpers-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "http-helpers"
  This metapackage enables feature "http-helpers" for the Rust proxmox-http
  crate, by pulling in any additional dependencies needed by that feature.
@@ -159,7 +159,7 @@ Depends:
 Provides:
  librust-proxmox-http-1+proxmox-async-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+proxmox-async-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+proxmox-async-dev (= ${binary:Version})
+ librust-proxmox-http-1.0.5+proxmox-async-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "proxmox-async"
  This metapackage enables feature "proxmox-async" for the Rust proxmox-http
  crate, by pulling in any additional dependencies needed by that feature.
@@ -182,7 +182,7 @@ Depends:
 Provides:
  librust-proxmox-http-1+rate-limited-stream-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+rate-limited-stream-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+rate-limited-stream-dev (= ${binary:Version})
+ librust-proxmox-http-1.0.5+rate-limited-stream-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "rate-limited-stream"
  This metapackage enables feature "rate-limited-stream" for the Rust proxmox-
  http crate, by pulling in any additional dependencies needed by that feature.
@@ -208,7 +208,7 @@ Depends:
 Provides:
  librust-proxmox-http-1+websocket-dev (= ${binary:Version}),
  librust-proxmox-http-1.0+websocket-dev (= ${binary:Version}),
- librust-proxmox-http-1.0.4+websocket-dev (= ${binary:Version})
+ librust-proxmox-http-1.0.5+websocket-dev (= ${binary:Version})
 Description: Proxmox HTTP library - feature "websocket"
  This metapackage enables feature "websocket" for the Rust proxmox-http crate,
  by pulling in any additional dependencies needed by that feature.
