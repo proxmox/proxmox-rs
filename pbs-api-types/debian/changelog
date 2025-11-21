@@ -1,3 +1,9 @@
+rust-pbs-api-types (1.0.7-1) stable; urgency=medium
+
+  * ClientRateLimitConfig: allow traffic-control rules to match users
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 21 Nov 2025 19:27:18 +0100
+
 rust-pbs-api-types (1.0.6-1) stable; urgency=medium
 
   * add schema for {worker, read, verify}-threads.
