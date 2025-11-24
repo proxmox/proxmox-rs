@@ -19,7 +19,8 @@ use crate::{
     BACKUP_ID_RE, BACKUP_NS_RE, BACKUP_TIME_RE, BACKUP_TYPE_RE, DATASTORE_NOTIFY_STRING_SCHEMA,
     GC_SCHEDULE_SCHEMA, GROUP_OR_SNAPSHOT_PATH_REGEX_STR, PROXMOX_SAFE_ID_FORMAT,
     PROXMOX_SAFE_ID_REGEX_STR, PRUNE_SCHEDULE_SCHEMA, SHA256_HEX_REGEX, SINGLE_LINE_COMMENT_SCHEMA,
-    SNAPSHOT_PATH_REGEX_STR, UPID,
+    SNAPSHOT_PATH_REGEX_STR, UPID, VERIFY_JOB_READ_THREADS_SCHEMA,
+    VERIFY_JOB_VERIFY_THREADS_SCHEMA,
 };
 
 const_regex! {
@@ -262,6 +263,14 @@ pub const GC_CACHE_CAPACITY_SCHEMA: Schema =
             schema: GC_CACHE_CAPACITY_SCHEMA,
             optional: true,
         },
+        "default-verification-workers": {
+            schema: VERIFY_JOB_VERIFY_THREADS_SCHEMA,
+            optional: true,
+        },
+        "default-verification-readers": {
+            schema: VERIFY_JOB_READ_THREADS_SCHEMA,
+            optional: true,
+        },
     },
 )]
 #[derive(Serialize, Deserialize, Default)]
@@ -279,6 +288,10 @@ pub struct DatastoreTuning {
     pub gc_atime_cutoff: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gc_cache_capacity: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_verification_workers: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_verification_readers: Option<usize>,
 }
 
 pub const DATASTORE_TUNING_STRING_SCHEMA: Schema = StringSchema::new("Datastore tuning options")
