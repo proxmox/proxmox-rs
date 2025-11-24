@@ -926,7 +926,7 @@ impl BackupNamespace {
 
     /// Return an adapter which [`fmt::Display`]s as a path with `"ns/"` prefixes in front of every
     /// component.
-    pub fn display_as_path(&self) -> BackupNamespacePath {
+    pub fn display_as_path(&self) -> BackupNamespacePath<'_> {
         BackupNamespacePath(self)
     }
 
