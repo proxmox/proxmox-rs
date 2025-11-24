@@ -1,3 +1,9 @@
+rust-pbs-api-types (1.0.8-1) UNRELEASED; urgency=medium
+
+  * datastore: add default-verification-{workers, readers} to tuning options.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 24 Nov 2025 14:02:20 +0100
+
 rust-pbs-api-types (1.0.7-1) stable; urgency=medium
 
   * ClientRateLimitConfig: allow traffic-control rules to match users
