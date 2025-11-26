@@ -126,6 +126,7 @@ Schema2Rust::generate_enum('IsRunning', {
 # We have a textual description of the default value in there, just pick the cgroupv2 one:
 Schema2Rust::register_api_override('UpdateQemuConfig', '/properties/cpuunits/default', 1024);
 Schema2Rust::register_api_override('UpdateQemuConfigAsync', '/properties/cpuunits/default', 1024);
+Schema2Rust::register_api_override('UpdateLxcConfig', '/properties/cpuunits/default', 100);
 
 Schema2Rust::register_api_override('QemuConfig', '/properties/cpuunits/default', 1024);
 Schema2Rust::register_api_override('LxcConfig', '/properties/cpuunits/default', 1024);
@@ -141,6 +142,7 @@ Schema2Rust::register_api_override('RemoteMigrateLxc', '/properties/bwlimit/defa
 
 # We have a textual description of the default value in there, simply set to undef
 Schema2Rust::register_api_override('QemuMoveDisk', '/properties/bwlimit/default', undef);
+Schema2Rust::register_api_override('LxcMoveVolume', '/properties/bwlimit/default', undef);
 
 # Token api is missing some descriptions and has textual defaults for integers
 Schema2Rust::register_api_extensions('CreateTokenResponseInfo', {
@@ -256,6 +258,10 @@ api(POST => '/nodes/{node}/qemu/{vmid}/remote_migrate', 'remote_migrate_qemu',  
 api(GET => '/nodes/{node}/lxc',                         'list_lxc',            'param-name' => 'FixmeListLxc',      'return-name' => 'LxcEntry');
 api(GET => '/nodes/{node}/lxc/{vmid}/config',           'lxc_get_config',      'param-name' => 'FixmeLxcGetConfig', 'return-name' => 'LxcConfig');
 Schema2Rust::derive('LxcConfigNet' => 'Clone', 'PartialEq');
+api(PUT => '/nodes/{node}/lxc/{vmid}/config', 'lxc_update_config', 'param-name' => 'UpdateLxcConfig');
+api(GET => '/nodes/{node}/lxc/{vmid}/pending', 'lxc_get_pending', 'param-name' => 'FixmeLxcGetPending', 'output-type' => 'Vec<PendingConfigValue>');
+api(POST => '/nodes/{node}/lxc/{vmid}/move_volume', 'lxc_move_volume', 'param-name' => 'LxcMoveVolume', 'output-type' => 'PveUpid');
+api(PUT => '/nodes/{node}/lxc/{vmid}/resize', 'lxc_resize', 'param-name' => 'LxcResize', 'output-type' => 'PveUpid');
 api(GET => '/nodes/{node}/lxc/{vmid}/status/current',   'lxc_get_status',      'return-name' => 'LxcStatus');
 api(POST => '/nodes/{node}/lxc/{vmid}/status/start',    'start_lxc_async',     'output-type' => 'PveUpid', 'param-name' => 'StartLxc');
 api(POST => '/nodes/{node}/lxc/{vmid}/status/stop',     'stop_lxc_async',      'output-type' => 'PveUpid', 'param-name' => 'StopLxc');
