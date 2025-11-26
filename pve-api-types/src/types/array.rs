@@ -89,12 +89,12 @@ impl<T, const MAX: usize> ArrayMap<T, { MAX }> {
     }
 
     /// Iterator through `(index, &value)` pairs.
-    pub fn iter(&self) -> btree_map::Iter<usize, T> {
+    pub fn iter(&self) -> btree_map::Iter<'_, usize, T> {
         self.inner.iter()
     }
 
     /// Iterator through `(index, &mut value)` pairs.
-    pub fn iter_mut(&mut self) -> btree_map::IterMut<usize, T> {
+    pub fn iter_mut(&mut self) -> btree_map::IterMut<'_, usize, T> {
         self.inner.iter_mut()
     }
 
