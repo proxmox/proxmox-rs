@@ -24,6 +24,7 @@
 /// - /access/users/{userid}/tfa
 /// - /access/users/{userid}/token
 /// - /access/users/{userid}/unlock-tfa
+/// - /access/vncticket
 /// - /cluster
 /// - /cluster/acme
 /// - /cluster/acme/account
@@ -39,6 +40,12 @@
 /// - /cluster/backup-info/not-backed-up
 /// - /cluster/backup/{id}
 /// - /cluster/backup/{id}/included_volumes
+/// - /cluster/bulk-action
+/// - /cluster/bulk-action/guest
+/// - /cluster/bulk-action/guest/migrate
+/// - /cluster/bulk-action/guest/shutdown
+/// - /cluster/bulk-action/guest/start
+/// - /cluster/bulk-action/guest/suspend
 /// - /cluster/ceph
 /// - /cluster/ceph/flags
 /// - /cluster/ceph/flags/{flag}
@@ -142,6 +149,7 @@
 /// - /nodes/{node}/apt/versions
 /// - /nodes/{node}/capabilities
 /// - /nodes/{node}/capabilities/qemu
+/// - /nodes/{node}/capabilities/qemu/cpu-flags
 /// - /nodes/{node}/capabilities/qemu/machines
 /// - /nodes/{node}/capabilities/qemu/migration
 /// - /nodes/{node}/ceph
@@ -308,6 +316,7 @@
 /// - /nodes/{node}/qemu/{vmid}/unlink
 /// - /nodes/{node}/qemu/{vmid}/vncproxy
 /// - /nodes/{node}/qemu/{vmid}/vncwebsocket
+/// - /nodes/{node}/query-oci-repo-tags
 /// - /nodes/{node}/query-url-metadata
 /// - /nodes/{node}/replication
 /// - /nodes/{node}/replication/{id}
@@ -326,9 +335,19 @@
 /// - /nodes/{node}/scan/pbs
 /// - /nodes/{node}/scan/zfs
 /// - /nodes/{node}/sdn
+/// - /nodes/{node}/sdn/fabrics
+/// - /nodes/{node}/sdn/fabrics/{fabric}
+/// - /nodes/{node}/sdn/fabrics/{fabric}/interfaces
+/// - /nodes/{node}/sdn/fabrics/{fabric}/neighbors
+/// - /nodes/{node}/sdn/fabrics/{fabric}/routes
+/// - /nodes/{node}/sdn/vnets
+/// - /nodes/{node}/sdn/vnets/{vnet}
+/// - /nodes/{node}/sdn/vnets/{vnet}/mac-vrf
 /// - /nodes/{node}/sdn/zones
 /// - /nodes/{node}/sdn/zones/{zone}
+/// - /nodes/{node}/sdn/zones/{zone}/bridges
 /// - /nodes/{node}/sdn/zones/{zone}/content
+/// - /nodes/{node}/sdn/zones/{zone}/ip-vrf
 /// - /nodes/{node}/services
 /// - /nodes/{node}/services/{service}
 /// - /nodes/{node}/services/{service}/reload
@@ -347,6 +366,7 @@
 /// - /nodes/{node}/storage/{storage}/file-restore/download
 /// - /nodes/{node}/storage/{storage}/file-restore/list
 /// - /nodes/{node}/storage/{storage}/import-metadata
+/// - /nodes/{node}/storage/{storage}/oci-registry-pull
 /// - /nodes/{node}/storage/{storage}/prunebackups
 /// - /nodes/{node}/storage/{storage}/rrd
 /// - /nodes/{node}/storage/{storage}/rrddata

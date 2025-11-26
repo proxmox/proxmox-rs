@@ -101,6 +101,9 @@ pub enum AptUpdateInfoArch {
     #[serde(rename = "s390x")]
     /// s390x.
     S390x,
+    #[serde(rename = "all")]
+    /// all.
+    All,
     /// Unknown variants for forward compatibility.
     #[serde(untagged)]
     UnknownEnumValue(FixedString),
@@ -2166,6 +2169,15 @@ fn test_regex_compilation_8() {
         digest: {
             type: String,
         },
+        entrypoint: {
+            default: "/sbin/init",
+            optional: true,
+            type: String,
+        },
+        env: {
+            optional: true,
+            type: String,
+        },
         features: {
             format: &ApiStringFormat::PropertyString(&LxcConfigFeatures::API_SCHEMA),
             optional: true,
@@ -2329,6 +2341,16 @@ pub struct LxcConfig {
     /// SHA1 digest of configuration file. This can be used to prevent
     /// concurrent modifications.
     pub digest: String,
+
+    /// Command to run as init, optionally with arguments; may start with an
+    /// absolute path, relative path, or a binary in $PATH.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entrypoint: Option<String>,
+
+    /// The container runtime environment as NUL-separated list. Replaces any
+    /// lxc.environment.runtime entries in the config.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub env: Option<String>,
 
     /// Allow containers access to advanced features.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2662,7 +2684,7 @@ pub struct LxcConfigFeatures {
 
     /// Allow nesting. Best used with unprivileged containers with additional id
     /// mapping. Note that this will expose procfs and sysfs contents of the
-    /// host to the guest.
+    /// host to the guest. This is also required by systemd to isolate services.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub nesting: Option<bool>,
@@ -2848,6 +2870,10 @@ fn test_regex_compilation_10() {
             optional: true,
             type: String,
         },
+        "host-managed": {
+            default: false,
+            optional: true,
+        },
         hwaddr: {
             format: &ApiStringFormat::Pattern(&LXC_CONFIG_NET_HWADDR_RE),
             optional: true,
@@ -2911,6 +2937,12 @@ pub struct LxcConfigNet {
     /// Default gateway for IPv6 traffic.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub gw6: Option<String>,
+
+    /// Whether this interface's IP configuration should be managed by the host.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "host-managed")]
+    pub host_managed: Option<bool>,
 
     /// The interface MAC address. This is dynamically allocated by default, but
     /// you can set that statically if needed, for example to always have the
@@ -6868,17 +6900,17 @@ serde_plain::derive_fromstr_from_deserialize!(NodeShellTermproxyCmd);
 /// Object.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct NodeShellTicket {
-    /// port used to bind termproxy to
+    /// port used to bind termproxy to.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub port: i64,
 
-    /// VNC ticket used to verifiy websocket connection
+    /// VNC ticket used to verify websocket connection.
     pub ticket: String,
 
-    /// UPID for termproxy worker task
+    /// UPID for termproxy worker task.
     pub upid: String,
 
-    /// user/token that generated the VNC ticket in `ticket`
+    /// user/token that generated the VNC ticket in `ticket`.
     pub user: String,
 }
 
@@ -7371,6 +7403,66 @@ serde_plain::derive_display_from_serialize!(PveQemuSevFmtType);
 serde_plain::derive_fromstr_from_deserialize!(PveQemuSevFmtType);
 
 #[api(
+    default_key: "type",
+    properties: {
+        attestation: {
+            default: true,
+        },
+        type: {
+            type: PveQemuTdxFmtType,
+        },
+        "vsock-cid": {
+            default: 2,
+            minimum: 2,
+            optional: true,
+            type: Integer,
+        },
+        "vsock-port": {
+            default: 4050,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct PveQemuTdxFmt {
+    /// Enable TDX attestation by including quote-generation-socket
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub attestation: bool,
+
+    #[serde(rename = "type")]
+    pub ty: PveQemuTdxFmtType,
+
+    /// CID for vsock of Quote Generation Service
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vsock-cid")]
+    pub vsock_cid: Option<u64>,
+
+    /// Port for vsock of Quote Generation Service
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "vsock-port")]
+    pub vsock_port: Option<u64>,
+}
+
+#[api]
+/// Enable TDX
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum PveQemuTdxFmtType {
+    #[serde(rename = "tdx")]
+    /// tdx.
+    Tdx,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(PveQemuTdxFmtType);
+serde_plain::derive_fromstr_from_deserialize!(PveQemuTdxFmtType);
+
+#[api(
     default_key: "legacy",
     properties: {
         legacy: {
@@ -7476,6 +7568,10 @@ fn test_regex_compilation_16() {
             optional: true,
             type: String,
         },
+        driver: {
+            optional: true,
+            type: PveQmHostpciDriver,
+        },
         host: {
             optional: true,
             type: String,
@@ -7530,6 +7626,9 @@ pub struct PveQmHostpci {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "device-id")]
     pub device_id: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub driver: Option<PveQmHostpciDriver>,
 
     /// Host PCI device pass through. The PCI ID of a host's PCI device or a
     /// list of PCI virtual functions of the host. HOSTPCIID syntax is:
@@ -7597,6 +7696,26 @@ pub struct PveQmHostpci {
     #[serde(rename = "x-vga")]
     pub x_vga: Option<bool>,
 }
+
+#[api]
+/// If set to 'keep' the device will neither be reset nor bound to the
+/// 'vfio-pci' driver. Useful for devices that already have the correct driver
+/// loaded.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum PveQmHostpciDriver {
+    #[serde(rename = "vfio")]
+    #[default]
+    /// vfio.
+    Vfio,
+    #[serde(rename = "keep")]
+    /// keep.
+    Keep,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(PveQmHostpciDriver);
+serde_plain::derive_fromstr_from_deserialize!(PveQmHostpciDriver);
 
 const_regex! {
 
@@ -8393,10 +8512,12 @@ pub struct PveVmCpuConf {
     pub cputype: Option<String>,
 
     /// List of additional CPU flags separated by ';'. Use '+FLAG' to enable,
-    /// '-FLAG' to disable a flag. Custom CPU models can specify any flag
-    /// supported by QEMU/KVM, VM-specific flags must be from the following set
-    /// for security reasons: pcid, spec-ctrl, ibpb, ssbd, virt-ssbd, amd-ssbd,
-    /// amd-no-ssb, pdpe1gb, md-clear, hv-tlbflush, hv-evmcs, aes
+    /// '-FLAG' to disable a flag. There is a special 'nested-virt' shorthand
+    /// which controls nested virtualization for the current CPU ('svm' for AMD
+    /// and 'vmx' for Intel). Custom CPU models can specify any flag supported
+    /// by QEMU/KVM, VM-specific flags must be from the following set for
+    /// security reasons: nested-virt, md-clear, pcid, spec-ctrl, ssbd, ibpb,
+    /// virt-ssbd, amd-ssbd, amd-no-ssb, pdpe1gb, hv-tlbflush, hv-evmcs, aes
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub flags: Option<String>,
 
@@ -8697,6 +8818,10 @@ fn test_regex_compilation_18() {
             optional: true,
             type: String,
         },
+        "allow-ksm": {
+            default: true,
+            optional: true,
+        },
         "amd-sev": {
             format: &ApiStringFormat::PropertyString(&PveQemuSevFmt::API_SCHEMA),
             optional: true,
@@ -8825,6 +8950,11 @@ fn test_regex_compilation_18() {
         },
         ide: {
             type: QemuConfigIdeArray,
+        },
+        "intel-tdx": {
+            format: &ApiStringFormat::PropertyString(&PveQemuTdxFmt::API_SCHEMA),
+            optional: true,
+            type: String,
         },
         ipconfig: {
             type: QemuConfigIpconfigArray,
@@ -9096,6 +9226,13 @@ pub struct QemuConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub agent: Option<String>,
 
+    /// Allow memory pages of this guest to be merged via KSM (Kernel Samepage
+    /// Merging).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "allow-ksm")]
+    pub allow_ksm: Option<bool>,
+
     /// Secure Encrypted Virtualization (SEV) features by AMD CPUs
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "amd-sev")]
@@ -9224,6 +9361,11 @@ pub struct QemuConfig {
     /// Use volume as IDE hard disk or CD-ROM (n is 0 to 3).
     #[serde(flatten)]
     pub ide: QemuConfigIdeArray,
+
+    /// Trusted Domain Extension (TDX) features by Intel CPUs
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "intel-tdx")]
+    pub intel_tdx: Option<String>,
 
     /// cloud-init: Specify IP addresses and gateways for the corresponding
     /// interface.
@@ -9856,6 +9998,10 @@ fn test_regex_compilation_19() {
             optional: true,
             type: PveQmIdeFormat,
         },
+        "ms-cert": {
+            optional: true,
+            type: QemuConfigEfidisk0MsCert,
+        },
         "pre-enrolled-keys": {
             default: false,
             optional: true,
@@ -9878,6 +10024,10 @@ pub struct QemuConfigEfidisk0 {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<PveQmIdeFormat>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ms-cert")]
+    pub ms_cert: Option<QemuConfigEfidisk0MsCert>,
 
     /// Use am EFI vars template with distribution-specific and Microsoft
     /// Standard keys enrolled, if used with 'efitype=4m'. Note that this will
@@ -9914,7 +10064,30 @@ serde_plain::derive_display_from_serialize!(QemuConfigEfidisk0Efitype);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigEfidisk0Efitype);
 
 #[api]
-/// Enable/disable hugepages memory.
+/// Informational marker indicating the version of the latest Microsof UEFI
+/// certificate that has been enrolled by Proxmox VE.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum QemuConfigEfidisk0MsCert {
+    #[serde(rename = "2011")]
+    #[default]
+    /// 2011.
+    CA2011,
+    #[serde(rename = "2023")]
+    /// 2023.
+    CA2023,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(QemuConfigEfidisk0MsCert);
+serde_plain::derive_fromstr_from_deserialize!(QemuConfigEfidisk0MsCert);
+
+#[api]
+/// Enables hugepages memory.
+///
+/// Sets the size of hugepages in MiB. If the value is set to 'any' then 1 GiB
+/// hugepages will be used if possible, otherwise the size will fall back to 2
+/// MiB.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigHugepages {
     #[serde(rename = "any")]
@@ -11328,6 +11501,10 @@ fn test_regex_compilation_23() {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
             type: String,
         },
+        format: {
+            optional: true,
+            type: QemuConfigTpmstate0Format,
+        },
         size: {
             format: &ApiStringFormat::Pattern(&QEMU_CONFIG_TPMSTATE0_SIZE_RE),
             optional: true,
@@ -11345,6 +11522,9 @@ pub struct QemuConfigTpmstate0 {
     /// The drive's backing volume.
     pub file: String,
 
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<QemuConfigTpmstate0Format>,
+
     /// Disk size. This is purely informational and has no effect.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub size: Option<String>,
@@ -11352,6 +11532,26 @@ pub struct QemuConfigTpmstate0 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<QemuConfigTpmstate0Version>,
 }
+
+#[api]
+/// Format of the image.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum QemuConfigTpmstate0Format {
+    #[serde(rename = "raw")]
+    /// raw.
+    Raw,
+    #[serde(rename = "qcow2")]
+    /// qcow2.
+    Qcow2,
+    #[serde(rename = "vmdk")]
+    /// vmdk.
+    Vmdk,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(QemuConfigTpmstate0Format);
+serde_plain::derive_fromstr_from_deserialize!(QemuConfigTpmstate0Format);
 
 #[api]
 /// The TPM interface version. v2.0 is newer and should be preferred. Note that
@@ -12216,7 +12416,7 @@ fn test_regex_compilation_27() {
         },
         format: {
             optional: true,
-            type: QemuMoveDiskFormat,
+            type: QemuConfigTpmstate0Format,
         },
         storage: {
             format: &ApiStringFormat::Pattern(&QEMU_MOVE_DISK_STORAGE_RE),
@@ -12262,7 +12462,7 @@ pub struct QemuMoveDisk {
     pub disk: QemuMoveDiskDisk,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub format: Option<QemuMoveDiskFormat>,
+    pub format: Option<QemuConfigTpmstate0Format>,
 
     /// Target storage.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -13241,26 +13441,6 @@ pub enum QemuMoveDiskDisk {
 }
 serde_plain::derive_display_from_serialize!(QemuMoveDiskDisk);
 serde_plain::derive_fromstr_from_deserialize!(QemuMoveDiskDisk);
-
-#[api]
-/// Target Format.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum QemuMoveDiskFormat {
-    #[serde(rename = "raw")]
-    /// raw.
-    Raw,
-    #[serde(rename = "qcow2")]
-    /// qcow2.
-    Qcow2,
-    #[serde(rename = "vmdk")]
-    /// vmdk.
-    Vmdk,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(QemuMoveDiskFormat);
-serde_plain::derive_fromstr_from_deserialize!(QemuMoveDiskFormat);
 
 #[api(
     properties: {
@@ -15987,6 +16167,15 @@ fn test_regex_compilation_37() {
             optional: true,
             type: String,
         },
+        entrypoint: {
+            default: "/sbin/init",
+            optional: true,
+            type: String,
+        },
+        env: {
+            optional: true,
+            type: String,
+        },
         features: {
             format: &ApiStringFormat::PropertyString(&LxcConfigFeatures::API_SCHEMA),
             optional: true,
@@ -16165,6 +16354,16 @@ pub struct UpdateLxcConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub digest: Option<String>,
 
+    /// Command to run as init, optionally with arguments; may start with an
+    /// absolute path, relative path, or a binary in $PATH.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entrypoint: Option<String>,
+
+    /// The container runtime environment as NUL-separated list. Replaces any
+    /// lxc.environment.runtime entries in the config.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub env: Option<String>,
+
     /// Allow containers access to advanced features.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub features: Option<String>,
@@ -16313,6 +16512,10 @@ fn test_regex_compilation_38() {
             optional: true,
             type: String,
         },
+        "allow-ksm": {
+            default: true,
+            optional: true,
+        },
         "amd-sev": {
             format: &ApiStringFormat::PropertyString(&PveQemuSevFmt::API_SCHEMA),
             optional: true,
@@ -16456,6 +16659,11 @@ fn test_regex_compilation_38() {
         },
         ide: {
             type: UpdateQemuConfigIdeArray,
+        },
+        "intel-tdx": {
+            format: &ApiStringFormat::PropertyString(&PveQemuTdxFmt::API_SCHEMA),
+            optional: true,
+            type: String,
         },
         ipconfig: {
             type: QemuConfigIpconfigArray,
@@ -16714,6 +16922,13 @@ pub struct UpdateQemuConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub agent: Option<String>,
 
+    /// Allow memory pages of this guest to be merged via KSM (Kernel Samepage
+    /// Merging).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "allow-ksm")]
+    pub allow_ksm: Option<bool>,
+
     /// Secure Encrypted Virtualization (SEV) features by AMD CPUs
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "amd-sev")]
@@ -16861,6 +17076,11 @@ pub struct UpdateQemuConfig {
     /// and the 'import-from' parameter to import from an existing volume.
     #[serde(flatten)]
     pub ide: UpdateQemuConfigIdeArray,
+
+    /// Trusted Domain Extension (TDX) features by Intel CPUs
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "intel-tdx")]
+    pub intel_tdx: Option<String>,
 
     /// cloud-init: Specify IP addresses and gateways for the corresponding
     /// interface.
@@ -17205,6 +17425,10 @@ fn test_regex_compilation_39() {
             optional: true,
             type: String,
         },
+        "allow-ksm": {
+            default: true,
+            optional: true,
+        },
         "amd-sev": {
             format: &ApiStringFormat::PropertyString(&PveQemuSevFmt::API_SCHEMA),
             optional: true,
@@ -17357,6 +17581,11 @@ fn test_regex_compilation_39() {
         },
         "import-working-storage": {
             format: &ApiStringFormat::Pattern(&UPDATE_QEMU_CONFIG_ASYNC_IMPORT_WORKING_STORAGE_RE),
+            optional: true,
+            type: String,
+        },
+        "intel-tdx": {
+            format: &ApiStringFormat::PropertyString(&PveQemuTdxFmt::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -17617,6 +17846,13 @@ pub struct UpdateQemuConfigAsync {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub agent: Option<String>,
 
+    /// Allow memory pages of this guest to be merged via KSM (Kernel Samepage
+    /// Merging).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "allow-ksm")]
+    pub allow_ksm: Option<bool>,
+
     /// Secure Encrypted Virtualization (SEV) features by AMD CPUs
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "amd-sev")]
@@ -17777,6 +18013,11 @@ pub struct UpdateQemuConfigAsync {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "import-working-storage")]
     pub import_working_storage: Option<String>,
+
+    /// Trusted Domain Extension (TDX) features by Intel CPUs
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "intel-tdx")]
+    pub intel_tdx: Option<String>,
 
     /// cloud-init: Specify IP addresses and gateways for the corresponding
     /// interface.
@@ -18071,6 +18312,10 @@ fn test_regex_compilation_40() {
             optional: true,
             type: String,
         },
+        "ms-cert": {
+            optional: true,
+            type: QemuConfigEfidisk0MsCert,
+        },
         "pre-enrolled-keys": {
             default: false,
             optional: true,
@@ -18100,6 +18345,10 @@ pub struct UpdateQemuConfigEfidisk0 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "import-from")]
     pub import_from: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ms-cert")]
+    pub ms_cert: Option<QemuConfigEfidisk0MsCert>,
 
     /// Use am EFI vars template with distribution-specific and Microsoft
     /// Standard keys enrolled, if used with 'efitype=4m'. Note that this will
@@ -19236,6 +19485,10 @@ fn test_regex_compilation_44() {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_qm_path),
             type: String,
         },
+        format: {
+            optional: true,
+            type: QemuConfigTpmstate0Format,
+        },
         "import-from": {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_volume_id_or_absolute_path),
             optional: true,
@@ -19257,6 +19510,9 @@ fn test_regex_compilation_44() {
 pub struct UpdateQemuConfigTpmstate0 {
     /// The drive's backing volume.
     pub file: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub format: Option<QemuConfigTpmstate0Format>,
 
     /// Create a new disk, importing from this source (volume ID or absolute
     /// path). When an absolute path is specified, it's up to you to ensure that

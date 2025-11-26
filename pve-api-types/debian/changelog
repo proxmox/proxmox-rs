@@ -1,3 +1,14 @@
+rust-pve-api-types (8.1.1-1) trixie; urgency=medium
+
+  * derive Clone and PartialEq for LxcConfigNet.
+  * rename QemuPendingConfigValue to PendingConfigValue as it can be used in a
+    generic manner.
+  * prepare API wrappers and types for LXC config, pending and move volume.
+  * update API schema JSON file to current PVE 9.1 development state and
+    refresh the generated types.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 26 Nov 2025 21:49:06 +0100
+
 rust-pve-api-types (8.1.0-1) trixie; urgency=medium
 
   * add FixedString type as a custom, immutable, string type, that main

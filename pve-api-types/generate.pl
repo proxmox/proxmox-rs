@@ -89,6 +89,8 @@ Schema2Rust::register_format('pve-sdn-vnet-id' => { code => 'verifiers::verify_s
 Schema2Rust::register_enum_variant('PveVmCpuConfReportedModel::486' => 'I486');
 Schema2Rust::register_enum_variant('QemuConfigEfidisk0Efitype::2m' => 'Mb2');
 Schema2Rust::register_enum_variant('QemuConfigEfidisk0Efitype::4m' => 'Mb4');
+Schema2Rust::register_enum_variant('QemuConfigEfidisk0MsCert::2011' => 'CA2011');
+Schema2Rust::register_enum_variant('QemuConfigEfidisk0MsCert::2023' => 'CA2023');
 Schema2Rust::register_enum_variant('QemuConfigHugepages::2' => 'Mb2');
 Schema2Rust::register_enum_variant('QemuConfigHugepages::1024' => 'Mb1024');
 Schema2Rust::register_enum_variant('PveQmRngSource::/dev/urandom', => 'DevUrandom');
