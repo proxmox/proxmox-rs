@@ -17,7 +17,7 @@ $(OUTPUT_DIR)/code.rs $(OUTPUT_DIR)/types.rs &: generate.pl $(GENERATOR_SOURCES)
 refresh:
 	rm -f $(OUTPUT_DIR)/code.rs
 	rm -f $(OUTPUT_DIR)/types.rs
-	$(MAKE) $(OUTPUT_DIR)/code.rs
+	$(MAKE) $(OUTPUT_DIR)/code.rs $(OUTPUT_DIR)/types.rs
 
 .PHONY: clean
 clean:
