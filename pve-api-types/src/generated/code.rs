@@ -622,7 +622,7 @@ pub trait PveClient {
         &self,
         node: &str,
         vmid: u32,
-    ) -> Result<Vec<QemuPendingConfigValue>, Error> {
+    ) -> Result<Vec<PendingConfigValue>, Error> {
         Err(Error::Other("qemu_get_pending not implemented"))
     }
 
@@ -1169,7 +1169,7 @@ where
         &self,
         node: &str,
         vmid: u32,
-    ) -> Result<Vec<QemuPendingConfigValue>, Error> {
+    ) -> Result<Vec<PendingConfigValue>, Error> {
         let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/pending");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }

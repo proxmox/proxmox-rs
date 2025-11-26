@@ -224,8 +224,8 @@ impl TaskStatus {
 #[derive(Deserialize, Serialize, PartialEq, Debug, Clone)]
 /// Get the virtual machine configuration with both current and pending values.
 ///
-/// (`GET /api2/json/nodes/{node}/qemu/{vmid}/pending) -> Vec<QemuPendingConfigValue>`
-pub struct QemuPendingConfigValue {
+/// (`GET /api2/json/nodes/{node}/qemu/{vmid}/pending) -> Vec<PendingConfigValue>`
+pub struct PendingConfigValue {
     /// Configuration option name.
     pub key: String,
     /// Indicates a pending delete request if present and not 0. The value 2 indicates a force-delete request.
