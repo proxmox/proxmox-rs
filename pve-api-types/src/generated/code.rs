@@ -224,11 +224,8 @@
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/lxc/{vmid}/interfaces
-/// - /nodes/{node}/lxc/{vmid}/move_volume
 /// - /nodes/{node}/lxc/{vmid}/mtunnel
 /// - /nodes/{node}/lxc/{vmid}/mtunnelwebsocket
-/// - /nodes/{node}/lxc/{vmid}/pending
-/// - /nodes/{node}/lxc/{vmid}/resize
 /// - /nodes/{node}/lxc/{vmid}/rrd
 /// - /nodes/{node}/lxc/{vmid}/rrddata
 /// - /nodes/{node}/lxc/{vmid}/snapshot
@@ -559,9 +556,44 @@ pub trait PveClient {
         Err(Error::Other("lxc_get_config not implemented"))
     }
 
+    /// Get container configuration, including pending changes.
+    async fn lxc_get_pending(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<PendingConfigValue>, Error> {
+        Err(Error::Other("lxc_get_pending not implemented"))
+    }
+
     /// Get virtual machine status.
     async fn lxc_get_status(&self, node: &str, vmid: u32) -> Result<LxcStatus, Error> {
         Err(Error::Other("lxc_get_status not implemented"))
+    }
+
+    /// Move a rootfs-/mp-volume to a different storage or to a different
+    /// container.
+    async fn lxc_move_volume(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: LxcMoveVolume,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("lxc_move_volume not implemented"))
+    }
+
+    /// Resize a container mount point.
+    async fn lxc_resize(&self, node: &str, vmid: u32, params: LxcResize) -> Result<PveUpid, Error> {
+        Err(Error::Other("lxc_resize not implemented"))
+    }
+
+    /// Set container options.
+    async fn lxc_update_config(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateLxcConfig,
+    ) -> Result<(), Error> {
+        Err(Error::Other("lxc_update_config not implemented"))
     }
 
     /// Migrate the container to another node. Creates a new migration task.
@@ -1096,10 +1128,49 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// Get container configuration, including pending changes.
+    async fn lxc_get_pending(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<PendingConfigValue>, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/pending");
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Get virtual machine status.
     async fn lxc_get_status(&self, node: &str, vmid: u32) -> Result<LxcStatus, Error> {
         let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/current");
         Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Move a rootfs-/mp-volume to a different storage or to a different
+    /// container.
+    async fn lxc_move_volume(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: LxcMoveVolume,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/move_volume");
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Resize a container mount point.
+    async fn lxc_resize(&self, node: &str, vmid: u32, params: LxcResize) -> Result<PveUpid, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/resize");
+        Ok(self.0.put(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Set container options.
+    async fn lxc_update_config(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateLxcConfig,
+    ) -> Result<(), Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/config");
+        self.0.put(url, &params).await?.nodata()
     }
 
     /// Migrate the container to another node. Creates a new migration task.

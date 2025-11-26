@@ -2893,7 +2893,7 @@ fn test_regex_compilation_10() {
     },
 )]
 /// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct LxcConfigNet {
     /// Bridge to attach the network device to.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3314,6 +3314,2464 @@ pub struct LxcEntry {
     pub vmid: u32,
 }
 
+const_regex! {
+
+LXC_MOVE_VOLUME_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_12() {
+    use regex::Regex;
+    let _: &Regex = &LXC_MOVE_VOLUME_STORAGE_RE;
+}
+#[api(
+    properties: {
+        bwlimit: {
+            minimum: 0.0,
+            optional: true,
+        },
+        delete: {
+            default: false,
+            optional: true,
+        },
+        digest: {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        storage: {
+            format: &ApiStringFormat::Pattern(&LXC_MOVE_VOLUME_STORAGE_RE),
+            optional: true,
+            type: String,
+        },
+        "target-digest": {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        "target-vmid": {
+            maximum: 999999999,
+            minimum: 100,
+            optional: true,
+            type: Integer,
+        },
+        "target-volume": {
+            optional: true,
+            type: LxcMoveVolumeTargetVolume,
+        },
+        volume: {
+            type: LxcMoveVolumeTargetVolume,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct LxcMoveVolume {
+    /// Override I/O bandwidth limit (in KiB/s).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bwlimit: Option<f64>,
+
+    /// Delete the original volume after successful copy. By default the
+    /// original is kept as an unused volume entry.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<bool>,
+
+    /// Prevent changes if current configuration file has different SHA1 " .
+    /// 		    "digest. This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Target Storage.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub storage: Option<String>,
+
+    /// Prevent changes if current configuration file of the target " .
+    /// 		    "container has a different SHA1 digest. This can be used to
+    /// prevent " . 		    "concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-digest")]
+    pub target_digest: Option<String>,
+
+    /// The (unique) ID of the VM.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-vmid")]
+    pub target_vmid: Option<u32>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-volume")]
+    pub target_volume: Option<LxcMoveVolumeTargetVolume>,
+
+    pub volume: LxcMoveVolumeTargetVolume,
+}
+
+#[api]
+/// The config key the volume will be moved to. Default is the source volume
+/// key.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum LxcMoveVolumeTargetVolume {
+    #[serde(rename = "rootfs")]
+    /// rootfs.
+    Rootfs,
+    #[serde(rename = "mp0")]
+    /// mp0.
+    Mp0,
+    #[serde(rename = "mp1")]
+    /// mp1.
+    Mp1,
+    #[serde(rename = "mp2")]
+    /// mp2.
+    Mp2,
+    #[serde(rename = "mp3")]
+    /// mp3.
+    Mp3,
+    #[serde(rename = "mp4")]
+    /// mp4.
+    Mp4,
+    #[serde(rename = "mp5")]
+    /// mp5.
+    Mp5,
+    #[serde(rename = "mp6")]
+    /// mp6.
+    Mp6,
+    #[serde(rename = "mp7")]
+    /// mp7.
+    Mp7,
+    #[serde(rename = "mp8")]
+    /// mp8.
+    Mp8,
+    #[serde(rename = "mp9")]
+    /// mp9.
+    Mp9,
+    #[serde(rename = "mp10")]
+    /// mp10.
+    Mp10,
+    #[serde(rename = "mp11")]
+    /// mp11.
+    Mp11,
+    #[serde(rename = "mp12")]
+    /// mp12.
+    Mp12,
+    #[serde(rename = "mp13")]
+    /// mp13.
+    Mp13,
+    #[serde(rename = "mp14")]
+    /// mp14.
+    Mp14,
+    #[serde(rename = "mp15")]
+    /// mp15.
+    Mp15,
+    #[serde(rename = "mp16")]
+    /// mp16.
+    Mp16,
+    #[serde(rename = "mp17")]
+    /// mp17.
+    Mp17,
+    #[serde(rename = "mp18")]
+    /// mp18.
+    Mp18,
+    #[serde(rename = "mp19")]
+    /// mp19.
+    Mp19,
+    #[serde(rename = "mp20")]
+    /// mp20.
+    Mp20,
+    #[serde(rename = "mp21")]
+    /// mp21.
+    Mp21,
+    #[serde(rename = "mp22")]
+    /// mp22.
+    Mp22,
+    #[serde(rename = "mp23")]
+    /// mp23.
+    Mp23,
+    #[serde(rename = "mp24")]
+    /// mp24.
+    Mp24,
+    #[serde(rename = "mp25")]
+    /// mp25.
+    Mp25,
+    #[serde(rename = "mp26")]
+    /// mp26.
+    Mp26,
+    #[serde(rename = "mp27")]
+    /// mp27.
+    Mp27,
+    #[serde(rename = "mp28")]
+    /// mp28.
+    Mp28,
+    #[serde(rename = "mp29")]
+    /// mp29.
+    Mp29,
+    #[serde(rename = "mp30")]
+    /// mp30.
+    Mp30,
+    #[serde(rename = "mp31")]
+    /// mp31.
+    Mp31,
+    #[serde(rename = "mp32")]
+    /// mp32.
+    Mp32,
+    #[serde(rename = "mp33")]
+    /// mp33.
+    Mp33,
+    #[serde(rename = "mp34")]
+    /// mp34.
+    Mp34,
+    #[serde(rename = "mp35")]
+    /// mp35.
+    Mp35,
+    #[serde(rename = "mp36")]
+    /// mp36.
+    Mp36,
+    #[serde(rename = "mp37")]
+    /// mp37.
+    Mp37,
+    #[serde(rename = "mp38")]
+    /// mp38.
+    Mp38,
+    #[serde(rename = "mp39")]
+    /// mp39.
+    Mp39,
+    #[serde(rename = "mp40")]
+    /// mp40.
+    Mp40,
+    #[serde(rename = "mp41")]
+    /// mp41.
+    Mp41,
+    #[serde(rename = "mp42")]
+    /// mp42.
+    Mp42,
+    #[serde(rename = "mp43")]
+    /// mp43.
+    Mp43,
+    #[serde(rename = "mp44")]
+    /// mp44.
+    Mp44,
+    #[serde(rename = "mp45")]
+    /// mp45.
+    Mp45,
+    #[serde(rename = "mp46")]
+    /// mp46.
+    Mp46,
+    #[serde(rename = "mp47")]
+    /// mp47.
+    Mp47,
+    #[serde(rename = "mp48")]
+    /// mp48.
+    Mp48,
+    #[serde(rename = "mp49")]
+    /// mp49.
+    Mp49,
+    #[serde(rename = "mp50")]
+    /// mp50.
+    Mp50,
+    #[serde(rename = "mp51")]
+    /// mp51.
+    Mp51,
+    #[serde(rename = "mp52")]
+    /// mp52.
+    Mp52,
+    #[serde(rename = "mp53")]
+    /// mp53.
+    Mp53,
+    #[serde(rename = "mp54")]
+    /// mp54.
+    Mp54,
+    #[serde(rename = "mp55")]
+    /// mp55.
+    Mp55,
+    #[serde(rename = "mp56")]
+    /// mp56.
+    Mp56,
+    #[serde(rename = "mp57")]
+    /// mp57.
+    Mp57,
+    #[serde(rename = "mp58")]
+    /// mp58.
+    Mp58,
+    #[serde(rename = "mp59")]
+    /// mp59.
+    Mp59,
+    #[serde(rename = "mp60")]
+    /// mp60.
+    Mp60,
+    #[serde(rename = "mp61")]
+    /// mp61.
+    Mp61,
+    #[serde(rename = "mp62")]
+    /// mp62.
+    Mp62,
+    #[serde(rename = "mp63")]
+    /// mp63.
+    Mp63,
+    #[serde(rename = "mp64")]
+    /// mp64.
+    Mp64,
+    #[serde(rename = "mp65")]
+    /// mp65.
+    Mp65,
+    #[serde(rename = "mp66")]
+    /// mp66.
+    Mp66,
+    #[serde(rename = "mp67")]
+    /// mp67.
+    Mp67,
+    #[serde(rename = "mp68")]
+    /// mp68.
+    Mp68,
+    #[serde(rename = "mp69")]
+    /// mp69.
+    Mp69,
+    #[serde(rename = "mp70")]
+    /// mp70.
+    Mp70,
+    #[serde(rename = "mp71")]
+    /// mp71.
+    Mp71,
+    #[serde(rename = "mp72")]
+    /// mp72.
+    Mp72,
+    #[serde(rename = "mp73")]
+    /// mp73.
+    Mp73,
+    #[serde(rename = "mp74")]
+    /// mp74.
+    Mp74,
+    #[serde(rename = "mp75")]
+    /// mp75.
+    Mp75,
+    #[serde(rename = "mp76")]
+    /// mp76.
+    Mp76,
+    #[serde(rename = "mp77")]
+    /// mp77.
+    Mp77,
+    #[serde(rename = "mp78")]
+    /// mp78.
+    Mp78,
+    #[serde(rename = "mp79")]
+    /// mp79.
+    Mp79,
+    #[serde(rename = "mp80")]
+    /// mp80.
+    Mp80,
+    #[serde(rename = "mp81")]
+    /// mp81.
+    Mp81,
+    #[serde(rename = "mp82")]
+    /// mp82.
+    Mp82,
+    #[serde(rename = "mp83")]
+    /// mp83.
+    Mp83,
+    #[serde(rename = "mp84")]
+    /// mp84.
+    Mp84,
+    #[serde(rename = "mp85")]
+    /// mp85.
+    Mp85,
+    #[serde(rename = "mp86")]
+    /// mp86.
+    Mp86,
+    #[serde(rename = "mp87")]
+    /// mp87.
+    Mp87,
+    #[serde(rename = "mp88")]
+    /// mp88.
+    Mp88,
+    #[serde(rename = "mp89")]
+    /// mp89.
+    Mp89,
+    #[serde(rename = "mp90")]
+    /// mp90.
+    Mp90,
+    #[serde(rename = "mp91")]
+    /// mp91.
+    Mp91,
+    #[serde(rename = "mp92")]
+    /// mp92.
+    Mp92,
+    #[serde(rename = "mp93")]
+    /// mp93.
+    Mp93,
+    #[serde(rename = "mp94")]
+    /// mp94.
+    Mp94,
+    #[serde(rename = "mp95")]
+    /// mp95.
+    Mp95,
+    #[serde(rename = "mp96")]
+    /// mp96.
+    Mp96,
+    #[serde(rename = "mp97")]
+    /// mp97.
+    Mp97,
+    #[serde(rename = "mp98")]
+    /// mp98.
+    Mp98,
+    #[serde(rename = "mp99")]
+    /// mp99.
+    Mp99,
+    #[serde(rename = "mp100")]
+    /// mp100.
+    Mp100,
+    #[serde(rename = "mp101")]
+    /// mp101.
+    Mp101,
+    #[serde(rename = "mp102")]
+    /// mp102.
+    Mp102,
+    #[serde(rename = "mp103")]
+    /// mp103.
+    Mp103,
+    #[serde(rename = "mp104")]
+    /// mp104.
+    Mp104,
+    #[serde(rename = "mp105")]
+    /// mp105.
+    Mp105,
+    #[serde(rename = "mp106")]
+    /// mp106.
+    Mp106,
+    #[serde(rename = "mp107")]
+    /// mp107.
+    Mp107,
+    #[serde(rename = "mp108")]
+    /// mp108.
+    Mp108,
+    #[serde(rename = "mp109")]
+    /// mp109.
+    Mp109,
+    #[serde(rename = "mp110")]
+    /// mp110.
+    Mp110,
+    #[serde(rename = "mp111")]
+    /// mp111.
+    Mp111,
+    #[serde(rename = "mp112")]
+    /// mp112.
+    Mp112,
+    #[serde(rename = "mp113")]
+    /// mp113.
+    Mp113,
+    #[serde(rename = "mp114")]
+    /// mp114.
+    Mp114,
+    #[serde(rename = "mp115")]
+    /// mp115.
+    Mp115,
+    #[serde(rename = "mp116")]
+    /// mp116.
+    Mp116,
+    #[serde(rename = "mp117")]
+    /// mp117.
+    Mp117,
+    #[serde(rename = "mp118")]
+    /// mp118.
+    Mp118,
+    #[serde(rename = "mp119")]
+    /// mp119.
+    Mp119,
+    #[serde(rename = "mp120")]
+    /// mp120.
+    Mp120,
+    #[serde(rename = "mp121")]
+    /// mp121.
+    Mp121,
+    #[serde(rename = "mp122")]
+    /// mp122.
+    Mp122,
+    #[serde(rename = "mp123")]
+    /// mp123.
+    Mp123,
+    #[serde(rename = "mp124")]
+    /// mp124.
+    Mp124,
+    #[serde(rename = "mp125")]
+    /// mp125.
+    Mp125,
+    #[serde(rename = "mp126")]
+    /// mp126.
+    Mp126,
+    #[serde(rename = "mp127")]
+    /// mp127.
+    Mp127,
+    #[serde(rename = "mp128")]
+    /// mp128.
+    Mp128,
+    #[serde(rename = "mp129")]
+    /// mp129.
+    Mp129,
+    #[serde(rename = "mp130")]
+    /// mp130.
+    Mp130,
+    #[serde(rename = "mp131")]
+    /// mp131.
+    Mp131,
+    #[serde(rename = "mp132")]
+    /// mp132.
+    Mp132,
+    #[serde(rename = "mp133")]
+    /// mp133.
+    Mp133,
+    #[serde(rename = "mp134")]
+    /// mp134.
+    Mp134,
+    #[serde(rename = "mp135")]
+    /// mp135.
+    Mp135,
+    #[serde(rename = "mp136")]
+    /// mp136.
+    Mp136,
+    #[serde(rename = "mp137")]
+    /// mp137.
+    Mp137,
+    #[serde(rename = "mp138")]
+    /// mp138.
+    Mp138,
+    #[serde(rename = "mp139")]
+    /// mp139.
+    Mp139,
+    #[serde(rename = "mp140")]
+    /// mp140.
+    Mp140,
+    #[serde(rename = "mp141")]
+    /// mp141.
+    Mp141,
+    #[serde(rename = "mp142")]
+    /// mp142.
+    Mp142,
+    #[serde(rename = "mp143")]
+    /// mp143.
+    Mp143,
+    #[serde(rename = "mp144")]
+    /// mp144.
+    Mp144,
+    #[serde(rename = "mp145")]
+    /// mp145.
+    Mp145,
+    #[serde(rename = "mp146")]
+    /// mp146.
+    Mp146,
+    #[serde(rename = "mp147")]
+    /// mp147.
+    Mp147,
+    #[serde(rename = "mp148")]
+    /// mp148.
+    Mp148,
+    #[serde(rename = "mp149")]
+    /// mp149.
+    Mp149,
+    #[serde(rename = "mp150")]
+    /// mp150.
+    Mp150,
+    #[serde(rename = "mp151")]
+    /// mp151.
+    Mp151,
+    #[serde(rename = "mp152")]
+    /// mp152.
+    Mp152,
+    #[serde(rename = "mp153")]
+    /// mp153.
+    Mp153,
+    #[serde(rename = "mp154")]
+    /// mp154.
+    Mp154,
+    #[serde(rename = "mp155")]
+    /// mp155.
+    Mp155,
+    #[serde(rename = "mp156")]
+    /// mp156.
+    Mp156,
+    #[serde(rename = "mp157")]
+    /// mp157.
+    Mp157,
+    #[serde(rename = "mp158")]
+    /// mp158.
+    Mp158,
+    #[serde(rename = "mp159")]
+    /// mp159.
+    Mp159,
+    #[serde(rename = "mp160")]
+    /// mp160.
+    Mp160,
+    #[serde(rename = "mp161")]
+    /// mp161.
+    Mp161,
+    #[serde(rename = "mp162")]
+    /// mp162.
+    Mp162,
+    #[serde(rename = "mp163")]
+    /// mp163.
+    Mp163,
+    #[serde(rename = "mp164")]
+    /// mp164.
+    Mp164,
+    #[serde(rename = "mp165")]
+    /// mp165.
+    Mp165,
+    #[serde(rename = "mp166")]
+    /// mp166.
+    Mp166,
+    #[serde(rename = "mp167")]
+    /// mp167.
+    Mp167,
+    #[serde(rename = "mp168")]
+    /// mp168.
+    Mp168,
+    #[serde(rename = "mp169")]
+    /// mp169.
+    Mp169,
+    #[serde(rename = "mp170")]
+    /// mp170.
+    Mp170,
+    #[serde(rename = "mp171")]
+    /// mp171.
+    Mp171,
+    #[serde(rename = "mp172")]
+    /// mp172.
+    Mp172,
+    #[serde(rename = "mp173")]
+    /// mp173.
+    Mp173,
+    #[serde(rename = "mp174")]
+    /// mp174.
+    Mp174,
+    #[serde(rename = "mp175")]
+    /// mp175.
+    Mp175,
+    #[serde(rename = "mp176")]
+    /// mp176.
+    Mp176,
+    #[serde(rename = "mp177")]
+    /// mp177.
+    Mp177,
+    #[serde(rename = "mp178")]
+    /// mp178.
+    Mp178,
+    #[serde(rename = "mp179")]
+    /// mp179.
+    Mp179,
+    #[serde(rename = "mp180")]
+    /// mp180.
+    Mp180,
+    #[serde(rename = "mp181")]
+    /// mp181.
+    Mp181,
+    #[serde(rename = "mp182")]
+    /// mp182.
+    Mp182,
+    #[serde(rename = "mp183")]
+    /// mp183.
+    Mp183,
+    #[serde(rename = "mp184")]
+    /// mp184.
+    Mp184,
+    #[serde(rename = "mp185")]
+    /// mp185.
+    Mp185,
+    #[serde(rename = "mp186")]
+    /// mp186.
+    Mp186,
+    #[serde(rename = "mp187")]
+    /// mp187.
+    Mp187,
+    #[serde(rename = "mp188")]
+    /// mp188.
+    Mp188,
+    #[serde(rename = "mp189")]
+    /// mp189.
+    Mp189,
+    #[serde(rename = "mp190")]
+    /// mp190.
+    Mp190,
+    #[serde(rename = "mp191")]
+    /// mp191.
+    Mp191,
+    #[serde(rename = "mp192")]
+    /// mp192.
+    Mp192,
+    #[serde(rename = "mp193")]
+    /// mp193.
+    Mp193,
+    #[serde(rename = "mp194")]
+    /// mp194.
+    Mp194,
+    #[serde(rename = "mp195")]
+    /// mp195.
+    Mp195,
+    #[serde(rename = "mp196")]
+    /// mp196.
+    Mp196,
+    #[serde(rename = "mp197")]
+    /// mp197.
+    Mp197,
+    #[serde(rename = "mp198")]
+    /// mp198.
+    Mp198,
+    #[serde(rename = "mp199")]
+    /// mp199.
+    Mp199,
+    #[serde(rename = "mp200")]
+    /// mp200.
+    Mp200,
+    #[serde(rename = "mp201")]
+    /// mp201.
+    Mp201,
+    #[serde(rename = "mp202")]
+    /// mp202.
+    Mp202,
+    #[serde(rename = "mp203")]
+    /// mp203.
+    Mp203,
+    #[serde(rename = "mp204")]
+    /// mp204.
+    Mp204,
+    #[serde(rename = "mp205")]
+    /// mp205.
+    Mp205,
+    #[serde(rename = "mp206")]
+    /// mp206.
+    Mp206,
+    #[serde(rename = "mp207")]
+    /// mp207.
+    Mp207,
+    #[serde(rename = "mp208")]
+    /// mp208.
+    Mp208,
+    #[serde(rename = "mp209")]
+    /// mp209.
+    Mp209,
+    #[serde(rename = "mp210")]
+    /// mp210.
+    Mp210,
+    #[serde(rename = "mp211")]
+    /// mp211.
+    Mp211,
+    #[serde(rename = "mp212")]
+    /// mp212.
+    Mp212,
+    #[serde(rename = "mp213")]
+    /// mp213.
+    Mp213,
+    #[serde(rename = "mp214")]
+    /// mp214.
+    Mp214,
+    #[serde(rename = "mp215")]
+    /// mp215.
+    Mp215,
+    #[serde(rename = "mp216")]
+    /// mp216.
+    Mp216,
+    #[serde(rename = "mp217")]
+    /// mp217.
+    Mp217,
+    #[serde(rename = "mp218")]
+    /// mp218.
+    Mp218,
+    #[serde(rename = "mp219")]
+    /// mp219.
+    Mp219,
+    #[serde(rename = "mp220")]
+    /// mp220.
+    Mp220,
+    #[serde(rename = "mp221")]
+    /// mp221.
+    Mp221,
+    #[serde(rename = "mp222")]
+    /// mp222.
+    Mp222,
+    #[serde(rename = "mp223")]
+    /// mp223.
+    Mp223,
+    #[serde(rename = "mp224")]
+    /// mp224.
+    Mp224,
+    #[serde(rename = "mp225")]
+    /// mp225.
+    Mp225,
+    #[serde(rename = "mp226")]
+    /// mp226.
+    Mp226,
+    #[serde(rename = "mp227")]
+    /// mp227.
+    Mp227,
+    #[serde(rename = "mp228")]
+    /// mp228.
+    Mp228,
+    #[serde(rename = "mp229")]
+    /// mp229.
+    Mp229,
+    #[serde(rename = "mp230")]
+    /// mp230.
+    Mp230,
+    #[serde(rename = "mp231")]
+    /// mp231.
+    Mp231,
+    #[serde(rename = "mp232")]
+    /// mp232.
+    Mp232,
+    #[serde(rename = "mp233")]
+    /// mp233.
+    Mp233,
+    #[serde(rename = "mp234")]
+    /// mp234.
+    Mp234,
+    #[serde(rename = "mp235")]
+    /// mp235.
+    Mp235,
+    #[serde(rename = "mp236")]
+    /// mp236.
+    Mp236,
+    #[serde(rename = "mp237")]
+    /// mp237.
+    Mp237,
+    #[serde(rename = "mp238")]
+    /// mp238.
+    Mp238,
+    #[serde(rename = "mp239")]
+    /// mp239.
+    Mp239,
+    #[serde(rename = "mp240")]
+    /// mp240.
+    Mp240,
+    #[serde(rename = "mp241")]
+    /// mp241.
+    Mp241,
+    #[serde(rename = "mp242")]
+    /// mp242.
+    Mp242,
+    #[serde(rename = "mp243")]
+    /// mp243.
+    Mp243,
+    #[serde(rename = "mp244")]
+    /// mp244.
+    Mp244,
+    #[serde(rename = "mp245")]
+    /// mp245.
+    Mp245,
+    #[serde(rename = "mp246")]
+    /// mp246.
+    Mp246,
+    #[serde(rename = "mp247")]
+    /// mp247.
+    Mp247,
+    #[serde(rename = "mp248")]
+    /// mp248.
+    Mp248,
+    #[serde(rename = "mp249")]
+    /// mp249.
+    Mp249,
+    #[serde(rename = "mp250")]
+    /// mp250.
+    Mp250,
+    #[serde(rename = "mp251")]
+    /// mp251.
+    Mp251,
+    #[serde(rename = "mp252")]
+    /// mp252.
+    Mp252,
+    #[serde(rename = "mp253")]
+    /// mp253.
+    Mp253,
+    #[serde(rename = "mp254")]
+    /// mp254.
+    Mp254,
+    #[serde(rename = "mp255")]
+    /// mp255.
+    Mp255,
+    #[serde(rename = "unused0")]
+    /// unused0.
+    Unused0,
+    #[serde(rename = "unused1")]
+    /// unused1.
+    Unused1,
+    #[serde(rename = "unused2")]
+    /// unused2.
+    Unused2,
+    #[serde(rename = "unused3")]
+    /// unused3.
+    Unused3,
+    #[serde(rename = "unused4")]
+    /// unused4.
+    Unused4,
+    #[serde(rename = "unused5")]
+    /// unused5.
+    Unused5,
+    #[serde(rename = "unused6")]
+    /// unused6.
+    Unused6,
+    #[serde(rename = "unused7")]
+    /// unused7.
+    Unused7,
+    #[serde(rename = "unused8")]
+    /// unused8.
+    Unused8,
+    #[serde(rename = "unused9")]
+    /// unused9.
+    Unused9,
+    #[serde(rename = "unused10")]
+    /// unused10.
+    Unused10,
+    #[serde(rename = "unused11")]
+    /// unused11.
+    Unused11,
+    #[serde(rename = "unused12")]
+    /// unused12.
+    Unused12,
+    #[serde(rename = "unused13")]
+    /// unused13.
+    Unused13,
+    #[serde(rename = "unused14")]
+    /// unused14.
+    Unused14,
+    #[serde(rename = "unused15")]
+    /// unused15.
+    Unused15,
+    #[serde(rename = "unused16")]
+    /// unused16.
+    Unused16,
+    #[serde(rename = "unused17")]
+    /// unused17.
+    Unused17,
+    #[serde(rename = "unused18")]
+    /// unused18.
+    Unused18,
+    #[serde(rename = "unused19")]
+    /// unused19.
+    Unused19,
+    #[serde(rename = "unused20")]
+    /// unused20.
+    Unused20,
+    #[serde(rename = "unused21")]
+    /// unused21.
+    Unused21,
+    #[serde(rename = "unused22")]
+    /// unused22.
+    Unused22,
+    #[serde(rename = "unused23")]
+    /// unused23.
+    Unused23,
+    #[serde(rename = "unused24")]
+    /// unused24.
+    Unused24,
+    #[serde(rename = "unused25")]
+    /// unused25.
+    Unused25,
+    #[serde(rename = "unused26")]
+    /// unused26.
+    Unused26,
+    #[serde(rename = "unused27")]
+    /// unused27.
+    Unused27,
+    #[serde(rename = "unused28")]
+    /// unused28.
+    Unused28,
+    #[serde(rename = "unused29")]
+    /// unused29.
+    Unused29,
+    #[serde(rename = "unused30")]
+    /// unused30.
+    Unused30,
+    #[serde(rename = "unused31")]
+    /// unused31.
+    Unused31,
+    #[serde(rename = "unused32")]
+    /// unused32.
+    Unused32,
+    #[serde(rename = "unused33")]
+    /// unused33.
+    Unused33,
+    #[serde(rename = "unused34")]
+    /// unused34.
+    Unused34,
+    #[serde(rename = "unused35")]
+    /// unused35.
+    Unused35,
+    #[serde(rename = "unused36")]
+    /// unused36.
+    Unused36,
+    #[serde(rename = "unused37")]
+    /// unused37.
+    Unused37,
+    #[serde(rename = "unused38")]
+    /// unused38.
+    Unused38,
+    #[serde(rename = "unused39")]
+    /// unused39.
+    Unused39,
+    #[serde(rename = "unused40")]
+    /// unused40.
+    Unused40,
+    #[serde(rename = "unused41")]
+    /// unused41.
+    Unused41,
+    #[serde(rename = "unused42")]
+    /// unused42.
+    Unused42,
+    #[serde(rename = "unused43")]
+    /// unused43.
+    Unused43,
+    #[serde(rename = "unused44")]
+    /// unused44.
+    Unused44,
+    #[serde(rename = "unused45")]
+    /// unused45.
+    Unused45,
+    #[serde(rename = "unused46")]
+    /// unused46.
+    Unused46,
+    #[serde(rename = "unused47")]
+    /// unused47.
+    Unused47,
+    #[serde(rename = "unused48")]
+    /// unused48.
+    Unused48,
+    #[serde(rename = "unused49")]
+    /// unused49.
+    Unused49,
+    #[serde(rename = "unused50")]
+    /// unused50.
+    Unused50,
+    #[serde(rename = "unused51")]
+    /// unused51.
+    Unused51,
+    #[serde(rename = "unused52")]
+    /// unused52.
+    Unused52,
+    #[serde(rename = "unused53")]
+    /// unused53.
+    Unused53,
+    #[serde(rename = "unused54")]
+    /// unused54.
+    Unused54,
+    #[serde(rename = "unused55")]
+    /// unused55.
+    Unused55,
+    #[serde(rename = "unused56")]
+    /// unused56.
+    Unused56,
+    #[serde(rename = "unused57")]
+    /// unused57.
+    Unused57,
+    #[serde(rename = "unused58")]
+    /// unused58.
+    Unused58,
+    #[serde(rename = "unused59")]
+    /// unused59.
+    Unused59,
+    #[serde(rename = "unused60")]
+    /// unused60.
+    Unused60,
+    #[serde(rename = "unused61")]
+    /// unused61.
+    Unused61,
+    #[serde(rename = "unused62")]
+    /// unused62.
+    Unused62,
+    #[serde(rename = "unused63")]
+    /// unused63.
+    Unused63,
+    #[serde(rename = "unused64")]
+    /// unused64.
+    Unused64,
+    #[serde(rename = "unused65")]
+    /// unused65.
+    Unused65,
+    #[serde(rename = "unused66")]
+    /// unused66.
+    Unused66,
+    #[serde(rename = "unused67")]
+    /// unused67.
+    Unused67,
+    #[serde(rename = "unused68")]
+    /// unused68.
+    Unused68,
+    #[serde(rename = "unused69")]
+    /// unused69.
+    Unused69,
+    #[serde(rename = "unused70")]
+    /// unused70.
+    Unused70,
+    #[serde(rename = "unused71")]
+    /// unused71.
+    Unused71,
+    #[serde(rename = "unused72")]
+    /// unused72.
+    Unused72,
+    #[serde(rename = "unused73")]
+    /// unused73.
+    Unused73,
+    #[serde(rename = "unused74")]
+    /// unused74.
+    Unused74,
+    #[serde(rename = "unused75")]
+    /// unused75.
+    Unused75,
+    #[serde(rename = "unused76")]
+    /// unused76.
+    Unused76,
+    #[serde(rename = "unused77")]
+    /// unused77.
+    Unused77,
+    #[serde(rename = "unused78")]
+    /// unused78.
+    Unused78,
+    #[serde(rename = "unused79")]
+    /// unused79.
+    Unused79,
+    #[serde(rename = "unused80")]
+    /// unused80.
+    Unused80,
+    #[serde(rename = "unused81")]
+    /// unused81.
+    Unused81,
+    #[serde(rename = "unused82")]
+    /// unused82.
+    Unused82,
+    #[serde(rename = "unused83")]
+    /// unused83.
+    Unused83,
+    #[serde(rename = "unused84")]
+    /// unused84.
+    Unused84,
+    #[serde(rename = "unused85")]
+    /// unused85.
+    Unused85,
+    #[serde(rename = "unused86")]
+    /// unused86.
+    Unused86,
+    #[serde(rename = "unused87")]
+    /// unused87.
+    Unused87,
+    #[serde(rename = "unused88")]
+    /// unused88.
+    Unused88,
+    #[serde(rename = "unused89")]
+    /// unused89.
+    Unused89,
+    #[serde(rename = "unused90")]
+    /// unused90.
+    Unused90,
+    #[serde(rename = "unused91")]
+    /// unused91.
+    Unused91,
+    #[serde(rename = "unused92")]
+    /// unused92.
+    Unused92,
+    #[serde(rename = "unused93")]
+    /// unused93.
+    Unused93,
+    #[serde(rename = "unused94")]
+    /// unused94.
+    Unused94,
+    #[serde(rename = "unused95")]
+    /// unused95.
+    Unused95,
+    #[serde(rename = "unused96")]
+    /// unused96.
+    Unused96,
+    #[serde(rename = "unused97")]
+    /// unused97.
+    Unused97,
+    #[serde(rename = "unused98")]
+    /// unused98.
+    Unused98,
+    #[serde(rename = "unused99")]
+    /// unused99.
+    Unused99,
+    #[serde(rename = "unused100")]
+    /// unused100.
+    Unused100,
+    #[serde(rename = "unused101")]
+    /// unused101.
+    Unused101,
+    #[serde(rename = "unused102")]
+    /// unused102.
+    Unused102,
+    #[serde(rename = "unused103")]
+    /// unused103.
+    Unused103,
+    #[serde(rename = "unused104")]
+    /// unused104.
+    Unused104,
+    #[serde(rename = "unused105")]
+    /// unused105.
+    Unused105,
+    #[serde(rename = "unused106")]
+    /// unused106.
+    Unused106,
+    #[serde(rename = "unused107")]
+    /// unused107.
+    Unused107,
+    #[serde(rename = "unused108")]
+    /// unused108.
+    Unused108,
+    #[serde(rename = "unused109")]
+    /// unused109.
+    Unused109,
+    #[serde(rename = "unused110")]
+    /// unused110.
+    Unused110,
+    #[serde(rename = "unused111")]
+    /// unused111.
+    Unused111,
+    #[serde(rename = "unused112")]
+    /// unused112.
+    Unused112,
+    #[serde(rename = "unused113")]
+    /// unused113.
+    Unused113,
+    #[serde(rename = "unused114")]
+    /// unused114.
+    Unused114,
+    #[serde(rename = "unused115")]
+    /// unused115.
+    Unused115,
+    #[serde(rename = "unused116")]
+    /// unused116.
+    Unused116,
+    #[serde(rename = "unused117")]
+    /// unused117.
+    Unused117,
+    #[serde(rename = "unused118")]
+    /// unused118.
+    Unused118,
+    #[serde(rename = "unused119")]
+    /// unused119.
+    Unused119,
+    #[serde(rename = "unused120")]
+    /// unused120.
+    Unused120,
+    #[serde(rename = "unused121")]
+    /// unused121.
+    Unused121,
+    #[serde(rename = "unused122")]
+    /// unused122.
+    Unused122,
+    #[serde(rename = "unused123")]
+    /// unused123.
+    Unused123,
+    #[serde(rename = "unused124")]
+    /// unused124.
+    Unused124,
+    #[serde(rename = "unused125")]
+    /// unused125.
+    Unused125,
+    #[serde(rename = "unused126")]
+    /// unused126.
+    Unused126,
+    #[serde(rename = "unused127")]
+    /// unused127.
+    Unused127,
+    #[serde(rename = "unused128")]
+    /// unused128.
+    Unused128,
+    #[serde(rename = "unused129")]
+    /// unused129.
+    Unused129,
+    #[serde(rename = "unused130")]
+    /// unused130.
+    Unused130,
+    #[serde(rename = "unused131")]
+    /// unused131.
+    Unused131,
+    #[serde(rename = "unused132")]
+    /// unused132.
+    Unused132,
+    #[serde(rename = "unused133")]
+    /// unused133.
+    Unused133,
+    #[serde(rename = "unused134")]
+    /// unused134.
+    Unused134,
+    #[serde(rename = "unused135")]
+    /// unused135.
+    Unused135,
+    #[serde(rename = "unused136")]
+    /// unused136.
+    Unused136,
+    #[serde(rename = "unused137")]
+    /// unused137.
+    Unused137,
+    #[serde(rename = "unused138")]
+    /// unused138.
+    Unused138,
+    #[serde(rename = "unused139")]
+    /// unused139.
+    Unused139,
+    #[serde(rename = "unused140")]
+    /// unused140.
+    Unused140,
+    #[serde(rename = "unused141")]
+    /// unused141.
+    Unused141,
+    #[serde(rename = "unused142")]
+    /// unused142.
+    Unused142,
+    #[serde(rename = "unused143")]
+    /// unused143.
+    Unused143,
+    #[serde(rename = "unused144")]
+    /// unused144.
+    Unused144,
+    #[serde(rename = "unused145")]
+    /// unused145.
+    Unused145,
+    #[serde(rename = "unused146")]
+    /// unused146.
+    Unused146,
+    #[serde(rename = "unused147")]
+    /// unused147.
+    Unused147,
+    #[serde(rename = "unused148")]
+    /// unused148.
+    Unused148,
+    #[serde(rename = "unused149")]
+    /// unused149.
+    Unused149,
+    #[serde(rename = "unused150")]
+    /// unused150.
+    Unused150,
+    #[serde(rename = "unused151")]
+    /// unused151.
+    Unused151,
+    #[serde(rename = "unused152")]
+    /// unused152.
+    Unused152,
+    #[serde(rename = "unused153")]
+    /// unused153.
+    Unused153,
+    #[serde(rename = "unused154")]
+    /// unused154.
+    Unused154,
+    #[serde(rename = "unused155")]
+    /// unused155.
+    Unused155,
+    #[serde(rename = "unused156")]
+    /// unused156.
+    Unused156,
+    #[serde(rename = "unused157")]
+    /// unused157.
+    Unused157,
+    #[serde(rename = "unused158")]
+    /// unused158.
+    Unused158,
+    #[serde(rename = "unused159")]
+    /// unused159.
+    Unused159,
+    #[serde(rename = "unused160")]
+    /// unused160.
+    Unused160,
+    #[serde(rename = "unused161")]
+    /// unused161.
+    Unused161,
+    #[serde(rename = "unused162")]
+    /// unused162.
+    Unused162,
+    #[serde(rename = "unused163")]
+    /// unused163.
+    Unused163,
+    #[serde(rename = "unused164")]
+    /// unused164.
+    Unused164,
+    #[serde(rename = "unused165")]
+    /// unused165.
+    Unused165,
+    #[serde(rename = "unused166")]
+    /// unused166.
+    Unused166,
+    #[serde(rename = "unused167")]
+    /// unused167.
+    Unused167,
+    #[serde(rename = "unused168")]
+    /// unused168.
+    Unused168,
+    #[serde(rename = "unused169")]
+    /// unused169.
+    Unused169,
+    #[serde(rename = "unused170")]
+    /// unused170.
+    Unused170,
+    #[serde(rename = "unused171")]
+    /// unused171.
+    Unused171,
+    #[serde(rename = "unused172")]
+    /// unused172.
+    Unused172,
+    #[serde(rename = "unused173")]
+    /// unused173.
+    Unused173,
+    #[serde(rename = "unused174")]
+    /// unused174.
+    Unused174,
+    #[serde(rename = "unused175")]
+    /// unused175.
+    Unused175,
+    #[serde(rename = "unused176")]
+    /// unused176.
+    Unused176,
+    #[serde(rename = "unused177")]
+    /// unused177.
+    Unused177,
+    #[serde(rename = "unused178")]
+    /// unused178.
+    Unused178,
+    #[serde(rename = "unused179")]
+    /// unused179.
+    Unused179,
+    #[serde(rename = "unused180")]
+    /// unused180.
+    Unused180,
+    #[serde(rename = "unused181")]
+    /// unused181.
+    Unused181,
+    #[serde(rename = "unused182")]
+    /// unused182.
+    Unused182,
+    #[serde(rename = "unused183")]
+    /// unused183.
+    Unused183,
+    #[serde(rename = "unused184")]
+    /// unused184.
+    Unused184,
+    #[serde(rename = "unused185")]
+    /// unused185.
+    Unused185,
+    #[serde(rename = "unused186")]
+    /// unused186.
+    Unused186,
+    #[serde(rename = "unused187")]
+    /// unused187.
+    Unused187,
+    #[serde(rename = "unused188")]
+    /// unused188.
+    Unused188,
+    #[serde(rename = "unused189")]
+    /// unused189.
+    Unused189,
+    #[serde(rename = "unused190")]
+    /// unused190.
+    Unused190,
+    #[serde(rename = "unused191")]
+    /// unused191.
+    Unused191,
+    #[serde(rename = "unused192")]
+    /// unused192.
+    Unused192,
+    #[serde(rename = "unused193")]
+    /// unused193.
+    Unused193,
+    #[serde(rename = "unused194")]
+    /// unused194.
+    Unused194,
+    #[serde(rename = "unused195")]
+    /// unused195.
+    Unused195,
+    #[serde(rename = "unused196")]
+    /// unused196.
+    Unused196,
+    #[serde(rename = "unused197")]
+    /// unused197.
+    Unused197,
+    #[serde(rename = "unused198")]
+    /// unused198.
+    Unused198,
+    #[serde(rename = "unused199")]
+    /// unused199.
+    Unused199,
+    #[serde(rename = "unused200")]
+    /// unused200.
+    Unused200,
+    #[serde(rename = "unused201")]
+    /// unused201.
+    Unused201,
+    #[serde(rename = "unused202")]
+    /// unused202.
+    Unused202,
+    #[serde(rename = "unused203")]
+    /// unused203.
+    Unused203,
+    #[serde(rename = "unused204")]
+    /// unused204.
+    Unused204,
+    #[serde(rename = "unused205")]
+    /// unused205.
+    Unused205,
+    #[serde(rename = "unused206")]
+    /// unused206.
+    Unused206,
+    #[serde(rename = "unused207")]
+    /// unused207.
+    Unused207,
+    #[serde(rename = "unused208")]
+    /// unused208.
+    Unused208,
+    #[serde(rename = "unused209")]
+    /// unused209.
+    Unused209,
+    #[serde(rename = "unused210")]
+    /// unused210.
+    Unused210,
+    #[serde(rename = "unused211")]
+    /// unused211.
+    Unused211,
+    #[serde(rename = "unused212")]
+    /// unused212.
+    Unused212,
+    #[serde(rename = "unused213")]
+    /// unused213.
+    Unused213,
+    #[serde(rename = "unused214")]
+    /// unused214.
+    Unused214,
+    #[serde(rename = "unused215")]
+    /// unused215.
+    Unused215,
+    #[serde(rename = "unused216")]
+    /// unused216.
+    Unused216,
+    #[serde(rename = "unused217")]
+    /// unused217.
+    Unused217,
+    #[serde(rename = "unused218")]
+    /// unused218.
+    Unused218,
+    #[serde(rename = "unused219")]
+    /// unused219.
+    Unused219,
+    #[serde(rename = "unused220")]
+    /// unused220.
+    Unused220,
+    #[serde(rename = "unused221")]
+    /// unused221.
+    Unused221,
+    #[serde(rename = "unused222")]
+    /// unused222.
+    Unused222,
+    #[serde(rename = "unused223")]
+    /// unused223.
+    Unused223,
+    #[serde(rename = "unused224")]
+    /// unused224.
+    Unused224,
+    #[serde(rename = "unused225")]
+    /// unused225.
+    Unused225,
+    #[serde(rename = "unused226")]
+    /// unused226.
+    Unused226,
+    #[serde(rename = "unused227")]
+    /// unused227.
+    Unused227,
+    #[serde(rename = "unused228")]
+    /// unused228.
+    Unused228,
+    #[serde(rename = "unused229")]
+    /// unused229.
+    Unused229,
+    #[serde(rename = "unused230")]
+    /// unused230.
+    Unused230,
+    #[serde(rename = "unused231")]
+    /// unused231.
+    Unused231,
+    #[serde(rename = "unused232")]
+    /// unused232.
+    Unused232,
+    #[serde(rename = "unused233")]
+    /// unused233.
+    Unused233,
+    #[serde(rename = "unused234")]
+    /// unused234.
+    Unused234,
+    #[serde(rename = "unused235")]
+    /// unused235.
+    Unused235,
+    #[serde(rename = "unused236")]
+    /// unused236.
+    Unused236,
+    #[serde(rename = "unused237")]
+    /// unused237.
+    Unused237,
+    #[serde(rename = "unused238")]
+    /// unused238.
+    Unused238,
+    #[serde(rename = "unused239")]
+    /// unused239.
+    Unused239,
+    #[serde(rename = "unused240")]
+    /// unused240.
+    Unused240,
+    #[serde(rename = "unused241")]
+    /// unused241.
+    Unused241,
+    #[serde(rename = "unused242")]
+    /// unused242.
+    Unused242,
+    #[serde(rename = "unused243")]
+    /// unused243.
+    Unused243,
+    #[serde(rename = "unused244")]
+    /// unused244.
+    Unused244,
+    #[serde(rename = "unused245")]
+    /// unused245.
+    Unused245,
+    #[serde(rename = "unused246")]
+    /// unused246.
+    Unused246,
+    #[serde(rename = "unused247")]
+    /// unused247.
+    Unused247,
+    #[serde(rename = "unused248")]
+    /// unused248.
+    Unused248,
+    #[serde(rename = "unused249")]
+    /// unused249.
+    Unused249,
+    #[serde(rename = "unused250")]
+    /// unused250.
+    Unused250,
+    #[serde(rename = "unused251")]
+    /// unused251.
+    Unused251,
+    #[serde(rename = "unused252")]
+    /// unused252.
+    Unused252,
+    #[serde(rename = "unused253")]
+    /// unused253.
+    Unused253,
+    #[serde(rename = "unused254")]
+    /// unused254.
+    Unused254,
+    #[serde(rename = "unused255")]
+    /// unused255.
+    Unused255,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(LxcMoveVolumeTargetVolume);
+serde_plain::derive_fromstr_from_deserialize!(LxcMoveVolumeTargetVolume);
+
+#[api(
+    properties: {
+        digest: {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        disk: {
+            type: LxcResizeDisk,
+        },
+        size: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct LxcResize {
+    /// Prevent changes if current configuration file has different SHA1 digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    pub disk: LxcResizeDisk,
+
+    /// The new size. With the '+' sign the value is added to the actual size of
+    /// the volume and without it, the value is taken as an absolute one.
+    /// Shrinking disk size is not supported.
+    pub size: String,
+}
+
+#[api]
+/// The disk you want to resize.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum LxcResizeDisk {
+    #[serde(rename = "rootfs")]
+    /// rootfs.
+    Rootfs,
+    #[serde(rename = "mp0")]
+    /// mp0.
+    Mp0,
+    #[serde(rename = "mp1")]
+    /// mp1.
+    Mp1,
+    #[serde(rename = "mp2")]
+    /// mp2.
+    Mp2,
+    #[serde(rename = "mp3")]
+    /// mp3.
+    Mp3,
+    #[serde(rename = "mp4")]
+    /// mp4.
+    Mp4,
+    #[serde(rename = "mp5")]
+    /// mp5.
+    Mp5,
+    #[serde(rename = "mp6")]
+    /// mp6.
+    Mp6,
+    #[serde(rename = "mp7")]
+    /// mp7.
+    Mp7,
+    #[serde(rename = "mp8")]
+    /// mp8.
+    Mp8,
+    #[serde(rename = "mp9")]
+    /// mp9.
+    Mp9,
+    #[serde(rename = "mp10")]
+    /// mp10.
+    Mp10,
+    #[serde(rename = "mp11")]
+    /// mp11.
+    Mp11,
+    #[serde(rename = "mp12")]
+    /// mp12.
+    Mp12,
+    #[serde(rename = "mp13")]
+    /// mp13.
+    Mp13,
+    #[serde(rename = "mp14")]
+    /// mp14.
+    Mp14,
+    #[serde(rename = "mp15")]
+    /// mp15.
+    Mp15,
+    #[serde(rename = "mp16")]
+    /// mp16.
+    Mp16,
+    #[serde(rename = "mp17")]
+    /// mp17.
+    Mp17,
+    #[serde(rename = "mp18")]
+    /// mp18.
+    Mp18,
+    #[serde(rename = "mp19")]
+    /// mp19.
+    Mp19,
+    #[serde(rename = "mp20")]
+    /// mp20.
+    Mp20,
+    #[serde(rename = "mp21")]
+    /// mp21.
+    Mp21,
+    #[serde(rename = "mp22")]
+    /// mp22.
+    Mp22,
+    #[serde(rename = "mp23")]
+    /// mp23.
+    Mp23,
+    #[serde(rename = "mp24")]
+    /// mp24.
+    Mp24,
+    #[serde(rename = "mp25")]
+    /// mp25.
+    Mp25,
+    #[serde(rename = "mp26")]
+    /// mp26.
+    Mp26,
+    #[serde(rename = "mp27")]
+    /// mp27.
+    Mp27,
+    #[serde(rename = "mp28")]
+    /// mp28.
+    Mp28,
+    #[serde(rename = "mp29")]
+    /// mp29.
+    Mp29,
+    #[serde(rename = "mp30")]
+    /// mp30.
+    Mp30,
+    #[serde(rename = "mp31")]
+    /// mp31.
+    Mp31,
+    #[serde(rename = "mp32")]
+    /// mp32.
+    Mp32,
+    #[serde(rename = "mp33")]
+    /// mp33.
+    Mp33,
+    #[serde(rename = "mp34")]
+    /// mp34.
+    Mp34,
+    #[serde(rename = "mp35")]
+    /// mp35.
+    Mp35,
+    #[serde(rename = "mp36")]
+    /// mp36.
+    Mp36,
+    #[serde(rename = "mp37")]
+    /// mp37.
+    Mp37,
+    #[serde(rename = "mp38")]
+    /// mp38.
+    Mp38,
+    #[serde(rename = "mp39")]
+    /// mp39.
+    Mp39,
+    #[serde(rename = "mp40")]
+    /// mp40.
+    Mp40,
+    #[serde(rename = "mp41")]
+    /// mp41.
+    Mp41,
+    #[serde(rename = "mp42")]
+    /// mp42.
+    Mp42,
+    #[serde(rename = "mp43")]
+    /// mp43.
+    Mp43,
+    #[serde(rename = "mp44")]
+    /// mp44.
+    Mp44,
+    #[serde(rename = "mp45")]
+    /// mp45.
+    Mp45,
+    #[serde(rename = "mp46")]
+    /// mp46.
+    Mp46,
+    #[serde(rename = "mp47")]
+    /// mp47.
+    Mp47,
+    #[serde(rename = "mp48")]
+    /// mp48.
+    Mp48,
+    #[serde(rename = "mp49")]
+    /// mp49.
+    Mp49,
+    #[serde(rename = "mp50")]
+    /// mp50.
+    Mp50,
+    #[serde(rename = "mp51")]
+    /// mp51.
+    Mp51,
+    #[serde(rename = "mp52")]
+    /// mp52.
+    Mp52,
+    #[serde(rename = "mp53")]
+    /// mp53.
+    Mp53,
+    #[serde(rename = "mp54")]
+    /// mp54.
+    Mp54,
+    #[serde(rename = "mp55")]
+    /// mp55.
+    Mp55,
+    #[serde(rename = "mp56")]
+    /// mp56.
+    Mp56,
+    #[serde(rename = "mp57")]
+    /// mp57.
+    Mp57,
+    #[serde(rename = "mp58")]
+    /// mp58.
+    Mp58,
+    #[serde(rename = "mp59")]
+    /// mp59.
+    Mp59,
+    #[serde(rename = "mp60")]
+    /// mp60.
+    Mp60,
+    #[serde(rename = "mp61")]
+    /// mp61.
+    Mp61,
+    #[serde(rename = "mp62")]
+    /// mp62.
+    Mp62,
+    #[serde(rename = "mp63")]
+    /// mp63.
+    Mp63,
+    #[serde(rename = "mp64")]
+    /// mp64.
+    Mp64,
+    #[serde(rename = "mp65")]
+    /// mp65.
+    Mp65,
+    #[serde(rename = "mp66")]
+    /// mp66.
+    Mp66,
+    #[serde(rename = "mp67")]
+    /// mp67.
+    Mp67,
+    #[serde(rename = "mp68")]
+    /// mp68.
+    Mp68,
+    #[serde(rename = "mp69")]
+    /// mp69.
+    Mp69,
+    #[serde(rename = "mp70")]
+    /// mp70.
+    Mp70,
+    #[serde(rename = "mp71")]
+    /// mp71.
+    Mp71,
+    #[serde(rename = "mp72")]
+    /// mp72.
+    Mp72,
+    #[serde(rename = "mp73")]
+    /// mp73.
+    Mp73,
+    #[serde(rename = "mp74")]
+    /// mp74.
+    Mp74,
+    #[serde(rename = "mp75")]
+    /// mp75.
+    Mp75,
+    #[serde(rename = "mp76")]
+    /// mp76.
+    Mp76,
+    #[serde(rename = "mp77")]
+    /// mp77.
+    Mp77,
+    #[serde(rename = "mp78")]
+    /// mp78.
+    Mp78,
+    #[serde(rename = "mp79")]
+    /// mp79.
+    Mp79,
+    #[serde(rename = "mp80")]
+    /// mp80.
+    Mp80,
+    #[serde(rename = "mp81")]
+    /// mp81.
+    Mp81,
+    #[serde(rename = "mp82")]
+    /// mp82.
+    Mp82,
+    #[serde(rename = "mp83")]
+    /// mp83.
+    Mp83,
+    #[serde(rename = "mp84")]
+    /// mp84.
+    Mp84,
+    #[serde(rename = "mp85")]
+    /// mp85.
+    Mp85,
+    #[serde(rename = "mp86")]
+    /// mp86.
+    Mp86,
+    #[serde(rename = "mp87")]
+    /// mp87.
+    Mp87,
+    #[serde(rename = "mp88")]
+    /// mp88.
+    Mp88,
+    #[serde(rename = "mp89")]
+    /// mp89.
+    Mp89,
+    #[serde(rename = "mp90")]
+    /// mp90.
+    Mp90,
+    #[serde(rename = "mp91")]
+    /// mp91.
+    Mp91,
+    #[serde(rename = "mp92")]
+    /// mp92.
+    Mp92,
+    #[serde(rename = "mp93")]
+    /// mp93.
+    Mp93,
+    #[serde(rename = "mp94")]
+    /// mp94.
+    Mp94,
+    #[serde(rename = "mp95")]
+    /// mp95.
+    Mp95,
+    #[serde(rename = "mp96")]
+    /// mp96.
+    Mp96,
+    #[serde(rename = "mp97")]
+    /// mp97.
+    Mp97,
+    #[serde(rename = "mp98")]
+    /// mp98.
+    Mp98,
+    #[serde(rename = "mp99")]
+    /// mp99.
+    Mp99,
+    #[serde(rename = "mp100")]
+    /// mp100.
+    Mp100,
+    #[serde(rename = "mp101")]
+    /// mp101.
+    Mp101,
+    #[serde(rename = "mp102")]
+    /// mp102.
+    Mp102,
+    #[serde(rename = "mp103")]
+    /// mp103.
+    Mp103,
+    #[serde(rename = "mp104")]
+    /// mp104.
+    Mp104,
+    #[serde(rename = "mp105")]
+    /// mp105.
+    Mp105,
+    #[serde(rename = "mp106")]
+    /// mp106.
+    Mp106,
+    #[serde(rename = "mp107")]
+    /// mp107.
+    Mp107,
+    #[serde(rename = "mp108")]
+    /// mp108.
+    Mp108,
+    #[serde(rename = "mp109")]
+    /// mp109.
+    Mp109,
+    #[serde(rename = "mp110")]
+    /// mp110.
+    Mp110,
+    #[serde(rename = "mp111")]
+    /// mp111.
+    Mp111,
+    #[serde(rename = "mp112")]
+    /// mp112.
+    Mp112,
+    #[serde(rename = "mp113")]
+    /// mp113.
+    Mp113,
+    #[serde(rename = "mp114")]
+    /// mp114.
+    Mp114,
+    #[serde(rename = "mp115")]
+    /// mp115.
+    Mp115,
+    #[serde(rename = "mp116")]
+    /// mp116.
+    Mp116,
+    #[serde(rename = "mp117")]
+    /// mp117.
+    Mp117,
+    #[serde(rename = "mp118")]
+    /// mp118.
+    Mp118,
+    #[serde(rename = "mp119")]
+    /// mp119.
+    Mp119,
+    #[serde(rename = "mp120")]
+    /// mp120.
+    Mp120,
+    #[serde(rename = "mp121")]
+    /// mp121.
+    Mp121,
+    #[serde(rename = "mp122")]
+    /// mp122.
+    Mp122,
+    #[serde(rename = "mp123")]
+    /// mp123.
+    Mp123,
+    #[serde(rename = "mp124")]
+    /// mp124.
+    Mp124,
+    #[serde(rename = "mp125")]
+    /// mp125.
+    Mp125,
+    #[serde(rename = "mp126")]
+    /// mp126.
+    Mp126,
+    #[serde(rename = "mp127")]
+    /// mp127.
+    Mp127,
+    #[serde(rename = "mp128")]
+    /// mp128.
+    Mp128,
+    #[serde(rename = "mp129")]
+    /// mp129.
+    Mp129,
+    #[serde(rename = "mp130")]
+    /// mp130.
+    Mp130,
+    #[serde(rename = "mp131")]
+    /// mp131.
+    Mp131,
+    #[serde(rename = "mp132")]
+    /// mp132.
+    Mp132,
+    #[serde(rename = "mp133")]
+    /// mp133.
+    Mp133,
+    #[serde(rename = "mp134")]
+    /// mp134.
+    Mp134,
+    #[serde(rename = "mp135")]
+    /// mp135.
+    Mp135,
+    #[serde(rename = "mp136")]
+    /// mp136.
+    Mp136,
+    #[serde(rename = "mp137")]
+    /// mp137.
+    Mp137,
+    #[serde(rename = "mp138")]
+    /// mp138.
+    Mp138,
+    #[serde(rename = "mp139")]
+    /// mp139.
+    Mp139,
+    #[serde(rename = "mp140")]
+    /// mp140.
+    Mp140,
+    #[serde(rename = "mp141")]
+    /// mp141.
+    Mp141,
+    #[serde(rename = "mp142")]
+    /// mp142.
+    Mp142,
+    #[serde(rename = "mp143")]
+    /// mp143.
+    Mp143,
+    #[serde(rename = "mp144")]
+    /// mp144.
+    Mp144,
+    #[serde(rename = "mp145")]
+    /// mp145.
+    Mp145,
+    #[serde(rename = "mp146")]
+    /// mp146.
+    Mp146,
+    #[serde(rename = "mp147")]
+    /// mp147.
+    Mp147,
+    #[serde(rename = "mp148")]
+    /// mp148.
+    Mp148,
+    #[serde(rename = "mp149")]
+    /// mp149.
+    Mp149,
+    #[serde(rename = "mp150")]
+    /// mp150.
+    Mp150,
+    #[serde(rename = "mp151")]
+    /// mp151.
+    Mp151,
+    #[serde(rename = "mp152")]
+    /// mp152.
+    Mp152,
+    #[serde(rename = "mp153")]
+    /// mp153.
+    Mp153,
+    #[serde(rename = "mp154")]
+    /// mp154.
+    Mp154,
+    #[serde(rename = "mp155")]
+    /// mp155.
+    Mp155,
+    #[serde(rename = "mp156")]
+    /// mp156.
+    Mp156,
+    #[serde(rename = "mp157")]
+    /// mp157.
+    Mp157,
+    #[serde(rename = "mp158")]
+    /// mp158.
+    Mp158,
+    #[serde(rename = "mp159")]
+    /// mp159.
+    Mp159,
+    #[serde(rename = "mp160")]
+    /// mp160.
+    Mp160,
+    #[serde(rename = "mp161")]
+    /// mp161.
+    Mp161,
+    #[serde(rename = "mp162")]
+    /// mp162.
+    Mp162,
+    #[serde(rename = "mp163")]
+    /// mp163.
+    Mp163,
+    #[serde(rename = "mp164")]
+    /// mp164.
+    Mp164,
+    #[serde(rename = "mp165")]
+    /// mp165.
+    Mp165,
+    #[serde(rename = "mp166")]
+    /// mp166.
+    Mp166,
+    #[serde(rename = "mp167")]
+    /// mp167.
+    Mp167,
+    #[serde(rename = "mp168")]
+    /// mp168.
+    Mp168,
+    #[serde(rename = "mp169")]
+    /// mp169.
+    Mp169,
+    #[serde(rename = "mp170")]
+    /// mp170.
+    Mp170,
+    #[serde(rename = "mp171")]
+    /// mp171.
+    Mp171,
+    #[serde(rename = "mp172")]
+    /// mp172.
+    Mp172,
+    #[serde(rename = "mp173")]
+    /// mp173.
+    Mp173,
+    #[serde(rename = "mp174")]
+    /// mp174.
+    Mp174,
+    #[serde(rename = "mp175")]
+    /// mp175.
+    Mp175,
+    #[serde(rename = "mp176")]
+    /// mp176.
+    Mp176,
+    #[serde(rename = "mp177")]
+    /// mp177.
+    Mp177,
+    #[serde(rename = "mp178")]
+    /// mp178.
+    Mp178,
+    #[serde(rename = "mp179")]
+    /// mp179.
+    Mp179,
+    #[serde(rename = "mp180")]
+    /// mp180.
+    Mp180,
+    #[serde(rename = "mp181")]
+    /// mp181.
+    Mp181,
+    #[serde(rename = "mp182")]
+    /// mp182.
+    Mp182,
+    #[serde(rename = "mp183")]
+    /// mp183.
+    Mp183,
+    #[serde(rename = "mp184")]
+    /// mp184.
+    Mp184,
+    #[serde(rename = "mp185")]
+    /// mp185.
+    Mp185,
+    #[serde(rename = "mp186")]
+    /// mp186.
+    Mp186,
+    #[serde(rename = "mp187")]
+    /// mp187.
+    Mp187,
+    #[serde(rename = "mp188")]
+    /// mp188.
+    Mp188,
+    #[serde(rename = "mp189")]
+    /// mp189.
+    Mp189,
+    #[serde(rename = "mp190")]
+    /// mp190.
+    Mp190,
+    #[serde(rename = "mp191")]
+    /// mp191.
+    Mp191,
+    #[serde(rename = "mp192")]
+    /// mp192.
+    Mp192,
+    #[serde(rename = "mp193")]
+    /// mp193.
+    Mp193,
+    #[serde(rename = "mp194")]
+    /// mp194.
+    Mp194,
+    #[serde(rename = "mp195")]
+    /// mp195.
+    Mp195,
+    #[serde(rename = "mp196")]
+    /// mp196.
+    Mp196,
+    #[serde(rename = "mp197")]
+    /// mp197.
+    Mp197,
+    #[serde(rename = "mp198")]
+    /// mp198.
+    Mp198,
+    #[serde(rename = "mp199")]
+    /// mp199.
+    Mp199,
+    #[serde(rename = "mp200")]
+    /// mp200.
+    Mp200,
+    #[serde(rename = "mp201")]
+    /// mp201.
+    Mp201,
+    #[serde(rename = "mp202")]
+    /// mp202.
+    Mp202,
+    #[serde(rename = "mp203")]
+    /// mp203.
+    Mp203,
+    #[serde(rename = "mp204")]
+    /// mp204.
+    Mp204,
+    #[serde(rename = "mp205")]
+    /// mp205.
+    Mp205,
+    #[serde(rename = "mp206")]
+    /// mp206.
+    Mp206,
+    #[serde(rename = "mp207")]
+    /// mp207.
+    Mp207,
+    #[serde(rename = "mp208")]
+    /// mp208.
+    Mp208,
+    #[serde(rename = "mp209")]
+    /// mp209.
+    Mp209,
+    #[serde(rename = "mp210")]
+    /// mp210.
+    Mp210,
+    #[serde(rename = "mp211")]
+    /// mp211.
+    Mp211,
+    #[serde(rename = "mp212")]
+    /// mp212.
+    Mp212,
+    #[serde(rename = "mp213")]
+    /// mp213.
+    Mp213,
+    #[serde(rename = "mp214")]
+    /// mp214.
+    Mp214,
+    #[serde(rename = "mp215")]
+    /// mp215.
+    Mp215,
+    #[serde(rename = "mp216")]
+    /// mp216.
+    Mp216,
+    #[serde(rename = "mp217")]
+    /// mp217.
+    Mp217,
+    #[serde(rename = "mp218")]
+    /// mp218.
+    Mp218,
+    #[serde(rename = "mp219")]
+    /// mp219.
+    Mp219,
+    #[serde(rename = "mp220")]
+    /// mp220.
+    Mp220,
+    #[serde(rename = "mp221")]
+    /// mp221.
+    Mp221,
+    #[serde(rename = "mp222")]
+    /// mp222.
+    Mp222,
+    #[serde(rename = "mp223")]
+    /// mp223.
+    Mp223,
+    #[serde(rename = "mp224")]
+    /// mp224.
+    Mp224,
+    #[serde(rename = "mp225")]
+    /// mp225.
+    Mp225,
+    #[serde(rename = "mp226")]
+    /// mp226.
+    Mp226,
+    #[serde(rename = "mp227")]
+    /// mp227.
+    Mp227,
+    #[serde(rename = "mp228")]
+    /// mp228.
+    Mp228,
+    #[serde(rename = "mp229")]
+    /// mp229.
+    Mp229,
+    #[serde(rename = "mp230")]
+    /// mp230.
+    Mp230,
+    #[serde(rename = "mp231")]
+    /// mp231.
+    Mp231,
+    #[serde(rename = "mp232")]
+    /// mp232.
+    Mp232,
+    #[serde(rename = "mp233")]
+    /// mp233.
+    Mp233,
+    #[serde(rename = "mp234")]
+    /// mp234.
+    Mp234,
+    #[serde(rename = "mp235")]
+    /// mp235.
+    Mp235,
+    #[serde(rename = "mp236")]
+    /// mp236.
+    Mp236,
+    #[serde(rename = "mp237")]
+    /// mp237.
+    Mp237,
+    #[serde(rename = "mp238")]
+    /// mp238.
+    Mp238,
+    #[serde(rename = "mp239")]
+    /// mp239.
+    Mp239,
+    #[serde(rename = "mp240")]
+    /// mp240.
+    Mp240,
+    #[serde(rename = "mp241")]
+    /// mp241.
+    Mp241,
+    #[serde(rename = "mp242")]
+    /// mp242.
+    Mp242,
+    #[serde(rename = "mp243")]
+    /// mp243.
+    Mp243,
+    #[serde(rename = "mp244")]
+    /// mp244.
+    Mp244,
+    #[serde(rename = "mp245")]
+    /// mp245.
+    Mp245,
+    #[serde(rename = "mp246")]
+    /// mp246.
+    Mp246,
+    #[serde(rename = "mp247")]
+    /// mp247.
+    Mp247,
+    #[serde(rename = "mp248")]
+    /// mp248.
+    Mp248,
+    #[serde(rename = "mp249")]
+    /// mp249.
+    Mp249,
+    #[serde(rename = "mp250")]
+    /// mp250.
+    Mp250,
+    #[serde(rename = "mp251")]
+    /// mp251.
+    Mp251,
+    #[serde(rename = "mp252")]
+    /// mp252.
+    Mp252,
+    #[serde(rename = "mp253")]
+    /// mp253.
+    Mp253,
+    #[serde(rename = "mp254")]
+    /// mp254.
+    Mp254,
+    #[serde(rename = "mp255")]
+    /// mp255.
+    Mp255,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(LxcResizeDisk);
+serde_plain::derive_fromstr_from_deserialize!(LxcResizeDisk);
+
 #[api(
     properties: {
         disk: {
@@ -3517,7 +5975,7 @@ MIGRATE_LXC_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a
 }
 
 #[test]
-fn test_regex_compilation_12() {
+fn test_regex_compilation_13() {
     use regex::Regex;
     let _: &Regex = &MIGRATE_LXC_TARGET_RE;
     let _: &Regex = &MIGRATE_LXC_TARGET_STORAGE_RE;
@@ -3598,7 +6056,7 @@ MIGRATE_QEMU_TARGETSTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a
 }
 
 #[test]
-fn test_regex_compilation_13() {
+fn test_regex_compilation_14() {
     use regex::Regex;
     let _: &Regex = &MIGRATE_QEMU_TARGET_RE;
     let _: &Regex = &MIGRATE_QEMU_TARGETSTORAGE_RE;
@@ -3712,7 +6170,7 @@ NETWORK_INTERFACE_VLAN_RAW_DEVICE_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)
 }
 
 #[test]
-fn test_regex_compilation_14() {
+fn test_regex_compilation_15() {
     use regex::Regex;
     let _: &Regex = &NETWORK_INTERFACE_BOND_PRIMARY_RE;
     let _: &Regex = &NETWORK_INTERFACE_BRIDGE_PORTS_RE;
@@ -4414,13 +6872,13 @@ pub struct NodeShellTicket {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     pub port: i64,
 
-    /// ticket used to verifiy websocket connection
+    /// VNC ticket used to verifiy websocket connection
     pub ticket: String,
 
     /// UPID for termproxy worker task
     pub upid: String,
 
-    /// user
+    /// user/token that generated the VNC ticket in `ticket`
     pub user: String,
 }
 
@@ -5007,7 +7465,7 @@ PVE_QM_HOSTPCI_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_15() {
+fn test_regex_compilation_16() {
     use regex::Regex;
     let _: &Regex = &PVE_QM_HOSTPCI_MAPPING_RE;
 }
@@ -5149,7 +7607,7 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_16() {
+fn test_regex_compilation_17() {
     use regex::Regex;
     let _: &Regex = &PVE_QM_IDE_MODEL_RE;
     let _: &Regex = &PVE_QM_IDE_SERIAL_RE;
@@ -6214,7 +8672,7 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_17() {
+fn test_regex_compilation_18() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &QEMU_CONFIG_BOOTDISK_RE;
@@ -7379,7 +9837,7 @@ QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_18() {
+fn test_regex_compilation_19() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -7756,7 +10214,7 @@ QEMU_CONFIG_NET_MACADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 }
 
 #[test]
-fn test_regex_compilation_19() {
+fn test_regex_compilation_20() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_NET_BRIDGE_RE;
     let _: &Regex = &QEMU_CONFIG_NET_MACADDR_RE;
@@ -8062,7 +10520,7 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_20() {
+fn test_regex_compilation_21() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &QEMU_CONFIG_SATA_SIZE_RE;
@@ -8395,7 +10853,7 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_21() {
+fn test_regex_compilation_22() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &QEMU_CONFIG_SCSI_SIZE_RE;
@@ -8859,7 +11317,7 @@ QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_22() {
+fn test_regex_compilation_23() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -8937,7 +11395,7 @@ QEMU_CONFIG_USB_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_23() {
+fn test_regex_compilation_24() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_USB_MAPPING_RE;
 }
@@ -9107,7 +11565,7 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_24() {
+fn test_regex_compilation_25() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &QEMU_CONFIG_VIRTIO_SIZE_RE;
@@ -9438,7 +11896,7 @@ QEMU_CONFIG_VIRTIOFS_DIRID_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_25() {
+fn test_regex_compilation_26() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_VIRTIOFS_DIRID_RE;
 }
@@ -9733,7 +12191,7 @@ QEMU_MOVE_DISK_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_26() {
+fn test_regex_compilation_27() {
     use regex::Regex;
     let _: &Regex = &QEMU_MOVE_DISK_STORAGE_RE;
 }
@@ -11353,7 +13811,7 @@ REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:
 }
 
 #[test]
-fn test_regex_compilation_27() {
+fn test_regex_compilation_28() {
     use regex::Regex;
     let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_BRIDGE_RE;
     let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE;
@@ -11470,7 +13928,7 @@ REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i
 }
 
 #[test]
-fn test_regex_compilation_28() {
+fn test_regex_compilation_29() {
     use regex::Regex;
     let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_BRIDGE_RE;
     let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE;
@@ -11787,7 +14245,7 @@ SDN_CONTROLLER_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F
 }
 
 #[test]
-fn test_regex_compilation_29() {
+fn test_regex_compilation_30() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_ISIS_NET_RE;
@@ -11940,7 +14398,7 @@ SDN_CONTROLLER_PENDING_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\
 }
 
 #[test]
-fn test_regex_compilation_30() {
+fn test_regex_compilation_31() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_NET_RE;
@@ -12241,7 +14699,7 @@ SDN_ZONE_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_31() {
+fn test_regex_compilation_32() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_EXITNODES_PRIMARY_RE;
@@ -12518,7 +14976,7 @@ SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_32() {
+fn test_regex_compilation_33() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE;
@@ -12848,7 +15306,7 @@ START_QEMU_TARGETSTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z
 }
 
 #[test]
-fn test_regex_compilation_33() {
+fn test_regex_compilation_34() {
     use regex::Regex;
     let _: &Regex = &START_QEMU_MIGRATEDFROM_RE;
     let _: &Regex = &START_QEMU_TARGETSTORAGE_RE;
@@ -13022,7 +15480,7 @@ STOP_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_34() {
+fn test_regex_compilation_35() {
     use regex::Regex;
     let _: &Regex = &STOP_QEMU_MIGRATEDFROM_RE;
 }
@@ -13124,7 +15582,7 @@ STORAGE_INFO_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_35() {
+fn test_regex_compilation_36() {
     use regex::Regex;
     let _: &Regex = &STORAGE_INFO_STORAGE_RE;
 }
@@ -13455,6 +15913,369 @@ pub struct TaskStatus {
 
 const_regex! {
 
+UPDATE_LXC_CONFIG_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+UPDATE_LXC_CONFIG_REVERT_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+UPDATE_LXC_CONFIG_TAGS_RE = r##"^(?i)[a-z0-9_][a-z0-9_\-+.]*$"##;
+UPDATE_LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_37() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_LXC_CONFIG_DELETE_RE;
+    let _: &Regex = &UPDATE_LXC_CONFIG_REVERT_RE;
+    let _: &Regex = &UPDATE_LXC_CONFIG_TAGS_RE;
+    let _: &Regex = &UPDATE_LXC_CONFIG_TIMEZONE_RE;
+}
+#[api(
+    properties: {
+        arch: {
+            optional: true,
+            type: LxcConfigArch,
+        },
+        cmode: {
+            optional: true,
+            type: LxcConfigCmode,
+        },
+        console: {
+            default: true,
+            optional: true,
+        },
+        cores: {
+            maximum: 8192,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        cpulimit: {
+            default: 0.0,
+            maximum: 8192.0,
+            minimum: 0.0,
+            optional: true,
+        },
+        cpuunits: {
+            default: 100,
+            maximum: 500000,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        debug: {
+            default: false,
+            optional: true,
+        },
+        delete: {
+            items: {
+                description: "List item of type pve-configid.",
+                format: &ApiStringFormat::Pattern(&UPDATE_LXC_CONFIG_DELETE_RE),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        description: {
+            max_length: 8192,
+            optional: true,
+            type: String,
+        },
+        dev: {
+            type: LxcConfigDevArray,
+        },
+        digest: {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        features: {
+            format: &ApiStringFormat::PropertyString(&LxcConfigFeatures::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        hookscript: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_volume_id),
+            optional: true,
+            type: String,
+        },
+        hostname: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_dns_name),
+            max_length: 255,
+            optional: true,
+            type: String,
+        },
+        lock: {
+            optional: true,
+            type: LxcConfigLock,
+        },
+        memory: {
+            default: 512,
+            minimum: 16,
+            optional: true,
+            type: Integer,
+        },
+        mp: {
+            type: LxcConfigMpArray,
+        },
+        nameserver: {
+            items: {
+                description: "List item of type lxc-ip-with-ll-iface.",
+                format: &ApiStringFormat::VerifyFn(verifiers::verify_ip_with_ll_iface),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        net: {
+            type: LxcConfigNetArray,
+        },
+        onboot: {
+            default: false,
+            optional: true,
+        },
+        ostype: {
+            optional: true,
+            type: LxcConfigOstype,
+        },
+        protection: {
+            default: false,
+            optional: true,
+        },
+        revert: {
+            items: {
+                description: "List item of type pve-configid.",
+                format: &ApiStringFormat::Pattern(&UPDATE_LXC_CONFIG_REVERT_RE),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        rootfs: {
+            format: &ApiStringFormat::PropertyString(&LxcConfigRootfs::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        searchdomain: {
+            items: {
+                description: "List item of type dns-name.",
+                format: &ApiStringFormat::VerifyFn(verifiers::verify_dns_name),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        startup: {
+            optional: true,
+            type: String,
+            type_text: "[[order=]\\d+] [,up=\\d+] [,down=\\d+] ",
+        },
+        swap: {
+            default: 512,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        tags: {
+            items: {
+                description: "List item of type pve-tag.",
+                format: &ApiStringFormat::Pattern(&UPDATE_LXC_CONFIG_TAGS_RE),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        template: {
+            default: false,
+            optional: true,
+        },
+        timezone: {
+            format: &ApiStringFormat::Pattern(&UPDATE_LXC_CONFIG_TIMEZONE_RE),
+            optional: true,
+            type: String,
+        },
+        tty: {
+            default: 2,
+            maximum: 6,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        unprivileged: {
+            default: false,
+            optional: true,
+        },
+        unused: {
+            type: LxcConfigUnusedArray,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateLxcConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arch: Option<LxcConfigArch>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cmode: Option<LxcConfigCmode>,
+
+    /// Attach a console device (/dev/console) to the container.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub console: Option<bool>,
+
+    /// The number of cores assigned to the container. A container can use all
+    /// available cores by default.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cores: Option<u16>,
+
+    /// Limit of CPU usage.
+    ///
+    /// NOTE: If the computer has 2 CPUs, it has a total of '2' CPU time. Value
+    /// '0' indicates no CPU limit.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpulimit: Option<f64>,
+
+    /// CPU weight for a container, will be clamped to [1, 10000] in cgroup v2.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpuunits: Option<u32>,
+
+    /// Try to be more verbose. For now this only enables debug log-level on
+    /// start.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub debug: Option<bool>,
+
+    /// A list of settings you want to delete.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<Vec<String>>,
+
+    /// Description for the Container. Shown in the web-interface CT's summary.
+    /// This is saved as comment inside the configuration file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    /// Device to pass through to the container
+    #[serde(flatten)]
+    pub dev: LxcConfigDevArray,
+
+    /// Prevent changes if current configuration file has different SHA1 digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Allow containers access to advanced features.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub features: Option<String>,
+
+    /// Script that will be executed during various steps in the containers
+    /// lifetime.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hookscript: Option<String>,
+
+    /// Set a host name for the container.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hostname: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lock: Option<LxcConfigLock>,
+
+    /// Amount of RAM for the container in MB.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub memory: Option<u64>,
+
+    /// Use volume as container mount point. Use the special syntax
+    /// STORAGE_ID:SIZE_IN_GiB to allocate a new volume.
+    #[serde(flatten)]
+    pub mp: LxcConfigMpArray,
+
+    /// Sets DNS server IP address for a container. Create will automatically
+    /// use the setting from the host if you neither set searchdomain nor
+    /// nameserver.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nameserver: Option<Vec<String>>,
+
+    /// Specifies network interfaces for the container.
+    #[serde(flatten)]
+    pub net: LxcConfigNetArray,
+
+    /// Specifies whether a container will be started during system bootup.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub onboot: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ostype: Option<LxcConfigOstype>,
+
+    /// Sets the protection flag of the container. This will prevent the CT or
+    /// CT's disk remove/update operation.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection: Option<bool>,
+
+    /// Revert a pending change.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub revert: Option<Vec<String>>,
+
+    /// Use volume as container root.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rootfs: Option<String>,
+
+    /// Sets DNS search domains for a container. Create will automatically use
+    /// the setting from the host if you neither set searchdomain nor
+    /// nameserver.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub searchdomain: Option<Vec<String>>,
+
+    /// Startup and shutdown behavior. Order is a non-negative number defining
+    /// the general startup order. Shutdown in done with reverse ordering.
+    /// Additionally you can set the 'up' or 'down' delay in seconds, which
+    /// specifies a delay to wait before the next VM is started or stopped.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub startup: Option<String>,
+
+    /// Amount of SWAP for the container in MB.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub swap: Option<u64>,
+
+    /// Tags of the Container. This is only meta information.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tags: Option<Vec<String>>,
+
+    /// Enable/disable Template.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub template: Option<bool>,
+
+    /// Time zone to use in the container. If option isn't set, then nothing
+    /// will be done. Can be set to 'host' to match the host time zone, or an
+    /// arbitrary time zone option from /usr/share/zoneinfo/zone.tab
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timezone: Option<String>,
+
+    /// Specify the number of tty available to the container
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tty: Option<u8>,
+
+    /// Makes the container run as unprivileged user. For creation, the default
+    /// is 1. For restore, the default is the value from the backup. (Should not
+    /// be modified manually.)
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unprivileged: Option<bool>,
+
+    /// Reference to unused volumes. This is used internally, and should not be
+    /// modified manually.
+    #[serde(flatten)]
+    pub unused: LxcConfigUnusedArray,
+}
+
+const_regex! {
+
 UPDATE_QEMU_CONFIG_AFFINITY_RE = r##"^(\s*\d+(-\d+)?\s*)(,\s*\d+(-\d+)?\s*)?$"##;
 UPDATE_QEMU_CONFIG_BOOTDISK_RE = r##"^(ide|sata|scsi|virtio|efidisk|tpmstate)\d+$"##;
 UPDATE_QEMU_CONFIG_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
@@ -13466,7 +16287,7 @@ UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_36() {
+fn test_regex_compilation_38() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_BOOTDISK_RE;
@@ -14357,7 +17178,7 @@ UPDATE_QEMU_CONFIG_ASYNC_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_37() {
+fn test_regex_compilation_39() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_BOOTDISK_RE;
@@ -15226,7 +18047,7 @@ UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_38() {
+fn test_regex_compilation_40() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -15303,7 +18124,7 @@ UPDATE_QEMU_CONFIG_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_39() {
+fn test_regex_compilation_41() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_MODEL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SERIAL_RE;
@@ -15659,7 +18480,7 @@ UPDATE_QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_40() {
+fn test_regex_compilation_42() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SIZE_RE;
@@ -16004,7 +18825,7 @@ UPDATE_QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_41() {
+fn test_regex_compilation_43() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SIZE_RE;
@@ -16404,7 +19225,7 @@ UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_42() {
+fn test_regex_compilation_44() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -16460,7 +19281,7 @@ UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_43() {
+fn test_regex_compilation_45() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE;
