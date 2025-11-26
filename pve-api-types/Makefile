@@ -4,8 +4,8 @@ GENERATOR_SOURCES != find generator-lib
 
 all: $(OUTPUT_DIR)/code.rs $(OUTPUT_DIR)/types.rs
 
-pve-api.json: dump_api.pl generator-lib/ApiDump.pm
-	perl dump_api.pl >$@.tmp
+pve-api.json: dump-api.pl generator-lib/ApiDump.pm
+	perl dump-api.pl >$@.tmp
 	mv $@.tmp $@
 
 $(OUTPUT_DIR)/code.rs $(OUTPUT_DIR)/types.rs &: generate.pl $(GENERATOR_SOURCES)
