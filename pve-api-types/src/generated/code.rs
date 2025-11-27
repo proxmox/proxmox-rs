@@ -146,7 +146,6 @@
 /// - /nodes/{node}/aplinfo
 /// - /nodes/{node}/apt
 /// - /nodes/{node}/apt/repositories
-/// - /nodes/{node}/apt/versions
 /// - /nodes/{node}/capabilities
 /// - /nodes/{node}/capabilities/qemu
 /// - /nodes/{node}/capabilities/qemu/cpu-flags
@@ -456,6 +455,11 @@ pub trait PveClient {
         version: Option<String>,
     ) -> Result<String, Error> {
         Err(Error::Other("get_package_changelog not implemented"))
+    }
+
+    /// Get package information for important Proxmox packages.
+    async fn get_package_versions(&self, node: &str) -> Result<Vec<InstalledPackage>, Error> {
+        Err(Error::Other("get_package_versions not implemented"))
     }
 
     /// Read subscription info.
@@ -960,6 +964,12 @@ where
             .arg("name", &name)
             .maybe_arg("version", &version)
             .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get package information for important Proxmox packages.
+    async fn get_package_versions(&self, node: &str) -> Result<Vec<InstalledPackage>, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/apt/versions");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 

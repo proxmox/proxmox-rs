@@ -1719,6 +1719,134 @@ pub struct CreateZone {
     pub zone: String,
 }
 
+#[api(
+    properties: {
+        Arch: {
+            type: AptUpdateInfoArch,
+        },
+        CurrentState: {
+            type: InstalledPackageCurrentState,
+        },
+        Description: {
+            type: String,
+        },
+        ManagerVersion: {
+            optional: true,
+            type: String,
+        },
+        NotifyStatus: {
+            optional: true,
+            type: String,
+        },
+        OldVersion: {
+            optional: true,
+            type: String,
+        },
+        Origin: {
+            type: String,
+        },
+        Package: {
+            type: String,
+        },
+        Priority: {
+            type: String,
+        },
+        RunningKernel: {
+            optional: true,
+            type: String,
+        },
+        Section: {
+            type: String,
+        },
+        Title: {
+            type: String,
+        },
+        Version: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct InstalledPackage {
+    #[serde(rename = "Arch")]
+    pub arch: AptUpdateInfoArch,
+
+    #[serde(rename = "CurrentState")]
+    pub current_state: InstalledPackageCurrentState,
+
+    /// Package description.
+    #[serde(rename = "Description")]
+    pub description: String,
+
+    /// Version of the currently running pve-manager API server.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ManagerVersion")]
+    pub manager_version: Option<String>,
+
+    /// Version for which PVE has already sent an update notification for.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "NotifyStatus")]
+    pub notify_status: Option<String>,
+
+    /// Old version currently installed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "OldVersion")]
+    pub old_version: Option<String>,
+
+    /// Package origin, e.g., 'Proxmox' or 'Debian'.
+    #[serde(rename = "Origin")]
+    pub origin: String,
+
+    /// Package name.
+    #[serde(rename = "Package")]
+    pub package: String,
+
+    /// Package priority.
+    #[serde(rename = "Priority")]
+    pub priority: String,
+
+    /// Kernel release, only for package 'proxmox-ve'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "RunningKernel")]
+    pub running_kernel: Option<String>,
+
+    /// Package section.
+    #[serde(rename = "Section")]
+    pub section: String,
+
+    /// Package title.
+    #[serde(rename = "Title")]
+    pub title: String,
+
+    /// New version to be updated to.
+    #[serde(rename = "Version")]
+    pub version: String,
+}
+
+#[api]
+/// Current state of the package installed on the system.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum InstalledPackageCurrentState {
+    /// Installed.
+    Installed,
+    /// NotInstalled.
+    NotInstalled,
+    /// UnPacked.
+    UnPacked,
+    /// HalfConfigured.
+    HalfConfigured,
+    /// HalfInstalled.
+    HalfInstalled,
+    /// ConfigFiles.
+    ConfigFiles,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(InstalledPackageCurrentState);
+serde_plain::derive_fromstr_from_deserialize!(InstalledPackageCurrentState);
+
 #[api]
 /// A guest's run state.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
