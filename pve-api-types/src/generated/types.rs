@@ -2191,6 +2191,137 @@ pub enum ListControllersType {
 serde_plain::derive_display_from_serialize!(ListControllersType);
 serde_plain::derive_fromstr_from_deserialize!(ListControllersType);
 
+#[api(
+    properties: {
+        action: {
+            type: String,
+        },
+        comment: {
+            optional: true,
+            type: String,
+        },
+        dest: {
+            optional: true,
+            type: String,
+        },
+        dport: {
+            optional: true,
+            type: String,
+        },
+        enable: {
+            optional: true,
+            type: Integer,
+        },
+        "icmp-type": {
+            optional: true,
+            type: String,
+        },
+        iface: {
+            optional: true,
+            type: String,
+        },
+        ipversion: {
+            optional: true,
+            type: Integer,
+        },
+        log: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        "macro": {
+            optional: true,
+            type: String,
+        },
+        pos: {
+            type: Integer,
+        },
+        proto: {
+            optional: true,
+            type: String,
+        },
+        source: {
+            optional: true,
+            type: String,
+        },
+        sport: {
+            optional: true,
+            type: String,
+        },
+        type: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct ListFirewallRules {
+    /// Rule action ('ACCEPT', 'DROP', 'REJECT') or security group name
+    pub action: String,
+
+    /// Descriptive comment
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// Restrict packet destination address
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dest: Option<String>,
+
+    /// Restrict TCP/UDP destination port
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dport: Option<String>,
+
+    /// Flag to enable/disable a rule
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enable: Option<i64>,
+
+    /// Specify icmp-type. Only valid if proto equals 'icmp' or
+    /// 'icmpv6'/'ipv6-icmp'
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "icmp-type")]
+    pub icmp_type: Option<String>,
+
+    /// Network interface name. You have to use network configuration key names
+    /// for VMs and containers
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub iface: Option<String>,
+
+    /// IP version (4 or 6) - automatically determined from source/dest
+    /// addresses
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ipversion: Option<i64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log: Option<FirewallLogLevel>,
+
+    /// Use predefined standard macro
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "macro")]
+    pub r#macro: Option<String>,
+
+    /// Rule position in the ruleset
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub pos: i64,
+
+    /// IP protocol. You can use protocol names ('tcp'/'udp') or simple numbers,
+    /// as defined in '/etc/protocols'
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proto: Option<String>,
+
+    /// Restrict packet source address
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+
+    /// Restrict TCP/UDP source port
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sport: Option<String>,
+
+    /// Rule type
+    #[serde(rename = "type")]
+    pub ty: String,
+}
+
 #[api]
 /// Only list specific interface types.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]

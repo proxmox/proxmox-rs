@@ -412,6 +412,15 @@ api(PUT => '/nodes/{node}/lxc/{vmid}/firewall/options', 'set_lxc_firewall_option
 api(GET => '/nodes/{node}/qemu/{vmid}/firewall/options', 'qemu_firewall_options', 'return-name' => 'GuestFirewallOptions');
 api(PUT => '/nodes/{node}/qemu/{vmid}/firewall/options', 'set_qemu_firewall_options', 'param-name' => 'UpdateGuestFirewallOptions');
 
+# rules
+api(GET => '/cluster/firewall/rules', 'list_cluster_firewall_rules', 'return-name' => 'ListFirewallRules');
+
+api(GET => '/nodes/{node}/firewall/rules', 'list_node_firewall_rules', 'return-name' => 'ListFirewallRules');
+
+api(GET => '/nodes/{node}/lxc/{vmid}/firewall/rules', 'list_lxc_firewall_rules', 'return-name' => 'ListFirewallRules');
+api(GET => '/nodes/{node}/qemu/{vmid}/firewall/rules', 'list_qemu_firewall_rules', 'return-name' => 'ListFirewallRules');
+Schema2Rust::derive('ListFirewallRules' => 'Clone', 'PartialEq');
+
 Schema2Rust::generate_enum('SdnObjectState', {
     type => 'string',
     description => "The state of an SDN object.",

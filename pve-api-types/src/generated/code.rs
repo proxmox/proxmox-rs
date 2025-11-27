@@ -68,7 +68,6 @@
 /// - /cluster/firewall/ipset/{name}/{cidr}
 /// - /cluster/firewall/macros
 /// - /cluster/firewall/refs
-/// - /cluster/firewall/rules
 /// - /cluster/firewall/rules/{pos}
 /// - /cluster/ha
 /// - /cluster/ha/groups
@@ -204,7 +203,6 @@
 /// - /nodes/{node}/execute
 /// - /nodes/{node}/firewall
 /// - /nodes/{node}/firewall/log
-/// - /nodes/{node}/firewall/rules
 /// - /nodes/{node}/firewall/rules/{pos}
 /// - /nodes/{node}/hardware
 /// - /nodes/{node}/hardware/pci
@@ -224,7 +222,6 @@
 /// - /nodes/{node}/lxc/{vmid}/firewall/ipset/{name}/{cidr}
 /// - /nodes/{node}/lxc/{vmid}/firewall/log
 /// - /nodes/{node}/lxc/{vmid}/firewall/refs
-/// - /nodes/{node}/lxc/{vmid}/firewall/rules
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/lxc/{vmid}/interfaces
 /// - /nodes/{node}/lxc/{vmid}/mtunnel
@@ -287,7 +284,6 @@
 /// - /nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}
 /// - /nodes/{node}/qemu/{vmid}/firewall/log
 /// - /nodes/{node}/qemu/{vmid}/firewall/refs
-/// - /nodes/{node}/qemu/{vmid}/firewall/rules
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/qemu/{vmid}/monitor
 /// - /nodes/{node}/qemu/{vmid}/mtunnel
@@ -503,6 +499,11 @@ pub trait PveClient {
         Err(Error::Other("list_available_updates not implemented"))
     }
 
+    /// List rules.
+    async fn list_cluster_firewall_rules(&self) -> Result<Vec<ListFirewallRules>, Error> {
+        Err(Error::Other("list_cluster_firewall_rules not implemented"))
+    }
+
     /// SDN controllers index.
     async fn list_controllers(
         &self,
@@ -523,6 +524,15 @@ pub trait PveClient {
         Err(Error::Other("list_lxc not implemented"))
     }
 
+    /// List rules.
+    async fn list_lxc_firewall_rules(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<ListFirewallRules>, Error> {
+        Err(Error::Other("list_lxc_firewall_rules not implemented"))
+    }
+
     /// List available networks
     async fn list_networks(
         &self,
@@ -530,6 +540,11 @@ pub trait PveClient {
         ty: Option<ListNetworksType>,
     ) -> Result<Vec<NetworkInterface>, Error> {
         Err(Error::Other("list_networks not implemented"))
+    }
+
+    /// List rules.
+    async fn list_node_firewall_rules(&self, node: &str) -> Result<Vec<ListFirewallRules>, Error> {
+        Err(Error::Other("list_node_firewall_rules not implemented"))
     }
 
     /// Cluster node index.
@@ -540,6 +555,15 @@ pub trait PveClient {
     /// Virtual machine index (per node).
     async fn list_qemu(&self, node: &str, full: Option<bool>) -> Result<Vec<VmEntry>, Error> {
         Err(Error::Other("list_qemu not implemented"))
+    }
+
+    /// List rules.
+    async fn list_qemu_firewall_rules(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<ListFirewallRules>, Error> {
+        Err(Error::Other("list_qemu_firewall_rules not implemented"))
     }
 
     /// Get status for all datastores.
@@ -1119,6 +1143,12 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// List rules.
+    async fn list_cluster_firewall_rules(&self) -> Result<Vec<ListFirewallRules>, Error> {
+        let url = "/api2/extjs/cluster/firewall/rules";
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// SDN controllers index.
     async fn list_controllers(
         &self,
@@ -1146,6 +1176,16 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// List rules.
+    async fn list_lxc_firewall_rules(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<ListFirewallRules>, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/firewall/rules");
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// List available networks
     async fn list_networks(
         &self,
@@ -1155,6 +1195,12 @@ where
         let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/network"))
             .maybe_arg("type", &ty)
             .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List rules.
+    async fn list_node_firewall_rules(&self, node: &str) -> Result<Vec<ListFirewallRules>, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/firewall/rules");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1169,6 +1215,16 @@ where
         let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/qemu"))
             .maybe_bool_arg("full", full)
             .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List rules.
+    async fn list_qemu_firewall_rules(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<ListFirewallRules>, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/firewall/rules");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
