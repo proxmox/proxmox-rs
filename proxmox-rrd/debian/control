@@ -55,8 +55,8 @@ Provides:
  librust-proxmox-rrd-1.0-dev (= ${binary:Version}),
  librust-proxmox-rrd-1.0+default-dev (= ${binary:Version}),
  librust-proxmox-rrd-1.0+rrd-v1-dev (= ${binary:Version}),
- librust-proxmox-rrd-1.0.1-dev (= ${binary:Version}),
- librust-proxmox-rrd-1.0.1+default-dev (= ${binary:Version}),
- librust-proxmox-rrd-1.0.1+rrd-v1-dev (= ${binary:Version})
+ librust-proxmox-rrd-1.0.2-dev (= ${binary:Version}),
+ librust-proxmox-rrd-1.0.2+default-dev (= ${binary:Version}),
+ librust-proxmox-rrd-1.0.2+rrd-v1-dev (= ${binary:Version})
 Description: Simple RRD database implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-rrd"
