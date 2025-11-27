@@ -1,3 +1,14 @@
+rust-pve-api-types (8.1.2-1) trixie; urgency=medium
+
+  * add bindings for a PVE nodes APT package versions and APT package
+    repository state.
+
+  * add bindings for get/update firewall options endpoints.
+
+  * add bindings for add list firewall rules endpoints.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 27 Nov 2025 21:27:47 +0100
+
 rust-pve-api-types (8.1.1-1) trixie; urgency=medium
 
   * derive Clone and PartialEq for LxcConfigNet.
