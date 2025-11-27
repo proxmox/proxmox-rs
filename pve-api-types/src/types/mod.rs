@@ -20,6 +20,8 @@ pub mod verifiers;
 mod fixed_string;
 pub use fixed_string::{FixedString, TooLongError};
 
+pub use proxmox_apt_api_types::APTRepositoriesResult;
+
 include!("../generated/types.rs");
 
 /// A PVE Upid, contrary to a PBS Upid, contains no 'task-id' number.

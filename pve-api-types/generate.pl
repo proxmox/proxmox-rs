@@ -366,6 +366,7 @@ api(GET => '/nodes/{node}/apt/update', 'list_available_updates', 'return-name' =
 api(POST => '/nodes/{node}/apt/update', 'update_apt_database', 'output-type' => 'PveUpid', 'param-name' => 'AptUpdateParams');
 api(GET => '/nodes/{node}/apt/changelog', 'get_package_changelog', 'output-type' => 'String');
 api(GET => '/nodes/{node}/apt/versions', 'get_package_versions', 'return-name' => 'InstalledPackage');
+api(GET => '/nodes/{node}/apt/repositories', 'get_apt_repositories', 'output-type' => 'APTRepositoriesResult');
 
 Schema2Rust::generate_enum('SdnObjectState', {
     type => 'string',

@@ -145,7 +145,6 @@
 /// - /nodes/{node}
 /// - /nodes/{node}/aplinfo
 /// - /nodes/{node}/apt
-/// - /nodes/{node}/apt/repositories
 /// - /nodes/{node}/capabilities
 /// - /nodes/{node}/capabilities/qemu
 /// - /nodes/{node}/capabilities/qemu/cpu-flags
@@ -445,6 +444,11 @@ pub trait PveClient {
     /// Create a new sdn zone object.
     async fn create_zone(&self, params: CreateZone) -> Result<(), Error> {
         Err(Error::Other("create_zone not implemented"))
+    }
+
+    /// Get APT repository information.
+    async fn get_apt_repositories(&self, node: &str) -> Result<APTRepositoriesResult, Error> {
+        Err(Error::Other("get_apt_repositories not implemented"))
     }
 
     /// Get package changelogs.
@@ -951,6 +955,12 @@ where
     async fn create_zone(&self, params: CreateZone) -> Result<(), Error> {
         let url = "/api2/extjs/cluster/sdn/zones";
         self.0.post(url, &params).await?.nodata()
+    }
+
+    /// Get APT repository information.
+    async fn get_apt_repositories(&self, node: &str) -> Result<APTRepositoriesResult, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/apt/repositories");
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get package changelogs.
