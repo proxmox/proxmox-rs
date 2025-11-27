@@ -14,4 +14,5 @@ exclude.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_plain.workspace = true
 proxmox-schema = { workspace = true, features = ["api-macro"] }
+proxmox-serde.workspace = true
 proxmox-config-digest.workspace = true

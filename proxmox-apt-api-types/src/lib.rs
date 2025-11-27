@@ -147,6 +147,7 @@ pub struct APTRepository {
     pub file_type: APTRepositoryFileType,
 
     /// Whether the repository is enabled or not.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     pub enabled: bool,
 }
 
@@ -256,7 +257,11 @@ pub struct APTStandardRepository {
 
     /// Configuration status of the associated repository, where `None` means
     /// not configured, and `Some(bool)` indicates enabled or disabled.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "proxmox_serde::perl::deserialize_bool"
+    )]
     pub status: Option<bool>,
 
     /// Display name of the repository.
