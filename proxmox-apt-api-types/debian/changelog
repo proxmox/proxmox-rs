@@ -1,3 +1,9 @@
+rust-proxmox-apt-api-types (2.0.3-1) trixie; urgency=medium
+
+  * make APTStandardRepository serialization compatible with PVE's bool.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 27 Nov 2025 21:24:55 +0100
+
 rust-proxmox-apt-api-types (2.0.2-1) trixie; urgency=medium
 
   * apt update info: make the old_version field optional, as it only exists
