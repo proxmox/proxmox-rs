@@ -232,6 +232,101 @@ mod cluster_resource_content {
     }
 }
 
+#[api(
+    properties: {
+        ebtables: {
+            default: true,
+            optional: true,
+        },
+        enable: {
+            default: 0,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        log_ratelimit: {
+            format: &ApiStringFormat::PropertyString(&ClusterFirewallOptionsLogRatelimit::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        policy_forward: {
+            optional: true,
+            type: FirewallFWPolicy,
+        },
+        policy_in: {
+            optional: true,
+            type: FirewallIOPolicy,
+        },
+        policy_out: {
+            optional: true,
+            type: FirewallIOPolicy,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterFirewallOptions {
+    /// Enable ebtables rules cluster wide.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ebtables: Option<bool>,
+
+    /// Enable or disable the firewall cluster wide.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enable: Option<u64>,
+
+    /// Log ratelimiting settings
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_ratelimit: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_forward: Option<FirewallFWPolicy>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_in: Option<FirewallIOPolicy>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_out: Option<FirewallIOPolicy>,
+}
+
+#[api(
+    default_key: "enable",
+    properties: {
+        burst: {
+            default: 5,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        enable: {
+            default: true,
+        },
+        rate: {
+            default: "1/second",
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterFirewallOptionsLogRatelimit {
+    /// Initial burst of packages which will always get logged before the rate
+    /// is applied
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub burst: Option<u64>,
+
+    /// Enable or disable log rate limiting
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub enable: bool,
+
+    /// Frequency with which the burst bucket gets refilled
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rate: Option<String>,
+}
+
 const_regex! {
 
 CLUSTER_JOIN_INFO_PREFERRED_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
@@ -1717,6 +1812,215 @@ pub struct CreateZone {
 
     /// The SDN zone object identifier.
     pub zone: String,
+}
+
+#[api]
+/// Firewall IO policies.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum FirewallFWPolicy {
+    #[serde(rename = "ACCEPT")]
+    #[default]
+    /// ACCEPT.
+    Accept,
+    #[serde(rename = "DROP")]
+    /// DROP.
+    Drop,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(FirewallFWPolicy);
+serde_plain::derive_fromstr_from_deserialize!(FirewallFWPolicy);
+
+#[api]
+/// Firewall IO policies.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum FirewallIOPolicy {
+    #[serde(rename = "ACCEPT")]
+    /// ACCEPT.
+    Accept,
+    #[serde(rename = "DROP")]
+    /// DROP.
+    Drop,
+    #[serde(rename = "REJECT")]
+    /// REJECT.
+    Reject,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(FirewallIOPolicy);
+serde_plain::derive_fromstr_from_deserialize!(FirewallIOPolicy);
+
+#[api]
+/// Firewall log levels.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum FirewallLogLevel {
+    #[serde(rename = "emerg")]
+    /// emerg.
+    Emerg,
+    #[serde(rename = "alert")]
+    /// alert.
+    Alert,
+    #[serde(rename = "crit")]
+    /// crit.
+    Crit,
+    #[serde(rename = "err")]
+    /// err.
+    Error,
+    #[serde(rename = "warning")]
+    /// warning.
+    Warning,
+    #[serde(rename = "notice")]
+    /// notice.
+    Notice,
+    #[serde(rename = "info")]
+    /// info.
+    Info,
+    #[serde(rename = "debug")]
+    /// debug.
+    Debug,
+    #[serde(rename = "nolog")]
+    #[default]
+    /// nolog.
+    Nolog,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(FirewallLogLevel);
+serde_plain::derive_fromstr_from_deserialize!(FirewallLogLevel);
+
+#[api]
+/// Firewall conntrack helper.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum FwConntrackHelper {
+    #[serde(rename = "amanda")]
+    /// amanda.
+    Amanda,
+    #[serde(rename = "ftp")]
+    /// ftp.
+    Ftp,
+    #[serde(rename = "irc")]
+    /// irc.
+    Irc,
+    #[serde(rename = "netbios-ns")]
+    /// netbios-ns.
+    NetbiosNs,
+    #[serde(rename = "pptp")]
+    /// pptp.
+    Pptp,
+    #[serde(rename = "sane")]
+    /// sane.
+    Sane,
+    #[serde(rename = "sip")]
+    /// sip.
+    Sip,
+    #[serde(rename = "snmp")]
+    /// snmp.
+    Snmp,
+    #[serde(rename = "tftp")]
+    /// tftp.
+    Tftp,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(FwConntrackHelper);
+serde_plain::derive_fromstr_from_deserialize!(FwConntrackHelper);
+
+#[api(
+    properties: {
+        dhcp: {
+            default: false,
+            optional: true,
+        },
+        enable: {
+            default: false,
+            optional: true,
+        },
+        ipfilter: {
+            default: false,
+            optional: true,
+        },
+        log_level_in: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        log_level_out: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        macfilter: {
+            default: true,
+            optional: true,
+        },
+        ndp: {
+            default: true,
+            optional: true,
+        },
+        policy_in: {
+            optional: true,
+            type: FirewallIOPolicy,
+        },
+        policy_out: {
+            optional: true,
+            type: FirewallIOPolicy,
+        },
+        radv: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct GuestFirewallOptions {
+    /// Enable DHCP.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dhcp: Option<bool>,
+
+    /// Enable/disable firewall rules.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enable: Option<bool>,
+
+    /// Enable default IP filters. This is equivalent to adding an empty
+    /// ipfilter-net<id> ipset for every interface. Such ipsets implicitly
+    /// contain sane default restrictions such as restricting IPv6 link local
+    /// addresses to the one derived from the interface's MAC address. For
+    /// containers the configured IP addresses will be implicitly added.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ipfilter: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_in: Option<FirewallLogLevel>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_out: Option<FirewallLogLevel>,
+
+    /// Enable/disable MAC address filter.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub macfilter: Option<bool>,
+
+    /// Enable NDP (Neighbor Discovery Protocol).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ndp: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_in: Option<FirewallIOPolicy>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_out: Option<FirewallIOPolicy>,
+
+    /// Allow sending Router Advertisement.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub radv: Option<bool>,
 }
 
 #[api(
@@ -6316,6 +6620,108 @@ pub struct MigrateQemu {
     pub with_local_disks: Option<bool>,
 }
 
+const NODE_FIREWALL_OPTIONS_NF_CONNTRACK_HELPERS: Schema =
+    proxmox_schema::ArraySchema::new("list", &FwConntrackHelper::API_SCHEMA).schema();
+
+mod node_firewall_options_nf_conntrack_helpers {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    #[doc(hidden)]
+    pub trait Ser: Sized {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>;
+    }
+
+    impl<T: Serialize + for<'a> Deserialize<'a>> Ser for Vec<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            super::stringlist::serialize(
+                &self[..],
+                serializer,
+                &super::NODE_FIREWALL_OPTIONS_NF_CONNTRACK_HELPERS,
+            )
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            super::stringlist::deserialize(
+                deserializer,
+                &super::NODE_FIREWALL_OPTIONS_NF_CONNTRACK_HELPERS,
+            )
+        }
+    }
+
+    impl<T: Ser> Ser for Option<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            match self {
+                None => serializer.serialize_none(),
+                Some(inner) => inner.ser(serializer),
+            }
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            use std::fmt;
+            use std::marker::PhantomData;
+
+            struct V<T: Ser>(PhantomData<T>);
+
+            impl<'de, T: Ser> serde::de::Visitor<'de> for V<T> {
+                type Value = Option<T>;
+
+                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("an optional string")
+                }
+
+                fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                    Ok(None)
+                }
+
+                fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+                where
+                    D: Deserializer<'de>,
+                {
+                    T::de(deserializer).map(Some)
+                }
+
+                fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
+                    use serde::de::IntoDeserializer;
+                    T::de(value.into_deserializer()).map(Some)
+                }
+            }
+
+            deserializer.deserialize_option(V::<T>(PhantomData))
+        }
+    }
+
+    pub fn serialize<T, S>(this: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: Ser,
+    {
+        this.ser(serializer)
+    }
+
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+        T: Ser,
+    {
+        T::de(deserializer)
+    }
+}
+
 const_regex! {
 
 NETWORK_INTERFACE_BOND_PRIMARY_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
@@ -6962,6 +7368,187 @@ pub enum NetworkInterfaceVlanProtocol {
 }
 serde_plain::derive_display_from_serialize!(NetworkInterfaceVlanProtocol);
 serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceVlanProtocol);
+
+#[api(
+    properties: {
+        enable: {
+            default: true,
+            optional: true,
+        },
+        log_level_forward: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        log_level_in: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        log_level_out: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        log_nf_conntrack: {
+            default: false,
+            optional: true,
+        },
+        ndp: {
+            default: true,
+            optional: true,
+        },
+        nf_conntrack_allow_invalid: {
+            default: false,
+            optional: true,
+        },
+        nf_conntrack_helpers: {
+            default: "",
+            format: &ApiStringFormat::PropertyString(&NODE_FIREWALL_OPTIONS_NF_CONNTRACK_HELPERS),
+            optional: true,
+            type: String,
+        },
+        nf_conntrack_max: {
+            default: 262144,
+            minimum: 32768,
+            optional: true,
+            type: Integer,
+        },
+        nf_conntrack_tcp_timeout_established: {
+            default: 432000,
+            minimum: 7875,
+            optional: true,
+            type: Integer,
+        },
+        nf_conntrack_tcp_timeout_syn_recv: {
+            default: 60,
+            maximum: 60,
+            minimum: 30,
+            optional: true,
+            type: Integer,
+        },
+        nftables: {
+            default: false,
+            optional: true,
+        },
+        nosmurfs: {
+            default: false,
+            optional: true,
+        },
+        protection_synflood: {
+            default: false,
+            optional: true,
+        },
+        protection_synflood_burst: {
+            default: 1000,
+            optional: true,
+            type: Integer,
+        },
+        protection_synflood_rate: {
+            default: 200,
+            optional: true,
+            type: Integer,
+        },
+        smurf_log_level: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        tcp_flags_log_level: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        tcpflags: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeFirewallOptions {
+    /// Enable host firewall rules.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enable: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_forward: Option<FirewallLogLevel>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_in: Option<FirewallLogLevel>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_out: Option<FirewallLogLevel>,
+
+    /// Enable logging of conntrack information.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_nf_conntrack: Option<bool>,
+
+    /// Enable NDP (Neighbor Discovery Protocol).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ndp: Option<bool>,
+
+    /// Allow invalid packets on connection tracking.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_allow_invalid: Option<bool>,
+
+    /// Enable conntrack helpers for specific protocols. Supported protocols:
+    /// amanda, ftp, irc, netbios-ns, pptp, sane, sip, snmp, tftp
+    #[serde(with = "node_firewall_options_nf_conntrack_helpers")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_helpers: Option<Vec<FwConntrackHelper>>,
+
+    /// Maximum number of tracked connections.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_max: Option<u64>,
+
+    /// Conntrack established timeout.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_tcp_timeout_established: Option<u64>,
+
+    /// Conntrack syn recv timeout.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_tcp_timeout_syn_recv: Option<u8>,
+
+    /// Enable nftables based firewall (tech preview)
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nftables: Option<bool>,
+
+    /// Enable SMURFS filter.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nosmurfs: Option<bool>,
+
+    /// Enable synflood protection
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection_synflood: Option<bool>,
+
+    /// Synflood protection rate burst by ip src.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection_synflood_burst: Option<i64>,
+
+    /// Synflood protection rate syn/sec by ip src.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection_synflood_rate: Option<i64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smurf_log_level: Option<FirewallLogLevel>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tcp_flags_log_level: Option<FirewallLogLevel>,
+
+    /// Filter illegal combinations of TCP flags.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tcpflags: Option<bool>,
+}
 
 #[api(
     properties: {
@@ -16219,6 +16806,328 @@ pub struct TaskStatus {
     pub user: String,
 }
 
+const UPDATE_NODE_FIREWALL_OPTIONS_NF_CONNTRACK_HELPERS: Schema =
+    proxmox_schema::ArraySchema::new("list", &FwConntrackHelper::API_SCHEMA).schema();
+
+mod update_node_firewall_options_nf_conntrack_helpers {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    #[doc(hidden)]
+    pub trait Ser: Sized {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>;
+    }
+
+    impl<T: Serialize + for<'a> Deserialize<'a>> Ser for Vec<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            super::stringlist::serialize(
+                &self[..],
+                serializer,
+                &super::UPDATE_NODE_FIREWALL_OPTIONS_NF_CONNTRACK_HELPERS,
+            )
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            super::stringlist::deserialize(
+                deserializer,
+                &super::UPDATE_NODE_FIREWALL_OPTIONS_NF_CONNTRACK_HELPERS,
+            )
+        }
+    }
+
+    impl<T: Ser> Ser for Option<T> {
+        fn ser<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
+            match self {
+                None => serializer.serialize_none(),
+                Some(inner) => inner.ser(serializer),
+            }
+        }
+
+        fn de<'de, D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            use std::fmt;
+            use std::marker::PhantomData;
+
+            struct V<T: Ser>(PhantomData<T>);
+
+            impl<'de, T: Ser> serde::de::Visitor<'de> for V<T> {
+                type Value = Option<T>;
+
+                fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    f.write_str("an optional string")
+                }
+
+                fn visit_none<E: serde::de::Error>(self) -> Result<Self::Value, E> {
+                    Ok(None)
+                }
+
+                fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+                where
+                    D: Deserializer<'de>,
+                {
+                    T::de(deserializer).map(Some)
+                }
+
+                fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
+                    use serde::de::IntoDeserializer;
+                    T::de(value.into_deserializer()).map(Some)
+                }
+            }
+
+            deserializer.deserialize_option(V::<T>(PhantomData))
+        }
+    }
+
+    pub fn serialize<T, S>(this: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+        T: Ser,
+    {
+        this.ser(serializer)
+    }
+
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+        T: Ser,
+    {
+        T::de(deserializer)
+    }
+}
+
+const_regex! {
+
+UPDATE_CLUSTER_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_37() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_CLUSTER_FIREWALL_OPTIONS_DELETE_RE;
+}
+#[api(
+    properties: {
+        delete: {
+            items: {
+                description: "List item of type pve-configid.",
+                format: &ApiStringFormat::Pattern(&UPDATE_CLUSTER_FIREWALL_OPTIONS_DELETE_RE),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        digest: {
+            max_length: 64,
+            optional: true,
+            type: String,
+        },
+        ebtables: {
+            default: true,
+            optional: true,
+        },
+        enable: {
+            default: 0,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        log_ratelimit: {
+            format: &ApiStringFormat::PropertyString(&ClusterFirewallOptionsLogRatelimit::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        policy_forward: {
+            optional: true,
+            type: FirewallFWPolicy,
+        },
+        policy_in: {
+            optional: true,
+            type: FirewallIOPolicy,
+        },
+        policy_out: {
+            optional: true,
+            type: FirewallIOPolicy,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateClusterFirewallOptions {
+    /// A list of settings you want to delete.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<Vec<String>>,
+
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Enable ebtables rules cluster wide.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ebtables: Option<bool>,
+
+    /// Enable or disable the firewall cluster wide.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enable: Option<u64>,
+
+    /// Log ratelimiting settings
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_ratelimit: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_forward: Option<FirewallFWPolicy>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_in: Option<FirewallIOPolicy>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_out: Option<FirewallIOPolicy>,
+}
+
+const_regex! {
+
+UPDATE_GUEST_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_38() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_GUEST_FIREWALL_OPTIONS_DELETE_RE;
+}
+#[api(
+    properties: {
+        delete: {
+            items: {
+                description: "List item of type pve-configid.",
+                format: &ApiStringFormat::Pattern(&UPDATE_GUEST_FIREWALL_OPTIONS_DELETE_RE),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        dhcp: {
+            default: false,
+            optional: true,
+        },
+        digest: {
+            max_length: 64,
+            optional: true,
+            type: String,
+        },
+        enable: {
+            default: false,
+            optional: true,
+        },
+        ipfilter: {
+            default: false,
+            optional: true,
+        },
+        log_level_in: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        log_level_out: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        macfilter: {
+            default: true,
+            optional: true,
+        },
+        ndp: {
+            default: true,
+            optional: true,
+        },
+        policy_in: {
+            optional: true,
+            type: FirewallIOPolicy,
+        },
+        policy_out: {
+            optional: true,
+            type: FirewallIOPolicy,
+        },
+        radv: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateGuestFirewallOptions {
+    /// A list of settings you want to delete.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<Vec<String>>,
+
+    /// Enable DHCP.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dhcp: Option<bool>,
+
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Enable/disable firewall rules.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enable: Option<bool>,
+
+    /// Enable default IP filters. This is equivalent to adding an empty
+    /// ipfilter-net<id> ipset for every interface. Such ipsets implicitly
+    /// contain sane default restrictions such as restricting IPv6 link local
+    /// addresses to the one derived from the interface's MAC address. For
+    /// containers the configured IP addresses will be implicitly added.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ipfilter: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_in: Option<FirewallLogLevel>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_out: Option<FirewallLogLevel>,
+
+    /// Enable/disable MAC address filter.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub macfilter: Option<bool>,
+
+    /// Enable NDP (Neighbor Discovery Protocol).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ndp: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_in: Option<FirewallIOPolicy>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_out: Option<FirewallIOPolicy>,
+
+    /// Allow sending Router Advertisement.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub radv: Option<bool>,
+}
+
 const_regex! {
 
 UPDATE_LXC_CONFIG_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
@@ -16229,7 +17138,7 @@ UPDATE_LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
 }
 
 #[test]
-fn test_regex_compilation_37() {
+fn test_regex_compilation_39() {
     use regex::Regex;
     let _: &Regex = &UPDATE_LXC_CONFIG_DELETE_RE;
     let _: &Regex = &UPDATE_LXC_CONFIG_REVERT_RE;
@@ -16603,6 +17512,221 @@ pub struct UpdateLxcConfig {
 
 const_regex! {
 
+UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_40() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE;
+}
+#[api(
+    properties: {
+        delete: {
+            items: {
+                description: "List item of type pve-configid.",
+                format: &ApiStringFormat::Pattern(&UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        digest: {
+            max_length: 64,
+            optional: true,
+            type: String,
+        },
+        enable: {
+            default: true,
+            optional: true,
+        },
+        log_level_forward: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        log_level_in: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        log_level_out: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        log_nf_conntrack: {
+            default: false,
+            optional: true,
+        },
+        ndp: {
+            default: true,
+            optional: true,
+        },
+        nf_conntrack_allow_invalid: {
+            default: false,
+            optional: true,
+        },
+        nf_conntrack_helpers: {
+            default: "",
+            format: &ApiStringFormat::PropertyString(&UPDATE_NODE_FIREWALL_OPTIONS_NF_CONNTRACK_HELPERS),
+            optional: true,
+            type: String,
+        },
+        nf_conntrack_max: {
+            default: 262144,
+            minimum: 32768,
+            optional: true,
+            type: Integer,
+        },
+        nf_conntrack_tcp_timeout_established: {
+            default: 432000,
+            minimum: 7875,
+            optional: true,
+            type: Integer,
+        },
+        nf_conntrack_tcp_timeout_syn_recv: {
+            default: 60,
+            maximum: 60,
+            minimum: 30,
+            optional: true,
+            type: Integer,
+        },
+        nftables: {
+            default: false,
+            optional: true,
+        },
+        nosmurfs: {
+            default: false,
+            optional: true,
+        },
+        protection_synflood: {
+            default: false,
+            optional: true,
+        },
+        protection_synflood_burst: {
+            default: 1000,
+            optional: true,
+            type: Integer,
+        },
+        protection_synflood_rate: {
+            default: 200,
+            optional: true,
+            type: Integer,
+        },
+        smurf_log_level: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        tcp_flags_log_level: {
+            optional: true,
+            type: FirewallLogLevel,
+        },
+        tcpflags: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateNodeFirewallOptions {
+    /// A list of settings you want to delete.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<Vec<String>>,
+
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Enable host firewall rules.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enable: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_forward: Option<FirewallLogLevel>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_in: Option<FirewallLogLevel>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_level_out: Option<FirewallLogLevel>,
+
+    /// Enable logging of conntrack information.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log_nf_conntrack: Option<bool>,
+
+    /// Enable NDP (Neighbor Discovery Protocol).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ndp: Option<bool>,
+
+    /// Allow invalid packets on connection tracking.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_allow_invalid: Option<bool>,
+
+    /// Enable conntrack helpers for specific protocols. Supported protocols:
+    /// amanda, ftp, irc, netbios-ns, pptp, sane, sip, snmp, tftp
+    #[serde(with = "update_node_firewall_options_nf_conntrack_helpers")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_helpers: Option<Vec<FwConntrackHelper>>,
+
+    /// Maximum number of tracked connections.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_max: Option<u64>,
+
+    /// Conntrack established timeout.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_tcp_timeout_established: Option<u64>,
+
+    /// Conntrack syn recv timeout.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nf_conntrack_tcp_timeout_syn_recv: Option<u8>,
+
+    /// Enable nftables based firewall (tech preview)
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nftables: Option<bool>,
+
+    /// Enable SMURFS filter.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nosmurfs: Option<bool>,
+
+    /// Enable synflood protection
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection_synflood: Option<bool>,
+
+    /// Synflood protection rate burst by ip src.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection_synflood_burst: Option<i64>,
+
+    /// Synflood protection rate syn/sec by ip src.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub protection_synflood_rate: Option<i64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub smurf_log_level: Option<FirewallLogLevel>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tcp_flags_log_level: Option<FirewallLogLevel>,
+
+    /// Filter illegal combinations of TCP flags.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tcpflags: Option<bool>,
+}
+
+const_regex! {
+
 UPDATE_QEMU_CONFIG_AFFINITY_RE = r##"^(\s*\d+(-\d+)?\s*)(,\s*\d+(-\d+)?\s*)?$"##;
 UPDATE_QEMU_CONFIG_BOOTDISK_RE = r##"^(ide|sata|scsi|virtio|efidisk|tpmstate)\d+$"##;
 UPDATE_QEMU_CONFIG_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
@@ -16614,7 +17738,7 @@ UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_38() {
+fn test_regex_compilation_41() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_BOOTDISK_RE;
@@ -17526,7 +18650,7 @@ UPDATE_QEMU_CONFIG_ASYNC_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_39() {
+fn test_regex_compilation_42() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_BOOTDISK_RE;
@@ -18416,7 +19540,7 @@ UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_40() {
+fn test_regex_compilation_43() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -18501,7 +19625,7 @@ UPDATE_QEMU_CONFIG_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_41() {
+fn test_regex_compilation_44() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_MODEL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SERIAL_RE;
@@ -18857,7 +19981,7 @@ UPDATE_QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_42() {
+fn test_regex_compilation_45() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SIZE_RE;
@@ -19202,7 +20326,7 @@ UPDATE_QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_43() {
+fn test_regex_compilation_46() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SIZE_RE;
@@ -19602,7 +20726,7 @@ UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_44() {
+fn test_regex_compilation_47() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -19665,7 +20789,7 @@ UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_45() {
+fn test_regex_compilation_48() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE;

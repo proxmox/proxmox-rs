@@ -67,7 +67,6 @@
 /// - /cluster/firewall/ipset/{name}
 /// - /cluster/firewall/ipset/{name}/{cidr}
 /// - /cluster/firewall/macros
-/// - /cluster/firewall/options
 /// - /cluster/firewall/refs
 /// - /cluster/firewall/rules
 /// - /cluster/firewall/rules/{pos}
@@ -205,7 +204,6 @@
 /// - /nodes/{node}/execute
 /// - /nodes/{node}/firewall
 /// - /nodes/{node}/firewall/log
-/// - /nodes/{node}/firewall/options
 /// - /nodes/{node}/firewall/rules
 /// - /nodes/{node}/firewall/rules/{pos}
 /// - /nodes/{node}/hardware
@@ -225,7 +223,6 @@
 /// - /nodes/{node}/lxc/{vmid}/firewall/ipset/{name}
 /// - /nodes/{node}/lxc/{vmid}/firewall/ipset/{name}/{cidr}
 /// - /nodes/{node}/lxc/{vmid}/firewall/log
-/// - /nodes/{node}/lxc/{vmid}/firewall/options
 /// - /nodes/{node}/lxc/{vmid}/firewall/refs
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules/{pos}
@@ -289,7 +286,6 @@
 /// - /nodes/{node}/qemu/{vmid}/firewall/ipset/{name}
 /// - /nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}
 /// - /nodes/{node}/qemu/{vmid}/firewall/log
-/// - /nodes/{node}/qemu/{vmid}/firewall/options
 /// - /nodes/{node}/qemu/{vmid}/firewall/refs
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules/{pos}
@@ -394,6 +390,11 @@ pub trait PveClient {
     /// Get information needed to join this cluster over the connected node.
     async fn cluster_config_join(&self, node: Option<String>) -> Result<ClusterJoinInfo, Error> {
         Err(Error::Other("cluster_config_join not implemented"))
+    }
+
+    /// Get Firewall options.
+    async fn cluster_firewall_options(&self) -> Result<ClusterFirewallOptions, Error> {
+        Err(Error::Other("cluster_firewall_options not implemented"))
     }
 
     /// Retrieve metrics of the cluster.
@@ -573,6 +574,15 @@ pub trait PveClient {
         Err(Error::Other("list_zones not implemented"))
     }
 
+    /// Get VM firewall options.
+    async fn lxc_firewall_options(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<GuestFirewallOptions, Error> {
+        Err(Error::Other("lxc_firewall_options not implemented"))
+    }
+
     /// Get container configuration.
     async fn lxc_get_config(
         &self,
@@ -644,6 +654,11 @@ pub trait PveClient {
         Err(Error::Other("migrate_qemu not implemented"))
     }
 
+    /// Get host firewall options.
+    async fn node_firewall_options(&self, node: &str) -> Result<NodeFirewallOptions, Error> {
+        Err(Error::Other("node_firewall_options not implemented"))
+    }
+
     /// Creates a VNC Shell proxy.
     async fn node_shell_termproxy(
         &self,
@@ -661,6 +676,15 @@ pub trait PveClient {
     /// List all custom and default CPU models.
     async fn qemu_cpu_capabilities(&self, node: &str) -> Result<Vec<QemuCpuModel>, Error> {
         Err(Error::Other("qemu_cpu_capabilities not implemented"))
+    }
+
+    /// Get VM firewall options.
+    async fn qemu_firewall_options(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<GuestFirewallOptions, Error> {
+        Err(Error::Other("qemu_firewall_options not implemented"))
     }
 
     /// Get the virtual machine configuration with pending configuration changes
@@ -780,6 +804,43 @@ pub trait PveClient {
         Err(Error::Other("sdn_apply not implemented"))
     }
 
+    /// Set Firewall options.
+    async fn set_cluster_firewall_options(
+        &self,
+        params: UpdateClusterFirewallOptions,
+    ) -> Result<(), Error> {
+        Err(Error::Other("set_cluster_firewall_options not implemented"))
+    }
+
+    /// Set Firewall options.
+    async fn set_lxc_firewall_options(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateGuestFirewallOptions,
+    ) -> Result<(), Error> {
+        Err(Error::Other("set_lxc_firewall_options not implemented"))
+    }
+
+    /// Set Firewall options.
+    async fn set_node_firewall_options(
+        &self,
+        node: &str,
+        params: UpdateNodeFirewallOptions,
+    ) -> Result<(), Error> {
+        Err(Error::Other("set_node_firewall_options not implemented"))
+    }
+
+    /// Set Firewall options.
+    async fn set_qemu_firewall_options(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateGuestFirewallOptions,
+    ) -> Result<(), Error> {
+        Err(Error::Other("set_qemu_firewall_options not implemented"))
+    }
+
     /// Shutdown the container. This will trigger a clean shutdown of the
     /// container, see lxc-stop(1) for details.
     async fn shutdown_lxc_async(
@@ -890,6 +951,12 @@ where
         let url = &ApiPathBuilder::new("/api2/extjs/cluster/config/join")
             .maybe_arg("node", &node)
             .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get Firewall options.
+    async fn cluster_firewall_options(&self) -> Result<ClusterFirewallOptions, Error> {
+        let url = "/api2/extjs/cluster/firewall/options";
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1153,6 +1220,16 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// Get VM firewall options.
+    async fn lxc_firewall_options(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<GuestFirewallOptions, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/firewall/options");
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Get container configuration.
     async fn lxc_get_config(
         &self,
@@ -1235,6 +1312,12 @@ where
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
+    /// Get host firewall options.
+    async fn node_firewall_options(&self, node: &str) -> Result<NodeFirewallOptions, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/firewall/options");
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Creates a VNC Shell proxy.
     async fn node_shell_termproxy(
         &self,
@@ -1254,6 +1337,16 @@ where
     /// List all custom and default CPU models.
     async fn qemu_cpu_capabilities(&self, node: &str) -> Result<Vec<QemuCpuModel>, Error> {
         let url = &format!("/api2/extjs/nodes/{node}/capabilities/qemu/cpu");
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get VM firewall options.
+    async fn qemu_firewall_options(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<GuestFirewallOptions, Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/firewall/options");
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1398,6 +1491,47 @@ where
     async fn sdn_apply(&self, params: ReloadSdn) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/cluster/sdn";
         Ok(self.0.put(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Set Firewall options.
+    async fn set_cluster_firewall_options(
+        &self,
+        params: UpdateClusterFirewallOptions,
+    ) -> Result<(), Error> {
+        let url = "/api2/extjs/cluster/firewall/options";
+        self.0.put(url, &params).await?.nodata()
+    }
+
+    /// Set Firewall options.
+    async fn set_lxc_firewall_options(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateGuestFirewallOptions,
+    ) -> Result<(), Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/firewall/options");
+        self.0.put(url, &params).await?.nodata()
+    }
+
+    /// Set Firewall options.
+    async fn set_node_firewall_options(
+        &self,
+        node: &str,
+        params: UpdateNodeFirewallOptions,
+    ) -> Result<(), Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/firewall/options");
+        self.0.put(url, &params).await?.nodata()
+    }
+
+    /// Set Firewall options.
+    async fn set_qemu_firewall_options(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: UpdateGuestFirewallOptions,
+    ) -> Result<(), Error> {
+        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/firewall/options");
+        self.0.put(url, &params).await?.nodata()
     }
 
     /// Shutdown the container. This will trigger a clean shutdown of the

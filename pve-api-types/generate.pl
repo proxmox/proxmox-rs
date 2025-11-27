@@ -368,6 +368,50 @@ api(GET => '/nodes/{node}/apt/changelog', 'get_package_changelog', 'output-type'
 api(GET => '/nodes/{node}/apt/versions', 'get_package_versions', 'return-name' => 'InstalledPackage');
 api(GET => '/nodes/{node}/apt/repositories', 'get_apt_repositories', 'output-type' => 'APTRepositoriesResult');
 
+Schema2Rust::generate_enum('FwConntrackHelper', {
+    type => 'string',
+    description => "Firewall conntrack helper.",
+    enum => ['amanda', 'ftp', 'irc', 'netbios-ns', 'pptp', 'sane', 'sip', 'snmp', 'tftp'],
+});
+
+Schema2Rust::register_enum_variant('FirewallLogLevel::err' => 'Error');
+Schema2Rust::generate_enum('FirewallLogLevel', {
+    type => 'string',
+    description => "Firewall log levels.",
+    enum => ['emerg', 'alert', 'crit', 'err', 'warning', 'notice', 'info', 'debug', 'nolog'],
+    default => 'nolog',
+});
+
+Schema2Rust::generate_enum('FirewallIOPolicy', {
+    type => 'string',
+    description => "Firewall IO policies.",
+    enum => ['ACCEPT', 'DROP', 'REJECT'],
+});
+
+Schema2Rust::generate_enum('FirewallFWPolicy', {
+    type => 'string',
+    description => "Firewall IO policies.",
+    enum => ['ACCEPT', 'DROP'],
+    default => 'ACCEPT',
+});
+
+Schema2Rust::register_format('pve-fw-conntrack-helper' => {
+    type => 'FwConntrackHelper',
+    kind => 'array',
+});
+
+# options
+api(GET => '/cluster/firewall/options', 'cluster_firewall_options', 'return-name' => 'ClusterFirewallOptions');
+api(PUT => '/cluster/firewall/options', 'set_cluster_firewall_options', 'param-name' => 'UpdateClusterFirewallOptions');
+
+api(GET => '/nodes/{node}/firewall/options', 'node_firewall_options', 'return-name' => 'NodeFirewallOptions');
+api(PUT => '/nodes/{node}/firewall/options', 'set_node_firewall_options', 'param-name' => 'UpdateNodeFirewallOptions');
+
+api(GET => '/nodes/{node}/lxc/{vmid}/firewall/options', 'lxc_firewall_options', 'return-name' => 'GuestFirewallOptions');
+api(PUT => '/nodes/{node}/lxc/{vmid}/firewall/options', 'set_lxc_firewall_options', 'param-name' => 'UpdateGuestFirewallOptions');
+api(GET => '/nodes/{node}/qemu/{vmid}/firewall/options', 'qemu_firewall_options', 'return-name' => 'GuestFirewallOptions');
+api(PUT => '/nodes/{node}/qemu/{vmid}/firewall/options', 'set_qemu_firewall_options', 'param-name' => 'UpdateGuestFirewallOptions');
+
 Schema2Rust::generate_enum('SdnObjectState', {
     type => 'string',
     description => "The state of an SDN object.",
