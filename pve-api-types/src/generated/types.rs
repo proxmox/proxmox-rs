@@ -15649,6 +15649,46 @@ pub struct SdnVnet {
     pub zone: Option<String>,
 }
 
+const_regex! {
+
+SDN_VNET_MAC_VRF_MAC_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_32() {
+    use regex::Regex;
+    let _: &Regex = &SDN_VNET_MAC_VRF_MAC_RE;
+}
+#[api(
+    properties: {
+        ip: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+            type: String,
+        },
+        mac: {
+            format: &ApiStringFormat::Pattern(&SDN_VNET_MAC_VRF_MAC_RE),
+            type: String,
+        },
+        nexthop: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct SdnVnetMacVrf {
+    /// The IP address of the MAC VRF entry.
+    pub ip: String,
+
+    /// The MAC address of the MAC VRF entry.
+    pub mac: String,
+
+    /// The IP address of the nexthop.
+    pub nexthop: String,
+}
+
 #[api(
     properties: {
         alias: {
@@ -15728,7 +15768,7 @@ SDN_ZONE_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_32() {
+fn test_regex_compilation_33() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_EXITNODES_PRIMARY_RE;
@@ -15997,6 +16037,44 @@ pub enum SdnZoneDhcp {
 serde_plain::derive_display_from_serialize!(SdnZoneDhcp);
 serde_plain::derive_fromstr_from_deserialize!(SdnZoneDhcp);
 
+#[api(
+    properties: {
+        ip: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidr),
+            type: String,
+        },
+        metric: {
+            type: Integer,
+        },
+        nexthops: {
+            items: {
+                description: "the interface name or ip address of the next hop",
+                type: String,
+            },
+            type: Array,
+        },
+        protocol: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct SdnZoneIpVrf {
+    /// The CIDR of the route table entry.
+    pub ip: String,
+
+    /// This route's metric.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub metric: i64,
+
+    /// A list of nexthops for the route table entry.
+    pub nexthops: Vec<String>,
+
+    /// The protocol where this route was learned from (e.g. BGP).
+    pub protocol: String,
+}
+
 const_regex! {
 
 SDN_ZONE_PENDING_EXITNODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
@@ -16005,7 +16083,7 @@ SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_33() {
+fn test_regex_compilation_34() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE;
@@ -16335,7 +16413,7 @@ START_QEMU_TARGETSTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z
 }
 
 #[test]
-fn test_regex_compilation_34() {
+fn test_regex_compilation_35() {
     use regex::Regex;
     let _: &Regex = &START_QEMU_MIGRATEDFROM_RE;
     let _: &Regex = &START_QEMU_TARGETSTORAGE_RE;
@@ -16509,7 +16587,7 @@ STOP_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_35() {
+fn test_regex_compilation_36() {
     use regex::Regex;
     let _: &Regex = &STOP_QEMU_MIGRATEDFROM_RE;
 }
@@ -16611,7 +16689,7 @@ STORAGE_INFO_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_36() {
+fn test_regex_compilation_37() {
     use regex::Regex;
     let _: &Regex = &STORAGE_INFO_STORAGE_RE;
 }
@@ -17049,7 +17127,7 @@ UPDATE_CLUSTER_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_37() {
+fn test_regex_compilation_38() {
     use regex::Regex;
     let _: &Regex = &UPDATE_CLUSTER_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -17141,7 +17219,7 @@ UPDATE_GUEST_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_38() {
+fn test_regex_compilation_39() {
     use regex::Regex;
     let _: &Regex = &UPDATE_GUEST_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -17272,7 +17350,7 @@ UPDATE_LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
 }
 
 #[test]
-fn test_regex_compilation_39() {
+fn test_regex_compilation_40() {
     use regex::Regex;
     let _: &Regex = &UPDATE_LXC_CONFIG_DELETE_RE;
     let _: &Regex = &UPDATE_LXC_CONFIG_REVERT_RE;
@@ -17651,7 +17729,7 @@ UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_40() {
+fn test_regex_compilation_41() {
     use regex::Regex;
     let _: &Regex = &UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -17872,7 +17950,7 @@ UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_41() {
+fn test_regex_compilation_42() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_BOOTDISK_RE;
@@ -18785,7 +18863,7 @@ UPDATE_QEMU_CONFIG_ASYNC_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_42() {
+fn test_regex_compilation_43() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_BOOTDISK_RE;
@@ -19676,7 +19754,7 @@ UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_43() {
+fn test_regex_compilation_44() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -19761,7 +19839,7 @@ UPDATE_QEMU_CONFIG_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_44() {
+fn test_regex_compilation_45() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_MODEL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SERIAL_RE;
@@ -20117,7 +20195,7 @@ UPDATE_QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_45() {
+fn test_regex_compilation_46() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SIZE_RE;
@@ -20462,7 +20540,7 @@ UPDATE_QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_46() {
+fn test_regex_compilation_47() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SIZE_RE;
@@ -20862,7 +20940,7 @@ UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_47() {
+fn test_regex_compilation_48() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -20925,7 +21003,7 @@ UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_48() {
+fn test_regex_compilation_49() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE;

@@ -332,12 +332,10 @@
 /// - /nodes/{node}/sdn/fabrics/{fabric}/routes
 /// - /nodes/{node}/sdn/vnets
 /// - /nodes/{node}/sdn/vnets/{vnet}
-/// - /nodes/{node}/sdn/vnets/{vnet}/mac-vrf
 /// - /nodes/{node}/sdn/zones
 /// - /nodes/{node}/sdn/zones/{zone}
 /// - /nodes/{node}/sdn/zones/{zone}/bridges
 /// - /nodes/{node}/sdn/zones/{zone}/content
-/// - /nodes/{node}/sdn/zones/{zone}/ip-vrf
 /// - /nodes/{node}/services
 /// - /nodes/{node}/services/{service}
 /// - /nodes/{node}/services/{service}/reload
@@ -492,6 +490,16 @@ pub trait PveClient {
     /// Read task status.
     async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
         Err(Error::Other("get_task_status not implemented"))
+    }
+
+    /// Get the MAC VRF for a VNet in an EVPN zone.
+    async fn get_vnet_mac_vrf(&self, node: &str, vnet: &str) -> Result<Vec<SdnVnetMacVrf>, Error> {
+        Err(Error::Other("get_vnet_mac_vrf not implemented"))
+    }
+
+    /// Get the IP VRF of an EVPN zone.
+    async fn get_zone_ip_vrf(&self, node: &str, zone: &str) -> Result<Vec<SdnZoneIpVrf>, Error> {
+        Err(Error::Other("get_zone_ip_vrf not implemented"))
     }
 
     /// List available updates.
@@ -1160,6 +1168,26 @@ where
             "/api2/extjs/nodes/{}/tasks/{}/status",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
             percent_encode(upid.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get the MAC VRF for a VNet in an EVPN zone.
+    async fn get_vnet_mac_vrf(&self, node: &str, vnet: &str) -> Result<Vec<SdnVnetMacVrf>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/sdn/vnets/{}/mac-vrf",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(vnet.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get the IP VRF of an EVPN zone.
+    async fn get_zone_ip_vrf(&self, node: &str, zone: &str) -> Result<Vec<SdnZoneIpVrf>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/sdn/zones/{}/ip-vrf",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(zone.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }

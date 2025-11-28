@@ -436,6 +436,8 @@ Schema2Rust::derive('SdnZone' => 'Clone', 'PartialEq');
 Schema2Rust::derive('SdnZonePending' => 'Clone', 'PartialEq');
 api(POST => '/cluster/sdn/zones', 'create_zone', 'param-name' => 'CreateZone');
 Schema2Rust::derive('CreateZone' => 'Clone', 'PartialEq');
+api(GET => '/nodes/{node}/sdn/zones/{zone}/ip-vrf', 'get_zone_ip_vrf', 'return-name' => 'SdnZoneIpVrf');
+Schema2Rust::derive('SdnZoneIpVrf' => 'Clone', 'PartialEq');
 
 api(GET => '/cluster/sdn/controllers', 'list_controllers', 'return-name' => 'SdnController');
 Schema2Rust::derive('SdnController' => 'Clone', 'PartialEq');
@@ -448,6 +450,8 @@ Schema2Rust::derive('SdnVnet' => 'Clone', 'PartialEq');
 Schema2Rust::derive('SdnVnetPending' => 'Clone', 'PartialEq');
 api(POST => '/cluster/sdn/vnets', 'create_vnet', 'param-name' => 'CreateVnet');
 Schema2Rust::derive('CreateVnet' => 'Clone', 'PartialEq');
+api(GET => '/nodes/{node}/sdn/vnets/{vnet}/mac-vrf', 'get_vnet_mac_vrf', 'return-name' => 'SdnVnetMacVrf');
+Schema2Rust::derive('SdnVnetMacVrf' => 'Clone', 'PartialEq');
 
 api(POST => '/cluster/sdn/lock', 'acquire_sdn_lock', 'param-name' => 'CreateSdnLock', 'output-type' => 'String');
 api(DELETE => '/cluster/sdn/lock', 'release_sdn_lock', 'param-name' => 'ReleaseSdnLock');
