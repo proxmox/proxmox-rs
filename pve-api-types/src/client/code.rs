@@ -2,6 +2,8 @@
 #![allow(unused)]
 //! The generated API client code.
 
+use percent_encoding::percent_encode;
+
 use proxmox_client::{ApiPathBuilder, ApiResponseData, Error, HttpApiClient};
 
 use crate::types::*;

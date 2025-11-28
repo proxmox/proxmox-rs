@@ -457,7 +457,27 @@ my sub return_expr : prototype($$) ($def, $expr) {
 my sub format_url : prototype($;$) ($def, $as_ref = 0) {
     if (defined($def->{url_params}) && $def->{url_params}->@*) {
         $as_ref = $as_ref ? '&' : '';
-        return "${as_ref}format!(\"/api2/extjs$def->{url}\")";
+
+        my $url_with_unnamed_params = url_with_unnamed_params($def->{url});
+
+        my $url = "${as_ref}format!(\"/api2/extjs${url_with_unnamed_params}\"";
+
+        # we have to percent encode string parameter in the url
+        for my $url_arg ($def->{url_params}->@*) {
+            my ($arg, $def) = @$url_arg;
+            my $name = $def->{rust_name};
+            my $type = $def->{type};
+
+            if ($type eq '&str') {
+                $url .= ",percent_encode(${name}.as_bytes(), percent_encoding::NON_ALPHANUMERIC)";
+            } elsif ($type =~ /^u8|u16|u32|u64|u128|i8|i16|i32|i64|i128|usize|isize|f32|f64$/) {
+                $url .= ",${name}";
+            } else {
+                $url .= ",percent_encode(${name}.to_string().as_bytes(), percent_encoding::NON_ALPHANUMERIC)";
+            }
+        }
+
+        $url .= ")";
     } else {
         return "\"/api2/extjs$def->{url}\"";
     }
@@ -1616,6 +1636,13 @@ my sub url_parameters : prototype($) {
     my ($path) = @_;
     my @params = ($path =~ /\{([^}]+)\}/g);
     return \@params;
+}
+
+# remove named params from the url
+sub url_with_unnamed_params : prototype($) {
+    my ($path) = @_;
+    $path =~ s/\{([^}]+)\}/\{\}/g;
+    return $path;
 }
 
 ### Extract method parameters and deal with path based parameters.
