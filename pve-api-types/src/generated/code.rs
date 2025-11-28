@@ -114,7 +114,6 @@
 /// - /cluster/notifications/targets
 /// - /cluster/notifications/targets/{name}
 /// - /cluster/notifications/targets/{name}/test
-/// - /cluster/options
 /// - /cluster/replication
 /// - /cluster/replication/{id}
 /// - /cluster/sdn/controllers/{controller}
@@ -399,6 +398,12 @@ pub trait PveClient {
         start_time: Option<i64>,
     ) -> Result<ClusterMetrics, Error> {
         Err(Error::Other("cluster_metrics_export not implemented"))
+    }
+
+    /// Get datacenter options. Without 'Sys.Audit' on '/' not all options are
+    /// returned.
+    async fn cluster_options(&self) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("cluster_options not implemented"))
     }
 
     /// Resources index (cluster wide).
@@ -1014,6 +1019,13 @@ where
             .maybe_arg("node-list", &node_list)
             .maybe_arg("start-time", &start_time)
             .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get datacenter options. Without 'Sys.Audit' on '/' not all options are
+    /// returned.
+    async fn cluster_options(&self) -> Result<serde_json::Value, Error> {
+        let url = "/api2/extjs/cluster/options";
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
