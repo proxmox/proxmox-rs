@@ -185,7 +185,6 @@
 /// - /nodes/{node}/certificates/acme/certificate
 /// - /nodes/{node}/certificates/custom
 /// - /nodes/{node}/certificates/info
-/// - /nodes/{node}/config
 /// - /nodes/{node}/disks
 /// - /nodes/{node}/disks/directory
 /// - /nodes/{node}/disks/directory/{name}
@@ -684,6 +683,15 @@ pub trait PveClient {
         params: MigrateQemu,
     ) -> Result<PveUpid, Error> {
         Err(Error::Other("migrate_qemu not implemented"))
+    }
+
+    /// Get node configuration options.
+    async fn node_config(
+        &self,
+        node: &str,
+        property: Option<NodeConfigProperty>,
+    ) -> Result<NodeConfig, Error> {
+        Err(Error::Other("node_config not implemented"))
     }
 
     /// Get host firewall options.
@@ -1483,6 +1491,21 @@ where
             vmid
         );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Get node configuration options.
+    async fn node_config(
+        &self,
+        node: &str,
+        property: Option<NodeConfigProperty>,
+    ) -> Result<NodeConfig, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/config",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("property", &property)
+        .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get host firewall options.

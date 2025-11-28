@@ -7502,6 +7502,275 @@ serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceVlanProtocol);
 
 #[api(
     properties: {
+        acme: {
+            format: &ApiStringFormat::PropertyString(&NodeConfigAcme::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        acmedomain: {
+            type: NodeConfigAcmedomainArray,
+        },
+        "ballooning-target": {
+            default: 80,
+            maximum: 100,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        description: {
+            max_length: 65536,
+            optional: true,
+            type: String,
+        },
+        digest: {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        "startall-onboot-delay": {
+            default: 0,
+            maximum: 300,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        wakeonlan: {
+            format: &ApiStringFormat::PropertyString(&NodeConfigWakeonlan::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeConfig {
+    /// Node specific ACME settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub acme: Option<String>,
+
+    /// ACME domain and validation plugin
+    #[serde(flatten)]
+    pub acmedomain: NodeConfigAcmedomainArray,
+
+    /// RAM usage target for ballooning (in percent of total memory)
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ballooning-target")]
+    pub ballooning_target: Option<u8>,
+
+    /// Description for the Node. Shown in the web-interface node notes panel.
+    /// This is saved as comment inside the configuration file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    /// Prevent changes if current configuration file has different SHA1 digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Initial delay in seconds, before starting all the Virtual Guests with
+    /// on-boot enabled.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "startall-onboot-delay")]
+    pub startall_onboot_delay: Option<u16>,
+
+    /// Node specific wake on LAN settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wakeonlan: Option<String>,
+}
+generate_array_field! {
+    NodeConfigAcmedomainArray [ 6 ] :
+    r#"ACME domain and validation plugin"#,
+    String => {
+        description: "ACME domain and validation plugin",
+        format: &ApiStringFormat::PropertyString(&NodeConfigAcmedomain::API_SCHEMA),
+        type: String,
+    }
+    acmedomain
+}
+
+const_regex! {
+
+NODE_CONFIG_ACME_ACCOUNT_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_16() {
+    use regex::Regex;
+    let _: &Regex = &NODE_CONFIG_ACME_ACCOUNT_RE;
+}
+#[api(
+    properties: {
+        account: {
+            default: "default",
+            format: &ApiStringFormat::Pattern(&NODE_CONFIG_ACME_ACCOUNT_RE),
+            optional: true,
+            type: String,
+        },
+        domains: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_acme_domain),
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeConfigAcme {
+    /// ACME account config file name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub account: Option<String>,
+
+    /// List of domains for this node's ACME certificate
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub domains: Option<String>,
+}
+
+const_regex! {
+
+NODE_CONFIG_ACMEDOMAIN_PLUGIN_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_17() {
+    use regex::Regex;
+    let _: &Regex = &NODE_CONFIG_ACMEDOMAIN_PLUGIN_RE;
+}
+#[api(
+    default_key: "domain",
+    properties: {
+        alias: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_acme_alias),
+            optional: true,
+            type: String,
+        },
+        domain: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_acme_domain),
+            type: String,
+        },
+        plugin: {
+            default: "standalone",
+            format: &ApiStringFormat::Pattern(&NODE_CONFIG_ACMEDOMAIN_PLUGIN_RE),
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeConfigAcmedomain {
+    /// Alias for the Domain to verify ACME Challenge over DNS
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alias: Option<String>,
+
+    /// domain for this node's ACME certificate
+    pub domain: String,
+
+    /// The ACME plugin ID
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin: Option<String>,
+}
+
+#[api]
+/// Return only a specific property from the node configuration.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum NodeConfigProperty {
+    #[serde(rename = "acme")]
+    /// acme.
+    Acme,
+    #[serde(rename = "acmedomain0")]
+    /// acmedomain0.
+    Acmedomain0,
+    #[serde(rename = "acmedomain1")]
+    /// acmedomain1.
+    Acmedomain1,
+    #[serde(rename = "acmedomain2")]
+    /// acmedomain2.
+    Acmedomain2,
+    #[serde(rename = "acmedomain3")]
+    /// acmedomain3.
+    Acmedomain3,
+    #[serde(rename = "acmedomain4")]
+    /// acmedomain4.
+    Acmedomain4,
+    #[serde(rename = "acmedomain5")]
+    /// acmedomain5.
+    Acmedomain5,
+    #[serde(rename = "ballooning-target")]
+    /// ballooning-target.
+    BallooningTarget,
+    #[serde(rename = "description")]
+    /// description.
+    Description,
+    #[serde(rename = "startall-onboot-delay")]
+    /// startall-onboot-delay.
+    StartallOnbootDelay,
+    #[serde(rename = "wakeonlan")]
+    /// wakeonlan.
+    Wakeonlan,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(NodeConfigProperty);
+serde_plain::derive_fromstr_from_deserialize!(NodeConfigProperty);
+
+const_regex! {
+
+NODE_CONFIG_WAKEONLAN_BIND_INTERFACE_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
+NODE_CONFIG_WAKEONLAN_MAC_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_18() {
+    use regex::Regex;
+    let _: &Regex = &NODE_CONFIG_WAKEONLAN_BIND_INTERFACE_RE;
+    let _: &Regex = &NODE_CONFIG_WAKEONLAN_MAC_RE;
+}
+#[api(
+    default_key: "mac",
+    properties: {
+        "bind-interface": {
+            default: "The interface carrying the default route",
+            format: &ApiStringFormat::Pattern(&NODE_CONFIG_WAKEONLAN_BIND_INTERFACE_RE),
+            optional: true,
+            type: String,
+        },
+        "broadcast-address": {
+            default: "255.255.255.255",
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ipv4),
+            optional: true,
+            type: String,
+        },
+        mac: {
+            format: &ApiStringFormat::Pattern(&NODE_CONFIG_WAKEONLAN_MAC_RE),
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeConfigWakeonlan {
+    /// Bind to this interface when sending wake on LAN packet
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bind-interface")]
+    pub bind_interface: Option<String>,
+
+    /// IPv4 broadcast address to use when sending wake on LAN packet
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "broadcast-address")]
+    pub broadcast_address: Option<String>,
+
+    /// MAC address for wake on LAN
+    pub mac: String,
+}
+
+#[api(
+    properties: {
         enable: {
             default: true,
             optional: true,
@@ -8403,7 +8672,7 @@ PVE_QM_HOSTPCI_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_16() {
+fn test_regex_compilation_19() {
     use regex::Regex;
     let _: &Regex = &PVE_QM_HOSTPCI_MAPPING_RE;
 }
@@ -8572,7 +8841,7 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_17() {
+fn test_regex_compilation_20() {
     use regex::Regex;
     let _: &Regex = &PVE_QM_IDE_MODEL_RE;
     let _: &Regex = &PVE_QM_IDE_SERIAL_RE;
@@ -9639,7 +9908,7 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_18() {
+fn test_regex_compilation_21() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &QEMU_CONFIG_BOOTDISK_RE;
@@ -10826,7 +11095,7 @@ QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_19() {
+fn test_regex_compilation_22() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -11234,7 +11503,7 @@ QEMU_CONFIG_NET_MACADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 }
 
 #[test]
-fn test_regex_compilation_20() {
+fn test_regex_compilation_23() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_NET_BRIDGE_RE;
     let _: &Regex = &QEMU_CONFIG_NET_MACADDR_RE;
@@ -11540,7 +11809,7 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_21() {
+fn test_regex_compilation_24() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &QEMU_CONFIG_SATA_SIZE_RE;
@@ -11873,7 +12142,7 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_22() {
+fn test_regex_compilation_25() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &QEMU_CONFIG_SCSI_SIZE_RE;
@@ -12337,7 +12606,7 @@ QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_23() {
+fn test_regex_compilation_26() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -12442,7 +12711,7 @@ QEMU_CONFIG_USB_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_24() {
+fn test_regex_compilation_27() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_USB_MAPPING_RE;
 }
@@ -12612,7 +12881,7 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_25() {
+fn test_regex_compilation_28() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &QEMU_CONFIG_VIRTIO_SIZE_RE;
@@ -12943,7 +13212,7 @@ QEMU_CONFIG_VIRTIOFS_DIRID_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_26() {
+fn test_regex_compilation_29() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_VIRTIOFS_DIRID_RE;
 }
@@ -13240,7 +13509,7 @@ QEMU_MOVE_DISK_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_27() {
+fn test_regex_compilation_30() {
     use regex::Regex;
     let _: &Regex = &QEMU_MOVE_DISK_STORAGE_RE;
 }
@@ -14840,7 +15109,7 @@ REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:
 }
 
 #[test]
-fn test_regex_compilation_28() {
+fn test_regex_compilation_31() {
     use regex::Regex;
     let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_BRIDGE_RE;
     let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE;
@@ -14957,7 +15226,7 @@ REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i
 }
 
 #[test]
-fn test_regex_compilation_29() {
+fn test_regex_compilation_32() {
     use regex::Regex;
     let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_BRIDGE_RE;
     let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE;
@@ -15274,7 +15543,7 @@ SDN_CONTROLLER_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F
 }
 
 #[test]
-fn test_regex_compilation_30() {
+fn test_regex_compilation_33() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_ISIS_NET_RE;
@@ -15427,7 +15696,7 @@ SDN_CONTROLLER_PENDING_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\
 }
 
 #[test]
-fn test_regex_compilation_31() {
+fn test_regex_compilation_34() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_NET_RE;
@@ -15656,7 +15925,7 @@ SDN_VNET_MAC_VRF_MAC_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 }
 
 #[test]
-fn test_regex_compilation_32() {
+fn test_regex_compilation_35() {
     use regex::Regex;
     let _: &Regex = &SDN_VNET_MAC_VRF_MAC_RE;
 }
@@ -15768,7 +16037,7 @@ SDN_ZONE_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_33() {
+fn test_regex_compilation_36() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_EXITNODES_PRIMARY_RE;
@@ -16083,7 +16352,7 @@ SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_34() {
+fn test_regex_compilation_37() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE;
@@ -16413,7 +16682,7 @@ START_QEMU_TARGETSTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z
 }
 
 #[test]
-fn test_regex_compilation_35() {
+fn test_regex_compilation_38() {
     use regex::Regex;
     let _: &Regex = &START_QEMU_MIGRATEDFROM_RE;
     let _: &Regex = &START_QEMU_TARGETSTORAGE_RE;
@@ -16587,7 +16856,7 @@ STOP_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_36() {
+fn test_regex_compilation_39() {
     use regex::Regex;
     let _: &Regex = &STOP_QEMU_MIGRATEDFROM_RE;
 }
@@ -16689,7 +16958,7 @@ STORAGE_INFO_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_37() {
+fn test_regex_compilation_40() {
     use regex::Regex;
     let _: &Regex = &STORAGE_INFO_STORAGE_RE;
 }
@@ -17127,7 +17396,7 @@ UPDATE_CLUSTER_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_38() {
+fn test_regex_compilation_41() {
     use regex::Regex;
     let _: &Regex = &UPDATE_CLUSTER_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -17219,7 +17488,7 @@ UPDATE_GUEST_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_39() {
+fn test_regex_compilation_42() {
     use regex::Regex;
     let _: &Regex = &UPDATE_GUEST_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -17350,7 +17619,7 @@ UPDATE_LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
 }
 
 #[test]
-fn test_regex_compilation_40() {
+fn test_regex_compilation_43() {
     use regex::Regex;
     let _: &Regex = &UPDATE_LXC_CONFIG_DELETE_RE;
     let _: &Regex = &UPDATE_LXC_CONFIG_REVERT_RE;
@@ -17729,7 +17998,7 @@ UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_41() {
+fn test_regex_compilation_44() {
     use regex::Regex;
     let _: &Regex = &UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -17950,7 +18219,7 @@ UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_42() {
+fn test_regex_compilation_45() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_BOOTDISK_RE;
@@ -18863,7 +19132,7 @@ UPDATE_QEMU_CONFIG_ASYNC_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_43() {
+fn test_regex_compilation_46() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_BOOTDISK_RE;
@@ -19754,7 +20023,7 @@ UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_44() {
+fn test_regex_compilation_47() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -19839,7 +20108,7 @@ UPDATE_QEMU_CONFIG_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_45() {
+fn test_regex_compilation_48() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_MODEL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SERIAL_RE;
@@ -20195,7 +20464,7 @@ UPDATE_QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_46() {
+fn test_regex_compilation_49() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SIZE_RE;
@@ -20540,7 +20809,7 @@ UPDATE_QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_47() {
+fn test_regex_compilation_50() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SIZE_RE;
@@ -20940,7 +21209,7 @@ UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_48() {
+fn test_regex_compilation_51() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -21003,7 +21272,7 @@ UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_49() {
+fn test_regex_compilation_52() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE;

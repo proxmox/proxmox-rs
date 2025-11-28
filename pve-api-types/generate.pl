@@ -42,8 +42,8 @@ Schema2Rust::register_format('CIDRv4' => { code => 'verifiers::verify_cidrv4' })
 Schema2Rust::register_format('CIDRv6' => { code => 'verifiers::verify_cidrv6' });
 Schema2Rust::register_format('ipv4mask' => { code => 'verifiers::verify_ipv4_mask' });
 Schema2Rust::register_format('mac-addr' => { regex => '^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$' });
-## Schema2Rust::register_format('pve-acme-alias' => { code => 'verify_pve_acme_alias' });
-## Schema2Rust::register_format('pve-acme-domain' => { code => 'verify_pve_acme_domain' });
+Schema2Rust::register_format('pve-acme-alias' => { code => 'verifiers::verify_pve_acme_alias' });
+Schema2Rust::register_format('pve-acme-domain' => { code => 'verifiers::verify_pve_acme_domain' });
 Schema2Rust::register_format('pve-bridge-id' => { regex => '^'.$BRIDGEID_RE.'$' });
 Schema2Rust::register_format('pve-configid' => { regex => $CONFIGID_RE });
 ## Schema2Rust::register_format('pve-groupid' => { code => 'verify_pve_groupid' });
@@ -213,13 +213,7 @@ Schema2Rust::derive('ClusterResource' => 'Clone', 'PartialEq');
 
 api(GET => '/nodes', 'list_nodes', 'return-name' => 'ClusterNodeIndexResponse');
 Schema2Rust::derive('ClusterNodeIndexResponse' => 'Clone', 'PartialEq');
-# api(
-#     GET => '/nodes/{node}/config',
-#     'get_node_config',
-#     'param-name' => 'GetNodeConfig',
-#     'return-name' => 'NodeConfig',
-#     # 'return-type' => { type => 'object', properties => PVE::NodeConfig::get_nodeconfig_schema() },
-# );
+api(GET => '/nodes/{node}/config', 'node_config', 'return-name' => 'NodeConfig');
 # api(PUT => '/nodes/{node}/config', 'set_node_config', 'param-name' => 'UpdateNodeConfig');
 # subscription api
 #

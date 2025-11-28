@@ -24,12 +24,24 @@ pub fn verify_pve_volume_id_or_absolute_path(s: &str) -> Result<(), Error> {
 macro_rules! DNS_NAMERE { () => (r##"([a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)"##) }
 #[rustfmt::skip]
 macro_rules! DNS_RE { () => (concat!("(", DNS_NAMERE!(), "\\.)*", DNS_NAMERE!(), "$")) }
+#[rustfmt::skip]
+macro_rules! ACME_NAME_RE { () => (r##"([a-zA-Z0-9]([a-zA-Z0-9_\-]*)?)"##) }
+#[rustfmt::skip]
+macro_rules! ACME_RE { () => (concat!("(", ACME_NAME_RE!(), "\\.)*", ACME_NAME_RE!(), "$")) }
+#[rustfmt::skip]
+macro_rules! ACME_ALIAS_NAME_RE { () => (r##"([a-zA-Z0-9_]([a-zA-Z0-9_\-]*)?)"##) }
+#[rustfmt::skip]
+macro_rules! ACME_ALIAS_RE { () => (concat!("(", ACME_ALIAS_NAME_RE!(), "\\.)*", ACME_ALIAS_NAME_RE!(), "$")) }
 
 const_regex! {
 
 pub VOLUME_ID = r##"^(?i)([a-z][a-z0-9\-\_\.]*[a-z0-9]):(.+)$"##;
 //pub DNS_NAMERE = concat!("^", DNS_NAMERE!(), "$");
 pub DNS_RE = concat!("^", DNS_RE!(), "$");
+
+pub ACME_ALIAS_RE = concat!("^", ACME_ALIAS_RE!(), "$");
+
+pub ACME_RE = concat!("^", ACME_RE!(), "$");
 
 pub FE80_RE = r##"^(?i)fe80:"##;
 
@@ -281,4 +293,20 @@ pub fn verify_sdn_bgp_rt(s: &str) -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+pub fn verify_pve_acme_domain(s: &str) -> Result<(), Error> {
+    if ACME_RE.is_match(s) {
+        Ok(())
+    } else {
+        bail!("not a valid acme domain");
+    }
+}
+
+pub fn verify_pve_acme_alias(s: &str) -> Result<(), Error> {
+    if ACME_ALIAS_RE.is_match(s) {
+        Ok(())
+    } else {
+        bail!("not a valid acme alias");
+    }
 }
