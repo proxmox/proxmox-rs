@@ -1656,10 +1656,6 @@ my sub method_parameters : prototype($$$$$) {
             $def->{type} = '&str';
         }
 
-        if ($def->{optional}) {
-            $def->{type} = "Option<$def->{type}>";
-        }
-
         push @$url_param_defs, [$param, $def];
     }
     $def->{url_params} = $url_param_defs;
