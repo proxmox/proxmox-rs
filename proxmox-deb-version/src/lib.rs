@@ -37,6 +37,21 @@ pub enum ParseError {
 ///
 /// Contains an optional epoch (defaults to 0), an upstream version, and an optional Debian
 /// revision. If the latter is none, it means that this is a native version.
+///
+/// # Examples
+///
+/// ```
+/// use proxmox_deb_version::Version;
+/// use std::str::FromStr;
+///
+/// let v1 = Version::from_str("1:2.0.3-1").unwrap();
+/// let v2 = Version::from_str("1:2.0.3-2").unwrap();
+///
+/// assert!(v1 < v2);
+/// assert_eq!(v1.epoch(), 1);
+/// assert_eq!(v1.upstream(), "2.0.3");
+/// assert_eq!(v1.revision(), Some("1"));
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Version {
     epoch: u32,
