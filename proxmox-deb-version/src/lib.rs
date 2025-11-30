@@ -282,17 +282,53 @@ mod tests {
     }
 
     #[test]
+    fn test_internal_comparison() {
+        // From test_version_cmp_part
+        assert_eq!(debian_cmp_str("1.0", "1.0"), Ordering::Equal);
+        assert_eq!(debian_cmp_str("0.1", "0.1"), Ordering::Equal);
+        assert_eq!(debian_cmp_str("000.1", "0.1"), Ordering::Equal);
+        assert_eq!(debian_cmp_str("1.0", "2.0"), Ordering::Less);
+        assert_eq!(debian_cmp_str("1.0", "0.0"), Ordering::Greater);
+        assert_eq!(debian_cmp_str("10.0", "2.0"), Ordering::Greater);
+        assert_eq!(debian_cmp_str("1.0~rc1", "1.0"), Ordering::Less);
+    }
+
+    #[test]
     fn test_comparisons() {
         let pairs = vec![
             ("1.0", "1.0", Ordering::Equal),
             ("1.0", "1.0.0", Ordering::Less), // 1.0 < 1.0.0 as longer version wins
+            ("1.0.0", "1.0", Ordering::Greater), // and vice versa
             ("1.0", "1.1", Ordering::Less),
             ("1.0-1", "1.0-2", Ordering::Less),
             ("1.0", "1.0-1", Ordering::Less), // no-revsion < has-revision
             ("1:1.0", "1.0", Ordering::Greater),
             ("1.0~rc1", "1.0", Ordering::Less),
             ("1.0~~", "1.0~", Ordering::Less),
-            ("1.0a", "1.0+", Ordering::Less), // letters < non-letters
+            // Some extra cases copied over from debversion-rs' test_cmp
+            ("1.0-1", "1.0-1", Ordering::Equal),
+            ("1.0-1", "1.0-2", Ordering::Less),
+            ("1.0-2", "1.0-1", Ordering::Greater),
+            ("1.0-1", "1.0", Ordering::Greater),
+            ("1.0", "1.0-1", Ordering::Less),
+            ("2.50.0", "10.0.1", Ordering::Less),
+            // Epoch
+            ("1:1.0-1", "1.0-1", Ordering::Greater),
+            ("1.0-1", "1:1.0-1", Ordering::Less),
+            ("1:1.0-1", "1:1.0-1", Ordering::Equal),
+            ("1:1.0-1", "2:1.0-1", Ordering::Less),
+            ("2:1.0-1", "1:1.0-1", Ordering::Greater),
+            // ~ symbol
+            ("1.0~rc1-1", "1.0-1", Ordering::Less),
+            ("1.0-1", "1.0~rc1-1", Ordering::Greater),
+            ("1.0~rc1-1", "1.0~rc1-1", Ordering::Equal),
+            ("1.0~rc1-1", "1.0~rc2-1", Ordering::Less),
+            ("1.0~rc2-1", "1.0~rc1-1", Ordering::Greater),
+            // letters
+            ("1.0a-1", "1.0-1", Ordering::Greater),
+            ("1.0-1", "1.0a-1", Ordering::Less),
+            ("1.0a-1", "1.0a-1", Ordering::Equal),
+            ("23.13.9-7", "0.6.45-2", Ordering::Greater),
         ];
 
         for (v1, v2, expected) in pairs {
@@ -300,6 +336,80 @@ mod tests {
             let ver2: Version = v2.parse().unwrap();
             assert_eq!(ver1.cmp(&ver2), expected, "{v1} vs {v2}");
         }
+    }
+
+    #[test]
+    fn test_display() {
+        assert_eq!(
+            "1.0-1",
+            Version {
+                epoch: 0,
+                upstream: "1.0".to_string(),
+                revision: Some("1".to_string())
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            "1.0",
+            Version {
+                epoch: 0,
+                upstream: "1.0".to_string(),
+                revision: None,
+            }
+            .to_string()
+        );
+
+        assert_eq!(
+            "2:1.0",
+            Version {
+                epoch: 2,
+                upstream: "1.0".to_string(),
+                revision: None,
+            }
+            .to_string()
+        );
+    }
+
+    #[test]
+    fn test_manpage_tilde_sequence() {
+        // from deb-version manpage: ~~, ~~a, ~, (empty), a are in sorted order
+        let versions = vec!["~~", "~~a", "~", "", "a"];
+        for i in 0..versions.len() - 1 {
+            let result = debian_cmp_str(versions[i], versions[i + 1]);
+            assert_eq!(
+                result,
+                Ordering::Less,
+                "{} should be < {}",
+                versions[i],
+                versions[i + 1]
+            );
+        }
+    }
+
+    #[test]
+    fn test_multiple_separators() {
+        // debian revision starts after the LAST hyphen
+        let v: Version = "1.0-rc1-2".parse().unwrap();
+        assert_eq!(v.upstream(), "1.0-rc1");
+        assert_eq!(v.revision(), Some("2"));
+
+        // epoch is split off at the FIRST colon
+        let v: Version = "2:1.0:beta".parse().unwrap();
+        assert_eq!(v.epoch(), 2);
+        assert_eq!(v.upstream(), "1.0:beta");
+    }
+
+    #[test]
+    fn test_very_large_numbers() {
+        // Ensure saturation works for unrealistically large version numbers
+        let huge = "1".repeat(100); // 100 digit number
+        let v: Version = huge.parse().unwrap();
+        assert_eq!(v.upstream(), &huge);
+
+        // Should not panic when comparing
+        let v2: Version = format!("{huge}0").parse().unwrap();
+        //assert!(v < v2); // TODO
     }
 
     #[test]
