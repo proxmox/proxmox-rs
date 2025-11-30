@@ -66,6 +66,9 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 "This repository contains the Ceph Squid packages before they are moved to the \
                 main repository."
             }
+            APTRepositoryHandle::UnknownEnumValue(s) => {
+                return format!("Unknown repository variant {s}");
+            }
         }
         .to_string()
     }
@@ -78,6 +81,9 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             APTRepositoryHandle::CephSquidEnterprise => "Ceph Squid Enterprise",
             APTRepositoryHandle::CephSquidNoSubscription => "Ceph Squid No-Subscription",
             APTRepositoryHandle::CephSquidTest => "Ceph Squid Test",
+            APTRepositoryHandle::UnknownEnumValue(s) => {
+                return format!("Unknown repository variant {s}");
+            }
         }
         .to_string()
     }
@@ -96,6 +102,9 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 | APTRepositoryHandle::CephSquidTest => {
                     "/etc/apt/sources.list.d/ceph.sources".to_string()
                 }
+                APTRepositoryHandle::UnknownEnumValue(_) => {
+                    "/dev/null".to_string() // TODO: improve this! return Result or at least log?
+                }
             },
             _ => match self {
                 APTRepositoryHandle::Enterprise => {
@@ -107,6 +116,9 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 | APTRepositoryHandle::CephSquidNoSubscription
                 | APTRepositoryHandle::CephSquidTest => {
                     "/etc/apt/sources.list.d/ceph.list".to_string()
+                }
+                APTRepositoryHandle::UnknownEnumValue(_) => {
+                    "/dev/null".to_string() // TODO: improve this! return Result or at least log?
                 }
             },
         }
@@ -168,6 +180,13 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 "test".to_string(),
                 "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
+            APTRepositoryHandle::UnknownEnumValue(s) => (
+                // TODO: improve this, return result or at least log?
+                APTRepositoryPackageType::Deb,
+                vec!["unknown".to_string()],
+                s.to_string(),
+                "/usr/share/keyrings/proxmox-archive-keyring.gpg",
+            )
         }
     }
 
