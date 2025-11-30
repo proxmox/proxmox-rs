@@ -14,6 +14,7 @@ members = [
     "proxmox-compression",
     "proxmox-config-digest",
     "proxmox-daemon",
+    "proxmox-deb-version",
     "proxmox-dns-api",
     "proxmox-http",
     "proxmox-http-error",
