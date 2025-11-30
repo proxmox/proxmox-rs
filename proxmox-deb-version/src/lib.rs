@@ -4,8 +4,8 @@
 //!
 //! The implementation should be efficient enough for most use cases, but [Version] does use the
 //! (allocated) String type for storing the upstream and revision parts of the version. This is done
-//! as a trade-off between more convenience for a bit less efficiency, but version strings are quite
-//! small and so this won't really matter.
+//! as a trade-off between more convenience for a bit less efficiency. For just comparing two &str
+//! slices you can use the [cmp_versions] function, which avoids allocations for doing so.
 //!
 //! Very lightly inspired by [debversion-rs], but we have a much narrower focus and this is no
 //! reimplementation. Some specific test cases may have been taken over 1:1, but our implementation
@@ -94,33 +94,27 @@ impl Version {
     pub fn revision(&self) -> Option<&str> {
         self.revision.as_deref()
     }
+
+    /// Convert to borrowed parts for comparison
+    fn as_parts(&self) -> VersionParts<'_> {
+        VersionParts {
+            epoch: self.epoch,
+            upstream: &self.upstream,
+            revision: self.revision.as_deref(),
+        }
+    }
 }
 
 impl std::str::FromStr for Version {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.is_empty() {
-            return Err(ParseError::Empty);
-        }
-
-        // split epoch, if present
-        let (epoch, rest) = match s.split_once(':') {
-            Some((e, r)) => (e.parse().map_err(ParseError::InvalidEpoch)?, r),
-            None => (0, s),
-        };
-
-        // split upstream and revision at the *last* hyphen
-        let (upstream, revision) = match rest.rfind('-') {
-            Some(idx) => (&rest[..idx], Some(&rest[idx + 1..])),
-            None => (rest, None),
-        };
-
-        if upstream.is_empty() {
-            return Err(ParseError::MissingUpstream); // always required
-        }
-
-        Ok(Version::new_with_epoch(epoch, upstream, revision))
+        let parts = parse_version_parts(s)?;
+        Ok(Version::new_with_epoch(
+            parts.epoch,
+            parts.upstream,
+            parts.revision,
+        ))
     }
 }
 
@@ -161,18 +155,7 @@ impl<'a> TryFrom<&'a str> for Version {
 
 impl Ord for Version {
     fn cmp(&self, other: &Self) -> Ordering {
-        // 1. compare epoch
-        self.epoch
-            .cmp(&other.epoch)
-            // 2. compare upstream
-            .then_with(|| debian_cmp_str(&self.upstream, &other.upstream))
-            // 3. Compare revision
-            .then_with(|| match (&self.revision, &other.revision) {
-                (Some(a), Some(b)) => debian_cmp_str(a, b),
-                (Some(_), None) => Ordering::Greater,
-                (None, Some(_)) => Ordering::Less,
-                (None, None) => Ordering::Equal,
-            })
+        cmp_version_parts(&self.as_parts(), &other.as_parts())
     }
 }
 
@@ -180,6 +163,74 @@ impl PartialOrd for Version {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
+}
+
+/// Compare two Debian version strings without allocating.
+///
+/// This is more efficient than parsing both versions into [Version] structs when you only need to
+/// compare them once. For cases where you need to store or reuse versions, prefer parsing into
+/// [Version] first.
+///
+/// # Examples
+///
+/// ```
+/// use proxmox_deb_version::cmp_versions;
+/// use std::cmp::Ordering;
+///
+/// assert_eq!(cmp_versions("1.0", "2.0").unwrap(), Ordering::Less);
+/// assert_eq!(cmp_versions("1:1.0", "0:2.0").unwrap(), Ordering::Greater);
+/// assert_eq!(cmp_versions("1.0~rc1", "1.0").unwrap(), Ordering::Less);
+/// ```
+pub fn cmp_versions(a: &str, b: &str) -> Result<Ordering, ParseError> {
+    let a_parts = parse_version_parts(a)?;
+    let b_parts = parse_version_parts(b)?;
+    Ok(cmp_version_parts(&a_parts, &b_parts))
+}
+
+// Core types and functions that are shared between both approaches
+
+struct VersionParts<'a> {
+    epoch: u32,
+    upstream: &'a str,
+    revision: Option<&'a str>,
+}
+
+fn parse_version_parts(s: &str) -> Result<VersionParts<'_>, ParseError> {
+    if s.is_empty() {
+        return Err(ParseError::Empty);
+    }
+
+    let (epoch, rest) = match s.split_once(':') {
+        Some((e, r)) => (e.parse().map_err(ParseError::InvalidEpoch)?, r),
+        None => (0, s),
+    };
+
+    let (upstream, revision) = match rest.rfind('-') {
+        Some(idx) => (&rest[..idx], Some(&rest[idx + 1..])),
+        None => (rest, None),
+    };
+
+    if upstream.is_empty() {
+        return Err(ParseError::MissingUpstream);
+    }
+
+    Ok(VersionParts {
+        epoch,
+        upstream,
+        revision,
+    })
+}
+
+fn cmp_version_parts(a: &VersionParts, b: &VersionParts) -> Ordering {
+    a.epoch
+        .cmp(&b.epoch)
+        .then_with(|| debian_cmp_str(a.upstream, b.upstream))
+        .then_with(|| match (a.revision, b.revision) {
+            (Some(a_rev), Some(b_rev)) => debian_cmp_str(a_rev, b_rev),
+            (Some(_), None) => Ordering::Greater,
+            (None, Some(_)) => Ordering::Less,
+            (None, None) => Ordering::Equal,
+        })
 }
 
 /// Implements the Debian version sorting algorithm as per the deb-version manpage.
@@ -356,6 +407,9 @@ mod tests {
             let ver1: Version = v1.parse().unwrap();
             let ver2: Version = v2.parse().unwrap();
             assert_eq!(ver1.cmp(&ver2), expected, "{v1} vs {v2}");
+
+            // just to be sure check also the non-allocating function to behave the same way.
+            assert_eq!(cmp_versions(v1, v2).unwrap(), expected, "{v1} vs {v2}");
         }
     }
 
