@@ -1,3 +1,10 @@
+rust-proxmox-apt-api-types (2.0.4-1) trixie; urgency=medium
+
+  * add optional unknown fallback variant to APTRepositoryHandle as stop gap
+    until we rework/split that type.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 30 Nov 2025 23:35:30 +0100
+
 rust-proxmox-apt-api-types (2.0.3-1) trixie; urgency=medium
 
   * make APTStandardRepository serialization compatible with PVE's bool.
