@@ -442,7 +442,7 @@ impl Service<Request<Incoming>> for ApiService {
             }
 
             let mut response = match Arc::clone(&config)
-                .handle_request(req, &peer, rate_limit_tags.clone())
+                .handle_request(req, &peer, rate_limit_tags)
                 .await
             {
                 Ok(response) => response,

@@ -29,7 +29,7 @@ pub fn handle_enum(attribs: JSONObject, enum_ty: syn::ItemEnum) -> Result<TokenS
         }
         match &variant.fields {
             syn::Fields::Unit => {
-                if let Some(untagged) = attrs.untagged.clone() {
+                if let Some(untagged) = attrs.untagged {
                     error!(untagged, "untagged unit variants not supported");
                 }
                 unit_variants += 1;
