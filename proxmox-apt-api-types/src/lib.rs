@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 use proxmox_config_digest::ConfigDigest;
 use proxmox_schema::api;
 
+#[cfg(feature = "enum-fallback")]
+use proxmox_fixed_string::FixedString;
+
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -291,6 +294,10 @@ pub enum APTRepositoryHandle {
     CephSquidNoSubscription,
     /// Ceph Squid test repository.
     CephSquidTest,
+    #[cfg(feature = "enum-fallback")]
+    #[serde(untagged)]
+    /// Unknwon repository type.
+    UnknownEnumValue(FixedString),
 }
 
 serde_plain::derive_display_from_serialize!(APTRepositoryHandle);
