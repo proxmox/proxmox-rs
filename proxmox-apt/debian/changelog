@@ -3,7 +3,7 @@ rust-proxmox-apt (0.99.6-1) trixie; urgency=medium
   * add optional support for unknown variant in APTRepositoryHandle as stop
     gap for easier backward and forward compatibility.
 
- -- Proxmox Support Team <support@proxmox.com>  Mon, 01 Dec 2025 00:01:42 +0100
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 01 Dec 2025 00:08:17 +0100
 
 rust-proxmox-apt (0.99.5-1) trixie; urgency=medium
 
