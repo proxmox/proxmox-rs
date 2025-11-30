@@ -1,4 +1,4 @@
-rust-pbs-api-types (1.0.9-1) UNRELEASED; urgency=medium
+rust-pbs-api-types (1.0.9-1) trixie; urgency=medium
 
   * add optional fallback variants to enums in public API. This is guarded
     behind the "enum-fallback" feature so that consumers of these types can
