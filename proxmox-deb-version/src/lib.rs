@@ -13,6 +13,34 @@
 //! is the same for us, as deb-version declares it that way), and we currently also do not support
 //! changing the version, like incrementing it.
 //!
+//! # Usage
+//!
+//! Use [`Version`] when storing or reusing versions:
+//!
+//! ```
+//! use proxmox_deb_version::Version;
+//!
+//! let version: Version = "1:2.4.5-1".parse()?;
+//! let newer: Version = "1:2.4.6-1".parse()?;
+//!
+//! assert_eq!(version.epoch(), 1);
+//! assert_eq!(version.upstream(), "2.4.5");
+//! assert!(version < newer);
+//! # Ok::<(), proxmox_deb_version::ParseError>(())
+//! ```
+//!
+//! Use [`cmp_versions`] for one-off comparisons without allocating:
+//!
+//! ```
+//! use proxmox_deb_version::cmp_versions;
+//! use std::cmp::Ordering;
+//!
+//! if cmp_versions("1.0-1", "1.0-2")? == Ordering::Less {
+//!     println!("Upgrade available!");
+//! }
+//! # Ok::<(), proxmox_deb_version::ParseError>(())
+//! ```
+//!
 //! [deb-version]: https://manpages.debian.org/stable/dpkg-dev/deb-version.7.en.html
 //! [debversion-rs]: https://github.com/jelmer/debversion-rs
 
