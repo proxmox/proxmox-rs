@@ -292,8 +292,8 @@ fn compare_digits(a: &mut Peekable<Chars>, b: &mut Peekable<Chars>) -> Ordering 
     let mut first_diff = Ordering::Equal;
 
     loop {
-        let is_a_digit = a.peek().map_or(false, |c| c.is_ascii_digit());
-        let is_b_digit = b.peek().map_or(false, |c| c.is_ascii_digit());
+        let is_a_digit = a.peek().is_some_and(|c| c.is_ascii_digit());
+        let is_b_digit = b.peek().is_some_and(|c| c.is_ascii_digit());
 
         match (is_a_digit, is_b_digit) {
             (true, true) => {
