@@ -38,7 +38,7 @@ Provides:
  librust-proxmox-upgrade-checks-1+default-dev (= ${binary:Version}),
  librust-proxmox-upgrade-checks-1.0-dev (= ${binary:Version}),
  librust-proxmox-upgrade-checks-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-upgrade-checks-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-upgrade-checks-1.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-upgrade-checks-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-upgrade-checks-1.0.1+default-dev (= ${binary:Version})
 Description: Helpers to implement checks to help with (major) upgrades of Proxmox products - Rust source code
  Source code for Debianized Rust crate "proxmox-upgrade-checks"

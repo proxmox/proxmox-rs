@@ -1,3 +1,11 @@
+rust-proxmox-upgrade-checks (1.0.1-1) trixie; urgency=medium
+
+  * adapt check for the version of the old-package on upgrade now being an
+    Option, like it can happen when a new dependency is pulled in, as then
+    there cannot be an old option.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 30 Nov 2025 21:01:20 +0100
+
 rust-proxmox-upgrade-checks (1.0.0-1) trixie; urgency=medium
 
   * Initial release.
