@@ -132,6 +132,28 @@ impl std::fmt::Display for Version {
     }
 }
 
+impl From<Version> for String {
+    fn from(v: Version) -> Self {
+        v.to_string()
+    }
+}
+
+impl TryFrom<String> for Version {
+    type Error = ParseError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+
+impl<'a> TryFrom<&'a str> for Version {
+    type Error = ParseError;
+
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+
 impl Ord for Version {
     fn cmp(&self, other: &Self) -> Ordering {
         // 1. compare epoch
