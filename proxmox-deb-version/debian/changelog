@@ -1,5 +1,5 @@
-rust-proxmox-deb-version (0.1.0-1) UNRELEASED; urgency=medium
+rust-proxmox-deb-version (0.1.0-1) unstable; urgency=medium
 
   * initial version.
 
- -- Proxmox Support Team <support@proxmox.com>  Mon, 04 Oct 2021 11:38:53 +0200
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 30 Nov 2025 16:52:02 +0100
