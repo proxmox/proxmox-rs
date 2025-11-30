@@ -10,5 +10,13 @@ homepage.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[features]
+serde = ["dep:serde"]
+
 [dependencies]
 thiserror.workspace = true
+serde = { workspace = true, optional = true, features = ["derive"] }
+# NOTE: any extra dependency should be carefully weighted. Favor adding it as optional feature.
+
+[dev-dependencies]
+serde_json.workspace = true

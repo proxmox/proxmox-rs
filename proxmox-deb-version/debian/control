@@ -20,6 +20,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-thiserror-2+default-dev
+Suggests:
+ librust-proxmox-deb-version+serde-dev (= ${binary:Version})
 Provides:
  librust-proxmox-deb-version+default-dev (= ${binary:Version}),
  librust-proxmox-deb-version-0-dev (= ${binary:Version}),
@@ -30,3 +32,19 @@ Provides:
  librust-proxmox-deb-version-0.1.0+default-dev (= ${binary:Version})
 Description: Simple debian version comparision - Rust source code
  Source code for Debianized Rust crate "proxmox-deb-version"
+
+Package: librust-proxmox-deb-version+serde-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-deb-version-dev (= ${binary:Version}),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev
+Provides:
+ librust-proxmox-deb-version-0+serde-dev (= ${binary:Version}),
+ librust-proxmox-deb-version-0.1+serde-dev (= ${binary:Version}),
+ librust-proxmox-deb-version-0.1.0+serde-dev (= ${binary:Version})
+Description: Simple debian version comparision - feature "serde"
+ This metapackage enables feature "serde" for the Rust proxmox-deb-version
+ crate, by pulling in any additional dependencies needed by that feature.

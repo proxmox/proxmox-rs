@@ -22,6 +22,9 @@ use std::str::Chars;
 
 use thiserror::Error;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// Errors for parsing a Debian version string.
 #[derive(Error, Debug, Clone, PartialEq)]
 pub enum ParseError {
@@ -53,6 +56,8 @@ pub enum ParseError {
 /// assert_eq!(v1.revision(), Some("1"));
 /// ```
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(try_from = "String", into = "String"))]
 pub struct Version {
     epoch: u32,
     upstream: String,
@@ -295,5 +300,25 @@ mod tests {
             let ver2: Version = v2.parse().unwrap();
             assert_eq!(ver1.cmp(&ver2), expected, "{v1} vs {v2}");
         }
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_serde_roundtrip() {
+        let v: Version = "1:2.3-4".parse().unwrap();
+
+        let json = serde_json::to_string(&v).unwrap();
+        assert_eq!(json, r#""1:2.3-4""#);
+
+        let v2: Version = serde_json::from_str(&json).unwrap();
+        assert_eq!(v, v2);
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn test_serde_invalid() {
+        // Should fail gracefully with parse error
+        let result: Result<Version, _> = serde_json::from_str(r#""""#);
+        assert!(result.is_err());
     }
 }
