@@ -204,21 +204,42 @@ fn debian_cmp_str(a: &str, b: &str) -> Ordering {
 }
 
 fn compare_digits(a: &mut Peekable<Chars>, b: &mut Peekable<Chars>) -> Ordering {
-    parse_leading_digits(a).cmp(&parse_leading_digits(b))
+    // 1. skip leading zeros in both strings to handle 001 == 1
+    skip_zeros(a);
+    skip_zeros(b);
+
+    // 2. compare the remaining significant digits. The number with more digits is always larger.
+    //    For equal digits, use lexicographically comparison to find the larger one.
+    let mut first_diff = Ordering::Equal;
+
+    loop {
+        let is_a_digit = a.peek().map_or(false, |c| c.is_ascii_digit());
+        let is_b_digit = b.peek().map_or(false, |c| c.is_ascii_digit());
+
+        match (is_a_digit, is_b_digit) {
+            (true, true) => {
+                let ca = a.next().unwrap();
+                let cb = b.next().unwrap();
+                // only record the first difference, but keep going to check lengths
+                if first_diff == Ordering::Equal {
+                    first_diff = ca.cmp(&cb);
+                }
+            }
+            (true, false) => return Ordering::Greater, // a is longer -> greater
+            (false, true) => return Ordering::Less,    // b is longer -> greater
+            (false, false) => return first_diff,       // same length -> lexical compare
+        }
+    }
 }
 
-fn parse_leading_digits(chars: &mut Peekable<Chars>) -> u64 {
-    let mut num: u64 = 0;
-    while let Some(&c) = chars.peek() {
-        if let Some(d) = c.to_digit(10) {
-            chars.next();
-            // saturating add to cope with extremely long version numbers gracefully
-            num = num.saturating_mul(10).saturating_add(d as u64);
+fn skip_zeros(iter: &mut Peekable<Chars>) {
+    while let Some(&c) = iter.peek() {
+        if c == '0' {
+            iter.next();
         } else {
             break;
         }
     }
-    num
 }
 
 fn compare_non_digits(a: &mut Peekable<Chars>, b: &mut Peekable<Chars>) -> Ordering {
@@ -409,7 +430,7 @@ mod tests {
 
         // Should not panic when comparing
         let v2: Version = format!("{huge}0").parse().unwrap();
-        //assert!(v < v2); // TODO
+        assert!(v < v2);
     }
 
     #[test]
