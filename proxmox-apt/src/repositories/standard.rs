@@ -66,6 +66,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 "This repository contains the Ceph Squid packages before they are moved to the \
                 main repository."
             }
+            #[cfg(feature = "enum-fallback")]
             APTRepositoryHandle::UnknownEnumValue(s) => {
                 return format!("Unknown repository variant {s}");
             }
@@ -81,6 +82,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             APTRepositoryHandle::CephSquidEnterprise => "Ceph Squid Enterprise",
             APTRepositoryHandle::CephSquidNoSubscription => "Ceph Squid No-Subscription",
             APTRepositoryHandle::CephSquidTest => "Ceph Squid Test",
+            #[cfg(feature = "enum-fallback")]
             APTRepositoryHandle::UnknownEnumValue(s) => {
                 return format!("Unknown repository variant {s}");
             }
@@ -102,6 +104,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 | APTRepositoryHandle::CephSquidTest => {
                     "/etc/apt/sources.list.d/ceph.sources".to_string()
                 }
+                #[cfg(feature = "enum-fallback")]
                 APTRepositoryHandle::UnknownEnumValue(_) => {
                     "/dev/null".to_string() // TODO: improve this! return Result or at least log?
                 }
@@ -117,6 +120,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 | APTRepositoryHandle::CephSquidTest => {
                     "/etc/apt/sources.list.d/ceph.list".to_string()
                 }
+                #[cfg(feature = "enum-fallback")]
                 APTRepositoryHandle::UnknownEnumValue(_) => {
                     "/dev/null".to_string() // TODO: improve this! return Result or at least log?
                 }
@@ -180,13 +184,14 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 "test".to_string(),
                 "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
+            #[cfg(feature = "enum-fallback")]
             APTRepositoryHandle::UnknownEnumValue(s) => (
                 // TODO: improve this, return result or at least log?
                 APTRepositoryPackageType::Deb,
                 vec!["unknown".to_string()],
                 s.to_string(),
                 "/usr/share/keyrings/proxmox-archive-keyring.gpg",
-            )
+            ),
         }
     }
 
