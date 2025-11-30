@@ -1,4 +1,13 @@
-rust-pbs-api-types (1.0.8-1) UNRELEASED; urgency=medium
+rust-pbs-api-types (1.0.9-1) UNRELEASED; urgency=medium
+
+  * add optional fallback variants to enums in public API. This is guarded
+    behind the "enum-fallback" feature so that consumers of these types can
+    avoid failing serialization and see what they missed while producers of
+    this types do not need to care about this.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 30 Nov 2025 22:07:22 +0100
+
+rust-pbs-api-types (1.0.8-1) trixie; urgency=medium
 
   * datastore: add default-verification-{workers, readers} to tuning options.
 
