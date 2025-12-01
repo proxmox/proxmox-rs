@@ -245,6 +245,12 @@ pub fn handle_method(mut attribs: JSONObject, func: syn::ItemFn) -> Result<Token
         .transpose()?
         .unwrap_or(false);
 
+    let unstable: bool = attribs
+        .remove("unstable")
+        .map(TryFrom::try_from)
+        .transpose()?
+        .unwrap_or(false);
+
     if !attribs.is_empty() {
         error!(
             attribs.span(),
@@ -329,7 +335,8 @@ pub fn handle_method(mut attribs: JSONObject, func: syn::ItemFn) -> Result<Token
             #returns_schema_setter
             #access_setter
             .reload_timezone(#reload_timezone)
-            .protected(#protected);
+            .protected(#protected)
+            .unstable(#unstable);
 
         #default_consts
 

@@ -789,6 +789,8 @@ pub struct ApiMethod {
     /// The protected flag indicates that the provides function should be forwarded
     /// to the daemon running in privileged mode.
     pub protected: bool,
+    /// Whether this method is still experimental or already stable.
+    pub unstable: bool,
     /// This flag indicates that the provided method may change the local timezone, so the server
     /// should do a tzset afterwards
     pub reload_timezone: bool,
@@ -820,6 +822,7 @@ impl ApiMethod {
             handler,
             returns: ReturnType::new(false, &NULL_SCHEMA),
             protected: false,
+            unstable: false,
             reload_timezone: false,
             access: ApiAccess {
                 description: None,
@@ -838,6 +841,7 @@ impl ApiMethod {
             handler: &DUMMY_HANDLER,
             returns: ReturnType::new(false, &NULL_SCHEMA),
             protected: false,
+            unstable: false,
             reload_timezone: false,
             access: ApiAccess {
                 description: None,
@@ -854,6 +858,12 @@ impl ApiMethod {
 
     pub const fn protected(mut self, protected: bool) -> Self {
         self.protected = protected;
+
+        self
+    }
+
+    pub const fn unstable(mut self, unstable: bool) -> Self {
+        self.unstable = unstable;
 
         self
     }
