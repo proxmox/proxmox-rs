@@ -13047,6 +13047,7 @@ serde_plain::derive_fromstr_from_deserialize!(QemuConfigVirtiofsCache);
         },
         "has-dbus-vmstate": {
             default: false,
+            optional: true,
         },
         local_disks: {
             items: {
@@ -13098,8 +13099,9 @@ pub struct QemuMigratePreconditions {
     /// Whether the VM host supports migrating additional VM state, such as
     /// conntrack entries.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "has-dbus-vmstate")]
-    pub has_dbus_vmstate: bool,
+    pub has_dbus_vmstate: Option<bool>,
 
     /// List local disks including CD-Rom, unused and not referenced disks
     pub local_disks: Vec<QemuMigratePreconditionsLocalDisks>,
