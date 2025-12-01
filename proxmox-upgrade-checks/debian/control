@@ -8,9 +8,9 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
- librust-proxmox-apt-0.99+cache-dev <!nocheck>,
- librust-proxmox-apt-0.99+default-dev <!nocheck>,
- librust-proxmox-apt-api-types-2+default-dev (>= 2.0.2-~~) <!nocheck>,
+ librust-proxmox-apt-0.99+cache-dev (>= 0.99.6-~~) <!nocheck>,
+ librust-proxmox-apt-0.99+default-dev (>= 0.99.6-~~) <!nocheck>,
+ librust-proxmox-apt-api-types-2+default-dev (>= 2.0.4-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-termcolor-1+default-dev (>= 1.1.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -27,9 +27,9 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-const-format-0.2+default-dev,
- librust-proxmox-apt-0.99+cache-dev,
- librust-proxmox-apt-0.99+default-dev,
- librust-proxmox-apt-api-types-2+default-dev (>= 2.0.2-~~),
+ librust-proxmox-apt-0.99+cache-dev (>= 0.99.6-~~),
+ librust-proxmox-apt-0.99+default-dev (>= 0.99.6-~~),
+ librust-proxmox-apt-api-types-2+default-dev (>= 2.0.4-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-termcolor-1+default-dev (>= 1.1.2-~~)
 Provides:
