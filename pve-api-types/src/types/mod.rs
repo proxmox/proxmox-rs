@@ -11,7 +11,10 @@ use serde_json::Value;
 use proxmox_schema::{api, const_regex, ApiStringFormat, ApiType, Schema, StringSchema};
 
 mod macros;
+pub(crate) use macros::__fill_names;
+pub(crate) use macros::__fill_properties;
 use macros::generate_array_field;
+pub(crate) use macros::__DIGIT_SPACE;
 
 pub mod array;
 pub mod stringlist;
