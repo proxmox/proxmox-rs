@@ -16,22 +16,22 @@ impl Error for TooLongError {}
 
 impl fmt::Display for TooLongError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        f.write_str("string is longer than 23 characters")
+        f.write_str("string is longer than 31 characters")
     }
 }
 
-/// An immutable string type with a maximum size of 23 bytes.
+/// An immutable string type with a maximum size of 31 bytes.
 ///
 /// After construction it is guaranteed that its contents are:
 /// * valid utf-8
-/// * not longer than 23 characters
+/// * not longer than 31 characters
 ///
 /// FixedString is immutable, therefore it is sufficient to validate the invariants only at
 /// construction time to guarantee that they will always hold during the lifecycle of the
 /// struct.
 #[derive(Clone, Copy)]
 pub struct FixedString {
-    buf: [u8; 23],
+    buf: [u8; 31],
     len: u8,
 }
 
@@ -40,18 +40,18 @@ impl FixedString {
     ///
     /// # Errors
     /// This function will return an error if:
-    /// * The passed string is longer than 23 bytes
+    /// * The passed string is longer than 31 bytes
     pub fn new(value: &str) -> Result<Self, TooLongError> {
-        if value.len() > 23 {
+        if value.len() > 31 {
             return Err(TooLongError);
         }
 
-        let mut buf = [0; 23];
+        let mut buf = [0; 31];
         buf[..value.len()].copy_from_slice(value.as_bytes());
 
         Ok(Self {
             buf,
-            // SAFETY: self.len is at least 0 and at most 23, which fits into u8
+            // SAFETY: self.len is at least 0 and at most 31, which fits into u8
             len: value.len() as u8,
         })
     }
@@ -66,7 +66,7 @@ impl FixedString {
     /// Returns a reference to the set bytes in the stored buffer
     #[inline]
     pub fn as_bytes(&self) -> &[u8] {
-        // SAFETY: self.len >= 0 and self.len <= 23 by construction
+        // SAFETY: self.len >= 0 and self.len <= 31 by construction
         unsafe { self.buf.get_unchecked(..self.len as usize) }
     }
 }
@@ -205,7 +205,7 @@ impl<'de> Deserialize<'de> for FixedString {
             type Value = FixedString;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> std::fmt::Result {
-                f.write_str("a string that is at most 23 bytes long")
+                f.write_str("a string that is at most 31 bytes long")
             }
 
             fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -238,11 +238,11 @@ mod tests {
         assert_eq!("🌏🌏🌏🌏🌏", fixed_string);
 
         let fixed_string =
-            FixedString::new("aaaaaaaaaaaaaaaaaaaaaaa").expect("23 characters are allowed");
+            FixedString::new("aaaaaaaaaaaaaaaaaaaaaaa").expect("31 characters are allowed");
         assert_eq!("aaaaaaaaaaaaaaaaaaaaaaa", fixed_string);
 
-        FixedString::new("🌏🌏🌏🌏🌏🌏").expect_err("string too long");
-        FixedString::new("aaaaaaaaaaaaaaaaaaaaaaaa").expect_err("string too long");
+        FixedString::new(&"🌏".repeat(10)).expect_err("string too long");
+        FixedString::new(&"a".repeat(32)).expect_err("string too long");
     }
 
     #[test]
@@ -257,7 +257,7 @@ mod tests {
             serde_plain::to_string(&fixed_string).expect("can be serialized into a string");
         assert_eq!(valid_string, serialized_string);
 
-        serde_plain::from_str::<FixedString>("aaaaaaaaaaaaaaaaaaaaaaaa")
+        serde_plain::from_str::<FixedString>(&"a".repeat(32))
             .expect_err("cannot deserialize string that is too long");
     }
 
