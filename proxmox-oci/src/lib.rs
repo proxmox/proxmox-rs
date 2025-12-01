@@ -302,6 +302,16 @@ fn extract_archive<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> s
             }
         }
 
+        // If a file or directory already exists at this path, remove it first.
+        let file_path_abs = target_path.as_ref().join(file.path()?);
+        if file_path_abs.exists() {
+            if file_path_abs.is_dir() {
+                remove_dir_all(file_path_abs)?;
+            } else {
+                remove_file(file_path_abs)?;
+            }
+        }
+
         file.unpack_in(&target_path)?;
     }
 
@@ -309,6 +319,16 @@ fn extract_archive<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> s
     // to avoid failure on restrictive parent directory permissions.
     directories.sort_by(|a, b| b.path_bytes().cmp(&a.path_bytes()));
     for mut dir in directories {
+        let dir_path_abs = target_path.as_ref().join(dir.path()?);
+
+        // Remove the trailing slash
+        let dir_path_abs = dir_path_abs.components().as_path();
+
+        // If a file already exists at this path, remove it first.
+        if dir_path_abs.exists() && !dir_path_abs.is_dir() {
+            remove_file(dir_path_abs)?;
+        }
+
         dir.unpack_in(&target_path)?;
     }
 
