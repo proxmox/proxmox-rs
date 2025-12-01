@@ -236,6 +236,7 @@ fn dump_api_method_schema(
         returns["optional"] = 1.into();
     }
     data["returns"] = returns;
+    data["unstable"] = api_method.unstable.into();
 
     match api_method.access {
         ApiAccess {
