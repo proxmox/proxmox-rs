@@ -144,8 +144,8 @@ zstd = "0.13"
 proxmox-access-control = { version = "1.3.0", path = "proxmox-access-control" }
 proxmox-acme = {  version = "1.0.0", path = "proxmox-acme", default-features = false }
 proxmox-api-macro = { version = "1.4.3", path = "proxmox-api-macro" }
-proxmox-apt = { version = "0.99", path = "proxmox-apt" }
-proxmox-apt-api-types = { version = "2.0.2", path = "proxmox-apt-api-types" }
+proxmox-apt = { version = "0.99.6", path = "proxmox-apt" }
+proxmox-apt-api-types = { version = "2.0.4", path = "proxmox-apt-api-types" }
 proxmox-auth-api = { version = "1.0.5", path = "proxmox-auth-api" }
 proxmox-async = { version = "0.5.0", path = "proxmox-async" }
 proxmox-base64 = {  version = "1.0.0", path = "proxmox-base64" }
