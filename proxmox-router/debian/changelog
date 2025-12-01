@@ -1,3 +1,10 @@
+rust-proxmox-router (3.2.4-1) trixie; urgency=medium
+
+  * add unstable flag to the ApiMethod struct to allow flagging some endpoints
+    to not have our usual stability guarantees (yet).
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 01 Dec 2025 16:30:28 +0100
+
 rust-proxmox-router (3.2.3-1) trixie; urgency=medium
 
   * update to proxmox-schema 5
