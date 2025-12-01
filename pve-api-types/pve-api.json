@@ -10997,8 +10997,10 @@
                                     "additionalProperties": 0,
                                     "properties": {
                                        "max-workers": {
-                                          "default": 1,
-                                          "description": "How many parallel tasks at maximum should be started.",
+                                          "default": 4,
+                                          "description": "Defines the maximum number of tasks running concurrently.",
+                                          "maximum": 64,
+                                          "minimum": 1,
                                           "optional": 1,
                                           "type": "integer"
                                        },
@@ -11057,8 +11059,10 @@
                                           "type": "boolean"
                                        },
                                        "max-workers": {
-                                          "default": 1,
-                                          "description": "How many parallel tasks at maximum should be started.",
+                                          "default": 4,
+                                          "description": "Defines the maximum number of tasks running concurrently.",
+                                          "maximum": 64,
+                                          "minimum": 1,
                                           "optional": 1,
                                           "type": "integer"
                                        },
@@ -11111,11 +11115,16 @@
                                  "parameters": {
                                     "additionalProperties": 0,
                                     "properties": {
-                                       "maxworkers": {
-                                          "default": 1,
-                                          "description": "How many parallel tasks at maximum should be started.",
+                                       "max-workers": {
+                                          "default": 4,
+                                          "description": "Defines the maximum number of tasks running concurrently.",
+                                          "maximum": 64,
+                                          "minimum": 1,
                                           "optional": 1,
                                           "type": "integer"
+                                       },
+                                       "maxworkers": {
+                                          "alias": "max-workers"
                                        },
                                        "statestorage": {
                                           "completion": ("Code")[],
@@ -11174,7 +11183,9 @@
                                     "properties": {
                                        "max-workers": {
                                           "default": 1,
-                                          "description": "How many parallel tasks at maximum should be started.",
+                                          "description": "Defines the maximum number of tasks running concurrently.",
+                                          "maximum": 64,
+                                          "minimum": 1,
                                           "optional": 1,
                                           "type": "integer"
                                        },
@@ -20330,7 +20341,7 @@
                                              },
                                              "migrate_downtime": {
                                                 "default": 0.1,
-                                                "description": "Set maximum tolerated downtime (in seconds) for migrations. Should the migration not be able to converge in the very end, because too much newly dirtied RAM needs to be transferred, the limit will be increased automatically step-by-step until migration can converge.",
+                                                "description": "Set maximum tolerated downtime (in seconds) for migrations. Should the migration not be able to converge in the very end, because too much newly dirtied RAM needs to be transferred, the limit will be increased automatically step-by-step until migration can converge. Will be capped to 2000 seconds (maximum in QEMU).",
                                                 "minimum": 0,
                                                 "optional": 1,
                                                 "type": "number"
@@ -53029,6 +53040,13 @@
                                     "optional": 1,
                                     "type": "boolean"
                                  },
+                                 "max-workers": {
+                                    "description": "Defines the maximum number of tasks running concurrently. If not set, uses 'max_workers' from datacenter.cfg, and if that's not set, the available CPU threads, clamped to a maximum of 8, are used.",
+                                    "maximum": 64,
+                                    "minimum": 1,
+                                    "optional": 1,
+                                    "type": "integer"
+                                 },
                                  "node": {
                                     "description": "The cluster node name.",
                                     "format": "pve-node",
@@ -53072,6 +53090,13 @@
                                     "description": "Force a hard-stop after the timeout.",
                                     "optional": 1,
                                     "type": "boolean"
+                                 },
+                                 "max-workers": {
+                                    "description": "Defines the maximum number of tasks running concurrently. If  not set, uses 'max_workers' from datacenter.cfg, and if that's not set, the available CPU threads, clamped to a maximum of 8, are used.",
+                                    "maximum": 64,
+                                    "minimum": 1,
+                                    "optional": 1,
+                                    "type": "integer"
                                  },
                                  "node": {
                                     "description": "The cluster node name.",
@@ -53119,6 +53144,13 @@
                            "parameters": {
                               "additionalProperties": 0,
                               "properties": {
+                                 "max-workers": {
+                                    "description": "Maximal number of parallel migration job. If not set, uses'max_workers' from datacenter.cfg, and if that's not set the available'\n                    .' CPU threads, clamped to a maximum of 8, are used.",
+                                    "maximum": 64,
+                                    "minimum": 1,
+                                    "optional": 1,
+                                    "type": "integer"
+                                 },
                                  "node": {
                                     "description": "The cluster node name.",
                                     "format": "pve-node",
@@ -53159,6 +53191,7 @@
                               "properties": {
                                  "max-workers": {
                                     "description": "Maximal number of parallel migration job. If not set, uses'max_workers' from datacenter.cfg. One of both must be set!",
+                                    "maximum": 64,
                                     "minimum": 1,
                                     "optional": 1,
                                     "type": "integer"
