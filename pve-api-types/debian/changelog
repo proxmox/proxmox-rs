@@ -1,3 +1,27 @@
+rust-pve-api-types (8.1.3-1) trixie; urgency=medium
+
+  * enable enum-fallback for proxmox-apt-api-types for better backward
+    compatibility.
+
+  * don't mark URL parameters as optional.
+
+  * handle fields named `ref`, which is a special keyword for rust, through
+    using raw identifiers, similar to how we already handle `macro`.
+
+  * percent-encode string parameters in the URL.
+
+  * generate array objects. Previously the array objects had their *item* as
+    schema, while we now generate the object schema by pointing to the item
+    schemas for each field.
+
+  * add method to get return schema of api.
+
+  * fix #7080: pve-api-types: mark 'has-dbus-vmstate' optional.
+
+  * generate ip-vrf / mac-vrf endpoints.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 01 Dec 2025 19:56:44 +0100
+
 rust-pve-api-types (8.1.2-1) trixie; urgency=medium
 
   * add bindings for a PVE nodes APT package versions and APT package
