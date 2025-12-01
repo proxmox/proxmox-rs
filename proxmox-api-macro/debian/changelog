@@ -1,3 +1,12 @@
+rust-proxmox-api-macro (1.4.4-1) trixie; urgency=medium
+
+  * avoid extra clone when handling untagged enums.
+
+  * support defining new unstable flag through the macro. This flag was
+    recently added to the router's ApiMethod struct.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 01 Dec 2025 16:50:10 +0100
+
 rust-proxmox-api-macro (1.4.3-1) trixie; urgency=medium
 
   * support untagged 'other' string-enum variant
