@@ -1,3 +1,9 @@
+rust-proxmox-docgen (1.0.1-1) trixie; urgency=medium
+
+  * add support for the new unstable flag.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 01 Dec 2025 16:25:05 +0100
+
 rust-proxmox-docgen (1.0.0-1) trixie; urgency=medium
 
   * Initial packaging

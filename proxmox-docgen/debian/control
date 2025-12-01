@@ -30,7 +30,7 @@ Provides:
  librust-proxmox-docgen-1+default-dev (= ${binary:Version}),
  librust-proxmox-docgen-1.0-dev (= ${binary:Version}),
  librust-proxmox-docgen-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-docgen-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-docgen-1.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-docgen-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-docgen-1.0.1+default-dev (= ${binary:Version})
 Description: Easily create documentation from Rust sources for Proxmox projects - Rust source code
  Source code for Debianized Rust crate "proxmox-docgen"
