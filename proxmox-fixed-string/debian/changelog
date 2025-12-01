@@ -1,3 +1,10 @@
+rust-proxmox-fixed-string (0.1.1-1) trixie; urgency=medium
+
+  * increase buffer from 23 to 31 due to running into 27 or 29 legit strings
+    we need to cover for now.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 01 Dec 2025 03:33:56 +0100
+
 rust-proxmox-fixed-string (0.1.0-1) trixie; urgency=medium
 
   * Initial release.
