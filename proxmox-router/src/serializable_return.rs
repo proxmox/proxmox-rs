@@ -21,8 +21,8 @@ pub trait SerializableReturn {
         serializer: SenderSerializer,
         value: Value,
     ) -> Result<
-        <SenderSerializer as serde::Serializer>::Ok,
-        <SenderSerializer as serde::Serializer>::Error,
+        <SenderSerializer<'_> as serde::Serializer>::Ok,
+        <SenderSerializer<'_> as serde::Serializer>::Error,
     >;
 
     /// Returns a value again from self
@@ -38,8 +38,8 @@ where
         serializer: SenderSerializer,
         value: Value,
     ) -> Result<
-        <SenderSerializer as serde::Serializer>::Ok,
-        <SenderSerializer as serde::Serializer>::Error,
+        <SenderSerializer<'_> as serde::Serializer>::Ok,
+        <SenderSerializer<'_> as serde::Serializer>::Error,
     > {
         use serde::ser::SerializeMap;
         if let Some(original) = value.as_object() {

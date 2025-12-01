@@ -433,7 +433,7 @@ impl CommandLine {
         self
     }
 
-    pub fn parse<A>(&self, rpcenv: &mut CliEnvironment, args: A) -> Result<Invocation, Error>
+    pub fn parse<A>(&self, rpcenv: &mut CliEnvironment, args: A) -> Result<Invocation<'_>, Error>
     where
         A: IntoIterator<Item = String>,
     {
