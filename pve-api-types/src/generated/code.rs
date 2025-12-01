@@ -1032,7 +1032,11 @@ where
         tokenid: &str,
         params: CreateToken,
     ) -> Result<CreateTokenResponse, Error> {
-        let url = &format!("/api2/extjs/access/users/{userid}/token/{tokenid}");
+        let url = &format!(
+            "/api2/extjs/access/users/{}/token/{}",
+            percent_encode(userid.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(tokenid.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1050,7 +1054,10 @@ where
 
     /// Get APT repository information.
     async fn get_apt_repositories(&self, node: &str) -> Result<APTRepositoriesResult, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/apt/repositories");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/apt/repositories",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1061,22 +1068,31 @@ where
         name: String,
         version: Option<String>,
     ) -> Result<String, Error> {
-        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/apt/changelog"))
-            .arg("name", &name)
-            .maybe_arg("version", &version)
-            .build();
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/apt/changelog",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .arg("name", &name)
+        .maybe_arg("version", &version)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get package information for important Proxmox packages.
     async fn get_package_versions(&self, node: &str) -> Result<Vec<InstalledPackage>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/apt/versions");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/apt/versions",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Read subscription info.
     async fn get_subscription(&self, node: &str) -> Result<NodeSubscriptionInfo, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/subscription");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/subscription",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1099,18 +1115,21 @@ where
             vmid: p_vmid,
         } = params;
 
-        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/tasks"))
-            .maybe_bool_arg("errors", p_errors)
-            .maybe_arg("limit", &p_limit)
-            .maybe_arg("since", &p_since)
-            .maybe_arg("source", &p_source)
-            .maybe_arg("start", &p_start)
-            .maybe_list_arg("statusfilter", &p_statusfilter)
-            .maybe_arg("typefilter", &p_typefilter)
-            .maybe_arg("until", &p_until)
-            .maybe_arg("userfilter", &p_userfilter)
-            .maybe_arg("vmid", &p_vmid)
-            .build();
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/tasks",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_bool_arg("errors", p_errors)
+        .maybe_arg("limit", &p_limit)
+        .maybe_arg("since", &p_since)
+        .maybe_arg("source", &p_source)
+        .maybe_arg("start", &p_start)
+        .maybe_list_arg("statusfilter", &p_statusfilter)
+        .maybe_arg("typefilter", &p_typefilter)
+        .maybe_arg("until", &p_until)
+        .maybe_arg("userfilter", &p_userfilter)
+        .maybe_arg("vmid", &p_vmid)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1123,23 +1142,34 @@ where
         limit: Option<u64>,
         start: Option<u64>,
     ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
-        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/tasks/{upid}/log"))
-            .maybe_bool_arg("download", download)
-            .maybe_arg("limit", &limit)
-            .maybe_arg("start", &start)
-            .build();
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/tasks/{}/log",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(upid.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_bool_arg("download", download)
+        .maybe_arg("limit", &limit)
+        .maybe_arg("start", &start)
+        .build();
         self.0.get(url).await?.expect_json()
     }
 
     /// Read task status.
     async fn get_task_status(&self, node: &str, upid: &str) -> Result<TaskStatus, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/tasks/{upid}/status");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/tasks/{}/status",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(upid.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// List available updates.
     async fn list_available_updates(&self, node: &str) -> Result<Vec<AptUpdateInfo>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/apt/update");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/apt/update",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1172,7 +1202,10 @@ where
 
     /// LXC container index (per node).
     async fn list_lxc(&self, node: &str) -> Result<Vec<LxcEntry>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1182,7 +1215,11 @@ where
         node: &str,
         vmid: u32,
     ) -> Result<Vec<ListFirewallRules>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/firewall/rules");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/rules",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1192,15 +1229,21 @@ where
         node: &str,
         ty: Option<ListNetworksType>,
     ) -> Result<Vec<NetworkInterface>, Error> {
-        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/network"))
-            .maybe_arg("type", &ty)
-            .build();
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/network",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("type", &ty)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// List rules.
     async fn list_node_firewall_rules(&self, node: &str) -> Result<Vec<ListFirewallRules>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/firewall/rules");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/firewall/rules",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1212,9 +1255,12 @@ where
 
     /// Virtual machine index (per node).
     async fn list_qemu(&self, node: &str, full: Option<bool>) -> Result<Vec<VmEntry>, Error> {
-        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/qemu"))
-            .maybe_bool_arg("full", full)
-            .build();
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/qemu",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_bool_arg("full", full)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1224,7 +1270,11 @@ where
         node: &str,
         vmid: u32,
     ) -> Result<Vec<ListFirewallRules>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/firewall/rules");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/rules",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1238,13 +1288,16 @@ where
         storage: Option<String>,
         target: Option<String>,
     ) -> Result<Vec<StorageInfo>, Error> {
-        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/storage"))
-            .maybe_list_arg("content", &content)
-            .maybe_bool_arg("enabled", enabled)
-            .maybe_bool_arg("format", format)
-            .maybe_arg("storage", &storage)
-            .maybe_arg("target", &target)
-            .build();
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/storage",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_list_arg("content", &content)
+        .maybe_bool_arg("enabled", enabled)
+        .maybe_bool_arg("format", format)
+        .maybe_arg("storage", &storage)
+        .maybe_arg("target", &target)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1282,7 +1335,11 @@ where
         node: &str,
         vmid: u32,
     ) -> Result<GuestFirewallOptions, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/firewall/options");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/options",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1294,10 +1351,14 @@ where
         current: Option<bool>,
         snapshot: Option<String>,
     ) -> Result<LxcConfig, Error> {
-        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/lxc/{vmid}/config"))
-            .maybe_bool_arg("current", current)
-            .maybe_arg("snapshot", &snapshot)
-            .build();
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/lxc/{}/config",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        ))
+        .maybe_bool_arg("current", current)
+        .maybe_arg("snapshot", &snapshot)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1307,13 +1368,21 @@ where
         node: &str,
         vmid: u32,
     ) -> Result<Vec<PendingConfigValue>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/pending");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/pending",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get virtual machine status.
     async fn lxc_get_status(&self, node: &str, vmid: u32) -> Result<LxcStatus, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/current");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/status/current",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1325,13 +1394,21 @@ where
         vmid: u32,
         params: LxcMoveVolume,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/move_volume");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/move_volume",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Resize a container mount point.
     async fn lxc_resize(&self, node: &str, vmid: u32, params: LxcResize) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/resize");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/resize",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.put(url, &params).await?.expect_json()?.data)
     }
 
@@ -1342,7 +1419,11 @@ where
         vmid: u32,
         params: UpdateLxcConfig,
     ) -> Result<(), Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/config");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/config",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         self.0.put(url, &params).await?.nodata()
     }
 
@@ -1353,7 +1434,11 @@ where
         vmid: u32,
         params: MigrateLxc,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/migrate");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/migrate",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1364,13 +1449,20 @@ where
         vmid: u32,
         params: MigrateQemu,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/migrate",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Get host firewall options.
     async fn node_firewall_options(&self, node: &str) -> Result<NodeFirewallOptions, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/firewall/options");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/firewall/options",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1380,19 +1472,28 @@ where
         node: &str,
         params: NodeShellTermproxy,
     ) -> Result<NodeShellTicket, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/termproxy");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/termproxy",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Read node status
     async fn node_status(&self, node: &str) -> Result<NodeStatus, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/status");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/status",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// List all custom and default CPU models.
     async fn qemu_cpu_capabilities(&self, node: &str) -> Result<Vec<QemuCpuModel>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/capabilities/qemu/cpu");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/capabilities/qemu/cpu",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1402,7 +1503,11 @@ where
         node: &str,
         vmid: u32,
     ) -> Result<GuestFirewallOptions, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/firewall/options");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/options",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1416,10 +1521,14 @@ where
         current: Option<bool>,
         snapshot: Option<String>,
     ) -> Result<QemuConfig, Error> {
-        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config"))
-            .maybe_bool_arg("current", current)
-            .maybe_arg("snapshot", &snapshot)
-            .build();
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/qemu/{}/config",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        ))
+        .maybe_bool_arg("current", current)
+        .maybe_arg("snapshot", &snapshot)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1430,13 +1539,21 @@ where
         node: &str,
         vmid: u32,
     ) -> Result<Vec<PendingConfigValue>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/pending");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/pending",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get virtual machine status.
     async fn qemu_get_status(&self, node: &str, vmid: u32) -> Result<QemuStatus, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/current");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/status/current",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1447,9 +1564,13 @@ where
         vmid: u32,
         target: Option<String>,
     ) -> Result<QemuMigratePreconditions, Error> {
-        let url = &ApiPathBuilder::new(format!("/api2/extjs/nodes/{node}/qemu/{vmid}/migrate"))
-            .maybe_arg("target", &target)
-            .build();
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/qemu/{}/migrate",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        ))
+        .maybe_arg("target", &target)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1460,7 +1581,11 @@ where
         vmid: u32,
         params: QemuMoveDisk,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/move_disk");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/move_disk",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1471,7 +1596,11 @@ where
         vmid: u32,
         params: QemuResize,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/resize");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/resize",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.put(url, &params).await?.expect_json()?.data)
     }
 
@@ -1484,7 +1613,11 @@ where
         vmid: u32,
         params: UpdateQemuConfig,
     ) -> Result<(), Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/config",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         self.0.put(url, &params).await?.nodata()
     }
 
@@ -1495,7 +1628,11 @@ where
         vmid: u32,
         params: UpdateQemuConfigAsync,
     ) -> Result<Option<PveUpid>, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/config");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/config",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1521,7 +1658,11 @@ where
         vmid: u32,
         params: RemoteMigrateLxc,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/remote_migrate");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/remote_migrate",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1533,7 +1674,11 @@ where
         vmid: u32,
         params: RemoteMigrateQemu,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/remote_migrate");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/remote_migrate",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1565,7 +1710,11 @@ where
         vmid: u32,
         params: UpdateGuestFirewallOptions,
     ) -> Result<(), Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/firewall/options");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/options",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         self.0.put(url, &params).await?.nodata()
     }
 
@@ -1575,7 +1724,10 @@ where
         node: &str,
         params: UpdateNodeFirewallOptions,
     ) -> Result<(), Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/firewall/options");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/firewall/options",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         self.0.put(url, &params).await?.nodata()
     }
 
@@ -1586,7 +1738,11 @@ where
         vmid: u32,
         params: UpdateGuestFirewallOptions,
     ) -> Result<(), Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/firewall/options");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/options",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         self.0.put(url, &params).await?.nodata()
     }
 
@@ -1598,7 +1754,11 @@ where
         vmid: u32,
         params: ShutdownLxc,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/shutdown");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/status/shutdown",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1611,7 +1771,11 @@ where
         vmid: u32,
         params: ShutdownQemu,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/shutdown");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/status/shutdown",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1622,7 +1786,11 @@ where
         vmid: u32,
         params: StartLxc,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/start");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/status/start",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1633,7 +1801,11 @@ where
         vmid: u32,
         params: StartQemu,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/start");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/status/start",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1645,7 +1817,11 @@ where
         vmid: u32,
         params: StopLxc,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/lxc/{vmid}/status/stop");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/status/stop",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
@@ -1658,19 +1834,31 @@ where
         vmid: u32,
         params: StopQemu,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/qemu/{vmid}/status/stop");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/status/stop",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Stop a task.
     async fn stop_task(&self, node: &str, upid: &str) -> Result<(), Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/tasks/{upid}");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/tasks/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(upid.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         self.0.delete(url).await?.nodata()
     }
 
     /// Read storage status.
     async fn storage_status(&self, node: &str, storage: &str) -> Result<StorageStatus, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/storage/{storage}/status");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/storage/{}/status",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(storage.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1681,7 +1869,10 @@ where
         node: &str,
         params: AptUpdateParams,
     ) -> Result<PveUpid, Error> {
-        let url = &format!("/api2/extjs/nodes/{node}/apt/update");
+        let url = &format!(
+            "/api2/extjs/nodes/{}/apt/update",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
