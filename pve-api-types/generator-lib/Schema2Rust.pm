@@ -1881,6 +1881,14 @@ sub api : prototype($$$;%) {
     create_method($api_url, $method, $rust_method_name, %extra);
 }
 
+# Get the return schema of a method to manipulate it.
+sub get_return_type : prototype($$) {
+    my ($method, $api_url) = @_;
+
+    (undef, $method) = walk_api($method, $api_url);
+    return $method->{returns};
+}
+
 # Fills $ALL_PATHS recursively from an api node.
 my sub collect_paths : prototype($$);
 sub collect_paths : prototype($$) {
