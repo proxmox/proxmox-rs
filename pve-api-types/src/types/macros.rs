@@ -49,7 +49,7 @@ pub(crate) const fn write_name_index(to: &mut [u8], name: &'static str, mut inde
     }
     if index == 0 {
         to[len] = b'0';
-        len += 1;
+        // NOTE: if you ever access to again below this if you need to advance len += 1 here!
     } else {
         let mut digits = 0;
         let mut copy = index;
