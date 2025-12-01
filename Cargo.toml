@@ -17,6 +17,7 @@ members = [
     "proxmox-deb-version",
     "proxmox-dns-api",
     "proxmox-fixed-string",
+    "proxmox-docgen",
     "proxmox-http",
     "proxmox-http-error",
     "proxmox-human-byte",
