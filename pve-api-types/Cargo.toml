@@ -4,7 +4,7 @@ name = "pve-api-types"
 # version we fully support. The minor part can be bumped if there are breaking
 # changes in the crate and type API code here, and patch for all new things and
 # fixes.
-version = "8.1.3"
+version = "8.1.4"
 description = "Proxmox VE API types"
 
 authors.workspace = true
