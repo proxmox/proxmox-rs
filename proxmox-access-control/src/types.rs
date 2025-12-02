@@ -24,13 +24,13 @@ pub const EXPIRE_USER_SCHEMA: Schema = IntegerSchema::new(
 
 pub const FIRST_NAME_SCHEMA: Schema = StringSchema::new("First name.")
     .format(&SINGLE_LINE_COMMENT_FORMAT)
-    .min_length(2)
+    .min_length(1)
     .max_length(64)
     .schema();
 
 pub const LAST_NAME_SCHEMA: Schema = StringSchema::new("Last name.")
     .format(&SINGLE_LINE_COMMENT_FORMAT)
-    .min_length(2)
+    .min_length(1)
     .max_length(64)
     .schema();
 
