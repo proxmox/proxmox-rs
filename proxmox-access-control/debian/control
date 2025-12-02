@@ -48,8 +48,8 @@ Provides:
  librust-proxmox-access-control-1+default-dev (= ${binary:Version}),
  librust-proxmox-access-control-1.3-dev (= ${binary:Version}),
  librust-proxmox-access-control-1.3+default-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.3.0-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.3.0+default-dev (= ${binary:Version})
+ librust-proxmox-access-control-1.3.1-dev (= ${binary:Version}),
+ librust-proxmox-access-control-1.3.1+default-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - Rust source code
  Source code for Debianized Rust crate "proxmox-access-control"
 
@@ -63,7 +63,7 @@ Depends:
 Provides:
  librust-proxmox-access-control-1+acl-dev (= ${binary:Version}),
  librust-proxmox-access-control-1.3+acl-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.3.0+acl-dev (= ${binary:Version})
+ librust-proxmox-access-control-1.3.1+acl-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - feature "acl"
  This metapackage enables feature "acl" for the Rust proxmox-access-control
  crate, by pulling in any additional dependencies needed by that feature.
@@ -79,7 +79,7 @@ Depends:
 Provides:
  librust-proxmox-access-control-1+api-dev (= ${binary:Version}),
  librust-proxmox-access-control-1.3+api-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.3.0+api-dev (= ${binary:Version})
+ librust-proxmox-access-control-1.3.1+api-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - feature "api"
  This metapackage enables feature "api" for the Rust proxmox-access-control
  crate, by pulling in any additional dependencies needed by that feature.
@@ -104,7 +104,7 @@ Depends:
 Provides:
  librust-proxmox-access-control-1+impl-dev (= ${binary:Version}),
  librust-proxmox-access-control-1.3+impl-dev (= ${binary:Version}),
- librust-proxmox-access-control-1.3.0+impl-dev (= ${binary:Version})
+ librust-proxmox-access-control-1.3.1+impl-dev (= ${binary:Version})
 Description: Collection of utilities to implement access control management - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-access-control
  crate, by pulling in any additional dependencies needed by that feature.
