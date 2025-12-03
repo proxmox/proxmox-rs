@@ -35,7 +35,7 @@ pub fn init<P: AsRef<Path>>(acme_config_dir: P, create_subdirs: bool) -> Result<
 fn acme_api_config() -> &'static AcmeApiConfig {
     ACME_ACME_CONFIG
         .get()
-        .expect("ProxmoxProductConfig is not initialized!")
+        .expect("AcmeApiConfig is not initialized!")
 }
 
 fn acme_config_dir() -> &'static Path {
