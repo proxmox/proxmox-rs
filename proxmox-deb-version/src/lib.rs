@@ -477,7 +477,7 @@ mod tests {
     #[test]
     fn test_manpage_tilde_sequence() {
         // from deb-version manpage: ~~, ~~a, ~, (empty), a are in sorted order
-        let versions = vec!["~~", "~~a", "~", "", "a"];
+        let versions = ["~~", "~~a", "~", "", "a"];
         for i in 0..versions.len() - 1 {
             let result = debian_cmp_str(versions[i], versions[i + 1]);
             assert_eq!(
