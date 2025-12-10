@@ -880,11 +880,11 @@ impl WebSocket {
         select! {
             res = downstream_future.fuse() => match res {
                 Ok(_) => Ok(()),
-                Err(err) => Err(Error::from(err)),
+                Err(err) => Err(err),
             },
             res = upstream_future.fuse() => match res {
                 Ok(_) => Ok(()),
-                Err(err) => Err(Error::from(err)),
+                Err(err) => Err(err),
             },
         }
     }
