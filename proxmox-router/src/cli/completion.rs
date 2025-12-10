@@ -484,7 +484,7 @@ impl CompletionParser {
             // with no arguments remaining, the final global argument could need completion:
             if let Some((option, argument)) = global_args.last() {
                 if let Some(completion) =
-                    self.try_complete_global_property(option, &[argument.clone()])
+                    self.try_complete_global_property(option, std::slice::from_ref(argument))
                 {
                     return Ok(GlobalArgs::Completed(completion));
                 }
