@@ -224,8 +224,6 @@ impl<'de> Deserialize<'de> for FixedString {
 mod tests {
     use super::*;
 
-    use serde_plain;
-
     #[test]
     fn test_construct() {
         let fixed_string = FixedString::new("").expect("empty string is valid");
