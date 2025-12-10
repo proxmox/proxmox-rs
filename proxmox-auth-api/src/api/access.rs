@@ -93,7 +93,7 @@ pub async fn verify_vnc_ticket(verify_params: VerifyVNCTicket) -> Result<(), Err
         verify_params.port.unwrap_or_default(),
     )? {
         None => bail!("Checking VNC ticket failed"), // no path based tickets supported, just fall through.
-        Some(true) => return Ok(()),
+        Some(true) => Ok(()),
         Some(false) => bail!("No such privilege"),
     }
 }
