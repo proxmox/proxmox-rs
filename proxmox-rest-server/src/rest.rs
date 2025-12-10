@@ -30,9 +30,7 @@ use url::form_urlencoded;
 
 use proxmox_http::Body;
 #[cfg(feature = "rate-limited-stream")]
-use proxmox_http::{RateLimiterTag, RateLimiterTags, RateLimiterTagsHandle};
-#[cfg(not(feature = "rate-limited-stream"))]
-type RateLimiterTags = ();
+use proxmox_http::{RateLimiterTag, RateLimiterTagsHandle};
 #[cfg(not(feature = "rate-limited-stream"))]
 type RateLimiterTagsHandle = ();
 use proxmox_router::{
