@@ -1,3 +1,11 @@
+rust-proxmox-oci (0.2.1-1) bookworm; urgency=medium
+
+  * fix rootfs extraction when paths already exist. Remove paths from previous
+    layers that conflict with new layer entries before unpacking to better
+    align with the OCI spec and improve support for some CT images.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 10 Dec 2025 19:18:03 +0100
+
 rust-proxmox-oci (0.2.0-1) bookworm; urgency=medium
 
   * build for Debian Trixie based Proxmox projects like Proxmox VE 9.

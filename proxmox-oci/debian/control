@@ -38,7 +38,7 @@ Provides:
  librust-proxmox-oci-0+default-dev (= ${binary:Version}),
  librust-proxmox-oci-0.2-dev (= ${binary:Version}),
  librust-proxmox-oci-0.2+default-dev (= ${binary:Version}),
- librust-proxmox-oci-0.2.0-dev (= ${binary:Version}),
- librust-proxmox-oci-0.2.0+default-dev (= ${binary:Version})
+ librust-proxmox-oci-0.2.1-dev (= ${binary:Version}),
+ librust-proxmox-oci-0.2.1+default-dev (= ${binary:Version})
 Description: OCI image parsing and extraction - Rust source code
  Source code for Debianized Rust crate "proxmox-oci"
