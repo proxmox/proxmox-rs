@@ -245,7 +245,7 @@ impl Account {
         &self,
         certificate: &[u8],
         reason: Option<u32>,
-    ) -> Result<CertificateRevocation, Error> {
+    ) -> Result<CertificateRevocation<'_>, Error> {
         let cert = if certificate.starts_with(b"-----BEGIN CERTIFICATE-----") {
             b64u::encode(&openssl::x509::X509::from_pem(certificate)?.to_der()?)
         } else {

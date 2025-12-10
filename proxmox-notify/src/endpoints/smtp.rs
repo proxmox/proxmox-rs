@@ -381,7 +381,7 @@ fn build_forwarded_message(
 }
 
 /// Quote mail name if required by RFC5322.
-fn quote_name_if_needed(name: &str) -> Cow<str> {
+fn quote_name_if_needed(name: &str) -> Cow<'_, str> {
     // See https://datatracker.ietf.org/doc/html/rfc5322#section-3.2.3
     let needs_quotes = name.chars().any(|c| {
         matches!(

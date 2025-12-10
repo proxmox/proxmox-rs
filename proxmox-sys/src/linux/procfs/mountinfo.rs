@@ -211,7 +211,7 @@ impl MountInfo {
     }
 
     /// Iterate over mount entries.
-    pub fn iter(&self) -> Iter {
+    pub fn iter(&self) -> Iter<'_> {
         self.entries.iter()
     }
 
