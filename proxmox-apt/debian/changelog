@@ -1,3 +1,9 @@
+rust-proxmox-apt (0.99.7-1) trixie; urgency=medium
+
+  * do not allow passing further options to apt changelog command.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 22 Dec 2025 16:23:30 +0100
+
 rust-proxmox-apt (0.99.6-1) trixie; urgency=medium
 
   * add optional support for unknown variant in APTRepositoryHandle as stop
