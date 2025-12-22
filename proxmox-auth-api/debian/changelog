@@ -1,3 +1,19 @@
+rust-proxmox-auth-api (0.4.9-1) bookworm; urgency=medium
+
+  * auth-api/tfa: prefer `Display` over `ToString`/an inherent function
+
+  * acme/auth-api: add `Default` for types with un-parameterized `new()`
+
+  * tfa, auth-api: simplify and restyle Display implementation
+
+  * auth-api: fix intra doc link for `Empty`
+
+  * auth-api: set content type header for the new HttpOnly ticket endpoint
+
+  * auth-api: remove ticket info in old create ticket endpoint
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 01 Oct 2025 13:29:50 +0200
+
 rust-proxmox-auth-api (0.4.8-1) bookworm; urgency=medium
 
   * add `AuthContext::prefixed_auth_cookie_name` to prepare for HttpOnly cookies

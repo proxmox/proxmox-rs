@@ -123,7 +123,7 @@ zstd = { version = "0.12", features = [ "bindgen" ] }
 proxmox-acme = {  version = "0.5.3", path = "proxmox-acme", default-features = false }
 proxmox-api-macro = { version = "1.3.2", path = "proxmox-api-macro" }
 proxmox-apt-api-types = { version = "1.0.2", path = "proxmox-apt-api-types" }
-proxmox-auth-api = { version = "0.4.0", path = "proxmox-auth-api" }
+proxmox-auth-api = { version = "0.4.9", path = "proxmox-auth-api" }
 proxmox-async = { version = "0.4.1", path = "proxmox-async" }
 proxmox-compression = { version = "0.2.4", path = "proxmox-compression" }
 proxmox-daemon = { version = "0.1.0", path = "proxmox-daemon" }
