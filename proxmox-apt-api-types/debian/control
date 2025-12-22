@@ -12,6 +12,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+perl-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
+ librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
@@ -33,6 +34,7 @@ Depends:
  librust-proxmox-serde-1+default-dev,
  librust-proxmox-serde-1+perl-dev,
  librust-proxmox-serde-1+serde-json-dev,
+ librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-plain-1+default-dev

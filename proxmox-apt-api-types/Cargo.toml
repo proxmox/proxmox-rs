@@ -20,3 +20,4 @@ proxmox-schema = { workspace = true, features = ["api-macro"] }
 proxmox-serde = { workspace = true, features = ["perl"] }
 proxmox-config-digest.workspace = true
 proxmox-fixed-string = { workspace = true, optional = true }
+regex = { workspace = true }

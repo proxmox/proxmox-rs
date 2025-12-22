@@ -3,10 +3,15 @@ use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 
 use proxmox_config_digest::ConfigDigest;
-use proxmox_schema::api;
+use proxmox_schema::{api, const_regex, ApiStringFormat};
 
 #[cfg(feature = "enum-fallback")]
 use proxmox_fixed_string::FixedString;
+
+const_regex! {
+    pub PACKAGE_NAME_REGEX = r"^[a-z0-9][-+.a-z0-9:]+$";
+}
+const PACKAGE_NAME_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&PACKAGE_NAME_REGEX);
 
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -400,7 +405,14 @@ pub struct APTRepositoriesResult {
     pub digest: ConfigDigest,
 }
 
-#[api()]
+#[api(
+    properties: {
+        name: {
+            type: String,
+            format: &PACKAGE_NAME_FORMAT,
+        },
+    },
+)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 /// Options for the get changelog API.
 pub struct APTGetChangelogOptions {
