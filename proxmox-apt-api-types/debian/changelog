@@ -1,3 +1,10 @@
+rust-proxmox-apt-api-types (2.0.5-1) trixie; urgency=medium
+
+  * change log options: provide schema for package name to avoid passing bogus
+    names that can never refer to a real package in any way.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 22 Dec 2025 16:24:37 +0100
+
 rust-proxmox-apt-api-types (2.0.4-1) trixie; urgency=medium
 
   * add optional unknown fallback variant to APTRepositoryHandle as stop gap

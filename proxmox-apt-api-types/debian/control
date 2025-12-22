@@ -46,8 +46,8 @@ Provides:
  librust-proxmox-apt-api-types-2+default-dev (= ${binary:Version}),
  librust-proxmox-apt-api-types-2.0-dev (= ${binary:Version}),
  librust-proxmox-apt-api-types-2.0+default-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0.4-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0.4+default-dev (= ${binary:Version})
+ librust-proxmox-apt-api-types-2.0.5-dev (= ${binary:Version}),
+ librust-proxmox-apt-api-types-2.0.5+default-dev (= ${binary:Version})
 Description: APT API type definitions - Rust source code
  Source code for Debianized Rust crate "proxmox-apt-api-types"
 
@@ -61,7 +61,7 @@ Depends:
 Provides:
  librust-proxmox-apt-api-types-2+enum-fallback-dev (= ${binary:Version}),
  librust-proxmox-apt-api-types-2.0+enum-fallback-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0.4+enum-fallback-dev (= ${binary:Version})
+ librust-proxmox-apt-api-types-2.0.5+enum-fallback-dev (= ${binary:Version})
 Description: APT API type definitions - feature "enum-fallback"
  This metapackage enables feature "enum-fallback" for the Rust proxmox-apt-api-
  types crate, by pulling in any additional dependencies needed by that feature.
