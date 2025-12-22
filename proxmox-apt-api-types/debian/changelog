@@ -1,3 +1,9 @@
+rust-proxmox-apt-api-types (1.0.4-1) bookworm; urgency=medium
+
+  * change log options: provide schema for package name.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 22 Dec 2025 17:15:55 +0100
+
 rust-proxmox-apt-api-types (1.0.3-1) bookworm; urgency=medium
 
   * rebuild with proxmox-schema 4.0
