@@ -16,6 +16,7 @@ pub fn get_changelog(options: &APTGetChangelogOptions) -> Result<String, Error> 
     let mut command = std::process::Command::new("apt-get");
     command.arg("changelog");
     command.arg("-qq"); // don't display download progress
+    command.arg("--"); // don't allow passing any further options
     if let Some(ver) = &options.version {
         command.arg(format!("{}={}", options.name, ver));
     } else {
