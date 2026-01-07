@@ -37,7 +37,7 @@ pub struct ListObjectsV2Response {
 /// https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html#API_ListObjectsV2_ResponseSyntax
 struct ListObjectsV2ResponseBody {
     /// Flag indication if response was truncated because of key limits.
-    pub is_truncated: bool,
+    pub is_truncated: Option<bool>,
     /// Token used for this request to get further keys in truncated responses.
     pub continuation_token: Option<String>,
     /// Allows to fetch the next set of keys for truncated responses.
@@ -50,7 +50,7 @@ impl ListObjectsV2ResponseBody {
     fn with_optional_date(self, date: Option<HttpDate>) -> ListObjectsV2Response {
         ListObjectsV2Response {
             date,
-            is_truncated: self.is_truncated,
+            is_truncated: self.is_truncated.unwrap_or_default(),
             continuation_token: self.continuation_token,
             next_continuation_token: self.next_continuation_token,
             contents: self.contents.unwrap_or_default(),
@@ -530,7 +530,7 @@ fn parse_list_objects_v2_response_test() {
         </ListBucketResult>
     "#;
     let result: ListObjectsV2ResponseBody = serde_xml_rs::from_str(response_body).unwrap();
-    assert!(!result.is_truncated);
+    assert_eq!(result.is_truncated, Some(false));
     assert_eq!(
         result.contents.unwrap(),
         vec![
