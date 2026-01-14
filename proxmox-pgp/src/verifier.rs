@@ -192,3 +192,195 @@ pub fn verify_signature(
     // neither a keyring nor a certificate was detect, so we abort here
     bail!("'key-path' contains neither a keyring nor a certificate, aborting!");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{verify_signature, WeakCryptoConfig};
+    use anyhow::Result;
+    use sequoia_openpgp::packet::prelude::SignatureBuilder;
+    use sequoia_openpgp::packet::signature::subpacket::NotationDataFlags;
+    use sequoia_openpgp::serialize::MarshalInto;
+    use sequoia_openpgp::types::{HashAlgorithm, SignatureType};
+    use sequoia_openpgp::{cert::prelude::*, policy::StandardPolicy, serialize::stream::*};
+    use std::io::Write;
+
+    const MESSAGE: &[u8] = b"Hello, pgp!";
+
+    fn setup(
+        name: &str,
+        mail: &str,
+        hash: Option<HashAlgorithm>,
+        detached: bool,
+    ) -> Result<(Cert, Vec<u8>)> {
+        let mut policy = StandardPolicy::new();
+
+        if let Some(h) = hash {
+            policy.accept_hash(h);
+        }
+
+        let (cert, _sig) =
+            CertBuilder::general_purpose(Some(format!("{name} <{mail}>"))).generate()?;
+
+        let keypair = cert
+            .keys()
+            .secret()
+            .with_policy(&policy, None)
+            .supported()
+            .alive()
+            .revoked(false)
+            .for_signing()
+            .next()
+            .unwrap()
+            .key()
+            .clone()
+            .into_keypair()?;
+
+        let mut sink = Vec::new();
+
+        {
+            let message = Signer::with_template(
+                Message::new(&mut sink),
+                keypair,
+                SignatureBuilder::new(SignatureType::Text)
+                    .add_notation(
+                        mail,
+                        name,
+                        NotationDataFlags::empty().set_human_readable(),
+                        false,
+                    )?
+                    .set_hash_algo(hash.unwrap_or(HashAlgorithm::SHA256)),
+            )?
+            .hash_algo(hash.unwrap_or(HashAlgorithm::SHA256))?;
+
+            if detached {
+                let mut message = message.detached().build()?;
+                message.write_all(MESSAGE)?;
+                message.finalize()?;
+            } else {
+                let mut message = LiteralWriter::new(message.build()?).build()?;
+                message.write_all(MESSAGE)?;
+                message.finalize()?;
+            }
+        }
+
+        Ok((cert, sink))
+    }
+
+    fn root_cause_no_valid_sig(err: anyhow::Error) -> bool {
+        err.root_cause()
+            .to_string()
+            .contains("No valid signature found.")
+    }
+
+    #[test]
+    fn verify_attached_signature_success() -> Result<()> {
+        // using same signature will work
+        {
+            let (cert, sink) = setup("Nicolas Frey", "n.frey@proxmox.com", None, false)?;
+            let verified =
+                verify_signature(&sink, &cert.to_vec()?, None, &WeakCryptoConfig::default())?;
+
+            assert_eq!(verified, MESSAGE);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn verify_attached_signature_fail() -> Result<()> {
+        // using different signatures will fail
+        {
+            let (cert1, sink1) = setup("Nicolas Frey", "n.frey@proxmox.com", None, false)?;
+            let (cert2, sink2) = setup("Proxmox Support Team", "support@proxmox.com", None, false)?;
+
+            assert!(
+                verify_signature(&sink1, &cert2.to_vec()?, None, &WeakCryptoConfig::default())
+                    .is_err_and(root_cause_no_valid_sig)
+            );
+            assert!(
+                verify_signature(&sink2, &cert1.to_vec()?, None, &WeakCryptoConfig::default())
+                    .is_err_and(root_cause_no_valid_sig)
+            );
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn verify_detached_signature_success() -> Result<()> {
+        // using same signature will work
+        {
+            let (cert, sink) = setup("Nicolas Frey", "n.frey@proxmox.com", None, true)?;
+            let verified = verify_signature(
+                MESSAGE,
+                &cert.to_vec()?,
+                Some(&sink),
+                &WeakCryptoConfig::default(),
+            )?;
+            assert_eq!(verified, MESSAGE);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn verify_detached_signature_fail() -> Result<()> {
+        // using different signatures will fail
+        {
+            let (cert1, sink1) = setup("Nicolas Frey", "n.frey@proxmox.com", None, true)?;
+            let (cert2, sink2) = setup("Proxmox Support Team", "support@proxmox.com", None, true)?;
+
+            assert!(verify_signature(
+                MESSAGE,
+                &cert2.to_vec()?,
+                Some(&sink1),
+                &WeakCryptoConfig::default()
+            )
+            .is_err_and(root_cause_no_valid_sig));
+
+            assert!(verify_signature(
+                MESSAGE,
+                &cert1.to_vec()?,
+                Some(&sink2),
+                &WeakCryptoConfig::default()
+            )
+            .is_err_and(root_cause_no_valid_sig));
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn weak_crypto_config_allow_sha1() -> Result<()> {
+        let (cert, sink) = setup(
+            "Nicolas Frey",
+            "n.frey@proxmox.com",
+            Some(HashAlgorithm::SHA1),
+            false,
+        )?;
+
+        // allowing sha1 will make the policy accept this signature
+        {
+            let verified = verify_signature(
+                &sink,
+                &cert.to_vec()?,
+                None,
+                &WeakCryptoConfig {
+                    allow_sha1: true,
+                    ..Default::default()
+                },
+            )?;
+            assert_eq!(verified, MESSAGE);
+        }
+
+        // while this will fail
+        {
+            assert!(
+                verify_signature(&sink, &cert.to_vec()?, None, &WeakCryptoConfig::default())
+                    .is_err_and(root_cause_no_valid_sig)
+            );
+        }
+
+        Ok(())
+    }
+}
