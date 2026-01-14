@@ -2,6 +2,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, format_err, Error};
+use proxmox_pgp::{verify_signature, WeakCryptoConfig};
 
 use crate::repositories::standard::APTRepositoryHandleImpl;
 use proxmox_apt_api_types::{
@@ -122,21 +123,24 @@ impl APTRepositoryImpl for APTRepository {
         product: &str,
         suite: &str,
     ) -> bool {
-        let (package_type, handle_uris, component, _key) = handle.info(product);
+        let (package_type, handle_uris, component, key) = handle.info(product);
 
-        let mut found_uri = false;
-
-        for uri in self.uris.iter() {
-            let uri = uri.trim_end_matches('/');
-
-            found_uri = found_uri || handle_uris.iter().any(|handle_uri| handle_uri == uri);
-        }
+        let found_uri_or_signed = || {
+            let mut found = false;
+            for uri in self.uris.iter() {
+                let uri = uri.trim_end_matches('/');
+                found = found
+                    || handle_uris.iter().any(|handle_uri| handle_uri == uri)
+                    || is_signed_by_key(uri, suite, key);
+            }
+            found
+        };
 
         self.types.contains(&package_type)
-            && found_uri
             // using contains would require a &String
             && self.suites.iter().any(|self_suite| self_suite == suite)
             && self.components.contains(&component)
+            && found_uri_or_signed()
     }
 
     fn origin_from_uris(&self) -> Option<String> {
@@ -387,6 +391,24 @@ fn write_stanza(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+/// Reads file contents of cached/local POM InRelease file from uri
+/// and key to verify pgp signature
+fn is_signed_by_key(uri: &str, suite: &str, key_path: &str) -> bool {
+    let (Ok(data), Ok(key)) = (
+        std::fs::read(release_filename(
+            Path::new("/var/lib/apt/lists"),
+            uri,
+            suite,
+            false,
+        )),
+        std::fs::read(key_path),
+    ) else {
+        return false;
+    };
+
+    verify_signature(&data, &key, None, &WeakCryptoConfig::default()).is_ok()
 }
 
 #[test]

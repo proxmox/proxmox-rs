@@ -24,6 +24,7 @@ proxmox-apt-api-types.workspace = true
 proxmox-fixed-string = { workspace = true, optional = true }
 proxmox-config-digest = { workspace = true, features = ["openssl"] }
 proxmox-sys.workspace = true
+proxmox-pgp.workspace = true
 
 apt-pkg-native = { version = "0.3.2", optional = true }
 regex = { workspace = true, optional = true }
