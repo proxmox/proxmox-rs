@@ -396,19 +396,25 @@ fn write_stanza(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> {
 /// Reads file contents of cached/local POM InRelease file from uri
 /// and key to verify pgp signature
 fn is_signed_by_key(uri: &str, suite: &str, key_path: &str) -> bool {
-    let (Ok(data), Ok(key)) = (
-        std::fs::read(release_filename(
-            Path::new("/var/lib/apt/lists"),
-            uri,
-            suite,
-            false,
-        )),
-        std::fs::read(key_path),
-    ) else {
+    let (Ok(data), Ok(key)) = (read_inrelease(uri, suite), std::fs::read(key_path)) else {
         return false;
     };
 
     verify_signature(&data, &key, None, &WeakCryptoConfig::default()).is_ok()
+}
+
+/// Reads cached/local POM InRelease file
+fn read_inrelease(uri: &str, suite: &str) -> Result<Vec<u8>, Error> {
+    let path = release_filename(Path::new("/var/lib/apt/lists"), uri, suite, false);
+
+    if path.exists() {
+        std::fs::read(&path).map_err(Into::into)
+    } else if let Some(local_path) = uri.strip_prefix("file://") {
+        let inrelease_path = format!("{local_path}/dists/{suite}/InRelease");
+        std::fs::read(&inrelease_path).map_err(Into::into)
+    } else {
+        bail!("Unsupported URI scheme: {uri}");
+    }
 }
 
 #[test]
