@@ -1,0 +1,44 @@
+Source: rust-proxmox-pgp
+Section: rust
+Priority: optional
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
+ librust-proxmox-api-macro-1+default-dev (>= 1.4.3-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-sequoia-openpgp-2+default-dev <!nocheck>,
+ librust-serde-1+default-dev <!nocheck>,
+ librust-serde-1+derive-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.7.2
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://git.proxmox.com/?p=proxmox.git
+X-Cargo-Crate: proxmox-pgp
+
+Package: librust-proxmox-pgp-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-anyhow-1+default-dev,
+ librust-proxmox-api-macro-1+default-dev (>= 1.4.3-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
+ librust-sequoia-openpgp-2+default-dev,
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev
+Provides:
+ librust-proxmox-pgp+default-dev (= ${binary:Version}),
+ librust-proxmox-pgp-1-dev (= ${binary:Version}),
+ librust-proxmox-pgp-1+default-dev (= ${binary:Version}),
+ librust-proxmox-pgp-1.0-dev (= ${binary:Version}),
+ librust-proxmox-pgp-1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-pgp-1.0.0-dev (= ${binary:Version}),
+ librust-proxmox-pgp-1.0.0+default-dev (= ${binary:Version})
+Description: Proxmox wrapper for verifying pgp signatures using sequoia-openpgp - Rust source code
+ Source code for Debianized Rust crate "proxmox-pgp"

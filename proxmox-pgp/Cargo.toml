@@ -1,0 +1,17 @@
+[package]
+name = "proxmox-pgp"
+version = "1.0.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+exclude.workspace = true
+description = "Proxmox wrapper for verifying pgp signatures using sequoia-openpgp"
+
+[dependencies]
+anyhow.workspace = true
+serde = { workspace = true, features = ["derive"] }
+sequoia-openpgp = "2"
+
+proxmox-api-macro.workspace = true
+proxmox-schema = { workspace = true, features = ["api-macro"] }

@@ -1,0 +1,5 @@
+rust-proxmox-pgp (1.0.0-1) stable; urgency=medium
+
+  * initial split out of proxmox offline mirror.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 22 Oct 2025 14:06:52 +0200

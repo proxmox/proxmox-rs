@@ -33,6 +33,7 @@ members = [
     "proxmox-notify",
     "proxmox-oci",
     "proxmox-openid",
+    "proxmox-pgp",
     "proxmox-product-config",
     "proxmox-rate-limiter",
     "proxmox-resource-scheduling",
@@ -161,6 +162,7 @@ proxmox-lang = { version = "1.5", path = "proxmox-lang" }
 proxmox-log = { version = "1.0.0", path = "proxmox-log" }
 proxmox-login = { version = "1.0.0", path = "proxmox-login" }
 proxmox-network-types = { version = "1.0.0", path = "proxmox-network-types" }
+proxmox-pgp = { version = "1.0.0", path = "proxmox-pgp" }
 proxmox-product-config = { version = "1.0.0", path = "proxmox-product-config" }
 proxmox-config-digest = { version = "1.0.0", path = "proxmox-config-digest" }
 proxmox-rate-limiter = { version = "1.0.0", path = "proxmox-rate-limiter" }
