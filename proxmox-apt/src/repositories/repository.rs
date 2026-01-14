@@ -416,3 +416,32 @@ fn test_uri_to_filename() {
     let filename = uri_to_filename("https://some_host/some/path");
     assert_eq!(filename, "some%5fhost_some_path".to_string());
 }
+
+#[test]
+fn test_release_filename() {
+    let data = [
+        // testcase for proxmox offline mirror (mounted)
+        (
+            Path::new("/var/lib/apt/lists"),
+            "file:///mnt/mirror/pve-no-subscription/2025-10-16T08:07:41Z",
+            "trixie",
+            false,
+            // expected
+            "/var/lib/apt/lists/_mnt_mirror_pve-no-subscription_2025-10-16T08:07:41Z_dists_trixie_InRelease"
+        ),
+        // testcase for proxmox offline mirror (local http server)
+        (
+            Path::new("/var/lib/apt/lists"),
+            "http://proxmox-offline-mirror.domain.example/pve-subscription/2025-10-16T08:07:41Z",
+            "trixie",
+            false,
+            // expected
+            "/var/lib/apt/lists/proxmox-offline-mirror.domain.example_pve-subscription_2025-10-16T08:07:41Z_dists_trixie_InRelease"
+        ),
+    ];
+
+    for d in data {
+        let filename = release_filename(d.0, d.1, d.2, d.3).display().to_string();
+        assert_eq!(filename, d.4);
+    }
+}
