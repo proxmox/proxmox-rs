@@ -203,7 +203,7 @@ impl Inner {
         let got_nonce = self.update_nonce(&mut response)?;
 
         if response.is_success() {
-            if response.status != request.expected {
+            if !request.expected.contains(&response.status) {
                 return Err(Error::InvalidApi(format!(
                     "API server responded with unexpected status code: {:?}",
                     response.status

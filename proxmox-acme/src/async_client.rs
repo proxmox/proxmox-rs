@@ -420,7 +420,7 @@ impl AcmeClient {
         };
 
         if parts.status.is_success() {
-            if status != request.expected {
+            if !request.expected.contains(&status) {
                 return Err(Error::InvalidApi(format!(
                     "ACME server responded with unexpected status code: {:?}",
                     parts.status
@@ -498,7 +498,7 @@ impl AcmeClient {
                 method: "GET",
                 content_type: "",
                 body: String::new(),
-                expected: crate::http_status::OK,
+                expected: &[crate::http_status::OK],
             },
             nonce,
         )
@@ -550,7 +550,7 @@ impl AcmeClient {
                 method: "HEAD",
                 content_type: "",
                 body: String::new(),
-                expected: crate::http_status::OK,
+                expected: &[crate::http_status::OK, crate::http_status::NO_CONTENT],
             },
             nonce,
         )

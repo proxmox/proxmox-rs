@@ -16,8 +16,8 @@ pub struct Request {
     /// The body to pass along with request, or an empty string.
     pub body: String,
 
-    /// The expected status code a compliant ACME provider will return on success.
-    pub expected: u16,
+    /// The set of HTTP status codes that indicate a successful response from an ACME provider.
+    pub expected: &'static [u16],
 }
 
 /// Common HTTP status codes used in ACME responses.
