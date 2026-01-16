@@ -1,7 +1,6 @@
 use serde::Deserialize;
 
 pub(crate) const JSON_CONTENT_TYPE: &str = "application/jose+json";
-pub(crate) const CREATED: u16 = 201;
 
 /// A request which should be performed on the ACME provider.
 pub struct Request {
@@ -19,6 +18,16 @@ pub struct Request {
 
     /// The expected status code a compliant ACME provider will return on success.
     pub expected: u16,
+}
+
+/// Common HTTP status codes used in ACME responses.
+pub(crate) mod http_status {
+    /// 200 OK
+    pub(crate) const OK: u16 = 200;
+    /// 201 Created
+    pub(crate) const CREATED: u16 = 201;
+    /// 204 No Content
+    pub(crate) const NO_CONTENT: u16 = 204;
 }
 
 /// An ACME error response contains a specially formatted type string, and can optionally

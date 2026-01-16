@@ -85,7 +85,7 @@ impl Account {
             method: "POST",
             content_type: crate::request::JSON_CONTENT_TYPE,
             body,
-            expected: crate::request::CREATED,
+            expected: crate::http_status::CREATED,
         };
 
         Ok(NewOrder::new(request))
@@ -107,7 +107,7 @@ impl Account {
             method: "POST",
             content_type: crate::request::JSON_CONTENT_TYPE,
             body,
-            expected: 200,
+            expected: crate::http_status::OK,
         })
     }
 
@@ -132,7 +132,7 @@ impl Account {
             method: "POST",
             content_type: crate::request::JSON_CONTENT_TYPE,
             body,
-            expected: 200,
+            expected: crate::http_status::OK,
         })
     }
 
@@ -405,7 +405,7 @@ impl AccountCreator {
             method: "POST",
             content_type: crate::request::JSON_CONTENT_TYPE,
             body,
-            expected: crate::request::CREATED,
+            expected: crate::http_status::CREATED,
         })
     }
 

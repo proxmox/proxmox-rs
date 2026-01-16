@@ -498,7 +498,7 @@ impl AcmeClient {
                 method: "GET",
                 content_type: "",
                 body: String::new(),
-                expected: 200,
+                expected: crate::http_status::OK,
             },
             nonce,
         )
@@ -550,7 +550,7 @@ impl AcmeClient {
                 method: "HEAD",
                 content_type: "",
                 body: String::new(),
-                expected: 200,
+                expected: crate::http_status::OK,
             },
             nonce,
         )
