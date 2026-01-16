@@ -1,3 +1,9 @@
+rust-proxmox-s3-client (1.2.5-1) trixie; urgency=medium
+
+  * s3-client: make truncation flag optional in list object v2 response
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 16 Jan 2026 09:09:55 +0100
+
 rust-proxmox-s3-client (1.2.4-1) stable; urgency=medium
 
   * make storage class in list objects v2 response optional, as some providers
