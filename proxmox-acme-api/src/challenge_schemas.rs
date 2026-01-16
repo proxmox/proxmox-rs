@@ -29,7 +29,7 @@ impl Serialize for ChallengeSchemaWrapper {
     }
 }
 
-fn load_dns_challenge_schema() -> Result<Vec<AcmeChallengeSchema>, Error> {
+pub(crate) fn load_dns_challenge_schema() -> Result<Vec<AcmeChallengeSchema>, Error> {
     let raw = file_read_string(ACME_DNS_SCHEMA_FN)?;
     let schemas: serde_json::Map<String, Value> = serde_json::from_str(&raw)?;
 
