@@ -148,6 +148,16 @@ pub fn verify_cidrv6(s: &str) -> Result<(), Error> {
     }
 }
 
+pub fn verify_ip_or_cidr(s: &str) -> Result<(), Error> {
+    if verify_cidr(s).is_ok() {
+        return Ok(());
+    } else if verify_ip(s).is_ok() {
+        return Ok(());
+    } else {
+        bail!("not a valid IP address or CIDR notation");
+    }
+}
+
 pub fn verify_ipv4_config(s: &str) -> Result<(), Error> {
     if s == "dhcp" || s == "manual" {
         return Ok(());

@@ -1331,6 +1331,37 @@ pub struct CreateController {
 
 #[api(
     properties: {
+        cidr: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip_or_cidr),
+            type: String,
+        },
+        comment: {
+            optional: true,
+            type: String,
+            description: "Descriptive comment",
+        },
+        name: {
+            max_length: 64,
+            min_length: 2,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateFirewallAlias {
+    /// Network/IP specification in CIDR format.
+    pub cidr: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// Alias name.
+    pub name: String,
+}
+
+#[api(
+    properties: {
         "allow-pending": {
             default: false,
             optional: true,
@@ -1812,6 +1843,60 @@ pub struct CreateZone {
 
     /// The SDN zone object identifier.
     pub zone: String,
+}
+
+#[api(
+    properties: {
+        digest: {
+            max_length: 64,
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct DeleteFirewallAlias {
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+}
+
+#[api(
+    properties: {
+        cidr: {
+            type: String,
+            description: "CIDR address",
+        },
+        comment: {
+            optional: true,
+            type: String,
+            description: "Descriptive comment",
+        },
+        digest: {
+            max_length: 64,
+            type: String,
+        },
+        name: {
+            type: String,
+            description: "Alias name",
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct FirewallAlias {
+    pub cidr: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    pub digest: String,
+
+    pub name: String,
 }
 
 #[api]
@@ -17479,6 +17564,49 @@ pub struct UpdateClusterFirewallOptions {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub policy_out: Option<FirewallIOPolicy>,
+}
+
+#[api(
+    properties: {
+        cidr: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip_or_cidr),
+            type: String,
+        },
+        comment: {
+            optional: true,
+            type: String,
+            description: "Descriptive comment",
+        },
+        digest: {
+            max_length: 64,
+            optional: true,
+            type: String,
+        },
+        rename: {
+            max_length: 64,
+            min_length: 2,
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateFirewallAlias {
+    /// Network/IP specification in CIDR format.
+    pub cidr: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// Rename an existing alias.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rename: Option<String>,
 }
 
 const_regex! {

@@ -41,6 +41,7 @@ Schema2Rust::register_format('CIDR' => { code => 'verifiers::verify_cidr' });
 Schema2Rust::register_format('CIDRv4' => { code => 'verifiers::verify_cidrv4' });
 Schema2Rust::register_format('CIDRv6' => { code => 'verifiers::verify_cidrv6' });
 Schema2Rust::register_format('ipv4mask' => { code => 'verifiers::verify_ipv4_mask' });
+Schema2Rust::register_format('IPorCIDR' => { code => 'verifiers::verify_ip_or_cidr' });
 Schema2Rust::register_format('mac-addr' => { regex => '^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$' });
 Schema2Rust::register_format('pve-acme-alias' => { code => 'verifiers::verify_pve_acme_alias' });
 Schema2Rust::register_format('pve-acme-domain' => { code => 'verifiers::verify_pve_acme_domain' });
@@ -426,7 +427,38 @@ api(GET => '/nodes/{node}/firewall/log', 'node_firewall_log', 'return-name' => '
 api(GET => '/nodes/{node}/lxc/{vmid}/firewall/log', 'lxc_firewall_log', 'return-name' => 'TaskLogLine', attribs => 1);
 api(GET => '/nodes/{node}/qemu/{vmid}/firewall/log', 'qemu_firewall_log', 'return-name' => 'TaskLogLine', attribs => 1);
 
+# aliases
+api(GET => '/cluster/firewall/aliases', 'cluster_firewall_aliases', 'return-name' => 'FirewallAlias');
+api(POST => '/cluster/firewall/aliases', 'create_cluster_firewall_alias', 'param-name' => 'CreateFirewallAlias');
+api(PUT => '/cluster/firewall/aliases/{name}', 'update_cluster_firewall_alias', 'param-name' => 'UpdateFirewallAlias');
+api(DELETE => '/cluster/firewall/aliases/{name}', 'delete_cluster_firewall_alias', 'param-name' => 'DeleteFirewallAlias');
+
+api(GET => '/nodes/{node}/lxc/{vmid}/firewall/aliases', 'lxc_firewall_aliases', 'return-name' => 'FirewallAlias');
+api(POST => '/nodes/{node}/lxc/{vmid}/firewall/aliases', 'create_lxc_firewall_alias', 'param-name' => 'CreateFirewallAlias');
+api(PUT => '/nodes/{node}/lxc/{vmid}/firewall/aliases/{name}', 'update_lxc_firewall_alias', 'param-name' => 'UpdateFirewallAlias');
+api(DELETE => '/nodes/{node}/lxc/{vmid}/firewall/aliases/{name}', 'delete_lxc_firewall_alias', 'param-name' => 'DeleteFirewallAlias');
+
+api(GET => '/nodes/{node}/qemu/{vmid}/firewall/aliases', 'qemu_firewall_aliases', 'return-name' => 'FirewallAlias');
+api(POST => '/nodes/{node}/qemu/{vmid}/firewall/aliases', 'create_qemu_firewall_alias', 'param-name' => 'CreateFirewallAlias');
+api(PUT => '/nodes/{node}/qemu/{vmid}/firewall/aliases/{name}', 'update_qemu_firewall_alias', 'param-name' => 'UpdateFirewallAlias');
+api(DELETE => '/nodes/{node}/qemu/{vmid}/firewall/aliases/{name}', 'delete_qemu_firewall_alias', 'param-name' => 'DeleteFirewallAlias');
+
+Schema2Rust::register_api_extensions('UpdateClusterFirewallOptions', {
+    '/properties/comment' => { description => sq("Descriptive comment") },
+});
+Schema2Rust::register_api_extensions('CreateFirewallAlias', {
+    '/properties/comment' => { description => sq("Descriptive comment") },
+});
+Schema2Rust::register_api_extensions('UpdateFirewallAlias', {
+    '/properties/comment' => { description => sq("Descriptive comment") },
+});
+Schema2Rust::register_api_extensions('FirewallAlias', {
+    '/properties/name' => { description => sq("Alias name") },
+    '/properties/comment' => { description => sq("Descriptive comment") },
+    '/properties/cidr' => { description => sq("CIDR address") },
+});
 Schema2Rust::derive('ListFirewallRules' => 'Clone', 'PartialEq');
+Schema2Rust::derive('FirewallAlias' => 'Clone', 'PartialEq');
 
 Schema2Rust::generate_enum('SdnObjectState', {
     type => 'string',

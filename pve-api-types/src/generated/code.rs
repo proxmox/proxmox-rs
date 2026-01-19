@@ -58,8 +58,6 @@
 /// - /cluster/config/qdevice
 /// - /cluster/config/totem
 /// - /cluster/firewall
-/// - /cluster/firewall/aliases
-/// - /cluster/firewall/aliases/{name}
 /// - /cluster/firewall/groups
 /// - /cluster/firewall/groups/{group}
 /// - /cluster/firewall/groups/{group}/{pos}
@@ -212,8 +210,6 @@
 /// - /nodes/{node}/lxc/{vmid}/clone
 /// - /nodes/{node}/lxc/{vmid}/feature
 /// - /nodes/{node}/lxc/{vmid}/firewall
-/// - /nodes/{node}/lxc/{vmid}/firewall/aliases
-/// - /nodes/{node}/lxc/{vmid}/firewall/aliases/{name}
 /// - /nodes/{node}/lxc/{vmid}/firewall/ipset
 /// - /nodes/{node}/lxc/{vmid}/firewall/ipset/{name}
 /// - /nodes/{node}/lxc/{vmid}/firewall/ipset/{name}/{cidr}
@@ -273,8 +269,6 @@
 /// - /nodes/{node}/qemu/{vmid}/dbus-vmstate
 /// - /nodes/{node}/qemu/{vmid}/feature
 /// - /nodes/{node}/qemu/{vmid}/firewall
-/// - /nodes/{node}/qemu/{vmid}/firewall/aliases
-/// - /nodes/{node}/qemu/{vmid}/firewall/aliases/{name}
 /// - /nodes/{node}/qemu/{vmid}/firewall/ipset
 /// - /nodes/{node}/qemu/{vmid}/firewall/ipset/{name}
 /// - /nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}
@@ -381,6 +375,11 @@ pub trait PveClient {
         Err(Error::Other("cluster_config_join not implemented"))
     }
 
+    /// List aliases
+    async fn cluster_firewall_aliases(&self) -> Result<Vec<FirewallAlias>, Error> {
+        Err(Error::Other("cluster_firewall_aliases not implemented"))
+    }
+
     /// Get Firewall options.
     async fn cluster_firewall_options(&self) -> Result<ClusterFirewallOptions, Error> {
         Err(Error::Other("cluster_firewall_options not implemented"))
@@ -416,9 +415,39 @@ pub trait PveClient {
         Err(Error::Other("cluster_status not implemented"))
     }
 
+    /// Create IP or Network Alias.
+    async fn create_cluster_firewall_alias(
+        &self,
+        params: CreateFirewallAlias,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "create_cluster_firewall_alias not implemented",
+        ))
+    }
+
     /// Create a new sdn controller object.
     async fn create_controller(&self, params: CreateController) -> Result<(), Error> {
         Err(Error::Other("create_controller not implemented"))
+    }
+
+    /// Create IP or Network Alias.
+    async fn create_lxc_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: CreateFirewallAlias,
+    ) -> Result<(), Error> {
+        Err(Error::Other("create_lxc_firewall_alias not implemented"))
+    }
+
+    /// Create IP or Network Alias.
+    async fn create_qemu_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: CreateFirewallAlias,
+    ) -> Result<(), Error> {
+        Err(Error::Other("create_qemu_firewall_alias not implemented"))
     }
 
     /// Generate a new API token for a specific user. NOTE: returns API token
@@ -440,6 +469,39 @@ pub trait PveClient {
     /// Create a new sdn zone object.
     async fn create_zone(&self, params: CreateZone) -> Result<(), Error> {
         Err(Error::Other("create_zone not implemented"))
+    }
+
+    /// Remove IP or Network alias.
+    async fn delete_cluster_firewall_alias(
+        &self,
+        name: &str,
+        params: DeleteFirewallAlias,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "delete_cluster_firewall_alias not implemented",
+        ))
+    }
+
+    /// Remove IP or Network alias.
+    async fn delete_lxc_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: DeleteFirewallAlias,
+    ) -> Result<(), Error> {
+        Err(Error::Other("delete_lxc_firewall_alias not implemented"))
+    }
+
+    /// Remove IP or Network alias.
+    async fn delete_qemu_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: DeleteFirewallAlias,
+    ) -> Result<(), Error> {
+        Err(Error::Other("delete_qemu_firewall_alias not implemented"))
     }
 
     /// Get APT repository information.
@@ -607,6 +669,15 @@ pub trait PveClient {
         Err(Error::Other("list_zones not implemented"))
     }
 
+    /// List aliases
+    async fn lxc_firewall_aliases(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<FirewallAlias>, Error> {
+        Err(Error::Other("lxc_firewall_aliases not implemented"))
+    }
+
     /// Read firewall log
     async fn lxc_firewall_log(
         &self,
@@ -743,6 +814,15 @@ pub trait PveClient {
     /// List all custom and default CPU models.
     async fn qemu_cpu_capabilities(&self, node: &str) -> Result<Vec<QemuCpuModel>, Error> {
         Err(Error::Other("qemu_cpu_capabilities not implemented"))
+    }
+
+    /// List aliases
+    async fn qemu_firewall_aliases(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<FirewallAlias>, Error> {
+        Err(Error::Other("qemu_firewall_aliases not implemented"))
     }
 
     /// Read firewall log
@@ -1007,6 +1087,39 @@ pub trait PveClient {
         Err(Error::Other("update_apt_database not implemented"))
     }
 
+    /// Update IP or Network alias.
+    async fn update_cluster_firewall_alias(
+        &self,
+        name: &str,
+        params: UpdateFirewallAlias,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "update_cluster_firewall_alias not implemented",
+        ))
+    }
+
+    /// Update IP or Network alias.
+    async fn update_lxc_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: UpdateFirewallAlias,
+    ) -> Result<(), Error> {
+        Err(Error::Other("update_lxc_firewall_alias not implemented"))
+    }
+
+    /// Update IP or Network alias.
+    async fn update_qemu_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: UpdateFirewallAlias,
+    ) -> Result<(), Error> {
+        Err(Error::Other("update_qemu_firewall_alias not implemented"))
+    }
+
     /// API version details, including some parts of the global datacenter
     /// config.
     async fn version(&self) -> Result<VersionResponse, Error> {
@@ -1031,6 +1144,12 @@ where
         let url = &ApiPathBuilder::new("/api2/extjs/cluster/config/join")
             .maybe_arg("node", &node)
             .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List aliases
+    async fn cluster_firewall_aliases(&self) -> Result<Vec<FirewallAlias>, Error> {
+        let url = "/api2/extjs/cluster/firewall/aliases";
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1081,9 +1200,48 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// Create IP or Network Alias.
+    async fn create_cluster_firewall_alias(
+        &self,
+        params: CreateFirewallAlias,
+    ) -> Result<(), Error> {
+        let url = "/api2/extjs/cluster/firewall/aliases";
+        self.0.post(url, &params).await?.nodata()
+    }
+
     /// Create a new sdn controller object.
     async fn create_controller(&self, params: CreateController) -> Result<(), Error> {
         let url = "/api2/extjs/cluster/sdn/controllers";
+        self.0.post(url, &params).await?.nodata()
+    }
+
+    /// Create IP or Network Alias.
+    async fn create_lxc_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: CreateFirewallAlias,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/aliases",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
+        self.0.post(url, &params).await?.nodata()
+    }
+
+    /// Create IP or Network Alias.
+    async fn create_qemu_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: CreateFirewallAlias,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/aliases",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
         self.0.post(url, &params).await?.nodata()
     }
 
@@ -1113,6 +1271,65 @@ where
     async fn create_zone(&self, params: CreateZone) -> Result<(), Error> {
         let url = "/api2/extjs/cluster/sdn/zones";
         self.0.post(url, &params).await?.nodata()
+    }
+
+    /// Remove IP or Network alias.
+    async fn delete_cluster_firewall_alias(
+        &self,
+        name: &str,
+        params: DeleteFirewallAlias,
+    ) -> Result<(), Error> {
+        let DeleteFirewallAlias { digest: p_digest } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/cluster/firewall/aliases/{}",
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("digest", &p_digest)
+        .build();
+        self.0.delete(url).await?.nodata()
+    }
+
+    /// Remove IP or Network alias.
+    async fn delete_lxc_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: DeleteFirewallAlias,
+    ) -> Result<(), Error> {
+        let DeleteFirewallAlias { digest: p_digest } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/aliases/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("digest", &p_digest)
+        .build();
+        self.0.delete(url).await?.nodata()
+    }
+
+    /// Remove IP or Network alias.
+    async fn delete_qemu_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: DeleteFirewallAlias,
+    ) -> Result<(), Error> {
+        let DeleteFirewallAlias { digest: p_digest } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/aliases/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("digest", &p_digest)
+        .build();
+        self.0.delete(url).await?.nodata()
     }
 
     /// Get APT repository information.
@@ -1412,6 +1629,20 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// List aliases
+    async fn lxc_firewall_aliases(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<FirewallAlias>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/aliases",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Read firewall log
     async fn lxc_firewall_log(
         &self,
@@ -1635,6 +1866,20 @@ where
         let url = &format!(
             "/api2/extjs/nodes/{}/capabilities/qemu/cpu",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List aliases
+    async fn qemu_firewall_aliases(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<FirewallAlias>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/aliases",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
         );
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
@@ -2039,6 +2284,53 @@ where
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Update IP or Network alias.
+    async fn update_cluster_firewall_alias(
+        &self,
+        name: &str,
+        params: UpdateFirewallAlias,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/cluster/firewall/aliases/{}",
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.put(url, &params).await?.nodata()
+    }
+
+    /// Update IP or Network alias.
+    async fn update_lxc_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: UpdateFirewallAlias,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/aliases/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.put(url, &params).await?.nodata()
+    }
+
+    /// Update IP or Network alias.
+    async fn update_qemu_firewall_alias(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: UpdateFirewallAlias,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/aliases/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.put(url, &params).await?.nodata()
     }
 
     /// API version details, including some parts of the global datacenter
