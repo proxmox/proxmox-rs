@@ -200,7 +200,6 @@
 /// - /nodes/{node}/dns
 /// - /nodes/{node}/execute
 /// - /nodes/{node}/firewall
-/// - /nodes/{node}/firewall/log
 /// - /nodes/{node}/firewall/rules/{pos}
 /// - /nodes/{node}/hardware
 /// - /nodes/{node}/hardware/pci
@@ -218,7 +217,6 @@
 /// - /nodes/{node}/lxc/{vmid}/firewall/ipset
 /// - /nodes/{node}/lxc/{vmid}/firewall/ipset/{name}
 /// - /nodes/{node}/lxc/{vmid}/firewall/ipset/{name}/{cidr}
-/// - /nodes/{node}/lxc/{vmid}/firewall/log
 /// - /nodes/{node}/lxc/{vmid}/firewall/refs
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/lxc/{vmid}/interfaces
@@ -280,7 +278,6 @@
 /// - /nodes/{node}/qemu/{vmid}/firewall/ipset
 /// - /nodes/{node}/qemu/{vmid}/firewall/ipset/{name}
 /// - /nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}
-/// - /nodes/{node}/qemu/{vmid}/firewall/log
 /// - /nodes/{node}/qemu/{vmid}/firewall/refs
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/qemu/{vmid}/monitor
@@ -610,6 +607,19 @@ pub trait PveClient {
         Err(Error::Other("list_zones not implemented"))
     }
 
+    /// Read firewall log
+    async fn lxc_firewall_log(
+        &self,
+        node: &str,
+        vmid: u32,
+        limit: Option<u64>,
+        since: Option<u64>,
+        start: Option<u64>,
+        until: Option<u64>,
+    ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
+        Err(Error::Other("lxc_firewall_log not implemented"))
+    }
+
     /// Get VM firewall options.
     async fn lxc_firewall_options(
         &self,
@@ -699,6 +709,18 @@ pub trait PveClient {
         Err(Error::Other("node_config not implemented"))
     }
 
+    /// Read firewall log
+    async fn node_firewall_log(
+        &self,
+        node: &str,
+        limit: Option<u64>,
+        since: Option<u64>,
+        start: Option<u64>,
+        until: Option<u64>,
+    ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
+        Err(Error::Other("node_firewall_log not implemented"))
+    }
+
     /// Get host firewall options.
     async fn node_firewall_options(&self, node: &str) -> Result<NodeFirewallOptions, Error> {
         Err(Error::Other("node_firewall_options not implemented"))
@@ -721,6 +743,19 @@ pub trait PveClient {
     /// List all custom and default CPU models.
     async fn qemu_cpu_capabilities(&self, node: &str) -> Result<Vec<QemuCpuModel>, Error> {
         Err(Error::Other("qemu_cpu_capabilities not implemented"))
+    }
+
+    /// Read firewall log
+    async fn qemu_firewall_log(
+        &self,
+        node: &str,
+        vmid: u32,
+        limit: Option<u64>,
+        since: Option<u64>,
+        start: Option<u64>,
+        until: Option<u64>,
+    ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
+        Err(Error::Other("qemu_firewall_log not implemented"))
     }
 
     /// Get VM firewall options.
@@ -1377,6 +1412,29 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// Read firewall log
+    async fn lxc_firewall_log(
+        &self,
+        node: &str,
+        vmid: u32,
+        limit: Option<u64>,
+        since: Option<u64>,
+        start: Option<u64>,
+        until: Option<u64>,
+    ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/log",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        ))
+        .maybe_arg("limit", &limit)
+        .maybe_arg("since", &since)
+        .maybe_arg("start", &start)
+        .maybe_arg("until", &until)
+        .build();
+        self.0.get(url).await?.expect_json()
+    }
+
     /// Get VM firewall options.
     async fn lxc_firewall_options(
         &self,
@@ -1520,6 +1578,27 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// Read firewall log
+    async fn node_firewall_log(
+        &self,
+        node: &str,
+        limit: Option<u64>,
+        since: Option<u64>,
+        start: Option<u64>,
+        until: Option<u64>,
+    ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/firewall/log",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("limit", &limit)
+        .maybe_arg("since", &since)
+        .maybe_arg("start", &start)
+        .maybe_arg("until", &until)
+        .build();
+        self.0.get(url).await?.expect_json()
+    }
+
     /// Get host firewall options.
     async fn node_firewall_options(&self, node: &str) -> Result<NodeFirewallOptions, Error> {
         let url = &format!(
@@ -1558,6 +1637,29 @@ where
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Read firewall log
+    async fn qemu_firewall_log(
+        &self,
+        node: &str,
+        vmid: u32,
+        limit: Option<u64>,
+        since: Option<u64>,
+        start: Option<u64>,
+        until: Option<u64>,
+    ) -> Result<ApiResponseData<Vec<TaskLogLine>>, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/log",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        ))
+        .maybe_arg("limit", &limit)
+        .maybe_arg("since", &since)
+        .maybe_arg("start", &start)
+        .maybe_arg("until", &until)
+        .build();
+        self.0.get(url).await?.expect_json()
     }
 
     /// Get VM firewall options.

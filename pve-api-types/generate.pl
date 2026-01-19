@@ -420,6 +420,12 @@ api(GET => '/nodes/{node}/firewall/rules', 'list_node_firewall_rules', 'return-n
 
 api(GET => '/nodes/{node}/lxc/{vmid}/firewall/rules', 'list_lxc_firewall_rules', 'return-name' => 'ListFirewallRules');
 api(GET => '/nodes/{node}/qemu/{vmid}/firewall/rules', 'list_qemu_firewall_rules', 'return-name' => 'ListFirewallRules');
+
+# log
+api(GET => '/nodes/{node}/firewall/log', 'node_firewall_log', 'return-name' => 'TaskLogLine', attribs => 1);
+api(GET => '/nodes/{node}/lxc/{vmid}/firewall/log', 'lxc_firewall_log', 'return-name' => 'TaskLogLine', attribs => 1);
+api(GET => '/nodes/{node}/qemu/{vmid}/firewall/log', 'qemu_firewall_log', 'return-name' => 'TaskLogLine', attribs => 1);
+
 Schema2Rust::derive('ListFirewallRules' => 'Clone', 'PartialEq');
 
 Schema2Rust::generate_enum('SdnObjectState', {
