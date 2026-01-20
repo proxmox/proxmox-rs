@@ -42,6 +42,8 @@ Schema2Rust::register_format('CIDRv4' => { code => 'verifiers::verify_cidrv4' })
 Schema2Rust::register_format('CIDRv6' => { code => 'verifiers::verify_cidrv6' });
 Schema2Rust::register_format('ipv4mask' => { code => 'verifiers::verify_ipv4_mask' });
 Schema2Rust::register_format('IPorCIDR' => { code => 'verifiers::verify_ip_or_cidr' });
+Schema2Rust::register_format('IPorCIDRorAlias' => { code => 'verifiers::verify_ip_or_cidr_or_alias' });
+
 Schema2Rust::register_format('mac-addr' => { regex => '^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$' });
 Schema2Rust::register_format('pve-acme-alias' => { code => 'verifiers::verify_pve_acme_alias' });
 Schema2Rust::register_format('pve-acme-domain' => { code => 'verifiers::verify_pve_acme_domain' });
@@ -443,6 +445,33 @@ api(POST => '/nodes/{node}/qemu/{vmid}/firewall/aliases', 'create_qemu_firewall_
 api(PUT => '/nodes/{node}/qemu/{vmid}/firewall/aliases/{name}', 'update_qemu_firewall_alias', 'param-name' => 'UpdateFirewallAlias');
 api(DELETE => '/nodes/{node}/qemu/{vmid}/firewall/aliases/{name}', 'delete_qemu_firewall_alias', 'param-name' => 'DeleteFirewallAlias');
 
+# /cluster/firewall/ipset
+api(GET => '/cluster/firewall/ipset', 'cluster_firewall_ipset_list', 'return-name' => 'FirewallIpSetListItem');
+api(GET => '/cluster/firewall/ipset/{name}', 'cluster_firewall_ipset', 'return-name' => 'FirewallIpSet');
+api(DELETE => '/cluster/firewall/ipset/{name}', 'delete_cluster_firewall_ipset', 'param-name' => 'DeleteFirewallIpSet');
+api(POST => '/cluster/firewall/ipset/{name}', 'create_cluster_firewall_ipset_entry', 'param-name' => 'CreateFirewallIpSetEntry');
+api(GET => '/cluster/firewall/ipset/{name}/{cidr}', 'cluster_firewall_ipset_entry', 'return-name' => 'FirewallIpSetEntry');
+api(PUT => '/cluster/firewall/ipset/{name}/{cidr}', 'update_cluster_firewall_ipset_entry', 'param-name' => 'UpdateFirewallIpSetEntry');
+api(DELETE => '/cluster/firewall/ipset/{name}/{cidr}', 'delete_cluster_firewall_ipset_entry', 'param-name' => 'DeleteFirewallIpSetEntry');
+
+# /nodes/{node}/lxc/{vmid}/firewall/ipset
+api(GET => '/nodes/{node}/lxc/{vmid}/firewall/ipset', 'lxc_firewall_ipset_list', 'return-name' => 'FirewallIpSetListItem');
+api(GET => '/nodes/{node}/lxc/{vmid}/firewall/ipset/{name}', 'lxc_firewall_ipset', 'return-name' => 'FirewallIpSet');
+api(DELETE => '/nodes/{node}/lxc/{vmid}/firewall/ipset/{name}', 'delete_lxc_firewall_ipset', 'param-name' => 'DeleteFirewallIpSet');
+api(POST => '/nodes/{node}/lxc/{vmid}/firewall/ipset/{name}', 'create_lxc_firewall_ipset_entry', 'param-name' => 'CreateFirewallIpSetEntry');
+api(GET => '/nodes/{node}/lxc/{vmid}/firewall/ipset/{name}/{cidr}', 'lxc_firewall_ipset_entry', 'return-name' => 'FirewallIpSetEntry');
+api(PUT => '/nodes/{node}/lxc/{vmid}/firewall/ipset/{name}/{cidr}', 'update_lxc_firewall_ipset_entry', 'param-name' => 'UpdateFirewallIpSetEntry');
+api(DELETE => '/nodes/{node}/lxc/{vmid}/firewall/ipset/{name}/{cidr}', 'delete_lxc_firewall_ipset_entry', 'param-name' => 'DeleteFirewallIpSetEntry');
+
+# /nodes/{node}/qemu/{vmid}/firewall/ipset
+api(GET => '/nodes/{node}/qemu/{vmid}/firewall/ipset', 'qemu_firewall_ipset_list', 'return-name' => 'FirewallIpSetListItem');
+api(GET => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}', 'qemu_firewall_ipset', 'return-name' => 'FirewallIpSet');
+api(DELETE => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}', 'delete_qemu_firewall_ipset', 'param-name' => 'DeleteFirewallIpSet');
+api(POST => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}', 'create_qemu_firewall_ipset_entry', 'param-name' => 'CreateFirewallIpSetEntry');
+api(GET => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}', 'qemu_firewall_ipset_entry', 'return-name' => 'FirewallIpSetEntry');
+api(PUT => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}', 'update_qemu_firewall_ipset_entry', 'param-name' => 'UpdateFirewallIpSetEntry');
+api(DELETE => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}', 'delete_qemu_firewall_ipset_entry', 'param-name' => 'DeleteFirewallIpSetEntry');
+
 Schema2Rust::register_api_extensions('UpdateClusterFirewallOptions', {
     '/properties/comment' => { description => sq("Descriptive comment") },
 });
@@ -457,6 +486,30 @@ Schema2Rust::register_api_extensions('FirewallAlias', {
     '/properties/comment' => { description => sq("Descriptive comment") },
     '/properties/cidr' => { description => sq("CIDR address") },
 });
+Schema2Rust::register_api_extensions('CreateFirewallIpSetEntry', {
+    '/properties/comment' => { description => sq("Descriptive comment") },
+    '/properties/cidr' => { description => sq("CIDR address") },
+    '/properties/nomatch' => { description => sq("Inversed matching") },
+});
+
+Schema2Rust::register_api_extensions('FirewallIpSetListItem', {
+    '/properties/comment' => { description => sq("Descriptive comment") },
+    '/properties/cidr' => { description => sq("CIDR address") },
+    '/properties/nomatch' => { description => sq("Inversed matching") },
+});
+
+Schema2Rust::register_api_extensions('FirewallIpSet', {
+    '/properties/comment' => { description => sq("Descriptive comment") },
+    '/properties/cidr' => { description => sq("CIDR address") },
+    '/properties/nomatch' => { description => sq("Inversed matching") },
+});
+
+Schema2Rust::register_api_extensions('UpdateFirewallIpSetEntry', {
+    '/properties/comment' => { description => sq("Descriptive comment") },
+    '/properties/cidr' => { description => sq("CIDR address") },
+    '/properties/nomatch' => { description => sq("Inversed matching") },
+});
+
 Schema2Rust::derive('ListFirewallRules' => 'Clone', 'PartialEq');
 Schema2Rust::derive('FirewallAlias' => 'Clone', 'PartialEq');
 

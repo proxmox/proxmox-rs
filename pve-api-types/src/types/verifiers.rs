@@ -55,6 +55,8 @@ pub SDN_CONTROLLER_ID = r##"^(?i)[a-z][a-z0-9_-]*[a-z0-9]$"##;
 
 pub SDN_BGP_RT = r##"^(\d+):(\d+)$"##;
 
+pub SCOPED_IP_ALIAS_RE = r##"^(dc/|guest/)?([A-Za-z][A-Za-z0-9\-\_]+)$"##;
+
 }
 
 pub fn verify_volume_id(s: &str) -> Result<(), Error> {
@@ -156,6 +158,13 @@ pub fn verify_ip_or_cidr(s: &str) -> Result<(), Error> {
     } else {
         bail!("not a valid IP address or CIDR notation");
     }
+}
+
+pub fn verify_ip_or_cidr_or_alias(s: &str) -> Result<(), Error> {
+    if SCOPED_IP_ALIAS_RE.is_match(s) {
+        return Ok(());
+    }
+    verify_ip_or_cidr(s)
 }
 
 pub fn verify_ipv4_config(s: &str) -> Result<(), Error> {

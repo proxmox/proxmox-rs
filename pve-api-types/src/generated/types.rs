@@ -1362,6 +1362,39 @@ pub struct CreateFirewallAlias {
 
 #[api(
     properties: {
+        cidr: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_ip_or_cidr_or_alias),
+            type: String,
+            description: "CIDR address",
+        },
+        comment: {
+            optional: true,
+            type: String,
+            description: "Descriptive comment",
+        },
+        nomatch: {
+            default: false,
+            optional: true,
+            description: "Inversed matching",
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateFirewallIpSetEntry {
+    /// Network/IP specification in CIDR format.
+    pub cidr: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nomatch: Option<bool>,
+}
+
+#[api(
+    properties: {
         "allow-pending": {
             default: false,
             optional: true,
@@ -1865,6 +1898,41 @@ pub struct DeleteFirewallAlias {
 
 #[api(
     properties: {
+        force: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct DeleteFirewallIpSet {
+    /// Delete all members of the IPSet, if there are any.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub force: Option<bool>,
+}
+
+#[api(
+    properties: {
+        digest: {
+            max_length: 64,
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct DeleteFirewallIpSetEntry {
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+}
+
+#[api(
+    properties: {
         cidr: {
             type: String,
             description: "CIDR address",
@@ -1936,6 +2004,77 @@ pub enum FirewallIOPolicy {
 }
 serde_plain::derive_display_from_serialize!(FirewallIOPolicy);
 serde_plain::derive_fromstr_from_deserialize!(FirewallIOPolicy);
+
+#[api(
+    properties: {
+        cidr: {
+            type: String,
+            description: "CIDR address",
+        },
+        comment: {
+            optional: true,
+            type: String,
+            description: "Descriptive comment",
+        },
+        digest: {
+            max_length: 64,
+            type: String,
+        },
+        nomatch: {
+            default: false,
+            optional: true,
+            description: "Inversed matching",
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct FirewallIpSet {
+    pub cidr: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    pub digest: String,
+
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nomatch: Option<bool>,
+}
+
+#[api(
+    properties: {
+        comment: {
+            optional: true,
+            type: String,
+            description: "Descriptive comment",
+        },
+        digest: {
+            max_length: 64,
+            type: String,
+        },
+        name: {
+            max_length: 64,
+            min_length: 2,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct FirewallIpSetListItem {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    pub digest: String,
+
+    /// IP set name.
+    pub name: String,
+}
 
 #[api]
 /// Firewall log levels.
@@ -17607,6 +17746,41 @@ pub struct UpdateFirewallAlias {
     /// Rename an existing alias.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rename: Option<String>,
+}
+
+#[api(
+    properties: {
+        comment: {
+            optional: true,
+            type: String,
+            description: "Descriptive comment",
+        },
+        digest: {
+            max_length: 64,
+            optional: true,
+            type: String,
+        },
+        nomatch: {
+            default: false,
+            optional: true,
+            description: "Inversed matching",
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateFirewallIpSetEntry {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// Prevent changes if current configuration file has a different digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nomatch: Option<bool>,
 }
 
 const_regex! {

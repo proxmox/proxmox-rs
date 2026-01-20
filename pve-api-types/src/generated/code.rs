@@ -61,9 +61,6 @@
 /// - /cluster/firewall/groups
 /// - /cluster/firewall/groups/{group}
 /// - /cluster/firewall/groups/{group}/{pos}
-/// - /cluster/firewall/ipset
-/// - /cluster/firewall/ipset/{name}
-/// - /cluster/firewall/ipset/{name}/{cidr}
 /// - /cluster/firewall/macros
 /// - /cluster/firewall/refs
 /// - /cluster/firewall/rules/{pos}
@@ -210,9 +207,6 @@
 /// - /nodes/{node}/lxc/{vmid}/clone
 /// - /nodes/{node}/lxc/{vmid}/feature
 /// - /nodes/{node}/lxc/{vmid}/firewall
-/// - /nodes/{node}/lxc/{vmid}/firewall/ipset
-/// - /nodes/{node}/lxc/{vmid}/firewall/ipset/{name}
-/// - /nodes/{node}/lxc/{vmid}/firewall/ipset/{name}/{cidr}
 /// - /nodes/{node}/lxc/{vmid}/firewall/refs
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/lxc/{vmid}/interfaces
@@ -269,9 +263,6 @@
 /// - /nodes/{node}/qemu/{vmid}/dbus-vmstate
 /// - /nodes/{node}/qemu/{vmid}/feature
 /// - /nodes/{node}/qemu/{vmid}/firewall
-/// - /nodes/{node}/qemu/{vmid}/firewall/ipset
-/// - /nodes/{node}/qemu/{vmid}/firewall/ipset/{name}
-/// - /nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}
 /// - /nodes/{node}/qemu/{vmid}/firewall/refs
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/qemu/{vmid}/monitor
@@ -380,6 +371,25 @@ pub trait PveClient {
         Err(Error::Other("cluster_firewall_aliases not implemented"))
     }
 
+    /// List IPSet content
+    async fn cluster_firewall_ipset(&self, name: &str) -> Result<Vec<FirewallIpSet>, Error> {
+        Err(Error::Other("cluster_firewall_ipset not implemented"))
+    }
+
+    /// Read IP or Network settings from IPSet.
+    async fn cluster_firewall_ipset_entry(
+        &self,
+        name: &str,
+        cidr: &str,
+    ) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("cluster_firewall_ipset_entry not implemented"))
+    }
+
+    /// List IPSets
+    async fn cluster_firewall_ipset_list(&self) -> Result<Vec<FirewallIpSetListItem>, Error> {
+        Err(Error::Other("cluster_firewall_ipset_list not implemented"))
+    }
+
     /// Get Firewall options.
     async fn cluster_firewall_options(&self) -> Result<ClusterFirewallOptions, Error> {
         Err(Error::Other("cluster_firewall_options not implemented"))
@@ -425,6 +435,17 @@ pub trait PveClient {
         ))
     }
 
+    /// Add IP or Network to IPSet.
+    async fn create_cluster_firewall_ipset_entry(
+        &self,
+        name: &str,
+        params: CreateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "create_cluster_firewall_ipset_entry not implemented",
+        ))
+    }
+
     /// Create a new sdn controller object.
     async fn create_controller(&self, params: CreateController) -> Result<(), Error> {
         Err(Error::Other("create_controller not implemented"))
@@ -440,6 +461,19 @@ pub trait PveClient {
         Err(Error::Other("create_lxc_firewall_alias not implemented"))
     }
 
+    /// Add IP or Network to IPSet.
+    async fn create_lxc_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: CreateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "create_lxc_firewall_ipset_entry not implemented",
+        ))
+    }
+
     /// Create IP or Network Alias.
     async fn create_qemu_firewall_alias(
         &self,
@@ -448,6 +482,19 @@ pub trait PveClient {
         params: CreateFirewallAlias,
     ) -> Result<(), Error> {
         Err(Error::Other("create_qemu_firewall_alias not implemented"))
+    }
+
+    /// Add IP or Network to IPSet.
+    async fn create_qemu_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: CreateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "create_qemu_firewall_ipset_entry not implemented",
+        ))
     }
 
     /// Generate a new API token for a specific user. NOTE: returns API token
@@ -482,6 +529,29 @@ pub trait PveClient {
         ))
     }
 
+    /// Delete IPSet
+    async fn delete_cluster_firewall_ipset(
+        &self,
+        name: &str,
+        params: DeleteFirewallIpSet,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "delete_cluster_firewall_ipset not implemented",
+        ))
+    }
+
+    /// Remove IP or Network from IPSet.
+    async fn delete_cluster_firewall_ipset_entry(
+        &self,
+        name: &str,
+        cidr: &str,
+        params: DeleteFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "delete_cluster_firewall_ipset_entry not implemented",
+        ))
+    }
+
     /// Remove IP or Network alias.
     async fn delete_lxc_firewall_alias(
         &self,
@@ -493,6 +563,31 @@ pub trait PveClient {
         Err(Error::Other("delete_lxc_firewall_alias not implemented"))
     }
 
+    /// Delete IPSet
+    async fn delete_lxc_firewall_ipset(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: DeleteFirewallIpSet,
+    ) -> Result<(), Error> {
+        Err(Error::Other("delete_lxc_firewall_ipset not implemented"))
+    }
+
+    /// Remove IP or Network from IPSet.
+    async fn delete_lxc_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+        params: DeleteFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "delete_lxc_firewall_ipset_entry not implemented",
+        ))
+    }
+
     /// Remove IP or Network alias.
     async fn delete_qemu_firewall_alias(
         &self,
@@ -502,6 +597,31 @@ pub trait PveClient {
         params: DeleteFirewallAlias,
     ) -> Result<(), Error> {
         Err(Error::Other("delete_qemu_firewall_alias not implemented"))
+    }
+
+    /// Delete IPSet
+    async fn delete_qemu_firewall_ipset(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: DeleteFirewallIpSet,
+    ) -> Result<(), Error> {
+        Err(Error::Other("delete_qemu_firewall_ipset not implemented"))
+    }
+
+    /// Remove IP or Network from IPSet.
+    async fn delete_qemu_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+        params: DeleteFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "delete_qemu_firewall_ipset_entry not implemented",
+        ))
     }
 
     /// Get APT repository information.
@@ -678,6 +798,36 @@ pub trait PveClient {
         Err(Error::Other("lxc_firewall_aliases not implemented"))
     }
 
+    /// List IPSet content
+    async fn lxc_firewall_ipset(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+    ) -> Result<Vec<FirewallIpSet>, Error> {
+        Err(Error::Other("lxc_firewall_ipset not implemented"))
+    }
+
+    /// Read IP or Network settings from IPSet.
+    async fn lxc_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+    ) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("lxc_firewall_ipset_entry not implemented"))
+    }
+
+    /// List IPSets
+    async fn lxc_firewall_ipset_list(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<FirewallIpSetListItem>, Error> {
+        Err(Error::Other("lxc_firewall_ipset_list not implemented"))
+    }
+
     /// Read firewall log
     async fn lxc_firewall_log(
         &self,
@@ -823,6 +973,36 @@ pub trait PveClient {
         vmid: u32,
     ) -> Result<Vec<FirewallAlias>, Error> {
         Err(Error::Other("qemu_firewall_aliases not implemented"))
+    }
+
+    /// List IPSet content
+    async fn qemu_firewall_ipset(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+    ) -> Result<Vec<FirewallIpSet>, Error> {
+        Err(Error::Other("qemu_firewall_ipset not implemented"))
+    }
+
+    /// Read IP or Network settings from IPSet.
+    async fn qemu_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+    ) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("qemu_firewall_ipset_entry not implemented"))
+    }
+
+    /// List IPSets
+    async fn qemu_firewall_ipset_list(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<FirewallIpSetListItem>, Error> {
+        Err(Error::Other("qemu_firewall_ipset_list not implemented"))
     }
 
     /// Read firewall log
@@ -1098,6 +1278,18 @@ pub trait PveClient {
         ))
     }
 
+    /// Update IP or Network settings
+    async fn update_cluster_firewall_ipset_entry(
+        &self,
+        name: &str,
+        cidr: &str,
+        params: UpdateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "update_cluster_firewall_ipset_entry not implemented",
+        ))
+    }
+
     /// Update IP or Network alias.
     async fn update_lxc_firewall_alias(
         &self,
@@ -1109,6 +1301,20 @@ pub trait PveClient {
         Err(Error::Other("update_lxc_firewall_alias not implemented"))
     }
 
+    /// Update IP or Network settings
+    async fn update_lxc_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+        params: UpdateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "update_lxc_firewall_ipset_entry not implemented",
+        ))
+    }
+
     /// Update IP or Network alias.
     async fn update_qemu_firewall_alias(
         &self,
@@ -1118,6 +1324,20 @@ pub trait PveClient {
         params: UpdateFirewallAlias,
     ) -> Result<(), Error> {
         Err(Error::Other("update_qemu_firewall_alias not implemented"))
+    }
+
+    /// Update IP or Network settings
+    async fn update_qemu_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+        params: UpdateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        Err(Error::Other(
+            "update_qemu_firewall_ipset_entry not implemented",
+        ))
     }
 
     /// API version details, including some parts of the global datacenter
@@ -1150,6 +1370,35 @@ where
     /// List aliases
     async fn cluster_firewall_aliases(&self) -> Result<Vec<FirewallAlias>, Error> {
         let url = "/api2/extjs/cluster/firewall/aliases";
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List IPSet content
+    async fn cluster_firewall_ipset(&self, name: &str) -> Result<Vec<FirewallIpSet>, Error> {
+        let url = &format!(
+            "/api2/extjs/cluster/firewall/ipset/{}",
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Read IP or Network settings from IPSet.
+    async fn cluster_firewall_ipset_entry(
+        &self,
+        name: &str,
+        cidr: &str,
+    ) -> Result<serde_json::Value, Error> {
+        let url = &format!(
+            "/api2/extjs/cluster/firewall/ipset/{}/{}",
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List IPSets
+    async fn cluster_firewall_ipset_list(&self) -> Result<Vec<FirewallIpSetListItem>, Error> {
+        let url = "/api2/extjs/cluster/firewall/ipset";
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1209,6 +1458,19 @@ where
         self.0.post(url, &params).await?.nodata()
     }
 
+    /// Add IP or Network to IPSet.
+    async fn create_cluster_firewall_ipset_entry(
+        &self,
+        name: &str,
+        params: CreateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/cluster/firewall/ipset/{}",
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.post(url, &params).await?.nodata()
+    }
+
     /// Create a new sdn controller object.
     async fn create_controller(&self, params: CreateController) -> Result<(), Error> {
         let url = "/api2/extjs/cluster/sdn/controllers";
@@ -1230,6 +1492,23 @@ where
         self.0.post(url, &params).await?.nodata()
     }
 
+    /// Add IP or Network to IPSet.
+    async fn create_lxc_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: CreateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/ipset/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.post(url, &params).await?.nodata()
+    }
+
     /// Create IP or Network Alias.
     async fn create_qemu_firewall_alias(
         &self,
@@ -1241,6 +1520,23 @@ where
             "/api2/extjs/nodes/{}/qemu/{}/firewall/aliases",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
             vmid
+        );
+        self.0.post(url, &params).await?.nodata()
+    }
+
+    /// Add IP or Network to IPSet.
+    async fn create_qemu_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: CreateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/ipset/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         self.0.post(url, &params).await?.nodata()
     }
@@ -1290,6 +1586,42 @@ where
         self.0.delete(url).await?.nodata()
     }
 
+    /// Delete IPSet
+    async fn delete_cluster_firewall_ipset(
+        &self,
+        name: &str,
+        params: DeleteFirewallIpSet,
+    ) -> Result<(), Error> {
+        let DeleteFirewallIpSet { force: p_force } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/cluster/firewall/ipset/{}",
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_bool_arg("force", p_force)
+        .build();
+        self.0.delete(url).await?.nodata()
+    }
+
+    /// Remove IP or Network from IPSet.
+    async fn delete_cluster_firewall_ipset_entry(
+        &self,
+        name: &str,
+        cidr: &str,
+        params: DeleteFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        let DeleteFirewallIpSetEntry { digest: p_digest } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/cluster/firewall/ipset/{}/{}",
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("digest", &p_digest)
+        .build();
+        self.0.delete(url).await?.nodata()
+    }
+
     /// Remove IP or Network alias.
     async fn delete_lxc_firewall_alias(
         &self,
@@ -1311,6 +1643,50 @@ where
         self.0.delete(url).await?.nodata()
     }
 
+    /// Delete IPSet
+    async fn delete_lxc_firewall_ipset(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: DeleteFirewallIpSet,
+    ) -> Result<(), Error> {
+        let DeleteFirewallIpSet { force: p_force } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/ipset/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_bool_arg("force", p_force)
+        .build();
+        self.0.delete(url).await?.nodata()
+    }
+
+    /// Remove IP or Network from IPSet.
+    async fn delete_lxc_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+        params: DeleteFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        let DeleteFirewallIpSetEntry { digest: p_digest } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/ipset/{}/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("digest", &p_digest)
+        .build();
+        self.0.delete(url).await?.nodata()
+    }
+
     /// Remove IP or Network alias.
     async fn delete_qemu_firewall_alias(
         &self,
@@ -1326,6 +1702,50 @@ where
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
             vmid,
             percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("digest", &p_digest)
+        .build();
+        self.0.delete(url).await?.nodata()
+    }
+
+    /// Delete IPSet
+    async fn delete_qemu_firewall_ipset(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        params: DeleteFirewallIpSet,
+    ) -> Result<(), Error> {
+        let DeleteFirewallIpSet { force: p_force } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/ipset/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_bool_arg("force", p_force)
+        .build();
+        self.0.delete(url).await?.nodata()
+    }
+
+    /// Remove IP or Network from IPSet.
+    async fn delete_qemu_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+        params: DeleteFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        let DeleteFirewallIpSetEntry { digest: p_digest } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/ipset/{}/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         ))
         .maybe_arg("digest", &p_digest)
         .build();
@@ -1643,6 +2063,54 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// List IPSet content
+    async fn lxc_firewall_ipset(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+    ) -> Result<Vec<FirewallIpSet>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/ipset/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Read IP or Network settings from IPSet.
+    async fn lxc_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+    ) -> Result<serde_json::Value, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/ipset/{}/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List IPSets
+    async fn lxc_firewall_ipset_list(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<FirewallIpSetListItem>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/ipset",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Read firewall log
     async fn lxc_firewall_log(
         &self,
@@ -1878,6 +2346,54 @@ where
     ) -> Result<Vec<FirewallAlias>, Error> {
         let url = &format!(
             "/api2/extjs/nodes/{}/qemu/{}/firewall/aliases",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List IPSet content
+    async fn qemu_firewall_ipset(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+    ) -> Result<Vec<FirewallIpSet>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/ipset/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Read IP or Network settings from IPSet.
+    async fn qemu_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+    ) -> Result<serde_json::Value, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/ipset/{}/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List IPSets
+    async fn qemu_firewall_ipset_list(
+        &self,
+        node: &str,
+        vmid: u32,
+    ) -> Result<Vec<FirewallIpSetListItem>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/ipset",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
             vmid
         );
@@ -2299,6 +2815,21 @@ where
         self.0.put(url, &params).await?.nodata()
     }
 
+    /// Update IP or Network settings
+    async fn update_cluster_firewall_ipset_entry(
+        &self,
+        name: &str,
+        cidr: &str,
+        params: UpdateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/cluster/firewall/ipset/{}/{}",
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.put(url, &params).await?.nodata()
+    }
+
     /// Update IP or Network alias.
     async fn update_lxc_firewall_alias(
         &self,
@@ -2316,6 +2847,25 @@ where
         self.0.put(url, &params).await?.nodata()
     }
 
+    /// Update IP or Network settings
+    async fn update_lxc_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+        params: UpdateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/ipset/{}/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.put(url, &params).await?.nodata()
+    }
+
     /// Update IP or Network alias.
     async fn update_qemu_firewall_alias(
         &self,
@@ -2329,6 +2879,25 @@ where
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
             vmid,
             percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.put(url, &params).await?.nodata()
+    }
+
+    /// Update IP or Network settings
+    async fn update_qemu_firewall_ipset_entry(
+        &self,
+        node: &str,
+        vmid: u32,
+        name: &str,
+        cidr: &str,
+        params: UpdateFirewallIpSetEntry,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/ipset/{}/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid,
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         self.0.put(url, &params).await?.nodata()
     }
