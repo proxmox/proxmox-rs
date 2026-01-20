@@ -476,7 +476,10 @@ api(DELETE => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}', 'delete_
 # firewall macros
 api(GET => '/cluster/firewall/macros', 'cluster_firewall_macros', 'return-name' => 'FirewallMacro');
 
-
+# firewall refs
+api(GET => '/cluster/firewall/refs', 'cluster_firewall_refs', 'return-name' => 'FirewallRef');
+api(GET => '/nodes/{node}/lxc/{vmid}/firewall/refs', 'lxc_firewall_refs', 'return-name' => 'FirewallRef');
+api(GET => '/nodes/{node}/qemu/{vmid}/firewall/refs', 'qemu_firewall_refs', 'return-name' => 'FirewallRef');
 
 Schema2Rust::register_api_extensions('UpdateClusterFirewallOptions', {
     '/properties/comment' => { description => sq("Descriptive comment") },
@@ -516,8 +519,18 @@ Schema2Rust::register_api_extensions('UpdateFirewallIpSetEntry', {
     '/properties/nomatch' => { description => sq("Inversed matching") },
 });
 
+Schema2Rust::register_api_extensions('FirewallRef', {
+    '/properties/comment' => { description => sq("Descriptive comment") },
+    '/properties/name' => { description => sq("The name of the alias or ipset.") },
+    '/properties/ref' => { description => sq("The reference string used in firewall rules.") },
+    '/properties/scope' => { description => sq("The scope of the reference (e.g., SDN).") },
+});
+
 Schema2Rust::derive('ListFirewallRules' => 'Clone', 'PartialEq');
 Schema2Rust::derive('FirewallAlias' => 'Clone', 'PartialEq');
+Schema2Rust::derive('FirewallMacro' => 'Clone', 'PartialEq');
+Schema2Rust::derive('FirewallRef' => 'Clone', 'PartialEq');
+Schema2Rust::derive('FirewallIpSetListItem' => 'Clone', 'PartialEq');
 
 Schema2Rust::generate_enum('SdnObjectState', {
     type => 'string',

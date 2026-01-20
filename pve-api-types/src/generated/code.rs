@@ -61,7 +61,6 @@
 /// - /cluster/firewall/groups
 /// - /cluster/firewall/groups/{group}
 /// - /cluster/firewall/groups/{group}/{pos}
-/// - /cluster/firewall/refs
 /// - /cluster/firewall/rules/{pos}
 /// - /cluster/ha
 /// - /cluster/ha/groups
@@ -206,7 +205,6 @@
 /// - /nodes/{node}/lxc/{vmid}/clone
 /// - /nodes/{node}/lxc/{vmid}/feature
 /// - /nodes/{node}/lxc/{vmid}/firewall
-/// - /nodes/{node}/lxc/{vmid}/firewall/refs
 /// - /nodes/{node}/lxc/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/lxc/{vmid}/interfaces
 /// - /nodes/{node}/lxc/{vmid}/mtunnel
@@ -262,7 +260,6 @@
 /// - /nodes/{node}/qemu/{vmid}/dbus-vmstate
 /// - /nodes/{node}/qemu/{vmid}/feature
 /// - /nodes/{node}/qemu/{vmid}/firewall
-/// - /nodes/{node}/qemu/{vmid}/firewall/refs
 /// - /nodes/{node}/qemu/{vmid}/firewall/rules/{pos}
 /// - /nodes/{node}/qemu/{vmid}/monitor
 /// - /nodes/{node}/qemu/{vmid}/mtunnel
@@ -397,6 +394,15 @@ pub trait PveClient {
     /// Get Firewall options.
     async fn cluster_firewall_options(&self) -> Result<ClusterFirewallOptions, Error> {
         Err(Error::Other("cluster_firewall_options not implemented"))
+    }
+
+    /// Lists possible IPSet/Alias reference which are allowed in source/dest
+    /// properties.
+    async fn cluster_firewall_refs(
+        &self,
+        ty: Option<ClusterFirewallRefsType>,
+    ) -> Result<Vec<FirewallRef>, Error> {
+        Err(Error::Other("cluster_firewall_refs not implemented"))
     }
 
     /// Retrieve metrics of the cluster.
@@ -854,6 +860,17 @@ pub trait PveClient {
         Err(Error::Other("lxc_firewall_options not implemented"))
     }
 
+    /// Lists possible IPSet/Alias reference which are allowed in source/dest
+    /// properties.
+    async fn lxc_firewall_refs(
+        &self,
+        node: &str,
+        vmid: u32,
+        ty: Option<ClusterFirewallRefsType>,
+    ) -> Result<Vec<FirewallRef>, Error> {
+        Err(Error::Other("lxc_firewall_refs not implemented"))
+    }
+
     /// Get container configuration.
     async fn lxc_get_config(
         &self,
@@ -1029,6 +1046,17 @@ pub trait PveClient {
         vmid: u32,
     ) -> Result<GuestFirewallOptions, Error> {
         Err(Error::Other("qemu_firewall_options not implemented"))
+    }
+
+    /// Lists possible IPSet/Alias reference which are allowed in source/dest
+    /// properties.
+    async fn qemu_firewall_refs(
+        &self,
+        node: &str,
+        vmid: u32,
+        ty: Option<ClusterFirewallRefsType>,
+    ) -> Result<Vec<FirewallRef>, Error> {
+        Err(Error::Other("qemu_firewall_refs not implemented"))
     }
 
     /// Get the virtual machine configuration with pending configuration changes
@@ -1415,6 +1443,18 @@ where
     /// Get Firewall options.
     async fn cluster_firewall_options(&self) -> Result<ClusterFirewallOptions, Error> {
         let url = "/api2/extjs/cluster/firewall/options";
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Lists possible IPSet/Alias reference which are allowed in source/dest
+    /// properties.
+    async fn cluster_firewall_refs(
+        &self,
+        ty: Option<ClusterFirewallRefsType>,
+    ) -> Result<Vec<FirewallRef>, Error> {
+        let url = &ApiPathBuilder::new("/api2/extjs/cluster/firewall/refs")
+            .maybe_arg("type", &ty)
+            .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -2158,6 +2198,24 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// Lists possible IPSet/Alias reference which are allowed in source/dest
+    /// properties.
+    async fn lxc_firewall_refs(
+        &self,
+        node: &str,
+        vmid: u32,
+        ty: Option<ClusterFirewallRefsType>,
+    ) -> Result<Vec<FirewallRef>, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/lxc/{}/firewall/refs",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        ))
+        .maybe_arg("type", &ty)
+        .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Get container configuration.
     async fn lxc_get_config(
         &self,
@@ -2444,6 +2502,24 @@ where
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
             vmid
         );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Lists possible IPSet/Alias reference which are allowed in source/dest
+    /// properties.
+    async fn qemu_firewall_refs(
+        &self,
+        node: &str,
+        vmid: u32,
+        ty: Option<ClusterFirewallRefsType>,
+    ) -> Result<Vec<FirewallRef>, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/qemu/{}/firewall/refs",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
+        ))
+        .maybe_arg("type", &ty)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 

@@ -327,6 +327,23 @@ pub struct ClusterFirewallOptionsLogRatelimit {
     pub rate: Option<String>,
 }
 
+#[api]
+/// Only list references of specified type.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterFirewallRefsType {
+    #[serde(rename = "alias")]
+    /// alias.
+    Alias,
+    #[serde(rename = "ipset")]
+    /// ipset.
+    Ipset,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterFirewallRefsType);
+serde_plain::derive_fromstr_from_deserialize!(ClusterFirewallRefsType);
+
 const_regex! {
 
 CLUSTER_JOIN_INFO_PREFERRED_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
@@ -2063,7 +2080,7 @@ pub struct FirewallIpSet {
     },
 )]
 /// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct FirewallIpSetListItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
@@ -2126,7 +2143,7 @@ serde_plain::derive_fromstr_from_deserialize!(FirewallLogLevel);
     },
 )]
 /// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct FirewallMacro {
     /// More verbose description (if available).
     pub descr: String,
@@ -2134,6 +2151,47 @@ pub struct FirewallMacro {
     /// Macro name.
     #[serde(rename = "macro")]
     pub r#macro: String,
+}
+
+#[api(
+    properties: {
+        comment: {
+            optional: true,
+            type: String,
+            description: "Descriptive comment",
+        },
+        name: {
+            type: String,
+            description: "The name of the alias or ipset.",
+        },
+        "ref": {
+            type: String,
+            description: "The reference string used in firewall rules.",
+        },
+        scope: {
+            type: String,
+            description: "The scope of the reference (e.g., SDN).",
+        },
+        type: {
+            type: ClusterFirewallRefsType,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct FirewallRef {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    pub name: String,
+
+    #[serde(rename = "ref")]
+    pub r#ref: String,
+
+    pub scope: String,
+
+    #[serde(rename = "type")]
+    pub ty: ClusterFirewallRefsType,
 }
 
 #[api]
