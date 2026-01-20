@@ -2115,6 +2115,27 @@ pub enum FirewallLogLevel {
 serde_plain::derive_display_from_serialize!(FirewallLogLevel);
 serde_plain::derive_fromstr_from_deserialize!(FirewallLogLevel);
 
+#[api(
+    properties: {
+        descr: {
+            type: String,
+        },
+        "macro": {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct FirewallMacro {
+    /// More verbose description (if available).
+    pub descr: String,
+
+    /// Macro name.
+    #[serde(rename = "macro")]
+    pub r#macro: String,
+}
+
 #[api]
 /// Firewall conntrack helper.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]

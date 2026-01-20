@@ -61,7 +61,6 @@
 /// - /cluster/firewall/groups
 /// - /cluster/firewall/groups/{group}
 /// - /cluster/firewall/groups/{group}/{pos}
-/// - /cluster/firewall/macros
 /// - /cluster/firewall/refs
 /// - /cluster/firewall/rules/{pos}
 /// - /cluster/ha
@@ -388,6 +387,11 @@ pub trait PveClient {
     /// List IPSets
     async fn cluster_firewall_ipset_list(&self) -> Result<Vec<FirewallIpSetListItem>, Error> {
         Err(Error::Other("cluster_firewall_ipset_list not implemented"))
+    }
+
+    /// List available macros
+    async fn cluster_firewall_macros(&self) -> Result<Vec<FirewallMacro>, Error> {
+        Err(Error::Other("cluster_firewall_macros not implemented"))
     }
 
     /// Get Firewall options.
@@ -1399,6 +1403,12 @@ where
     /// List IPSets
     async fn cluster_firewall_ipset_list(&self) -> Result<Vec<FirewallIpSetListItem>, Error> {
         let url = "/api2/extjs/cluster/firewall/ipset";
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List available macros
+    async fn cluster_firewall_macros(&self) -> Result<Vec<FirewallMacro>, Error> {
+        let url = "/api2/extjs/cluster/firewall/macros";
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 

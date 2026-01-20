@@ -405,6 +405,7 @@ Schema2Rust::register_format('pve-fw-conntrack-helper' => {
 # FIXME: to use a better return value than `Value`, we first must fix the return schema there
 api(GET => '/cluster/options', 'cluster_options', 'output-type' => 'serde_json::Value');
 
+# firewall options
 api(GET => '/cluster/firewall/options', 'cluster_firewall_options', 'return-name' => 'ClusterFirewallOptions');
 api(PUT => '/cluster/firewall/options', 'set_cluster_firewall_options', 'param-name' => 'UpdateClusterFirewallOptions');
 
@@ -416,7 +417,7 @@ api(PUT => '/nodes/{node}/lxc/{vmid}/firewall/options', 'set_lxc_firewall_option
 api(GET => '/nodes/{node}/qemu/{vmid}/firewall/options', 'qemu_firewall_options', 'return-name' => 'GuestFirewallOptions');
 api(PUT => '/nodes/{node}/qemu/{vmid}/firewall/options', 'set_qemu_firewall_options', 'param-name' => 'UpdateGuestFirewallOptions');
 
-# rules
+# firewall rules
 api(GET => '/cluster/firewall/rules', 'list_cluster_firewall_rules', 'return-name' => 'ListFirewallRules');
 
 api(GET => '/nodes/{node}/firewall/rules', 'list_node_firewall_rules', 'return-name' => 'ListFirewallRules');
@@ -424,12 +425,12 @@ api(GET => '/nodes/{node}/firewall/rules', 'list_node_firewall_rules', 'return-n
 api(GET => '/nodes/{node}/lxc/{vmid}/firewall/rules', 'list_lxc_firewall_rules', 'return-name' => 'ListFirewallRules');
 api(GET => '/nodes/{node}/qemu/{vmid}/firewall/rules', 'list_qemu_firewall_rules', 'return-name' => 'ListFirewallRules');
 
-# log
+# firewall log
 api(GET => '/nodes/{node}/firewall/log', 'node_firewall_log', 'return-name' => 'TaskLogLine', attribs => 1);
 api(GET => '/nodes/{node}/lxc/{vmid}/firewall/log', 'lxc_firewall_log', 'return-name' => 'TaskLogLine', attribs => 1);
 api(GET => '/nodes/{node}/qemu/{vmid}/firewall/log', 'qemu_firewall_log', 'return-name' => 'TaskLogLine', attribs => 1);
 
-# aliases
+# firewall aliases
 api(GET => '/cluster/firewall/aliases', 'cluster_firewall_aliases', 'return-name' => 'FirewallAlias');
 api(POST => '/cluster/firewall/aliases', 'create_cluster_firewall_alias', 'param-name' => 'CreateFirewallAlias');
 api(PUT => '/cluster/firewall/aliases/{name}', 'update_cluster_firewall_alias', 'param-name' => 'UpdateFirewallAlias');
@@ -471,6 +472,11 @@ api(POST => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}', 'create_qemu_fire
 api(GET => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}', 'qemu_firewall_ipset_entry', 'return-name' => 'FirewallIpSetEntry');
 api(PUT => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}', 'update_qemu_firewall_ipset_entry', 'param-name' => 'UpdateFirewallIpSetEntry');
 api(DELETE => '/nodes/{node}/qemu/{vmid}/firewall/ipset/{name}/{cidr}', 'delete_qemu_firewall_ipset_entry', 'param-name' => 'DeleteFirewallIpSetEntry');
+
+# firewall macros
+api(GET => '/cluster/firewall/macros', 'cluster_firewall_macros', 'return-name' => 'FirewallMacro');
+
+
 
 Schema2Rust::register_api_extensions('UpdateClusterFirewallOptions', {
     '/properties/comment' => { description => sq("Descriptive comment") },
