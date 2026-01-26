@@ -66,28 +66,6 @@ macro_rules! static_assert_size {
     };
 }
 
-/// Evaluates to the offset (in bytes) of a given member within a struct
-///
-/// ```
-/// # use proxmox_lang::offsetof;
-///
-/// #[repr(C)]
-/// struct Stuff {
-///     first: u32,
-///     second: u32,
-/// }
-///
-/// assert_eq!(offsetof!(Stuff, second), 4);
-///
-/// ```
-#[deprecated = "use std::mem::offset_of! instead"]
-#[macro_export]
-macro_rules! offsetof {
-    ($ty:ty, $field:ident) => {
-        unsafe { &(*(std::ptr::null::<$ty>())).$field as *const _ as usize }
-    };
-}
-
 /// Shortcut for generating an `&'static CStr`.
 ///
 /// This takes a *string* (*not* a *byte-string*), appends a terminating zero, and calls
