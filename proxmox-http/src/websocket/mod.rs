@@ -550,7 +550,7 @@ impl<R: AsyncRead + Unpin + Send + 'static> AsyncRead for WebSocketReader<R> {
 
                     this.state = ReaderState::Receiving(future.boxed());
                 }
-                ReaderState::Receiving(ref mut future) => match ready!(future.as_mut().poll(cx)) {
+                ReaderState::Receiving(future) => match ready!(future.as_mut().poll(cx)) {
                     Ok(ReadResult {
                         len,
                         reader,

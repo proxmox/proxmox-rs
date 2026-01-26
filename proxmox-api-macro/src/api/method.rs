@@ -30,7 +30,7 @@ pub enum ReturnType {
 impl ReturnType {
     fn as_mut_schema(&mut self) -> Option<&mut Schema> {
         match self {
-            ReturnType::Explicit(ReturnSchema { ref mut schema, .. }) => Some(schema),
+            ReturnType::Explicit(ReturnSchema { schema, .. }) => Some(schema),
             _ => None,
         }
     }
@@ -589,7 +589,7 @@ fn create_wrapper_function(
     let body = match method_info.flavor {
         MethodFlavor::Normal => {
             quote! {
-                if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
+                if let ::serde_json::Value::Object(input_map) = &mut input_params {
                     #body
                     Ok(::serde_json::to_value(#func_name(#args) #await_keyword #question_mark)?)
                 } else {
@@ -599,7 +599,7 @@ fn create_wrapper_function(
         }
         MethodFlavor::Serializing => {
             quote! {
-                if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
+                if let ::serde_json::Value::Object(input_map) = &mut input_params {
                     #body
                     let res = #func_name(#args) #await_keyword #question_mark;
                     let res: ::std::boxed::Box<dyn ::proxmox_router::SerializableReturn + Send> = ::std::boxed::Box::new(res);
@@ -616,7 +616,7 @@ fn create_wrapper_function(
                 quote! { ::proxmox_router::SyncStream }
             };
             quote! {
-                if let ::serde_json::Value::Object(ref mut input_map) = &mut input_params {
+                if let ::serde_json::Value::Object(input_map) = &mut input_params {
                     #body
                     let res = #func_name(#args) #await_keyword #question_mark;
                     let res = #ty::from(res);

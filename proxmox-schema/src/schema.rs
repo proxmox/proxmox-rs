@@ -608,7 +608,7 @@ impl ArraySchema {
     /// Verify JSON value using an `ArraySchema`.
     pub fn verify_json(&self, data: &Value) -> Result<(), Error> {
         let list = match data {
-            Value::Array(ref list) => list,
+            Value::Array(list) => list,
             Value::Object(_) => bail!("Expected array - got object."),
             _ => bail!("Expected array - got scalar value."),
         };
@@ -1091,7 +1091,7 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
     /// Verify JSON value using an object schema.
     fn verify_json(&self, data: &Value) -> Result<(), Error> {
         let map = match data {
-            Value::Object(ref map) => map,
+            Value::Object(map) => map,
             Value::Array(_) => bail!("Expected object - got array."),
             _ => bail!("Expected object - got scalar value."),
         };
@@ -1285,7 +1285,7 @@ impl ObjectSchemaType for OneOfSchema {
 
     fn verify_json(&self, data: &Value) -> Result<(), Error> {
         let map = match data {
-            Value::Object(ref map) => map,
+            Value::Object(map) => map,
             Value::Array(_) => bail!("Expected object - got array."),
             _ => bail!("Expected object - got scalar value."),
         };

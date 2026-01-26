@@ -83,7 +83,7 @@ pub fn update_plugin(
     expected_digest.detect_modification(digest.as_ref())?;
 
     match plugins.get_mut(&id) {
-        Some((ty, ref mut entry)) => {
+        Some((ty, entry)) => {
             if ty != "dns" {
                 bail!("cannot update plugin of type {:?}", ty);
             }
@@ -150,7 +150,7 @@ fn modify_cfg_for_api(id: &str, ty: &str, data: &Value) -> PluginConfig {
     // None of these should be able to fail unless the user changed the files by hand, in which
     // case we leave the unmodified string in the Value for now. This will be handled with an error
     // later.
-    if let Some(Value::String(ref mut data)) = obj.get_mut("data") {
+    if let Some(Value::String(data)) = obj.get_mut("data") {
         if let Ok(new) = proxmox_base64::url::decode_no_pad(&data) {
             if let Ok(utf8) = String::from_utf8(new) {
                 *data = utf8;

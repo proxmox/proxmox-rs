@@ -272,10 +272,7 @@ impl AsyncBufRead for BodyBufReader {
         cx: &mut std::task::Context<'_>,
     ) -> Poll<io::Result<&[u8]>> {
         use hyper::body::Body as HyperBody;
-        let Self {
-            ref mut reader,
-            ref mut buf_at,
-        } = Pin::into_inner(self);
+        let Self { reader, buf_at } = Pin::into_inner(self);
         loop {
             // If we currently have a buffer, use it:
             if let Some((buf, at)) = buf_at {

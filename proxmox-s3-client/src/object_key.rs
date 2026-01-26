@@ -35,8 +35,8 @@ impl S3ObjectKey {
     /// If the object key is already a full key, the prefix is ignored.
     pub(crate) fn to_full_key(&self, prefix: &str) -> Self {
         match self {
-            Self::Full(ref key) => Self::Full(key.to_string()),
-            Self::Relative(ref key) => {
+            Self::Full(key) => Self::Full(key.to_string()),
+            Self::Relative(key) => {
                 let prefix = prefix.strip_prefix("/").unwrap_or(prefix);
                 Self::Full(format!("{prefix}/{key}"))
             }

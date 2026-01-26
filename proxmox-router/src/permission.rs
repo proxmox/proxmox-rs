@@ -38,9 +38,9 @@ impl fmt::Debug for Permission {
             Permission::Superuser => f.write_str("Superuser"),
             Permission::World => f.write_str("World"),
             Permission::Anybody => f.write_str("Anybody"),
-            Permission::User(ref userid) => write!(f, "User({userid})"),
+            Permission::User(userid) => write!(f, "User({userid})"),
             Permission::UserParam(param_name) => write!(f, "UserParam({param_name})"),
-            Permission::Group(ref group) => write!(f, "Group({group})"),
+            Permission::Group(group) => write!(f, "Group({group})"),
             Permission::WithParam(param_name, subtest) => {
                 write!(f, "WithParam({param_name}, {subtest:?})")
             }
@@ -122,12 +122,12 @@ fn check_api_permission_tail(
         },
         Permission::User(expected_userid) => match userid {
             None => return false,
-            Some(ref userid) => return userid == expected_userid,
+            Some(userid) => return &userid == expected_userid,
         },
         Permission::UserParam(param_name) => match (userid, param.get(&param_name.to_string())) {
             (None, _) => return false,
             (_, None) => return false,
-            (Some(ref userid), Some(ref expected)) => return userid == expected,
+            (Some(userid), Some(expected)) => return userid == expected,
         },
         Permission::Group(expected_group) => match userid {
             None => return false,

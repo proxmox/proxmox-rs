@@ -36,8 +36,8 @@ fn init() -> SectionConfig {
     );
     config.register_plugin(standalone_plugin);
 
-    let dns_challenge_schema = match DnsPlugin::API_SCHEMA {
-        Schema::AllOf(ref schema) => schema,
+    let dns_challenge_schema = match &DnsPlugin::API_SCHEMA {
+        Schema::AllOf(schema) => schema,
         _ => unreachable!(),
     };
     let dns_challenge_plugin = SectionConfigPlugin::new(

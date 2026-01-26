@@ -76,7 +76,7 @@ impl AsyncChannelWriter {
 
                     self.state = WriterState::Sending(future.boxed());
                 }
-                WriterState::Sending(ref mut future) => match ready!(future.as_mut().poll(cx)) {
+                WriterState::Sending(future) => match ready!(future.as_mut().poll(cx)) {
                     Ok(sender) => {
                         self.sender = Some(sender);
                         self.state = WriterState::Ready;

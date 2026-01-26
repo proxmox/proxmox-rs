@@ -254,7 +254,7 @@ impl Endpoint for SmtpEndpoint {
                     .map_err(|err| Error::NotifyFailed(self.name().into(), Box::new(err)))?
             }
             #[cfg(feature = "mail-forwarder")]
-            Content::ForwardedMail { ref raw, .. } => {
+            Content::ForwardedMail { raw, .. } => {
                 build_forwarded_message(email_builder, self.name(), raw)?
             }
         };

@@ -24,9 +24,9 @@ impl<S: AsyncRead + AsyncWrite + Unpin> AsyncRead for MaybeTlsStream<S> {
         buf: &mut ReadBuf,
     ) -> Poll<Result<(), io::Error>> {
         match self.get_mut() {
-            MaybeTlsStream::Normal(ref mut s) => Pin::new(s).poll_read(cx, buf),
-            MaybeTlsStream::Proxied(ref mut s) => Pin::new(s).poll_read(cx, buf),
-            MaybeTlsStream::Secured(ref mut s) => Pin::new(s).poll_read(cx, buf),
+            MaybeTlsStream::Normal(s) => Pin::new(s).poll_read(cx, buf),
+            MaybeTlsStream::Proxied(s) => Pin::new(s).poll_read(cx, buf),
+            MaybeTlsStream::Secured(s) => Pin::new(s).poll_read(cx, buf),
         }
     }
 }
@@ -38,9 +38,9 @@ impl<S: AsyncRead + AsyncWrite + Unpin> AsyncWrite for MaybeTlsStream<S> {
         buf: &[u8],
     ) -> Poll<Result<usize, io::Error>> {
         match self.get_mut() {
-            MaybeTlsStream::Normal(ref mut s) => Pin::new(s).poll_write(cx, buf),
-            MaybeTlsStream::Proxied(ref mut s) => Pin::new(s).poll_write(cx, buf),
-            MaybeTlsStream::Secured(ref mut s) => Pin::new(s).poll_write(cx, buf),
+            MaybeTlsStream::Normal(s) => Pin::new(s).poll_write(cx, buf),
+            MaybeTlsStream::Proxied(s) => Pin::new(s).poll_write(cx, buf),
+            MaybeTlsStream::Secured(s) => Pin::new(s).poll_write(cx, buf),
         }
     }
 
@@ -50,9 +50,9 @@ impl<S: AsyncRead + AsyncWrite + Unpin> AsyncWrite for MaybeTlsStream<S> {
         bufs: &[io::IoSlice<'_>],
     ) -> Poll<Result<usize, io::Error>> {
         match self.get_mut() {
-            MaybeTlsStream::Normal(ref mut s) => Pin::new(s).poll_write_vectored(cx, bufs),
-            MaybeTlsStream::Proxied(ref mut s) => Pin::new(s).poll_write_vectored(cx, bufs),
-            MaybeTlsStream::Secured(ref mut s) => Pin::new(s).poll_write_vectored(cx, bufs),
+            MaybeTlsStream::Normal(s) => Pin::new(s).poll_write_vectored(cx, bufs),
+            MaybeTlsStream::Proxied(s) => Pin::new(s).poll_write_vectored(cx, bufs),
+            MaybeTlsStream::Secured(s) => Pin::new(s).poll_write_vectored(cx, bufs),
         }
     }
 
@@ -66,17 +66,17 @@ impl<S: AsyncRead + AsyncWrite + Unpin> AsyncWrite for MaybeTlsStream<S> {
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), io::Error>> {
         match self.get_mut() {
-            MaybeTlsStream::Normal(ref mut s) => Pin::new(s).poll_flush(cx),
-            MaybeTlsStream::Proxied(ref mut s) => Pin::new(s).poll_flush(cx),
-            MaybeTlsStream::Secured(ref mut s) => Pin::new(s).poll_flush(cx),
+            MaybeTlsStream::Normal(s) => Pin::new(s).poll_flush(cx),
+            MaybeTlsStream::Proxied(s) => Pin::new(s).poll_flush(cx),
+            MaybeTlsStream::Secured(s) => Pin::new(s).poll_flush(cx),
         }
     }
 
     fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Result<(), io::Error>> {
         match self.get_mut() {
-            MaybeTlsStream::Normal(ref mut s) => Pin::new(s).poll_shutdown(cx),
-            MaybeTlsStream::Proxied(ref mut s) => Pin::new(s).poll_shutdown(cx),
-            MaybeTlsStream::Secured(ref mut s) => Pin::new(s).poll_shutdown(cx),
+            MaybeTlsStream::Normal(s) => Pin::new(s).poll_shutdown(cx),
+            MaybeTlsStream::Proxied(s) => Pin::new(s).poll_shutdown(cx),
+            MaybeTlsStream::Secured(s) => Pin::new(s).poll_shutdown(cx),
         }
     }
 }

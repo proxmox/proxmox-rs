@@ -337,10 +337,10 @@ pub async fn handle_command_future(
     set_help_context(Some(def.clone()));
 
     let result = match &*def {
-        CommandLineInterface::Simple(ref cli_cmd) => {
+        CommandLineInterface::Simple(cli_cmd) => {
             handle_simple_command_future(prefix, cli_cmd, args, rpcenv).await
         }
-        CommandLineInterface::Nested(ref map) => {
+        CommandLineInterface::Nested(map) => {
             let mut prefix = prefix.to_string();
             let cli_cmd = parse_nested_command(&mut prefix, map, &mut args)?;
             handle_simple_command_future(&prefix, cli_cmd, args, rpcenv).await
@@ -366,10 +366,10 @@ pub fn handle_command(
     set_help_context(Some(def.clone()));
 
     let result = match &*def {
-        CommandLineInterface::Simple(ref cli_cmd) => {
+        CommandLineInterface::Simple(cli_cmd) => {
             handle_simple_command(prefix, cli_cmd, args, &mut rpcenv, run, [].into_iter())
         }
-        CommandLineInterface::Nested(ref map) => {
+        CommandLineInterface::Nested(map) => {
             let mut prefix = prefix.to_string();
             let cli_cmd = parse_nested_command(&mut prefix, map, &mut args)?;
             handle_simple_command(&prefix, cli_cmd, args, &mut rpcenv, run, [].into_iter())

@@ -165,7 +165,7 @@ fn handle_regular_struct(
     let mut all_of_schemas = TokenStream::new();
     let mut to_remove = Vec::new();
 
-    if let syn::Fields::Named(ref fields) = &stru.fields {
+    if let syn::Fields::Named(fields) = &stru.fields {
         for field in &fields.named {
             let attrs = serde::FieldAttrib::try_from(&field.attrs[..])?;
 

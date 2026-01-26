@@ -508,7 +508,7 @@ impl UpgradeChecker {
                     continue;
                 }
 
-                if let Some((ref current_suite, ref current_location)) = found_suite {
+                if let Some((current_suite, current_location)) = found_suite {
                     let location = repo_file.path.clone().unwrap_or_default();
                     if suite != current_suite {
                         if mismatches.is_empty() {

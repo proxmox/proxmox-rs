@@ -229,30 +229,30 @@ pub fn get_property_description(
 
     let (descr, default, extra) = match schema {
         Schema::Null => ("null", None, None),
-        Schema::String(ref schema) => (
+        Schema::String(schema) => (
             schema.description,
             schema.default.map(|v| v.to_owned()),
             None,
         ),
-        Schema::Boolean(ref schema) => (
+        Schema::Boolean(schema) => (
             schema.description,
             schema.default.map(|v| v.to_string()),
             None,
         ),
-        Schema::Integer(ref schema) => (
+        Schema::Integer(schema) => (
             schema.description,
             schema.default.map(|v| v.to_string()),
             None,
         ),
-        Schema::Number(ref schema) => (
+        Schema::Number(schema) => (
             schema.description,
             schema.default.map(|v| v.to_string()),
             None,
         ),
-        Schema::Object(ref schema) => (schema.description, None, None),
-        Schema::AllOf(ref schema) => (schema.description, None, None),
-        Schema::OneOf(ref schema) => (schema.description, None, None),
-        Schema::Array(ref schema) => (
+        Schema::Object(schema) => (schema.description, None, None),
+        Schema::AllOf(schema) => (schema.description, None, None),
+        Schema::OneOf(schema) => (schema.description, None, None),
+        Schema::Array(schema) => (
             schema.description,
             None,
             Some(String::from("Can be specified more than once.")),

@@ -177,7 +177,7 @@ fn register_traffic(limiter: &dyn ShareableRateLimit, count: usize) -> Option<Pi
 
 fn delay_is_ready(delay: &mut Option<Pin<Box<Sleep>>>, ctx: &mut Context<'_>) -> bool {
     match delay {
-        Some(ref mut future) => future.as_mut().poll(ctx).is_ready(),
+        Some(future) => future.as_mut().poll(ctx).is_ready(),
         None => true,
     }
 }

@@ -121,8 +121,8 @@ impl<R: BufRead> Iterator for Lexer<R> {
             self.cur_line = Some(Self::split_line(&line));
         }
 
-        match self.cur_line {
-            Some(ref mut cur_line) => {
+        match &mut self.cur_line {
+            Some(cur_line) => {
                 if cur_line.is_empty() {
                     self.cur_line = None;
                     Some(Ok((Token::Newline, String::from("\n"))))
