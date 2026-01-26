@@ -582,14 +582,14 @@ my $type_pid = open2(
     '>&'.fileno($type_fh),
     my $type_pipe,
     #'cat',
-    'rustfmt', '--edition=2021', '--config', 'wrap_comments=true'
+    'rustfmt', '--edition=2024', '--config', 'wrap_comments=true'
 );
 open(my $code_fh, '>', $code_out_file) or die "failed to open '$code_out_file': $!\n";
 my $code_pid = open2(
     '>&'.fileno($code_fh),
     my $code_pipe,
     #'cat',
-    'rustfmt', '--edition=2021', '--config', 'wrap_comments=true'
+    'rustfmt', '--edition=2024', '--config', 'wrap_comments=true'
 );
 close($type_fh);
 close($code_fh);
