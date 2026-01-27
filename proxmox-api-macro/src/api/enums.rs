@@ -268,11 +268,18 @@ fn handle_section_config_enum(
             TokenStream::new()
         };
 
+        let cfg_attrs: Vec<&syn::Attribute> = variant
+            .attrs
+            .iter()
+            .filter(|attr| attr.path().is_ident("cfg"))
+            .collect();
+
         let variant_ident = &variant.ident;
         let ty = &field.ty;
         variants.push((
             variant_string.value(),
             quote_spanned! { variant.ident.span() =>
+                #(#cfg_attrs)*
                 (
                     #variant_string,
                     &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA,
@@ -280,6 +287,7 @@ fn handle_section_config_enum(
             },
         ));
         register_sections.extend(quote_spanned! { variant.ident.span() =>
+            #(#cfg_attrs)*
             this.register_plugin(
                 ::proxmox_section_config::SectionConfigPlugin::new(
                     #variant_string.to_string(),
@@ -297,6 +305,7 @@ fn handle_section_config_enum(
             );
         });
         to_type.extend(quote_spanned! { variant.ident.span() =>
+            #(#cfg_attrs)*
             Self::#variant_ident(_) => #variant_string,
         });
     }

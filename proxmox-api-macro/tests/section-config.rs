@@ -43,6 +43,8 @@ pub enum Config {
     A(TypeA),
     #[api(type_key = "the-type")]
     B(TypeB),
+    #[cfg(false)]
+    NotCompiled(NonExistingPlugin),
 }
 
 #[test]
