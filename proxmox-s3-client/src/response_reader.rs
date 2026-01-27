@@ -251,7 +251,7 @@ impl ResponseReader {
 
         let body = String::from_utf8(body.to_vec())?;
 
-        let date = Self::parse_optional_date_header(&parts.headers)?;
+        let date = Self::parse_optional_header(header::DATE, &parts.headers)?;
 
         let response: ListObjectsV2ResponseBody =
             serde_xml_rs::from_str(&body).context("failed to parse response body")?;
@@ -282,7 +282,7 @@ impl ResponseReader {
         let content_length: u64 = Self::parse_header(header::CONTENT_LENGTH, &parts.headers)?;
         let content_type = Self::parse_header(header::CONTENT_TYPE, &parts.headers)?;
         let e_tag = Self::parse_header(header::ETAG, &parts.headers)?;
-        let date = Self::parse_optional_date_header(&parts.headers)?;
+        let date = Self::parse_optional_header(header::DATE, &parts.headers)?;
         let last_modified = Self::parse_header(header::LAST_MODIFIED, &parts.headers)?;
 
         Ok(Some(HeadObjectResponse {
@@ -314,7 +314,7 @@ impl ResponseReader {
         let content_length: u64 = Self::parse_header(header::CONTENT_LENGTH, &parts.headers)?;
         let content_type = Self::parse_header(header::CONTENT_TYPE, &parts.headers)?;
         let e_tag = Self::parse_header(header::ETAG, &parts.headers)?;
-        let date = Self::parse_optional_date_header(&parts.headers)?;
+        let date = Self::parse_optional_header(header::DATE, &parts.headers)?;
         let last_modified = Self::parse_header(header::LAST_MODIFIED, &parts.headers)?;
 
         Ok(Some(GetObjectResponse {
@@ -477,30 +477,30 @@ impl ResponseReader {
         <T as FromStr>::Err: Send + Sync + 'static,
         Result<T, <T as FromStr>::Err>: Context<T, <T as FromStr>::Err>,
     {
-        let header_value = headers
-            .get(&name)
+        let value = Self::parse_optional_header(name.clone(), headers)?
             .ok_or_else(|| anyhow!("missing header '{name}'"))?;
+        Ok(value)
+    }
+
+    fn parse_optional_header<T: FromStr>(
+        name: HeaderName,
+        headers: &HeaderMap,
+    ) -> Result<Option<T>, Error>
+    where
+        <T as FromStr>::Err: Send + Sync + 'static,
+        Result<T, <T as FromStr>::Err>: Context<T, <T as FromStr>::Err>,
+    {
+        let header_value = match headers.get(&name) {
+            Some(value) => value,
+            None => return Ok(None),
+        };
         let header_str = header_value
             .to_str()
             .with_context(|| format!("non UTF-8 header '{name}'"))?;
         let value = header_str
             .parse()
             .with_context(|| format!("failed to parse header '{name}'"))?;
-        Ok(value)
-    }
-
-    fn parse_optional_date_header(headers: &HeaderMap) -> Result<Option<HttpDate>, Error> {
-        let header_value = match headers.get(header::DATE) {
-            Some(value) => value,
-            None => return Ok(None),
-        };
-        let header_str = header_value
-            .to_str()
-            .with_context(|| format!("non UTF-8 header '{}'", header::DATE))?;
-        let date: HttpDate = header_str
-            .parse()
-            .with_context(|| format!("failed to parse header '{}'", header::DATE))?;
-        Ok(Some(date))
+        Ok(Some(value))
     }
 }
 
@@ -615,7 +615,8 @@ fn test_optional_date_header_parsing() {
 
     let expected_date = "Wed, 12 Oct 2009 17:50:00 GMT";
     header_map.insert(header::DATE, expected_date.parse().unwrap());
-    let parsed_date = ResponseReader::parse_optional_date_header(&header_map).unwrap();
+    let parsed_date: Option<HttpDate> =
+        ResponseReader::parse_optional_header(header::DATE, &header_map).unwrap();
     assert!(parsed_date.is_some());
     assert_eq!(
         parsed_date.unwrap(),
@@ -625,10 +626,12 @@ fn test_optional_date_header_parsing() {
     header_map.clear();
     let invalid_date_format = "2019-11-10";
     header_map.insert(header::DATE, invalid_date_format.parse().unwrap());
-    assert!(ResponseReader::parse_optional_date_header(&header_map).is_err());
+    assert!(ResponseReader::parse_optional_header::<HttpDate>(header::DATE, &header_map).is_err());
 
     header_map.clear();
-    assert!(ResponseReader::parse_optional_date_header(&header_map)
-        .unwrap()
-        .is_none());
+    assert!(
+        ResponseReader::parse_optional_header::<HttpDate>(header::DATE, &header_map)
+            .unwrap()
+            .is_none()
+    );
 }
