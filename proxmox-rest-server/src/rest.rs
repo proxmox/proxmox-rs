@@ -981,7 +981,7 @@ impl Formatted {
                     // always delay unauthorized calls by 3 seconds (from start of request)
                     let err = http_err!(UNAUTHORIZED, "authentication failed - {}", err);
                     tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
-                    return Err(err);
+                    return Err(format_err!("authentication failed"));
                 }
             }
         }
@@ -1088,7 +1088,7 @@ impl Unformatted {
                     // always delay unauthorized calls by 3 seconds (from start of request)
                     let err = http_err!(UNAUTHORIZED, "authentication failed - {}", err);
                     tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
-                    return Err(err);
+                    return Err(format_err!("authentication failed"));
                 }
             }
         } else {
