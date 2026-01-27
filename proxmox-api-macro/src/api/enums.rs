@@ -106,6 +106,12 @@ fn handle_string_enum(
     let mut variants = TokenStream::new();
     let mut has_untagged_other = false;
     for variant in &mut enum_ty.variants {
+        let cfg_attrs: Vec<&syn::Attribute> = variant
+            .attrs
+            .iter()
+            .filter(|attr| attr.path().is_ident("cfg"))
+            .collect();
+
         let attrs = serde::VariantAttrib::try_from(&variant.attrs[..])?;
 
         match &variant.fields {
@@ -153,6 +159,7 @@ fn handle_string_enum(
         }
 
         variants.extend(quote_spanned! { variant.ident.span() =>
+            #(#cfg_attrs)*
             ::proxmox_schema::EnumEntry {
                 value: #variant_string,
                 description: #comment,

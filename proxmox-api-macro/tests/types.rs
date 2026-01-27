@@ -137,6 +137,9 @@ pub enum Selection {
     AnotherKind,
     /// And yet another.
     SelectionNumberThree,
+    #[cfg(false)]
+    /// And one that isn't compiled due to a cfg and won't be included in the test below.
+    NotIncludedKind,
 }
 
 #[test]
