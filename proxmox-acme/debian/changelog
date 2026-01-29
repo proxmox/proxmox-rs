@@ -1,3 +1,10 @@
+rust-proxmox-acme (1.1.0-1) trixie; urgency=medium
+
+  * fix #6939: acme: support servers returning 204 for nonce requests, as
+    allowed by the ACME specification.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 29 Jan 2026 12:28:04 +0100
+
 rust-proxmox-acme (1.0.3-1) trixie; urgency=medium
 
   * update proxmox-schema to 5.0.0
