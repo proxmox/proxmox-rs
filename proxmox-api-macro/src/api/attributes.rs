@@ -112,6 +112,7 @@ impl EnumFieldAttributes {
 }
 
 /// Helper to hold attributes which we want to pass on from the input, or warn or error about.
+#[derive(Clone, Default)]
 pub struct CheckedAttributes {
     attrs: Vec<syn::Attribute>,
 }

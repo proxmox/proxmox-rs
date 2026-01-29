@@ -45,6 +45,10 @@ pub struct TestStruct {
 
     /// An optional auto-derived value for testing:
     another: Option<String>,
+
+    /// Disabled field.
+    #[cfg(false)]
+    disabled_field: String,
 }
 
 #[test]

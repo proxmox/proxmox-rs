@@ -492,6 +492,9 @@ pub struct ObjectEntry {
     pub optional: OptionType,
     pub schema: Schema,
 
+    /// Some attributes, such as `#[cfg]`, need to also be added to the schema expression.
+    pub attrs: attributes::CheckedAttributes,
+
     /// This is only valid for methods. Methods should reset this to false after dealing with it,
     /// as encountering this during schema serialization will always cause an error.
     pub flatten: Option<Span>,
@@ -507,6 +510,7 @@ impl ObjectEntry {
             name,
             optional: optional.into(),
             schema,
+            attrs: Default::default(),
             flatten: None,
             flatten_in_struct: false,
         }
@@ -688,9 +692,13 @@ impl SchemaObject {
 
             let key = element.name.as_str();
             let optional = &element.optional;
+            let attrs = &element.attrs;
             let mut schema = TokenStream::new();
             element.schema.to_schema(&mut schema)?;
-            ts.extend(quote! { (#key, #optional, &#schema), });
+            ts.extend(quote! {
+                #attrs
+                (#key, #optional, &#schema),
+            });
         }
         Ok(())
     }

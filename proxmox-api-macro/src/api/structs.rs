@@ -191,8 +191,12 @@ fn handle_regular_struct(
                 continue;
             }
 
+            let checked_attrs = CheckedAttributes::from_slice(&field.attrs);
+
             match schema_fields.remove(&name) {
                 Some(field_def) => {
+                    field_def.attrs = checked_attrs;
+
                     if attrs.flatten {
                         to_remove.push(name.clone());
 
@@ -217,7 +221,11 @@ fn handle_regular_struct(
                     handle_regular_field(field_def, field, false, &attrs)?;
 
                     if attrs.flatten {
-                        all_of_schemas.extend(quote::quote! {&});
+                        let checked_attrs = &field_def.attrs;
+                        all_of_schemas.extend(quote::quote! {
+                            #checked_attrs
+                            &
+                        });
                         field_def.schema.to_schema(&mut all_of_schemas)?;
                         all_of_schemas.extend(quote::quote! {,});
                     }
@@ -228,10 +236,15 @@ fn handle_regular_struct(
                         false,
                         Schema::blank(span),
                     );
+                    field_def.attrs = checked_attrs;
                     handle_regular_field(&mut field_def, field, true, &attrs)?;
 
                     if attrs.flatten {
-                        all_of_schemas.extend(quote::quote! {&});
+                        let checked_attrs = &field_def.attrs;
+                        all_of_schemas.extend(quote::quote! {
+                            #checked_attrs
+                            &
+                        });
                         field_def.schema.to_schema(&mut all_of_schemas)?;
                         all_of_schemas.extend(quote::quote! {,});
                         to_remove.push(name.clone());
