@@ -110,3 +110,28 @@ impl EnumFieldAttributes {
         self.type_key.as_ref()
     }
 }
+
+/// Helper to hold attributes which we want to pass on from the input, or warn or error about.
+pub struct CheckedAttributes {
+    attrs: Vec<syn::Attribute>,
+}
+
+impl CheckedAttributes {
+    pub fn from_slice(attrs: &[syn::Attribute]) -> Self {
+        Self {
+            attrs: attrs
+                .iter()
+                .filter(|attr| attr.path().is_ident("cfg"))
+                .cloned()
+                .collect(),
+        }
+    }
+}
+
+impl quote::ToTokens for CheckedAttributes {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        for attr in &self.attrs {
+            attr.to_tokens(tokens)
+        }
+    }
+}

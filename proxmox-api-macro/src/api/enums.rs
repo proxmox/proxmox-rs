@@ -6,6 +6,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
 use syn::spanned::Spanned;
 
+use super::attributes::CheckedAttributes;
 use super::attributes::EnumFieldAttributes;
 use super::Schema;
 use crate::serde;
@@ -106,11 +107,7 @@ fn handle_string_enum(
     let mut variants = TokenStream::new();
     let mut has_untagged_other = false;
     for variant in &mut enum_ty.variants {
-        let cfg_attrs: Vec<&syn::Attribute> = variant
-            .attrs
-            .iter()
-            .filter(|attr| attr.path().is_ident("cfg"))
-            .collect();
+        let checked_attrs = CheckedAttributes::from_slice(&variant.attrs);
 
         let attrs = serde::VariantAttrib::try_from(&variant.attrs[..])?;
 
@@ -159,7 +156,7 @@ fn handle_string_enum(
         }
 
         variants.extend(quote_spanned! { variant.ident.span() =>
-            #(#cfg_attrs)*
+            #checked_attrs
             ::proxmox_schema::EnumEntry {
                 value: #variant_string,
                 description: #comment,
@@ -268,18 +265,14 @@ fn handle_section_config_enum(
             TokenStream::new()
         };
 
-        let cfg_attrs: Vec<&syn::Attribute> = variant
-            .attrs
-            .iter()
-            .filter(|attr| attr.path().is_ident("cfg"))
-            .collect();
+        let checked_attrs = CheckedAttributes::from_slice(&variant.attrs);
 
         let variant_ident = &variant.ident;
         let ty = &field.ty;
         variants.push((
             variant_string.value(),
             quote_spanned! { variant.ident.span() =>
-                #(#cfg_attrs)*
+                #checked_attrs
                 (
                     #variant_string,
                     &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA,
@@ -287,7 +280,7 @@ fn handle_section_config_enum(
             },
         ));
         register_sections.extend(quote_spanned! { variant.ident.span() =>
-            #(#cfg_attrs)*
+            #checked_attrs
             this.register_plugin(
                 ::proxmox_section_config::SectionConfigPlugin::new(
                     #variant_string.to_string(),
@@ -305,7 +298,7 @@ fn handle_section_config_enum(
             );
         });
         to_type.extend(quote_spanned! { variant.ident.span() =>
-            #(#cfg_attrs)*
+            #checked_attrs
             Self::#variant_ident(_) => #variant_string,
         });
     }
