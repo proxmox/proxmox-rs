@@ -1,3 +1,9 @@
+rust-proxmox-rest-server (1.0.4-1) trixie; urgency=medium
+
+  * unify returned error message for authentication failure.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 29 Jan 2026 11:23:58 +0100
+
 rust-proxmox-rest-server (1.0.3-1) trixie; urgency=medium
 
   * fix #5946: worker task log: detect task status on multi-line message.
