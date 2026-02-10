@@ -979,9 +979,8 @@ impl Formatted {
                     rpcenv.log_failed_auth(None, &err.to_string());
 
                     // always delay unauthorized calls by 3 seconds (from start of request)
-                    let err = http_err!(UNAUTHORIZED, "authentication failed - {}", err);
                     tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
-                    return Err(format_err!("authentication failed"));
+                    return Err(http_err!(UNAUTHORIZED, "authentication failed"));
                 }
             }
         }
@@ -1086,9 +1085,8 @@ impl Unformatted {
                     rpcenv.log_failed_auth(None, &err.to_string());
 
                     // always delay unauthorized calls by 3 seconds (from start of request)
-                    let err = http_err!(UNAUTHORIZED, "authentication failed - {}", err);
                     tokio::time::sleep_until(Instant::from_std(delay_unauth_time())).await;
-                    return Err(format_err!("authentication failed"));
+                    return Err(http_err!(UNAUTHORIZED, "authentication failed"));
                 }
             }
         } else {
