@@ -346,13 +346,8 @@ fn log_response(
         };
 
         log::error!(
-            "{} {}: {} {}: [client {}] {}",
-            method.as_str(),
-            path,
-            status.as_str(),
-            reason,
-            peer,
-            message
+            "{method} {path}: {status} {reason}: [client {peer}] {message}",
+            status = status.as_str(),
         );
     }
     if let Some(logfile) = logfile {
@@ -368,7 +363,6 @@ fn log_response(
         logfile.lock().unwrap().log(format!(
             "{ip} - {auth_id} [{datetime}] \"{method} {path}\" {status} {size} {user_agent}",
             ip = peer.ip(),
-            method = method.as_str(),
             status = status.as_str(),
             size = resp.body().size_hint().lower(),
             user_agent = user_agent.unwrap_or_else(|| "-".to_string()),
