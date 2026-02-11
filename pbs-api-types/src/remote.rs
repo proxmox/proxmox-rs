@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use proxmox_schema::BooleanSchema;
+
 use super::*;
 
 pub const REMOTE_PASSWORD_SCHEMA: Schema =
@@ -22,6 +24,12 @@ pub const REMOTE_ID_SCHEMA: Schema = StringSchema::new("Remote ID.")
     .max_length(32)
     .schema();
 
+pub const USE_NODE_HTTP_PROXY_SCHEMA: Schema = BooleanSchema::new(
+    "Use the http proxy configuration of the node for remote connections.",
+)
+.default(false)
+.schema();
+
 #[api(
     properties: {
         comment: {
@@ -43,6 +51,10 @@ pub const REMOTE_ID_SCHEMA: Schema = StringSchema::new("Remote ID.")
             optional: true,
             schema: CERT_FINGERPRINT_SHA256_SCHEMA,
         },
+        "use-node-proxy": {
+            optional: true,
+            schema: USE_NODE_HTTP_PROXY_SCHEMA,
+        },
     },
 )]
 #[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
@@ -57,6 +69,8 @@ pub struct RemoteConfig {
     pub auth_id: Authid,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fingerprint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub use_node_proxy: Option<bool>,
 }
 
 #[api(
