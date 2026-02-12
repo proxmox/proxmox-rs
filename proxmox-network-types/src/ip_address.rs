@@ -385,6 +385,44 @@ impl Cidr {
             _ => false,
         }
     }
+
+    /// Parses a comma-separated list of CIDRs or IP ranges.
+    ///
+    /// The input string can contain a mix of CIDR notations and IP ranges, supporting both IPv4 and
+    /// IPv6.
+    ///
+    /// # Example
+    /// ```
+    /// use proxmox_network_types::Cidr;
+    ///
+    /// let list = "10.0.0.1,2001:db8::1-2001:db8::2,192.168.0.0/16";
+    /// let cidrs = Cidr::from_str_list(list).unwrap();
+    ///
+    /// assert_eq!(cidrs.len(), 4);
+    /// assert_eq!(cidrs[0].to_string(), "10.0.0.1/32");
+    /// assert_eq!(cidrs[1].to_string(), "2001:db8::1/128");
+    /// assert_eq!(cidrs[2].to_string(), "2001:db8::2/128");
+    /// assert_eq!(cidrs[3].to_string(), "192.168.0.0/16");
+    /// ```
+    pub fn from_str_list<S: AsRef<str>>(list: S) -> Result<Vec<Cidr>, IpRangeError> {
+        let list = list.as_ref();
+        let mut res = Vec::new();
+        for s in list.split(',') {
+            let s = s.trim();
+            if s.is_empty() {
+                continue;
+            }
+
+            if let Ok(cidr) = s.parse() {
+                res.push(cidr);
+                continue;
+            }
+
+            let range: IpRange = s.parse().map_err(|_| IpRangeError::InvalidFormat)?;
+            res.extend(range.to_cidrs());
+        }
+        Ok(res)
+    }
 }
 
 impl std::fmt::Display for Cidr {
@@ -849,6 +887,9 @@ impl AddressRange<Ipv4Addr> {
     /// let cidrs = range.to_cidrs();
     /// // Result: 192.168.1.1/32, 192.168.1.2/31
     /// ```
+    ///
+    /// Note: For an IP-family-agnostic function that parses a list of [`AddressRange`] and
+    /// [`Cidr`], see [`Cidr::from_str_list`].
     pub fn to_cidrs(&self) -> Vec<Ipv4Cidr> {
         let mut cidrs = Vec::new();
 
