@@ -1,4 +1,77 @@
-//! Provides helpers to deal with IP addresses / CIDRs
+//! Provides helpers to deal with IP addresses / CIDRs.
+//!
+//! # Examples
+//!
+//! Parsing a CIDR and checking if it contains an IP:
+//! ```
+//! use proxmox_network_types::Cidr;
+//! use std::net::IpAddr;
+//!
+//! let cidr: Cidr = "192.168.0.0/24".parse().unwrap();
+//! let ip: IpAddr = "192.168.0.10".parse().unwrap();
+//!
+//! assert!(cidr.contains_address(&ip));
+//! ```
+//!
+//! Checking for overlap between two CIDRs:
+//! ```
+//! use proxmox_network_types::Ipv4Cidr;
+//!
+//! let a: Ipv4Cidr = "10.0.0.0/8".parse().unwrap();
+//! let b: Ipv4Cidr = "10.1.0.0/16".parse().unwrap();
+//!
+//! assert!(a.overlaps(&b));
+//!
+//! // IPv6 is supported too:
+//! use proxmox_network_types::Ipv6Cidr;
+//!
+//! let c: Ipv6Cidr = "3fff::/20".parse().unwrap();
+//! let d: Ipv6Cidr = "3fff:1::/24".parse().unwrap();
+//!
+//! assert!(c.overlaps(&d));
+//! ```
+//!
+//! Converting an IP range into a minimal set of CIDRs:
+//! ```
+//! use proxmox_network_types::IpRange;
+//!
+//! let range: IpRange = "192.168.1.1-192.168.1.3".parse().unwrap();
+//! let cidrs = range.to_cidrs();
+//!
+//! assert_eq!(cidrs.len(), 2);
+//! assert_eq!(cidrs[0].to_string(), "192.168.1.1/32");
+//! assert_eq!(cidrs[1].to_string(), "192.168.1.2/31");
+//! ```
+//!
+//! # API Integration
+//!
+//! When the `api-types` feature is enabled, types in this crate implement [`ApiType`] and can be
+//! used directly with the `#[api]` macro that is re-exported from [`proxmox_schema`].
+//!
+//! Note that [`std::net::Ipv4Addr`] and [`std::net::Ipv6Addr`] do not implement `ApiType`. You must
+//! use the wrappers provided in [`api_types`] (e.g., [`api_types::Ipv4Addr`]) within your API
+//! structs.
+//!
+//! ```
+//! # #[cfg(feature = "api-types")]
+//! # mod api_example {
+//! use proxmox_schema::api;
+//! use proxmox_network_types::{Cidr, api_types::Ipv4Addr};
+//! use serde::{Deserialize, Serialize};
+//!
+//! #[api]
+//! #[derive(Deserialize, Serialize)]
+//! /// A struct representing a network configuration.
+//! pub struct NetworkConfig {
+//!     /// The CIDR of the network.
+//!     pub cidr: Cidr,
+//!
+//!     /// An optional gateway IPv4 address.
+//!     #[serde(skip_serializing_if = "Option::is_none")]
+//!     pub gateway: Option<Ipv4Addr>,
+//! }
+//! # }
+//! ```
 
 use std::net::{AddrParseError, IpAddr, Ipv4Addr, Ipv6Addr};
 
@@ -12,6 +85,7 @@ use proxmox_schema::{ApiType, Schema, UpdaterType};
 use proxmox_schema::api_types::{CIDR_SCHEMA, CIDR_V4_SCHEMA, CIDR_V6_SCHEMA};
 
 #[cfg(feature = "api-types")]
+/// Wrapper types for `std::net` IP addresses that implement `proxmox_schema` traits.
 pub mod api_types {
     use std::net::AddrParseError;
     use std::ops::{Deref, DerefMut};
@@ -20,6 +94,7 @@ pub mod api_types {
     use proxmox_schema::{api_types::IP_V4_SCHEMA, ApiType, UpdaterType};
     use serde_with::{DeserializeFromStr, SerializeDisplay};
 
+    /// A wrapper around [`std::net::Ipv4Addr`] that implements [`ApiType`].
     #[derive(
         Debug,
         Clone,
@@ -78,6 +153,7 @@ pub mod api_types {
         }
     }
 
+    /// A wrapper around [`std::net::Ipv6Addr`] that implements [`ApiType`].
     #[derive(
         Debug,
         Clone,
@@ -137,18 +213,22 @@ pub mod api_types {
     }
 }
 
-/// The family (v4 or v6)  of an IP address or CIDR prefix
+/// The family (v4 or v6) of an IP address or CIDR prefix.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Family {
+    /// Internet Protocol version 4.
     V4,
+    /// Internet Protocol version 6.
     V6,
 }
 
 impl Family {
+    /// Returns true if the family is IPv4.
     pub fn is_ipv4(self) -> bool {
         self == Self::V4
     }
 
+    /// Returns true if the family is IPv6.
     pub fn is_ipv6(self) -> bool {
         self == Self::V6
     }
@@ -163,6 +243,7 @@ impl std::fmt::Display for Family {
     }
 }
 
+/// Errors that can occur when parsing or constructing a CIDR.
 #[derive(Error, Debug)]
 pub enum CidrError {
     #[error("invalid netmask")]
@@ -171,7 +252,16 @@ pub enum CidrError {
     InvalidAddress(#[from] AddrParseError),
 }
 
-/// Represents either an [`Ipv4Cidr`] or [`Ipv6Cidr`] CIDR prefix
+/// Represents either an [`Ipv4Cidr`] or [`Ipv6Cidr`] CIDR prefix.
+///
+/// # Example
+/// ```
+/// use std::str::FromStr;
+/// use proxmox_network_types::Cidr;
+///
+/// let cidr = Cidr::from_str("192.168.1.0/24").unwrap();
+/// assert!(cidr.is_ipv4());
+/// ```
 #[derive(
     Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq, Hash, SerializeDisplay, DeserializeFromStr,
 )]
@@ -191,15 +281,17 @@ impl UpdaterType for Cidr {
 }
 
 impl Cidr {
+    /// Creates a new IPv4 CIDR.
     pub fn new_v4(addr: impl Into<Ipv4Addr>, mask: u8) -> Result<Self, CidrError> {
         Ok(Cidr::Ipv4(Ipv4Cidr::new(addr, mask)?))
     }
 
+    /// Creates a new IPv6 CIDR.
     pub fn new_v6(addr: impl Into<Ipv6Addr>, mask: u8) -> Result<Self, CidrError> {
         Ok(Cidr::Ipv6(Ipv6Cidr::new(addr, mask)?))
     }
 
-    /// which [`Family`] this CIDR belongs to
+    /// Returns the [`Family`] (v4 or v6) this CIDR belongs to.
     pub const fn family(&self) -> Family {
         match self {
             Cidr::Ipv4(_) => Family::V4,
@@ -207,18 +299,33 @@ impl Cidr {
         }
     }
 
+    /// Returns true if the CIDR is IPv4.
     pub fn is_ipv4(&self) -> bool {
         matches!(self, Cidr::Ipv4(_))
     }
 
+    /// Returns true if the CIDR is IPv6.
     pub fn is_ipv6(&self) -> bool {
         matches!(self, Cidr::Ipv6(_))
     }
 
-    /// Whether a given IP address is contained in this [`Cidr`]
+    /// Checks whether a given IP address is contained in this [`Cidr`].
     ///
-    /// This only works if both [`IpAddr`] are in the same family, otherwise the function returns
-    /// false.
+    /// This only works if both the CIDR and the IP address belong to the same family.
+    /// Otherwise, the function returns false.
+    ///
+    /// # Example
+    /// ```
+    /// use proxmox_network_types::Cidr;
+    /// use std::net::IpAddr;
+    ///
+    /// let cidr: Cidr = "192.168.0.0/24".parse().unwrap();
+    /// let ip: IpAddr = "192.168.0.100".parse().unwrap();
+    /// let ipv6: IpAddr = "::1".parse().unwrap();
+    ///
+    /// assert!(cidr.contains_address(&ip));
+    /// assert!(!cidr.contains_address(&ipv6));
+    /// ```
     pub fn contains_address(&self, ip: &IpAddr) -> bool {
         match (self, ip) {
             (Cidr::Ipv4(cidr), IpAddr::V4(ip)) => cidr.contains_address(ip),
@@ -272,7 +379,7 @@ impl From<IpAddr> for Cidr {
 
 const IPV4_LENGTH: u8 = 32;
 
-/// An IPv4 CIDR (e.g. 192.0.2.0/24)
+/// An IPv4 CIDR (e.g. 192.0.2.0/24).
 #[derive(
     Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq, Hash, SerializeDisplay, DeserializeFromStr,
 )]
@@ -292,6 +399,9 @@ impl UpdaterType for Ipv4Cidr {
 }
 
 impl Ipv4Cidr {
+    /// Creates a new IPv4 CIDR from an address and a mask.
+    ///
+    /// Returns an error if the mask is greater than 32.
     pub fn new(addr: impl Into<Ipv4Addr>, mask: u8) -> Result<Self, CidrError> {
         if mask > IPV4_LENGTH {
             return Err(CidrError::InvalidNetmask);
@@ -303,7 +413,7 @@ impl Ipv4Cidr {
         })
     }
 
-    /// checks whether this CIDR contains an IPv4 address.
+    /// Checks whether this CIDR contains a specific IPv4 address.
     pub fn contains_address(&self, other: &Ipv4Addr) -> bool {
         let bits = u32::from_be_bytes(self.addr.octets());
         let other_bits = u32::from_be_bytes(other.octets());
@@ -314,10 +424,12 @@ impl Ipv4Cidr {
             == other_bits.checked_shr(shift_amount).unwrap_or(0)
     }
 
+    /// Returns the address portion of the CIDR.
     pub fn address(&self) -> &Ipv4Addr {
         &self.addr
     }
 
+    /// Returns the mask of the CIDR.
     pub fn mask(&self) -> u8 {
         self.mask
     }
@@ -335,6 +447,18 @@ impl Ipv4Cidr {
     ///
     /// CIDRs are always disjoint so we only need to check if one CIDR contains
     /// the other. We do this by simply comparing the prefix.
+    ///
+    /// # Example
+    /// ```
+    /// use proxmox_network_types::Ipv4Cidr;
+    ///
+    /// let a: Ipv4Cidr = "192.168.1.0/24".parse().unwrap();
+    /// let b: Ipv4Cidr = "192.168.1.128/25".parse().unwrap();
+    /// let c: Ipv4Cidr = "10.0.0.0/8".parse().unwrap();
+    ///
+    /// assert!(a.overlaps(&b));
+    /// assert!(!a.overlaps(&c));
+    /// ```
     pub fn overlaps(&self, other: &Ipv4Cidr) -> bool {
         // we normalize by the smallest mask, so the larger of the two subnets.
         let min_mask = self.mask().min(other.mask());
@@ -389,7 +513,7 @@ impl std::fmt::Display for Ipv4Cidr {
 
 const IPV6_LENGTH: u8 = 128;
 
-/// An IPv6 CIDR (e.g. 2001:db8::/32)
+/// An IPv6 CIDR (e.g. 2001:db8::/32).
 #[derive(
     Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq, Hash, SerializeDisplay, DeserializeFromStr,
 )]
@@ -409,6 +533,9 @@ impl UpdaterType for Ipv6Cidr {
 }
 
 impl Ipv6Cidr {
+    /// Creates a new IPv6 CIDR from an address and a mask.
+    ///
+    /// Returns an error if the mask is greater than 128.
     pub fn new(addr: impl Into<Ipv6Addr>, mask: u8) -> Result<Self, CidrError> {
         if mask > IPV6_LENGTH {
             return Err(CidrError::InvalidNetmask);
@@ -420,7 +547,7 @@ impl Ipv6Cidr {
         })
     }
 
-    /// checks whether this CIDR contains a given IPv6 address
+    /// Checks whether this CIDR contains a given IPv6 address.
     pub fn contains_address(&self, other: &Ipv6Addr) -> bool {
         let bits = u128::from_be_bytes(self.addr.octets());
         let other_bits = u128::from_be_bytes(other.octets());
@@ -431,10 +558,12 @@ impl Ipv6Cidr {
             == other_bits.checked_shr(shift_amount).unwrap_or(0)
     }
 
+    /// Returns the address portion of the CIDR.
     pub fn address(&self) -> &Ipv6Addr {
         &self.addr
     }
 
+    /// Returns the mask of the CIDR.
     pub fn mask(&self) -> u8 {
         self.mask
     }
@@ -504,6 +633,7 @@ impl<T: Into<Ipv6Addr>> From<T> for Ipv6Cidr {
     }
 }
 
+/// Errors that can occur when handling IP ranges.
 #[derive(Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Error)]
 pub enum IpRangeError {
     #[error("mismatched ip address families")]
@@ -516,7 +646,17 @@ pub enum IpRangeError {
 
 /// Represents a range of IPv4 or IPv6 addresses.
 ///
-/// For more information see [`AddressRange`]
+/// For more information see [`AddressRange`].
+///
+/// # Example
+/// ```
+/// use proxmox_network_types::IpRange;
+/// use std::str::FromStr;
+///
+/// let range = IpRange::from_str("192.168.1.5-192.168.1.10").unwrap();
+/// let cidrs = range.to_cidrs();
+/// // Result: 192.168.1.5/32, 192.168.1.6/31, 192.168.1.8/31, 192.168.1.10/32
+/// ```
 #[derive(
     Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, SerializeDisplay, DeserializeFromStr,
 )]
@@ -547,7 +687,7 @@ impl IpRange {
         }
     }
 
-    /// construct a new IPv4 Range
+    /// Constructs a new IPv4 Range.
     pub fn new_v4(
         start: impl Into<Ipv4Addr>,
         last: impl Into<Ipv4Addr>,
@@ -555,7 +695,7 @@ impl IpRange {
         Ok(IpRange::V4(AddressRange::new_v4(start, last)?))
     }
 
-    /// construct a new IPv6 Range
+    /// Constructs a new IPv6 Range.
     pub fn new_v6(
         start: impl Into<Ipv6Addr>,
         last: impl Into<Ipv6Addr>,
@@ -565,8 +705,8 @@ impl IpRange {
 
     /// Converts an IpRange into the minimal amount of CIDRs.
     ///
-    /// see the concrete implementations of [`AddressRange<Ipv4Addr>`] or [`AddressRange<Ipv6Addr>`]
-    /// respectively
+    /// See the concrete implementations of [`AddressRange<Ipv4Addr>`] or [`AddressRange<Ipv6Addr>`]
+    /// respectively.
     pub fn to_cidrs(&self) -> Vec<Cidr> {
         match self {
             IpRange::V4(range) => range.to_cidrs().into_iter().map(Cidr::from).collect(),
@@ -635,20 +775,28 @@ impl AddressRange<Ipv4Addr> {
         Ok(Self { start, last })
     }
 
-    /// Returns the minimum amount of CIDRs that exactly represent the range
+    /// Returns the minimum amount of CIDRs that exactly represent the range.
     ///
     /// The idea behind this algorithm is as follows:
     ///
     /// Start iterating with current = start of the IP range
     ///
-    /// Find two netmasks
+    /// Find two netmasks:
     /// * The largest CIDR that the current IP can be the first of
     /// * The largest CIDR that *only* contains IPs from current - last
     ///
-    /// Add the smaller of the two CIDRs to our result and current to the first IP that is in
+    /// Add the smaller of the two CIDRs to our result and set current to the first IP that is in
     /// the range but not in the CIDR we just added. Proceed until we reached the last of the IP
     /// range.
     ///
+    /// # Example
+    /// ```
+    /// use proxmox_network_types::{IpRange, Cidr};
+    ///
+    /// let range: IpRange = "192.168.1.1-192.168.1.3".parse().unwrap();
+    /// let cidrs = range.to_cidrs();
+    /// // Result: 192.168.1.1/32, 192.168.1.2/31
+    /// ```
     pub fn to_cidrs(&self) -> Vec<Ipv4Cidr> {
         let mut cidrs = Vec::new();
 
@@ -718,7 +866,7 @@ impl AddressRange<Ipv6Addr> {
     /// Returns the minimum amount of CIDRs that exactly represent the [`AddressRange`].
     ///
     /// This function works analogous to the IPv4 version, please refer to the respective
-    /// documentation of [`AddressRange<Ipv4Addr>`]
+    /// documentation of [`AddressRange<Ipv4Addr>`].
     pub fn to_cidrs(&self) -> Vec<Ipv6Cidr> {
         let mut cidrs = Vec::new();
 
@@ -772,12 +920,12 @@ impl AddressRange<Ipv6Addr> {
 }
 
 impl<T> AddressRange<T> {
-    /// the first IP address contained in this [`AddressRange`]
+    /// The first IP address contained in this [`AddressRange`].
     pub fn start(&self) -> &T {
         &self.start
     }
 
-    /// the last IP address contained in this [`AddressRange`]
+    /// The last IP address contained in this [`AddressRange`].
     pub fn last(&self) -> &T {
         &self.last
     }
