@@ -29,6 +29,15 @@
 //! let d: Ipv6Cidr = "3fff:1::/24".parse().unwrap();
 //!
 //! assert!(c.overlaps(&d));
+//!
+//! // or IP-family agnostic:
+//! use proxmox_network_types::Cidr;
+//!
+//! let a: Cidr = a.into();
+//! let c: Cidr = c.into();
+//!
+//! assert!(!a.overlaps(&c)); // different families never overlap
+//!
 //! ```
 //!
 //! Converting an IP range into a minimal set of CIDRs:
@@ -307,6 +316,49 @@ impl Cidr {
     /// Returns true if the CIDR is IPv6.
     pub fn is_ipv6(&self) -> bool {
         matches!(self, Cidr::Ipv6(_))
+    }
+
+    /// Returns the mask of the CIDR independent of the underlying IP family.
+    pub fn mask(&self) -> u8 {
+        match self {
+            Cidr::Ipv4(ip) => ip.mask(),
+            Cidr::Ipv6(ip) => ip.mask(),
+        }
+    }
+
+    /// Returns the address portion of the CIDR independent of the underlying IP family.
+    pub fn address(&self) -> IpAddr {
+        match self {
+            Cidr::Ipv4(ip) => IpAddr::V4(*ip.address()),
+            Cidr::Ipv6(ip) => IpAddr::V6(*ip.address()),
+        }
+    }
+
+    /// Checks if the two CIDRs overlap independent of their IP family.
+    ///
+    /// Returns false if the CIDRs are not of the same family.
+    ///
+    /// # Example
+    /// ```
+    /// use proxmox_network_types::Cidr;
+    ///
+    /// let a: Cidr = "192.168.0.0/24".parse().unwrap();
+    /// let b: Cidr = "192.168.0.128/25".parse().unwrap();
+    /// let c: Cidr = "10.0.0.0/8".parse().unwrap();
+    /// let d: Cidr = "3fff::/20".parse().unwrap();
+    /// let e: Cidr = "3fff:1::/36".parse().unwrap();
+    ///
+    /// assert!(a.overlaps(&b));
+    /// assert!(!a.overlaps(&c));
+    /// assert!(d.overlaps(&e));
+    /// assert!(!a.overlaps(&d));
+    /// ```
+    pub fn overlaps(&self, other: &Cidr) -> bool {
+        match (self, other) {
+            (Cidr::Ipv4(a), Cidr::Ipv4(b)) => a.overlaps(b),
+            (Cidr::Ipv6(a), Cidr::Ipv6(b)) => a.overlaps(b),
+            _ => false,
+        }
     }
 
     /// Checks whether a given IP address is contained in this [`Cidr`].
