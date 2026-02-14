@@ -1,0 +1,214 @@
+//! Comma-separated list strings.
+//!
+//! This module provides [`CommaSeparatedList<T>`], a newtype wrapper around
+//! `Vec<T>` that serializes to and deserializes from a comma-separated string
+//! representation (e.g. `"1,2,3"`). This is useful for API parameters that
+//! accept multiple values encoded in a single string field.
+//!
+//! Element types must implement the [`CommaSeparatedListSchema`] trait, which
+//! provides the static [`ArraySchema`](crate::ArraySchema) used for
+//! validation during serialization and deserialization.
+//!
+//! Note that individual element values are **not quoted** in the serialized
+//! string — they are simply joined with commas. This means element types must
+//! serialize to simple strings that do not themselves contain commas.
+//!
+//! # Example
+//!
+//! ```
+//! use proxmox_schema::{ApiType, Schema, ArraySchema, IntegerSchema};
+//! use proxmox_schema::comma_separated_list::{CommaSeparatedList, CommaSeparatedListSchema};
+//!
+//! #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+//! struct Port(u16);
+//!
+//! const PORT_SCHEMA: Schema = IntegerSchema::new("A network port")
+//!     .minimum(1)
+//!     .maximum(65535)
+//!     .schema();
+//!
+//! impl ApiType for Port {
+//!     const API_SCHEMA: Schema = PORT_SCHEMA;
+//! }
+//!
+//! impl CommaSeparatedListSchema for Port {
+//!     const ARRAY_SCHEMA: Schema =
+//!         ArraySchema::new("List of network ports.", &PORT_SCHEMA).schema();
+//! }
+//!
+//! // Deserialize from a comma-separated string:
+//! let ports: CommaSeparatedList<Port> =
+//!     serde_json::from_value("80,443,8080".into()).unwrap();
+//! assert_eq!(ports.len(), 3);
+//!
+//! // Serialize back to a comma-separated string:
+//! let value = serde_json::to_value(&ports).unwrap();
+//! assert_eq!(value.as_str(), Some("80,443,8080"));
+//! ```
+//!
+use std::ops::{Deref, DerefMut};
+
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use crate::{ApiStringFormat, ApiType, Schema, StringSchema};
+
+fn serialize<S, T>(
+    data: &[T],
+    serializer: S,
+    array_schema: &'static Schema,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    T: Serialize,
+{
+    use serde::ser::{Error, SerializeSeq};
+
+    let mut ser = crate::ser::PropertyStringSerializer::new(String::new(), array_schema)
+        .serialize_seq(Some(data.len()))
+        .map_err(S::Error::custom)?;
+
+    for element in data {
+        ser.serialize_element(element).map_err(S::Error::custom)?;
+    }
+
+    let out = ser.end().map_err(S::Error::custom)?;
+    serializer.serialize_str(&out)
+}
+
+fn deserialize<'de, D, T>(deserializer: D, array_schema: &'static Schema) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    use serde::de::Error;
+
+    let string = std::borrow::Cow::<'de, str>::deserialize(deserializer)?;
+
+    T::deserialize(crate::de::SchemaDeserializer::new(string, array_schema))
+        .map_err(D::Error::custom)
+}
+
+/// Trait to provide a static array schema for a type.
+///
+/// This is needed because generic const items are unstable in Rust.
+pub trait CommaSeparatedListSchema: ApiType {
+    /// The static array schema for this type.
+    const ARRAY_SCHEMA: Schema;
+}
+
+#[derive(Clone, Debug, Default, Hash, Eq, PartialEq, Ord, PartialOrd)]
+#[repr(transparent)]
+pub struct CommaSeparatedList<T>(pub Vec<T>);
+
+impl<T> ApiType for CommaSeparatedList<T>
+where
+    T: CommaSeparatedListSchema,
+{
+    const API_SCHEMA: Schema = StringSchema::new(T::ARRAY_SCHEMA.unwrap_array_schema().description)
+        .format(&ApiStringFormat::PropertyString(&T::ARRAY_SCHEMA))
+        .schema();
+}
+
+impl<T: CommaSeparatedListSchema + Serialize> Serialize for CommaSeparatedList<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serialize(&self.0, serializer, &T::ARRAY_SCHEMA)
+    }
+}
+
+impl<'de, T: CommaSeparatedListSchema + Deserialize<'de>> Deserialize<'de>
+    for CommaSeparatedList<T>
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let vec: Vec<T> = deserialize(deserializer, &T::ARRAY_SCHEMA)?;
+        Ok(CommaSeparatedList(vec))
+    }
+}
+
+impl<T> CommaSeparatedList<T> {
+    pub fn new(inner: Vec<T>) -> Self {
+        Self(inner)
+    }
+
+    pub fn into_inner(self) -> Vec<T> {
+        self.0
+    }
+}
+
+impl<T> Deref for CommaSeparatedList<T> {
+    type Target = Vec<T>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for CommaSeparatedList<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<T> From<Vec<T>> for CommaSeparatedList<T> {
+    fn from(inner: Vec<T>) -> Self {
+        Self::new(inner)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{ArraySchema, IntegerSchema};
+
+    // Test type that implements CommaSeparatedListSchema
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    struct TestNum(u32);
+
+    const TEST_NUM_SCHEMA: Schema = IntegerSchema::new("Test number (0-3)").maximum(3).schema();
+    const TEST_NUM_ARRAY_SCHEMA: Schema =
+        ArraySchema::new("Array of test numbers.", &TEST_NUM_SCHEMA).schema();
+
+    impl ApiType for TestNum {
+        const API_SCHEMA: Schema = TEST_NUM_SCHEMA;
+    }
+
+    impl CommaSeparatedListSchema for TestNum {
+        const ARRAY_SCHEMA: Schema = TEST_NUM_ARRAY_SCHEMA;
+    }
+
+    #[test]
+    fn test_comma_separated_list_serialize() {
+        let list = CommaSeparatedList(vec![TestNum(1), TestNum(2), TestNum(3)]);
+        let s = serde_json::to_value(&list).unwrap();
+        // The serialize function should produce a property string
+        assert_eq!(s.as_str(), Some("1,2,3"));
+    }
+
+    #[test]
+    fn test_comma_separated_list_deref() {
+        let list = CommaSeparatedList(vec![TestNum(42)]);
+        assert_eq!(list.len(), 1);
+        assert_eq!(list[0], TestNum(42));
+    }
+
+    #[test]
+    fn test_comma_separated_list_deserialize() {
+        let list: CommaSeparatedList<TestNum> = serde_json::from_value("1,2,3".into()).unwrap();
+        assert_eq!(list.0, vec![TestNum(1), TestNum(2), TestNum(3)]);
+        // test integer maximum (4 > maximum)
+        let _ = serde_json::from_value::<CommaSeparatedList<TestNum>>("3,4".into()).unwrap_err();
+    }
+
+    #[test]
+    fn test_comma_separated_list_description() {
+        let descr = CommaSeparatedList::<TestNum>::API_SCHEMA
+            .unwrap_string_schema()
+            .description;
+        assert_eq!(descr, "Array of test numbers.");
+    }
+}

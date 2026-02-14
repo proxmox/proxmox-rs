@@ -22,6 +22,7 @@ pub mod de;
 pub mod format;
 pub mod ser;
 
+pub mod comma_separated_list;
 pub mod property_string;
 
 mod schema;
