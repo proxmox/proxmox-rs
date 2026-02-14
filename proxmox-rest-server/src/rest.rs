@@ -325,9 +325,13 @@ impl Service<Request<Body>> for ApiService {
         let user_agent = get_user_agent(req.headers());
 
         let config = Arc::clone(&self.api_config);
-        let peer = match get_proxied_peer(req.headers()) {
-            Some(proxied_peer) => proxied_peer,
-            None => self.peer,
+        let peer = if config.env_type() == RpcEnvironmentType::PUBLIC {
+            self.peer
+        } else {
+            match get_proxied_peer(req.headers()) {
+                Some(proxied_peer) => proxied_peer,
+                None => self.peer,
+            }
         };
         async move {
             let response = match Arc::clone(&config).handle_request(req, &peer).await {
