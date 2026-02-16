@@ -1,3 +1,12 @@
+rust-proxmox-network-api (1.0.5-1) trixie; urgency=medium
+
+  * update to proxmox-network-types 1.0.0.
+
+  * interface: increase minimum allowed MTU to 68 as per RFC 791 page 24 and
+    Linux not allowing to set lower ones.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 16 Feb 2026 17:44:35 +0100
+
 rust-proxmox-network-api (1.0.4-1) trixie; urgency=medium
 
   * update proxmox-schema to 5.0.0
