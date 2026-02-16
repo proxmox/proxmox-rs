@@ -1,3 +1,17 @@
+rust-proxmox-network-types (1.0.0-1) trixie; urgency=medium
+
+  * re-export ip_address and mac_address in top-level lib.
+
+  * extend and improve mac_address module documentation.
+
+  * extend and improve ip_address module documentation.
+
+  * passthrough mask, address and overlaps fn in Cidr impl.
+
+  * add from_str_list helper to Cidr impl.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 16 Feb 2026 17:24:28 +0100
+
 rust-proxmox-network-types (0.1.2-1) trixie; urgency=medium
 
   * update proxmox-schema to 5.0.0
