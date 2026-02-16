@@ -16,6 +16,7 @@ use tower_service::Service;
 use proxmox_daemon::command_socket::CommandSocket;
 use proxmox_http::Body;
 use proxmox_log::{FileLogOptions, FileLogger};
+use proxmox_network_types::Cidr;
 use proxmox_router::{Router, RpcEnvironmentType, UserInformation};
 use proxmox_sys::fs::{create_path, CreateOptions};
 
@@ -37,6 +38,27 @@ pub struct ApiConfig {
     // removed.
     pub(crate) auth_cookie_name: Option<String>,
 
+    /// The header that should be used to determine the real IP for a request.
+    ///
+    /// By default, the rest-server logs the IP address of the client that sent the request when the
+    /// [`env_type`] is [`RpcEnvironmentType::PUBLIC`].
+    /// In cases where a proxy server is in front of the rest-server, one can configure a header
+    /// that the proxy then should set and the rest-server checks for the real IP used in logging
+    /// purposes.
+    ///
+    /// For rest-server's that are configured with the [`env_type`] being
+    /// [`RpcEnvironmentType::PRIVILEGED`], the server's listening IP is normaly local-only and all
+    /// requests are normally forwarded. There, the rest-server defaults to checking the `FORWARDED`
+    /// header, if not explicitly overridden.
+    pub(crate) real_ip_header: Option<String>,
+
+    /// The trusted IP address or network(s) for which the [`real_ip_header`] is applied.
+    ///
+    /// As clients control headers of requests and the real IP is used in logs, it might be desired
+    /// to lock down the sources to the networks and or proxies you control.
+    /// If
+    pub(crate) real_ip_allow_from: Option<Vec<Cidr>>,
+
     #[cfg(feature = "templates")]
     templates: templates::Templates,
 }
@@ -55,6 +77,10 @@ impl ApiConfig {
     /// the [ApiConfig], so it can use [handlebars::Handlebars] templates
     /// ([render_template](Self::render_template) to generate pages.
     pub fn new<B: Into<PathBuf>>(basedir: B, env_type: RpcEnvironmentType) -> Self {
+        let real_ip_header = match env_type {
+            RpcEnvironmentType::PUBLIC => None,
+            _ => Some("FORWARDED".to_string()),
+        };
         Self {
             basedir: basedir.into(),
             aliases: HashMap::new(),
@@ -66,6 +92,9 @@ impl ApiConfig {
             index_handler: None,
             privileged_addr: None,
             auth_cookie_name: None,
+
+            real_ip_header,
+            real_ip_allow_from: None,
 
             #[cfg(feature = "templates")]
             templates: templates::Templates::with_escape_fn(),
@@ -101,6 +130,29 @@ impl ApiConfig {
     pub fn index_handler(mut self, index_handler: IndexHandler) -> Self {
         self.index_handler = Some(index_handler);
         self
+    }
+
+    /// Set the header to derive the real-IP from (for logging).
+    pub fn real_ip_header(mut self, real_ip_header: String) -> Self {
+        self.real_ip_header = Some(real_ip_header);
+        self
+    }
+
+    /// Set the source peer IPs for which the real-IP header is allowed to be used.
+    pub fn real_ip_allow_from(mut self, real_ip_allow_from: Vec<Cidr>) -> Self {
+        self.real_ip_allow_from = Some(real_ip_allow_from);
+        self
+    }
+
+    /// Parse the source peer IPs for which the real-IP header is allowed to be used from a
+    /// comma-separated string.
+    pub fn str_list_to_real_ip_allow_from(
+        mut self,
+        real_ip_allow_from: &str,
+    ) -> Result<Self, Error> {
+        let real_ip_allow_from = Cidr::from_str_list(real_ip_allow_from)?;
+        self.real_ip_allow_from = Some(real_ip_allow_from);
+        Ok(self)
     }
 
     /// Set the index handler from a function.

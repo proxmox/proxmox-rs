@@ -370,13 +370,36 @@ fn log_response(
     }
 }
 
-fn get_proxied_peer(headers: &HeaderMap) -> Option<std::net::SocketAddr> {
-    static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"for="([^"]+)""#).unwrap());
-    let forwarded = headers.get(header::FORWARDED)?.to_str().ok()?;
-    let capture = RE.captures(forwarded)?;
-    let rhost = capture.get(1)?.as_str();
+fn get_proxied_peer(
+    headers: &HeaderMap,
+    config: &ApiConfig,
+    peer: &std::net::SocketAddr,
+) -> Option<std::net::SocketAddr> {
+    let real_ip_header = config.real_ip_header.as_ref()?;
 
-    rhost.parse().ok()
+    if let Some(ref allow_from) = config.real_ip_allow_from {
+        let peer_ip = peer.ip();
+        if !allow_from
+            .iter()
+            .any(|cidr| cidr.contains_address(&peer_ip))
+        {
+            return None;
+        }
+    }
+
+    if real_ip_header.eq_ignore_ascii_case("FORWARDED") {
+        static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"for="([^"]+)""#).unwrap());
+        let forwarded = headers.get(header::FORWARDED)?.to_str().ok()?;
+        let capture = RE.captures(forwarded)?;
+        let val = capture.get(1)?.as_str();
+        return val.parse().ok();
+    }
+
+    let value = headers.get(real_ip_header.as_str())?.to_str().ok()?;
+    value.parse::<std::net::SocketAddr>().ok().or_else(|| {
+        let ip: std::net::IpAddr = value.trim().parse().ok()?;
+        Some(std::net::SocketAddr::new(ip, 0))
+    })
 }
 
 fn get_user_agent(headers: &HeaderMap) -> Option<String> {
@@ -406,13 +429,9 @@ impl Service<Request<Incoming>> for ApiService {
         let user_agent = get_user_agent(req.headers());
 
         let config = Arc::clone(&self.api_config);
-        let peer = if config.env_type() == RpcEnvironmentType::PUBLIC {
-            self.peer
-        } else {
-            match get_proxied_peer(req.headers()) {
-                Some(proxied_peer) => proxied_peer,
-                None => self.peer,
-            }
+        let peer = match get_proxied_peer(req.headers(), &config, &self.peer) {
+            Some(proxied_peer) => proxied_peer,
+            None => self.peer,
         };
         #[cfg(feature = "rate-limited-stream")]
         let rate_limit_tags = self.rate_limit_tags.clone();
