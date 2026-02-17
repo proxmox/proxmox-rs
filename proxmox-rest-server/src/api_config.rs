@@ -144,17 +144,6 @@ impl ApiConfig {
         self
     }
 
-    /// Parse the source peer IPs for which the real-IP header is allowed to be used from a
-    /// comma-separated string.
-    pub fn str_list_to_real_ip_allow_from(
-        mut self,
-        real_ip_allow_from: &str,
-    ) -> Result<Self, Error> {
-        let real_ip_allow_from = Cidr::from_str_list(real_ip_allow_from)?;
-        self.real_ip_allow_from = Some(real_ip_allow_from);
-        Ok(self)
-    }
-
     /// Set the index handler from a function.
     pub fn index_handler_func<Func>(self, func: Func) -> Self
     where
