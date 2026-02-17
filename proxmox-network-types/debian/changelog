@@ -1,3 +1,9 @@
+rust-proxmox-network-types (1.0.1-1) trixie; urgency=medium
+
+  * cidr: support IPv4-mapped IPv6 range for CIDR-contains-IP check.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 17 Feb 2026 13:47:45 +0100
+
 rust-proxmox-network-types (1.0.0-1) trixie; urgency=medium
 
   * re-export ip_address and mac_address in top-level lib.
