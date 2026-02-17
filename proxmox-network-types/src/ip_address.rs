@@ -363,8 +363,8 @@ impl Cidr {
 
     /// Checks whether a given IP address is contained in this [`Cidr`].
     ///
-    /// This only works if both the CIDR and the IP address belong to the same family.
-    /// Otherwise, the function returns false.
+    /// When the CIDR and the IP address do *not* belong to the same family, they are compared as
+    /// IPv4-mapped IPv6 addresses.
     ///
     /// # Example
     /// ```
@@ -377,12 +377,27 @@ impl Cidr {
     ///
     /// assert!(cidr.contains_address(&ip));
     /// assert!(!cidr.contains_address(&ipv6));
+    ///
+    /// // IPv4 mapped in IPv6 are normalized.
+    /// let ipv4_mapped_v6: IpAddr = "::ffff:192.168.0.100".parse().unwrap();
+    /// assert!(cidr.contains_address(&ipv4_mapped_v6));
+    ///
+    /// // Comparing a v4-mapped v6 CIDR works too, but remember that the mapped range goes from /96
+    /// // to /128, so you need to add 96 to your IPv4 mask to get a matching mapped one.
+    /// let cidr_v6: Cidr = "::ffff:192.168.0.0/120".parse().unwrap();
+    /// assert!(cidr_v6.contains_address(&ip));
     /// ```
     pub fn contains_address(&self, ip: &IpAddr) -> bool {
         match (self, ip) {
             (Cidr::Ipv4(cidr), IpAddr::V4(ip)) => cidr.contains_address(ip),
             (Cidr::Ipv6(cidr), IpAddr::V6(ip)) => cidr.contains_address(ip),
-            _ => false,
+            (Cidr::Ipv4(cidr), IpAddr::V6(v6)) => v6
+                .to_ipv4_mapped()
+                .is_some_and(|v4| cidr.contains_address(&v4)),
+            (Cidr::Ipv6(cidr), IpAddr::V4(v4)) => {
+                let v6 = v4.to_ipv6_mapped();
+                cidr.contains_address(&v6)
+            }
         }
     }
 
