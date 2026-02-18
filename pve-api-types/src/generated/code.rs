@@ -634,6 +634,11 @@ pub trait PveClient {
         ))
     }
 
+    /// Remove API token for a specific user.
+    async fn delete_token(&self, userid: &str, tokenid: &str) -> Result<(), Error> {
+        Err(Error::Other("delete_token not implemented"))
+    }
+
     /// Get APT repository information.
     async fn get_apt_repositories(&self, node: &str) -> Result<APTRepositoriesResult, Error> {
         Err(Error::Other("get_apt_repositories not implemented"))
@@ -1799,6 +1804,16 @@ where
         ))
         .maybe_arg("digest", &p_digest)
         .build();
+        self.0.delete(url).await?.nodata()
+    }
+
+    /// Remove API token for a specific user.
+    async fn delete_token(&self, userid: &str, tokenid: &str) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/access/users/{}/token/{}",
+            percent_encode(userid.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(tokenid.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         self.0.delete(url).await?.nodata()
     }
 

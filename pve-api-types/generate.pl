@@ -362,6 +362,7 @@ Schema2Rust::derive('ListRealm' => 'Clone', 'PartialEq');
 # api(GET => '/access/users/{userid}', 'get_user', 'return-name' => 'User');
 api(POST => '/access/users/{userid}/token/{tokenid}', 'create_token', 'param-name' => 'CreateToken');
 Schema2Rust::derive('CreateToken' => 'Default');
+api(DELETE => '/access/users/{userid}/token/{tokenid}', 'delete_token');
 
 api(GET => '/nodes/{node}/apt/update', 'list_available_updates', 'return-name' => 'AptUpdateInfo');
 api(POST => '/nodes/{node}/apt/update', 'update_apt_database', 'output-type' => 'PveUpid', 'param-name' => 'AptUpdateParams');
