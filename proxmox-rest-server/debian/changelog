@@ -1,3 +1,12 @@
+rust-proxmox-rest-server (0.8.10-1) bookworm; urgency=medium
+
+  * unify returned error message for authentication failure.
+
+  * only default to getting real client IP from RFC 7239 "Forwarded" header in
+    non-public RPC environment.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 18 Feb 2026 15:35:23 +0100
+
 rust-proxmox-rest-server (0.8.9-1) bookworm; urgency=medium
 
   * increase maximal request body size fro 64 kiB to 512 kiB, similar to a
