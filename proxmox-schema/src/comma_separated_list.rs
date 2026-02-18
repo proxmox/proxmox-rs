@@ -16,7 +16,7 @@
 //!
 //! ```
 //! use proxmox_schema::{ApiType, Schema, ArraySchema, IntegerSchema};
-//! use proxmox_schema::comma_separated_list::{CommaSeparatedList, CommaSeparatedListSchema};
+//! use proxmox_schema::{CommaSeparatedList, CommaSeparatedListSchema};
 //!
 //! #[derive(Clone, Debug, PartialEq,  serde::Serialize, serde::Deserialize)]
 //! struct Port(u16);
