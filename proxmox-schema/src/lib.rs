@@ -25,7 +25,9 @@ pub mod ser;
 mod comma_separated_list;
 pub use comma_separated_list::*;
 
+// TODO: only a pub mod for backward compat, drop if all call sites are fixed.
 pub mod property_string;
+pub use property_string::*;
 
 mod schema;
 pub use schema::*;
