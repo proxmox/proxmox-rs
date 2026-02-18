@@ -77,7 +77,10 @@ where
     serializer.serialize_str(&out)
 }
 
-fn deserialize<'de, D, T>(deserializer: D, array_schema: &'static Schema) -> Result<T, D::Error>
+fn deserialize<'de, D, T>(
+    deserializer: D,
+    array_schema: &'static Schema,
+) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
@@ -86,7 +89,7 @@ where
 
     let string = std::borrow::Cow::<'de, str>::deserialize(deserializer)?;
 
-    T::deserialize(crate::de::SchemaDeserializer::new(string, array_schema))
+    Vec::<T>::deserialize(crate::de::SchemaDeserializer::new(string, array_schema))
         .map_err(D::Error::custom)
 }
 
