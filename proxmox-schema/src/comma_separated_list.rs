@@ -1,17 +1,16 @@
 //! Comma-separated list strings.
 //!
-//! This module provides [`CommaSeparatedList<T>`], a newtype wrapper around
-//! `Vec<T>` that serializes to and deserializes from a comma-separated string
-//! representation (e.g. `"1,2,3"`). This is useful for API parameters that
-//! accept multiple values encoded in a single string field.
+//! This module provides [`CommaSeparatedList<T>`], a newtype wrapper around `Vec<T>` that
+//! serializes to and deserializes from a comma-separated string representation (e.g. `"1,2,3"`).
+//! This is useful for API parameters that accept multiple values encoded in a single string field.
 //!
-//! Element types must implement the [`CommaSeparatedListSchema`] trait, which
-//! provides the static [`ArraySchema`](crate::ArraySchema) used for
-//! validation during serialization and deserialization.
+//! Element types must implement the [`CommaSeparatedListSchema`] trait, which provides the static
+//! [`ArraySchema`](crate::ArraySchema) used for validation during deserialization, but currently
+//! not on serialization.
 //!
-//! Note that individual element values are **not quoted** in the serialized
-//! string — they are simply joined with commas. This means element types must
-//! serialize to simple strings that do not themselves contain commas.
+//! Note that individual element values are **not quoted** in the serialized string — they are
+//! simply joined with commas. This means element types must serialize to simple strings that do not
+//! themselves contain commas.
 //!
 //! # Example
 //!
@@ -19,7 +18,7 @@
 //! use proxmox_schema::{ApiType, Schema, ArraySchema, IntegerSchema};
 //! use proxmox_schema::comma_separated_list::{CommaSeparatedList, CommaSeparatedListSchema};
 //!
-//! #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+//! #[derive(Clone, Debug, PartialEq,  serde::Serialize, serde::Deserialize)]
 //! struct Port(u16);
 //!
 //! const PORT_SCHEMA: Schema = IntegerSchema::new("A network port")
@@ -40,6 +39,9 @@
 //! let ports: CommaSeparatedList<Port> =
 //!     serde_json::from_value("80,443,8080".into()).unwrap();
 //! assert_eq!(ports.len(), 3);
+//! assert_eq!(ports[0], Port(80));
+//! assert_eq!(ports[1], Port(443));
+//! assert_eq!(ports[2], Port(8080));
 //!
 //! // Serialize back to a comma-separated string:
 //! let value = serde_json::to_value(&ports).unwrap();
@@ -96,6 +98,15 @@ pub trait CommaSeparatedListSchema: ApiType {
     const ARRAY_SCHEMA: Schema;
 }
 
+/// A [`Vec<T>`] that serializes to and deserializes from a comma-separated string.
+///
+/// The inner type `T` must implement [`CommaSeparatedListSchema`] so that element-level API schema
+/// is available for the API definitions and so that validation is applied during deserialization.
+///
+/// Element values **must not** contain commas themselves - the format does not support quoting or
+/// escaping.
+///
+/// See the [module-level documentation](self) for usage examples and details.
 #[derive(Clone, Debug, Default, Hash, Eq, PartialEq, Ord, PartialOrd)]
 #[repr(transparent)]
 pub struct CommaSeparatedList<T>(pub Vec<T>);
