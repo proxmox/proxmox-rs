@@ -211,4 +211,106 @@ mod tests {
             .description;
         assert_eq!(descr, "Array of test numbers.");
     }
+
+    #[test]
+    fn test_round_trip() {
+        let original = CommaSeparatedList::new(vec![TestNum(1), TestNum(2), TestNum(3)]);
+        let serialized = serde_json::to_value(&original).unwrap();
+        let deserialized: CommaSeparatedList<TestNum> = serde_json::from_value(serialized).unwrap();
+        assert_eq!(original.0, deserialized.0);
+    }
+
+    #[test]
+    fn test_single_element_serialize() {
+        let list = CommaSeparatedList::new(vec![TestNum(2)]);
+        let serialized = serde_json::to_value(&list).unwrap();
+        // Must not produce trailing/leading commas.
+        assert_eq!(serialized.as_str(), Some("2"));
+    }
+
+    #[test]
+    fn test_single_element_deserialize() {
+        let list: CommaSeparatedList<TestNum> = serde_json::from_value("2".into()).unwrap();
+        assert_eq!(list.0, vec![TestNum(2)]);
+    }
+
+    #[test]
+    fn test_single_element_round_trip() {
+        let original = CommaSeparatedList::new(vec![TestNum(0)]);
+        let serialized = serde_json::to_value(&original).unwrap();
+        let deserialized: CommaSeparatedList<TestNum> = serde_json::from_value(serialized).unwrap();
+        assert_eq!(original.0, deserialized.0);
+    }
+
+    #[test]
+    fn test_empty_list_serialize() {
+        let list: CommaSeparatedList<TestNum> = CommaSeparatedList::new(vec![]);
+        let serialized = serde_json::to_value(&list).unwrap();
+        // An empty vec should serialize to an empty string.
+        assert_eq!(serialized.as_str(), Some(""));
+    }
+
+    #[test]
+    fn test_empty_list_deserialize() {
+        let result = serde_json::from_value::<CommaSeparatedList<TestNum>>("".into());
+
+        match result {
+            Ok(list) => assert!(
+                list.is_empty(),
+                "empty string should deserialize to an empty list, got {:?}",
+                list.0
+            ),
+            Err(err) => {
+                panic!("empty string should deserialize to an empty list but got error {err:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn test_empty_list_round_trip() {
+        let original: CommaSeparatedList<TestNum> = CommaSeparatedList::new(vec![]);
+        let serialized = serde_json::to_value(&original).unwrap();
+
+        if let Ok(deserialized) = serde_json::from_value::<CommaSeparatedList<TestNum>>(serialized)
+        {
+            assert!(deserialized.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_from_vec_conversion() {
+        let v = vec![TestNum(1), TestNum(2), TestNum(3)];
+        let list: CommaSeparatedList<TestNum> = v.clone().into();
+        assert_eq!(&list.0, &v);
+    }
+
+    #[test]
+    fn test_from_vec_empty() {
+        let v: Vec<TestNum> = vec![];
+        let list: CommaSeparatedList<TestNum> = v.into();
+        assert!(list.is_empty());
+    }
+
+    #[test]
+    fn test_serialize_validation_exceeds_maximum() {
+        // TestNum schema has maximum(3), but serialization must not reject out-of-range values —
+        // validation is a deserialization concern only.
+        // TODO: re-evaluate if this is really what we want.
+        let list = CommaSeparatedList::new(vec![TestNum(1), TestNum(4)]);
+        let serialized = serde_json::to_value(&list).unwrap();
+        assert_eq!(serialized.as_str(), Some("1,4"));
+    }
+
+    #[test]
+    fn test_deserialize_validation_exceeds_maximum() {
+        // TestNum schema has maximum(3), so "4" violates the constraint.
+        // TODO: re-evaluate if this is really what we *always* want (yes for config parsers, but
+        // maybe not for clients consuming responses from different major versions of an API)
+        let result = serde_json::from_value::<CommaSeparatedList<TestNum>>("1,4".into());
+        assert!(
+            result.is_err(),
+            "deserializing a value exceeding maximum should fail, got: {:?}",
+            result.unwrap()
+        );
+    }
 }
