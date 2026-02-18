@@ -174,6 +174,14 @@ impl<T> From<Vec<T>> for CommaSeparatedList<T> {
     }
 }
 
+impl<T> IntoIterator for CommaSeparatedList<T> {
+    type Item = T;
+    type IntoIter = std::vec::IntoIter<T>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
