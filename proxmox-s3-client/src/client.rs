@@ -380,11 +380,6 @@ impl S3Client {
                 }
             }
 
-            if retry > 0 {
-                let backoff_secs = S3_HTTP_REQUEST_RETRY_BACKOFF_DEFAULT * 3_u32.pow(retry as u32);
-                tokio::time::sleep(backoff_secs).await;
-            }
-
             let response = if let Some(deadline) = deadline {
                 tokio::time::timeout_at(deadline, self.client.request(request))
                     .await
@@ -401,6 +396,9 @@ impl S3Client {
                     }
                 }
             }
+
+            let backoff_secs = S3_HTTP_REQUEST_RETRY_BACKOFF_DEFAULT * 3_u32.pow(retry as u32);
+            tokio::time::sleep(backoff_secs).await;
         }
 
         bail!("failed to send request exceeding retries");
