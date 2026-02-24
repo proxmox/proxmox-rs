@@ -388,13 +388,18 @@ impl S3Client {
                 self.client.request(request).await
             };
 
-            match response {
-                Ok(response) => return Ok(response),
-                Err(err) => {
-                    if retry >= MAX_S3_HTTP_REQUEST_RETRY - 1 {
-                        return Err(err.into());
-                    }
-                }
+            let do_retry = match &response {
+                Ok(response) => matches!(
+                    response.status(),
+                    StatusCode::INTERNAL_SERVER_ERROR
+                        | StatusCode::SERVICE_UNAVAILABLE
+                        | StatusCode::GATEWAY_TIMEOUT
+                ),
+                Err(_) => true,
+            };
+
+            if !do_retry || retry >= MAX_S3_HTTP_REQUEST_RETRY - 1 {
+                return Ok(response?);
             }
 
             let backoff_secs = S3_HTTP_REQUEST_RETRY_BACKOFF_DEFAULT * 3_u32.pow(retry as u32);
