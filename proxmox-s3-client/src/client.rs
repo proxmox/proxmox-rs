@@ -386,21 +386,18 @@ impl S3Client {
             }
 
             let response = if let Some(deadline) = deadline {
-                tokio::time::timeout_at(deadline, self.client.request(request)).await
+                tokio::time::timeout_at(deadline, self.client.request(request))
+                    .await
+                    .context("request timeout reached")?
             } else {
-                Ok(self.client.request(request).await)
+                self.client.request(request).await
             };
 
             match response {
-                Ok(Ok(response)) => return Ok(response),
-                Ok(Err(err)) => {
+                Ok(response) => return Ok(response),
+                Err(err) => {
                     if retry >= MAX_S3_HTTP_REQUEST_RETRY - 1 {
                         return Err(err.into());
-                    }
-                }
-                Err(_elapsed) => {
-                    if retry >= MAX_S3_HTTP_REQUEST_RETRY - 1 {
-                        bail!("request timed out exceeding retries");
                     }
                 }
             }
