@@ -44,23 +44,111 @@ const RFC5987SET: &AsciiSet = &CONTROLS
 /// base64 encode and hard-wrap the base64 encoded string every 72 characters. this improves
 /// compatibility.
 fn encode_base64_formatted<T: AsRef<[u8]>>(raw: T) -> String {
-    const TEXT_WIDTH: usize = 72;
-
     let encoded = proxmox_base64::encode(raw);
-    let bytes = encoded.as_bytes();
 
-    let lines = bytes.len().div_ceil(TEXT_WIDTH);
-    let mut out = Vec::with_capacity(bytes.len() + lines - 1); // account for 1 newline per line
+    format_encoded_text(&encoded, |_| "".into(), "", 0, true)
+}
 
-    for (line, chunk) in bytes.chunks(TEXT_WIDTH).enumerate() {
+fn encode_filename_formatted(filename: &str) -> String {
+    let encoded = format!("UTF-8''{}", utf8_percent_encode(filename, RFC5987SET));
+
+    let format_prefix = |l| {
+        if let Some(l) = l {
+            format!("\tfilename*{l}*=")
+        } else {
+            "\tfilename*NN*=".into()
+        }
+    };
+
+    format_encoded_text(&encoded, format_prefix, ";", 0, true)
+}
+
+/// Helper function used to format text to not exceed line limits imposed by standards such as RFC
+/// 2045 Section 6.8 that specifies that Base64 content transfer encoded text "must be represented
+/// in lines of no more than 76 characters each". It also allows taking into account any necessary
+/// pre- and suffixes as well as shortening the first line by a certain amounts of characters.
+///
+/// Currently this errs on the side of caution and wraps lines at 72 characters. By doing so,
+/// callers can add a couple of characters to the last line of the text, which is sometimes needed
+/// to conform to how certain header values in MIME messages need to be represented.
+///
+/// Parameters:
+/// * `text`: The text that will be formatted.
+/// * `prefix`: A closure that computes the prefix needed for each line. It takes an
+///   `Option<usize>` as input. If the input is `None`, a prefix that is used as size hint for
+///   buffer allocation should be returned. `Some(n)` as input, should produce the prefix for the
+///   n-th line of the output text.
+/// * `suffix`: A string slice that will be appended to the end of each line of output text.
+/// * `shorten_first`: Defines by how many characters the first line will be shortened compared to
+///    the rest of the text. Useful for formatting header values, since there the first line often
+///    needs to be prefaced with the name of a key in a key value structure or similar.
+/// * `skip_last_suffix`: If true, no suffix will be appended to the last line.
+fn format_encoded_text<F>(
+    text: &str,
+    prefix: F,
+    suffix: &str,
+    shorten_first: usize,
+    skip_last_suffix: bool,
+) -> String
+where
+    F: Fn(Option<usize>) -> String,
+{
+    const DEFAULT_TEXT_WIDTH: usize = 72;
+
+    let bytes = text.as_bytes();
+    let suffix = suffix.as_bytes();
+
+    // compute the number of lines by taking into account skipped characters in the first line and
+    // formatting text
+    let format_text_len = suffix.len() + prefix(None).len();
+    let lines = (bytes.len() + shorten_first).div_ceil(DEFAULT_TEXT_WIDTH - format_text_len);
+
+    // bytes + formatting and "\n" per line - no "\n" in the last line
+    let mut capacity = bytes.len() + (format_text_len + 1) * lines - 1;
+
+    if skip_last_suffix {
+        capacity -= suffix.len();
+    }
+
+    let mut out = Vec::with_capacity(capacity);
+    let first_line_length = DEFAULT_TEXT_WIDTH - shorten_first - format_text_len;
+
+    // format first line if we skip characters
+    let (existing_lines, bytes) =
+        if let Some((first, rest)) = bytes.split_at_checked(first_line_length) {
+            out.extend_from_slice(prefix(Some(0)).as_bytes());
+            out.extend_from_slice(first);
+
+            if !rest.is_empty() {
+                out.extend_from_slice(suffix);
+                out.push(b'\n');
+            } else if !skip_last_suffix {
+                out.extend_from_slice(suffix);
+            }
+
+            (1, rest)
+        } else {
+            (0, bytes)
+        };
+
+    // format the rest of the text
+    for (line, chunk) in bytes
+        .chunks(DEFAULT_TEXT_WIDTH - format_text_len)
+        .enumerate()
+    {
+        let total_lines = existing_lines + line;
+        out.extend_from_slice(prefix(Some(total_lines)).as_bytes());
         out.extend_from_slice(chunk);
-        if line + 1 != lines {
-            // do not end last line with newline to give caller control over doing so.
+
+        if total_lines + 1 != lines {
+            out.extend_from_slice(suffix);
             out.push(b'\n');
+        } else if !skip_last_suffix {
+            out.extend_from_slice(suffix);
         }
     }
 
-    // SAFETY: base64 encoded, which is 7-bit chars (ASCII) and thus always valid UTF8
+    // SAFETY: all input slices were valid utf-8 string slices
     unsafe { String::from_utf8_unchecked(out) }
 }
 
@@ -104,24 +192,41 @@ impl Attachment<'_> {
 
         let mut attachment = String::new();
 
-        let encoded_filename = if self.filename.is_ascii() {
-            &self.filename
-        } else {
-            &format!("=?utf-8?B?{}?=", proxmox_base64::encode(&self.filename))
-        };
-
         let _ = writeln!(attachment, "\n--{file_boundary}");
-        let _ = writeln!(
-            attachment,
-            "Content-Type: {}; name=\"{encoded_filename}\"",
-            self.mime,
-        );
 
-        // both `filename` and `filename*` are included for additional compatibility
+        let _ = write!(attachment, "Content-Type: {};\n\tname=\"", self.mime);
+
+        if self.filename.is_ascii() {
+            let _ = write!(attachment, "{}", &self.filename);
+        } else {
+            let encoded = proxmox_base64::encode(&self.filename);
+            let prefix_fn = |line| {
+                if Some(0) == line {
+                    "=?utf-8?B?"
+                } else {
+                    "\t=?utf-8?B?"
+                }
+                .into()
+            };
+
+            // minus one here as the first line isn't indented
+            let skip_first = "\tname=\"".len() - 1;
+
+            let _ = write!(
+                attachment,
+                "{}",
+                format_encoded_text(&encoded, prefix_fn, "?=", skip_first, false)
+            );
+        }
+
+        // should be fine to add one here, the last line should be at most 72 chars. according to
+        // rfc 2045 encoded output lines should be "no more than 76 characters each"
+        let _ = writeln!(attachment, "\"");
+
         let _ = writeln!(
             attachment,
-            "Content-Disposition: attachment; filename=\"{encoded_filename}\";\n\tfilename*=UTF-8''{}",
-            utf8_percent_encode(&self.filename, RFC5987SET)
+            "Content-Disposition: attachment;\n{}",
+            encode_filename_formatted(&self.filename)
         );
 
         attachment.push_str("Content-Transfer-Encoding: base64\n\n");
@@ -541,6 +646,9 @@ impl<'a> Mail<'a> {
 mod test {
     use super::*;
 
+    // helper string for formatting tests
+    const ALPHA: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
     /// Compare two multi-line strings, ignoring any line that starts with 'Date:'.
     ///
     /// The `Date` header is formatted in the local timezone, which means our
@@ -809,9 +917,10 @@ Content-Transfer-Encoding: 7bit
 Lorem Ipsum Dolor Sit
 Amet
 ------_=_NextPart_001_1732806251
-Content-Type: application/octet-stream; name="deadbeef.bin"
-Content-Disposition: attachment; filename="deadbeef.bin";
-	filename*=UTF-8''deadbeef.bin
+Content-Type: application/octet-stream;
+	name="deadbeef.bin"
+Content-Disposition: attachment;
+	filename*0*=UTF-8''deadbeef.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
@@ -838,7 +947,7 @@ Content-Transfer-Encoding: base64
         )
         .with_recipient_and_name("Receiver Name", "receiver@example.com")
         .with_attachment("deadbeef.bin", "application/octet-stream", &bin)
-        .with_attachment("🐄💀.bin", "image/bmp", &bin)
+        .with_attachment("🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀🐄💀.bin", "image/bmp", &bin)
         .with_html_alt("<html lang=\"de-at\"><head></head><body>\n\t<pre>\n\t\tLorem Ipsum Dolor Sit Amet\n\t</pre>\n</body></html>");
 
         let body = mail.format_mail(1732806251).expect("could not format mail");
@@ -879,17 +988,28 @@ Content-Transfer-Encoding: 7bit
 </body></html>
 ------_=_NextPart_002_1732806251--
 ------_=_NextPart_001_1732806251
-Content-Type: application/octet-stream; name="deadbeef.bin"
-Content-Disposition: attachment; filename="deadbeef.bin";
-	filename*=UTF-8''deadbeef.bin
+Content-Type: application/octet-stream;
+	name="deadbeef.bin"
+Content-Disposition: attachment;
+	filename*0*=UTF-8''deadbeef.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
 3q2+796tvu8=
 ------_=_NextPart_001_1732806251
-Content-Type: image/bmp; name="=?utf-8?B?8J+QhPCfkoAuYmlu?="
-Content-Disposition: attachment; filename="=?utf-8?B?8J+QhPCfkoAuYmlu?=";
-	filename*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
+Content-Type: image/bmp;
+	name="=?utf-8?B?8J+QhPCfkoDwn5CE8J+SgPCfkITwn5KA8J+QhPCfkoDwn5CE8J+Sg?=
+	=?utf-8?B?PCfkITwn5KA8J+QhPCfkoDwn5CE8J+SgPCfkITwn5KA8J+QhPCfkoDwn5CE?=
+	=?utf-8?B?8J+SgPCfkITwn5KA8J+QhPCfkoDwn5CE8J+SgPCfkITwn5KA8J+QhPCfkoA?=
+	=?utf-8?B?uYmlu?="
+Content-Disposition: attachment;
+	filename*0*=UTF-8''%F0%9F%90%84%F0%9F%92%80%F0%9F%90%84%F0%9F%92%80%F;
+	filename*1*=0%9F%90%84%F0%9F%92%80%F0%9F%90%84%F0%9F%92%80%F0%9F%90%8;
+	filename*2*=4%F0%9F%92%80%F0%9F%90%84%F0%9F%92%80%F0%9F%90%84%F0%9F%9;
+	filename*3*=2%80%F0%9F%90%84%F0%9F%92%80%F0%9F%90%84%F0%9F%92%80%F0%9;
+	filename*4*=F%90%84%F0%9F%92%80%F0%9F%90%84%F0%9F%92%80%F0%9F%90%84%F;
+	filename*5*=0%9F%92%80%F0%9F%90%84%F0%9F%92%80%F0%9F%90%84%F0%9F%92%8;
+	filename*6*=0%F0%9F%90%84%F0%9F%92%80%F0%9F%90%84%F0%9F%92%80.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
@@ -997,22 +1117,162 @@ PGh0bWwgbGFuZz0iZGUtYXQiPjxoZWFkPjwvaGVhZD48Ym9keT4KCTxwcmU+CgkJTG9yZW0g
 SXBzdW0gRMO2bG9yIFNpdCBBbWV0Cgk8L3ByZT4KPC9ib2R5PjwvaHRtbD4=
 ------_=_NextPart_002_1732806251--
 ------_=_NextPart_001_1732806251
-Content-Type: application/octet-stream; name="deadbeef.bin"
-Content-Disposition: attachment; filename="deadbeef.bin";
-	filename*=UTF-8''deadbeef.bin
+Content-Type: application/octet-stream;
+	name="deadbeef.bin"
+Content-Disposition: attachment;
+	filename*0*=UTF-8''deadbeef.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
 3q2+796tvu8=
 ------_=_NextPart_001_1732806251
-Content-Type: image/bmp; name="=?utf-8?B?8J+QhPCfkoAuYmlu?="
-Content-Disposition: attachment; filename="=?utf-8?B?8J+QhPCfkoAuYmlu?=";
-	filename*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
+Content-Type: image/bmp;
+	name="=?utf-8?B?8J+QhPCfkoAuYmlu?="
+Content-Disposition: attachment;
+	filename*0*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
 Content-Transfer-Encoding: base64
 
 3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
 3q2+796tvu8=
 ------_=_NextPart_001_1732806251--"#,
         )
+    }
+
+    #[test]
+    fn format_encoded_text_correctly() {
+        let simple = format_encoded_text(ALPHA, |_| "".to_string(), "", 0, true);
+
+        assert_eq!(simple, ALPHA);
+    }
+
+    #[test]
+    fn format_encoded_text_multiple_lines() {
+        let multiple_lines = format_encoded_text(
+            &format!("{ALPHA}{ALPHA}{ALPHA}"),
+            |_| "".to_string(),
+            "",
+            0,
+            true,
+        );
+
+        let out = r#"
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJ
+KLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRST
+UVWXYZabcdefghijklmnopqrstuvwxyz1234567890"#
+            .trim();
+
+        assert_eq!(multiple_lines, out);
+    }
+
+    #[test]
+    fn format_encoded_text_suffixed() {
+        let suffixed = format_encoded_text(ALPHA, |_| "".to_string(), ";", 0, false);
+
+        let out = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890;";
+
+        assert_eq!(suffixed, out);
+
+        let suffixed = format_encoded_text(ALPHA, |_| "".to_string(), ";", 0, true);
+
+        let out = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
+        assert_eq!(suffixed, out);
+
+        let suffixed = format_encoded_text(
+            &format!("{ALPHA}{ALPHA}{ALPHA}"),
+            |_| "".to_string(),
+            ";",
+            0,
+            false,
+        );
+
+        let out = r#"
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHI;
+JKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQR;
+STUVWXYZabcdefghijklmnopqrstuvwxyz1234567890;"#
+            .trim();
+
+        assert_eq!(suffixed, out);
+
+        let suffixed = format_encoded_text(
+            &format!("{ALPHA}{ALPHA}{ALPHA}"),
+            |_| "".to_string(),
+            ";",
+            0,
+            true,
+        );
+
+        let out = r#"
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHI;
+JKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQR;
+STUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"#
+            .trim();
+
+        assert_eq!(suffixed, out);
+    }
+
+    #[test]
+    fn format_encoded_text_prefixed() {
+        let suffixed = format_encoded_text(ALPHA, |_| "==".to_string(), "", 0, false);
+
+        let out = "==ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
+        assert_eq!(suffixed, out);
+
+        let suffixed = format_encoded_text(
+            &format!("{ALPHA}{ALPHA}{ALPHA}"),
+            |_| "==".to_string(),
+            "",
+            0,
+            false,
+        );
+
+        let out = r#"
+==ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGH
+==IJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOP
+==QRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"#
+            .trim();
+
+        assert_eq!(suffixed, out);
+
+        let suffixed = format_encoded_text(
+            &format!("{ALPHA}{ALPHA}{ALPHA}"),
+            |i| {
+                if let Some(n) = i {
+                    format!("={n}=")
+                } else {
+                    "===".to_string()
+                }
+            },
+            "",
+            0,
+            false,
+        );
+
+        let out = r#"
+=0=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFG
+=1=HIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMN
+=2=OPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890"#
+            .trim();
+
+        assert_eq!(suffixed, out);
+    }
+
+    #[test]
+    fn format_encoded_text_skip_first() {
+        let suffixed = format_encoded_text(ALPHA, |_| "".to_string(), "", 5, false);
+
+        let out = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
+        assert_eq!(suffixed, out);
+
+        let suffixed = format_encoded_text(ALPHA, |_| "".to_string(), "", 20, false);
+
+        let out = r#"
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+1234567890"#
+            .trim();
+
+        assert_eq!(suffixed, out);
     }
 }
