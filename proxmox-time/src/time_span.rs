@@ -316,7 +316,7 @@ mod tests {
     use std::str::FromStr;
 
     #[test]
-    fn conversions() {
+    fn parse_equivalences() {
         let ts1 = TimeSpan::from_str("1h 1m 3s").unwrap();
         let ts2 = TimeSpan::from_str("1 hour 1 minute 3 second").unwrap();
         let ts3 = TimeSpan::from_str("0y 0M 0w 1h 1m 3s").unwrap();
@@ -330,17 +330,52 @@ mod tests {
         assert_eq!(ts1, ts3);
         assert_eq!(ts1, ts4);
         assert_eq!(ts1, ts5);
+    }
 
-        let display_ts1 = format!("{ts1}");
-        let display_ts2 = format!("{ts2}");
-        assert_eq!(display_ts1, display_ts2);
-        assert_eq!(String::from("1h 1m 3s"), display_ts2);
+    #[test]
+    fn parse_all_unit_aliases() {
+        let aliases = [
+            "1seconds", "1second", "1sec", "1s", "1msec", "1ms", "1usec", "1us", "1µs", "1nsec",
+            "1ns", "1minutes", "1minute", "1min", "1m", "1hours", "1hour", "1hr", "1h", "1days",
+            "1day", "1d", "1weeks", "1week", "1w", "1months", "1month", "1M", "1years", "1year",
+            "1y",
+        ];
+        for alias in aliases {
+            assert!(
+                TimeSpan::from_str(alias).is_ok(),
+                "failed to parse alias: {alias}",
+            );
+        }
+    }
 
-        let duration1 = std::time::Duration::new(32 * 24 * 60 * 60 + 3, 0);
-        let ts1 = TimeSpan::from(duration1);
-        let ts2 = TimeSpan::from_str("1M 1d 3s").unwrap();
-        let ts3 = TimeSpan::from_str("1m 1d 3s").unwrap();
-        assert_eq!(ts1, ts2);
-        assert_ne!(ts1, ts3);
+    #[test]
+    fn case_sensitivity_m_vs_big_m() {
+        let months = TimeSpan::from_str("1M").unwrap();
+        let minutes = TimeSpan::from_str("1m").unwrap();
+        assert_eq!(months.months, 1);
+        assert_eq!(months.minutes, 0);
+        assert_eq!(minutes.minutes, 1);
+        assert_eq!(minutes.months, 0);
+        assert_ne!(months, minutes);
+    }
+
+    #[test]
+    fn display_basic() {
+        let ts = TimeSpan::from_str("1h 1m 3s").unwrap();
+        assert_eq!(ts.to_string(), "1h 1m 3s");
+
+        let ts_long = TimeSpan::from_str("1 hour 1 minute 3 second").unwrap();
+        assert_eq!(ts.to_string(), ts_long.to_string());
+    }
+
+    #[test]
+    fn from_duration_round_trip() {
+        let duration = std::time::Duration::new(32 * 24 * 60 * 60 + 3, 0);
+        let ts = TimeSpan::from(duration);
+        let ts_parsed = TimeSpan::from_str("1M 1d 3s").unwrap();
+        assert_eq!(ts, ts_parsed);
+
+        // minutes vs months
+        assert_ne!(ts, TimeSpan::from_str("1m 1d 3s").unwrap());
     }
 }
