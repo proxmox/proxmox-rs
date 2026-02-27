@@ -37,7 +37,7 @@ impl std::str::FromStr for Empty {
 }
 
 /// An API ticket consists of a ticket type (prefix), type-dependent data, optional additional
-/// authenticaztion data, a timestamp and a signature. We store these values in the form
+/// authentication data, a timestamp and a signature. We store these values in the form
 /// `<prefix>:<stringified data>:<timestamp>::<signature>`.
 ///
 /// The signature is made over the string consisting of prefix, data, timestamp and aad joined

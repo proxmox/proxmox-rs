@@ -205,7 +205,7 @@ impl HMACKey {
         Ok(proxmox_base64::encode_no_pad(bytes))
     }
 
-    // This is needed for legacy CSRF token verifyication.
+    // This is needed for legacy CSRF token verification.
     //
     // TODO: remove once all dependent products had a major version release (PBS)
     #[cfg(feature = "api")]
