@@ -586,7 +586,6 @@ mod test {
     }
 
     fn complete_global(arg: &str, _param: &HashMap<String, String>) -> Vec<String> {
-        eprintln!("GOT HERE WITH {arg:?}");
         ["one", "two"]
             .into_iter()
             .filter(|v| v.starts_with(arg))
