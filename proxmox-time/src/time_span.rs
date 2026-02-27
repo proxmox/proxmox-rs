@@ -38,80 +38,49 @@
 //!
 //! This module also supports transforming a [std::time::Duration] to a [TimeSpan].
 
-use std::collections::HashMap;
-use std::sync::LazyLock;
-
 use anyhow::Error;
 use nom::{bytes::complete::take_while1, character::complete::space0, combinator::opt};
 
 use crate::parse_helpers::{parse_complete_line, parse_error, parse_u64, IResult};
 
-static TIME_SPAN_UNITS: LazyLock<HashMap<&'static str, f64>> = LazyLock::new(|| {
-    let mut map = HashMap::new();
+/// Enumerates the recognized time unit categories.
+///
+/// This is the single source of truth for unit classification; both the parser and the unit
+/// validation flow through [`TimeUnit::classify`] which maps string aliases to these variants.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TimeUnit {
+    Nanoseconds,
+    Microseconds,
+    Milliseconds,
+    Seconds,
+    Minutes,
+    Hours,
+    Days,
+    Weeks,
+    Months,
+    Years,
+}
 
-    let second = 1.0;
-
-    map.insert("seconds", second);
-    map.insert("second", second);
-    map.insert("sec", second);
-    map.insert("s", second);
-
-    let msec = second / 1000.0;
-
-    map.insert("msec", msec);
-    map.insert("ms", msec);
-
-    let usec = msec / 1000.0;
-
-    map.insert("usec", usec);
-    map.insert("us", usec);
-    map.insert("µs", usec);
-
-    let nsec = usec / 1000.0;
-
-    map.insert("nsec", nsec);
-    map.insert("ns", nsec);
-
-    let minute = second * 60.0;
-
-    map.insert("minutes", minute);
-    map.insert("minute", minute);
-    map.insert("min", minute);
-    map.insert("m", minute);
-
-    let hour = minute * 60.0;
-
-    map.insert("hours", hour);
-    map.insert("hour", hour);
-    map.insert("hr", hour);
-    map.insert("h", hour);
-
-    let day = hour * 24.0;
-
-    map.insert("days", day);
-    map.insert("day", day);
-    map.insert("d", day);
-
-    let week = day * 7.0;
-
-    map.insert("weeks", week);
-    map.insert("week", week);
-    map.insert("w", week);
-
-    let month = 30.44 * day;
-
-    map.insert("months", month);
-    map.insert("month", month);
-    map.insert("M", month);
-
-    let year = 365.25 * day;
-
-    map.insert("years", year);
-    map.insert("year", year);
-    map.insert("y", year);
-
-    map
-});
+impl TimeUnit {
+    /// Maps a unit string (e.g. `"hours"`, `"m"`, `"µs"`) to its [`TimeUnit`].
+    ///
+    /// Returns [`None`] for unrecognized input.
+    pub fn classify(s: &str) -> Option<Self> {
+        match s {
+            "seconds" | "second" | "sec" | "s" => Some(TimeUnit::Seconds),
+            "msec" | "ms" => Some(TimeUnit::Milliseconds),
+            "usec" | "us" | "µs" => Some(TimeUnit::Microseconds),
+            "nsec" | "ns" => Some(TimeUnit::Nanoseconds),
+            "minutes" | "minute" | "min" | "m" => Some(TimeUnit::Minutes),
+            "hours" | "hour" | "hr" | "h" => Some(TimeUnit::Hours),
+            "days" | "day" | "d" => Some(TimeUnit::Days),
+            "weeks" | "week" | "w" => Some(TimeUnit::Weeks),
+            "months" | "month" | "M" => Some(TimeUnit::Months),
+            "years" | "year" | "y" => Some(TimeUnit::Years),
+            _ => None,
+        }
+    }
+}
 
 /// A time spans defines a time duration
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -233,12 +202,11 @@ impl std::fmt::Display for TimeSpan {
     }
 }
 
-fn parse_time_unit(i: &str) -> IResult<&str, &str> {
+fn parse_time_unit(i: &str) -> IResult<&str, TimeUnit> {
     let (n, text) = take_while1(|c: char| char::is_ascii_alphabetic(&c) || c == 'µ')(i)?;
-    if TIME_SPAN_UNITS.contains_key(&text) {
-        Ok((n, text))
-    } else {
-        Err(parse_error(text, "time unit"))
+    match TimeUnit::classify(text) {
+        Some(unit) => Ok((n, unit)),
+        None => Err(parse_error(text, "time unit")),
     }
 }
 
@@ -264,37 +232,16 @@ fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpan> {
         if let (n, Some(unit)) = opt(parse_time_unit)(i)? {
             i = n;
             match unit {
-                "seconds" | "second" | "sec" | "s" => {
-                    ts.seconds += num;
-                }
-                "msec" | "ms" => {
-                    ts.msec += num;
-                }
-                "usec" | "us" | "µs" => {
-                    ts.usec += num;
-                }
-                "nsec" | "ns" => {
-                    ts.nsec += num;
-                }
-                "minutes" | "minute" | "min" | "m" => {
-                    ts.minutes += num;
-                }
-                "hours" | "hour" | "hr" | "h" => {
-                    ts.hours += num;
-                }
-                "days" | "day" | "d" => {
-                    ts.days += num;
-                }
-                "weeks" | "week" | "w" => {
-                    ts.weeks += num;
-                }
-                "months" | "month" | "M" => {
-                    ts.months += num;
-                }
-                "years" | "year" | "y" => {
-                    ts.years += num;
-                }
-                _ => return Err(parse_error(unit, "internal error")),
+                TimeUnit::Seconds => ts.seconds += num,
+                TimeUnit::Milliseconds => ts.msec += num,
+                TimeUnit::Microseconds => ts.usec += num,
+                TimeUnit::Nanoseconds => ts.nsec += num,
+                TimeUnit::Minutes => ts.minutes += num,
+                TimeUnit::Hours => ts.hours += num,
+                TimeUnit::Days => ts.days += num,
+                TimeUnit::Weeks => ts.weeks += num,
+                TimeUnit::Months => ts.months += num,
+                TimeUnit::Years => ts.years += num,
             }
         } else {
             ts.seconds += num;
