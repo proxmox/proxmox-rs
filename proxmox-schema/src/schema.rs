@@ -1,4 +1,4 @@
-//! Data types to decscribe data types.
+//! Data types to describe data types.
 //!
 //! This is loosely based on JSON Schema, but uses static rust data types. This way we can build
 //! completely static API definitions that can be included within the programs read-only text
@@ -641,7 +641,7 @@ pub type SchemaPropertyEntry = (&'static str, bool, &'static Schema);
 /// - `optional`: Set when the property is optional
 /// - `schema`: Property type schema
 ///
-/// **Note:** The list has to be storted by name, because we use
+/// **Note:** The list has to be sorted by name, because we use
 /// a binary search to find items.
 ///
 /// This is a workaround unless RUST can const_fn `Hash::new()`
@@ -1354,7 +1354,7 @@ impl Iterator for OneOfPropertyIterator {
 ///
 /// const SIMPLE_OBJECT: Schema = ObjectSchema::new(
 ///     "A very simple object with 2 properties",
-///     &[ // this arrays needs to be storted by name!
+///     &[ // this arrays needs to be sorted by name!
 ///         (
 ///             "property_one",
 ///             false /* required */,

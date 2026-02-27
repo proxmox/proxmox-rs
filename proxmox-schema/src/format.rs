@@ -329,7 +329,7 @@ pub fn get_schema_type_text(schema: &Schema, _style: ParameterDisplayStyle) -> S
                         variants.iter().map(|e| String::from(e.value)).collect();
                     list.join("|")
                 }
-                // displaying regex add more confision than it helps
+                // displaying regex adds more confusion than it helps
                 //StringSchema { format: Some(ApiStringFormat::Pattern(const_regex)), .. } => {
                 //    format!("/{}/", const_regex.regex_string)
                 //}
