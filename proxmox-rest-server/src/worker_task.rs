@@ -1045,7 +1045,7 @@ impl WorkerTask {
         if !prev_abort {
             self.log_message("received abort request ..."); // log abort only once
         }
-        // noitify listeners
+        // notify listeners
         let mut data = self.data.lock().unwrap();
         loop {
             match data.abort_listeners.pop() {
