@@ -214,12 +214,13 @@ impl std::str::FromStr for TimeSpan {
     type Err = Error;
 
     fn from_str(i: &str) -> Result<Self, Self::Err> {
-        parse_complete_line("calendar event", i, parse_time_span_incomplete)
+        parse_complete_line("time span", i, parse_time_span_incomplete)
     }
 }
 
 fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpan> {
     let mut ts = TimeSpan::default();
+    let mut parsed_any = false;
 
     loop {
         i = space0(i)?.0;
@@ -228,6 +229,7 @@ fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpan> {
         }
         let (n, num) = parse_u64(i)?;
         i = space0(n)?.0;
+        parsed_any = true;
 
         if let (n, Some(unit)) = opt(parse_time_unit)(i)? {
             i = n;
@@ -246,6 +248,10 @@ fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpan> {
         } else {
             ts.seconds += num;
         }
+    }
+
+    if !parsed_any {
+        return Err(parse_error(i, "time span"));
     }
 
     Ok((i, ts))
@@ -304,6 +310,23 @@ mod tests {
         assert_eq!(minutes.minutes, 1);
         assert_eq!(minutes.months, 0);
         assert_ne!(months, minutes);
+    }
+
+    #[test]
+    fn parse_rejects_empty_and_invalid() {
+        assert!(TimeSpan::from_str("").is_err());
+        assert!(TimeSpan::from_str("abc").is_err());
+        assert!(TimeSpan::from_str("1x").is_err());
+    }
+
+    #[test]
+    fn error_message_mentions_time_span() {
+        let err = TimeSpan::from_str("not valid").unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("time span"),
+            "error should mention 'time span', got: {msg}",
+        );
     }
 
     #[test]
