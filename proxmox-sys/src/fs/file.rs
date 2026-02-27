@@ -33,7 +33,7 @@ pub fn file_get_contents<P: AsRef<Path>>(path: P) -> Result<Vec<u8>, Error> {
 /// Read the entire contents of a file into a bytes vector if the file exists
 ///
 /// Same as file_get_contents(), but returns 'Ok(None)' instead of
-/// 'Err' if the file dose not exist.
+/// 'Err' if the file does not exist.
 pub fn file_get_optional_contents<P: AsRef<Path>>(path: P) -> Result<Option<Vec<u8>>, Error> {
     let path = path.as_ref();
 
@@ -62,7 +62,7 @@ pub fn file_read_string<P: AsRef<Path>>(path: P) -> Result<String, Error> {
 /// Read the entire contents of a file into a String if the file exists
 ///
 /// Same as file_read_string(), but returns 'Ok(None)' instead of
-/// 'Err' if the file dose not exist.
+/// 'Err' if the file does not exist.
 pub fn file_read_optional_string<P: AsRef<Path>>(path: P) -> Result<Option<String>, Error> {
     let path = path.as_ref();
 
