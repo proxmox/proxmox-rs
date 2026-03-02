@@ -185,18 +185,26 @@ impl std::fmt::Display for TimeSpan {
                 do_write(self.minutes, "m")?;
             }
         }
-        let seconds = self.seconds as f64 + (self.msec as f64 / 1000.0);
+        let seconds = self.seconds as f64
+            + (self.msec as f64 / 1_000.0)
+            + (self.usec as f64 / 1_000_000.0)
+            + (self.nsec as f64 / 1_000_000_000.0);
         if seconds >= 0.1 {
             if !first {
                 write!(f, " ")?;
             }
-            if seconds >= 1.0 || !first {
-                write!(f, "{seconds:.0}s")?;
+            let rounded = (seconds * 10.0).round() / 10.0;
+            if rounded.fract().abs() < f64::EPSILON {
+                write!(f, "{rounded:.0}s")?;
             } else {
-                write!(f, "{seconds:.1}s")?;
+                write!(f, "{rounded:.1}s")?;
             }
         } else if first {
-            write!(f, "<0.1s")?;
+            if seconds > 0.0 {
+                write!(f, "<0.1s")?;
+            } else {
+                write!(f, "0s")?;
+            }
         }
         Ok(())
     }
@@ -336,6 +344,95 @@ mod tests {
 
         let ts_long = TimeSpan::from_str("1 hour 1 minute 3 second").unwrap();
         assert_eq!(ts.to_string(), ts_long.to_string());
+    }
+
+    #[test]
+    fn display_zero() {
+        assert_eq!(TimeSpan::default().to_string(), "0s");
+    }
+
+    #[test]
+    fn display_very_small() {
+        let ts = TimeSpan {
+            nsec: 1,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "<0.1s");
+
+        let ts = TimeSpan {
+            usec: 50,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "<0.1s");
+
+        let ts = TimeSpan {
+            msec: 50,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "<0.1s");
+    }
+
+    #[test]
+    fn display_subsecond_includes_usec_and_nsec() {
+        let ts = TimeSpan {
+            usec: 500_000,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "0.5s");
+
+        let ts = TimeSpan {
+            nsec: 100_000_000,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "0.1s");
+    }
+
+    #[test]
+    fn display_subsecond_precision() {
+        let ts = TimeSpan {
+            msec: 500,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "0.5s");
+
+        let ts = TimeSpan {
+            seconds: 1,
+            msec: 800,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "1.8s");
+    }
+
+    #[test]
+    fn display_subsecond_rounds_to_whole_number_cleanly() {
+        let ts = TimeSpan {
+            msec: 999,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "1s");
+
+        let ts = TimeSpan {
+            seconds: 1,
+            msec: 999,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "2s");
+    }
+
+    #[test]
+    fn display_integer_seconds_no_decimal() {
+        let ts = TimeSpan {
+            seconds: 5,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "5s");
+
+        let ts = TimeSpan {
+            hours: 2,
+            seconds: 10,
+            ..Default::default()
+        };
+        assert_eq!(ts.to_string(), "2h 10s");
     }
 
     #[test]
