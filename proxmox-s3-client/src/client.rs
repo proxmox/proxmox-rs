@@ -29,8 +29,9 @@ use crate::aws_sign_v4::AWS_SIGN_V4_DATETIME_FORMAT;
 use crate::aws_sign_v4::{aws_sign_v4_signature, aws_sign_v4_uri_encode};
 use crate::object_key::S3ObjectKey;
 use crate::response_reader::{
-    CopyObjectResponse, DeleteObjectsResponse, GetObjectResponse, HeadObjectResponse,
-    ListBucketsResponse, ListObjectsV2Response, PutObjectResponse, ResponseReader,
+    CopyObjectResponse, DeleteObjectsResponse, DeletedObject, GetObjectResponse,
+    HeadObjectResponse, ListBucketsResponse, ListObjectsV2Response, PutObjectResponse,
+    ResponseReader,
 };
 
 /// Default timeout for s3 api requests.
@@ -544,7 +545,7 @@ impl S3Client {
 
     /// Removes an object from a bucket.
     /// See reference docs: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html
-    pub async fn delete_object(&self, object_key: S3ObjectKey) -> Result<(), Error> {
+    pub async fn delete_object(&self, object_key: S3ObjectKey) -> Result<DeletedObject, Error> {
         let object_key = object_key.to_full_key(&self.options.common_prefix);
         let request = Request::builder()
             .method(Method::DELETE)
@@ -553,7 +554,7 @@ impl S3Client {
 
         let response = self.send(request, None).await?;
         let response_reader = ResponseReader::new(response);
-        response_reader.delete_object_response().await
+        response_reader.delete_object_response(object_key).await
     }
 
     /// Delete multiple objects from a bucket using a single HTTP request.

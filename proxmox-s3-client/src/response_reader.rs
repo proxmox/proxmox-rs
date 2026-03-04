@@ -361,7 +361,10 @@ impl ResponseReader {
     /// Read and parse the delete object response.
     ///
     /// Returns with error if an unexpected status code is encountered.
-    pub(crate) async fn delete_object_response(self) -> Result<(), Error> {
+    pub(crate) async fn delete_object_response(
+        self,
+        key: S3ObjectKey,
+    ) -> Result<DeletedObject, Error> {
         let (parts, _body) = self.response.into_parts();
 
         match parts.status {
@@ -369,7 +372,21 @@ impl ResponseReader {
             status_code => bail!("unexpected status code {status_code}"),
         };
 
-        Ok(())
+        let delete_marker = Self::parse_optional_header(
+            HeaderName::from_static("x-amz-delete-marker"),
+            &parts.headers,
+        )?;
+        let delete_marker_version_id = Self::parse_optional_header(
+            HeaderName::from_static("x-amz-version-id"),
+            &parts.headers,
+        )?;
+
+        Ok(DeletedObject {
+            delete_marker,
+            delete_marker_version_id,
+            key: Some(key),
+            version_id: None,
+        })
     }
 
     /// Read and parse the delete objects response.
