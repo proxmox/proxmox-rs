@@ -554,7 +554,10 @@ impl S3Client {
 
         let response = self.send(request, None).await?;
         let response_reader = ResponseReader::new(response);
-        response_reader.delete_object_response(object_key).await
+        response_reader
+            .delete_object_response(object_key)
+            .await
+            .map_err(Into::into)
     }
 
     /// Delete multiple objects from a bucket using a single HTTP request.

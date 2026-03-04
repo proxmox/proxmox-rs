@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use anyhow::{anyhow, bail, Context, Error};
+use anyhow::{anyhow, bail, format_err, Context, Error};
 use http_body_util::BodyExt;
 use hyper::body::{Bytes, Incoming};
 use hyper::header::HeaderName;
@@ -226,6 +226,26 @@ pub struct Bucket {
     pub creation_date: LastModifiedTimestamp,
 }
 
+pub(crate) enum DeleteError {
+    Response(DeleteObjectError),
+    Parsing(Error),
+}
+
+impl Into<Error> for DeleteError {
+    fn into(self) -> Error {
+        match self {
+            Self::Response(delete_error) => {
+                if let Some(code) = delete_error.code {
+                    format_err!("unexpected status code: {code}")
+                } else {
+                    format_err!("failed to generate error, missing error status code")
+                }
+            }
+            Self::Parsing(error) => error,
+        }
+    }
+}
+
 impl ResponseReader {
     /// Create a new response reader to parse given response.
     pub(crate) fn new(response: Response<Incoming>) -> Self {
@@ -364,22 +384,31 @@ impl ResponseReader {
     pub(crate) async fn delete_object_response(
         self,
         key: S3ObjectKey,
-    ) -> Result<DeletedObject, Error> {
+    ) -> Result<DeletedObject, DeleteError> {
         let (parts, _body) = self.response.into_parts();
 
         match parts.status {
             StatusCode::NO_CONTENT => (),
-            status_code => bail!("unexpected status code {status_code}"),
+            status_code => {
+                return Err(DeleteError::Response(DeleteObjectError {
+                    code: Some(status_code.to_string()),
+                    key: Some(key),
+                    message: None,
+                    version_id: None,
+                }));
+            }
         };
 
         let delete_marker = Self::parse_optional_header(
             HeaderName::from_static("x-amz-delete-marker"),
             &parts.headers,
-        )?;
+        )
+        .map_err(|err| DeleteError::Parsing(err))?;
         let delete_marker_version_id = Self::parse_optional_header(
             HeaderName::from_static("x-amz-version-id"),
             &parts.headers,
-        )?;
+        )
+        .map_err(|err| DeleteError::Parsing(err))?;
 
         Ok(DeletedObject {
             delete_marker,
