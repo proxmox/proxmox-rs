@@ -665,12 +665,12 @@ impl S3Client {
 
     /// Delete objects by given key prefix.
     /// Requires at least 2 api calls.
-    pub async fn delete_objects_by_prefix(&self, prefix: &S3PathPrefix) -> Result<bool, Error> {
+    pub async fn delete_objects_by_prefix(&self, prefix: &S3PathPrefix) -> Result<Vec<DeleteObjectError>, Error> {
         // S3 API does not provide a convenient way to delete objects by key prefix.
         // List all objects with given group prefix and delete all objects found, so this
         // requires at least 2 API calls.
         let mut next_continuation_token: Option<String> = None;
-        let mut delete_errors = false;
+        let mut delete_errors = Vec::new();
         loop {
             let list_objects_result = self
                 .list_objects_v2(prefix, next_continuation_token.as_deref())
@@ -683,8 +683,8 @@ impl S3Client {
                 .collect();
 
             let response = self.delete_objects(&objects_to_delete).await?;
-            if response.error.is_some() {
-                delete_errors = true;
+            if let Some(mut errors) = response.error {
+                delete_errors.append(&mut errors);
             }
 
             if list_objects_result.is_truncated {
@@ -712,12 +712,12 @@ impl S3Client {
         prefix: &S3PathPrefix,
         suffix: &str,
         excldue_from_parent: &[&str],
-    ) -> Result<bool, Error> {
+    ) -> Result<Vec<DeleteObjectError>, Error> {
         // S3 API does not provide a convenient way to delete objects by key prefix.
         // List all objects with given group prefix and delete all objects found, so this
         // requires at least 2 API calls.
         let mut next_continuation_token: Option<String> = None;
-        let mut delete_errors = false;
+        let mut delete_errors = Vec::new();
         let mut prefix_filters = Vec::new();
         let mut list_objects = Vec::new();
         loop {
@@ -771,9 +771,9 @@ impl S3Client {
             .collect();
 
         for objects in objects_to_delete.chunks(1000) {
-            let result = self.delete_objects(objects).await?;
-            if result.error.is_some() {
-                delete_errors = true;
+            let response = self.delete_objects(objects).await?;
+            if let Some(mut errors) = response.error {
+                delete_errors.append(&mut errors);
             }
         }
 

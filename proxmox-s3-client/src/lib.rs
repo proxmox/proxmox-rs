@@ -33,3 +33,5 @@ mod object_key;
 pub use object_key::S3ObjectKey;
 #[cfg(feature = "impl")]
 mod response_reader;
+#[cfg(feature = "impl")]
+pub use response_reader::DeleteObjectError;
