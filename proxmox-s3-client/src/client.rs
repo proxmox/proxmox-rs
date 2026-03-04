@@ -598,7 +598,6 @@ impl S3Client {
         let copy_source = source_key.to_copy_source_key(bucket, &self.options.common_prefix);
         let copy_source = aws_sign_v4_uri_encode(&copy_source, true);
         let destination_key = destination_key.to_full_key(&self.options.common_prefix);
-        let destination_key = aws_sign_v4_uri_encode(&destination_key, true);
         let request = Request::builder()
             .method(Method::PUT)
             .uri(self.build_uri(&destination_key, &[])?)
