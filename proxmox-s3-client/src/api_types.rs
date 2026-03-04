@@ -87,6 +87,8 @@ pub const S3_BUCKET_NAME_SCHEMA: Schema = StringSchema::new("Bucket name for S3 
 pub enum ProviderQuirks {
     /// Prvider does not support the If-None-Match http header
     SkipIfNoneMatchHeader,
+    /// Prvider does not support DeleteObjects API endpoint, use delete object calls instead
+    DeleteObjectsViaDeleteObject,
 }
 serde_plain::derive_display_from_serialize!(ProviderQuirks);
 serde_plain::derive_fromstr_from_deserialize!(ProviderQuirks);

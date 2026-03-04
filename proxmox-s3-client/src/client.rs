@@ -29,9 +29,9 @@ use crate::aws_sign_v4::AWS_SIGN_V4_DATETIME_FORMAT;
 use crate::aws_sign_v4::{aws_sign_v4_signature, aws_sign_v4_uri_encode};
 use crate::object_key::S3ObjectKey;
 use crate::response_reader::{
-    CopyObjectResponse, DeleteObjectsResponse, DeletedObject, GetObjectResponse,
-    HeadObjectResponse, ListBucketsResponse, ListObjectsV2Response, PutObjectResponse,
-    ResponseReader,
+    CopyObjectResponse, DeleteError, DeleteObjectError, DeleteObjectsResponse, DeletedObject,
+    GetObjectResponse, HeadObjectResponse, ListBucketsResponse, ListObjectsV2Response,
+    PutObjectResponse, ResponseReader,
 };
 
 /// Default timeout for s3 api requests.
@@ -546,18 +546,31 @@ impl S3Client {
     /// Removes an object from a bucket.
     /// See reference docs: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html
     pub async fn delete_object(&self, object_key: S3ObjectKey) -> Result<DeletedObject, Error> {
+        self.delete_object_impl(object_key)
+            .await
+            .map_err(Into::into)
+    }
+
+    async fn delete_object_impl(
+        &self,
+        object_key: S3ObjectKey,
+    ) -> Result<DeletedObject, DeleteError> {
         let object_key = object_key.to_full_key(&self.options.common_prefix);
         let request = Request::builder()
             .method(Method::DELETE)
-            .uri(self.build_uri(&object_key, &[])?)
-            .body(Body::empty())?;
+            .uri(
+                self.build_uri(&object_key, &[])
+                    .map_err(|err| DeleteError::Parsing(err))?,
+            )
+            .body(Body::empty())
+            .map_err(|err| DeleteError::Parsing(err.into()))?;
 
-        let response = self.send(request, None).await?;
-        let response_reader = ResponseReader::new(response);
-        response_reader
-            .delete_object_response(object_key)
+        let response = self
+            .send(request, None)
             .await
-            .map_err(Into::into)
+            .map_err(|err| DeleteError::Parsing(err))?;
+        let response_reader = ResponseReader::new(response);
+        response_reader.delete_object_response(object_key).await
     }
 
     /// Delete multiple objects from a bucket using a single HTTP request.
@@ -568,6 +581,39 @@ impl S3Client {
     ) -> Result<DeleteObjectsResponse, Error> {
         if object_keys.is_empty() {
             return Ok(DeleteObjectsResponse::default());
+        }
+
+        if self
+            .options
+            .provider_quirks
+            .contains(&ProviderQuirks::DeleteObjectsViaDeleteObject)
+        {
+            let mut response = DeleteObjectsResponse::default();
+            response.deleted = Some(Vec::with_capacity(object_keys.len()));
+
+            for object_key in object_keys {
+                match self.delete_object_impl(object_key.clone()).await {
+                    Ok(deleted_object) => {
+                        let deleted = response.deleted.get_or_insert(Vec::new());
+                        deleted.push(deleted_object);
+                    }
+                    Err(err) => {
+                        let errors = response.error.get_or_insert(Vec::new());
+                        let err = match err {
+                            DeleteError::Response(err) => err,
+                            DeleteError::Parsing(err) => DeleteObjectError {
+                                code: None,
+                                key: Some(object_key.clone()),
+                                message: Some(format!("{err}")),
+                                version_id: None,
+                            },
+                        };
+                        errors.push(err);
+                    }
+                }
+            }
+
+            return Ok(response);
         }
 
         let mut body = String::from(r#"<Delete xmlns="http://s3.amazonaws.com/doc/2006-03-01/">"#);
