@@ -61,6 +61,34 @@
 //! value and displayed as a decimal with up to one decimal place. Spans shorter than 0.1 seconds
 //! are displayed as `<0.1s`. A completely zero span displays as `0s`.
 //!
+//! ## Precision-controlled sub-second display
+//!
+//! An explicit **fmt precision** (`{ts:.N}`) selects the finest sub-second unit to include.
+//! Every 3 levels of precision introduces the next sub-second unit as a discrete integer field;
+//! intermediate levels add decimal places to the finest unit shown:
+//!
+//! ```
+//! # use proxmox_time::TimeSpan;
+//! let ts = TimeSpan::from(std::time::Duration::new(1, 500_200_003));
+//! assert_eq!(format!("{ts:.0}"), "1s");           // whole seconds
+//! assert_eq!(format!("{ts:.1}"), "1.5s");         // 1 decimal place
+//! assert_eq!(format!("{ts:.3}"), "1s 500ms");     // discrete milliseconds
+//! assert_eq!(format!("{ts:.6}"), "1s 500ms 200µs"); // + discrete microseconds
+//! assert_eq!(format!("{ts:.9}"), "1s 500ms 200µs 3ns"); // all sub-second units
+//! ```
+//!
+//! ## Truncating at coarser units
+//!
+//! [`TimeSpan::display_down_to`] returns a wrapper that shows discrete integer units down to a
+//! chosen [`TimeUnit`], omitting everything finer:
+//!
+//! ```
+//! # use proxmox_time::{TimeSpan, TimeUnit};
+//! let ts: TimeSpan = "1h 30m 45s".parse().unwrap();
+//! assert_eq!(ts.display_down_to(TimeUnit::Minutes).to_string(), "1h 30m");
+//! assert_eq!(ts.display_down_to(TimeUnit::Seconds).to_string(), "1h 30m 45s");
+//! ```
+//!
 //! # Parsing
 //!
 //! When parsing a time span, all units listed above are accepted. Spaces between numeric values and
@@ -174,6 +202,38 @@ impl TimeUnit {
             "months" | "month" | "M" => Some(TimeUnit::Months),
             "years" | "year" | "y" => Some(TimeUnit::Years),
             _ => None,
+        }
+    }
+
+    /// Returns the shortest display suffix for this unit.
+    pub fn suffix(self) -> &'static str {
+        match self {
+            TimeUnit::Years => "y",
+            TimeUnit::Months => "M",
+            TimeUnit::Weeks => "w",
+            TimeUnit::Days => "d",
+            TimeUnit::Hours => "h",
+            TimeUnit::Minutes => "m",
+            TimeUnit::Seconds => "s",
+            TimeUnit::Milliseconds => "ms",
+            TimeUnit::Microseconds => "µs",
+            TimeUnit::Nanoseconds => "ns",
+        }
+    }
+
+    /// Ordinal from coarsest (0 = Years) to finest (9 = Nanoseconds).
+    fn ordinal(self) -> u8 {
+        match self {
+            TimeUnit::Years => 0,
+            TimeUnit::Months => 1,
+            TimeUnit::Weeks => 2,
+            TimeUnit::Days => 3,
+            TimeUnit::Hours => 4,
+            TimeUnit::Minutes => 5,
+            TimeUnit::Seconds => 6,
+            TimeUnit::Milliseconds => 7,
+            TimeUnit::Microseconds => 8,
+            TimeUnit::Nanoseconds => 9,
         }
     }
 }
@@ -311,6 +371,74 @@ impl TimeSpan {
     pub fn normalize(self) -> Result<Self, Error> {
         Ok(self)
     }
+
+    /// Returns a [`Display`](std::fmt::Display) wrapper that formats with discrete integer units
+    /// down to `smallest`, omitting zero-valued components.
+    ///
+    /// Unlike the default `Display` (which folds sub-second parts into a decimal seconds value),
+    /// this shows each unit separately with its own suffix.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use proxmox_time::{TimeSpan, TimeUnit};
+    /// let ts: TimeSpan = "1h 30m 45s".parse().unwrap();
+    /// assert_eq!(ts.display_down_to(TimeUnit::Minutes).to_string(), "1h 30m");
+    ///
+    /// let ts = TimeSpan::from(std::time::Duration::new(5, 500_200_003));
+    /// assert_eq!(ts.display_down_to(TimeUnit::Milliseconds).to_string(), "5s 500ms");
+    /// assert_eq!(ts.display_down_to(TimeUnit::Nanoseconds).to_string(), "5s 500ms 200µs 3ns");
+    /// ```
+    pub fn display_down_to(self, smallest: TimeUnit) -> DisplayTimeSpan {
+        DisplayTimeSpan { ts: self, smallest }
+    }
+}
+
+/// Wrapper for displaying a [`TimeSpan`] with discrete integer units down to a specified
+/// smallest unit. Obtained via [`TimeSpan::display_down_to`].
+pub struct DisplayTimeSpan {
+    ts: TimeSpan,
+    smallest: TimeUnit,
+}
+
+impl std::fmt::Display for DisplayTimeSpan {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let p = self.ts.parts();
+        let limit = self.smallest.ordinal();
+        let mut first = true;
+
+        let units: [(u64, TimeUnit); 10] = [
+            (p.years, TimeUnit::Years),
+            (p.months, TimeUnit::Months),
+            (p.weeks, TimeUnit::Weeks),
+            (p.days, TimeUnit::Days),
+            (p.hours, TimeUnit::Hours),
+            (p.minutes, TimeUnit::Minutes),
+            (p.seconds, TimeUnit::Seconds),
+            (p.msec, TimeUnit::Milliseconds),
+            (p.usec, TimeUnit::Microseconds),
+            (p.nsec, TimeUnit::Nanoseconds),
+        ];
+
+        for (val, unit) in units {
+            if unit.ordinal() > limit {
+                break;
+            }
+            if val > 0 {
+                if !first {
+                    write!(f, " ")?;
+                }
+                first = false;
+                write!(f, "{val}{}", unit.suffix())?;
+            }
+        }
+
+        if first {
+            write!(f, "0{}", self.smallest.suffix())?;
+        }
+
+        Ok(())
+    }
 }
 
 /// Converts a [`TimeSpanParts`] into a [`TimeSpan`] by summing all fields into total seconds and
@@ -439,6 +567,111 @@ impl From<std::time::Duration> for TimeSpan {
     }
 }
 
+/// Formats the seconds-and-below components of a [`TimeSpanParts`] with explicit precision.
+///
+/// Precision follows a tiered scheme where every 3 levels introduces the next sub-second unit,
+/// and intermediate levels add decimal places to the finest unit.
+fn fmt_precise_subseconds(
+    f: &mut std::fmt::Formatter<'_>,
+    p: &TimeSpanParts,
+    nanos: u32,
+    precision: usize,
+    first: &mut bool,
+) -> std::fmt::Result {
+    let tier = (precision / 3).min(3);
+    let dp = if tier < 3 { precision % 3 } else { 0 };
+
+    macro_rules! sep {
+        () => {
+            if !*first {
+                write!(f, " ")?;
+            }
+            *first = false;
+        };
+    }
+
+    // Tier 0: seconds only.
+    if tier == 0 {
+        if dp == 0 {
+            if p.seconds > 0 {
+                sep!();
+                write!(f, "{}s", p.seconds)?;
+            }
+        } else {
+            let secs_f = p.seconds as f64 + nanos as f64 / 1_000_000_000.0;
+            if secs_f > 0.0 {
+                sep!();
+                write!(f, "{val:.prec$}s", val = secs_f, prec = dp)?;
+            }
+        }
+        return Ok(());
+    }
+
+    // Tier >= 1: seconds as integer, then sub-second units.
+    if p.seconds > 0 {
+        sep!();
+        write!(f, "{}s", p.seconds)?;
+    }
+
+    let ms = (nanos / 1_000_000) as u64;
+    let ms_rem = nanos % 1_000_000;
+
+    if tier == 1 {
+        if dp == 0 {
+            if ms > 0 {
+                sep!();
+                write!(f, "{ms}ms")?;
+            }
+        } else {
+            let ms_f = ms as f64 + ms_rem as f64 / 1_000_000.0;
+            if ms_f > 0.0 {
+                sep!();
+                write!(f, "{val:.prec$}ms", val = ms_f, prec = dp)?;
+            }
+        }
+        return Ok(());
+    }
+
+    // Tier >= 2: ms as integer.
+    if ms > 0 {
+        sep!();
+        write!(f, "{ms}ms")?;
+    }
+
+    let us = (ms_rem / 1_000) as u64;
+    let us_rem = ms_rem % 1_000;
+
+    if tier == 2 {
+        if dp == 0 {
+            if us > 0 {
+                sep!();
+                write!(f, "{us}µs")?;
+            }
+        } else {
+            let us_f = us as f64 + us_rem as f64 / 1_000.0;
+            if us_f > 0.0 {
+                sep!();
+                write!(f, "{val:.prec$}µs", val = us_f, prec = dp)?;
+            }
+        }
+        return Ok(());
+    }
+
+    // Tier 3: all discrete integers.
+    if us > 0 {
+        sep!();
+        write!(f, "{us}µs")?;
+    }
+
+    let ns = us_rem as u64;
+    if ns > 0 {
+        sep!();
+        write!(f, "{ns}ns")?;
+    }
+
+    Ok(())
+}
+
 impl std::fmt::Display for TimeSpan {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         let p = self.parts();
@@ -470,27 +703,44 @@ impl std::fmt::Display for TimeSpan {
                 do_write(p.minutes, "m")?;
             }
         }
-        let seconds = p.seconds as f64
-            + (p.msec as f64 / 1_000.0)
-            + (p.usec as f64 / 1_000_000.0)
-            + (p.nsec as f64 / 1_000_000_000.0);
-        if seconds >= 0.1 {
-            if !first {
-                write!(f, " ")?;
+        match f.precision() {
+            None => {
+                // Default: fold sub-second into decimal seconds with 1dp.
+                let seconds = p.seconds as f64
+                    + (p.msec as f64 / 1_000.0)
+                    + (p.usec as f64 / 1_000_000.0)
+                    + (p.nsec as f64 / 1_000_000_000.0);
+                if seconds >= 0.1 {
+                    if !first {
+                        write!(f, " ")?;
+                    }
+                    let rounded = (seconds * 10.0).round() / 10.0;
+                    if rounded.fract().abs() < f64::EPSILON {
+                        write!(f, "{rounded:.0}s")?;
+                    } else {
+                        write!(f, "{rounded:.1}s")?;
+                    }
+                } else if first {
+                    if seconds > 0.0 {
+                        write!(f, "<0.1s")?;
+                    } else {
+                        write!(f, "0s")?;
+                    }
+                }
             }
-            let rounded = (seconds * 10.0).round() / 10.0;
-            if rounded.fract().abs() < f64::EPSILON {
-                write!(f, "{rounded:.0}s")?;
-            } else {
-                write!(f, "{rounded:.1}s")?;
-            }
-        } else if first {
-            if seconds > 0.0 {
-                write!(f, "<0.1s")?;
-            } else {
-                write!(f, "0s")?;
+            Some(precision) => {
+                fmt_precise_subseconds(f, &p, self.nanos, precision, &mut first)?;
+                if first {
+                    // Nothing written at all — show a zero appropriate for the precision.
+                    if (1..=2).contains(&precision) {
+                        write!(f, "{val:.prec$}s", val = 0.0, prec = precision)?;
+                    } else {
+                        write!(f, "0s")?;
+                    }
+                }
             }
         }
+
         Ok(())
     }
 }
@@ -507,8 +757,7 @@ impl std::str::FromStr for TimeSpan {
     type Err = Error;
 
     fn from_str(i: &str) -> Result<Self, Self::Err> {
-        let parts: TimeSpanParts =
-            parse_complete_line("time span", i, parse_time_span_incomplete)?;
+        let parts: TimeSpanParts = parse_complete_line("time span", i, parse_time_span_incomplete)?;
         Self::try_from(parts)
     }
 }
@@ -981,5 +1230,83 @@ mod tests {
     fn verify_invalid() {
         assert!(verify_time_span("invalid").is_err());
         assert!(verify_time_span("1x").is_err());
+    }
+
+    #[test]
+    fn display_precision() {
+        let ts = TimeSpan::from(Duration::new(1, 500_200_003));
+
+        // Tier 0: whole seconds / decimal seconds
+        assert_eq!(format!("{ts:.0}"), "1s");
+        assert_eq!(format!("{ts:.1}"), "1.5s");
+        assert_eq!(format!("{ts:.2}"), "1.50s");
+
+        // Tier 1: seconds + ms (integer or decimal)
+        assert_eq!(format!("{ts:.3}"), "1s 500ms");
+        assert_eq!(format!("{ts:.4}"), "1s 500.2ms");
+        assert_eq!(format!("{ts:.5}"), "1s 500.20ms");
+
+        // Tier 2: seconds + ms + µs (integer or decimal)
+        assert_eq!(format!("{ts:.6}"), "1s 500ms 200µs");
+        assert_eq!(format!("{ts:.7}"), "1s 500ms 200.0µs");
+        assert_eq!(format!("{ts:.8}"), "1s 500ms 200.00µs");
+
+        // Tier 3: all discrete sub-second units
+        assert_eq!(format!("{ts:.9}"), "1s 500ms 200µs 3ns");
+
+        // Zero span
+        assert_eq!(format!("{:.0}", TimeSpan::default()), "0s");
+        assert_eq!(format!("{:.1}", TimeSpan::default()), "0.0s");
+        assert_eq!(format!("{:.2}", TimeSpan::default()), "0.00s");
+
+        // Sub-second only
+        let ts = TimeSpan::from_str("500ms").unwrap();
+        assert_eq!(format!("{ts:.0}"), "0s");
+        assert_eq!(format!("{ts:.1}"), "0.5s");
+        assert_eq!(format!("{ts:.3}"), "500ms");
+
+        // Big units unaffected by precision
+        let ts = TimeSpan::from_str("1y 2M 3w 4d 5h 6m 7s").unwrap();
+        assert_eq!(format!("{ts:.0}"), "1y 2M 3w 4d 5h 6m 7s");
+        assert_eq!(format!("{ts:.3}"), "1y 2M 3w 4d 5h 6m 7s");
+    }
+
+    #[test]
+    fn display_down_to() {
+        let ts = TimeSpan::from_str("1h 30m 45s").unwrap();
+        assert_eq!(ts.display_down_to(TimeUnit::Hours).to_string(), "1h");
+        assert_eq!(ts.display_down_to(TimeUnit::Minutes).to_string(), "1h 30m");
+        assert_eq!(
+            ts.display_down_to(TimeUnit::Seconds).to_string(),
+            "1h 30m 45s"
+        );
+
+        // Sub-second units
+        let ts = TimeSpan::from(Duration::new(5, 500_200_003));
+        assert_eq!(
+            ts.display_down_to(TimeUnit::Milliseconds).to_string(),
+            "5s 500ms"
+        );
+        assert_eq!(
+            ts.display_down_to(TimeUnit::Microseconds).to_string(),
+            "5s 500ms 200µs"
+        );
+        assert_eq!(
+            ts.display_down_to(TimeUnit::Nanoseconds).to_string(),
+            "5s 500ms 200µs 3ns"
+        );
+
+        // Zero span shows zero in the chosen unit
+        let ts = TimeSpan::default();
+        assert_eq!(ts.display_down_to(TimeUnit::Seconds).to_string(), "0s");
+        assert_eq!(
+            ts.display_down_to(TimeUnit::Milliseconds).to_string(),
+            "0ms"
+        );
+        assert_eq!(ts.display_down_to(TimeUnit::Nanoseconds).to_string(), "0ns");
+
+        // Zero-valued intermediate fields are omitted
+        let ts = TimeSpan::from_str("1h 3s").unwrap();
+        assert_eq!(ts.display_down_to(TimeUnit::Seconds).to_string(), "1h 3s");
     }
 }
