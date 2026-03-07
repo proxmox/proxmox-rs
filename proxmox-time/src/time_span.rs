@@ -116,7 +116,6 @@
 //! - [`From<TimeSpan> for std::time::Duration`] is likewise trivial and infallible.
 
 use anyhow::{Context, Error};
-use nom::{bytes::complete::take_while1, character::complete::space0, combinator::opt};
 
 use crate::parse_helpers::{parse_complete_line, parse_error, parse_u64, IResult};
 
@@ -746,9 +745,15 @@ impl std::fmt::Display for TimeSpan {
 }
 
 fn parse_time_unit(i: &str) -> IResult<&str, TimeUnit> {
-    let (n, text) = take_while1(|c: char| char::is_ascii_alphabetic(&c) || c == 'µ')(i)?;
+    let end = i
+        .find(|c: char| !c.is_ascii_alphabetic() && c != 'µ')
+        .unwrap_or(i.len());
+    if end == 0 {
+        return Err(parse_error(i, "time unit"));
+    }
+    let (text, rest) = i.split_at(end);
     match TimeUnit::classify(text) {
-        Some(unit) => Ok((n, unit)),
+        Some(unit) => Ok((rest, unit)),
         None => Err(parse_error(text, "time unit")),
     }
 }
@@ -767,30 +772,31 @@ fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpanParts> {
     let mut parsed_any = false;
 
     loop {
-        i = space0(i)?.0;
+        i = i.trim_start();
         if i.is_empty() {
             break;
         }
         let (n, num) = parse_u64(i)?;
-        i = space0(n)?.0;
+        i = n.trim_start();
         parsed_any = true;
 
-        if let (n, Some(unit)) = opt(parse_time_unit)(i)? {
-            i = n;
-            match unit {
-                TimeUnit::Seconds => parts.seconds += num,
-                TimeUnit::Milliseconds => parts.msec += num,
-                TimeUnit::Microseconds => parts.usec += num,
-                TimeUnit::Nanoseconds => parts.nsec += num,
-                TimeUnit::Minutes => parts.minutes += num,
-                TimeUnit::Hours => parts.hours += num,
-                TimeUnit::Days => parts.days += num,
-                TimeUnit::Weeks => parts.weeks += num,
-                TimeUnit::Months => parts.months += num,
-                TimeUnit::Years => parts.years += num,
+        match parse_time_unit(i) {
+            Ok((n, unit)) => {
+                i = n;
+                match unit {
+                    TimeUnit::Seconds => parts.seconds += num,
+                    TimeUnit::Milliseconds => parts.msec += num,
+                    TimeUnit::Microseconds => parts.usec += num,
+                    TimeUnit::Nanoseconds => parts.nsec += num,
+                    TimeUnit::Minutes => parts.minutes += num,
+                    TimeUnit::Hours => parts.hours += num,
+                    TimeUnit::Days => parts.days += num,
+                    TimeUnit::Weeks => parts.weeks += num,
+                    TimeUnit::Months => parts.months += num,
+                    TimeUnit::Years => parts.years += num,
+                }
             }
-        } else {
-            parts.seconds += num;
+            Err(_) => parts.seconds += num,
         }
     }
 
