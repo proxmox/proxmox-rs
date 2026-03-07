@@ -42,6 +42,13 @@ pub enum Error {
     /// Another internal error occurred.
     Internal(&'static str, Box<dyn StdError + Send + Sync + 'static>),
 
+    /// Login returned a TFA challenge that cannot be completed.
+    ///
+    /// Callers that do not support Two-Factor-Authentication, or not all available variants, can
+    /// convert a [`SecondFactorChallenge`](proxmox_login::SecondFactorChallenge) into this variant
+    /// to propagate a more meaningful error.
+    TfaRequired(proxmox_login::tfa::TfaChallenge),
+
     /// An `anyhow` error because `proxmox_http::Client` uses it...
     Anyhow(anyhow::Error),
 }
@@ -73,6 +80,16 @@ impl fmt::Display for Error {
             Self::Ticket(err) => write!(f, "authentication error: {err}"),
             Self::Connect(err) => write!(f, "connection failed: {err}"),
             Self::Client(err) => fmt::Display::fmt(err, f),
+            Self::TfaRequired(challenge) => {
+                f.write_str("login requires a second factor (")?;
+                let mut comma = "";
+                for ty in tfa_type_names(challenge).into_iter().flatten() {
+                    f.write_str(comma)?;
+                    f.write_str(ty)?;
+                    comma = ", ";
+                }
+                f.write_str(")")
+            }
             Self::Internal(msg, _) => f.write_str(msg),
             Self::Anyhow(err) => fmt::Display::fmt(err, f),
         }
@@ -122,6 +139,15 @@ impl Error {
             _ => Self::Api(status, format!("HTTP error {}", status.as_u16())),
         }
     }
+}
+
+fn tfa_type_names(challenge: &proxmox_login::tfa::TfaChallenge) -> [Option<&'static str>; 4] {
+    [
+        challenge.totp.then_some("TOTP"),
+        challenge.yubico.then_some("Yubico OTP"),
+        challenge.webauthn_raw.is_some().then_some("WebAuthn"),
+        (!challenge.recovery.is_unavailable()).then_some("recovery keys"),
+    ]
 }
 
 #[derive(Clone, Copy, Debug)]
