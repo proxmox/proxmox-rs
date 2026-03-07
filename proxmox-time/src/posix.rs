@@ -262,7 +262,7 @@ pub fn epoch_to_rfc3339(epoch: i64) -> Result<String, Error> {
         bail!("epoch_to_rfc3339: wrong year '{year}'");
     }
 
-    // Note: We cannot use strftime %z because of missing collon
+    // Note: We cannot use strftime %z because of missing colon
 
     let mut offset = localtime.tm_gmtoff;
 

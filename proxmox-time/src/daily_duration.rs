@@ -28,7 +28,7 @@ impl PartialOrd for HmTime {
     }
 }
 
-/// Defines a period of time for on or more [WeekDays]
+/// Defines a period of time for one or more [WeekDays]
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct DailyDuration {
     /// the days in a week this duration should trigger
@@ -149,24 +149,24 @@ mod test {
 
         if duration.start.hour != start_h {
             bail!(
-                "start hour mismatch, extected {}, got {:?}",
+                "start hour mismatch, expected {}, got {:?}",
                 start_h,
                 duration
             );
         }
         if duration.start.minute != start_m {
             bail!(
-                "start minute mismatch, extected {}, got {:?}",
+                "start minute mismatch, expected {}, got {:?}",
                 start_m,
                 duration
             );
         }
         if duration.end.hour != end_h {
-            bail!("end hour mismatch, extected {}, got {:?}", end_h, duration);
+            bail!("end hour mismatch, expected {}, got {:?}", end_h, duration);
         }
         if duration.end.minute != end_m {
             bail!(
-                "end minute mismatch, extected {}, got {:?}",
+                "end minute mismatch, expected {}, got {:?}",
                 end_m,
                 duration
             );
@@ -174,7 +174,7 @@ mod test {
 
         if duration.days != expected_days {
             bail!(
-                "weekday mismatch, extected {:?}, got {:?}",
+                "weekday mismatch, expected {:?}, got {:?}",
                 expected_days,
                 duration
             );
