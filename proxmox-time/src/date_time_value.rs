@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) enum DateTimeValue {
     Single(u32),
     Range(u32, u32),

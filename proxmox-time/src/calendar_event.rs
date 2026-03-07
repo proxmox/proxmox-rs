@@ -15,7 +15,7 @@ use crate::{parse_weekdays_range, WeekDays};
 /// Calendar events may be used to refer to one or more points in time in a
 /// single expression. They are designed after the systemd.time Calendar Events
 /// specification, but are not guaranteed to be 100% compatible.
-#[derive(Default, Clone, Debug)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct CalendarEvent {
     /// if true, the event is calculated in utc and the local timezone otherwise
     utc: bool,
