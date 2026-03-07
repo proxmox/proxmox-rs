@@ -25,7 +25,18 @@ pub enum Error {
     /// Generic errors.
     Other(&'static str),
 
-    /// Generic errors bubbled up from a deeper source, usually the http client.
+    /// Failed to establish a new connection (DNS, TCP, TLS).
+    ///
+    /// The request was guaranteed never sent. Safe to retry on a different endpoint; retrying the
+    /// same endpoint is unlikely to help unless the failure was transient.
+    Connect(Box<dyn StdError + Send + Sync + 'static>),
+
+    /// An error after the connection was already established.
+    ///
+    /// Note that hyper-util already retries internally when a pooled connection turns out to be
+    /// stale (request never left the client). Errors that reach this variant have typically
+    /// progressed past that point, meaning the request was likely serialized onto the wire and the
+    /// server may have processed it. Callers must not retry non-idempotent requests blindly.
     Client(Box<dyn StdError + Send + Sync + 'static>),
 
     /// Another internal error occurred.
@@ -41,6 +52,7 @@ impl StdError for Error {
             Self::Authentication(err) => Some(err),
             Self::BadApi(_, Some(err)) => Some(&**err),
             Self::Ticket(err) => Some(err),
+            Self::Connect(err) => Some(&**err),
             Self::Client(err) => Some(&**err),
             Self::Internal(_, err) => Some(&**err),
             Self::Anyhow(err) => err.chain().next(),
@@ -59,6 +71,7 @@ impl fmt::Display for Error {
             Self::Other(err) => f.write_str(err),
             Self::Authentication(err) => write!(f, "authentication error: {err}"),
             Self::Ticket(err) => write!(f, "authentication error: {err}"),
+            Self::Connect(err) => write!(f, "connection failed: {err}"),
             Self::Client(err) => fmt::Display::fmt(err, f),
             Self::Internal(msg, _) => f.write_str(msg),
             Self::Anyhow(err) => fmt::Display::fmt(err, f),

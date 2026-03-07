@@ -242,22 +242,10 @@ impl Client {
         }
         .map_err(|err| Error::internal("failed to build request", err))?;
 
-        let response = client.request(request).await.map_err(|err| {
-            for err in err.chain() {
-                if let Some(err) = err.downcast_ref::<openssl::error::ErrorStack>() {
-                    return Error::Client(
-                        format!(
-                            "Could not establish a TLS connection. Check \
-                            whether the fingerprint matches or the certificate is valid. \
-                            OpenSSL Error: {err}"
-                        )
-                        .into(),
-                    );
-                }
-            }
-
-            Error::Client(err.into())
-        })?;
+        let response = client
+            .request(request)
+            .await
+            .map_err(classify_client_error)?;
 
         if response.status() == StatusCode::UNAUTHORIZED {
             return Err(Error::Unauthorized);
@@ -364,22 +352,11 @@ impl Client {
             .body(request.body.into())
             .map_err(|err| Error::internal("error building login http request", err))?;
 
-        let api_response = self.client.request(request).await.map_err(|err| {
-            for err in err.chain() {
-                if let Some(err) = err.downcast_ref::<openssl::error::ErrorStack>() {
-                    return Error::Client(
-                        format!(
-                            "Could not establish a TLS connection. Check \
-                            whether the fingerprint matches or the certificate is valid. \
-                            OpenSSL Error: {err}"
-                        )
-                        .into(),
-                    );
-                }
-            }
-
-            Error::Client(err.into())
-        })?;
+        let api_response = self
+            .client
+            .request(request)
+            .await
+            .map_err(classify_client_error)?;
 
         if !api_response.status().is_success() {
             return Err(Error::api(api_response.status(), "authentication failed"));
@@ -603,6 +580,25 @@ fn fp_string(fp: &[u8]) -> String {
         let _ = write!(out, "{b:02x}");
     }
     out
+}
+
+/// Classify an HTTP client error.
+fn classify_client_error(err: anyhow::Error) -> Error {
+    // TLS handshake failures are connection-establishment errors.
+    for cause in err.chain() {
+        if let Some(ssl_err) = cause.downcast_ref::<openssl::error::ErrorStack>() {
+            return Error::Connect(
+                format!(
+                    "Could not establish a TLS connection. Check \
+                    whether the fingerprint matches or the certificate is valid. \
+                    OpenSSL Error: {ssl_err}"
+                )
+                .into(),
+            );
+        }
+    }
+
+    Error::Client(err.into())
 }
 
 impl Error {
