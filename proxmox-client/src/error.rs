@@ -97,6 +97,31 @@ impl Error {
     pub(crate) fn api<T: Into<String>>(status: http::StatusCode, msg: T) -> Self {
         Self::Api(status, msg.into())
     }
+
+    /// Build an [`Error::Api`] from a raw response body.
+    ///
+    /// Tries to parse the Proxmox JSON envelope (`{"message": "..."}`) and uses the `message` field
+    /// as the error string. Falls back to the raw UTF-8 body, or a status-only message if the body
+    /// is not valid text.
+    pub(crate) fn api_from_body(status: http::StatusCode, body: &[u8]) -> Self {
+        #[derive(serde::Deserialize)]
+        struct ApiError {
+            #[serde(default)]
+            message: Option<String>,
+        }
+
+        if let Ok(ApiError {
+            message: Some(message),
+        }) = serde_json::from_slice::<ApiError>(body)
+        {
+            return Self::Api(status, message);
+        }
+
+        match std::str::from_utf8(body) {
+            Ok(text) if !text.is_empty() => Self::Api(status, text.to_owned()),
+            _ => Self::Api(status, format!("HTTP error {}", status.as_u16())),
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]

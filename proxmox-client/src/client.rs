@@ -255,14 +255,7 @@ impl Client {
 
         if !response.status.is_success() {
             let body = read_body(body).await?;
-            // FIXME: Decode json errors...
-            //match serde_json::from_slice(&data)
-            //    Ok(value) =>
-            //        if value["error"]
-            let data =
-                String::from_utf8(body).map_err(|_| Error::Other("API returned non-utf8 data"))?;
-
-            return Err(Error::api(response.status, data));
+            return Err(Error::api_from_body(response.status, &body));
         }
 
         Ok((response, body))
@@ -358,12 +351,12 @@ impl Client {
             .await
             .map_err(classify_client_error)?;
 
-        if !api_response.status().is_success() {
-            return Err(Error::api(api_response.status(), "authentication failed"));
-        }
-
         let (parts, body) = api_response.into_parts();
         let body = read_body(body).await?;
+
+        if !parts.status.is_success() {
+            return Err(Error::api_from_body(parts.status, &body));
+        }
 
         let ticket: Option<Ticket> = self.cookie_name.as_ref().and_then(|cookie_name| {
             parts
