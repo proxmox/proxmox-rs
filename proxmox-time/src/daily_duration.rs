@@ -1,5 +1,3 @@
-use std::cmp::{Ordering, PartialOrd};
-
 use anyhow::Error;
 use nom::{
     bytes::complete::tag, character::complete::space0, error::context, multi::separated_list1,
@@ -12,24 +10,14 @@ use crate::{parse_weekdays_range, WeekDays};
 use crate::TmEditor;
 
 /// Time of Day (hour with minute)
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct HmTime {
     pub hour: u32,
     pub minute: u32,
 }
 
-impl PartialOrd for HmTime {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        let mut order = self.hour.cmp(&other.hour);
-        if order == Ordering::Equal {
-            order = self.minute.cmp(&other.minute);
-        }
-        Some(order)
-    }
-}
-
 /// Defines a period of time for one or more [WeekDays]
-#[derive(Default, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DailyDuration {
     /// the days in a week this duration should trigger
     pub days: WeekDays,
