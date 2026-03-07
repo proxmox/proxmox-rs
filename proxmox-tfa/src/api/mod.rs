@@ -136,6 +136,10 @@ fn check_u2f(u2f: &Option<U2fConfig>) -> Result<u2f::U2f, Error> {
 
 /// Helper to get a `Webauthn` instance from a `WebauthnConfig`, or `None` if there isn't one
 /// configured.
+///
+/// Errors from instantiation are logged and mapped to `Ok(None)`. The caller is responsible for
+/// checking whether the user has webauthn entries that could not be served to avoid disabling TFA
+/// when no other factor is configured!
 fn get_webauthn(
     waconfig: &Option<WebauthnConfig>,
     origin: Option<&Url>,
@@ -147,19 +151,27 @@ fn get_webauthn(
     let wa = match waconfig.instantiate(origin) {
         Ok(wa) => wa,
         Err(err) => {
-            log::error!("webauthn error: {err}");
+            log::error!("webauthn config error: {err}");
             return Ok(None);
         }
     };
-    Ok(Some(
-        WebauthnBuilder::new(wa.id, wa.origin)
-            .context("failed to begin webauthn context instantiation")?
-            .danger_set_user_presence_only_security_keys(true)
-            .allow_subdomains(wa.allow_subdomains)
-            .rp_name(wa.rp)
-            .build()
-            .context("failed to instantiate webauthn context")?,
-    ))
+
+    match WebauthnBuilder::new(wa.id, wa.origin)
+        .context("failed to begin webauthn context instantiation")
+        .and_then(|builder| {
+            builder
+                .danger_set_user_presence_only_security_keys(true)
+                .allow_subdomains(wa.allow_subdomains)
+                .rp_name(wa.rp)
+                .build()
+                .context("failed to instantiate webauthn context")
+        }) {
+        Ok(webauthn) => Ok(Some(webauthn)),
+        Err(err) => {
+            log::error!("webauthn error: {err}");
+            Ok(None)
+        }
+    }
 }
 
 /// Helper to get a [`WebauthnConfigInstance`] from a `WebauthnConfig`
@@ -879,7 +891,15 @@ impl TfaUserData {
                         None
                     }
                 },
-                None => None,
+                None => {
+                    // No webauthn context available (not configured or broken). If the user has
+                    // enabled webauthn entries, mark as not_empty so we don't silently skip TFA for
+                    // webauthn-only users.
+                    if self.enabled_webauthn_entries().next().is_some() {
+                        not_empty = true;
+                    }
+                    None
+                }
             },
             u2f: match u2f {
                 Some(u2f) => match self.u2f_challenge(access, userid, u2f) {
@@ -890,7 +910,12 @@ impl TfaUserData {
                         None
                     }
                 },
-                None => None,
+                None => {
+                    if self.enabled_u2f_entries().next().is_some() {
+                        not_empty = true;
+                    }
+                    None
+                }
             },
             yubico: self.yubico.iter().any(|e| e.info.enable),
         };
