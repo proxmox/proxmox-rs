@@ -582,7 +582,13 @@ fn fp_string(fp: &[u8]) -> String {
     out
 }
 
-/// Classify an HTTP client error.
+/// Classify an HTTP client error into either a connection-establishment failure
+/// ([`Error::Connect`]) or a post-connection error ([`Error::Client`]).
+///
+/// The distinction matters for retry logic: connect failures (DNS, TCP, TLS) guarantee the request
+/// never reached the server and are always safe to retry. Client errors indicate the request was
+/// likely already sent (hyper-util retries stale pool connections internally), so only idempotent
+/// requests should be retried.
 fn classify_client_error(err: anyhow::Error) -> Error {
     // TLS handshake failures are connection-establishment errors.
     for cause in err.chain() {
@@ -598,7 +604,15 @@ fn classify_client_error(err: anyhow::Error) -> Error {
         }
     }
 
-    Error::Client(err.into())
+    let is_connect = err
+        .downcast_ref::<hyper_util::client::legacy::Error>()
+        .is_some_and(hyper_util::client::legacy::Error::is_connect);
+
+    if is_connect {
+        Error::Connect(err.into())
+    } else {
+        Error::Client(err.into())
+    }
 }
 
 impl Error {

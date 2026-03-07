@@ -27,6 +27,7 @@ proxmox-login = { workspace = true, features = [ "http" ] }
 
 proxmox-http = { workspace = true, optional = true, features = [ "client" ] }
 hyper = { workspace = true, optional = true }
+hyper-util = { workspace = true, optional = true, features = [ "client-legacy" ] }
 
 proxmox-serde = { workspace = true, features = [ "perl" ] }
 
@@ -35,6 +36,6 @@ serde_plain.workspace = true
 
 [features]
 default = []
-hyper-client = [ "dep:openssl", "dep:hyper", "dep:proxmox-http", "dep:log" ]
+hyper-client = [ "dep:openssl", "dep:hyper", "dep:hyper-util", "dep:proxmox-http", "dep:log" ]
 perl-api-path-builder = []
 webauthn = [ "proxmox-login/webauthn" ]
