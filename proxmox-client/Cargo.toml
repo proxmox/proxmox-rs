@@ -32,7 +32,9 @@ hyper-util = { workspace = true, optional = true, features = [ "client-legacy" ]
 proxmox-serde = { workspace = true, features = [ "perl" ] }
 
 [dev-dependencies]
+proxmox-sys.workspace = true
 serde_plain.workspace = true
+tokio = { workspace = true, features = ["rt", "macros"] }
 
 [features]
 default = []
