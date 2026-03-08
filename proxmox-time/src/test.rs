@@ -184,10 +184,16 @@ fn test_compute_next_event() -> Result<(), Error> {
     test_value("2020-7..9-2/2", JUL_31_2020, JUL_31_2020 + 2 * DAY)?;
     test_value("2020,2021-12-31", JUL_31_2020, DEC_31_2020)?;
 
+    // keyword shortcuts
+    test_value("minutely", THURSDAY_00_00, THURSDAY_00_00 + MIN)?;
+    test_value("hourly", THURSDAY_00_00, THURSDAY_00_00 + HOUR)?;
+    test_value("weekly", THURSDAY_00_00, THURSDAY_00_00 + 4 * DAY)?; // next Monday
     test_value("monthly", 0, 31 * DAY)?;
     test_value("quarterly", 0, (31 + 28 + 31) * DAY)?;
     test_value("semiannually", 0, (31 + 28 + 31 + 30 + 31 + 30) * DAY)?;
-    test_value("yearly", 0, (365) * DAY)?;
+    test_value("semi-annually", 0, (31 + 28 + 31 + 30 + 31 + 30) * DAY)?;
+    test_value("yearly", 0, 365 * DAY)?;
+    test_value("annually", 0, 365 * DAY)?;
 
     test_never("2021-02-29", 0)?;
     test_never("02-30", 0)?;
