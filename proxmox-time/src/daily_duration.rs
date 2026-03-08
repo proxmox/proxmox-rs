@@ -9,35 +9,61 @@ use crate::{parse_weekdays_range, WeekDays};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::TmEditor;
 
-/// Time of Day (hour with minute)
+/// Time of day as hour and minute.
+///
+/// Supports natural ordering (compares hour first, then minute).
+///
+/// # Examples
+///
+/// ```
+/// use proxmox_time::HmTime;
+///
+/// let morning = HmTime { hour: 8, minute: 30 };
+/// let evening = HmTime { hour: 20, minute: 0 };
+/// assert!(morning < evening);
+/// ```
 #[derive(Clone, Copy, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct HmTime {
     pub hour: u32,
     pub minute: u32,
 }
 
-/// Defines a period of time for one or more [WeekDays]
+/// A time-of-day window, optionally restricted to certain [`WeekDays`].
+///
+/// Specifies a half-open `[start, end)` time range. When `days` is empty or
+/// [`WeekDays::all()`], the window applies to every day of the week.
+///
+/// # Examples
+///
+/// ```
+/// use proxmox_time::{parse_daily_duration, WeekDays};
+///
+/// let d = parse_daily_duration("mon..fri 8:00-17:00").unwrap();
+/// assert!(d.days.contains(WeekDays::MONDAY));
+/// assert!(!d.days.contains(WeekDays::SATURDAY));
+/// ```
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct DailyDuration {
-    /// the days in a week this duration should trigger
+    /// The weekdays this window applies to (empty means all days).
     pub days: WeekDays,
+    /// Start of the window (inclusive).
     pub start: HmTime,
+    /// End of the window (exclusive).
     pub end: HmTime,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl DailyDuration {
-    /// Test it time is within this frame
+    /// Test if the given epoch falls within this time window.
     pub fn time_match(&self, epoch: i64, utc: bool) -> Result<bool, Error> {
         let t = TmEditor::with_epoch(epoch, utc)?;
 
         Ok(self.time_match_with_tm_editor(&t))
     }
 
-    /// Like time_match, but use [TmEditor] to specify the time
+    /// Like [`time_match`](Self::time_match), but takes a [`TmEditor`] directly.
     ///
-    /// Note: This function returns bool (not Result<bool, Error>). It
-    /// simply returns ''false' if passed time 't' contains invalid values.
+    /// Returns `false` if the time fields in `t` contain invalid values.
     pub fn time_match_with_tm_editor(&self, t: &TmEditor) -> bool {
         let all_days = self.days.is_empty() || self.days.is_all();
 
@@ -69,7 +95,24 @@ impl DailyDuration {
     }
 }
 
-/// Parse a [DailyDuration]
+/// Parse a [`DailyDuration`] from a string.
+///
+/// The format is `[weekdays] start-end`, where times are `H:MM` or `H` and
+/// weekdays are comma-separated names or `..` ranges (e.g. `mon..fri`).
+///
+/// # Examples
+///
+/// ```
+/// use proxmox_time::parse_daily_duration;
+///
+/// // Time-only (applies to all days)
+/// let d = parse_daily_duration("8:00-17:00").unwrap();
+/// assert!(d.days.is_empty());
+///
+/// // With weekday constraint
+/// let d = parse_daily_duration("sat,sun 10-14").unwrap();
+/// assert!(!d.days.is_empty());
+/// ```
 pub fn parse_daily_duration(i: &str) -> Result<DailyDuration, Error> {
     parse_complete_line("daily duration", i, parse_daily_duration_incomplete)
 }
