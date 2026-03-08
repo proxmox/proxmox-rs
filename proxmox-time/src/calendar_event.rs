@@ -12,9 +12,41 @@ use crate::date_time_value::DateTimeValue;
 use crate::parse_helpers::{parse_complete_line, parse_error, parse_time_comp, IResult};
 use crate::{parse_weekdays_range, WeekDays};
 
-/// Calendar events may be used to refer to one or more points in time in a
-/// single expression. They are designed after the systemd.time Calendar Events
-/// specification, but are not guaranteed to be 100% compatible.
+/// A recurring time specification inspired by systemd.time Calendar Events.
+///
+/// Calendar events describe one or more points in time using a single expression.
+/// They support weekday constraints, date patterns, and time patterns with ranges
+/// and repetitions. The format is not guaranteed to be 100% compatible with
+/// systemd.time.
+///
+/// # Keyword shortcuts
+///
+/// The following keywords are recognized as shorthands:
+///
+/// `minutely`, `hourly`, `daily`, `weekly`, `monthly`, `quarterly`,
+/// `semiannually` / `semi-annually`, `yearly` / `annually`
+///
+/// # Examples
+///
+/// ```
+/// use proxmox_time::CalendarEvent;
+///
+/// // Keyword shortcut
+/// let event: CalendarEvent = "daily UTC".parse().unwrap();
+/// let next = event.compute_next_event(0).unwrap();
+/// assert_eq!(next, Some(86400)); // next day at midnight
+///
+/// // Weekday + time pattern: every hour on weekdays
+/// let event: CalendarEvent = "mon..fri *:00 UTC".parse().unwrap();
+/// let next = event.compute_next_event(0).unwrap();
+/// // epoch 0 is a Thursday, so next full hour is Thu 01:00
+/// assert_eq!(next, Some(3600));
+///
+/// // Date + time: specific date
+/// let event: CalendarEvent = "2020-07-31 12:00 UTC".parse().unwrap();
+/// let next = event.compute_next_event(0).unwrap();
+/// assert!(next.is_some());
+/// ```
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 pub struct CalendarEvent {
     /// if true, the event is calculated in utc and the local timezone otherwise
@@ -37,8 +69,11 @@ pub struct CalendarEvent {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl CalendarEvent {
-    /// Computes the next timestamp after `last`. If `utc` is false, the local
-    /// timezone will be used for the calculation.
+    /// Computes the next matching Unix epoch strictly after `last`.
+    ///
+    /// Returns `Ok(None)` if no future match can be found (e.g. a past year
+    /// specification). Uses UTC or local time depending on how the event was
+    /// parsed.
     pub fn compute_next_event(&self, last: i64) -> Result<Option<i64>, Error> {
         let last = last + 1; // at least one second later
 
@@ -172,7 +207,17 @@ impl std::str::FromStr for CalendarEvent {
     }
 }
 
-/// Verify the format of the [CalendarEvent]
+/// Verify that a string is a valid [`CalendarEvent`] specification.
+///
+/// # Examples
+///
+/// ```
+/// use proxmox_time::verify_calendar_event;
+///
+/// assert!(verify_calendar_event("daily").is_ok());
+/// assert!(verify_calendar_event("mon..fri *:00").is_ok());
+/// assert!(verify_calendar_event("not valid!").is_err());
+/// ```
 pub fn verify_calendar_event(i: &str) -> Result<(), Error> {
     let _: CalendarEvent = i.parse()?;
     Ok(())
