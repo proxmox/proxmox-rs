@@ -988,7 +988,11 @@ pub trait PveClient {
     }
 
     /// List all custom and default CPU models.
-    async fn qemu_cpu_capabilities(&self, node: &str) -> Result<Vec<QemuCpuModel>, Error> {
+    async fn qemu_cpu_capabilities(
+        &self,
+        node: &str,
+        arch: Option<QemuConfigArch>,
+    ) -> Result<Vec<QemuCpuModel>, Error> {
         Err(Error::Other("qemu_cpu_capabilities not implemented"))
     }
 
@@ -2413,11 +2417,17 @@ where
     }
 
     /// List all custom and default CPU models.
-    async fn qemu_cpu_capabilities(&self, node: &str) -> Result<Vec<QemuCpuModel>, Error> {
-        let url = &format!(
+    async fn qemu_cpu_capabilities(
+        &self,
+        node: &str,
+        arch: Option<QemuConfigArch>,
+    ) -> Result<Vec<QemuCpuModel>, Error> {
+        let url = &ApiPathBuilder::new(format!(
             "/api2/extjs/nodes/{}/capabilities/qemu/cpu",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
-        );
+        ))
+        .maybe_arg("arch", &arch)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 

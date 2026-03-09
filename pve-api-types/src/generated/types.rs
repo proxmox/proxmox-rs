@@ -915,6 +915,10 @@ fn test_regex_compilation_4() {
             optional: true,
             type: String,
         },
+        shared: {
+            default: false,
+            optional: true,
+        },
         status: {
             optional: true,
             type: String,
@@ -1076,6 +1080,11 @@ pub struct ClusterResource {
     /// The name of an SDN entity (for type 'sdn')
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sdn: Option<String>,
+
+    /// Determines whether the storage is shared
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared: Option<bool>,
 
     /// Resource type dependent status.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3619,6 +3628,10 @@ fn test_regex_compilation_9() {
             default: false,
             optional: true,
         },
+        keepattrs: {
+            default: false,
+            optional: true,
+        },
         mountoptions: {
             optional: true,
             type: String,
@@ -3666,6 +3679,11 @@ pub struct LxcConfigMp {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backup: Option<bool>,
+
+    /// Inherit ownership and permissions from the mount point directory.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub keepattrs: Option<bool>,
 
     /// Extra mount options for rootfs/mps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3805,6 +3823,11 @@ pub struct LxcConfigNet {
     pub gw6: Option<String>,
 
     /// Whether this interface's IP configuration should be managed by the host.
+    /// When enabled, the host (rather than the container) is responsible for
+    /// the interface's IP configuration. The container should not run its own
+    /// DHCP client or network manager on this interface. This is useful for
+    /// containers that lack an internal network management stack, like many
+    /// application containers.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "host-managed")]
@@ -9934,8 +9957,8 @@ pub struct PveVmCpuConf {
     /// which controls nested virtualization for the current CPU ('svm' for AMD
     /// and 'vmx' for Intel). Custom CPU models can specify any flag supported
     /// by QEMU/KVM, VM-specific flags must be from the following set for
-    /// security reasons: nested-virt, md-clear, pcid, spec-ctrl, ssbd, ibpb,
-    /// virt-ssbd, amd-ssbd, amd-no-ssb, pdpe1gb, hv-tlbflush, hv-evmcs, aes
+    /// security reasons: aes, amd-no-ssb, amd-ssbd, hv-evmcs, hv-tlbflush,
+    /// ibpb, md-clear, nested-virt, pcid, pdpe1gb, spec-ctrl, ssbd, virt-ssbd
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub flags: Option<String>,
 
@@ -9945,7 +9968,8 @@ pub struct PveVmCpuConf {
     #[serde(rename = "guest-phys-bits")]
     pub guest_phys_bits: Option<u8>,
 
-    /// Do not identify as a KVM virtual machine.
+    /// Do not identify as a KVM virtual machine. Only affects vCPUs with x86-64
+    /// architecture.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hidden: Option<bool>,
@@ -9978,6 +10002,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "486")]
     /// 486.
     I486,
+    #[serde(rename = "a64fx")]
+    /// a64fx.
+    A64fx,
     #[serde(rename = "athlon")]
     /// athlon.
     Athlon,
@@ -10007,6 +10034,8 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "Cascadelake-Server-v5")]
     /// Cascadelake-Server-v5.
     CascadelakeServerV5,
+    /// ClearwaterForest.
+    ClearwaterForest,
     /// Conroe.
     Conroe,
     /// Cooperlake.
@@ -10020,12 +10049,36 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "coreduo")]
     /// coreduo.
     Coreduo,
+    #[serde(rename = "cortex-a35")]
+    /// cortex-a35.
+    CortexA35,
+    #[serde(rename = "cortex-a53")]
+    /// cortex-a53.
+    CortexA53,
+    #[serde(rename = "cortex-a55")]
+    /// cortex-a55.
+    CortexA55,
+    #[serde(rename = "cortex-a57")]
+    /// cortex-a57.
+    CortexA57,
+    #[serde(rename = "cortex-a710")]
+    /// cortex-a710.
+    CortexA710,
+    #[serde(rename = "cortex-a72")]
+    /// cortex-a72.
+    CortexA72,
+    #[serde(rename = "cortex-a76")]
+    /// cortex-a76.
+    CortexA76,
     #[serde(rename = "EPYC")]
     /// EPYC.
     Epyc,
     #[serde(rename = "EPYC-Genoa")]
     /// EPYC-Genoa.
     EpycGenoa,
+    #[serde(rename = "EPYC-Genoa-v2")]
+    /// EPYC-Genoa-v2.
+    EpycGenoaV2,
     #[serde(rename = "EPYC-IBPB")]
     /// EPYC-IBPB.
     EpycIbpb,
@@ -10035,6 +10088,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "EPYC-Milan-v2")]
     /// EPYC-Milan-v2.
     EpycMilanV2,
+    #[serde(rename = "EPYC-Milan-v3")]
+    /// EPYC-Milan-v3.
+    EpycMilanV3,
     #[serde(rename = "EPYC-Rome")]
     /// EPYC-Rome.
     EpycRome,
@@ -10047,14 +10103,29 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "EPYC-Rome-v4")]
     /// EPYC-Rome-v4.
     EpycRomeV4,
+    #[serde(rename = "EPYC-Rome-v5")]
+    /// EPYC-Rome-v5.
+    EpycRomeV5,
+    #[serde(rename = "EPYC-Turin")]
+    /// EPYC-Turin.
+    EpycTurin,
     #[serde(rename = "EPYC-v3")]
     /// EPYC-v3.
     EpycV3,
     #[serde(rename = "EPYC-v4")]
     /// EPYC-v4.
     EpycV4,
+    #[serde(rename = "EPYC-v5")]
+    /// EPYC-v5.
+    EpycV5,
     /// GraniteRapids.
     GraniteRapids,
+    #[serde(rename = "GraniteRapids-v2")]
+    /// GraniteRapids-v2.
+    GraniteRapidsV2,
+    #[serde(rename = "GraniteRapids-v3")]
+    /// GraniteRapids-v3.
+    GraniteRapidsV3,
     /// Haswell.
     Haswell,
     #[serde(rename = "Haswell-IBRS")]
@@ -10093,6 +10164,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "Icelake-Server-v6")]
     /// Icelake-Server-v6.
     IcelakeServerV6,
+    #[serde(rename = "Icelake-Server-v7")]
+    /// Icelake-Server-v7.
+    IcelakeServerV7,
     /// IvyBridge.
     IvyBridge,
     #[serde(rename = "IvyBridge-IBRS")]
@@ -10115,6 +10189,15 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "Nehalem-IBRS")]
     /// Nehalem-IBRS.
     NehalemIbrs,
+    #[serde(rename = "neoverse-n1")]
+    /// neoverse-n1.
+    NeoverseN1,
+    #[serde(rename = "neoverse-n2")]
+    /// neoverse-n2.
+    NeoverseN2,
+    #[serde(rename = "neoverse-v1")]
+    /// neoverse-v1.
+    NeoverseV1,
     #[serde(rename = "Opteron_G1")]
     /// Opteron_G1.
     OpteronG1,
@@ -10160,6 +10243,20 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "SapphireRapids-v2")]
     /// SapphireRapids-v2.
     SapphireRapidsV2,
+    #[serde(rename = "SapphireRapids-v3")]
+    /// SapphireRapids-v3.
+    SapphireRapidsV3,
+    #[serde(rename = "SapphireRapids-v4")]
+    /// SapphireRapids-v4.
+    SapphireRapidsV4,
+    /// SierraForest.
+    SierraForest,
+    #[serde(rename = "SierraForest-v2")]
+    /// SierraForest-v2.
+    SierraForestV2,
+    #[serde(rename = "SierraForest-v3")]
+    /// SierraForest-v3.
+    SierraForestV3,
     #[serde(rename = "Skylake-Client")]
     /// Skylake-Client.
     SkylakeClient,
@@ -10672,8 +10769,8 @@ pub struct QemuConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub autostart: Option<bool>,
 
-    /// Amount of target RAM for the VM in MiB. Using zero disables the ballon
-    /// driver.
+    /// Amount of target RAM for the VM in MiB. The balloon driver is enabled by
+    /// default, unless it is explicitly disabled by setting the value to zero.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub balloon: Option<u64>,
@@ -11228,6 +11325,10 @@ generate_array_field! {
             default: false,
             optional: true,
         },
+        "guest-fsfreeze": {
+            default: true,
+            optional: true,
+        },
         type: {
             optional: true,
             type: QemuConfigAgentType,
@@ -11242,6 +11343,8 @@ pub struct QemuConfigAgent {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     pub enabled: bool,
 
+    /// Deprecated: Use 'guest-fsfreeze' instead.
+    ///
     /// Freeze/thaw guest filesystems on backup for consistency.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -11252,6 +11355,13 @@ pub struct QemuConfigAgent {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fstrim_cloned_disks: Option<bool>,
+
+    /// Whether to issue the guest-fsfreeze-freeze and guest-fsfreeze-thaw QEMU
+    /// guest agent commands.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "guest-fsfreeze")]
+    pub guest_fsfreeze: Option<bool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "type")]
@@ -11277,7 +11387,7 @@ serde_plain::derive_display_from_serialize!(QemuConfigAgentType);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigAgentType);
 
 #[api]
-/// Virtual processor architecture. Defaults to the host.
+/// Virtual processor architecture. Defaults to the host architecture.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigArch {
     #[serde(rename = "x86_64")]
@@ -11483,8 +11593,11 @@ serde_plain::derive_display_from_serialize!(QemuConfigEfidisk0Efitype);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigEfidisk0Efitype);
 
 #[api]
-/// Informational marker indicating the version of the latest Microsof UEFI
-/// certificate that has been enrolled by Proxmox VE.
+/// Informational marker indicating the version of the latest Microsoft UEFI
+/// certificates that have been enrolled by Proxmox VE. The value '2023k' means
+/// that the 'Microsoft UEFI CA 2023', the 'Windows UEFI CA 2023' and the
+/// 'Microsoft Corporation KEK 2K CA 2023' certificates are included. The values
+/// '2023' and '2023w' are deprecated and for compatibility only.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigEfidisk0MsCert {
     #[serde(rename = "2011")]
@@ -11494,6 +11607,12 @@ pub enum QemuConfigEfidisk0MsCert {
     #[serde(rename = "2023")]
     /// 2023.
     CA2023,
+    #[serde(rename = "2023w")]
+    /// 2023w.
+    CA2023w,
+    #[serde(rename = "2023k")]
+    /// 2023k.
+    CA2023k,
     /// Unknown variants for forward compatibility.
     #[serde(untagged)]
     UnknownEnumValue(FixedString),
@@ -13109,7 +13228,8 @@ pub struct QemuConfigVga {
 
 #[api]
 /// Enable a specific clipboard. If not set, depending on the display type the
-/// SPICE one will be added. Migration with VNC clipboard is not yet supported!
+/// SPICE one will be added. Live migration with a VNC clipboard is not possible
+/// with QEMU machine version < 10.1.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuConfigVgaClipboard {
     #[serde(rename = "vnc")]
@@ -15244,12 +15364,15 @@ pub struct QemuStatus {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
-    /// Currently used memory in bytes.
+    /// Currently used memory in bytes. Does not take into account kernel
+    /// same-page merging (KSM). Uses information from ballooning when
+    /// available.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<i64>,
 
-    /// Current memory usage on the host.
+    /// Current memory usage on the host. Does not take into account kernel
+    /// same-page merging (KSM).
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memhost: Option<i64>,
@@ -15397,7 +15520,7 @@ pub struct ReloadSdn {
     pub lock_token: Option<String>,
 
     /// When lock-token has been provided and configuration successfully
-    /// commited, release the lock automatically afterwards
+    /// committed, release the lock automatically afterwards
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "release-lock")]
@@ -19064,8 +19187,8 @@ pub struct UpdateQemuConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub autostart: Option<bool>,
 
-    /// Amount of target RAM for the VM in MiB. Using zero disables the ballon
-    /// driver.
+    /// Amount of target RAM for the VM in MiB. The balloon driver is enabled by
+    /// default, unless it is explicitly disabled by setting the value to zero.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub balloon: Option<u64>,
@@ -19995,8 +20118,8 @@ pub struct UpdateQemuConfigAsync {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub background_delay: Option<u8>,
 
-    /// Amount of target RAM for the VM in MiB. Using zero disables the ballon
-    /// driver.
+    /// Amount of target RAM for the VM in MiB. The balloon driver is enabled by
+    /// default, unless it is explicitly disabled by setting the value to zero.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub balloon: Option<u64>,
@@ -22170,12 +22293,15 @@ pub struct VmEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub maxmem: Option<i64>,
 
-    /// Currently used memory in bytes.
+    /// Currently used memory in bytes. Does not take into account kernel
+    /// same-page merging (KSM). Uses information from ballooning when
+    /// available.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mem: Option<i64>,
 
-    /// Current memory usage on the host.
+    /// Current memory usage on the host. Does not take into account kernel
+    /// same-page merging (KSM).
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub memhost: Option<i64>,

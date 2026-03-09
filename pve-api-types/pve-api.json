@@ -898,7 +898,7 @@
             "type": "string"
          },
          "flags": {
-            "description": "List of additional CPU flags separated by ';'. Use '+FLAG' to enable, '-FLAG' to disable a flag. There is a special 'nested-virt' shorthand which controls nested virtualization for the current CPU ('svm' for AMD and 'vmx' for Intel). Custom CPU models can specify any flag supported by QEMU/KVM, VM-specific flags must be from the following set for security reasons: nested-virt, md-clear, pcid, spec-ctrl, ssbd, ibpb, virt-ssbd, amd-ssbd, amd-no-ssb, pdpe1gb, hv-tlbflush, hv-evmcs, aes",
+            "description": "List of additional CPU flags separated by ';'. Use '+FLAG' to enable, '-FLAG' to disable a flag. There is a special 'nested-virt' shorthand which controls nested virtualization for the current CPU ('svm' for AMD and 'vmx' for Intel). Custom CPU models can specify any flag supported by QEMU/KVM, VM-specific flags must be from the following set for security reasons: aes, amd-no-ssb, amd-ssbd, hv-evmcs, hv-tlbflush, ibpb, md-clear, nested-virt, pcid, pdpe1gb, spec-ctrl, ssbd, virt-ssbd",
             "format_description": "+FLAG[;-FLAG...]",
             "optional": 1,
             "pattern": ("Regex")["(?^:(?^:([+-])([a-zA-Z0-9\\-_\\.]+))(;(?^:([+-])([a-zA-Z0-9\\-_\\.]+)))*)"],
@@ -913,7 +913,7 @@
          },
          "hidden": {
             "default": 0,
-            "description": "Do not identify as a KVM virtual machine.",
+            "description": "Do not identify as a KVM virtual machine. Only affects vCPUs with x86-64 architecture.",
             "optional": 1,
             "type": "boolean"
          },
@@ -936,6 +936,7 @@
             "description": "CPU model and vendor to report to the guest. Must be a QEMU/KVM supported model. Only valid for custom CPU model definitions, default models will always report themselves to the guest OS.",
             "enum": [
                "486",
+               "a64fx",
                "athlon",
                "Broadwell",
                "Broadwell-IBRS",
@@ -946,23 +947,38 @@
                "Cascadelake-Server-v2",
                "Cascadelake-Server-v4",
                "Cascadelake-Server-v5",
+               "ClearwaterForest",
                "Conroe",
                "Cooperlake",
                "Cooperlake-v2",
                "core2duo",
                "coreduo",
+               "cortex-a35",
+               "cortex-a53",
+               "cortex-a55",
+               "cortex-a57",
+               "cortex-a710",
+               "cortex-a72",
+               "cortex-a76",
                "EPYC",
                "EPYC-Genoa",
+               "EPYC-Genoa-v2",
                "EPYC-IBPB",
                "EPYC-Milan",
                "EPYC-Milan-v2",
+               "EPYC-Milan-v3",
                "EPYC-Rome",
                "EPYC-Rome-v2",
                "EPYC-Rome-v3",
                "EPYC-Rome-v4",
+               "EPYC-Rome-v5",
+               "EPYC-Turin",
                "EPYC-v3",
                "EPYC-v4",
+               "EPYC-v5",
                "GraniteRapids",
+               "GraniteRapids-v2",
+               "GraniteRapids-v3",
                "Haswell",
                "Haswell-IBRS",
                "Haswell-noTSX",
@@ -976,6 +992,7 @@
                "Icelake-Server-v4",
                "Icelake-Server-v5",
                "Icelake-Server-v6",
+               "Icelake-Server-v7",
                "IvyBridge",
                "IvyBridge-IBRS",
                "KnightsMill",
@@ -984,6 +1001,9 @@
                "max",
                "Nehalem",
                "Nehalem-IBRS",
+               "neoverse-n1",
+               "neoverse-n2",
+               "neoverse-v1",
                "Opteron_G1",
                "Opteron_G2",
                "Opteron_G3",
@@ -1000,6 +1020,11 @@
                "SandyBridge-IBRS",
                "SapphireRapids",
                "SapphireRapids-v2",
+               "SapphireRapids-v3",
+               "SapphireRapids-v4",
+               "SierraForest",
+               "SierraForest-v2",
+               "SierraForest-v3",
                "Skylake-Client",
                "Skylake-Client-IBRS",
                "Skylake-Client-noTSX-IBRS",
@@ -4669,6 +4694,13 @@
                               "optional": 1,
                               "type": "integer"
                            },
+                           "token-coefficient": {
+                              "default": 125,
+                              "description": "Coefficient used to determine Corosync's token timeout. See the corosync.conf(5) manual for more details.",
+                              "minimum": 0,
+                              "optional": 1,
+                              "type": "integer"
+                           },
                            "votes": {
                               "description": "Number of votes for this node.",
                               "minimum": 1,
@@ -7427,7 +7459,7 @@
                                           "type": "string"
                                        },
                                        "max_relocate": {
-                                          "description": "Maximal number of service relocate tries when a service failes to start.",
+                                          "description": "Maximal number of service relocate tries when a service fails to start.",
                                           "optional": 1,
                                           "type": "integer"
                                        },
@@ -7504,7 +7536,7 @@
                                        },
                                        "max_relocate": {
                                           "default": 1,
-                                          "description": "Maximal number of service relocate tries when a service failes to start.",
+                                          "description": "Maximal number of service relocate tries when a service fails to start.",
                                           "minimum": 0,
                                           "optional": 1,
                                           "type": "integer"
@@ -11005,7 +11037,12 @@
                                           "type": "integer"
                                        },
                                        "maxworkers": {
-                                          "alias": "max-workers"
+                                          "default": 4,
+                                          "description": "Defines the maximum number of tasks running concurrently. Deprecated, use 'max-workers' instead.",
+                                          "maximum": 64,
+                                          "minimum": 1,
+                                          "optional": 1,
+                                          "type": "integer"
                                        },
                                        "timeout": {
                                           "description": "Default start timeout in seconds. Only valid for VMs. (default depends on the guest configuration).",
@@ -11067,7 +11104,12 @@
                                           "type": "integer"
                                        },
                                        "maxworkers": {
-                                          "alias": "max-workers"
+                                          "default": 4,
+                                          "description": "Defines the maximum number of tasks running concurrently. Deprecated, use 'max-workers' instead.",
+                                          "maximum": 64,
+                                          "minimum": 1,
+                                          "optional": 1,
+                                          "type": "integer"
                                        },
                                        "timeout": {
                                           "default": 180,
@@ -11124,7 +11166,12 @@
                                           "type": "integer"
                                        },
                                        "maxworkers": {
-                                          "alias": "max-workers"
+                                          "default": 4,
+                                          "description": "Defines the maximum number of tasks running concurrently. Deprecated, use 'max-workers' instead.",
+                                          "maximum": 64,
+                                          "minimum": 1,
+                                          "optional": 1,
+                                          "type": "integer"
                                        },
                                        "statestorage": {
                                           "completion": ("Code")[],
@@ -11190,7 +11237,12 @@
                                           "type": "integer"
                                        },
                                        "maxworkers": {
-                                          "alias": "max-workers"
+                                          "default": 1,
+                                          "description": "Defines the maximum number of tasks running concurrently. Deprecated, use 'max-workers' instead.",
+                                          "maximum": 64,
+                                          "minimum": 1,
+                                          "optional": 1,
+                                          "type": "integer"
                                        },
                                        "online": {
                                           "description": "Enable live migration for VMs and restart migration for CTs.",
@@ -15830,7 +15882,7 @@
                            },
                            "release-lock": {
                               "default": 1,
-                              "description": "When lock-token has been provided and configuration successfully commited, release the lock automatically afterwards",
+                              "description": "When lock-token has been provided and configuration successfully committed, release the lock automatically afterwards",
                               "optional": 1,
                               "type": "boolean"
                            }
@@ -16064,6 +16116,11 @@
                                  "description": "The name of an SDN entity (for type 'sdn')",
                                  "optional": 1,
                                  "type": "string"
+                              },
+                              "shared": {
+                                 "description": "Determines whether the storage is shared",
+                                 "optional": 1,
+                                 "type": "boolean"
                               },
                               "status": {
                                  "description": "Resource type dependent status.",
@@ -19379,6 +19436,20 @@
                                              "parameters": {
                                                 "additionalProperties": 0,
                                                 "properties": {
+                                                   "count": {
+                                                      "default": "16777216",
+                                                      "description": "Number of bytes to read.",
+                                                      "maximum": "16777216",
+                                                      "minimum": 1,
+                                                      "optional": 1,
+                                                      "type": "integer"
+                                                   },
+                                                   "decode": {
+                                                      "default": 1,
+                                                      "description": "Data received from the QEMU Guest-Agent is base64 encoded. If this is set to true, the data is decoded. Otherwise the content is forwarded with base64 encoding. Defaults to true.",
+                                                      "optional": 1,
+                                                      "type": "boolean"
+                                                   },
                                                    "file": {
                                                       "description": "The path to the file",
                                                       "type": "string"
@@ -19387,6 +19458,13 @@
                                                       "description": "The cluster node name.",
                                                       "format": "pve-node",
                                                       "type": "string"
+                                                   },
+                                                   "offset": {
+                                                      "default": 0,
+                                                      "description": "Offset to start reading at",
+                                                      "minimum": 0,
+                                                      "optional": 1,
+                                                      "type": "integer"
                                                    },
                                                    "vmid": {
                                                       "completion": ("Code")[],
@@ -19420,7 +19498,7 @@
                                                       "type": "string"
                                                    },
                                                    "truncated": {
-                                                      "description": "If set to 1, the output is truncated and not complete",
+                                                      "description": "If set to 1, the read did not reach the end of the file.",
                                                       "optional": 1,
                                                       "type": "boolean"
                                                    }
@@ -19828,7 +19906,7 @@
                                                    },
                                                    "freeze-fs-on-backup": {
                                                       "default": 1,
-                                                      "description": "Freeze/thaw guest filesystems on backup for consistency.",
+                                                      "description": "Deprecated: Use 'guest-fsfreeze' instead.\n\nFreeze/thaw guest filesystems on backup for consistency.",
                                                       "optional": 1,
                                                       "type": "boolean"
                                                    },
@@ -19837,6 +19915,13 @@
                                                       "description": "Run fstrim after moving a disk or migrating the VM.",
                                                       "optional": 1,
                                                       "type": "boolean"
+                                                   },
+                                                   "guest-fsfreeze": {
+                                                      "default": 1,
+                                                      "description": "Whether to issue the guest-fsfreeze-freeze and guest-fsfreeze-thaw QEMU guest agent commands.",
+                                                      "optional": 1,
+                                                      "type": "boolean",
+                                                      "verbose_description": "Whether to issue the guest-fsfreeze-freeze and guest-fsfreeze-thaw QEMU guest agent commands. Backups in snapshot mode, clones, snapshots without RAM, importing disks from a running guest, and replications normally issue a guest-fsfreeze-freeze and a respective thaw command when the QEMU Guest agent option is enabled in the guest's configuration and the agent is running inside of the guest.\n\nWhen set, it will take precedence over 'freeze-fs-on-backup'."
                                                    },
                                                    "type": {
                                                       "default": "virtio",
@@ -19865,7 +19950,7 @@
                                                 "type": "string"
                                              },
                                              "arch": {
-                                                "description": "Virtual processor architecture. Defaults to the host.",
+                                                "description": "Virtual processor architecture. Defaults to the host architecture.",
                                                 "enum": [
                                                    "x86_64",
                                                    "aarch64"
@@ -19912,7 +19997,7 @@
                                                 "type": "boolean"
                                              },
                                              "balloon": {
-                                                "description": "Amount of target RAM for the VM in MiB. Using zero disables the ballon driver.",
+                                                "description": "Amount of target RAM for the VM in MiB. The balloon driver is enabled by default, unless it is explicitly disabled by setting the value to zero.",
                                                 "minimum": 0,
                                                 "optional": 1,
                                                 "type": "integer"
@@ -20048,10 +20133,12 @@
                                                    },
                                                    "ms-cert": {
                                                       "default": "2011",
-                                                      "description": "Informational marker indicating the version of the latest Microsof UEFI certificate that has been enrolled by Proxmox VE.",
+                                                      "description": "Informational marker indicating the version of the latest Microsoft UEFI certificates that have been enrolled by Proxmox VE. The value '2023k' means that the 'Microsoft UEFI CA 2023', the 'Windows UEFI CA 2023' and the 'Microsoft Corporation KEK 2K CA 2023' certificates are included. The values '2023' and '2023w' are deprecated and for compatibility only.",
                                                       "enum": [
                                                          "2011",
-                                                         "2023"
+                                                         "2023",
+                                                         "2023w",
+                                                         "2023k"
                                                       ],
                                                       "optional": 1,
                                                       "type": "string"
@@ -21341,7 +21428,7 @@
                                                 "description": "Configure the VGA hardware.",
                                                 "format": {
                                                    "clipboard": {
-                                                      "description": "Enable a specific clipboard. If not set, depending on the display type the SPICE one will be added. Migration with VNC clipboard is not yet supported!",
+                                                      "description": "Enable a specific clipboard. If not set, depending on the display type the SPICE one will be added. Live migration with a VNC clipboard is not possible with QEMU machine version < 10.1.",
                                                       "enum": [
                                                          "vnc"
                                                       ],
@@ -21672,10 +21759,12 @@
                                                    },
                                                    "ms-cert": {
                                                       "default": "2011",
-                                                      "description": "Informational marker indicating the version of the latest Microsof UEFI certificate that has been enrolled by Proxmox VE.",
+                                                      "description": "Informational marker indicating the version of the latest Microsoft UEFI certificates that have been enrolled by Proxmox VE. The value '2023k' means that the 'Microsoft UEFI CA 2023', the 'Windows UEFI CA 2023' and the 'Microsoft Corporation KEK 2K CA 2023' certificates are included. The values '2023' and '2023w' are deprecated and for compatibility only.",
                                                       "enum": [
                                                          "2011",
-                                                         "2023"
+                                                         "2023",
+                                                         "2023w",
+                                                         "2023k"
                                                       ],
                                                       "optional": 1,
                                                       "type": "string"
@@ -24715,13 +24804,13 @@
                                                       "type": "integer"
                                                    },
                                                    "mem": {
-                                                      "description": "Currently used memory in bytes.",
+                                                      "description": "Currently used memory in bytes. Does not take into account kernel same-page merging (KSM). Uses information from ballooning when available.",
                                                       "optional": 1,
                                                       "renderer": "bytes",
                                                       "type": "integer"
                                                    },
                                                    "memhost": {
-                                                      "description": "Current memory usage on the host.",
+                                                      "description": "Current memory usage on the host. Does not take into account kernel same-page merging (KSM).",
                                                       "optional": 1,
                                                       "renderer": "bytes",
                                                       "type": "integer"
@@ -30195,6 +30284,13 @@
                                                       "type": "boolean",
                                                       "verbose_description": "Whether to include the mount point in backups (only used for volume mount points)."
                                                    },
+                                                   "keepattrs": {
+                                                      "default": 0,
+                                                      "description": "Inherit ownership and permissions from the mount point directory.",
+                                                      "optional": 1,
+                                                      "type": "boolean",
+                                                      "verbose_description": "Inherit UID, GID and access mode from the mount point directory, if it exists already."
+                                                   },
                                                    "mountoptions": {
                                                       "description": "Extra mount options for rootfs/mps.",
                                                       "format_description": "opt[;opt...]",
@@ -31816,7 +31912,7 @@
                                                       "type": "string"
                                                    },
                                                    "host-managed": {
-                                                      "description": "Whether this interface's IP configuration should be managed by the host.",
+                                                      "description": "Whether this interface's IP configuration should be managed by the host. When enabled, the host (rather than the container) is responsible for the interface's IP configuration. The container should not run its own DHCP client or network manager on this interface. This is useful for containers that lack an internal network management stack, like many application containers.",
                                                       "optional": 1,
                                                       "type": "boolean"
                                                    },
@@ -45791,6 +45887,12 @@
                                        "parameters": {
                                           "additionalProperties": 0,
                                           "properties": {
+                                             "arch": {
+                                                "description": "Virtual processor architecture. Defaults to the host architecture.",
+                                                "enum": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/arch/enum"],
+                                                "optional": 1,
+                                                "type": "string"
+                                             },
                                              "node": {
                                                 "description": "The cluster node name.",
                                                 "format": "pve-node",
@@ -45844,6 +45946,12 @@
                                        "parameters": {
                                           "additionalProperties": 0,
                                           "properties": {
+                                             "arch": {
+                                                "description": "Virtual processor architecture. Defaults to the host architecture.",
+                                                "enum": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/arch/enum"],
+                                                "optional": 1,
+                                                "type": "string"
+                                             },
                                              "node": {
                                                 "description": "The cluster node name.",
                                                 "format": "pve-node",
@@ -45886,6 +45994,12 @@
                                        "parameters": {
                                           "additionalProperties": 0,
                                           "properties": {
+                                             "arch": {
+                                                "description": "Virtual processor architecture. Defaults to the host architecture.",
+                                                "enum": ("Ref")["/root/1/children/0/children/0/children/0/children/4/info/GET/returns/properties/arch/enum"],
+                                                "optional": 1,
+                                                "type": "string"
+                                             },
                                              "node": {
                                                 "description": "The cluster node name.",
                                                 "format": "pve-node",
@@ -48956,6 +49070,7 @@
                                     "properties": {
                                        "name": {
                                           "description": "Package name.",
+                                          "pattern": ("Regex")["(?^:[a-z0-9][-+.a-z0-9:]+)"],
                                           "type": "string"
                                        },
                                        "node": {
@@ -53197,7 +53312,11 @@
                                     "type": "integer"
                                  },
                                  "maxworkers": {
-                                    "alias": "max-workers"
+                                    "description": "Maximal number of parallel migration job. If not set, uses'max_workers' from datacenter.cfg. One of both must be set!Deprecated, use 'max-workers' instead.",
+                                    "maximum": 64,
+                                    "minimum": 1,
+                                    "optional": 1,
+                                    "type": "integer"
                                  },
                                  "node": {
                                     "description": "The cluster node name.",
