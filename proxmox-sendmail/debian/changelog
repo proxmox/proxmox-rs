@@ -1,3 +1,9 @@
+rust-proxmox-sendmail (1.0.2-1) trixie; urgency=medium
+
+  * sendmail: improve Content-Disposition header handling and wrap lines
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 09 Mar 2026 16:08:58 +0100
+
 rust-proxmox-sendmail (1.0.1-1) trixie; urgency=medium
 
   * encode non-ascii filenames to improve compatibility.
