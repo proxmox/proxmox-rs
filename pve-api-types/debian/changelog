@@ -1,3 +1,18 @@
+rust-pve-api-types (8.1.5-1) trixie; urgency=medium
+
+  * firewall: add various API endpoints, including those for cluster log,
+    IP-set, references (aliases), and macros.
+
+  * user management: add missing `delete_token` method.
+
+  * refresh tracked API schema. This adds some vCPU types, but also newer OVMF
+    pre-enrolled-cert variants and – relevant for #7315 – the shared flag to
+    the storage resource API.
+
+  * switch rust edition to 2024.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 09 Mar 2026 13:03:46 +0100
+
 rust-pve-api-types (8.1.4-1) trixie; urgency=medium
 
   * add node config get api call.
