@@ -17,5 +17,5 @@ const_format.workspace = true
 regex.workspace = true
 termcolor.workspace = true
 
-proxmox-apt = { workspace = true, features = [ "cache" ] }
+proxmox-apt = { workspace = true, features = [ "cache", "enum-fallback" ] }
 proxmox-apt-api-types.workspace = true
