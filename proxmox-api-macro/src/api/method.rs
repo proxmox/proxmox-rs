@@ -493,28 +493,26 @@ fn handle_function_signature(method_info: &mut MethodInfo) -> Result<Ident, Erro
 }
 
 fn is_api_method_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Reference(r) = ty {
-        if let syn::Type::Path(p) = &*r.elem {
-            if p.qself.is_some() {
-                return false;
-            }
-            if let Some(ps) = p.path.segments.last() {
-                return ps.ident == "ApiMethod";
-            }
+    if let syn::Type::Reference(r) = ty
+        && let syn::Type::Path(p) = &*r.elem
+    {
+        if p.qself.is_some() {
+            return false;
+        }
+        if let Some(ps) = p.path.segments.last() {
+            return ps.ident == "ApiMethod";
         }
     }
     false
 }
 
 fn is_rpc_env_type(ty: &syn::Type) -> bool {
-    if let syn::Type::Reference(r) = ty {
-        if let syn::Type::TraitObject(t) = &*r.elem {
-            if let Some(syn::TypeParamBound::Trait(b)) = t.bounds.first() {
-                if let Some(ps) = b.path.segments.last() {
-                    return ps.ident == "RpcEnvironment";
-                }
-            }
-        }
+    if let syn::Type::Reference(r) = ty
+        && let syn::Type::TraitObject(t) = &*r.elem
+        && let Some(syn::TypeParamBound::Trait(b)) = t.bounds.first()
+        && let Some(ps) = b.path.segments.last()
+    {
+        return ps.ident == "RpcEnvironment";
     }
     false
 }
@@ -945,16 +943,16 @@ struct DefaultParameters<'a>(&'a Schema);
 
 impl VisitMut for DefaultParameters<'_> {
     fn visit_expr_mut(&mut self, i: &mut syn::Expr) {
-        if let syn::Expr::Macro(exprmac) = i {
-            if exprmac.mac.path.is_ident("api_get_default") {
-                // replace api_get_default macros with the actual default found in the #[api]
-                // macro.
-                match self.get_default(mem::take(&mut exprmac.mac.tokens)) {
-                    Ok(expr) => *i = expr,
-                    Err(err) => {
-                        *i = syn::Expr::Verbatim(err.to_compile_error());
-                        return;
-                    }
+        if let syn::Expr::Macro(exprmac) = i
+            && exprmac.mac.path.is_ident("api_get_default")
+        {
+            // replace api_get_default macros with the actual default found in the #[api]
+            // macro.
+            match self.get_default(mem::take(&mut exprmac.mac.tokens)) {
+                Ok(expr) => *i = expr,
+                Err(err) => {
+                    *i = syn::Expr::Verbatim(err.to_compile_error());
+                    return;
                 }
             }
         }

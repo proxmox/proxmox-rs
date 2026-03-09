@@ -150,11 +150,11 @@ impl FileReferenceType {
                 }
                 "debian-installer" => {
                     // another layer, then like regular repo but pointing at udebs
-                    if let Some((dir, rest)) = rest.split_once('/') {
-                        if let Some(arch) = dir.strip_prefix("binary-") {
-                            // Packages or compat-Release
-                            return parse_binary_dir(rest, arch);
-                        }
+                    if let Some((dir, rest)) = rest.split_once('/')
+                        && let Some(arch) = dir.strip_prefix("binary-")
+                    {
+                        // Packages or compat-Release
+                        return parse_binary_dir(rest, arch);
                     }
 
                     // all the rest

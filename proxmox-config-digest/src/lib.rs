@@ -41,10 +41,10 @@ impl ConfigDigest {
     ///
     /// This function fails with a reasonable error message if checksums do not match.
     pub fn detect_modification(&self, user_digest: Option<&Self>) -> Result<(), Error> {
-        if let Some(user_digest) = user_digest {
-            if user_digest != self {
-                bail!("detected modified configuration - file changed by other user? Try again.");
-            }
+        if let Some(user_digest) = user_digest
+            && user_digest != self
+        {
+            bail!("detected modified configuration - file changed by other user? Try again.");
         }
         Ok(())
     }

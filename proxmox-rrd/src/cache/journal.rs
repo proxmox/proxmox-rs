@@ -170,18 +170,16 @@ impl JournalState {
                 Some(_) => (),
             }
 
-            if let Some(extension) = path.extension() {
-                if let Some(extension) = extension.to_str() {
-                    if let Some(rest) = extension.strip_prefix("journal-") {
-                        if let Ok(time) = u64::from_str_radix(rest, 16) {
-                            list.push(JournalFileInfo {
-                                time,
-                                name: format!("rrd.{extension}"),
-                                path: path.to_owned(),
-                            });
-                        }
-                    }
-                }
+            if let Some(extension) = path.extension()
+                && let Some(extension) = extension.to_str()
+                && let Some(rest) = extension.strip_prefix("journal-")
+                && let Ok(time) = u64::from_str_radix(rest, 16)
+            {
+                list.push(JournalFileInfo {
+                    time,
+                    name: format!("rrd.{extension}"),
+                    path: path.to_owned(),
+                });
             }
         }
         list.sort_unstable_by_key(|entry| entry.time);

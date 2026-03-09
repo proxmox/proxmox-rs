@@ -152,9 +152,9 @@ pub fn verify_cidrv6(s: &str) -> Result<(), Error> {
 
 pub fn verify_ip_or_cidr(s: &str) -> Result<(), Error> {
     if verify_cidr(s).is_ok() {
-        return Ok(());
+        Ok(())
     } else if verify_ip(s).is_ok() {
-        return Ok(());
+        Ok(())
     } else {
         bail!("not a valid IP address or CIDR notation");
     }
@@ -217,10 +217,11 @@ pub fn verify_lxc_mp_string(s: &str) -> Result<(), Error> {
 }
 
 pub fn verify_ip_with_ll_iface(s: &str) -> Result<(), Error> {
-    if let Some(percent) = s.find('%') {
-        if FE80_RE.is_match(s) && IFACE_RE.is_match(&s[(percent + 1)..]) {
-            return verify_ipv6(&s[..percent]);
-        }
+    if let Some(percent) = s.find('%')
+        && FE80_RE.is_match(s)
+        && IFACE_RE.is_match(&s[(percent + 1)..])
+    {
+        return verify_ipv6(&s[..percent]);
     }
     verify_ip(s)
 }

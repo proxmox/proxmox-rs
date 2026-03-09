@@ -13,10 +13,10 @@ pub fn list_available_apt_update<P: AsRef<Path>>(
     apt_state_file: P,
 ) -> Result<Vec<APTUpdateInfo>, Error> {
     let apt_state_file = apt_state_file.as_ref();
-    if let Ok(false) = crate::cache::pkg_cache_expired(apt_state_file) {
-        if let Ok(Some(cache)) = crate::cache::read_pkg_state(apt_state_file) {
-            return Ok(cache.package_status);
-        }
+    if let Ok(false) = crate::cache::pkg_cache_expired(apt_state_file)
+        && let Ok(Some(cache)) = crate::cache::read_pkg_state(apt_state_file)
+    {
+        return Ok(cache.package_status);
     }
 
     let cache = crate::cache::update_cache(apt_state_file)?;

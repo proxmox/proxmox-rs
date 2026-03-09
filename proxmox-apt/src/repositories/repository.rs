@@ -228,10 +228,10 @@ fn uri_to_filename(uri: &str) -> String {
         filename = &filename[(begin + 3)..];
     }
 
-    if uri.starts_with("http://") || uri.starts_with("https://") {
-        if let Some(begin) = filename.find('@') {
-            filename = &filename[(begin + 1)..];
-        }
+    if (uri.starts_with("http://") || uri.starts_with("https://"))
+        && let Some(begin) = filename.find('@')
+    {
+        filename = &filename[(begin + 1)..];
     }
 
     // APT seems to only strip one final slash, so do the same

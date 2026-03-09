@@ -174,16 +174,16 @@ impl<T, const MAX: usize> ArrayMap<T, { MAX }> {
                 let mut this = ArrayMap::default();
 
                 while let Some((key, value)) = map.next_entry::<std::borrow::Cow<str>, T>()? {
-                    if let Some(id) = key.as_ref().strip_prefix(self.prefix) {
-                        if let Ok(id) = id.parse::<usize>() {
-                            if this.insert(id, value).map_err(A::Error::custom)?.is_some() {
-                                return Err(A::Error::custom(format!(
-                                    "multiple '{}{id}' elements",
-                                    self.prefix
-                                )));
-                            }
-                            continue;
+                    if let Some(id) = key.as_ref().strip_prefix(self.prefix)
+                        && let Ok(id) = id.parse::<usize>()
+                    {
+                        if this.insert(id, value).map_err(A::Error::custom)?.is_some() {
+                            return Err(A::Error::custom(format!(
+                                "multiple '{}{id}' elements",
+                                self.prefix
+                            )));
                         }
+                        continue;
                     }
                     return Err(A::Error::custom(format!(
                         "invalid array element name {key}"

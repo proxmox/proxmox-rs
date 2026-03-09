@@ -433,11 +433,11 @@ impl SectionConfig {
                                         id_property: &Option<String>|
          -> Result<(), Error> {
             for (name, optional, _prop_schema) in schema.properties() {
-                if let Some(id_property) = id_property {
-                    if name == id_property {
-                        // the id_property is the section header, skip for requirement check
-                        continue;
-                    }
+                if let Some(id_property) = id_property
+                    && name == id_property
+                {
+                    // the id_property is the section header, skip for requirement check
+                    continue;
                 }
                 if !*optional && value[name] == Value::Null {
                     return Err(format_err!(

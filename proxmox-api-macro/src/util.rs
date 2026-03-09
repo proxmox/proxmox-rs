@@ -434,18 +434,17 @@ pub fn derive_descriptions(
 
     let mut parts = doc_comment.split("\nReturns:");
 
-    if let Some(first) = parts.next() {
-        if input_schema.description.is_none() {
-            input_schema.description = Maybe::Derived(syn::LitStr::new(first.trim(), doc_span));
-        }
+    if let Some(first) = parts.next()
+        && input_schema.description.is_none()
+    {
+        input_schema.description = Maybe::Derived(syn::LitStr::new(first.trim(), doc_span));
     }
 
     if let Some(second) = parts.next() {
-        if let Some(returns_schema) = returns_schema {
-            if returns_schema.description.is_none() {
-                returns_schema.description =
-                    Maybe::Derived(syn::LitStr::new(second.trim(), doc_span));
-            }
+        if let Some(returns_schema) = returns_schema
+            && returns_schema.description.is_none()
+        {
+            returns_schema.description = Maybe::Derived(syn::LitStr::new(second.trim(), doc_span));
         }
 
         if parts.next().is_some() {
@@ -519,12 +518,11 @@ pub fn is_option_type(ty: &syn::Type) -> Option<&syn::Type> {
             return None;
         }
 
-        if let syn::PathArguments::AngleBracketed(generic) = &segs.last().unwrap().arguments {
-            if generic.args.len() == 1 {
-                if let syn::GenericArgument::Type(ty) = generic.args.first().unwrap() {
-                    return Some(ty);
-                }
-            }
+        if let syn::PathArguments::AngleBracketed(generic) = &segs.last().unwrap().arguments
+            && generic.args.len() == 1
+            && let syn::GenericArgument::Type(ty) = generic.args.first().unwrap()
+        {
+            return Some(ty);
         }
     }
     None
@@ -747,19 +745,19 @@ where
         for arg in std::mem::take(&mut args).into_pairs() {
             match arg {
                 Pair::Punctuated(item, punct) => {
-                    if let syn::Meta::Path(path) = &item {
-                        if !func(path) {
-                            continue;
-                        }
+                    if let syn::Meta::Path(path) = &item
+                        && !func(path)
+                    {
+                        continue;
                     }
                     args.push_value(item);
                     args.push_punct(punct);
                 }
                 Pair::End(item) => {
-                    if let syn::Meta::Path(path) = &item {
-                        if !func(path) {
-                            continue;
-                        }
+                    if let syn::Meta::Path(path) = &item
+                        && !func(path)
+                    {
+                        continue;
                     }
                     args.push_value(item);
                 }

@@ -165,11 +165,11 @@ impl<R: BufRead> APTListFileParser<R> {
         line = line.trim_matches(|c| char::is_ascii_whitespace(&c));
 
         // check for commented out repository first
-        if let Some(commented_out) = line.strip_prefix('#') {
-            if let Ok(Some(mut repo)) = self.parse_one_line(commented_out) {
-                repo.set_enabled(false);
-                return Ok(Some(repo));
-            }
+        if let Some(commented_out) = line.strip_prefix('#')
+            && let Ok(Some(mut repo)) = self.parse_one_line(commented_out)
+        {
+            repo.set_enabled(false);
+            return Ok(Some(repo));
         }
 
         let mut repo = APTRepository::new(APTRepositoryFileType::List);

@@ -229,10 +229,10 @@ impl FieldAttrib {
     }
 
     pub fn check_non_option_type(&self) {
-        if let Some(span) = self.has_skip_serializing_if {
-            if !self.has_default {
-                error!(span, "`skip_serializing_if` without `default`");
-            }
+        if let Some(span) = self.has_skip_serializing_if
+            && !self.has_default
+        {
+            error!(span, "`skip_serializing_if` without `default`");
         }
     }
 }

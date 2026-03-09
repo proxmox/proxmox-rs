@@ -1,6 +1,6 @@
 use anyhow::{bail, Error};
 
-use crate::{const_regex, ApiStringFormat, ApiType, Schema, StringSchema};
+use crate::{ApiStringFormat, ApiType, Schema, StringSchema};
 
 /// Unique Process/Task Identifier
 ///

@@ -215,10 +215,10 @@ impl<T> SectionConfigData<T> {
     {
         let removed_value = self.sections.remove(key);
         // only update the order vector if we actually removed something
-        if removed_value.is_some() {
-            if let Some(pos) = self.order.iter().position(|k| k.borrow() == key) {
-                self.order.remove(pos);
-            }
+        if removed_value.is_some()
+            && let Some(pos) = self.order.iter().position(|k| k.borrow() == key)
+        {
+            self.order.remove(pos);
         }
         removed_value
     }

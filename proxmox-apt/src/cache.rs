@@ -247,10 +247,10 @@ where
                 // versions anyway
                 let mut pkg_iter = origin.file();
                 let pkg_file = pkg_iter.next();
-                if let Some(pkg_file) = pkg_file {
-                    if let Some(origin_name) = pkg_file.origin() {
-                        origin_res = origin_name;
-                    }
+                if let Some(pkg_file) = pkg_file
+                    && let Some(origin_name) = pkg_file.origin()
+                {
+                    origin_res = origin_name;
                 }
             }
 

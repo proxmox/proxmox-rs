@@ -110,10 +110,10 @@ impl MaintenanceMode {
             bail!("offline maintenance mode: {}", message);
         } else if self.ty == MaintenanceType::S3Refresh {
             bail!("S3 refresh maintenance mode: {}", message);
-        } else if self.ty == MaintenanceType::ReadOnly {
-            if let Some(Operation::Write) = operation {
-                bail!("read-only maintenance mode: {}", message);
-            }
+        } else if self.ty == MaintenanceType::ReadOnly
+            && let Some(Operation::Write) = operation
+        {
+            bail!("read-only maintenance mode: {}", message);
         }
         Ok(())
     }

@@ -350,13 +350,13 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
                     add_info("warning", message_new(base_suite));
                 }
 
-                if let Some(require_suffix) = require_suffix {
-                    if suffix != require_suffix {
-                        add_info(
-                            "warning",
-                            format!("expected suite '{current_codename}{require_suffix}'"),
-                        );
-                    }
+                if let Some(require_suffix) = require_suffix
+                    && suffix != require_suffix
+                {
+                    add_info(
+                        "warning",
+                        format!("expected suite '{current_codename}{require_suffix}'"),
+                    );
                 }
             }
         }

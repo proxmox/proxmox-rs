@@ -132,15 +132,15 @@ pub fn verify_signature(
     if weak_crypto.allow_sha1 {
         policy.accept_hash(HashAlgorithm::SHA1);
     }
-    if let Some(min_dsa) = weak_crypto.min_dsa_key_size {
-        if min_dsa <= 1024 {
-            policy.accept_asymmetric_algo(sequoia_openpgp::policy::AsymmetricAlgorithm::DSA1024);
-        }
+    if let Some(min_dsa) = weak_crypto.min_dsa_key_size
+        && min_dsa <= 1024
+    {
+        policy.accept_asymmetric_algo(sequoia_openpgp::policy::AsymmetricAlgorithm::DSA1024);
     }
-    if let Some(min_rsa) = weak_crypto.min_rsa_key_size {
-        if min_rsa <= 1024 {
-            policy.accept_asymmetric_algo(sequoia_openpgp::policy::AsymmetricAlgorithm::RSA1024);
-        }
+    if let Some(min_rsa) = weak_crypto.min_rsa_key_size
+        && min_rsa <= 1024
+    {
+        policy.accept_asymmetric_algo(sequoia_openpgp::policy::AsymmetricAlgorithm::RSA1024);
     }
 
     let verifier = |cert| {

@@ -140,17 +140,17 @@ fn handle_string_enum(
             syn::LitStr::new(&name.to_string(), name.span())
         };
 
-        if derives_default {
-            if let Some(attr) = variant.attrs.iter().find(|a| a.path().is_ident("default")) {
-                if let Some(default_value) = &default_value {
-                    error!(attr => "multiple default values defined");
-                    error!(default_value => "default previously defined here");
-                } else {
-                    default_value = Some(variant_string.clone());
-                    if let Some(span) = has_default_attrib {
-                        error!(attr => "#[default] attribute in use with 'default' #[api] key");
-                        error!(span, "'default' also defined here");
-                    }
+        if derives_default
+            && let Some(attr) = variant.attrs.iter().find(|a| a.path().is_ident("default"))
+        {
+            if let Some(default_value) = &default_value {
+                error!(attr => "multiple default values defined");
+                error!(default_value => "default previously defined here");
+            } else {
+                default_value = Some(variant_string.clone());
+                if let Some(span) = has_default_attrib {
+                    error!(attr => "#[default] attribute in use with 'default' #[api] key");
+                    error!(span, "'default' also defined here");
                 }
             }
         }
