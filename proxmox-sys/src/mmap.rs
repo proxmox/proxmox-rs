@@ -56,6 +56,18 @@ impl<T> Mmap<T> {
             len: count,
         })
     }
+
+    /// Flush all in-memory contents to the backing file.
+    pub fn msync(&self, flags: mman::MsFlags) -> io::Result<()> {
+        unsafe {
+            mman::msync(
+                self.data.cast::<core::ffi::c_void>(),
+                self.len * mem::size_of::<T>(),
+                flags,
+            )
+        }
+        .map_err(SysError::into_io_error)
+    }
 }
 
 impl<T> std::ops::Deref for Mmap<T> {
