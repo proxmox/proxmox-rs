@@ -12,7 +12,7 @@ use std::path::Path;
 use anyhow::{bail, format_err, Error};
 use nix::errno::Errno;
 use nix::fcntl::OFlag;
-use nix::sys::mman::{MapFlags, ProtFlags};
+use nix::sys::mman::{MapFlags, MsFlags, ProtFlags};
 use nix::sys::stat::Mode;
 
 use proxmox_sys::error::SysError;
@@ -229,6 +229,11 @@ impl<T: Sized + Init> SharedMemory<T> {
 
     pub fn data_mut(&mut self) -> &mut T {
         &mut self.mmap[0]
+    }
+
+    /// Flush all in-memory contents to the backing file.
+    pub fn msync(&self, flags: MsFlags) -> Result<(), Error> {
+        self.mmap.msync(flags).map_err(Into::into)
     }
 }
 
