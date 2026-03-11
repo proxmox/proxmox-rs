@@ -1,3 +1,13 @@
+rust-pbs-api-types (1.0.10-1) trixie; urgency=medium
+
+  * pbs-api-types: remote: add flag to use node proxy for remote connect
+
+  * pbs-api-types: make operation non-optional for maintenance-mode check
+
+  * pbs-api-types: add backend type to datastore's status items
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 11 Mar 2026 15:36:33 +0100
+
 rust-pbs-api-types (1.0.9-1) trixie; urgency=medium
 
   * add optional fallback variants to enums in public API. This is guarded
