@@ -80,7 +80,25 @@ fn mmap_file<T: Init>(file: &mut File, initialize: bool) -> Result<Mmap<T>, Erro
 }
 
 impl<T: Sized + Init> SharedMemory<T> {
+    /// Open and mmap the file given at path, checking if the file resides on tmpfs. Further,
+    /// checks the size to be multiples of the page size.
+    /// Creates the file and path directories with given create options if they do not exist.
     pub fn open(path: &Path, options: CreateOptions) -> Result<Self, Error> {
+        Self::open_impl(path, options, false)
+    }
+
+    /// Open and mmap the file given at path, without checking if it is located on a tmpfs.
+    /// Checks the size to be multiples of the page size.
+    /// Creates the file and path directories with given create options if they do not exist.
+    pub fn open_non_tmpfs(path: &Path, options: CreateOptions) -> Result<Self, Error> {
+        Self::open_impl(path, options, true)
+    }
+
+    fn open_impl(
+        path: &Path,
+        options: CreateOptions,
+        skip_tmpfs_check: bool,
+    ) -> Result<Self, Error> {
         let size = std::mem::size_of::<T>();
         let up_size = up_to_page_size(size);
 
@@ -92,12 +110,31 @@ impl<T: Sized + Init> SharedMemory<T> {
             );
         }
 
-        let mmap = Self::open_shmem(path, options)?;
+        let mmap = Self::open_shmem_impl(path, options, skip_tmpfs_check)?;
 
         Ok(Self { mmap })
     }
 
+    /// Open and mmap the file given at path, checking if the file resides on tmpfs.
+    /// Creates the file and path directories with given create options if they do not exist.
     pub fn open_shmem<P: AsRef<Path>>(path: P, options: CreateOptions) -> Result<Mmap<T>, Error> {
+        Self::open_shmem_impl(path, options, false)
+    }
+
+    /// Open and mmap the file given at path, without checking if it is located on a tmpfs.
+    /// Creates the file and path directories with given create options if they do not exist.
+    pub fn open_shmem_non_tmpfs<P: AsRef<Path>>(
+        path: P,
+        options: CreateOptions,
+    ) -> Result<Mmap<T>, Error> {
+        Self::open_shmem_impl(path, options, true)
+    }
+
+    fn open_shmem_impl<P: AsRef<Path>>(
+        path: P,
+        options: CreateOptions,
+        skip_tmpfs_check: bool,
+    ) -> Result<Mmap<T>, Error> {
         let path = path.as_ref();
 
         let dir_name = path
@@ -105,7 +142,7 @@ impl<T: Sized + Init> SharedMemory<T> {
             .ok_or_else(|| format_err!("bad path {:?}", path))?
             .to_owned();
 
-        if !dir_name.ends_with("shmemtest") {
+        if !(dir_name.ends_with("shmemtest") || skip_tmpfs_check) {
             let statfs = nix::sys::statfs::statfs(&dir_name)?;
             if statfs.filesystem_type() != nix::sys::statfs::TMPFS_MAGIC {
                 bail!("path {:?} is not on tmpfs", dir_name);
