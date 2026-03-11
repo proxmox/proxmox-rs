@@ -20,7 +20,7 @@ use openssl::x509::X509StoreContextRef;
 use tracing::error;
 
 use proxmox_http::client::HttpsConnector;
-use proxmox_http::Body;
+use proxmox_http::{Body, ProxyConfig};
 use proxmox_rate_limiter::{RateLimit, RateLimiter, SharedRateLimiter};
 use proxmox_schema::api_types::CERT_FINGERPRINT_SHA256_SCHEMA;
 
@@ -101,6 +101,8 @@ pub struct S3ClientOptions {
     pub provider_quirks: Vec<ProviderQuirks>,
     /// Configuration options for the shared rate limiter.
     pub rate_limiter_config: Option<S3RateLimiterConfig>,
+    /// Proxy configuration to be used by the client.
+    pub proxy_config: Option<ProxyConfig>,
 }
 
 impl S3ClientOptions {
@@ -111,6 +113,7 @@ impl S3ClientOptions {
         bucket: Option<String>,
         common_prefix: String,
         rate_limiter_options: Option<S3RateLimiterOptions>,
+        proxy_config: Option<ProxyConfig>,
     ) -> Self {
         let rate_limiter_config = rate_limiter_options.map(|options| S3RateLimiterConfig {
             options,
@@ -132,6 +135,7 @@ impl S3ClientOptions {
             put_rate_limit: config.put_rate_limit,
             provider_quirks: config.provider_quirks.unwrap_or_default(),
             rate_limiter_config,
+            proxy_config,
         }
     }
 }
@@ -212,6 +216,10 @@ impl S3Client {
                 )?;
                 https_connector.set_write_limiter(Some(Arc::new(limiter)));
             }
+        }
+
+        if let Some(proxy_config) = &options.proxy_config {
+            https_connector.set_proxy(proxy_config.clone());
         }
 
         let client = Client::builder(TokioExecutor::new()).build::<_, Body>(https_connector);
