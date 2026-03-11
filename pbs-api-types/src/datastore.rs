@@ -1677,6 +1677,9 @@ pub struct GarbageCollectionJobStatus {
             type: Counts,
             optional: true,
         },
+        "backend-type": {
+            type: DatastoreBackendType,
+        },
     },
 )]
 #[derive(Serialize, Deserialize)]
@@ -1695,6 +1698,9 @@ pub struct DataStoreStatus {
     /// Group/Snapshot counts
     #[serde(skip_serializing_if = "Option::is_none")]
     pub counts: Option<Counts>,
+    /// Datastore backend type
+    #[serde(default)]
+    pub backend_type: DatastoreBackendType,
 }
 
 #[api(
@@ -1712,6 +1718,9 @@ pub struct DataStoreStatus {
                 type: Number,
                 description: "The usage of a time in the past. Either null or between 0.0 and 1.0.",
             }
+        },
+        "backend-type": {
+            type: DatastoreBackendType,
         },
      },
 )]
@@ -1752,10 +1761,18 @@ pub struct DataStoreStatusListItem {
     /// Status of last GC
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gc_status: Option<GarbageCollectionStatus>,
+    /// Datastore backend type
+    #[serde(default)]
+    pub backend_type: DatastoreBackendType,
 }
 
 impl DataStoreStatusListItem {
-    pub fn empty(store: &str, err: Option<String>, mount_status: DataStoreMountStatus) -> Self {
+    pub fn empty(
+        store: &str,
+        err: Option<String>,
+        mount_status: DataStoreMountStatus,
+        backend_type: DatastoreBackendType,
+    ) -> Self {
         DataStoreStatusListItem {
             store: store.to_owned(),
             total: None,
@@ -1768,6 +1785,7 @@ impl DataStoreStatusListItem {
             estimated_full_date: None,
             error: err,
             gc_status: None,
+            backend_type,
         }
     }
 }
