@@ -93,7 +93,7 @@ impl MaintenanceMode {
             || self.ty == MaintenanceType::Unmount
     }
 
-    pub fn check(&self, operation: Option<Operation>) -> Result<(), Error> {
+    pub fn check(&self, operation: Operation) -> Result<(), Error> {
         if self.ty == MaintenanceType::Delete {
             bail!("datastore is being deleted");
         }
@@ -102,7 +102,7 @@ impl MaintenanceMode {
             .decode_utf8()
             .unwrap_or(Cow::Borrowed(""));
 
-        if let Some(Operation::Lookup) = operation {
+        if Operation::Lookup == operation {
             return Ok(());
         } else if self.ty == MaintenanceType::Unmount {
             bail!("datastore is being unmounted");
@@ -110,9 +110,7 @@ impl MaintenanceMode {
             bail!("offline maintenance mode: {}", message);
         } else if self.ty == MaintenanceType::S3Refresh {
             bail!("S3 refresh maintenance mode: {}", message);
-        } else if self.ty == MaintenanceType::ReadOnly
-            && let Some(Operation::Write) = operation
-        {
+        } else if self.ty == MaintenanceType::ReadOnly && Operation::Write == operation {
             bail!("read-only maintenance mode: {}", message);
         }
         Ok(())
