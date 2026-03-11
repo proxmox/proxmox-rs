@@ -1,3 +1,23 @@
+rust-proxmox-s3-client (1.2.6-1) trixie; urgency=medium
+
+  * early return when request timeout deadline reached
+
+  * move exponential backoff to after the response state check
+
+  * fix #6858: s3-client: retry request on 500, 503 and 504 status codes
+
+  * fix double URI encoding of copy_object destination key
+
+  * return dedicated error type for delete object response
+
+  * extend provider quirks by delete objects via delete object
+
+  * return list of errors when deleting by prefix
+
+  * add proxy configuration as optional client option
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 11 Mar 2026 15:40:37 +0100
+
 rust-proxmox-s3-client (1.2.5-1) trixie; urgency=medium
 
   * s3-client: make truncation flag optional in list object v2 response
