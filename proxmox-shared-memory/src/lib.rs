@@ -142,7 +142,7 @@ impl<T: Sized + Init> SharedMemory<T> {
             .ok_or_else(|| format_err!("bad path {:?}", path))?
             .to_owned();
 
-        if !(dir_name.ends_with("shmemtest") || skip_tmpfs_check) {
+        if !skip_tmpfs_check {
             let statfs = nix::sys::statfs::statfs(&dir_name)?;
             if statfs.filesystem_type() != nix::sys::statfs::TMPFS_MAGIC {
                 bail!("path {:?} is not on tmpfs", dir_name);

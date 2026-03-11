@@ -107,7 +107,8 @@ fn test_shared_memory_mutex() -> Result<(), Error> {
         Some(path) => path,
     };
 
-    let shared: SharedMemory<SingleMutexData> = SharedMemory::open(&path, CreateOptions::new())?;
+    let shared: SharedMemory<SingleMutexData> =
+        SharedMemory::open_non_tmpfs(&path, CreateOptions::new())?;
 
     let shared = Arc::new(shared);
 
@@ -144,7 +145,8 @@ fn test_shared_memory_multi_mutex() -> Result<(), Error> {
         }
         Some(path) => path,
     };
-    let shared: SharedMemory<MultiMutexData> = SharedMemory::open(&path, CreateOptions::new())?;
+    let shared: SharedMemory<MultiMutexData> =
+        SharedMemory::open_non_tmpfs(&path, CreateOptions::new())?;
 
     let shared = Arc::new(shared);
 
