@@ -474,6 +474,7 @@ fn parse_proc_meminfo(text: &str) -> Result<ProcFsMemInfo, Error> {
     meminfo.memshared = match read_firstline("/sys/kernel/mm/ksm/pages_sharing") {
         Ok(spages_line) => spages_line.trim_end().parse::<u64>()? * 4096,
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => 0,
+        Err(err) if err.kind() == std::io::ErrorKind::PermissionDenied => 0,
         Err(err) => bail!("unable to get KSM pages_sharing - {err}"),
     };
 
