@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo
 Build-Depends-Arch: cargo:native <!nocheck>,
- rustc:native (>= 1.82) <!nocheck>,
+ rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-libc-0.2+default-dev (>= 0.2.107-~~) <!nocheck>,
@@ -75,10 +75,10 @@ Provides:
  librust-proxmox-sys-1.0+acl-dev (= ${binary:Version}),
  librust-proxmox-sys-1.0+default-dev (= ${binary:Version}),
  librust-proxmox-sys-1.0+timer-dev (= ${binary:Version}),
- librust-proxmox-sys-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-sys-1.0.0+acl-dev (= ${binary:Version}),
- librust-proxmox-sys-1.0.0+default-dev (= ${binary:Version}),
- librust-proxmox-sys-1.0.0+timer-dev (= ${binary:Version})
+ librust-proxmox-sys-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-sys-1.0.1+acl-dev (= ${binary:Version}),
+ librust-proxmox-sys-1.0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-sys-1.0.1+timer-dev (= ${binary:Version})
 Description: System tools (using nix) - Rust source code
  Source code for Debianized Rust crate "proxmox-sys"
 
@@ -92,7 +92,7 @@ Depends:
 Provides:
  librust-proxmox-sys-1+crypt-dev (= ${binary:Version}),
  librust-proxmox-sys-1.0+crypt-dev (= ${binary:Version}),
- librust-proxmox-sys-1.0.0+crypt-dev (= ${binary:Version})
+ librust-proxmox-sys-1.0.1+crypt-dev (= ${binary:Version})
 Description: System tools (using nix) - feature "crypt"
  This metapackage enables feature "crypt" for the Rust proxmox-sys crate, by
  pulling in any additional dependencies needed by that feature.
@@ -107,7 +107,7 @@ Depends:
 Provides:
  librust-proxmox-sys-1+logrotate-dev (= ${binary:Version}),
  librust-proxmox-sys-1.0+logrotate-dev (= ${binary:Version}),
- librust-proxmox-sys-1.0.0+logrotate-dev (= ${binary:Version})
+ librust-proxmox-sys-1.0.1+logrotate-dev (= ${binary:Version})
 Description: System tools (using nix) - feature "logrotate"
  This metapackage enables feature "logrotate" for the Rust proxmox-sys crate, by
  pulling in any additional dependencies needed by that feature.

@@ -1,3 +1,19 @@
+rust-proxmox-sys (1.0.1-1) trixie; urgency=medium
+
+  * various cleanups:
+    - drop unused import for FromRawFd
+    - use io::Error::other
+    - inline format string variables
+    - don't hide a lifetimes that are elided elsewhere
+
+  * cargo: set edition to 2024 and resolver to 3
+
+  * mmap: expose msync to flush mmapped contents to filesystem
+
+  * procfs: meminfo: do not fail if KSM sharing info is unavailable
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 12 Mar 2026 12:01:52 +0100
+
 rust-proxmox-sys (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
