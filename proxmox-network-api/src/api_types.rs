@@ -37,6 +37,8 @@ pub enum NetworkConfigMethod {
     DHCP,
     /// Define the loopback interface.
     Loopback,
+    /// Define interfaces with automatically assigned IPv6 addresses.
+    Auto,
 }
 
 #[api()]

@@ -177,6 +177,7 @@ fn write_iface(iface: &Interface, w: &mut dyn Write) -> Result<(), Error> {
             NetworkConfigMethod::Loopback => "loopback",
             NetworkConfigMethod::Manual => "manual",
             NetworkConfigMethod::DHCP => "dhcp",
+            NetworkConfigMethod::Auto => "auto",
         }
     }
 

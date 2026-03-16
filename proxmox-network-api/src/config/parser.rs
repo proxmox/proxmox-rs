@@ -461,6 +461,7 @@ impl<R: BufRead> NetworkParser<R> {
                 Token::Static => config_method = Some(NetworkConfigMethod::Static),
                 Token::Manual => config_method = Some(NetworkConfigMethod::Manual),
                 Token::DHCP => config_method = Some(NetworkConfigMethod::DHCP),
+                Token::Auto => config_method = Some(NetworkConfigMethod::Auto),
                 _ => bail!("unknown iface option {}", text),
             }
         }
@@ -737,6 +738,48 @@ mod test {
                         \n\
                         iface ens22 inet manual\n\
                         \n";
+        assert_eq!(output, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_network_config_parser_ipv6_variants() -> Result<(), Error> {
+        let input = "auto lo\n\
+                 iface lo inet6 loopback\n\
+                 \n\
+                 auto ens18\n\
+                 iface ens18 inet6 auto\n\
+                 \n\
+                 auto ens20\n\
+                 iface ens20 inet6 static\n\
+                 \taddress 2001:db8:a::1/64\n\
+                 \tgateway 2001:db8:a::fe\n\
+                 \n\
+                 auto ens21\n\
+                 iface ens21 inet6 dhcp\n";
+
+        let mut parser = NetworkParser::new(input.as_bytes());
+
+        let config = parser.parse_interfaces(None)?;
+
+        let output = String::try_from(config)?;
+
+        let expected = "auto lo\n\
+                    iface lo inet6 loopback\n\
+                    \n\
+                    auto ens18\n\
+                    iface ens18 inet6 auto\n\
+                    \n\
+                    auto ens20\n\
+                    iface ens20 inet6 static\n\
+                    \taddress 2001:db8:a::1/64\n\
+                    \tgateway 2001:db8:a::fe\n\
+                    \n\
+                    auto ens21\n\
+                    iface ens21 inet6 dhcp\n\
+                    \n";
+
         assert_eq!(output, expected);
 
         Ok(())
