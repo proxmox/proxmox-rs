@@ -530,7 +530,7 @@ impl S3Client {
         let mut request = Request::builder()
             .method(Method::PUT)
             .uri(self.build_uri(&object_key, &[])?)
-            .header(header::CONTENT_TYPE, "binary/octet");
+            .header(header::CONTENT_TYPE, "application/octet-stream");
 
         if !replace {
             // Some providers not implement this and fails with error if the header is set,
@@ -660,6 +660,7 @@ impl S3Client {
             .method(Method::PUT)
             .uri(self.build_uri(&destination_key, &[])?)
             .header("x-amz-copy-source", HeaderValue::from_str(&copy_source)?)
+            .header(header::CONTENT_TYPE, "application/octet-stream")
             .header(
                 "x-amz-metadata-directive",
                 HeaderValue::from_str("REPLACE")?,
