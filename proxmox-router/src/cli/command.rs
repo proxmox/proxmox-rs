@@ -437,11 +437,13 @@ pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C, rpcenv
     run_async_cli_command_with_args(def, rpcenv, std::env::args()).await
 }
 
-/// Helper to get arguments and invoke the command.
+/// Parse and execute a CLI command.
 ///
-/// This is the synchronous version of run_async_cli_command. You can
-/// pass an optional ``run`` function to execute async commands (else
-/// async commands simply fail).
+/// This is a simple entry point that does not support [`GlobalOptions`](super::GlobalOptions).
+/// For global option support, use [`CommandLine`](super::CommandLine) instead.
+///
+/// Async handlers require a `run` function to execute the future; pass `None` if all
+/// handlers are synchronous.
 pub fn run_cli_command<C: Into<CommandLineInterface>>(
     def: C,
     rpcenv: CliEnvironment,

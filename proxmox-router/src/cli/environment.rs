@@ -7,7 +7,10 @@ use proxmox_schema::ApiType;
 
 use crate::{RpcEnvironment, RpcEnvironmentType};
 
-/// `RpcEnvironment` implementation for command line tools
+/// [`RpcEnvironment`] implementation for command line tools.
+///
+/// Stores global options parsed by the [`CommandLine`](super::CommandLine) parser, accessible via
+/// [`global_option`](Self::global_option) and [`take_global_option`](Self::take_global_option).
 #[derive(Default)]
 pub struct CliEnvironment {
     result_attributes: Value,
@@ -20,7 +23,10 @@ impl CliEnvironment {
         Default::default()
     }
 
-    /// Get a specific command line argument type.
+    /// Borrow a global option by type.
+    ///
+    /// Returns `None` if the option type was not registered or no value was provided on the
+    /// command line.
     pub fn global_option<T>(&self) -> Option<&T>
     where
         T: ApiType + Any + Send + Sync + 'static,
@@ -33,7 +39,7 @@ impl CliEnvironment {
         )
     }
 
-    /// Get a mutable reference to a specific command line argument type.
+    /// Mutably borrow a global option by type.
     pub fn global_option_mut<T>(&mut self) -> Option<&mut T>
     where
         T: ApiType + Any + Send + Sync + 'static,
@@ -46,7 +52,10 @@ impl CliEnvironment {
         )
     }
 
-    /// Take a command line argument struct out of the argument list.
+    /// Remove and return a global option by type.
+    ///
+    /// Typically used after [`CommandLine::parse`](super::CommandLine::parse) to extract global
+    /// options before calling the command handler. a2abfd30 (fixup! router: cli: improve documentation for CLI parser types)
     pub fn take_global_option<T>(&mut self) -> Option<T>
     where
         T: ApiType + Any + Send + Sync + 'static,

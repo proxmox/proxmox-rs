@@ -295,8 +295,14 @@ impl CliCommandMap {
         None
     }
 
-    /// Builder style method to set extra options for the entire set of subcommands.
-    /// Can be used multiple times.
+    /// Register options shared by all subcommands in this group.
+    ///
+    /// Can be called multiple times with different option types. The parameters are shown in help
+    /// output as "Inherited group parameters" and can be placed anywhere on the command line
+    /// (before or after the subcommand name).
+    ///
+    /// Note: global options are only processed by the [`CommandLine`] parser. The legacy
+    /// [`run_cli_command`] path ignores them.
     pub fn global_option(mut self, opts: GlobalOptions) -> Self {
         if self.global_options.insert(opts.type_id, opts).is_some() {
             panic!("cannot add same option struct multiple times to command line interface");
@@ -304,11 +310,9 @@ impl CliCommandMap {
         self
     }
 
-    /// Builder style method to set extra options for the entire set of subcommands, taking a
-    /// prepared `GlobalOptions` for potential
-    /// Can be used multiple times.
+    /// Finish building and convert into a [`CommandLineInterface`].
     ///
-    /// Finish the command line interface.
+    /// Shorthand for `.into()`.
     pub fn build(self) -> CommandLineInterface {
         self.into()
     }
@@ -332,7 +336,31 @@ impl From<CliCommandMap> for CommandLineInterface {
     }
 }
 
-/// Options covering an entire hierarchy set of subcommands.
+/// Options that apply to an entire command group and all its subcommands.
+///
+/// Registered via [`CliCommandMap::global_option`], these parameters are parsed before subcommand
+/// dispatch and shown under "Inherited group parameters" in `--help` output.
+///
+/// ```ignore
+/// use proxmox_router::cli::{CliCommandMap, GlobalOptions};
+/// use proxmox_schema::{api, ApiType};
+///
+/// #[api]
+/// /// Options shared by all subcommands.
+/// struct SharedArgs {
+///     /// Path to config file.
+///     #[serde(default)]
+///     config: Option<String>,
+/// }
+///
+/// let cmd = CliCommandMap::new()
+///     .insert_help()
+///     .global_option(GlobalOptions::of::<SharedArgs>())
+///     .insert("sub1", sub1_cmd)
+///     .insert("sub2", sub2_cmd);
+/// ```
+///
+/// After parsing, retrieve the values via [`CliEnvironment::take_global_option`].
 pub struct GlobalOptions {
     type_id: TypeId,
     schema: &'static Schema,
@@ -341,7 +369,10 @@ pub struct GlobalOptions {
 }
 
 impl GlobalOptions {
-    /// Get an entry for an API type `T`.
+    /// Create a global option set from an API type.
+    ///
+    /// The type's schema properties become CLI parameters that are accepted at the command-group
+    /// level and passed through to all subcommands.
     pub fn of<T>() -> Self
     where
         T: Send + Sync + Any + ApiType + for<'a> Deserialize<'a>,
@@ -406,6 +437,25 @@ impl GlobalOptions {
     }
 }
 
+/// CLI parser with support for global (group-level) options.
+///
+/// Unlike the legacy [`run_cli_command`] helper, this parser correctly handles
+/// [`GlobalOptions`] registered on [`CliCommandMap`] nodes. Use [`CommandLine::parse`]
+/// followed by [`Invocation::call`] to inspect global options between parsing and
+/// command execution.
+///
+/// # Example
+///
+/// ```ignore
+/// let cli = CommandLine::new(cmd_def).with_async(|f| proxmox_async::runtime::main(f));
+/// let mut rpcenv = CliEnvironment::new();
+/// let invocation = cli.parse(&mut rpcenv, std::env::args())?;
+///
+/// let globals: MyGlobalArgs = rpcenv.take_global_option().unwrap_or_default();
+/// setup_logging(globals.verbose);
+///
+/// invocation.call(&mut rpcenv)?;
+/// ```
 pub struct CommandLine {
     interface: Arc<CommandLineInterface>,
     async_run: Option<fn(ApiFuture) -> Result<Value, Error>>,
@@ -421,6 +471,7 @@ struct CommandLineParseState<'cli> {
 }
 
 impl CommandLine {
+    /// Create a new CLI parser for the given command interface.
     pub fn new(interface: CommandLineInterface) -> Self {
         Self {
             interface: Arc::new(interface),
@@ -428,11 +479,22 @@ impl CommandLine {
         }
     }
 
+    /// Set the executor for async API handlers.
+    ///
+    /// Required when any subcommand uses `ApiHandler::Async`. Typically:
+    /// ```ignore
+    /// .with_async(|future| proxmox_async::runtime::main(future))
+    /// ```
     pub fn with_async(mut self, async_run: fn(ApiFuture) -> Result<Value, Error>) -> Self {
         self.async_run = Some(async_run);
         self
     }
 
+    /// Parse the command line and return an [`Invocation`] without executing it.
+    ///
+    /// After parsing, global options are available in `rpcenv` via
+    /// [`CliEnvironment::global_option`] or [`CliEnvironment::take_global_option`].
+    /// Call [`Invocation::call`] to execute the resolved command handler.
     pub fn parse<A>(&self, rpcenv: &mut CliEnvironment, args: A) -> Result<Invocation<'_>, Error>
     where
         A: IntoIterator<Item = String>,
@@ -577,13 +639,17 @@ impl<'cli> CommandLineParseState<'cli> {
 type InvocationFn<'cli> =
     Box<dyn FnOnce(&mut CliEnvironment) -> Result<(), Error> + Send + Sync + 'cli>;
 
-/// After parsing the command line, this is responsible for calling the API method with its
-/// parameters, and gives the user a chance to adapt the RPC environment before doing so.
+/// A parsed command line ready for execution.
+///
+/// Returned by [`CommandLine::parse`]. Call [`Invocation::call`] to run the resolved
+/// handler. Between parsing and calling, you can inspect or modify the [`CliEnvironment`]
+/// (for example, to extract global options).
 pub struct Invocation<'cli> {
     call: InvocationFn<'cli>,
 }
 
 impl Invocation<'_> {
+    /// Execute the parsed command handler.
     pub fn call(self, rpcenv: &mut CliEnvironment) -> Result<(), Error> {
         (self.call)(rpcenv)
     }
