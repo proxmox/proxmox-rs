@@ -34,7 +34,7 @@ impl CliEnvironment {
     }
 
     /// Get a mutable reference to a specific command line argument type.
-    pub fn global_option_mut<T>(&mut self) -> Option<&T>
+    pub fn global_option_mut<T>(&mut self) -> Option<&mut T>
     where
         T: ApiType + Any + Send + Sync + 'static,
     {
