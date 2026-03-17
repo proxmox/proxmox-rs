@@ -259,6 +259,24 @@ pub struct TimeSpanParts {
     pub nsec: u64,
 }
 
+impl TimeSpanParts {
+    /// Return all (value, unit) pairs from largest to smallest.
+    fn unit_pairs(&self) -> [(u64, TimeUnit); 10] {
+        [
+            (self.years, TimeUnit::Years),
+            (self.months, TimeUnit::Months),
+            (self.weeks, TimeUnit::Weeks),
+            (self.days, TimeUnit::Days),
+            (self.hours, TimeUnit::Hours),
+            (self.minutes, TimeUnit::Minutes),
+            (self.seconds, TimeUnit::Seconds),
+            (self.msec, TimeUnit::Milliseconds),
+            (self.usec, TimeUnit::Microseconds),
+            (self.nsec, TimeUnit::Nanoseconds),
+        ]
+    }
+}
+
 /// A time span representing a duration of time.
 ///
 /// Internally stores total seconds and sub-second nanoseconds (always `< 1_000_000_000`).
@@ -391,6 +409,61 @@ impl TimeSpan {
     pub fn display_down_to(self, smallest: TimeUnit) -> DisplayTimeSpan {
         DisplayTimeSpan { ts: self, smallest }
     }
+
+    /// Return a display wrapper that shows `count` contiguous units starting from the largest
+    /// non-zero one, filling gaps with zeros for readability.
+    ///
+    /// Useful for human-friendly summaries like "2d 4h" or "1y 3M".
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use proxmox_time::TimeSpan;
+    /// let ts: TimeSpan = "1y 3months 2d 4h 30min".parse().unwrap();
+    /// assert_eq!(ts.display_top(2).to_string(), "1y 3M");
+    /// assert_eq!(ts.display_top(3).to_string(), "1y 3M 0w");
+    ///
+    /// let ts: TimeSpan = "1d 2s".parse().unwrap();
+    /// assert_eq!(ts.display_top(2).to_string(), "1d 0h");
+    /// assert_eq!(ts.display_top(3).to_string(), "1d 0h 0m");
+    /// ```
+    pub fn display_top(self, count: usize) -> DisplayTopUnits {
+        DisplayTopUnits { ts: self, count }
+    }
+}
+
+/// Wrapper for displaying a [`TimeSpan`] showing the N largest contiguous units starting from the
+/// first non-zero one. Obtained via [`TimeSpan::display_top`].
+pub struct DisplayTopUnits {
+    ts: TimeSpan,
+    count: usize,
+}
+
+impl std::fmt::Display for DisplayTopUnits {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut remaining = self.count;
+        let mut started = false;
+
+        for (val, unit) in self.ts.parts().unit_pairs() {
+            if remaining == 0 {
+                break;
+            }
+            if started {
+                write!(f, " {val}{}", unit.suffix())?;
+                remaining -= 1;
+            } else if val > 0 {
+                write!(f, "{val}{}", unit.suffix())?;
+                remaining -= 1;
+                started = true;
+            }
+        }
+
+        if !started {
+            write!(f, "0s")?;
+        }
+
+        Ok(())
+    }
 }
 
 /// Wrapper for displaying a [`TimeSpan`] with discrete integer units down to a specified
@@ -402,24 +475,10 @@ pub struct DisplayTimeSpan {
 
 impl std::fmt::Display for DisplayTimeSpan {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let p = self.ts.parts();
         let limit = self.smallest.ordinal();
         let mut first = true;
 
-        let units: [(u64, TimeUnit); 10] = [
-            (p.years, TimeUnit::Years),
-            (p.months, TimeUnit::Months),
-            (p.weeks, TimeUnit::Weeks),
-            (p.days, TimeUnit::Days),
-            (p.hours, TimeUnit::Hours),
-            (p.minutes, TimeUnit::Minutes),
-            (p.seconds, TimeUnit::Seconds),
-            (p.msec, TimeUnit::Milliseconds),
-            (p.usec, TimeUnit::Microseconds),
-            (p.nsec, TimeUnit::Nanoseconds),
-        ];
-
-        for (val, unit) in units {
+        for (val, unit) in self.ts.parts().unit_pairs() {
             if unit.ordinal() > limit {
                 break;
             }
