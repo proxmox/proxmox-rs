@@ -21,11 +21,6 @@ pub(crate) fn parse_error<'a>(
     nom::Err::Error(err)
 }
 
-// Parse a 64 bit unsigned integer
-pub(crate) fn parse_u64(i: &str) -> IResult<&str, u64> {
-    map_res(recognize(digit1), str::parse)(i)
-}
-
 // Parse complete input, generate simple error message (use this for simple line input).
 pub(crate) fn parse_complete_line<'a, F, O>(what: &str, i: &'a str, parser: F) -> Result<O, Error>
 where

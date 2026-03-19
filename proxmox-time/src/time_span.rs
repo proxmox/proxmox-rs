@@ -117,7 +117,7 @@
 
 use anyhow::{Context, Error};
 
-use crate::parse_helpers::{parse_complete_line, parse_error, parse_u64, IResult};
+use crate::parse_helpers::{parse_complete_line, parse_error, IResult};
 
 // Seconds-per-unit constants. Month and year are the systemd definitions:
 // 1 month = 30.44 days = 2,630,016 s (exact), 1 year = 365.25 days = 31,557,600 s (exact).
@@ -835,7 +835,7 @@ fn parse_time_span_incomplete(mut i: &str) -> IResult<&str, TimeSpanParts> {
         if i.is_empty() {
             break;
         }
-        let (n, num) = parse_u64(i)?;
+        let (n, num) = nom::character::complete::u64(i)?;
         i = n.trim_start();
         parsed_any = true;
 
