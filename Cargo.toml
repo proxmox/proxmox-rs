@@ -35,6 +35,7 @@ members = [
     "proxmox-openid",
     "proxmox-parallel-handler",
     "proxmox-pgp",
+    "proxmox-procfs",
     "proxmox-product-config",
     "proxmox-rate-limiter",
     "proxmox-resource-scheduling",
@@ -165,6 +166,7 @@ proxmox-login = { version = "1.0.0", path = "proxmox-login" }
 proxmox-network-types = { version = "1.0.0", path = "proxmox-network-types" }
 proxmox-parallel-handler = { version = "1.0.0", path = "proxmox-parallel-handler" }
 proxmox-pgp = { version = "1.0.0", path = "proxmox-pgp" }
+proxmox-procfs = { version = "0.1.0", path = "proxmox-procfs" }
 proxmox-product-config = { version = "1.0.0", path = "proxmox-product-config" }
 proxmox-config-digest = { version = "1.0.0", path = "proxmox-config-digest" }
 proxmox-rate-limiter = { version = "1.0.0", path = "proxmox-rate-limiter" }

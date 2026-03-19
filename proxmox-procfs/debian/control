@@ -1,0 +1,50 @@
+Source: rust-proxmox-procfs
+Section: rust
+Priority: optional
+Build-Depends: debhelper-compat (= 13),
+ dh-sequence-cargo
+Build-Depends-Arch: cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-thiserror-2+default-dev <!nocheck>
+Maintainer: Proxmox Support Team <support@proxmox.com>
+Standards-Version: 4.7.2
+Vcs-Git: git://git.proxmox.com/git/proxmox.git
+Vcs-Browser: https://git.proxmox.com/?p=proxmox.git
+Homepage: https://proxmox.com
+X-Cargo-Crate: proxmox-procfs
+
+Package: librust-proxmox-procfs-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-thiserror-2+default-dev
+Suggests:
+ librust-proxmox-procfs+serde-dev (= ${binary:Version})
+Provides:
+ librust-proxmox-procfs+default-dev (= ${binary:Version}),
+ librust-proxmox-procfs-0-dev (= ${binary:Version}),
+ librust-proxmox-procfs-0+default-dev (= ${binary:Version}),
+ librust-proxmox-procfs-0.1-dev (= ${binary:Version}),
+ librust-proxmox-procfs-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-procfs-0.1.0-dev (= ${binary:Version}),
+ librust-proxmox-procfs-0.1.0+default-dev (= ${binary:Version})
+Description: Helpers for reading system information from /proc - Rust source code
+ Source code for Debianized Rust crate "proxmox-procfs"
+
+Package: librust-proxmox-procfs+serde-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-procfs-dev (= ${binary:Version}),
+ librust-serde-1+default-dev,
+ librust-serde-1+derive-dev
+Provides:
+ librust-proxmox-procfs-0+serde-dev (= ${binary:Version}),
+ librust-proxmox-procfs-0.1+serde-dev (= ${binary:Version}),
+ librust-proxmox-procfs-0.1.0+serde-dev (= ${binary:Version})
+Description: Helpers for reading system information from /proc - feature "serde"
+ This metapackage enables feature "serde" for the Rust proxmox-procfs crate, by
+ pulling in any additional dependencies needed by that feature.
