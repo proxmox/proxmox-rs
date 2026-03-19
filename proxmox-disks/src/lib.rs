@@ -189,6 +189,43 @@ impl DiskManage {
     pub fn is_devnum_mounted(&self, dev: dev_t) -> Result<bool, Error> {
         self.mounted_devices().map(|mounted| mounted.contains(&dev))
     }
+
+    /// Query [`BlockDevStat`] for a given path.
+    pub fn blockdev_stat_for_path<P: AsRef<Path>>(
+        self: Arc<DiskManage>,
+        path: P,
+    ) -> Result<BlockDevStat, Error> {
+        let (fs_type, device, mount_source) = self
+            .find_mounted_device(path.as_ref())
+            .context("find_mounted_device failed")?
+            .ok_or_else(|| {
+                format_err!(
+                    "could not determine mounted device for path {}",
+                    path.as_ref().display()
+                )
+            })?;
+
+        if let Some(source) = mount_source
+            && fs_type == "zfs"
+        {
+            let dataset = source.into_string().map_err(|s| {
+                format_err!("could not convert {s:?} to string - invalid characters")
+            })?;
+
+            zfs_dataset_stats(&dataset)
+        } else {
+            let disk = self
+                .clone()
+                .disk_by_dev_num(device.into_dev_t())
+                .context("could not look up disk by device num")?;
+
+            disk.read_stat()
+                .with_context(|| format!("could not read stats for {}", path.as_ref().display()))?
+                .ok_or_else(|| {
+                    format_err!("could not read disk stats for {}", path.as_ref().display())
+                })
+        }
+    }
 }
 
 /// Queries (and caches) various information about a specific disk.
