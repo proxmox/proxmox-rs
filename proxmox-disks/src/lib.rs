@@ -1136,7 +1136,7 @@ pub fn reread_partition_table(disk: &Disk) -> Result<(), Error> {
 }
 
 /// Initialize disk by writing a GPT partition table
-pub fn inititialize_gpt_disk(disk: &Disk, uuid: Option<&str>) -> Result<(), Error> {
+pub fn initialize_gpt_disk(disk: &Disk, uuid: Option<&str>) -> Result<(), Error> {
     let disk_path = match disk.device_path() {
         Some(path) => path,
         None => bail!("disk {:?} has no node in /dev", disk.syspath()),
