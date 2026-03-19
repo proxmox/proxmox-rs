@@ -26,5 +26,9 @@ proxmox-io.workspace = true
 proxmox-lang.workspace = true
 proxmox-log.workspace = true
 proxmox-parallel-handler.workspace = true
-proxmox-schema = { workspace = true, features = [ "api-macro", "api-types" ] }
+proxmox-schema = { workspace = true, features = [ "api-types" ], optional = true }
 proxmox-sys.workspace = true
+
+[features]
+default = [ "dep:proxmox-schema" ]
+api-types = [ "proxmox-schema/api-macro" ]

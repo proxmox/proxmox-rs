@@ -17,12 +17,14 @@ use ::serde::{Deserialize, Serialize};
 use proxmox_lang::{io_bail, io_format_err};
 use proxmox_log::info;
 use proxmox_parallel_handler::ParallelHandler;
-use proxmox_schema::api;
 use proxmox_sys::linux::procfs::{mountinfo::Device, MountInfo};
 
 use proxmox_schema::api_types::{
     BLOCKDEVICE_DISK_AND_PARTITION_NAME_REGEX, BLOCKDEVICE_NAME_REGEX, UUID_REGEX,
 };
+
+#[cfg(feature = "api-types")]
+use proxmox_schema::api;
 
 mod zfs;
 pub use zfs::*;
@@ -626,7 +628,7 @@ impl Disk {
     }
 }
 
-#[api()]
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 /// This is just a rough estimate for a "type" of disk.
@@ -682,7 +684,7 @@ fn get_file_system_devices(lsblk_info: &[LsblkInfo]) -> Result<HashSet<u64>, Err
     Ok(device_set)
 }
 
-#[api()]
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 /// What a block device partition is used for.
@@ -703,7 +705,7 @@ pub enum PartitionUsageType {
     FileSystem,
 }
 
-#[api()]
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 /// What a block device (disk) is used for.
@@ -724,7 +726,7 @@ pub enum DiskUsageType {
     FileSystem,
 }
 
-#[api()]
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 /// Basic information about a partition
@@ -747,7 +749,7 @@ pub struct PartitionInfo {
     pub uuid: Option<String>,
 }
 
-#[api(
+#[cfg_attr(feature = "api-types", api(
     properties: {
         used: {
             type: DiskUsageType,
@@ -765,7 +767,7 @@ pub struct PartitionInfo {
             }
         }
     }
-)]
+))]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 /// Information about how a Disk is used
@@ -1302,7 +1304,7 @@ pub fn create_single_linux_partition(disk: &Disk) -> Result<Disk, Error> {
     }
 }
 
-#[api()]
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 /// A file system type supported by our tooling.

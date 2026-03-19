@@ -7,9 +7,10 @@ use std::{
 use ::serde::{Deserialize, Serialize};
 use anyhow::Error;
 
+#[cfg(feature = "api-types")]
 use proxmox_schema::api;
 
-#[api()]
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 /// SMART status
@@ -22,7 +23,7 @@ pub enum SmartStatus {
     Unknown,
 }
 
-#[api()]
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Debug, Serialize, Deserialize)]
 /// SMART Attribute
 pub struct SmartAttribute {
@@ -51,7 +52,7 @@ pub struct SmartAttribute {
     threshold: Option<f64>,
 }
 
-#[api(
+#[cfg_attr(feature = "api-types", api(
     properties: {
         status: {
             type: SmartStatus,
@@ -69,7 +70,7 @@ pub struct SmartAttribute {
             },
         },
     },
-)]
+))]
 #[derive(Debug, Serialize, Deserialize)]
 /// Data from smartctl
 pub struct SmartData {
