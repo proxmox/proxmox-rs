@@ -269,3 +269,76 @@ impl<I> Drop for ParallelHandler<I> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[test]
+    fn test_send_on_pool() {
+        let count = Arc::new(AtomicUsize::new(0));
+        let count_clone = Arc::clone(&count);
+
+        let pool = ParallelHandler::new("ok", 2, move |_: u32| {
+            count_clone.fetch_add(1, Ordering::Relaxed);
+            Ok(())
+        });
+
+        for i in 0..10 {
+            pool.send(i).unwrap();
+        }
+
+        pool.complete().unwrap();
+        assert_eq!(count.load(Ordering::Relaxed), 10);
+    }
+
+    #[test]
+    fn test_send_on_handle() {
+        let count = Arc::new(AtomicUsize::new(0));
+        let count_clone = Arc::clone(&count);
+
+        let pool = ParallelHandler::new("chan", 2, move |_: u32| {
+            count_clone.fetch_add(1, Ordering::Relaxed);
+            Ok(())
+        });
+
+        let handle = pool.channel();
+        for i in 0..5 {
+            handle.send(i).unwrap();
+        }
+        drop(handle);
+
+        pool.complete().unwrap();
+        assert_eq!(count.load(Ordering::Relaxed), 5);
+    }
+
+    #[test]
+    fn handler_error_is_propagated_on_complete() {
+        let pool = ParallelHandler::new("fail", 1, |_: u32| {
+            anyhow::bail!("boom");
+        });
+
+        pool.send(1).unwrap();
+        let err = pool.complete().unwrap_err();
+
+        match err {
+            Error::HandlerFailed(msg) => assert!(msg.contains("boom")),
+            _ => panic!("invalid error variant"),
+        }
+    }
+
+    #[test]
+    fn thread_panic_is_reported_on_complete() {
+        let pool = ParallelHandler::new("panic", 1, |_: u32| -> Result<(), anyhow::Error> {
+            panic!("boom");
+        });
+
+        pool.send(1).unwrap();
+        let err = pool.complete().unwrap_err();
+        match err {
+            Error::ThreadPanicked { message, .. } => assert!(message.unwrap().contains("boom")),
+            _ => panic!("invalid error variant"),
+        }
+    }
+}
