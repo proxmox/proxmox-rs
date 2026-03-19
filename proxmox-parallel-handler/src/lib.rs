@@ -3,8 +3,24 @@
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
-use anyhow::{bail, format_err, Error};
 use crossbeam_channel::{bounded, Sender};
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("send failed - channel closed")]
+    ChannelClosed,
+
+    #[error("handler failed: {0}")]
+    HandlerFailed(String),
+
+    #[error("thread {name} panicked")]
+    ThreadPanicked {
+        /// The name of the thread.
+        name: String,
+        /// The panic message extracted from the panic payload.
+        message: Option<String>,
+    },
+}
 
 /// A handle to send data to the worker thread (implements clone)
 pub struct SendHandle<I> {
@@ -16,7 +32,7 @@ pub struct SendHandle<I> {
 fn check_abort(abort: &Mutex<Option<String>>) -> Result<(), Error> {
     let guard = abort.lock().unwrap();
     if let Some(err_msg) = &*guard {
-        return Err(format_err!("{}", err_msg));
+        return Err(Error::HandlerFailed(err_msg.clone()));
     }
     Ok(())
 }
@@ -25,10 +41,7 @@ impl<I: Send> SendHandle<I> {
     /// Send data to the worker threads
     pub fn send(&self, input: I) -> Result<(), Error> {
         check_abort(&self.abort)?;
-        match self.input.send(input) {
-            Ok(()) => Ok(()),
-            Err(_) => bail!("send failed - channel closed"),
-        }
+        self.input.send(input).map_err(|_| Error::ChannelClosed)
     }
 }
 
@@ -42,7 +55,6 @@ impl<I: Send> SendHandle<I> {
 /// outstanding errors.
 pub struct ParallelHandler<I> {
     handles: Vec<JoinHandle<()>>,
-    name: String,
     input: Option<SendHandle<I>>,
 }
 
@@ -60,7 +72,7 @@ impl<I: Send + 'static> ParallelHandler<I> {
     /// with 'handler_fn'.
     pub fn new<F>(name: &str, threads: usize, handler_fn: F) -> Self
     where
-        F: Fn(I) -> Result<(), Error> + Send + Clone + 'static,
+        F: Fn(I) -> Result<(), anyhow::Error> + Send + Clone + 'static,
     {
         let mut handles = Vec::new();
         let (input_tx, input_rx) = bounded::<I>(threads);
@@ -83,7 +95,7 @@ impl<I: Send + 'static> ParallelHandler<I> {
                         if let Err(err) = (handler_fn)(data) {
                             let mut guard = abort.lock().unwrap();
                             if guard.is_none() {
-                                *guard = Some(err.to_string());
+                                *guard = Some(format!("{err:#}"));
                             }
                         }
                     })
@@ -92,7 +104,6 @@ impl<I: Send + 'static> ParallelHandler<I> {
         }
         Self {
             handles,
-            name: name.to_string(),
             input: Some(SendHandle {
                 input: input_tx,
                 abort,
@@ -118,32 +129,44 @@ impl<I: Send + 'static> ParallelHandler<I> {
         check_abort(&abort)?;
         drop(input);
 
-        let msg_list = self.join_threads();
+        let mut msg_list = self.join_threads();
 
         // an error might be encountered while waiting for the join
         check_abort(&abort)?;
 
-        if msg_list.is_empty() {
-            return Ok(());
+        if let Some(e) = msg_list.pop() {
+            // Any error here is due to a thread panicking - let's just report that
+            // last panic that occurred.
+            Err(e)
+        } else {
+            Ok(())
         }
-        Err(format_err!("{}", msg_list.join("\n")))
     }
 
-    fn join_threads(&mut self) -> Vec<String> {
+    fn join_threads(&mut self) -> Vec<Error> {
         let mut msg_list = Vec::new();
 
-        let mut i = 0;
         while let Some(handle) = self.handles.pop() {
+            let thread_name = handle.thread().name().unwrap_or("<unknown>").to_string();
+
             if let Err(panic) = handle.join() {
-                if let Some(panic_msg) = panic.downcast_ref::<&str>() {
-                    msg_list.push(format!("thread {} ({i}) panicked: {panic_msg}", self.name));
-                } else if let Some(panic_msg) = panic.downcast_ref::<String>() {
-                    msg_list.push(format!("thread {} ({i}) panicked: {panic_msg}", self.name));
+                if let Some(message) = panic.downcast_ref::<&str>() {
+                    msg_list.push(Error::ThreadPanicked {
+                        name: thread_name,
+                        message: Some(message.to_string()),
+                    });
+                } else if let Some(message) = panic.downcast_ref::<String>() {
+                    msg_list.push(Error::ThreadPanicked {
+                        name: thread_name,
+                        message: Some(message.to_string()),
+                    });
                 } else {
-                    msg_list.push(format!("thread {} ({i}) panicked", self.name));
+                    msg_list.push(Error::ThreadPanicked {
+                        name: thread_name,
+                        message: None,
+                    });
                 }
             }
-            i += 1;
         }
         msg_list
     }

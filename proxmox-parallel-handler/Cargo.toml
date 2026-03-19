@@ -13,3 +13,4 @@ repository.workspace = true
 [dependencies]
 anyhow.workspace = true
 crossbeam-channel.workspace = true
+thiserror.workspace = true
