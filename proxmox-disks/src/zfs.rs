@@ -81,11 +81,11 @@ pub fn zfs_devices(lsblk_info: &[LsblkInfo], pool: Option<String>) -> Result<Has
     }
     if pool.is_none() {
         for info in lsblk_info.iter() {
-            if let Some(partition_type) = &info.partition_type {
-                if ZFS_UUIDS.contains(partition_type.as_str()) {
-                    let meta = std::fs::metadata(&info.path)?;
-                    device_set.insert(meta.rdev());
-                }
+            if let Some(partition_type) = &info.partition_type
+                && ZFS_UUIDS.contains(partition_type.as_str())
+            {
+                let meta = std::fs::metadata(&info.path)?;
+                device_set.insert(meta.rdev());
             }
         }
     }

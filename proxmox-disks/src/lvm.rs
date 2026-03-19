@@ -34,11 +34,11 @@ pub fn get_lvm_devices(lsblk_info: &[LsblkInfo]) -> Result<HashSet<u64>, Error> 
     let mut device_set: HashSet<u64> = HashSet::new();
 
     for info in lsblk_info.iter() {
-        if let Some(partition_type) = &info.partition_type {
-            if LVM_UUIDS.contains(partition_type.as_str()) {
-                let meta = std::fs::metadata(&info.path)?;
-                device_set.insert(meta.rdev());
-            }
+        if let Some(partition_type) = &info.partition_type
+            && LVM_UUIDS.contains(partition_type.as_str())
+        {
+            let meta = std::fs::metadata(&info.path)?;
+            device_set.insert(meta.rdev());
         }
     }
 

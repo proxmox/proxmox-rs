@@ -1009,21 +1009,20 @@ fn get_disks(
 
         let name = item.file_name().to_str().unwrap().to_string();
 
-        if let Some(ref disks) = disks {
-            if !disks.contains(&name) {
-                continue;
-            }
+        if let Some(ref disks) = disks
+            && !disks.contains(&name)
+        {
+            continue;
         }
 
         let sys_path = format!("/sys/block/{name}");
 
-        if let Ok(target) = std::fs::read_link(&sys_path) {
-            if let Some(target) = target.to_str() {
-                if ISCSI_PATH_REGEX.is_match(target) {
-                    continue;
-                } // skip iSCSI devices
-            }
-        }
+        if let Ok(target) = std::fs::read_link(&sys_path)
+            && let Some(target) = target.to_str()
+            && ISCSI_PATH_REGEX.is_match(target)
+        {
+            continue;
+        } // skip iSCSI devices
 
         let disk = disk_manager.clone().disk_by_sys_path(&sys_path)?;
 
