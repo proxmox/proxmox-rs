@@ -1,0 +1,30 @@
+[package]
+name = "proxmox-disks"
+description = "disk management and utilities"
+version = "0.1.0"
+
+authors.workspace = true
+edition.workspace = true
+exclude.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+crossbeam-channel.workspace = true
+libc.workspace = true
+nix.workspace = true
+nom.workspace = true
+once_cell.workspace = true
+regex.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+udev.workspace = true
+
+proxmox-io.workspace = true
+proxmox-lang.workspace = true
+proxmox-log.workspace = true
+proxmox-parallel-handler.workspace = true
+proxmox-schema = { workspace = true, features = [ "api-macro", "api-types" ] }
+proxmox-sys.workspace = true

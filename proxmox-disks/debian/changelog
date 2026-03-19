@@ -1,0 +1,5 @@
+rust-proxmox-disks (0.1.0-1) unstable; urgency=medium
+
+  * initial version.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 10 Mar 2026 15:05:21 +0100

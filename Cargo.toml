@@ -15,6 +15,7 @@ members = [
     "proxmox-config-digest",
     "proxmox-daemon",
     "proxmox-deb-version",
+    "proxmox-disks",
     "proxmox-dns-api",
     "proxmox-fixed-string",
     "proxmox-docgen",
@@ -115,6 +116,9 @@ mail-parser = "0.11"
 md5 = "0.7.0"
 native-tls = "0.2"
 nix = "0.29"
+nom = "7"
+# used by proxmox-disks, can be replaced by OnceLock from std once it supports get_or_try_init
+once_cell = "1.3.1"
 openssl = "0.10"
 pam-sys = "0.5"
 percent-encoding = "2.1"
@@ -143,6 +147,7 @@ tracing = "0.1"
 tracing-journald = "0.3.1"
 tracing-log = { version = "0.2", default-features = false }
 tracing-subscriber = "0.3.16"
+udev = "0.9"
 url = "2.2"
 walkdir = "2"
 zstd = "0.13"
@@ -159,6 +164,7 @@ proxmox-async = { version = "0.5.0", path = "proxmox-async" }
 proxmox-base64 = {  version = "1.0.0", path = "proxmox-base64" }
 proxmox-compression = { version = "1.0.0", path = "proxmox-compression" }
 proxmox-daemon = { version = "1.0.0", path = "proxmox-daemon" }
+proxmox-disks = { version = "0.1.0", path = "proxmox-disks" }
 proxmox-fixed-string = { version = "0.1.0", path = "proxmox-fixed-string" }
 proxmox-http = { version = "1.0.5", path = "proxmox-http" }
 proxmox-http-error = { version = "1.0.0", path = "proxmox-http-error" }
