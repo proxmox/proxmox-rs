@@ -1,3 +1,26 @@
+rust-proxmox-time (2.1.1-1) trixie; urgency=medium
+
+  * improve time span and add new interfaces:
+    - redesign as normalized (seconds, nanoseconds) pair instead of storing
+      each unit separately, reducing memory from 80 to 12 bytes and making
+      arithmetic and comparison straightforward.
+    - add precision-controlled display formatting via standard fmt precision
+      (for example, {:.3} for milliseconds) and a display_down_to() method for
+      truncating below a chosen unit.
+    - add display_top(n) for showing N contiguous units from the largest
+      non-zero one, useful for compact summaries like "2d 4h"
+    - add public TimeUnit enum with classify(), suffix(), and ordinal()
+      helpers
+    - fix Display to account for all sub-second units, not just microseconds
+    - reject empty input when parsing and fix misleading error context
+    - drop nom dependency, replaced with a simpler hand-written parser
+
+  * calendar event: derive PartialEq and Eq
+
+  * daily duration: derive PartialEq, Eq, and Copy
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 20 Mar 2026 18:44:07 +0100
+
 rust-proxmox-time (2.1.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
