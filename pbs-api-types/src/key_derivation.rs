@@ -3,12 +3,13 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "enum-fallback")]
 use proxmox_fixed_string::FixedString;
 
-use proxmox_schema::api;
+use proxmox_schema::api_types::SAFE_ID_FORMAT;
+use proxmox_schema::{api, Schema, StringSchema, Updater};
 
 use crate::CERT_FINGERPRINT_SHA256_SCHEMA;
 
 #[api(default: "scrypt")]
-#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 /// Key derivation function for password protected encryption keys.
 pub enum Kdf {
@@ -41,7 +42,7 @@ impl Default for Kdf {
         },
     },
 )]
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize, Updater, PartialEq)]
 /// Encryption Key Information
 pub struct KeyInfo {
     /// Path to key (if stored in a file)
@@ -58,4 +59,35 @@ pub struct KeyInfo {
     /// Password hint
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hint: Option<String>,
+}
+
+/// ID to uniquely identify an encryption/decryption key.
+pub const CRYPT_KEY_ID_SCHEMA: Schema =
+    StringSchema::new("ID to uniquely identify encryption/decription key")
+        .format(&SAFE_ID_FORMAT)
+        .min_length(3)
+        .max_length(32)
+        .schema();
+
+#[api(
+    properties: {
+        id: {
+            schema: CRYPT_KEY_ID_SCHEMA,
+        },
+        info: {
+            type: KeyInfo,
+        },
+    },
+)]
+#[derive(Clone, Default, Deserialize, Serialize, Updater, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+/// Encryption/Decryption Key Info with ID.
+pub struct CryptKey {
+    #[updater(skip)]
+    pub id: String,
+    #[serde(flatten)]
+    pub info: KeyInfo,
+    /// Timestamp when key was archived (not set if key is active).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub archived_at: Option<i64>,
 }

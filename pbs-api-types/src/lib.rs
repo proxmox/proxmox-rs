@@ -104,7 +104,7 @@ mod jobs;
 pub use jobs::*;
 
 mod key_derivation;
-pub use key_derivation::{Kdf, KeyInfo};
+pub use key_derivation::{CryptKey, Kdf, KeyInfo, CRYPT_KEY_ID_SCHEMA};
 
 mod maintenance;
 pub use maintenance::*;
