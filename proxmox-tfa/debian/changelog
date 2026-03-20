@@ -1,3 +1,12 @@
+rust-proxmox-tfa (6.0.5-1) trixie; urgency=medium
+
+  * api: fix TFA bypass when WebAuthn context instantiation fails. Users
+    with fallback methods (recovery keys, TOTP) now get a challenge with
+    those methods; users with only WebAuthn are blocked instead of being
+    let through without a second factor.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 20 Mar 2026 17:18:57 +0100
+
 rust-proxmox-tfa (6.0.4-1) trixie; urgency=medium
 
   * update schema to 5.0.0
