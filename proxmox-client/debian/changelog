@@ -1,3 +1,18 @@
+rust-proxmox-client (1.0.2-1) trixie; urgency=medium
+
+  * split Client error into Connect (never sent) and Client (likely sent)
+    variants so callers can make informed retry decisions.
+
+  * parse Proxmox JSON error envelope on HTTP failures instead of discarding
+    the response body or using hardcoded error strings.
+
+  * add TfaRequired error variant so callers can programmatically detect when
+    a login requires a second factor.
+
+  * add api-client example for manual connectivity and TFA testing.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 20 Mar 2026 17:40:41 +0100
+
 rust-proxmox-client (1.0.1-1) trixie; urgency=medium
 
   * map tls verification errors to a more telling error message so that users
