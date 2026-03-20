@@ -673,7 +673,10 @@ impl S3Client {
 
     /// Delete objects by given key prefix.
     /// Requires at least 2 api calls.
-    pub async fn delete_objects_by_prefix(&self, prefix: &S3PathPrefix) -> Result<Vec<DeleteObjectError>, Error> {
+    pub async fn delete_objects_by_prefix(
+        &self,
+        prefix: &S3PathPrefix,
+    ) -> Result<Vec<DeleteObjectError>, Error> {
         // S3 API does not provide a convenient way to delete objects by key prefix.
         // List all objects with given group prefix and delete all objects found, so this
         // requires at least 2 API calls.

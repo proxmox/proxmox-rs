@@ -24,11 +24,10 @@ pub const REMOTE_ID_SCHEMA: Schema = StringSchema::new("Remote ID.")
     .max_length(32)
     .schema();
 
-pub const USE_NODE_HTTP_PROXY_SCHEMA: Schema = BooleanSchema::new(
-    "Use the http proxy configuration of the node for remote connections.",
-)
-.default(false)
-.schema();
+pub const USE_NODE_HTTP_PROXY_SCHEMA: Schema =
+    BooleanSchema::new("Use the http proxy configuration of the node for remote connections.")
+        .default(false)
+        .schema();
 
 #[api(
     properties: {
