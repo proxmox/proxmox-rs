@@ -530,29 +530,36 @@ impl CommandLine {
         state.parse_do(&self.interface, rpcenv, args)
     }
 
-    /// Parse arguments, run a setup callback, and execute the command.
-    ///
-    /// This is a convenience wrapper around [`parse`](Self::parse) and [`Invocation::call`] that
-    /// handles error reporting and process exit, similar to [`run_cli_command`].
+    /// Parse arguments, run a setup callback, and execute the command, returning errors to the
+    /// caller.
     ///
     /// The `setup` callback runs after argument parsing but before the command handler, giving you
     /// a chance to extract global options and initialize shared state. If no setup is needed, pass
     /// `|_| Ok(())`.
     ///
-    /// On error (parse failure, setup failure, or handler failure), the error is printed to stderr
-    /// and the process exits with code -1.
-    pub fn run<A, F>(self, args: A, setup: F)
+    /// Use this when you need post-call cleanup or custom error handling. For simple CLIs that
+    /// just want to print errors and exit, see [`run`](Self::run).
+    pub fn try_run<A, F>(self, args: A, setup: F) -> Result<(), Error>
     where
         A: IntoIterator<Item = String>,
         F: FnOnce(&mut CliEnvironment) -> Result<(), Error>,
     {
         let mut rpcenv = CliEnvironment::new();
-        let result = self.parse(&mut rpcenv, args).and_then(|invocation| {
-            setup(&mut rpcenv)?;
-            invocation.call(&mut rpcenv)
-        });
+        let invocation = self.parse(&mut rpcenv, args)?;
+        setup(&mut rpcenv)?;
+        invocation.call(&mut rpcenv)
+    }
 
-        if let Err(err) = result {
+    /// Parse arguments, run a setup callback, and execute the command.
+    ///
+    /// Convenience wrapper around [`try_run`](Self::try_run) that prints errors to stderr and
+    /// exits the process, similar to [`run_cli_command`].
+    pub fn run<A, F>(self, args: A, setup: F)
+    where
+        A: IntoIterator<Item = String>,
+        F: FnOnce(&mut CliEnvironment) -> Result<(), Error>,
+    {
+        if let Err(err) = self.try_run(args, setup) {
             eprintln!("Error: {err:?}");
             std::process::exit(-1);
         }
