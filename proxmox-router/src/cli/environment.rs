@@ -54,8 +54,16 @@ impl CliEnvironment {
 
     /// Remove and return a global option by type.
     ///
-    /// Typically used after [`CommandLine::parse`](super::CommandLine::parse) to extract global
-    /// options before calling the command handler. a2abfd30 (fixup! router: cli: improve documentation for CLI parser types)
+    /// This is the typical way to extract global options in a [`CommandLine::run`](super::CommandLine::run)
+    /// setup callback:
+    ///
+    /// ```ignore
+    /// CommandLine::new(cmd_def).run(std::env::args(), |env| {
+    ///     let opts: MyArgs = env.take_global_option().unwrap_or_default();
+    ///     // ... use opts ...
+    ///     Ok(())
+    /// });
+    /// ``` 8a10f9d4 (router: cli: add CommandLine::run convenience method)
     pub fn take_global_option<T>(&mut self) -> Option<T>
     where
         T: ApiType + Any + Send + Sync + 'static,

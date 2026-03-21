@@ -440,7 +440,7 @@ pub async fn run_async_cli_command<C: Into<CommandLineInterface>>(def: C, rpcenv
 /// Parse and execute a CLI command.
 ///
 /// This is a simple entry point that does not support [`GlobalOptions`](super::GlobalOptions).
-/// For global option support, use [`CommandLine`](super::CommandLine) instead.
+/// For global option support, use [`CommandLine::run`](super::CommandLine::run) instead.
 ///
 /// Async handlers require a `run` function to execute the future; pass `None` if all
 /// handlers are synchronous.

@@ -439,22 +439,39 @@ impl GlobalOptions {
 
 /// CLI parser with support for global (group-level) options.
 ///
-/// Unlike the legacy [`run_cli_command`] helper, this parser correctly handles
-/// [`GlobalOptions`] registered on [`CliCommandMap`] nodes. Use [`CommandLine::parse`]
-/// followed by [`Invocation::call`] to inspect global options between parsing and
-/// command execution.
+/// Unlike the legacy [`run_cli_command`] helper, this parser correctly handles [`GlobalOptions`]
+/// registered on [`CliCommandMap`] nodes. Use [`CommandLine::run`] for a one-call entry point, or
+/// [`CommandLine::parse`] followed by [`Invocation::call`] when you need to inspect global options
+/// between parsing and command execution.
 ///
 /// # Example
 ///
-/// ```ignore
-/// let cli = CommandLine::new(cmd_def).with_async(|f| proxmox_async::runtime::main(f));
-/// let mut rpcenv = CliEnvironment::new();
-/// let invocation = cli.parse(&mut rpcenv, std::env::args())?;
+/// ```
+/// use serde_json::Value;
+/// use proxmox_router::{ApiHandler, ApiMethod, RpcEnvironment};
+/// use proxmox_router::cli::{CliCommand, CliCommandMap, CommandLine};
+/// use proxmox_schema::ObjectSchema;
 ///
-/// let globals: MyGlobalArgs = rpcenv.take_global_option().unwrap_or_default();
-/// setup_logging(globals.verbose);
+/// fn handler(
+///     _param: Value,
+///     _info: &ApiMethod,
+///     _rpcenv: &mut dyn RpcEnvironment,
+/// ) -> Result<Value, anyhow::Error> {
+///     println!("Hello, world!");
+///     Ok(Value::Null)
+/// }
 ///
-/// invocation.call(&mut rpcenv)?;
+/// const API_METHOD: ApiMethod = ApiMethod::new(
+///     &ApiHandler::Sync(&handler),
+///     &ObjectSchema::new("A test command.", &[]),
+/// );
+///
+/// let cmd_def = CliCommandMap::new()
+///     .insert_help()
+///     .insert("test", CliCommand::new(&API_METHOD))
+///     .build();
+///
+/// CommandLine::new(cmd_def).run(["cmd", "test"].map(String::from), |_env| Ok(()));
 /// ```
 pub struct CommandLine {
     interface: Arc<CommandLineInterface>,
@@ -492,9 +509,9 @@ impl CommandLine {
 
     /// Parse the command line and return an [`Invocation`] without executing it.
     ///
-    /// After parsing, global options are available in `rpcenv` via
-    /// [`CliEnvironment::global_option`] or [`CliEnvironment::take_global_option`].
-    /// Call [`Invocation::call`] to execute the resolved command handler.
+    /// After parsing, global options are available in `rpcenv` via [`CliEnvironment::global_option`]
+    /// or [`CliEnvironment::take_global_option`]. Call [`Invocation::call`] to execute the resolved
+    /// command handler.
     pub fn parse<A>(&self, rpcenv: &mut CliEnvironment, args: A) -> Result<Invocation<'_>, Error>
     where
         A: IntoIterator<Item = String>,
@@ -511,6 +528,34 @@ impl CommandLine {
         };
 
         state.parse_do(&self.interface, rpcenv, args)
+    }
+
+    /// Parse arguments, run a setup callback, and execute the command.
+    ///
+    /// This is a convenience wrapper around [`parse`](Self::parse) and [`Invocation::call`] that
+    /// handles error reporting and process exit, similar to [`run_cli_command`].
+    ///
+    /// The `setup` callback runs after argument parsing but before the command handler, giving you
+    /// a chance to extract global options and initialize shared state. If no setup is needed, pass
+    /// `|_| Ok(())`.
+    ///
+    /// On error (parse failure, setup failure, or handler failure), the error is printed to stderr
+    /// and the process exits with code -1.
+    pub fn run<A, F>(self, args: A, setup: F)
+    where
+        A: IntoIterator<Item = String>,
+        F: FnOnce(&mut CliEnvironment) -> Result<(), Error>,
+    {
+        let mut rpcenv = CliEnvironment::new();
+        let result = self.parse(&mut rpcenv, args).and_then(|invocation| {
+            setup(&mut rpcenv)?;
+            invocation.call(&mut rpcenv)
+        });
+
+        if let Err(err) = result {
+            eprintln!("Error: {err:?}");
+            std::process::exit(-1);
+        }
     }
 }
 
@@ -641,9 +686,9 @@ type InvocationFn<'cli> =
 
 /// A parsed command line ready for execution.
 ///
-/// Returned by [`CommandLine::parse`]. Call [`Invocation::call`] to run the resolved
-/// handler. Between parsing and calling, you can inspect or modify the [`CliEnvironment`]
-/// (for example, to extract global options).
+/// Returned by [`CommandLine::parse`]. Call [`Invocation::call`] to run the resolved handler.
+/// Between parsing and calling, you can inspect or modify the [`CliEnvironment`] (for example, to
+/// extract global options).
 pub struct Invocation<'cli> {
     call: InvocationFn<'cli>,
 }
