@@ -1,3 +1,14 @@
+rust-proxmox-router (3.2.5-1) trixie; urgency=medium
+
+  * cli: add CommandLine::run convenience method to avoid every CLI wanting to
+    use the new style has to do the same three steps (parse, extract global,
+    exit on error) themselves.
+
+  * cli: fix return type of global_option_mut, wasn't mut and thus not really
+    useful (still unused AFAICT, we only use this new way in PDM currently).
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 21 Mar 2026 20:15:36 +0100
+
 rust-proxmox-router (3.2.4-1) trixie; urgency=medium
 
   * add unstable flag to the ApiMethod struct to allow flagging some endpoints
