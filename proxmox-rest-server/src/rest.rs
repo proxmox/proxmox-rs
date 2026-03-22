@@ -424,7 +424,11 @@ impl Service<Request<Incoming>> for ApiService {
     }
 
     fn call(&mut self, req: Request<Incoming>) -> Self::Future {
-        let path = req.uri().path_and_query().unwrap().as_str().to_owned();
+        let path = req
+            .uri()
+            .path_and_query()
+            .map(|pq| pq.as_str().to_owned())
+            .unwrap_or_default();
         let method = req.method().clone();
         let user_agent = get_user_agent(req.headers());
 
