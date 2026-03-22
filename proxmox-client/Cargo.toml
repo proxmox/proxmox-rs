@@ -36,6 +36,10 @@ proxmox-sys.workspace = true
 serde_plain.workspace = true
 tokio = { workspace = true, features = ["rt", "macros"] }
 
+[[example]]
+name = "api-client"
+required-features = ["hyper-client"]
+
 [features]
 default = []
 hyper-client = [ "dep:openssl", "dep:hyper", "dep:hyper-util", "dep:proxmox-http", "dep:log" ]
