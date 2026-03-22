@@ -1,3 +1,10 @@
+rust-proxmox-router (3.2.6-1) trixie; urgency=medium
+
+  * cli: also add CommandLine::try_run, a variant of run() that returns errors
+    instead of exiting the process.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 22 Mar 2026 09:12:43 +0100
+
 rust-proxmox-router (3.2.5-1) trixie; urgency=medium
 
   * cli: add CommandLine::run convenience method to avoid every CLI wanting to
