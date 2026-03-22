@@ -131,7 +131,6 @@ impl TlsAcceptorBuilder {
                     X509::builder().context("generating building self signed certificate")?;
                 cert.set_version(2)?;
                 cert.set_pubkey(&key)?;
-                cert.sign(&key, openssl::hash::MessageDigest::sha256())?;
                 cert.set_not_before(openssl::asn1::Asn1Time::days_from_now(0)?.as_ref())?;
                 cert.set_not_after(openssl::asn1::Asn1Time::days_from_now(365)?.as_ref())?;
 
@@ -139,8 +138,11 @@ impl TlsAcceptorBuilder {
                 name.append_entry_by_text("C", "CA")?;
                 name.append_entry_by_text("O", "Self")?;
                 name.append_entry_by_text("CN", "localhost")?;
-                cert.set_issuer_name(name.build().as_ref())?;
+                let name = name.build();
+                cert.set_subject_name(name.as_ref())?;
+                cert.set_issuer_name(name.as_ref())?;
 
+                cert.sign(&key, openssl::hash::MessageDigest::sha256())?;
                 let cert = cert.build();
 
                 acceptor
