@@ -21,6 +21,7 @@
 /// * `Display` as a pass-through to `String`'s `Display`
 /// * `Deref`
 /// * `DerefMut`
+/// * `FromStr`
 /// * `AsRef<str>`
 /// * `TryFrom<String>`
 /// * `fn into_string(self) -> String`
@@ -65,6 +66,19 @@ macro_rules! api_string_type {
 
             fn try_from(inner: String) -> Result<Self, ::anyhow::Error> {
                 Self::from_string(inner)
+            }
+        }
+
+        impl ::std::str::FromStr for $name {
+            type Err = ::anyhow::Error;
+
+            fn from_str(inner: &str) -> Result<Self, Self::Err> {
+                use $crate::ApiType;
+                match &Self::API_SCHEMA {
+                    $crate::Schema::String(s) => s.check_constraints(inner)?,
+                    _ => unreachable!(),
+                }
+                Ok(Self(inner.to_string()))
             }
         }
 
