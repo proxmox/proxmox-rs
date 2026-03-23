@@ -1,3 +1,16 @@
+rust-proxmox-rest-server (1.0.6-1) trixie; urgency=medium
+
+  * self-signed fallback cert: fix sign order and error handling. While this
+    was not used by our actual products, it's still not ideal to have broken
+    cert-creation code around, might be copied without noticing.
+
+  * tls acceptor builder: avoid some unwraps and improve error message for
+    better developer experience.
+
+  * avoid panic on some non-conform requests with missing the path.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 23 Mar 2026 23:56:36 +0100
+
 rust-proxmox-rest-server (1.0.5-1) trixie; urgency=medium
 
   * correctly return "401 unauthorized" over generic "400 bad request" in
