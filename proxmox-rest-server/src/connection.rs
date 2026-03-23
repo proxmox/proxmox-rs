@@ -77,7 +77,8 @@ impl TlsAcceptorBuilder {
     }
 
     pub fn build(self) -> Result<SslAcceptor, Error> {
-        let mut acceptor = SslAcceptor::mozilla_intermediate_v5(SslMethod::tls()).unwrap();
+        let mut acceptor = SslAcceptor::mozilla_intermediate_v5(SslMethod::tls())
+            .context("failed to create TLS acceptor")?;
 
         if let Some(cipher_suites) = self.cipher_suites.as_deref() {
             acceptor
@@ -128,7 +129,7 @@ impl TlsAcceptorBuilder {
                 //    .context("generating temporary rsa key")?;
 
                 let mut cert =
-                    X509::builder().context("generating building self signed certificate")?;
+                    X509::builder().context("failed to create self-signed certificate builder")?;
                 cert.set_version(2)?;
                 cert.set_pubkey(&key)?;
                 cert.set_not_before(openssl::asn1::Asn1Time::days_from_now(0)?.as_ref())?;
@@ -154,7 +155,9 @@ impl TlsAcceptorBuilder {
             }
         }
         acceptor.set_options(openssl::ssl::SslOptions::NO_RENEGOTIATION);
-        acceptor.check_private_key().unwrap();
+        acceptor
+            .check_private_key()
+            .context("private key does not match certificate")?;
 
         Ok(acceptor.build())
     }
