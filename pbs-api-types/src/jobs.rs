@@ -13,8 +13,9 @@ use proxmox_schema::*;
 use crate::{
     Authid, BackupNamespace, BackupType, NotificationMode, RateLimitConfig, Userid,
     BACKUP_GROUP_SCHEMA, BACKUP_NAMESPACE_SCHEMA, BACKUP_NS_RE, DATASTORE_SCHEMA,
-    DRIVE_NAME_SCHEMA, MEDIA_POOL_NAME_SCHEMA, NS_MAX_DEPTH_REDUCED_SCHEMA, PROXMOX_SAFE_ID_FORMAT,
-    PROXMOX_SAFE_ID_REGEX_STR, REMOTE_ID_SCHEMA, SINGLE_LINE_COMMENT_SCHEMA,
+    DRIVE_NAME_SCHEMA, CRYPT_KEY_ID_SCHEMA, MEDIA_POOL_NAME_SCHEMA,
+    NS_MAX_DEPTH_REDUCED_SCHEMA, PROXMOX_SAFE_ID_FORMAT, PROXMOX_SAFE_ID_REGEX_STR,
+    REMOTE_ID_SCHEMA, SINGLE_LINE_COMMENT_SCHEMA,
 };
 
 const_regex! {
@@ -673,6 +674,18 @@ pub const UNMOUNT_ON_SYNC_DONE_SCHEMA: Schema =
             schema: SYNC_WORKER_THREADS_SCHEMA,
             optional: true,
         },
+        "active-encryption-key": {
+            schema: CRYPT_KEY_ID_SCHEMA,
+            optional: true,
+        },
+        "associated-key": {
+            type: Array,
+            description: "List of cryptographic keys associated with sync job.",
+            items: {
+                schema: CRYPT_KEY_ID_SCHEMA,
+            },
+            optional: true,
+        },
     }
 )]
 #[derive(Serialize, Deserialize, Clone, Updater, PartialEq)]
@@ -720,6 +733,10 @@ pub struct SyncJobConfig {
     pub sync_direction: Option<SyncDirection>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub worker_threads: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active_encryption_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub associated_key: Option<Vec<String>>,
 }
 
 impl SyncJobConfig {
