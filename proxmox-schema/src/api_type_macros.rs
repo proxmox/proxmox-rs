@@ -74,10 +74,8 @@ macro_rules! api_string_type {
 
             fn from_str(inner: &str) -> Result<Self, Self::Err> {
                 use $crate::ApiType;
-                match &Self::API_SCHEMA {
-                    $crate::Schema::String(s) => s.check_constraints(inner)?,
-                    _ => unreachable!(),
-                }
+                let schema = const { Self::API_SCHEMA.unwrap_string_schema() };
+                schema.check_constraints(inner)?;
                 Ok(Self(inner.to_string()))
             }
         }
@@ -109,10 +107,8 @@ macro_rules! api_string_type {
             /// method.
             pub fn from_string(inner: String) -> Result<Self, ::anyhow::Error> {
                 use $crate::ApiType;
-                match &Self::API_SCHEMA {
-                    $crate::Schema::String(s) => s.check_constraints(&inner)?,
-                    _ => unreachable!(),
-                }
+                let schema = const { Self::API_SCHEMA.unwrap_string_schema() };
+                schema.check_constraints(&inner)?;
                 Ok(Self(inner))
             }
         }
