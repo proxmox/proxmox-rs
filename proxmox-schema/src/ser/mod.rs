@@ -284,7 +284,7 @@ impl<T: fmt::Write> ser::SerializeMap for SerializeStruct<T> {
     where
         V: Serialize + ?Sized,
     {
-        self.do_key(value)
+        self.do_value(value)
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {

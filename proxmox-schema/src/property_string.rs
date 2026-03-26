@@ -367,6 +367,7 @@ where
 #[cfg(test)]
 mod test {
     use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
 
     use crate::schema::*;
 
@@ -514,5 +515,21 @@ mod test {
         );
 
         Ok(())
+    }
+
+    #[test]
+    fn test_map_serialization() {
+        #[derive(Serialize, PartialEq)]
+        struct Outer(HashMap<String, u32>);
+
+        impl ApiType for Outer {
+            const API_SCHEMA: Schema = ObjectSchema::new("Outer", &[])
+                .additional_properties(true)
+                .schema();
+        }
+
+        let mut map = HashMap::with_capacity(2);
+        map.insert("a".to_owned(), 1);
+        assert_eq!(super::print(&Outer(map)).expect("property string"), "a=1");
     }
 }
