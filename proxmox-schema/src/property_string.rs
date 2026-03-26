@@ -271,7 +271,7 @@ where
 
         use std::marker::PhantomData;
 
-        struct V<T>(InPropertyStringGuard, PhantomData<T>);
+        struct V<T>(InPropertyStringGuard, PhantomData<fn() -> T>);
 
         impl<'de, T> serde::de::Visitor<'de> for V<T>
         where
