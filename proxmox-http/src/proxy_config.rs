@@ -6,6 +6,9 @@ use anyhow::{bail, format_err, Error};
 
 use http::Uri;
 
+#[cfg(feature = "api-types")]
+use proxmox_schema::{ApiStringFormat, Schema, StringSchema};
+
 use crate::uri::build_authority;
 
 /// HTTP Proxy Configuration
@@ -88,3 +91,16 @@ impl ProxyConfig {
         })
     }
 }
+
+#[cfg(feature = "api-types")]
+/// Schema for the http proxy configuration
+pub const HTTP_PROXY_SCHEMA: Schema =
+    StringSchema::new("HTTP proxy configuration [http://]<host>[:port]")
+        .format(&ApiStringFormat::VerifyFn(|s| {
+            ProxyConfig::parse_proxy_url(s)?;
+            Ok(())
+        }))
+        .min_length(1)
+        .max_length(128)
+        .type_text("[http://]<host>[:port]")
+        .schema();

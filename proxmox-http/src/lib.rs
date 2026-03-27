@@ -5,13 +5,15 @@
 #[cfg(feature = "websocket")]
 pub mod websocket;
 
-#[cfg(feature = "http-helpers")]
+#[cfg(any(feature = "http-helpers", feature = "api-types"))]
 pub mod uri;
 
-#[cfg(feature = "http-helpers")]
+#[cfg(any(feature = "http-helpers", feature = "api-types"))]
 pub mod proxy_config;
-#[cfg(feature = "http-helpers")]
+#[cfg(any(feature = "http-helpers", feature = "api-types"))]
 pub use proxy_config::ProxyConfig;
+#[cfg(feature = "api-types")]
+pub use proxy_config::HTTP_PROXY_SCHEMA;
 
 #[cfg(feature = "http-helpers")]
 mod http_options;

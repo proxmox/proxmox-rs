@@ -33,6 +33,7 @@ url = { workspace = true, optional = true }
 proxmox-async = { workspace = true, optional = true }
 proxmox-base64 = { workspace = true, optional = true }
 proxmox-rate-limiter = { workspace = true, optional = true, features = [ "rate-limiter" ] }
+proxmox-schema = { workspace = true, optional = true }
 proxmox-sys = { workspace = true, optional = true }
 proxmox-io = { workspace = true, optional = true }
 proxmox-lang = { workspace = true, optional = true }
@@ -89,6 +90,7 @@ client = [
 client-sync = [ "client-trait", "http-helpers", "dep:ureq", "dep:native-tls" ]
 client-trait = [ "dep:http" ]
 http-helpers = [ "dep:http", "dep:proxmox-base64", "dep:proxmox-sys", "dep:serde_json", "dep:url" ]
+api-types = [ "dep:http", "dep:proxmox-schema", "dep:serde_json", "dep:url" ]
 websocket = [
     "dep:futures",
     "dep:http",
