@@ -1,7 +1,7 @@
 //! Utilities for reading [Pressure Stall Information][psi] for the system or cgroups.
 //!
 //! To read pressure data, refer to [`PressureData::read_system`] and [`PressureData::read_cgroup`].
-//! [`PressureData::read_file`] can be use for lower-level access, proving the path to the
+//! [`PressureData::read_file`] can be used for lower-level access, providing the path to the
 //! pressure file directly.
 //!
 //! # Examples
@@ -33,8 +33,9 @@ use std::io::{BufRead, BufReader, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-#[derive(thiserror::Error, Debug)]
 /// Error type for pressure-related errors.
+#[derive(thiserror::Error, Debug)]
+#[non_exhaustive]
 pub enum Error {
     /// General IO error when reading the pressure stall information file.
     #[error("could not read pressure stall info file: {0}")]
@@ -52,9 +53,9 @@ pub enum Error {
     InvalidFormat(String),
 }
 
+/// Pressure stall information data.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Debug)]
-/// Pressure stall information data.
 pub struct PressureData {
     /// At least some tasks were stalled on a given resource.
     pub some: PressureRecord,
@@ -67,10 +68,10 @@ pub struct PressureData {
     pub full: PressureRecord,
 }
 
+/// Individual record corresponding to one line from a pressure stall information file.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 #[derive(Clone, Debug)]
-/// Individual record corresponding to one line from a pressure stall information file.
 pub struct PressureRecord {
     /// Average pressure stall ratio over the last 10 seconds.
     pub average_10: f64,
@@ -100,9 +101,9 @@ impl FromStr for PressureRecordKind {
     }
 }
 
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Copy, Debug, PartialEq)]
 /// Which pressure stall information to query.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Resource {
     /// Query CPU pressure stall information.
     Cpu,
