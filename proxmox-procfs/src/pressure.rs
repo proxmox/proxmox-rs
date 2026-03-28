@@ -330,4 +330,26 @@ full avg10=0.08 avg60=0.18 avg300=0.13 total=22865313
             Err(Error::NotFound(_))
         ))
     }
+
+    #[test]
+    fn test_truncated_file() {
+        let s = "some avg10=1.42 avg60=2.09 avg300=1.42 total=40979658\n";
+        let mut reader = std::io::Cursor::new(s);
+        assert!(PressureData::read(&mut reader).is_err());
+    }
+
+    #[test]
+    fn test_wrong_line_order() {
+        let s = "full avg10=0.08 avg60=0.18 avg300=0.13 total=22865313
+some avg10=1.42 avg60=2.09 avg300=1.42 total=40979658
+";
+        let mut reader = std::io::Cursor::new(s);
+        assert!(PressureData::read(&mut reader).is_err());
+    }
+
+    #[test]
+    fn test_empty_file() {
+        let mut reader = std::io::Cursor::new("");
+        assert!(PressureData::read(&mut reader).is_err());
+    }
 }
