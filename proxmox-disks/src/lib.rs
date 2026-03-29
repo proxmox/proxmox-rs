@@ -46,6 +46,11 @@ static ISCSI_PATH_REGEX: LazyLock<regex::Regex> =
 ///
 /// This provides access to disk information with some caching for faster querying of multiple
 /// devices.
+///
+/// Several methods on [`Disk`] (such as `disk_by_node`, `disk_by_sys_path`, and
+/// `disk_by_name`) require `self: &Arc<Self>`, so callers that need them should wrap the
+/// `DiskManage` in an `Arc` via [`into_arc`](Self::into_arc).
+#[derive(Default)]
 pub struct DiskManage {
     mount_info: OnceCell<MountInfo>,
     mounted_devices: OnceCell<HashSet<dev_t>>,
@@ -68,11 +73,18 @@ pub struct LsblkInfo {
 
 impl DiskManage {
     /// Create a new disk management context.
-    pub fn new() -> Arc<Self> {
-        Arc::new(Self {
+    ///
+    /// Wrap in an [`Arc`] via [`into_arc`](Self::into_arc) if you need the `disk_by_*` methods.
+    pub fn new() -> Self {
+        Self {
             mount_info: OnceCell::new(),
             mounted_devices: OnceCell::new(),
-        })
+        }
+    }
+
+    /// Wrap this context in an `Arc` for use with `disk_by_*` methods.
+    pub fn into_arc(self) -> Arc<Self> {
+        Arc::new(self)
     }
 
     /// Get the current mount info. This simply caches the result of `MountInfo::read` from the
@@ -82,7 +94,7 @@ impl DiskManage {
     }
 
     /// Get a `Disk` from a device node (eg. `/dev/sda`).
-    pub fn disk_by_node<P: AsRef<Path>>(self: Arc<Self>, devnode: P) -> io::Result<Disk> {
+    pub fn disk_by_node<P: AsRef<Path>>(self: &Arc<Self>, devnode: P) -> io::Result<Disk> {
         let devnode = devnode.as_ref();
 
         let meta = std::fs::metadata(devnode)?;
@@ -94,7 +106,7 @@ impl DiskManage {
     }
 
     /// Get a `Disk` for a specific device number.
-    pub fn disk_by_dev_num(self: Arc<Self>, devnum: dev_t) -> io::Result<Disk> {
+    pub fn disk_by_dev_num(self: &Arc<Self>, devnum: dev_t) -> io::Result<Disk> {
         self.disk_by_sys_path(format!(
             "/sys/dev/block/{}:{}",
             unsafe { libc::major(devnum) },
@@ -103,23 +115,23 @@ impl DiskManage {
     }
 
     /// Get a `Disk` for a path in `/sys`.
-    pub fn disk_by_sys_path<P: AsRef<Path>>(self: Arc<Self>, path: P) -> io::Result<Disk> {
+    pub fn disk_by_sys_path<P: AsRef<Path>>(self: &Arc<Self>, path: P) -> io::Result<Disk> {
         let device = udev::Device::from_syspath(path.as_ref())?;
         Ok(Disk {
-            manager: self,
+            manager: self.clone(),
             device,
             info: Default::default(),
         })
     }
 
     /// Get a `Disk` for a name in `/sys/block/<name>`.
-    pub fn disk_by_name(self: Arc<Self>, name: &str) -> io::Result<Disk> {
+    pub fn disk_by_name(self: &Arc<Self>, name: &str) -> io::Result<Disk> {
         let syspath = format!("/sys/block/{name}");
         self.disk_by_sys_path(syspath)
     }
 
     /// Get a `Disk` for a name in `/sys/class/block/<name>`.
-    pub fn partition_by_name(self: Arc<Self>, name: &str) -> io::Result<Disk> {
+    pub fn partition_by_name(self: &Arc<Self>, name: &str) -> io::Result<Disk> {
         let syspath = format!("/sys/class/block/{name}");
         self.disk_by_sys_path(syspath)
     }
@@ -194,7 +206,7 @@ impl DiskManage {
 
     /// Query [`BlockDevStat`] for a given path.
     pub fn blockdev_stat_for_path<P: AsRef<Path>>(
-        self: Arc<DiskManage>,
+        self: &Arc<DiskManage>,
         path: P,
     ) -> Result<BlockDevStat, Error> {
         let (fs_type, device, mount_source) = self
@@ -217,7 +229,6 @@ impl DiskManage {
             zfs_dataset_stats(&dataset)
         } else {
             let disk = self
-                .clone()
                 .disk_by_dev_num(device.into_dev_t())
                 .context("could not look up disk by device num")?;
 
@@ -809,7 +820,7 @@ pub struct DiskUsageInfo {
 }
 
 fn scan_partitions(
-    disk_manager: Arc<DiskManage>,
+    disk_manager: &Arc<DiskManage>,
     lvm_devices: &HashSet<u64>,
     zfs_devices: &HashSet<u64>,
     device: &str,
@@ -840,7 +851,7 @@ fn scan_partitions(
         let mut part_path = sys_path.clone();
         part_path.push(name);
 
-        let data = disk_manager.clone().disk_by_sys_path(&part_path)?;
+        let data = disk_manager.disk_by_sys_path(&part_path)?;
 
         let devnum = data.devnum()?;
 
@@ -993,7 +1004,7 @@ fn get_disks(
     // include partitions
     include_partitions: bool,
 ) -> Result<HashMap<String, DiskUsageInfo>, Error> {
-    let disk_manager = DiskManage::new();
+    let disk_manager = Arc::new(DiskManage::new());
 
     let lsblk_info = get_lsblk_info()?;
 
@@ -1036,7 +1047,7 @@ fn get_disks(
             continue;
         } // skip iSCSI devices
 
-        let disk = disk_manager.clone().disk_by_sys_path(&sys_path)?;
+        let disk = disk_manager.disk_by_sys_path(&sys_path)?;
 
         let devnum = disk.devnum()?;
 
@@ -1099,7 +1110,7 @@ fn get_disks(
         };
 
         if usage != DiskUsageType::Mounted {
-            match scan_partitions(disk_manager.clone(), &lvm_devices, &zfs_devices, &name) {
+            match scan_partitions(&disk_manager, &lvm_devices, &zfs_devices, &name) {
                 Ok(part_usage) => {
                     if part_usage != DiskUsageType::Unused {
                         usage = part_usage;
