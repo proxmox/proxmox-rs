@@ -1,4 +1,4 @@
-//! Disk query/management utilities for.
+//! Disk query/management utilities.
 
 use std::collections::{HashMap, HashSet};
 use std::ffi::{OsStr, OsString};
