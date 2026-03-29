@@ -1,11 +1,14 @@
 use std::sync::LazyLock;
+use std::time::Duration;
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
 };
 
 use ::serde::{Deserialize, Serialize};
-use anyhow::Error;
+use anyhow::{bail, Error};
+use nix::sys::signal::{self, Signal};
+use nix::unistd::Pid;
 
 #[cfg(feature = "api-types")]
 use proxmox_schema::api;
@@ -79,24 +82,20 @@ pub struct SmartData {
     pub attributes: Vec<SmartAttribute>,
 }
 
+/// Default timeout for smartctl invocations (30 seconds).
+pub const DEFAULT_SMART_TIMEOUT: Duration = Duration::from_secs(30);
+
 /// Read S.M.A.R.T. data for a block device via `smartctl`.
-pub fn get_smart_data(disk_path: &Path, health_only: bool) -> Result<SmartData, Error> {
-    const SMARTCTL_BIN_PATH: &str = "smartctl";
-
-    let mut command = std::process::Command::new(SMARTCTL_BIN_PATH);
-    command.arg("-H");
-    if !health_only {
-        command.args(["-A", "-j"]);
-    }
-
-    command.arg(disk_path);
-
-    let output = proxmox_sys::command::run_command(
-        command,
-        Some(
-            |exitcode| (exitcode & 0b0011) == 0, // only bits 0-1 are fatal errors
-        ),
-    )?;
+///
+/// The `timeout` parameter limits how long `smartctl` may run. This prevents stalls from
+/// unresponsive disks (for example, a spindle in standby mode) from blocking the entire disk
+/// enumeration.
+pub fn get_smart_data(
+    disk_path: &Path,
+    health_only: bool,
+    timeout: Duration,
+) -> Result<SmartData, Error> {
+    let output = run_smartctl(disk_path, health_only, timeout)?;
 
     let output: serde_json::Value = output.parse()?;
 
@@ -204,6 +203,59 @@ pub fn get_smart_data(disk_path: &Path, health_only: bool) -> Result<SmartData, 
         wearout,
         attributes,
     })
+}
+
+fn run_smartctl(disk_path: &Path, health_only: bool, timeout: Duration) -> Result<String, Error> {
+    let mut command = std::process::Command::new("smartctl");
+    command.arg("-H");
+    if !health_only {
+        command.arg("-A");
+    }
+    // always request JSON output so the caller can parse the result
+    command.arg("-j").arg(disk_path);
+
+    let child = command
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()?;
+
+    let pid = Pid::from_raw(child.id() as i32);
+
+    let (tx, rx) = crossbeam_channel::bounded(1);
+    std::thread::spawn(move || {
+        let _ = tx.send(child.wait_with_output());
+    });
+
+    let output = match rx.recv_timeout(timeout) {
+        Ok(result) => result?,
+        Err(crossbeam_channel::RecvTimeoutError::Timeout) => {
+            // Kill the smartctl process to avoid leaving it running indefinitely.
+            let _ = signal::kill(pid, Signal::SIGKILL);
+            bail!(
+                "smartctl timed out after {}s for {}",
+                timeout.as_secs(),
+                disk_path.display(),
+            );
+        }
+        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
+            bail!(
+                "smartctl thread terminated unexpectedly for {}",
+                disk_path.display(),
+            );
+        }
+    };
+
+    let exitcode = output.status.code().unwrap_or(-1);
+    // only bits 0-1 in the smartctl exit code are fatal errors
+    if (exitcode & 0b0011) != 0 {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!(
+            "smartctl failed for {} (exit code {exitcode}): {stderr}",
+            disk_path.display(),
+        );
+    }
+
+    Ok(String::from_utf8(output.stdout)?)
 }
 
 static WEAROUT_FIELD_ORDER: &[&str] = &[
