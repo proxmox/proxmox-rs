@@ -136,7 +136,7 @@ fn parse_zpool_list(i: &str) -> Result<Vec<ZFSPoolInfo>, Error> {
 ///
 /// Devices are only included when run with verbose flags
 /// set. Without, device lists are empty.
-pub fn zpool_list(pool: Option<&String>, verbose: bool) -> Result<Vec<ZFSPoolInfo>, Error> {
+pub fn zpool_list(pool: Option<&str>, verbose: bool) -> Result<Vec<ZFSPoolInfo>, Error> {
     // Note: zpools list verbose output can include entries for 'special', 'cache' and 'logs'
     // and maybe other things.
 

@@ -196,9 +196,9 @@ fn parse_zpool_status(input: &str) -> Result<Vec<(String, String)>, Error> {
 }
 
 pub fn vdev_list_to_tree(vdev_list: &[ZFSPoolVDevState]) -> Result<Value, Error> {
-    indented_list_to_tree(vdev_list, |vdev| {
-        let node = serde_json::to_value(vdev).unwrap();
-        (node, vdev.lvl)
+    indented_list_to_tree(vdev_list, |vdev| -> Result<(Value, u64), Error> {
+        let node = serde_json::to_value(vdev)?;
+        Ok((node, vdev.lvl))
     })
 }
 
@@ -206,7 +206,7 @@ fn indented_list_to_tree<'a, T, F, I>(items: I, to_node: F) -> Result<Value, Err
 where
     T: 'a,
     I: IntoIterator<Item = &'a T>,
-    F: Fn(&T) -> (Value, u64),
+    F: Fn(&T) -> Result<(Value, u64), Error>,
 {
     struct StackItem {
         node: Map<String, Value>,
@@ -223,7 +223,7 @@ where
     };
 
     for item in items {
-        let (node, node_level) = to_node(item);
+        let (node, node_level) = to_node(item)?;
         let vdev_level = 1 + node_level;
         let mut node = match node {
             Value::Object(map) => map,

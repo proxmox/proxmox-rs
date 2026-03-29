@@ -317,7 +317,12 @@ impl Disk {
     ///
     /// Note: path must be a relative path!
     pub fn read_sys(&self, path: &Path) -> io::Result<Option<Vec<u8>>> {
-        assert!(path.is_relative());
+        if !path.is_relative() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "path must be relative to the device sysfs directory",
+            ));
+        }
 
         std::fs::read(self.syspath().join(path))
             .map(Some)
@@ -1007,7 +1012,10 @@ fn get_disks(
     {
         let item = item?;
 
-        let name = item.file_name().to_str().unwrap().to_string();
+        let name = match item.file_name().to_str() {
+            Ok(name) => name.to_string(),
+            Err(_) => continue,
+        };
 
         if let Some(ref disks) = disks
             && !disks.contains(&name)
@@ -1232,7 +1240,7 @@ pub fn wipe_blockdev(disk: &Disk) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn zero_disk_start_and_end(disk: &Disk) -> Result<(), Error> {
+pub(crate) fn zero_disk_start_and_end(disk: &Disk) -> Result<(), Error> {
     let disk_path = match disk.device_path() {
         Some(path) => path,
         None => bail!("disk {:?} has no node in /dev", disk.syspath()),
@@ -1243,19 +1251,19 @@ pub fn zero_disk_start_and_end(disk: &Disk) -> Result<(), Error> {
         .write(true)
         .custom_flags(libc::O_CLOEXEC | libc::O_DSYNC)
         .open(disk_path)
-        .with_context(|| "failed to open device {disk_path:?} for writing")?;
+        .with_context(|| format!("failed to open device {disk_path:?} for writing"))?;
     let write_size = disk_size.min(200 * 1024 * 1024);
     let zeroes = proxmox_io::boxed::zeroed(write_size as usize);
     file.write_all_at(&zeroes, 0)
-        .with_context(|| "failed to wipe start of device {disk_path:?}")?;
+        .with_context(|| format!("failed to wipe start of device {disk_path:?}"))?;
     if disk_size > write_size {
         file.write_all_at(&zeroes[0..4096], disk_size - 4096)
-            .with_context(|| "failed to wipe end of device {disk_path:?}")?;
+            .with_context(|| format!("failed to wipe end of device {disk_path:?}"))?;
     }
     Ok(())
 }
 
-pub fn change_parttype(part_disk: &Disk, part_type: &str) -> Result<(), Error> {
+pub(crate) fn change_parttype(part_disk: &Disk, part_type: &str) -> Result<(), Error> {
     let part_path = match part_disk.device_path() {
         Some(path) => path,
         None => bail!("disk {:?} has no node in /dev", part_disk.syspath()),
@@ -1359,7 +1367,7 @@ pub fn complete_disk_name(_arg: &str, _param: &HashMap<String, String>) -> Vec<S
         };
 
     dir.flatten()
-        .map(|item| item.file_name().to_str().unwrap().to_string())
+        .filter_map(|item| item.file_name().to_str().ok().map(String::from))
         .collect()
 }
 
@@ -1375,7 +1383,7 @@ pub fn complete_partition_name(_arg: &str, _param: &HashMap<String, String>) -> 
     };
 
     dir.flatten()
-        .map(|item| item.file_name().to_str().unwrap().to_string())
+        .filter_map(|item| item.file_name().to_str().ok().map(String::from))
         .collect()
 }
 

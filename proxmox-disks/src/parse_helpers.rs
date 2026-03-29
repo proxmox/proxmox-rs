@@ -23,7 +23,7 @@ pub(crate) fn parse_failure<'a>(
     i: &'a str,
     context: &'static str,
 ) -> nom::Err<VerboseError<&'a str>> {
-    nom::Err::Error(verbose_err(i, context))
+    nom::Err::Failure(verbose_err(i, context))
 }
 
 /// Recognizes one or more non-whitespace characters

@@ -25,9 +25,8 @@ fn get_pool_from_dataset(dataset: &str) -> &str {
 }
 
 /// Returns kernel IO-stats for zfs pools
-pub fn zfs_pool_stats(pool: &OsStr) -> Result<Option<BlockDevStat>, Error> {
-    let mut path = PathBuf::from("/proc/spl/kstat/zfs");
-    path.push(pool);
+pub fn zfs_pool_stats(pool: &str) -> Result<Option<BlockDevStat>, Error> {
+    let mut path = PathBuf::from(format!("/proc/spl/kstat/zfs/{pool}"));
     path.push("io");
 
     let text = match proxmox_sys::fs::file_read_optional_string(&path)? {
@@ -70,7 +69,7 @@ pub fn zfs_pool_stats(pool: &OsStr) -> Result<Option<BlockDevStat>, Error> {
 ///
 /// The set is indexed by using the unix raw device number (dev_t is u64)
 pub fn zfs_devices(lsblk_info: &[LsblkInfo], pool: Option<String>) -> Result<HashSet<u64>, Error> {
-    let list = zpool_list(pool.as_ref(), true)?;
+    let list = zpool_list(pool.as_deref(), true)?;
 
     let mut device_set = HashSet::new();
     for entry in list {
