@@ -156,3 +156,94 @@ pub mod string_as_base64 {
         <T as StrAsBase64>::de::<'de, D>(deserializer)
     }
 }
+
+/// Serialize `[u8; N]` or `Option<[u8; N]>` as base64 encoded.
+///
+/// If you do not need the convenience of handling both [u8; N] and Option transparently, you could
+/// also use [`proxmox_base64`] directly.
+///
+/// Usage example:
+/// ```
+/// use serde::{Deserialize, Serialize};
+///
+/// #[derive(Debug, Deserialize, PartialEq, Serialize)]
+/// struct Foo {
+///     #[serde(with = "proxmox_serde::byte_array_as_base64")]
+///     data: [u8; 4],
+/// }
+///
+/// let obj = Foo { data: [1, 2, 3, 4] };
+/// let json = serde_json::to_string(&obj).unwrap();
+/// assert_eq!(json, r#"{"data":"AQIDBA=="}"#);
+///
+/// let deserialized: Foo = serde_json::from_str(&json).unwrap();
+/// assert_eq!(obj, deserialized);
+/// ```
+pub mod byte_array_as_base64 {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    /// Private trait to enable `byte_array_as_base64` for `Option<[u8; N]>` in addition to `[u8; N]`.
+    #[doc(hidden)]
+    pub trait ByteArrayAsBase64<const N: usize>: Sized {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>;
+        fn de<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error>;
+    }
+
+    fn finish_deserializing<'de, const N: usize, D: Deserializer<'de>>(
+        string: String,
+    ) -> Result<[u8; N], D::Error> {
+        use serde::de::Error;
+
+        let vec = proxmox_base64::decode(string).map_err(|err| {
+            let msg = format!("base64 decode: {}", err);
+            Error::custom(msg)
+        })?;
+
+        vec.as_slice().try_into().map_err(|_| {
+            let msg = format!("expected {N} bytes, got {}", vec.len());
+            Error::custom(msg)
+        })
+    }
+
+    impl<const N: usize> ByteArrayAsBase64<N> for [u8; N] {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            serializer.serialize_str(&proxmox_base64::encode(self))
+        }
+
+        fn de<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+            finish_deserializing::<'de, N, D>(String::deserialize(deserializer)?)
+        }
+    }
+
+    impl<const N: usize> ByteArrayAsBase64<N> for Option<[u8; N]> {
+        fn ser<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+            match self {
+                Some(s) => Self::ser(&Some(*s), serializer),
+                None => serializer.serialize_none(),
+            }
+        }
+
+        fn de<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+            match Option::<String>::deserialize(deserializer)? {
+                Some(s) => Ok(Some(finish_deserializing::<'de, N, D>(s)?)),
+                None => Ok(None),
+            }
+        }
+    }
+
+    pub fn serialize<const N: usize, S, T>(data: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        T: ByteArrayAsBase64<N>,
+    {
+        <T as ByteArrayAsBase64<N>>::ser(data, serializer)
+    }
+
+    pub fn deserialize<'de, const N: usize, D, T>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: ByteArrayAsBase64<N>,
+    {
+        <T as ByteArrayAsBase64<N>>::de::<'de, D>(deserializer)
+    }
+}
