@@ -145,8 +145,10 @@ impl<const N: usize> IdealAlternatives<N> {
             let min = fixed_criterion
                 .clone()
                 .min_by(|a, b| a.total_cmp(b))
-                .unwrap();
-            let max = fixed_criterion.max_by(|a, b| a.total_cmp(b)).unwrap();
+                .unwrap_or(f64::NEG_INFINITY);
+            let max = fixed_criterion
+                .max_by(|a, b| a.total_cmp(b))
+                .unwrap_or(f64::INFINITY);
 
             (best[n], worst[n]) = match criteria[n].maximize {
                 true => (max, min),
