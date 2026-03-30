@@ -22,14 +22,14 @@ criteria_struct! {
     static PVE_HA_TOPSIS_CRITERIA;
 }
 
-/// Scores candidate `nodes` to start a `service` on. Scoring is done according to the static memory
-/// and CPU usages of the nodes as if the service would already be running on each.
+/// Scores candidate `nodes` to start a `resource` on. Scoring is done according to the static memory
+/// and CPU usages of the nodes as if the resource would already be running on each.
 ///
 /// Returns a vector of (nodename, score) pairs. Scores are between 0.0 and 1.0 and a higher score
 /// is better.
-pub fn score_nodes_to_start_service<T: AsRef<StaticNodeUsage>>(
+pub fn score_nodes_to_start_resource<T: AsRef<StaticNodeUsage>>(
     nodes: &[T],
-    service: &StaticServiceUsage,
+    resource: &StaticServiceUsage,
 ) -> Result<Vec<(String, f64)>, Error> {
     let len = nodes.len();
 
@@ -46,10 +46,10 @@ pub fn score_nodes_to_start_service<T: AsRef<StaticNodeUsage>>(
             for (index, node) in nodes.iter().enumerate() {
                 let node = node.as_ref();
                 let new_cpu = if index == target_index {
-                    if service.maxcpu == 0.0 {
+                    if resource.maxcpu == 0.0 {
                         node.cpu + node.maxcpu as f64
                     } else {
-                        node.cpu + service.maxcpu
+                        node.cpu + resource.maxcpu
                     }
                 } else {
                     node.cpu
@@ -58,7 +58,7 @@ pub fn score_nodes_to_start_service<T: AsRef<StaticNodeUsage>>(
                 squares_cpu += new_cpu.powi(2);
 
                 let new_mem = if index == target_index {
-                    node.mem + service.maxmem
+                    node.mem + resource.maxmem
                 } else {
                     node.mem
                 } as f64

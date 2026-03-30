@@ -62,5 +62,5 @@ pub fn score_nodes_to_start_service<T: AsRef<StaticNodeUsage>>(
     nodes: &[T],
     service: &StaticServiceUsage,
 ) -> Result<Vec<(String, f64)>, Error> {
-    scheduler::score_nodes_to_start_service(nodes, service)
+    scheduler::score_nodes_to_start_resource(nodes, service)
 }
