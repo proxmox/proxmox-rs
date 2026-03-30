@@ -1,9 +1,15 @@
 use anyhow::Error;
 
-use crate::{
-    pve_static::{StaticNodeUsage, StaticServiceUsage},
-    topsis,
-};
+use crate::{node::NodeStats, resource::ResourceStats, topsis};
+
+/// The scheduler view of a node.
+#[derive(Clone, Debug)]
+pub struct NodeUsage {
+    /// The identifier of the node.
+    pub name: String,
+    /// The usage statistics of the node.
+    pub stats: NodeStats,
+}
 
 criteria_struct! {
     /// A given alternative.
@@ -22,69 +28,83 @@ criteria_struct! {
     static PVE_HA_TOPSIS_CRITERIA;
 }
 
-/// Scores candidate `nodes` to start a `resource` on. Scoring is done according to the static memory
-/// and CPU usages of the nodes as if the resource would already be running on each.
-///
-/// Returns a vector of (nodename, score) pairs. Scores are between 0.0 and 1.0 and a higher score
-/// is better.
-pub fn score_nodes_to_start_resource<T: AsRef<StaticNodeUsage>>(
-    nodes: &[T],
-    resource: &StaticServiceUsage,
-) -> Result<Vec<(String, f64)>, Error> {
-    let len = nodes.len();
+#[derive(Clone, Debug)]
+pub struct Scheduler {
+    nodes: Vec<NodeUsage>,
+}
 
-    let matrix = nodes
-        .iter()
-        .enumerate()
-        .map(|(target_index, _)| {
-            // Base values on percentages to allow comparing nodes with different stats.
-            let mut highest_cpu = 0.0;
-            let mut squares_cpu = 0.0;
-            let mut highest_mem = 0.0;
-            let mut squares_mem = 0.0;
+impl Scheduler {
+    /// Instantiate scheduler instance from node usages.
+    pub fn from_nodes<I>(nodes: I) -> Self
+    where
+        I: IntoIterator<Item: Into<NodeUsage>>,
+    {
+        Self {
+            nodes: nodes.into_iter().map(|node| node.into()).collect(),
+        }
+    }
 
-            for (index, node) in nodes.iter().enumerate() {
-                let node = node.as_ref();
-                let new_cpu = if index == target_index {
-                    if resource.maxcpu == 0.0 {
-                        node.cpu + node.maxcpu as f64
-                    } else {
-                        node.cpu + resource.maxcpu
-                    }
-                } else {
-                    node.cpu
-                } / (node.maxcpu as f64);
-                highest_cpu = f64::max(highest_cpu, new_cpu);
-                squares_cpu += new_cpu.powi(2);
+    /// Scores nodes to start a resource with the usage statistics `resource_stats` on.
+    ///
+    /// The scoring is done as if the resource is already started on each node. This assumes that
+    /// the already started resource consumes the maximum amount of each stat according to its
+    /// `resource_stats`.
+    ///
+    /// Returns a vector of (nodename, score) pairs. Scores are between 0.0 and 1.0 and a higher
+    /// score is better.
+    pub fn score_nodes_to_start_resource<T: Into<ResourceStats>>(
+        &self,
+        resource_stats: T,
+    ) -> Result<Vec<(String, f64)>, Error> {
+        let len = self.nodes.len();
+        let resource_stats = resource_stats.into();
 
-                let new_mem = if index == target_index {
-                    node.mem + resource.maxmem
-                } else {
-                    node.mem
-                } as f64
-                    / node.maxmem as f64;
-                highest_mem = f64::max(highest_mem, new_mem);
-                squares_mem += new_mem.powi(2);
-            }
+        let matrix = self
+            .nodes
+            .iter()
+            .enumerate()
+            .map(|(target_index, _)| {
+                // Base values on percentages to allow comparing nodes with different stats.
+                let mut highest_cpu = 0.0;
+                let mut squares_cpu = 0.0;
+                let mut highest_mem = 0.0;
+                let mut squares_mem = 0.0;
 
-            // Add 1.0 to avoid boosting tiny differences: e.g. 0.004 is twice as much as 0.002, but
-            // 1.004 is only slightly more than 1.002.
-            PveTopsisAlternative {
-                average_cpu: 1.0 + (squares_cpu / len as f64).sqrt(),
-                highest_cpu: 1.0 + highest_cpu,
-                average_memory: 1.0 + (squares_mem / len as f64).sqrt(),
-                highest_memory: 1.0 + highest_mem,
-            }
-            .into()
-        })
-        .collect::<Vec<_>>();
+                for (index, node) in self.nodes.iter().enumerate() {
+                    let mut new_stats = node.stats;
 
-    let scores =
-        topsis::score_alternatives(&topsis::Matrix::new(matrix)?, &PVE_HA_TOPSIS_CRITERIA)?;
+                    if index == target_index {
+                        new_stats.add_started_resource(&resource_stats)
+                    };
 
-    Ok(scores
-        .into_iter()
-        .enumerate()
-        .map(|(n, score)| (nodes[n].as_ref().name.clone(), score))
-        .collect())
+                    let new_cpu = new_stats.cpu_load();
+                    highest_cpu = f64::max(highest_cpu, new_cpu);
+                    squares_cpu += new_cpu.powi(2);
+
+                    let new_mem = new_stats.mem_load();
+                    highest_mem = f64::max(highest_mem, new_mem);
+                    squares_mem += new_mem.powi(2);
+                }
+
+                // Add 1.0 to avoid boosting tiny differences: e.g. 0.004 is twice as much as 0.002, but
+                // 1.004 is only slightly more than 1.002.
+                PveTopsisAlternative {
+                    average_cpu: 1.0 + (squares_cpu / len as f64).sqrt(),
+                    highest_cpu: 1.0 + highest_cpu,
+                    average_memory: 1.0 + (squares_mem / len as f64).sqrt(),
+                    highest_memory: 1.0 + highest_mem,
+                }
+                .into()
+            })
+            .collect::<Vec<_>>();
+
+        let scores =
+            topsis::score_alternatives(&topsis::Matrix::new(matrix)?, &PVE_HA_TOPSIS_CRITERIA)?;
+
+        Ok(scores
+            .into_iter()
+            .enumerate()
+            .map(|(n, score)| (self.nodes[n].name.clone(), score))
+            .collect())
+    }
 }
