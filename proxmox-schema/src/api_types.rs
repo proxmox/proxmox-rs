@@ -1,7 +1,7 @@
 //! The "basic" api types we generally require along with some of their macros.
 use const_format::concatcp;
 
-use crate::{ApiStringFormat, ArraySchema, Schema, StringSchema};
+use crate::{ApiStringFormat, ArraySchema, IntegerSchema, Schema, StringSchema};
 
 #[rustfmt::skip]
 const IPV4OCTET: &str = r"(?:25[0-5]|(?:2[0-4]|1[0-9]|[1-9])?[0-9])";
@@ -220,6 +220,11 @@ pub const HOST_PORT_SCHEMA: Schema =
     StringSchema::new("host:port combination (Host can be DNS name or IP address).")
         .format(&HOST_PORT_FORMAT)
         .schema();
+
+pub const PORT_SCHEMA: Schema = IntegerSchema::new("Node port")
+    .minimum(1)
+    .maximum(65535)
+    .schema();
 
 pub const HTTP_URL_SCHEMA: Schema = StringSchema::new("HTTP(s) url with optional port.")
     .format(&HTTP_URL_FORMAT)
