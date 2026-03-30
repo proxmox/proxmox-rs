@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::resource::ResourceStats;
 
 /// Usage statistics of a node.
@@ -35,5 +37,43 @@ impl NodeStats {
     /// Returns the current memory usage as a percentage.
     pub fn mem_load(&self) -> f64 {
         self.mem as f64 / self.maxmem as f64
+    }
+}
+
+/// A node in the cluster context.
+#[derive(Clone, Debug)]
+pub struct Node {
+    /// Base stats of the node.
+    stats: NodeStats,
+    /// The identifiers of the resources assigned to the node.
+    resources: HashSet<String>,
+}
+
+impl Node {
+    pub fn new(stats: NodeStats) -> Self {
+        Self {
+            stats,
+            resources: HashSet::new(),
+        }
+    }
+
+    pub fn add_resource(&mut self, sid: String) -> bool {
+        self.resources.insert(sid)
+    }
+
+    pub fn remove_resource(&mut self, sid: &str) -> bool {
+        self.resources.remove(sid)
+    }
+
+    pub fn stats(&self) -> NodeStats {
+        self.stats
+    }
+
+    pub fn resources_iter(&self) -> impl Iterator<Item = &str> {
+        self.resources.iter().map(String::as_str)
+    }
+
+    pub fn contains_resource(&self, sid: &str) -> bool {
+        self.resources.contains(sid)
     }
 }

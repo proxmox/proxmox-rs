@@ -3,6 +3,7 @@ pub mod topsis;
 
 pub mod node;
 pub mod resource;
+pub mod usage;
 
 pub mod scheduler;
 
