@@ -159,7 +159,7 @@ pub struct WireGuardPeer {
     /// Additional key preshared between two peers. Adds an additional layer of symmetric-key
     /// cryptography to be mixed into the already existing public-key cryptography, for
     /// post-quantum resistance.
-    pub preshared_key: PresharedKey,
+    pub preshared_key: Option<PresharedKey>,
     /// List of IPv4/v6 CIDRs from which incoming traffic for this peer is allowed and to which
     /// outgoing traffic for this peer is directed. The catch-all 0.0.0.0/0 may be specified for
     /// matching all IPv4 addresses, and ::/0 may be specified for matching all IPv6 addresses.
@@ -257,7 +257,7 @@ mod tests {
             },
             peers: vec![WireGuardPeer {
                 public_key: mock_private_key(1).public_key(),
-                preshared_key: mock_preshared_key(1),
+                preshared_key: Some(mock_preshared_key(1)),
                 allowed_ips: vec![Cidr::new_v4(Ipv4Addr::new(192, 168, 0, 0), 24).unwrap()],
                 endpoint: Some("foo.example.com:51820".parse().unwrap()),
                 persistent_keepalive: Some(25),
@@ -292,28 +292,28 @@ PersistentKeepalive = 25
             peers: vec![
                 WireGuardPeer {
                     public_key: mock_private_key(1).public_key(),
-                    preshared_key: mock_preshared_key(1),
+                    preshared_key: Some(mock_preshared_key(1)),
                     allowed_ips: vec![Cidr::new_v4(Ipv4Addr::new(192, 168, 0, 0), 24).unwrap()],
                     endpoint: Some("foo.example.com:51820".parse().unwrap()),
                     persistent_keepalive: None,
                 },
                 WireGuardPeer {
                     public_key: mock_private_key(2).public_key(),
-                    preshared_key: mock_preshared_key(2),
+                    preshared_key: Some(mock_preshared_key(2)),
                     allowed_ips: vec![Cidr::new_v4(Ipv4Addr::new(192, 168, 1, 0), 24).unwrap()],
                     endpoint: None,
                     persistent_keepalive: Some(25),
                 },
                 WireGuardPeer {
                     public_key: mock_private_key(3).public_key(),
-                    preshared_key: mock_preshared_key(3),
+                    preshared_key: Some(mock_preshared_key(3)),
                     allowed_ips: vec![Cidr::new_v4(Ipv4Addr::new(192, 168, 2, 0), 24).unwrap()],
                     endpoint: None,
                     persistent_keepalive: None,
                 },
                 WireGuardPeer {
                     public_key: mock_private_key(4).public_key(),
-                    preshared_key: mock_preshared_key(4),
+                    preshared_key: Some(mock_preshared_key(4)),
                     allowed_ips: vec![],
                     endpoint: Some("10.0.0.1:51820".parse().unwrap()),
                     persistent_keepalive: Some(25),
@@ -363,7 +363,7 @@ PersistentKeepalive = 25
             },
             peers: vec![WireGuardPeer {
                 public_key: mock_private_key(1).public_key(),
-                preshared_key: mock_preshared_key(1),
+                preshared_key: Some(mock_preshared_key(1)),
                 allowed_ips: vec![Cidr::new_v4(Ipv4Addr::new(192, 168, 0, 0), 24).unwrap()],
                 endpoint: Some("10.0.0.1:51820".parse().unwrap()),
                 persistent_keepalive: Some(25),
