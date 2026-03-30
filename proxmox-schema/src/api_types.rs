@@ -122,6 +122,11 @@ const_regex! {
 
     pub BLOCKDEVICE_NAME_REGEX = r"^(?:(?:h|s|x?v)d[a-z]+)|(?:nvme\d+n\d+)$";
     pub BLOCKDEVICE_DISK_AND_PARTITION_NAME_REGEX = r"^(?:(?:h|s|x?v)d[a-z]+\d*)|(?:nvme\d+n\d+(p\d+)?)$";
+
+    /// Regex to match a base64-encoded ED25519 key.
+    /// A ED25519 key has always 32 bytes of raw key material, base64 needs 4 * (n / 3) characters
+    /// to represent n bytes -> 4 * (32 / 3) = 42.6.., thus 43 + 1 padding character.
+    pub ED25519_BASE64_KEY_REGEX =r"^[a-zA-Z0-9+/-]{43}=";
 }
 
 pub const SAFE_ID_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&SAFE_ID_REGEX);
@@ -289,4 +294,11 @@ fn test_regexes() {
     assert!(IP_BRACKET_REGEX.is_match("[2014:b3a::27]"));
     assert!(IP_BRACKET_REGEX.is_match("[2014:b3a::192.168.0.1]"));
     assert!(IP_BRACKET_REGEX.is_match("[2014:b3a:0102:adf1:1234:4321:4afA:BCDF]"));
+
+    assert!(ED25519_BASE64_KEY_REGEX.is_match("KNpc7alqlLTaWE6RzuzHGioKs7Nqh/z3YxMJojpSelA="));
+    assert!(!ED25519_BASE64_KEY_REGEX.is_match(""));
+    // 31 bytes of data
+    assert!(!ED25519_BASE64_KEY_REGEX.is_match("6zroXbjGs9sdOpr1n/M5hh+UklBxtQ90tGQDnYzJfw=="));
+    // 33 bytes of data
+    assert!(!ED25519_BASE64_KEY_REGEX.is_match("IiC3Nkh4Fn2ukUZUNmdK5K5CWO53Zmk/eGlKO4m6aCD/"));
 }
