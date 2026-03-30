@@ -13,14 +13,17 @@ rust-version.workspace = true
 ed25519-dalek = "2.1"
 serde = { workspace = true, features = [ "derive" ] }
 thiserror.workspace = true
+proxmox-schema = { workspace = true, optional = true, features = ["api-types"] }
 proxmox-ini.workspace = true
 proxmox-network-types.workspace = true
 proxmox-sys = { workspace = true, optional = true }
 proxmox-serde.workspace = true
+regex = { workspace = true, optional = true }
 
 [dev-dependencies]
 pretty_assertions.workspace = true
 
 [features]
 default = ["key-generation"]
+api-types = ["dep:proxmox-schema", "dep:regex"]
 key-generation = ["dep:proxmox-sys"]

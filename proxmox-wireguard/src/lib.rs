@@ -17,6 +17,10 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 use proxmox_network_types::{endpoint::ServiceEndpoint, ip_address::Cidr};
+#[cfg(feature = "api-types")]
+use proxmox_schema::{
+    api_types::ED25519_BASE64_KEY_REGEX, ApiStringFormat, ApiType, StringSchema, UpdaterType,
+};
 
 /// Possible error when handling WireGuard configurations.
 #[derive(thiserror::Error, Debug, PartialEq, Clone)]
@@ -41,6 +45,19 @@ impl From<proxmox_ini::Error> for Error {
 pub struct PublicKey(
     #[serde(with = "proxmox_serde::byte_array_as_base64")] [u8; ed25519_dalek::PUBLIC_KEY_LENGTH],
 );
+
+#[cfg(feature = "api-types")]
+impl ApiType for PublicKey {
+    const API_SCHEMA: proxmox_schema::Schema =
+        StringSchema::new("ED25519 public key (base64 encoded)")
+            .format(&ApiStringFormat::Pattern(&ED25519_BASE64_KEY_REGEX))
+            .schema();
+}
+
+#[cfg(feature = "api-types")]
+impl UpdaterType for PublicKey {
+    type Updater = Option<PublicKey>;
+}
 
 /// Private key of a WireGuard peer.
 #[derive(Serialize)]
