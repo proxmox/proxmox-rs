@@ -94,7 +94,11 @@ pub fn score_nodes_to_start_service<T: AsRef<StaticNodeUsage>>(
             for (index, node) in nodes.iter().enumerate() {
                 let node = node.as_ref();
                 let new_cpu = if index == target_index {
-                    add_cpu_usage(node.cpu, node.maxcpu as f64, service.maxcpu)
+                    if service.maxcpu == 0.0 {
+                        node.cpu + node.maxcpu as f64
+                    } else {
+                        node.cpu + service.maxcpu
+                    }
                 } else {
                     node.cpu
                 } / (node.maxcpu as f64);
