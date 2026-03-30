@@ -2,6 +2,12 @@ use anyhow::Error;
 
 use crate::{node::NodeStats, resource::ResourceStats, topsis};
 
+use serde::{Deserialize, Serialize};
+use std::{
+    cmp::{Ordering, Reverse},
+    collections::BinaryHeap,
+};
+
 /// The scheduler view of a node.
 #[derive(Clone, Debug)]
 pub struct NodeUsage {
@@ -9,6 +15,36 @@ pub struct NodeUsage {
     pub name: String,
     /// The usage statistics of the node.
     pub stats: NodeStats,
+}
+
+/// Returns the load imbalance among the nodes.
+///
+/// The load balance is measured as the statistical dispersion of the individual node loads.
+///
+/// The current implementation uses the dimensionless coefficient of variation, which expresses the
+/// standard deviation in relation to the average mean of the node loads.
+///
+/// The coefficient of variation is not robust, which is a desired property here, because outliers
+/// should be detected as much as possible.
+fn calculate_node_imbalance(nodes: &[NodeUsage], to_load: impl Fn(&NodeUsage) -> f64) -> f64 {
+    let node_count = nodes.len();
+    let node_loads = nodes.iter().map(to_load).collect::<Vec<_>>();
+
+    let load_sum = node_loads.iter().sum::<f64>();
+
+    // load_sum is guaranteed to be -0.0 for empty `nodes`
+    if load_sum == 0.0 {
+        0.0
+    } else {
+        let load_mean = load_sum / node_count as f64;
+
+        let squared_diff_sum = node_loads
+            .iter()
+            .fold(0.0, |sum, node_load| sum + (node_load - load_mean).powi(2));
+        let load_sd = (squared_diff_sum / node_count as f64).sqrt();
+
+        load_sd / load_mean
+    }
 }
 
 criteria_struct! {
@@ -31,6 +67,83 @@ criteria_struct! {
 #[derive(Clone, Debug)]
 pub struct Scheduler {
     nodes: Vec<NodeUsage>,
+}
+
+/// A possible migration.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct Migration {
+    /// The identifier of a leading resource.
+    pub sid: String,
+    /// The current node of the leading resource.
+    pub source_node: String,
+    /// The possible migration target node for the resource.
+    pub target_node: String,
+}
+
+/// A possible migration with a score.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub struct ScoredMigration {
+    /// The possible migration.
+    pub migration: Migration,
+    /// The expected node imbalance after the migration.
+    pub imbalance: f64,
+}
+
+impl Ord for ScoredMigration {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.imbalance
+            .total_cmp(&other.imbalance)
+            .then(self.migration.cmp(&other.migration))
+    }
+}
+
+impl PartialOrd for ScoredMigration {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for ScoredMigration {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == Ordering::Equal
+    }
+}
+
+impl Eq for ScoredMigration {}
+
+impl ScoredMigration {
+    pub fn new<T: Into<Migration>>(migration: T, imbalance: f64) -> Self {
+        // Depending on how the imbalance is calculated, it can contain minor approximation errors.
+        // As this struct implements the Ord trait, users of the struct's cmp() can run into cases,
+        // where the imbalance is the same up to the significant digits in base 10, but treated as
+        // different values.
+        //
+        // Therefore, truncate any non-significant digits to prevent these cases.
+        let factor = 10_f64.powi(f64::DIGITS as i32);
+        let truncated_imbalance = f64::trunc(factor * imbalance) / factor;
+
+        Self {
+            migration: migration.into(),
+            imbalance: truncated_imbalance,
+        }
+    }
+}
+
+/// A possible migration candidate with the migrated usage stats.
+#[derive(Clone, Debug)]
+pub struct MigrationCandidate {
+    /// The possible migration.
+    pub migration: Migration,
+    /// Usage stats of the resource(s) to be migrated.
+    pub stats: ResourceStats,
+}
+
+impl From<MigrationCandidate> for Migration {
+    fn from(candidate: MigrationCandidate) -> Self {
+        candidate.migration
+    }
 }
 
 impl Scheduler {
@@ -82,6 +195,123 @@ impl Scheduler {
         }
     }
 
+    /// Returns the load imbalance among the nodes.
+    ///
+    /// See [`calculate_node_imbalance`] for more information.
+    pub fn node_imbalance(&self) -> f64 {
+        calculate_node_imbalance(&self.nodes, |node| node.stats.load())
+    }
+
+    /// Returns the load imbalance among the nodes as if a specific resource was moved.
+    ///
+    /// See [`calculate_node_imbalance`] for more information.
+    fn node_imbalance_with_migration_candidate(&self, candidate: &MigrationCandidate) -> f64 {
+        calculate_node_imbalance(&self.nodes, |node| {
+            let mut new_stats = node.stats;
+
+            if node.name == candidate.migration.source_node {
+                new_stats.remove_running_resource(&candidate.stats);
+            } else if node.name == candidate.migration.target_node {
+                new_stats.add_running_resource(&candidate.stats);
+            }
+
+            new_stats.load()
+        })
+    }
+
+    /// Scores the given migration `candidates` by the best node imbalance improvement with
+    /// exhaustive search.
+    ///
+    /// The `candidates` are assumed to be consistent with the scheduler. No further validation is
+    /// done whether the given nodenames actually exist in the scheduler.
+    ///
+    /// The scoring is done as if each resource migration has already been done. This assumes that
+    /// the already migrated resource consumes the same amount of each stat as on the previous node
+    /// according to its `stats`.
+    ///
+    /// Returns up to `limit` of the best scored migrations.
+    pub fn score_best_balancing_migration_candidates<I>(
+        &self,
+        candidates: I,
+        limit: usize,
+    ) -> Vec<ScoredMigration>
+    where
+        I: IntoIterator<Item = MigrationCandidate>,
+    {
+        let mut scored_migrations = candidates
+            .into_iter()
+            .map(|candidate| {
+                let imbalance = self.node_imbalance_with_migration_candidate(&candidate);
+
+                Reverse(ScoredMigration::new(candidate, imbalance))
+            })
+            .collect::<BinaryHeap<_>>();
+
+        let mut best_migrations = Vec::with_capacity(limit);
+
+        // BinaryHeap::into_iter_sorted() is still in nightly unfortunately
+        while best_migrations.len() < limit {
+            match scored_migrations.pop() {
+                Some(Reverse(alternative)) => best_migrations.push(alternative),
+                None => break,
+            }
+        }
+
+        best_migrations
+    }
+
+    /// Scores the given migration `candidates` by the best node imbalance improvement with the
+    /// TOPSIS method.
+    ///
+    /// The `candidates` are assumed to be consistent with the scheduler. No further validation is
+    /// done whether the given nodenames actually exist in the scheduler.
+    ///
+    /// The scoring is done as if each resource migration has already been done. This assumes that
+    /// the already migrated resource consumes the same amount of each stat as on the previous node
+    /// according to its `stats`.
+    ///
+    /// Returns up to `limit` of the best scored migrations.
+    pub fn score_best_balancing_migration_candidates_topsis(
+        &self,
+        candidates: &[MigrationCandidate],
+        limit: usize,
+    ) -> Result<Vec<ScoredMigration>, Error> {
+        let matrix = candidates
+            .iter()
+            .map(|candidate| {
+                let resource_stats = &candidate.stats;
+                let source_node = &candidate.migration.source_node;
+                let target_node = &candidate.migration.target_node;
+
+                self.topsis_alternative_with(|node| {
+                    let mut new_stats = node.stats;
+
+                    if &node.name == source_node {
+                        new_stats.remove_running_resource(resource_stats);
+                    } else if &node.name == target_node {
+                        new_stats.add_running_resource(resource_stats);
+                    }
+
+                    new_stats
+                })
+                .into()
+            })
+            .collect::<Vec<_>>();
+
+        let best_alternatives =
+            topsis::rank_alternatives(&topsis::Matrix::new(matrix)?, &PVE_HA_TOPSIS_CRITERIA)?;
+
+        Ok(best_alternatives
+            .into_iter()
+            .take(limit)
+            .map(|i| {
+                let imbalance = self.node_imbalance_with_migration_candidate(&candidates[i]);
+
+                ScoredMigration::new(candidates[i].clone(), imbalance)
+            })
+            .collect())
+    }
+
     /// Scores nodes to start a resource with the usage statistics `resource_stats` on.
     ///
     /// The scoring is done as if the resource is already started on each node. This assumes that
@@ -121,5 +351,57 @@ impl Scheduler {
             .enumerate()
             .map(|(n, score)| (self.nodes[n].name.clone(), score))
             .collect())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scored_migration_order() {
+        let migration1 = ScoredMigration::new(
+            Migration {
+                sid: String::from("vm:102"),
+                source_node: String::from("node1"),
+                target_node: String::from("node2"),
+            },
+            0.7231749488916931,
+        );
+        let migration2 = ScoredMigration::new(
+            Migration {
+                sid: String::from("vm:102"),
+                source_node: String::from("node1"),
+                target_node: String::from("node3"),
+            },
+            0.723174948891693,
+        );
+        let migration3 = ScoredMigration::new(
+            Migration {
+                sid: String::from("vm:101"),
+                source_node: String::from("node1"),
+                target_node: String::from("node2"),
+            },
+            0.723174948891693 + 1e-15,
+        );
+
+        let mut migrations = vec![migration2.clone(), migration3.clone(), migration1.clone()];
+
+        migrations.sort();
+
+        assert_eq!(
+            vec![migration1.clone(), migration2.clone(), migration3.clone()],
+            migrations
+        );
+
+        let mut heap = BinaryHeap::from(vec![
+            Reverse(migration2.clone()),
+            Reverse(migration3.clone()),
+            Reverse(migration1.clone()),
+        ]);
+
+        assert_eq!(heap.pop(), Some(Reverse(migration1)));
+        assert_eq!(heap.pop(), Some(Reverse(migration2)));
+        assert_eq!(heap.pop(), Some(Reverse(migration3)));
     }
 }

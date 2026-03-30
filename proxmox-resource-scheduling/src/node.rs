@@ -29,6 +29,18 @@ impl NodeStats {
         self.mem += resource_stats.maxmem;
     }
 
+    /// Adds the resource stats to the node stats as if the resource is running on the node.
+    pub fn add_running_resource(&mut self, resource_stats: &ResourceStats) {
+        self.cpu += resource_stats.cpu;
+        self.mem += resource_stats.mem;
+    }
+
+    /// Removes the resource stats from the node stats as if the resource is not running on the node.
+    pub fn remove_running_resource(&mut self, resource_stats: &ResourceStats) {
+        self.cpu = f64::max(0.0, self.cpu - resource_stats.cpu);
+        self.mem = self.mem.saturating_sub(resource_stats.mem);
+    }
+
     /// Returns the current cpu usage as a percentage.
     pub fn cpu_load(&self) -> f64 {
         self.cpu / self.maxcpu as f64
@@ -37,6 +49,11 @@ impl NodeStats {
     /// Returns the current memory usage as a percentage.
     pub fn mem_load(&self) -> f64 {
         self.mem as f64 / self.maxmem as f64
+    }
+
+    /// Returns a combined node usage as a percentage.
+    pub fn load(&self) -> f64 {
+        (self.cpu_load() + self.mem_load()) / 2.0
     }
 }
 
