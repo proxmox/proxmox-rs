@@ -1,3 +1,9 @@
+rust-proxmox-http (1.0.6-1) trixie; urgency=medium
+
+  * move over http-proxy schema for reuse guarded by api-types feature
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 30 Mar 2026 21:31:29 +0200
+
 rust-proxmox-http (1.0.5-1) trixie; urgency=medium
 
   * track user tag updates on rate-limited streams.
