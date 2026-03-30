@@ -62,18 +62,17 @@ impl Scheduler {
         let matrix = self
             .nodes
             .iter()
-            .enumerate()
-            .map(|(target_index, _)| {
+            .map(|node| {
                 // Base values on percentages to allow comparing nodes with different stats.
                 let mut highest_cpu = 0.0;
                 let mut squares_cpu = 0.0;
                 let mut highest_mem = 0.0;
                 let mut squares_mem = 0.0;
 
-                for (index, node) in self.nodes.iter().enumerate() {
-                    let mut new_stats = node.stats;
+                for target_node in self.nodes.iter() {
+                    let mut new_stats = target_node.stats;
 
-                    if index == target_index {
+                    if node.name == target_node.name {
                         new_stats.add_started_resource(&resource_stats)
                     };
 
