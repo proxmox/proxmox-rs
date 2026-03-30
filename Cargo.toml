@@ -21,6 +21,7 @@ members = [
     "proxmox-http",
     "proxmox-http-error",
     "proxmox-human-byte",
+    "proxmox-ini",
     "proxmox-io",
     "proxmox-lang",
     "proxmox-ldap",
@@ -117,6 +118,7 @@ openssl = "0.10"
 pam-sys = "0.5"
 percent-encoding = "2.1"
 pin-utils = "0.1.0"
+pretty_assertions = "1.4"
 proc-macro2 = "1.0"
 quick-xml = "0.36.1"
 quote = "1.0"

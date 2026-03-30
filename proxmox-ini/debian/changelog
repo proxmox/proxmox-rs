@@ -1,0 +1,5 @@
+rust-proxmox-ini (0.1.0-1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 27 Mar 2026 12:03:43 +0100
