@@ -1,3 +1,19 @@
+rust-proxmox-resource-scheduling (2.0.0-1) trixie; urgency=medium
+
+  * rename service to resource where appropriate, including public interfaces.
+
+  * introduce generic scheduler and cluster usage implementation.
+
+  * topsis: handle empty criteria without panics.
+
+  * implement rebalancing migration selection. Assuming that a resource will
+    hold the same dynamic resource usage on a new node as on the previous
+    node, score possible migrations, where the cluster node imbalance is
+    minimal (bruteforce), or the shifted root mean square and maximum resource
+    usages of the cpu and memory is minimal across the cluster nodes (TOPSIS).
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 31 Mar 2026 18:06:13 +0200
+
 rust-proxmox-resource-scheduling (1.0.1-1) trixie; urgency=medium
 
   * allow owned nodes slice for score_nodes_to_start_service.
