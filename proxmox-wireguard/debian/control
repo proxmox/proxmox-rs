@@ -8,7 +8,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-ed25519-dalek-2+default-dev (>= 2.1-~~) <!nocheck>,
  librust-proxmox-ini-0.1+default-dev <!nocheck>,
- librust-proxmox-network-types-1+default-dev <!nocheck>,
+ librust-proxmox-network-types-1+default-dev (>= 1.0.2-~~) <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
  librust-proxmox-sys-1+default-dev (>= 1.0.1-~~) <!nocheck>,
@@ -29,7 +29,7 @@ Depends:
  ${misc:Depends},
  librust-ed25519-dalek-2+default-dev (>= 2.1-~~),
  librust-proxmox-ini-0.1+default-dev,
- librust-proxmox-network-types-1+default-dev,
+ librust-proxmox-network-types-1+default-dev (>= 1.0.2-~~),
  librust-proxmox-serde-1+default-dev,
  librust-proxmox-serde-1+serde-json-dev,
  librust-serde-1+default-dev,
@@ -52,8 +52,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-wireguard-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-types-dev (>= 5.1.0-~~),
- librust-proxmox-schema-5+default-dev (>= 5.1.0-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
  librust-regex-1+default-dev (>= 1.5-~~)
 Provides:
  librust-proxmox-wireguard-0+api-types-dev (= ${binary:Version}),
