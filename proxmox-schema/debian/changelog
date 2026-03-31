@@ -1,3 +1,12 @@
+rust-proxmox-schema (5.1.1-1) trixie; urgency=medium
+
+  * ser: fix value serialization for maps by actually serializing map values
+    as values, not keys.
+  * provide integer schema for (node) ports.
+  * api-types: add ed25519 base64 encoded key schema.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 01 Apr 2026 00:56:48 +0200
+
 rust-proxmox-schema (5.1.0-1) trixie; urgency=medium
 
   * add CommaSeparatedList<T> wrapper type
