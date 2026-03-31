@@ -1,3 +1,9 @@
+rust-proxmox-network-types (1.0.2-1) trixie; urgency=medium
+
+  * add ServiceEndpoint type as host/port tuple abstraction.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 01 Apr 2026 00:50:58 +0200
+
 rust-proxmox-network-types (1.0.1-1) trixie; urgency=medium
 
   * cidr: support IPv4-mapped IPv6 range for CIDR-contains-IP check.
