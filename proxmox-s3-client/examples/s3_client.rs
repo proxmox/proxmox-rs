@@ -41,6 +41,7 @@ async fn run() -> Result<(), anyhow::Error> {
         provider_quirks: Vec::new(),
         rate_limiter_config: None,
         proxy_config: None,
+        request_counter_config: None,
     };
 
     // Creating a client instance and connect to api endpoint

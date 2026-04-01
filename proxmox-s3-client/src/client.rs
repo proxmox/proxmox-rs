@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -33,6 +34,7 @@ use crate::response_reader::{
     GetObjectResponse, HeadObjectResponse, ListBucketsResponse, ListObjectsV2Response,
     PutObjectResponse, ResponseReader,
 };
+use crate::shared_request_counters::SharedRequestCounters;
 
 /// Default timeout for s3 api requests.
 pub const S3_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(30 * 60);
@@ -75,6 +77,16 @@ pub struct S3RateLimiterConfig {
     burst_out: Option<u64>,
 }
 
+/// Configuration for the s3 client's shared request counters
+pub struct S3RequestCounterConfig {
+    /// ID for the memory mapped file
+    pub id: String,
+    /// Base path for the shared memory mapped file
+    pub base_path: PathBuf,
+    /// User for the to be created shared memory mapped file and folders
+    pub user: User,
+}
+
 /// Configuration options for client
 pub struct S3ClientOptions {
     /// Endpoint to access S3 object store.
@@ -103,6 +115,8 @@ pub struct S3ClientOptions {
     pub rate_limiter_config: Option<S3RateLimiterConfig>,
     /// Proxy configuration to be used by the client.
     pub proxy_config: Option<ProxyConfig>,
+    /// Configuration options for the client's shared request counters.
+    pub request_counter_config: Option<S3RequestCounterConfig>,
 }
 
 impl S3ClientOptions {
@@ -114,6 +128,7 @@ impl S3ClientOptions {
         common_prefix: String,
         rate_limiter_options: Option<S3RateLimiterOptions>,
         proxy_config: Option<ProxyConfig>,
+        request_counter_config: Option<S3RequestCounterConfig>,
     ) -> Self {
         let rate_limiter_config = rate_limiter_options.map(|options| S3RateLimiterConfig {
             options,
@@ -136,6 +151,7 @@ impl S3ClientOptions {
             provider_quirks: config.provider_quirks.unwrap_or_default(),
             rate_limiter_config,
             proxy_config,
+            request_counter_config,
         }
     }
 }
@@ -146,6 +162,7 @@ pub struct S3Client {
     options: S3ClientOptions,
     authority: Authority,
     put_rate_limiter: Option<Arc<Mutex<RateLimiter>>>,
+    request_counters: Option<Arc<SharedRequestCounters>>,
 }
 
 impl S3Client {
@@ -222,6 +239,20 @@ impl S3Client {
             https_connector.set_proxy(proxy_config.clone());
         }
 
+        let request_counters = if let Some(config) = options.request_counter_config.as_ref() {
+            let path = config
+                .base_path
+                .join(format!("{}.shmem", config.id));
+            let request_counters = SharedRequestCounters::open_shared_memory_mapped(
+                &path,
+                config.user.clone(),
+            )
+            .context("failed to mmap shared S3 request counters")?;
+            Some(Arc::new(request_counters))
+        } else {
+            None
+        };
+
         let client = Client::builder(TokioExecutor::new()).build::<_, Body>(https_connector);
 
         let authority_template = if let Some(port) = options.port {
@@ -250,6 +281,7 @@ impl S3Client {
             options,
             authority,
             put_rate_limiter,
+            request_counters,
         })
     }
 
@@ -408,6 +440,11 @@ impl S3Client {
             };
 
             if !do_retry || retry >= MAX_S3_HTTP_REQUEST_RETRY - 1 {
+                if let Some(counters) = self.request_counters.as_ref()
+                    && response.is_ok()
+                {
+                    let _prev = counters.increment(parts.method.clone(), Ordering::AcqRel);
+                }
                 return Ok(response?);
             }
 

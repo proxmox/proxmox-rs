@@ -38,7 +38,9 @@ proxmox-base64 = { workspace = true, optional = true }
 proxmox-http = { workspace = true, features = [ "body", "client", "client-trait" ], optional = true }
 proxmox-human-byte.workspace = true
 proxmox-rate-limiter = { workspace = true, features = [ "rate-limiter", "shared-rate-limiter" ], optional = true }
+proxmox-shared-memory = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = [ "api-macro", "api-types" ] }
+proxmox-sys = { workspace = true, optional = true }
 proxmox-serde.workspace = true
 proxmox-time = {workspace = true, optional = true }
 
@@ -65,6 +67,8 @@ impl = [
     "dep:proxmox-base64",
     "dep:proxmox-http",
     "dep:proxmox-rate-limiter",
+    "dep:proxmox-shared-memory",
+    "dep:proxmox-sys",
     "dep:proxmox-time",
 ]
 

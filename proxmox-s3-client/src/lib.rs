@@ -21,7 +21,8 @@ pub use aws_sign_v4::uri_decode;
 mod client;
 #[cfg(feature = "impl")]
 pub use client::{
-    S3Client, S3ClientOptions, S3PathPrefix, S3RateLimiterOptions, S3_HTTP_REQUEST_TIMEOUT,
+    S3Client, S3ClientOptions, S3PathPrefix, S3RateLimiterOptions, S3RequestCounterConfig,
+    S3_HTTP_REQUEST_TIMEOUT,
 };
 #[cfg(feature = "impl")]
 mod timestamps;
@@ -35,3 +36,7 @@ pub use object_key::S3ObjectKey;
 mod response_reader;
 #[cfg(feature = "impl")]
 pub use response_reader::DeleteObjectError;
+#[cfg(feature = "impl")]
+mod shared_request_counters;
+#[cfg(feature = "impl")]
+pub use shared_request_counters::{RequestCounterValues, SharedRequestCounters};
