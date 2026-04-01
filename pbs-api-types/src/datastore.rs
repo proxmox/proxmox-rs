@@ -1680,6 +1680,10 @@ pub struct GarbageCollectionJobStatus {
         "backend-type": {
             type: DatastoreBackendType,
         },
+        "s3-statistics": {
+            type: S3Statistics,
+            optional: true,
+        },
     },
 )]
 #[derive(Serialize, Deserialize)]
@@ -1701,6 +1705,30 @@ pub struct DataStoreStatus {
     /// Datastore backend type
     #[serde(default)]
     pub backend_type: DatastoreBackendType,
+    /// S3 backend statistics (on datastores with s3 backend only).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub s3_statistics: Option<S3Statistics>,
+}
+
+#[api()]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+/// Statistics specific to the S3 backend
+pub struct S3Statistics {
+    /// Total downloaded (bytes).
+    pub downloaded: u64,
+    /// Total uploaded (bytes).
+    pub uploaded: u64,
+    /// Get requests
+    pub get: u64,
+    /// Post requests
+    pub post: u64,
+    /// Put requests
+    pub put: u64,
+    /// Head requests
+    pub head: u64,
+    /// Delete requests
+    pub delete: u64,
 }
 
 #[api(
