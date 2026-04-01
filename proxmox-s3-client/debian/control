@@ -9,9 +9,9 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
  librust-proxmox-human-byte-1+default-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~) <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
@@ -32,9 +32,9 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-const-format-0.2+default-dev,
  librust-proxmox-human-byte-1+default-dev,
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
  librust-proxmox-serde-1+default-dev,
  librust-proxmox-serde-1+serde-json-dev,
  librust-regex-1+default-dev (>= 1.5-~~),
@@ -48,12 +48,12 @@ Provides:
  librust-proxmox-s3-client-1-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1+api-types-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1+default-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2+api-types-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2+default-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.6-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.6+api-types-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.6+default-dev (= ${binary:Version})
+ librust-proxmox-s3-client-1.3-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.3+api-types-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.3+default-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.3.0-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.3.0+api-types-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.3.0+default-dev (= ${binary:Version})
 Description: Low level REST API client for AWS S3 compatible object stores - Rust source code
  Source code for Debianized Rust crate "proxmox-s3-client"
 
@@ -86,8 +86,8 @@ Depends:
  librust-proxmox-rate-limiter-1+default-dev,
  librust-proxmox-rate-limiter-1+rate-limiter-dev,
  librust-proxmox-rate-limiter-1+shared-rate-limiter-dev,
- librust-proxmox-shared-memory-1+default-dev,
- librust-proxmox-sys-1+default-dev,
+ librust-proxmox-shared-memory-1+default-dev (>= 1.0.1-~~),
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~),
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~),
  librust-quick-xml-0.36+async-tokio-dev (>= 0.36.1-~~),
  librust-quick-xml-0.36+default-dev (>= 0.36.1-~~),
@@ -99,8 +99,8 @@ Depends:
  librust-url-2+default-dev (>= 2.2-~~)
 Provides:
  librust-proxmox-s3-client-1+impl-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2+impl-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.2.6+impl-dev (= ${binary:Version})
+ librust-proxmox-s3-client-1.3+impl-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.3.0+impl-dev (= ${binary:Version})
 Description: Low level REST API client for AWS S3 compatible object stores - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-s3-client crate,
  by pulling in any additional dependencies needed by that feature.
