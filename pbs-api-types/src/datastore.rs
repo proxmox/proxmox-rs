@@ -420,6 +420,14 @@ impl FromStr for DatastoreBackendConfig {
     }
 }
 
+pub const COUNTER_RESET_SCHEDULE_SCHEMA: Schema =
+    StringSchema::new("Reset notification threshold related counters at specified schedule.")
+        .format(&ApiStringFormat::VerifyFn(
+            proxmox_time::verify_calendar_event,
+        ))
+        .type_text("<calendar-event>")
+        .schema();
+
 #[api(
     properties: {
         name: {
@@ -479,6 +487,10 @@ impl FromStr for DatastoreBackendConfig {
             optional: true,
             format: &ApiStringFormat::PropertyString(&RequestCounterThresholds::API_SCHEMA),
             type: String,
+        },
+        "counter-reset-schedule": {
+            optional: true,
+            schema: COUNTER_RESET_SCHEDULE_SCHEMA,
         },
     }
 )]
@@ -541,6 +553,10 @@ pub struct DataStoreConfig {
     /// Threshold values for notifications
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notification_thresholds: Option<String>,
+
+    /// Notification threshold related counter reset schedule
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub counter_reset_schedule: Option<String>,
 }
 
 #[api]
@@ -581,6 +597,7 @@ impl DataStoreConfig {
             backing_device: None,
             backend: None,
             notification_thresholds: None,
+            counter_reset_schedule: None,
         }
     }
 
