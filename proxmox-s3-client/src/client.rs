@@ -258,14 +258,10 @@ impl S3Client {
         }
 
         let request_counters = if let Some(config) = options.request_counter_config.as_ref() {
-            let path = config
-                .base_path
-                .join(format!("{}.shmem", config.id));
-            let request_counters = SharedRequestCounters::open_shared_memory_mapped(
-                &path,
-                config.user.clone(),
-            )
-            .context("failed to mmap shared S3 request counters")?;
+            let path = config.base_path.join(format!("{}.shmem", config.id));
+            let request_counters =
+                SharedRequestCounters::open_shared_memory_mapped(&path, config.user.clone())
+                    .context("failed to mmap shared S3 request counters")?;
             let request_counters = Arc::new(request_counters);
 
             SHARED_COUNTER_FLUSHER
