@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
 use anyhow::{bail, format_err, Context, Error};
@@ -34,7 +34,7 @@ use crate::response_reader::{
     GetObjectResponse, HeadObjectResponse, ListBucketsResponse, ListObjectsV2Response,
     PutObjectResponse, ResponseReader,
 };
-use crate::shared_request_counters::SharedRequestCounters;
+use crate::shared_request_counters::{MmapFlusher, SharedRequestCounters};
 
 /// Default timeout for s3 api requests.
 pub const S3_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(30 * 60);
@@ -46,6 +46,9 @@ const MAX_S3_UPLOAD_RETRY: usize = 3;
 const S3_MIN_ASSUMED_UPLOAD_RATE: u64 = 1024;
 const MAX_S3_HTTP_REQUEST_RETRY: usize = 3;
 const S3_HTTP_REQUEST_RETRY_BACKOFF_DEFAULT: Duration = Duration::from_secs(1);
+
+static SHARED_COUNTER_FLUSHER: LazyLock<RwLock<MmapFlusher>> =
+    LazyLock::new(|| RwLock::new(MmapFlusher::new()));
 
 /// S3 object key path prefix without the context prefix as defined by the client options.
 ///
@@ -248,7 +251,14 @@ impl S3Client {
                 config.user.clone(),
             )
             .context("failed to mmap shared S3 request counters")?;
-            Some(Arc::new(request_counters))
+            let request_counters = Arc::new(request_counters);
+
+            SHARED_COUNTER_FLUSHER
+                .write()
+                .unwrap()
+                .register_counter(Arc::clone(&request_counters));
+
+            Some(request_counters)
         } else {
             None
         };
@@ -449,6 +459,9 @@ impl S3Client {
                         .try_into()
                         .context("failed to account for upload traffic")?;
                     let _prev_uploaded = counters.add_upload_traffic(transferred, Ordering::AcqRel);
+
+                    // okay in async context since request_flush() is non-blocking
+                    let _ = SHARED_COUNTER_FLUSHER.read().unwrap().request_flush();
                 }
                 return Ok(response?);
             }

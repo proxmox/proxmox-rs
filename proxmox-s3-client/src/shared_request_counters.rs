@@ -1,11 +1,19 @@
+use std::collections::HashMap;
 use std::mem::MaybeUninit;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, RwLock};
+use std::time::Duration;
 
 use anyhow::{bail, Error};
 use hyper::http::method::Method;
+use nix::sys::mman::MsFlags;
 use nix::sys::stat::Mode;
 use nix::unistd::User;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::error::TrySendError;
+use tokio::task::JoinHandle;
+use tokio::time::Instant;
 
 use proxmox_shared_memory::{Init, SharedMemory};
 use proxmox_sys::fs::CreateOptions;
@@ -169,6 +177,7 @@ impl Init for MappableRequestCounters {
 /// If set, the counts can be filtered based on a path prefix.
 pub struct SharedRequestCounters {
     shared_memory: SharedMemory<MappableRequestCounters>,
+    path: PathBuf,
 }
 
 impl SharedRequestCounters {
@@ -176,7 +185,7 @@ impl SharedRequestCounters {
     ///
     /// Opens or creates mmap file and accesses it via shared memory mapping.
     pub fn open_shared_memory_mapped<P: AsRef<Path>>(path: P, user: User) -> Result<Self, Error> {
-        let path = path.as_ref();
+        let path = path.as_ref().to_path_buf();
         if let Some(parent) = path.parent() {
             let dir_opts = CreateOptions::new()
                 .perm(Mode::from_bits_truncate(0o770))
@@ -190,8 +199,11 @@ impl SharedRequestCounters {
             .perm(Mode::from_bits_truncate(0o660))
             .owner(user.uid)
             .group(user.gid);
-        let shared_memory = SharedMemory::open_non_tmpfs(path, file_opts)?;
-        Ok(Self { shared_memory })
+        let shared_memory = SharedMemory::open_non_tmpfs(&path, file_opts)?;
+        Ok(Self {
+            shared_memory,
+            path,
+        })
     }
 
     /// Increment the counter for given method, following the provided memory ordering constrains
@@ -250,6 +262,153 @@ impl SharedRequestCounters {
             .data()
             .counters
             .get_download_traffic(ordering)
+    }
+
+    /// Flush in-memory contents to backing file, but do not wait for completion
+    pub fn schedule_flush(&self) -> Result<(), Error> {
+        self.shared_memory.msync(MsFlags::MS_ASYNC)
+    }
+
+    /// Path of shared memory backing file
+    pub fn path_buf(&self) -> PathBuf {
+        self.path.clone()
+    }
+}
+
+const FLUSH_THRESHOLD: Duration = Duration::from_secs(5);
+
+// state for periodic flushing of the mmapped request counter values to the
+// backend
+pub(crate) struct MmapFlusher {
+    task_handler: Option<TaskHandler>,
+    register: Arc<RwLock<HashMap<PathBuf, CounterRegisterItem>>>,
+}
+
+struct CounterRegisterItem {
+    register_count: usize,
+    counters: Arc<SharedRequestCounters>,
+}
+
+struct TaskHandler {
+    request_sender: mpsc::Sender<()>,
+    task_handle: JoinHandle<()>,
+    // Keep reference to runtime while task is being executed
+    _runtime: Arc<tokio::runtime::Runtime>,
+}
+
+impl Drop for TaskHandler {
+    fn drop(&mut self) {
+        self.task_handle.abort();
+    }
+}
+
+impl MmapFlusher {
+    /// Create new empty and inactive flusher instance. Handler task will be created on-demand
+    /// when the first counter is registered.
+    pub(crate) fn new() -> Self {
+        Self {
+            task_handler: None,
+            register: Arc::new(RwLock::new(HashMap::new())),
+        }
+    }
+
+    /// Register the shared request counter to be flushed periodically.
+    pub(crate) fn register_counter(&mut self, counters: Arc<SharedRequestCounters>) {
+        let id = counters.path_buf();
+
+        if self.task_handler.is_none() {
+            self.task_handler = Some(self.init_channel_and_task());
+        }
+
+        let mut register = self.register.write().unwrap();
+        register
+            .entry(id)
+            .and_modify(|item| item.register_count += 1)
+            .or_insert(CounterRegisterItem {
+                register_count: 1,
+                counters,
+            });
+    }
+
+    /// Remove the shared request counter to no longer be flushed by the handler task.
+    pub(crate) fn remove_counter(&mut self, id: &PathBuf) {
+        let mut register = self.register.write().unwrap();
+        if let Some(item) = register.remove(id) {
+            if item.register_count > 1 {
+                register.insert(
+                    item.counters.path_buf(),
+                    CounterRegisterItem {
+                        register_count: item.register_count - 1,
+                        counters: item.counters,
+                    },
+                );
+            }
+        }
+        if register.is_empty() {
+            // no more registered counters, abort task by dropping
+            self.task_handler.take();
+        }
+    }
+
+    /// Request for the flusher to be executed the next time the timeout is reached.
+    pub(crate) fn request_flush(&self) -> Result<(), Error> {
+        match self.task_handler.as_ref() {
+            Some(handler) => {
+                // ignore when channel full, flush already requested anyways
+                if let Err(TrySendError::Closed(())) = handler.request_sender.try_send(()) {
+                    bail!("failed to send flush request, channel closed");
+                }
+            }
+            None => bail!("failed to send flush request, no task handler"),
+        }
+        Ok(())
+    }
+
+    /// Setup or get the current tokio runtime, create channel for requesting flushes and setup
+    /// the task to periodically check for flush requests.
+    fn init_channel_and_task(&self) -> TaskHandler {
+        let (request_sender, mut request_receiver) = mpsc::channel(1);
+
+        let register = Arc::clone(&self.register);
+        let _runtime = proxmox_async::runtime::get_runtime();
+        let task_handle = _runtime.spawn(async move {
+            let mut flush_requested = false;
+            let mut next_timeout = Instant::now() + FLUSH_THRESHOLD;
+
+            loop {
+                match tokio::time::timeout_at(next_timeout, request_receiver.recv()).await {
+                    Ok(Some(())) => flush_requested = true,
+                    Err(_timeout) => {
+                        if flush_requested {
+                            Self::handle_flush(Arc::clone(&register));
+                            flush_requested = false;
+                        }
+                        next_timeout = Instant::now() + FLUSH_THRESHOLD;
+                    }
+                    _ => {
+                        // channel closed or error
+                        Self::handle_flush(Arc::clone(&register));
+                        return;
+                    }
+                }
+            }
+        });
+
+        TaskHandler {
+            request_sender,
+            task_handle,
+            _runtime,
+        }
+    }
+
+    // Helper to flush all currently registered shared request counters.
+    fn handle_flush(register: Arc<RwLock<HashMap<PathBuf, CounterRegisterItem>>>) {
+        let register = register.read().unwrap();
+        for item in register.values() {
+            if let Err(err) = item.counters.schedule_flush() {
+                tracing::error!("failed to schedule flush: {err}");
+            }
+        }
     }
 }
 

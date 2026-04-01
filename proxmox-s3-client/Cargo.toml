@@ -34,6 +34,7 @@ tokio-util = { workspace = true, features = [ "compat" ], optional = true }
 tracing = { workspace = true, optional = true }
 url = {workspace = true, optional = true }
 
+proxmox-async = { workspace = true, optional = true }
 proxmox-base64 = { workspace = true, optional = true }
 proxmox-http = { workspace = true, features = [ "body", "client", "client-trait" ], optional = true }
 proxmox-human-byte.workspace = true
@@ -64,6 +65,7 @@ impl = [
     "dep:tokio-util",
     "dep:tracing",
     "dep:url",
+    "dep:proxmox-async",
     "dep:proxmox-base64",
     "dep:proxmox-http",
     "dep:proxmox-rate-limiter",
