@@ -1,19 +1,24 @@
+use std::pin::Pin;
 use std::str::FromStr;
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
+use std::task::{Context as Ctx, Poll};
 
 use anyhow::{anyhow, bail, format_err, Context, Error};
 use http_body_util::BodyExt;
-use hyper::body::{Bytes, Incoming};
+use hyper::body::{Body, Bytes, Frame, Incoming, SizeHint};
 use hyper::header::HeaderName;
 use hyper::http::header;
 use hyper::http::StatusCode;
 use hyper::{HeaderMap, Response};
 use serde::Deserialize;
 
-use crate::{HttpDate, LastModifiedTimestamp, S3ObjectKey};
+use crate::{HttpDate, LastModifiedTimestamp, S3ObjectKey, SharedRequestCounters};
 
 /// Response reader to check S3 api response status codes and parse response body, if any.
 pub(crate) struct ResponseReader {
     response: Response<Incoming>,
+    request_counters: Option<Arc<SharedRequestCounters>>,
 }
 
 #[derive(Debug)]
@@ -105,7 +110,7 @@ pub struct GetObjectResponse {
     /// Last modified http header.
     pub last_modified: HttpDate,
     /// Object content in http response body.
-    pub content: Incoming,
+    pub content: Content,
 }
 
 #[derive(Debug)]
@@ -246,10 +251,56 @@ impl Into<Error> for DeleteError {
     }
 }
 
+/// Response content stream
+pub struct Content {
+    incoming: Incoming,
+    request_counters: Option<Arc<SharedRequestCounters>>,
+}
+
+impl Body for Content {
+    type Data = Bytes;
+    type Error = hyper::Error;
+
+    fn poll_frame(
+        mut self: Pin<&mut Self>,
+        cx: &mut Ctx<'_>,
+    ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
+        let mut this = self.as_mut();
+
+        let incoming = Pin::new(&mut this.incoming).poll_frame(cx);
+
+        if let Some(counter) = self.request_counters.as_ref() {
+            if let Poll::Ready(Some(Ok(frame))) = &incoming {
+                let bytes = frame
+                    .data_ref()
+                    .map(|bytes| bytes.len() as u64)
+                    .unwrap_or(0);
+                let _ = counter.add_download_traffic(bytes, Ordering::AcqRel);
+            }
+        }
+
+        incoming
+    }
+
+    fn is_end_stream(&self) -> bool {
+        self.incoming.is_end_stream()
+    }
+
+    fn size_hint(&self) -> SizeHint {
+        self.incoming.size_hint()
+    }
+}
+
 impl ResponseReader {
     /// Create a new response reader to parse given response.
-    pub(crate) fn new(response: Response<Incoming>) -> Self {
-        Self { response }
+    pub(crate) fn new(
+        response: Response<Incoming>,
+        request_counters: Option<Arc<SharedRequestCounters>>,
+    ) -> Self {
+        Self {
+            response,
+            request_counters,
+        }
     }
 
     /// Read and parse the list object v2 response.
@@ -319,7 +370,11 @@ impl ResponseReader {
     /// Returns with error if the object is not accessible, an unexpected status code is encountered
     /// or the response headers or body cannot be parsed.
     pub(crate) async fn get_object_response(self) -> Result<Option<GetObjectResponse>, Error> {
-        let (parts, content) = self.response.into_parts();
+        let (parts, incoming) = self.response.into_parts();
+        let content = Content {
+            incoming,
+            request_counters: self.request_counters.clone(),
+        };
 
         match parts.status {
             StatusCode::OK => (),
