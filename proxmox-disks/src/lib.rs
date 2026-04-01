@@ -16,7 +16,6 @@ use ::serde::{Deserialize, Serialize};
 
 use proxmox_lang::{io_bail, io_format_err};
 use proxmox_log::info;
-use proxmox_parallel_handler::ParallelHandler;
 use proxmox_sys::linux::procfs::{mountinfo::Device, MountInfo};
 
 use proxmox_schema::api_types::{
@@ -776,9 +775,6 @@ pub struct PartitionInfo {
         "disk-type": {
             type: DiskType,
         },
-        status: {
-            type: SmartStatus,
-        },
         partitions: {
             optional: true,
             items: {
@@ -790,15 +786,15 @@ pub struct PartitionInfo {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
-/// Information about how a Disk is used
+/// Disk identity and usage information from sysfs/udev/lsblk.
+///
+/// This type intentionally does not include S.M.A.R.T. health data — use
+/// `get_smart_data()` for on-demand queries and combine at the API layer.
 pub struct DiskUsageInfo {
     /// Disk name (`/sys/block/<name>`)
     pub name: String,
     pub used: DiskUsageType,
     pub disk_type: DiskType,
-    pub status: SmartStatus,
-    /// Disk wearout
-    pub wearout: Option<f64>,
     /// Vendor
     pub vendor: Option<String>,
     /// Model
@@ -888,7 +884,6 @@ fn scan_partitions(
 }
 
 pub struct DiskUsageQuery {
-    smart: bool,
     partitions: bool,
 }
 
@@ -901,14 +896,8 @@ impl Default for DiskUsageQuery {
 impl DiskUsageQuery {
     pub const fn new() -> Self {
         Self {
-            smart: true,
             partitions: false,
         }
-    }
-
-    pub fn smart(&mut self, smart: bool) -> &mut Self {
-        self.smart = smart;
-        self
     }
 
     pub fn partitions(&mut self, partitions: bool) -> &mut Self {
@@ -917,11 +906,11 @@ impl DiskUsageQuery {
     }
 
     pub fn query(&self) -> Result<HashMap<String, DiskUsageInfo>, Error> {
-        get_disks(None, !self.smart, self.partitions)
+        get_disks(None, self.partitions)
     }
 
     pub fn find(&self, disk: &str) -> Result<DiskUsageInfo, Error> {
-        let mut map = get_disks(Some(vec![disk.to_string()]), !self.smart, self.partitions)?;
+        let mut map = get_disks(Some(vec![disk.to_string()]), self.partitions)?;
         if let Some(info) = map.remove(disk) {
             Ok(info)
         } else {
@@ -930,7 +919,7 @@ impl DiskUsageQuery {
     }
 
     pub fn find_all(&self, disks: Vec<String>) -> Result<HashMap<String, DiskUsageInfo>, Error> {
-        get_disks(Some(disks), !self.smart, self.partitions)
+        get_disks(Some(disks), self.partitions)
     }
 }
 
@@ -999,8 +988,6 @@ fn get_partitions_info(
 fn get_disks(
     // filter - list of device names (without leading /dev)
     disks: Option<Vec<String>>,
-    // do no include data from smartctl
-    no_smart: bool,
     // include partitions
     include_partitions: bool,
 ) -> Result<HashMap<String, DiskUsageInfo>, Error> {
@@ -1021,7 +1008,6 @@ fn get_disks(
     // fixme: ceph journals/volumes
 
     let mut result = HashMap::new();
-    let mut device_paths = Vec::new();
 
     for item in proxmox_sys::fs::scan_subdir(libc::AT_FDCWD, "/sys/block", &BLOCKDEVICE_NAME_REGEX)?
     {
@@ -1091,8 +1077,6 @@ fn get_disks(
             .map(|p| p.to_owned())
             .map(|p| p.to_string_lossy().to_string());
 
-        device_paths.push((name.clone(), devpath.clone()));
-
         let wwn = disk.wwn().map(|s| s.to_string_lossy().into_owned());
 
         let partitions: Option<Vec<PartitionInfo>> = if include_partitions {
@@ -1138,8 +1122,6 @@ fn get_disks(
             size,
             wwn,
             disk_type,
-            status: SmartStatus::Unknown,
-            wearout: None,
             used: usage,
             gpt: disk.has_gpt(),
             rpm: disk.ata_rotation_rate_rpm(),
@@ -1148,35 +1130,6 @@ fn get_disks(
         result.insert(name, info);
     }
 
-    if !no_smart {
-        let (tx, rx) = crossbeam_channel::bounded(result.len());
-
-        let parallel_handler =
-            ParallelHandler::new("smartctl data", 4, move |device: (String, String)| {
-                match get_smart_data(Path::new(&device.1), false) {
-                    Ok(smart_data) => tx.send((device.0, smart_data))?,
-                    // do not fail the whole disk output just because smartctl couldn't query one
-                    Err(err) => {
-                        proxmox_log::error!("failed to gather smart data for {} – {err}", device.1)
-                    }
-                }
-                Ok(())
-            });
-
-        for (name, path) in device_paths.into_iter() {
-            if let Some(p) = path {
-                parallel_handler.send((name, p))?;
-            }
-        }
-
-        parallel_handler.complete()?;
-        while let Ok(msg) = rx.recv() {
-            if let Some(value) = result.get_mut(&msg.0) {
-                value.wearout = msg.1.wearout;
-                value.status = msg.1.status;
-            }
-        }
-    }
     Ok(result)
 }
 
