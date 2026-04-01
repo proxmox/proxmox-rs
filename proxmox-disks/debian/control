@@ -15,10 +15,9 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-io-1+default-dev (>= 1.2.1-~~) <!nocheck>,
  librust-proxmox-lang-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-proxmox-log-1+default-dev <!nocheck>,
- librust-proxmox-parallel-handler-1+default-dev <!nocheck>,
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-sys-1+default-dev <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
@@ -36,24 +35,19 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
- librust-crossbeam-channel-0.5+default-dev,
  librust-libc-0.2+default-dev (>= 0.2.107-~~),
- librust-nix-0.29+default-dev,
- librust-nom-7+default-dev,
  librust-once-cell-1+default-dev (>= 1.3.1-~~),
- librust-proxmox-io-1+default-dev (>= 1.2.1-~~),
  librust-proxmox-lang-1+default-dev (>= 1.5-~~),
- librust-proxmox-log-1+default-dev,
- librust-proxmox-parallel-handler-1+default-dev,
- librust-proxmox-sys-1+default-dev,
- librust-regex-1+default-dev (>= 1.5-~~),
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~),
  librust-serde-1+default-dev,
- librust-serde-json-1+default-dev,
  librust-udev-0.9+default-dev
 Recommends:
  librust-proxmox-disks+default-dev (= ${binary:Version})
 Suggests:
- librust-proxmox-disks+api-types-dev (= ${binary:Version})
+ librust-proxmox-disks+api-types-dev (= ${binary:Version}),
+ librust-proxmox-disks+discovery-dev (= ${binary:Version}),
+ librust-proxmox-disks+operations-dev (= ${binary:Version}),
+ librust-proxmox-disks+smart-dev (= ${binary:Version})
 Provides:
  librust-proxmox-disks-0-dev (= ${binary:Version}),
  librust-proxmox-disks-0.1-dev (= ${binary:Version}),
@@ -67,8 +61,9 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-disks-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~)
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~)
 Provides:
  librust-proxmox-disks-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-disks-0.1+api-types-dev (= ${binary:Version}),
@@ -83,12 +78,67 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-disks-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~)
+ librust-proxmox-disks+discovery-dev (= ${binary:Version}),
+ librust-proxmox-disks+smart-dev (= ${binary:Version}),
+ librust-proxmox-disks+operations-dev (= ${binary:Version})
 Provides:
  librust-proxmox-disks-0+default-dev (= ${binary:Version}),
  librust-proxmox-disks-0.1+default-dev (= ${binary:Version}),
  librust-proxmox-disks-0.1.0+default-dev (= ${binary:Version})
 Description: Disk management and utilities - feature "default"
  This metapackage enables feature "default" for the Rust proxmox-disks crate, by
+ pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox-disks+discovery-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-disks-dev (= ${binary:Version}),
+ librust-nom-7+default-dev,
+ librust-proxmox-log-1+default-dev,
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
+ librust-regex-1+default-dev (>= 1.5-~~),
+ librust-serde-json-1+default-dev
+Provides:
+ librust-proxmox-disks-0+discovery-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.1+discovery-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.1.0+discovery-dev (= ${binary:Version})
+Description: Disk management and utilities - feature "discovery"
+ This metapackage enables feature "discovery" for the Rust proxmox-disks crate,
+ by pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox-disks+operations-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-disks-dev (= ${binary:Version}),
+ librust-nix-0.29+default-dev,
+ librust-proxmox-io-1+default-dev (>= 1.2.1-~~),
+ librust-proxmox-log-1+default-dev
+Provides:
+ librust-proxmox-disks-0+operations-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.1+operations-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.1.0+operations-dev (= ${binary:Version})
+Description: Disk management and utilities - feature "operations"
+ This metapackage enables feature "operations" for the Rust proxmox-disks crate,
+ by pulling in any additional dependencies needed by that feature.
+
+Package: librust-proxmox-disks+smart-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-proxmox-disks-dev (= ${binary:Version}),
+ librust-crossbeam-channel-0.5+default-dev,
+ librust-nix-0.29+default-dev,
+ librust-serde-json-1+default-dev
+Provides:
+ librust-proxmox-disks-0+smart-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.1+smart-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.1.0+smart-dev (= ${binary:Version})
+Description: Disk management and utilities - feature "smart"
+ This metapackage enables feature "smart" for the Rust proxmox-disks crate, by
  pulling in any additional dependencies needed by that feature.

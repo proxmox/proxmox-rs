@@ -16,7 +16,7 @@ static LVM_UUIDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
 /// Get set of devices used by LVM (pvs).
 ///
 /// The set is indexed by using the unix raw device number (dev_t is u64)
-pub fn get_lvm_devices(lsblk_info: &[LsblkInfo]) -> Result<HashSet<u64>, Error> {
+pub(crate) fn get_lvm_devices(lsblk_info: &[LsblkInfo]) -> Result<HashSet<u64>, Error> {
     const PVS_BIN_PATH: &str = "pvs";
 
     let mut command = std::process::Command::new(PVS_BIN_PATH);

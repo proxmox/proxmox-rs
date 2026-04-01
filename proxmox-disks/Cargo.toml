@@ -12,23 +12,34 @@ repository.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-crossbeam-channel.workspace = true
 libc.workspace = true
-nix.workspace = true
-nom.workspace = true
 once_cell.workspace = true
-regex.workspace = true
-serde_json.workspace = true
 serde.workspace = true
 udev.workspace = true
 
-proxmox-io.workspace = true
 proxmox-lang.workspace = true
-proxmox-log.workspace = true
-proxmox-parallel-handler.workspace = true
-proxmox-schema = { workspace = true, features = [ "api-types" ], optional = true }
 proxmox-sys.workspace = true
 
+# Optional dependencies, pulled in by features
+crossbeam-channel = { workspace = true, optional = true }
+nix = { workspace = true, optional = true }
+nom = { workspace = true, optional = true }
+regex = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+proxmox-io = { workspace = true, optional = true }
+proxmox-log = { workspace = true, optional = true }
+proxmox-schema = { workspace = true, features = ["api-types"], optional = true }
+
 [features]
-default = [ "dep:proxmox-schema" ]
-api-types = [ "proxmox-schema/api-macro" ]
+default = ["discovery", "smart", "operations"]
+api-types = ["dep:proxmox-schema", "proxmox-schema/api-macro"]
+discovery = [
+    "dep:nom",
+    "dep:regex",
+    "dep:serde_json",
+    "dep:proxmox-log",
+    "dep:proxmox-schema",
+]
+smart = ["dep:crossbeam-channel", "dep:nix", "dep:serde_json"]
+operations = ["dep:nix", "dep:proxmox-io", "dep:proxmox-log"]

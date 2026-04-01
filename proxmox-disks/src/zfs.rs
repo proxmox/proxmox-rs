@@ -1,9 +1,9 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::os::unix::fs::MetadataExt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{LazyLock, Mutex};
 
-use anyhow::{bail, Error};
+use anyhow::{bail, format_err, Error};
 
 use proxmox_schema::const_regex;
 
@@ -26,8 +26,7 @@ fn get_pool_from_dataset(dataset: &str) -> &str {
 
 /// Returns kernel IO-stats for zfs pools
 pub fn zfs_pool_stats(pool: &str) -> Result<Option<BlockDevStat>, Error> {
-    let mut path = PathBuf::from(format!("/proc/spl/kstat/zfs/{pool}"));
-    path.push("io");
+    let path = Path::new("/proc/spl/kstat/zfs").join(pool).join("io");
 
     let text = match proxmox_sys::fs::file_read_optional_string(&path)? {
         Some(text) => text,
@@ -68,7 +67,10 @@ pub fn zfs_pool_stats(pool: &str) -> Result<Option<BlockDevStat>, Error> {
 /// Get set of devices used by zfs (or a specific zfs pool)
 ///
 /// The set is indexed by using the unix raw device number (dev_t is u64)
-pub fn zfs_devices(lsblk_info: &[LsblkInfo], pool: Option<String>) -> Result<HashSet<u64>, Error> {
+pub(crate) fn zfs_devices(
+    lsblk_info: &[LsblkInfo],
+    pool: Option<String>,
+) -> Result<HashSet<u64>, Error> {
     let list = zpool_list(pool.as_deref(), true)?;
 
     let mut device_set = HashSet::new();

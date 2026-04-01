@@ -10,22 +10,10 @@ use anyhow::{bail, Error};
 use nix::sys::signal::{self, Signal};
 use nix::unistd::Pid;
 
+use crate::SmartStatus;
+
 #[cfg(feature = "api-types")]
 use proxmox_schema::api;
-
-/// S.M.A.R.T. health status.
-#[cfg_attr(feature = "api-types", api)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-#[non_exhaustive]
-pub enum SmartStatus {
-    /// Smart tests passed — everything is OK.
-    Passed,
-    /// Smart tests failed — disk has problems.
-    Failed,
-    /// Unknown status.
-    Unknown,
-}
 
 #[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
