@@ -1,3 +1,13 @@
+rust-proxmox-shared-memory (1.0.1-1) bookworm; urgency=medium
+
+  * add `open_non_tmpfs` method to allow placing shared memory backed files on
+    persistent storage, for use cases where data should survive reboots.
+
+  * expose `msync` to flush in-memory contents to the backing file, avoiding
+    potential data loss on host crashes or OOM situations.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 01 Apr 2026 23:33:40 +0200
+
 rust-proxmox-shared-memory (1.0.0-1) bookworm; urgency=medium
 
   * re-build for Debian Trixie based releases.
