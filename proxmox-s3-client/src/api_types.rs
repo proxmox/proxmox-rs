@@ -257,3 +257,62 @@ pub struct S3BucketListItem {
     /// S3 bucket name.
     pub name: String,
 }
+
+#[api(
+    properties: {
+        "s3-get": {
+            type: Integer,
+            optional: true,
+        },
+        "s3-put": {
+            type: Integer,
+            optional: true,
+        },
+        "s3-post": {
+            type: Integer,
+            optional: true,
+        },
+        "s3-head": {
+            type: Integer,
+            optional: true,
+        },
+        "s3-delete": {
+            type: Integer,
+            optional: true,
+        },
+        "s3-upload": {
+            type: HumanByte,
+            optional: true,
+        },
+        "s3-download": {
+            type: HumanByte,
+            optional: true,
+        }
+    },
+)]
+#[derive(Default, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+/// Request counter thresholds
+pub struct RequestCounterThresholds {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Threshold for GET requests.
+    pub s3_get: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Threshold for PUT requests.
+    pub s3_put: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Threshold for POST requests.
+    pub s3_post: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Threshold for HEAD requests.
+    pub s3_head: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Threshold for DELETE requests.
+    pub s3_delete: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Threshold for upload traffic to datastore's backing S3 bucket.
+    pub s3_upload: Option<HumanByte>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Threshold for download traffic to datastore's backing S3 bucket.
+    pub s3_download: Option<HumanByte>,
+}
