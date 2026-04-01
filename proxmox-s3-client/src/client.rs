@@ -444,6 +444,11 @@ impl S3Client {
                     && response.is_ok()
                 {
                     let _prev = counters.increment(parts.method.clone(), Ordering::AcqRel);
+                    let transferred: u64 = body_bytes
+                        .len()
+                        .try_into()
+                        .context("failed to account for upload traffic")?;
+                    let _prev_uploaded = counters.add_upload_traffic(transferred, Ordering::AcqRel);
                 }
                 return Ok(response?);
             }
