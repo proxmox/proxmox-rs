@@ -1,3 +1,18 @@
+rust-pbs-api-types (1.0.11-1) trixie; urgency=medium
+
+  * move NodeConfig and related API types from PBS, in preparation for
+    refactoring the node config.
+
+  * define API type for S3 request statistics, to be used in the datastore
+    status response.
+
+  * add notification thresholds to datastore config, allowing to trigger
+    notifications when S3 request or traffic counters are exceeded.
+
+  * add configurable reset schedule for notification threshold counters.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 01 Apr 2026 23:28:03 +0200
+
 rust-pbs-api-types (1.0.10-1) trixie; urgency=medium
 
   * pbs-api-types: remote: add flag to use node proxy for remote connect
