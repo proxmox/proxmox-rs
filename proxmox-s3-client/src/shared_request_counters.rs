@@ -269,6 +269,11 @@ impl SharedRequestCounters {
         self.shared_memory.msync(MsFlags::MS_ASYNC)
     }
 
+    /// Persist in-memory contents to backing file, blocking until synced
+    pub fn flush(&self) -> Result<(), Error> {
+        self.shared_memory.msync(MsFlags::MS_SYNC)
+    }
+
     /// Path of shared memory backing file
     pub fn path_buf(&self) -> PathBuf {
         self.path.clone()

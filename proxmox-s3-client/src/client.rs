@@ -168,6 +168,21 @@ pub struct S3Client {
     request_counters: Option<Arc<SharedRequestCounters>>,
 }
 
+impl Drop for S3Client {
+    fn drop(&mut self) {
+        if let Some(counters) = &self.request_counters {
+            SHARED_COUNTER_FLUSHER
+                .write()
+                .unwrap()
+                .remove_counter(&counters.path_buf());
+
+            if let Err(err) = counters.flush() {
+                tracing::error!("flushing s3 request counters failed: {err:?}");
+            }
+        }
+    }
+}
+
 impl S3Client {
     /// Creates a new S3 client instance, connecting to the provided endpoint using https given the
     /// provided options.
