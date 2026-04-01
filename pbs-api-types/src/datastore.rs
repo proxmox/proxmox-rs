@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use proxmox_fixed_string::FixedString;
 
 use proxmox_human_byte::HumanByte;
+use proxmox_s3_client::RequestCounterThresholds;
 use proxmox_schema::{
     api, const_regex, ApiStringFormat, ApiType, ArraySchema, EnumEntry, IntegerSchema, ReturnType,
     Schema, StringSchema, Updater, UpdaterType,
@@ -474,6 +475,11 @@ impl FromStr for DatastoreBackendConfig {
             schema: DATASTORE_BACKEND_CONFIG_STRING_SCHEMA,
             optional: true,
         },
+        "notification-thresholds": {
+            optional: true,
+            format: &ApiStringFormat::PropertyString(&RequestCounterThresholds::API_SCHEMA),
+            type: String,
+        },
     }
 )]
 #[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
@@ -531,6 +537,10 @@ pub struct DataStoreConfig {
     #[updater(skip)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backend: Option<String>,
+
+    /// Threshold values for notifications
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notification_thresholds: Option<String>,
 }
 
 #[api]
@@ -570,6 +580,7 @@ impl DataStoreConfig {
             maintenance_mode: None,
             backing_device: None,
             backend: None,
+            notification_thresholds: None,
         }
     }
 
