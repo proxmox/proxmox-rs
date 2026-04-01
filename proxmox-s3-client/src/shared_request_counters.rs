@@ -37,6 +37,9 @@ struct RequestCounters {
     put: AlignedAtomic,
     head: AlignedAtomic,
     post: AlignedAtomic,
+    // traffic in bytes
+    upload: AlignedAtomic,
+    download: AlignedAtomic,
 }
 
 impl Init for RequestCounters {
@@ -83,7 +86,33 @@ impl RequestCounters {
             head: self.head.0.swap(0, ordering),
             post: self.post.0.swap(0, ordering),
             put: self.put.0.swap(0, ordering),
+            upload: self.upload.0.swap(0, ordering),
+            download: self.download.0.swap(0, ordering),
         }
+    }
+
+    /// Account for new upload traffic.
+    ///
+    /// Returns the previously stored value.
+    pub fn add_upload_traffic(&self, count: u64, ordering: Ordering) -> u64 {
+        self.upload.0.fetch_add(count, ordering)
+    }
+
+    /// Returns upload traffic count.
+    pub fn get_upload_traffic(&self, ordering: Ordering) -> u64 {
+        self.upload.0.load(ordering)
+    }
+
+    /// Account for new download traffic.
+    ///
+    /// Returns the previously stored value.
+    pub fn add_download_traffic(&self, count: u64, ordering: Ordering) -> u64 {
+        self.download.0.fetch_add(count, ordering)
+    }
+
+    /// Returns download traffic count.
+    pub fn get_download_traffic(&self, ordering: Ordering) -> u64 {
+        self.download.0.load(ordering)
     }
 }
 
@@ -186,6 +215,42 @@ impl SharedRequestCounters {
     pub fn reset(&self, ordering: Ordering) -> RequestCounterValues {
         self.shared_memory.data().counters.reset(ordering)
     }
+
+    /// Account for new upload traffic.
+    ///
+    /// Returns the previously stored value.
+    pub fn add_upload_traffic(&self, count: u64, ordering: Ordering) -> u64 {
+        self.shared_memory
+            .data()
+            .counters
+            .add_upload_traffic(count, ordering)
+    }
+
+    /// Returns upload traffic count.
+    pub fn get_upload_traffic(&self, ordering: Ordering) -> u64 {
+        self.shared_memory
+            .data()
+            .counters
+            .get_upload_traffic(ordering)
+    }
+
+    /// Account for new download traffic.
+    ///
+    /// Returns the previously stored value.
+    pub fn add_download_traffic(&self, count: u64, ordering: Ordering) -> u64 {
+        self.shared_memory
+            .data()
+            .counters
+            .add_download_traffic(count, ordering)
+    }
+
+    /// Returns download traffic count.
+    pub fn get_download_traffic(&self, ordering: Ordering) -> u64 {
+        self.shared_memory
+            .data()
+            .counters
+            .get_download_traffic(ordering)
+    }
 }
 
 /// Current value of the individual request counters.
@@ -202,4 +267,8 @@ pub struct RequestCounterValues {
     pub head: u64,
     /// number of POST requests
     pub post: u64,
+    /// bytes uploaded
+    pub upload: u64,
+    /// bytes downloaded
+    pub download: u64,
 }
