@@ -15,7 +15,8 @@ use nom::{
     sequence::preceded,
 };
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct ZFSPoolVDevState {
     pub name: String,
     pub lvl: u64,

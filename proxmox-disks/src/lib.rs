@@ -239,37 +239,35 @@ pub struct Disk {
     info: DiskInfo,
 }
 
-/// Helper struct (so we can initialize this with Default)
-///
-/// We probably want this to be serializable to the same hash type we use in perl currently.
+/// Lazily cached disk properties, populated on first access from sysfs/udev.
 #[derive(Default)]
 struct DiskInfo {
     size: OnceCell<u64>,
     vendor: OnceCell<Option<OsString>>,
     model: OnceCell<Option<OsString>>,
     rotational: OnceCell<Option<bool>>,
-    // for perl: #[serde(rename = "devpath")]
+
     ata_rotation_rate_rpm: OnceCell<Option<u64>>,
-    // for perl: #[serde(rename = "devpath")]
+
     device_path: OnceCell<Option<PathBuf>>,
     wwn: OnceCell<Option<OsString>>,
     serial: OnceCell<Option<OsString>>,
-    // for perl: #[serde(skip_serializing)]
+
     partition_table_type: OnceCell<Option<OsString>>,
-    // for perl: #[serde(skip_serializing)]
+
     partition_entry_scheme: OnceCell<Option<OsString>>,
-    // for perl: #[serde(skip_serializing)]
+
     partition_entry_uuid: OnceCell<Option<OsString>>,
-    // for perl: #[serde(skip_serializing)]
+
     partition_entry_type: OnceCell<Option<OsString>>,
     gpt: OnceCell<bool>,
-    // ???
+
     bus: OnceCell<Option<OsString>>,
-    // ???
+
     fs_type: OnceCell<Option<OsString>>,
-    // ???
+
     has_holders: OnceCell<bool>,
-    // ???
+
     is_mounted: OnceCell<bool>,
 }
 
@@ -634,8 +632,9 @@ impl Disk {
 }
 
 #[cfg_attr(feature = "api-types", api)]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 /// This is just a rough estimate for a "type" of disk.
 pub enum DiskType {
     /// We know nothing.
@@ -651,8 +650,9 @@ pub enum DiskType {
     Usb,
 }
 
-#[derive(Debug)]
 /// Represents the contents of the `/sys/block/<dev>/stat` file.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct BlockDevStat {
     pub read_ios: u64,
     pub read_sectors: u64,
@@ -690,8 +690,9 @@ fn get_file_system_devices(lsblk_info: &[LsblkInfo]) -> Result<HashSet<u64>, Err
 }
 
 #[cfg_attr(feature = "api-types", api)]
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 /// What a block device partition is used for.
 pub enum PartitionUsageType {
     /// Partition is not used (as far we can tell)
@@ -711,8 +712,9 @@ pub enum PartitionUsageType {
 }
 
 #[cfg_attr(feature = "api-types", api)]
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 /// What a block device (disk) is used for.
 pub enum DiskUsageType {
     /// Disk is not used (as far we can tell)
@@ -732,8 +734,9 @@ pub enum DiskUsageType {
 }
 
 #[cfg_attr(feature = "api-types", api)]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
+#[non_exhaustive]
 /// Basic information about a partition
 pub struct PartitionInfo {
     /// The partition name
@@ -773,8 +776,9 @@ pub struct PartitionInfo {
         }
     }
 ))]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
+#[non_exhaustive]
 /// Information about how a Disk is used
 pub struct DiskUsageInfo {
     /// Disk name (`/sys/block/<name>`)
@@ -792,7 +796,7 @@ pub struct DiskUsageInfo {
     pub wwn: Option<String>,
     /// Disk size
     pub size: u64,
-    /// Serisal number
+    /// Serial number
     pub serial: Option<String>,
     /// Partitions on the device
     pub partitions: Option<Vec<PartitionInfo>>,
@@ -1314,6 +1318,7 @@ pub fn create_single_linux_partition(disk: &Disk) -> Result<Disk, Error> {
 #[cfg_attr(feature = "api-types", api)]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 /// A file system type supported by our tooling.
 pub enum FileSystemType {
     /// Linux Ext4
@@ -1333,11 +1338,14 @@ impl std::fmt::Display for FileSystemType {
 }
 
 impl std::str::FromStr for FileSystemType {
-    type Err = serde_json::Error;
+    type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        use serde::de::IntoDeserializer;
-        Self::deserialize(s.into_deserializer())
+        match s {
+            "ext4" => Ok(Self::Ext4),
+            "xfs" => Ok(Self::Xfs),
+            other => anyhow::bail!("unknown filesystem type: {other:?}"),
+        }
     }
 }
 

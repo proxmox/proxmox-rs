@@ -10,7 +10,8 @@ use nom::{
     sequence::{preceded, tuple},
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct ZFSPoolUsage {
     pub size: u64,
     pub alloc: u64,
@@ -19,7 +20,8 @@ pub struct ZFSPoolUsage {
     pub frag: u64,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct ZFSPoolInfo {
     pub name: String,
     pub health: String,

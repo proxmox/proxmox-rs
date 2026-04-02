@@ -10,46 +10,45 @@ use anyhow::Error;
 #[cfg(feature = "api-types")]
 use proxmox_schema::api;
 
+/// S.M.A.R.T. health status.
 #[cfg_attr(feature = "api-types", api)]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-/// SMART status
+#[non_exhaustive]
 pub enum SmartStatus {
-    /// Smart tests passed - everything is OK
+    /// Smart tests passed — everything is OK.
     Passed,
-    /// Smart tests failed - disk has problems
+    /// Smart tests failed — disk has problems.
     Failed,
-    /// Unknown status
+    /// Unknown status.
     Unknown,
 }
 
 #[cfg_attr(feature = "api-types", api)]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[non_exhaustive]
 /// SMART Attribute
 pub struct SmartAttribute {
     /// Attribute name
-    name: String,
-    // FIXME: remove value with next major release (PBS 3.0)
-    /// duplicate of raw - kept for API stability
-    value: String,
-    /// Attribute raw value
-    raw: String,
-    // the rest of the values is available for ATA type
+    pub name: String,
+    /// Attribute raw value.
+    pub raw: String,
+    // The remaining fields are only available for ATA devices.
     /// ATA Attribute ID
     #[serde(skip_serializing_if = "Option::is_none")]
-    id: Option<u64>,
+    pub id: Option<u64>,
     /// ATA Flags
     #[serde(skip_serializing_if = "Option::is_none")]
-    flags: Option<String>,
+    pub flags: Option<String>,
     /// ATA normalized value (0..100)
     #[serde(skip_serializing_if = "Option::is_none")]
-    normalized: Option<f64>,
+    pub normalized: Option<f64>,
     /// ATA worst
     #[serde(skip_serializing_if = "Option::is_none")]
-    worst: Option<f64>,
+    pub worst: Option<f64>,
     /// ATA threshold
     #[serde(skip_serializing_if = "Option::is_none")]
-    threshold: Option<f64>,
+    pub threshold: Option<f64>,
 }
 
 #[cfg_attr(feature = "api-types", api(
@@ -71,7 +70,8 @@ pub struct SmartAttribute {
         },
     },
 ))]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[non_exhaustive]
 /// Data from smartctl
 pub struct SmartData {
     pub status: SmartStatus,
@@ -79,7 +79,7 @@ pub struct SmartData {
     pub attributes: Vec<SmartAttribute>,
 }
 
-/// Read smartctl data for a disk (/dev/XXX).
+/// Read S.M.A.R.T. data for a block device via `smartctl`.
 pub fn get_smart_data(disk_path: &Path, health_only: bool) -> Result<SmartData, Error> {
     const SMARTCTL_BIN_PATH: &str = "smartctl";
 
@@ -149,7 +149,6 @@ pub fn get_smart_data(disk_path: &Path, health_only: bool) -> Result<SmartData, 
 
             attributes.push(SmartAttribute {
                 name,
-                value: raw_value.clone(),
                 raw: raw_value,
                 id: Some(id),
                 flags: Some(flags),
@@ -183,7 +182,6 @@ pub fn get_smart_data(disk_path: &Path, health_only: bool) -> Result<SmartData, 
             if let Some(value) = value.as_f64() {
                 attributes.push(SmartAttribute {
                     name: name.to_string(),
-                    value: value.to_string(),
                     raw: value.to_string(),
                     id: None,
                     flags: None,
