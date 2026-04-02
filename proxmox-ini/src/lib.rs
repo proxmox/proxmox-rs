@@ -338,8 +338,6 @@ impl<'a> ser::SerializeMap for IniMapSerializer<'a> {
                 self.ser.buf += &serializer.buf;
             }
             SerializedType::Section => {
-                dbg!(&serializer.buf, &serializer.sections);
-
                 if !serializer.buf.is_empty() {
                     // First, add all top-level entries from the map into a new section,
                     // in case we serialized a map
