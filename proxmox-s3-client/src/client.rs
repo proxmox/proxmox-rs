@@ -34,7 +34,9 @@ use crate::response_reader::{
     GetObjectResponse, HeadObjectResponse, ListBucketsResponse, ListObjectsV2Response,
     PutObjectResponse, ResponseReader,
 };
-use crate::shared_request_counters::{MmapFlusher, SharedRequestCounters};
+use crate::shared_request_counters::{
+    MmapFlusher, SharedRequestCounters, ThresholdExceededCallback,
+};
 
 /// Default timeout for s3 api requests.
 pub const S3_HTTP_REQUEST_TIMEOUT: Duration = Duration::from_secs(30 * 60);
@@ -120,6 +122,8 @@ pub struct S3ClientOptions {
     pub proxy_config: Option<ProxyConfig>,
     /// Configuration options for the client's shared request counters.
     pub request_counter_config: Option<S3RequestCounterConfig>,
+    /// Optional callback invoked when a request counter exceeds its threshold.
+    pub threshold_callback: Option<ThresholdExceededCallback>,
 }
 
 impl S3ClientOptions {
@@ -155,6 +159,7 @@ impl S3ClientOptions {
             rate_limiter_config,
             proxy_config,
             request_counter_config,
+            threshold_callback: None,
         }
     }
 }
@@ -186,7 +191,7 @@ impl Drop for S3Client {
 impl S3Client {
     /// Creates a new S3 client instance, connecting to the provided endpoint using https given the
     /// provided options.
-    pub fn new(options: S3ClientOptions) -> Result<Self, Error> {
+    pub fn new(mut options: S3ClientOptions) -> Result<Self, Error> {
         let expected_fingerprint = if let Some(ref fingerprint) = options.fingerprint {
             CERT_FINGERPRINT_SHA256_SCHEMA
                 .unwrap_string_schema()
@@ -259,9 +264,12 @@ impl S3Client {
 
         let request_counters = if let Some(config) = options.request_counter_config.as_ref() {
             let path = config.base_path.join(format!("{}.shmem", config.id));
-            let request_counters =
+            let mut request_counters =
                 SharedRequestCounters::open_shared_memory_mapped(&path, config.user.clone())
                     .context("failed to mmap shared S3 request counters")?;
+            if let Some(callback) = options.threshold_callback.take() {
+                request_counters.set_threshold_callback(callback);
+            }
             let request_counters = Arc::new(request_counters);
 
             SHARED_COUNTER_FLUSHER

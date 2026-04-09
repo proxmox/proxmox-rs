@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::mem::MaybeUninit;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, LazyLock, RwLock};
+use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 use anyhow::{bail, Error};
@@ -24,13 +24,10 @@ const MEMORY_PAGE_SIZE: usize = 4096;
 /// Generated via openssl::sha::sha256(b"Proxmox shared request counters v1.0")[0..8]
 const PROXMOX_SHARED_REQUEST_COUNTERS_1_0: [u8; 8] = [224, 110, 88, 252, 26, 77, 180, 5];
 
-/// Callback method triggered when exceeding counter thresholds.
-/// Callback is called with the following parameters: common-prefix, threshold name, threshold limit,
-/// value exceeding limit.
-pub type ThresholdExceededCallback = Box<dyn Fn(&str, &str, u64, u64) + Send + Sync + 'static>;
-static SHARED_COUNTER_THRESHOLD_EXCEEDED_CALLBACK: LazyLock<
-    RwLock<Option<ThresholdExceededCallback>>,
-> = LazyLock::new(|| RwLock::new(None));
+/// Callback triggered when a counter exceeds its threshold.
+///
+/// Parameters: counter name (for example, "GET" or "uploaded"), threshold limit, current value.
+pub type ThresholdExceededCallback = Box<dyn Fn(&str, u64, u64) + Send + Sync + 'static>;
 
 #[repr(C, align(32))]
 #[derive(Default)]
@@ -80,54 +77,35 @@ impl Init for RequestCounters {
 impl RequestCounters {
     /// Increment the counter for given method, following the provided memory ordering constrains.
     ///
-    /// Returns the previously stored value.
-    pub fn increment(&self, cb_label: &str, method: Method, ordering: Ordering) -> u64 {
-        match method {
-            Method::DELETE => {
-                let prev = self.delete.0.fetch_add(1, ordering);
-                let threshold = self.delete_threshold.0.load(Ordering::Acquire);
-                Self::check_threshold(cb_label, method.as_str(), threshold, prev + 1);
-                prev
-            }
-            Method::GET => {
-                let prev = self.get.0.fetch_add(1, ordering);
-                let threshold = self.get_threshold.0.load(Ordering::Acquire);
-                Self::check_threshold(cb_label, method.as_str(), threshold, prev + 1);
-                prev
-            }
-            Method::HEAD => {
-                let prev = self.head.0.fetch_add(1, ordering);
-                let threshold = self.head_threshold.0.load(Ordering::Acquire);
-                Self::check_threshold(cb_label, method.as_str(), threshold, prev + 1);
-                prev
-            }
-            Method::POST => {
-                let prev = self.post.0.fetch_add(1, ordering);
-                let threshold = self.post_threshold.0.load(Ordering::Acquire);
-                Self::check_threshold(cb_label, method.as_str(), threshold, prev + 1);
-                prev
-            }
-            Method::PUT => {
-                let prev = self.put.0.fetch_add(1, ordering);
-                let threshold = self.put_threshold.0.load(Ordering::Acquire);
-                Self::check_threshold(cb_label, method.as_str(), threshold, prev + 1);
-                prev
-            }
-            _ => 0,
+    /// Returns (previous value, threshold).
+    fn increment(&self, method: &Method, ordering: Ordering) -> (u64, u64) {
+        match *method {
+            Method::DELETE => (
+                self.delete.0.fetch_add(1, ordering),
+                self.delete_threshold.0.load(Ordering::Acquire),
+            ),
+            Method::GET => (
+                self.get.0.fetch_add(1, ordering),
+                self.get_threshold.0.load(Ordering::Acquire),
+            ),
+            Method::HEAD => (
+                self.head.0.fetch_add(1, ordering),
+                self.head_threshold.0.load(Ordering::Acquire),
+            ),
+            Method::POST => (
+                self.post.0.fetch_add(1, ordering),
+                self.post_threshold.0.load(Ordering::Acquire),
+            ),
+            Method::PUT => (
+                self.put.0.fetch_add(1, ordering),
+                self.put_threshold.0.load(Ordering::Acquire),
+            ),
+            _ => (0, 0),
         }
     }
 
-    fn check_threshold(cb_label: &str, counter_id: &str, threshold: u64, current: u64) {
-        if threshold > 0 && current > threshold && current - 1 == threshold {
-            let guard = SHARED_COUNTER_THRESHOLD_EXCEEDED_CALLBACK.read().unwrap();
-            if let Some(callback) = guard.as_ref() {
-                callback(cb_label, counter_id, threshold, current);
-            }
-        }
-    }
-
-    /// Load current counter state for given method, following the provided memory ordering constrains
-    pub fn load(&self, method: Method, ordering: Ordering) -> u64 {
+    /// Load current counter state for given method, following the provided memory ordering constrains.
+    fn load(&self, method: Method, ordering: Ordering) -> u64 {
         match method {
             Method::DELETE => self.delete.0.load(ordering),
             Method::GET => self.get.0.load(ordering),
@@ -138,10 +116,10 @@ impl RequestCounters {
         }
     }
 
-    /// Reset all counters, following the provided memory ordering constrains
+    /// Reset all counters, following the provided memory ordering constrains.
     ///
     /// Returns the respective counter values before reset.
-    pub fn reset(&self, ordering: Ordering) -> RequestCounterValues {
+    fn reset(&self, ordering: Ordering) -> RequestCounterValues {
         RequestCounterValues {
             delete: self.delete.0.swap(0, ordering),
             get: self.get.0.swap(0, ordering),
@@ -155,48 +133,34 @@ impl RequestCounters {
 
     /// Account for new upload traffic.
     ///
-    /// Returns the previously stored value.
-    pub fn add_upload_traffic(&self, cb_label: &str, count: u64, ordering: Ordering) -> u64 {
+    /// Returns (previous value, threshold).
+    fn add_upload_traffic(&self, count: u64, ordering: Ordering) -> (u64, u64) {
         let prev = self.upload.0.fetch_add(count, ordering);
         let threshold = self.upload_threshold.0.load(Ordering::Acquire);
-        let uploaded = prev + count;
-        if threshold > 0 && uploaded > threshold && prev <= threshold {
-            let guard = SHARED_COUNTER_THRESHOLD_EXCEEDED_CALLBACK.read().unwrap();
-            if let Some(callback) = guard.as_ref() {
-                callback(cb_label, "uploaded", threshold, uploaded);
-            }
-        }
-        prev
+        (prev, threshold)
     }
 
     /// Returns upload traffic count.
-    pub fn get_upload_traffic(&self, ordering: Ordering) -> u64 {
+    fn get_upload_traffic(&self, ordering: Ordering) -> u64 {
         self.upload.0.load(ordering)
     }
 
     /// Account for new download traffic.
     ///
-    /// Returns the previously stored value.
-    pub fn add_download_traffic(&self, cb_label: &str, count: u64, ordering: Ordering) -> u64 {
+    /// Returns (previous value, threshold).
+    fn add_download_traffic(&self, count: u64, ordering: Ordering) -> (u64, u64) {
         let prev = self.download.0.fetch_add(count, ordering);
         let threshold = self.download_threshold.0.load(Ordering::Acquire);
-        let downloaded = prev + count;
-        if threshold > 0 && downloaded > threshold && prev <= threshold {
-            let guard = SHARED_COUNTER_THRESHOLD_EXCEEDED_CALLBACK.read().unwrap();
-            if let Some(callback) = guard.as_ref() {
-                callback(cb_label, "downloaded", threshold, downloaded);
-            }
-        }
-        prev
+        (prev, threshold)
     }
 
     /// Returns download traffic count.
-    pub fn get_download_traffic(&self, ordering: Ordering) -> u64 {
+    fn get_download_traffic(&self, ordering: Ordering) -> u64 {
         self.download.0.load(ordering)
     }
 
     /// Update the request threshold values.
-    pub fn update_thresholds(&self, thresholds: &RequestCounterThresholds) {
+    fn update_thresholds(&self, thresholds: &RequestCounterThresholds) {
         self.delete_threshold
             .0
             .store(thresholds.s3_delete.unwrap_or(0), Ordering::Release);
@@ -274,13 +238,15 @@ impl Init for MappableRequestCounters {
 }
 
 /// Atomic counters storing per-request method counts for the client.
-///
-/// If set, the counts can be filtered based on a path prefix.
 pub struct SharedRequestCounters {
-    cb_label: String,
     shared_memory: SharedMemory<MappableRequestCounters>,
     path: PathBuf,
+    threshold_callback: Option<ThresholdExceededCallback>,
 }
+
+// The threshold_callback (Box<dyn Fn>) prevents auto-deriving RefUnwindSafe, but the callback is
+// only invoked from regular (non-panicking) counter increment paths, so this is safe to assert.
+impl std::panic::RefUnwindSafe for SharedRequestCounters {}
 
 impl SharedRequestCounters {
     /// Create a new shared counter instance.
@@ -303,28 +269,40 @@ impl SharedRequestCounters {
             .group(user.gid);
         let shared_memory = SharedMemory::open_non_tmpfs(&path, file_opts)?;
         Ok(Self {
-            cb_label: String::new(),
             shared_memory,
             path,
+            threshold_callback: None,
         })
     }
 
-    /// Increment the counter for given method, following the provided memory ordering constrains
+    /// Fire the threshold callback if `current` just crossed `threshold`.
+    fn check_threshold(&self, counter_id: &str, threshold: u64, prev: u64, current: u64) {
+        if threshold > 0 && current > threshold && prev <= threshold {
+            if let Some(cb) = &self.threshold_callback {
+                cb(counter_id, threshold, current);
+            }
+        }
+    }
+
+    /// Increment the counter for given method, following the provided memory ordering constrains.
     ///
     /// Returns the previously stored value.
     pub fn increment(&self, method: Method, ordering: Ordering) -> u64 {
-        self.shared_memory
+        let (prev, threshold) = self
+            .shared_memory
             .data()
             .counters
-            .increment(&self.cb_label, method, ordering)
+            .increment(&method, ordering);
+        self.check_threshold(method.as_str(), threshold, prev, prev + 1);
+        prev
     }
 
-    /// Load current counter state for given method, following the provided memory ordering constrains
+    /// Load current counter state for given method, following the provided memory ordering constrains.
     pub fn load(&self, method: Method, ordering: Ordering) -> u64 {
         self.shared_memory.data().counters.load(method, ordering)
     }
 
-    /// Reset all counters, following the provided memory ordering constrains
+    /// Reset all counters, following the provided memory ordering constrains.
     ///
     /// Returns the respective counter values before reset.
     pub fn reset(&self, ordering: Ordering) -> RequestCounterValues {
@@ -335,10 +313,13 @@ impl SharedRequestCounters {
     ///
     /// Returns the previously stored value.
     pub fn add_upload_traffic(&self, count: u64, ordering: Ordering) -> u64 {
-        self.shared_memory
+        let (prev, threshold) = self
+            .shared_memory
             .data()
             .counters
-            .add_upload_traffic(&self.cb_label, count, ordering)
+            .add_upload_traffic(count, ordering);
+        self.check_threshold("uploaded", threshold, prev, prev + count);
+        prev
     }
 
     /// Returns upload traffic count.
@@ -353,10 +334,13 @@ impl SharedRequestCounters {
     ///
     /// Returns the previously stored value.
     pub fn add_download_traffic(&self, count: u64, ordering: Ordering) -> u64 {
-        self.shared_memory
+        let (prev, threshold) = self
+            .shared_memory
             .data()
             .counters
-            .add_download_traffic(&self.cb_label, count, ordering)
+            .add_download_traffic(count, ordering);
+        self.check_threshold("downloaded", threshold, prev, prev + count);
+        prev
     }
 
     /// Returns download traffic count.
@@ -382,18 +366,12 @@ impl SharedRequestCounters {
         self.path.clone()
     }
 
-    /// Update the callback and the label to identify the counter executing it
-    /// when one of the set thresholds is exceeded.
-    pub fn set_thresholds_exceeded_callback(
-        &mut self,
-        cb_label: String,
-        callback: ThresholdExceededCallback,
-    ) {
-        self.cb_label = cb_label;
-        SHARED_COUNTER_THRESHOLD_EXCEEDED_CALLBACK
-            .write()
-            .unwrap()
-            .replace(callback);
+    /// Set the callback invoked when a counter exceeds its threshold.
+    ///
+    /// The callback receives the counter name (for example, "GET" or "uploaded"), the threshold
+    /// limit, and the current value.
+    pub fn set_threshold_callback(&mut self, callback: ThresholdExceededCallback) {
+        self.threshold_callback = Some(callback);
     }
 
     /// Update the request counter thresholds to given values.
