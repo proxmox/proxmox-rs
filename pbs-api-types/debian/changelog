@@ -1,3 +1,9 @@
+rust-pbs-api-types (1.0.12-1) trixie; urgency=medium
+
+  * include backend-type in datastore list item.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 09 Apr 2026 17:14:22 +0200
+
 rust-pbs-api-types (1.0.11-1) trixie; urgency=medium
 
   * move NodeConfig and related API types from PBS, in preparation for
