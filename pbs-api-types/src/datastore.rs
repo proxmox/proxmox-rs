@@ -715,7 +715,10 @@ impl DataStoreConfig {
             optional: true,
             format: &ApiStringFormat::PropertyString(&MaintenanceMode::API_SCHEMA),
             type: String,
-        }
+        },
+        "backend-type": {
+            type: DatastoreBackendType,
+        },
     },
 )]
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
@@ -729,6 +732,8 @@ pub struct DataStoreListItem {
     /// If the datastore is in maintenance mode, information about it
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maintenance: Option<String>,
+    #[serde(default)]
+    pub backend_type: DatastoreBackendType,
 }
 
 #[api(
