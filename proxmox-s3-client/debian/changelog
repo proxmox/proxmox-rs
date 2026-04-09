@@ -1,3 +1,9 @@
+rust-proxmox-s3-client (1.4.0-1) trixie; urgency=medium
+
+  * change threshold callback from global to per-instance.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 10 Apr 2026 01:18:08 +0200
+
 rust-proxmox-s3-client (1.3.0-1) trixie; urgency=medium
 
   * fix Content-Type for put and copy object requests, use the IANA registered
