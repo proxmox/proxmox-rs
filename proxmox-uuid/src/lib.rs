@@ -82,10 +82,10 @@ impl Uuid {
     /// ```
     /// use proxmox_uuid::Uuid;
     ///
-    /// let gen = Uuid::generate();
-    /// let text = format!("{}", gen);
+    /// let uuid = Uuid::generate();
+    /// let text = format!("{}", uuid);
     /// let parsed: Uuid = text.parse().unwrap();
-    /// assert_eq!(gen, parsed);
+    /// assert_eq!(uuid, parsed);
     ///
     /// let uuid1: Uuid = "65b8563978d7433085c639502b2f9b01".parse().unwrap();
     /// let uuid2: Uuid = "65b85639-78d7-4330-85c6-39502b2f9b01".parse().unwrap();
