@@ -458,12 +458,12 @@ impl ResponseReader {
             HeaderName::from_static("x-amz-delete-marker"),
             &parts.headers,
         )
-        .map_err(|err| DeleteError::Parsing(err))?;
+        .map_err(DeleteError::Parsing)?;
         let delete_marker_version_id = Self::parse_optional_header(
             HeaderName::from_static("x-amz-version-id"),
             &parts.headers,
         )
-        .map_err(|err| DeleteError::Parsing(err))?;
+        .map_err(DeleteError::Parsing)?;
 
         Ok(DeletedObject {
             delete_marker,

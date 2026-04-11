@@ -642,7 +642,7 @@ impl S3Client {
             .method(Method::DELETE)
             .uri(
                 self.build_uri(&object_key, &[])
-                    .map_err(|err| DeleteError::Parsing(err))?,
+                    .map_err(DeleteError::Parsing)?,
             )
             .body(Body::empty())
             .map_err(|err| DeleteError::Parsing(err.into()))?;
@@ -650,7 +650,7 @@ impl S3Client {
         let response = self
             .send(request, None)
             .await
-            .map_err(|err| DeleteError::Parsing(err))?;
+            .map_err(DeleteError::Parsing)?;
         let response_reader = ResponseReader::new(response, self.request_counters.clone());
         response_reader.delete_object_response(object_key).await
     }
