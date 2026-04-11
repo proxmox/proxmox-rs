@@ -339,12 +339,11 @@ impl LdapRealmSyncJob {
 
                     user_config.sections.remove(&tokenid_string);
 
-                    if !self.dry_run {
-                        if let Err(e) =
+                    if !self.dry_run
+                        && let Err(e) =
                             proxmox_access_control::token_shadow::delete_secret(&tokenid)
-                        {
-                            log::warn!("could not delete token for user {userid}: {e}",)
-                        }
+                    {
+                        log::warn!("could not delete token for user {userid}: {e}")
                     }
 
                     if self.general_sync_settings.should_remove_acls() {
