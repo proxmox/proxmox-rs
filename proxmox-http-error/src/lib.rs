@@ -61,7 +61,6 @@ macro_rules! http_bail {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_http_err() {
