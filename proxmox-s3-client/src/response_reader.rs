@@ -236,17 +236,17 @@ pub(crate) enum DeleteError {
     Parsing(Error),
 }
 
-impl Into<Error> for DeleteError {
-    fn into(self) -> Error {
-        match self {
-            Self::Response(delete_error) => {
+impl From<DeleteError> for Error {
+    fn from(val: DeleteError) -> Self {
+        match val {
+            DeleteError::Response(delete_error) => {
                 if let Some(code) = delete_error.code {
                     format_err!("unexpected status code: {code}")
                 } else {
                     format_err!("failed to generate error, missing error status code")
                 }
             }
-            Self::Parsing(error) => error,
+            DeleteError::Parsing(error) => error,
         }
     }
 }
