@@ -196,10 +196,10 @@ fn force_allow_backup_eligibility(
 ) -> Result<SecurityKeyAuthentication, Error> {
     let mut state =
         serde_json::to_value(&state).context("failed to convert authentication state to json")?;
-    if let Some(obj) = state.get_mut("ast") {
-        if let Some(allow) = obj.get_mut("allow_backup_eligible_upgrade") {
-            *allow = serde_json::Value::Bool(true);
-        }
+    if let Some(obj) = state.get_mut("ast")
+        && let Some(allow) = obj.get_mut("allow_backup_eligible_upgrade")
+    {
+        *allow = serde_json::Value::Bool(true);
     }
 
     serde_json::from_value(state).context("failed to convert json back to authentication state")

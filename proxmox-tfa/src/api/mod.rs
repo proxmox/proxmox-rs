@@ -446,10 +446,8 @@ impl TfaConfig {
                     save = true;
                 }
 
-                if save {
-                    if let Err(err) = data.save() {
-                        log::error!("failed to store user challenge data: {err}");
-                    }
+                if save && let Err(err) = data.save() {
+                    log::error!("failed to store user challenge data: {err}");
                 }
                 r
             }
@@ -1018,30 +1016,28 @@ impl TfaUserData {
         if let Some(entry) = self
             .enabled_u2f_entries()
             .find(|e| e.key.key_handle == response.key_handle())
-        {
-            if u2f
+            && u2f
                 .auth_verify_obj(&entry.public_key, &challenge.challenge, response)?
                 .is_some()
-            {
-                let mut data = match access.open_no_create(userid)? {
-                    Some(data) => data,
-                    None => bail!("no such challenge"),
-                };
-                let index = data
-                    .get_mut()
-                    .u2f_auths
-                    .iter()
-                    .position(|r| r == challenge)
-                    .ok_or_else(|| format_err!("no such challenge"))?;
-                let entry = data.get_mut().u2f_auths.remove(index);
-                if entry.is_expired(expire_before) {
-                    bail!("no such challenge");
-                }
-                data.save()
-                    .map_err(|err| format_err!("failed to save challenge file: {}", err))?;
-
-                return Ok(());
+        {
+            let mut data = match access.open_no_create(userid)? {
+                Some(data) => data,
+                None => bail!("no such challenge"),
+            };
+            let index = data
+                .get_mut()
+                .u2f_auths
+                .iter()
+                .position(|r| r == challenge)
+                .ok_or_else(|| format_err!("no such challenge"))?;
+            let entry = data.get_mut().u2f_auths.remove(index);
+            if entry.is_expired(expire_before) {
+                bail!("no such challenge");
             }
+            data.save()
+                .map_err(|err| format_err!("failed to save challenge file: {}", err))?;
+
+            return Ok(());
         }
 
         bail!("u2f verification failed");
@@ -1114,20 +1110,20 @@ impl TfaUserData {
         userid: &str,
         value: &str,
     ) -> Result<(), Error> {
-        if let Some(r) = &mut self.recovery {
-            if r.verify(value)? {
-                // On success we reset the failure state.
-                self.totp_locked = false;
-                self.tfa_locked_until = None;
+        if let Some(r) = &mut self.recovery
+            && r.verify(value)?
+        {
+            // On success we reset the failure state.
+            self.totp_locked = false;
+            self.tfa_locked_until = None;
 
-                let mut data = access.open(userid)?;
-                let access = data.get_mut();
-                if access.totp_failures != 0 {
-                    access.totp_failures = 0;
-                    data.save()?;
-                }
-                return Ok(());
+            let mut data = access.open(userid)?;
+            let access = data.get_mut();
+            if access.totp_failures != 0 {
+                access.totp_failures = 0;
+                data.save()?;
             }
+            return Ok(());
         }
         bail!("recovery verification failed");
     }
