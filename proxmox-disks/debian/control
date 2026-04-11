@@ -50,8 +50,8 @@ Suggests:
  librust-proxmox-disks+smart-dev (= ${binary:Version})
 Provides:
  librust-proxmox-disks-0-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1.0-dev (= ${binary:Version})
+ librust-proxmox-disks-0.2-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.2.0-dev (= ${binary:Version})
 Description: Disk management and utilities - Rust source code
  Source code for Debianized Rust crate "proxmox-disks"
 
@@ -66,8 +66,8 @@ Depends:
  librust-proxmox-schema-5+default-dev (>= 5.1.1-~~)
 Provides:
  librust-proxmox-disks-0+api-types-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1+api-types-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1.0+api-types-dev (= ${binary:Version})
+ librust-proxmox-disks-0.2+api-types-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.2.0+api-types-dev (= ${binary:Version})
 Description: Disk management and utilities - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-disks crate,
  by pulling in any additional dependencies needed by that feature.
@@ -83,8 +83,8 @@ Depends:
  librust-proxmox-disks+operations-dev (= ${binary:Version})
 Provides:
  librust-proxmox-disks-0+default-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-disks-0.2+default-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.2.0+default-dev (= ${binary:Version})
 Description: Disk management and utilities - feature "default"
  This metapackage enables feature "default" for the Rust proxmox-disks crate, by
  pulling in any additional dependencies needed by that feature.
@@ -103,8 +103,8 @@ Depends:
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-disks-0+discovery-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1+discovery-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1.0+discovery-dev (= ${binary:Version})
+ librust-proxmox-disks-0.2+discovery-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.2.0+discovery-dev (= ${binary:Version})
 Description: Disk management and utilities - feature "discovery"
  This metapackage enables feature "discovery" for the Rust proxmox-disks crate,
  by pulling in any additional dependencies needed by that feature.
@@ -120,8 +120,8 @@ Depends:
  librust-proxmox-log-1+default-dev
 Provides:
  librust-proxmox-disks-0+operations-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1+operations-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1.0+operations-dev (= ${binary:Version})
+ librust-proxmox-disks-0.2+operations-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.2.0+operations-dev (= ${binary:Version})
 Description: Disk management and utilities - feature "operations"
  This metapackage enables feature "operations" for the Rust proxmox-disks crate,
  by pulling in any additional dependencies needed by that feature.
@@ -137,8 +137,8 @@ Depends:
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-disks-0+smart-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1+smart-dev (= ${binary:Version}),
- librust-proxmox-disks-0.1.0+smart-dev (= ${binary:Version})
+ librust-proxmox-disks-0.2+smart-dev (= ${binary:Version}),
+ librust-proxmox-disks-0.2.0+smart-dev (= ${binary:Version})
 Description: Disk management and utilities - feature "smart"
  This metapackage enables feature "smart" for the Rust proxmox-disks crate, by
  pulling in any additional dependencies needed by that feature.

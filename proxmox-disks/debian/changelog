@@ -1,3 +1,23 @@
+rust-proxmox-disks (0.2.0-1) unstable; urgency=medium
+
+  * improve on various pre-existing issues from the PBS import, like error
+    handling, completion safety, smartctl JSON parsing.
+
+  * rename DiskManage to Disks, return Self from new() instead of Arc.
+
+  * separate SMART health data from disk enumeration - DiskUsageInfo no longer
+    contains status/wearout fields, one needs to query SMART separately via
+    get_smart_data() and combine at the API layer.
+
+  * smart: add configurable timeout for smartctl invocations to prevent stalls
+    from unresponsive disks.
+
+  * split monolithic lib.rs into focused modules and gate all but the core
+    code behind features: smart, discovery, operations, api-types. The
+    discovery feature no longer implies smart.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 11 Apr 2026 10:13:05 +0200
+
 rust-proxmox-disks (0.1.0-1) unstable; urgency=medium
 
   * initial version.
