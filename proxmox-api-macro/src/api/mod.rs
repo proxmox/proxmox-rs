@@ -155,7 +155,7 @@ impl Schema {
         }
     }
 
-    fn to_typed_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
+    fn to_typed_schema(&self, ts: &mut TokenStream) -> Result<(), syn::Error> {
         self.item.to_schema(
             ts,
             self.description.as_ref(),
@@ -165,7 +165,7 @@ impl Schema {
         )
     }
 
-    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
+    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), syn::Error> {
         self.item.to_schema(
             ts,
             self.description.as_ref(),
@@ -315,7 +315,7 @@ impl SchemaItem {
         description: Maybe<&syn::LitStr>,
         span: Span,
         properties: &[(Ident, syn::Expr)],
-    ) -> Result<bool, Error> {
+    ) -> Result<bool, syn::Error> {
         let check_description =
             move || description.ok_or_else(|| format_err!(span, "missing description"));
 
@@ -418,7 +418,7 @@ impl SchemaItem {
         span: Span,
         properties: &[(Ident, syn::Expr)],
         typed: bool,
-    ) -> Result<(), Error> {
+    ) -> Result<(), syn::Error> {
         if typed {
             let _: bool = self.to_inner_schema(ts, description, span, properties)?;
             return Ok(());
@@ -676,7 +676,7 @@ impl SchemaObject {
         Ok(this)
     }
 
-    fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), Error> {
+    fn to_schema_inner(&self, ts: &mut TokenStream) -> Result<(), syn::Error> {
         for element in self.properties_.iter() {
             if element.flatten_in_struct {
                 continue;
@@ -749,7 +749,7 @@ impl SchemaArray {
         })
     }
 
-    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), Error> {
+    fn to_schema(&self, ts: &mut TokenStream) -> Result<(), syn::Error> {
         self.item.to_schema(ts)
     }
 }
