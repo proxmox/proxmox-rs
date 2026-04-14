@@ -6,9 +6,9 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
 use syn::spanned::Spanned;
 
+use super::Schema;
 use super::attributes::CheckedAttributes;
 use super::attributes::EnumFieldAttributes;
-use super::Schema;
 use crate::serde;
 use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
 
@@ -195,6 +195,54 @@ fn handle_string_enum(
     })
 }
 
+struct SectionConfigAttribs {
+    id_schema: TokenStream,
+    id_property: syn::LitStr,
+    with_type_key: TokenStream,
+}
+
+impl SectionConfigAttribs {
+    fn extract(name: &Ident, attribs: &mut JSONObject) -> Result<Option<Self>, syn::Error> {
+        let id_schema = attribs.remove("id-schema");
+        let id_property = attribs.remove("id-property");
+        let type_key = attribs.remove("type-key");
+
+        if id_schema.is_none() && id_property.is_none() && type_key.is_none() {
+            return Ok(None);
+        }
+
+        let id_schema = {
+            let schema: Schema = match id_schema {
+                Some(schema) => schema.try_into()?,
+                None => {
+                    bail!(name => "missing 'id-schema' property for SectionConfig style enum")
+                }
+            };
+
+            let mut ts = TokenStream::new();
+            schema.to_typed_schema(&mut ts)?;
+            ts
+        };
+        let id_property: syn::LitStr = match id_property {
+            Some(name) => name.try_into()?,
+            None => bail!(name => "missing 'id-property' property for SectionConfig style enum"),
+        };
+        let with_type_key: TokenStream = match type_key {
+            Some(value) => {
+                let value: syn::LitStr = value.try_into()?;
+                quote_spanned!(value.span() => .with_type_key(#value))
+            }
+            None => TokenStream::new(),
+        };
+
+        Ok(Some(Self {
+            id_schema,
+            id_property,
+            with_type_key,
+        }))
+    }
+}
+
 fn handle_section_config_enum(
     mut attribs: JSONObject,
     mut enum_ty: syn::ItemEnum,
@@ -212,29 +260,9 @@ fn handle_section_config_enum(
         }
     };
 
-    let id_schema = {
-        let schema: Schema = match attribs.remove("id-schema") {
-            Some(schema) => schema.try_into()?,
-            None => {
-                bail!(name => "missing 'id-schema' property for SectionConfig style enum")
-            }
-        };
-
-        let mut ts = TokenStream::new();
-        schema.to_typed_schema(&mut ts)?;
-        ts
-    };
-    let id_property: syn::LitStr = match attribs.remove("id-property") {
-        Some(name) => name.try_into()?,
-        None => bail!(name => "missing 'id-property' property for SectionConfig style enum"),
-    };
-    let with_type_key: TokenStream = match attribs.remove("type-key") {
-        Some(value) => {
-            let value: syn::LitStr = value.try_into()?;
-            quote_spanned!(value.span() => .with_type_key(#value))
-        }
-        None => TokenStream::new(),
-    };
+    let section_config_attrs = SectionConfigAttribs::extract(name, &mut attribs)
+        .map_err(crate::add_error)
+        .unwrap_or(None);
 
     let container_attrs = serde::ContainerAttrib::try_from(&enum_ty.attrs[..])?;
     let Some(tag) = container_attrs.tag.as_ref() else {
@@ -271,6 +299,9 @@ fn handle_section_config_enum(
 
         let field_attrs = EnumFieldAttributes::from_attributes(&mut variant.attrs);
         let with_type_key = if let Some(key) = field_attrs.type_key() {
+            if section_config_attrs.is_none() {
+                error!(key => "type_key not allowed on a non-section-config enum");
+            }
             quote_spanned!(key.span() => .with_type_key(#key))
         } else {
             TokenStream::new()
@@ -298,24 +329,28 @@ fn handle_section_config_enum(
                 ),
             },
         ));
-        register_sections.extend(quote_spanned! { variant.ident.span() =>
-            #checked_attrs
-            this.register_plugin(
-                ::proxmox_section_config::SectionConfigPlugin::new(
-                    #variant_string.to_string(),
-                    Some(#id_property.to_string()),
-                    const {
-                        match &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA {
-                            ::proxmox_schema::Schema::Object(schema) => schema,
-                            ::proxmox_schema::Schema::OneOf(schema) => schema,
-                            ::proxmox_schema::Schema::AllOf(schema) => schema,
-                            _ => panic!("enum requires an object schema"),
+        if let Some(section_config_attrs) = &section_config_attrs {
+            let id_property = &section_config_attrs.id_property;
+
+            register_sections.extend(quote_spanned! { variant.ident.span() =>
+                #checked_attrs
+                this.register_plugin(
+                    ::proxmox_section_config::SectionConfigPlugin::new(
+                        #variant_string.to_string(),
+                        Some(#id_property.to_string()),
+                        const {
+                            match &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA {
+                                ::proxmox_schema::Schema::Object(schema) => schema,
+                                ::proxmox_schema::Schema::OneOf(schema) => schema,
+                                ::proxmox_schema::Schema::AllOf(schema) => schema,
+                                _ => panic!("enum requires an object schema"),
+                            }
                         }
-                    }
-                )
-                #with_type_key
-            );
-        });
+                    )
+                    #with_type_key
+                );
+            });
+        }
         to_type.extend(quote_spanned! { variant.ident.span() =>
             #checked_attrs
             Self::#variant_ident(_) => #variant_string,
@@ -326,6 +361,40 @@ fn handle_section_config_enum(
         .into_iter()
         .map(|(_name, def)| def)
         .collect::<TokenStream>();
+
+    let section_config_impl = match section_config_attrs {
+        None => TokenStream::new(),
+        Some(SectionConfigAttribs {
+            id_schema,
+            with_type_key,
+            id_property: _,
+        }) => {
+            quote_spanned! { name.span() =>
+                impl ::proxmox_section_config::typed::ApiSectionDataEntry for #name {
+                    const INTERNALLY_TAGGED: Option<&'static str> = Some(#tag);
+
+                    fn section_config() -> &'static ::proxmox_section_config::SectionConfig {
+                        static CONFIG: ::std::sync::OnceLock<::proxmox_section_config::SectionConfig> =
+                            ::std::sync::OnceLock::new();
+
+                        CONFIG.get_or_init(|| {
+                            const ID_SCHEMA: ::proxmox_schema::Schema = #id_schema.schema();
+                            let mut this = ::proxmox_section_config::SectionConfig::new(&ID_SCHEMA)
+                                #with_type_key;
+                            #register_sections
+                            this
+                        })
+                    }
+
+                    fn section_type(&self) -> &'static str {
+                        match self {
+                            #to_type
+                        }
+                    }
+                }
+            }
+        }
+    };
 
     Ok(quote_spanned! { name.span() =>
         #enum_ty
@@ -346,27 +415,6 @@ fn handle_section_config_enum(
                 .schema();
         }
 
-        impl ::proxmox_section_config::typed::ApiSectionDataEntry for #name {
-            const INTERNALLY_TAGGED: Option<&'static str> = Some(#tag);
-
-            fn section_config() -> &'static ::proxmox_section_config::SectionConfig {
-                static CONFIG: ::std::sync::OnceLock<::proxmox_section_config::SectionConfig> =
-                    ::std::sync::OnceLock::new();
-
-                CONFIG.get_or_init(|| {
-                    const ID_SCHEMA: ::proxmox_schema::Schema = #id_schema.schema();
-                    let mut this = ::proxmox_section_config::SectionConfig::new(&ID_SCHEMA)
-                        #with_type_key;
-                    #register_sections
-                    this
-                })
-            }
-
-            fn section_type(&self) -> &'static str {
-                match self {
-                    #to_type
-                }
-            }
-        }
+        #section_config_impl
     })
 }
