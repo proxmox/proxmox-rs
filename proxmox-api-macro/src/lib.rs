@@ -373,3 +373,27 @@ pub(crate) fn take_non_fatal_errors() -> TokenStream {
             .expect("missing call to init_local_mut")
     })
 }
+
+static WARN_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+/// Create a deprecation warning.
+pub(crate) fn add_warning(span: proc_macro2::Span, message: &str) {
+    let id = WARN_COUNTER.fetch_add(1, Ordering::Relaxed);
+
+    let id_name = syn::Ident::new(&format!("api_macro_deprecation_warning_{id}"), span);
+
+    NON_FATAL_ERRORS.with(|errors| {
+        errors
+            .borrow_mut()
+            .as_mut()
+            .expect("missing call to init_local_error")
+            .extend(quote::quote_spanned! { span =>
+                #[allow(dead_code)]
+                fn #id_name() {
+                    #[deprecated(note = #message)]
+                    const WARN: () = ();
+                    let _warn = WARN;
+                }
+            })
+    });
+}
