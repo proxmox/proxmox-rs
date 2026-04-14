@@ -5,6 +5,7 @@ extern crate proc_macro;
 extern crate proc_macro2;
 
 use std::cell::RefCell;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use anyhow::Error;
 

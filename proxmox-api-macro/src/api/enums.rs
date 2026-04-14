@@ -242,6 +242,7 @@ fn handle_section_config_enum(
     };
 
     let mut variants = Vec::new();
+    let mut type_enum = TokenStream::new();
     let mut register_sections = TokenStream::new();
     let mut to_type = TokenStream::new();
     for variant in &mut enum_ty.variants {
@@ -251,6 +252,13 @@ fn handle_section_config_enum(
         };
 
         let attrs = serde::VariantAttrib::try_from(&variant.attrs[..])?;
+
+        let (mut comment, _doc_span) = util::get_doc_comments(&variant.attrs)?;
+        if comment.is_empty() {
+            crate::add_warning(variant.ident.span(), "enum variant needs a description");
+            comment = "<missing description>".to_string();
+        }
+
         let variant_string = if let Some(renamed) = attrs.rename {
             renamed
         } else if let Some(rename_all) = container_attrs.rename_all {
@@ -269,6 +277,14 @@ fn handle_section_config_enum(
         };
 
         let checked_attrs = CheckedAttributes::from_slice(&variant.attrs);
+
+        type_enum.extend(quote_spanned! { variant.ident.span() =>
+            #checked_attrs
+            ::proxmox_schema::EnumEntry {
+                value: #variant_string,
+                description: #comment,
+            },
+        });
 
         let variant_ident = &variant.ident;
         let ty = &field.ty;
@@ -318,7 +334,13 @@ fn handle_section_config_enum(
             const API_SCHEMA: ::proxmox_schema::Schema =
                 ::proxmox_schema::OneOfSchema::new(
                     #description,
-                    &(#tag, false, &#id_schema.schema()),
+                    &(
+                        #tag,
+                        false,
+                        &::proxmox_schema::StringSchema::new("Type of the object.")
+                            .format(&::proxmox_schema::ApiStringFormat::Enum(&[#type_enum]))
+                            .schema()
+                    ),
                     &[#variants],
                 )
                 .schema();
@@ -332,13 +354,8 @@ fn handle_section_config_enum(
                     ::std::sync::OnceLock::new();
 
                 CONFIG.get_or_init(|| {
-                    let id_schema = const {
-                        <Self as ::proxmox_schema::ApiType>::API_SCHEMA
-                            .unwrap_one_of_schema()
-                            .type_property_entry
-                            .2
-                    };
-                    let mut this = ::proxmox_section_config::SectionConfig::new(id_schema)
+                    const ID_SCHEMA: ::proxmox_schema::Schema = #id_schema.schema();
+                    let mut this = ::proxmox_section_config::SectionConfig::new(&ID_SCHEMA)
                         #with_type_key;
                     #register_sections
                     this

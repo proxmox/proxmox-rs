@@ -41,9 +41,12 @@ pub struct TypeB {
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum Config {
+    /// Type A.
     A(TypeA),
+    /// Type B.
     #[api(type_key = "the-type")]
     B(TypeB),
+    /// Non existing plugin.
     #[cfg(false)]
     NotCompiled(NonExistingPlugin),
 }
@@ -110,7 +113,9 @@ pub struct TypeA2 {
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ConfigTypeKey {
+    /// Type A2.
     A2(TypeA2),
+    /// Type B.
     #[api(type_key = "the-type")]
     B(TypeB),
 }
