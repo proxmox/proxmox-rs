@@ -254,7 +254,10 @@ fn handle_section_config_enum(
         None => {
             let (comment, span) = util::get_doc_comments(&enum_ty.attrs)?;
             if comment.is_empty() {
-                error!(Span::call_site(), "missing doc comment on enum for api-schema description");
+                error!(
+                    Span::call_site(),
+                    "missing doc comment on enum for api-schema description"
+                );
             }
             syn::LitStr::new(comment.trim(), span)
         }
@@ -319,14 +322,12 @@ fn handle_section_config_enum(
 
         let variant_ident = &variant.ident;
         let ty = &field.ty;
+        let variant_schema = build_variant_schema(variant_ident, ty, &container_attrs);
         variants.push((
             variant_string.value(),
             quote_spanned! { variant.ident.span() =>
                 #checked_attrs
-                (
-                    #variant_string,
-                    &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA,
-                ),
+                (#variant_string, #variant_schema),
             },
         ));
         if let Some(section_config_attrs) = &section_config_attrs {
@@ -417,4 +418,25 @@ fn handle_section_config_enum(
 
         #section_config_impl
     })
+}
+
+fn build_variant_schema(
+    ident: &Ident,
+    ty: &syn::Type,
+    container_attrs: &serde::ContainerAttrib,
+) -> TokenStream {
+    if let Some(content) = &container_attrs.content {
+        let description = syn::LitStr::new(&format!("An instance of {ident}."), ident.span());
+        quote_spanned! { ident.span() =>
+            &::proxmox_schema::ObjectSchema::new(
+                #description,
+                &[(#content, false, &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA)],
+            )
+            .schema()
+        }
+    } else {
+        quote_spanned! { ident.span() =>
+            &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA
+        }
+    }
 }

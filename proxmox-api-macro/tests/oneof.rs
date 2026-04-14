@@ -46,29 +46,67 @@ pub enum AOrB {
     B(IndexText),
 }
 
+const A_OR_B_TYPE_SCHEMA: schema::Schema = schema::StringSchema::new("Type of the object.")
+    .format(&schema::ApiStringFormat::Enum(&[
+        schema::EnumEntry {
+            value: "A",
+            description: "Type A.",
+        },
+        schema::EnumEntry {
+            value: "B",
+            description: "Type B.",
+        },
+    ]))
+    .schema();
+
 #[test]
 fn test_a_or_b_schema() {
-    const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::OneOfSchema::new(
+    const TEST_SCHEMA: schema::Schema = schema::OneOfSchema::new(
         "An A or a B.",
-        &(
-            "type",
-            false,
-            &schema::StringSchema::new("Type of the object.")
-                .format(&schema::ApiStringFormat::Enum(&[
-                    schema::EnumEntry {
-                        value: "A",
-                        description: "Type A.",
-                    },
-                    schema::EnumEntry {
-                        value: "B",
-                        description: "Type B.",
-                    },
-                ]))
-                .schema(),
-        ),
+        &("type", false, &A_OR_B_TYPE_SCHEMA),
         &[("A", &NameValue::API_SCHEMA), ("B", &IndexText::API_SCHEMA)],
     )
     .schema();
 
     assert_eq!(TEST_SCHEMA, AOrB::API_SCHEMA);
+}
+
+#[api]
+/// An A or a B - adjacently tagged.
+#[derive(Deserialize, Serialize)]
+#[serde(tag = "type", content = "value")]
+pub enum AOrBAdjacent {
+    /// Type A.
+    A(NameValue),
+    /// Type B.
+    B(IndexText),
+}
+
+#[test]
+fn test_adjacently_tagged() {
+    const TEST_SCHEMA: schema::Schema = schema::OneOfSchema::new(
+        "An A or a B - adjacently tagged.",
+        &("type", false, &A_OR_B_TYPE_SCHEMA),
+        &[
+            (
+                "A",
+                &schema::ObjectSchema::new(
+                    "An instance of A.",
+                    &[("value", false, &NameValue::API_SCHEMA)],
+                )
+                .schema(),
+            ),
+            (
+                "B",
+                &schema::ObjectSchema::new(
+                    "An instance of B.",
+                    &[("value", false, &IndexText::API_SCHEMA)],
+                )
+                .schema(),
+            ),
+        ],
+    )
+    .schema();
+
+    assert_eq!(TEST_SCHEMA, AOrBAdjacent::API_SCHEMA);
 }

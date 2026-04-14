@@ -129,6 +129,7 @@ impl RenameAll {
 pub struct ContainerAttrib {
     pub rename_all: Option<RenameAll>,
     pub tag: Option<syn::LitStr>,
+    pub content: Option<syn::LitStr>,
 }
 
 impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
@@ -169,6 +170,16 @@ impl TryFrom<&[syn::Attribute]> for ContainerAttrib {
                                 this.tag = Some(lit.clone());
                             }
                             _ => error!(var.value => "invalid 'tag' value type"),
+                        }
+                    } else if var.path.is_ident("content") {
+                        match &var.value {
+                            syn::Expr::Lit(syn::ExprLit {
+                                lit: syn::Lit::Str(lit),
+                                ..
+                            }) => {
+                                this.content = Some(lit.clone());
+                            }
+                            _ => error!(var.value => "invalid 'content' value type"),
                         }
                     }
                 }
