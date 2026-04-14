@@ -37,6 +37,7 @@ pub struct TypeB {
         max_length: 16,
     },
 )]
+/// Some configuration of type A or B.
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum Config {
@@ -105,6 +106,7 @@ pub struct TypeA2 {
     },
     "type-key": "ty",
 )]
+/// Section config of A2 or B entries.
 #[derive(Debug, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ConfigTypeKey {

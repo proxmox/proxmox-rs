@@ -205,6 +205,9 @@ fn handle_section_config_enum(
         Some(desc) => desc.try_into()?,
         None => {
             let (comment, span) = util::get_doc_comments(&enum_ty.attrs)?;
+            if comment.is_empty() {
+                error!(Span::call_site(), "missing doc comment on enum for api-schema description");
+            }
             syn::LitStr::new(comment.trim(), span)
         }
     };
