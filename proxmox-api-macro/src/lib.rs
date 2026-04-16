@@ -153,8 +153,10 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     }
     ```
 
-    The `#[api]` macro can also be used on type declarations to create schemas for structs to be
-    used instead of accessing json values via string indexing.
+    The `#[api]` macro can also be used on type declarations to create schemas for `struct` and
+    `enum` types to be used instead of accessing json values via string indexing.
+
+    # Object schemas: `struct` types.
 
     For a simple struct, the schema can be left empty and will be completely derived from the
     information available in rust:
@@ -178,16 +180,20 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
 
     This will produce the following schema:
     ```no_run
+    # use proxmox_schema::ApiType;
+    # use proxmox_schema::ObjectSchema;
+    # use proxmox_schema::Schema;
+    # use proxmox_schema::StringSchema;
     # struct RenamedStruct;
-    impl RenamedStruct {
-        pub const API_SCHEMA: &'static ::proxmox_schema::Schema =
-            &::proxmox_schema::ObjectSchema::new(
+    impl ApiType for RenamedStruct {
+        const API_SCHEMA: Schema =
+            ObjectSchema::new(
                 "An example of a struct with renamed fields.",
                 &[
                    (
                         "SomeOther",
                         true,
-                        &::proxmox_schema::StringSchema::new(
+                        &StringSchema::new(
                             "An optional auto-derived value for testing:",
                         )
                         .schema(),
@@ -195,7 +201,7 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
                     (
                         "test-string",
                         false,
-                        &::proxmox_schema::StringSchema::new("A test string.").schema(),
+                        &StringSchema::new("A test string.").schema(),
                     ),
 
                 ],
@@ -227,10 +233,167 @@ fn router_do(item: TokenStream) -> Result<TokenStream, Error> {
     ```
 
     There are a few shortcuts for schemas: if the `type` refers to an arbitrary rust type other
-    than strings or integers, we assume that it has an `impl` block containing a `pub const
-    API_SCHEMA: &'static Schema`. This is what the `#[api]` macro produces on `struct` and `enum`
-    declarations. If it contains a `schema` key, this is expected to be the path to an existing
-    schema. (Hence `type: Foo` is the same as `schema: Foo::API_SCHEMA`.)
+    than strings or integers, we assume that it implements `proxmox_schema::ApiType`.
+    If it contains a `schema` key, this is expected to be the path to an existing schema. (Hence
+    `type: Foo` is the same as `schema: Foo::API_SCHEMA`.)
+
+    The `#[api]` macro supports `#[serde(flatten)]` by creating an `AllOfSchema`. Note that this is
+    incompatible with `#[serde(deny_unknown_fields)]`.
+
+    # `enum` types:
+
+    The `#[api]` macro supports 2 distinct versions of `enum` types:
+
+    - Simple enums, which become `String` types using the "format" `ApiStringFormat::Enum`. A
+      single `#[serde(untagged)]` variant is allowed to support "unknown" strings.
+    - Enums with only newtype variants.
+
+    ## Simple enums.
+
+    ```no_run
+    # use proxmox_api_macro::api;
+    # use serde::{Deserialize, Serialize};
+    #[api]
+    #[derive(Deserialize, Serialize)]
+    #[serde(rename_all = "kebab-case")]
+    /// Some Description.
+    pub enum SimpleEnum {
+        /// Mandatory description 1.
+        VariantOne,
+        /// Mandatory description 2.
+        VariantTwo,
+    }
+    ```
+
+    This produces the following schema:
+
+    ```no_run
+    # use proxmox_schema::ApiType;
+    # use proxmox_schema::Schema;
+    # use proxmox_schema::StringSchema;
+    # use proxmox_schema::ApiStringFormat;
+    # use proxmox_schema::EnumEntry;
+    # pub enum SimpleEnum {}
+    impl ApiType for SimpleEnum {
+        const API_SCHEMA: Schema =
+            StringSchema::new("Some Description.")
+                .format(&ApiStringFormat::Enum(&[
+                    EnumEntry {
+                        value: "variant-one",
+                        description: "Mandatory description 1.",
+                    },
+                    EnumEntry {
+                        value: "variant-two",
+                        description: "Mandatory description 2.",
+                    },
+                ]))
+                .schema();
+    }
+    ```
+
+    ## `OneOf` schema `enum`s.
+
+    For `enum`s with newtype variants, the `#[api]` macro currently supports internally and
+    adjacently tagged enums. There is currently no support for externally tagged enums.
+
+    ```no_run
+    # use proxmox_api_macro::api;
+    # use serde::{Deserialize, Serialize};
+    # #[api]
+    # /// Name and value.
+    # #[derive(Deserialize, Serialize)]
+    # pub struct NameValue {}
+    #
+    # #[api]
+    # /// Index and text.
+    # #[derive(Deserialize, Serialize)]
+    # pub struct IndexText {}
+    #[api]
+    /// An A or a B.
+    #[derive(Deserialize, Serialize)]
+    #[serde(tag = "type")]
+    pub enum AOrB {
+        /// Type A.
+        A(NameValue),
+        /// Type B.
+        B(IndexText),
+    }
+    ```
+
+    This will produce the following schema.
+
+    ```no_run
+    # use proxmox_api_macro::api;
+    # use proxmox_schema::ApiType;
+    # use proxmox_schema::OneOfSchema;
+    # use proxmox_schema::Schema;
+    # use proxmox_schema::StringSchema;
+    # use serde::{Deserialize, Serialize};
+    # #[api]
+    # #[derive(Deserialize, Serialize)]
+    # /// Name and value.
+    # pub struct NameValue {}
+    # #[api]
+    # /// Index and text.
+    # #[derive(Deserialize, Serialize)]
+    # pub struct IndexText {}
+    # pub enum AOrB {}
+    impl ApiType for AOrB {
+        const API_SCHEMA: Schema = OneOfSchema::new(
+            "An A or a B.",
+            &("type", false, &StringSchema::new("...").schema() /* .format(enum entries...) */ ),
+            &[("A", &NameValue::API_SCHEMA), ("B", &IndexText::API_SCHEMA)],
+        )
+        .schema();
+    }
+    ```
+
+    Adding a `#[serde(content = "value")]` to it will wrap the two variants in an additional
+    object schema like so:
+
+    ```no_run
+    # use proxmox_api_macro::api;
+    # use proxmox_schema::ApiType;
+    # use proxmox_schema::OneOfSchema;
+    # use proxmox_schema::ObjectSchema;
+    # use proxmox_schema::Schema;
+    # use proxmox_schema::StringSchema;
+    # use serde::{Deserialize, Serialize};
+    # #[api]
+    # #[derive(Deserialize, Serialize)]
+    # /// Name and value.
+    # pub struct NameValue {}
+    # #[api]
+    # /// Index and text.
+    # #[derive(Deserialize, Serialize)]
+    # pub struct IndexText {}
+    # pub enum AOrB {}
+    impl ApiType for AOrB {
+        const API_SCHEMA: Schema = OneOfSchema::new(
+            "An A or a B.",
+            &("type", false, &StringSchema::new("...").schema() /* .format(enum entries...) */ ),
+            &[
+                (
+                    "A",
+                    &ObjectSchema::new(
+                        "An instance of A.",
+                        &[("value", false, &NameValue::API_SCHEMA)],
+                    )
+                    .schema(),
+                ),
+                (
+                    "B",
+                    &ObjectSchema::new(
+                        "An instance of B.",
+                        &[("value", false, &IndexText::API_SCHEMA)],
+                    )
+                    .schema(),
+                ),
+            ],
+        )
+        .schema();
+    }
+    ```
 
     # Deriving an `Updater`:
 
