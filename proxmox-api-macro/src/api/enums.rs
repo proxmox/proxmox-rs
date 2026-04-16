@@ -340,12 +340,8 @@ fn handle_section_config_enum(
                         #variant_string.to_string(),
                         Some(#id_property.to_string()),
                         const {
-                            match &<#ty as ::proxmox_schema::ApiType>::API_SCHEMA {
-                                ::proxmox_schema::Schema::Object(schema) => schema,
-                                ::proxmox_schema::Schema::OneOf(schema) => schema,
-                                ::proxmox_schema::Schema::AllOf(schema) => schema,
-                                _ => panic!("enum requires an object schema"),
-                            }
+                            <#ty as ::proxmox_schema::ApiType>::API_SCHEMA
+                                .unwrap_any_object_schema()
                         }
                     )
                     #with_type_key
