@@ -452,6 +452,11 @@ pub const COUNTER_RESET_SCHEDULE_SCHEMA: Schema =
             optional: true,
             schema: GC_SCHEDULE_SCHEMA,
         },
+        "gc-on-unmount": {
+            description: "Run garbage collection before unmounting a removable datastore.",
+            optional: true,
+            type: bool,
+        },
         "prune-schedule": {
             optional: true,
             schema: PRUNE_SCHEDULE_SCHEMA,
@@ -509,6 +514,9 @@ pub struct DataStoreConfig {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub gc_schedule: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gc_on_unmount: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prune_schedule: Option<String>,
@@ -586,6 +594,7 @@ impl DataStoreConfig {
             path,
             comment: None,
             gc_schedule: None,
+            gc_on_unmount: None,
             prune_schedule: None,
             keep: Default::default(),
             verify_new: None,
