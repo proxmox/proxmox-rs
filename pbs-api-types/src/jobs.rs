@@ -88,6 +88,11 @@ pub const VERIFY_JOB_VERIFY_THREADS_SCHEMA: Schema = threads_schema(
     4,
 );
 
+pub const SYNC_WORKER_THREADS_SCHEMA: Schema = threads_schema(
+    "The number of worker threads to process groups in parallel.",
+    1,
+);
+
 #[api(
     properties: {
         "next-run": {
@@ -664,6 +669,10 @@ pub const UNMOUNT_ON_SYNC_DONE_SCHEMA: Schema =
             type: SyncDirection,
             optional: true,
         },
+        "worker-threads": {
+            schema: SYNC_WORKER_THREADS_SCHEMA,
+            optional: true,
+        },
     }
 )]
 #[derive(Serialize, Deserialize, Clone, Updater, PartialEq)]
@@ -709,6 +718,8 @@ pub struct SyncJobConfig {
     pub unmount_on_done: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sync_direction: Option<SyncDirection>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub worker_threads: Option<usize>,
 }
 
 impl SyncJobConfig {
