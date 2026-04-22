@@ -1,3 +1,11 @@
+rust-pbs-api-types (1.0.13-1) trixie; urgency=medium
+
+  * add 'gc-on-unmount' flag for removable datastores.
+
+  * add 'worker-threads' option to sync job config.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 22 Apr 2026 16:06:20 +0200
+
 rust-pbs-api-types (1.0.12-1) trixie; urgency=medium
 
   * include backend-type in datastore list item.
