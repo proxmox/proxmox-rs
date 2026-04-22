@@ -1,3 +1,11 @@
+rust-proxmox-shared-memory (1.0.2-1) bookworm; urgency=medium
+
+  * immediately flush contents of newly created mmap file to avoid possible
+    races between creating and initializing a new mmapped file and opening
+    while checking the header of this file.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 22 Apr 2026 17:29:49 +0200
+
 rust-proxmox-shared-memory (1.0.1-1) bookworm; urgency=medium
 
   * add `open_non_tmpfs` method to allow placing shared memory backed files on

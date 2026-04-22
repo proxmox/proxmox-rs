@@ -32,7 +32,7 @@ Provides:
  librust-proxmox-shared-memory-1+default-dev (= ${binary:Version}),
  librust-proxmox-shared-memory-1.0-dev (= ${binary:Version}),
  librust-proxmox-shared-memory-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-shared-memory-1.0.1-dev (= ${binary:Version}),
- librust-proxmox-shared-memory-1.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-shared-memory-1.0.2-dev (= ${binary:Version}),
+ librust-proxmox-shared-memory-1.0.2+default-dev (= ${binary:Version})
 Description: Shared memory helpers and shared mutex implementation - Rust source code
  Source code for Debianized Rust crate "proxmox-shared-memory"
