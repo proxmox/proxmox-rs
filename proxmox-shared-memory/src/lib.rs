@@ -190,6 +190,10 @@ impl<T: Sized + Init> SharedMemory<T> {
 
         let mmap = mmap_file(&mut file, true)?;
 
+        if skip_tmpfs_check {
+            mmap.msync(MsFlags::MS_SYNC)?;
+        }
+
         let res = {
             let path = CString::new(path.as_os_str().as_bytes())?;
             Errno::result(unsafe {
