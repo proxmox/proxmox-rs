@@ -1,3 +1,11 @@
+rust-pbs-api-types (1.0.14-1) trixie; urgency=medium
+
+  * define en-/decryption key type and schema.
+
+  * sync job: add optional cryptographic keys to config.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 23 Apr 2026 21:50:14 +0200
+
 rust-pbs-api-types (1.0.13-1) trixie; urgency=medium
 
   * add 'gc-on-unmount' flag for removable datastores.
