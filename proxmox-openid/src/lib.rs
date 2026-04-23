@@ -95,6 +95,8 @@ pub struct OpenIdConfig {
     pub prompt: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub acr_values: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub audiences: Option<Vec<String>>,
 }
 
 pub struct OpenIdAuthenticator {
@@ -258,12 +260,27 @@ impl OpenIdAuthenticator {
             .request(&http_client)
             .map_err(|err| format_err!("Failed to contact token endpoint: {}", err))?;
 
-        let id_token_verifier: CoreIdTokenVerifier = self.client.id_token_verifier();
+        let verifier = &self
+            .client
+            .id_token_verifier()
+            .require_audience_match(true)
+            .set_other_audience_verifier_fn(|aud| {
+                if self.config.client_id == **aud {
+                    return true;
+                }
+
+                if let Some(allowed_audiences) = self.config.audiences.as_ref() {
+                    return allowed_audiences.contains(aud);
+                }
+
+                false
+            });
+
         let id_token_claims: &GenericIdTokenClaims = token_response
             .extra_fields()
             .id_token()
             .expect("Server did not return an ID token")
-            .claims(&id_token_verifier, &private_auth_state.nonce)
+            .claims(verifier, &private_auth_state.nonce)
             .map_err(|err| format_err!("Failed to verify ID token: {}", err))?;
 
         if !query_userinfo {
