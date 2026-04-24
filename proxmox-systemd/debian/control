@@ -28,7 +28,7 @@ Provides:
  librust-proxmox-systemd-1+default-dev (= ${binary:Version}),
  librust-proxmox-systemd-1.0-dev (= ${binary:Version}),
  librust-proxmox-systemd-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-systemd-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-systemd-1.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-systemd-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-systemd-1.0.1+default-dev (= ${binary:Version})
 Description: Utilities for dealing with systemd unit files and communicating with systemd - Rust source code
  Source code for Debianized Rust crate "proxmox-systemd"

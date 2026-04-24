@@ -1,3 +1,9 @@
+rust-proxmox-systemd (1.0.1-1) trixie; urgency=medium
+
+  * add bindings for 128-bit machine-specific application-id generation.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 24 Apr 2026 21:40:44 +0200
+
 rust-proxmox-systemd (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
