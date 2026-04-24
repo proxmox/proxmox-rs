@@ -1,3 +1,10 @@
+rust-pbs-api-types (1.0.15-1) trixie; urgency=medium
+
+  * add ServerIdentity to provide a type that will uniquely identify a PBS
+    node, which comes in useful to match PBS storages to PBS remotes in PDM.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 24 Apr 2026 21:47:15 +0200
+
 rust-pbs-api-types (1.0.14-1) trixie; urgency=medium
 
   * define en-/decryption key type and schema.
