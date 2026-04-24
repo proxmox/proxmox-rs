@@ -453,3 +453,12 @@ impl Iterator for AcmeDomainIter<'_> {
         )
     }
 }
+
+#[api]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "kebab-case")]
+/// Unique instance identity information.
+pub struct ServerIdentity {
+    /// Unique instance identifier.
+    pub pbs_instance_id: String,
+}
