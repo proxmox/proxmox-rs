@@ -4,6 +4,11 @@ use std::os::fd::RawFd;
 
 pub const LISTEN_FDS_START: RawFd = 3;
 
+#[repr(C)]
+pub struct sd_id128_t {
+    pub bytes: [u8; 16],
+}
+
 #[link(name = "systemd")]
 unsafe extern "C" {
     pub fn sd_journal_stream_fd(
@@ -24,6 +29,7 @@ unsafe extern "C" {
         unset_environment: c_int,
         names: *mut *mut *mut c_char,
     ) -> c_int;
+    pub fn sd_id128_get_machine_app_specific(app_id: sd_id128_t, ret: *mut sd_id128_t) -> c_int;
 }
 
 pub fn check_call(ret: c_int) -> Result<c_int, io::Error> {
