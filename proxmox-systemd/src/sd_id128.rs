@@ -1,3 +1,13 @@
+//! Safe wrappers around systemd's `sd-id128` 128-bit ID APIs.
+//!
+//! `sd-id128.h` is part of `libsystemd` and provides APIs to generate, convert, and compare
+//! 128-bit ID values, which are a generalization of RFC 4122 OSF UUIDs with a simpler string
+//! format. See `sd-id128(3)` for the full C API.
+//!
+//! See [`get_app_specific_id`] for deriving a stable, application-specific ID from the local
+//! machine ID (`sd_id128_get_machine_app_specific(3)`, `machine-id(5)`), and [`SystemdId128Error`]
+//! for the errors it can return.
+
 use std::fmt;
 
 use crate::sys::{self, sd_id128_t};
