@@ -30,7 +30,7 @@ pub struct FieldName {
 
 impl FieldName {
     pub fn new(name: String, span: Span) -> Self {
-        let mut ident_str = name.replace(['-', '.', '+'].as_ref(), "_");
+        let mut ident_str = name.replace(['-', '.', '+', '$'].as_ref(), "_");
 
         if ident_str.chars().next().unwrap().is_numeric() {
             ident_str.insert(0, '_');
