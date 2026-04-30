@@ -4,7 +4,7 @@
 //! completely static API definitions that can be included within the programs read-only text
 //! segment.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt;
 
 use anyhow::{bail, format_err, Error};
@@ -2136,6 +2136,14 @@ impl<T> UpdaterType for Vec<T> {
 }
 
 impl<T> UpdaterType for crate::property_string::PropertyString<T> {
+    type Updater = Option<Self>;
+}
+
+impl<K, V> UpdaterType for HashMap<K, V> {
+    type Updater = Option<Self>;
+}
+
+impl<K, V> UpdaterType for BTreeMap<K, V> {
     type Updater = Option<Self>;
 }
 
