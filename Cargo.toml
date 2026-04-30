@@ -23,6 +23,7 @@ members = [
     "proxmox-http-error",
     "proxmox-human-byte",
     "proxmox-ini",
+    "proxmox-installer-types",
     "proxmox-io",
     "proxmox-lang",
     "proxmox-ldap",

@@ -1,0 +1,5 @@
+rust-proxmox-installer-types (0.1.0-1) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 25 Nov 2025 10:23:32 +0200
