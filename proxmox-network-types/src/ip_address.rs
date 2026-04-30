@@ -99,8 +99,10 @@ pub mod api_types {
     use std::net::AddrParseError;
     use std::ops::{Deref, DerefMut};
 
-    use proxmox_schema::api_types::IP_V6_SCHEMA;
-    use proxmox_schema::{api_types::IP_V4_SCHEMA, ApiType, UpdaterType};
+    use proxmox_schema::{
+        api_types::{IP_SCHEMA, IP_V4_SCHEMA, IP_V6_SCHEMA},
+        ApiType, UpdaterType,
+    };
     use serde_with::{DeserializeFromStr, SerializeDisplay};
 
     /// A wrapper around [`std::net::Ipv4Addr`] that implements [`ApiType`].
@@ -217,6 +219,64 @@ pub mod api_types {
 
     impl From<std::net::Ipv6Addr> for Ipv6Addr {
         fn from(value: std::net::Ipv6Addr) -> Self {
+            Self(value)
+        }
+    }
+
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        Eq,
+        PartialEq,
+        Ord,
+        PartialOrd,
+        DeserializeFromStr,
+        SerializeDisplay,
+        Hash,
+    )]
+    #[repr(transparent)]
+    pub struct IpAddr(pub std::net::IpAddr);
+
+    impl ApiType for IpAddr {
+        const API_SCHEMA: proxmox_schema::Schema = IP_SCHEMA;
+    }
+
+    impl UpdaterType for IpAddr {
+        type Updater = Option<IpAddr>;
+    }
+
+    impl Deref for IpAddr {
+        type Target = std::net::IpAddr;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl DerefMut for IpAddr {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl std::str::FromStr for IpAddr {
+        type Err = AddrParseError;
+
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            let ip_address = std::net::IpAddr::from_str(value)?;
+            Ok(Self(ip_address))
+        }
+    }
+
+    impl std::fmt::Display for IpAddr {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    impl From<std::net::IpAddr> for IpAddr {
+        fn from(value: std::net::IpAddr) -> Self {
             Self(value)
         }
     }
