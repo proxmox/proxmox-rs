@@ -17,34 +17,43 @@ pub struct NodeUsage {
     pub stats: NodeStats,
 }
 
-/// Returns the load imbalance among the nodes.
+/// Returns the load imbalance among the nodes, which is a value between 0 and 1 that describes the
+/// statistical dispersion of the individual node loads around the mean node load. The lower the
+/// value, the better.
 ///
-/// The load balance is measured as the statistical dispersion of the individual node loads.
-///
-/// The current implementation uses the dimensionless coefficient of variation, which expresses the
-/// standard deviation in relation to the average mean of the node loads.
-///
-/// The coefficient of variation is not robust, which is a desired property here, because outliers
-/// should be detected as much as possible.
+/// In more detail, the current implementation computes the so-called coefficient of variation (CV),
+/// which is the ratio of the standard deviation to the mean of the given node loads. The lower
+/// bound of the CV is reached if all node loads are equal. The upper bound is reached if all nodes
+/// except one are idle. To present the CV as a value between 0 and 1, it's being divided by the
+/// upper bound of the CV for the given number of nodes.
 fn calculate_node_imbalance(nodes: &[NodeUsage], to_load: impl Fn(&NodeUsage) -> f64) -> f64 {
     let node_count = nodes.len();
-    let node_loads = nodes.iter().map(to_load).collect::<Vec<_>>();
 
+    // early return with perfect imbalance to avoid division by zero
+    if node_count < 2 {
+        return 0.0;
+    }
+
+    let node_loads = nodes.iter().map(to_load).collect::<Vec<_>>();
     let load_sum = node_loads.iter().sum::<f64>();
 
-    // load_sum is guaranteed to be -0.0 for empty `nodes`
+    // early return with perfect imbalance to avoid division by zero
     if load_sum == 0.0 {
-        0.0
-    } else {
-        let load_mean = load_sum / node_count as f64;
-
-        let squared_diff_sum = node_loads
-            .iter()
-            .fold(0.0, |sum, node_load| sum + (node_load - load_mean).powi(2));
-        let load_sd = (squared_diff_sum / node_count as f64).sqrt();
-
-        load_sd / load_mean
+        return 0.0;
     }
+
+    let load_mean = load_sum / node_count as f64;
+    let squared_diff_sum = node_loads
+        .iter()
+        .fold(0.0, |sum, node_load| sum + (node_load - load_mean).powi(2));
+    let load_sd = (squared_diff_sum / node_count as f64).sqrt();
+
+    let cv = load_sd / load_mean;
+
+    // https://stats.stackexchange.com/questions/18621
+    let max_cv = ((node_count - 1) as f64).sqrt();
+
+    cv / max_cv
 }
 
 criteria_struct! {
