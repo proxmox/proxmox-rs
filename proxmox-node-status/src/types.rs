@@ -27,7 +27,7 @@ pub struct BootModeInformation {
 }
 
 #[api]
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Clone, Serialize, Deserialize, Default, PartialEq)]
 #[serde(rename_all = "lowercase")]
 /// The current kernel version (output of `uname`)
 pub struct KernelVersionInformation {
