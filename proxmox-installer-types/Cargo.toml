@@ -12,9 +12,13 @@ exclude.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+anyhow.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_plain.workspace = true
 proxmox-network-types.workspace = true
+proxmox-node-status.workspace = true
 
 [features]
 default = []
+# enable old-style answer file keys with underscores for backwards compatibility
+legacy = []

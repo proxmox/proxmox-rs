@@ -7,6 +7,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 #![deny(unsafe_code, missing_docs)]
 
+pub mod answer;
+pub mod post_hook;
+
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 

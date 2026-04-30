@@ -6,7 +6,9 @@ Build-Depends: debhelper-compat (= 13),
 Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
+ librust-anyhow-1+default-dev <!nocheck>,
  librust-proxmox-network-types-1+default-dev (>= 1.0.2-~~) <!nocheck>,
+ librust-proxmox-node-status-1+default-dev <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-plain-1+default-dev <!nocheck>
@@ -22,17 +24,23 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
+ librust-anyhow-1+default-dev,
  librust-proxmox-network-types-1+default-dev (>= 1.0.2-~~),
+ librust-proxmox-node-status-1+default-dev,
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-plain-1+default-dev
 Provides:
  librust-proxmox-installer-types+default-dev (= ${binary:Version}),
+ librust-proxmox-installer-types+legacy-dev (= ${binary:Version}),
  librust-proxmox-installer-types-0-dev (= ${binary:Version}),
  librust-proxmox-installer-types-0+default-dev (= ${binary:Version}),
+ librust-proxmox-installer-types-0+legacy-dev (= ${binary:Version}),
  librust-proxmox-installer-types-0.1-dev (= ${binary:Version}),
  librust-proxmox-installer-types-0.1+default-dev (= ${binary:Version}),
+ librust-proxmox-installer-types-0.1+legacy-dev (= ${binary:Version}),
  librust-proxmox-installer-types-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-installer-types-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-installer-types-0.1.0+default-dev (= ${binary:Version}),
+ librust-proxmox-installer-types-0.1.0+legacy-dev (= ${binary:Version})
 Description: Type definitions used within the installer - Rust source code
  Source code for Debianized Rust crate "proxmox-installer-types"
