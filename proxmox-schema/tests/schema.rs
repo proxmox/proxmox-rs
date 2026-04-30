@@ -1,5 +1,5 @@
 use anyhow::bail;
-use serde_json::Value;
+use serde_json::{json, Value};
 use url::form_urlencoded;
 
 use proxmox_schema::*;
@@ -389,4 +389,93 @@ fn test_verify_complex_array() {
         let res = parse_query_string("list=2,3,4,5", &SCHEMA, true);
         assert!(res.is_err());
     }
+}
+
+#[test]
+fn test_one_of_schema_string_variant() {
+    const OBJECT1_SCHEMA: Schema = ObjectSchema::new(
+        "Object 1",
+        &[
+            ("a", false, &StringSchema::new("A property").schema()),
+            ("type", false, &StringSchema::new("v1 or v2").schema()),
+        ],
+    )
+    .schema();
+    const OBJECT2_SCHEMA: Schema = ObjectSchema::new(
+        "Object 2",
+        &[
+            (
+                "b",
+                true,
+                &StringSchema::new("A optional property").schema(),
+            ),
+            ("type", false, &StringSchema::new("v1 or v2").schema()),
+        ],
+    )
+    .schema();
+
+    const NO_STRING_VARIANT_SCHEMA: OneOfSchema = OneOfSchema::new(
+        "An oneOf schema",
+        &("type", false, &StringSchema::new("v1 or v2").schema()),
+        &[("v1", &OBJECT1_SCHEMA), ("v2", &OBJECT2_SCHEMA)],
+    );
+
+    const ONE_STRING_VARIANT_SCHEMA: OneOfSchema = OneOfSchema::new(
+        "An oneOf schema with a string variant",
+        &(
+            "type",
+            false,
+            &StringSchema::new("string or v1 or v2").schema(),
+        ),
+        &[
+            (
+                "name does not matter",
+                &StringSchema::new("A string").schema(),
+            ),
+            ("v1", &OBJECT1_SCHEMA),
+            ("v2", &OBJECT2_SCHEMA),
+        ],
+    );
+
+    NO_STRING_VARIANT_SCHEMA
+        .verify_json(&json!({
+            "type": "v1", "a": "foo"
+        }))
+        .expect("should verify");
+
+    ONE_STRING_VARIANT_SCHEMA
+        .verify_json(&json!({
+            "type": "v2", "b": "foo"
+        }))
+        .expect("should verify");
+
+    ONE_STRING_VARIANT_SCHEMA
+        .verify_json(&json!("plain string"))
+        .expect("should verify");
+}
+
+#[test]
+#[should_panic(expected = "oneOf can have only zero or one string variants")]
+fn test_one_of_schema_with_multiple_string_variant() {
+    const OBJECT1_SCHEMA: Schema = ObjectSchema::new(
+        "Object 1",
+        &[
+            ("a", false, &StringSchema::new("A property").schema()),
+            ("type", false, &StringSchema::new("v1 or v2").schema()),
+        ],
+    )
+    .schema();
+    const TYPE_SCHEMA: Schema = StringSchema::new("string or string or v1").schema();
+    const STRING1_SCHEMA: Schema = StringSchema::new("A string").schema();
+    const STRING2_SCHEMA: Schema = StringSchema::new("Another string").schema();
+
+    let _ = OneOfSchema::new(
+        "An invalid oneOf schema with multiple string variant",
+        &("type", false, &TYPE_SCHEMA),
+        &[
+            ("string variant 1", &STRING1_SCHEMA),
+            ("v1", &OBJECT1_SCHEMA),
+            ("whoops", &STRING2_SCHEMA),
+        ],
+    );
 }

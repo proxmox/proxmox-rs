@@ -912,6 +912,20 @@ const fn assert_one_of_list_is_sorted(list: &[(&str, &Schema)]) {
     }
 }
 
+const fn assert_one_of_zero_or_one_string_schema(list: &[(&str, &Schema)]) {
+    let mut i = 0;
+    let mut already_seen = false;
+    while i != list.len() {
+        if let Schema::String(_) = list[i].1 {
+            if already_seen {
+                panic!("oneOf can have only zero or one string variants");
+            }
+            already_seen = true;
+        }
+        i += 1;
+    }
+}
+
 impl OneOfSchema {
     /// Create a new `oneOf` schema.
     ///
@@ -943,6 +957,27 @@ impl OneOfSchema {
     ///     &[
     ///         ("v1", &SCHEMA_V1),
     ///         ("v2", &SCHEMA_V2),
+    ///     ],
+    /// ).schema();
+    /// ```
+    ///
+    /// There is also support for the data to be either a string or some object:
+    ///
+    /// ```
+    /// # use proxmox_schema::{OneOfSchema, ObjectSchema, Schema, StringSchema};
+    /// # const SCHEMA_V1: Schema = ObjectSchema::new(
+    /// #     "Some Object",
+    /// #     &[
+    /// #         ("key1", false, &StringSchema::new("A String").schema()),
+    /// #         ("key2", false, &StringSchema::new("Another String").schema()),
+    /// #     ],
+    /// # ).schema();
+    /// const SCHEMA: Schema = OneOfSchema::new(
+    ///     "A plain string or some enum",
+    ///     &("type", false, &StringSchema::new("v1 or v2").schema()),
+    ///     &[
+    ///         ("plain-string", &StringSchema::new("some string").schema()),
+    ///         ("v1", &SCHEMA_V1),
     ///     ],
     /// ).schema();
     /// ```
@@ -1001,12 +1036,28 @@ impl OneOfSchema {
     ///     ],
     /// ).schema();
     /// ```
+    ///
+    /// ```compile_fail,E0080
+    /// # use proxmox_schema::{OneOfSchema, ObjectSchema, Schema, StringSchema};
+    /// # const SCHEMA_V1: Schema = &StringSchema::new("A String").schema()
+    /// # const SCHEMA_V2: Schema = &StringSchema::new("Another String").schema()
+    /// const SCHEMA: Schema = OneOfSchema::new(
+    ///     "Some enum",
+    ///     &("type", false, &StringSchema::new("v1 or v2").schema()),
+    ///     &[
+    ///         ("v1", &SCHEMA_V1),
+    ///         // more than one string schema:
+    ///         ("v2", &SCHEMA_V2),
+    ///     ],
+    /// ).schema();
+    /// ```
     pub const fn new(
         description: &'static str,
         type_property_entry: &'static SchemaPropertyEntry,
         list: &'static [(&'static str, &'static Schema)],
     ) -> Self {
         assert_one_of_list_is_sorted(list);
+        assert_one_of_zero_or_one_string_schema(list);
         Self {
             description,
             type_property_entry,
@@ -1064,6 +1115,12 @@ impl OneOfSchema {
         test_required: bool,
     ) -> Result<Value, ParameterError> {
         ParameterSchema::from(self).parse_parameter_strings(data, test_required)
+    }
+
+    fn string_variant(&self) -> Option<&Schema> {
+        self.list
+            .iter()
+            .find_map(|(_, item)| matches!(item, Schema::String(_)).then_some(&**item))
     }
 }
 
@@ -1271,11 +1328,12 @@ impl ObjectSchemaType for OneOfSchema {
     }
 
     fn additional_properties(&self) -> bool {
-        self.list.iter().any(|(_, schema)| {
-            schema
+        self.list.iter().any(|(_, schema)| match schema {
+            Schema::String(_) => false,
+            _ => schema
                 .any_object()
                 .expect("non-object-schema in `OneOfSchema`")
-                .additional_properties()
+                .additional_properties(),
         })
     }
 
@@ -1286,6 +1344,10 @@ impl ObjectSchemaType for OneOfSchema {
     fn verify_json(&self, data: &Value) -> Result<(), Error> {
         let map = match data {
             Value::Object(map) => map,
+            Value::String(_) => match self.string_variant() {
+                Some(schema) => return schema.verify_json(data),
+                None => bail!("Expected object - got string value."),
+            },
             Value::Array(_) => bail!("Expected object - got array."),
             _ => bail!("Expected object - got scalar value."),
         };
