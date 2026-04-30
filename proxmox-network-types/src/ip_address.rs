@@ -360,6 +360,15 @@ impl Cidr {
         Ok(Cidr::Ipv6(Ipv6Cidr::new(addr, mask)?))
     }
 
+    /// Constructs a new [`Cidr`] from an generic [`IpAddr`], which can either be a IPv4 or IPv6
+    /// address
+    pub fn new(addr: impl Into<IpAddr>, mask: u8) -> Result<Self, CidrError> {
+        match addr.into() {
+            IpAddr::V4(v4) => Self::new_v4(v4, mask),
+            IpAddr::V6(v6) => Self::new_v6(v6, mask),
+        }
+    }
+
     /// Returns the [`Family`] (v4 or v6) this CIDR belongs to.
     pub const fn family(&self) -> Family {
         match self {
