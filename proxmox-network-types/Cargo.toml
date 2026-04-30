@@ -10,9 +10,10 @@ exclude.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-regex = { workspace = true, optional = true}
+regex = { workspace = true, optional = true }
 serde = { workspace = true, features = [ "derive", "std" ] }
 serde_with = "3.8.1"
+serde_plain.workspace = true
 thiserror.workspace = true
 
 proxmox-schema = { workspace = true, features = [ "api-macro", "api-types" ], optional = true}

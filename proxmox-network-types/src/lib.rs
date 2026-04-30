@@ -2,6 +2,7 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 
 pub mod endpoint;
+pub mod fqdn;
 pub mod ip_address;
 pub use ip_address::*;
 

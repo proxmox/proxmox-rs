@@ -9,6 +9,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-1+std-dev <!nocheck>,
+ librust-serde-plain-1+default-dev <!nocheck>,
  librust-serde-with-3+default-dev (>= 3.8.1-~~) <!nocheck>,
  librust-thiserror-2+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -26,6 +27,7 @@ Depends:
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-1+std-dev,
+ librust-serde-plain-1+default-dev,
  librust-serde-with-3+default-dev (>= 3.8.1-~~),
  librust-thiserror-2+default-dev
 Suggests:
@@ -47,9 +49,9 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-network-types-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-macro-dev (>= 5.1.0-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.1.0-~~),
- librust-proxmox-schema-5+default-dev (>= 5.1.0-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
  librust-regex-1+default-dev (>= 1.5-~~)
 Provides:
  librust-proxmox-network-types-1+api-types-dev (= ${binary:Version}),
