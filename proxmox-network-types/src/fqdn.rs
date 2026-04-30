@@ -31,6 +31,8 @@ impl fmt::Display for FqdnParseError {
     }
 }
 
+impl std::error::Error for FqdnParseError {}
+
 /// A type for safely representing fully-qualified domain names (FQDNs).
 ///
 /// It considers following RFCs:
