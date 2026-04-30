@@ -111,6 +111,8 @@ Usage:
 clicmd help [{<command>}] [OPTIONS]
 clicmd l0c1 --another-required-arg <string> --required-arg <string> [OPTIONS]
 clicmd l0c2 <required-arg> --another-required-arg <string> [OPTIONS]
+Global options for `clicmd l0sub`: --global1 one|two --global2 <string>
+
 clicmd l0sub l1c1 --another-required-arg <string> --required-arg <string> [OPTIONS]
 clicmd l0sub l1c2 --another-required-arg <string> --required-arg <string> [OPTIONS]
 "##

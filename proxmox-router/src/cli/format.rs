@@ -314,14 +314,46 @@ impl<'cli> UsageState<'cli> {
             return String::new();
         }
 
-        if !matches!(
-            format,
-            DocumentationFormat::ReST | DocumentationFormat::Full
-        ) {
+        // The Long format is used for per-command parameter-error reporting where the same
+        // information is already rendered inline by `generate_usage_str_do` under
+        // `Inherited group parameters`; emitting it twice would just be noise.
+        if matches!(format, DocumentationFormat::Long) {
             return String::new();
         }
 
         let mut out = String::new();
+
+        if matches!(format, DocumentationFormat::Short) {
+            // Compact one-line summary for the top-of-usage banner. Listing each global
+            // option with its full type signature and description here would dwarf the
+            // per-command usage lines that follow; users get the full description via
+            // `<binary> help <subcommand>` (which uses Full) or on a parameter error.
+            let mut names: Vec<_> = opts
+                .iter()
+                .flat_map(|opt| {
+                    opt.schema
+                        .any_object()
+                        .expect("non-object schema in global options")
+                        .properties()
+                })
+                .collect();
+            names.sort_by(|a, b| a.0.cmp(b.0));
+
+            // Qualify with the prefix so the line cannot be misread as belonging to the
+            // adjacent per-command usage line. ReST/Full output already uses this scoping
+            // ("Options available for command group ..."); Short keeps the same spirit
+            // with a tighter form.
+            let _ = write!(out, "Global options for `{prefix}`:");
+            for (name, _optional, schema) in &names {
+                let type_text = get_schema_type_text(schema, ParameterDisplayStyle::Arg);
+                let _ = write!(out, " --{name} {type_text}");
+            }
+            // Trailing newline so the per-command list below gets a blank-line separator
+            // (the surrounding loop joins commands with a single "\n" in Short format).
+            out.push('\n');
+            return out;
+        }
+
         let _ = write!(out, "Options available for command group ``{prefix}``:");
         for opt in opts {
             let mut properties: Vec<_> = opt
@@ -504,4 +536,122 @@ pub fn print_help_to(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{ApiHandler, ApiMethod, RpcEnvironment};
+    use proxmox_schema::{ApiType, ObjectSchema, Schema, StringSchema};
+
+    fn dummy_method(
+        _param: Value,
+        _info: &ApiMethod,
+        _rpcenv: &mut dyn RpcEnvironment,
+    ) -> Result<Value, Error> {
+        Ok(Value::Null)
+    }
+
+    const API_METHOD_NOOP: ApiMethod = ApiMethod::new(
+        &ApiHandler::Sync(&dummy_method),
+        &ObjectSchema::new("noop", &[]),
+    );
+
+    #[allow(dead_code)]
+    struct DummyGlobals {
+        config: Option<String>,
+    }
+
+    impl<'de> serde::Deserialize<'de> for DummyGlobals {
+        fn deserialize<D>(_d: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            unreachable!("not used in tests")
+        }
+    }
+
+    impl ApiType for DummyGlobals {
+        const API_SCHEMA: Schema = ObjectSchema::new(
+            "Dummy globals for tests.",
+            &[(
+                "config",
+                true,
+                &StringSchema::new("Path to config file.").schema(),
+            )],
+        )
+        .schema();
+    }
+
+    #[test]
+    fn nested_usage_short_includes_globals() {
+        let map = CliCommandMap::new()
+            .global_option(GlobalOptions::of::<DummyGlobals>())
+            .insert("foo", CliCommand::new(&API_METHOD_NOOP));
+        let usage = generate_nested_usage("bin", &map, DocumentationFormat::Short);
+        assert!(
+            usage.starts_with("Global options for `bin`: --config <string>"),
+            "expected compact globals header in Short format, got: {usage:?}",
+        );
+        assert!(
+            usage.contains("bin foo"),
+            "per-command usage line still expected, got: {usage:?}",
+        );
+    }
+
+    #[test]
+    fn nested_usage_short_separates_globals_from_first_command_with_blank_line() {
+        // Pin the visual contract: the globals header must be separated from the first
+        // per-command line by exactly one blank line. A regression here would make the
+        // banner run together with the command list and confuse readers.
+        let map = CliCommandMap::new()
+            .global_option(GlobalOptions::of::<DummyGlobals>())
+            .insert("foo", CliCommand::new(&API_METHOD_NOOP));
+        let usage = generate_nested_usage("bin", &map, DocumentationFormat::Short);
+        assert!(
+            usage.contains("--config <string>\n\nbin foo"),
+            "expected blank-line separator between globals and first command, got: {usage:?}",
+        );
+    }
+
+    #[test]
+    fn nested_usage_short_qualifies_subgroup_globals_with_prefix() {
+        // Globals registered on a subgroup (not the root) must surface with their
+        // group prefix so the reader cannot misread them as scoped to the preceding
+        // sibling command at the parent level.
+        let sub = CliCommandMap::new()
+            .global_option(GlobalOptions::of::<DummyGlobals>())
+            .insert("inner", CliCommand::new(&API_METHOD_NOOP));
+        let map = CliCommandMap::new().insert("group", CommandLineInterface::Nested(sub));
+        let usage = generate_nested_usage("bin", &map, DocumentationFormat::Short);
+        assert!(
+            usage.contains("Global options for `bin group`: --config <string>"),
+            "expected subgroup globals header to be qualified with its prefix, got: {usage:?}",
+        );
+    }
+
+    #[test]
+    fn nested_usage_short_no_globals_when_none_registered() {
+        let map = CliCommandMap::new().insert("foo", CliCommand::new(&API_METHOD_NOOP));
+        let usage = generate_nested_usage("bin", &map, DocumentationFormat::Short);
+        assert!(
+            !usage.contains("Global options"),
+            "should not emit globals header when none registered, got: {usage:?}",
+        );
+    }
+
+    #[test]
+    fn nested_usage_long_does_not_repeat_globals() {
+        // Long format is the per-command usage error path; globals are already inlined as
+        // "Inherited group parameters" by generate_usage_str_do, so describe_current must
+        // not also surface them here.
+        let map = CliCommandMap::new()
+            .global_option(GlobalOptions::of::<DummyGlobals>())
+            .insert("foo", CliCommand::new(&API_METHOD_NOOP));
+        let usage = generate_nested_usage("bin", &map, DocumentationFormat::Long);
+        assert!(
+            !usage.contains("Global options"),
+            "describe_current must stay quiet for Long format, got: {usage:?}",
+        );
+    }
 }
