@@ -489,7 +489,28 @@ struct CommandLineParseState<'cli> {
 
 impl CommandLine {
     /// Create a new CLI parser for the given command interface.
+    ///
+    /// For nested command groups, a `help` subcommand is registered at the top level if one is
+    /// not already present, so callers get `<bin> help <sub>` output (where the `Inherited group
+    /// parameters` block surfaces any registered globals) without an explicit
+    /// [`CliCommandMap::insert_help`] call. A pre-registered `help` is preserved.
+    ///
+    /// Differs from the legacy [`run_cli_command`] path, which calls `insert_help`
+    /// unconditionally and silently replaces a user-provided `help`.
+    ///
+    /// Note: a binary with subcommands sharing the `help` prefix (`helper`, ...) but no exact
+    /// `help` previously got prefix-matched to one of those when the user typed `help`. Now
+    /// exact `help` resolves to the framework's built-in help command instead.
     pub fn new(interface: CommandLineInterface) -> Self {
+        // Auto-insert rather than exposing a builder method (such as `with_help_subcommand`):
+        // ~all proxmox CLIs want `help`, an explicit toggle would be boilerplate at every call
+        // site, and the conditional skip below preserves a caller's pre-registered `help`.
+        let interface = match interface {
+            CommandLineInterface::Nested(map) if !map.commands.contains_key("help") => {
+                CommandLineInterface::Nested(map.insert_help())
+            }
+            other => other,
+        };
         Self {
             interface: Arc::new(interface),
             async_run: None,
@@ -704,5 +725,57 @@ impl Invocation<'_> {
     /// Execute the parsed command handler.
     pub fn call(self, rpcenv: &mut CliEnvironment) -> Result<(), Error> {
         (self.call)(rpcenv)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ApiHandler;
+    use proxmox_schema::ObjectSchema;
+
+    fn dummy_method(
+        _: Value,
+        _: &ApiMethod,
+        _: &mut dyn crate::RpcEnvironment,
+    ) -> Result<Value, Error> {
+        Ok(Value::Null)
+    }
+
+    #[test]
+    fn command_line_new_auto_inserts_help() {
+        let cmd_def = CliCommandMap::new().build();
+        let cli = CommandLine::new(cmd_def);
+        let CommandLineInterface::Nested(map) = cli.interface.as_ref() else {
+            panic!("expected nested interface");
+        };
+        assert!(
+            map.commands.contains_key("help"),
+            "CommandLine::new should auto-insert a help subcommand on nested interfaces",
+        );
+    }
+
+    #[test]
+    fn command_line_new_preserves_user_help() {
+        // A caller that explicitly registers `help` (perhaps to override the framework's
+        // built-in help semantics) must not have it silently replaced.
+        static USER_HELP: ApiMethod = ApiMethod::new(
+            &ApiHandler::Sync(&dummy_method),
+            &ObjectSchema::new("user help", &[]),
+        );
+        let cmd_def = CliCommandMap::new()
+            .insert("help", CliCommand::new(&USER_HELP))
+            .build();
+        let cli = CommandLine::new(cmd_def);
+        let CommandLineInterface::Nested(map) = cli.interface.as_ref() else {
+            panic!("expected nested interface");
+        };
+        let CommandLineInterface::Simple(help_cmd) = map.commands.get("help").unwrap() else {
+            panic!("user-registered help should remain a Simple command");
+        };
+        assert!(
+            std::ptr::eq(help_cmd.info, &USER_HELP),
+            "user-registered help must not be overwritten by auto-insert",
+        );
     }
 }
