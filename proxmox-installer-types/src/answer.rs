@@ -15,15 +15,37 @@ use std::{
 };
 
 use proxmox_network_types::{fqdn::Fqdn, ip_address::Cidr};
+
+#[cfg(feature = "api-types")]
+use proxmox_schema::{
+    api,
+    api_types::{DISK_ARRAY_SCHEMA, PASSWORD_FORMAT},
+    ApiType, IntegerSchema, NumberSchema, ObjectSchema, OneOfSchema, Schema, StringSchema, Updater,
+    UpdaterType,
+};
+
+#[cfg(feature = "api-types")]
+type IpAddr = proxmox_network_types::ip_address::api_types::IpAddr;
+#[cfg(not(feature = "api-types"))]
 type IpAddr = std::net::IpAddr;
+
+#[cfg(feature = "api-types")]
+proxmox_schema::const_regex! {
+    /// A unique two-letter country code, according to ISO 3166-1 (alpha-2).
+    pub COUNTRY_CODE_REGEX = r"^[a-z]{2}$";
+}
 
 /// Defines API types used by proxmox-fetch-answer, the first part of the
 /// auto-installer.
 pub mod fetch {
     use serde::{Deserialize, Serialize};
 
+    #[cfg(feature = "api-types")]
+    use proxmox_schema::api;
+
     use crate::SystemInfo;
 
+    #[cfg_attr(feature = "api-types", api)]
     #[derive(Deserialize, Serialize)]
     #[serde(rename_all = "kebab-case")]
     /// Metadata of the HTTP POST payload, such as schema version of the document.
@@ -50,6 +72,13 @@ pub mod fetch {
         }
     }
 
+    #[cfg_attr(feature = "api-types", api(
+            properties: {
+                sysinfo: {
+                    flatten: true,
+                },
+            },
+    ))]
     #[derive(Deserialize, Serialize)]
     #[serde(rename_all = "kebab-case")]
     /// Data sent in the body of POST request when retrieving the answer file via HTTP(S).
@@ -68,6 +97,7 @@ pub mod fetch {
     }
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Top-level answer file structure, describing all possible options for an
@@ -91,6 +121,25 @@ pub struct AutoInstallerConfig {
     pub first_boot: Option<FirstBootHookInfo>,
 }
 
+/// Machine root password schema.
+#[cfg(feature = "api-types")]
+pub const ROOT_PASSWORD_SCHEMA: proxmox_schema::Schema = StringSchema::new("Root Password.")
+    .format(&PASSWORD_FORMAT)
+    .min_length(8)
+    .max_length(64)
+    .schema();
+
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        "root-ssh-keys": {
+            type: Array,
+            items: {
+                description: "Public SSH key.",
+                type: String,
+            }
+        },
+    },
+))]
 #[derive(Clone, Default, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// General target system options for setting up the system in an automated
@@ -130,6 +179,7 @@ pub struct GlobalOptions {
     pub root_ssh_keys: Vec<String>,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Deserialize, Serialize, Debug, Default, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Action to take after the installation completed successfully.
@@ -144,6 +194,7 @@ pub enum RebootMode {
 serde_plain::derive_fromstr_from_deserialize!(RebootMode);
 
 #[derive(Clone, Deserialize, Debug, Serialize, PartialEq)]
+#[cfg_attr(feature = "api-types", derive(Updater))]
 #[serde(
     untagged,
     expecting = "either a fully-qualified domain name or extendend configuration for usage with DHCP must be specified"
@@ -161,6 +212,23 @@ impl Default for FqdnConfig {
     fn default() -> Self {
         Self::FromDhcp(FqdnFromDhcpConfig::default())
     }
+}
+
+#[cfg(feature = "api-types")]
+impl ApiType for FqdnConfig {
+    const API_SCHEMA: Schema = OneOfSchema::new(
+        "Either a FQDN as string or an object describing the retrieval method.",
+        &(
+            "type",
+            false,
+            &StringSchema::new("A string or an object").schema(),
+        ),
+        &[
+            ("from-dhcp", &<FqdnFromDhcpConfig as ApiType>::API_SCHEMA),
+            ("simple", &StringSchema::new("Plain FQDN").schema()),
+        ],
+    )
+    .schema();
 }
 
 impl FqdnConfig {
@@ -183,6 +251,7 @@ impl FqdnConfig {
     }
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Default, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Extended configuration for retrieving the FQDN from external sources.
@@ -195,6 +264,7 @@ pub struct FqdnFromDhcpConfig {
     pub domain: Option<String>,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Deserialize, Debug, Default, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Describes the source to retrieve the FQDN of the installation.
@@ -204,6 +274,7 @@ pub enum FqdnSourceMode {
     FromDhcp,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Configuration for the post-installation hook, which runs after an
@@ -216,6 +287,7 @@ pub struct PostNotificationHookInfo {
     pub cert_fingerprint: Option<String>,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Possible sources for the optional first-boot hook script/executable file.
@@ -227,6 +299,7 @@ pub enum FirstBootHookSourceMode {
     FromIso,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Default, Deserialize, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Possible orderings for the `proxmox-first-boot` systemd service.
@@ -256,6 +329,7 @@ impl FirstBootHookServiceOrdering {
     }
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Describes from where to fetch the first-boot hook script, either being baked into the ISO or
@@ -276,6 +350,15 @@ pub struct FirstBootHookInfo {
     pub cert_fingerprint: Option<String>,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        mapping: {
+            type: Object,
+            properties: {},
+            additional_properties: true,
+        }
+    },
+))]
 #[derive(Clone, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Options controlling the behaviour of the network interface pinning (by
@@ -288,6 +371,15 @@ pub struct NetworkInterfacePinningOptionsAnswer {
     pub mapping: HashMap<String, String>,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        filter: {
+            type: Object,
+            properties: {},
+            additional_properties: true,
+        }
+    },
+))]
 #[derive(Clone, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Static network configuration given by the user.
@@ -307,6 +399,7 @@ pub struct NetworkConfigFromAnswer {
     pub interface_name_pinning: Option<NetworkInterfacePinningOptionsAnswer>,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Use the network configuration received from the DHCP server.
@@ -317,6 +410,13 @@ pub struct NetworkConfigFromDhcp {
     pub interface_name_pinning: Option<NetworkInterfacePinningOptionsAnswer>,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    "id-property": "source",
+    "id-schema": {
+        type: String,
+        description: "'from-dhcp' or 'from-answer'",
+    }
+))]
 #[derive(Clone, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields, tag = "source")]
 /// Network configuration to set up inside the target installation.
@@ -339,6 +439,7 @@ impl NetworkConfig {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(feature = "api-types", derive(UpdaterType))]
 #[serde(rename_all = "kebab-case", tag = "filesystem")]
 /// Filesystem-specific options to set on the root disk.
 pub enum FilesystemOptions {
@@ -368,6 +469,66 @@ impl FilesystemOptions {
     }
 }
 
+#[cfg(feature = "api-types")]
+impl ApiType for FilesystemOptions {
+    // FIXME: proxmox-schema can not correctly differentiate between different
+    // enums in struct members with the same name.
+    const API_SCHEMA: Schema = ObjectSchema::new(
+        "Filesystem-specific options to set on the root disk.",
+        &[
+            (
+                "ashift",
+                true,
+                &IntegerSchema::new("`ashift` value to create the zpool with.")
+                    .minimum(9)
+                    .maximum(16)
+                    .default(12)
+                    .schema(),
+            ),
+            ("filesystem", false, &Filesystem::API_SCHEMA),
+            (
+                "hdsize",
+                true,
+                &NumberSchema::new("Size of the root disk to use, in GiB.")
+                    .minimum(2.)
+                    .schema(),
+            ),
+            (
+                "maxfree",
+                true,
+                &NumberSchema::new(
+                    "Minimum amount of free space to leave on the LVM volume group, in GiB.",
+                )
+                .minimum(0.)
+                .schema(),
+            ),
+            (
+                "maxroot",
+                true,
+                &NumberSchema::new("Maximum size of the `root` volume, in GiB.")
+                    .minimum(2.)
+                    .schema(),
+            ),
+            (
+                "maxvz",
+                true,
+                &NumberSchema::new("Maximum size of the `data` volume, in GiB.")
+                    .minimum(0.)
+                    .schema(),
+            ),
+            (
+                "swapsize",
+                true,
+                &NumberSchema::new("Size of the swap volume, in GiB.")
+                    .minimum(0.)
+                    .schema(),
+            ),
+        ],
+    )
+    .additional_properties(true)
+    .schema();
+}
+
 #[derive(Clone, Debug, Serialize)]
 /// Defines the disks to use for the installation. Can either be a fixed list
 /// of disk names or a dynamic filter list.
@@ -393,6 +554,7 @@ impl Display for DiskSelection {
     }
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Default, Deserialize, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase", deny_unknown_fields)]
 /// Whether the associated filters must all match for a device or if any one
@@ -407,6 +569,18 @@ pub enum FilterMatch {
 
 serde_plain::derive_fromstr_from_deserialize!(FilterMatch);
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        "disk-list": {
+            schema: DISK_ARRAY_SCHEMA,
+        },
+        filter: {
+            type: Object,
+            properties: {},
+            additional_properties: true,
+        }
+    },
+))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Disk configuration for the target installation.
@@ -502,7 +676,7 @@ impl DiskSetup {
     }
 }
 
-
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Deserialize, Serialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase", deny_unknown_fields)]
 /// Available filesystem during installation.
@@ -531,6 +705,46 @@ impl From<FilesystemType> for Filesystem {
 serde_plain::derive_display_from_serialize!(Filesystem);
 serde_plain::derive_fromstr_from_deserialize!(Filesystem);
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        raid: {
+            type: ZfsRaidLevel,
+            optional: true,
+        },
+        ashift: {
+            type: Integer,
+            minimum: 9,
+            maximum: 16,
+            default: 12,
+            optional: true,
+        },
+        "arc-max": {
+            type: Integer,
+            // ZFS specifies 64 MiB as the absolute minimum.
+            minimum: 64,
+            optional: true,
+        },
+        checksum: {
+            type: ZfsChecksumOption,
+            optional: true,
+        },
+        compress: {
+            type: ZfsChecksumOption,
+            optional: true,
+        },
+        copies: {
+            type: Integer,
+            minimum: 1,
+            maximum: 3,
+            optional: true,
+        },
+        hdsize: {
+            type: Number,
+            minimum: 2.,
+            optional: true,
+        },
+    },
+), derive(Updater))]
 #[derive(Clone, Copy, Default, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// ZFS-specific filesystem options.
@@ -561,6 +775,35 @@ pub struct ZfsOptions {
     pub hdsize: Option<f64>,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        hdsize: {
+            type: Number,
+            minimum: 2.,
+            optional: true,
+        },
+        swapsize: {
+            type: Number,
+            minimum: 0.,
+            optional: true,
+        },
+        maxroot: {
+            type: Number,
+            minimum: 2.,
+            optional: true,
+        },
+        maxvz: {
+            type: Number,
+            minimum: 0.,
+            optional: true,
+        },
+        minfree: {
+            type: Number,
+            minimum: 0.,
+            optional: true,
+        },
+    },
+), derive(Updater))]
 #[derive(Clone, Copy, Default, Deserialize, Serialize, Debug, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// LVM-specific filesystem options, when using ext4 or xfs as filesystem.
@@ -588,6 +831,23 @@ pub struct LvmOptions {
     pub minfree: Option<f64>,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        hdsize: {
+            type: Number,
+            minimum: 2.,
+            optional: true,
+        },
+        raid: {
+            type: BtrfsRaidLevel,
+            optional: true,
+        },
+        compress: {
+            type: BtrfsCompressOption,
+            optional: true,
+        },
+    },
+), derive(Updater))]
 #[derive(Clone, Copy, Default, Deserialize, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Btrfs-specific filesystem options.
@@ -604,6 +864,7 @@ pub struct BtrfsOptions {
     pub compress: Option<BtrfsCompressOption>,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Deserialize, Serialize, Debug, Default, PartialEq)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 /// Keyboard layout of the system.
@@ -697,6 +958,7 @@ impl KeyboardLayout {
 serde_plain::derive_fromstr_from_deserialize!(KeyboardLayout);
 serde_plain::derive_display_from_serialize!(KeyboardLayout);
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "UPPERCASE")]
 /// Available Btrfs RAID levels.
@@ -715,6 +977,7 @@ pub enum BtrfsRaidLevel {
 
 serde_plain::derive_display_from_serialize!(BtrfsRaidLevel);
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 /// Possible compression algorithms usable with Btrfs. See the accompanying
@@ -742,6 +1005,7 @@ pub const BTRFS_COMPRESS_OPTIONS: &[BtrfsCompressOption] = {
     &[On, Off, Zlib, Lzo, Zstd]
 };
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Debug, Default, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(rename_all = "UPPERCASE")]
 /// Available ZFS RAID levels.
@@ -769,6 +1033,7 @@ pub enum ZfsRaidLevel {
 
 serde_plain::derive_display_from_serialize!(ZfsRaidLevel);
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 /// Possible compression algorithms usable with ZFS.
@@ -799,6 +1064,7 @@ pub const ZFS_COMPRESS_OPTIONS: &[ZfsCompressOption] = {
     &[On, Off, Lzjb, Lz4, Zle, Gzip, Zstd]
 };
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 /// Possible checksum algorithms usable with ZFS.

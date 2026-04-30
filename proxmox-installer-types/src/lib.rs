@@ -10,6 +10,9 @@
 pub mod answer;
 pub mod post_hook;
 
+#[cfg(feature = "api-types")]
+use proxmox_schema::api;
+
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
@@ -18,6 +21,7 @@ use proxmox_network_types::mac_address::MacAddress;
 /// Default placeholder value for the administrator email address.
 pub const EMAIL_DEFAULT_PLACEHOLDER: &str = "mail@example.invalid";
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Copy, Clone, Eq, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 /// Whether the system boots using legacy BIOS or (U)EFI.
@@ -40,6 +44,16 @@ pub struct UdevInfo {
     pub nics: BTreeMap<String, UdevProperties>,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        network_interfaces: {
+            type: Array,
+            items: {
+                type: NetworkInterface,
+            },
+        },
+    },
+))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 /// Information about the hardware and installer in use.
 pub struct SystemInfo {
@@ -53,6 +67,7 @@ pub struct SystemInfo {
     pub network_interfaces: Vec<NetworkInterface>,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 /// The per-product configuration of the installer.
 pub struct ProductConfig {
@@ -75,6 +90,7 @@ impl ProductConfig {
     }
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 /// Information about the ISO itself.
 pub struct IsoInfo {
@@ -94,6 +110,25 @@ impl IsoInfo {
     }
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        baseboard: {
+            type: Object,
+            properties: {},
+            additional_properties: true,
+        },
+        chassis: {
+            type: Object,
+            properties: {},
+            additional_properties: true,
+        },
+        system: {
+            type: Object,
+            properties: {},
+            additional_properties: true,
+        },
+    },
+))]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 /// Collection of various DMI information categories.
 pub struct SystemDMI {
@@ -105,6 +140,7 @@ pub struct SystemDMI {
     pub system: HashMap<String, String>,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 /// A unique network interface.
 pub struct NetworkInterface {
@@ -114,6 +150,7 @@ pub struct NetworkInterface {
     pub mac: MacAddress,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "lowercase")]

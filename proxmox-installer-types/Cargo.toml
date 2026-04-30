@@ -15,10 +15,14 @@ rust-version.workspace = true
 anyhow.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_plain.workspace = true
+regex = { workspace = true, optional = true }
 proxmox-network-types.workspace = true
+proxmox-schema = { workspace = true, optional = true, features = ["api-macro"] }
+proxmox-section-config = { workspace = true, optional = true }
 proxmox-node-status.workspace = true
 
 [features]
 default = []
+api-types = ["dep:regex", "dep:proxmox-schema", "dep:proxmox-section-config", "proxmox-network-types/api-types"]
 # enable old-style answer file keys with underscores for backwards compatibility
 legacy = []

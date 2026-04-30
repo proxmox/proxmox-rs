@@ -3,6 +3,8 @@
 use serde::{Deserialize, Serialize};
 
 use proxmox_network_types::ip_address::Cidr;
+#[cfg(feature = "api-types")]
+use proxmox_schema::api;
 
 use crate::{
     answer::{FilesystemType, RebootMode},
@@ -12,6 +14,13 @@ use crate::{
 /// Re-export for convenience, since this is public API
 pub use proxmox_node_status::KernelVersionInformation;
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        "secureboot": {
+            optional: true,
+        },
+    },
+))]
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 /// Information about the system boot status.
 pub struct BootInfo {
@@ -22,6 +31,7 @@ pub struct BootInfo {
     pub secureboot: bool,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 /// Holds all the public keys for the different algorithms available.
 pub struct SshPublicHostKeys {
@@ -33,6 +43,18 @@ pub struct SshPublicHostKeys {
     pub rsa: String,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        "udev-properties": {
+            type: Object,
+            additional_properties: true,
+            properties: {},
+        },
+        "is-bootdisk": {
+            optional: true,
+        },
+    },
+))]
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// Holds information about a single disk in the system.
@@ -46,6 +68,21 @@ pub struct DiskInfo {
     pub udev_properties: UdevProperties,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        "udev-properties": {
+            type: Object,
+            additional_properties: true,
+            properties: {},
+        },
+        "is-management": {
+            optional: true,
+        },
+        "is-pinned": {
+            optional: true,
+        },
+    },
+))]
 /// Holds information about the management network interface.
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
@@ -69,6 +106,7 @@ pub struct NetworkInterfaceInfo {
     pub udev_properties: UdevProperties,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// Information about the installed product itself.
@@ -81,6 +119,7 @@ pub struct ProductInfo {
     pub version: String,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 /// Information about the CPU(s) installed in the system
 pub struct CpuInfo {
@@ -98,6 +137,7 @@ pub struct CpuInfo {
     pub sockets: usize,
 }
 
+#[cfg_attr(feature = "api-types", api)]
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// Metadata of the hook, such as schema version of the document.
@@ -112,6 +152,21 @@ pub struct PostHookInfoSchema {
     pub version: String,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        filesystem: {
+            type: String,
+        },
+        disks: {
+            type: Array,
+            items: { type: DiskInfo },
+        },
+        "network-interfaces": {
+            type: Array,
+            items: { type: NetworkInterfaceInfo },
+        }
+    },
+))]
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 /// All data sent as request payload with the post-installation-webhook POST request.
