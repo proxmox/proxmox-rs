@@ -2,6 +2,9 @@
 
 use std::{fmt, str::FromStr};
 
+#[cfg(feature = "api-types")]
+use proxmox_schema::UpdaterType;
+
 use serde::Deserialize;
 
 /// Possible errors that might occur when parsing FQDNs.
@@ -55,6 +58,7 @@ impl fmt::Display for FqdnParseError {
 /// [RFC4343]: <https://www.ietf.org/rfc/rfc4343.txt>
 /// [hostname(7)]: <https://manpages.debian.org/stable/manpages/hostname.7.en.html>
 #[derive(Clone, Debug, Eq)]
+#[cfg_attr(feature = "api-types", derive(UpdaterType))]
 pub struct Fqdn {
     parts: Vec<String>,
 }
@@ -123,6 +127,16 @@ impl Fqdn {
                 .take(s.len().saturating_sub(2))
                 .all(|c| c.is_ascii_alphanumeric() || c == '-')
     }
+}
+
+#[cfg(feature = "api-types")]
+impl proxmox_schema::ApiType for Fqdn {
+    const API_SCHEMA: proxmox_schema::Schema =
+        proxmox_schema::StringSchema::new("Fully-qualified domain name")
+            .format(&proxmox_schema::ApiStringFormat::Pattern(
+                &proxmox_schema::api_types::DNS_NAME_REGEX,
+            ))
+            .schema();
 }
 
 impl FromStr for Fqdn {
