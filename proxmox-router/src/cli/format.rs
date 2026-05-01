@@ -327,7 +327,7 @@ impl<'cli> UsageState<'cli> {
             let mut properties: Vec<_> = opt
                 .schema
                 .any_object()
-                .expect("non-object schema in global optiosn")
+                .expect("non-object schema in global options")
                 .properties()
                 .collect();
             properties.sort_by(|a, b| a.0.cmp(b.0));
