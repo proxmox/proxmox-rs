@@ -17,6 +17,11 @@ path = "tests/docs.rs"
 test = true
 required-features = [ "cli" ]
 
+[[example]]
+name = "help_output"
+path = "examples/help_output.rs"
+required-features = [ "cli" ]
+
 [dependencies]
 anyhow.workspace = true
 bytes = { workspace = true, optional = true }
