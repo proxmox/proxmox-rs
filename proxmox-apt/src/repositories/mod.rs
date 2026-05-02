@@ -52,7 +52,7 @@ fn common_digest(files: &[APTRepositoryFile]) -> ConfigDigest {
 /// `badge` for official URIs.
 pub fn check_repositories(
     files: &[APTRepositoryFile],
-    current_suite: DebianCodename,
+    current_suite: &DebianCodename,
     apt_lists_dir: &Path,
 ) -> Vec<APTRepositoryInfo> {
     let mut infos = vec![];
@@ -67,9 +67,9 @@ pub fn check_repositories(
 
 /// Get the repository associated to the handle and the path where it is usually configured.
 pub fn get_standard_repository(
-    handle: APTRepositoryHandle,
+    handle: &APTRepositoryHandle,
     product: &str,
-    suite: DebianCodename,
+    suite: &DebianCodename,
 ) -> (APTRepository, String) {
     let suite = suite.to_string();
 
@@ -84,7 +84,7 @@ pub fn get_standard_repository(
 pub fn standard_repositories(
     files: &[APTRepositoryFile],
     product: &str,
-    suite: DebianCodename,
+    suite: &DebianCodename,
 ) -> Vec<APTStandardRepository> {
     let mut result = vec![
         APTStandardRepository::from_handle(APTRepositoryHandle::Enterprise),
@@ -92,7 +92,7 @@ pub fn standard_repositories(
         APTStandardRepository::from_handle(APTRepositoryHandle::Test),
     ];
 
-    if product == "pve" && suite == DebianCodename::Trixie {
+    if product == "pve" && *suite == DebianCodename::Trixie {
         result.append(&mut vec![
             APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidEnterprise),
             APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidNoSubscription),
@@ -100,6 +100,7 @@ pub fn standard_repositories(
         ]);
     }
 
+    let suite_str = suite.to_string();
     for file in files.iter() {
         for repo in file.repositories.iter() {
             for entry in result.iter_mut() {
@@ -107,7 +108,7 @@ pub fn standard_repositories(
                     continue;
                 }
 
-                if repo.is_referenced_repository(&entry.handle, product, &suite.to_string()) {
+                if repo.is_referenced_repository(&entry.handle, product, &suite_str) {
                     entry.status = Some(repo.enabled);
                 }
             }

@@ -57,7 +57,7 @@ pub trait APTRepositoryFileImpl {
 
     /// Checks if old or unstable suites are configured and that the Debian security repository
     /// has the correct suite. Also checks that the `stable` keyword is not used.
-    fn check_suites(&self, current_codename: DebianCodename) -> Vec<APTRepositoryInfo>;
+    fn check_suites(&self, current_codename: &DebianCodename) -> Vec<APTRepositoryInfo>;
 
     /// Checks for official URIs.
     fn check_uris(&self, apt_lists_dir: &Path) -> Vec<APTRepositoryInfo>;
@@ -276,7 +276,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
         Ok(())
     }
 
-    fn check_suites(&self, current_codename: DebianCodename) -> Vec<APTRepositoryInfo> {
+    fn check_suites(&self, current_codename: &DebianCodename) -> Vec<APTRepositoryInfo> {
         let mut infos = vec![];
 
         let path = match &self.path {
@@ -300,7 +300,7 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
             });
 
             let require_suffix = match is_security_repo {
-                true if current_codename >= DebianCodename::Bullseye => Some("-security"),
+                true if *current_codename >= DebianCodename::Bullseye => Some("-security"),
                 true => Some("/updates"),
                 false => None,
             };
@@ -340,13 +340,13 @@ impl APTRepositoryFileImpl for APTRepositoryFile {
                     Err(_) => continue,
                 };
 
-                if codename < current_codename {
+                if codename < *current_codename {
                     add_info("warning", message_old(base_suite));
                 }
 
-                if Some(codename) == current_codename.next() {
+                if current_codename.next().as_ref() == Some(&codename) {
                     add_info("ignore-pre-upgrade-warning", message_new(base_suite));
-                } else if codename > current_codename {
+                } else if codename > *current_codename {
                     add_info("warning", message_new(base_suite));
                 }
 

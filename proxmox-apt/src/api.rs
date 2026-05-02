@@ -35,8 +35,8 @@ pub fn list_repositories(product: &str) -> Result<APTRepositoriesResult, Error> 
 
     let suite = crate::repositories::get_current_release_codename()?;
 
-    let infos = crate::repositories::check_repositories(&files, suite, apt_lists_dir);
-    let standard_repos = crate::repositories::standard_repositories(&files, product, suite);
+    let infos = crate::repositories::check_repositories(&files, &suite, apt_lists_dir);
+    let standard_repos = crate::repositories::standard_repositories(&files, product, &suite);
 
     Ok(APTRepositoriesResult {
         files,
@@ -78,7 +78,7 @@ pub fn add_repository_handle(
         }
     }
 
-    let (repo, path) = crate::repositories::get_standard_repository(handle, product, suite);
+    let (repo, path) = crate::repositories::get_standard_repository(&handle, product, &suite);
 
     if let Some(error) = errors.iter().find(|error| error.path == path) {
         bail!(

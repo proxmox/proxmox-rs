@@ -188,7 +188,7 @@ fn test_check_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let infos = check_repositories(&[file], DebianCodename::Bullseye, &apt_lists_dir);
+    let infos = check_repositories(&[file], &DebianCodename::Bullseye, &apt_lists_dir);
 
     assert!(infos.is_empty());
     let pve_list = read_dir.join("pve.list");
@@ -213,7 +213,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&[file], DebianCodename::Bullseye, &apt_lists_dir);
+    let mut infos = check_repositories(&[file], &DebianCodename::Bullseye, &apt_lists_dir);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -279,7 +279,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&[file], DebianCodename::Bullseye, &apt_lists_dir);
+    let mut infos = check_repositories(&[file], &DebianCodename::Bullseye, &apt_lists_dir);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -311,7 +311,7 @@ fn test_check_repositories() -> Result<(), Error> {
     }
     expected_infos.sort();
 
-    let mut infos = check_repositories(&[file], DebianCodename::Bullseye, &apt_lists_dir);
+    let mut infos = check_repositories(&[file], &DebianCodename::Bullseye, &apt_lists_dir);
     infos.sort();
 
     assert_eq!(infos, expected_infos);
@@ -364,7 +364,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
+    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Bookworm);
 
     assert_eq!(std_repos, &expected[0..=2]);
 
@@ -372,7 +372,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Trixie);
+    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Trixie);
 
     assert_eq!(std_repos, expected);
 
@@ -392,14 +392,14 @@ fn test_standard_repositories() -> Result<(), Error> {
 
     let file_vec = vec![file];
 
-    let std_repos = standard_repositories(&file_vec, "pbs", DebianCodename::Bookworm);
+    let std_repos = standard_repositories(&file_vec, "pbs", &DebianCodename::Bookworm);
 
     assert_eq!(&std_repos, &expected[0..=2]);
 
     expected[0].status = Some(false);
     expected[1].status = Some(true);
 
-    let std_repos = standard_repositories(&file_vec, "pve", DebianCodename::Bookworm);
+    let std_repos = standard_repositories(&file_vec, "pve", &DebianCodename::Bookworm);
 
     assert_eq!(std_repos, &expected[0..=2]);
 
@@ -411,7 +411,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     expected[1].status = Some(true);
     expected[2].status = Some(false);
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Bookworm);
+    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Bookworm);
 
     assert_eq!(std_repos, &expected[0..=2]);
 
@@ -428,7 +428,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     expected[4].status = Some(true);
     expected[5].status = Some(true);
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Trixie);
+    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Trixie);
 
     assert_eq!(std_repos, expected);
 
@@ -443,7 +443,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     expected[4].status = Some(true);
     expected[5].status = None;
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Trixie);
+    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Trixie);
 
     assert_eq!(std_repos, expected);
 
@@ -458,7 +458,7 @@ fn test_standard_repositories() -> Result<(), Error> {
     expected[4].status = None;
     expected[5].status = None;
 
-    let std_repos = standard_repositories(&[file], "pve", DebianCodename::Trixie);
+    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Trixie);
 
     assert_eq!(std_repos, expected);
 

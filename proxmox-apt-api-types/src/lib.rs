@@ -7,8 +7,169 @@ use proxmox_schema::{api, const_regex, ApiStringFormat};
 
 const_regex! {
     pub PACKAGE_NAME_REGEX = r"^[a-z0-9][-+.a-z0-9:]+$";
+    /// Valid `Unknown(_)` payload shape for the open-enum APT wire types.
+    pub APT_OPEN_ENUM_REGEX = r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$";
 }
 const PACKAGE_NAME_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&PACKAGE_NAME_REGEX);
+
+fn is_apt_open_enum_token(s: &str) -> bool {
+    APT_OPEN_ENUM_REGEX.is_match(s)
+}
+
+/// API-types-level error for APT repository data; avoids pulling in `anyhow`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct APTRepositoryError {
+    error: String,
+}
+
+impl APTRepositoryError {
+    pub fn new(error: impl Into<String>) -> Self {
+        Self {
+            error: error.into(),
+        }
+    }
+}
+
+impl Display for APTRepositoryError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "proxmox-apt error - {}", self.error)
+    }
+}
+
+impl std::error::Error for APTRepositoryError {}
+
+#[api]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+/// Debian release codenames, excluding `sid`. `Unknown` sorts above all known so future
+/// codenames take the newer branch in `*suite >= Trixie`-style checks. Wire-deserialize
+/// accepts unknown values; `TryFrom<&str>` rejects them.
+pub enum DebianCodename {
+    /// Debian 5 Lenny
+    Lenny,
+    /// Debian 6 Squeeze
+    Squeeze,
+    /// Debian 7 Wheezy
+    Wheezy,
+    /// Debian 8 Jessie
+    Jessie,
+    /// Debian 9 Stretch
+    Stretch,
+    /// Debian 10 Buster
+    Buster,
+    /// Debian 11 Bullseye
+    Bullseye,
+    /// Debian 12 Bookworm
+    Bookworm,
+    /// Debian 13 Trixie
+    Trixie,
+    /// Debian 14 Forky
+    Forky,
+    /// Debian 15 Duke
+    Duke,
+    /// Forward-compat fallback for unknown wire values; stored lowercased.
+    #[serde(untagged)]
+    Unknown(String),
+}
+
+impl DebianCodename {
+    /// Stable ordinal driving [`Ord`]; `Unknown` is `u8::MAX` so unknown codenames sort highest.
+    fn rank(&self) -> u8 {
+        match self {
+            Self::Lenny => 1,
+            Self::Squeeze => 2,
+            Self::Wheezy => 3,
+            Self::Jessie => 4,
+            Self::Stretch => 5,
+            Self::Buster => 6,
+            Self::Bullseye => 7,
+            Self::Bookworm => 8,
+            Self::Trixie => 9,
+            Self::Forky => 10,
+            Self::Duke => 11,
+            Self::Unknown(_) => u8::MAX,
+        }
+    }
+}
+
+impl Ord for DebianCodename {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match (self, other) {
+            (Self::Unknown(a), Self::Unknown(b)) => a.cmp(b),
+            _ => self.rank().cmp(&other.rank()),
+        }
+    }
+}
+
+impl PartialOrd for DebianCodename {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+proxmox_serde::forward_display_to_serialize!(DebianCodename);
+proxmox_serde::forward_from_str_to_deserialize!(DebianCodename);
+
+impl DebianCodename {
+    /// Lowercase wire-string lookup shared by `Deserialize` and `TryFrom<&str>`.
+    fn from_known(s: &str) -> Option<Self> {
+        Some(match s {
+            "lenny" => Self::Lenny,
+            "squeeze" => Self::Squeeze,
+            "wheezy" => Self::Wheezy,
+            "jessie" => Self::Jessie,
+            "stretch" => Self::Stretch,
+            "buster" => Self::Buster,
+            "bullseye" => Self::Bullseye,
+            "bookworm" => Self::Bookworm,
+            "trixie" => Self::Trixie,
+            "forky" => Self::Forky,
+            "duke" => Self::Duke,
+            _ => return None,
+        })
+    }
+
+    /// Next known codename, or `None` for the latest known release or any `Unknown`.
+    pub fn next(&self) -> Option<Self> {
+        Some(match self {
+            Self::Lenny => Self::Squeeze,
+            Self::Squeeze => Self::Wheezy,
+            Self::Wheezy => Self::Jessie,
+            Self::Jessie => Self::Stretch,
+            Self::Stretch => Self::Buster,
+            Self::Buster => Self::Bullseye,
+            Self::Bullseye => Self::Bookworm,
+            Self::Bookworm => Self::Trixie,
+            Self::Trixie => Self::Forky,
+            Self::Forky => Self::Duke,
+            Self::Duke | Self::Unknown(_) => return None,
+        })
+    }
+}
+
+impl<'de> Deserialize<'de> for DebianCodename {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let lower = String::deserialize(d)?.to_ascii_lowercase();
+        if let Some(known) = Self::from_known(&lower) {
+            return Ok(known);
+        }
+        if !is_apt_open_enum_token(&lower) {
+            return Err(serde::de::Error::custom(format!(
+                "invalid Debian codename {lower:?}"
+            )));
+        }
+        Ok(Self::Unknown(lower))
+    }
+}
+
+impl TryFrom<&str> for DebianCodename {
+    type Error = APTRepositoryError;
+
+    fn try_from(string: &str) -> Result<Self, Self::Error> {
+        Self::from_known(&string.to_ascii_lowercase())
+            .ok_or_else(|| APTRepositoryError::new(format!("unknown Debian code name '{string}'")))
+    }
+}
 
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]

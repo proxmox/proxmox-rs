@@ -1,89 +1,8 @@
-use std::fmt::Display;
 use std::io::{BufRead, BufReader};
 
 use anyhow::{bail, format_err, Error};
 
-/// The code names of Debian releases. Does not include `sid`.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum DebianCodename {
-    Lenny = 5,
-    Squeeze,
-    Wheezy,
-    Jessie,
-    Stretch,
-    Buster,
-    Bullseye,
-    Bookworm,
-    Trixie,
-    Forky,
-    Duke,
-}
-
-impl DebianCodename {
-    pub fn next(&self) -> Option<Self> {
-        (*self as u8 + 1).try_into().ok()
-    }
-}
-
-impl TryFrom<&str> for DebianCodename {
-    type Error = Error;
-
-    fn try_from(string: &str) -> Result<Self, Error> {
-        match string {
-            "lenny" => Ok(DebianCodename::Lenny),
-            "squeeze" => Ok(DebianCodename::Squeeze),
-            "wheezy" => Ok(DebianCodename::Wheezy),
-            "jessie" => Ok(DebianCodename::Jessie),
-            "stretch" => Ok(DebianCodename::Stretch),
-            "buster" => Ok(DebianCodename::Buster),
-            "bullseye" => Ok(DebianCodename::Bullseye),
-            "bookworm" => Ok(DebianCodename::Bookworm),
-            "trixie" => Ok(DebianCodename::Trixie),
-            "forky" => Ok(DebianCodename::Forky),
-            "duke" => Ok(DebianCodename::Duke),
-            _ => bail!("unknown Debian code name '{string}'"),
-        }
-    }
-}
-
-impl TryFrom<u8> for DebianCodename {
-    type Error = Error;
-
-    fn try_from(number: u8) -> Result<Self, Error> {
-        match number {
-            5 => Ok(DebianCodename::Lenny),
-            6 => Ok(DebianCodename::Squeeze),
-            7 => Ok(DebianCodename::Wheezy),
-            8 => Ok(DebianCodename::Jessie),
-            9 => Ok(DebianCodename::Stretch),
-            10 => Ok(DebianCodename::Buster),
-            11 => Ok(DebianCodename::Bullseye),
-            12 => Ok(DebianCodename::Bookworm),
-            13 => Ok(DebianCodename::Trixie),
-            14 => Ok(DebianCodename::Forky),
-            15 => Ok(DebianCodename::Duke),
-            _ => bail!("unknown Debian release number '{number}'"),
-        }
-    }
-}
-
-impl Display for DebianCodename {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            DebianCodename::Lenny => write!(f, "lenny"),
-            DebianCodename::Squeeze => write!(f, "squeeze"),
-            DebianCodename::Wheezy => write!(f, "wheezy"),
-            DebianCodename::Jessie => write!(f, "jessie"),
-            DebianCodename::Stretch => write!(f, "stretch"),
-            DebianCodename::Buster => write!(f, "buster"),
-            DebianCodename::Bullseye => write!(f, "bullseye"),
-            DebianCodename::Bookworm => write!(f, "bookworm"),
-            DebianCodename::Trixie => write!(f, "trixie"),
-            DebianCodename::Forky => write!(f, "forky"),
-            DebianCodename::Duke => write!(f, "duke"),
-        }
-    }
-}
+pub use proxmox_apt_api_types::DebianCodename;
 
 /// Read the `VERSION_CODENAME` from `/etc/os-release`.
 pub fn get_current_release_codename() -> Result<DebianCodename, Error> {
@@ -97,7 +16,7 @@ pub fn get_current_release_codename() -> Result<DebianCodename, Error> {
 
         if let Some(codename) = line.strip_prefix("VERSION_CODENAME=") {
             let codename = codename.trim_matches(&['"', '\''][..]);
-            return codename.try_into();
+            return Ok(codename.try_into()?);
         }
     }
 
