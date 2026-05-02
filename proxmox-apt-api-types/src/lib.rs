@@ -171,6 +171,58 @@ impl TryFrom<&str> for DebianCodename {
     }
 }
 
+/// Proxmox host product an APT operation runs on; scopes offered repositories and file layout.
+#[api]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "kebab-case")]
+pub enum HostProduct {
+    /// Proxmox VE
+    Pve,
+    /// Proxmox Backup Server
+    Pbs,
+    /// Proxmox Datacenter Manager
+    Pdm,
+    /// Proxmox Mail Gateway
+    Pmg,
+    /// Forward-compat fallback for unknown wire values; stored lowercased.
+    #[serde(untagged)]
+    Unknown(String),
+}
+
+proxmox_serde::forward_display_to_serialize!(HostProduct);
+proxmox_serde::forward_from_str_to_deserialize!(HostProduct);
+
+impl<'de> Deserialize<'de> for HostProduct {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let lower = String::deserialize(d)?.to_ascii_lowercase();
+        Ok(match lower.as_str() {
+            "pve" => Self::Pve,
+            "pbs" => Self::Pbs,
+            "pdm" => Self::Pdm,
+            "pmg" => Self::Pmg,
+            _ if is_apt_open_enum_token(&lower) => Self::Unknown(lower),
+            _ => {
+                return Err(serde::de::Error::custom(format!(
+                    "invalid host product {lower:?}"
+                )));
+            }
+        })
+    }
+}
+
+impl HostProduct {
+    /// Canonical kebab-case identifier used in URIs, paths, and repository components.
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Pve => "pve",
+            Self::Pbs => "pbs",
+            Self::Pdm => "pdm",
+            Self::Pmg => "pmg",
+            Self::Unknown(s) => s.as_str(),
+        }
+    }
+}
+
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
