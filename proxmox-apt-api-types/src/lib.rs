@@ -24,8 +24,8 @@ pub enum APTRepositoryFileType {
     Sources,
 }
 
-serde_plain::derive_display_from_serialize!(APTRepositoryFileType);
-serde_plain::derive_fromstr_from_deserialize!(APTRepositoryFileType);
+proxmox_serde::forward_display_to_serialize!(APTRepositoryFileType);
+proxmox_serde::forward_from_str_to_deserialize!(APTRepositoryFileType);
 
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -38,8 +38,8 @@ pub enum APTRepositoryPackageType {
     DebSrc,
 }
 
-serde_plain::derive_display_from_serialize!(APTRepositoryPackageType);
-serde_plain::derive_fromstr_from_deserialize!(APTRepositoryPackageType);
+proxmox_serde::forward_display_to_serialize!(APTRepositoryPackageType);
+proxmox_serde::forward_from_str_to_deserialize!(APTRepositoryPackageType);
 
 #[api(
     properties: {
@@ -305,8 +305,8 @@ pub enum APTRepositoryHandle {
     UnknownEnumValue(FixedString),
 }
 
-serde_plain::derive_display_from_serialize!(APTRepositoryHandle);
-serde_plain::derive_fromstr_from_deserialize!(APTRepositoryHandle);
+proxmox_serde::forward_display_to_serialize!(APTRepositoryHandle);
+proxmox_serde::forward_from_str_to_deserialize!(APTRepositoryHandle);
 
 #[api()]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
