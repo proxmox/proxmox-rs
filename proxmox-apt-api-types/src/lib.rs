@@ -223,6 +223,134 @@ impl HostProduct {
     }
 }
 
+/// Software a repository provides; with an [`APTRepoComponent`] and [`DebianCodename`]
+/// it identifies a standard repository.
+#[api]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "kebab-case")]
+pub enum APTRepoType {
+    /// Proxmox VE
+    Pve,
+    /// Proxmox Backup Server
+    Pbs,
+    /// Proxmox Backup Server Client-only repository
+    PbsClient,
+    /// Proxmox Datacenter Manager
+    Pdm,
+    /// Proxmox Mail Gateway
+    Pmg,
+    /// Debian main archive
+    Debian,
+    /// Debian security archive
+    DebianSecurity,
+    /// Debian backports archive
+    DebianBackports,
+    /// Proxmox Ceph Squid
+    CephSquid,
+    /// Forward-compat fallback for unknown wire values; stored lowercased.
+    #[serde(untagged)]
+    Unknown(String),
+}
+
+proxmox_serde::forward_display_to_serialize!(APTRepoType);
+proxmox_serde::forward_from_str_to_deserialize!(APTRepoType);
+
+impl<'de> Deserialize<'de> for APTRepoType {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let lower = String::deserialize(d)?.to_ascii_lowercase();
+        Ok(match lower.as_str() {
+            "pve" => Self::Pve,
+            "pbs" => Self::Pbs,
+            "pbs-client" => Self::PbsClient,
+            "pdm" => Self::Pdm,
+            "pmg" => Self::Pmg,
+            "debian" => Self::Debian,
+            "debian-security" => Self::DebianSecurity,
+            "debian-backports" => Self::DebianBackports,
+            "ceph-squid" => Self::CephSquid,
+            _ if is_apt_open_enum_token(&lower) => Self::Unknown(lower),
+            _ => {
+                return Err(serde::de::Error::custom(format!(
+                    "invalid APT repo type {lower:?}"
+                )));
+            }
+        })
+    }
+}
+
+impl APTRepoType {
+    /// Whether this repo type is a Proxmox host product; exhaustive so new variants fail to compile.
+    pub fn is_host_product(&self) -> bool {
+        match self {
+            Self::Pve | Self::Pbs | Self::Pdm | Self::Pmg => true,
+            Self::PbsClient
+            | Self::Debian
+            | Self::DebianSecurity
+            | Self::DebianBackports
+            | Self::CephSquid
+            | Self::Unknown(_) => false,
+        }
+    }
+
+    /// Whether this repo type ships Ceph release packages; exhaustive (new variants fail to compile).
+    pub fn is_ceph_release(&self) -> bool {
+        match self {
+            Self::CephSquid => true,
+            Self::Pve
+            | Self::Pbs
+            | Self::PbsClient
+            | Self::Pdm
+            | Self::Pmg
+            | Self::Debian
+            | Self::DebianSecurity
+            | Self::DebianBackports
+            | Self::Unknown(_) => false,
+        }
+    }
+}
+
+/// Release channel of a Proxmox repository; combined with [`APTRepoType`] identifies a repo.
+#[api]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "kebab-case")]
+pub enum APTRepoComponent {
+    /// The enterprise repository for production use.
+    Enterprise,
+    /// The repository that can be used without subscription.
+    NoSubscription,
+    /// The test repository.
+    Test,
+    /// Production repository for components without a no-subscription tier.
+    Main,
+    /// Internal staging repository for builds undergoing initial QA.
+    Staging,
+    /// Forward-compat fallback for unknown wire values; stored lowercased.
+    #[serde(untagged)]
+    Unknown(String),
+}
+
+proxmox_serde::forward_display_to_serialize!(APTRepoComponent);
+proxmox_serde::forward_from_str_to_deserialize!(APTRepoComponent);
+
+impl<'de> Deserialize<'de> for APTRepoComponent {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let lower = String::deserialize(d)?.to_ascii_lowercase();
+        Ok(match lower.as_str() {
+            "enterprise" => Self::Enterprise,
+            "no-subscription" => Self::NoSubscription,
+            "test" => Self::Test,
+            "main" => Self::Main,
+            "staging" => Self::Staging,
+            _ if is_apt_open_enum_token(&lower) => Self::Unknown(lower),
+            _ => {
+                return Err(serde::de::Error::custom(format!(
+                    "invalid APT repo component {lower:?}"
+                )));
+            }
+        })
+    }
+}
+
 #[api]
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
