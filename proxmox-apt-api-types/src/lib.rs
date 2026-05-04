@@ -956,3 +956,422 @@ pub struct APTChangeRepositoryOptions {
     /// Whether the repository should be enabled or not.
     pub enabled: Option<bool>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Pin the historic wire strings perl/UI consumers embed; their bytes are API contract.
+    #[test]
+    fn handle_known_wire_round_trip() {
+        for (wire, expected) in [
+            ("enterprise", APTRepositoryHandle::ENTERPRISE),
+            ("no-subscription", APTRepositoryHandle::NO_SUBSCRIPTION),
+            ("test", APTRepositoryHandle::TEST),
+            (
+                "ceph-squid-enterprise",
+                APTRepositoryHandle::CEPH_SQUID_ENTERPRISE,
+            ),
+            (
+                "ceph-squid-no-subscription",
+                APTRepositoryHandle::CEPH_SQUID_NO_SUBSCRIPTION,
+            ),
+            ("ceph-squid-test", APTRepositoryHandle::CEPH_SQUID_TEST),
+        ] {
+            let parsed: APTRepositoryHandle = wire
+                .parse()
+                .unwrap_or_else(|e| panic!("parsing known wire string {wire:?} failed: {e}"));
+            assert_eq!(parsed, expected, "parse({wire:?})");
+            assert_eq!(parsed.to_string(), wire, "render({expected:?})");
+        }
+
+        // Property: KNOWN_NONHOST_REPO_TYPES x KNOWN_COMPONENTS round-trips bytewise.
+        for (prefix, repo_type) in KNOWN_NONHOST_REPO_TYPES {
+            assert!(
+                !repo_type.is_host_product(),
+                "{repo_type:?} is classified as host product but listed in KNOWN_NONHOST_REPO_TYPES",
+            );
+            assert_eq!(
+                repo_type.to_string(),
+                *prefix,
+                "Display for {repo_type:?} drifted from KNOWN_NONHOST_REPO_TYPES"
+            );
+            for (comp_str, component) in KNOWN_COMPONENTS {
+                let wire = format!("{prefix}-{comp_str}");
+                let parsed: APTRepositoryHandle = wire
+                    .parse()
+                    .unwrap_or_else(|e| panic!("parsing {wire:?} failed: {e}"));
+                assert_eq!(parsed.repo_type.as_ref(), Some(repo_type), "wire={wire}");
+                assert_eq!(&parsed.component, component, "wire={wire}");
+                assert_eq!(parsed.to_string(), wire, "round-trip {wire:?}");
+            }
+        }
+    }
+
+    /// Unknown prefix + known component: structure preserved so old clients still see the channel.
+    #[test]
+    fn handle_unknown_repo_type_round_trip() {
+        let wire = "ceph-future-enterprise";
+        let parsed: APTRepositoryHandle = wire.parse().unwrap();
+        assert_eq!(
+            parsed,
+            APTRepositoryHandle::standalone(
+                APTRepoType::Unknown("ceph-future".into()),
+                APTRepoComponent::Enterprise,
+            )
+        );
+        assert_eq!(parsed.to_string(), wire);
+    }
+
+    /// No recognized component suffix: fully-opaque round-trip; never mangle bytes.
+    #[test]
+    fn handle_fully_opaque_round_trip() {
+        let wire = "some-future-thing";
+        let parsed: APTRepositoryHandle = wire.parse().unwrap();
+        assert_eq!(
+            parsed,
+            APTRepositoryHandle::host(APTRepoComponent::Unknown(wire.into()))
+        );
+        assert_eq!(parsed.to_string(), wire);
+    }
+
+    /// A host-product `repo_type` collapses to `None`; wire form has no product prefix.
+    #[test]
+    fn handle_host_product_repo_type_collapses() {
+        let h = APTRepositoryHandle::new(Some(APTRepoType::Pve), APTRepoComponent::Enterprise);
+        assert_eq!(h.repo_type, None);
+        assert_eq!(h.to_string(), "enterprise");
+    }
+
+    /// An empty wire string is not a valid handle.
+    #[test]
+    fn handle_empty_wire_string_rejected() {
+        assert!("".parse::<APTRepositoryHandle>().is_err());
+    }
+
+    /// FromStr enforces the API-schema regex so direct callers can't build garbage handles.
+    #[test]
+    fn handle_invalid_wire_strings_rejected() {
+        for bad in [
+            "-test",
+            "test-",
+            " ",
+            "test test",
+            "Test",
+            "ENTERPRISE",
+            "no--sub",
+        ] {
+            assert!(
+                bad.parse::<APTRepositoryHandle>().is_err(),
+                "expected {bad:?} to be rejected"
+            );
+        }
+    }
+
+    /// `new()` collapses every host-product variant to the bare host-channel handle.
+    #[test]
+    fn handle_new_collapses_all_host_products() {
+        for hp in [
+            APTRepoType::Pve,
+            APTRepoType::Pbs,
+            APTRepoType::Pdm,
+            APTRepoType::Pmg,
+        ] {
+            let via_new = APTRepositoryHandle::new(Some(hp.clone()), APTRepoComponent::Enterprise);
+            assert_eq!(via_new, APTRepositoryHandle::ENTERPRISE);
+            assert_eq!(via_new.to_string(), "enterprise");
+            assert_eq!(via_new.repo_type, None, "{hp:?} did not collapse");
+        }
+    }
+
+    /// Mixed-case wire input lowercases before matching; no split between known and Unknown.
+    #[test]
+    fn open_enums_lowercase_normalize() {
+        let cases: &[(&str, DebianCodename)] = &[
+            ("BOOKWORM", DebianCodename::Bookworm),
+            ("Trixie", DebianCodename::Trixie),
+            ("trixie", DebianCodename::Trixie),
+        ];
+        for (wire, expected) in cases {
+            let json = format!("\"{wire}\"");
+            let parsed: DebianCodename = serde_json::from_str(&json).unwrap();
+            assert_eq!(&parsed, expected, "{wire}");
+            assert!(
+                parsed < DebianCodename::Unknown("future".into()),
+                "Unknown sorts above every known codename"
+            );
+        }
+        let upper: DebianCodename = serde_json::from_str("\"FUTURE-NAME\"").unwrap();
+        let lower: DebianCodename = serde_json::from_str("\"future-name\"").unwrap();
+        assert_eq!(upper, lower);
+        assert_eq!(upper, DebianCodename::Unknown("future-name".into()));
+
+        let hp: HostProduct = serde_json::from_str("\"PVE\"").unwrap();
+        assert_eq!(hp, HostProduct::Pve);
+        let rt: APTRepoType = serde_json::from_str("\"CEPH-SQUID\"").unwrap();
+        assert_eq!(rt, APTRepoType::CephSquid);
+        let rc: APTRepoComponent = serde_json::from_str("\"NO-SUBSCRIPTION\"").unwrap();
+        assert_eq!(rc, APTRepoComponent::NoSubscription);
+
+        let h: APTRepositoryHandle = serde_json::from_str("\"Enterprise\"").unwrap();
+        assert_eq!(h, APTRepositoryHandle::ENTERPRISE);
+        let h: APTRepositoryHandle =
+            serde_json::from_str("\"CEPH-SQUID-No-Subscription\"").unwrap();
+        assert_eq!(h, APTRepositoryHandle::CEPH_SQUID_NO_SUBSCRIPTION);
+    }
+
+    /// `new()` lowercases `Unknown(_)` payloads so programmatic + wire paths produce the same form.
+    #[test]
+    fn handle_new_normalizes_unknown_payloads() {
+        let mixed = APTRepositoryHandle::new(
+            Some(APTRepoType::Unknown("CEPH-FUTURE".into())),
+            APTRepoComponent::Enterprise,
+        );
+        let lower = APTRepositoryHandle::new(
+            Some(APTRepoType::Unknown("ceph-future".into())),
+            APTRepoComponent::Enterprise,
+        );
+        assert_eq!(mixed, lower);
+        assert_eq!(mixed.to_string(), "ceph-future-enterprise");
+        let round: APTRepositoryHandle = mixed.to_string().parse().unwrap();
+        assert_eq!(round, mixed);
+
+        let mixed_comp = APTRepositoryHandle::new(None, APTRepoComponent::Unknown("WEIRD".into()));
+        let lower_comp = APTRepositoryHandle::new(None, APTRepoComponent::Unknown("weird".into()));
+        assert_eq!(mixed_comp, lower_comp);
+    }
+
+    /// Greedy suffix match: longest known component wins (no-subscription beats anything shorter).
+    #[test]
+    fn handle_longest_component_wins() {
+        let parsed: APTRepositoryHandle = "ceph-squid-no-subscription".parse().unwrap();
+        assert_eq!(parsed, APTRepositoryHandle::CEPH_SQUID_NO_SUBSCRIPTION);
+    }
+
+    /// JSON round-trip via serde, which is what the REST API uses.
+    #[test]
+    fn handle_json_round_trip() {
+        let h = APTRepositoryHandle::CEPH_SQUID_ENTERPRISE;
+        let json = serde_json::to_string(&h).unwrap();
+        assert_eq!(json, "\"ceph-squid-enterprise\"");
+        let back: APTRepositoryHandle = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, h);
+    }
+
+    /// Wire-bytes round-trip + the TryFrom / Deserialize miss-handling split.
+    #[test]
+    fn debian_codename_round_trip() {
+        for (wire, expected) in [
+            ("trixie", DebianCodename::Trixie),
+            ("bookworm", DebianCodename::Bookworm),
+            ("forky", DebianCodename::Forky),
+        ] {
+            assert_eq!(DebianCodename::try_from(wire).unwrap(), expected);
+            assert_eq!(expected.to_string(), wire);
+        }
+        // Strict TryFrom rejects unknown; Deserialize accepts forward-compat Unknown.
+        assert!(DebianCodename::try_from("zürich").is_err());
+        let parsed: DebianCodename = serde_json::from_str("\"zurichish\"").unwrap();
+        assert_eq!(parsed, DebianCodename::Unknown("zurichish".into()));
+        assert_eq!(parsed.to_string(), "zurichish");
+    }
+
+    /// HostProduct must serialize to the expected lowercase strings.
+    #[test]
+    fn host_product_round_trip() {
+        for (wire, expected) in [
+            ("pve", HostProduct::Pve),
+            ("pbs", HostProduct::Pbs),
+            ("pdm", HostProduct::Pdm),
+            ("pmg", HostProduct::Pmg),
+        ] {
+            let json = serde_json::to_string(&expected).unwrap();
+            assert_eq!(json, format!("\"{wire}\""));
+            let back: HostProduct = serde_json::from_str(&json).unwrap();
+            assert_eq!(back, expected);
+            assert_eq!(expected.as_str(), wire);
+        }
+        // Unknown forward-compat fallback.
+        let parsed: HostProduct = serde_json::from_str("\"future-product\"").unwrap();
+        assert_eq!(parsed, HostProduct::Unknown("future-product".into()));
+    }
+
+    /// Drift guard: `_force_exhaustive_*` compile-fails on a new variant so the round-trip list
+    /// (and KNOWN_NONHOST_REPO_TYPES / STANDARD_REPOS for `APTRepoType`) gets extended too.
+    #[test]
+    fn open_enum_variants_round_trip() {
+        // --- DebianCodename ---
+        fn _force_exhaustive_codename(v: DebianCodename) {
+            match v {
+                DebianCodename::Lenny
+                | DebianCodename::Squeeze
+                | DebianCodename::Wheezy
+                | DebianCodename::Jessie
+                | DebianCodename::Stretch
+                | DebianCodename::Buster
+                | DebianCodename::Bullseye
+                | DebianCodename::Bookworm
+                | DebianCodename::Trixie
+                | DebianCodename::Forky
+                | DebianCodename::Duke
+                | DebianCodename::Unknown(_) => {}
+            }
+        }
+        for v in [
+            DebianCodename::Lenny,
+            DebianCodename::Squeeze,
+            DebianCodename::Wheezy,
+            DebianCodename::Jessie,
+            DebianCodename::Stretch,
+            DebianCodename::Buster,
+            DebianCodename::Bullseye,
+            DebianCodename::Bookworm,
+            DebianCodename::Trixie,
+            DebianCodename::Forky,
+            DebianCodename::Duke,
+        ] {
+            let json = serde_json::to_string(&v).unwrap();
+            let back: DebianCodename = serde_json::from_str(&json).unwrap();
+            assert_eq!(back, v, "DebianCodename round-trip failed via {json}");
+        }
+
+        // --- HostProduct ---
+        fn _force_exhaustive_host(v: HostProduct) {
+            match v {
+                HostProduct::Pve
+                | HostProduct::Pbs
+                | HostProduct::Pdm
+                | HostProduct::Pmg
+                | HostProduct::Unknown(_) => {}
+            }
+        }
+        for v in [
+            HostProduct::Pve,
+            HostProduct::Pbs,
+            HostProduct::Pdm,
+            HostProduct::Pmg,
+        ] {
+            let json = serde_json::to_string(&v).unwrap();
+            let back: HostProduct = serde_json::from_str(&json).unwrap();
+            assert_eq!(back, v);
+        }
+
+        // --- APTRepoType ---
+        fn _force_exhaustive_repo_type(v: APTRepoType) {
+            match v {
+                APTRepoType::Pve
+                | APTRepoType::Pbs
+                | APTRepoType::PbsClient
+                | APTRepoType::Pdm
+                | APTRepoType::Pmg
+                | APTRepoType::Debian
+                | APTRepoType::DebianSecurity
+                | APTRepoType::DebianBackports
+                | APTRepoType::CephSquid
+                | APTRepoType::Unknown(_) => {}
+            }
+        }
+        for v in [
+            APTRepoType::Pve,
+            APTRepoType::Pbs,
+            APTRepoType::PbsClient,
+            APTRepoType::Pdm,
+            APTRepoType::Pmg,
+            APTRepoType::Debian,
+            APTRepoType::DebianSecurity,
+            APTRepoType::DebianBackports,
+            APTRepoType::CephSquid,
+        ] {
+            let json = serde_json::to_string(&v).unwrap();
+            let back: APTRepoType = serde_json::from_str(&json).unwrap();
+            assert_eq!(back, v);
+            if !v.is_host_product() {
+                assert!(
+                    KNOWN_NONHOST_REPO_TYPES.iter().any(|(_, rt)| rt == &v),
+                    "non-host APTRepoType {v:?} missing from KNOWN_NONHOST_REPO_TYPES",
+                );
+            }
+        }
+
+        // Cross-check the kebab table against the Deserialize impl: catches typos that would
+        // silently route a known wire string to Unknown(_) instead of the typed variant.
+        for (kebab, expected) in KNOWN_NONHOST_REPO_TYPES {
+            let parsed: APTRepoType = serde_json::from_str(&format!("\"{kebab}\"")).unwrap();
+            assert_eq!(
+                &parsed, expected,
+                "kebab {kebab:?} did not Deserialize to {expected:?}",
+            );
+        }
+
+        // --- APTRepoComponent ---
+        fn _force_exhaustive_component(v: APTRepoComponent) {
+            match v {
+                APTRepoComponent::Enterprise
+                | APTRepoComponent::NoSubscription
+                | APTRepoComponent::Test
+                | APTRepoComponent::Main
+                | APTRepoComponent::Staging
+                | APTRepoComponent::Unknown(_) => {}
+            }
+        }
+        for v in [
+            APTRepoComponent::Enterprise,
+            APTRepoComponent::NoSubscription,
+            APTRepoComponent::Test,
+            APTRepoComponent::Main,
+            APTRepoComponent::Staging,
+        ] {
+            let json = serde_json::to_string(&v).unwrap();
+            let back: APTRepoComponent = serde_json::from_str(&json).unwrap();
+            assert_eq!(back, v);
+        }
+    }
+
+    fn std_repo(handle: APTRepositoryHandle, enabled: Option<bool>) -> APTStandardRepository {
+        APTStandardRepository {
+            handle,
+            status: enabled,
+            name: String::new(),
+            description: String::new(),
+        }
+    }
+
+    #[test]
+    fn standard_repo_summary_buckets() {
+        use APTRepoComponent::*;
+        let on = Some(true);
+        let off = Some(false);
+        let none = None;
+        let h = |rt: Option<APTRepoType>, c: APTRepoComponent| APTRepositoryHandle::new(rt, c);
+        let repos = vec![
+            std_repo(h(None, Enterprise), on),
+            std_repo(h(None, NoSubscription), off), // off: must not flip flag
+            std_repo(h(None, Test), none),          // unconfigured: ditto
+            std_repo(h(Some(APTRepoType::CephSquid), Enterprise), on),
+            std_repo(h(Some(APTRepoType::CephSquid), Test), on),
+            std_repo(h(Some(APTRepoType::Debian), Main), on), // ignored bucket
+            std_repo(
+                h(Some(APTRepoType::Unknown("ceph-future".into())), Enterprise),
+                on,
+            ),
+            std_repo(
+                h(None, APTRepoComponent::Unknown("future-channel".into())),
+                on,
+            ),
+        ];
+
+        let summary = APTStandardRepoSummary::from_repos(&repos);
+
+        assert!(summary.has_enterprise);
+        assert!(!summary.has_no_subscription);
+        assert!(!summary.has_test);
+        assert!(summary.has_ceph_enterprise);
+        assert!(!summary.has_ceph_no_subscription);
+        assert!(summary.has_ceph_test);
+        assert_eq!(
+            summary.unrecognized.len(),
+            2,
+            "ceph-future + future-channel"
+        );
+    }
+}

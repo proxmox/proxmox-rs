@@ -16,3 +16,6 @@ proxmox-schema = { workspace = true, features = ["api-macro"] }
 proxmox-serde = { workspace = true, features = ["perl"] }
 proxmox-config-digest.workspace = true
 regex = { workspace = true }
+
+[dev-dependencies]
+serde_json.workspace = true

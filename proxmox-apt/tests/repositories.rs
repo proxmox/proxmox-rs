@@ -442,3 +442,153 @@ fn test_get_current_release_codename() -> Result<(), Error> {
 
     Ok(())
 }
+
+/// Legacy `enterprise.proxmox.com/debian` URIs (no `/pve` suffix) still in user configs must
+/// keep mapping to the PVE handle, even though we now write the `/pve`-suffixed canonical form.
+#[test]
+fn test_pve_legacy_uri_still_detected() -> Result<(), Error> {
+    use proxmox_apt::repositories::APTRepositoryHandleImpl;
+    use proxmox_apt_api_types::{
+        APTRepository, APTRepositoryFileType, APTRepositoryOption, APTRepositoryPackageType,
+    };
+
+    let host_pve = HostProduct::Pve;
+    let suite = DebianCodename::Bullseye;
+
+    let legacy_enterprise = APTRepository {
+        types: vec![APTRepositoryPackageType::Deb],
+        uris: vec!["https://enterprise.proxmox.com/debian".to_string()],
+        suites: vec!["bullseye".to_string()],
+        components: vec!["pve-enterprise".to_string()],
+        options: vec![APTRepositoryOption {
+            key: "Signed-By".into(),
+            values: vec!["/usr/share/keyrings/proxmox-archive-keyring.gpg".into()],
+        }],
+        comment: String::new(),
+        file_type: APTRepositoryFileType::List,
+        enabled: true,
+    };
+    assert!(
+        APTRepositoryHandle::ENTERPRISE.is_referenced_by(&legacy_enterprise, &host_pve, &suite),
+        "PVE legacy enterprise URI without /pve must still be detected as Enterprise"
+    );
+
+    let legacy_nosub = APTRepository {
+        types: vec![APTRepositoryPackageType::Deb],
+        uris: vec!["http://download.proxmox.com/debian".to_string()],
+        suites: vec!["bullseye".to_string()],
+        components: vec!["pve-no-subscription".to_string()],
+        options: vec![],
+        comment: String::new(),
+        file_type: APTRepositoryFileType::List,
+        enabled: true,
+    };
+    assert!(
+        APTRepositoryHandle::NO_SUBSCRIPTION.is_referenced_by(&legacy_nosub, &host_pve, &suite),
+        "PVE legacy no-subscription URI without /pve must still be detected"
+    );
+
+    let canonical_enterprise = APTRepository {
+        types: vec![APTRepositoryPackageType::Deb],
+        uris: vec!["https://enterprise.proxmox.com/debian/pve".to_string()],
+        suites: vec!["bullseye".to_string()],
+        components: vec!["pve-enterprise".to_string()],
+        options: vec![],
+        comment: String::new(),
+        file_type: APTRepositoryFileType::List,
+        enabled: true,
+    };
+    assert!(
+        APTRepositoryHandle::ENTERPRISE.is_referenced_by(&canonical_enterprise, &host_pve, &suite),
+        "canonical PVE enterprise URI must still be detected"
+    );
+
+    let host_pbs = HostProduct::Pbs;
+    assert!(
+        !APTRepositoryHandle::ENTERPRISE.is_referenced_by(&legacy_enterprise, &host_pbs, &suite),
+        "PVE URI must not be recognized as a PBS Enterprise repo"
+    );
+
+    Ok(())
+}
+
+/// PVE 8 / PBS 3 / PMG 8 wrote the Test channel component as `pvetest` / `pbstest` / `pmgtest`;
+/// trixie standardized to the hyphenated form. Upgraded hosts keep the legacy spelling in
+/// `sources.list` until apt rewrites it, so detection must still recognize it as the Test repo.
+#[test]
+fn test_legacy_unhyphenated_test_component_still_detected() -> Result<(), Error> {
+    use proxmox_apt::repositories::APTRepositoryHandleImpl;
+    use proxmox_apt_api_types::{APTRepository, APTRepositoryFileType, APTRepositoryPackageType};
+
+    let suite = DebianCodename::Bookworm;
+    let suite_str = suite.to_string();
+
+    for (host, slug) in [
+        (HostProduct::Pve, "pve"),
+        (HostProduct::Pbs, "pbs"),
+        (HostProduct::Pmg, "pmg"),
+    ] {
+        let legacy_test = APTRepository {
+            types: vec![APTRepositoryPackageType::Deb],
+            uris: vec![format!("http://download.proxmox.com/debian/{slug}")],
+            suites: vec![suite_str.clone()],
+            components: vec![format!("{slug}test")],
+            options: vec![],
+            comment: String::new(),
+            file_type: APTRepositoryFileType::List,
+            enabled: true,
+        };
+        assert!(
+            APTRepositoryHandle::TEST.is_referenced_by(&legacy_test, &host, &suite),
+            "legacy component '{slug}test' must still map to the Test handle for {host:?}",
+        );
+    }
+    Ok(())
+}
+
+/// PDM/PMG must offer the full host-product channel set; pins a future refactor against silent drop.
+#[test]
+fn test_pdm_pmg_host_products_offer_full_channel_set() -> Result<(), Error> {
+    use proxmox_apt::repositories::APTRepositoryHandleImpl;
+
+    let suite = DebianCodename::Trixie;
+
+    for (host_product, slug) in [(HostProduct::Pdm, "pdm"), (HostProduct::Pmg, "pmg")] {
+        let offered = standard_repositories(&[], &host_product, &suite);
+        let handles: Vec<APTRepositoryHandle> = offered.iter().map(|r| r.handle.clone()).collect();
+        assert_eq!(
+            handles,
+            vec![
+                APTRepositoryHandle::ENTERPRISE,
+                APTRepositoryHandle::NO_SUBSCRIPTION,
+                APTRepositoryHandle::TEST,
+            ],
+            "{host_product:?} should offer the three host-product channels in canonical order",
+        );
+
+        for r in &offered {
+            assert!(
+                r.handle.repo_type().is_none(),
+                "{host_product:?} should only offer host-product handles, got {:?}",
+                r.handle,
+            );
+        }
+
+        let enterprise = APTRepositoryHandle::ENTERPRISE
+            .to_repository(&host_product, &suite)
+            .expect("Enterprise must be offered on every host product");
+        assert_eq!(enterprise.components, vec![format!("{slug}-enterprise")]);
+        assert_eq!(
+            enterprise.uris,
+            vec![format!("https://enterprise.proxmox.com/debian/{slug}")],
+        );
+        let path = APTRepositoryHandle::ENTERPRISE
+            .file_path(&host_product, &suite)
+            .expect("Enterprise has a path on every host product");
+        assert_eq!(
+            path,
+            format!("/etc/apt/sources.list.d/{slug}-enterprise.sources"),
+        );
+    }
+    Ok(())
+}
