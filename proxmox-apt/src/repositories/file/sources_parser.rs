@@ -4,7 +4,7 @@ use std::iter::Iterator;
 use anyhow::{bail, Error};
 
 use crate::repositories::APTRepositoryImpl;
-use crate::repositories::{
+use proxmox_apt_api_types::{
     APTRepository, APTRepositoryFileType, APTRepositoryOption, APTRepositoryPackageType,
 };
 

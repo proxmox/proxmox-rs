@@ -3,13 +3,12 @@ use std::path::PathBuf;
 use anyhow::{bail, format_err, Error};
 
 use proxmox_apt::repositories::{
-    check_repositories, get_current_release_codename, standard_repositories, DebianCodename,
+    check_repositories, get_current_release_codename, standard_repositories,
+    standard_repos_offered_for, DebianCodename,
 };
-use proxmox_apt::repositories::{
-    APTRepositoryFileImpl, APTRepositoryImpl, APTStandardRepositoryImpl,
-};
+use proxmox_apt::repositories::{APTRepositoryFileImpl, APTRepositoryImpl};
 use proxmox_apt_api_types::{
-    APTRepositoryFile, APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository,
+    APTRepositoryFile, APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository, HostProduct,
 };
 
 fn create_clean_directory(path: &PathBuf) -> Result<(), Error> {
@@ -351,115 +350,77 @@ fn test_standard_repositories() -> Result<(), Error> {
     let test_dir = std::env::current_dir()?.join("tests");
     let read_dir = test_dir.join("sources.list.d");
 
-    let mut expected = vec![
-        APTStandardRepository::from_handle(APTRepositoryHandle::Enterprise),
-        APTStandardRepository::from_handle(APTRepositoryHandle::NoSubscription),
-        APTStandardRepository::from_handle(APTRepositoryHandle::Test),
-        APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidEnterprise),
-        APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidNoSubscription),
-        APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidTest),
-    ];
+    // Expected lists are taken straight from the declarative table so adding a Ceph release or
+    // host-product channel does not need a parallel edit here.
+    let host_pve = HostProduct::Pve;
+    let host_pbs = HostProduct::Pbs;
+    let pve_bookworm = standard_repos_offered_for(&host_pve, &DebianCodename::Bookworm);
+    let mut expected = standard_repos_offered_for(&host_pve, &DebianCodename::Trixie);
+
+    // Mutate a row's status by handle so reorderings or insertions in the table don't silently
+    // shift indices and pass against the wrong row.
+    let set_status = |repos: &mut [APTStandardRepository],
+                      handle: APTRepositoryHandle,
+                      status: Option<bool>| {
+        let row = repos
+            .iter_mut()
+            .find(|r| r.handle == handle)
+            .unwrap_or_else(|| panic!("no expected row for handle {handle}"));
+        row.status = status;
+    };
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");
     let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Bookworm);
-
-    assert_eq!(std_repos, &expected[0..=2]);
+    // On Bookworm, no Ceph Squid is offered.
+    let std_repos = standard_repositories(&[file], &host_pve, &DebianCodename::Bookworm);
+    assert_eq!(std_repos, pve_bookworm);
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");
     let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
 
-    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Trixie);
-
+    let std_repos = standard_repositories(&[file], &host_pve, &DebianCodename::Trixie);
     assert_eq!(std_repos, expected);
 
-    // FIXME: make this test(s) easier to use and adapt, keep input and results closer together,
-    // content of sources entries should be probably inlined here, we can assume that reading files
-    // works after all (or at least not our job to test).
-    // Manipulating array entries is rather annoying, one needs to frequently jump back and
-    // manually correlate things, simply completely unnecessary extra work.
-    // Further, we need to better split products, components, and suites, unify where the possible
-    // combinations are defined and do that ideally in a declarative list, so that one can keep it
-    // around for older suites and add newer ones already earlier, as is this is way to much work
-    // for what this is..
-    /*
-    let pve_list = read_dir.join("pve.list");
-    let mut file = APTRepositoryFile::new(pve_list)?.unwrap();
+    // PBS view of a PVE-flavored fixture: host-product handles don't match
+    // each other's URIs, so all three statuses stay None. (Use the absolute
+    // suite list since it has no PVE URIs anyway and we just want to
+    // exercise the host-product cross-check.)
+    let absolute_suite_list = read_dir.join("absolute_suite.list");
+    let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
     file.parse()?;
+    let std_repos = standard_repositories(&[file], &host_pbs, &DebianCodename::Bookworm);
+    let pbs_expected = standard_repos_offered_for(&host_pbs, &DebianCodename::Bookworm);
+    assert_eq!(std_repos, pbs_expected);
 
-    let file_vec = vec![file];
-
-    let std_repos = standard_repositories(&file_vec, "pbs", &DebianCodename::Bookworm);
-
-    assert_eq!(&std_repos, &expected[0..=2]);
-
-    expected[0].status = Some(false);
-    expected[1].status = Some(true);
-
-    let std_repos = standard_repositories(&file_vec, "pve", &DebianCodename::Bookworm);
-
-    assert_eq!(std_repos, &expected[0..=2]);
-
-    let pve_alt_list = read_dir.join("pve-alt.list");
-    let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
-    file.parse()?;
-
-    expected[0].status = Some(true);
-    expected[1].status = Some(true);
-    expected[2].status = Some(false);
-
-    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Bookworm);
-
-    assert_eq!(std_repos, &expected[0..=2]);
-
-    */
+    // ---
+    // Ceph Squid detection on Trixie.
 
     let pve_alt_list = read_dir.join("ceph-squid-trixie.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
-
-    expected[0].status = None;
-    expected[1].status = None;
-    expected[2].status = None;
-    expected[3].status = Some(true);
-    expected[4].status = Some(true);
-    expected[5].status = Some(true);
-
-    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Trixie);
-
+    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_ENTERPRISE, Some(true));
+    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_NO_SUBSCRIPTION, Some(true));
+    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_TEST, Some(true));
+    let std_repos = standard_repositories(&[file], &host_pve, &DebianCodename::Trixie);
     assert_eq!(std_repos, expected);
 
     let pve_alt_list = read_dir.join("ceph-squid-nosub-trixie.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
-
-    expected[0].status = None;
-    expected[1].status = None;
-    expected[2].status = None;
-    expected[3].status = None;
-    expected[4].status = Some(true);
-    expected[5].status = None;
-
-    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Trixie);
-
+    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_ENTERPRISE, None);
+    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_TEST, None);
+    let std_repos = standard_repositories(&[file], &host_pve, &DebianCodename::Trixie);
     assert_eq!(std_repos, expected);
 
     let pve_alt_list = read_dir.join("ceph-squid-enterprise-trixie.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
-
-    expected[0].status = None;
-    expected[1].status = None;
-    expected[2].status = None;
-    expected[3].status = Some(true);
-    expected[4].status = None;
-    expected[5].status = None;
-
-    let std_repos = standard_repositories(&[file], "pve", &DebianCodename::Trixie);
-
+    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_ENTERPRISE, Some(true));
+    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_NO_SUBSCRIPTION, None);
+    let std_repos = standard_repositories(&[file], &host_pve, &DebianCodename::Trixie);
     assert_eq!(std_repos, expected);
 
     Ok(())

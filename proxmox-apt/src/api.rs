@@ -5,11 +5,11 @@ use anyhow::{bail, Error};
 
 use proxmox_apt_api_types::{
     APTChangeRepositoryOptions, APTGetChangelogOptions, APTRepositoriesResult, APTRepositoryFile,
-    APTRepositoryHandle,
+    APTRepositoryHandle, HostProduct,
 };
 use proxmox_config_digest::ConfigDigest;
 
-use crate::repositories::{APTRepositoryFileImpl, APTRepositoryImpl};
+use crate::repositories::{APTRepositoryFileImpl, APTRepositoryHandleImpl, APTRepositoryImpl};
 
 /// Retrieve the changelog of the specified package.
 pub fn get_changelog(options: &APTGetChangelogOptions) -> Result<String, Error> {
@@ -28,7 +28,7 @@ pub fn get_changelog(options: &APTGetChangelogOptions) -> Result<String, Error> 
 }
 
 /// Get APT repository information.
-pub fn list_repositories(product: &str) -> Result<APTRepositoriesResult, Error> {
+pub fn list_repositories(host_product: &HostProduct) -> Result<APTRepositoriesResult, Error> {
     let apt_lists_dir = Path::new("/var/lib/apt/lists");
 
     let (files, errors, digest) = crate::repositories::repositories()?;
@@ -36,7 +36,7 @@ pub fn list_repositories(product: &str) -> Result<APTRepositoriesResult, Error> 
     let suite = crate::repositories::get_current_release_codename()?;
 
     let infos = crate::repositories::check_repositories(&files, &suite, apt_lists_dir);
-    let standard_repos = crate::repositories::standard_repositories(&files, product, &suite);
+    let standard_repos = crate::repositories::standard_repositories(&files, host_product, &suite);
 
     Ok(APTRepositoriesResult {
         files,
@@ -52,7 +52,7 @@ pub fn list_repositories(product: &str) -> Result<APTRepositoriesResult, Error> 
 ///
 /// The `digest` parameter asserts that the configuration has not been modified.
 pub fn add_repository_handle(
-    product: &str,
+    host_product: &HostProduct,
     handle: APTRepositoryHandle,
     digest: Option<ConfigDigest>,
 ) -> Result<(), Error> {
@@ -65,7 +65,7 @@ pub fn add_repository_handle(
     // check if it's already configured first
     for file in files.iter_mut() {
         for repo in file.repositories.iter_mut() {
-            if repo.is_referenced_repository(&handle, product, &suite.to_string()) {
+            if handle.is_referenced_by(repo, host_product, &suite) {
                 if repo.enabled {
                     return Ok(());
                 }
@@ -78,7 +78,8 @@ pub fn add_repository_handle(
         }
     }
 
-    let (repo, path) = crate::repositories::get_standard_repository(&handle, product, &suite);
+    let (repo, path) = crate::repositories::get_standard_repository(&handle, host_product, &suite)
+        .ok_or_else(|| anyhow::format_err!("no standard repository for handle '{handle}' on host product '{host_product}' and suite '{suite}'"))?;
 
     if let Some(error) = errors.iter().find(|error| error.path == path) {
         bail!(

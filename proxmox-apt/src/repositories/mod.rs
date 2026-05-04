@@ -1,25 +1,32 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Error};
+use anyhow::{bail, format_err, Error};
 
-mod repository;
 use proxmox_apt_api_types::{
-    APTRepository, APTRepositoryFile, APTRepositoryFileError, APTRepositoryFileType,
-    APTRepositoryHandle, APTRepositoryInfo, APTRepositoryOption, APTRepositoryPackageType,
-    APTStandardRepository,
+    APTRepository, APTRepositoryFile, APTRepositoryFileError, APTRepositoryHandle,
+    APTRepositoryInfo, APTStandardRepository, HostProduct,
 };
 use proxmox_config_digest::ConfigDigest;
+
+mod repository;
 pub use repository::APTRepositoryImpl;
 
 mod file;
 pub use file::APTRepositoryFileImpl;
 
 mod release;
-pub use release::{get_current_release_codename, DebianCodename};
+pub use release::get_current_release_codename;
+// Re-export so consumers can write `proxmox_apt::repositories::DebianCodename`
+// alongside the other repository types instead of pulling api-types in
+// directly just for one name.
+pub use proxmox_apt_api_types::DebianCodename;
 
 mod standard;
-pub use standard::{APTRepositoryHandleImpl, APTStandardRepositoryImpl};
+pub use standard::{
+    find_handle_for_repository, standard_repos_offered_for, APTRepositoryHandleImpl,
+    APTStandardRepositoryImpl,
+};
 
 const APT_SOURCES_LIST_FILENAME: &str = "/etc/apt/sources.list";
 const APT_SOURCES_LIST_DIRECTORY: &str = "/etc/apt/sources.list.d/";
@@ -65,50 +72,36 @@ pub fn check_repositories(
     infos
 }
 
-/// Get the repository associated to the handle and the path where it is usually configured.
+/// Build a fresh standard repository entry and the on-disk path it
+/// should be written to. Returns `None` when the handle does not
+/// correspond to a known standard repo for the given host product/suite.
 pub fn get_standard_repository(
     handle: &APTRepositoryHandle,
-    product: &str,
+    host_product: &HostProduct,
     suite: &DebianCodename,
-) -> (APTRepository, String) {
-    let suite = suite.to_string();
-
-    let repo = handle.to_repository(product, &suite);
-    let path = handle.path(product, &suite);
-
-    (repo, path)
+) -> Option<(APTRepository, String)> {
+    let repo = handle.to_repository(host_product, suite)?;
+    let path = handle.file_path(host_product, suite)?;
+    Some((repo, path))
 }
 
-/// Return handles for standard Proxmox repositories and their status, where
-/// `None` means not configured, and `Some(bool)` indicates enabled or disabled.
+/// Return all standard Proxmox repositories offered for the given host
+/// product and suite, with `status` filled in based on whether each one
+/// is currently configured (and enabled) in `files`.
 pub fn standard_repositories(
     files: &[APTRepositoryFile],
-    product: &str,
+    host_product: &HostProduct,
     suite: &DebianCodename,
 ) -> Vec<APTStandardRepository> {
-    let mut result = vec![
-        APTStandardRepository::from_handle(APTRepositoryHandle::Enterprise),
-        APTStandardRepository::from_handle(APTRepositoryHandle::NoSubscription),
-        APTStandardRepository::from_handle(APTRepositoryHandle::Test),
-    ];
+    let mut result = standard::standard_repos_offered_for(host_product, suite);
 
-    if product == "pve" && *suite == DebianCodename::Trixie {
-        result.append(&mut vec![
-            APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidEnterprise),
-            APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidNoSubscription),
-            APTStandardRepository::from_handle(APTRepositoryHandle::CephSquidTest),
-        ]);
-    }
-
-    let suite_str = suite.to_string();
     for file in files.iter() {
         for repo in file.repositories.iter() {
             for entry in result.iter_mut() {
                 if entry.status == Some(true) {
                     continue;
                 }
-
-                if repo.is_referenced_repository(&entry.handle, product, &suite_str) {
+                if entry.handle.is_referenced_by(repo, host_product, suite) {
                     entry.status = Some(repo.enabled);
                 }
             }
@@ -173,7 +166,9 @@ pub fn repositories() -> Result<Repositories, Error> {
         return Ok(to_result(files, errors));
     }
 
-    for entry in std::fs::read_dir(sources_list_d_path)? {
+    for entry in std::fs::read_dir(sources_list_d_path)
+        .map_err(|err| format_err!("read_dir failed - {err}"))?
+    {
         let path = entry?.path();
 
         match APTRepositoryFile::new(path) {

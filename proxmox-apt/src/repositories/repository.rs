@@ -4,10 +4,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{bail, format_err, Error};
 use proxmox_pgp::{verify_signature, WeakCryptoConfig};
 
-use crate::repositories::standard::APTRepositoryHandleImpl;
-use proxmox_apt_api_types::{
-    APTRepository, APTRepositoryFileType, APTRepositoryHandle, APTRepositoryOption,
-};
+use proxmox_apt_api_types::{APTRepository, APTRepositoryFileType, APTRepositoryOption};
 
 pub trait APTRepositoryImpl {
     /// Crates an empty repository.
@@ -19,14 +16,6 @@ pub trait APTRepositoryImpl {
 
     /// Makes sure that all basic properties of a repository are present and not obviously invalid.
     fn basic_check(&self) -> Result<(), Error>;
-
-    /// Checks if the repository is the one referenced by the handle.
-    fn is_referenced_repository(
-        &self,
-        handle: &APTRepositoryHandle,
-        product: &str,
-        suite: &str,
-    ) -> bool;
 
     /// Guess the origin from the repository's URIs.
     ///
@@ -115,32 +104,6 @@ impl APTRepositoryImpl for APTRepository {
         }
 
         Ok(())
-    }
-
-    fn is_referenced_repository(
-        &self,
-        handle: &APTRepositoryHandle,
-        product: &str,
-        suite: &str,
-    ) -> bool {
-        let (package_type, handle_uris, component, key) = handle.info(product);
-
-        let found_uri_or_signed = || {
-            let mut found = false;
-            for uri in self.uris.iter() {
-                let uri = uri.trim_end_matches('/');
-                found = found
-                    || handle_uris.iter().any(|handle_uri| handle_uri == uri)
-                    || is_signed_by_key(uri, suite, key);
-            }
-            found
-        };
-
-        self.types.contains(&package_type)
-            // using contains would require a &String
-            && self.suites.iter().any(|self_suite| self_suite == suite)
-            && self.components.contains(&component)
-            && found_uri_or_signed()
     }
 
     fn origin_from_uris(&self) -> Option<String> {
@@ -395,7 +358,7 @@ fn write_stanza(repo: &APTRepository, w: &mut dyn Write) -> Result<(), Error> {
 
 /// Reads file contents of cached/local POM InRelease file from uri
 /// and key to verify pgp signature
-fn is_signed_by_key(uri: &str, suite: &str, key_path: &str) -> bool {
+pub(crate) fn is_signed_by_key(uri: &str, suite: &str, key_path: &str) -> bool {
     let (Ok(data), Ok(key)) = (read_inrelease(uri, suite), std::fs::read(key_path)) else {
         return false;
     };
@@ -403,7 +366,7 @@ fn is_signed_by_key(uri: &str, suite: &str, key_path: &str) -> bool {
     verify_signature(&data, &key, None, &WeakCryptoConfig::default()).is_ok()
 }
 
-/// Reads cached/local POM InRelease file
+/// Reads cached/local InRelease file. TODO: HTTP-fetch fallback when cache is missing.
 fn read_inrelease(uri: &str, suite: &str) -> Result<Vec<u8>, Error> {
     let path = release_filename(Path::new("/var/lib/apt/lists"), uri, suite, false);
 

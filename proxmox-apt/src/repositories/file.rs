@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{format_err, Error};
 
-use crate::repositories::release::DebianCodename;
+use proxmox_apt_api_types::DebianCodename;
 use proxmox_apt_api_types::{
     APTRepository, APTRepositoryFile, APTRepositoryFileError, APTRepositoryFileType,
     APTRepositoryInfo, APTRepositoryPackageType,

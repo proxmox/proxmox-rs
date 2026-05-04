@@ -617,35 +617,223 @@ pub struct APTStandardRepository {
     pub description: String,
 }
 
-#[api]
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-/// Handles for Proxmox repositories.
-pub enum APTRepositoryHandle {
-    /// The enterprise repository for production use.
-    Enterprise,
-    /// The repository that can be used without subscription.
-    NoSubscription,
-    /// The test repository.
-    Test,
-    // TODO: Add separate enum for ceph releases and use something like
-    // `CephTest(CephReleaseCodename),` once the API macro supports it.
-    // Or create dedicated product type where ceph (or ceph$release) are entries.
-    /// Ceph Squid enterprise repository.
-    CephSquidEnterprise,
-    /// Ceph Squid no-subscription repository.
-    CephSquidNoSubscription,
-    /// Ceph Squid test repository.
-    CephSquidTest,
-    /// Unknown repository handle, lossless fallback that lets clients tolerate
-    /// future variants without hard-failing deserialization. The contained
-    /// string is the verbatim wire value.
-    #[serde(untagged)]
-    Unknown(String),
+/// Which host-product and Ceph-release channels are enabled across a set of
+/// [`APTStandardRepository`] entries. Built via [`Self::from_repos`].
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct APTStandardRepoSummary {
+    pub has_enterprise: bool,
+    pub has_no_subscription: bool,
+    pub has_test: bool,
+    pub has_ceph_enterprise: bool,
+    pub has_ceph_no_subscription: bool,
+    pub has_ceph_test: bool,
+    /// Enabled handles that didn't fit any known bucket; suitable for logging.
+    pub unrecognized: Vec<APTRepositoryHandle>,
 }
 
-proxmox_serde::forward_display_to_serialize!(APTRepositoryHandle);
-proxmox_serde::forward_from_str_to_deserialize!(APTRepositoryHandle);
+impl APTStandardRepoSummary {
+    /// Walks the iterator once; only `status == Some(true)` entries contribute.
+    pub fn from_repos<'a, I>(repos: I) -> Self
+    where
+        I: IntoIterator<Item = &'a APTStandardRepository>,
+    {
+        let mut s = Self::default();
+        for r in repos {
+            if r.status != Some(true) {
+                continue;
+            }
+            let handle = &r.handle;
+            let unknown_component = matches!(handle.component(), APTRepoComponent::Unknown(_));
+            let is_ceph = match handle.repo_type() {
+                None => false,
+                Some(APTRepoType::Unknown(_)) => {
+                    s.unrecognized.push(handle.clone());
+                    continue;
+                }
+                Some(rt) => rt.is_ceph_release(),
+            };
+            if unknown_component {
+                s.unrecognized.push(handle.clone());
+                continue;
+            }
+            match (handle.repo_type().is_none(), is_ceph, handle.component()) {
+                (true, _, APTRepoComponent::Enterprise) => s.has_enterprise = true,
+                (true, _, APTRepoComponent::NoSubscription) => s.has_no_subscription = true,
+                (true, _, APTRepoComponent::Test) => s.has_test = true,
+                (false, true, APTRepoComponent::Enterprise) => s.has_ceph_enterprise = true,
+                (false, true, APTRepoComponent::NoSubscription) => {
+                    s.has_ceph_no_subscription = true
+                }
+                (false, true, APTRepoComponent::Test) => s.has_ceph_test = true,
+                _ => {}
+            }
+        }
+        s
+    }
+}
+
+const_regex! {
+    pub APT_REPOSITORY_HANDLE_REGEX = r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$";
+}
+
+const APT_REPOSITORY_HANDLE_FORMAT: ApiStringFormat =
+    ApiStringFormat::Pattern(&APT_REPOSITORY_HANDLE_REGEX);
+
+/// Handle for a standard Proxmox APT repository: an [`APTRepoType`] (software) and an
+/// [`APTRepoComponent`] (channel); `repo_type == None` is the host product's own channel.
+/// Wire format is the historical kebab-case string. `FromStr` is byte-strict (lowercase only),
+/// `Deserialize` lowercases first to mirror the open enums; `new()` lowercases `Unknown(_)`
+/// payloads and debug-asserts they match the open-enum kebab shape so a programmatically built
+/// handle round-trips through its own `Display`.
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct APTRepositoryHandle {
+    repo_type: Option<APTRepoType>,
+    component: APTRepoComponent,
+}
+
+/// Known component-name strings, longest first so suffix-matching picks the longest match.
+const KNOWN_COMPONENTS: &[(&str, APTRepoComponent)] = &[
+    ("no-subscription", APTRepoComponent::NoSubscription),
+    ("enterprise", APTRepoComponent::Enterprise),
+    ("staging", APTRepoComponent::Staging),
+    ("test", APTRepoComponent::Test),
+    ("main", APTRepoComponent::Main),
+];
+
+/// Non-host-product repo-type prefixes, longest first so `debian-security` beats `debian`.
+/// Host products (`pve`, `pbs`, ...) intentionally absent; their wire form has no prefix.
+const KNOWN_NONHOST_REPO_TYPES: &[(&str, APTRepoType)] = &[
+    ("debian-backports", APTRepoType::DebianBackports),
+    ("debian-security", APTRepoType::DebianSecurity),
+    ("ceph-squid", APTRepoType::CephSquid),
+    ("pbs-client", APTRepoType::PbsClient),
+    ("debian", APTRepoType::Debian),
+];
+
+impl APTRepositoryHandle {
+    /// Collapses host-product `repo_type` to `None` to match the wire-round-tripped form.
+    pub fn new(repo_type: Option<APTRepoType>, mut component: APTRepoComponent) -> Self {
+        let repo_type = match repo_type {
+            Some(rt) if rt.is_host_product() => None,
+            Some(APTRepoType::Unknown(mut payload)) => {
+                payload.make_ascii_lowercase();
+                debug_assert!(
+                    is_apt_open_enum_token(&payload),
+                    "APTRepoType::Unknown payload {payload:?} is not a valid open-enum kebab token",
+                );
+                Some(APTRepoType::Unknown(payload))
+            }
+            other => other,
+        };
+        if let APTRepoComponent::Unknown(payload) = &mut component {
+            payload.make_ascii_lowercase();
+            debug_assert!(
+                is_apt_open_enum_token(payload),
+                "APTRepoComponent::Unknown payload {payload:?} is not a valid open-enum kebab token",
+            );
+        }
+        Self {
+            repo_type,
+            component,
+        }
+    }
+
+    /// `None` for host-product channels (no prefix on the wire).
+    pub fn repo_type(&self) -> Option<&APTRepoType> {
+        self.repo_type.as_ref()
+    }
+
+    /// The release channel.
+    pub fn component(&self) -> &APTRepoComponent {
+        &self.component
+    }
+
+    const fn host(component: APTRepoComponent) -> Self {
+        Self {
+            repo_type: None,
+            component,
+        }
+    }
+
+    const fn standalone(repo_type: APTRepoType, component: APTRepoComponent) -> Self {
+        Self {
+            repo_type: Some(repo_type),
+            component,
+        }
+    }
+
+    pub const ENTERPRISE: Self = Self::host(APTRepoComponent::Enterprise);
+    pub const NO_SUBSCRIPTION: Self = Self::host(APTRepoComponent::NoSubscription);
+    pub const TEST: Self = Self::host(APTRepoComponent::Test);
+    pub const CEPH_SQUID_ENTERPRISE: Self =
+        Self::standalone(APTRepoType::CephSquid, APTRepoComponent::Enterprise);
+    pub const CEPH_SQUID_NO_SUBSCRIPTION: Self =
+        Self::standalone(APTRepoType::CephSquid, APTRepoComponent::NoSubscription);
+    pub const CEPH_SQUID_TEST: Self =
+        Self::standalone(APTRepoType::CephSquid, APTRepoComponent::Test);
+}
+
+impl Display for APTRepositoryHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.repo_type {
+            None => write!(f, "{}", self.component),
+            Some(rt) if rt.is_host_product() => write!(f, "{}", self.component),
+            Some(rt) => write!(f, "{}-{}", rt, self.component),
+        }
+    }
+}
+
+impl std::str::FromStr for APTRepositoryHandle {
+    type Err = APTRepositoryError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Match the API schema regex on every entry path so non-router callers can't construct
+        // handles that would surface as garbage on-disk component names.
+        if !APT_REPOSITORY_HANDLE_REGEX.is_match(s) {
+            return Err(APTRepositoryError::new(format!(
+                "invalid APT repository handle: '{s}'"
+            )));
+        }
+        // Greedy suffix match: longest known component wins so "ceph-future-enterprise" splits as
+        // {Unknown("ceph-future"), Enterprise} when the repo_type is not yet known.
+        for (comp_str, component) in KNOWN_COMPONENTS {
+            let Some(prefix) = s.strip_suffix(comp_str) else {
+                continue;
+            };
+            let prefix = match prefix.strip_suffix('-') {
+                Some(p) if !p.is_empty() => p,
+                Some(_) => continue,
+                None if prefix.is_empty() => return Ok(Self::host(component.clone())),
+                None => continue,
+            };
+            let repo_type = KNOWN_NONHOST_REPO_TYPES
+                .iter()
+                .find_map(|(s, rt)| (*s == prefix).then(|| rt.clone()))
+                .unwrap_or_else(|| APTRepoType::Unknown(prefix.to_string()));
+            return Ok(Self::standalone(repo_type, component.clone()));
+        }
+        // No known component suffix; opaque fallback. The regex above already constrained `s`.
+        Ok(Self::host(APTRepoComponent::Unknown(s.to_string())))
+    }
+}
+
+proxmox_serde::forward_serialize_to_display!(APTRepositoryHandle);
+
+impl<'de> Deserialize<'de> for APTRepositoryHandle {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let mut s = String::deserialize(deserializer)?;
+        s.make_ascii_lowercase();
+        s.parse().map_err(serde::de::Error::custom)
+    }
+}
+
+impl proxmox_schema::ApiType for APTRepositoryHandle {
+    const API_SCHEMA: proxmox_schema::Schema =
+        proxmox_schema::StringSchema::new("Handle referencing a standard APT repository.")
+            .format(&APT_REPOSITORY_HANDLE_FORMAT)
+            .schema();
+}
 
 #[api()]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

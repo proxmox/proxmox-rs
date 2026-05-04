@@ -5,7 +5,7 @@ use anyhow::{bail, format_err, Error};
 
 use super::APTRepositoryParser;
 use crate::repositories::APTRepositoryImpl;
-use crate::repositories::{APTRepository, APTRepositoryFileType, APTRepositoryOption};
+use proxmox_apt_api_types::{APTRepository, APTRepositoryFileType, APTRepositoryOption};
 
 // TODO convert %-escape characters. Also adapt printing back accordingly,
 // because at least '%' needs to be re-escaped when printing.
