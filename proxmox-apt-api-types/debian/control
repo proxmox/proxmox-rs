@@ -14,8 +14,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
- librust-serde-1+derive-dev <!nocheck>,
- librust-serde-plain-1+default-dev <!nocheck>
+ librust-serde-1+derive-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.2
 Vcs-Git: git://git.proxmox.com/git/proxmox-apt.git
@@ -36,32 +35,14 @@ Depends:
  librust-proxmox-serde-1+serde-json-dev,
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
- librust-serde-1+derive-dev,
- librust-serde-plain-1+default-dev
-Suggests:
- librust-proxmox-apt-api-types+enum-fallback-dev (= ${binary:Version})
+ librust-serde-1+derive-dev
 Provides:
  librust-proxmox-apt-api-types+default-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2+default-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0+default-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0.5-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0.5+default-dev (= ${binary:Version})
+ librust-proxmox-apt-api-types-3-dev (= ${binary:Version}),
+ librust-proxmox-apt-api-types-3+default-dev (= ${binary:Version}),
+ librust-proxmox-apt-api-types-3.0-dev (= ${binary:Version}),
+ librust-proxmox-apt-api-types-3.0+default-dev (= ${binary:Version}),
+ librust-proxmox-apt-api-types-3.0.0-dev (= ${binary:Version}),
+ librust-proxmox-apt-api-types-3.0.0+default-dev (= ${binary:Version})
 Description: APT API type definitions - Rust source code
  Source code for Debianized Rust crate "proxmox-apt-api-types"
-
-Package: librust-proxmox-apt-api-types+enum-fallback-dev
-Architecture: any
-Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-proxmox-apt-api-types-dev (= ${binary:Version}),
- librust-proxmox-fixed-string-0.1+default-dev
-Provides:
- librust-proxmox-apt-api-types-2+enum-fallback-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0+enum-fallback-dev (= ${binary:Version}),
- librust-proxmox-apt-api-types-2.0.5+enum-fallback-dev (= ${binary:Version})
-Description: APT API type definitions - feature "enum-fallback"
- This metapackage enables feature "enum-fallback" for the Rust proxmox-apt-api-
- types crate, by pulling in any additional dependencies needed by that feature.

@@ -1,3 +1,55 @@
+rust-proxmox-apt-api-types (3.0.0-1) trixie; urgency=medium
+
+  * APTRepositoryHandle changes from a flat enum to a struct over
+    (repo_type, component) so adding a new Ceph release or product
+    channel does not require fanning out enum variants. The kebab-case
+    wire strings used by the REST API, perl, and the web UI are
+    unchanged: enterprise, no-subscription, test, ceph-squid-enterprise,
+    etc. all serialize/deserialize as before. Rust consumers that
+    pattern-match on the old variant identifiers (e.g. `match handle
+    { APTRepositoryHandle::CephSquidEnterprise => ... }`) will not
+    compile any more; switch to matching on `handle.component()` (and,
+    for Ceph, `handle.repo_type()`) instead. The fields are private and
+    the struct is `#[non_exhaustive]` to keep all construction going
+    through `APTRepositoryHandle::new` / `from_str` / the pub `const`
+    instances, which all normalize the value to the wire-equivalent
+    form.
+
+  * Add APTRepoType enum (Pve, Pbs, Pdm, Pmg, Debian, DebianSecurity,
+    DebianBackports, CephSquid, CephTentacle, ...) and APTRepoComponent
+    enum (Enterprise, NoSubscription, Test, Main, Staging) as the two
+    axes of the new handle struct. The type system allows arbitrary
+    pairs; the set of semantically valid handles is constrained by the
+    proxmox-apt-side STANDARD_REPOS lookup table, not by the types.
+
+  * Add HostProduct enum (Pve, Pbs, Pdm, Pmg) for the host product an APT
+    operation runs on behalf of. Replaces the previous untyped &str
+    parameter on the proxmox-apt public API.
+
+  * Lift DebianCodename out of proxmox-apt so it can appear in API
+    parameter and response types. Reachable from proxmox-apt at the
+    historical re-export path for source compatibility. Both Deserialize
+    and TryFrom<&str> now lowercase the input before matching known
+    codenames; TryFrom keeps Err-on-unknown semantics for strict
+    suite-name callers, while Deserialize keeps the Unknown(s) wire
+    fallback.
+
+  * Drop the enum-fallback Cargo feature: the Unknown(String) forward-
+    compat fallback variant is now unconditional on every open-enum
+    type (APTRepoType, APTRepoComponent, DebianCodename, HostProduct),
+    so a single dependency can not accidentally turn graceful tolerance
+    back into a hard deserialization failure for future variants.
+
+  * The Unknown(_) payload is now constrained to lowercase kebab-case
+    (regex `^[a-z][a-z0-9]*(-[a-z0-9]+)*$`), where the previous 2.0.4
+    `enum-fallback` `UnknownEnumValue(FixedString)` accepted any UTF-8
+    string up to 31 bytes. No production wire payload hits this in
+    practice (all Proxmox-emitted handles are lowercase kebab-case), but
+    downstream maintainers introducing new wire forms must keep them in
+    that envelope to round-trip via the Unknown fallback.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 03 May 2026 12:00:00 +0200
+
 rust-proxmox-apt-api-types (2.0.5-1) trixie; urgency=medium
 
   * change log options: provide schema for package name to avoid passing bogus
