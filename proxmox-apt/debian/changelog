@@ -1,3 +1,48 @@
+rust-proxmox-apt (1.0.0-1) trixie; urgency=medium
+
+  * fix #5207: verify repository origin via signature info from the cached
+    InRelease file when the URI does not match a standard repository, so
+    locally mirrored (POM) repositories are correctly recognized as Proxmox
+    origin instead of being flagged with a "no Proxmox repository enabled"
+    error.
+
+  * fall back to the locally cached InRelease file when probing repository
+    status, so a host that has not contacted the upstream mirror yet still
+    reports the correct origin once apt has populated /var/lib/apt/lists.
+
+  * Standard repositories are now defined via a single declarative
+    STANDARD_REPOS table in standard.rs. Adding a new Ceph release or a
+    new product channel is a single row, no longer a fan-out across
+    five separate match blocks.
+
+  * Switch the public API (list_repositories, add_repository_handle,
+    standard_repositories, get_standard_repository) from an untyped
+    `&str` product parameter to the typed HostProduct enum. Callers get
+    compile-time guarantees instead of silent typos.
+
+  * APTRepositoryHandle::is_referenced_by(repo, host_product, suite)
+    replaces the previous APTRepositoryImpl::is_referenced_repository
+    method, consolidating URI / component / signature-fallback checks
+    against the table.
+
+  * Re-export proxmox_apt_api_types::DebianCodename at the historical
+    path so callers do not need to update their imports.
+
+  * The PVE legacy enterprise.proxmox.com/debian URI form (without the
+    /pve product suffix) is still recognized when detecting an existing
+    user configuration; new repositories are written with the canonical
+    /pve-suffixed URI.
+
+  * Fix add_repository_handle ignoring the product argument when probing
+    for an already-configured repository: it previously hardcoded "pbs",
+    so PDM and any future PVE/PMG caller could never hit the
+    "already-configured, just enable it" path. The new HostProduct-typed
+    parameter is honored throughout.
+
+  * Register Ceph Tentacle as a standard repository for PVE on Trixie.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 04 May 2026 12:00:00 +0200
+
 rust-proxmox-apt (0.99.7-1) trixie; urgency=medium
 
   * do not allow passing further options to apt changelog command.
