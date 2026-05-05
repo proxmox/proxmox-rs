@@ -134,11 +134,18 @@ struct CephRelease {
     suites: &'static [DebianCodename],
 }
 
-const CEPH_RELEASES: &[CephRelease] = &[CephRelease {
-    repo_type: APTRepoType::CephSquid,
-    name: "Squid",
-    suites: &[DebianCodename::Trixie],
-}];
+const CEPH_RELEASES: &[CephRelease] = &[
+    CephRelease {
+        repo_type: APTRepoType::CephSquid,
+        name: "Squid",
+        suites: &[DebianCodename::Trixie],
+    },
+    CephRelease {
+        repo_type: APTRepoType::CephTentacle,
+        name: "Tentacle",
+        suites: &[DebianCodename::Trixie],
+    },
+];
 
 /// One materialized standard-repo row, built from a [`HostProductDef`] or [`CephRelease`]
 /// paired with one channel. Per-channel fields are owned strings, formatted on build.

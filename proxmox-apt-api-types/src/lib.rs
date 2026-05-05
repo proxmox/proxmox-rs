@@ -247,6 +247,8 @@ pub enum APTRepoType {
     DebianBackports,
     /// Proxmox Ceph Squid
     CephSquid,
+    /// Proxmox Ceph Tentacle
+    CephTentacle,
     /// Forward-compat fallback for unknown wire values; stored lowercased.
     #[serde(untagged)]
     Unknown(String),
@@ -268,6 +270,7 @@ impl<'de> Deserialize<'de> for APTRepoType {
             "debian-security" => Self::DebianSecurity,
             "debian-backports" => Self::DebianBackports,
             "ceph-squid" => Self::CephSquid,
+            "ceph-tentacle" => Self::CephTentacle,
             _ if is_apt_open_enum_token(&lower) => Self::Unknown(lower),
             _ => {
                 return Err(serde::de::Error::custom(format!(
@@ -288,6 +291,7 @@ impl APTRepoType {
             | Self::DebianSecurity
             | Self::DebianBackports
             | Self::CephSquid
+            | Self::CephTentacle
             | Self::Unknown(_) => false,
         }
     }
@@ -295,7 +299,7 @@ impl APTRepoType {
     /// Whether this repo type ships Ceph release packages; exhaustive (new variants fail to compile).
     pub fn is_ceph_release(&self) -> bool {
         match self {
-            Self::CephSquid => true,
+            Self::CephSquid | Self::CephTentacle => true,
             Self::Pve
             | Self::Pbs
             | Self::PbsClient
@@ -706,6 +710,7 @@ const KNOWN_COMPONENTS: &[(&str, APTRepoComponent)] = &[
 const KNOWN_NONHOST_REPO_TYPES: &[(&str, APTRepoType)] = &[
     ("debian-backports", APTRepoType::DebianBackports),
     ("debian-security", APTRepoType::DebianSecurity),
+    ("ceph-tentacle", APTRepoType::CephTentacle),
     ("ceph-squid", APTRepoType::CephSquid),
     ("pbs-client", APTRepoType::PbsClient),
     ("debian", APTRepoType::Debian),
@@ -772,6 +777,12 @@ impl APTRepositoryHandle {
         Self::standalone(APTRepoType::CephSquid, APTRepoComponent::NoSubscription);
     pub const CEPH_SQUID_TEST: Self =
         Self::standalone(APTRepoType::CephSquid, APTRepoComponent::Test);
+    pub const CEPH_TENTACLE_ENTERPRISE: Self =
+        Self::standalone(APTRepoType::CephTentacle, APTRepoComponent::Enterprise);
+    pub const CEPH_TENTACLE_NO_SUBSCRIPTION: Self =
+        Self::standalone(APTRepoType::CephTentacle, APTRepoComponent::NoSubscription);
+    pub const CEPH_TENTACLE_TEST: Self =
+        Self::standalone(APTRepoType::CephTentacle, APTRepoComponent::Test);
 }
 
 impl Display for APTRepositoryHandle {
@@ -1268,6 +1279,7 @@ mod tests {
                 | APTRepoType::DebianSecurity
                 | APTRepoType::DebianBackports
                 | APTRepoType::CephSquid
+                | APTRepoType::CephTentacle
                 | APTRepoType::Unknown(_) => {}
             }
         }
@@ -1281,6 +1293,7 @@ mod tests {
             APTRepoType::DebianSecurity,
             APTRepoType::DebianBackports,
             APTRepoType::CephSquid,
+            APTRepoType::CephTentacle,
         ] {
             let json = serde_json::to_string(&v).unwrap();
             let back: APTRepoType = serde_json::from_str(&json).unwrap();
@@ -1347,7 +1360,7 @@ mod tests {
             std_repo(h(None, Enterprise), on),
             std_repo(h(None, NoSubscription), off), // off: must not flip flag
             std_repo(h(None, Test), none),          // unconfigured: ditto
-            std_repo(h(Some(APTRepoType::CephSquid), Enterprise), on),
+            std_repo(h(Some(APTRepoType::CephTentacle), Enterprise), on),
             std_repo(h(Some(APTRepoType::CephSquid), Test), on),
             std_repo(h(Some(APTRepoType::Debian), Main), on), // ignored bucket
             std_repo(
