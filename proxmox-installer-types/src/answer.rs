@@ -285,6 +285,12 @@ pub struct PostNotificationHookInfo {
     /// SHA256 cert fingerprint if certificate pinning should be used.
     #[serde(skip_serializing_if = "Option::is_none", alias = "cert_fingerprint")]
     pub cert_fingerprint: Option<String>,
+    /// Optional opaque authentication token. The post-hook executor sends
+    /// this back to the configured URL as a top-level "token" field so the
+    /// receiving side can authenticate the callback.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "legacy", serde(alias = "auth_token"))]
+    pub auth_token: Option<String>,
 }
 
 #[cfg_attr(feature = "api-types", api)]
