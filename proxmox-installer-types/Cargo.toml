@@ -26,3 +26,6 @@ default = []
 api-types = ["dep:regex", "dep:proxmox-schema", "dep:proxmox-section-config", "proxmox-network-types/api-types"]
 # enable old-style answer file keys with underscores for backwards compatibility
 legacy = []
+
+[dev-dependencies]
+toml = "0.8"
