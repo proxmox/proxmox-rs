@@ -1,5 +1,20 @@
-rust-proxmox-installer-types (0.1.0-1) unstable; urgency=medium
+rust-proxmox-installer-types (0.1.0-1) trixie; urgency=medium
 
-  * Initial release.
+  * initial release of proxmox-installer-types, a crate carrying the data
+    types and wire-format definitions shared between the Proxmox automated
+    installer, its post-installation hook and consumers like Proxmox
+    Datacenter Manager that serve answer files. Split out from the
+    pve-installer source tree so the same types can be reused from other
+    Proxmox products without pulling in the rest of the installer code.
 
- -- Proxmox Support Team <support@proxmox.com>  Tue, 25 Nov 2025 10:23:32 +0200
+  * exposes the answer-file format, the system-information payload sent to the
+    answer endpoint and the post-install webhook payload, plus a regex and
+    schema for Proxmox subscription keys for downstream API consumers.
+
+  * the optional `api-types` cargo feature wires the types up with
+    proxmox-schema and proxmox-api-macro for backend integration, while the
+    `legacy` feature keeps old snake_case answer-file keys parseable so
+    pve-installer ISOs predating the schema-stable kebab-case form keep
+    working.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 01:27:33 +0200
