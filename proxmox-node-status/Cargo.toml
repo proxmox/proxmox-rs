@@ -1,7 +1,7 @@
 [package]
 name = "proxmox-node-status"
 description = "API implementation and types for querying a nodes status."
-version = "1.0.0"
+version = "1.0.1"
 
 authors.workspace = true
 edition.workspace = true

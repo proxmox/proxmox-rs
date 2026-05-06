@@ -4,11 +4,11 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo
 Build-Depends-Arch: cargo:native <!nocheck>,
- rustc:native (>= 1.82) <!nocheck>,
+ rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
@@ -24,9 +24,9 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
@@ -38,8 +38,8 @@ Provides:
  librust-proxmox-node-status-1+default-dev (= ${binary:Version}),
  librust-proxmox-node-status-1.0-dev (= ${binary:Version}),
  librust-proxmox-node-status-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-node-status-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-node-status-1.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-node-status-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-node-status-1.0.1+default-dev (= ${binary:Version})
 Description: API implementation and types for querying a nodes status - Rust source code
  Source code for Debianized Rust crate "proxmox-node-status"
 
@@ -54,12 +54,12 @@ Depends:
  librust-nix-0.29+default-dev,
  librust-openssl-0.10+default-dev,
  librust-proxmox-router-3+default-dev (>= 3.2.2-~~),
- librust-proxmox-sys-1+default-dev,
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~),
  librust-tokio-1+default-dev (>= 1.6-~~)
 Provides:
  librust-proxmox-node-status-1+api-dev (= ${binary:Version}),
  librust-proxmox-node-status-1.0+api-dev (= ${binary:Version}),
- librust-proxmox-node-status-1.0.0+api-dev (= ${binary:Version})
+ librust-proxmox-node-status-1.0.1+api-dev (= ${binary:Version})
 Description: API implementation and types for querying a nodes status - feature "api"
  This metapackage enables feature "api" for the Rust proxmox-node-status crate,
  by pulling in any additional dependencies needed by that feature.

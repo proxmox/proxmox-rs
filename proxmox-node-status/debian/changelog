@@ -1,3 +1,9 @@
+rust-proxmox-node-status (1.0.1-1) trixie; urgency=medium
+
+  * make KernelVersionInformation Clone + PartialEq.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 01:16:40 +0200
+
 rust-proxmox-node-status (1.0.0-1) trixie; urgency=medium
 
   * Initial packaging
