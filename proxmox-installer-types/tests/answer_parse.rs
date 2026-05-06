@@ -20,6 +20,7 @@ root-password-hashed = "$5$abcdefgh$abcdefghijklmnopqrstuvwxyz01234"
 reboot-on-error = false
 reboot-mode = "reboot"
 root-ssh-keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBzeJUiB6X test"]
+subscription-key = "pve4c-1234567890"
 
 [network]
 source = "from-dhcp"
@@ -53,6 +54,7 @@ root_password_hashed = "$5$abcdefgh$abcdefghijklmnopqrstuvwxyz01234"
 reboot_on_error = false
 reboot_mode = "reboot"
 root_ssh_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBzeJUiB6X test"]
+subscription_key = "pve4c-1234567890"
 
 [network]
 source = "from-dhcp"

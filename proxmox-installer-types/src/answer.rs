@@ -33,7 +33,25 @@ type IpAddr = std::net::IpAddr;
 proxmox_schema::const_regex! {
     /// A unique two-letter country code, according to ISO 3166-1 (alpha-2).
     pub COUNTRY_CODE_REGEX = r"^[a-z]{2}$";
+
+    /// A Proxmox subscription key, of the form `<product><socket?><level>-<10 hex>`.
+    ///
+    /// PVE keys carry a maximum-socket-count digit between the product letters and the
+    /// level letter (`pve4b-...`); PBS and PMG do not. Level letters are c/b/s/p
+    /// (Community/Basic/Standard/Premium).
+    pub SUBSCRIPTION_KEY_REGEX = r"^(?:pve[0-9]+|pbs|pmg)[cbsp]-[0-9a-f]{10}$";
 }
+
+/// Schema for an optional Proxmox subscription key.
+#[cfg(feature = "api-types")]
+pub const SUBSCRIPTION_KEY_SCHEMA: proxmox_schema::Schema =
+    StringSchema::new("A Proxmox subscription key for the installed product.")
+        .format(&proxmox_schema::ApiStringFormat::Pattern(
+            &SUBSCRIPTION_KEY_REGEX,
+        ))
+        .min_length(11)
+        .max_length(32)
+        .schema();
 
 /// Defines API types used by proxmox-fetch-answer, the first part of the
 /// auto-installer.
@@ -138,6 +156,10 @@ pub const ROOT_PASSWORD_SCHEMA: proxmox_schema::Schema = StringSchema::new("Root
                 type: String,
             }
         },
+        "subscription-key": {
+            optional: true,
+            schema: SUBSCRIPTION_KEY_SCHEMA,
+        },
     },
 ))]
 #[derive(Clone, Default, Deserialize, Debug, Serialize, PartialEq)]
@@ -177,6 +199,11 @@ pub struct GlobalOptions {
     #[cfg_attr(feature = "legacy", serde(alias = "root_ssh_keys"))]
     /// Public SSH keys to set up for the `root` PAM account.
     pub root_ssh_keys: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "legacy", serde(alias = "subscription_key"))]
+    /// Optional Proxmox subscription key to apply to the installed system on
+    /// first boot. Restricted to PVE, PBS and PMG keys.
+    pub subscription_key: Option<String>,
 }
 
 #[cfg_attr(feature = "api-types", api)]
