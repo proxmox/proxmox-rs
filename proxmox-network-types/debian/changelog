@@ -1,3 +1,24 @@
+rust-proxmox-network-types (1.1.0-1) trixie; urgency=medium
+
+  * add a new `Fqdn` type for safely representing fully-qualified domain names
+    that satisfy the relevant RFCs and Debian's hostname restrictions, moved
+    out of pve-installer's common crate so it can be shared with other
+    consumers.
+
+  * api-types: add the api-type implementation for `Fqdn`.
+
+  * api-types: add an api wrapper for `std::net::IpAddr`, matching the
+    existing wrappers for `Ipv4Addr` and `Ipv6Addr`.
+
+  * cidr: add a generic `IpAddr::new` constructor that takes either an IPv4 or
+    an IPv6 address.
+
+  * fqdn: implement `std::error::Error` for the parse-error type, so it
+    interoperates cleanly with `anyhow` and other crates that rely on that
+    trait for automatic error conversions.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 01:14:36 +0200
+
 rust-proxmox-network-types (1.0.2-1) trixie; urgency=medium
 
   * add ServiceEndpoint type as host/port tuple abstraction.
