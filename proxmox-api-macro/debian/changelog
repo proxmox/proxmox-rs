@@ -1,3 +1,30 @@
+rust-proxmox-api-macro (1.5.0-1) trixie; urgency=medium
+
+  * forward `#[cfg(...)]` attributes from enum variants, section-config enum
+    variants and struct fields to the generated schema-registration code, so
+    conditionally compiled items no longer get registered when the item itself
+    is configured out.
+
+  * support adjacently tagged enums (`#[serde(tag = "...", content = "...")]`)
+    in `#[api]` types.
+
+  * make the section-config implementation on `oneOf` enums optional, so the
+    macro can also be used for non-section-config `oneOf` schemas.
+
+  * enforce that section-config schemas carry a description, and warn when an
+    enum variant has no doc comment.
+
+  * fix the schema reported for the type field of `oneOf` enums; the code
+    previously fell back to the section-config id schema. The field is
+    currently unused by the verifier, so no behavior changes for existing
+    users.
+
+  * allow `$` in identifier-name renames for API types.
+
+  * docs: add enum examples for the `#[api]` macro.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 00:29:13 +0200
+
 rust-proxmox-api-macro (1.4.4-1) trixie; urgency=medium
 
   * avoid extra clone when handling untagged enums.
