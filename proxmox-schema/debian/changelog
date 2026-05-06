@@ -1,3 +1,14 @@
+rust-proxmox-schema (5.2.0-1) trixie; urgency=medium
+
+  * implement `UpdaterType` for `HashMap` and `BTreeMap`, so map-typed fields
+    can be used inside `Updater`-derived types.
+
+  * oneOf: allow a plain string as one of the variants, so a type that can
+    deserialize from either a string or a structured object becomes
+    representable as a single `OneOfSchema`.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 01:05:32 +0200
+
 rust-proxmox-schema (5.1.1-1) trixie; urgency=medium
 
   * ser: fix value serialization for maps by actually serializing map values
