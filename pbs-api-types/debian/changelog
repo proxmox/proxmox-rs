@@ -1,3 +1,9 @@
+rust-pbs-api-types (1.0.16-1) trixie; urgency=medium
+
+  * fix #5076: pbs-api-types: add audiences to open id realm config
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 11:10:54 +0200
+
 rust-pbs-api-types (1.0.15-1) trixie; urgency=medium
 
   * add ServerIdentity to provide a type that will uniquely identify a PBS

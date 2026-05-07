@@ -1,6 +1,6 @@
 [package]
 name = "pbs-api-types"
-version = "1.0.15"
+version = "1.0.16"
 license.workspace = true
 authors.workspace = true
 edition.workspace = true
