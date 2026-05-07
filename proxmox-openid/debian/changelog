@@ -1,3 +1,13 @@
+rust-proxmox-openid (1.0.3-1) trixie; urgency=medium
+
+  * update thiserror to 2
+
+  * clippy: inline format string variables
+
+  * fix #5076: openid: add logic to handle OIDC audiences
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 11:05:41 +0200
+
 rust-proxmox-openid (1.0.2-1) trixie; urgency=medium
 
   * http client: avoid unversioned ureq module.
