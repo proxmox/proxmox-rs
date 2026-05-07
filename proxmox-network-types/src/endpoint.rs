@@ -7,13 +7,19 @@ use std::{
     str::FromStr,
 };
 
+#[cfg(feature = "api-types")]
+use proxmox_schema::StringSchema;
+#[cfg(feature = "api-types")]
+use proxmox_schema::{ApiType, UpdaterType};
+use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 /// Represents either a resolvable hostname or an IPv4/IPv6 address.
 /// IPv6 address are correctly bracketed on [`Display`], and parsing
 /// automatically tries parsing it as an IP address first, falling back to a
 /// plain hostname in the other case.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
+#[serde(untagged)]
 pub enum HostnameOrIpAddr {
     Hostname(String),
     IpAddr(IpAddr),
@@ -42,9 +48,19 @@ impl<S: Into<String>> From<S> for HostnameOrIpAddr {
     }
 }
 
+#[cfg(feature = "api-types")]
+impl ApiType for HostnameOrIpAddr {
+    const API_SCHEMA: proxmox_schema::Schema = StringSchema::new("hostname or ip address").schema();
+}
+
+#[cfg(feature = "api-types")]
+impl UpdaterType for HostnameOrIpAddr {
+    type Updater = Option<Self>;
+}
+
 /// Represents a (host, port) tuple, where the host can either be a resolvable
 /// hostname or an IPv4/IPv6 address.
-#[derive(Clone, Debug, PartialEq, SerializeDisplay, DeserializeFromStr)]
+#[derive(Clone, Debug, PartialEq, Hash, SerializeDisplay, DeserializeFromStr)]
 pub struct ServiceEndpoint {
     host: HostnameOrIpAddr,
     port: u16,
@@ -97,6 +113,16 @@ impl FromStr for ServiceEndpoint {
                 .map_err(|err: std::num::ParseIntError| Self::Err::InvalidPort(err.to_string()))?,
         })
     }
+}
+
+#[cfg(feature = "api-types")]
+impl UpdaterType for ServiceEndpoint {
+    type Updater = Option<Self>;
+}
+
+#[cfg(feature = "api-types")]
+impl ApiType for ServiceEndpoint {
+    const API_SCHEMA: proxmox_schema::Schema = StringSchema::new("service endpoint").schema();
 }
 
 #[cfg(test)]
