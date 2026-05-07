@@ -142,6 +142,7 @@ pub struct WireGuardPeer {
     /// Additional key preshared between two peers. Adds an additional layer of symmetric-key
     /// cryptography to be mixed into the already existing public-key cryptography, for
     /// post-quantum resistance.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub preshared_key: Option<PresharedKey>,
     /// List of IPv4/v6 CIDRs from which incoming traffic for this peer is allowed and to which
     /// outgoing traffic for this peer is directed. The catch-all 0.0.0.0/0 may be specified for
