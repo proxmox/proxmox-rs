@@ -1,3 +1,11 @@
+rust-proxmox-network-types (1.1.1-1) UNRELEASED; urgency=medium
+
+  * implement ApiType for endpoints and hostnames to allows those types to be
+    used in the section config types for the wireguard fabric, as well as in
+    the API definitions for them.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 15:50:17 +0200
+
 rust-proxmox-network-types (1.1.0-1) trixie; urgency=medium
 
   * add a new `Fqdn` type for safely representing fully-qualified domain names
