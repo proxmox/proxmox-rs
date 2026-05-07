@@ -12,9 +12,11 @@
 
 #![forbid(unsafe_code, missing_docs)]
 
+use std::fmt;
+
 use ed25519_dalek::SigningKey;
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use x25519_dalek::StaticSecret;
 
 use proxmox_network_types::{endpoint::ServiceEndpoint, ip_address::Cidr};
 #[cfg(feature = "api-types")]
@@ -42,9 +44,7 @@ impl From<proxmox_ini::Error> for Error {
 /// Public key of a WireGuard peer.
 #[derive(Clone, Copy, Deserialize, Serialize, Hash, Debug)]
 #[serde(transparent)]
-pub struct PublicKey(
-    #[serde(with = "proxmox_serde::byte_array_as_base64")] [u8; ed25519_dalek::PUBLIC_KEY_LENGTH],
-);
+pub struct PublicKey(#[serde(with = "proxmox_serde::byte_array_as_base64")] [u8; 32]);
 
 #[cfg(feature = "api-types")]
 impl ApiType for PublicKey {
@@ -62,9 +62,7 @@ impl UpdaterType for PublicKey {
 /// Private key of a WireGuard peer.
 #[derive(Serialize)]
 #[serde(transparent)]
-pub struct PrivateKey(
-    #[serde(with = "proxmox_serde::byte_array_as_base64")] ed25519_dalek::SecretKey,
-);
+pub struct PrivateKey(#[serde(with = "proxmox_serde::byte_array_as_base64")] [u8; 32]);
 
 impl fmt::Debug for PrivateKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -73,42 +71,27 @@ impl fmt::Debug for PrivateKey {
 }
 
 impl PrivateKey {
-    /// Length of the raw private key data in bytes.
-    pub const RAW_LENGTH: usize = ed25519_dalek::SECRET_KEY_LENGTH;
-
     /// Generates a new private key suitable for use with WireGuard.
     #[cfg(feature = "key-generation")]
     pub fn generate() -> Result<Self, Error> {
-        generate_key().map(Self)
+        Ok(Self(StaticSecret::random().to_bytes()))
     }
 
     /// Calculates the public key from the private key.
     pub fn public_key(&self) -> PublicKey {
-        PublicKey(
-            ed25519_dalek::SigningKey::from_bytes(&self.0)
-                .verifying_key()
-                .to_bytes(),
-        )
-    }
-
-    /// Builds a new [`PrivateKey`] from raw key material.
-    #[must_use]
-    pub fn from_raw(data: ed25519_dalek::SecretKey) -> Self {
-        // [`SigningKey`] takes care of correct key clamping.
-        Self(SigningKey::from(&data).to_bytes())
+        PublicKey(x25519_dalek::PublicKey::from(&StaticSecret::from(self.0)).to_bytes())
     }
 }
 
-impl From<ed25519_dalek::SecretKey> for PrivateKey {
-    fn from(value: ed25519_dalek::SecretKey) -> Self {
+impl From<[u8; 32]> for PrivateKey {
+    fn from(value: [u8; 32]) -> Self {
         Self(value)
     }
 }
 
-impl AsRef<ed25519_dalek::SecretKey> for PrivateKey {
-    /// Returns the raw private key material.
-    fn as_ref(&self) -> &ed25519_dalek::SecretKey {
-        &self.0
+impl From<x25519_dalek::StaticSecret> for PrivateKey {
+    fn from(value: x25519_dalek::StaticSecret) -> Self {
+        Self(value.to_bytes())
     }
 }
 
@@ -239,7 +222,8 @@ mod tests {
 
     fn mock_private_key(v: u8) -> PrivateKey {
         let base = v * 32;
-        PrivateKey((base..base + 32).collect::<Vec<u8>>().try_into().unwrap())
+        let key: [u8; 32] = (base..base + 32).collect::<Vec<u8>>().try_into().unwrap();
+        PrivateKey(key.into())
     }
 
     fn mock_preshared_key(v: u8) -> PresharedKey {
@@ -272,7 +256,7 @@ ListenPort = 51820
 FwMark = 127
 
 [Peer]
-PublicKey = Kay64UG8yvCyLhqU000LxzYeUm0L/hLIl5S8kyKWbdc=
+PublicKey = NYBy1jZYgNGu6jKa35EhODhR7SGijjt16WXQ0s0WYlQ=
 PresharedKey = ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8=
 AllowedIPs = 192.168.0.0/24
 Endpoint = foo.example.com:51820
@@ -328,24 +312,24 @@ PrivateKey = AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
 ListenPort = 51820
 
 [Peer]
-PublicKey = Kay64UG8yvCyLhqU000LxzYeUm0L/hLIl5S8kyKWbdc=
+PublicKey = NYBy1jZYgNGu6jKa35EhODhR7SGijjt16WXQ0s0WYlQ=
 PresharedKey = ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8=
 AllowedIPs = 192.168.0.0/24
 Endpoint = foo.example.com:51820
 
 [Peer]
-PublicKey = JUO5L/EJVRFHatyDadtt3JM2ZaEZeN2hQE7hBmypVZ0=
+PublicKey = eaYx7t4b+cmPEgMs3q3Q56B5OY/HhriMyEbsia+FpRo=
 PresharedKey = QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl8=
 AllowedIPs = 192.168.1.0/24
 PersistentKeepalive = 25
 
 [Peer]
-PublicKey = F0VTtFbd38aQjsqxwQH+arIeK6oGF3lbfUOmNIKZP9U=
+PublicKey = Z13VdO13iTELPS52gfN5C0ZsdzsVIf7PNld5WDcepS8=
 PresharedKey = YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn8=
 AllowedIPs = 192.168.2.0/24
 
 [Peer]
-PublicKey = zRSzf5VulTGU/3+3Oz2B3MVh1hp1OAlLfD4aZD7l86o=
+PublicKey = ST6C/HRGSlkmiBdiPSBTxeuOLMSpiLT+4XnsawENUx0=
 PresharedKey = gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp8=
 Endpoint = 10.0.0.1:51820
 PersistentKeepalive = 25
@@ -376,7 +360,7 @@ PersistentKeepalive = 25
 PrivateKey = AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=
 
 [Peer]
-PublicKey = Kay64UG8yvCyLhqU000LxzYeUm0L/hLIl5S8kyKWbdc=
+PublicKey = NYBy1jZYgNGu6jKa35EhODhR7SGijjt16WXQ0s0WYlQ=
 PresharedKey = ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8=
 AllowedIPs = 192.168.0.0/24
 Endpoint = 10.0.0.1:51820
