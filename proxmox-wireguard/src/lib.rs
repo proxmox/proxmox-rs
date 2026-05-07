@@ -60,9 +60,22 @@ impl UpdaterType for PublicKey {
 }
 
 /// Private key of a WireGuard peer.
-#[derive(Serialize)]
+#[derive(Clone, Copy, Deserialize, Serialize, Hash)]
 #[serde(transparent)]
 pub struct PrivateKey(#[serde(with = "proxmox_serde::byte_array_as_base64")] [u8; 32]);
+
+#[cfg(feature = "api-types")]
+impl ApiType for PrivateKey {
+    const API_SCHEMA: proxmox_schema::Schema =
+        StringSchema::new("ED25519 private key (base64 encoded)")
+            .format(&ApiStringFormat::Pattern(&ED25519_BASE64_KEY_REGEX))
+            .schema();
+}
+
+#[cfg(feature = "api-types")]
+impl UpdaterType for PrivateKey {
+    type Updater = Option<PrivateKey>;
+}
 
 impl fmt::Debug for PrivateKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
