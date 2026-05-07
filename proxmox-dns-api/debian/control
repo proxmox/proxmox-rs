@@ -4,14 +4,14 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo
 Build-Depends-Arch: cargo:native <!nocheck>,
- rustc:native (>= 1.82) <!nocheck>,
+ rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
  librust-proxmox-config-digest-1+default-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>
@@ -30,9 +30,9 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-const-format-0.2+default-dev,
  librust-proxmox-config-digest-1+default-dev,
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev
@@ -56,7 +56,7 @@ Depends:
  ${misc:Depends},
  librust-proxmox-dns-api-dev (= ${binary:Version}),
  librust-proxmox-config-digest-1+openssl-dev,
- librust-proxmox-sys-1+default-dev
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~)
 Provides:
  librust-proxmox-dns-api-1+impl-dev (= ${binary:Version}),
  librust-proxmox-dns-api-1.0+impl-dev (= ${binary:Version}),

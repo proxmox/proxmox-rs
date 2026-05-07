@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo
 Build-Depends-Arch: cargo:native <!nocheck>,
- rustc:native (>= 1.82) <!nocheck>,
+ rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
@@ -18,14 +18,14 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-http-1+default-dev (>= 1.0.5-~~) <!nocheck>,
  librust-proxmox-http-error-1+default-dev <!nocheck>,
  librust-proxmox-human-byte-1+default-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~) <!nocheck>,
  librust-proxmox-section-config-3+default-dev (>= 3.1.0-~~) <!nocheck>,
- librust-proxmox-sendmail-1+default-dev (>= 1.0.1-~~) <!nocheck>,
+ librust-proxmox-sendmail-1+default-dev (>= 1.0.2-~~) <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
- librust-proxmox-sys-1+default-dev <!nocheck>,
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~) <!nocheck>,
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~) <!nocheck>,
  librust-proxmox-uuid-1+default-dev (>= 1.1.0-~~) <!nocheck>,
  librust-proxmox-uuid-1+serde-dev (>= 1.1.0-~~) <!nocheck>,
@@ -52,9 +52,9 @@ Depends:
  librust-openssl-0.10+default-dev,
  librust-proxmox-http-error-1+default-dev,
  librust-proxmox-human-byte-1+default-dev,
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
  librust-proxmox-section-config-3+default-dev (>= 3.1.0-~~),
  librust-proxmox-serde-1+default-dev,
  librust-proxmox-serde-1+serde-json-dev,
@@ -124,8 +124,8 @@ Depends:
  ${misc:Depends},
  librust-proxmox-notify-dev (= ${binary:Version}),
  librust-mail-parser-0.11+default-dev,
- librust-proxmox-sendmail-1+mail-forwarder-dev (>= 1.0.1-~~),
- librust-proxmox-sys-1+default-dev
+ librust-proxmox-sendmail-1+mail-forwarder-dev (>= 1.0.2-~~),
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~)
 Provides:
  librust-proxmox-notify-1+mail-forwarder-dev (= ${binary:Version}),
  librust-proxmox-notify-1.0+mail-forwarder-dev (= ${binary:Version}),
@@ -140,7 +140,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-notify-dev (= ${binary:Version}),
- librust-proxmox-sys-1+default-dev
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~)
 Provides:
  librust-proxmox-notify+pve-context-dev (= ${binary:Version}),
  librust-proxmox-notify-1+pbs-context-dev (= ${binary:Version}),
@@ -161,8 +161,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-notify-dev (= ${binary:Version}),
- librust-proxmox-sendmail-1+default-dev (>= 1.0.1-~~),
- librust-proxmox-sys-1+default-dev
+ librust-proxmox-sendmail-1+default-dev (>= 1.0.2-~~),
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~)
 Provides:
  librust-proxmox-notify-1+sendmail-dev (= ${binary:Version}),
  librust-proxmox-notify-1.0+sendmail-dev (= ${binary:Version}),

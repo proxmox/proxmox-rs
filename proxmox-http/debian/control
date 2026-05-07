@@ -48,7 +48,7 @@ Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
  librust-http-1+default-dev,
- librust-proxmox-schema-5+default-dev (>= 5.1.0-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
  librust-serde-json-1+default-dev,
  librust-url-2+default-dev (>= 2.2-~~)
 Provides:

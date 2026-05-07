@@ -8,8 +8,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-nix-0.29+default-dev <!nocheck>,
- librust-proxmox-sys-1+default-dev <!nocheck>,
- librust-proxmox-sys-1+timer-dev <!nocheck>
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~) <!nocheck>,
+ librust-proxmox-sys-1+timer-dev (>= 1.0.1-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.2
 Vcs-Git: git://git.proxmox.com/git/proxmox.git
@@ -24,8 +24,8 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-nix-0.29+default-dev,
- librust-proxmox-sys-1+default-dev,
- librust-proxmox-sys-1+timer-dev
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~),
+ librust-proxmox-sys-1+timer-dev (>= 1.0.1-~~)
 Provides:
  librust-proxmox-product-config+default-dev (= ${binary:Version}),
  librust-proxmox-product-config-1-dev (= ${binary:Version}),

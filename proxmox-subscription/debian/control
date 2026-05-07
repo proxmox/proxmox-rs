@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo
 Build-Depends-Arch: cargo:native <!nocheck>,
- rustc:native (>= 1.82) <!nocheck>,
+ rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-hex-0.4+default-dev <!nocheck>,
@@ -15,7 +15,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-http-1+http-helpers-dev (>= 1.0.5-~~) <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
- librust-proxmox-sys-1+default-dev <!nocheck>,
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~) <!nocheck>,
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
@@ -55,8 +55,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-subscription-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~)
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~)
 Provides:
  librust-proxmox-subscription-1+api-types-dev (= ${binary:Version}),
  librust-proxmox-subscription-1.0+api-types-dev (= ${binary:Version}),
@@ -77,7 +77,7 @@ Depends:
  librust-proxmox-http-1+client-trait-dev (>= 1.0.5-~~),
  librust-proxmox-http-1+default-dev (>= 1.0.5-~~),
  librust-proxmox-http-1+http-helpers-dev (>= 1.0.5-~~),
- librust-proxmox-sys-1+default-dev,
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~),
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~)
 Provides:
  librust-proxmox-subscription+default-dev (= ${binary:Version}),

@@ -4,12 +4,13 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo
 Build-Depends-Arch: cargo:native <!nocheck>,
- rustc:native (>= 1.82) <!nocheck>,
+ rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
  librust-proxmox-apt-0.99+cache-dev (>= 0.99.6-~~) <!nocheck>,
  librust-proxmox-apt-0.99+default-dev (>= 0.99.6-~~) <!nocheck>,
+ librust-proxmox-apt-0.99+enum-fallback-dev (>= 0.99.6-~~) <!nocheck>,
  librust-proxmox-apt-api-types-2+default-dev (>= 2.0.4-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-termcolor-1+default-dev (>= 1.1.2-~~) <!nocheck>
@@ -29,6 +30,7 @@ Depends:
  librust-const-format-0.2+default-dev,
  librust-proxmox-apt-0.99+cache-dev (>= 0.99.6-~~),
  librust-proxmox-apt-0.99+default-dev (>= 0.99.6-~~),
+ librust-proxmox-apt-0.99+enum-fallback-dev (>= 0.99.6-~~),
  librust-proxmox-apt-api-types-2+default-dev (>= 2.0.4-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-termcolor-1+default-dev (>= 1.1.2-~~)

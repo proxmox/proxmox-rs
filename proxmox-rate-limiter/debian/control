@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo
 Build-Depends-Arch: cargo:native <!nocheck>,
- rustc:native (>= 1.82) <!nocheck>,
+ rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -57,8 +57,8 @@ Depends:
  ${misc:Depends},
  librust-proxmox-rate-limiter-dev (= ${binary:Version}),
  librust-nix-0.29+default-dev,
- librust-proxmox-shared-memory-1+default-dev,
- librust-proxmox-sys-1+default-dev
+ librust-proxmox-shared-memory-1+default-dev (>= 1.0.1-~~),
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~)
 Provides:
  librust-proxmox-rate-limiter-1+shared-rate-limiter-dev (= ${binary:Version}),
  librust-proxmox-rate-limiter-1.0+shared-rate-limiter-dev (= ${binary:Version}),

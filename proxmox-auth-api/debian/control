@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo
 Build-Depends-Arch: cargo:native <!nocheck>,
- rustc:native (>= 1.82) <!nocheck>,
+ rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -70,9 +70,9 @@ Depends:
  ${misc:Depends},
  librust-proxmox-auth-api-dev (= ${binary:Version}),
  librust-const-format-0.2+default-dev,
- librust-proxmox-schema-5+api-macro-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.0.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.0.1-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
@@ -113,8 +113,8 @@ Depends:
  librust-log-0.4+default-dev (>= 0.4.17-~~),
  librust-nix-0.29+default-dev,
  librust-proxmox-product-config-1+default-dev,
- librust-proxmox-sys-1+crypt-dev,
- librust-proxmox-sys-1+default-dev
+ librust-proxmox-sys-1+crypt-dev (>= 1.0.1-~~),
+ librust-proxmox-sys-1+default-dev (>= 1.0.1-~~)
 Provides:
  librust-proxmox-auth-api-1+password-authenticator-dev (= ${binary:Version}),
  librust-proxmox-auth-api-1.0+password-authenticator-dev (= ${binary:Version}),
