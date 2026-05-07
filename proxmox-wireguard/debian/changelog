@@ -1,5 +1,11 @@
+rust-proxmox-wireguard (0.1.1-1) unstable; urgency=medium
+
+  * re-bump to superseded upload of previous revision.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 16:02:06 +0200
+
 rust-proxmox-wireguard (0.1.0-1) unstable; urgency=medium
 
   * Initial release.
 
- -- Proxmox Support Team <support@proxmox.com>  Wed, 01 Apr 2026 00:58:32 +0200
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 07 May 2026 15:39:26 +0200
