@@ -86,8 +86,13 @@ macro_rules! forward_impl_to_bytes {
 
 forward_impl_to_bytes! {
     PartialEq { eq -> bool }
-    PartialOrd { partial_cmp -> Option<Ordering> }
     Ord { cmp -> Ordering }
+}
+
+impl PartialOrd for FixedString {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(Ord::cmp(self, other))
+    }
 }
 
 macro_rules! forward_impl_to_str_bidir {
