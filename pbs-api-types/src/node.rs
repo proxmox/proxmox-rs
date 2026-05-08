@@ -41,6 +41,42 @@ pub struct NodeSwapCounters {
     pub free: u64,
 }
 
+pub const LOCATION_NAME_SCHEMA: Schema = StringSchema::new("A location name.")
+    .format(&api_types::SINGLE_LINE_COMMENT_FORMAT)
+    .max_length(128)
+    .schema();
+
+#[api(
+    properties: {
+        name: {
+            schema: LOCATION_NAME_SCHEMA,
+            optional: true,
+        },
+        latitude: {
+            type: Number,
+            minimum: -90.0,
+            maximum: 90.0,
+        },
+        longitude: {
+            type: Number,
+            minimum: -180.0,
+            maximum: 180.0,
+        },
+    },
+)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+#[serde(rename_all = "kebab-case")]
+/// Location information about a node.
+pub struct NodeLocation {
+    /// The name of the location of this node.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// The latitude of the nodes location in degrees.
+    pub latitude: f64,
+    /// The longitude of the nodes location in degrees.
+    pub longitude: f64,
+}
+
 #[api]
 #[derive(Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -325,7 +361,11 @@ pub enum Translation {
             optional: true,
             type: String,
             max_length: 64 * 1024,
-        }
+        },
+        location: {
+            optional: true,
+            type: String,
+        },
     },
 )]
 #[derive(Deserialize, Serialize, Updater)]
@@ -380,6 +420,10 @@ pub struct NodeConfig {
     /// Consent banner text
     #[serde(skip_serializing_if = "Option::is_none")]
     pub consent_text: Option<String>,
+
+    /// The location of the PBS instance.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location: Option<PropertyString<NodeLocation>>,
 }
 
 impl NodeConfig {
