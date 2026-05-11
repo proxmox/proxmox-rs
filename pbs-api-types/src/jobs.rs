@@ -63,7 +63,7 @@ pub const VERIFICATION_SCHEDULE_SCHEMA: Schema =
         .schema();
 
 pub const REMOVE_VANISHED_BACKUPS_SCHEMA: Schema = BooleanSchema::new(
-    "Delete vanished backups. This remove the local copy if the remote backup was deleted.",
+    "Delete vanished backups. This removes the local copy if the remote backup was deleted.",
 )
 .default(false)
 .schema();
