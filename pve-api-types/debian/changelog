@@ -1,3 +1,10 @@
+rust-pve-api-types (8.1.6-1) trixie; urgency=medium
+
+  * node subscription: expose the set, delete, and update methods so callers
+    can manage a node's subscription key without falling back to raw JSON.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 13 May 2026 04:58:30 +0200
+
 rust-pve-api-types (8.1.5-1) trixie; urgency=medium
 
   * firewall: add various API endpoints, including those for cluster log,
