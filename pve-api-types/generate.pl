@@ -223,7 +223,10 @@ api(GET => '/nodes/{node}/config', 'node_config', 'return-name' => 'NodeConfig')
 # subscription api
 #
 Schema2Rust::register_enum_variant('NodeSubscriptionInfoStatus::notfound' => 'NotFound');
-api(GET => '/nodes/{node}/subscription', 'get_subscription',   'return-name' => 'NodeSubscriptionInfo');
+api(GET    => '/nodes/{node}/subscription', 'get_subscription',    'return-name' => 'NodeSubscriptionInfo');
+api(POST   => '/nodes/{node}/subscription', 'update_subscription', 'param-name' => 'UpdateSubscription');
+api(PUT    => '/nodes/{node}/subscription', 'set_subscription',    'param-name' => 'SetSubscription');
+api(DELETE => '/nodes/{node}/subscription', 'delete_subscription');
 # # low level task api:
 # # ?? api(GET    => '/nodes/{node}/tasks/{upid}', 'get_task');
 api(GET => '/nodes/{node}/tasks',               'get_task_list',   'param-name' => 'ListTasks');

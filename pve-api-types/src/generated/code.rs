@@ -634,6 +634,11 @@ pub trait PveClient {
         ))
     }
 
+    /// Delete subscription key of this node.
+    async fn delete_subscription(&self, node: &str) -> Result<(), Error> {
+        Err(Error::Other("delete_subscription not implemented"))
+    }
+
     /// Remove API token for a specific user.
     async fn delete_token(&self, userid: &str, tokenid: &str) -> Result<(), Error> {
         Err(Error::Other("delete_token not implemented"))
@@ -1222,6 +1227,11 @@ pub trait PveClient {
         Err(Error::Other("set_qemu_firewall_options not implemented"))
     }
 
+    /// Set subscription key.
+    async fn set_subscription(&self, node: &str, params: SetSubscription) -> Result<(), Error> {
+        Err(Error::Other("set_subscription not implemented"))
+    }
+
     /// Shutdown the container. This will trigger a clean shutdown of the
     /// container, see lxc-stop(1) for details.
     async fn shutdown_lxc_async(
@@ -1379,6 +1389,15 @@ pub trait PveClient {
         Err(Error::Other(
             "update_qemu_firewall_ipset_entry not implemented",
         ))
+    }
+
+    /// Update subscription info.
+    async fn update_subscription(
+        &self,
+        node: &str,
+        params: UpdateSubscription,
+    ) -> Result<(), Error> {
+        Err(Error::Other("update_subscription not implemented"))
     }
 
     /// API version details, including some parts of the global datacenter
@@ -1808,6 +1827,15 @@ where
         ))
         .maybe_arg("digest", &p_digest)
         .build();
+        self.0.delete(url).await?.nodata()
+    }
+
+    /// Delete subscription key of this node.
+    async fn delete_subscription(&self, node: &str) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/subscription",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         self.0.delete(url).await?.nodata()
     }
 
@@ -2783,6 +2811,15 @@ where
         self.0.put(url, &params).await?.nodata()
     }
 
+    /// Set subscription key.
+    async fn set_subscription(&self, node: &str, params: SetSubscription) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/subscription",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.put(url, &params).await?.nodata()
+    }
+
     /// Shutdown the container. This will trigger a clean shutdown of the
     /// container, see lxc-stop(1) for details.
     async fn shutdown_lxc_async(
@@ -3011,6 +3048,19 @@ where
             percent_encode(cidr.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         self.0.put(url, &params).await?.nodata()
+    }
+
+    /// Update subscription info.
+    async fn update_subscription(
+        &self,
+        node: &str,
+        params: UpdateSubscription,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/subscription",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.post(url, &params).await?.nodata()
     }
 
     /// API version details, including some parts of the global datacenter

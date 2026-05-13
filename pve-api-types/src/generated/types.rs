@@ -17000,6 +17000,21 @@ pub struct SdnZonePending {
 
 #[api(
     properties: {
+        key: {
+            max_length: 32,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct SetSubscription {
+    /// Proxmox VE subscription key
+    pub key: String,
+}
+
+#[api(
+    properties: {
         forceStop: {
             default: false,
             optional: true,
@@ -22110,6 +22125,23 @@ pub struct UpdateQemuConfigVirtio {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub werror: Option<PveQmIdeWerror>,
+}
+
+#[api(
+    properties: {
+        force: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateSubscription {
+    /// Always connect to server, even if local cache is still valid.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub force: Option<bool>,
 }
 
 #[api(
