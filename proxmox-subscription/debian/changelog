@@ -1,3 +1,19 @@
+rust-proxmox-subscription (1.0.2-1) trixie; urgency=medium
+
+  * server-id: accept multiple candidates per host. Replace the singular
+    `get_hardware_address` with `get_hardware_address_candidates`, returning a
+    `Vec<ServerId>` covering the legacy ssh-host-key hash and a new
+    machine-id-based form. Callers must migrate.
+
+  * add `UpdateSubscription` and `SetSubscription` request body structs for the
+    per-node subscription endpoints (`POST` and `PUT` on
+    `/nodes/{node}/subscription`), so that PBS-side handlers and typed clients
+    can drive the same surface from one canonical type definition instead of
+    declaring it inline or sending raw JSON. Names and wire shape mirror the
+    auto-generated structs in pve-api-types.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 14 May 2026 14:50:00 +0200
+
 rust-proxmox-subscription (1.0.1-1) trixie; urgency=medium
 
   * update proxmox-schema to 5.0.0
