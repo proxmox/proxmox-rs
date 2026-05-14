@@ -47,6 +47,43 @@ impl std::fmt::Display for SubscriptionStatus {
     }
 }
 
+/// Variant discriminator for `ServerId`
+#[derive(Clone, Copy, Debug, Hash, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ServerIdType {
+    /// Legacy variant tied to SSH host key, for backwards compatibility
+    SshMd5,
+    /// Tied to /etc/machine-id
+    MachineId,
+}
+
+impl Display for ServerIdType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let txt = match self {
+            ServerIdType::SshMd5 => "SSH MD5",
+            ServerIdType::MachineId => "machine-id",
+        };
+        f.write_str(txt)
+    }
+}
+
+/// Serverid used to bind subscription key to system
+pub struct ServerId {
+    ty: ServerIdType,
+    id: String,
+}
+
+impl ServerId {
+    pub fn kind(&self) -> ServerIdType {
+        self.ty
+    }
+}
+
+impl Display for ServerId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.id)
+    }
+}
+
 #[cfg_attr(feature = "api-types", api())]
 #[cfg_attr(feature = "api-types", derive(Updater))]
 #[derive(Debug, Clone, Hash, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -133,7 +170,7 @@ pub struct SubscriptionInfo {
 }
 
 #[cfg(feature = "impl")]
-pub use _impl::get_hardware_address;
+pub use _impl::get_hardware_address_candidates;
 
 #[cfg(feature = "impl")]
 pub(crate) use _impl::{md5sum, SHARED_KEY_DATA};
@@ -150,6 +187,10 @@ mod _impl {
     use proxmox_time::TmEditor;
 
     use crate::sign::Verifier;
+
+    // Generated using `systemd-sd128 new`
+    pub(crate) const PMX_APPLICATION_ID: [u8; 16] =
+        0x0e6b456a63fe4892997e9f42ebfaf980_u128.to_le_bytes();
 
     pub(crate) const SHARED_KEY_DATA: &str = "kjfdlskfhiuewhfk947368";
 
@@ -245,7 +286,7 @@ mod _impl {
         /// `status` is set to [SubscriptionStatus::Invalid] and `message` to a human-readable
         ///  message in case it does not.
         pub fn check_server_id(&mut self) {
-            match (self.serverid.as_ref(), get_hardware_address()) {
+            match (self.serverid.as_ref(), get_hardware_address_candidates()) {
                 (_, Err(err)) => {
                     self.status = SubscriptionStatus::Invalid;
                     self.message = Some(format!("Failed to obtain server ID - {err}."));
@@ -256,7 +297,9 @@ mod _impl {
                     self.message = Some("Missing server ID.".to_string());
                     self.signature = None;
                 }
-                (Some(contained), Ok(expected)) if &expected != contained => {
+                (Some(contained), Ok(expected))
+                    if !expected.iter().any(|serverid| serverid.id == *contained) =>
+                {
                     self.status = SubscriptionStatus::Invalid;
                     self.message = Some("Server ID mismatch.".to_string());
                     self.signature = None;
@@ -316,16 +359,54 @@ mod _impl {
         hash(MessageDigest::md5(), data).map_err(Error::from)
     }
 
+    fn get_hardware_address(ty: super::ServerIdType) -> Result<super::ServerId, Error> {
+        fn get_ssh_key() -> Result<Vec<u8>, Error> {
+            static FILENAME: &str = "/etc/ssh/ssh_host_rsa_key.pub";
+
+            proxmox_sys::fs::file_get_contents(FILENAME)
+                .map_err(|e| format_err!("Error getting host key - {}", e))
+        }
+
+        let id = match ty {
+            crate::subscription_info::ServerIdType::SshMd5 => {
+                let digest = md5sum(&get_ssh_key()?)
+                    .map_err(|e| format_err!("Error digesting host key - {}", e))?;
+
+                hex::encode(digest).to_uppercase()
+            }
+            crate::subscription_info::ServerIdType::MachineId => {
+                let machine_id =
+                    proxmox_systemd::sd_id128::get_app_specific_id(PMX_APPLICATION_ID)?;
+                hex::encode(machine_id).to_uppercase()
+            }
+        };
+        Ok(super::ServerId { ty, id })
+    }
+
     /// Generate the current system's "server ID".
-    pub fn get_hardware_address() -> Result<String, Error> {
-        static FILENAME: &str = "/etc/ssh/ssh_host_rsa_key.pub";
-
-        let contents = proxmox_sys::fs::file_get_contents(FILENAME)
-            .map_err(|e| format_err!("Error getting host key - {}", e))?;
-        let digest =
-            md5sum(&contents).map_err(|e| format_err!("Error digesting host key - {}", e))?;
-
-        Ok(hex::encode(digest).to_uppercase())
+    pub fn get_hardware_address_candidates() -> Result<Vec<super::ServerId>, Error> {
+        let mut res = Vec::new();
+        let mut errors = Vec::new();
+        let variants = [super::ServerIdType::MachineId, super::ServerIdType::SshMd5];
+        for ty in variants {
+            match get_hardware_address(ty) {
+                Ok(id) => res.push(id),
+                Err(err) => errors.push((ty, err)),
+            }
+        }
+        if res.is_empty() {
+            let error_strings: Vec<String> = errors
+                .into_iter()
+                .map(|(ty, err)| format!("{ty}: {err}"))
+                .collect();
+            let msg = if error_strings.is_empty() {
+                "unknown error".to_string()
+            } else {
+                error_strings.join(", ")
+            };
+            bail!("Failed to get any hardware address candidate: {msg}",);
+        }
+        Ok(res)
     }
 
     fn parse_next_due(value: &str) -> Result<i64, Error> {
