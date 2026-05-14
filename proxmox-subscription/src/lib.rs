@@ -3,11 +3,14 @@
 mod subscription_info;
 #[cfg(feature = "impl")]
 pub use subscription_info::{
-    get_hardware_address_candidates, ProductType, ServerId, SubscriptionInfo, SubscriptionStatus,
+    get_hardware_address_candidates, UpdateSubscription, ProductType, ServerId, SetSubscription,
+    SubscriptionInfo, SubscriptionStatus,
 };
 
 #[cfg(not(feature = "impl"))]
-pub use subscription_info::{ProductType, SubscriptionInfo, SubscriptionStatus};
+pub use subscription_info::{
+    UpdateSubscription, ProductType, SetSubscription, SubscriptionInfo, SubscriptionStatus,
+};
 
 #[cfg(feature = "impl")]
 pub mod check;

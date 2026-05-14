@@ -169,6 +169,48 @@ pub struct SubscriptionInfo {
     pub signature: Option<String>,
 }
 
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        force: {
+            description: "Always connect to server, even if information in cache is up to date.",
+            type: bool,
+            optional: true,
+            default: false,
+        },
+    },
+))]
+#[derive(Debug, Default, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+/// Parameters for the POST `/nodes/{node}/subscription` endpoint that re-checks the live
+/// subscription state against the shop.
+///
+/// Name and wire shape mirror Proxmox VE's auto-generated `UpdateSubscription` so a single
+/// canonical struct drives the endpoint across all products. Proxmox Backup Server consumes
+/// this directly through the `api-types` feature; Proxmox VE currently keeps its own
+/// auto-generated copy in `pve-api-types` for backward compatibility.
+pub struct UpdateSubscription {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub force: Option<bool>,
+}
+
+#[cfg_attr(feature = "api-types", api(
+    properties: {
+        key: {
+            description: "The subscription key to install.",
+            type: String,
+        },
+    },
+))]
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+/// Parameters for the PUT `/nodes/{node}/subscription` endpoint that stores and validates a new
+/// subscription key on the node. Mirrors PVE's auto-generated `SetSubscription` struct so that
+/// both products can be driven from typed code; product-specific key formats are enforced at the
+/// receiving API handler.
+pub struct SetSubscription {
+    pub key: String,
+}
+
 #[cfg(feature = "impl")]
 pub use _impl::get_hardware_address_candidates;
 
