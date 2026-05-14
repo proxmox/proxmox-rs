@@ -28,9 +28,9 @@ Provides:
  librust-proxmox-resource-scheduling+default-dev (= ${binary:Version}),
  librust-proxmox-resource-scheduling-2-dev (= ${binary:Version}),
  librust-proxmox-resource-scheduling-2+default-dev (= ${binary:Version}),
- librust-proxmox-resource-scheduling-2.0-dev (= ${binary:Version}),
- librust-proxmox-resource-scheduling-2.0+default-dev (= ${binary:Version}),
- librust-proxmox-resource-scheduling-2.0.0-dev (= ${binary:Version}),
- librust-proxmox-resource-scheduling-2.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-resource-scheduling-2.1-dev (= ${binary:Version}),
+ librust-proxmox-resource-scheduling-2.1+default-dev (= ${binary:Version}),
+ librust-proxmox-resource-scheduling-2.1.0-dev (= ${binary:Version}),
+ librust-proxmox-resource-scheduling-2.1.0+default-dev (= ${binary:Version})
 Description: Proxmox library for resource scheduling - Rust source code
  Source code for Debianized Rust crate "proxmox-resource-scheduling"

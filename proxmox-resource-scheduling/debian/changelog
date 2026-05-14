@@ -1,3 +1,13 @@
+rust-proxmox-resource-scheduling (2.1.0-1) trixie; urgency=medium
+
+  * scheduler: clamp the load imbalance metric to the unit interval, by
+    normalizing the previously raw coefficient of variation against its
+    theoretical upper bound for the given number of nodes. This yields a value
+    between 0 and 1 that can be interpreted on its own, rather than only being
+    meaningful in direct comparison to other values.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 15 May 2026 00:26:52 +0200
+
 rust-proxmox-resource-scheduling (2.0.0-1) trixie; urgency=medium
 
   * rename service to resource where appropriate, including public interfaces.
