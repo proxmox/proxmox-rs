@@ -307,6 +307,16 @@ pub struct DatastoreTuning {
     pub default_verification_readers: Option<usize>,
 }
 
+impl FromStr for DatastoreTuning {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let tuning: DatastoreTuning =
+            proxmox_schema::property_string::parse_with_schema(s, &DatastoreTuning::API_SCHEMA)?;
+        Ok(tuning)
+    }
+}
+
 pub const DATASTORE_TUNING_STRING_SCHEMA: Schema = StringSchema::new("Datastore tuning options")
     .format(&ApiStringFormat::PropertyString(
         &DatastoreTuning::API_SCHEMA,
