@@ -1,3 +1,9 @@
+rust-pbs-api-types (1.0.17-1) trixie; urgency=medium
+
+  * node config: add location property.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 15 May 2026 12:08:47 +0200
+
 rust-pbs-api-types (1.0.16-1) trixie; urgency=medium
 
   * fix #5076: pbs-api-types: add audiences to open id realm config
