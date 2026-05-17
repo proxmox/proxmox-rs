@@ -170,7 +170,7 @@ proxmox-fixed-string = { version = "0.1.0", path = "proxmox-fixed-string" }
 proxmox-http = { version = "1.0.5", path = "proxmox-http" }
 proxmox-http-error = { version = "1.0.0", path = "proxmox-http-error" }
 proxmox-human-byte = { version = "1.0.0", path = "proxmox-human-byte" }
-proxmox-ini = { version = "0.1.0", path = "proxmox-ini" }
+proxmox-ini = { version = "0.1.1", path = "proxmox-ini" }
 proxmox-io = { version = "1.2.1", path = "proxmox-io" }
 proxmox-lang = { version = "1.5", path = "proxmox-lang" }
 proxmox-log = { version = "1.0.0", path = "proxmox-log" }
