@@ -26,7 +26,7 @@ Provides:
  librust-proxmox-ini-0+default-dev (= ${binary:Version}),
  librust-proxmox-ini-0.1-dev (= ${binary:Version}),
  librust-proxmox-ini-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-ini-0.1.0-dev (= ${binary:Version}),
- librust-proxmox-ini-0.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-ini-0.1.1-dev (= ${binary:Version}),
+ librust-proxmox-ini-0.1.1+default-dev (= ${binary:Version})
 Description: INI format support for serde - Rust source code
  Source code for Debianized Rust crate "proxmox-ini"

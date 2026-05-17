@@ -1,7 +1,7 @@
 [package]
 name = "proxmox-ini"
 description = "INI format support for serde"
-version = "0.1.0"
+version = "0.1.1"
 
 authors.workspace = true
 edition.workspace = true

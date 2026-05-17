@@ -1,3 +1,11 @@
+rust-proxmox-ini (0.1.1-1) trixie; urgency=medium
+
+  * remove a leftover debug print that leaked the serialized value being
+    formatted; which can leak private config information via logs. Luckily
+    this crate is new and not used in announced production features yet.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 17 May 2026 02:08:41 +0200
+
 rust-proxmox-ini (0.1.0-1) unstable; urgency=medium
 
   * Initial release.
