@@ -7,7 +7,7 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-ed25519-dalek-2+default-dev (>= 2.1-~~) <!nocheck>,
- librust-proxmox-ini-0.1+default-dev <!nocheck>,
+ librust-proxmox-ini-0.1+default-dev (>= 0.1.1-~~) <!nocheck>,
  librust-proxmox-network-types-1+default-dev (>= 1.0.2-~~) <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
@@ -31,7 +31,7 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-ed25519-dalek-2+default-dev (>= 2.1-~~),
- librust-proxmox-ini-0.1+default-dev,
+ librust-proxmox-ini-0.1+default-dev (>= 0.1.1-~~),
  librust-proxmox-network-types-1+default-dev (>= 1.0.2-~~),
  librust-proxmox-serde-1+default-dev,
  librust-proxmox-serde-1+serde-json-dev,
@@ -48,7 +48,7 @@ Suggests:
 Provides:
  librust-proxmox-wireguard-0-dev (= ${binary:Version}),
  librust-proxmox-wireguard-0.1-dev (= ${binary:Version}),
- librust-proxmox-wireguard-0.1.1-dev (= ${binary:Version})
+ librust-proxmox-wireguard-0.1.2-dev (= ${binary:Version})
 Description: WireGuard configuration support - Rust source code
  Source code for Debianized Rust crate "proxmox-wireguard"
 
@@ -64,7 +64,7 @@ Depends:
 Provides:
  librust-proxmox-wireguard-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-wireguard-0.1+api-types-dev (= ${binary:Version}),
- librust-proxmox-wireguard-0.1.1+api-types-dev (= ${binary:Version})
+ librust-proxmox-wireguard-0.1.2+api-types-dev (= ${binary:Version})
 Description: WireGuard configuration support - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-wireguard
  crate, by pulling in any additional dependencies needed by that feature.
@@ -82,8 +82,8 @@ Provides:
  librust-proxmox-wireguard-0+default-dev (= ${binary:Version}),
  librust-proxmox-wireguard-0.1+key-generation-dev (= ${binary:Version}),
  librust-proxmox-wireguard-0.1+default-dev (= ${binary:Version}),
- librust-proxmox-wireguard-0.1.1+key-generation-dev (= ${binary:Version}),
- librust-proxmox-wireguard-0.1.1+default-dev (= ${binary:Version})
+ librust-proxmox-wireguard-0.1.2+key-generation-dev (= ${binary:Version}),
+ librust-proxmox-wireguard-0.1.2+default-dev (= ${binary:Version})
 Description: WireGuard configuration support - feature "key-generation" and 1 more
  This metapackage enables feature "key-generation" for the Rust proxmox-
  wireguard crate, by pulling in any additional dependencies needed by that

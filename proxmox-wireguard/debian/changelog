@@ -1,3 +1,10 @@
+rust-proxmox-wireguard (0.1.2-1) trixie; urgency=medium
+
+  * rebuild against proxmox-ini 0.1.1 to pick up the removal of a leftover
+    debug print that could leak the formatted configuration via the log.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 17 May 2026 02:13:04 +0200
+
 rust-proxmox-wireguard (0.1.1-1) unstable; urgency=medium
 
   * re-bump to superseded upload of previous revision.
