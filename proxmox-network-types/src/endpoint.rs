@@ -8,21 +8,72 @@ use std::{
 };
 
 #[cfg(feature = "api-types")]
-use proxmox_schema::StringSchema;
-#[cfg(feature = "api-types")]
-use proxmox_schema::{ApiType, UpdaterType};
+use proxmox_schema::{
+    api_types::{DNS_NAME_OR_IP_FORMAT, HOST_PORT_FORMAT},
+    ApiType, StringSchema, UpdaterType,
+};
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 /// Represents either a resolvable hostname or an IPv4/IPv6 address.
 /// IPv6 address are correctly bracketed on [`Display`], and parsing
 /// automatically tries parsing it as an IP address first, falling back to a
-/// plain hostname in the other case.
-#[derive(Clone, Debug, PartialEq, Hash, Deserialize, Serialize)]
+/// validated plain hostname in the other case. CIDR notation is rejected.
+#[derive(Clone, Debug, PartialEq, Hash, Serialize)]
 #[serde(untagged)]
 pub enum HostnameOrIpAddr {
     Hostname(String),
     IpAddr(IpAddr),
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum HostnameOrIpAddrParseError {
+    #[error("invalid hostname or IP address: '{0}'")]
+    Invalid(String),
+}
+
+impl FromStr for HostnameOrIpAddr {
+    type Err = HostnameOrIpAddrParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Ok(ip_addr) = IpAddr::from_str(s) {
+            return Ok(Self::IpAddr(ip_addr));
+        }
+
+        if is_valid_hostname(s) {
+            return Ok(Self::Hostname(s.to_owned()));
+        }
+
+        Err(HostnameOrIpAddrParseError::Invalid(s.to_owned()))
+    }
+}
+
+impl<'de> Deserialize<'de> for HostnameOrIpAddr {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        s.parse().map_err(serde::de::Error::custom)
+    }
+}
+
+fn is_valid_hostname(s: &str) -> bool {
+    !s.is_empty()
+        && s.len() <= 253
+        && s.split('.').all(|label| {
+            !label.is_empty()
+                && label.len() <= 63
+                && label
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_alphanumeric())
+                && label
+                    .chars()
+                    .last()
+                    .is_some_and(|c| c.is_ascii_alphanumeric())
+                && label.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+        })
 }
 
 impl Display for HostnameOrIpAddr {
@@ -37,20 +88,11 @@ impl Display for HostnameOrIpAddr {
     }
 }
 
-impl<S: Into<String>> From<S> for HostnameOrIpAddr {
-    fn from(value: S) -> Self {
-        let s = value.into();
-        if let Ok(ip_addr) = IpAddr::from_str(&s) {
-            Self::IpAddr(ip_addr)
-        } else {
-            Self::Hostname(s)
-        }
-    }
-}
-
 #[cfg(feature = "api-types")]
 impl ApiType for HostnameOrIpAddr {
-    const API_SCHEMA: proxmox_schema::Schema = StringSchema::new("hostname or ip address").schema();
+    const API_SCHEMA: proxmox_schema::Schema = StringSchema::new("DNS name or IP address.")
+        .format(&DNS_NAME_OR_IP_FORMAT)
+        .schema();
 }
 
 #[cfg(feature = "api-types")]
@@ -67,12 +109,11 @@ pub struct ServiceEndpoint {
 }
 
 impl ServiceEndpoint {
-    pub fn new<S: Into<String>>(host: S, port: u16) -> Self {
-        let s = host.into();
-        Self {
-            host: s.into(),
+    pub fn new<S: AsRef<str>>(host: S, port: u16) -> Result<Self, HostnameOrIpAddrParseError> {
+        Ok(Self {
+            host: host.as_ref().parse()?,
             port,
-        }
+        })
     }
 }
 
@@ -90,6 +131,8 @@ pub enum ParseError {
     MissingHost,
     #[error("invalid port: {0}")]
     InvalidPort(String),
+    #[error("invalid host: {0}")]
+    InvalidHost(#[from] HostnameOrIpAddrParseError),
 }
 
 impl FromStr for ServiceEndpoint {
@@ -107,7 +150,7 @@ impl FromStr for ServiceEndpoint {
         host = host.trim_matches(['[', ']']);
 
         Ok(ServiceEndpoint {
-            host: host.into(),
+            host: host.parse()?,
             port: port
                 .parse()
                 .map_err(|err: std::num::ParseIntError| Self::Err::InvalidPort(err.to_string()))?,
@@ -122,7 +165,10 @@ impl UpdaterType for ServiceEndpoint {
 
 #[cfg(feature = "api-types")]
 impl ApiType for ServiceEndpoint {
-    const API_SCHEMA: proxmox_schema::Schema = StringSchema::new("service endpoint").schema();
+    const API_SCHEMA: proxmox_schema::Schema =
+        StringSchema::new("service endpoint (DNS name or IP address with port).")
+            .format(&HOST_PORT_FORMAT)
+            .schema();
 }
 
 #[cfg(test)]
@@ -133,20 +179,44 @@ mod tests {
 
     #[test]
     fn display_works() {
-        let s = ServiceEndpoint::new("127.0.0.1", 123);
+        let s = ServiceEndpoint::new("127.0.0.1", 123).unwrap();
         assert_eq!(s.to_string(), "127.0.0.1:123");
 
-        let s = ServiceEndpoint::new("fc00:f00d::4321", 123);
+        let s = ServiceEndpoint::new("fc00:f00d::4321", 123).unwrap();
         assert_eq!(s.to_string(), "[fc00:f00d::4321]:123");
 
-        let s = ServiceEndpoint::new("::", 123);
+        let s = ServiceEndpoint::new("::", 123).unwrap();
         assert_eq!(s.to_string(), "[::]:123");
 
-        let s = ServiceEndpoint::new("fc00::", 123);
+        let s = ServiceEndpoint::new("fc00::", 123).unwrap();
         assert_eq!(s.to_string(), "[fc00::]:123");
 
-        let s = ServiceEndpoint::new("example.com", 123);
+        let s = ServiceEndpoint::new("example.com", 123).unwrap();
         assert_eq!(s.to_string(), "example.com:123");
+
+        assert!(ServiceEndpoint::new("fc00::/64", 123).is_err());
+        assert!(ServiceEndpoint::new("192.0.2.0/24", 123).is_err());
+        assert!(ServiceEndpoint::new("foo/bar", 123).is_err());
+    }
+
+    #[test]
+    fn hostname_or_ip_fromstr_works() {
+        assert_eq!(
+            "127.0.0.1".parse::<HostnameOrIpAddr>().unwrap(),
+            HostnameOrIpAddr::IpAddr([127, 0, 0, 1].into()),
+        );
+        assert_eq!(
+            "example.com".parse::<HostnameOrIpAddr>().unwrap(),
+            HostnameOrIpAddr::Hostname("example.com".to_owned()),
+        );
+        assert_eq!(
+            "foo".parse::<HostnameOrIpAddr>().unwrap(),
+            HostnameOrIpAddr::Hostname("foo".to_owned()),
+        );
+
+        assert!("fc00::/64".parse::<HostnameOrIpAddr>().is_err());
+        assert!("192.0.2.0/24".parse::<HostnameOrIpAddr>().is_err());
+        assert!("foo/bar".parse::<HostnameOrIpAddr>().is_err());
     }
 
     #[test]
@@ -176,5 +246,9 @@ mod tests {
                 port: 123
             }
         );
+
+        assert!("fc00::/64:123".parse::<ServiceEndpoint>().is_err());
+        assert!("[fc00::/64]:123".parse::<ServiceEndpoint>().is_err());
+        assert!("192.0.2.0/24:123".parse::<ServiceEndpoint>().is_err());
     }
 }
