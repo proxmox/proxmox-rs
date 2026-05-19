@@ -65,7 +65,7 @@ pub fn add_repository_handle(
     // check if it's already configured first
     for file in files.iter_mut() {
         for repo in file.repositories.iter_mut() {
-            if repo.is_referenced_repository(handle, "pbs", &suite.to_string()) {
+            if repo.is_referenced_repository(&handle, "pbs", &suite.to_string()) {
                 if repo.enabled {
                     return Ok(());
                 }

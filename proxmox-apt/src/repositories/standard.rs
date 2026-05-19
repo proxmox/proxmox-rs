@@ -11,36 +11,38 @@ pub trait APTStandardRepositoryImpl {
 
 impl APTStandardRepositoryImpl for APTStandardRepository {
     fn from_handle(handle: APTRepositoryHandle) -> APTStandardRepository {
+        let name = handle.name();
+        let description = handle.description();
         APTStandardRepository {
             handle,
             status: None,
-            name: handle.name(),
-            description: handle.description(),
+            name,
+            description,
         }
     }
 }
 
 pub trait APTRepositoryHandleImpl {
     /// Get the description for the repository.
-    fn description(self) -> String;
+    fn description(&self) -> String;
     /// Get the display name of the repository.
-    fn name(self) -> String;
+    fn name(&self) -> String;
     /// Get the standard file path for the repository referenced by the handle.
-    fn path(self, product: &str, suite: &str) -> String;
+    fn path(&self, product: &str, suite: &str) -> String;
     /// Get package type, possible URIs, the component associated with the handle and the
     /// associated signing key.
     ///
     /// The first URI is the preferred one.
-    fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String, &str);
+    fn info(&self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String, &str);
     /// Get the standard repository referenced by the handle.
     ///
     /// An URI in the result is not '/'-terminated (under the assumption that no valid
     /// product name is).
-    fn to_repository(self, product: &str, suite: &str) -> APTRepository;
+    fn to_repository(&self, product: &str, suite: &str) -> APTRepository;
 }
 
 impl APTRepositoryHandleImpl for APTRepositoryHandle {
-    fn description(self) -> String {
+    fn description(&self) -> String {
         match self {
             APTRepositoryHandle::Enterprise => {
                 "This is the default, stable, and recommended repository, available for all \
@@ -66,15 +68,14 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 "This repository contains the Ceph Squid packages before they are moved to the \
                 main repository."
             }
-            #[cfg(feature = "enum-fallback")]
-            APTRepositoryHandle::UnknownEnumValue(s) => {
+            APTRepositoryHandle::Unknown(s) => {
                 return format!("Unknown repository variant {s}");
             }
         }
         .to_string()
     }
 
-    fn name(self) -> String {
+    fn name(&self) -> String {
         match self {
             APTRepositoryHandle::Enterprise => "Enterprise",
             APTRepositoryHandle::NoSubscription => "No-Subscription",
@@ -82,15 +83,14 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
             APTRepositoryHandle::CephSquidEnterprise => "Ceph Squid Enterprise",
             APTRepositoryHandle::CephSquidNoSubscription => "Ceph Squid No-Subscription",
             APTRepositoryHandle::CephSquidTest => "Ceph Squid Test",
-            #[cfg(feature = "enum-fallback")]
-            APTRepositoryHandle::UnknownEnumValue(s) => {
+            APTRepositoryHandle::Unknown(s) => {
                 return format!("Unknown repository variant {s}");
             }
         }
         .to_string()
     }
 
-    fn path(self, product: &str, suite: &str) -> String {
+    fn path(&self, product: &str, suite: &str) -> String {
         match DebianCodename::try_from(suite) {
             Ok(codename) if codename >= DebianCodename::Trixie => match self {
                 APTRepositoryHandle::Enterprise => {
@@ -104,8 +104,7 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 | APTRepositoryHandle::CephSquidTest => {
                     "/etc/apt/sources.list.d/ceph.sources".to_string()
                 }
-                #[cfg(feature = "enum-fallback")]
-                APTRepositoryHandle::UnknownEnumValue(_) => {
+                APTRepositoryHandle::Unknown(_) => {
                     "/dev/null".to_string() // TODO: improve this! return Result or at least log?
                 }
             },
@@ -120,15 +119,14 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 | APTRepositoryHandle::CephSquidTest => {
                     "/etc/apt/sources.list.d/ceph.list".to_string()
                 }
-                #[cfg(feature = "enum-fallback")]
-                APTRepositoryHandle::UnknownEnumValue(_) => {
+                APTRepositoryHandle::Unknown(_) => {
                     "/dev/null".to_string() // TODO: improve this! return Result or at least log?
                 }
             },
         }
     }
 
-    fn info(self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String, &str) {
+    fn info(&self, product: &str) -> (APTRepositoryPackageType, Vec<String>, String, &str) {
         match self {
             APTRepositoryHandle::Enterprise => (
                 APTRepositoryPackageType::Deb,
@@ -184,18 +182,17 @@ impl APTRepositoryHandleImpl for APTRepositoryHandle {
                 "test".to_string(),
                 "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
-            #[cfg(feature = "enum-fallback")]
-            APTRepositoryHandle::UnknownEnumValue(s) => (
+            APTRepositoryHandle::Unknown(s) => (
                 // TODO: improve this, return result or at least log?
                 APTRepositoryPackageType::Deb,
                 vec!["unknown".to_string()],
-                s.to_string(),
+                s.clone(),
                 "/usr/share/keyrings/proxmox-archive-keyring.gpg",
             ),
         }
     }
 
-    fn to_repository(self, product: &str, suite: &str) -> APTRepository {
+    fn to_repository(&self, product: &str, suite: &str) -> APTRepository {
         let (package_type, uris, component, key) = self.info(product);
 
         let file_type = match DebianCodename::try_from(suite) {

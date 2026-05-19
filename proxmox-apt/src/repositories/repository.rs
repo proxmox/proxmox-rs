@@ -23,7 +23,7 @@ pub trait APTRepositoryImpl {
     /// Checks if the repository is the one referenced by the handle.
     fn is_referenced_repository(
         &self,
-        handle: APTRepositoryHandle,
+        handle: &APTRepositoryHandle,
         product: &str,
         suite: &str,
     ) -> bool;
@@ -119,7 +119,7 @@ impl APTRepositoryImpl for APTRepository {
 
     fn is_referenced_repository(
         &self,
-        handle: APTRepositoryHandle,
+        handle: &APTRepositoryHandle,
         product: &str,
         suite: &str,
     ) -> bool {

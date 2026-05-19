@@ -5,9 +5,6 @@ use serde::{Deserialize, Serialize};
 use proxmox_config_digest::ConfigDigest;
 use proxmox_schema::{api, const_regex, ApiStringFormat};
 
-#[cfg(feature = "enum-fallback")]
-use proxmox_fixed_string::FixedString;
-
 const_regex! {
     pub PACKAGE_NAME_REGEX = r"^[a-z0-9][-+.a-z0-9:]+$";
 }
@@ -280,7 +277,7 @@ pub struct APTStandardRepository {
 }
 
 #[api]
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 /// Handles for Proxmox repositories.
 pub enum APTRepositoryHandle {
@@ -299,10 +296,11 @@ pub enum APTRepositoryHandle {
     CephSquidNoSubscription,
     /// Ceph Squid test repository.
     CephSquidTest,
-    #[cfg(feature = "enum-fallback")]
+    /// Unknown repository handle, lossless fallback that lets clients tolerate
+    /// future variants without hard-failing deserialization. The contained
+    /// string is the verbatim wire value.
     #[serde(untagged)]
-    /// Unknwon repository type.
-    UnknownEnumValue(FixedString),
+    Unknown(String),
 }
 
 proxmox_serde::forward_display_to_serialize!(APTRepositoryHandle);

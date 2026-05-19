@@ -21,7 +21,6 @@ serde_json.workspace = true
 rfc822-like = "0.2.1"
 
 proxmox-apt-api-types.workspace = true
-proxmox-fixed-string = { workspace = true, optional = true }
 proxmox-config-digest = { workspace = true, features = ["openssl"] }
 proxmox-sys.workspace = true
 proxmox-pgp.workspace = true
@@ -41,4 +40,3 @@ cache = [
     "dep:log",
     "dep:proxmox-schema",
 ]
-enum-fallback = ["dep:proxmox-fixed-string", "proxmox-apt-api-types/enum-fallback"]

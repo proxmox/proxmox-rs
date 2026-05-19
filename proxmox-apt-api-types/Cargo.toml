@@ -10,13 +10,9 @@ license.workspace = true
 repository.workspace = true
 exclude.workspace = true
 
-[features]
-enum-fallback = ["dep:proxmox-fixed-string"]
-
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
 proxmox-schema = { workspace = true, features = ["api-macro"] }
 proxmox-serde = { workspace = true, features = ["perl"] }
 proxmox-config-digest.workspace = true
-proxmox-fixed-string = { workspace = true, optional = true }
 regex = { workspace = true }

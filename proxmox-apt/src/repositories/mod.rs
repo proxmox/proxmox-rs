@@ -107,7 +107,7 @@ pub fn standard_repositories(
                     continue;
                 }
 
-                if repo.is_referenced_repository(entry.handle, product, &suite.to_string()) {
+                if repo.is_referenced_repository(&entry.handle, product, &suite.to_string()) {
                     entry.status = Some(repo.enabled);
                 }
             }
