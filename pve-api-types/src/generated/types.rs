@@ -839,6 +839,10 @@ fn test_regex_compilation_4() {
             optional: true,
             type: String,
         },
+        "host-arch": {
+            optional: true,
+            type: ClusterResourceHostArch,
+        },
         id: {
             type: String,
             description: "Resource id.",
@@ -998,6 +1002,10 @@ pub struct ClusterResource {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hastate: Option<String>,
 
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "host-arch")]
+    pub host_arch: Option<ClusterResourceHostArch>,
+
     /// Resource id.
     pub id: String,
 
@@ -1124,6 +1132,24 @@ pub struct ClusterResource {
 }
 
 #[api]
+/// The node's CPU architecture. (for type 'node').
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterResourceHostArch {
+    #[serde(rename = "x86_64")]
+    #[default]
+    /// x86_64.
+    X8664,
+    #[serde(rename = "aarch64")]
+    /// aarch64.
+    Aarch64,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterResourceHostArch);
+serde_plain::derive_fromstr_from_deserialize!(ClusterResourceHostArch);
+
+#[api]
 /// Resource type.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum ClusterResourceKind {
@@ -1203,6 +1229,8 @@ const_regex! {
 CREATE_CONTROLLER_ISIS_IFACES_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
 CREATE_CONTROLLER_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F0-9]{2}$"##;
 CREATE_CONTROLLER_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+CREATE_CONTROLLER_NODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
+CREATE_CONTROLLER_PEER_GROUP_NAME_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 
 }
 
@@ -1212,6 +1240,8 @@ fn test_regex_compilation_5() {
     let _: &Regex = &CREATE_CONTROLLER_ISIS_IFACES_RE;
     let _: &Regex = &CREATE_CONTROLLER_ISIS_NET_RE;
     let _: &Regex = &CREATE_CONTROLLER_NODE_RE;
+    let _: &Regex = &CREATE_CONTROLLER_NODES_RE;
+    let _: &Regex = &CREATE_CONTROLLER_PEER_GROUP_NAME_RE;
 }
 #[api(
     properties: {
@@ -1221,12 +1251,17 @@ fn test_regex_compilation_5() {
             optional: true,
             type: Integer,
         },
+        "bgp-mode": {
+            optional: true,
+            type: SdnControllerBgpMode,
+        },
         "bgp-multipath-as-path-relax": {
             default: false,
             optional: true,
         },
         controller: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_controller_id),
+            max_length: 64,
+            min_length: 2,
             type: String,
         },
         ebgp: {
@@ -1257,6 +1292,8 @@ fn test_regex_compilation_5() {
         },
         "isis-net": {
             format: &ApiStringFormat::Pattern(&CREATE_CONTROLLER_ISIS_NET_RE),
+            max_length: 50,
+            min_length: 20,
             optional: true,
             type: String,
         },
@@ -1273,6 +1310,21 @@ fn test_regex_compilation_5() {
             optional: true,
             type: String,
         },
+        nodes: {
+            items: {
+                description: "List item of type pve-node.",
+                format: &ApiStringFormat::Pattern(&CREATE_CONTROLLER_NODES_RE),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        "peer-group-name": {
+            default: "VTEP",
+            format: &ApiStringFormat::Pattern(&CREATE_CONTROLLER_PEER_GROUP_NAME_RE),
+            optional: true,
+            type: String,
+        },
         peers: {
             items: {
                 description: "List item of type ip.",
@@ -1281,6 +1333,16 @@ fn test_regex_compilation_5() {
             },
             optional: true,
             type: Array,
+        },
+        "route-map-in": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_route_map_id),
+            optional: true,
+            type: String,
+        },
+        "route-map-out": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_route_map_id),
+            optional: true,
+            type: String,
         },
         type: {
             type: ListControllersType,
@@ -1294,6 +1356,10 @@ pub struct CreateController {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub asn: Option<u32>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bgp-mode")]
+    pub bgp_mode: Option<SdnControllerBgpMode>,
 
     /// Consider different AS paths of equal length for multipath computation.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
@@ -1347,9 +1413,28 @@ pub struct CreateController {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub node: Option<String>,
 
+    /// List of cluster node names.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodes: Option<Vec<String>>,
+
+    /// Name of the peer group for this EVPN controller
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "peer-group-name")]
+    pub peer_group_name: Option<String>,
+
     /// peers address list.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub peers: Option<Vec<String>>,
+
+    /// Route Map that should be applied for incoming routes
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "route-map-in")]
+    pub route_map_in: Option<String>,
+
+    /// Route Map that should be applied for outgoing routes
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "route-map-out")]
+    pub route_map_out: Option<String>,
 
     #[serde(rename = "type")]
     pub ty: ListControllersType,
@@ -1567,7 +1652,8 @@ pub struct CreateTokenResponseInfo {
             optional: true,
         },
         vnet: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_id),
+            max_length: 8,
+            min_length: 2,
             type: String,
         },
         zone: {
@@ -1743,6 +1829,16 @@ fn test_regex_compilation_6() {
             optional: true,
             type: Array,
         },
+        "secondary-controllers": {
+            items: {
+                description: "Controller ID.",
+                max_length: 64,
+                min_length: 2,
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
         tag: {
             minimum: 0,
             optional: true,
@@ -1769,7 +1865,8 @@ fn test_regex_compilation_6() {
             type: Integer,
         },
         zone: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_sdn_id),
+            max_length: 8,
+            min_length: 2,
             type: String,
         },
     },
@@ -1875,6 +1972,11 @@ pub struct CreateZone {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "rt-import")]
     pub rt_import: Option<Vec<String>>,
+
+    /// Additional controllers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "secondary-controllers")]
+    pub secondary_controllers: Option<Vec<String>>,
 
     /// Service-VLAN Tag (outer VLAN)
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
@@ -3628,6 +3730,10 @@ fn test_regex_compilation_9() {
             default: false,
             optional: true,
         },
+        idmap: {
+            optional: true,
+            type: String,
+        },
         keepattrs: {
             default: false,
             optional: true,
@@ -3679,6 +3785,11 @@ pub struct LxcConfigMp {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backup: Option<bool>,
+
+    /// Map specific container UIDs/GIDs to underlying disk UIDs/GIDs for this
+    /// mount point
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub idmap: Option<String>,
 
     /// Inherit ownership and permissions from the mount point directory.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
@@ -3959,6 +4070,10 @@ fn test_regex_compilation_11() {
             default: false,
             optional: true,
         },
+        idmap: {
+            optional: true,
+            type: String,
+        },
         mountoptions: {
             optional: true,
             type: String,
@@ -3997,6 +4112,11 @@ pub struct LxcConfigRootfs {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub acl: Option<bool>,
+
+    /// Map specific container UIDs/GIDs to underlying disk UIDs/GIDs for this
+    /// mount point
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub idmap: Option<String>,
 
     /// Extra mount options for rootfs/mps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -7853,6 +7973,11 @@ serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceVlanProtocol);
             optional: true,
             type: String,
         },
+        location: {
+            format: &ApiStringFormat::PropertyString(&NodeConfigLocation::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
         "startall-onboot-delay": {
             default: 0,
             maximum: 300,
@@ -7893,6 +8018,11 @@ pub struct NodeConfig {
     /// This can be used to prevent concurrent modifications.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub digest: Option<String>,
+
+    /// The location of the node. Overrides the default from the datacenter
+    /// config.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<String>,
 
     /// Initial delay in seconds, before starting all the Virtual Guests with
     /// on-boot enabled.
@@ -8000,6 +8130,40 @@ pub struct NodeConfigAcmedomain {
     pub plugin: Option<String>,
 }
 
+#[api(
+    properties: {
+        latitude: {
+            maximum: 90.0,
+            minimum: -90.0,
+        },
+        longitude: {
+            maximum: 180.0,
+            minimum: -180.0,
+        },
+        name: {
+            max_length: 128,
+            optional: true,
+            type: String,
+            type_text: "<name>",
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct NodeConfigLocation {
+    /// The latitude of the nodes location in degrees.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    pub latitude: f64,
+
+    /// The longitude of the nodes location in degrees.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    pub longitude: f64,
+
+    /// The name of the location of this node
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+}
+
 #[api]
 /// Return only a specific property from the node configuration.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -8031,6 +8195,9 @@ pub enum NodeConfigProperty {
     #[serde(rename = "description")]
     /// description.
     Description,
+    #[serde(rename = "location")]
+    /// location.
+    Location,
     #[serde(rename = "startall-onboot-delay")]
     /// startall-onboot-delay.
     StartallOnbootDelay,
@@ -9933,6 +10100,12 @@ serde_plain::derive_fromstr_from_deserialize!(PveQmWatchdogModel);
             optional: true,
             type: String,
         },
+        level: {
+            maximum: 4294967295,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
         "phys-bits": {
             format: &ApiStringFormat::VerifyFn(verifiers::verify_pve_phys_bits),
             optional: true,
@@ -9979,6 +10152,16 @@ pub struct PveVmCpuConf {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "hv-vendor-id")]
     pub hv_vendor_id: Option<String>,
+
+    /// Maximum input value for the basic CPUID leaves the guest can query -
+    /// that is the vendor (leaf 0), family/model/stepping and feature bits
+    /// (leaf 1), cache and topology info (leaves 4 and B), and so on.
+    /// Higher-numbered leaves are hidden. Setting '30' is a common workaround
+    /// for Hyper-V boot failures on Windows guests running on recent Intel
+    /// hosts. Only applies when the vCPU architecture is x86_64.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<u32>,
 
     /// The physical memory address bits that are reported to the guest OS.
     /// Should be smaller or equal to the host's. Set to 'host' to use value
@@ -10036,6 +10219,12 @@ pub enum PveVmCpuConfReportedModel {
     CascadelakeServerV5,
     /// ClearwaterForest.
     ClearwaterForest,
+    #[serde(rename = "ClearwaterForest-v2")]
+    /// ClearwaterForest-v2.
+    ClearwaterForestV2,
+    #[serde(rename = "ClearwaterForest-v3")]
+    /// ClearwaterForest-v3.
+    ClearwaterForestV3,
     /// Conroe.
     Conroe,
     /// Cooperlake.
@@ -10070,6 +10259,11 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "cortex-a76")]
     /// cortex-a76.
     CortexA76,
+    #[serde(rename = "cortex-a78ae")]
+    /// cortex-a78ae.
+    CortexA78ae,
+    /// DiamondRapids.
+    DiamondRapids,
     #[serde(rename = "EPYC")]
     /// EPYC.
     Epyc,
@@ -10126,6 +10320,12 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "GraniteRapids-v3")]
     /// GraniteRapids-v3.
     GraniteRapidsV3,
+    #[serde(rename = "GraniteRapids-v4")]
+    /// GraniteRapids-v4.
+    GraniteRapidsV4,
+    #[serde(rename = "GraniteRapids-v5")]
+    /// GraniteRapids-v5.
+    GraniteRapidsV5,
     /// Haswell.
     Haswell,
     #[serde(rename = "Haswell-IBRS")]
@@ -10249,6 +10449,12 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "SapphireRapids-v4")]
     /// SapphireRapids-v4.
     SapphireRapidsV4,
+    #[serde(rename = "SapphireRapids-v5")]
+    /// SapphireRapids-v5.
+    SapphireRapidsV5,
+    #[serde(rename = "SapphireRapids-v6")]
+    /// SapphireRapids-v6.
+    SapphireRapidsV6,
     /// SierraForest.
     SierraForest,
     #[serde(rename = "SierraForest-v2")]
@@ -10257,6 +10463,12 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "SierraForest-v3")]
     /// SierraForest-v3.
     SierraForestV3,
+    #[serde(rename = "SierraForest-v4")]
+    /// SierraForest-v4.
+    SierraForestV4,
+    #[serde(rename = "SierraForest-v5")]
+    /// SierraForest-v5.
+    SierraForestV5,
     #[serde(rename = "Skylake-Client")]
     /// Skylake-Client.
     SkylakeClient,
@@ -10344,7 +10556,7 @@ fn test_regex_compilation_21() {
         },
         arch: {
             optional: true,
-            type: QemuConfigArch,
+            type: ClusterResourceHostArch,
         },
         args: {
             optional: true,
@@ -10754,7 +10966,7 @@ pub struct QemuConfig {
     pub amd_sev: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub arch: Option<QemuConfigArch>,
+    pub arch: Option<ClusterResourceHostArch>,
 
     /// Arbitrary arguments passed to kvm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -11317,16 +11529,12 @@ generate_array_field! {
         enabled: {
             default: false,
         },
-        "freeze-fs-on-backup": {
+        "freeze-fs": {
             default: true,
             optional: true,
         },
         fstrim_cloned_disks: {
             default: false,
-            optional: true,
-        },
-        "guest-fsfreeze": {
-            default: true,
             optional: true,
         },
         type: {
@@ -11343,25 +11551,17 @@ pub struct QemuConfigAgent {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     pub enabled: bool,
 
-    /// Deprecated: Use 'guest-fsfreeze' instead.
-    ///
-    /// Freeze/thaw guest filesystems on backup for consistency.
+    /// Freeze guest filesystems through QGA for consistent disk state on
+    /// operations such as snapshots, backups, replications and clones.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "freeze-fs-on-backup")]
-    pub freeze_fs_on_backup: Option<bool>,
+    #[serde(rename = "freeze-fs")]
+    pub freeze_fs: Option<bool>,
 
     /// Run fstrim after moving a disk or migrating the VM.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fstrim_cloned_disks: Option<bool>,
-
-    /// Whether to issue the guest-fsfreeze-freeze and guest-fsfreeze-thaw QEMU
-    /// guest agent commands.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "guest-fsfreeze")]
-    pub guest_fsfreeze: Option<bool>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "type")]
@@ -11385,23 +11585,6 @@ pub enum QemuConfigAgentType {
 }
 serde_plain::derive_display_from_serialize!(QemuConfigAgentType);
 serde_plain::derive_fromstr_from_deserialize!(QemuConfigAgentType);
-
-#[api]
-/// Virtual processor architecture. Defaults to the host architecture.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum QemuConfigArch {
-    #[serde(rename = "x86_64")]
-    /// x86_64.
-    X8664,
-    #[serde(rename = "aarch64")]
-    /// aarch64.
-    Aarch64,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(QemuConfigArch);
-serde_plain::derive_fromstr_from_deserialize!(QemuConfigArch);
 
 #[api(
     properties: {
@@ -13911,6 +14094,9 @@ pub struct QemuMigratePreconditionsNotAllowedNodesBlockingHaResources {
 /// The reason why the HA resource is blocking the migration.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum QemuMigratePreconditionsNotAllowedNodesBlockingHaResourcesCause {
+    #[serde(rename = "node-affinity")]
+    /// node-affinity.
+    NodeAffinity,
     #[serde(rename = "resource-affinity")]
     /// resource-affinity.
     ResourceAffinity,
@@ -15965,6 +16151,7 @@ const_regex! {
 
 SDN_CONTROLLER_ISIS_IFACES_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
 SDN_CONTROLLER_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F0-9]{2}$"##;
+SDN_CONTROLLER_NODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 
 }
 
@@ -15973,6 +16160,7 @@ fn test_regex_compilation_33() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_ISIS_NET_RE;
+    let _: &Regex = &SDN_CONTROLLER_NODES_RE;
 }
 #[api(
     properties: {
@@ -15981,6 +16169,10 @@ fn test_regex_compilation_33() {
             minimum: 0,
             optional: true,
             type: Integer,
+        },
+        "bgp-mode": {
+            optional: true,
+            type: SdnControllerBgpMode,
         },
         "bgp-multipath-as-relax": {
             default: false,
@@ -16023,6 +16215,15 @@ fn test_regex_compilation_33() {
             optional: true,
             type: String,
         },
+        nodes: {
+            format: &ApiStringFormat::Pattern(&SDN_CONTROLLER_NODES_RE),
+            optional: true,
+            type: String,
+        },
+        "peer-group-name": {
+            optional: true,
+            type: String,
+        },
         peers: {
             optional: true,
             type: String,
@@ -16047,6 +16248,10 @@ pub struct SdnController {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub asn: Option<u32>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bgp-mode")]
+    pub bgp_mode: Option<SdnControllerBgpMode>,
 
     /// Consider different AS paths of equal length for multipath computation.
     /// BGP only.
@@ -16099,6 +16304,15 @@ pub struct SdnController {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub node: Option<String>,
 
+    /// List of cluster node names.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodes: Option<String>,
+
+    /// Name of the peer group for this EVPN controller
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "peer-group-name")]
+    pub peer_group_name: Option<String>,
+
     /// Comma-separated list of the peers IP addresses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub peers: Option<String>,
@@ -16114,10 +16328,33 @@ pub struct SdnController {
     pub ty: ListControllersType,
 }
 
+#[api]
+/// Whether to use eBGP or iBGP. Auto mode chooses depending on BGP controller
+/// or falls back to iBGP.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum SdnControllerBgpMode {
+    #[serde(rename = "auto")]
+    #[default]
+    /// auto.
+    Auto,
+    #[serde(rename = "external")]
+    /// external.
+    External,
+    #[serde(rename = "internal")]
+    /// internal.
+    Internal,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(SdnControllerBgpMode);
+serde_plain::derive_fromstr_from_deserialize!(SdnControllerBgpMode);
+
 const_regex! {
 
 SDN_CONTROLLER_PENDING_ISIS_IFACES_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
 SDN_CONTROLLER_PENDING_ISIS_NET_RE = r##"^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F0-9]{2}$"##;
+SDN_CONTROLLER_PENDING_NODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 
 }
 
@@ -16126,6 +16363,7 @@ fn test_regex_compilation_34() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_NET_RE;
+    let _: &Regex = &SDN_CONTROLLER_PENDING_NODES_RE;
 }
 #[api(
     properties: {
@@ -16134,6 +16372,10 @@ fn test_regex_compilation_34() {
             minimum: 0,
             optional: true,
             type: Integer,
+        },
+        "bgp-mode": {
+            optional: true,
+            type: SdnControllerBgpMode,
         },
         "bgp-multipath-as-relax": {
             default: false,
@@ -16169,6 +16411,15 @@ fn test_regex_compilation_34() {
             optional: true,
             type: String,
         },
+        nodes: {
+            format: &ApiStringFormat::Pattern(&SDN_CONTROLLER_PENDING_NODES_RE),
+            optional: true,
+            type: String,
+        },
+        "peer-group-name": {
+            optional: true,
+            type: String,
+        },
         peers: {
             optional: true,
             type: String,
@@ -16182,6 +16433,10 @@ pub struct SdnControllerPending {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u32")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub asn: Option<u32>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "bgp-mode")]
+    pub bgp_mode: Option<SdnControllerBgpMode>,
 
     /// Consider different AS paths of equal length for multipath computation.
     /// BGP only.
@@ -16226,6 +16481,15 @@ pub struct SdnControllerPending {
     /// Node(s) where this controller is active.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub node: Option<String>,
+
+    /// List of cluster node names.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodes: Option<String>,
+
+    /// Name of the peer group for this EVPN controller
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "peer-group-name")]
+    pub peer_group_name: Option<String>,
 
     /// Comma-separated list of the peers IP addresses.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -16554,6 +16818,16 @@ fn test_regex_compilation_36() {
             optional: true,
             type: String,
         },
+        "secondary-controllers": {
+            items: {
+                description: "Controller ID.",
+                max_length: 64,
+                min_length: 2,
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
         state: {
             optional: true,
             type: SdnObjectState,
@@ -16685,6 +16959,11 @@ pub struct SdnZone {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "rt-import")]
     pub rt_import: Option<String>,
+
+    /// Additional controllers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "secondary-controllers")]
+    pub secondary_controllers: Option<Vec<String>>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub state: Option<SdnObjectState>,
@@ -16861,6 +17140,16 @@ fn test_regex_compilation_37() {
             optional: true,
             type: String,
         },
+        "secondary-controllers": {
+            items: {
+                description: "Controller ID.",
+                max_length: 64,
+                min_length: 2,
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
         tag: {
             minimum: 0,
             optional: true,
@@ -16974,6 +17263,11 @@ pub struct SdnZonePending {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "rt-import")]
     pub rt_import: Option<String>,
+
+    /// Additional controllers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "secondary-controllers")]
+    pub secondary_controllers: Option<Vec<String>>,
 
     /// Service-VLAN Tag (outer VLAN). QinQ zone only
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
@@ -18775,7 +19069,7 @@ fn test_regex_compilation_45() {
         },
         arch: {
             optional: true,
-            type: QemuConfigArch,
+            type: ClusterResourceHostArch,
         },
         args: {
             optional: true,
@@ -19187,7 +19481,7 @@ pub struct UpdateQemuConfig {
     pub amd_sev: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub arch: Option<QemuConfigArch>,
+    pub arch: Option<ClusterResourceHostArch>,
 
     /// Arbitrary arguments passed to kvm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -19689,7 +19983,7 @@ fn test_regex_compilation_46() {
         },
         arch: {
             optional: true,
-            type: QemuConfigArch,
+            type: ClusterResourceHostArch,
         },
         args: {
             optional: true,
@@ -20112,7 +20406,7 @@ pub struct UpdateQemuConfigAsync {
     pub amd_sev: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub arch: Option<QemuConfigArch>,
+    pub arch: Option<ClusterResourceHostArch>,
 
     /// Arbitrary arguments passed to kvm.
     #[serde(default, skip_serializing_if = "Option::is_none")]

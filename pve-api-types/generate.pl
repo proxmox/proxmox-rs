@@ -122,6 +122,7 @@ Schema2Rust::register_format('pve-sdn-bgp-rt' => { code => 'verifiers::verify_sd
 Schema2Rust::register_format('pve-sdn-controller-id' => { code => 'verifiers::verify_sdn_controller_id' });
 Schema2Rust::register_format('pve-sdn-isis-net' => { regex => '^[a-fA-F0-9]{2}(\.[a-fA-F0-9]{4}){3,9}\.[a-fA-F0-9]{2}$' });
 Schema2Rust::register_format('pve-sdn-fabric-id' => { code => 'verifiers::verify_sdn_id' });
+Schema2Rust::register_format('pve-sdn-route-map-id' => { code => 'verifiers::verify_sdn_route_map_id' });
 
 # This is used as both a task status and guest status.
 Schema2Rust::generate_enum('IsRunning', {

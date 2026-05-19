@@ -55,6 +55,10 @@ pub SDN_CONTROLLER_ID = r##"^(?i)[a-z][a-z0-9_-]*[a-z0-9]$"##;
 
 pub SDN_BGP_RT = r##"^(\d+):(\d+)$"##;
 
+pub SDN_ROUTE_MAP_ID = r##"^(?i)[a-z0-9][a-z0-9\-_]{0,30}[a-z0-9]?$"##;
+
+pub SDN_ROUTE_MAP_ID_RESERVED = r##"^(pve_.*|MAP_VTEP_IN|MAP_VTEP_OUT|correct_src)$"##;
+
 pub SCOPED_IP_ALIAS_RE = r##"^(dc/|guest/)?([A-Za-z][A-Za-z0-9\-\_]+)$"##;
 
 }
@@ -284,6 +288,18 @@ pub fn verify_sdn_controller_id(s: &str) -> Result<(), Error> {
 
     if !SDN_CONTROLLER_ID.is_match(s) {
         bail!("SDN controller ID contains illegal characters");
+    }
+
+    Ok(())
+}
+
+pub fn verify_sdn_route_map_id(s: &str) -> Result<(), Error> {
+    if SDN_ROUTE_MAP_ID_RESERVED.is_match(s) {
+        bail!("route map ID '{s}' is currently reserved and cannot be used");
+    }
+
+    if !SDN_ROUTE_MAP_ID.is_match(s) {
+        bail!("route map ID '{s}' contains illegal characters");
     }
 
     Ok(())

@@ -72,7 +72,9 @@
 /// - /cluster/ha/rules
 /// - /cluster/ha/rules/{rule}
 /// - /cluster/ha/status
+/// - /cluster/ha/status/arm-ha
 /// - /cluster/ha/status/current
+/// - /cluster/ha/status/disarm-ha
 /// - /cluster/ha/status/manager_status
 /// - /cluster/jobs
 /// - /cluster/jobs/realm-sync
@@ -107,11 +109,16 @@
 /// - /cluster/notifications/targets
 /// - /cluster/notifications/targets/{name}
 /// - /cluster/notifications/targets/{name}/test
+/// - /cluster/qemu
+/// - /cluster/qemu/cpu-flags
+/// - /cluster/qemu/custom-cpu-models
+/// - /cluster/qemu/custom-cpu-models/{cputype}
 /// - /cluster/replication
 /// - /cluster/replication/{id}
 /// - /cluster/sdn/controllers/{controller}
 /// - /cluster/sdn/dns
 /// - /cluster/sdn/dns/{dns}
+/// - /cluster/sdn/dry-run
 /// - /cluster/sdn/fabrics
 /// - /cluster/sdn/fabrics/all
 /// - /cluster/sdn/fabrics/fabric
@@ -122,6 +129,15 @@
 /// - /cluster/sdn/ipams
 /// - /cluster/sdn/ipams/{ipam}
 /// - /cluster/sdn/ipams/{ipam}/status
+/// - /cluster/sdn/prefix-lists
+/// - /cluster/sdn/prefix-lists/{id}
+/// - /cluster/sdn/prefix-lists/{id}/entries
+/// - /cluster/sdn/prefix-lists/{id}/entries/{url_seq}
+/// - /cluster/sdn/route-maps
+/// - /cluster/sdn/route-maps/entries
+/// - /cluster/sdn/route-maps/entries/{route-map-id}
+/// - /cluster/sdn/route-maps/entries/{route-map-id}/entry
+/// - /cluster/sdn/route-maps/entries/{route-map-id}/entry/{order}
 /// - /cluster/sdn/vnets/{vnet}
 /// - /cluster/sdn/vnets/{vnet}/firewall
 /// - /cluster/sdn/vnets/{vnet}/firewall/options
@@ -329,6 +345,7 @@
 /// - /nodes/{node}/storage/{storage}/file-restore
 /// - /nodes/{node}/storage/{storage}/file-restore/download
 /// - /nodes/{node}/storage/{storage}/file-restore/list
+/// - /nodes/{node}/storage/{storage}/identity
 /// - /nodes/{node}/storage/{storage}/import-metadata
 /// - /nodes/{node}/storage/{storage}/oci-registry-pull
 /// - /nodes/{node}/storage/{storage}/prunebackups
@@ -996,7 +1013,7 @@ pub trait PveClient {
     async fn qemu_cpu_capabilities(
         &self,
         node: &str,
-        arch: Option<QemuConfigArch>,
+        arch: Option<ClusterResourceHostArch>,
     ) -> Result<Vec<QemuCpuModel>, Error> {
         Err(Error::Other("qemu_cpu_capabilities not implemented"))
     }
@@ -2448,7 +2465,7 @@ where
     async fn qemu_cpu_capabilities(
         &self,
         node: &str,
-        arch: Option<QemuConfigArch>,
+        arch: Option<ClusterResourceHostArch>,
     ) -> Result<Vec<QemuCpuModel>, Error> {
         let url = &ApiPathBuilder::new(format!(
             "/api2/extjs/nodes/{}/capabilities/qemu/cpu",
