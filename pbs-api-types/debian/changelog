@@ -1,3 +1,15 @@
+rust-pbs-api-types (1.0.18-1) trixie; urgency=medium
+
+  * derive FromStr for DatastoreTuning so callers can parse the tuning
+    options directly without going through serde.
+
+  * jobs: fix typo in `REMOVE_VANISHED_BACKUPS_SCHEMA` doc string.
+
+  * re-build for proxmox-apt-api-types 3.0; the re-exported APT handle and
+    related types now follow the new struct-based shape.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 19 May 2026 13:30:00 +0200
+
 rust-pbs-api-types (1.0.17-1) trixie; urgency=medium
 
   * node config: add location property.
