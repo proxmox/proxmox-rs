@@ -8,10 +8,9 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
- librust-proxmox-apt-0.99+cache-dev (>= 0.99.6-~~) <!nocheck>,
- librust-proxmox-apt-0.99+default-dev (>= 0.99.6-~~) <!nocheck>,
- librust-proxmox-apt-0.99+enum-fallback-dev (>= 0.99.6-~~) <!nocheck>,
- librust-proxmox-apt-api-types-2+default-dev (>= 2.0.4-~~) <!nocheck>,
+ librust-proxmox-apt-1+cache-dev <!nocheck>,
+ librust-proxmox-apt-1+default-dev <!nocheck>,
+ librust-proxmox-apt-api-types-3+default-dev <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-termcolor-1+default-dev (>= 1.1.2-~~) <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
@@ -28,10 +27,9 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-const-format-0.2+default-dev,
- librust-proxmox-apt-0.99+cache-dev (>= 0.99.6-~~),
- librust-proxmox-apt-0.99+default-dev (>= 0.99.6-~~),
- librust-proxmox-apt-0.99+enum-fallback-dev (>= 0.99.6-~~),
- librust-proxmox-apt-api-types-2+default-dev (>= 2.0.4-~~),
+ librust-proxmox-apt-1+cache-dev,
+ librust-proxmox-apt-1+default-dev,
+ librust-proxmox-apt-api-types-3+default-dev,
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-termcolor-1+default-dev (>= 1.1.2-~~)
 Provides:
@@ -40,7 +38,7 @@ Provides:
  librust-proxmox-upgrade-checks-1+default-dev (= ${binary:Version}),
  librust-proxmox-upgrade-checks-1.0-dev (= ${binary:Version}),
  librust-proxmox-upgrade-checks-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-upgrade-checks-1.0.1-dev (= ${binary:Version}),
- librust-proxmox-upgrade-checks-1.0.1+default-dev (= ${binary:Version})
+ librust-proxmox-upgrade-checks-1.0.2-dev (= ${binary:Version}),
+ librust-proxmox-upgrade-checks-1.0.2+default-dev (= ${binary:Version})
 Description: Helpers to implement checks to help with (major) upgrades of Proxmox products - Rust source code
  Source code for Debianized Rust crate "proxmox-upgrade-checks"

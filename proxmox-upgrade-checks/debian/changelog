@@ -1,3 +1,11 @@
+rust-proxmox-upgrade-checks (1.0.2-1) trixie; urgency=medium
+
+  * re-build for proxmox-apt 1.0 and proxmox-apt-api-types 3.0; the
+    enum-fallback Cargo feature on both crates is gone and no longer
+    requested.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 19 May 2026 13:30:00 +0200
+
 rust-proxmox-upgrade-checks (1.0.1-1) trixie; urgency=medium
 
   * adapt check for the version of the old-package on upgrade now being an
