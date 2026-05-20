@@ -546,6 +546,47 @@ fn test_legacy_unhyphenated_test_component_still_detected() -> Result<(), Error>
     Ok(())
 }
 
+/// PVE 8's unhyphenated `pvetest` (and PBS/PMG equivalents) must be rewritten to their kebab-case
+/// form on the next write so a `apt update` against the PVE 9 archive (which no longer hosts the
+/// legacy path) does not 404.
+#[test]
+fn test_legacy_unhyphenated_test_component_canonicalized_on_write() -> Result<(), Error> {
+    use proxmox_apt::repositories::canonicalize_components_to_standard;
+    use proxmox_apt_api_types::{APTRepository, APTRepositoryFileType, APTRepositoryPackageType};
+
+    let suite = DebianCodename::Bookworm;
+    let suite_str = suite.to_string();
+
+    for (host, slug) in [
+        (HostProduct::Pve, "pve"),
+        (HostProduct::Pbs, "pbs"),
+        (HostProduct::Pmg, "pmg"),
+    ] {
+        let mut legacy_test = APTRepository {
+            types: vec![APTRepositoryPackageType::Deb],
+            uris: vec![format!("http://download.proxmox.com/debian/{slug}")],
+            suites: vec![suite_str.clone()],
+            components: vec![format!("{slug}test")],
+            options: vec![],
+            comment: String::new(),
+            file_type: APTRepositoryFileType::List,
+            enabled: true,
+        };
+        let changed = canonicalize_components_to_standard(&mut legacy_test, &host, &suite);
+        assert!(changed, "{slug}test should report a change after canonicalize");
+        assert_eq!(
+            legacy_test.components,
+            vec![format!("{slug}-test")],
+            "{slug}test must be rewritten to '{slug}-test' for {host:?}",
+        );
+
+        // Idempotent: a second pass on the already-canonical components must report no change.
+        let again = canonicalize_components_to_standard(&mut legacy_test, &host, &suite);
+        assert!(!again, "canonicalize on an already-canonical repo must be a no-op");
+    }
+    Ok(())
+}
+
 /// PDM/PMG must offer the full host-product channel set; pins a future refactor against silent drop.
 #[test]
 fn test_pdm_pmg_host_products_offer_full_channel_set() -> Result<(), Error> {
