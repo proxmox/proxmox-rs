@@ -1474,6 +1474,11 @@ pub trait PveClient {
         Err(Error::Other("set_cluster_firewall_options not implemented"))
     }
 
+    /// Set datacenter options.
+    async fn set_cluster_options(&self, params: UpdateClusterOptions) -> Result<(), Error> {
+        Err(Error::Other("set_cluster_options not implemented"))
+    }
+
     /// Set Firewall options.
     async fn set_lxc_firewall_options(
         &self,
@@ -3577,6 +3582,12 @@ where
         params: UpdateClusterFirewallOptions,
     ) -> Result<(), Error> {
         let url = "/api2/extjs/cluster/firewall/options";
+        self.0.put(url, &params).await?.nodata()
+    }
+
+    /// Set datacenter options.
+    async fn set_cluster_options(&self, params: UpdateClusterOptions) -> Result<(), Error> {
+        let url = "/api2/extjs/cluster/options";
         self.0.put(url, &params).await?.nodata()
     }
 

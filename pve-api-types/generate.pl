@@ -45,6 +45,7 @@ Schema2Rust::register_format('IPorCIDR' => { code => 'verifiers::verify_ip_or_ci
 Schema2Rust::register_format('IPorCIDRorAlias' => { code => 'verifiers::verify_ip_or_cidr_or_alias' });
 
 Schema2Rust::register_format('mac-addr' => { regex => '^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$' });
+Schema2Rust::register_format('mac-prefix' => { regex => '^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){0,2}(?::[a-f0-9]?)?$' });
 Schema2Rust::register_format('pve-acme-alias' => { code => 'verifiers::verify_pve_acme_alias' });
 Schema2Rust::register_format('pve-acme-domain' => { code => 'verifiers::verify_pve_acme_domain' });
 Schema2Rust::register_format('pve-bridge-id' => { regex => '^'.$BRIDGEID_RE.'$' });
@@ -59,7 +60,7 @@ Schema2Rust::register_format('pve-node' => { regex => '^(?i:[a-z0-9](?i:[a-z0-9\
 ##
 Schema2Rust::register_format('disk-size' => { regex => '^(\d+(\.\d+)?)([KMGT])?$' });
 Schema2Rust::register_format('dns-name' => { code => 'verifiers::verify_dns_name' });
-## Schema2Rust::register_format('email' => { code => 'verify_email' });
+Schema2Rust::register_format('email' => { regex => '^[A-Za-z0-9_+~-]+(\.[A-Za-z0-9_+~-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*$' });
 Schema2Rust::register_format('pve-phys-bits' => { code => 'verifiers::verify_pve_phys_bits' });
 Schema2Rust::register_format('pve-qm-bootdev' => { unchecked => 1 });
 Schema2Rust::register_format('pve-qm-bootdisk' => { regex => '^(ide|sata|scsi|virtio|efidisk|tpmstate)\d+$' });
@@ -418,6 +419,7 @@ Schema2Rust::register_format('pve-fw-conntrack-helper' => {
 # options
 # FIXME: to use a better return value than `Value`, we first must fix the return schema there
 api(GET => '/cluster/options', 'cluster_options', 'output-type' => 'serde_json::Value');
+api(PUT => '/cluster/options', 'set_cluster_options', 'param-name' => 'UpdateClusterOptions');
 
 # firewall options
 api(GET => '/cluster/firewall/options', 'cluster_firewall_options', 'return-name' => 'ClusterFirewallOptions');
