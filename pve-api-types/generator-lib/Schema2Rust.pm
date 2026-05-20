@@ -622,7 +622,8 @@ my sub print_method_with_body : prototype($$$$$) {
         my ($arg, $def) = @$url_arg;
         print {$out} "    $arg: $def->{type},\n";
     }
-    print {$out} "    params: $def->{input_type},\n";
+    my $has_body = defined($def->{input_type});
+    print {$out} "    params: $def->{input_type},\n" if $has_body;
     my $output = $def->{output_type} // '()';
     print {$out} ") -> Result<$output, Error> {\n";
     if ($trait) {
@@ -631,7 +632,8 @@ my sub print_method_with_body : prototype($$$$$) {
     }
     # print {$out} "    // self.login().await?;\n";
     print_url($out, $def);
-        my $call = return_expr($def, "self.0.${method}(url, &params).await?");
+        my $body = $has_body ? '&params' : '&serde_json::Value::Null';
+        my $call = return_expr($def, "self.0.${method}(url, $body).await?");
         print {$out} "    $call\n";
     print {$out} "}\n\n";
 }
