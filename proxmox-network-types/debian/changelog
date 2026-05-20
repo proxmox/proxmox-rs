@@ -1,4 +1,4 @@
-rust-proxmox-network-types (1.1.1-1) UNRELEASED; urgency=medium
+rust-proxmox-network-types (1.1.1-1) trixie; urgency=medium
 
   * implement ApiType for endpoints and hostnames to allows those types to be
     used in the section config types for the wireguard fabric, as well as in
