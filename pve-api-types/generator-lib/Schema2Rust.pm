@@ -135,7 +135,8 @@ sub api_to_string : prototype($$$$$) {
         local $API_TYPE_POS = "$API_TYPE_POS/$key";
 
         # We need to quote keys with hyphens or reserved keywords:
-        my $safe_key = (($key =~ /-/) || ($key eq 'macro') || ($key eq 'ref')) ? "\"$key\"" : $key;
+        my $safe_key = (($key =~ /-/) || ($key eq 'macro') || ($key eq 'ref') || ($key eq 'move'))
+            ? "\"$key\"" : $key;
 
         if (exists($API_TYPE_OVERRIDES{$API_TYPE_POS})) {
             $value = $API_TYPE_OVERRIDES{$API_TYPE_POS};
@@ -761,6 +762,7 @@ sub namify_field : prototype($) {
     return 'ty' if $out eq 'type';
     return 'r#macro' if $out eq 'macro';
     return 'r#ref' if $out eq 'ref';
+    return 'r#move' if $out eq 'move';
 
     return $out;
 }
