@@ -83,6 +83,14 @@ sub register_api_extensions : prototype($$) {
     }
 }
 
+our %FORCE_ADDITIONAL_PROPERTIES = ();
+# Force a struct to accept and ignore unknown properties even when its schema
+# declares no additional properties. Keyed by the generated Rust type name.
+sub register_additional_properties : prototype($) {
+    my ($rust_type) = @_;
+    $FORCE_ADDITIONAL_PROPERTIES{$rust_type} = 1;
+}
+
 our $API_TYPE_POS = '';
 my sub api_to_string : prototype($$$$$);
 # $derive_optional => For structs only, if an api entry contains *only* the 'optional' flag then
@@ -1556,6 +1564,7 @@ EOF
     }
 
     my $additional = delete($schema->{additionalProperties}); # default is 1 urrrgh
+    $additional = 1 if $FORCE_ADDITIONAL_PROPERTIES{$name_hint};
     if (!defined($additional)) {
         # We don't know whether to just ignore it or actually scatter
         # `HashMap<String, serde_json::Value>` entries throughout the code.
