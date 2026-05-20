@@ -47,10 +47,6 @@
 /// - /cluster/bulk-action/guest/start
 /// - /cluster/bulk-action/guest/suspend
 /// - /cluster/ceph
-/// - /cluster/ceph/flags
-/// - /cluster/ceph/flags/{flag}
-/// - /cluster/ceph/metadata
-/// - /cluster/ceph/status
 /// - /cluster/config
 /// - /cluster/config/apiversion
 /// - /cluster/config/nodes
@@ -158,36 +154,6 @@
 /// - /nodes/{node}/capabilities/qemu/migration
 /// - /nodes/{node}/ceph
 /// - /nodes/{node}/ceph/cfg
-/// - /nodes/{node}/ceph/cfg/db
-/// - /nodes/{node}/ceph/cfg/raw
-/// - /nodes/{node}/ceph/cfg/value
-/// - /nodes/{node}/ceph/cmd-safety
-/// - /nodes/{node}/ceph/crush
-/// - /nodes/{node}/ceph/fs
-/// - /nodes/{node}/ceph/fs/{name}
-/// - /nodes/{node}/ceph/init
-/// - /nodes/{node}/ceph/log
-/// - /nodes/{node}/ceph/mds
-/// - /nodes/{node}/ceph/mds/{name}
-/// - /nodes/{node}/ceph/mgr
-/// - /nodes/{node}/ceph/mgr/{id}
-/// - /nodes/{node}/ceph/mon
-/// - /nodes/{node}/ceph/mon/{monid}
-/// - /nodes/{node}/ceph/osd
-/// - /nodes/{node}/ceph/osd/{osdid}
-/// - /nodes/{node}/ceph/osd/{osdid}/in
-/// - /nodes/{node}/ceph/osd/{osdid}/lv-info
-/// - /nodes/{node}/ceph/osd/{osdid}/metadata
-/// - /nodes/{node}/ceph/osd/{osdid}/out
-/// - /nodes/{node}/ceph/osd/{osdid}/scrub
-/// - /nodes/{node}/ceph/pool
-/// - /nodes/{node}/ceph/pool/{name}
-/// - /nodes/{node}/ceph/pool/{name}/status
-/// - /nodes/{node}/ceph/restart
-/// - /nodes/{node}/ceph/rules
-/// - /nodes/{node}/ceph/start
-/// - /nodes/{node}/ceph/status
-/// - /nodes/{node}/ceph/stop
 /// - /nodes/{node}/certificates
 /// - /nodes/{node}/certificates/acme
 /// - /nodes/{node}/certificates/acme/certificate
@@ -374,6 +340,44 @@ pub trait PveClient {
         Err(Error::Other("acquire_sdn_lock not implemented"))
     }
 
+    /// ceph osd in
+    async fn ceph_osd_in(&self, node: &str, osdid: i64) -> Result<(), Error> {
+        Err(Error::Other("ceph_osd_in not implemented"))
+    }
+
+    /// ceph osd out
+    async fn ceph_osd_out(&self, node: &str, osdid: i64) -> Result<(), Error> {
+        Err(Error::Other("ceph_osd_out not implemented"))
+    }
+
+    /// Instruct the OSD to scrub.
+    async fn ceph_osd_scrub(
+        &self,
+        node: &str,
+        osdid: i64,
+        params: CephOsdScrub,
+    ) -> Result<(), Error> {
+        Err(Error::Other("ceph_osd_scrub not implemented"))
+    }
+
+    /// get the status of all ceph flags
+    async fn cluster_ceph_flags(&self) -> Result<Vec<CephFlagInfo>, Error> {
+        Err(Error::Other("cluster_ceph_flags not implemented"))
+    }
+
+    /// Get ceph metadata.
+    async fn cluster_ceph_metadata(
+        &self,
+        scope: Option<ClusterCephMetadataScope>,
+    ) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("cluster_ceph_metadata not implemented"))
+    }
+
+    /// Get ceph status.
+    async fn cluster_ceph_status(&self) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("cluster_ceph_status not implemented"))
+    }
+
     /// Get information needed to join this cluster over the connected node.
     async fn cluster_config_join(&self, node: Option<String>) -> Result<ClusterJoinInfo, Error> {
         Err(Error::Other("cluster_config_join not implemented"))
@@ -450,6 +454,52 @@ pub trait PveClient {
     /// Get cluster status information.
     async fn cluster_status(&self) -> Result<Vec<ClusterNodeStatus>, Error> {
         Err(Error::Other("cluster_status not implemented"))
+    }
+
+    /// Create a Ceph filesystem
+    async fn create_ceph_fs(
+        &self,
+        node: &str,
+        name: &str,
+        params: CreateCephFs,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("create_ceph_fs not implemented"))
+    }
+
+    /// Create Ceph Metadata Server (MDS)
+    async fn create_ceph_mds(
+        &self,
+        node: &str,
+        name: &str,
+        params: CreateCephMds,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("create_ceph_mds not implemented"))
+    }
+
+    /// Create Ceph Manager
+    async fn create_ceph_mgr(&self, node: &str, id: &str) -> Result<PveUpid, Error> {
+        Err(Error::Other("create_ceph_mgr not implemented"))
+    }
+
+    /// Create a Ceph Monitor. Also auto-creates a Manager for the first
+    /// monitor.
+    async fn create_ceph_mon(
+        &self,
+        node: &str,
+        monid: &str,
+        params: CreateCephMon,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("create_ceph_mon not implemented"))
+    }
+
+    /// Create OSD
+    async fn create_ceph_osd(&self, node: &str, params: CreateCephOsd) -> Result<PveUpid, Error> {
+        Err(Error::Other("create_ceph_osd not implemented"))
+    }
+
+    /// Create Ceph pool
+    async fn create_ceph_pool(&self, node: &str, params: CreateCephPool) -> Result<PveUpid, Error> {
+        Err(Error::Other("create_ceph_pool not implemented"))
     }
 
     /// Create IP or Network Alias.
@@ -661,9 +711,145 @@ pub trait PveClient {
         Err(Error::Other("delete_token not implemented"))
     }
 
+    /// Destroy a Ceph filesystem. Refuses if any PVE storage entry of type
+    /// 'cephfs' still references the filesystem and is not disabled. Optionally
+    /// also removes the storage entries and/or the underlying metadata and data
+    /// pools.
+    async fn destroy_ceph_fs(
+        &self,
+        node: &str,
+        name: &str,
+        params: DestroyCephFs,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("destroy_ceph_fs not implemented"))
+    }
+
+    /// Destroy Ceph Metadata Server
+    async fn destroy_ceph_mds(&self, node: &str, name: &str) -> Result<PveUpid, Error> {
+        Err(Error::Other("destroy_ceph_mds not implemented"))
+    }
+
+    /// Destroy Ceph Manager.
+    async fn destroy_ceph_mgr(&self, node: &str, id: &str) -> Result<PveUpid, Error> {
+        Err(Error::Other("destroy_ceph_mgr not implemented"))
+    }
+
+    /// Destroy a Ceph Monitor. Refuses to remove the last monitor of the
+    /// cluster. Does not destroy any Manager on the same node; use
+    /// /nodes/{node}/ceph/mgr/{id} for that.
+    async fn destroy_ceph_mon(&self, node: &str, monid: &str) -> Result<PveUpid, Error> {
+        Err(Error::Other("destroy_ceph_mon not implemented"))
+    }
+
+    /// Destroy OSD
+    async fn destroy_ceph_osd(
+        &self,
+        node: &str,
+        osdid: i64,
+        params: DestroyCephOsd,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("destroy_ceph_osd not implemented"))
+    }
+
+    /// Destroy pool
+    async fn destroy_ceph_pool(
+        &self,
+        node: &str,
+        name: &str,
+        params: DestroyCephPool,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("destroy_ceph_pool not implemented"))
+    }
+
     /// Get APT repository information.
     async fn get_apt_repositories(&self, node: &str) -> Result<APTRepositoriesResult, Error> {
         Err(Error::Other("get_apt_repositories not implemented"))
+    }
+
+    /// Get the Ceph configuration database.
+    async fn get_ceph_cfg_db(&self, node: &str) -> Result<Vec<CephConfigDbEntry>, Error> {
+        Err(Error::Other("get_ceph_cfg_db not implemented"))
+    }
+
+    /// Get the Ceph configuration file.
+    async fn get_ceph_cfg_raw(&self, node: &str) -> Result<String, Error> {
+        Err(Error::Other("get_ceph_cfg_raw not implemented"))
+    }
+
+    /// Get configured values from either ceph.conf or the mon config DB.
+    /// Underscores in section and key names are normalised to hyphens in the
+    /// response, regardless of how they're written in the source.
+    async fn get_ceph_cfg_value(
+        &self,
+        node: &str,
+        config_keys: String,
+    ) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("get_ceph_cfg_value not implemented"))
+    }
+
+    /// Heuristical check if it is safe to perform an action.
+    async fn get_ceph_cmd_safety(
+        &self,
+        node: &str,
+        action: GetCephCmdSafetyAction,
+        id: String,
+        service: GetCephCmdSafetyService,
+    ) -> Result<CephCmdSafety, Error> {
+        Err(Error::Other("get_ceph_cmd_safety not implemented"))
+    }
+
+    /// Get OSD crush map
+    async fn get_ceph_crush(&self, node: &str) -> Result<String, Error> {
+        Err(Error::Other("get_ceph_crush not implemented"))
+    }
+
+    /// Get the status of a specific ceph flag.
+    async fn get_ceph_flag(&self, flag: CephFlagInfoName) -> Result<bool, Error> {
+        Err(Error::Other("get_ceph_flag not implemented"))
+    }
+
+    /// Read ceph log
+    async fn get_ceph_log(
+        &self,
+        node: &str,
+        limit: Option<u64>,
+        start: Option<u64>,
+    ) -> Result<ApiResponseData<Vec<CephLogLine>>, Error> {
+        Err(Error::Other("get_ceph_log not implemented"))
+    }
+
+    /// Get OSD volume details
+    async fn get_ceph_osd_lv_info(
+        &self,
+        node: &str,
+        osdid: i64,
+        ty: Option<CephOsdMetadataDevicesDevice>,
+    ) -> Result<CephOsdLvInfo, Error> {
+        Err(Error::Other("get_ceph_osd_lv_info not implemented"))
+    }
+
+    /// Get OSD details
+    async fn get_ceph_osd_metadata(
+        &self,
+        node: &str,
+        osdid: i64,
+    ) -> Result<CephOsdMetadata, Error> {
+        Err(Error::Other("get_ceph_osd_metadata not implemented"))
+    }
+
+    /// Get Ceph osd list/tree.
+    async fn get_ceph_osd_tree(&self, node: &str) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("get_ceph_osd_tree not implemented"))
+    }
+
+    /// Show the current pool status.
+    async fn get_ceph_pool_status(
+        &self,
+        node: &str,
+        name: &str,
+        verbose: Option<bool>,
+    ) -> Result<CephPoolStatus, Error> {
+        Err(Error::Other("get_ceph_pool_status not implemented"))
     }
 
     /// Get package changelogs.
@@ -722,9 +908,48 @@ pub trait PveClient {
         Err(Error::Other("get_zone_ip_vrf not implemented"))
     }
 
+    /// Create the initial Ceph default configuration and set up symlinks.
+    /// Idempotent on re-call: if a [global] section already exists in
+    /// ceph.conf, the existing fsid / auth / pool defaults are preserved and
+    /// most parameters are silently ignored.
+    async fn init_ceph(&self, node: &str, params: InitCeph) -> Result<(), Error> {
+        Err(Error::Other("init_ceph not implemented"))
+    }
+
     /// List available updates.
     async fn list_available_updates(&self, node: &str) -> Result<Vec<AptUpdateInfo>, Error> {
         Err(Error::Other("list_available_updates not implemented"))
+    }
+
+    /// Directory index.
+    async fn list_ceph_fs(&self, node: &str) -> Result<Vec<CephFs>, Error> {
+        Err(Error::Other("list_ceph_fs not implemented"))
+    }
+
+    /// MDS directory index.
+    async fn list_ceph_mds(&self, node: &str) -> Result<Vec<CephMds>, Error> {
+        Err(Error::Other("list_ceph_mds not implemented"))
+    }
+
+    /// MGR directory index.
+    async fn list_ceph_mgr(&self, node: &str) -> Result<Vec<CephMgr>, Error> {
+        Err(Error::Other("list_ceph_mgr not implemented"))
+    }
+
+    /// Get Ceph monitor list.
+    async fn list_ceph_mon(&self, node: &str) -> Result<Vec<CephMon>, Error> {
+        Err(Error::Other("list_ceph_mon not implemented"))
+    }
+
+    /// List all pools and their settings (which are settable by the POST/PUT
+    /// endpoints).
+    async fn list_ceph_pools(&self, node: &str) -> Result<Vec<CephPool>, Error> {
+        Err(Error::Other("list_ceph_pools not implemented"))
+    }
+
+    /// List ceph rules.
+    async fn list_ceph_rules(&self, node: &str) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("list_ceph_rules not implemented"))
     }
 
     /// List rules.
@@ -969,6 +1194,13 @@ pub trait PveClient {
         Err(Error::Other("migrate_qemu not implemented"))
     }
 
+    /// Get the Ceph cluster status (raw 'ceph status' output). The response is
+    /// cluster-wide and identical to /cluster/ceph/status; this node-level
+    /// alias exists for operator convenience.
+    async fn node_ceph_status(&self, node: &str) -> Result<serde_json::Value, Error> {
+        Err(Error::Other("node_ceph_status not implemented"))
+    }
+
     /// Get node configuration options.
     async fn node_config(
         &self,
@@ -1197,6 +1429,15 @@ pub trait PveClient {
         Err(Error::Other("remote_migrate_qemu not implemented"))
     }
 
+    /// Restart ceph services.
+    async fn restart_ceph_services(
+        &self,
+        node: &str,
+        params: RestartCephServices,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("restart_ceph_services not implemented"))
+    }
+
     /// Rollback pending changes to SDN configuration
     async fn rollback_sdn_changes(&self, params: RollbackSdn) -> Result<(), Error> {
         Err(Error::Other("rollback_sdn_changes not implemented"))
@@ -1205,6 +1446,24 @@ pub trait PveClient {
     /// Apply sdn controller changes && reload.
     async fn sdn_apply(&self, params: ReloadSdn) -> Result<PveUpid, Error> {
         Err(Error::Other("sdn_apply not implemented"))
+    }
+
+    /// Set/Unset multiple Ceph flags at once. Each flag is a top-level optional
+    /// boolean: passing true sets the flag, false unsets it, omitting it leaves
+    /// the current state untouched. Runs as a worker task; returns a UPID to
+    /// follow.
+    async fn set_ceph_flags(&self, params: SetCephFlags) -> Result<PveUpid, Error> {
+        Err(Error::Other("set_ceph_flags not implemented"))
+    }
+
+    /// Change POOL settings
+    async fn set_ceph_pool(
+        &self,
+        node: &str,
+        name: &str,
+        params: SetCephPool,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("set_ceph_pool not implemented"))
     }
 
     /// Set Firewall options.
@@ -1272,6 +1531,15 @@ pub trait PveClient {
         Err(Error::Other("shutdown_qemu_async not implemented"))
     }
 
+    /// Start ceph services.
+    async fn start_ceph_services(
+        &self,
+        node: &str,
+        params: StartCephServices,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("start_ceph_services not implemented"))
+    }
+
     /// Start the container.
     async fn start_lxc_async(
         &self,
@@ -1290,6 +1558,15 @@ pub trait PveClient {
         params: StartQemu,
     ) -> Result<PveUpid, Error> {
         Err(Error::Other("start_qemu_async not implemented"))
+    }
+
+    /// Stop ceph services.
+    async fn stop_ceph_services(
+        &self,
+        node: &str,
+        params: StopCephServices,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("stop_ceph_services not implemented"))
     }
 
     /// Stop the container. This will abruptly stop all processes running in the
@@ -1333,6 +1610,16 @@ pub trait PveClient {
         params: AptUpdateParams,
     ) -> Result<PveUpid, Error> {
         Err(Error::Other("update_apt_database not implemented"))
+    }
+
+    /// Set or clear (unset) a specific Ceph flag. Runs synchronously (unlike
+    /// the bulk PUT /cluster/ceph/flags endpoint, which forks a worker task).
+    async fn update_ceph_flag(
+        &self,
+        flag: CephFlagInfoName,
+        params: UpdateCephFlag,
+    ) -> Result<(), Error> {
+        Err(Error::Other("update_ceph_flag not implemented"))
     }
 
     /// Update IP or Network alias.
@@ -1434,6 +1721,64 @@ where
     async fn acquire_sdn_lock(&self, params: CreateSdnLock) -> Result<String, Error> {
         let url = "/api2/extjs/cluster/sdn/lock";
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// ceph osd in
+    async fn ceph_osd_in(&self, node: &str, osdid: i64) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/osd/{}/in",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            osdid
+        );
+        self.0.post(url, &serde_json::Value::Null).await?.nodata()
+    }
+
+    /// ceph osd out
+    async fn ceph_osd_out(&self, node: &str, osdid: i64) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/osd/{}/out",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            osdid
+        );
+        self.0.post(url, &serde_json::Value::Null).await?.nodata()
+    }
+
+    /// Instruct the OSD to scrub.
+    async fn ceph_osd_scrub(
+        &self,
+        node: &str,
+        osdid: i64,
+        params: CephOsdScrub,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/osd/{}/scrub",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            osdid
+        );
+        self.0.post(url, &params).await?.nodata()
+    }
+
+    /// get the status of all ceph flags
+    async fn cluster_ceph_flags(&self) -> Result<Vec<CephFlagInfo>, Error> {
+        let url = "/api2/extjs/cluster/ceph/flags";
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get ceph metadata.
+    async fn cluster_ceph_metadata(
+        &self,
+        scope: Option<ClusterCephMetadataScope>,
+    ) -> Result<serde_json::Value, Error> {
+        let url = &ApiPathBuilder::new("/api2/extjs/cluster/ceph/metadata")
+            .maybe_arg("scope", &scope)
+            .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get ceph status.
+    async fn cluster_ceph_status(&self) -> Result<serde_json::Value, Error> {
+        let url = "/api2/extjs/cluster/ceph/status";
+        Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
     /// Get information needed to join this cluster over the connected node.
@@ -1542,6 +1887,85 @@ where
     async fn cluster_status(&self) -> Result<Vec<ClusterNodeStatus>, Error> {
         let url = "/api2/extjs/cluster/status";
         Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Create a Ceph filesystem
+    async fn create_ceph_fs(
+        &self,
+        node: &str,
+        name: &str,
+        params: CreateCephFs,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/fs/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Create Ceph Metadata Server (MDS)
+    async fn create_ceph_mds(
+        &self,
+        node: &str,
+        name: &str,
+        params: CreateCephMds,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/mds/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Create Ceph Manager
+    async fn create_ceph_mgr(&self, node: &str, id: &str) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/mgr/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(id.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self
+            .0
+            .post(url, &serde_json::Value::Null)
+            .await?
+            .expect_json()?
+            .data)
+    }
+
+    /// Create a Ceph Monitor. Also auto-creates a Manager for the first
+    /// monitor.
+    async fn create_ceph_mon(
+        &self,
+        node: &str,
+        monid: &str,
+        params: CreateCephMon,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/mon/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(monid.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Create OSD
+    async fn create_ceph_osd(&self, node: &str, params: CreateCephOsd) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/osd",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Create Ceph pool
+    async fn create_ceph_pool(&self, node: &str, params: CreateCephPool) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/pool",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
     /// Create IP or Network Alias.
@@ -1866,12 +2290,263 @@ where
         self.0.delete(url).await?.nodata()
     }
 
+    /// Destroy a Ceph filesystem. Refuses if any PVE storage entry of type
+    /// 'cephfs' still references the filesystem and is not disabled. Optionally
+    /// also removes the storage entries and/or the underlying metadata and data
+    /// pools.
+    async fn destroy_ceph_fs(
+        &self,
+        node: &str,
+        name: &str,
+        params: DestroyCephFs,
+    ) -> Result<PveUpid, Error> {
+        let DestroyCephFs {
+            remove_pools: p_remove_pools,
+            remove_storages: p_remove_storages,
+        } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/ceph/fs/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_bool_arg("remove-pools", p_remove_pools)
+        .maybe_bool_arg("remove-storages", p_remove_storages)
+        .build();
+        Ok(self.0.delete(url).await?.expect_json()?.data)
+    }
+
+    /// Destroy Ceph Metadata Server
+    async fn destroy_ceph_mds(&self, node: &str, name: &str) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/mds/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.delete(url).await?.expect_json()?.data)
+    }
+
+    /// Destroy Ceph Manager.
+    async fn destroy_ceph_mgr(&self, node: &str, id: &str) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/mgr/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(id.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.delete(url).await?.expect_json()?.data)
+    }
+
+    /// Destroy a Ceph Monitor. Refuses to remove the last monitor of the
+    /// cluster. Does not destroy any Manager on the same node; use
+    /// /nodes/{node}/ceph/mgr/{id} for that.
+    async fn destroy_ceph_mon(&self, node: &str, monid: &str) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/mon/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(monid.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.delete(url).await?.expect_json()?.data)
+    }
+
+    /// Destroy OSD
+    async fn destroy_ceph_osd(
+        &self,
+        node: &str,
+        osdid: i64,
+        params: DestroyCephOsd,
+    ) -> Result<PveUpid, Error> {
+        let DestroyCephOsd { cleanup: p_cleanup } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/ceph/osd/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            osdid
+        ))
+        .maybe_bool_arg("cleanup", p_cleanup)
+        .build();
+        Ok(self.0.delete(url).await?.expect_json()?.data)
+    }
+
+    /// Destroy pool
+    async fn destroy_ceph_pool(
+        &self,
+        node: &str,
+        name: &str,
+        params: DestroyCephPool,
+    ) -> Result<PveUpid, Error> {
+        let DestroyCephPool {
+            force: p_force,
+            remove_ecprofile: p_remove_ecprofile,
+            remove_storages: p_remove_storages,
+        } = params;
+
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/ceph/pool/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_bool_arg("force", p_force)
+        .maybe_bool_arg("remove_ecprofile", p_remove_ecprofile)
+        .maybe_bool_arg("remove_storages", p_remove_storages)
+        .build();
+        Ok(self.0.delete(url).await?.expect_json()?.data)
+    }
+
     /// Get APT repository information.
     async fn get_apt_repositories(&self, node: &str) -> Result<APTRepositoriesResult, Error> {
         let url = &format!(
             "/api2/extjs/nodes/{}/apt/repositories",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get the Ceph configuration database.
+    async fn get_ceph_cfg_db(&self, node: &str) -> Result<Vec<CephConfigDbEntry>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/cfg/db",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get the Ceph configuration file.
+    async fn get_ceph_cfg_raw(&self, node: &str) -> Result<String, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/cfg/raw",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get configured values from either ceph.conf or the mon config DB.
+    /// Underscores in section and key names are normalised to hyphens in the
+    /// response, regardless of how they're written in the source.
+    async fn get_ceph_cfg_value(
+        &self,
+        node: &str,
+        config_keys: String,
+    ) -> Result<serde_json::Value, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/ceph/cfg/value",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .arg("config-keys", &config_keys)
+        .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Heuristical check if it is safe to perform an action.
+    async fn get_ceph_cmd_safety(
+        &self,
+        node: &str,
+        action: GetCephCmdSafetyAction,
+        id: String,
+        service: GetCephCmdSafetyService,
+    ) -> Result<CephCmdSafety, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/ceph/cmd-safety",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .arg("action", &action)
+        .arg("id", &id)
+        .arg("service", &service)
+        .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get OSD crush map
+    async fn get_ceph_crush(&self, node: &str) -> Result<String, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/crush",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get the status of a specific ceph flag.
+    async fn get_ceph_flag(&self, flag: CephFlagInfoName) -> Result<bool, Error> {
+        let url = &format!(
+            "/api2/extjs/cluster/ceph/flags/{}",
+            percent_encode(
+                flag.to_string().as_bytes(),
+                percent_encoding::NON_ALPHANUMERIC
+            )
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Read ceph log
+    async fn get_ceph_log(
+        &self,
+        node: &str,
+        limit: Option<u64>,
+        start: Option<u64>,
+    ) -> Result<ApiResponseData<Vec<CephLogLine>>, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/ceph/log",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_arg("limit", &limit)
+        .maybe_arg("start", &start)
+        .build();
+        self.0.get(url).await?.expect_json()
+    }
+
+    /// Get OSD volume details
+    async fn get_ceph_osd_lv_info(
+        &self,
+        node: &str,
+        osdid: i64,
+        ty: Option<CephOsdMetadataDevicesDevice>,
+    ) -> Result<CephOsdLvInfo, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/ceph/osd/{}/lv-info",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            osdid
+        ))
+        .maybe_arg("type", &ty)
+        .build();
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get OSD details
+    async fn get_ceph_osd_metadata(
+        &self,
+        node: &str,
+        osdid: i64,
+    ) -> Result<CephOsdMetadata, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/osd/{}/metadata",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            osdid
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get Ceph osd list/tree.
+    async fn get_ceph_osd_tree(&self, node: &str) -> Result<serde_json::Value, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/osd",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Show the current pool status.
+    async fn get_ceph_pool_status(
+        &self,
+        node: &str,
+        name: &str,
+        verbose: Option<bool>,
+    ) -> Result<CephPoolStatus, Error> {
+        let url = &ApiPathBuilder::new(format!(
+            "/api2/extjs/nodes/{}/ceph/pool/{}/status",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        ))
+        .maybe_bool_arg("verbose", verbose)
+        .build();
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
@@ -1998,10 +2673,77 @@ where
         Ok(self.0.get(url).await?.expect_json()?.data)
     }
 
+    /// Create the initial Ceph default configuration and set up symlinks.
+    /// Idempotent on re-call: if a [global] section already exists in
+    /// ceph.conf, the existing fsid / auth / pool defaults are preserved and
+    /// most parameters are silently ignored.
+    async fn init_ceph(&self, node: &str, params: InitCeph) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/init",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        self.0.post(url, &params).await?.nodata()
+    }
+
     /// List available updates.
     async fn list_available_updates(&self, node: &str) -> Result<Vec<AptUpdateInfo>, Error> {
         let url = &format!(
             "/api2/extjs/nodes/{}/apt/update",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Directory index.
+    async fn list_ceph_fs(&self, node: &str) -> Result<Vec<CephFs>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/fs",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// MDS directory index.
+    async fn list_ceph_mds(&self, node: &str) -> Result<Vec<CephMds>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/mds",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// MGR directory index.
+    async fn list_ceph_mgr(&self, node: &str) -> Result<Vec<CephMgr>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/mgr",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// Get Ceph monitor list.
+    async fn list_ceph_mon(&self, node: &str) -> Result<Vec<CephMon>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/mon",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List all pools and their settings (which are settable by the POST/PUT
+    /// endpoints).
+    async fn list_ceph_pools(&self, node: &str) -> Result<Vec<CephPool>, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/pool",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
+    /// List ceph rules.
+    async fn list_ceph_rules(&self, node: &str) -> Result<serde_json::Value, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/rules",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         Ok(self.0.get(url).await?.expect_json()?.data)
@@ -2394,6 +3136,17 @@ where
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
+    /// Get the Ceph cluster status (raw 'ceph status' output). The response is
+    /// cluster-wide and identical to /cluster/ceph/status; this node-level
+    /// alias exists for operator convenience.
+    async fn node_ceph_status(&self, node: &str) -> Result<serde_json::Value, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/status",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.get(url).await?.expect_json()?.data)
+    }
+
     /// Get node configuration options.
     async fn node_config(
         &self,
@@ -2764,6 +3517,19 @@ where
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
+    /// Restart ceph services.
+    async fn restart_ceph_services(
+        &self,
+        node: &str,
+        params: RestartCephServices,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/restart",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
     /// Rollback pending changes to SDN configuration
     async fn rollback_sdn_changes(&self, params: RollbackSdn) -> Result<(), Error> {
         let url = "/api2/extjs/cluster/sdn/rollback";
@@ -2773,6 +3539,30 @@ where
     /// Apply sdn controller changes && reload.
     async fn sdn_apply(&self, params: ReloadSdn) -> Result<PveUpid, Error> {
         let url = "/api2/extjs/cluster/sdn";
+        Ok(self.0.put(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Set/Unset multiple Ceph flags at once. Each flag is a top-level optional
+    /// boolean: passing true sets the flag, false unsets it, omitting it leaves
+    /// the current state untouched. Runs as a worker task; returns a UPID to
+    /// follow.
+    async fn set_ceph_flags(&self, params: SetCephFlags) -> Result<PveUpid, Error> {
+        let url = "/api2/extjs/cluster/ceph/flags";
+        Ok(self.0.put(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Change POOL settings
+    async fn set_ceph_pool(
+        &self,
+        node: &str,
+        name: &str,
+        params: SetCephPool,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/pool/{}",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            percent_encode(name.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
         Ok(self.0.put(url, &params).await?.expect_json()?.data)
     }
 
@@ -2870,6 +3660,19 @@ where
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
 
+    /// Start ceph services.
+    async fn start_ceph_services(
+        &self,
+        node: &str,
+        params: StartCephServices,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/start",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
     /// Start the container.
     async fn start_lxc_async(
         &self,
@@ -2896,6 +3699,19 @@ where
             "/api2/extjs/nodes/{}/qemu/{}/status/start",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
             vmid
+        );
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Stop ceph services.
+    async fn stop_ceph_services(
+        &self,
+        node: &str,
+        params: StopCephServices,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/ceph/stop",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
@@ -2965,6 +3781,23 @@ where
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Set or clear (unset) a specific Ceph flag. Runs synchronously (unlike
+    /// the bulk PUT /cluster/ceph/flags endpoint, which forks a worker task).
+    async fn update_ceph_flag(
+        &self,
+        flag: CephFlagInfoName,
+        params: UpdateCephFlag,
+    ) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/cluster/ceph/flags/{}",
+            percent_encode(
+                flag.to_string().as_bytes(),
+                percent_encoding::NON_ALPHANUMERIC
+            )
+        );
+        self.0.put(url, &params).await?.nodata()
     }
 
     /// Update IP or Network alias.

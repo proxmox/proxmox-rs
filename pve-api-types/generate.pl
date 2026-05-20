@@ -582,6 +582,97 @@ api(POST => '/cluster/sdn/rollback', 'rollback_sdn_changes', 'param-name' => 'Ro
 
 api(POST => '/nodes/{node}/termproxy', 'node_shell_termproxy', 'param-name' => 'NodeShellTermproxy', 'return-name' => 'NodeShellTicket');
 
+# Ceph: cluster-wide read endpoints
+# /cluster/ceph/metadata's per-daemon hashes are declared as
+# `additionalProperties => {SCHEMA}` which the generator turns into
+# `HashMap<String, SubStruct>` fields - but the api macro then complains because
+# those fields are not listed in the `#[api()]` properties block. Leave as Value
+# until the generator can populate the api block for that shape.
+api(GET => '/cluster/ceph/metadata', 'cluster_ceph_metadata', 'param-name' => 'GetClusterCephMetadata', 'output-type' => 'serde_json::Value');
+# /cluster/ceph/status returns the raw `ceph status` JSON; the schema declares an
+# untyped object so we keep this as a Value until the upstream tightens it.
+api(GET => '/cluster/ceph/status', 'cluster_ceph_status', 'output-type' => 'serde_json::Value');
+api(GET => '/cluster/ceph/flags', 'cluster_ceph_flags', 'return-name' => 'CephFlagInfo');
+Schema2Rust::derive('CephFlagInfo' => 'Clone', 'PartialEq');
+api(GET => '/cluster/ceph/flags/{flag}', 'get_ceph_flag', 'output-type' => 'bool');
+# /cluster/ceph/flags single-flag update is synchronous, the bulk variant forks a worker task
+api(PUT => '/cluster/ceph/flags/{flag}', 'update_ceph_flag', 'param-name' => 'UpdateCephFlag');
+api(PUT => '/cluster/ceph/flags', 'set_ceph_flags', 'param-name' => 'SetCephFlags', 'output-type' => 'PveUpid');
+
+# Ceph: node-level service-listing endpoints
+api(GET => '/nodes/{node}/ceph/mon', 'list_ceph_mon', 'return-name' => 'CephMon');
+Schema2Rust::derive('CephMon' => 'Clone', 'PartialEq');
+api(POST => '/nodes/{node}/ceph/mon/{monid}', 'create_ceph_mon', 'param-name' => 'CreateCephMon', 'output-type' => 'PveUpid');
+api(DELETE => '/nodes/{node}/ceph/mon/{monid}', 'destroy_ceph_mon', 'output-type' => 'PveUpid');
+
+api(GET => '/nodes/{node}/ceph/mgr', 'list_ceph_mgr', 'return-name' => 'CephMgr');
+Schema2Rust::derive('CephMgr' => 'Clone', 'PartialEq');
+api(POST => '/nodes/{node}/ceph/mgr/{id}', 'create_ceph_mgr', 'output-type' => 'PveUpid');
+api(DELETE => '/nodes/{node}/ceph/mgr/{id}', 'destroy_ceph_mgr', 'output-type' => 'PveUpid');
+
+api(GET => '/nodes/{node}/ceph/mds', 'list_ceph_mds', 'return-name' => 'CephMds');
+Schema2Rust::derive('CephMds' => 'Clone', 'PartialEq');
+api(POST => '/nodes/{node}/ceph/mds/{name}', 'create_ceph_mds', 'param-name' => 'CreateCephMds', 'output-type' => 'PveUpid');
+api(DELETE => '/nodes/{node}/ceph/mds/{name}', 'destroy_ceph_mds', 'output-type' => 'PveUpid');
+
+# Ceph: OSD endpoints
+# The OSD tree mirrors the CRUSH hierarchy: a recursive bucket structure whose
+# per-node properties vary by node type, so it does not map onto a static Rust
+# type. Keep it as Value.
+api(GET => '/nodes/{node}/ceph/osd', 'get_ceph_osd_tree', 'output-type' => 'serde_json::Value');
+api(POST => '/nodes/{node}/ceph/osd', 'create_ceph_osd', 'param-name' => 'CreateCephOsd', 'output-type' => 'PveUpid');
+api(DELETE => '/nodes/{node}/ceph/osd/{osdid}', 'destroy_ceph_osd', 'param-name' => 'DestroyCephOsd', 'output-type' => 'PveUpid');
+api(GET => '/nodes/{node}/ceph/osd/{osdid}/metadata', 'get_ceph_osd_metadata', 'return-name' => 'CephOsdMetadata');
+Schema2Rust::derive('CephOsdMetadata' => 'Clone', 'PartialEq');
+Schema2Rust::derive('CephOsdMetadataOsd' => 'Clone', 'PartialEq');
+Schema2Rust::derive('CephOsdMetadataDevices' => 'Clone', 'PartialEq');
+api(GET => '/nodes/{node}/ceph/osd/{osdid}/lv-info', 'get_ceph_osd_lv_info', 'param-name' => 'GetCephOsdLvInfo', 'return-name' => 'CephOsdLvInfo');
+Schema2Rust::derive('CephOsdLvInfo' => 'Clone', 'PartialEq');
+api(POST => '/nodes/{node}/ceph/osd/{osdid}/in', 'ceph_osd_in');
+api(POST => '/nodes/{node}/ceph/osd/{osdid}/out', 'ceph_osd_out');
+api(POST => '/nodes/{node}/ceph/osd/{osdid}/scrub', 'ceph_osd_scrub', 'param-name' => 'CephOsdScrub');
+
+# Ceph: pool endpoints
+api(GET => '/nodes/{node}/ceph/pool', 'list_ceph_pools', 'return-name' => 'CephPool');
+Schema2Rust::derive('CephPool' => 'Clone', 'PartialEq');
+api(POST => '/nodes/{node}/ceph/pool', 'create_ceph_pool', 'param-name' => 'CreateCephPool', 'output-type' => 'PveUpid');
+api(GET => '/nodes/{node}/ceph/pool/{name}/status', 'get_ceph_pool_status', 'param-name' => 'GetCephPoolStatus', 'return-name' => 'CephPoolStatus');
+Schema2Rust::derive('CephPoolStatus' => 'Clone', 'PartialEq');
+api(PUT => '/nodes/{node}/ceph/pool/{name}', 'set_ceph_pool', 'param-name' => 'SetCephPool', 'output-type' => 'PveUpid');
+api(DELETE => '/nodes/{node}/ceph/pool/{name}', 'destroy_ceph_pool', 'param-name' => 'DestroyCephPool', 'output-type' => 'PveUpid');
+
+# Ceph: CephFS endpoints
+api(GET => '/nodes/{node}/ceph/fs', 'list_ceph_fs', 'return-name' => 'CephFs');
+Schema2Rust::derive('CephFs' => 'Clone', 'PartialEq');
+api(POST => '/nodes/{node}/ceph/fs/{name}', 'create_ceph_fs', 'param-name' => 'CreateCephFs', 'output-type' => 'PveUpid');
+api(DELETE => '/nodes/{node}/ceph/fs/{name}', 'destroy_ceph_fs', 'param-name' => 'DestroyCephFs', 'output-type' => 'PveUpid');
+
+# Ceph: configuration endpoints
+api(GET => '/nodes/{node}/ceph/cfg/raw', 'get_ceph_cfg_raw', 'output-type' => 'String');
+api(GET => '/nodes/{node}/ceph/cfg/db', 'get_ceph_cfg_db', 'return-name' => 'CephConfigDbEntry');
+Schema2Rust::derive('CephConfigDbEntry' => 'Clone', 'PartialEq');
+# /cfg/value returns a two-level {section -> {key -> value}} map; declared as untyped object
+api(GET => '/nodes/{node}/ceph/cfg/value', 'get_ceph_cfg_value', 'param-name' => 'GetCephCfgValue', 'output-type' => 'serde_json::Value');
+
+# Ceph: cmd-safety, log, rules and untyped status aliases
+api(GET => '/nodes/{node}/ceph/cmd-safety', 'get_ceph_cmd_safety', 'param-name' => 'GetCephCmdSafety', 'return-name' => 'CephCmdSafety');
+Schema2Rust::derive('CephCmdSafety' => 'Clone', 'PartialEq');
+api(GET => '/nodes/{node}/ceph/log', 'get_ceph_log', 'param-name' => 'GetCephLog', 'return-name' => 'CephLogLine', attribs => 1);
+# /nodes/{node}/ceph/rules returns `[{ "name": <rule> }, ...]`, but its return schema
+# carries a child link whose href is that single 'name' property. The generator
+# collapses such single-property child-link arrays to Vec<String>, which would not
+# deserialize the object wire format. Keep it as Value until that collapse is reworked.
+api(GET => '/nodes/{node}/ceph/rules', 'list_ceph_rules', 'output-type' => 'serde_json::Value');
+# /nodes/{node}/ceph/status is the node-level alias of /cluster/ceph/status; same untyped shape
+api(GET => '/nodes/{node}/ceph/status', 'node_ceph_status', 'output-type' => 'serde_json::Value');
+api(GET => '/nodes/{node}/ceph/crush', 'get_ceph_crush', 'output-type' => 'String');
+
+# Ceph: init + service control
+api(POST => '/nodes/{node}/ceph/init', 'init_ceph', 'param-name' => 'InitCeph');
+api(POST => '/nodes/{node}/ceph/start', 'start_ceph_services', 'param-name' => 'StartCephServices', 'output-type' => 'PveUpid');
+api(POST => '/nodes/{node}/ceph/stop', 'stop_ceph_services', 'param-name' => 'StopCephServices', 'output-type' => 'PveUpid');
+api(POST => '/nodes/{node}/ceph/restart', 'restart_ceph_services', 'param-name' => 'RestartCephServices', 'output-type' => 'PveUpid');
+
 # NOW DUMP THE CODE:
 #
 # We generate one file for API types, and one for API method calls.

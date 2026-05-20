@@ -234,6 +234,1170 @@ mod cluster_resource_content {
 
 #[api(
     properties: {
+        safe: {
+            default: false,
+        },
+        status: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephCmdSafety {
+    /// True if Ceph reports the requested action is safe.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub safe: bool,
+
+    /// Human-readable status message from Ceph (typically the reason an action
+    /// is not safe); absent when Ceph returned no message.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
+}
+
+#[api(
+    additional_properties: "additional_properties",
+    properties: {
+        can_update_at_runtime: {
+            default: false,
+        },
+        level: {
+            type: CephConfigDbEntryLevel,
+        },
+        mask: {
+            type: String,
+        },
+        name: {
+            type: String,
+        },
+        section: {
+            type: String,
+        },
+        value: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephConfigDbEntry {
+    /// Set if the value can be changed at runtime without restarting the
+    /// affected daemons. Emitted as the integer 1/0 to match the existing PVE
+    /// wire convention.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub can_update_at_runtime: bool,
+
+    pub level: CephConfigDbEntryLevel,
+
+    /// Match expression restricting the entry's scope; empty when the entry has
+    /// no mask. Examples: 'host:foo', 'class:ssd'.
+    pub mask: String,
+
+    /// Config key name.
+    pub name: String,
+
+    /// Ceph config section the entry applies to: 'global', a daemon type
+    /// ('mon', 'osd', 'mgr', 'mds', 'client'), or a specific daemon (e.g.
+    /// 'osd.0', 'mon.<name>').
+    pub section: String,
+
+    /// Configured value for the key (always serialised as a string by Ceph,
+    /// regardless of the option's underlying type).
+    pub value: String,
+
+    #[serde(flatten)]
+    pub additional_properties: HashMap<String, Value>,
+}
+
+#[api]
+/// Config level the entry is exposed at: 'basic' for operator-visible settings,
+/// 'advanced' for tuning parameters, 'dev' for developer-only knobs.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum CephConfigDbEntryLevel {
+    #[serde(rename = "basic")]
+    /// basic.
+    Basic,
+    #[serde(rename = "advanced")]
+    /// advanced.
+    Advanced,
+    #[serde(rename = "dev")]
+    /// dev.
+    Dev,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(CephConfigDbEntryLevel);
+serde_plain::derive_fromstr_from_deserialize!(CephConfigDbEntryLevel);
+
+#[api(
+    additional_properties: "additional_properties",
+    properties: {
+        description: {
+            type: String,
+        },
+        name: {
+            type: CephFlagInfoName,
+        },
+        value: {
+            default: false,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephFlagInfo {
+    /// Flag description.
+    pub description: String,
+
+    pub name: CephFlagInfoName,
+
+    /// Flag value.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub value: bool,
+
+    #[serde(flatten)]
+    pub additional_properties: HashMap<String, Value>,
+}
+
+#[api]
+/// Flag name.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum CephFlagInfoName {
+    #[serde(rename = "nobackfill")]
+    /// nobackfill.
+    Nobackfill,
+    #[serde(rename = "nodeep-scrub")]
+    /// nodeep-scrub.
+    NodeepScrub,
+    #[serde(rename = "nodown")]
+    /// nodown.
+    Nodown,
+    #[serde(rename = "noin")]
+    /// noin.
+    Noin,
+    #[serde(rename = "noout")]
+    /// noout.
+    Noout,
+    #[serde(rename = "norebalance")]
+    /// norebalance.
+    Norebalance,
+    #[serde(rename = "norecover")]
+    /// norecover.
+    Norecover,
+    #[serde(rename = "noscrub")]
+    /// noscrub.
+    Noscrub,
+    #[serde(rename = "notieragent")]
+    /// notieragent.
+    Notieragent,
+    #[serde(rename = "noup")]
+    /// noup.
+    Noup,
+    #[serde(rename = "pause")]
+    /// pause.
+    Pause,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(CephFlagInfoName);
+serde_plain::derive_fromstr_from_deserialize!(CephFlagInfoName);
+
+#[api(
+    additional_properties: "additional_properties",
+    properties: {
+        data_pool: {
+            type: String,
+        },
+        data_pool_ids: {
+            items: {
+                description: "Data pool id.",
+                type: Integer,
+            },
+            optional: true,
+            type: Array,
+        },
+        data_pools: {
+            items: {
+                description: "Data pool name.",
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        metadata_pool: {
+            type: String,
+        },
+        metadata_pool_id: {
+            optional: true,
+            type: Integer,
+        },
+        name: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephFs {
+    /// Name of the filesystem's first data pool. A CephFS can have more than
+    /// one data pool; consumers interested in the full set should read
+    /// 'data_pools' instead. Kept for backwards compatibility.
+    pub data_pool: String,
+
+    /// Numeric ids of the data pools.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_pool_ids: Option<Vec<i64>>,
+
+    /// Names of all data pools assigned to the filesystem; a CephFS can have
+    /// multiple data pools (e.g. replicated metadata plus EC data, or multiple
+    /// device-class-specific data pools).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_pools: Option<Vec<String>>,
+
+    /// Name of the metadata pool.
+    pub metadata_pool: String,
+
+    /// Numeric id of the metadata pool.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub metadata_pool_id: Option<i64>,
+
+    /// The ceph filesystem name.
+    pub name: String,
+
+    #[serde(flatten)]
+    pub additional_properties: HashMap<String, Value>,
+}
+
+#[api(
+    properties: {
+        n: {
+            type: Integer,
+        },
+        t: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CephLogLine {
+    /// Log-file line number (1-based).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub n: i64,
+
+    /// Log line text.
+    pub t: String,
+}
+
+#[api(
+    properties: {
+        addr: {
+            optional: true,
+            type: String,
+        },
+        ceph_version: {
+            optional: true,
+            type: String,
+        },
+        ceph_version_short: {
+            optional: true,
+            type: String,
+        },
+        direxists: {
+            default: false,
+            optional: true,
+        },
+        fs_name: {
+            optional: true,
+            type: String,
+        },
+        host: {
+            optional: true,
+            type: String,
+        },
+        name: {
+            type: String,
+        },
+        rank: {
+            optional: true,
+            type: Integer,
+        },
+        service: {
+            default: false,
+            optional: true,
+        },
+        standby_replay: {
+            default: false,
+            optional: true,
+        },
+        state: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephMds {
+    /// Address as advertised by the MDS; Ceph-formatted (typically
+    /// 'IP:PORT/NONCE').
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub addr: Option<String>,
+
+    /// Full Ceph version string of the MDS daemon.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ceph_version: Option<String>,
+
+    /// Short Ceph version string of the MDS daemon (e.g. '19.2.0').
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ceph_version_short: Option<String>,
+
+    /// Set when the MDS's data directory exists on this node.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub direxists: Option<bool>,
+
+    /// Name of the CephFS this MDS is bound to; absent or null for standby
+    /// MDSes not currently serving a rank.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fs_name: Option<String>,
+
+    /// Host the MDS runs on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
+
+    /// The name (ID) for the MDS.
+    pub name: String,
+
+    /// MDS rank within the file system; -1 for standby MDSes not currently
+    /// bound to a rank.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rank: Option<i64>,
+
+    /// Set if a ceph-mds@<id> systemd unit is enabled on the hosting node;
+    /// absent otherwise.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub service: Option<bool>,
+
+    /// If true, the standby MDS is polling the active MDS for faster recovery
+    /// (hot standby).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub standby_replay: Option<bool>,
+
+    /// MDS state: Ceph-reported run state (e.g. 'up:active', 'up:standby',
+    /// 'up:standby-replay') for daemons known to the cluster; 'stopped' or
+    /// 'unknown' for configured daemons not visible to the cluster.
+    pub state: String,
+}
+
+#[api(
+    properties: {
+        addr: {
+            optional: true,
+            type: String,
+        },
+        ceph_version: {
+            optional: true,
+            type: String,
+        },
+        ceph_version_short: {
+            optional: true,
+            type: String,
+        },
+        direxists: {
+            default: false,
+            optional: true,
+        },
+        host: {
+            optional: true,
+            type: String,
+        },
+        name: {
+            type: String,
+        },
+        service: {
+            default: false,
+            optional: true,
+        },
+        state: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephMgr {
+    /// Address as advertised by the manager; Ceph-formatted (typically
+    /// 'IP:PORT/NONCE').
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub addr: Option<String>,
+
+    /// Full Ceph version string of the manager daemon.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ceph_version: Option<String>,
+
+    /// Short Ceph version string of the manager daemon (e.g. '19.2.0').
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ceph_version_short: Option<String>,
+
+    /// Set when the manager's data directory exists on this node.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub direxists: Option<bool>,
+
+    /// Host the manager runs on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
+
+    /// The name (ID) for the MGR.
+    pub name: String,
+
+    /// Set if a ceph-mgr@<id> systemd unit is enabled on the hosting node;
+    /// absent otherwise.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub service: Option<bool>,
+
+    /// Manager state: 'active' or 'standby' for daemons visible to the mgr
+    /// cluster, 'stopped' or 'unknown' for configured daemons not currently
+    /// visible.
+    pub state: String,
+}
+
+#[api(
+    properties: {
+        addr: {
+            optional: true,
+            type: String,
+        },
+        ceph_version: {
+            optional: true,
+            type: String,
+        },
+        ceph_version_short: {
+            optional: true,
+            type: String,
+        },
+        direxists: {
+            default: false,
+            optional: true,
+        },
+        host: {
+            optional: true,
+            type: String,
+        },
+        name: {
+            type: String,
+        },
+        quorum: {
+            default: false,
+            optional: true,
+        },
+        rank: {
+            optional: true,
+            type: Integer,
+        },
+        service: {
+            default: false,
+            optional: true,
+        },
+        state: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephMon {
+    /// Address as advertised by the monitor; Ceph-formatted (typically
+    /// 'IP:PORT/NONCE', possibly as a messenger-v2 vector depending on Ceph
+    /// version and ceph.conf shape).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub addr: Option<String>,
+
+    /// Full Ceph version string of the monitor daemon.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ceph_version: Option<String>,
+
+    /// Short Ceph version string of the monitor daemon (e.g. '19.2.0').
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ceph_version_short: Option<String>,
+
+    /// Set when the monitor's data directory exists on this node.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub direxists: Option<bool>,
+
+    /// Host the monitor runs on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub host: Option<String>,
+
+    /// Monitor id (typically the hostname).
+    pub name: String,
+
+    /// Set when the monitor is part of the current quorum.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quorum: Option<bool>,
+
+    /// Rank of the monitor within the mon map.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rank: Option<i64>,
+
+    /// Set if a ceph-mon@<id> systemd unit is enabled on the hosting node;
+    /// absent otherwise.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub service: Option<bool>,
+
+    /// Run state of the monitor: 'running' (in quorum), 'stopped' (systemd unit
+    /// configured but daemon not visible to the cluster), or 'unknown' (no
+    /// rados access).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<String>,
+}
+
+#[api(
+    properties: {
+        creation_time: {
+            type: String,
+        },
+        lv_name: {
+            type: String,
+        },
+        lv_path: {
+            type: String,
+        },
+        lv_size: {
+            type: Integer,
+        },
+        lv_uuid: {
+            type: String,
+        },
+        vg_name: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephOsdLvInfo {
+    /// Creation time as reported by `lvs`.
+    pub creation_time: String,
+
+    /// Name of the logical volume (LV).
+    pub lv_name: String,
+
+    /// Path to the logical volume (LV).
+    pub lv_path: String,
+
+    /// Size of the logical volume (LV).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub lv_size: i64,
+
+    /// UUID of the logical volume (LV).
+    pub lv_uuid: String,
+
+    /// Name of the volume group (VG).
+    pub vg_name: String,
+}
+
+#[api(
+    properties: {
+        devices: {
+            items: {
+                type: CephOsdMetadataDevices,
+            },
+            type: Array,
+        },
+        osd: {
+            type: CephOsdMetadataOsd,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephOsdMetadata {
+    /// Array containing data about devices
+    pub devices: Vec<CephOsdMetadataDevices>,
+
+    /// General information about the OSD
+    pub osd: CephOsdMetadataOsd,
+}
+
+#[api(
+    properties: {
+        dev_node: {
+            type: String,
+        },
+        device: {
+            type: CephOsdMetadataDevicesDevice,
+        },
+        physical_device: {
+            type: String,
+        },
+        size: {
+            type: Integer,
+        },
+        support_discard: {
+            default: false,
+        },
+        type: {
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephOsdMetadataDevices {
+    /// Device node
+    pub dev_node: String,
+
+    pub device: CephOsdMetadataDevicesDevice,
+
+    /// Underlying physical device(s) used by this OSD device (comma- or
+    /// space-joined when multiple).
+    pub physical_device: String,
+
+    /// Size of the OSD device in bytes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub size: i64,
+
+    /// Whether the underlying physical device supports discard/TRIM.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub support_discard: bool,
+
+    /// Type of device. For example, hdd or ssd
+    #[serde(rename = "type")]
+    pub ty: String,
+}
+
+#[api]
+/// Kind of OSD device
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum CephOsdMetadataDevicesDevice {
+    #[serde(rename = "block")]
+    /// block.
+    Block,
+    #[serde(rename = "db")]
+    /// db.
+    Db,
+    #[serde(rename = "wal")]
+    /// wal.
+    Wal,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(CephOsdMetadataDevicesDevice);
+serde_plain::derive_fromstr_from_deserialize!(CephOsdMetadataDevicesDevice);
+
+#[api(
+    properties: {
+        back_addr: {
+            type: String,
+        },
+        encrypted: {
+            default: false,
+        },
+        front_addr: {
+            type: String,
+        },
+        hb_back_addr: {
+            type: String,
+        },
+        hb_front_addr: {
+            type: String,
+        },
+        hostname: {
+            type: String,
+        },
+        id: {
+            type: Integer,
+        },
+        mem_usage: {
+            type: Integer,
+        },
+        osd_data: {
+            type: String,
+        },
+        osd_objectstore: {
+            type: String,
+        },
+        pid: {
+            optional: true,
+            type: Integer,
+        },
+        version: {
+            type: String,
+        },
+    },
+)]
+/// General information about the OSD
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephOsdMetadataOsd {
+    /// Address and port used to talk to other OSDs.
+    pub back_addr: String,
+
+    /// Whether the OSD is encrypted with LUKS via dm-crypt.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub encrypted: bool,
+
+    /// Address and port used to talk to clients and monitors.
+    pub front_addr: String,
+
+    /// Heartbeat address and port for other OSDs.
+    pub hb_back_addr: String,
+
+    /// Heartbeat address and port for clients and monitors.
+    pub hb_front_addr: String,
+
+    /// Name of the host containing the OSD.
+    pub hostname: String,
+
+    /// ID of the OSD.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub id: i64,
+
+    /// Proportional set size (PSS) memory usage of the OSD daemon process in
+    /// bytes; 0 when the process is not running.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub mem_usage: i64,
+
+    /// Path to the OSD's data directory.
+    pub osd_data: String,
+
+    /// The type of object store used.
+    pub osd_objectstore: String,
+
+    /// OSD process ID; absent if the systemd unit for this OSD is not currently
+    /// running.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pid: Option<i64>,
+
+    /// Ceph version of the OSD service.
+    pub version: String,
+}
+
+#[api(
+    properties: {
+        deep: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CephOsdScrub {
+    /// If set, instructs a deep scrub instead of a normal one.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deep: Option<bool>,
+}
+
+#[api(
+    properties: {
+        application_metadata: {
+            description: "Application tags attached to the pool (mapping of application name to its metadata object).",
+            optional: true,
+            properties: {},
+            type: Object,
+        },
+        autoscale_status: {
+            description: "Raw pg_autoscaler status object for this pool; shape varies between Ceph releases.",
+            optional: true,
+            properties: {},
+            type: Object,
+        },
+        bytes_used: {
+            optional: true,
+            type: Integer,
+        },
+        crush_rule: {
+            type: Integer,
+        },
+        crush_rule_name: {
+            optional: true,
+            type: String,
+        },
+        min_size: {
+            type: Integer,
+        },
+        pg_autoscale_mode: {
+            optional: true,
+            type: String,
+        },
+        pg_num: {
+            type: Integer,
+        },
+        pg_num_final: {
+            optional: true,
+            type: Integer,
+        },
+        pg_num_min: {
+            optional: true,
+            type: Integer,
+        },
+        pool: {
+            type: Integer,
+        },
+        pool_name: {
+            type: String,
+        },
+        size: {
+            type: Integer,
+        },
+        target_size: {
+            optional: true,
+            type: Integer,
+        },
+        type: {
+            type: CephPoolType,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephPool {
+    /// Application tags attached to the pool (mapping of application name to
+    /// its metadata object).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub application_metadata: Option<serde_json::Value>,
+
+    /// Raw pg_autoscaler status object for this pool; shape varies between Ceph
+    /// releases.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub autoscale_status: Option<serde_json::Value>,
+
+    /// Bytes currently used in the pool; absent if no usage statistics are
+    /// reported.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bytes_used: Option<i64>,
+
+    /// Numeric id of the CRUSH rule used by this pool.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub crush_rule: i64,
+
+    /// Human-readable name of the CRUSH rule used by this pool; absent if the
+    /// rule id is not in the current CRUSH map.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crush_rule_name: Option<String>,
+
+    /// Minimum number of replicas required to accept writes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub min_size: i64,
+
+    /// Percentage of pool capacity currently used; absent if no usage
+    /// statistics are reported.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub percent_used: Option<f64>,
+
+    /// Placement-group autoscaler mode ('on', 'warn' or 'off').
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_autoscale_mode: Option<String>,
+
+    /// Current placement-group count.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub pg_num: i64,
+
+    /// Optimal placement-group count computed by pg_autoscaler.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_num_final: Option<i64>,
+
+    /// Minimum placement-group count the pg_autoscaler may choose.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_num_min: Option<i64>,
+
+    /// Numeric pool id assigned by Ceph.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub pool: i64,
+
+    /// Operator-visible name of the pool.
+    pub pool_name: String,
+
+    /// Replication factor (target number of object replicas).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub size: i64,
+
+    /// Operator-supplied target size in bytes; hints the pg_autoscaler.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_size: Option<i64>,
+
+    /// Operator-supplied target ratio of total pool capacity; hints the
+    /// pg_autoscaler.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_size_ratio: Option<f64>,
+
+    #[serde(rename = "type")]
+    pub ty: CephPoolType,
+}
+
+#[api(
+    properties: {
+        application: {
+            optional: true,
+            type: CreateCephPoolApplication,
+        },
+        application_list: {
+            items: {
+                description: "Application name (e.g. 'rbd', 'cephfs', 'rgw').",
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        autoscale_status: {
+            description: "Raw pg_autoscaler status object for this pool; shape varies between Ceph releases.",
+            optional: true,
+            properties: {},
+            type: Object,
+        },
+        crush_rule: {
+            optional: true,
+            type: String,
+        },
+        fast_read: {
+            default: false,
+        },
+        hashpspool: {
+            default: false,
+        },
+        id: {
+            type: Integer,
+        },
+        min_size: {
+            default: 2,
+            maximum: 7,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        name: {
+            type: String,
+        },
+        "nodeep-scrub": {
+            default: false,
+        },
+        nodelete: {
+            default: false,
+        },
+        nopgchange: {
+            default: false,
+        },
+        noscrub: {
+            default: false,
+        },
+        nosizechange: {
+            default: false,
+        },
+        pg_autoscale_mode: {
+            optional: true,
+            type: CreateCephPoolPgAutoscaleMode,
+        },
+        pg_num: {
+            default: 128,
+            maximum: 32768,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        pg_num_min: {
+            maximum: 32768,
+            optional: true,
+            type: Integer,
+        },
+        pgp_num: {
+            type: Integer,
+        },
+        size: {
+            default: 3,
+            maximum: 7,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        statistics: {
+            description: "Optional pool usage and IO statistics (only present when verbose=1 is requested).",
+            optional: true,
+            properties: {},
+            type: Object,
+        },
+        target_size: {
+            optional: true,
+            type: String,
+        },
+        use_gmt_hitset: {
+            default: false,
+        },
+        write_fadvise_dontneed: {
+            default: false,
+        },
+    },
+)]
+/// Object.
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+pub struct CephPoolStatus {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub application: Option<CreateCephPoolApplication>,
+
+    /// Names of applications currently associated with the pool.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub application_list: Option<Vec<String>>,
+
+    /// Raw pg_autoscaler status object for this pool; shape varies between Ceph
+    /// releases.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub autoscale_status: Option<serde_json::Value>,
+
+    /// The rule to use for mapping object placement in the cluster.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crush_rule: Option<String>,
+
+    /// Set if the pool uses fast-read for erasure-coded reads.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub fast_read: bool,
+
+    /// Set if the pool hashes pool id into its CRUSH placement-seed.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub hashpspool: bool,
+
+    /// Numeric pool id assigned by Ceph.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub id: i64,
+
+    /// Minimum number of replicas per object
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_size: Option<u8>,
+
+    /// The name of the pool. It must be unique.
+    pub name: String,
+
+    /// Set if deep-scrubbing is disabled for this pool.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(rename = "nodeep-scrub")]
+    pub nodeep_scrub: bool,
+
+    /// Set if pool delete is blocked.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub nodelete: bool,
+
+    /// Set if changing the placement-group count is blocked.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub nopgchange: bool,
+
+    /// Set if scrubbing is disabled for this pool.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub noscrub: bool,
+
+    /// Set if changing the replication size is blocked.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub nosizechange: bool,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_autoscale_mode: Option<CreateCephPoolPgAutoscaleMode>,
+
+    /// Number of placement groups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_num: Option<u16>,
+
+    /// Minimal number of placement groups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_num_min: Option<i64>,
+
+    /// Placement-group-for-placement count.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    pub pgp_num: i64,
+
+    /// Number of replicas per object
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<u8>,
+
+    /// Optional pool usage and IO statistics (only present when verbose=1 is
+    /// requested).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub statistics: Option<serde_json::Value>,
+
+    /// The estimated target size of the pool for the PG autoscaler.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_size: Option<String>,
+
+    /// The estimated target ratio of the pool for the PG autoscaler.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_size_ratio: Option<f64>,
+
+    /// Set if hitsets use GMT timestamps (for cache-tier pools).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub use_gmt_hitset: bool,
+
+    /// Set if the pool sets the FADV_DONTNEED hint on writes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub write_fadvise_dontneed: bool,
+}
+
+#[api]
+/// Pool type: 'replicated' for n-way replication, 'erasure' for an
+/// erasure-coded pool, 'unknown' for types PVE does not yet map.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum CephPoolType {
+    #[serde(rename = "replicated")]
+    /// replicated.
+    Replicated,
+    #[serde(rename = "erasure")]
+    /// erasure.
+    Erasure,
+    #[serde(rename = "unknown")]
+    /// unknown.
+    Unknown,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(CephPoolType);
+serde_plain::derive_fromstr_from_deserialize!(CephPoolType);
+
+#[api]
+/// Which metadata facet to return: 'all' enriches the per-daemon metadata with
+/// the PVE-side service state (presence of unit, data directory), 'versions'
+/// collects only per-node Ceph binary version data.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterCephMetadataScope {
+    #[serde(rename = "all")]
+    #[default]
+    /// all.
+    All,
+    #[serde(rename = "versions")]
+    /// versions.
+    Versions,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterCephMetadataScope);
+serde_plain::derive_fromstr_from_deserialize!(ClusterCephMetadataScope);
+
+#[api(
+    properties: {
         ebtables: {
             default: true,
             optional: true,
@@ -1224,6 +2388,375 @@ pub enum ClusterResourceType {
 serde_plain::derive_display_from_serialize!(ClusterResourceType);
 serde_plain::derive_fromstr_from_deserialize!(ClusterResourceType);
 
+#[api(
+    properties: {
+        "add-storage": {
+            default: false,
+            optional: true,
+        },
+        pg_num: {
+            default: 128,
+            maximum: 32768,
+            minimum: 8,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateCephFs {
+    /// Configure the created CephFS as storage for this cluster.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "add-storage")]
+    pub add_storage: Option<bool>,
+
+    /// Number of placement groups for the backing data pool. The metadata pool
+    /// will use a quarter of this.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_num: Option<u16>,
+}
+
+#[api(
+    properties: {
+        hotstandby: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateCephMds {
+    /// Determines whether a ceph-mds daemon should poll and replay the log of
+    /// an active MDS. Faster switch on MDS failure, but needs more idle
+    /// resources.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hotstandby: Option<bool>,
+}
+
+#[api(
+    properties: {
+        "mon-address": {
+            items: {
+                description: "List item of type ip.",
+                format: &ApiStringFormat::VerifyFn(verifiers::verify_ip),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateCephMon {
+    /// Overwrites autodetected monitor IP address(es). Must be in the public
+    /// network(s) of Ceph.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "mon-address")]
+    pub mon_address: Option<Vec<String>>,
+}
+
+#[api(
+    properties: {
+        "crush-device-class": {
+            optional: true,
+            type: String,
+        },
+        db_dev: {
+            optional: true,
+            type: String,
+        },
+        db_dev_size: {
+            minimum: 1.0,
+            optional: true,
+        },
+        dev: {
+            type: String,
+        },
+        encrypted: {
+            default: false,
+            optional: true,
+        },
+        "osds-per-device": {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        wal_dev: {
+            optional: true,
+            type: String,
+        },
+        wal_dev_size: {
+            minimum: 0.5,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateCephOsd {
+    /// Set the device class of the OSD in crush.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "crush-device-class")]
+    pub crush_device_class: Option<String>,
+
+    /// Block device name for block.db.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub db_dev: Option<String>,
+
+    /// Size in GiB for block.db.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub db_dev_size: Option<f64>,
+
+    /// Block device name.
+    pub dev: String,
+
+    /// Enables encryption of the OSD.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub encrypted: Option<bool>,
+
+    /// OSD services per physical device. Only useful for fast NVMe devices to
+    /// utilize their performance better. Mutually exclusive with 'db_dev' and
+    /// 'wal_dev'.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "osds-per-device")]
+    pub osds_per_device: Option<u64>,
+
+    /// Block device name for block.wal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wal_dev: Option<String>,
+
+    /// Size in GiB for block.wal.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wal_dev_size: Option<f64>,
+}
+
+#[api(
+    properties: {
+        add_storages: {
+            default: false,
+            optional: true,
+        },
+        application: {
+            optional: true,
+            type: CreateCephPoolApplication,
+        },
+        crush_rule: {
+            optional: true,
+            type: String,
+        },
+        "erasure-coding": {
+            format: &ApiStringFormat::PropertyString(&CreateCephPoolErasureCoding::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        min_size: {
+            default: 2,
+            maximum: 7,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        name: {
+            type: String,
+        },
+        pg_autoscale_mode: {
+            optional: true,
+            type: CreateCephPoolPgAutoscaleMode,
+        },
+        pg_num: {
+            default: 128,
+            maximum: 32768,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        pg_num_min: {
+            maximum: 32768,
+            optional: true,
+            type: Integer,
+        },
+        size: {
+            default: 3,
+            maximum: 7,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        target_size: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateCephPool {
+    /// Configure VM and CT storage using the new pool. Defaults to false for
+    /// replicated pools and to true for erasure-coded pools (since EC pools are
+    /// typically only useful when wired up to storage).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub add_storages: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub application: Option<CreateCephPoolApplication>,
+
+    /// The rule to use for mapping object placement in the cluster.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crush_rule: Option<String>,
+
+    /// Create an erasure coded pool for RBD with an accompaning replicated pool
+    /// for metadata storage. With EC, the common ceph options 'size',
+    /// 'min_size' and 'crush_rule' parameters will be applied to the metadata
+    /// pool.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "erasure-coding")]
+    pub erasure_coding: Option<String>,
+
+    /// Minimum number of replicas per object
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_size: Option<u8>,
+
+    /// The name of the pool. It must be unique.
+    pub name: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_autoscale_mode: Option<CreateCephPoolPgAutoscaleMode>,
+
+    /// Number of placement groups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_num: Option<u16>,
+
+    /// Minimal number of placement groups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_num_min: Option<i64>,
+
+    /// Number of replicas per object
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<u8>,
+
+    /// The estimated target size of the pool for the PG autoscaler.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_size: Option<String>,
+
+    /// The estimated target ratio of the pool for the PG autoscaler.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_size_ratio: Option<f64>,
+}
+
+#[api]
+/// The application of the pool.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum CreateCephPoolApplication {
+    #[serde(rename = "rbd")]
+    #[default]
+    /// rbd.
+    Rbd,
+    #[serde(rename = "cephfs")]
+    /// cephfs.
+    Cephfs,
+    #[serde(rename = "rgw")]
+    /// rgw.
+    Rgw,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(CreateCephPoolApplication);
+serde_plain::derive_fromstr_from_deserialize!(CreateCephPoolApplication);
+
+#[api(
+    properties: {
+        "device-class": {
+            optional: true,
+            type: String,
+        },
+        "failure-domain": {
+            default: "host",
+            optional: true,
+            type: String,
+        },
+        k: {
+            minimum: 2,
+            type: Integer,
+        },
+        m: {
+            minimum: 1,
+            type: Integer,
+        },
+        profile: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct CreateCephPoolErasureCoding {
+    /// CRUSH device class. Will create an erasure coded pool plus a replicated
+    /// pool for metadata.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "device-class")]
+    pub device_class: Option<String>,
+
+    /// CRUSH failure domain. Default is 'host'. Will create an erasure coded
+    /// pool plus a replicated pool for metadata.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "failure-domain")]
+    pub failure_domain: Option<String>,
+
+    /// Number of data chunks. Will create an erasure coded pool plus a
+    /// replicated pool for metadata.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    pub k: u64,
+
+    /// Number of coding chunks. Will create an erasure coded pool plus a
+    /// replicated pool for metadata.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    pub m: u64,
+
+    /// Override the erasure code (EC) profile to use. Will create an erasure
+    /// coded pool plus a replicated pool for metadata.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub profile: Option<String>,
+}
+
+#[api]
+/// The automatic PG scaling mode of the pool.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum CreateCephPoolPgAutoscaleMode {
+    #[serde(rename = "on")]
+    /// on.
+    On,
+    #[serde(rename = "off")]
+    /// off.
+    Off,
+    #[serde(rename = "warn")]
+    #[default]
+    /// warn.
+    Warn,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(CreateCephPoolPgAutoscaleMode);
+serde_plain::derive_fromstr_from_deserialize!(CreateCephPoolPgAutoscaleMode);
+
 const_regex! {
 
 CREATE_CONTROLLER_ISIS_IFACES_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)?$"##;
@@ -2061,6 +3594,90 @@ pub struct DeleteFirewallIpSetEntry {
 
 #[api(
     properties: {
+        "remove-pools": {
+            default: false,
+            optional: true,
+        },
+        "remove-storages": {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct DestroyCephFs {
+    /// Remove the metadata and data pools used by this filesystem.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "remove-pools")]
+    pub remove_pools: Option<bool>,
+
+    /// Remove pveceph-managed storages configured for this filesystem.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "remove-storages")]
+    pub remove_storages: Option<bool>,
+}
+
+#[api(
+    properties: {
+        cleanup: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct DestroyCephOsd {
+    /// If set, also destroy the underlying logical volumes via 'ceph-volume lvm
+    /// zap --destroy', remove the volume group's physical volume with pvremove,
+    /// and wipe any journal/block.db/block.wal partitions left over from
+    /// filestore OSDs. Without this flag the LVs and partitions are left intact
+    /// for inspection.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cleanup: Option<bool>,
+}
+
+#[api(
+    properties: {
+        force: {
+            default: false,
+            optional: true,
+        },
+        remove_ecprofile: {
+            default: true,
+            optional: true,
+        },
+        remove_storages: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct DestroyCephPool {
+    /// If true, destroys pool even if in use
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub force: Option<bool>,
+
+    /// Remove the erasure code profile. Defaults to true, if applicable.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub remove_ecprofile: Option<bool>,
+
+    /// Remove all pveceph-managed storages configured for this pool
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub remove_storages: Option<bool>,
+}
+
+#[api(
+    properties: {
         cidr: {
             type: String,
             description: "CIDR address",
@@ -2343,6 +3960,43 @@ pub enum FwConntrackHelper {
 serde_plain::derive_display_from_serialize!(FwConntrackHelper);
 serde_plain::derive_fromstr_from_deserialize!(FwConntrackHelper);
 
+#[api]
+/// Action to check
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum GetCephCmdSafetyAction {
+    #[serde(rename = "stop")]
+    /// stop.
+    Stop,
+    #[serde(rename = "destroy")]
+    /// destroy.
+    Destroy,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(GetCephCmdSafetyAction);
+serde_plain::derive_fromstr_from_deserialize!(GetCephCmdSafetyAction);
+
+#[api]
+/// Service type
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum GetCephCmdSafetyService {
+    #[serde(rename = "osd")]
+    /// osd.
+    Osd,
+    #[serde(rename = "mon")]
+    /// mon.
+    Mon,
+    #[serde(rename = "mds")]
+    /// mds.
+    Mds,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(GetCephCmdSafetyService);
+serde_plain::derive_fromstr_from_deserialize!(GetCephCmdSafetyService);
+
 #[api(
     properties: {
         dhcp: {
@@ -2435,6 +4089,88 @@ pub struct GuestFirewallOptions {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub radv: Option<bool>,
+}
+
+#[api(
+    properties: {
+        "cluster-network": {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidr),
+            max_length: 128,
+            optional: true,
+            type: String,
+        },
+        disable_cephx: {
+            default: false,
+            optional: true,
+        },
+        min_size: {
+            default: 2,
+            maximum: 7,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        network: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidr),
+            max_length: 128,
+            optional: true,
+            type: String,
+        },
+        pg_bits: {
+            default: 6,
+            maximum: 14,
+            minimum: 6,
+            optional: true,
+            type: Integer,
+        },
+        size: {
+            default: 3,
+            maximum: 7,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct InitCeph {
+    /// Declare a separate cluster network, OSDs will route heartbeat, object
+    /// replication and recovery traffic over it
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "cluster-network")]
+    pub cluster_network: Option<String>,
+
+    /// Disable cephx authentication.
+    ///
+    /// WARNING: cephx is a security feature protecting against
+    /// man-in-the-middle attacks. Only consider disabling cephx if your network
+    /// is private!
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub disable_cephx: Option<bool>,
+
+    /// Minimum number of available replicas per object to allow I/O
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_size: Option<u8>,
+
+    /// Use specific network for all ceph related traffic
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub network: Option<String>,
+
+    /// Placement group bits, used to specify the default number of placement
+    /// groups.
+    ///
+    /// Depreacted. This setting was deprecated in recent Ceph versions.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_bits: Option<u8>,
+
+    /// Targeted number of replicas per object
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<u8>,
 }
 
 #[api(
@@ -15935,6 +17671,23 @@ pub struct RemoteMigrateQemu {
 
 #[api(
     properties: {
+        service: {
+            default: "ceph.target",
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct RestartCephServices {
+    /// Ceph service name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub service: Option<String>,
+}
+
+#[api(
+    properties: {
         "lock-token": {
             optional: true,
             type: String,
@@ -17298,6 +19051,202 @@ pub struct SdnZonePending {
 
 #[api(
     properties: {
+        nobackfill: {
+            default: false,
+            optional: true,
+        },
+        "nodeep-scrub": {
+            default: false,
+            optional: true,
+        },
+        nodown: {
+            default: false,
+            optional: true,
+        },
+        noin: {
+            default: false,
+            optional: true,
+        },
+        noout: {
+            default: false,
+            optional: true,
+        },
+        norebalance: {
+            default: false,
+            optional: true,
+        },
+        norecover: {
+            default: false,
+            optional: true,
+        },
+        noscrub: {
+            default: false,
+            optional: true,
+        },
+        notieragent: {
+            default: false,
+            optional: true,
+        },
+        noup: {
+            default: false,
+            optional: true,
+        },
+        pause: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct SetCephFlags {
+    /// Backfilling of PGs is suspended.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nobackfill: Option<bool>,
+
+    /// Deep Scrubbing is disabled.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "nodeep-scrub")]
+    pub nodeep_scrub: Option<bool>,
+
+    /// OSD failure reports are being ignored, such that the monitors will not
+    /// mark OSDs down.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nodown: Option<bool>,
+
+    /// OSDs that were previously marked out will not be marked back in when
+    /// they start.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub noin: Option<bool>,
+
+    /// OSDs will not automatically be marked out after the configured interval.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub noout: Option<bool>,
+
+    /// Rebalancing of PGs is suspended.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub norebalance: Option<bool>,
+
+    /// Recovery of PGs is suspended.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub norecover: Option<bool>,
+
+    /// Scrubbing is disabled.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub noscrub: Option<bool>,
+
+    /// Cache tiering activity is suspended.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub notieragent: Option<bool>,
+
+    /// OSDs are not allowed to start.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub noup: Option<bool>,
+
+    /// Pauses read and writes.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pause: Option<bool>,
+}
+
+#[api(
+    properties: {
+        application: {
+            optional: true,
+            type: CreateCephPoolApplication,
+        },
+        crush_rule: {
+            optional: true,
+            type: String,
+        },
+        min_size: {
+            maximum: 7,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        pg_autoscale_mode: {
+            optional: true,
+            type: CreateCephPoolPgAutoscaleMode,
+        },
+        pg_num: {
+            maximum: 32768,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        pg_num_min: {
+            maximum: 32768,
+            optional: true,
+            type: Integer,
+        },
+        size: {
+            maximum: 7,
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        target_size: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct SetCephPool {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub application: Option<CreateCephPoolApplication>,
+
+    /// The rule to use for mapping object placement in the cluster.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crush_rule: Option<String>,
+
+    /// Minimum number of replicas per object
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min_size: Option<u8>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_autoscale_mode: Option<CreateCephPoolPgAutoscaleMode>,
+
+    /// Number of placement groups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_num: Option<u16>,
+
+    /// Minimal number of placement groups.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pg_num_min: Option<i64>,
+
+    /// Number of replicas per object
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<u8>,
+
+    /// The estimated target size of the pool for the PG autoscaler.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_size: Option<String>,
+
+    /// The estimated target ratio of the pool for the PG autoscaler.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_size_ratio: Option<f64>,
+}
+
+#[api(
+    properties: {
         key: {
             max_length: 32,
             type: String,
@@ -17385,6 +19334,23 @@ pub struct ShutdownQemu {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub timeout: Option<u64>,
+}
+
+#[api(
+    properties: {
+        service: {
+            default: "ceph.target",
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct StartCephServices {
+    /// Ceph service name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub service: Option<String>,
 }
 
 #[api(
@@ -17560,6 +19526,23 @@ pub enum StartQemuMigrationType {
 }
 serde_plain::derive_display_from_serialize!(StartQemuMigrationType);
 serde_plain::derive_fromstr_from_deserialize!(StartQemuMigrationType);
+
+#[api(
+    properties: {
+        service: {
+            default: "ceph.target",
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct StopCephServices {
+    /// Ceph service name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub service: Option<String>,
+}
 
 #[api(
     properties: {
@@ -18126,6 +20109,21 @@ mod update_node_firewall_options_nf_conntrack_helpers {
     {
         T::de(deserializer)
     }
+}
+
+#[api(
+    properties: {
+        value: {
+            default: false,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateCephFlag {
+    /// The new value of the flag
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    pub value: bool,
 }
 
 const_regex! {
