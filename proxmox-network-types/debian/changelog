@@ -1,3 +1,10 @@
+rust-proxmox-network-types (1.1.2-1) trixie; urgency=medium
+
+  * endpoint: parse hostnames and addresses strictly, rejecting CIDR notation
+    and other malformed input that was previously accepted as a hostname.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 20 May 2026 04:21:17 +0200
+
 rust-proxmox-network-types (1.1.1-1) trixie; urgency=medium
 
   * implement ApiType for endpoints and hostnames to allows those types to be
