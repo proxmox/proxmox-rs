@@ -227,7 +227,7 @@ Schema2Rust::derive('ClusterResource' => 'Clone', 'PartialEq');
 api(GET => '/nodes', 'list_nodes', 'return-name' => 'ClusterNodeIndexResponse');
 Schema2Rust::derive('ClusterNodeIndexResponse' => 'Clone', 'PartialEq');
 api(GET => '/nodes/{node}/config', 'node_config', 'return-name' => 'NodeConfig');
-# api(PUT => '/nodes/{node}/config', 'set_node_config', 'param-name' => 'UpdateNodeConfig');
+api(PUT => '/nodes/{node}/config', 'set_node_config', 'param-name' => 'UpdateNodeConfig');
 # subscription api
 #
 Schema2Rust::register_enum_variant('NodeSubscriptionInfoStatus::notfound' => 'NotFound');

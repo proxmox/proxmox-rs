@@ -20808,12 +20808,126 @@ pub struct UpdateLxcConfig {
 
 const_regex! {
 
-UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+UPDATE_NODE_CONFIG_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 
 }
 
 #[test]
 fn test_regex_compilation_44() {
+    use regex::Regex;
+    let _: &Regex = &UPDATE_NODE_CONFIG_DELETE_RE;
+}
+#[api(
+    properties: {
+        acme: {
+            format: &ApiStringFormat::PropertyString(&NodeConfigAcme::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        acmedomain: {
+            type: NodeConfigAcmedomainArray,
+        },
+        "ballooning-target": {
+            default: 80,
+            maximum: 100,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        delete: {
+            items: {
+                description: "List item of type pve-configid.",
+                format: &ApiStringFormat::Pattern(&UPDATE_NODE_CONFIG_DELETE_RE),
+                type: String,
+            },
+            optional: true,
+            type: Array,
+        },
+        description: {
+            max_length: 65536,
+            optional: true,
+            type: String,
+        },
+        digest: {
+            max_length: 40,
+            optional: true,
+            type: String,
+        },
+        location: {
+            format: &ApiStringFormat::PropertyString(&NodeConfigLocation::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        "startall-onboot-delay": {
+            default: 0,
+            maximum: 300,
+            minimum: 0,
+            optional: true,
+            type: Integer,
+        },
+        wakeonlan: {
+            format: &ApiStringFormat::PropertyString(&NodeConfigWakeonlan::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct UpdateNodeConfig {
+    /// Node specific ACME settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub acme: Option<String>,
+
+    /// ACME domain and validation plugin
+    #[serde(flatten)]
+    pub acmedomain: NodeConfigAcmedomainArray,
+
+    /// RAM usage target for ballooning (in percent of total memory)
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u8")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ballooning-target")]
+    pub ballooning_target: Option<u8>,
+
+    /// A list of settings you want to delete.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delete: Option<Vec<String>>,
+
+    /// Description for the Node. Shown in the web-interface node notes panel.
+    /// This is saved as comment inside the configuration file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    /// Prevent changes if current configuration file has different SHA1 digest.
+    /// This can be used to prevent concurrent modifications.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub digest: Option<String>,
+
+    /// The location of the node. Overrides the default from the datacenter
+    /// config.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<String>,
+
+    /// Initial delay in seconds, before starting all the Virtual Guests with
+    /// on-boot enabled.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u16")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "startall-onboot-delay")]
+    pub startall_onboot_delay: Option<u16>,
+
+    /// Node specific wake on LAN settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wakeonlan: Option<String>,
+}
+
+const_regex! {
+
+UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_45() {
     use regex::Regex;
     let _: &Regex = &UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -21034,7 +21148,7 @@ UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_45() {
+fn test_regex_compilation_46() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_BOOTDISK_RE;
@@ -21947,7 +22061,7 @@ UPDATE_QEMU_CONFIG_ASYNC_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_46() {
+fn test_regex_compilation_47() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_BOOTDISK_RE;
@@ -22838,7 +22952,7 @@ UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_47() {
+fn test_regex_compilation_48() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -22923,7 +23037,7 @@ UPDATE_QEMU_CONFIG_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_48() {
+fn test_regex_compilation_49() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_MODEL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SERIAL_RE;
@@ -23279,7 +23393,7 @@ UPDATE_QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_49() {
+fn test_regex_compilation_50() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SIZE_RE;
@@ -23624,7 +23738,7 @@ UPDATE_QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_50() {
+fn test_regex_compilation_51() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SIZE_RE;
@@ -24024,7 +24138,7 @@ UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_51() {
+fn test_regex_compilation_52() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -24087,7 +24201,7 @@ UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_52() {
+fn test_regex_compilation_53() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE;

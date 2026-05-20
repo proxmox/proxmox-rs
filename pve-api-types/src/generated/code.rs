@@ -1484,6 +1484,11 @@ pub trait PveClient {
         Err(Error::Other("set_lxc_firewall_options not implemented"))
     }
 
+    /// Set node configuration options.
+    async fn set_node_config(&self, node: &str, params: UpdateNodeConfig) -> Result<(), Error> {
+        Err(Error::Other("set_node_config not implemented"))
+    }
+
     /// Set Firewall options.
     async fn set_node_firewall_options(
         &self,
@@ -3586,6 +3591,15 @@ where
             "/api2/extjs/nodes/{}/lxc/{}/firewall/options",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
             vmid
+        );
+        self.0.put(url, &params).await?.nodata()
+    }
+
+    /// Set node configuration options.
+    async fn set_node_config(&self, node: &str, params: UpdateNodeConfig) -> Result<(), Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/config",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
         );
         self.0.put(url, &params).await?.nodata()
     }
