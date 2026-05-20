@@ -1582,6 +1582,15 @@ EOF
         } else {
             $def->{api}->{additional_properties} = '"additional_properties"';
             $def->{additional_properties} = true;
+            # Pure-bag structs (only the additional_properties field, no declared
+            # properties of their own) get Clone + PartialEq auto-derived: HashMap<String,
+            # Value> implements both, and parent structs that derive Clone/PartialEq would
+            # otherwise fail to compile just because a nested additionalProperties
+            # substruct was generated implicitly.
+            if (!keys($def->{fields}->%*)) {
+                $def->{derive}->{Clone} = 1;
+                $def->{derive}->{PartialEq} = 1;
+            }
             #die "struct with arbitrary additional properties currently not supported\n";
         }
     }
