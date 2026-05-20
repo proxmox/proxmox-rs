@@ -11524,6 +11524,7 @@ generate_array_field! {
 }
 
 #[api(
+    additional_properties: "additional_properties",
     default_key: "enabled",
     properties: {
         enabled: {
@@ -11566,6 +11567,9 @@ pub struct QemuConfigAgent {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[serde(rename = "type")]
     pub ty: Option<QemuConfigAgentType>,
+
+    #[serde(flatten)]
+    pub additional_properties: HashMap<String, Value>,
 }
 
 #[api]

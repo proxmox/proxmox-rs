@@ -138,6 +138,13 @@ Schema2Rust::register_api_override('UpdateLxcConfig', '/properties/cpuunits/defa
 
 Schema2Rust::register_api_override('QemuConfig', '/properties/cpuunits/default', 1024);
 Schema2Rust::register_api_override('LxcConfig', '/properties/cpuunits/default', 1024);
+
+# The guest agent property string gained deprecated key aliases on the PVE side
+# ('freeze-fs-on-backup' and 'guest-fsfreeze' both alias 'freeze-fs'). Configs
+# written before the rename still carry the old key, and the schema-driven
+# property-string parser would otherwise hard-error on it. Tolerate unknown keys
+# so reading such configs from older remotes does not fail.
+Schema2Rust::register_additional_properties('QemuConfigAgent');
 Schema2Rust::register_api_extension('LxcConfig', '/properties/lxc/items', {
     description => sq('A raw lxc config entry'),
 });
