@@ -467,3 +467,28 @@ pub fn find_handle_for_repository(
 ) -> Option<APTRepositoryHandle> {
     find_entry_for_repository(repo, host_product, suite).map(entry_handle)
 }
+
+/// Replace any legacy `deb_component` spellings on `repo` with the canonical form of the
+/// matching standard entry. Returns `true` if any component was rewritten.
+///
+/// Used by write-path callers: PVE 8 wrote the test-channel deb822 component without a
+/// hyphen (`pvetest` / `pbstest` / `pmgtest`); the unhyphenated form is no longer hosted on
+/// `download.proxmox.com` and an `apt update` against a PVE 9 host that still carries the
+/// legacy spelling will 404. Rewriting on the next API write fixes the file in place.
+pub fn canonicalize_components_to_standard(
+    repo: &mut APTRepository,
+    host_product: &HostProduct,
+    suite: &DebianCodename,
+) -> bool {
+    let Some(entry) = find_entry_for_repository(repo, host_product, suite) else {
+        return false;
+    };
+    let mut changed = false;
+    for c in repo.components.iter_mut() {
+        if *c != entry.deb_component && entry.matches_component(c) {
+            *c = entry.deb_component.clone();
+            changed = true;
+        }
+    }
+    changed
+}

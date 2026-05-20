@@ -66,7 +66,15 @@ pub fn add_repository_handle(
     for file in files.iter_mut() {
         for repo in file.repositories.iter_mut() {
             if handle.is_referenced_by(repo, host_product, &suite) {
+                let canonicalized = crate::repositories::canonicalize_components_to_standard(
+                    repo,
+                    host_product,
+                    &suite,
+                );
                 if repo.enabled {
+                    if canonicalized {
+                        file.write()?;
+                    }
                     return Ok(());
                 }
 

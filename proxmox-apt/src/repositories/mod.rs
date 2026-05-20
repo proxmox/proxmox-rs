@@ -24,8 +24,8 @@ pub use proxmox_apt_api_types::DebianCodename;
 
 mod standard;
 pub use standard::{
-    find_handle_for_repository, standard_repos_offered_for, APTRepositoryHandleImpl,
-    APTStandardRepositoryImpl,
+    canonicalize_components_to_standard, find_handle_for_repository, standard_repos_offered_for,
+    APTRepositoryHandleImpl, APTStandardRepositoryImpl,
 };
 
 const APT_SOURCES_LIST_FILENAME: &str = "/etc/apt/sources.list";
