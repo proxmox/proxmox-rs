@@ -1,3 +1,12 @@
+rust-proxmox-apt (1.0.1-1) trixie; urgency=medium
+
+  * rewrite legacy unhyphenated test-channel deb822 components (`pvetest` /
+    `pbstest` / `pmgtest` from bookworm-based releases) to the kebab-case form
+    on the next API write, so a host upgraded to trixie does not 404 on `apt
+    update` once its download.proxmox.com archive drops the legacy path.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 20 May 2026 03:02:38 +0200
+
 rust-proxmox-apt (1.0.0-1) trixie; urgency=medium
 
   * fix #5207: verify repository origin via signature info from the cached

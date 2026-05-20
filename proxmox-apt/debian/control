@@ -50,8 +50,8 @@ Provides:
  librust-proxmox-apt-1+default-dev (= ${binary:Version}),
  librust-proxmox-apt-1.0-dev (= ${binary:Version}),
  librust-proxmox-apt-1.0+default-dev (= ${binary:Version}),
- librust-proxmox-apt-1.0.0-dev (= ${binary:Version}),
- librust-proxmox-apt-1.0.0+default-dev (= ${binary:Version})
+ librust-proxmox-apt-1.0.1-dev (= ${binary:Version}),
+ librust-proxmox-apt-1.0.1+default-dev (= ${binary:Version})
 Description: Proxmox library for APT - Rust source code
  Source code for Debianized Rust crate "proxmox-apt"
 
@@ -69,7 +69,7 @@ Depends:
 Provides:
  librust-proxmox-apt-1+cache-dev (= ${binary:Version}),
  librust-proxmox-apt-1.0+cache-dev (= ${binary:Version}),
- librust-proxmox-apt-1.0.0+cache-dev (= ${binary:Version})
+ librust-proxmox-apt-1.0.1+cache-dev (= ${binary:Version})
 Description: Proxmox library for APT - feature "cache"
  This metapackage enables feature "cache" for the Rust proxmox-apt crate, by
  pulling in any additional dependencies needed by that feature.
