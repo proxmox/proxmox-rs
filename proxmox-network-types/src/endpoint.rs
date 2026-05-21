@@ -36,7 +36,13 @@ impl FromStr for HostnameOrIpAddr {
     type Err = HostnameOrIpAddrParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Ok(ip_addr) = IpAddr::from_str(s) {
+        // accept a `[fc00::1]` form for backward compat with stored values where
+        // the surrounding brackets were not (yet) stripped by a higher layer
+        let unbracketed = s
+            .strip_prefix('[')
+            .and_then(|t| t.strip_suffix(']'))
+            .unwrap_or(s);
+        if let Ok(ip_addr) = IpAddr::from_str(unbracketed) {
             return Ok(Self::IpAddr(ip_addr));
         }
 
@@ -213,6 +219,21 @@ mod tests {
             "foo".parse::<HostnameOrIpAddr>().unwrap(),
             HostnameOrIpAddr::Hostname("foo".to_owned()),
         );
+
+        // brackets around IPv6 are accepted for backward compatibility
+        let v6_loopback = HostnameOrIpAddr::IpAddr(
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1].into(),
+        );
+        assert_eq!("::1".parse::<HostnameOrIpAddr>().unwrap(), v6_loopback);
+        assert_eq!("[::1]".parse::<HostnameOrIpAddr>().unwrap(), v6_loopback);
+
+        // brackets must not turn a hostname into an accepted value
+        assert!("[example.com]".parse::<HostnameOrIpAddr>().is_err());
+        // unbalanced brackets are rejected
+        assert!("[::1".parse::<HostnameOrIpAddr>().is_err());
+        assert!("::1]".parse::<HostnameOrIpAddr>().is_err());
+        // bracketed CIDR is still garbage
+        assert!("[fc00::/64]".parse::<HostnameOrIpAddr>().is_err());
 
         assert!("fc00::/64".parse::<HostnameOrIpAddr>().is_err());
         assert!("192.0.2.0/24".parse::<HostnameOrIpAddr>().is_err());
