@@ -1,3 +1,12 @@
+rust-proxmox-network-types (1.1.3-1) trixie; urgency=medium
+
+  * endpoint: accept a bracketed `[fc00::1]` form in HostnameOrIpAddr's
+    FromStr for backward compatibility with stored values where the
+    surrounding brackets were not stripped by a higher layer, and so the
+    serialize/deserialize round-trip works for IPv6 hosts.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 21 May 2026 12:50:00 +0200
+
 rust-proxmox-network-types (1.1.2-1) trixie; urgency=medium
 
   * endpoint: parse hostnames and addresses strictly, rejecting CIDR notation
