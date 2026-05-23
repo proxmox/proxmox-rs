@@ -1960,13 +1960,988 @@ serde_plain::derive_fromstr_from_deserialize!(ClusterNodeStatusType);
 
 const_regex! {
 
+CLUSTER_OPTIONS_EMAIL_FROM_RE = r##"^[A-Za-z0-9_+~-]+(\.[A-Za-z0-9_+~-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*$"##;
+CLUSTER_OPTIONS_MAC_PREFIX_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){0,2}(?::[a-f0-9]?)?$"##;
+
+}
+
+#[test]
+fn test_regex_compilation_4() {
+    use regex::Regex;
+    let _: &Regex = &CLUSTER_OPTIONS_EMAIL_FROM_RE;
+    let _: &Regex = &CLUSTER_OPTIONS_MAC_PREFIX_RE;
+}
+#[api(
+    properties: {
+        "allowed-tags": {
+            items: {
+                description: "A tag.",
+                type: String,
+            },
+            type: Array,
+        },
+        bwlimit: {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsBwlimit::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        "consent-text": {
+            max_length: 65536,
+            optional: true,
+            type: String,
+        },
+        console: {
+            optional: true,
+            type: VersionResponseConsole,
+        },
+        crs: {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsCrs::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        description: {
+            max_length: 65536,
+            optional: true,
+            type: String,
+        },
+        email_from: {
+            format: &ApiStringFormat::Pattern(&CLUSTER_OPTIONS_EMAIL_FROM_RE),
+            optional: true,
+            type: String,
+        },
+        fencing: {
+            optional: true,
+            type: ClusterOptionsFencing,
+        },
+        ha: {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsHa::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        http_proxy: {
+            optional: true,
+            type: String,
+        },
+        keyboard: {
+            optional: true,
+            type: QemuConfigKeyboard,
+        },
+        language: {
+            optional: true,
+            type: ClusterOptionsLanguage,
+        },
+        location: {
+            format: &ApiStringFormat::PropertyString(&PveNodeLocation::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        mac_prefix: {
+            default: "BC:24:11",
+            format: &ApiStringFormat::Pattern(&CLUSTER_OPTIONS_MAC_PREFIX_RE),
+            optional: true,
+            type: String,
+        },
+        max_workers: {
+            minimum: 1,
+            optional: true,
+            type: Integer,
+        },
+        migration: {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsMigration::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        migration_unsecure: {
+            default: false,
+            optional: true,
+        },
+        "next-id": {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsNextId::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        notify: {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsNotify::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        "registered-tags": {
+            optional: true,
+            type: String,
+            type_text: "<tag>[;<tag>...]",
+        },
+        replication: {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsReplication::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        "tag-style": {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsTagStyle::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        u2f: {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsU2f::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        "user-tag-access": {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsUserTagAccess::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+        webauthn: {
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsWebauthn::API_SCHEMA),
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptions {
+    /// The tags the current user is allowed to set and see.
+    #[serde(rename = "allowed-tags")]
+    pub allowed_tags: Vec<String>,
+
+    /// Set I/O bandwidth limit for various operations (in KiB/s).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bwlimit: Option<String>,
+
+    /// Consent text that is displayed before logging in.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "consent-text")]
+    pub consent_text: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub console: Option<VersionResponseConsole>,
+
+    /// Cluster resource scheduling settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crs: Option<String>,
+
+    /// Datacenter description. Shown in the web-interface datacenter notes
+    /// panel. This is saved as comment inside the configuration file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    /// Specify email address to send notification from (default is
+    /// root@$hostname)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub email_from: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fencing: Option<ClusterOptionsFencing>,
+
+    /// Cluster wide HA settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ha: Option<String>,
+
+    /// Specify external http proxy which is used for downloads (example: 'http://username:password@host:port/')
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub http_proxy: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub keyboard: Option<QemuConfigKeyboard>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language: Option<ClusterOptionsLanguage>,
+
+    /// The location of the cluster.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<String>,
+
+    /// Prefix for the auto-generated MAC addresses of virtual guests. The
+    /// default 'BC:24:11' is the OUI assigned by the IEEE to Proxmox Server
+    /// Solutions GmbH for a 24-bit large MAC block. You're allowed to use this
+    /// in local networks, i.e., those not directly reachable by the public
+    /// (e.g., in a LAN or behind NAT).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mac_prefix: Option<String>,
+
+    /// Defines how many workers (per node) are maximal started  on actions like
+    /// 'stopall VMs' or task from the ha-manager.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_workers: Option<u64>,
+
+    /// For cluster wide migration settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migration: Option<String>,
+
+    /// Migration is secure using SSH tunnel by default. For secure private
+    /// networks you can disable it to speed up migration. Deprecated, use the
+    /// 'migration' property instead!
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migration_unsecure: Option<bool>,
+
+    /// Control the range for the free VMID auto-selection pool.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "next-id")]
+    pub next_id: Option<String>,
+
+    /// Cluster-wide notification settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub notify: Option<String>,
+
+    /// A list of tags that require a `Sys.Modify` on '/' to set and delete.
+    /// Tags set here that are also in 'user-tag-access' also require
+    /// `Sys.Modify`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "registered-tags")]
+    pub registered_tags: Option<String>,
+
+    /// For cluster wide replication settings.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub replication: Option<String>,
+
+    /// Tag style options.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "tag-style")]
+    pub tag_style: Option<String>,
+
+    /// u2f
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub u2f: Option<String>,
+
+    /// Privilege options for user-settable tags
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "user-tag-access")]
+    pub user_tag_access: Option<String>,
+
+    /// webauthn configuration
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub webauthn: Option<String>,
+}
+
+#[api(
+    properties: {
+        clone: {
+            minimum: 0.0,
+            optional: true,
+        },
+        default: {
+            minimum: 0.0,
+            optional: true,
+        },
+        migration: {
+            minimum: 0.0,
+            optional: true,
+        },
+        "move": {
+            minimum: 0.0,
+            optional: true,
+        },
+        restore: {
+            minimum: 0.0,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsBwlimit {
+    /// bandwidth limit in KiB/s for cloning disks
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clone: Option<f64>,
+
+    /// default bandwidth limit in KiB/s
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default: Option<f64>,
+
+    /// bandwidth limit in KiB/s for migrating guests (including moving local
+    /// disks)
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migration: Option<f64>,
+
+    /// bandwidth limit in KiB/s for moving disks
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "move")]
+    pub r#move: Option<f64>,
+
+    /// bandwidth limit in KiB/s for restoring guests from backups
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub restore: Option<f64>,
+}
+
+#[api(
+    properties: {
+        ha: {
+            optional: true,
+            type: ClusterOptionsCrsHa,
+        },
+        "ha-auto-rebalance": {
+            default: false,
+            optional: true,
+        },
+        "ha-auto-rebalance-hold-duration": {
+            default: 3.0,
+            minimum: 0.0,
+            optional: true,
+        },
+        "ha-auto-rebalance-margin": {
+            default: 10.0,
+            maximum: 100.0,
+            minimum: 0.0,
+            optional: true,
+        },
+        "ha-auto-rebalance-method": {
+            optional: true,
+            type: ClusterOptionsCrsHaAutoRebalanceMethod,
+        },
+        "ha-auto-rebalance-threshold": {
+            default: 30.0,
+            maximum: 100.0,
+            minimum: 0.0,
+            optional: true,
+        },
+        "ha-rebalance-on-start": {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsCrs {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ha: Option<ClusterOptionsCrsHa>,
+
+    /// Whether to use CRS for balancing HA resources automatically depending on
+    /// the current node imbalance.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ha-auto-rebalance")]
+    pub ha_auto_rebalance: Option<bool>,
+
+    /// The number of HA rounds for which the cluster node imbalance threshold
+    /// must be exceeded before triggering an automatic resource balancing
+    /// migration.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ha-auto-rebalance-hold-duration")]
+    pub ha_auto_rebalance_hold_duration: Option<f64>,
+
+    /// The minimum relative improvement in cluster node imbalance, in percent,
+    /// to commit to a resource balancing migration.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ha-auto-rebalance-margin")]
+    pub ha_auto_rebalance_margin: Option<f64>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ha-auto-rebalance-method")]
+    pub ha_auto_rebalance_method: Option<ClusterOptionsCrsHaAutoRebalanceMethod>,
+
+    /// The cluster node imbalance, in percent, which will trigger the automatic
+    /// resource balancing system if exceeded.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ha-auto-rebalance-threshold")]
+    pub ha_auto_rebalance_threshold: Option<f64>,
+
+    /// Set to use CRS for selecting a suited node when a HA services
+    /// request-state changes from stop to start.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "ha-rebalance-on-start")]
+    pub ha_rebalance_on_start: Option<bool>,
+}
+
+#[api]
+/// Use this resource scheduler mode for HA.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsCrsHa {
+    #[serde(rename = "basic")]
+    #[default]
+    /// basic.
+    Basic,
+    #[serde(rename = "static")]
+    /// static.
+    Static,
+    #[serde(rename = "dynamic")]
+    /// dynamic.
+    Dynamic,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsCrsHa);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsCrsHa);
+
+#[api]
+/// The method to use for the scoring of balancing migrations.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsCrsHaAutoRebalanceMethod {
+    #[serde(rename = "bruteforce")]
+    #[default]
+    /// bruteforce.
+    Bruteforce,
+    #[serde(rename = "topsis")]
+    /// topsis.
+    Topsis,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsCrsHaAutoRebalanceMethod);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsCrsHaAutoRebalanceMethod);
+
+#[api]
+/// Set the fencing mode of the HA cluster. Hardware mode needs a valid
+/// configuration of fence devices in /etc/pve/ha/fence.cfg. With both all two
+/// modes are used.
+///
+/// WARNING: 'hardware' and 'both' are EXPERIMENTAL & WIP
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsFencing {
+    #[serde(rename = "watchdog")]
+    #[default]
+    /// watchdog.
+    Watchdog,
+    #[serde(rename = "hardware")]
+    /// hardware.
+    Hardware,
+    #[serde(rename = "both")]
+    /// both.
+    Both,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsFencing);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsFencing);
+
+#[api(
+    properties: {
+        shutdown_policy: {
+            type: ClusterOptionsHaShutdownPolicy,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsHa {
+    pub shutdown_policy: ClusterOptionsHaShutdownPolicy,
+}
+
+#[api]
+/// The policy for HA services on node shutdown. 'freeze' disables
+/// auto-recovery, 'failover' ensures recovery, 'conditional' recovers on
+/// poweroff and freezes on reboot. 'migrate' will migrate running services to
+/// other nodes, if possible. With 'freeze' or 'failover', HA Services will
+/// always get stopped first on shutdown.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsHaShutdownPolicy {
+    #[serde(rename = "freeze")]
+    /// freeze.
+    Freeze,
+    #[serde(rename = "failover")]
+    /// failover.
+    Failover,
+    #[serde(rename = "conditional")]
+    #[default]
+    /// conditional.
+    Conditional,
+    #[serde(rename = "migrate")]
+    /// migrate.
+    Migrate,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsHaShutdownPolicy);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsHaShutdownPolicy);
+
+#[api]
+/// Default GUI language.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsLanguage {
+    #[serde(rename = "ar")]
+    /// ar.
+    Ar,
+    #[serde(rename = "ca")]
+    /// ca.
+    Ca,
+    #[serde(rename = "da")]
+    /// da.
+    Da,
+    #[serde(rename = "de")]
+    /// de.
+    De,
+    #[serde(rename = "en")]
+    /// en.
+    En,
+    #[serde(rename = "es")]
+    /// es.
+    Es,
+    #[serde(rename = "eu")]
+    /// eu.
+    Eu,
+    #[serde(rename = "fa")]
+    /// fa.
+    Fa,
+    #[serde(rename = "fr")]
+    /// fr.
+    Fr,
+    #[serde(rename = "hr")]
+    /// hr.
+    Hr,
+    #[serde(rename = "he")]
+    /// he.
+    He,
+    #[serde(rename = "it")]
+    /// it.
+    It,
+    #[serde(rename = "ja")]
+    /// ja.
+    Ja,
+    #[serde(rename = "ka")]
+    /// ka.
+    Ka,
+    #[serde(rename = "kr")]
+    /// kr.
+    Kr,
+    #[serde(rename = "nb")]
+    /// nb.
+    Nb,
+    #[serde(rename = "nl")]
+    /// nl.
+    Nl,
+    #[serde(rename = "nn")]
+    /// nn.
+    Nn,
+    #[serde(rename = "pl")]
+    /// pl.
+    Pl,
+    #[serde(rename = "pt_BR")]
+    /// pt_BR.
+    PtBr,
+    #[serde(rename = "ru")]
+    /// ru.
+    Ru,
+    #[serde(rename = "sl")]
+    /// sl.
+    Sl,
+    #[serde(rename = "sv")]
+    /// sv.
+    Sv,
+    #[serde(rename = "tr")]
+    /// tr.
+    Tr,
+    #[serde(rename = "ukr")]
+    /// ukr.
+    Ukr,
+    #[serde(rename = "zh_CN")]
+    /// zh_CN.
+    ZhCn,
+    #[serde(rename = "zh_TW")]
+    /// zh_TW.
+    ZhTw,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsLanguage);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsLanguage);
+
+#[api(
+    default_key: "type",
+    properties: {
+        network: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidr),
+            optional: true,
+            type: String,
+        },
+        type: {
+            type: StartQemuMigrationType,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsMigration {
+    /// CIDR of the (sub) network that is used for migration. Used as a fallback
+    /// for replications jobs if the replication network setting is not set
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub network: Option<String>,
+
+    #[serde(rename = "type")]
+    pub ty: StartQemuMigrationType,
+}
+
+#[api(
+    properties: {
+        lower: {
+            default: 100,
+            optional: true,
+            type: Integer,
+        },
+        upper: {
+            default: 1000000,
+            optional: true,
+            type: Integer,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsNextId {
+    /// Lower, inclusive boundary for free next-id API range.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lower: Option<i64>,
+
+    /// Upper, exclusive boundary for free next-id API range.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub upper: Option<i64>,
+}
+
+#[api(
+    properties: {
+        fencing: {
+            optional: true,
+            type: ClusterOptionsNotifyFencing,
+        },
+        "package-updates": {
+            optional: true,
+            type: ClusterOptionsNotifyPackageUpdates,
+        },
+        replication: {
+            optional: true,
+            type: ClusterOptionsNotifyFencing,
+        },
+        "target-fencing": {
+            optional: true,
+            type: String,
+        },
+        "target-package-updates": {
+            optional: true,
+            type: String,
+        },
+        "target-replication": {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsNotify {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fencing: Option<ClusterOptionsNotifyFencing>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "package-updates")]
+    pub package_updates: Option<ClusterOptionsNotifyPackageUpdates>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub replication: Option<ClusterOptionsNotifyFencing>,
+
+    /// UNUSED - Use datacenter notification settings instead.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-fencing")]
+    pub target_fencing: Option<String>,
+
+    /// UNUSED - Use datacenter notification settings instead.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-package-updates")]
+    pub target_package_updates: Option<String>,
+
+    /// UNUSED - Use datacenter notification settings instead.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "target-replication")]
+    pub target_replication: Option<String>,
+}
+
+#[api]
+/// UNUSED - Use datacenter notification settings instead.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsNotifyFencing {
+    #[serde(rename = "always")]
+    /// always.
+    Always,
+    #[serde(rename = "never")]
+    /// never.
+    Never,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsNotifyFencing);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsNotifyFencing);
+
+#[api]
+/// DEPRECATED: Use datacenter notification settings instead. Control when the
+/// daily update job should send out notifications.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsNotifyPackageUpdates {
+    #[serde(rename = "auto")]
+    #[default]
+    /// auto.
+    Auto,
+    #[serde(rename = "always")]
+    /// always.
+    Always,
+    #[serde(rename = "never")]
+    /// never.
+    Never,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsNotifyPackageUpdates);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsNotifyPackageUpdates);
+
+#[api(
+    default_key: "type",
+    properties: {
+        network: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidr),
+            optional: true,
+            type: String,
+        },
+        type: {
+            type: StartQemuMigrationType,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsReplication {
+    /// CIDR of the (sub) network that is used for replication jobs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub network: Option<String>,
+
+    #[serde(rename = "type")]
+    pub ty: StartQemuMigrationType,
+}
+
+#[api(
+    properties: {
+        "case-sensitive": {
+            default: false,
+            optional: true,
+        },
+        "color-map": {
+            optional: true,
+            type: String,
+            type_text: "<tag>:<hex-color>[:<hex-color-for-text>][;<tag>=...]",
+        },
+        ordering: {
+            optional: true,
+            type: ClusterOptionsTagStyleOrdering,
+        },
+        shape: {
+            optional: true,
+            type: ClusterOptionsTagStyleShape,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsTagStyle {
+    /// Controls if filtering for unique tags on update should check
+    /// case-sensitive.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "case-sensitive")]
+    pub case_sensitive: Option<bool>,
+
+    /// Manual color mapping for tags (semicolon separated).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "color-map")]
+    pub color_map: Option<String>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ordering: Option<ClusterOptionsTagStyleOrdering>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shape: Option<ClusterOptionsTagStyleShape>,
+}
+
+#[api]
+/// Controls the sorting of the tags in the web-interface and the API update.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsTagStyleOrdering {
+    #[serde(rename = "config")]
+    /// config.
+    Config,
+    #[serde(rename = "alphabetical")]
+    #[default]
+    /// alphabetical.
+    Alphabetical,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsTagStyleOrdering);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsTagStyleOrdering);
+
+#[api]
+/// Tag shape for the web ui tree. 'full' draws the full tag. 'circle' draws
+/// only a circle with the background color. 'dense' only draws a small
+/// rectancle (useful when many tags are assigned to each guest).'none' disables
+/// showing the tags.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsTagStyleShape {
+    #[serde(rename = "full")]
+    /// full.
+    Full,
+    #[serde(rename = "circle")]
+    #[default]
+    /// circle.
+    Circle,
+    #[serde(rename = "dense")]
+    /// dense.
+    Dense,
+    #[serde(rename = "none")]
+    /// none.
+    None,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsTagStyleShape);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsTagStyleShape);
+
+#[api(
+    properties: {
+        appid: {
+            optional: true,
+            type: String,
+        },
+        origin: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsU2f {
+    /// U2F AppId URL override. Defaults to the origin.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub appid: Option<String>,
+
+    /// U2F Origin override. Mostly useful for single nodes with a single URL.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<String>,
+}
+
+#[api(
+    properties: {
+        "user-allow": {
+            optional: true,
+            type: ClusterOptionsUserTagAccessUserAllow,
+        },
+        "user-allow-list": {
+            optional: true,
+            type: String,
+            type_text: "<tag>[;<tag>...]",
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsUserTagAccess {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "user-allow")]
+    pub user_allow: Option<ClusterOptionsUserTagAccessUserAllow>,
+
+    /// List of tags users are allowed to set and delete (semicolon separated)
+    /// for 'user-allow' values 'list' and 'existing'.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "user-allow-list")]
+    pub user_allow_list: Option<String>,
+}
+
+#[api]
+/// Controls tag usage for users without `Sys.Modify` on `/` by either allowing
+/// `none`, a `list`, already `existing` or anything (`free`).
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+pub enum ClusterOptionsUserTagAccessUserAllow {
+    #[serde(rename = "none")]
+    /// none.
+    None,
+    #[serde(rename = "list")]
+    /// list.
+    List,
+    #[serde(rename = "existing")]
+    /// existing.
+    Existing,
+    #[serde(rename = "free")]
+    #[default]
+    /// free.
+    Free,
+    /// Unknown variants for forward compatibility.
+    #[serde(untagged)]
+    UnknownEnumValue(FixedString),
+}
+serde_plain::derive_display_from_serialize!(ClusterOptionsUserTagAccessUserAllow);
+serde_plain::derive_fromstr_from_deserialize!(ClusterOptionsUserTagAccessUserAllow);
+
+#[api(
+    properties: {
+        "allow-subdomains": {
+            default: true,
+            optional: true,
+        },
+        id: {
+            optional: true,
+            type: String,
+        },
+        origin: {
+            optional: true,
+            type: String,
+        },
+        rp: {
+            optional: true,
+            type: String,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct ClusterOptionsWebauthn {
+    /// Whether to allow the origin to be a subdomain, rather than the exact
+    /// URL.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "allow-subdomains")]
+    pub allow_subdomains: Option<bool>,
+
+    /// Relying party ID. Must be the domain name without protocol, port or
+    /// location. Changing this *will* break existing credentials.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+
+    /// Site origin. Must be a `https://` URL (or `http://localhost`). Should contain the address users type in their browsers to access the web interface. Changing this *may* break existing credentials.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<String>,
+
+    /// Relying party name. Any text identifier. Changing this *may* break
+    /// existing credentials.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rp: Option<String>,
+}
+
+const_regex! {
+
 CLUSTER_RESOURCE_NODE_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 CLUSTER_RESOURCE_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 
 }
 
 #[test]
-fn test_regex_compilation_4() {
+fn test_regex_compilation_5() {
     use regex::Regex;
     let _: &Regex = &CLUSTER_RESOURCE_NODE_RE;
     let _: &Regex = &CLUSTER_RESOURCE_STORAGE_RE;
@@ -2768,7 +3743,7 @@ CREATE_CONTROLLER_PEER_GROUP_NAME_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_5() {
+fn test_regex_compilation_6() {
     use regex::Regex;
     let _: &Regex = &CREATE_CONTROLLER_ISIS_IFACES_RE;
     let _: &Regex = &CREATE_CONTROLLER_ISIS_NET_RE;
@@ -3245,7 +4220,7 @@ CREATE_ZONE_NODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_6() {
+fn test_regex_compilation_7() {
     use regex::Regex;
     let _: &Regex = &CREATE_ZONE_EXITNODES_RE;
     let _: &Regex = &CREATE_ZONE_EXITNODES_PRIMARY_RE;
@@ -4586,7 +5561,7 @@ LIST_TASKS_STATUSFILTER_RE = r##"^(?i:ok|error|warning|unknown)$"##;
 }
 
 #[test]
-fn test_regex_compilation_7() {
+fn test_regex_compilation_8() {
     use regex::Regex;
     let _: &Regex = &LIST_TASKS_STATUSFILTER_RE;
 }
@@ -4829,7 +5804,7 @@ LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
 }
 
 #[test]
-fn test_regex_compilation_8() {
+fn test_regex_compilation_9() {
     use regex::Regex;
     let _: &Regex = &LXC_CONFIG_TAGS_RE;
     let _: &Regex = &LXC_CONFIG_TIMEZONE_RE;
@@ -5451,7 +6426,7 @@ LXC_CONFIG_MP_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_9() {
+fn test_regex_compilation_10() {
     use regex::Regex;
     let _: &Regex = &LXC_CONFIG_MP_SIZE_RE;
 }
@@ -5577,7 +6552,7 @@ LXC_CONFIG_NET_HWADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 }
 
 #[test]
-fn test_regex_compilation_10() {
+fn test_regex_compilation_11() {
     use regex::Regex;
     let _: &Regex = &LXC_CONFIG_NET_HWADDR_RE;
 }
@@ -5795,7 +6770,7 @@ LXC_CONFIG_ROOTFS_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_11() {
+fn test_regex_compilation_12() {
     use regex::Regex;
     let _: &Regex = &LXC_CONFIG_ROOTFS_SIZE_RE;
 }
@@ -6098,7 +7073,7 @@ LXC_MOVE_VOLUME_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_12() {
+fn test_regex_compilation_13() {
     use regex::Regex;
     let _: &Regex = &LXC_MOVE_VOLUME_STORAGE_RE;
 }
@@ -8752,7 +9727,7 @@ MIGRATE_LXC_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a
 }
 
 #[test]
-fn test_regex_compilation_13() {
+fn test_regex_compilation_14() {
     use regex::Regex;
     let _: &Regex = &MIGRATE_LXC_TARGET_RE;
     let _: &Regex = &MIGRATE_LXC_TARGET_STORAGE_RE;
@@ -8833,7 +9808,7 @@ MIGRATE_QEMU_TARGETSTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a
 }
 
 #[test]
-fn test_regex_compilation_14() {
+fn test_regex_compilation_15() {
     use regex::Regex;
     let _: &Regex = &MIGRATE_QEMU_TARGET_RE;
     let _: &Regex = &MIGRATE_QEMU_TARGETSTORAGE_RE;
@@ -9049,7 +10024,7 @@ NETWORK_INTERFACE_VLAN_RAW_DEVICE_RE = r##"^[a-zA-Z][a-zA-Z0-9_]{1,20}([:\.]\d+)
 }
 
 #[test]
-fn test_regex_compilation_15() {
+fn test_regex_compilation_16() {
     use regex::Regex;
     let _: &Regex = &NETWORK_INTERFACE_BOND_PRIMARY_RE;
     let _: &Regex = &NETWORK_INTERFACE_BRIDGE_PORTS_RE;
@@ -9789,7 +10764,7 @@ NODE_CONFIG_ACME_ACCOUNT_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_16() {
+fn test_regex_compilation_17() {
     use regex::Regex;
     let _: &Regex = &NODE_CONFIG_ACME_ACCOUNT_RE;
 }
@@ -9827,7 +10802,7 @@ NODE_CONFIG_ACMEDOMAIN_PLUGIN_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_17() {
+fn test_regex_compilation_18() {
     use regex::Regex;
     let _: &Regex = &NODE_CONFIG_ACMEDOMAIN_PLUGIN_RE;
 }
@@ -9921,7 +10896,7 @@ NODE_CONFIG_WAKEONLAN_MAC_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"#
 }
 
 #[test]
-fn test_regex_compilation_18() {
+fn test_regex_compilation_19() {
     use regex::Regex;
     let _: &Regex = &NODE_CONFIG_WAKEONLAN_BIND_INTERFACE_RE;
     let _: &Regex = &NODE_CONFIG_WAKEONLAN_MAC_RE;
@@ -10901,7 +11876,7 @@ PVE_QM_HOSTPCI_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_19() {
+fn test_regex_compilation_20() {
     use regex::Regex;
     let _: &Regex = &PVE_QM_HOSTPCI_MAPPING_RE;
 }
@@ -11070,7 +12045,7 @@ PVE_QM_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_20() {
+fn test_regex_compilation_21() {
     use regex::Regex;
     let _: &Regex = &PVE_QM_IDE_MODEL_RE;
     let _: &Regex = &PVE_QM_IDE_SERIAL_RE;
@@ -12256,7 +13231,7 @@ QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_21() {
+fn test_regex_compilation_22() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &QEMU_CONFIG_BOOTDISK_RE;
@@ -13431,7 +14406,7 @@ QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_22() {
+fn test_regex_compilation_23() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -13848,7 +14823,7 @@ QEMU_CONFIG_NET_MACADDR_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 }
 
 #[test]
-fn test_regex_compilation_23() {
+fn test_regex_compilation_24() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_NET_BRIDGE_RE;
     let _: &Regex = &QEMU_CONFIG_NET_MACADDR_RE;
@@ -14154,7 +15129,7 @@ QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_24() {
+fn test_regex_compilation_25() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &QEMU_CONFIG_SATA_SIZE_RE;
@@ -14487,7 +15462,7 @@ QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_25() {
+fn test_regex_compilation_26() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &QEMU_CONFIG_SCSI_SIZE_RE;
@@ -14951,7 +15926,7 @@ QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_26() {
+fn test_regex_compilation_27() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -15056,7 +16031,7 @@ QEMU_CONFIG_USB_MAPPING_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_27() {
+fn test_regex_compilation_28() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_USB_MAPPING_RE;
 }
@@ -15227,7 +16202,7 @@ QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_28() {
+fn test_regex_compilation_29() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &QEMU_CONFIG_VIRTIO_SIZE_RE;
@@ -15558,7 +16533,7 @@ QEMU_CONFIG_VIRTIOFS_DIRID_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_29() {
+fn test_regex_compilation_30() {
     use regex::Regex;
     let _: &Regex = &QEMU_CONFIG_VIRTIOFS_DIRID_RE;
 }
@@ -15858,7 +16833,7 @@ QEMU_MOVE_DISK_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_30() {
+fn test_regex_compilation_31() {
     use regex::Regex;
     let _: &Regex = &QEMU_MOVE_DISK_STORAGE_RE;
 }
@@ -17461,7 +18436,7 @@ REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:
 }
 
 #[test]
-fn test_regex_compilation_31() {
+fn test_regex_compilation_32() {
     use regex::Regex;
     let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_BRIDGE_RE;
     let _: &Regex = &REMOTE_MIGRATE_LXC_TARGET_STORAGE_RE;
@@ -17578,7 +18553,7 @@ REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i
 }
 
 #[test]
-fn test_regex_compilation_32() {
+fn test_regex_compilation_33() {
     use regex::Regex;
     let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_BRIDGE_RE;
     let _: &Regex = &REMOTE_MIGRATE_QEMU_TARGET_STORAGE_RE;
@@ -17940,7 +18915,7 @@ SDN_CONTROLLER_NODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_33() {
+fn test_regex_compilation_34() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_ISIS_NET_RE;
@@ -18143,7 +19118,7 @@ SDN_CONTROLLER_PENDING_NODES_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"#
 }
 
 #[test]
-fn test_regex_compilation_34() {
+fn test_regex_compilation_35() {
     use regex::Regex;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_IFACES_RE;
     let _: &Regex = &SDN_CONTROLLER_PENDING_ISIS_NET_RE;
@@ -18399,7 +19374,7 @@ SDN_VNET_MAC_VRF_MAC_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2}){5}$"##;
 }
 
 #[test]
-fn test_regex_compilation_35() {
+fn test_regex_compilation_36() {
     use regex::Regex;
     let _: &Regex = &SDN_VNET_MAC_VRF_MAC_RE;
 }
@@ -18511,7 +19486,7 @@ SDN_ZONE_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_36() {
+fn test_regex_compilation_37() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_EXITNODES_PRIMARY_RE;
@@ -18841,7 +19816,7 @@ SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_37() {
+fn test_regex_compilation_38() {
     use regex::Regex;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_RE;
     let _: &Regex = &SDN_ZONE_PENDING_EXITNODES_PRIMARY_RE;
@@ -19414,7 +20389,7 @@ START_QEMU_TARGETSTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]):(?i:[a-z][a-z
 }
 
 #[test]
-fn test_regex_compilation_38() {
+fn test_regex_compilation_39() {
     use regex::Regex;
     let _: &Regex = &START_QEMU_MIGRATEDFROM_RE;
     let _: &Regex = &START_QEMU_TARGETSTORAGE_RE;
@@ -19605,7 +20580,7 @@ STOP_QEMU_MIGRATEDFROM_RE = r##"^(?i:[a-z0-9](?i:[a-z0-9\-]*[a-z0-9])?)$"##;
 }
 
 #[test]
-fn test_regex_compilation_39() {
+fn test_regex_compilation_40() {
     use regex::Regex;
     let _: &Regex = &STOP_QEMU_MIGRATEDFROM_RE;
 }
@@ -19707,7 +20682,7 @@ STORAGE_INFO_STORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_40() {
+fn test_regex_compilation_41() {
     use regex::Regex;
     let _: &Regex = &STORAGE_INFO_STORAGE_RE;
 }
@@ -20160,7 +21135,7 @@ UPDATE_CLUSTER_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_41() {
+fn test_regex_compilation_42() {
     use regex::Regex;
     let _: &Regex = &UPDATE_CLUSTER_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -20254,7 +21229,7 @@ UPDATE_CLUSTER_OPTIONS_MAC_PREFIX_RE = r##"^(?i)[a-f0-9][02468ace](?::[a-f0-9]{2
 }
 
 #[test]
-fn test_regex_compilation_42() {
+fn test_regex_compilation_43() {
     use regex::Regex;
     let _: &Regex = &UPDATE_CLUSTER_OPTIONS_DELETE_RE;
     let _: &Regex = &UPDATE_CLUSTER_OPTIONS_EMAIL_FROM_RE;
@@ -20263,7 +21238,7 @@ fn test_regex_compilation_42() {
 #[api(
     properties: {
         bwlimit: {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsBwlimit::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsBwlimit::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -20277,7 +21252,7 @@ fn test_regex_compilation_42() {
             type: VersionResponseConsole,
         },
         crs: {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsCrs::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsCrs::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -20302,10 +21277,10 @@ fn test_regex_compilation_42() {
         },
         fencing: {
             optional: true,
-            type: UpdateClusterOptionsFencing,
+            type: ClusterOptionsFencing,
         },
         ha: {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsHa::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsHa::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -20319,7 +21294,7 @@ fn test_regex_compilation_42() {
         },
         language: {
             optional: true,
-            type: UpdateClusterOptionsLanguage,
+            type: ClusterOptionsLanguage,
         },
         location: {
             format: &ApiStringFormat::PropertyString(&PveNodeLocation::API_SCHEMA),
@@ -20338,7 +21313,7 @@ fn test_regex_compilation_42() {
             type: Integer,
         },
         migration: {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsMigration::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsMigration::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -20347,12 +21322,12 @@ fn test_regex_compilation_42() {
             optional: true,
         },
         "next-id": {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsNextId::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsNextId::API_SCHEMA),
             optional: true,
             type: String,
         },
         notify: {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsNotify::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsNotify::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -20362,27 +21337,27 @@ fn test_regex_compilation_42() {
             type_text: "<tag>[;<tag>...]",
         },
         replication: {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsReplication::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsReplication::API_SCHEMA),
             optional: true,
             type: String,
         },
         "tag-style": {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsTagStyle::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsTagStyle::API_SCHEMA),
             optional: true,
             type: String,
         },
         u2f: {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsU2f::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsU2f::API_SCHEMA),
             optional: true,
             type: String,
         },
         "user-tag-access": {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsUserTagAccess::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsUserTagAccess::API_SCHEMA),
             optional: true,
             type: String,
         },
         webauthn: {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsWebauthn::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&ClusterOptionsWebauthn::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -20422,7 +21397,7 @@ pub struct UpdateClusterOptions {
     pub email_from: Option<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub fencing: Option<UpdateClusterOptionsFencing>,
+    pub fencing: Option<ClusterOptionsFencing>,
 
     /// Cluster wide HA settings.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -20436,7 +21411,7 @@ pub struct UpdateClusterOptions {
     pub keyboard: Option<QemuConfigKeyboard>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub language: Option<UpdateClusterOptionsLanguage>,
+    pub language: Option<ClusterOptionsLanguage>,
 
     /// The location of the cluster.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -20504,724 +21479,6 @@ pub struct UpdateClusterOptions {
     /// webauthn configuration
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub webauthn: Option<String>,
-}
-
-#[api(
-    properties: {
-        clone: {
-            minimum: 0.0,
-            optional: true,
-        },
-        default: {
-            minimum: 0.0,
-            optional: true,
-        },
-        migration: {
-            minimum: 0.0,
-            optional: true,
-        },
-        "move": {
-            minimum: 0.0,
-            optional: true,
-        },
-        restore: {
-            minimum: 0.0,
-            optional: true,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsBwlimit {
-    /// bandwidth limit in KiB/s for cloning disks
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub clone: Option<f64>,
-
-    /// default bandwidth limit in KiB/s
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub default: Option<f64>,
-
-    /// bandwidth limit in KiB/s for migrating guests (including moving local
-    /// disks)
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub migration: Option<f64>,
-
-    /// bandwidth limit in KiB/s for moving disks
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "move")]
-    pub r#move: Option<f64>,
-
-    /// bandwidth limit in KiB/s for restoring guests from backups
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub restore: Option<f64>,
-}
-
-#[api(
-    properties: {
-        ha: {
-            optional: true,
-            type: UpdateClusterOptionsCrsHa,
-        },
-        "ha-auto-rebalance": {
-            default: false,
-            optional: true,
-        },
-        "ha-auto-rebalance-hold-duration": {
-            default: 3.0,
-            minimum: 0.0,
-            optional: true,
-        },
-        "ha-auto-rebalance-margin": {
-            default: 10.0,
-            maximum: 100.0,
-            minimum: 0.0,
-            optional: true,
-        },
-        "ha-auto-rebalance-method": {
-            optional: true,
-            type: UpdateClusterOptionsCrsHaAutoRebalanceMethod,
-        },
-        "ha-auto-rebalance-threshold": {
-            default: 30.0,
-            maximum: 100.0,
-            minimum: 0.0,
-            optional: true,
-        },
-        "ha-rebalance-on-start": {
-            default: false,
-            optional: true,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsCrs {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub ha: Option<UpdateClusterOptionsCrsHa>,
-
-    /// Whether to use CRS for balancing HA resources automatically depending on
-    /// the current node imbalance.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ha-auto-rebalance")]
-    pub ha_auto_rebalance: Option<bool>,
-
-    /// The number of HA rounds for which the cluster node imbalance threshold
-    /// must be exceeded before triggering an automatic resource balancing
-    /// migration.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ha-auto-rebalance-hold-duration")]
-    pub ha_auto_rebalance_hold_duration: Option<f64>,
-
-    /// The minimum relative improvement in cluster node imbalance, in percent,
-    /// to commit to a resource balancing migration.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ha-auto-rebalance-margin")]
-    pub ha_auto_rebalance_margin: Option<f64>,
-
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ha-auto-rebalance-method")]
-    pub ha_auto_rebalance_method: Option<UpdateClusterOptionsCrsHaAutoRebalanceMethod>,
-
-    /// The cluster node imbalance, in percent, which will trigger the automatic
-    /// resource balancing system if exceeded.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ha-auto-rebalance-threshold")]
-    pub ha_auto_rebalance_threshold: Option<f64>,
-
-    /// Set to use CRS for selecting a suited node when a HA services
-    /// request-state changes from stop to start.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ha-rebalance-on-start")]
-    pub ha_rebalance_on_start: Option<bool>,
-}
-
-#[api]
-/// Use this resource scheduler mode for HA.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsCrsHa {
-    #[serde(rename = "basic")]
-    #[default]
-    /// basic.
-    Basic,
-    #[serde(rename = "static")]
-    /// static.
-    Static,
-    #[serde(rename = "dynamic")]
-    /// dynamic.
-    Dynamic,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsCrsHa);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsCrsHa);
-
-#[api]
-/// The method to use for the scoring of balancing migrations.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsCrsHaAutoRebalanceMethod {
-    #[serde(rename = "bruteforce")]
-    #[default]
-    /// bruteforce.
-    Bruteforce,
-    #[serde(rename = "topsis")]
-    /// topsis.
-    Topsis,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsCrsHaAutoRebalanceMethod);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsCrsHaAutoRebalanceMethod);
-
-#[api]
-/// Set the fencing mode of the HA cluster. Hardware mode needs a valid
-/// configuration of fence devices in /etc/pve/ha/fence.cfg. With both all two
-/// modes are used.
-///
-/// WARNING: 'hardware' and 'both' are EXPERIMENTAL & WIP
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsFencing {
-    #[serde(rename = "watchdog")]
-    #[default]
-    /// watchdog.
-    Watchdog,
-    #[serde(rename = "hardware")]
-    /// hardware.
-    Hardware,
-    #[serde(rename = "both")]
-    /// both.
-    Both,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsFencing);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsFencing);
-
-#[api(
-    properties: {
-        shutdown_policy: {
-            type: UpdateClusterOptionsHaShutdownPolicy,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsHa {
-    pub shutdown_policy: UpdateClusterOptionsHaShutdownPolicy,
-}
-
-#[api]
-/// The policy for HA services on node shutdown. 'freeze' disables
-/// auto-recovery, 'failover' ensures recovery, 'conditional' recovers on
-/// poweroff and freezes on reboot. 'migrate' will migrate running services to
-/// other nodes, if possible. With 'freeze' or 'failover', HA Services will
-/// always get stopped first on shutdown.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsHaShutdownPolicy {
-    #[serde(rename = "freeze")]
-    /// freeze.
-    Freeze,
-    #[serde(rename = "failover")]
-    /// failover.
-    Failover,
-    #[serde(rename = "conditional")]
-    #[default]
-    /// conditional.
-    Conditional,
-    #[serde(rename = "migrate")]
-    /// migrate.
-    Migrate,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsHaShutdownPolicy);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsHaShutdownPolicy);
-
-#[api]
-/// Default GUI language.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsLanguage {
-    #[serde(rename = "ar")]
-    /// ar.
-    Ar,
-    #[serde(rename = "ca")]
-    /// ca.
-    Ca,
-    #[serde(rename = "da")]
-    /// da.
-    Da,
-    #[serde(rename = "de")]
-    /// de.
-    De,
-    #[serde(rename = "en")]
-    /// en.
-    En,
-    #[serde(rename = "es")]
-    /// es.
-    Es,
-    #[serde(rename = "eu")]
-    /// eu.
-    Eu,
-    #[serde(rename = "fa")]
-    /// fa.
-    Fa,
-    #[serde(rename = "fr")]
-    /// fr.
-    Fr,
-    #[serde(rename = "hr")]
-    /// hr.
-    Hr,
-    #[serde(rename = "he")]
-    /// he.
-    He,
-    #[serde(rename = "it")]
-    /// it.
-    It,
-    #[serde(rename = "ja")]
-    /// ja.
-    Ja,
-    #[serde(rename = "ka")]
-    /// ka.
-    Ka,
-    #[serde(rename = "kr")]
-    /// kr.
-    Kr,
-    #[serde(rename = "nb")]
-    /// nb.
-    Nb,
-    #[serde(rename = "nl")]
-    /// nl.
-    Nl,
-    #[serde(rename = "nn")]
-    /// nn.
-    Nn,
-    #[serde(rename = "pl")]
-    /// pl.
-    Pl,
-    #[serde(rename = "pt_BR")]
-    /// pt_BR.
-    PtBr,
-    #[serde(rename = "ru")]
-    /// ru.
-    Ru,
-    #[serde(rename = "sl")]
-    /// sl.
-    Sl,
-    #[serde(rename = "sv")]
-    /// sv.
-    Sv,
-    #[serde(rename = "tr")]
-    /// tr.
-    Tr,
-    #[serde(rename = "ukr")]
-    /// ukr.
-    Ukr,
-    #[serde(rename = "zh_CN")]
-    /// zh_CN.
-    ZhCn,
-    #[serde(rename = "zh_TW")]
-    /// zh_TW.
-    ZhTw,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsLanguage);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsLanguage);
-
-#[api(
-    default_key: "type",
-    properties: {
-        network: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidr),
-            optional: true,
-            type: String,
-        },
-        type: {
-            type: StartQemuMigrationType,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsMigration {
-    /// CIDR of the (sub) network that is used for migration. Used as a fallback
-    /// for replications jobs if the replication network setting is not set
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub network: Option<String>,
-
-    #[serde(rename = "type")]
-    pub ty: StartQemuMigrationType,
-}
-
-#[api(
-    properties: {
-        lower: {
-            default: 100,
-            optional: true,
-            type: Integer,
-        },
-        upper: {
-            default: 1000000,
-            optional: true,
-            type: Integer,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsNextId {
-    /// Lower, inclusive boundary for free next-id API range.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub lower: Option<i64>,
-
-    /// Upper, exclusive boundary for free next-id API range.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub upper: Option<i64>,
-}
-
-#[api(
-    properties: {
-        fencing: {
-            optional: true,
-            type: UpdateClusterOptionsNotifyFencing,
-        },
-        "package-updates": {
-            optional: true,
-            type: UpdateClusterOptionsNotifyPackageUpdates,
-        },
-        replication: {
-            optional: true,
-            type: UpdateClusterOptionsNotifyFencing,
-        },
-        "target-fencing": {
-            optional: true,
-            type: String,
-        },
-        "target-package-updates": {
-            optional: true,
-            type: String,
-        },
-        "target-replication": {
-            optional: true,
-            type: String,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsNotify {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub fencing: Option<UpdateClusterOptionsNotifyFencing>,
-
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "package-updates")]
-    pub package_updates: Option<UpdateClusterOptionsNotifyPackageUpdates>,
-
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub replication: Option<UpdateClusterOptionsNotifyFencing>,
-
-    /// UNUSED - Use datacenter notification settings instead.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "target-fencing")]
-    pub target_fencing: Option<String>,
-
-    /// UNUSED - Use datacenter notification settings instead.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "target-package-updates")]
-    pub target_package_updates: Option<String>,
-
-    /// UNUSED - Use datacenter notification settings instead.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "target-replication")]
-    pub target_replication: Option<String>,
-}
-
-#[api]
-/// UNUSED - Use datacenter notification settings instead.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsNotifyFencing {
-    #[serde(rename = "always")]
-    /// always.
-    Always,
-    #[serde(rename = "never")]
-    /// never.
-    Never,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsNotifyFencing);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsNotifyFencing);
-
-#[api]
-/// DEPRECATED: Use datacenter notification settings instead. Control when the
-/// daily update job should send out notifications.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsNotifyPackageUpdates {
-    #[serde(rename = "auto")]
-    #[default]
-    /// auto.
-    Auto,
-    #[serde(rename = "always")]
-    /// always.
-    Always,
-    #[serde(rename = "never")]
-    /// never.
-    Never,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsNotifyPackageUpdates);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsNotifyPackageUpdates);
-
-#[api(
-    default_key: "type",
-    properties: {
-        network: {
-            format: &ApiStringFormat::VerifyFn(verifiers::verify_cidr),
-            optional: true,
-            type: String,
-        },
-        type: {
-            type: StartQemuMigrationType,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsReplication {
-    /// CIDR of the (sub) network that is used for replication jobs.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub network: Option<String>,
-
-    #[serde(rename = "type")]
-    pub ty: StartQemuMigrationType,
-}
-
-#[api(
-    properties: {
-        "case-sensitive": {
-            default: false,
-            optional: true,
-        },
-        "color-map": {
-            optional: true,
-            type: String,
-            type_text: "<tag>:<hex-color>[:<hex-color-for-text>][;<tag>=...]",
-        },
-        ordering: {
-            optional: true,
-            type: UpdateClusterOptionsTagStyleOrdering,
-        },
-        shape: {
-            optional: true,
-            type: UpdateClusterOptionsTagStyleShape,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsTagStyle {
-    /// Controls if filtering for unique tags on update should check
-    /// case-sensitive.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "case-sensitive")]
-    pub case_sensitive: Option<bool>,
-
-    /// Manual color mapping for tags (semicolon separated).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "color-map")]
-    pub color_map: Option<String>,
-
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub ordering: Option<UpdateClusterOptionsTagStyleOrdering>,
-
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub shape: Option<UpdateClusterOptionsTagStyleShape>,
-}
-
-#[api]
-/// Controls the sorting of the tags in the web-interface and the API update.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsTagStyleOrdering {
-    #[serde(rename = "config")]
-    /// config.
-    Config,
-    #[serde(rename = "alphabetical")]
-    #[default]
-    /// alphabetical.
-    Alphabetical,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsTagStyleOrdering);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsTagStyleOrdering);
-
-#[api]
-/// Tag shape for the web ui tree. 'full' draws the full tag. 'circle' draws
-/// only a circle with the background color. 'dense' only draws a small
-/// rectancle (useful when many tags are assigned to each guest).'none' disables
-/// showing the tags.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsTagStyleShape {
-    #[serde(rename = "full")]
-    /// full.
-    Full,
-    #[serde(rename = "circle")]
-    #[default]
-    /// circle.
-    Circle,
-    #[serde(rename = "dense")]
-    /// dense.
-    Dense,
-    #[serde(rename = "none")]
-    /// none.
-    None,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsTagStyleShape);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsTagStyleShape);
-
-#[api(
-    properties: {
-        appid: {
-            optional: true,
-            type: String,
-        },
-        origin: {
-            optional: true,
-            type: String,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsU2f {
-    /// U2F AppId URL override. Defaults to the origin.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub appid: Option<String>,
-
-    /// U2F Origin override. Mostly useful for single nodes with a single URL.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<String>,
-}
-
-#[api(
-    properties: {
-        "user-allow": {
-            optional: true,
-            type: UpdateClusterOptionsUserTagAccessUserAllow,
-        },
-        "user-allow-list": {
-            optional: true,
-            type: String,
-            type_text: "<tag>[;<tag>...]",
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsUserTagAccess {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "user-allow")]
-    pub user_allow: Option<UpdateClusterOptionsUserTagAccessUserAllow>,
-
-    /// List of tags users are allowed to set and delete (semicolon separated)
-    /// for 'user-allow' values 'list' and 'existing'.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "user-allow-list")]
-    pub user_allow_list: Option<String>,
-}
-
-#[api]
-/// Controls tag usage for users without `Sys.Modify` on `/` by either allowing
-/// `none`, a `list`, already `existing` or anything (`free`).
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
-pub enum UpdateClusterOptionsUserTagAccessUserAllow {
-    #[serde(rename = "none")]
-    /// none.
-    None,
-    #[serde(rename = "list")]
-    /// list.
-    List,
-    #[serde(rename = "existing")]
-    /// existing.
-    Existing,
-    #[serde(rename = "free")]
-    #[default]
-    /// free.
-    Free,
-    /// Unknown variants for forward compatibility.
-    #[serde(untagged)]
-    UnknownEnumValue(FixedString),
-}
-serde_plain::derive_display_from_serialize!(UpdateClusterOptionsUserTagAccessUserAllow);
-serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsUserTagAccessUserAllow);
-
-#[api(
-    properties: {
-        "allow-subdomains": {
-            default: true,
-            optional: true,
-        },
-        id: {
-            optional: true,
-            type: String,
-        },
-        origin: {
-            optional: true,
-            type: String,
-        },
-        rp: {
-            optional: true,
-            type: String,
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsWebauthn {
-    /// Whether to allow the origin to be a subdomain, rather than the exact
-    /// URL.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "allow-subdomains")]
-    pub allow_subdomains: Option<bool>,
-
-    /// Relying party ID. Must be the domain name without protocol, port or
-    /// location. Changing this *will* break existing credentials.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-
-    /// Site origin. Must be a `https://` URL (or `http://localhost`). Should contain the address users type in their browsers to access the web interface. Changing this *may* break existing credentials.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<String>,
-
-    /// Relying party name. Any text identifier. Changing this *may* break
-    /// existing credentials.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub rp: Option<String>,
 }
 
 #[api(
@@ -21309,7 +21566,7 @@ UPDATE_GUEST_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_43() {
+fn test_regex_compilation_44() {
     use regex::Regex;
     let _: &Regex = &UPDATE_GUEST_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -21440,7 +21697,7 @@ UPDATE_LXC_CONFIG_TIMEZONE_RE = r##"^.*/.*$"##;
 }
 
 #[test]
-fn test_regex_compilation_44() {
+fn test_regex_compilation_45() {
     use regex::Regex;
     let _: &Regex = &UPDATE_LXC_CONFIG_DELETE_RE;
     let _: &Regex = &UPDATE_LXC_CONFIG_REVERT_RE;
@@ -21819,7 +22076,7 @@ UPDATE_NODE_CONFIG_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_45() {
+fn test_regex_compilation_46() {
     use regex::Regex;
     let _: &Regex = &UPDATE_NODE_CONFIG_DELETE_RE;
 }
@@ -21933,7 +22190,7 @@ UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE = r##"^(?i:[a-z][a-z0-9_-]+)$"##;
 }
 
 #[test]
-fn test_regex_compilation_46() {
+fn test_regex_compilation_47() {
     use regex::Regex;
     let _: &Regex = &UPDATE_NODE_FIREWALL_OPTIONS_DELETE_RE;
 }
@@ -22154,7 +22411,7 @@ UPDATE_QEMU_CONFIG_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9])$"##;
 }
 
 #[test]
-fn test_regex_compilation_47() {
+fn test_regex_compilation_48() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_BOOTDISK_RE;
@@ -23067,7 +23324,7 @@ UPDATE_QEMU_CONFIG_ASYNC_VMSTATESTORAGE_RE = r##"^(?i:[a-z][a-z0-9\-_.]*[a-z0-9]
 }
 
 #[test]
-fn test_regex_compilation_48() {
+fn test_regex_compilation_49() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_AFFINITY_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_ASYNC_BOOTDISK_RE;
@@ -23958,7 +24215,7 @@ UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_49() {
+fn test_regex_compilation_50() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_EFIDISK0_SIZE_RE;
 }
@@ -24043,7 +24300,7 @@ UPDATE_QEMU_CONFIG_IDE_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_50() {
+fn test_regex_compilation_51() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_MODEL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_IDE_SERIAL_RE;
@@ -24399,7 +24656,7 @@ UPDATE_QEMU_CONFIG_SATA_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_51() {
+fn test_regex_compilation_52() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SATA_SIZE_RE;
@@ -24744,7 +25001,7 @@ UPDATE_QEMU_CONFIG_SCSI_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_52() {
+fn test_regex_compilation_53() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_SCSI_SIZE_RE;
@@ -25144,7 +25401,7 @@ UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_53() {
+fn test_regex_compilation_54() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_TPMSTATE0_SIZE_RE;
 }
@@ -25207,7 +25464,7 @@ UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE = r##"^(\d+(\.\d+)?)([KMGT])?$"##;
 }
 
 #[test]
-fn test_regex_compilation_54() {
+fn test_regex_compilation_55() {
     use regex::Regex;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SERIAL_RE;
     let _: &Regex = &UPDATE_QEMU_CONFIG_VIRTIO_SIZE_RE;

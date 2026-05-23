@@ -438,7 +438,7 @@ pub trait PveClient {
 
     /// Get datacenter options. Without 'Sys.Audit' on '/' not all options are
     /// returned.
-    async fn cluster_options(&self) -> Result<serde_json::Value, Error> {
+    async fn cluster_options(&self) -> Result<ClusterOptions, Error> {
         Err(Error::Other("cluster_options not implemented"))
     }
 
@@ -1886,7 +1886,7 @@ where
 
     /// Get datacenter options. Without 'Sys.Audit' on '/' not all options are
     /// returned.
-    async fn cluster_options(&self) -> Result<serde_json::Value, Error> {
+    async fn cluster_options(&self) -> Result<ClusterOptions, Error> {
         let url = "/api2/extjs/cluster/options";
         Ok(self.0.get(url).await?.expect_json()?.data)
     }

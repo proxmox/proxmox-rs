@@ -419,8 +419,7 @@ Schema2Rust::register_format('pve-fw-conntrack-helper' => {
 });
 
 # options
-# FIXME: to use a better return value than `Value`, we first must fix the return schema there
-api(GET => '/cluster/options', 'cluster_options', 'output-type' => 'serde_json::Value');
+api(GET => '/cluster/options', 'cluster_options', 'return-name' => 'ClusterOptions');
 api(PUT => '/cluster/options', 'set_cluster_options', 'param-name' => 'UpdateClusterOptions');
 
 # firewall options
