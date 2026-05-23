@@ -17688,6 +17688,33 @@ pub struct RestartCephServices {
 
 #[api(
     properties: {
+        nocheck: {
+            default: false,
+            optional: true,
+        },
+        skiplock: {
+            default: false,
+            optional: true,
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
+pub struct ResumeQemu {
+    /// Do not check whether the VM is running, used internally during
+    /// migration. Only root may use this option.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nocheck: Option<bool>,
+
+    /// Ignore locks - only root is allowed to use this option.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skiplock: Option<bool>,
+}
+
+#[api(
+    properties: {
         "lock-token": {
             optional: true,
             type: String,

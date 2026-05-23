@@ -255,6 +255,7 @@ api(PUT => '/nodes/{node}/qemu/{vmid}/resize', 'qemu_resize', 'param-name' => 'Q
 api(POST => '/nodes/{node}/qemu/{vmid}/status/start',    'start_qemu_async',    'output-type' => 'PveUpid', 'param-name' => 'StartQemu');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/stop',     'stop_qemu_async',     'output-type' => 'PveUpid', 'param-name' => 'StopQemu');
 api(POST => '/nodes/{node}/qemu/{vmid}/status/shutdown', 'shutdown_qemu_async', 'output-type' => 'PveUpid', 'param-name' => 'ShutdownQemu');
+api(POST => '/nodes/{node}/qemu/{vmid}/status/resume',   'resume_qemu_async',   'output-type' => 'PveUpid', 'param-name' => 'ResumeQemu');
 
 # PVE9 introduced a non-optional return value, mark it optional manually so we can still use it with PVE8
 my $r = (Schema2Rust::get_return_type(GET => '/nodes/{node}/qemu/{vmid}/migrate'))->{properties};
@@ -268,6 +269,7 @@ Schema2Rust::derive('QemuMigratePreconditions' => 'Clone', 'PartialEq');
 Schema2Rust::derive('StartQemu' => 'Default');
 Schema2Rust::derive('StopQemu' => 'Default');
 Schema2Rust::derive('ShutdownQemu' => 'Default');
+Schema2Rust::derive('ResumeQemu' => 'Default');
 api(POST => '/nodes/{node}/qemu/{vmid}/migrate',        'migrate_qemu',         'output-type' => 'PveUpid', 'param-name' => 'MigrateQemu');
 Schema2Rust::register_api_override('MigrateQemu', '/properties/bwlimit/default', undef);
 api(POST => '/nodes/{node}/qemu/{vmid}/remote_migrate', 'remote_migrate_qemu',  'output-type' => 'PveUpid', 'param-name' => 'RemoteMigrateQemu');

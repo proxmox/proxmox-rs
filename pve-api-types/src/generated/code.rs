@@ -257,7 +257,6 @@
 /// - /nodes/{node}/qemu/{vmid}/status
 /// - /nodes/{node}/qemu/{vmid}/status/reboot
 /// - /nodes/{node}/qemu/{vmid}/status/reset
-/// - /nodes/{node}/qemu/{vmid}/status/resume
 /// - /nodes/{node}/qemu/{vmid}/status/suspend
 /// - /nodes/{node}/qemu/{vmid}/template
 /// - /nodes/{node}/qemu/{vmid}/termproxy
@@ -1436,6 +1435,16 @@ pub trait PveClient {
         params: RestartCephServices,
     ) -> Result<PveUpid, Error> {
         Err(Error::Other("restart_ceph_services not implemented"))
+    }
+
+    /// Resume virtual machine.
+    async fn resume_qemu_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: ResumeQemu,
+    ) -> Result<PveUpid, Error> {
+        Err(Error::Other("resume_qemu_async not implemented"))
     }
 
     /// Rollback pending changes to SDN configuration
@@ -3536,6 +3545,21 @@ where
         let url = &format!(
             "/api2/extjs/nodes/{}/ceph/restart",
             percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC)
+        );
+        Ok(self.0.post(url, &params).await?.expect_json()?.data)
+    }
+
+    /// Resume virtual machine.
+    async fn resume_qemu_async(
+        &self,
+        node: &str,
+        vmid: u32,
+        params: ResumeQemu,
+    ) -> Result<PveUpid, Error> {
+        let url = &format!(
+            "/api2/extjs/nodes/{}/qemu/{}/status/resume",
+            percent_encode(node.as_bytes(), percent_encoding::NON_ALPHANUMERIC),
+            vmid
         );
         Ok(self.0.post(url, &params).await?.expect_json()?.data)
     }
