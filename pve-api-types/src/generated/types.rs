@@ -9710,7 +9710,7 @@ serde_plain::derive_fromstr_from_deserialize!(NetworkInterfaceVlanProtocol);
             type: String,
         },
         location: {
-            format: &ApiStringFormat::PropertyString(&NodeConfigLocation::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&PveNodeLocation::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -9864,40 +9864,6 @@ pub struct NodeConfigAcmedomain {
     /// The ACME plugin ID
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub plugin: Option<String>,
-}
-
-#[api(
-    properties: {
-        latitude: {
-            maximum: 90.0,
-            minimum: -90.0,
-        },
-        longitude: {
-            maximum: 180.0,
-            minimum: -180.0,
-        },
-        name: {
-            max_length: 128,
-            optional: true,
-            type: String,
-            type_text: "<name>",
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct NodeConfigLocation {
-    /// The latitude of the nodes location in degrees.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    pub latitude: f64,
-
-    /// The longitude of the nodes location in degrees.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    pub longitude: f64,
-
-    /// The name of the location of this node
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
 }
 
 #[api]
@@ -10666,6 +10632,40 @@ pub struct ProxmoxRemote {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_i64")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub port: Option<i64>,
+}
+
+#[api(
+    properties: {
+        latitude: {
+            maximum: 90.0,
+            minimum: -90.0,
+        },
+        longitude: {
+            maximum: 180.0,
+            minimum: -180.0,
+        },
+        name: {
+            max_length: 128,
+            optional: true,
+            type: String,
+            type_text: "<name>",
+        },
+    },
+)]
+/// Object.
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct PveNodeLocation {
+    /// The latitude of the nodes location in degrees.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    pub latitude: f64,
+
+    /// The longitude of the nodes location in degrees.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
+    pub longitude: f64,
+
+    /// The name of the location of this node
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
 }
 
 #[api(
@@ -20322,7 +20322,7 @@ fn test_regex_compilation_42() {
             type: UpdateClusterOptionsLanguage,
         },
         location: {
-            format: &ApiStringFormat::PropertyString(&UpdateClusterOptionsLocation::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&PveNodeLocation::API_SCHEMA),
             optional: true,
             type: String,
         },
@@ -20841,40 +20841,6 @@ pub enum UpdateClusterOptionsLanguage {
 }
 serde_plain::derive_display_from_serialize!(UpdateClusterOptionsLanguage);
 serde_plain::derive_fromstr_from_deserialize!(UpdateClusterOptionsLanguage);
-
-#[api(
-    properties: {
-        latitude: {
-            maximum: 90.0,
-            minimum: -90.0,
-        },
-        longitude: {
-            maximum: 180.0,
-            minimum: -180.0,
-        },
-        name: {
-            max_length: 128,
-            optional: true,
-            type: String,
-            type_text: "<name>",
-        },
-    },
-)]
-/// Object.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct UpdateClusterOptionsLocation {
-    /// The latitude of the nodes location in degrees.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    pub latitude: f64,
-
-    /// The longitude of the nodes location in degrees.
-    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_f64")]
-    pub longitude: f64,
-
-    /// The name of the location of this node
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-}
 
 #[api(
     default_key: "type",
@@ -21894,7 +21860,7 @@ fn test_regex_compilation_45() {
             type: String,
         },
         location: {
-            format: &ApiStringFormat::PropertyString(&NodeConfigLocation::API_SCHEMA),
+            format: &ApiStringFormat::PropertyString(&PveNodeLocation::API_SCHEMA),
             optional: true,
             type: String,
         },
