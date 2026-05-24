@@ -1,3 +1,18 @@
+rust-pve-api-types (8.1.9-1) trixie; urgency=medium
+
+  * expose additional API endpoints: Ceph cluster and node, the QEMU resume
+    action, and updating the datacenter options and per-node config.
+
+  * type the 'GET /cluster/options' return as a dedicated ClusterOptions
+    struct instead of returning untyped JSON.
+
+  * refresh the tracked API schema; the node and datacenter location now share
+    a single PveNodeLocation type.
+
+  * derive Clone and PartialEq on more generated types.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 24 May 2026 02:32:06 +0200
+
 rust-pve-api-types (8.1.8-1) trixie; urgency=medium
 
   * guest agent config: tolerate the deprecated 'freeze-fs-on-backup' and
