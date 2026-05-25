@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
-use proxmox_apt::repositories::{
-    check_repositories, get_current_release_codename, standard_repositories,
-    standard_repos_offered_for, DebianCodename,
-};
 use proxmox_apt::repositories::{APTRepositoryFileImpl, APTRepositoryImpl};
+use proxmox_apt::repositories::{
+    DebianCodename, check_repositories, get_current_release_codename, standard_repos_offered_for,
+    standard_repositories,
+};
 use proxmox_apt_api_types::{
     APTRepositoryFile, APTRepositoryHandle, APTRepositoryInfo, APTStandardRepository, HostProduct,
 };
@@ -359,15 +359,14 @@ fn test_standard_repositories() -> Result<(), Error> {
 
     // Mutate a row's status by handle so reorderings or insertions in the table don't silently
     // shift indices and pass against the wrong row.
-    let set_status = |repos: &mut [APTStandardRepository],
-                      handle: APTRepositoryHandle,
-                      status: Option<bool>| {
-        let row = repos
-            .iter_mut()
-            .find(|r| r.handle == handle)
-            .unwrap_or_else(|| panic!("no expected row for handle {handle}"));
-        row.status = status;
-    };
+    let set_status =
+        |repos: &mut [APTStandardRepository], handle: APTRepositoryHandle, status: Option<bool>| {
+            let row = repos
+                .iter_mut()
+                .find(|r| r.handle == handle)
+                .unwrap_or_else(|| panic!("no expected row for handle {handle}"));
+            row.status = status;
+        };
 
     let absolute_suite_list = read_dir.join("absolute_suite.list");
     let mut file = APTRepositoryFile::new(absolute_suite_list)?.unwrap();
@@ -401,16 +400,32 @@ fn test_standard_repositories() -> Result<(), Error> {
     let pve_alt_list = read_dir.join("ceph-squid-trixie.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
-    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_ENTERPRISE, Some(true));
-    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_NO_SUBSCRIPTION, Some(true));
-    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_TEST, Some(true));
+    set_status(
+        &mut expected,
+        APTRepositoryHandle::CEPH_SQUID_ENTERPRISE,
+        Some(true),
+    );
+    set_status(
+        &mut expected,
+        APTRepositoryHandle::CEPH_SQUID_NO_SUBSCRIPTION,
+        Some(true),
+    );
+    set_status(
+        &mut expected,
+        APTRepositoryHandle::CEPH_SQUID_TEST,
+        Some(true),
+    );
     let std_repos = standard_repositories(&[file], &host_pve, &DebianCodename::Trixie);
     assert_eq!(std_repos, expected);
 
     let pve_alt_list = read_dir.join("ceph-squid-nosub-trixie.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
-    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_ENTERPRISE, None);
+    set_status(
+        &mut expected,
+        APTRepositoryHandle::CEPH_SQUID_ENTERPRISE,
+        None,
+    );
     set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_TEST, None);
     let std_repos = standard_repositories(&[file], &host_pve, &DebianCodename::Trixie);
     assert_eq!(std_repos, expected);
@@ -418,8 +433,16 @@ fn test_standard_repositories() -> Result<(), Error> {
     let pve_alt_list = read_dir.join("ceph-squid-enterprise-trixie.list");
     let mut file = APTRepositoryFile::new(pve_alt_list)?.unwrap();
     file.parse()?;
-    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_ENTERPRISE, Some(true));
-    set_status(&mut expected, APTRepositoryHandle::CEPH_SQUID_NO_SUBSCRIPTION, None);
+    set_status(
+        &mut expected,
+        APTRepositoryHandle::CEPH_SQUID_ENTERPRISE,
+        Some(true),
+    );
+    set_status(
+        &mut expected,
+        APTRepositoryHandle::CEPH_SQUID_NO_SUBSCRIPTION,
+        None,
+    );
     let std_repos = standard_repositories(&[file], &host_pve, &DebianCodename::Trixie);
     assert_eq!(std_repos, expected);
 
@@ -573,7 +596,10 @@ fn test_legacy_unhyphenated_test_component_canonicalized_on_write() -> Result<()
             enabled: true,
         };
         let changed = canonicalize_components_to_standard(&mut legacy_test, &host, &suite);
-        assert!(changed, "{slug}test should report a change after canonicalize");
+        assert!(
+            changed,
+            "{slug}test should report a change after canonicalize"
+        );
         assert_eq!(
             legacy_test.components,
             vec![format!("{slug}-test")],
@@ -582,7 +608,10 @@ fn test_legacy_unhyphenated_test_component_canonicalized_on_write() -> Result<()
 
         // Idempotent: a second pass on the already-canonical components must report no change.
         let again = canonicalize_components_to_standard(&mut legacy_test, &host, &suite);
-        assert!(!again, "canonicalize on an already-canonical repo must be a no-op");
+        assert!(
+            !again,
+            "canonicalize on an already-canonical repo must be a no-op"
+        );
     }
     Ok(())
 }

@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::process::Command;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use proxmox_rrd::rrd::Database;
 use proxmox_sys::fs::CreateOptions;

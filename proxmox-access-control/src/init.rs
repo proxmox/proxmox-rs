@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 
 use proxmox_auth_api::types::{Authid, Userid};
 use proxmox_section_config::SectionConfigData;
@@ -123,9 +123,9 @@ pub(crate) mod impl_feature {
     use std::path::{Path, PathBuf};
     use std::sync::OnceLock;
 
-    use anyhow::{format_err, Error};
+    use anyhow::{Error, format_err};
 
-    use crate::init::{init_access_config, AccessControlConfig};
+    use crate::init::{AccessControlConfig, init_access_config};
 
     static ACCESS_CONF_DIR: OnceLock<PathBuf> = OnceLock::new();
 

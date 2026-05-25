@@ -1,9 +1,9 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Error};
-use serde_json::{json, Value};
+use anyhow::{Error, bail};
+use serde_json::{Value, json};
 
-use proxmox_sys::fs::{file_get_json, open_file_locked, replace_file, CreateOptions};
+use proxmox_sys::fs::{CreateOptions, file_get_json, open_file_locked, replace_file};
 use proxmox_time::epoch_i64;
 
 use super::{PrivateAuthState, PublicAuthState};

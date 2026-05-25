@@ -3,16 +3,16 @@ use std::ffi::OsStr;
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
 
-use proxmox_acme_api::{AcmeConfig, AcmeDomain, ACME_DOMAIN_PROPERTY_SCHEMA};
+use proxmox_acme_api::{ACME_DOMAIN_PROPERTY_SCHEMA, AcmeConfig, AcmeDomain};
 use proxmox_auth_api::types::Authid;
 #[cfg(feature = "enum-fallback")]
 use proxmox_fixed_string::FixedString;
-use proxmox_http::{ProxyConfig, HTTP_PROXY_SCHEMA};
+use proxmox_http::{HTTP_PROXY_SCHEMA, ProxyConfig};
 use proxmox_schema::*;
 
 use crate::{
-    StorageStatus, EMAIL_SCHEMA, MULTI_LINE_COMMENT_SCHEMA, OPENSSL_CIPHERS_TLS_1_2_SCHEMA,
-    OPENSSL_CIPHERS_TLS_1_3_SCHEMA,
+    EMAIL_SCHEMA, MULTI_LINE_COMMENT_SCHEMA, OPENSSL_CIPHERS_TLS_1_2_SCHEMA,
+    OPENSSL_CIPHERS_TLS_1_3_SCHEMA, StorageStatus,
 };
 
 #[api]

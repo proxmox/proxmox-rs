@@ -7,8 +7,8 @@ use proxmox_network_types::ip_address::Cidr;
 use proxmox_schema::api;
 
 use crate::{
-    answer::{FilesystemType, RebootMode},
     BootType, IsoInfo, ProxmoxProduct, SystemDMI, UdevProperties,
+    answer::{FilesystemType, RebootMode},
 };
 
 /// Re-export for convenience, since this is public API

@@ -117,7 +117,7 @@
 
 use anyhow::{Context, Error};
 
-use crate::parse_helpers::{parse_complete_line, parse_error, IResult};
+use crate::parse_helpers::{IResult, parse_complete_line, parse_error};
 
 // Seconds-per-unit constants. Month and year are the systemd definitions:
 // 1 month = 30.44 days = 2,630,016 s (exact), 1 year = 365.25 days = 31,557,600 s (exact).

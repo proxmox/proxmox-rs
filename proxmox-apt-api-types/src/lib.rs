@@ -3,7 +3,7 @@ use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 
 use proxmox_config_digest::ConfigDigest;
-use proxmox_schema::{api, const_regex, ApiStringFormat};
+use proxmox_schema::{ApiStringFormat, api, const_regex};
 
 const_regex! {
     pub PACKAGE_NAME_REGEX = r"^[a-z0-9][-+.a-z0-9:]+$";

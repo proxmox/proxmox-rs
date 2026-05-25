@@ -1,16 +1,16 @@
 use std::fmt;
 use std::sync::LazyLock;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use serde::{Deserialize, Serialize};
 
 use regex::Regex;
 
-use proxmox_schema::api_types::SAFE_ID_REGEX;
 use proxmox_schema::ApiStringFormat;
 use proxmox_schema::ArraySchema;
 use proxmox_schema::Schema;
 use proxmox_schema::StringSchema;
+use proxmox_schema::api_types::SAFE_ID_REGEX;
 
 pub use proxmox_schema::api;
 pub use proxmox_schema::api_types::{CIDR_SCHEMA, CIDR_V4_SCHEMA, CIDR_V6_SCHEMA};

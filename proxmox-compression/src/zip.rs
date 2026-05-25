@@ -14,7 +14,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::SystemTime;
 
-use anyhow::{format_err, Error, Result};
+use anyhow::{Error, Result, format_err};
 use endian_trait::Endian;
 use futures::ready;
 use libc::{S_IFDIR, S_IFLNK, S_IFREG};

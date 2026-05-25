@@ -5,9 +5,9 @@ use std::io::BufRead;
 use std::iter::{Iterator, Peekable};
 use std::sync::LazyLock;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use regex::Regex;
-use serde::de::{value, Deserialize, IntoDeserializer};
+use serde::de::{Deserialize, IntoDeserializer, value};
 
 use super::helper::*;
 use super::lexer::*;

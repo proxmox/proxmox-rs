@@ -1,6 +1,6 @@
 use std::fs::{read_to_string, remove_dir_all};
 
-use proxmox_oci::{parse_and_extract_image, Arch};
+use proxmox_oci::{Arch, parse_and_extract_image};
 use proxmox_sys::fs::make_tmp_dir;
 
 #[test]

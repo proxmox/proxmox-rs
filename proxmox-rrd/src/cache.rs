@@ -7,13 +7,13 @@ use std::sync::{Arc, RwLock};
 use std::thread::spawn;
 use std::time::SystemTime;
 
-use anyhow::{bail, format_err, Error};
-use crossbeam_channel::{bounded, TryRecvError};
+use anyhow::{Error, bail, format_err};
+use crossbeam_channel::{TryRecvError, bounded};
 
-use proxmox_sys::fs::{create_path, CreateOptions};
+use proxmox_sys::fs::{CreateOptions, create_path};
 
-use crate::rrd::{AggregationFn, DataSourceType, Database};
 use crate::Entry;
+use crate::rrd::{AggregationFn, DataSourceType, Database};
 
 mod journal;
 use journal::*;

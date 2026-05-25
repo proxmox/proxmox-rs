@@ -30,7 +30,7 @@
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
-use crossbeam_channel::{bounded, Sender};
+use crossbeam_channel::{Sender, bounded};
 
 /// Errors returned by [`ParallelHandler`] and [`SendHandle`] operations.
 #[derive(Debug, thiserror::Error)]
@@ -149,15 +149,17 @@ impl<I: Send + 'static> ParallelHandler<I> {
             handles.push(
                 std::thread::Builder::new()
                     .name(format!("{name} ({i})"))
-                    .spawn(move || loop {
-                        let data = match input_rx.recv() {
-                            Ok(data) => data,
-                            Err(_) => return,
-                        };
-                        if let Err(err) = (handler_fn)(data) {
-                            let mut guard = abort.lock().unwrap();
-                            if guard.is_none() {
-                                *guard = Some(format!("{err:#}"));
+                    .spawn(move || {
+                        loop {
+                            let data = match input_rx.recv() {
+                                Ok(data) => data,
+                                Err(_) => return,
+                            };
+                            if let Err(err) = (handler_fn)(data) {
+                                let mut guard = abort.lock().unwrap();
+                                if guard.is_none() {
+                                    *guard = Some(format!("{err:#}"));
+                                }
                             }
                         }
                     })

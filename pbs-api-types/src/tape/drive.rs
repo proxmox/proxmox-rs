@@ -1,13 +1,13 @@
 //! Types for tape drive API
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "enum-fallback")]
 use proxmox_fixed_string::FixedString;
 
-use proxmox_schema::{api, IntegerSchema, Schema, StringSchema, Updater};
+use proxmox_schema::{IntegerSchema, Schema, StringSchema, Updater, api};
 
-use crate::{OptionalDeviceIdentification, CHANGER_NAME_SCHEMA, PROXMOX_SAFE_ID_FORMAT};
+use crate::{CHANGER_NAME_SCHEMA, OptionalDeviceIdentification, PROXMOX_SAFE_ID_FORMAT};
 
 pub const DRIVE_NAME_SCHEMA: Schema = StringSchema::new("Drive Identifier.")
     .format(&PROXMOX_SAFE_ID_FORMAT)

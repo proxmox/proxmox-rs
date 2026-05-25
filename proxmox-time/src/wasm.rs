@@ -1,4 +1,4 @@
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 /// Returns Unix Epoch (now)
 pub fn epoch_i64() -> i64 {

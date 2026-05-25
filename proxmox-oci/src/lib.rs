@@ -1,13 +1,13 @@
 use std::collections::HashMap;
-use std::fs::{read_dir, remove_dir_all, remove_file, File};
+use std::fs::{File, read_dir, remove_dir_all, remove_file};
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use flate2::read::GzDecoder;
+use oci_spec::OciSpecError;
 pub use oci_spec::image::{Arch, Config};
 use oci_spec::image::{ImageConfiguration, ImageManifest, MediaType};
-use oci_spec::OciSpecError;
 use sha2::digest::generic_array::GenericArray;
 use sha2::{Digest, Sha256};
 use tar::{Archive, EntryType};
@@ -217,7 +217,7 @@ fn extract_image_rootfs<R: Read + Seek, P: AsRef<Path>>(
             | MediaType::ArtifactManifest
             | MediaType::EmptyJSON
             | MediaType::Other(_)) => {
-                return Err(ExtractError::WrongMediaType(media_type.to_string()))
+                return Err(ExtractError::WrongMediaType(media_type.to_string()));
             }
         };
 

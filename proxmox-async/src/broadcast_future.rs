@@ -4,7 +4,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use futures::future::{FutureExt, TryFutureExt};
 use tokio::sync::oneshot;
 
@@ -44,7 +44,7 @@ impl<T: Clone> BroadcastData<T> {
     }
 
     pub fn listen(&mut self) -> impl Future<Output = Result<T, Error>> + use<T> {
-        use futures::future::{ok, Either};
+        use futures::future::{Either, ok};
 
         match &self.result {
             None => {}

@@ -1,13 +1,13 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use proxmox_schema::api_types::{BLOCKDEVICE_NAME_REGEX, UUID_REGEX};
 
 use crate::{
-    get_lvm_devices, zfs_devices, Disk, DiskUsageInfo, DiskUsageType, Disks, LsblkInfo,
-    PartitionInfo, PartitionUsageType,
+    Disk, DiskUsageInfo, DiskUsageType, Disks, LsblkInfo, PartitionInfo, PartitionUsageType,
+    get_lvm_devices, zfs_devices,
 };
 
 static ISCSI_PATH_REGEX: LazyLock<regex::Regex> =

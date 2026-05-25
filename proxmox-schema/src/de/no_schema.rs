@@ -4,8 +4,8 @@ use std::borrow::Cow;
 
 use serde::de;
 
-use super::cow3::Cow3;
 use super::Error;
+use super::cow3::Cow3;
 
 /// This can only deserialize strings and lists of strings and has no schema.
 pub struct NoSchemaDeserializer<'de, 'i> {

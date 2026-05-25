@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -13,13 +13,6 @@ mod auth_state;
 pub use auth_state::*;
 
 use openidconnect::{
-    //curl::http_client,
-    core::{
-        CoreAuthDisplay, CoreAuthPrompt, CoreAuthenticationFlow, CoreErrorResponseType,
-        CoreGenderClaim, CoreIdTokenVerifier, CoreJsonWebKey, CoreJweContentEncryptionAlgorithm,
-        CoreJwsSigningAlgorithm, CoreProviderMetadata, CoreRevocableToken,
-        CoreRevocationErrorResponse, CoreTokenIntrospectionResponse, CoreTokenType,
-    },
     AdditionalClaims,
     AuthenticationContextClass,
     AuthorizationCode,
@@ -43,6 +36,13 @@ use openidconnect::{
     StandardErrorResponse,
     StandardTokenResponse,
     UserInfoClaims,
+    //curl::http_client,
+    core::{
+        CoreAuthDisplay, CoreAuthPrompt, CoreAuthenticationFlow, CoreErrorResponseType,
+        CoreGenderClaim, CoreIdTokenVerifier, CoreJsonWebKey, CoreJweContentEncryptionAlgorithm,
+        CoreJwsSigningAlgorithm, CoreProviderMetadata, CoreRevocableToken,
+        CoreRevocationErrorResponse, CoreTokenIntrospectionResponse, CoreTokenType,
+    },
 };
 
 /// Stores Additional Claims into a serde_json::Value;

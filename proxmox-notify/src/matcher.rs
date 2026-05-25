@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 
 use proxmox_schema::api_types::{COMMENT_SCHEMA, SAFE_ID_REGEX_STR};
-use proxmox_schema::{api, const_regex, ApiStringFormat, Schema, StringSchema, Updater};
-use proxmox_time::{parse_daily_duration, DailyDuration};
+use proxmox_schema::{ApiStringFormat, Schema, StringSchema, Updater, api, const_regex};
+use proxmox_time::{DailyDuration, parse_daily_duration};
 
 use crate::schema::ENTITY_NAME_SCHEMA;
 use crate::{Error, Notification, Origin, Severity};

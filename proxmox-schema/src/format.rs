@@ -1,6 +1,6 @@
 //! Module to generate and format API Documentation
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use crate::*;
 

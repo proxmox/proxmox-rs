@@ -17,6 +17,7 @@ pub mod builder;
 pub use builder::Logger;
 pub use file_logger::{FileLogOptions, FileLogger};
 
+pub use tracing::Level;
 pub use tracing::debug;
 pub use tracing::debug_span;
 pub use tracing::enabled;
@@ -31,7 +32,6 @@ pub use tracing::trace;
 pub use tracing::trace_span;
 pub use tracing::warn;
 pub use tracing::warn_span;
-pub use tracing::Level;
 pub use tracing_subscriber::filter::LevelFilter;
 
 tokio::task_local! {

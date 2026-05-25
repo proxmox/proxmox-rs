@@ -7,7 +7,7 @@ use crate::{
 #[cfg(feature = "enum-fallback")]
 use proxmox_fixed_string::FixedString;
 
-use proxmox_schema::{api, Schema, StringSchema, Updater};
+use proxmox_schema::{Schema, StringSchema, Updater, api};
 
 pub const METRIC_SERVER_ID_SCHEMA: Schema = StringSchema::new("Metrics Server ID.")
     .format(&PROXMOX_SAFE_ID_FORMAT)

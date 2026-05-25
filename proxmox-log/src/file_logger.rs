@@ -3,7 +3,7 @@ use std::io::Write;
 use anyhow::Error;
 use nix::fcntl::OFlag;
 
-use proxmox_sys::fs::{atomic_open_or_create_file, CreateOptions};
+use proxmox_sys::fs::{CreateOptions, atomic_open_or_create_file};
 
 /// Options to control the behavior of a [FileLogger] instance
 #[derive(Default)]

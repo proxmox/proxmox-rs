@@ -2,17 +2,17 @@
 
 use std::collections::{HashMap, HashSet};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use serde::Serialize;
 use serde_json::Value;
 
 use proxmox_schema::format::{
-    get_property_description, get_schema_type_text, DocumentationFormat, ParameterDisplayStyle,
+    DocumentationFormat, ParameterDisplayStyle, get_property_description, get_schema_type_text,
 };
 use proxmox_schema::*;
 
-use super::{value_to_text, TableFormatOptions};
 use super::{CliCommand, CliCommandMap, CommandLineInterface, GlobalOptions};
+use super::{TableFormatOptions, value_to_text};
 
 /// Helper function to format and print result.
 ///

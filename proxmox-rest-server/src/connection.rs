@@ -7,11 +7,11 @@ use std::mem::ManuallyDrop;
 use std::net::SocketAddr;
 use std::os::unix::io::AsFd;
 use std::path::PathBuf;
-use std::pin::{pin, Pin};
+use std::pin::{Pin, pin};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use anyhow::{format_err, Context, Error};
+use anyhow::{Context, Error, format_err};
 use futures::FutureExt;
 use openssl::ec::{EcGroup, EcKey};
 use openssl::nid::Nid;
@@ -367,7 +367,7 @@ impl AcceptBuilder {
         let (socket, peer) = match listener.accept().await {
             Ok(connection) => connection,
             Err(error) => {
-                return Err(format_err!(error)).context("error while accepting tcp stream")
+                return Err(format_err!(error)).context("error while accepting tcp stream");
             }
         };
 
@@ -473,7 +473,9 @@ impl AcceptBuilder {
                 let insecure_stream = Box::pin(state.socket);
 
                 if let Err(send_err) = insecure_sender.send(Ok(insecure_stream)).await {
-                    log::error!("[{peer}] failed to accept connection - connection channel closed: {send_err}");
+                    log::error!(
+                        "[{peer}] failed to accept connection - connection channel closed: {send_err}"
+                    );
                 }
             }
             Err(err) => {

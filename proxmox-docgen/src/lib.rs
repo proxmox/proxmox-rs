@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use proxmox_router::{ApiAccess, ApiHandler, ApiMethod, Permission, Router, SubRoute};
 use proxmox_schema::format::get_property_string_type_text;

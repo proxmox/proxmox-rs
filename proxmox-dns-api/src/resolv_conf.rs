@@ -5,9 +5,9 @@ use const_format::concatcp;
 use proxmox_config_digest::ConfigDigest;
 use regex::Regex;
 
+use proxmox_sys::fs::CreateOptions;
 use proxmox_sys::fs::file_get_contents;
 use proxmox_sys::fs::replace_file;
-use proxmox_sys::fs::CreateOptions;
 
 use proxmox_schema::api_types::IPRE_STR;
 

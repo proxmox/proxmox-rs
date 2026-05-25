@@ -2,13 +2,13 @@
 
 use std::os::unix::io::AsRawFd;
 
-use nix::sys::stat::Mode;
 use nix::NixPath;
+use nix::sys::stat::Mode;
 use nix::{fcntl::OFlag, sys::stat};
 
 use std::os::unix::io::{FromRawFd, OwnedFd, RawFd};
 
-use nix::fcntl::{fcntl, FdFlag, F_GETFD, F_SETFD};
+use nix::fcntl::{F_GETFD, F_SETFD, FdFlag, fcntl};
 
 /// Change the `O_CLOEXEC` flag of an existing file descriptor.
 pub fn fd_change_cloexec(fd: RawFd, on: bool) -> Result<(), anyhow::Error> {

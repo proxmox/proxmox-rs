@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use hyper::http::method::Method;
 use nix::sys::mman::MsFlags;
 use nix::sys::stat::Mode;

@@ -1,9 +1,9 @@
 use std::fs::{remove_dir_all, write};
 
 use proxmox_rest_server::{
-    init_worker_tasks, upid_log_path, upid_read_status, TaskState, WorkerTask,
+    TaskState, WorkerTask, init_worker_tasks, upid_log_path, upid_read_status,
 };
-use proxmox_sys::fs::{make_tmp_dir, CreateOptions};
+use proxmox_sys::fs::{CreateOptions, make_tmp_dir};
 
 fn upid_read_status_test_helper(log: &str, expected: &TaskState) {
     let task = WorkerTask::new("x", None, "u@pam".into(), false).unwrap().0;

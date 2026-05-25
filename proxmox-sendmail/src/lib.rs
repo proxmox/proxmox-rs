@@ -6,8 +6,8 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
 
-use anyhow::{bail, Context, Error};
-use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
+use anyhow::{Context, Error, bail};
+use percent_encoding::{AsciiSet, CONTROLS, utf8_percent_encode};
 
 // Characters in this set will be encoded, so reproduce the inverse of the set described by RFC5987
 // Section 3.2.1 `attr-char`, as that describes all characters that **don't** need encoding:

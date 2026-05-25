@@ -3,8 +3,8 @@ use std::io::{Read, Seek, SeekFrom};
 use std::ops::Range;
 use std::path::{Path, PathBuf};
 
-use oci_spec::image::{Arch, Digest, ImageIndex, ImageManifest, MediaType};
 use oci_spec::OciSpecError;
+use oci_spec::image::{Arch, Digest, ImageIndex, ImageManifest, MediaType};
 use tar::Archive;
 
 use proxmox_io::RangeReader;

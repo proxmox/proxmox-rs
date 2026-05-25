@@ -2,7 +2,7 @@
 //!
 //! This can be used with the async [`Client`](crate::client::Client) or sync [`Client`](crate::client::sync::Client).
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use http::Uri;
 

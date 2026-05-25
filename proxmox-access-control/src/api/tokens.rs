@@ -1,6 +1,6 @@
 //! User Management
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use proxmox_config_digest::ConfigDigest;
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 
@@ -11,8 +11,8 @@ use proxmox_schema::api;
 use crate::acl;
 use crate::token_shadow::{self};
 use crate::types::{
-    ApiToken, ApiTokenSecret, DeletableTokenProperty, TokenApiEntry, ENABLE_USER_SCHEMA,
-    EXPIRE_USER_SCHEMA, REGENERATE_TOKEN_SCHEMA,
+    ApiToken, ApiTokenSecret, DeletableTokenProperty, ENABLE_USER_SCHEMA, EXPIRE_USER_SCHEMA,
+    REGENERATE_TOKEN_SCHEMA, TokenApiEntry,
 };
 
 #[api(

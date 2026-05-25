@@ -6,9 +6,9 @@
 use std::convert::TryFrom;
 
 use proc_macro2::Span;
+use syn::Token;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::Token;
 
 /// Serde name types.
 #[allow(clippy::enum_variant_names)]

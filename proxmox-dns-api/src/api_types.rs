@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use proxmox_schema::api;
-use proxmox_schema::api_types::IP_FORMAT;
 use proxmox_schema::Schema;
 use proxmox_schema::StringSchema;
+use proxmox_schema::api;
+use proxmox_schema::api_types::IP_FORMAT;
 
 use proxmox_config_digest::ConfigDigest;
 

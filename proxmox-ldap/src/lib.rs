@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{bail, format_err, Context, Error};
+use anyhow::{Context, Error, bail, format_err};
 use ldap3::adapters::{Adapter, EntriesOnly, PagedResults};
 use ldap3::{Ldap, LdapConnAsync, LdapConnSettings, LdapResult, Scope, SearchEntry};
 use native_tls::{Certificate, TlsConnector, TlsConnectorBuilder};

@@ -1,6 +1,6 @@
 use std::io;
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::sign::Signer;

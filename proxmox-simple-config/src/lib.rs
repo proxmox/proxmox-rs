@@ -4,7 +4,7 @@
 
 use std::io::Write;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

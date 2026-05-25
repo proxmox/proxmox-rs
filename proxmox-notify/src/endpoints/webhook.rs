@@ -17,17 +17,17 @@ use http::Request;
 use percent_encoding::AsciiSet;
 use proxmox_schema::property_string::PropertyString;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 use proxmox_http::client::sync::Client;
 use proxmox_http::{HttpClient, HttpOptions, ProxyConfig};
 use proxmox_schema::api_types::{COMMENT_SCHEMA, HTTP_URL_SCHEMA};
-use proxmox_schema::{api, ApiStringFormat, ApiType, Schema, StringSchema, Updater};
+use proxmox_schema::{ApiStringFormat, ApiType, Schema, StringSchema, Updater, api};
 
 use crate::context::context;
 use crate::renderer::TemplateType;
 use crate::schema::ENTITY_NAME_SCHEMA;
-use crate::{renderer, Content, Endpoint, Error, Notification, Origin};
+use crate::{Content, Endpoint, Error, Notification, Origin, renderer};
 
 /// This will be used as a section type in the public/private configuration file.
 pub(crate) const WEBHOOK_TYPENAME: &str = "webhook";

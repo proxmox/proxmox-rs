@@ -6,7 +6,7 @@ use proxmox_human_byte::HumanByte;
 use proxmox_schema::api_types::{
     CERT_FINGERPRINT_SHA256_SCHEMA, DNS_LABEL_STR, IPRE_STR, SAFE_ID_FORMAT,
 };
-use proxmox_schema::{api, const_regex, ApiStringFormat, Schema, StringSchema, Updater};
+use proxmox_schema::{ApiStringFormat, Schema, StringSchema, Updater, api, const_regex};
 
 #[rustfmt::skip]
 /// Regex to match S3 endpoint full qualified domain names, including template patterns for bucket

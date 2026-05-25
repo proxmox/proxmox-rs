@@ -1,11 +1,11 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 #[cfg(feature = "enum-fallback")]
 use proxmox_fixed_string::FixedString;
 
-use proxmox_schema::{api, const_regex, ApiStringFormat, Schema, StringSchema};
+use proxmox_schema::{ApiStringFormat, Schema, StringSchema, api, const_regex};
 
 const_regex! {
     pub MAINTENANCE_MESSAGE_REGEX = r"^[[:^cntrl:]]*$";

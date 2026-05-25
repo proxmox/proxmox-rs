@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::sync::Arc;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -11,8 +11,8 @@ use proxmox_schema::*;
 use super::environment::CliEnvironment;
 use super::getopts;
 use super::{
-    generate_nested_usage, generate_usage_str_do, print_help, print_nested_usage_error,
-    print_simple_usage_error_do, CliCommand, CliCommandMap, CommandLineInterface, GlobalOptions,
+    CliCommand, CliCommandMap, CommandLineInterface, GlobalOptions, generate_nested_usage,
+    generate_usage_str_do, print_help, print_nested_usage_error, print_simple_usage_error_do,
 };
 use crate::{ApiFuture, ApiHandler, ApiMethod, RpcEnvironment};
 

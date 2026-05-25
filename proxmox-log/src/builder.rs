@@ -1,15 +1,15 @@
-use tracing::level_filters::LevelFilter;
 use tracing::Level;
 use tracing::Metadata;
+use tracing::level_filters::LevelFilter;
 use tracing_log::{AsLog, LogTracer};
+use tracing_subscriber::Layer;
 use tracing_subscriber::layer::Context;
 use tracing_subscriber::layer::Filter;
 use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::Layer;
 
 use crate::{
-    get_env_variable, journald_or_stderr_layer, plain_stderr_layer,
-    pve_task_formatter::PveTaskFormatter, tasklog_layer::TasklogLayer, LogContext,
+    LogContext, get_env_variable, journald_or_stderr_layer, plain_stderr_layer,
+    pve_task_formatter::PveTaskFormatter, tasklog_layer::TasklogLayer,
 };
 ///
 /// Filter yielding `true` *outside* of worker tasks, *unless* the level is `ERROR`.

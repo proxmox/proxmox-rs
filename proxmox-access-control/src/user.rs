@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock, RwLock};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use proxmox_auth_api::types::Authid;
 use proxmox_config_digest::ConfigDigest;
-use proxmox_product_config::{open_api_lockfile, replace_privileged_config, ApiLockGuard};
+use proxmox_product_config::{ApiLockGuard, open_api_lockfile, replace_privileged_config};
 use proxmox_schema::*;
 use proxmox_section_config::{SectionConfig, SectionConfigData, SectionConfigPlugin};
 

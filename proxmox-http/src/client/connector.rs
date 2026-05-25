@@ -1,12 +1,12 @@
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
 use futures::*;
 use http::Uri;
-use hyper_util::client::legacy::connect::dns::{GaiResolver, Name};
 use hyper_util::client::legacy::connect::HttpConnector;
+use hyper_util::client::legacy::connect::dns::{GaiResolver, Name};
 use hyper_util::rt::TokioIo;
 use openssl::ssl::SslConnector;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};

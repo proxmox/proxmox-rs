@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use rfc822_like::de::Deserializer;
 use serde::Deserialize;
 use serde_json::Value;

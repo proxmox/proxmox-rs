@@ -61,7 +61,7 @@ pub struct Uuid(Box<[u8; 16]>);
 impl Uuid {
     /// Generate a uuid with `uuid_generate(3)`.
     pub fn generate() -> Self {
-        use std::alloc::{alloc, Layout};
+        use std::alloc::{Layout, alloc};
         let uuid = unsafe { alloc(Layout::new::<[u8; 16]>()) as *mut [u8; 16] };
         unsafe { uuid_generate(uuid) };
         Self(unsafe { Box::from_raw(uuid) })
@@ -92,7 +92,7 @@ impl Uuid {
     /// assert_eq!(uuid1, uuid2);
     /// ```
     pub fn parse_str(src: &str) -> Result<Self, UuidError> {
-        use std::alloc::{alloc, Layout};
+        use std::alloc::{Layout, alloc};
         let uuid: *mut [u8; 16] = unsafe { alloc(Layout::new::<[u8; 16]>()) as *mut [u8; 16] };
         if src.len() == 36 {
             // Unfortunately the manpage of `uuid_parse(3)` states that it technically requires a

@@ -1,10 +1,10 @@
 use std::{fmt::Display, str::FromStr};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "api-types")]
-use proxmox_schema::{api, Updater};
+use proxmox_schema::{Updater, api};
 
 // Aliases are needed for PVE compat!
 #[cfg_attr(feature = "api-types", api())]
@@ -215,7 +215,7 @@ pub struct SetSubscription {
 pub use _impl::get_hardware_address_candidates;
 
 #[cfg(feature = "impl")]
-pub(crate) use _impl::{md5sum, SHARED_KEY_DATA};
+pub(crate) use _impl::{SHARED_KEY_DATA, md5sum};
 
 #[cfg(feature = "impl")]
 mod _impl {
@@ -223,8 +223,8 @@ mod _impl {
     use std::path::Path;
 
     use anyhow::format_err;
-    use anyhow::{bail, Error};
-    use openssl::hash::{hash, DigestBytes, MessageDigest};
+    use anyhow::{Error, bail};
+    use openssl::hash::{DigestBytes, MessageDigest, hash};
     use proxmox_sys::fs::file_get_contents;
     use proxmox_time::TmEditor;
 

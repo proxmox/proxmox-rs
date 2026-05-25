@@ -54,11 +54,7 @@ impl From<StaticNodeUsage> for NodeUsage {
 /// Calculate new CPU usage in percent.
 /// `add` being `0.0` means "unlimited" and results in `max` being added.
 fn add_cpu_usage(old: f64, max: f64, add: f64) -> f64 {
-    if add == 0.0 {
-        old + max
-    } else {
-        old + add
-    }
+    if add == 0.0 { old + max } else { old + add }
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]

@@ -2,7 +2,7 @@ use std::io::{self, IsTerminal, Read, Write};
 use std::mem::MaybeUninit;
 use std::os::unix::io::{AsRawFd, OwnedFd};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 

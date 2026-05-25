@@ -2,7 +2,7 @@ use std::borrow::{Borrow, BorrowMut};
 use std::ops::{Deref, DerefMut};
 use std::os::unix::io::{AsRawFd, RawFd};
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use nix::dir;
 use nix::dir::Dir;
 use nix::fcntl::OFlag;

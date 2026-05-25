@@ -6,7 +6,7 @@
 //! TODO: Remove the snake_case'd variants in a future major version (e.g.
 //! PVE 10).
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, HashMap},
@@ -18,10 +18,9 @@ use proxmox_network_types::{fqdn::Fqdn, ip_address::Cidr};
 
 #[cfg(feature = "api-types")]
 use proxmox_schema::{
-    api,
-    api_types::{DISK_ARRAY_SCHEMA, PASSWORD_FORMAT},
     ApiType, IntegerSchema, NumberSchema, ObjectSchema, OneOfSchema, Schema, StringSchema, Updater,
-    UpdaterType,
+    UpdaterType, api,
+    api_types::{DISK_ARRAY_SCHEMA, PASSWORD_FORMAT},
 };
 
 #[cfg(feature = "api-types")]

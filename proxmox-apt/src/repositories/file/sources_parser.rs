@@ -1,7 +1,7 @@
 use std::io::BufRead;
 use std::iter::Iterator;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use crate::repositories::APTRepositoryImpl;
 use proxmox_apt_api_types::{

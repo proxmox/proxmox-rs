@@ -1,10 +1,10 @@
 use std::mem::{replace, take};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
-use crate::parse_helpers::{notspace1, parse_complete, parse_error, parse_failure, IResult};
+use crate::parse_helpers::{IResult, notspace1, parse_complete, parse_error, parse_failure};
 
 use nom::{
     bytes::complete::{tag, take_while, take_while1},

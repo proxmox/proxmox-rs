@@ -3,7 +3,7 @@
 pub(crate) mod sys;
 
 mod escape;
-pub use escape::{escape_unit, unescape_unit, unescape_unit_path, UnescapeError};
+pub use escape::{UnescapeError, escape_unit, unescape_unit, unescape_unit_path};
 
 pub mod journal;
 pub mod notify;

@@ -4,17 +4,17 @@ use std::time::Duration;
 use lettre::message::header::{HeaderName, HeaderValue};
 use lettre::message::{Mailbox, MultiPart, SinglePart};
 use lettre::transport::smtp::client::{Tls, TlsParameters};
-use lettre::{message::header::ContentType, Message, SmtpTransport, Transport};
+use lettre::{Message, SmtpTransport, Transport, message::header::ContentType};
 use serde::{Deserialize, Serialize};
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
-use proxmox_schema::{api, Updater};
+use proxmox_schema::{Updater, api};
 
 use crate::context::context;
 use crate::endpoints::common::mail;
 use crate::renderer::TemplateType;
 use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA, USER_SCHEMA};
-use crate::{renderer, Content, Endpoint, Error, Notification, Origin};
+use crate::{Content, Endpoint, Error, Notification, Origin, renderer};
 
 pub(crate) const SMTP_TYPENAME: &str = "smtp";
 
@@ -292,8 +292,8 @@ fn build_forwarded_message(
     endpoint_name: &str,
     raw: &[u8],
 ) -> Result<Message, Error> {
-    use lettre::message::header::ContentTransferEncoding;
     use lettre::message::Body;
+    use lettre::message::header::ContentTransferEncoding;
     use tracing::error;
 
     let parsed_message = mail_parser::MessageParser::default()

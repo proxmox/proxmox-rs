@@ -15,11 +15,11 @@ use std::io::{Read, Write};
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd};
 use std::path::Path;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use serde::{Deserialize, Serialize};
 
 use proxmox_schema::api;
-use proxmox_sys::fs::{make_tmp_file, CreateOptions};
+use proxmox_sys::fs::{CreateOptions, make_tmp_file};
 
 /// Proxmox RRD v2 file magic number
 // openssl::sha::sha256(b"Proxmox Round Robin Database file v2.0")[0..8];

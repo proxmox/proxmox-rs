@@ -2,7 +2,7 @@
 
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use proxmox_api_macro::api;
 use proxmox_schema as schema;

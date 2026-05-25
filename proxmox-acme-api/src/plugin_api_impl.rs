@@ -1,6 +1,6 @@
 //! ACME plugin configuration API implementation
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use serde::Deserialize;
 use serde_json::Value;
@@ -12,7 +12,7 @@ use crate::types::{
     DeletablePluginProperty, DnsPlugin, DnsPluginCore, DnsPluginCoreUpdater, PluginConfig,
 };
 
-use proxmox_router::{http_bail, RpcEnvironment};
+use proxmox_router::{RpcEnvironment, http_bail};
 
 pub fn list_plugins(rpcenv: &mut dyn RpcEnvironment) -> Result<Vec<PluginConfig>, Error> {
     let (plugins, digest) = super::plugin_config::plugin_config()?;

@@ -1,15 +1,15 @@
 use std::pin::Pin;
 use std::str::FromStr;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::task::{Context as Ctx, Poll};
 
-use anyhow::{anyhow, bail, format_err, Context, Error};
+use anyhow::{Context, Error, anyhow, bail, format_err};
 use http_body_util::BodyExt;
 use hyper::body::{Body, Bytes, Frame, Incoming, SizeHint};
 use hyper::header::HeaderName;
-use hyper::http::header;
 use hyper::http::StatusCode;
+use hyper::http::header;
 use hyper::{HeaderMap, Response};
 use serde::Deserialize;
 

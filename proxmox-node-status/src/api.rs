@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::OnceLock;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use proxmox_schema::api;
 use proxmox_schema::api_types::NODE_SCHEMA;

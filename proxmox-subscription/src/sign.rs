@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use openssl::{hash::MessageDigest, pkey::Public};
 use serde::{Deserialize, Serialize};

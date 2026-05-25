@@ -1,6 +1,6 @@
 //! Auth key handling.
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use openssl::hash::MessageDigest;
 use openssl::pkey::{HasPublic, Id, PKey, PKeyRef, Private, Public};
 use openssl::rsa::Rsa;
@@ -320,7 +320,7 @@ impl Keyring {
         if let Some(key) = &self.signing_key {
             match key {
                 SigningKey::Private(key) if verify_with(&key.key, digest, signature, data)? => {
-                    return Ok(true)
+                    return Ok(true);
                 }
                 SigningKey::Hmac(key) if key.verify(digest, signature, data)? => return Ok(true),
                 _ => (),
@@ -330,10 +330,10 @@ impl Keyring {
         for key in &self.public_keys {
             match key {
                 VerificationKey::Public(key) if verify_with(&key.key, digest, signature, data)? => {
-                    return Ok(true)
+                    return Ok(true);
                 }
                 VerificationKey::Hmac(key) if key.verify(digest, signature, data)? => {
-                    return Ok(true)
+                    return Ok(true);
                 }
                 _ => (),
             }

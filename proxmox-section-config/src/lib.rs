@@ -24,13 +24,13 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use proxmox_lang::try_block;
-use proxmox_schema::format::{dump_properties, wrap_text, ParameterDisplayStyle};
+use proxmox_schema::format::{ParameterDisplayStyle, dump_properties, wrap_text};
 use proxmox_schema::*;
 
 pub mod typed;

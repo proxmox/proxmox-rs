@@ -6,10 +6,10 @@ use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll};
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use http::{HeaderMap, Method, Uri};
-use hyper::http::request::Parts;
 use hyper::Response;
+use hyper::http::request::Parts;
 use hyper_util::rt::TokioIo;
 use tower_service::Service;
 
@@ -18,10 +18,10 @@ use proxmox_http::Body;
 use proxmox_log::{FileLogOptions, FileLogger};
 use proxmox_network_types::Cidr;
 use proxmox_router::{Router, RpcEnvironmentType, UserInformation};
-use proxmox_sys::fs::{create_path, CreateOptions};
+use proxmox_sys::fs::{CreateOptions, create_path};
 
-use crate::rest::Handler;
 use crate::RestEnvironment;
+use crate::rest::Handler;
 
 /// REST server configuration
 pub struct ApiConfig {
@@ -376,7 +376,7 @@ mod templates {
     use std::sync::RwLock;
     use std::time::SystemTime;
 
-    use anyhow::{bail, format_err, Error};
+    use anyhow::{Error, bail, format_err};
     use handlebars::Handlebars;
     use serde::Serialize;
 

@@ -1,15 +1,15 @@
 use std::sync::LazyLock;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use regex::Regex;
 use serde_json::json;
 
-use proxmox_http::{uri::json_object_to_query, HttpClient};
+use proxmox_http::{HttpClient, uri::json_object_to_query};
 
 use crate::{
-    subscription_info::{md5sum, SHARED_KEY_DATA},
     SubscriptionInfo, SubscriptionStatus,
+    subscription_info::{SHARED_KEY_DATA, md5sum},
 };
 
 static ATTR_RE: LazyLock<Regex> =

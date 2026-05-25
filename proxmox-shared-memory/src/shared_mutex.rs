@@ -3,10 +3,10 @@ use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
-use crate::raw_shared_mutex::RawSharedMutex;
 use crate::Init;
+use crate::raw_shared_mutex::RawSharedMutex;
 
 #[derive(Debug)]
 #[repr(C)]

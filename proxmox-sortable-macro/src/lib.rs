@@ -9,10 +9,10 @@ use std::mem;
 use proc_macro::TokenStream as TokenStream_1;
 use proc_macro2::TokenStream;
 use quote::quote;
+use syn::Error;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::visit_mut::VisitMut;
-use syn::Error;
 
 macro_rules! format_err {
     ($span:expr => $($msg:tt)*) => { Error::new_spanned($span, format!($($msg)*)) };

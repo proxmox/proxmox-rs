@@ -3,7 +3,7 @@
 //! This defines the methods & types used in the authentication and TFA configuration API between
 //! PBS, PVE, PMG.
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use super::{OpenUserChallengeData, TfaConfig, TfaInfo, TfaUserData};
 use crate::totp::Totp;

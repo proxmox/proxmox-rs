@@ -1,10 +1,10 @@
 use std::future::Future;
 use std::pin::pin;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::OnceLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 
-use anyhow::{bail, Error};
-use tokio::signal::unix::{signal, SignalKind};
+use anyhow::{Error, bail};
+use tokio::signal::unix::{SignalKind, signal};
 use tokio::sync::watch;
 
 static SHUTDOWN_LISTENERS: OnceLock<watch::Sender<bool>> = OnceLock::new();

@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use hyper::header;
 
 /// Possible Compression Methods, order determines preference (later is preferred)

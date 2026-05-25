@@ -1,11 +1,11 @@
 use proxmox_http_error::HttpError;
 
+use crate::Config;
 use crate::api::http_err;
 use crate::endpoints::gotify::{
-    DeleteableGotifyProperty, GotifyConfig, GotifyConfigUpdater, GotifyPrivateConfig,
-    GotifyPrivateConfigUpdater, GOTIFY_TYPENAME,
+    DeleteableGotifyProperty, GOTIFY_TYPENAME, GotifyConfig, GotifyConfigUpdater,
+    GotifyPrivateConfig, GotifyPrivateConfigUpdater,
 };
-use crate::Config;
 
 /// Get a list of all gotify endpoints.
 ///
@@ -193,15 +193,17 @@ mod tests {
     fn test_update_not_existing_returns_error() -> Result<(), HttpError> {
         let mut config = empty_config();
 
-        assert!(update_endpoint(
-            &mut config,
-            "test",
-            Default::default(),
-            Default::default(),
-            None,
-            None
-        )
-        .is_err());
+        assert!(
+            update_endpoint(
+                &mut config,
+                "test",
+                Default::default(),
+                Default::default(),
+                None,
+                None
+            )
+            .is_err()
+        );
 
         Ok(())
     }
@@ -211,15 +213,17 @@ mod tests {
         let mut config = empty_config();
         add_default_gotify_endpoint(&mut config)?;
 
-        assert!(update_endpoint(
-            &mut config,
-            "gotify-endpoint",
-            Default::default(),
-            Default::default(),
-            None,
-            Some(&[0; 32])
-        )
-        .is_err());
+        assert!(
+            update_endpoint(
+                &mut config,
+                "gotify-endpoint",
+                Default::default(),
+                Default::default(),
+                None,
+                Some(&[0; 32])
+            )
+            .is_err()
+        );
 
         Ok(())
     }

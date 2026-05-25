@@ -2,13 +2,13 @@ use proxmox_sendmail::Mail;
 use serde::{Deserialize, Serialize};
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
-use proxmox_schema::{api, Updater};
+use proxmox_schema::{Updater, api};
 
 use crate::context;
 use crate::endpoints::common::mail;
 use crate::renderer::TemplateType;
 use crate::schema::{EMAIL_SCHEMA, ENTITY_NAME_SCHEMA, USER_SCHEMA};
-use crate::{renderer, Content, Endpoint, Error, Notification, Origin};
+use crate::{Content, Endpoint, Error, Notification, Origin, renderer};
 
 pub(crate) const SENDMAIL_TYPENAME: &str = "sendmail";
 

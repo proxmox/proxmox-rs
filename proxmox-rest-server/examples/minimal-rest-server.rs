@@ -3,10 +3,10 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::{LazyLock, Mutex};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use futures::future;
-use http::request::Parts;
 use http::HeaderMap;
+use http::request::Parts;
 use hyper::{Method, Response};
 use hyper_util::server::graceful::GracefulShutdown;
 use tokio::net::TcpListener;
@@ -14,7 +14,7 @@ use tokio::net::TcpListener;
 use proxmox_http::Body;
 use proxmox_log::LevelFilter;
 use proxmox_router::{
-    list_subdirs_api_method, Router, RpcEnvironmentType, SubdirMap, UserInformation,
+    Router, RpcEnvironmentType, SubdirMap, UserInformation, list_subdirs_api_method,
 };
 use proxmox_schema::api;
 

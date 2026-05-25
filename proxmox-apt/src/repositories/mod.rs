@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use proxmox_apt_api_types::{
     APTRepository, APTRepositoryFile, APTRepositoryFileError, APTRepositoryHandle,
@@ -24,8 +24,8 @@ pub use proxmox_apt_api_types::DebianCodename;
 
 mod standard;
 pub use standard::{
-    canonicalize_components_to_standard, find_handle_for_repository, standard_repos_offered_for,
-    APTRepositoryHandleImpl, APTStandardRepositoryImpl,
+    APTRepositoryHandleImpl, APTStandardRepositoryImpl, canonicalize_components_to_standard,
+    find_handle_for_repository, standard_repos_offered_for,
 };
 
 const APT_SOURCES_LIST_FILENAME: &str = "/etc/apt/sources.list";

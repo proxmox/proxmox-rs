@@ -1,12 +1,12 @@
 use std::fmt::Write as _;
 
-use tracing::field::Field;
-use tracing::field::Visit;
 use tracing::Event;
 use tracing::Level;
 use tracing::Subscriber;
-use tracing_subscriber::layer::Context;
+use tracing::field::Field;
+use tracing::field::Visit;
 use tracing_subscriber::Layer;
+use tracing_subscriber::layer::Context;
 
 use crate::{FileLogState, LogContext};
 

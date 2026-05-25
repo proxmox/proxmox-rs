@@ -18,9 +18,9 @@ use anyhow::Error;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote_spanned;
 
+use super::Schema;
 use super::attributes::CheckedAttributes;
 use super::attributes::UpdaterFieldAttributes;
-use super::Schema;
 use crate::api::{self, ObjectEntry, SchemaItem};
 use crate::serde;
 use crate::util::{self, FieldName, JSONObject, Maybe};

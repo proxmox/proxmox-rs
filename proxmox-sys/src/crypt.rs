@@ -5,7 +5,7 @@
 
 use std::ffi::{CStr, CString};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 // from libcrypt1, 'lib/crypt.h.in'
 const CRYPT_OUTPUT_SIZE: usize = 384;

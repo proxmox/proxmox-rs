@@ -9,7 +9,7 @@ use std::os::unix::io::AsRawFd;
 use std::os::unix::io::FromRawFd;
 use std::path::Path;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use nix::errno::Errno;
 use nix::fcntl::OFlag;
 use nix::sys::mman::{MapFlags, MsFlags, ProtFlags};

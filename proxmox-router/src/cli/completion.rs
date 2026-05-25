@@ -4,7 +4,7 @@ use proxmox_schema::*;
 
 use super::help_command_def;
 use super::{
-    shellword_split_unclosed, CliCommand, CliCommandMap, CommandLineInterface, CompletionFunction,
+    CliCommand, CliCommandMap, CommandLineInterface, CompletionFunction, shellword_split_unclosed,
 };
 
 fn record_done_argument(

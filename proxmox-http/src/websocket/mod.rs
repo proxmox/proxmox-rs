@@ -9,10 +9,10 @@ use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use futures::select;
 use http::header::{
-    HeaderMap, HeaderValue, CONNECTION, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_KEY,
+    CONNECTION, HeaderMap, HeaderValue, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_KEY,
     SEC_WEBSOCKET_PROTOCOL, SEC_WEBSOCKET_VERSION, UPGRADE,
 };
 use http::{Response, StatusCode};

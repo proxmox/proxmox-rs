@@ -2,7 +2,7 @@ use std::ffi::OsString;
 use std::os::unix::ffi::OsStringExt;
 use std::path::PathBuf;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 #[allow(clippy::manual_range_contains)]
 fn parse_hex_digit(d: u8) -> Result<u8, Error> {

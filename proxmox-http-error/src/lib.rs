@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use serde::{ser::SerializeStruct, Serialize, Serializer};
+use serde::{Serialize, Serializer, ser::SerializeStruct};
 
 #[doc(hidden)]
 pub use http::StatusCode;

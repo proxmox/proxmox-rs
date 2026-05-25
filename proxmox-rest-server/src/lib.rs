@@ -19,7 +19,7 @@
 use std::fmt;
 use std::sync::LazyLock;
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use nix::unistd::Pid;
 
 use proxmox_sys::fs::CreateOptions;

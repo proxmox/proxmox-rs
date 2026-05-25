@@ -14,7 +14,7 @@ use proxmox_router::http_err;
 use proxmox_router::{ApiResponseFuture, HttpError, Router, RpcEnvironment};
 
 use crate::formatter::*;
-use crate::{normalize_path_with_components, WorkerTask};
+use crate::{WorkerTask, normalize_path_with_components};
 
 /// Hyper Service implementation to handle stateful H2 connections.
 ///

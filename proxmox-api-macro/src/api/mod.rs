@@ -12,7 +12,7 @@ use std::convert::{TryFrom, TryInto};
 use anyhow::Error;
 
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{ToTokens, quote, quote_spanned};
 use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
 use syn::{Expr, ExprPath, Ident};

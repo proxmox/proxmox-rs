@@ -1,6 +1,6 @@
+use crate::Error;
 use crate::context::Context;
 use crate::renderer::TemplateSource;
-use crate::Error;
 
 #[derive(Debug)]
 pub struct TestContext;

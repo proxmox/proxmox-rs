@@ -2,11 +2,11 @@ use serde::{Deserialize, Serialize};
 
 use const_format::concatcp;
 
-use proxmox_auth_api::types::{Authid, Tokenname, Userid, PROXMOX_TOKEN_ID_SCHEMA};
+use proxmox_auth_api::types::{Authid, PROXMOX_TOKEN_ID_SCHEMA, Tokenname, Userid};
 use proxmox_schema::{
-    api,
+    ApiStringFormat, BooleanSchema, IntegerSchema, Schema, StringSchema, Updater, api,
     api_types::{COMMENT_SCHEMA, SAFE_ID_REGEX_STR, SINGLE_LINE_COMMENT_FORMAT},
-    const_regex, ApiStringFormat, BooleanSchema, IntegerSchema, Schema, StringSchema, Updater,
+    const_regex,
 };
 
 pub const ENABLE_USER_SCHEMA: Schema = BooleanSchema::new(

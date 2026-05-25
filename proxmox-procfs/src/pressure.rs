@@ -185,7 +185,7 @@ impl PressureData {
         let file = match File::open(path.as_ref()) {
             Ok(file) => file,
             Err(err) if err.kind() == ErrorKind::NotFound => {
-                return Err(Error::NotFound(path.as_ref().into()))
+                return Err(Error::NotFound(path.as_ref().into()));
             }
             Err(err) => return Err(Error::Io(err)),
         };

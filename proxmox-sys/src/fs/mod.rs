@@ -1,7 +1,7 @@
 //! File system related utilities
 use std::path::Path;
 
-use anyhow::{bail, Context, Error};
+use anyhow::{Context, Error, bail};
 
 use nix::sys::stat;
 use nix::unistd::{Gid, Uid};

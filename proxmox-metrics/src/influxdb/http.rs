@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use tokio::sync::mpsc;
 

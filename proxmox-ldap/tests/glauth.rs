@@ -151,13 +151,14 @@ fn test_search() -> Result<(), Error> {
         assert!(a.dn.starts_with("cn=test"));
         assert!(a.dn.ends_with("ou=testgroup,ou=users,dc=example,dc=com"));
 
-        assert!(a
-            .attributes
-            .get("mail")
-            .unwrap()
-            .first()
-            .unwrap()
-            .ends_with("@example.com"));
+        assert!(
+            a.attributes
+                .get("mail")
+                .unwrap()
+                .first()
+                .unwrap()
+                .ends_with("@example.com")
+        );
         assert!(a.attributes.get("sn").unwrap().first().unwrap().eq("User"));
     }
 

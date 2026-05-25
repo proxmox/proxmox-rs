@@ -2,11 +2,11 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use apt_pkg_native::Cache;
 
 use proxmox_schema::const_regex;
-use proxmox_sys::fs::{file_read_optional_string, replace_file, CreateOptions};
+use proxmox_sys::fs::{CreateOptions, file_read_optional_string, replace_file};
 
 use proxmox_apt_api_types::APTUpdateInfo;
 

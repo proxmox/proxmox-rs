@@ -16,7 +16,5 @@ macro_rules! c_result {
 /// doing `c_result!(expr)?` (note the question mark).
 #[macro_export]
 macro_rules! c_try {
-    ($expr:expr) => {{
-        $crate::c_result!($expr)?
-    }};
+    ($expr:expr) => {{ $crate::c_result!($expr)? }};
 }

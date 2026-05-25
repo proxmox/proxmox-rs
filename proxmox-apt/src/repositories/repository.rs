@@ -1,8 +1,8 @@
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, format_err, Error};
-use proxmox_pgp::{verify_signature, WeakCryptoConfig};
+use anyhow::{Error, bail, format_err};
+use proxmox_pgp::{WeakCryptoConfig, verify_signature};
 
 use proxmox_apt_api_types::{APTRepository, APTRepositoryFileType, APTRepositoryOption};
 
@@ -396,7 +396,7 @@ fn test_release_filename() {
             "trixie",
             false,
             // expected
-            "/var/lib/apt/lists/_mnt_mirror_pve-no-subscription_2025-10-16T08:07:41Z_dists_trixie_InRelease"
+            "/var/lib/apt/lists/_mnt_mirror_pve-no-subscription_2025-10-16T08:07:41Z_dists_trixie_InRelease",
         ),
         // testcase for proxmox offline mirror (local http server)
         (
@@ -405,7 +405,7 @@ fn test_release_filename() {
             "trixie",
             false,
             // expected
-            "/var/lib/apt/lists/proxmox-offline-mirror.domain.example_pve-subscription_2025-10-16T08:07:41Z_dists_trixie_InRelease"
+            "/var/lib/apt/lists/proxmox-offline-mirror.domain.example_pve-subscription_2025-10-16T08:07:41Z_dists_trixie_InRelease",
         ),
     ];
 

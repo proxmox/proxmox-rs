@@ -3,10 +3,10 @@ use std::net::IpAddr;
 use std::pin::Pin;
 use std::sync::{Mutex, OnceLock};
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use percent_encoding::percent_decode_str;
 
-use proxmox_rest_server::{extract_cookie, AuthError};
+use proxmox_rest_server::{AuthError, extract_cookie};
 use proxmox_tfa::api::{OpenUserChallengeData, TfaConfig};
 
 use crate::auth_key::{HMACKey, Keyring};
@@ -19,8 +19,8 @@ use crate::ticket::Ticket;
 use access::verify_csrf_prevention_token;
 
 pub use access::{
-    assemble_csrf_prevention_token, create_ticket, verify_vnc_ticket, API_METHOD_CREATE_TICKET,
-    API_METHOD_CREATE_TICKET_HTTP_ONLY, API_METHOD_LOGOUT, API_METHOD_VERIFY_VNC_TICKET,
+    API_METHOD_CREATE_TICKET, API_METHOD_CREATE_TICKET_HTTP_ONLY, API_METHOD_LOGOUT,
+    API_METHOD_VERIFY_VNC_TICKET, assemble_csrf_prevention_token, create_ticket, verify_vnc_ticket,
 };
 pub use ticket::{ApiTicket, PartialTicket};
 

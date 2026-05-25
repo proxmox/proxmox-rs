@@ -658,7 +658,7 @@ impl<'a, W: fmt::Write> ser::Serializer for IniKeySerializer<'a, W> {
 mod tests {
     use std::{collections::BTreeMap, ffi::CString, marker::PhantomData};
 
-    use super::{to_string, Error};
+    use super::{Error, to_string};
     use serde::Serialize;
 
     #[test]

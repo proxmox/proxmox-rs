@@ -63,7 +63,7 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 use thiserror::Error;
 
 #[cfg(feature = "api-types")]
-use proxmox_schema::{const_regex, ApiStringFormat, ApiType, Schema, StringSchema, UpdaterType};
+use proxmox_schema::{ApiStringFormat, ApiType, Schema, StringSchema, UpdaterType, const_regex};
 
 /// Errors encountered when parsing a MAC address string.
 #[derive(Error, Debug)]

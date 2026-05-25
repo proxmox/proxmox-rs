@@ -1,10 +1,10 @@
 use proxmox_http_error::HttpError;
 
+use crate::Config;
 use crate::api::http_err;
 use crate::matcher::{
-    DeleteableMatcherProperty, MatcherConfig, MatcherConfigUpdater, MATCHER_TYPENAME,
+    DeleteableMatcherProperty, MATCHER_TYPENAME, MatcherConfig, MatcherConfigUpdater,
 };
-use crate::Config;
 
 /// Get a list of all matchers
 ///
@@ -182,14 +182,16 @@ matcher: matcher2
     #[test]
     fn test_update_invalid_digest_returns_error() -> Result<(), HttpError> {
         let mut config = config_with_two_matchers();
-        assert!(update_matcher(
-            &mut config,
-            "matcher1",
-            Default::default(),
-            None,
-            Some(&[0u8; 32])
-        )
-        .is_err());
+        assert!(
+            update_matcher(
+                &mut config,
+                "matcher1",
+                Default::default(),
+                None,
+                Some(&[0u8; 32])
+            )
+            .is_err()
+        );
 
         Ok(())
     }

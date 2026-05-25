@@ -4,9 +4,9 @@ use std::borrow::Cow;
 use std::fmt;
 use std::marker::PhantomData;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use openssl::hash::MessageDigest;
-use percent_encoding::{percent_decode_str, percent_encode, AsciiSet};
+use percent_encoding::{AsciiSet, percent_decode_str, percent_encode};
 
 use crate::auth_key::Keyring;
 

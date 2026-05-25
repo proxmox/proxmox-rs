@@ -1,6 +1,6 @@
-use crate::context::{common, Context};
-use crate::renderer::TemplateSource;
 use crate::Error;
+use crate::context::{Context, common};
+use crate::renderer::TemplateSource;
 use std::path::Path;
 
 fn lookup_mail_address(content: &str, user: &str) -> Option<String> {

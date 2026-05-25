@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use anyhow::{ensure, Result};
+use anyhow::{Result, ensure};
 use flate2::{Decompress, FlushDecompress};
 use tokio::test;
 

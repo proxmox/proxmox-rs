@@ -8,6 +8,7 @@ use openssl::pkey::{PKey, Private};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::Error;
 use crate::authorization::{Authorization, GetAuthorization};
 use crate::b64u;
 use crate::directory::Directory;
@@ -16,7 +17,6 @@ use crate::key::{Jwk, PublicKey};
 use crate::order::{NewOrder, Order, OrderData};
 use crate::request::Request;
 use crate::types::{AccountData, AccountStatus, ExternalAccountBinding};
-use crate::Error;
 
 /// An ACME Account.
 ///

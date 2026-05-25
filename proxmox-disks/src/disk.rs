@@ -5,7 +5,7 @@ use std::os::unix::ffi::{OsStrExt, OsStringExt};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use libc::dev_t;
 use once_cell::sync::OnceCell;
 

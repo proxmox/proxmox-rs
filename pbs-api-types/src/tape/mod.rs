@@ -25,11 +25,11 @@ pub use media::*;
 use const_format::concatcp;
 use serde::{Deserialize, Serialize};
 
-use proxmox_schema::{api, const_regex, ApiStringFormat, Schema, StringSchema};
+use proxmox_schema::{ApiStringFormat, Schema, StringSchema, api, const_regex};
 use proxmox_uuid::Uuid;
 
 use crate::{
-    BackupType, BACKUP_ID_SCHEMA, BACKUP_NS_PATH_RE, FINGERPRINT_SHA256_FORMAT,
+    BACKUP_ID_SCHEMA, BACKUP_NS_PATH_RE, BackupType, FINGERPRINT_SHA256_FORMAT,
     PROXMOX_SAFE_ID_REGEX_STR, SNAPSHOT_PATH_REGEX_STR,
 };
 

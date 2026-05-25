@@ -9,8 +9,8 @@ use nom::{
 };
 
 use crate::date_time_value::DateTimeValue;
-use crate::parse_helpers::{parse_complete_line, parse_error, parse_time_comp, IResult};
-use crate::{parse_weekdays_range, WeekDays};
+use crate::parse_helpers::{IResult, parse_complete_line, parse_error, parse_time_comp};
+use crate::{WeekDays, parse_weekdays_range};
 
 /// A recurring time specification inspired by systemd.time Calendar Events.
 ///

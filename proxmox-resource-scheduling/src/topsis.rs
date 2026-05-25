@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 fn differences<const N: usize>(xs: &[f64; N], ys: &[f64; N]) -> [f64; N] {
     // Uses SSE optimizations

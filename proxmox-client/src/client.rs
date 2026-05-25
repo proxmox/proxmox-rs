@@ -4,9 +4,9 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::Mutex;
 
+use http::Method;
 use http::request::Request;
 use http::uri::PathAndQuery;
-use http::Method;
 use http::{StatusCode, Uri};
 use http_body_util::BodyExt;
 use openssl::hash::MessageDigest;

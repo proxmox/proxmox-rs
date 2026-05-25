@@ -7,10 +7,10 @@ use proxmox_schema::property_string::PropertyString;
 
 use crate::api::http_err;
 use crate::endpoints::webhook::{
-    DeleteableWebhookProperty, KeyAndBase64Val, WebhookConfig, WebhookConfigUpdater,
-    WebhookPrivateConfig, WEBHOOK_TYPENAME,
+    DeleteableWebhookProperty, KeyAndBase64Val, WEBHOOK_TYPENAME, WebhookConfig,
+    WebhookConfigUpdater, WebhookPrivateConfig,
 };
-use crate::{http_bail, Config};
+use crate::{Config, http_bail};
 
 use super::remove_private_config_entry;
 use super::set_private_config_entry;
@@ -301,11 +301,10 @@ mod tests {
                 name: "webhook-endpoint".into(),
                 method: HttpMethod::Post,
                 url: "http://example.com/webhook".into(),
-                header: vec![KeyAndBase64Val::new_with_plain_value(
-                    "Content-Type",
-                    "application/json",
-                )
-                .into()],
+                header: vec![
+                    KeyAndBase64Val::new_with_plain_value("Content-Type", "application/json")
+                        .into(),
+                ],
                 body: Some(proxmox_base64::encode("this is the body")),
                 comment: Some("comment".into()),
                 disable: Some(false),
@@ -332,14 +331,16 @@ mod tests {
         let mut config = empty_config();
         add_default_webhook_endpoint(&mut config)?;
 
-        assert!(update_endpoint(
-            &mut config,
-            "webhook-endpoint",
-            Default::default(),
-            None,
-            Some(&[0; 32])
-        )
-        .is_err());
+        assert!(
+            update_endpoint(
+                &mut config,
+                "webhook-endpoint",
+                Default::default(),
+                None,
+                Some(&[0; 32])
+            )
+            .is_err()
+        );
 
         Ok(())
     }

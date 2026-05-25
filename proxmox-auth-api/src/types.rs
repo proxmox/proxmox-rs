@@ -25,12 +25,12 @@ use std::borrow::Borrow;
 use std::fmt;
 use std::sync::LazyLock;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use const_format::concatcp;
 use serde::{Deserialize, Serialize};
 
 use proxmox_schema::{
-    api, const_regex, ApiStringFormat, ApiType, Schema, StringSchema, UpdaterType,
+    ApiStringFormat, ApiType, Schema, StringSchema, UpdaterType, api, const_regex,
 };
 
 use proxmox_schema::api_types::SAFE_ID_REGEX_STR;

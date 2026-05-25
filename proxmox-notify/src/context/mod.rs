@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 use std::sync::Mutex;
 
-use crate::renderer::TemplateSource;
 use crate::Error;
+use crate::renderer::TemplateSource;
 
 #[cfg(any(feature = "pve-context", feature = "pbs-context"))]
 pub mod common;

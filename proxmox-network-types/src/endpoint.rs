@@ -9,8 +9,8 @@ use std::{
 
 #[cfg(feature = "api-types")]
 use proxmox_schema::{
-    api_types::{DNS_NAME_OR_IP_FORMAT, HOST_PORT_FORMAT},
     ApiType, StringSchema, UpdaterType,
+    api_types::{DNS_NAME_OR_IP_FORMAT, HOST_PORT_FORMAT},
 };
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
@@ -221,9 +221,8 @@ mod tests {
         );
 
         // brackets around IPv6 are accepted for backward compatibility
-        let v6_loopback = HostnameOrIpAddr::IpAddr(
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1].into(),
-        );
+        let v6_loopback =
+            HostnameOrIpAddr::IpAddr([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1].into());
         assert_eq!("::1".parse::<HostnameOrIpAddr>().unwrap(), v6_loopback);
         assert_eq!("[::1]".parse::<HostnameOrIpAddr>().unwrap(), v6_loopback);
 

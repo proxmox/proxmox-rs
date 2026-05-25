@@ -5,12 +5,12 @@ use std::path::{Path, PathBuf};
 #[cfg(feature = "timer")]
 use std::time::Duration;
 
-use anyhow::{bail, format_err, Context as _, Error};
+use anyhow::{Context as _, Error, bail, format_err};
+use nix::NixPath;
 use nix::errno::Errno;
 use nix::fcntl::OFlag;
 use nix::sys::stat;
 use nix::unistd;
-use nix::NixPath;
 use serde_json::Value;
 
 use crate::error::SysError;

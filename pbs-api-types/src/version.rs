@@ -2,7 +2,7 @@
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 
-use anyhow::{format_err, Context};
+use anyhow::{Context, format_err};
 
 use proxmox_schema::api;
 

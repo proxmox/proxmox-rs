@@ -46,9 +46,7 @@ impl Body {
     pub fn wrap_stream<S>(stream: S) -> Body
     where
         S: futures::stream::TryStream + Send + 'static,
-
         S::Error: Into<Error>,
-
         Bytes: From<S::Ok>,
     {
         Body::stream(stream)
@@ -57,9 +55,7 @@ impl Body {
     pub(crate) fn stream<S>(stream: S) -> Body
     where
         S: futures::stream::TryStream + Send + 'static,
-
         S::Error: Into<Error>,
-
         Bytes: From<S::Ok>,
     {
         use futures::TryStreamExt;

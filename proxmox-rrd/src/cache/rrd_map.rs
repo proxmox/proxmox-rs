@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use proxmox_sys::fs::create_path;
 

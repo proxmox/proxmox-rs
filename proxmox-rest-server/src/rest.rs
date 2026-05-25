@@ -7,7 +7,7 @@ use std::pin::Pin;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::task::{Context, Poll};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use futures::future::FutureExt;
 use futures::stream::TryStreamExt;
 use http_body_util::{BodyDataStream, BodyStream};
@@ -34,8 +34,8 @@ use proxmox_http::{RateLimiterTag, RateLimiterTagsHandle};
 #[cfg(not(feature = "rate-limited-stream"))]
 type RateLimiterTagsHandle = ();
 use proxmox_router::{
-    check_api_permission, ApiHandler, ApiMethod, HttpError, Permission, RpcEnvironment,
-    RpcEnvironmentType, UserInformation,
+    ApiHandler, ApiMethod, HttpError, Permission, RpcEnvironment, RpcEnvironmentType,
+    UserInformation, check_api_permission,
 };
 use proxmox_router::{http_bail, http_err};
 use proxmox_schema::{ObjectSchemaType, ParameterSchema};
@@ -45,7 +45,7 @@ use proxmox_compression::DeflateEncoder;
 use proxmox_log::FileLogger;
 
 use crate::{
-    formatter::*, normalize_path, ApiConfig, AuthError, CompressionMethod, RestEnvironment,
+    ApiConfig, AuthError, CompressionMethod, RestEnvironment, formatter::*, normalize_path,
 };
 
 unsafe extern "C" {

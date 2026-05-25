@@ -3,7 +3,7 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::LazyLock;
 
-use anyhow::{bail, format_err, Context, Error};
+use anyhow::{Context, Error, bail, format_err};
 use const_format::concatcp;
 use regex::Regex;
 

@@ -53,8 +53,7 @@ const CHANNELS: &[Channel] = &[
         domain: ENTERPRISE_DOMAIN,
         host_description: "This is the default, stable, and recommended repository, available \
             for all Proxmox subscription users.",
-        ceph_description_template:
-            "This repository holds the production-ready Proxmox Ceph {name} packages.",
+        ceph_description_template: "This repository holds the production-ready Proxmox Ceph {name} packages.",
     },
     Channel {
         component: APTRepoComponent::NoSubscription,
@@ -64,8 +63,7 @@ const CHANNELS: &[Channel] = &[
         host_description: "This is the recommended repository for testing and non-production \
             use. Its packages are not as heavily tested and validated as the production ready \
             enterprise repository. You don't need a subscription key to access this repository.",
-        ceph_description_template:
-            "This repository holds the Proxmox Ceph {name} packages intended for \
+        ceph_description_template: "This repository holds the Proxmox Ceph {name} packages intended for \
              non-production use.",
     },
     Channel {
@@ -75,8 +73,7 @@ const CHANNELS: &[Channel] = &[
         domain: DOWNLOAD_DOMAIN,
         host_description: "This repository contains the latest packages and is primarily used \
             for test labs and by developers to test new features.",
-        ceph_description_template:
-            "This repository contains the Ceph {name} packages before they are moved to \
+        ceph_description_template: "This repository contains the Ceph {name} packages before they are moved to \
              the main repository.",
     },
 ];

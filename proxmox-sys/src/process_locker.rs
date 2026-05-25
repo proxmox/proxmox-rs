@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::os::unix::io::AsRawFd;
 use std::sync::{Arc, Mutex};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 // fixme: use F_OFD_ locks when implemented with nix::fcntl
 

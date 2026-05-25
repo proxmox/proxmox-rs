@@ -1,20 +1,20 @@
 //! Provides the "/access/ticket" API call.
 
-use anyhow::{bail, format_err, Error};
-use http::request::Parts;
+use anyhow::{Error, bail, format_err};
 use http::Response;
+use http::request::Parts;
 use openssl::hash::MessageDigest;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
-use proxmox_rest_server::{extract_cookie, RestEnvironment};
+use proxmox_rest_server::{RestEnvironment, extract_cookie};
 use proxmox_router::{
-    http_err, ApiHandler, ApiMethod, ApiResponseFuture, Permission, RpcEnvironment,
+    ApiHandler, ApiMethod, ApiResponseFuture, Permission, RpcEnvironment, http_err,
 };
-use proxmox_schema::{api, AllOfSchema, ApiType, ObjectSchema, ParameterSchema, ReturnType};
+use proxmox_schema::{AllOfSchema, ApiType, ObjectSchema, ParameterSchema, ReturnType, api};
 use proxmox_tfa::api::TfaChallenge;
 
 use super::ApiTicket;
-use super::{auth_context, HMACKey};
+use super::{HMACKey, auth_context};
 use crate::ticket::Ticket;
 use crate::types::{Authid, CreateTicket, CreateTicketResponse, Userid, VerifyVNCTicket};
 

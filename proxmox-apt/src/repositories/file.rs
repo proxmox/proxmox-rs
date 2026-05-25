@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 
 use proxmox_apt_api_types::DebianCodename;
 use proxmox_apt_api_types::{

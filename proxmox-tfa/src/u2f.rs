@@ -503,8 +503,7 @@ mod test {
 
     const TEST_APPID: &str = "https://u2ftest.enonet.errno.eu";
 
-    const TEST_REGISTRATION_JSON: &str =
-        "{\"challenge\":\"mZoWLngnAh8p98nPkFOIBXecd0CbmgEx5tEd5jNswgY\",\"response\":{\"client\
+    const TEST_REGISTRATION_JSON: &str = "{\"challenge\":\"mZoWLngnAh8p98nPkFOIBXecd0CbmgEx5tEd5jNswgY\",\"response\":{\"client\
         Data\":\"eyJjaGFsbGVuZ2UiOiJtWm9XTG5nbkFoOHA5OG5Qa0ZPSUJYZWNkMENibWdFeDV0RWQ1ak5zd2dZI\
         iwib3JpZ2luIjoiaHR0cHM6Ly91MmZ0ZXN0LmVub25ldC5lcnJuby5ldSIsInR5cCI6Im5hdmlnYXRvci5pZC5\
         maW5pc2hFbnJvbGxtZW50In0\",\"registrationData\":\"BQR_9TmMowVeoAHp3ABljCa90eNG87t76D4W\
@@ -522,8 +521,7 @@ mod test {
         SbtOrrwswjOKEzwp6EonkCIFBxbLAmwUnblAWOVELASi610ZfPK-7qx2VwkWfHqnll\",\"version\":\"U2F\
         _V2\"}}";
 
-    const TEST_AUTH_JSON: &str =
-        "{\"challenge\":\"8LE_-7Rd1vB3Otn3vJ7GyiwRQtYPMv-BWliCejH0d4Y\",\"response\":{\"clientD\
+    const TEST_AUTH_JSON: &str = "{\"challenge\":\"8LE_-7Rd1vB3Otn3vJ7GyiwRQtYPMv-BWliCejH0d4Y\",\"response\":{\"clientD\
         ata\":\"eyJjaGFsbGVuZ2UiOiI4TEVfLTdSZDF2QjNPdG4zdko3R3lpd1JRdFlQTXYtQldsaUNlakgwZDRZIiw\
         ib3JpZ2luIjoiaHR0cHM6Ly91MmZ0ZXN0LmVub25ldC5lcnJuby5ldSIsInR5cCI6Im5hdmlnYXRvci5pZC5nZX\
         RBc3NlcnRpb24ifQ\",\"keyHandle\":\"eW3zVxEF8gPsG8eT9cgllzmSzkPdHVlXXV8m52ncX6KL8pJ1loVv\

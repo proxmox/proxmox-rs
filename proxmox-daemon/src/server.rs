@@ -7,11 +7,11 @@ use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 use std::panic::UnwindSafe;
 use std::path::PathBuf;
-use std::pin::{pin, Pin};
+use std::pin::{Pin, pin};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use futures::future::{self, Either};
-use nix::unistd::{fork, ForkResult};
+use nix::unistd::{ForkResult, fork};
 
 use proxmox_sys::fd::fd_change_cloexec;
 use proxmox_sys::fs::CreateOptions;

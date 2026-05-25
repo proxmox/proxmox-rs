@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use std::time::{Duration, Instant};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 /// Rate limiter interface.
 pub trait RateLimit {

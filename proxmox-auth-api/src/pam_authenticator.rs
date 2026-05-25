@@ -1,9 +1,9 @@
-use std::ffi::{c_int, c_void, CStr, CString};
+use std::ffi::{CStr, CString, c_int, c_void};
 use std::future::Future;
 use std::net::IpAddr;
 use std::pin::Pin;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use pam_sys::types::{
     PamHandle, PamItemType, PamMessage, PamMessageStyle, PamResponse, PamReturnCode,
 };

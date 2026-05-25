@@ -6,7 +6,7 @@ use proxmox_router::RpcEnvironment;
 use proxmox_schema as schema;
 
 use anyhow::Error;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 pub const NAME_SCHEMA: schema::Schema = schema::StringSchema::new("Archive name.")
     //.format(&FILENAME_FORMAT)

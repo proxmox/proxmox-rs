@@ -7,8 +7,8 @@ use std::str::FromStr;
 
 use context::context;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use serde_json::Value;
+use serde_json::json;
 use tracing::{error, info};
 
 use proxmox_schema::api;
@@ -16,7 +16,7 @@ use proxmox_section_config::SectionConfigData;
 use proxmox_uuid::Uuid;
 
 pub mod matcher;
-use matcher::{MatcherConfig, MATCHER_TYPENAME};
+use matcher::{MATCHER_TYPENAME, MatcherConfig};
 
 pub mod api;
 pub mod config;

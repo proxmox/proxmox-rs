@@ -6,11 +6,11 @@ use http_body_util::BodyExt;
 use hyper::Request;
 use serde::{Deserialize, Serialize};
 
-use proxmox_http::{client::Client, Body};
+use proxmox_http::{Body, client::Client};
 
+use crate::Request as AcmeRequest;
 use crate::account::AccountCreator;
 use crate::order::{Order, OrderData};
-use crate::Request as AcmeRequest;
 use crate::{Account, Authorization, Challenge, Directory, Error, ErrorResponse};
 
 /// A non-blocking Acme client using tokio/hyper.

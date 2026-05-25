@@ -1,6 +1,6 @@
 //! Helpers for request authentication using AWS signature version 4
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use hyper::Request;
 use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Private};

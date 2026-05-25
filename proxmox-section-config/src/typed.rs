@@ -6,8 +6,8 @@ use std::hash::Hash;
 use std::path::Path;
 
 use anyhow::Error;
-use serde::{de::DeserializeOwned, Serialize};
-use serde_json::{json, Value};
+use serde::{Serialize, de::DeserializeOwned};
+use serde_json::{Value, json};
 
 use crate::SectionConfig;
 use crate::SectionConfigData as RawSectionConfigData;

@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 /// Byte limit for s3 object keys.
 /// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html

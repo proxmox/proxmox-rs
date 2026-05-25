@@ -4,8 +4,8 @@ use openssl::hash::{Hasher, MessageDigest};
 use openssl::pkey::{HasPublic, Id, PKeyRef};
 use serde::Serialize;
 
-use crate::b64u;
 use crate::Error;
+use crate::b64u;
 
 /// An RSA public key.
 #[derive(Clone, Debug, Serialize)]

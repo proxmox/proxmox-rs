@@ -221,8 +221,8 @@ fn test_score_best_balancing_migration_candidates_topsis_with_no_candidates() ->
 }
 
 #[test]
-fn test_score_best_balancing_migration_candidates_topsis_in_homogeneous_cluster(
-) -> Result<(), Error> {
+fn test_score_best_balancing_migration_candidates_topsis_in_homogeneous_cluster()
+-> Result<(), Error> {
     let scheduler = new_homogeneous_cluster_scheduler();
 
     assert_imbalance(scheduler.node_imbalance(), 0.3460548572604576);
@@ -238,8 +238,8 @@ fn test_score_best_balancing_migration_candidates_topsis_in_homogeneous_cluster(
 }
 
 #[test]
-fn test_score_best_balancing_migration_candidates_topsis_in_heterogeneous_cluster(
-) -> Result<(), Error> {
+fn test_score_best_balancing_migration_candidates_topsis_in_heterogeneous_cluster()
+-> Result<(), Error> {
     let scheduler = new_heterogeneous_cluster_scheduler();
 
     assert_imbalance(scheduler.node_imbalance(), 0.23352917788066363);

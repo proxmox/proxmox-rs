@@ -12,7 +12,7 @@ use tracing::error;
 use proxmox_human_byte::HumanByte;
 use proxmox_time::TimeSpan;
 
-use crate::{context, Error};
+use crate::{Error, context};
 
 mod html;
 mod plaintext;

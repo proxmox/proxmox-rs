@@ -1,4 +1,4 @@
-use percent_encoding::{utf8_percent_encode, AsciiSet};
+use percent_encoding::{AsciiSet, utf8_percent_encode};
 
 /// This used to be: `SIMPLE_ENCODE_SET` plus space, `"`, `#`, `<`, `>`, backtick, `?`, `{`, `}`
 pub const DEFAULT_ENCODE_SET: &AsciiSet = &percent_encoding::CONTROLS // 0..1f and 7e

@@ -5,11 +5,11 @@ use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 use std::sync::Arc;
 
-use anyhow::{format_err, Context as _, Error};
+use anyhow::{Context as _, Error, format_err};
 use libc::dev_t;
 use once_cell::sync::OnceCell;
 
-use proxmox_sys::linux::procfs::{mountinfo::Device, MountInfo};
+use proxmox_sys::linux::procfs::{MountInfo, mountinfo::Device};
 
 use crate::{BlockDevStat, Disk};
 

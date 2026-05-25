@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use proxmox_schema::{api, BooleanSchema, IntegerSchema, Schema, StringSchema, Updater};
+use proxmox_schema::{BooleanSchema, IntegerSchema, Schema, StringSchema, Updater, api};
 
-use super::userid::{Authid, Userid, PROXMOX_TOKEN_ID_SCHEMA};
+use super::userid::{Authid, PROXMOX_TOKEN_ID_SCHEMA, Userid};
 use super::{SINGLE_LINE_COMMENT_FORMAT, SINGLE_LINE_COMMENT_SCHEMA};
 
 pub const ENABLE_USER_SCHEMA: Schema = BooleanSchema::new(

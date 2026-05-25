@@ -1,10 +1,10 @@
 use std::collections::HashSet;
 
-use anyhow::{format_err, Context, Error};
+use anyhow::{Context, Error, format_err};
 
 use proxmox_access_control::acl::AclTree;
 use proxmox_access_control::types::{
-    ApiToken, User, EMAIL_SCHEMA, FIRST_NAME_SCHEMA, LAST_NAME_SCHEMA,
+    ApiToken, EMAIL_SCHEMA, FIRST_NAME_SCHEMA, LAST_NAME_SCHEMA, User,
 };
 use proxmox_auth_api::types::{Authid, Realm, Userid};
 use proxmox_product_config::ApiLockGuard;
@@ -12,8 +12,8 @@ use proxmox_schema::{ApiType, Schema};
 use proxmox_section_config::SectionConfigData;
 
 use crate::types::{
-    AdRealmConfig, LdapRealmConfig, RemoveVanished, SyncAttributes, SyncDefaultsOptions,
-    REMOVE_VANISHED_ARRAY, USER_CLASSES_ARRAY,
+    AdRealmConfig, LdapRealmConfig, REMOVE_VANISHED_ARRAY, RemoveVanished, SyncAttributes,
+    SyncDefaultsOptions, USER_CLASSES_ARRAY,
 };
 use crate::{Config, Connection, SearchResult};
 

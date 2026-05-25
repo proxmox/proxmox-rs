@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use nix::dir::Dir;
 use nix::fcntl::{AtFlags, OFlag};
-use nix::sys::stat::{fstatat, Mode};
+use nix::sys::stat::{Mode, fstatat};
 
 pub fn complete_file_name(arg: &str, _param: &HashMap<String, String>) -> Vec<String> {
     let mut result = vec![];

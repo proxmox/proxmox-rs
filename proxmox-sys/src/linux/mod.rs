@@ -1,6 +1,6 @@
 //! Linux specific helpers and syscall wrapper
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use proxmox_io::vec;
 

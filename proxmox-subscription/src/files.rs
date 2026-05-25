@@ -1,11 +1,11 @@
 use std::path::Path;
 
-use anyhow::{format_err, Error};
-use proxmox_sys::fs::{replace_file, CreateOptions};
+use anyhow::{Error, format_err};
+use proxmox_sys::fs::{CreateOptions, replace_file};
 
 use crate::{
-    subscription_info::{md5sum, SHARED_KEY_DATA},
     SubscriptionInfo, SubscriptionStatus,
+    subscription_info::{SHARED_KEY_DATA, md5sum},
 };
 
 pub const DEFAULT_SIGNING_KEY: &str = "/usr/share/keyrings/proxmox-offline-signing-key.pub";
@@ -67,7 +67,7 @@ fn parse_subscription_file(raw: &str) -> Result<Option<SubscriptionInfo>, Error>
                 status: SubscriptionStatus::Invalid,
                 message: Some("subscription key mismatch".to_string()),
                 ..info
-            }))
+            }));
         }
         _ => {}
     }

@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use crate::{ApiStringFormat, ApiType, Schema, StringSchema};
 
@@ -212,7 +212,7 @@ mod upid_impl {
     use std::os::unix::ffi::OsStrExt;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
-    use anyhow::{bail, format_err, Error};
+    use anyhow::{Error, bail, format_err};
 
     use super::UPID;
 

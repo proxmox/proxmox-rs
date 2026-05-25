@@ -6,9 +6,9 @@ use tracing::error;
 use proxmox_schema::{ObjectSchema, Schema, StringSchema};
 use proxmox_section_config::{SectionConfig, SectionConfigPlugin};
 
-use crate::context::{common, Context};
-use crate::renderer::TemplateSource;
 use crate::Error;
+use crate::context::{Context, common};
+use crate::renderer::TemplateSource;
 
 const PBS_USER_CFG_FILENAME: &str = "/etc/proxmox-backup/user.cfg";
 const PBS_NODE_CFG_FILENAME: &str = "/etc/proxmox-backup/node.cfg";

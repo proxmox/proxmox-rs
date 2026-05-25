@@ -1,10 +1,10 @@
 use proxmox_http_error::HttpError;
 
+use crate::Config;
 use crate::api::{http_bail, http_err};
 use crate::endpoints::sendmail::{
-    DeleteableSendmailProperty, SendmailConfig, SendmailConfigUpdater, SENDMAIL_TYPENAME,
+    DeleteableSendmailProperty, SENDMAIL_TYPENAME, SendmailConfig, SendmailConfigUpdater,
 };
-use crate::Config;
 
 /// Get a list of all sendmail endpoints.
 ///
@@ -203,21 +203,23 @@ pub mod tests {
         let mut config = empty_config();
         add_sendmail_endpoint_for_test(&mut config, "sendmail-endpoint")?;
 
-        assert!(update_endpoint(
-            &mut config,
-            "sendmail-endpoint",
-            SendmailConfigUpdater {
-                mailto: Some(vec!["user2@example.com".into(), "user3@example.com".into()]),
-                mailto_user: None,
-                from_address: Some("root@example.com".into()),
-                author: Some("newauthor".into()),
-                comment: Some("new comment".into()),
-                ..Default::default()
-            },
-            None,
-            Some(&[0; 32]),
-        )
-        .is_err());
+        assert!(
+            update_endpoint(
+                &mut config,
+                "sendmail-endpoint",
+                SendmailConfigUpdater {
+                    mailto: Some(vec!["user2@example.com".into(), "user3@example.com".into()]),
+                    mailto_user: None,
+                    from_address: Some("root@example.com".into()),
+                    author: Some("newauthor".into()),
+                    comment: Some("new comment".into()),
+                    ..Default::default()
+                },
+                None,
+                Some(&[0; 32]),
+            )
+            .is_err()
+        );
 
         Ok(())
     }

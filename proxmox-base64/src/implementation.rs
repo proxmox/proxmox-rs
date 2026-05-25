@@ -27,9 +27,9 @@ macro_rules! implement_kind {
     ) => {
         use std::fmt;
 
-        use base64::engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig};
         use base64::engine::DecodePaddingMode;
         use base64::engine::Engine as _;
+        use base64::engine::general_purpose::{GeneralPurpose, GeneralPurposeConfig};
 
         #[cfg(feature = "serde")]
         use serde::{Deserialize, Deserializer, Serializer};

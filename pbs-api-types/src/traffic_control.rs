@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use proxmox_human_byte::HumanByte;
-use proxmox_schema::{api, ApiType, Schema, StringSchema, Updater};
+use proxmox_schema::{ApiType, Schema, StringSchema, Updater, api};
 
 use proxmox_schema::api_types::CIDR_SCHEMA;
 

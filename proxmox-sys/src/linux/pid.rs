@@ -4,12 +4,12 @@ use std::fs::File;
 use std::io;
 use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, FromRawFd, IntoRawFd, OwnedFd, RawFd};
 
+use nix::NixPath;
 use nix::fcntl::OFlag;
 use nix::sys::signal::Signal;
 use nix::sys::signalfd::siginfo;
 use nix::sys::stat::Mode;
 use nix::unistd::Pid;
-use nix::NixPath;
 
 use crate::error::SysResult;
 use crate::linux::procfs::{MountInfo, PidStat};

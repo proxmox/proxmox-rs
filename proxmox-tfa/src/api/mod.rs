@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 use std::fmt;
 
-use anyhow::{bail, format_err, Context as _, Error};
+use anyhow::{Context as _, Error, bail, format_err};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use url::Url;
@@ -1249,11 +1249,11 @@ impl<'de> Deserialize<'de> for TotpEntry {
                         "totp" if totp.is_some() => return Err(A::Error::duplicate_field("totp")),
                         "totp" => totp = Some(map.next_value()?),
                         "last-count" if last_count.is_some() => {
-                            return Err(A::Error::duplicate_field("last-count"))
+                            return Err(A::Error::duplicate_field("last-count"));
                         }
                         "last-count" => last_count = Some(map.next_value()?),
                         other => {
-                            return Err(A::Error::unknown_field(other, &["totp", "last-count"]))
+                            return Err(A::Error::unknown_field(other, &["totp", "last-count"]));
                         }
                     }
                 }

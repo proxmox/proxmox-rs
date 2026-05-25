@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::LazyLock;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use const_format::concatcp;
 use serde::{Deserialize, Serialize};
 
@@ -14,17 +14,17 @@ use proxmox_fixed_string::FixedString;
 use proxmox_human_byte::HumanByte;
 use proxmox_s3_client::RequestCounterThresholds;
 use proxmox_schema::{
-    api, const_regex, ApiStringFormat, ApiType, ArraySchema, EnumEntry, IntegerSchema, ReturnType,
-    Schema, StringSchema, Updater, UpdaterType,
+    ApiStringFormat, ApiType, ArraySchema, EnumEntry, IntegerSchema, ReturnType, Schema,
+    StringSchema, Updater, UpdaterType, api, const_regex,
 };
 
 use crate::{
-    Authid, CryptMode, Fingerprint, GroupFilter, MaintenanceMode, MaintenanceType, Userid,
-    BACKUP_ID_RE, BACKUP_NS_RE, BACKUP_TIME_RE, BACKUP_TYPE_RE, DATASTORE_NOTIFY_STRING_SCHEMA,
-    GC_SCHEDULE_SCHEMA, GROUP_OR_SNAPSHOT_PATH_REGEX_STR, PROXMOX_SAFE_ID_FORMAT,
-    PROXMOX_SAFE_ID_REGEX_STR, PRUNE_SCHEDULE_SCHEMA, SHA256_HEX_REGEX, SINGLE_LINE_COMMENT_SCHEMA,
-    SNAPSHOT_PATH_REGEX_STR, UPID, VERIFY_JOB_READ_THREADS_SCHEMA,
-    VERIFY_JOB_VERIFY_THREADS_SCHEMA,
+    Authid, BACKUP_ID_RE, BACKUP_NS_RE, BACKUP_TIME_RE, BACKUP_TYPE_RE, CryptMode,
+    DATASTORE_NOTIFY_STRING_SCHEMA, Fingerprint, GC_SCHEDULE_SCHEMA,
+    GROUP_OR_SNAPSHOT_PATH_REGEX_STR, GroupFilter, MaintenanceMode, MaintenanceType,
+    PROXMOX_SAFE_ID_FORMAT, PROXMOX_SAFE_ID_REGEX_STR, PRUNE_SCHEDULE_SCHEMA, SHA256_HEX_REGEX,
+    SINGLE_LINE_COMMENT_SCHEMA, SNAPSHOT_PATH_REGEX_STR, UPID, Userid,
+    VERIFY_JOB_READ_THREADS_SCHEMA, VERIFY_JOB_VERIFY_THREADS_SCHEMA,
 };
 
 const_regex! {

@@ -80,7 +80,5 @@ macro_rules! static_assert_size {
 #[deprecated = "use c\"literals\" instead"]
 #[macro_export]
 macro_rules! c_str {
-    ($data:expr) => {{
-        unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(concat!($data, "\0").as_bytes()) }
-    }};
+    ($data:expr) => {{ unsafe { ::std::ffi::CStr::from_bytes_with_nul_unchecked(concat!($data, "\0").as_bytes()) } }};
 }

@@ -1,6 +1,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use proxmox_schema::{ApiStringFormat, ApiType, Schema, StringSchema, UpdaterType};
 

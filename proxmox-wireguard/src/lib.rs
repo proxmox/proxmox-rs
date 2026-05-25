@@ -21,7 +21,7 @@ use x25519_dalek::StaticSecret;
 use proxmox_network_types::{endpoint::ServiceEndpoint, ip_address::Cidr};
 #[cfg(feature = "api-types")]
 use proxmox_schema::{
-    api_types::ED25519_BASE64_KEY_REGEX, ApiStringFormat, ApiType, StringSchema, UpdaterType,
+    ApiStringFormat, ApiType, StringSchema, UpdaterType, api_types::ED25519_BASE64_KEY_REGEX,
 };
 
 /// Possible error when handling WireGuard configurations.

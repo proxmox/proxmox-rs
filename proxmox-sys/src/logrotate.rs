@@ -1,14 +1,14 @@
 //! Log rotation helper
 
-use std::fs::{rename, File};
+use std::fs::{File, rename};
 use std::io::Read;
 use std::os::unix::io::{FromRawFd, IntoRawFd};
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use nix::unistd;
 
-use crate::fs::{make_tmp_file, CreateOptions};
+use crate::fs::{CreateOptions, make_tmp_file};
 
 /// Used for rotating log files and iterating over them
 pub struct LogRotate {

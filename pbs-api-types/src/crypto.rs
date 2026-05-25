@@ -75,7 +75,7 @@ fn as_fingerprint(bytes: &[u8]) -> String {
 pub mod bytes_as_fingerprint {
     use std::fmt;
 
-    use serde::{de, Deserializer, Serializer};
+    use serde::{Deserializer, Serializer, de};
 
     pub fn serialize<S>(bytes: &[u8; 32], serializer: S) -> Result<S::Ok, S::Error>
     where

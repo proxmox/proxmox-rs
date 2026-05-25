@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use proxmox_fixed_string::FixedString;
 
 use proxmox_schema::api_types::SAFE_ID_FORMAT;
-use proxmox_schema::{api, Schema, StringSchema, Updater};
+use proxmox_schema::{Schema, StringSchema, Updater, api};
 
 use crate::CERT_FINGERPRINT_SHA256_SCHEMA;
 

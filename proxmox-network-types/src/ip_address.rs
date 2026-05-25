@@ -100,8 +100,8 @@ pub mod api_types {
     use std::ops::{Deref, DerefMut};
 
     use proxmox_schema::{
-        api_types::{IP_SCHEMA, IP_V4_SCHEMA, IP_V6_SCHEMA},
         ApiType, UpdaterType,
+        api_types::{IP_SCHEMA, IP_V4_SCHEMA, IP_V6_SCHEMA},
     };
     use serde_with::{DeserializeFromStr, SerializeDisplay};
 
@@ -1945,7 +1945,9 @@ mod tests {
 
         assert_eq!(
             [Ipv6Cidr::new(
-                [0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF],
+                [
+                    0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF
+                ],
                 128
             )
             .unwrap(),],
@@ -2005,21 +2007,29 @@ mod tests {
                 )
         );
 
-        assert!(Ipv4Cidr::new("10.0.0.1".parse::<Ipv4Addr>().unwrap(), 32)
-            .unwrap()
-            .overlaps(&Ipv4Cidr::new("10.0.0.1".parse::<Ipv4Addr>().unwrap(), 32).unwrap()));
+        assert!(
+            Ipv4Cidr::new("10.0.0.1".parse::<Ipv4Addr>().unwrap(), 32)
+                .unwrap()
+                .overlaps(&Ipv4Cidr::new("10.0.0.1".parse::<Ipv4Addr>().unwrap(), 32).unwrap())
+        );
 
-        assert!(!Ipv4Cidr::new("10.0.0.1".parse::<Ipv4Addr>().unwrap(), 32)
-            .unwrap()
-            .overlaps(&Ipv4Cidr::new("10.0.0.2".parse::<Ipv4Addr>().unwrap(), 32).unwrap()));
+        assert!(
+            !Ipv4Cidr::new("10.0.0.1".parse::<Ipv4Addr>().unwrap(), 32)
+                .unwrap()
+                .overlaps(&Ipv4Cidr::new("10.0.0.2".parse::<Ipv4Addr>().unwrap(), 32).unwrap())
+        );
 
-        assert!(Ipv4Cidr::new("10.0.0.0".parse::<Ipv4Addr>().unwrap(), 8)
-            .unwrap()
-            .overlaps(&Ipv4Cidr::new("10.5.10.100".parse::<Ipv4Addr>().unwrap(), 32).unwrap()));
+        assert!(
+            Ipv4Cidr::new("10.0.0.0".parse::<Ipv4Addr>().unwrap(), 8)
+                .unwrap()
+                .overlaps(&Ipv4Cidr::new("10.5.10.100".parse::<Ipv4Addr>().unwrap(), 32).unwrap())
+        );
 
-        assert!(Ipv4Cidr::new("0.0.0.0".parse::<Ipv4Addr>().unwrap(), 0)
-            .unwrap()
-            .overlaps(&Ipv4Cidr::new("172.16.0.0".parse::<Ipv4Addr>().unwrap(), 12).unwrap()));
+        assert!(
+            Ipv4Cidr::new("0.0.0.0".parse::<Ipv4Addr>().unwrap(), 0)
+                .unwrap()
+                .overlaps(&Ipv4Cidr::new("172.16.0.0".parse::<Ipv4Addr>().unwrap(), 12).unwrap())
+        );
 
         assert!(
             !Ipv4Cidr::new("192.168.1.0".parse::<Ipv4Addr>().unwrap(), 30)
@@ -2033,9 +2043,11 @@ mod tests {
                 .overlaps(&Ipv4Cidr::new("192.168.1.2".parse::<Ipv4Addr>().unwrap(), 31).unwrap())
         );
 
-        assert!(!Ipv4Cidr::new("10.0.0.0".parse::<Ipv4Addr>().unwrap(), 8)
-            .unwrap()
-            .overlaps(&Ipv4Cidr::new("172.16.0.0".parse::<Ipv4Addr>().unwrap(), 12).unwrap()));
+        assert!(
+            !Ipv4Cidr::new("10.0.0.0".parse::<Ipv4Addr>().unwrap(), 8)
+                .unwrap()
+                .overlaps(&Ipv4Cidr::new("172.16.0.0".parse::<Ipv4Addr>().unwrap(), 12).unwrap())
+        );
 
         assert!(
             !Ipv4Cidr::new("172.16.0.0".parse::<Ipv4Addr>().unwrap(), 12)
@@ -2063,9 +2075,11 @@ mod tests {
                 .overlaps(&Ipv4Cidr::new("203.0.113.2".parse::<Ipv4Addr>().unwrap(), 31).unwrap())
         );
 
-        assert!(Ipv4Cidr::new("0.0.0.0".parse::<Ipv4Addr>().unwrap(), 0)
-            .unwrap()
-            .overlaps(&Ipv4Cidr::new("0.0.0.0".parse::<Ipv4Addr>().unwrap(), 0).unwrap()));
+        assert!(
+            Ipv4Cidr::new("0.0.0.0".parse::<Ipv4Addr>().unwrap(), 0)
+                .unwrap()
+                .overlaps(&Ipv4Cidr::new("0.0.0.0".parse::<Ipv4Addr>().unwrap(), 0).unwrap())
+        );
 
         assert!(
             Ipv4Cidr::new("255.255.255.255".parse::<Ipv4Addr>().unwrap(), 0)
@@ -2129,34 +2143,44 @@ mod tests {
                 .overlaps(&Ipv6Cidr::new("2001:db8::2".parse::<Ipv6Addr>().unwrap(), 128).unwrap())
         );
 
-        assert!(Ipv6Cidr::new("2001:db8::".parse::<Ipv6Addr>().unwrap(), 32)
-            .unwrap()
-            .overlaps(
-                &Ipv6Cidr::new(
-                    "2001:db8:cafe:babe::dead:beef".parse::<Ipv6Addr>().unwrap(),
-                    128
-                )
+        assert!(
+            Ipv6Cidr::new("2001:db8::".parse::<Ipv6Addr>().unwrap(), 32)
                 .unwrap()
-            ));
-
-        assert!(Ipv6Cidr::new("::0".parse::<Ipv6Addr>().unwrap(), 0)
-            .unwrap()
-            .overlaps(&Ipv6Cidr::new("fe80::".parse::<Ipv6Addr>().unwrap(), 10).unwrap()));
-
-        assert!(!Ipv6Cidr::new("fe80::".parse::<Ipv6Addr>().unwrap(), 10)
-            .unwrap()
-            .overlaps(&Ipv6Cidr::new("2001:db8::".parse::<Ipv6Addr>().unwrap(), 32).unwrap()));
-
-        assert!(!Ipv6Cidr::new("fc00::".parse::<Ipv6Addr>().unwrap(), 7)
-            .unwrap()
-            .overlaps(&Ipv6Cidr::new("2001:db8::".parse::<Ipv6Addr>().unwrap(), 32).unwrap()));
-
-        assert!(Ipv6Cidr::new("2001:db8::".parse::<Ipv6Addr>().unwrap(), 16)
-            .unwrap()
-            .overlaps(
-                &Ipv6Cidr::new("2001:db8:1234:5678::abcd".parse::<Ipv6Addr>().unwrap(), 64)
+                .overlaps(
+                    &Ipv6Cidr::new(
+                        "2001:db8:cafe:babe::dead:beef".parse::<Ipv6Addr>().unwrap(),
+                        128
+                    )
                     .unwrap()
-            ));
+                )
+        );
+
+        assert!(
+            Ipv6Cidr::new("::0".parse::<Ipv6Addr>().unwrap(), 0)
+                .unwrap()
+                .overlaps(&Ipv6Cidr::new("fe80::".parse::<Ipv6Addr>().unwrap(), 10).unwrap())
+        );
+
+        assert!(
+            !Ipv6Cidr::new("fe80::".parse::<Ipv6Addr>().unwrap(), 10)
+                .unwrap()
+                .overlaps(&Ipv6Cidr::new("2001:db8::".parse::<Ipv6Addr>().unwrap(), 32).unwrap())
+        );
+
+        assert!(
+            !Ipv6Cidr::new("fc00::".parse::<Ipv6Addr>().unwrap(), 7)
+                .unwrap()
+                .overlaps(&Ipv6Cidr::new("2001:db8::".parse::<Ipv6Addr>().unwrap(), 32).unwrap())
+        );
+
+        assert!(
+            Ipv6Cidr::new("2001:db8::".parse::<Ipv6Addr>().unwrap(), 16)
+                .unwrap()
+                .overlaps(
+                    &Ipv6Cidr::new("2001:db8:1234:5678::abcd".parse::<Ipv6Addr>().unwrap(), 64)
+                        .unwrap()
+                )
+        );
 
         assert!(
             !Ipv6Cidr::new("2001:db8:0000::".parse::<Ipv6Addr>().unwrap(), 48)

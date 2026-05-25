@@ -1,6 +1,6 @@
 use std::io;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use sequoia_openpgp::cert::CertParser;
 use sequoia_openpgp::parse::stream::{
     DetachedVerifierBuilder, MessageLayer, MessageStructure, VerificationError, VerificationHelper,
@@ -195,7 +195,7 @@ pub fn verify_signature(
 
 #[cfg(test)]
 mod tests {
-    use super::{verify_signature, WeakCryptoConfig};
+    use super::{WeakCryptoConfig, verify_signature};
     use anyhow::Result;
     use sequoia_openpgp::packet::prelude::SignatureBuilder;
     use sequoia_openpgp::packet::signature::subpacket::NotationDataFlags;
@@ -330,21 +330,25 @@ mod tests {
             let (cert1, sink1) = setup("Nicolas Frey", "n.frey@proxmox.com", None, true)?;
             let (cert2, sink2) = setup("Proxmox Support Team", "support@proxmox.com", None, true)?;
 
-            assert!(verify_signature(
-                MESSAGE,
-                &cert2.to_vec()?,
-                Some(&sink1),
-                &WeakCryptoConfig::default()
-            )
-            .is_err_and(root_cause_no_valid_sig));
+            assert!(
+                verify_signature(
+                    MESSAGE,
+                    &cert2.to_vec()?,
+                    Some(&sink1),
+                    &WeakCryptoConfig::default()
+                )
+                .is_err_and(root_cause_no_valid_sig)
+            );
 
-            assert!(verify_signature(
-                MESSAGE,
-                &cert1.to_vec()?,
-                Some(&sink2),
-                &WeakCryptoConfig::default()
-            )
-            .is_err_and(root_cause_no_valid_sig));
+            assert!(
+                verify_signature(
+                    MESSAGE,
+                    &cert1.to_vec()?,
+                    Some(&sink2),
+                    &WeakCryptoConfig::default()
+                )
+                .is_err_and(root_cause_no_valid_sig)
+            );
         }
 
         Ok(())

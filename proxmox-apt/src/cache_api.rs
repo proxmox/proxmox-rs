@@ -1,7 +1,7 @@
 // API function that need feature "cache"
 use std::path::Path;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use std::os::unix::prelude::OsStrExt;
 
 use proxmox_apt_api_types::{APTUpdateInfo, APTUpdateOptions};

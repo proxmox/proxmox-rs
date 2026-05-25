@@ -6,7 +6,7 @@ use std::process::Stdio;
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use futures::TryFutureExt;
 use http::{Request, Response};
 use http_body_util::Full;

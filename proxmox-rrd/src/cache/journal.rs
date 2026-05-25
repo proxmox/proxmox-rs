@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use crossbeam_channel::Receiver;
 use nix::fcntl::OFlag;
 

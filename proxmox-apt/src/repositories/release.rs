@@ -1,6 +1,6 @@
 use std::io::{BufRead, BufReader};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 pub use proxmox_apt_api_types::DebianCodename;
 

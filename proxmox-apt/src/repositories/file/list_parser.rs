@@ -1,7 +1,7 @@
 use std::io::BufRead;
 use std::iter::Iterator;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use super::APTRepositoryParser;
 use crate::repositories::APTRepositoryImpl;

@@ -1,8 +1,8 @@
 //! URI Related helpers, such as `build_authority`
 
+use anyhow::Error;
 use anyhow::bail;
 use anyhow::format_err;
-use anyhow::Error;
 use http::uri::{Authority, InvalidUri};
 use serde_json::Value;
 

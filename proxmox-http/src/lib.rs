@@ -10,10 +10,10 @@ pub mod uri;
 
 #[cfg(any(feature = "http-helpers", feature = "api-types"))]
 pub mod proxy_config;
-#[cfg(any(feature = "http-helpers", feature = "api-types"))]
-pub use proxy_config::ProxyConfig;
 #[cfg(feature = "api-types")]
 pub use proxy_config::HTTP_PROXY_SCHEMA;
+#[cfg(any(feature = "http-helpers", feature = "api-types"))]
+pub use proxy_config::ProxyConfig;
 
 #[cfg(feature = "http-helpers")]
 mod http_options;

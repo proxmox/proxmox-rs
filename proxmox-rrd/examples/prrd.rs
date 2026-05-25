@@ -2,15 +2,15 @@
 
 use std::path::PathBuf;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use proxmox_router::cli::{
-    complete_file_name, run_cli_command, CliCommand, CliCommandMap, CliEnvironment,
-};
 use proxmox_router::RpcEnvironment;
-use proxmox_schema::{api, ApiStringFormat, ApiType, IntegerSchema, Schema, StringSchema};
+use proxmox_router::cli::{
+    CliCommand, CliCommandMap, CliEnvironment, complete_file_name, run_cli_command,
+};
+use proxmox_schema::{ApiStringFormat, ApiType, IntegerSchema, Schema, StringSchema, api};
 
 use proxmox_sys::fs::CreateOptions;
 

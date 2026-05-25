@@ -1,4 +1,4 @@
-use std::ffi::{c_int, CString, OsStr};
+use std::ffi::{CString, OsStr, c_int};
 use std::io;
 use std::os::fd::{FromRawFd, OwnedFd};
 use std::os::unix::ffi::OsStrExt;

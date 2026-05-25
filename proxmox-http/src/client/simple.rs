@@ -1,4 +1,4 @@
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use std::collections::HashMap;
 
 use std::fmt::Display;
@@ -12,15 +12,15 @@ use futures::*;
 
 use http::{HeaderValue, Request, Response};
 use http_body_util::{BodyDataStream, BodyExt};
-use hyper_util::client::legacy::connect::dns::GaiResolver;
-use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::client::legacy::Client as HyperClient;
+use hyper_util::client::legacy::connect::HttpConnector;
+use hyper_util::client::legacy::connect::dns::GaiResolver;
 use hyper_util::rt::TokioExecutor;
 use openssl::ssl::{SslConnector, SslMethod};
 
-use crate::client::HttpsConnector;
 use crate::Body;
 use crate::HttpOptions;
+use crate::client::HttpsConnector;
 
 /// Asynchronous HTTP client implementation
 pub struct Client {
@@ -338,8 +338,8 @@ si aliquod aeternum et infinitum impendere."#;
     }
 
     fn encode_deflate(bytes: &[u8]) -> Result<Vec<u8>, std::io::Error> {
-        use flate2::write::ZlibEncoder;
         use flate2::Compression;
+        use flate2::write::ZlibEncoder;
 
         let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
         e.write_all(bytes).unwrap();

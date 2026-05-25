@@ -5,9 +5,9 @@ use openssl::pkey::{HasPrivate, PKeyRef};
 use openssl::sign::Signer;
 use serde::Serialize;
 
+use crate::Error;
 use crate::b64u;
 use crate::key::{Jwk, PublicKey};
-use crate::Error;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

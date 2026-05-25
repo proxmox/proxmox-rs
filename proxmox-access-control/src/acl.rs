@@ -6,7 +6,7 @@ use std::io::Write;
 #[cfg(feature = "impl")]
 use std::path::Path;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use proxmox_auth_api::types::{Authid, Userid};
 #[cfg(feature = "impl")]
@@ -654,10 +654,10 @@ pub use impl_feature::{cached_config, config, lock_config, save_config};
 mod impl_feature {
     use std::sync::{Arc, OnceLock, RwLock};
 
-    use anyhow::{bail, Error};
+    use anyhow::{Error, bail};
 
     use proxmox_config_digest::ConfigDigest;
-    use proxmox_product_config::{open_api_lockfile, replace_privileged_config, ApiLockGuard};
+    use proxmox_product_config::{ApiLockGuard, open_api_lockfile, replace_privileged_config};
 
     use crate::acl::AclTree;
     use crate::init::access_conf;
@@ -763,7 +763,7 @@ fn privs_to_priv_names(privs: u64) -> Vec<&'static str> {
 mod test {
     use std::{collections::HashMap, sync::OnceLock};
 
-    use crate::init::{init_access_config, AccessControlConfig};
+    use crate::init::{AccessControlConfig, init_access_config};
 
     use super::AclTree;
     use anyhow::Error;
@@ -986,9 +986,10 @@ mod test {
         );
 
         // user2 has no privileges under "/store/store2/store3" --> return empty
-        assert!(tree
-            .get_child_paths(&user2, &["store", "store2", "store3"],)?
-            .is_empty());
+        assert!(
+            tree.get_child_paths(&user2, &["store", "store2", "store3"],)?
+                .is_empty()
+        );
 
         // user2 has DatastoreReader privileges under "/store/store2/store31" --> return paths
         let paths = tree.get_child_paths(&user2, &["store/store2/store31"])?;
@@ -997,15 +998,17 @@ mod test {
         );
 
         // user2 has no privileges under "/store/store2/foo/bar/baz"
-        assert!(tree
-            .get_child_paths(&user2, &["store", "store2", "foo/bar/baz"])?
-            .is_empty());
+        assert!(
+            tree.get_child_paths(&user2, &["store", "store2", "foo/bar/baz"])?
+                .is_empty()
+        );
 
         // user2 has DatastoreReader privileges on "/store/store2/store31/store4/store6", but not
         // on any child paths --> return empty
-        assert!(tree
-            .get_child_paths(&user2, &["store/store2/store31/store4/store6"],)?
-            .is_empty());
+        assert!(
+            tree.get_child_paths(&user2, &["store/store2/store31/store4/store6"],)?
+                .is_empty()
+        );
 
         Ok(())
     }

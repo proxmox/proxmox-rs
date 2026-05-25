@@ -7,12 +7,12 @@ use serde_json::json;
 use proxmox_http::client::sync::Client;
 use proxmox_http::{HttpClient, HttpOptions, ProxyConfig};
 use proxmox_schema::api_types::COMMENT_SCHEMA;
-use proxmox_schema::{api, Updater};
+use proxmox_schema::{Updater, api};
 
 use crate::context::context;
 use crate::renderer::TemplateType;
 use crate::schema::ENTITY_NAME_SCHEMA;
-use crate::{renderer, Content, Endpoint, Error, Notification, Origin, Severity};
+use crate::{Content, Endpoint, Error, Notification, Origin, Severity, renderer};
 
 const HTTP_TIMEOUT: Duration = Duration::from_secs(10);
 

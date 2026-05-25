@@ -1,7 +1,7 @@
 use std::os::unix::fs::{FileExt, OpenOptionsExt};
 use std::path::Path;
 
-use anyhow::{bail, Context as _, Error};
+use anyhow::{Context as _, Error, bail};
 
 use proxmox_log::info;
 

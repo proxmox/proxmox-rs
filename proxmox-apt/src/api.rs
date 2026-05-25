@@ -1,7 +1,7 @@
 // API function that work without feature "cache"
 use std::path::Path;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use proxmox_apt_api_types::{
     APTChangeRepositoryOptions, APTGetChangelogOptions, APTRepositoriesResult, APTRepositoryFile,

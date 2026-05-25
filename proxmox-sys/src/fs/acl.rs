@@ -11,8 +11,8 @@ use std::path::Path;
 use std::ptr;
 
 use libc::{c_char, c_int, c_void};
-use nix::errno::Errno;
 use nix::NixPath;
+use nix::errno::Errno;
 
 #[rustfmt::skip]
 mod constants {

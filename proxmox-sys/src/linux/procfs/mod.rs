@@ -8,7 +8,7 @@ use std::str::FromStr;
 use std::sync::{LazyLock, RwLock};
 use std::time::Instant;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use nix::unistd::Pid;
 use serde::Serialize;
 

@@ -8,9 +8,11 @@ use proxmox_resource_scheduling::{
 fn test_no_duplicate_nodes() {
     let mut usage = Usage::new();
 
-    assert!(usage
-        .add_node("node1".to_owned(), NodeStats::default())
-        .is_ok());
+    assert!(
+        usage
+            .add_node("node1".to_owned(), NodeStats::default())
+            .is_ok()
+    );
 
     assert!(
         usage
@@ -24,18 +26,22 @@ fn test_no_duplicate_nodes() {
 fn test_no_duplicate_resources() {
     let mut usage = Usage::new();
 
-    assert!(usage
-        .add_node("node1".to_owned(), NodeStats::default())
-        .is_ok());
+    assert!(
+        usage
+            .add_node("node1".to_owned(), NodeStats::default())
+            .is_ok()
+    );
 
     let placement = ResourcePlacement::Stationary {
         current_node: "node1".to_owned(),
     };
     let resource = Resource::new(ResourceStats::default(), ResourceState::Stopped, placement);
 
-    assert!(usage
-        .add_resource("vm:101".to_owned(), resource.clone())
-        .is_ok());
+    assert!(
+        usage
+            .add_resource("vm:101".to_owned(), resource.clone())
+            .is_ok()
+    );
 
     assert!(
         usage.add_resource("vm:101".to_owned(), resource).is_err(),
@@ -44,9 +50,11 @@ fn test_no_duplicate_resources() {
 }
 
 fn assert_add_node(usage: &mut Usage, nodename: &str) {
-    assert!(usage
-        .add_node(nodename.to_owned(), NodeStats::default())
-        .is_ok());
+    assert!(
+        usage
+            .add_node(nodename.to_owned(), NodeStats::default())
+            .is_ok()
+    );
 
     assert!(
         usage.get_node(nodename).is_some(),
@@ -72,9 +80,11 @@ fn test_add_resource_usage_to_node() {
     assert_add_node(&mut usage, "node2");
     assert_add_node(&mut usage, "node3");
 
-    assert!(usage
-        .add_resource_usage_to_node("node1", "vm:101", ResourceStats::default())
-        .is_ok());
+    assert!(
+        usage
+            .add_resource_usage_to_node("node1", "vm:101", ResourceStats::default())
+            .is_ok()
+    );
 
     assert!(
         usage
@@ -83,9 +93,11 @@ fn test_add_resource_usage_to_node() {
         "add_resource_usage_to_node() allows adding non-existent nodes"
     );
 
-    assert!(usage
-        .add_resource_usage_to_node("node2", "vm:101", ResourceStats::default())
-        .is_ok());
+    assert!(
+        usage
+            .add_resource_usage_to_node("node2", "vm:101", ResourceStats::default())
+            .is_ok()
+    );
 
     assert!(
         usage

@@ -8,7 +8,7 @@ use std::time::{Duration, SystemTime};
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use openssl::sign::Signer;
-use percent_encoding::{percent_decode, percent_encode, PercentDecode};
+use percent_encoding::{PercentDecode, percent_decode, percent_encode};
 use serde::{Serialize, Serializer};
 
 /// An error from the TOTP TFA submodule.
@@ -352,7 +352,7 @@ impl Totp {
             None => {
                 return Err(Error::msg(
                     "cannot create otpauth uri without an account name",
-                ))
+                ));
             }
         };
 
@@ -647,7 +647,9 @@ fn test_algorithm_parsing() {
     let period = 30;
     let digits = 6;
     let issuer = "ISSUER";
-    let uri = format!("otpauth://totp/user%40hostname?secret={secret}&issuer={issuer}&algorithm=sha1&digits={digits}&period={period}");
+    let uri = format!(
+        "otpauth://totp/user%40hostname?secret={secret}&issuer={issuer}&algorithm=sha1&digits={digits}&period={period}"
+    );
     let hotp: Totp = uri.parse().expect("failed to parse otp uri");
 
     assert_eq!(hotp.algorithm, Algorithm::Sha1);

@@ -3,8 +3,8 @@ use nom::{
     bytes::complete::tag, character::complete::space0, error::context, multi::separated_list1,
 };
 
-use crate::parse_helpers::{parse_complete_line, parse_error, parse_hm_time, IResult};
-use crate::{parse_weekdays_range, WeekDays};
+use crate::parse_helpers::{IResult, parse_complete_line, parse_error, parse_hm_time};
+use crate::{WeekDays, parse_weekdays_range};
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::TmEditor;
@@ -158,7 +158,7 @@ fn parse_daily_duration_incomplete(mut i: &str) -> IResult<&str, DailyDuration> 
 #[cfg(test)]
 mod test {
 
-    use anyhow::{bail, Error};
+    use anyhow::{Error, bail};
 
     use super::*;
 

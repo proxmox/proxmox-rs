@@ -5,7 +5,7 @@ use std::io::Write;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use proxmox_auth_api::api::Authenticator;
 use proxmox_auth_api::types::Username;

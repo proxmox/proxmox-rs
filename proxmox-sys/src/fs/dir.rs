@@ -4,7 +4,7 @@ use std::os::unix::ffi::OsStringExt;
 use std::os::unix::io::{AsRawFd, OwnedFd};
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use nix::errno::Errno;
 use nix::fcntl::OFlag;
 use nix::sys::stat;
@@ -12,7 +12,7 @@ use nix::unistd;
 
 use proxmox_lang::try_block;
 
-use crate::fs::{fchown, CreateOptions};
+use crate::fs::{CreateOptions, fchown};
 
 /// The default list of [`OFlag`]'s we want to use when opening directories. Besides ensuring that
 /// the FD indeed points to a directory we also must ensure that it gets closed on exec to avoid

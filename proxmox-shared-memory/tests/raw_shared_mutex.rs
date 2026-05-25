@@ -5,7 +5,7 @@ use anyhow::Error;
 use nix::fcntl::OFlag;
 use nix::sys::stat::Mode;
 use nix::unistd::mkdir;
-use proxmox_shared_memory::{check_subtype, initialize_subtype, Init, SharedMemory, SharedMutex};
+use proxmox_shared_memory::{Init, SharedMemory, SharedMutex, check_subtype, initialize_subtype};
 use proxmox_sys::fs::CreateOptions;
 
 use std::sync::atomic::AtomicU64;

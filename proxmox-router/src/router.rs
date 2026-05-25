@@ -44,10 +44,12 @@ use crate::SerializableReturn;
 ///    &ObjectSchema::new("Hello World Example", &[])
 /// );
 /// ```
-pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<Value, Error>
-              + Send
-              + Sync
-              + 'static);
+pub type ApiHandlerFn = &'static (
+             dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<Value, Error>
+                 + Send
+                 + Sync
+                 + 'static
+         );
 
 /// A synchronous API handler gets a json Value as input and returns a serializable return value as output.
 ///
@@ -71,14 +73,16 @@ pub type ApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironm
 ///    &ObjectSchema::new("Hello World Example", &[])
 /// );
 /// ```
-pub type SerializingApiHandlerFn = &'static (dyn Fn(
+pub type SerializingApiHandlerFn = &'static (
+             dyn Fn(
     Value,
     &ApiMethod,
     &mut dyn RpcEnvironment,
 ) -> Result<Box<dyn SerializableReturn + Send>, Error>
-              + Send
-              + Sync
-              + 'static);
+                 + Send
+                 + Sync
+                 + 'static
+         );
 
 /// A record for a streaming API call. This contains a `Result<Value, Error>` and allows formatting
 /// as a `json-seq` formatted string.
@@ -183,10 +187,12 @@ where
 ///    &ObjectSchema::new("Hello World Example", &[])
 /// );
 /// ```
-pub type StreamApiHandlerFn = &'static (dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<SyncStream, Error>
-              + Send
-              + Sync
-              + 'static);
+pub type StreamApiHandlerFn = &'static (
+             dyn Fn(Value, &ApiMethod, &mut dyn RpcEnvironment) -> Result<SyncStream, Error>
+                 + Send
+                 + Sync
+                 + 'static
+         );
 
 pub struct SyncStream {
     inner: Box<dyn Iterator<Item = Record> + Send>,
@@ -246,9 +252,11 @@ where
 ///    &ObjectSchema::new("Hello World Example (async)", &[])
 /// );
 /// ```
-pub type ApiAsyncHandlerFn = &'static (dyn for<'a> Fn(Value, &'static ApiMethod, &'a mut dyn RpcEnvironment) -> ApiFuture<'a>
-              + Send
-              + Sync);
+pub type ApiAsyncHandlerFn = &'static (
+             dyn for<'a> Fn(Value, &'static ApiMethod, &'a mut dyn RpcEnvironment) -> ApiFuture<'a>
+                 + Send
+                 + Sync
+         );
 
 pub type ApiFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, anyhow::Error>> + Send + 'a>>;
 
@@ -278,13 +286,15 @@ pub type ApiFuture<'a> = Pin<Box<dyn Future<Output = Result<Value, anyhow::Error
 ///    &ObjectSchema::new("Hello World Example (async)", &[])
 /// );
 /// ```
-pub type SerializingApiAsyncHandlerFn = &'static (dyn for<'a> Fn(
+pub type SerializingApiAsyncHandlerFn = &'static (
+             dyn for<'a> Fn(
     Value,
     &'static ApiMethod,
     &'a mut dyn RpcEnvironment,
 ) -> SerializingApiFuture<'a>
-              + Send
-              + Sync);
+                 + Send
+                 + Sync
+         );
 
 pub type SerializingApiFuture<'a> = Pin<
     Box<dyn Future<Output = Result<Box<dyn SerializableReturn + Send>, anyhow::Error>> + Send + 'a>,
@@ -321,13 +331,15 @@ pub type SerializingApiFuture<'a> = Pin<
 ///    &ObjectSchema::new("Hello World Example (async)", &[])
 /// );
 /// ```
-pub type StreamApiAsyncHandlerFn = &'static (dyn for<'a> Fn(
+pub type StreamApiAsyncHandlerFn = &'static (
+             dyn for<'a> Fn(
     Value,
     &'static ApiMethod,
     &'a mut dyn RpcEnvironment,
 ) -> StreamApiFuture<'a>
-              + Send
-              + Sync);
+                 + Send
+                 + Sync
+         );
 
 pub type StreamApiFuture<'a> =
     Pin<Box<dyn Future<Output = Result<Stream, anyhow::Error>> + Send + 'a>>;
@@ -422,16 +434,18 @@ impl IntoRecord for Result<Record, Error> {
 /// );
 /// ```
 #[cfg(feature = "server")]
-pub type ApiAsyncHttpHandlerFn = &'static (dyn Fn(
+pub type ApiAsyncHttpHandlerFn = &'static (
+             dyn Fn(
     Parts,
     Incoming,
     Value,
     &'static ApiMethod,
     Box<dyn RpcEnvironment>,
 ) -> ApiResponseFuture
-              + Send
-              + Sync
-              + 'static);
+                 + Send
+                 + Sync
+                 + 'static
+         );
 
 /// The output of an asynchronous API handler is a future yielding a `Response`.
 #[cfg(feature = "server")]
@@ -472,10 +486,12 @@ pub type ApiResponseFuture =
 /// );
 /// ```
 #[cfg(feature = "server")]
-pub type ApiAsyncHttpHandlerBodyParametersFn = &'static (dyn Fn(Parts, Value, &'static ApiMethod, Box<dyn RpcEnvironment>) -> ApiResponseFuture
-              + Send
-              + Sync
-              + 'static);
+pub type ApiAsyncHttpHandlerBodyParametersFn = &'static (
+             dyn Fn(Parts, Value, &'static ApiMethod, Box<dyn RpcEnvironment>) -> ApiResponseFuture
+                 + Send
+                 + Sync
+                 + 'static
+         );
 
 /// Enum for different types of API handler functions.
 #[non_exhaustive]

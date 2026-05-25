@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use anyhow::{format_err, Context as _, Error};
+use anyhow::{Context as _, Error, format_err};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use webauthn_rs::prelude::SecurityKeyAuthentication;
@@ -10,7 +10,7 @@ use webauthn_rs::prelude::SecurityKeyRegistration;
 use webauthn_rs_core::proto::{COSEKey, CredentialID, UserVerificationPolicy};
 
 #[cfg(feature = "api-types")]
-use proxmox_schema::{api, Updater, UpdaterType};
+use proxmox_schema::{Updater, UpdaterType, api};
 
 use super::IsExpired;
 

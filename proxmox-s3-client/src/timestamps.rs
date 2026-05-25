@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, Context, Error};
+use anyhow::{Context, Error, anyhow, bail};
 
 const VALID_DAYS_OF_WEEK: [&str; 7] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const VALID_MONTHS: [&str; 12] = [

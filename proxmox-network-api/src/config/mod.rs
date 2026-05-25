@@ -2,15 +2,15 @@ mod helper;
 mod lexer;
 mod parser;
 
-pub use helper::{assert_ifupdown2_installed, network_reload, parse_cidr, AltnameMapping, IpLink};
+pub use helper::{AltnameMapping, IpLink, assert_ifupdown2_installed, network_reload, parse_cidr};
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::Write;
 use std::sync::LazyLock;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use regex::Regex;
-use serde::de::{value, Deserialize, IntoDeserializer};
+use serde::de::{Deserialize, IntoDeserializer, value};
 
 use super::{
     BondXmitHashPolicy, Interface, LinuxBondMode, NetworkConfigMethod, NetworkInterfaceType,
@@ -21,7 +21,7 @@ pub use helper::get_network_interfaces;
 use parser::NetworkParser;
 
 use proxmox_config_digest::ConfigDigest;
-use proxmox_product_config::{open_api_lockfile, replace_system_config, ApiLockGuard};
+use proxmox_product_config::{ApiLockGuard, open_api_lockfile, replace_system_config};
 
 static PHYSICAL_NIC_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(?:eth\d+|en[^:.]+|ib\d+)$").unwrap());

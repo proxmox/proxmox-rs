@@ -2,7 +2,7 @@
 
 use std::process::{Command, Output};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 /// Helper to check result from [Command] output
 ///

@@ -2,7 +2,7 @@
 
 use std::ffi::{CStr, CString};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 /// Safe bindings to libc timelocal
 ///

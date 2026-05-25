@@ -1,12 +1,12 @@
 use std::str::FromStr;
 
 use const_format::concatcp;
-use serde::de::{value, IntoDeserializer};
+use serde::de::{IntoDeserializer, value};
 use serde::{Deserialize, Serialize};
 
 use proxmox_lang::constnamedbitmap;
 use proxmox_schema::{
-    api, const_regex, ApiStringFormat, BooleanSchema, EnumEntry, Schema, StringSchema,
+    ApiStringFormat, BooleanSchema, EnumEntry, Schema, StringSchema, api, const_regex,
 };
 
 use crate::PROXMOX_SAFE_ID_REGEX_STR;

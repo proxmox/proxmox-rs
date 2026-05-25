@@ -1,15 +1,15 @@
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 #[cfg(feature = "openssl")]
 use openssl::sha;
 
-use proxmox_schema::api_types::SHA256_HEX_REGEX;
 use proxmox_schema::ApiStringFormat;
 use proxmox_schema::ApiType;
 use proxmox_schema::Schema;
 use proxmox_schema::StringSchema;
+use proxmox_schema::api_types::SHA256_HEX_REGEX;
 
 pub const PROXMOX_CONFIG_DIGEST_FORMAT: ApiStringFormat =
     ApiStringFormat::Pattern(&SHA256_HEX_REGEX);

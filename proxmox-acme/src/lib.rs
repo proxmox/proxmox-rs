@@ -74,9 +74,9 @@ pub use request::Request;
 #[cfg(feature = "impl")]
 pub use order::NewOrder;
 #[cfg(feature = "impl")]
-pub(crate) use request::http_status;
-#[cfg(feature = "impl")]
 pub use request::ErrorResponse;
+#[cfg(feature = "impl")]
+pub(crate) use request::http_status;
 
 /// Header name for nonces.
 pub const REPLAY_NONCE: &str = "Replay-Nonce";

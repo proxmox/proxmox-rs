@@ -1,5 +1,5 @@
 mod release_file;
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 pub use release_file::{CompressionType, FileReference, FileReferenceType, ReleaseFile};
 
 mod packages_file;

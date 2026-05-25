@@ -3,7 +3,7 @@ use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use bytes::Bytes;
 use futures::ready;
 use futures::stream::Stream;

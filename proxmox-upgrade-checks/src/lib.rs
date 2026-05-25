@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::{io::Write, path::PathBuf};
 
-use anyhow::{format_err, Error};
+use anyhow::{Error, format_err};
 use const_format::concatcp;
 use regex::Regex;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -603,7 +603,7 @@ impl UpgradeChecker {
                 \n       While not necessary for the upgrade it's recommended to use one of:\
                 \n        * chrony (Default in new Proxmox product installations)\
                 \n        * ntpsec\
-                \n        * openntpd"
+                \n        * openntpd",
             )?;
         } else if self.get_systemd_unit_state("ntp.service")?.1 == SystemdUnitState::Active {
             self.output.log_info(

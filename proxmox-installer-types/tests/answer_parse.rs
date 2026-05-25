@@ -106,8 +106,7 @@ fn rejects_unknown_global_field() {
 
 #[test]
 fn roundtrip_modern_answer() {
-    let parsed: AutoInstallerConfig =
-        toml::from_str(MODERN_ANSWER).expect("answer must parse");
+    let parsed: AutoInstallerConfig = toml::from_str(MODERN_ANSWER).expect("answer must parse");
     let reserialized = toml::to_string(&parsed).expect("answer must serialize");
     let reparsed: AutoInstallerConfig =
         toml::from_str(&reserialized).expect("re-serialized answer must parse again");

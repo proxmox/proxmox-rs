@@ -9,7 +9,7 @@ use std::str::FromStr;
 use anyhow::Error;
 use serde::{Deserialize, Serialize};
 
-use proxmox_schema::{api, ApiStringFormat, Schema, StringSchema, Updater};
+use proxmox_schema::{ApiStringFormat, Schema, StringSchema, Updater, api};
 
 use proxmox_time::{CalendarEvent, TimeSpan};
 

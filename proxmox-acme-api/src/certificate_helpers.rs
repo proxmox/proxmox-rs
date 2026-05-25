@@ -4,17 +4,17 @@ use std::time::Duration;
 
 use foreign_types::ForeignTypeRef;
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use openssl::pkey::{PKey, Private};
 use openssl::rsa::Rsa;
-use openssl::x509::{X509Builder, X509};
+use openssl::x509::{X509, X509Builder};
 
 use proxmox_acme::async_client::AcmeClient;
 use proxmox_log::{info, warn};
 use proxmox_rest_server::WorkerTask;
 
-use crate::types::{AcmeConfig, AcmeDomain};
 use crate::CertificateInfo;
+use crate::types::{AcmeConfig, AcmeDomain};
 
 pub async fn revoke_certificate(acme_config: &AcmeConfig, certificate: &[u8]) -> Result<(), Error> {
     let mut acme = super::account_config::load_account_config(&acme_config.account)

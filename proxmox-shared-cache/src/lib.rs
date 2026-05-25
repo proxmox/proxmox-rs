@@ -4,8 +4,8 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use anyhow::Error;
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 use proxmox_sys::fs::CreateOptions;
 

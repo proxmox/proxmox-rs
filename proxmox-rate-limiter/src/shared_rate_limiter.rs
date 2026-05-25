@@ -4,13 +4,13 @@ use std::mem::MaybeUninit;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use nix::sys::stat::Mode;
 use nix::unistd::User;
 
-use proxmox_shared_memory::{check_subtype, initialize_subtype};
 use proxmox_shared_memory::{Init, SharedMemory, SharedMutex};
-use proxmox_sys::fs::{create_path, CreateOptions};
+use proxmox_shared_memory::{check_subtype, initialize_subtype};
+use proxmox_sys::fs::{CreateOptions, create_path};
 
 use crate::{RateLimit, RateLimiter, ShareableRateLimit};
 

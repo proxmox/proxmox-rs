@@ -1,4 +1,4 @@
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use std::collections::HashMap;
 use std::future::Future;

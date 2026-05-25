@@ -4,10 +4,10 @@ use std::convert::TryFrom;
 
 use proc_macro2::{Ident, Span, TokenStream, TokenTree};
 use quote::ToTokens;
+use syn::Token;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::Token;
 
 use anyhow::Error;
 

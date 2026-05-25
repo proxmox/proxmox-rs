@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use proxmox_fixed_string::FixedString;
 
 use proxmox_schema::{
-    api, ApiStringFormat, ArraySchema, IntegerSchema, Schema, StringSchema, Updater,
+    ApiStringFormat, ArraySchema, IntegerSchema, Schema, StringSchema, Updater, api,
 };
 
 use crate::{OptionalDeviceIdentification, PROXMOX_SAFE_ID_FORMAT};

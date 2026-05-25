@@ -7,8 +7,8 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt;
 
-use anyhow::{bail, format_err, Error};
-use serde_json::{json, Value};
+use anyhow::{Error, bail, format_err};
+use serde_json::{Value, json};
 
 use crate::ConstRegexPattern;
 
@@ -1516,7 +1516,9 @@ impl Schema {
                         if let Some(key) = default_key {
                             param_list.push((key.to_string(), value.into_owned()));
                         } else {
-                            bail!("Value '{value}' without key, but schema does not define a default key.");
+                            bail!(
+                                "Value '{value}' without key, but schema does not define a default key."
+                            );
                         }
                     }
                 }

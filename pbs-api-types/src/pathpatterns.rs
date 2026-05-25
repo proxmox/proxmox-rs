@@ -1,4 +1,4 @@
-use proxmox_schema::{const_regex, ApiStringFormat, ApiType, Schema, StringSchema};
+use proxmox_schema::{ApiStringFormat, ApiType, Schema, StringSchema, const_regex};
 
 use serde::{Deserialize, Serialize};
 

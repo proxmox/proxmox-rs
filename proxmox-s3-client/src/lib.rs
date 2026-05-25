@@ -21,8 +21,8 @@ pub use aws_sign_v4::uri_decode;
 mod client;
 #[cfg(feature = "impl")]
 pub use client::{
-    S3Client, S3ClientOptions, S3PathPrefix, S3RateLimiterOptions, S3RequestCounterConfig,
-    S3_HTTP_REQUEST_TIMEOUT,
+    S3_HTTP_REQUEST_TIMEOUT, S3Client, S3ClientOptions, S3PathPrefix, S3RateLimiterOptions,
+    S3RequestCounterConfig,
 };
 #[cfg(feature = "impl")]
 mod timestamps;

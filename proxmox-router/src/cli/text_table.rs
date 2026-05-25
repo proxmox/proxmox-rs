@@ -1,6 +1,6 @@
 use std::io::{IsTerminal, Write};
 
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 use serde_json::Value;
 use unicode_width::UnicodeWidthStr;
 

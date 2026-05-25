@@ -4,14 +4,14 @@ use std::sync::atomic::Ordering;
 use std::sync::{Arc, LazyLock, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-use anyhow::{bail, format_err, Context, Error};
+use anyhow::{Context, Error, bail, format_err};
 use hyper::body::{Bytes, Incoming};
 use hyper::http::method::Method;
 use hyper::http::uri::{Authority, Parts, PathAndQuery, Scheme};
-use hyper::http::{header, HeaderValue, StatusCode, Uri};
+use hyper::http::{HeaderValue, StatusCode, Uri, header};
 use hyper::{Request, Response};
-use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::client::legacy::Client;
+use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::rt::TokioExecutor;
 use nix::unistd::User;
 use openssl::hash::MessageDigest;

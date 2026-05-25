@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use proxmox_schema::api_types::{COMMENT_SCHEMA, SAFE_ID_FORMAT};
-use proxmox_schema::{api, ApiStringFormat, ApiType, ArraySchema, Schema, StringSchema, Updater};
+use proxmox_schema::{ApiStringFormat, ApiType, ArraySchema, Schema, StringSchema, Updater, api};
 
 pub const REALM_ID_SCHEMA: Schema = StringSchema::new("Realm name.")
     .format(&SAFE_ID_FORMAT)
@@ -257,8 +257,7 @@ pub const SYNC_DEFAULTS_STRING_SCHEMA: Schema = StringSchema::new("sync defaults
     ))
     .schema();
 
-const REMOVE_VANISHED_DESCRIPTION: &str =
-    "A semicolon-separated list of things to remove when they or the user \
+const REMOVE_VANISHED_DESCRIPTION: &str = "A semicolon-separated list of things to remove when they or the user \
 vanishes during user synchronization. The following values are possible: ``entry`` removes the \
 user when not returned from the sync; ``properties`` removes any  \
 properties on existing user that do not appear in the source. \

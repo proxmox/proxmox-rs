@@ -11,11 +11,11 @@ use std::mem;
 use anyhow::Error;
 
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{ToTokens, quote, quote_spanned};
+use syn::Ident;
 use syn::ext::IdentExt;
 use syn::spanned::Spanned;
 use syn::visit_mut::{self, VisitMut};
-use syn::Ident;
 
 use super::{ObjectEntry, Schema, SchemaItem, SchemaObject};
 use crate::util::{self, FieldName, JSONObject, JSONValue, Maybe};
@@ -93,11 +93,7 @@ impl TryFrom<JSONObject> for ReturnSchema {
             Some(value) => {
                 let span = value.span();
                 let is_optional: bool = value.try_into()?;
-                if is_optional {
-                    Some(span)
-                } else {
-                    None
-                }
+                if is_optional { Some(span) } else { None }
             }
             None => None,
         };
@@ -528,7 +524,7 @@ fn is_value_type(ty: &syn::Type) -> bool {
             1 => return segs.last().unwrap().ident == "Value",
             2 => {
                 return segs.first().unwrap().ident == "serde_json"
-                    && segs.last().unwrap().ident == "Value"
+                    && segs.last().unwrap().ident == "Value";
             }
             _ => return false,
         }

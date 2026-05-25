@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use proxmox_schema::api_types::{DNS_ALIAS_FORMAT, DNS_NAME_FORMAT, SAFE_ID_FORMAT};
-use proxmox_schema::{api, ApiStringFormat, ApiType, Schema, StringSchema, Updater};
+use proxmox_schema::{ApiStringFormat, ApiType, Schema, StringSchema, Updater, api};
 
 use proxmox_acme::types::AccountData as AcmeAccountData;
 

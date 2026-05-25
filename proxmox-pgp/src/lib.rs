@@ -2,4 +2,4 @@
 
 mod verifier;
 
-pub use verifier::{verify_signature, WeakCryptoConfig, WeakCryptoConfigUpdater};
+pub use verifier::{WeakCryptoConfig, WeakCryptoConfigUpdater, verify_signature};

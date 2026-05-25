@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use proxmox_schema::{api, ApiType, Updater, UpdaterType};
+use proxmox_schema::{ApiType, Updater, UpdaterType, api};
 
 // Helpers for type checks:
 struct AssertTypeEq<T>(T);

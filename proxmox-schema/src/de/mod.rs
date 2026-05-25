@@ -17,9 +17,9 @@ pub mod verify;
 
 pub use extract::ExtractValueDeserializer;
 
-use cow3::{str_slice_to_range, Cow3};
+use cow3::{Cow3, str_slice_to_range};
 
-pub use no_schema::{split_list, SplitList};
+pub use no_schema::{SplitList, split_list};
 
 // Used to disable calling `check_constraints` on a `StringSchema` if it is being deserialized
 // for a `PropertyString`, which performs its own checking.
@@ -638,7 +638,7 @@ impl<'de> de::MapAccess<'de> for MapAccess<'de, '_> {
                 None => {
                     return Err(Error::msg(
                         "value without key, but schema does not define a default key",
-                    ))
+                    ));
                 }
             },
         };

@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use anyhow::{bail, format_err, Error};
-use serde_json::{from_value, Value};
+use anyhow::{Error, bail, format_err};
+use serde_json::{Value, from_value};
 
 use proxmox_auth_api::types::Authid;
-use proxmox_product_config::{open_api_lockfile, replace_config, ApiLockGuard};
+use proxmox_product_config::{ApiLockGuard, open_api_lockfile, replace_config};
 
 use crate::init::impl_feature::{token_shadow, token_shadow_lock};
 

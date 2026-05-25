@@ -16,7 +16,7 @@ mod write;
 pub use write::WriteExt;
 
 mod sparse_copy;
-pub use sparse_copy::{buffer_is_zero, sparse_copy, SparseCopyResult};
+pub use sparse_copy::{SparseCopyResult, buffer_is_zero, sparse_copy};
 
 #[cfg(feature = "tokio")]
 pub use sparse_copy::sparse_copy_async;

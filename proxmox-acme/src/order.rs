@@ -3,8 +3,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::request::Request;
 use crate::Error;
+use crate::request::Request;
 
 /// Status of an [`Order`].
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Deserialize, Serialize)]

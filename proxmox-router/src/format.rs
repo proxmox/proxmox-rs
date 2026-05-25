@@ -4,8 +4,8 @@ use std::io::Write;
 
 use anyhow::Error;
 
-use proxmox_schema::format::*;
 use proxmox_schema::ObjectSchemaType;
+use proxmox_schema::format::*;
 
 #[cfg(feature = "server")]
 use crate::ApiHandler;

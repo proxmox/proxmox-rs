@@ -6,7 +6,7 @@ use serde::Serialize;
 
 use crate::key::Jwk;
 use crate::types::ExternalAccountBinding;
-use crate::{b64u, Error};
+use crate::{Error, b64u};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

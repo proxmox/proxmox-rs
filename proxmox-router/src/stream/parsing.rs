@@ -1,9 +1,9 @@
 use std::future::Future;
 use std::io;
 use std::pin::Pin;
-use std::task::{ready, Poll};
+use std::task::{Poll, ready};
 
-use anyhow::{format_err, Context as _, Error};
+use anyhow::{Context as _, Error, format_err};
 use bytes::Bytes;
 use futures::io::{AsyncBufRead, AsyncBufReadExt, AsyncRead, BufReader};
 use serde::Deserialize;

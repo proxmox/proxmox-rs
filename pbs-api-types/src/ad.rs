@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use proxmox_schema::{api, Updater};
+use proxmox_schema::{Updater, api};
 
 use super::{
-    LdapMode, LDAP_DOMAIN_SCHEMA, REALM_ID_SCHEMA, SINGLE_LINE_COMMENT_SCHEMA,
+    LDAP_DOMAIN_SCHEMA, LdapMode, REALM_ID_SCHEMA, SINGLE_LINE_COMMENT_SCHEMA,
     SYNC_ATTRIBUTES_SCHEMA, SYNC_DEFAULTS_STRING_SCHEMA, USER_CLASSES_SCHEMA,
 };
 

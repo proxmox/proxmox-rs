@@ -196,14 +196,18 @@ fn iterate_over_property_string() {
     );
     assert!(iter.next().is_none());
 
-    assert!(PropertyIterator::new(r#"key="open \\ value"#)
-        .next()
-        .unwrap()
-        .is_err());
-    assert!(PropertyIterator::new(r#"key="open \\ value\""#)
-        .next()
-        .unwrap()
-        .is_err());
+    assert!(
+        PropertyIterator::new(r#"key="open \\ value"#)
+            .next()
+            .unwrap()
+            .is_err()
+    );
+    assert!(
+        PropertyIterator::new(r#"key="open \\ value\""#)
+            .next()
+            .unwrap()
+            .is_err()
+    );
 }
 
 /// A wrapper for a de/serializable type which is stored as a property string.
@@ -267,7 +271,7 @@ where
     where
         D: serde::Deserializer<'de>,
     {
-        use crate::de::{set_in_property_string, InPropertyStringGuard};
+        use crate::de::{InPropertyStringGuard, set_in_property_string};
 
         use std::marker::PhantomData;
 

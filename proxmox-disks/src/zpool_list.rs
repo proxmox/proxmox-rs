@@ -1,6 +1,6 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
-use crate::parse_helpers::{notspace1, IResult};
+use crate::parse_helpers::{IResult, notspace1};
 
 use nom::{
     bytes::complete::{take_till, take_till1, take_while1},

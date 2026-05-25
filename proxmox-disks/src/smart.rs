@@ -6,7 +6,7 @@ use std::{
 };
 
 use ::serde::{Deserialize, Serialize};
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use nix::sys::signal::{self, Signal};
 use nix::unistd::Pid;
 

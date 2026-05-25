@@ -1,12 +1,12 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 use proxmox_config_digest::ConfigDigest;
 
-use crate::{parse_vlan_id_from_name, parse_vlan_raw_device_from_name};
 use crate::{
     DeletableInterfaceProperty, Interface, InterfaceUpdater, LinuxBondMode, NetworkConfigMethod,
     NetworkInterfaceType,
 };
+use crate::{parse_vlan_id_from_name, parse_vlan_raw_device_from_name};
 
 /// Create network interface configuration.
 pub fn create_interface(iface: String, config: InterfaceUpdater) -> Result<(), Error> {
@@ -99,7 +99,9 @@ pub fn create_interface(iface: String, config: InterfaceUpdater) -> Result<(), E
                 }
                 if config.bond_xmit_hash_policy.is_some() {
                     if mode != LinuxBondMode::Ieee802_3ad && mode != LinuxBondMode::BalanceXor {
-                        bail!("bond_xmit_hash_policy is only valid with LACP(802.3ad) or balance-xor mode");
+                        bail!(
+                            "bond_xmit_hash_policy is only valid with LACP(802.3ad) or balance-xor mode"
+                        );
                     }
                     interface.bond_xmit_hash_policy = config.bond_xmit_hash_policy;
                 }

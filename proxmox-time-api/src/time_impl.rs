@@ -1,4 +1,4 @@
-use anyhow::{bail, format_err, Error};
+use anyhow::{Error, bail, format_err};
 
 use proxmox_product_config::replace_system_config;
 use proxmox_sys::fs::file_read_firstline;

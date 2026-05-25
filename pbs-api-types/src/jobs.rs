@@ -11,11 +11,11 @@ use proxmox_fixed_string::FixedString;
 use proxmox_schema::*;
 
 use crate::{
-    Authid, BackupNamespace, BackupType, NotificationMode, RateLimitConfig, Userid,
-    BACKUP_GROUP_SCHEMA, BACKUP_NAMESPACE_SCHEMA, BACKUP_NS_RE, DATASTORE_SCHEMA,
-    DRIVE_NAME_SCHEMA, CRYPT_KEY_ID_SCHEMA, MEDIA_POOL_NAME_SCHEMA,
-    NS_MAX_DEPTH_REDUCED_SCHEMA, PROXMOX_SAFE_ID_FORMAT, PROXMOX_SAFE_ID_REGEX_STR,
-    REMOTE_ID_SCHEMA, SINGLE_LINE_COMMENT_SCHEMA,
+    Authid, BACKUP_GROUP_SCHEMA, BACKUP_NAMESPACE_SCHEMA, BACKUP_NS_RE, BackupNamespace,
+    BackupType, CRYPT_KEY_ID_SCHEMA, DATASTORE_SCHEMA, DRIVE_NAME_SCHEMA, MEDIA_POOL_NAME_SCHEMA,
+    NS_MAX_DEPTH_REDUCED_SCHEMA, NotificationMode, PROXMOX_SAFE_ID_FORMAT,
+    PROXMOX_SAFE_ID_REGEX_STR, REMOTE_ID_SCHEMA, RateLimitConfig, SINGLE_LINE_COMMENT_SCHEMA,
+    Userid,
 };
 
 const_regex! {
@@ -469,11 +469,15 @@ impl std::str::FromStr for FilterType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s.split_once(':') {
-            Some(("group", value)) => BACKUP_GROUP_SCHEMA.parse_simple_value(value).map(|_| FilterType::Group(value.to_string()))?,
+            Some(("group", value)) => BACKUP_GROUP_SCHEMA
+                .parse_simple_value(value)
+                .map(|_| FilterType::Group(value.to_string()))?,
             Some(("type", value)) => FilterType::BackupType(value.parse()?),
             Some(("regex", value)) => FilterType::Regex(Regex::new(value)?),
             Some((ty, _value)) => bail!("expected 'group', 'type' or 'regex' prefix, got '{}'", ty),
-            None => bail!("input doesn't match expected format '<group:GROUP||type:<vm|ct|host>|regex:REGEX>'"),
+            None => bail!(
+                "input doesn't match expected format '<group:GROUP||type:<vm|ct|host>|regex:REGEX>'"
+            ),
         })
     }
 }

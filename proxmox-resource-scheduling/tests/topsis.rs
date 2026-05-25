@@ -1,6 +1,6 @@
 use anyhow::Error;
 
-use proxmox_resource_scheduling::topsis::{rank_alternatives, Criteria, Criterion, Matrix};
+use proxmox_resource_scheduling::topsis::{Criteria, Criterion, Matrix, rank_alternatives};
 
 #[test]
 fn test_topsis_single_criterion() -> Result<(), Error> {

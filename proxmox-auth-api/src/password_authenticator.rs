@@ -2,7 +2,7 @@ use std::future::Future;
 use std::net::IpAddr;
 use std::pin::Pin;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use serde_json::json;
 
 use proxmox_product_config::open_secret_lockfile;
