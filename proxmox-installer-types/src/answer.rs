@@ -976,8 +976,7 @@ pub struct LvmOptions {
 /// Btrfs-specific filesystem options.
 pub struct BtrfsOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
-    /// Size of the root partition. Optional, will be heuristically determined if
-    /// unset.
+    /// Size of the root disk. Optional, will be heuristically determined if unset.
     pub hdsize: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     /// RAID level to use.
