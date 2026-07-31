@@ -1772,7 +1772,7 @@ impl BackupGroupDeleteStats {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 /// Allowed variants of backup archives to be contained in a snapshot's manifest
 pub enum ArchiveType {
     FixedIndex,
@@ -1801,7 +1801,7 @@ impl ArchiveType {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 /// Name of archive files contained in snapshot's manifest
 pub struct BackupArchiveName {
     // archive name including the `.fidx`, `.didx` or `.blob` archive type extension
