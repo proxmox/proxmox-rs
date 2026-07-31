@@ -6,6 +6,8 @@ use std::sync::LazyLock;
 
 use anyhow::{bail, format_err, Error};
 use const_format::concatcp;
+use serde::de::IntoDeserializer;
+use serde::de::value::{Error as ValueError, StrDeserializer};
 use serde::{Deserialize, Serialize};
 
 use proxmox_schema::{
@@ -1902,6 +1904,33 @@ impl BackupArchiveName {
             .into()
     }
 
+    /// Stricter deserializer which does not perform server side type extension coercion and
+    /// explicitly calls schema validation, otherwise only performed when deserialized as API
+    /// parameter.
+    pub fn deserialize_strict<'de, D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value: String = Deserialize::deserialize(deserializer)?;
+        let archive_type = proxmox_schema::de::verify::verify(&BACKUP_ARCHIVE_NAME_SCHEMA, &value)
+            .and(ArchiveType::from_path(&value))
+            .map_err(serde::de::Error::custom)?;
+
+        Ok(Self {
+            name: value,
+            ty: archive_type,
+        })
+    }
+
+    /// Stricter 'try_from' variant which does not perform server side type extension coercion and
+    /// explicitly calls schema validation, otherwise only performed when deserialized as API
+    /// parameter.
+    pub fn try_from_strict(value: &str) -> Result<Self, Error> {
+        let de: StrDeserializer<'_, ValueError> = value.into_deserializer();
+        let archive_name = Self::deserialize_strict(de)?;
+        Ok(archive_name)
+    }
+
     fn parse_archive_type(archive_name: &str) -> Result<(String, ArchiveType), Error> {
         // Detect archive type via given server archive name type extension, if present
         if let Ok(archive_type) = ArchiveType::from_path(archive_name) {
@@ -1956,6 +1985,32 @@ mod tests {
     }
 
     #[test]
+    fn test_invalid_backup_archive_names_try_from_strict() {
+        let invalid_archive_names = [
+            "/invalid/",
+            "/invalid/archive-name.pxar.didx",
+            "/invalid/archive-name.img.fidx",
+            "/invalid/archive-name.cfg.blob",
+            "/invalid-archive-name.pxar",
+            "../invalid-archive-name.pxar",
+            "invalid-archive-name.pxar",
+            "invalid-archive-name.mpxar",
+            "invalid-archive-name.ppxar",
+            "invalid-archive-name.pcat1",
+            "invalid-archive-name.img",
+            "invalid-archive-name.conf",
+            "invalid-archive-name.json",
+            "invalid-archive-name.key",
+            "invalid-archive-name.log",
+            "invalid-archive-name.ext",
+        ];
+
+        for archive_name in invalid_archive_names {
+            assert!(BackupArchiveName::try_from_strict(archive_name).is_err());
+        }
+    }
+
+    #[test]
     fn test_valid_didx_backup_archive_names() {
         let valid_archive_names = [
             "/valid/archive-name.pxar",
@@ -1972,6 +2027,14 @@ mod tests {
             let archive = BackupArchiveName::from_path(archive_name).unwrap();
             assert!(archive.as_ref().ends_with(".didx"));
             assert!(archive.archive_type() == ArchiveType::DynamicIndex);
+            let file_name = archive_name.rsplit('/').next().unwrap();
+            if archive_name.ends_with(".didx") {
+                let archive_from_str = BackupArchiveName::try_from_strict(file_name).unwrap();
+                assert!(archive == archive_from_str);
+                assert!(BackupArchiveName::try_from_strict(archive_name).is_err());
+            } else {
+                assert!(BackupArchiveName::try_from_strict(file_name).is_err());
+            }
         }
     }
 
@@ -1984,6 +2047,14 @@ mod tests {
             assert!(archive.as_ref() == "archive-name.img.fidx");
             assert!(archive.without_type_extension() == "archive-name.img");
             assert!(archive.archive_type() == ArchiveType::FixedIndex);
+            let file_name = archive_name.rsplit('/').next().unwrap();
+            if archive_name.ends_with(".fidx") {
+                let archive_from_str = BackupArchiveName::try_from_strict(file_name).unwrap();
+                assert!(archive == archive_from_str);
+                assert!(BackupArchiveName::try_from_strict(archive_name).is_err());
+            } else {
+                assert!(BackupArchiveName::try_from_strict(file_name).is_err());
+            }
         }
     }
 
@@ -2004,6 +2075,14 @@ mod tests {
             let archive = BackupArchiveName::from_path(archive_name).unwrap();
             assert!(archive.as_ref().ends_with(".blob"));
             assert!(archive.archive_type() == ArchiveType::Blob);
+            let file_name = archive_name.rsplit('/').next().unwrap();
+            if archive_name.ends_with(".blob") {
+                let archive_from_str = BackupArchiveName::try_from_strict(file_name).unwrap();
+                assert!(archive == archive_from_str);
+                assert!(BackupArchiveName::try_from_strict(archive_name).is_err());
+            } else {
+                assert!(BackupArchiveName::try_from_strict(file_name).is_err());
+            }
         }
     }
 }
