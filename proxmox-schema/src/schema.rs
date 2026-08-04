@@ -1088,6 +1088,10 @@ impl AllOfSchema {
         Schema::AllOf(self)
     }
 
+    #[cfg_attr(
+        proxmox_schema = "strict",
+        deprecated(note = "lookup without data ignores clashing oneOf keys, use lookup_schema")
+    )]
     pub fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)> {
         for entry in self.list {
             if let Some(v) = entry
@@ -1367,6 +1371,10 @@ impl OneOfSchema {
         self.type_property_entry.2
     }
 
+    #[cfg_attr(
+        proxmox_schema = "strict",
+        deprecated(note = "lookup without data ignores clashing oneOf keys, use lookup_schema")
+    )]
     pub fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)> {
         if key == self.type_property() {
             return Some((false, self.type_schema()));
@@ -1502,7 +1510,17 @@ fn rename_aliases_to_canonicals(
 /// Beside [`ObjectSchema`] we also have an [`AllOfSchema`] which also represents objects.
 pub trait ObjectSchemaType: private::Sealed + Send + Sync {
     fn description(&self) -> &'static str;
+    #[cfg_attr(
+        proxmox_schema = "strict",
+        deprecated(note = "lookup without data ignores clashing oneOf keys, use lookup_schema")
+    )]
     fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)>;
+    #[cfg_attr(
+        proxmox_schema = "strict",
+        deprecated(
+            note = "properties iteration with oneOf subschemas is broken, use all_properties"
+        )
+    )]
     fn properties(&self) -> ObjectPropertyIterator;
     fn additional_properties(&self) -> bool;
     fn default_key(&self) -> Option<&'static str>;
@@ -2979,6 +2997,7 @@ impl ObjectSchemaType for ParameterSchema {
     }
 
     fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)> {
+        #[allow(deprecated)]
         match self {
             ParameterSchema::Object(o) => o.lookup(key),
             ParameterSchema::AllOf(o) => o.lookup(key),

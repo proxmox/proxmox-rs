@@ -40,3 +40,8 @@ api-types = [ "dep:const_format" ]
 
 # Testing only
 test-harness = []
+
+# To be removed once lookup method deprecations are enforced.
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ['cfg(proxmox_schema, values("strict"))']
