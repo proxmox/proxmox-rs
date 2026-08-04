@@ -555,3 +555,230 @@ mod one_of_type_property_clash {
         );
     }
 }
+
+#[cfg(feature = "test-harness")]
+#[test]
+fn test_lookup_schema_with_data() {
+    use proxmox_api_macro::json_schema;
+
+    const PROP_A: Schema = StringSchema::new("Property for A.").schema();
+    const PROP_CLASHING_A: Schema = BooleanSchema::new("A common clashing schema (A).").schema();
+    const INSTANCE_A: Schema = json_schema! {
+        description: "An instance of A",
+        properties: {
+            "prop-a": { schema: PROP_A },
+            "clashing": {
+                optional: true,
+                schema: PROP_CLASHING_A,
+            },
+        },
+    };
+
+    const PROP_B: Schema = StringSchema::new("Property for B").schema();
+    const PROP_CLASHING_B: Schema = IntegerSchema::new("A common clashing schema (B).").schema();
+    const INSTANCE_B: Schema = json_schema! {
+        description: "An instance of B",
+        properties: {
+            "prop-b": { schema: PROP_B },
+            "clashing": { schema: PROP_CLASHING_B },
+        },
+    };
+
+    const PROP_B1: Schema = StringSchema::new("Property B1").schema();
+    const INSTANCE_B1: Schema = json_schema! {
+        description: "An instance of B1",
+        properties: {
+            "prop-b1": { schema: PROP_B1 },
+        },
+    };
+
+    const PROP_B2: Schema = StringSchema::new("Property B2").schema();
+    const INSTANCE_B2: Schema = json_schema! {
+        description: "An instance of B2",
+        properties: {
+            "prop-b2": { schema: PROP_B2 },
+        },
+    };
+
+    const SCHEMA: Schema = json_schema! {
+        description: "Collection of schemas",
+        allOf: [
+            {
+                description: "Simple Schema",
+                properties: {
+                    name: {
+                        type: String,
+                        description: "A name.",
+                    },
+                    value: {
+                        type: Integer,
+                        description: "An integer.",
+                        optional: true,
+                    },
+                },
+            },
+            {
+                description: "An A or B.",
+                "type-property": "type",
+                "type-property-schema": {
+                    type: String,
+                    description: "A or B",
+                    format: &ApiStringFormat::Enum(&[
+                        EnumEntry::new("A", "Type A"),
+                        EnumEntry::new("B", "Type B"),
+                    ]),
+                },
+                oneOf: [
+                    {
+                        "instance-type": "A",
+                        schema: INSTANCE_A,
+                    },
+                    {
+                        "instance-type": "B",
+                        description: "Instance type B",
+                        allOf: [
+                            { schema: INSTANCE_B },
+                            {
+                                description: "A B1 or B2",
+                                "type-property": "inner-type",
+                                "type-property-schema": {
+                                    type: String,
+                                    description: "B1 or B2",
+                                    format: &ApiStringFormat::Enum(&[
+                                        EnumEntry::new("B1", "Type B1"),
+                                        EnumEntry::new("B2", "Type B2"),
+                                    ]),
+                                },
+                                oneOf: [
+                                    {
+                                        "instance-type": "B1",
+                                        schema: INSTANCE_B1,
+                                    },
+                                    {
+                                        "instance-type": "B2",
+                                        schema: INSTANCE_B2,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    };
+
+    let data_a = serde_json::json!({
+        "type": "A",
+        "prop-a": "hello",
+    });
+
+    let schema = SCHEMA.any_object().expect("schema should be an object");
+
+    assert_eq!(
+        schema.lookup_schema("name", &NoTypeData),
+        Some((
+            false,
+            &json_schema! {
+                "type": String,
+                description: "A name.",
+            }
+        )),
+        "Regular property lookup should work, optional=false",
+    );
+    assert_eq!(
+        schema.lookup_schema("value", &NoTypeData),
+        Some((
+            true,
+            &json_schema! {
+                "type": Integer,
+                description: "An integer.",
+            }
+        )),
+        "Regular property lookup should work, optional=true",
+    );
+    assert_eq!(
+        schema.lookup_schema("prop-a", &NoTypeData),
+        None,
+        "Looking up a property inside a oneOf should yield nothing",
+    );
+    assert_eq!(
+        schema.lookup_schema("prop-b", &NoTypeData),
+        None,
+        "Looking up a property inside a oneOf should yield nothing",
+    );
+    assert_eq!(
+        schema.lookup_schema("clashing", &NoTypeData),
+        None,
+        "Looking up a property inside a oneOf should yield nothing",
+    );
+
+    assert_eq!(
+        schema.lookup_schema("prop-a", &data_a),
+        Some((false, &PROP_A)),
+        "Looking up a property which is valid for the data should work",
+    );
+    assert_eq!(
+        schema.lookup_schema("prop-b", &data_a),
+        None,
+        "Looking up a property which is invalid for the data should yield nothing",
+    );
+
+    let data_b = serde_json::json!({
+        "type": "B",
+        "prop-b": "hello",
+    });
+
+    assert_eq!(
+        schema.lookup_schema("prop-a", &data_b),
+        None,
+        "Looking up a property which is invalid for the data should yield nothing",
+    );
+    assert_eq!(
+        schema.lookup_schema("prop-b", &data_b),
+        Some((false, &PROP_B)),
+        "Looking up a property which is valid for the data should work",
+    );
+
+    assert_eq!(
+        schema.lookup_schema("clashing", &data_a),
+        Some((true, &PROP_CLASHING_A)),
+        "Looking up clashing keys should yield the correct entry (A).",
+    );
+    assert_eq!(
+        schema.lookup_schema("clashing", &data_b),
+        Some((false, &PROP_CLASHING_B)),
+        "Looking up clashing keys should yield the correct entry (B).",
+    );
+
+    let data_b1 = serde_json::json!({
+        "type": "B",
+        "prop-b": "hello",
+        "inner-type": "B1",
+    });
+    assert_eq!(
+        schema.lookup_schema("prop-b1", &data_b1),
+        Some((false, &PROP_B1)),
+        "Nested oneOf lookups should work",
+    );
+    assert_eq!(
+        schema.lookup_schema("prop-b2", &data_b1),
+        None,
+        "Nested oneOf lookups should work",
+    );
+
+    let data_b2 = serde_json::json!({
+        "type": "B",
+        "prop-b": "hello",
+        "inner-type": "B2",
+    });
+    assert_eq!(
+        schema.lookup_schema("prop-b1", &data_b2),
+        None,
+        "Nested oneOf lookups should work",
+    );
+    assert_eq!(
+        schema.lookup_schema("prop-b2", &data_b2),
+        Some((false, &PROP_B2)),
+        "Nested oneOf lookups should work",
+    );
+}

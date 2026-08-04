@@ -647,6 +647,76 @@ pub type SchemaPropertyEntry = (&'static str, bool, &'static Schema);
 /// This is a workaround unless RUST can const_fn `Hash::new()`
 pub type SchemaPropertyMap = &'static [SchemaPropertyEntry];
 
+/// Trait for querying a type field in an object.
+///
+/// When performing lookups or property iteration, a [`OneOfSchema`] may contain the same field
+/// multiple times with different schemas. In order to know which one is to be included callers may
+/// pass a [`WithTypeField`] to lookup a type property in the current data, if available.
+///
+/// Since we usually have a `serde_json::Value` to lookup data in, but don't want to encode that
+/// type in the lookup function for flexibility, this trait should be more convenient to use than
+/// forcing a closure.
+///
+/// In order to avoid life time issues and allow more flexible implementations (eg. when the object
+/// the data is being fetched from also needs to be mutably accessible in between calls), the code
+/// *using* the value is passed as a callback, this way the life time does not need to escapes the
+/// `with_type_field` method call itself.
+pub trait WithTypeField {
+    /// Query the value of a property which is expected to be a string and call a function with it.
+    ///
+    /// This is called by iterators in order to query the value of [`OneOfSchema`] type properties.
+    ///
+    /// The value passed to the function is `Some(value)` if the field exists and is a string, or
+    /// `None` otherwise.
+    fn with_type_field(&self, name: &str, func: &mut dyn FnMut(Option<&str>));
+}
+
+impl WithTypeField for Value {
+    fn with_type_field(&self, name: &str, func: &mut dyn FnMut(Option<&str>)) {
+        func(
+            self.as_object()
+                .and_then(|obj| obj.get(name))
+                .and_then(Value::as_str),
+        )
+    }
+}
+
+impl WithTypeField for serde_json::Map<String, Value> {
+    fn with_type_field(&self, name: &str, func: &mut dyn FnMut(Option<&str>)) {
+        func(self.get(name).and_then(Value::as_str))
+    }
+}
+
+/// Covers string to string map types like `HashMap<&str, &str>`.
+impl<K, V> WithTypeField for HashMap<K, V>
+where
+    K: Send + Sync + Eq + std::hash::Hash + std::borrow::Borrow<str>,
+    V: Send + Sync + AsRef<str>,
+{
+    fn with_type_field(&self, name: &str, func: &mut dyn FnMut(Option<&str>)) {
+        func(self.get(name).map(|v| v.as_ref()))
+    }
+}
+
+/// Empty type for when there is no data to use for [`WithTypeField`].
+/// That is, when calling [`lookup_schema`](ObjectSchemaType::lookup_schema) on a schema known not
+/// to be or contain a `OneOfSchema`, or its contents can safely be ignored.
+pub struct NoTypeData;
+
+/// This implementation can be used for `lookup_schema` if no type data is required.
+impl WithTypeField for NoTypeData {
+    fn with_type_field(&self, _: &str, _: &mut dyn FnMut(Option<&str>)) {}
+}
+
+impl<F> WithTypeField for F
+where
+    F: Fn(&str, &mut dyn FnMut(Option<&str>)),
+{
+    fn with_type_field(&self, name: &str, func: &mut dyn FnMut(Option<&str>)) {
+        (*self)(name, func)
+    }
+}
+
 const fn assert_properties_sorted(properties: SchemaPropertyMap) {
     use std::cmp::Ordering;
 
@@ -1025,6 +1095,31 @@ impl AllOfSchema {
         None
     }
 
+    /// Lookup the schema for a key.
+    ///
+    /// The `get_type` callback will be used when descending into [`OneOfSchema`]s to decide which
+    /// variant is the currently active one.
+    ///
+    /// Otherwise, [`OneOfSchema`]s only return the schema for their type property, but their
+    /// variants are ignored.
+    pub fn lookup_schema(
+        &self,
+        key: &str,
+        get_type: &dyn WithTypeField,
+    ) -> Option<(bool, &'static Schema)> {
+        for entry in self.list {
+            if let Some(v) = entry
+                .any_object()
+                .expect("non-object-schema in `AllOfSchema`")
+                .lookup_schema(key, get_type)
+            {
+                return Some(v);
+            }
+        }
+
+        None
+    }
+
     /// Parse key/value pairs and verify with object schema
     ///
     /// - `test_required`: is set, checks if all required properties are
@@ -1281,6 +1376,36 @@ impl OneOfSchema {
         None
     }
 
+    /// Lookup the schema for a key.
+    ///
+    /// The `get_type` callback will be used when descending into [`OneOfSchema`]s to decide which
+    /// variant is the currently active one.
+    ///
+    /// Otherwise, [`OneOfSchema`]s only return the schema for their type property, but their
+    /// variants are ignored.
+    pub fn lookup_schema(
+        &self,
+        key: &str,
+        get_type: &dyn WithTypeField,
+    ) -> Option<(bool, &'static Schema)> {
+        if key == self.type_property() {
+            return Some((self.type_property_entry.1, self.type_property_entry.2));
+        }
+
+        let mut out = None;
+        get_type.with_type_field(self.type_property(), &mut |variant| {
+            let Some(variant) = variant else { return };
+
+            if let Some(schema) = self.lookup_variant(variant) {
+                out = schema
+                    .any_object()
+                    .expect("non-object-schema in `OneOfSchema`")
+                    .lookup_schema(key, get_type)
+            }
+        });
+        out
+    }
+
     pub fn lookup_variant(&self, name: &str) -> Option<&'static Schema> {
         Some(
             self.list[self
@@ -1379,6 +1504,19 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
     fn lookup_alias(&self, _key: &str) -> Option<&'static str> {
         None
     }
+
+    /// Lookup the schema for a key.
+    ///
+    /// The `get_type` callback will be used when descending into [`OneOfSchema`]s to decide which
+    /// variant is the currently active one.
+    ///
+    /// Otherwise, [`OneOfSchema`]s only return the schema for their type property, but their
+    /// variants are ignored.
+    fn lookup_schema(
+        &self,
+        key: &str,
+        get_type: &dyn WithTypeField,
+    ) -> Option<(bool, &'static Schema)>;
 
     /// Rewrite deprecated alias keys in `value` to their canonical names.
     ///
@@ -1501,6 +1639,10 @@ impl ObjectSchemaType for ObjectSchema {
         ObjectSchema::lookup(self, key)
     }
 
+    fn lookup_schema(&self, key: &str, _: &dyn WithTypeField) -> Option<(bool, &'static Schema)> {
+        ObjectSchema::lookup(self, key)
+    }
+
     fn properties(&self) -> ObjectPropertyIterator {
         ObjectPropertyIterator::Simple(SimpleObjectPropertyIterator {
             schemas: [].iter(),
@@ -1554,6 +1696,14 @@ impl ObjectSchemaType for AllOfSchema {
 
     fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)> {
         AllOfSchema::lookup(self, key)
+    }
+
+    fn lookup_schema(
+        &self,
+        key: &str,
+        get_type: &dyn WithTypeField,
+    ) -> Option<(bool, &'static Schema)> {
+        AllOfSchema::lookup_schema(self, key, get_type)
     }
 
     fn properties(&self) -> ObjectPropertyIterator {
@@ -1654,6 +1804,14 @@ impl ObjectSchemaType for OneOfSchema {
 
     fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)> {
         OneOfSchema::lookup(self, key)
+    }
+
+    fn lookup_schema(
+        &self,
+        key: &str,
+        get_type: &dyn WithTypeField,
+    ) -> Option<(bool, &'static Schema)> {
+        OneOfSchema::lookup_schema(self, key, get_type)
     }
 
     fn properties(&self) -> ObjectPropertyIterator {
@@ -2341,6 +2499,18 @@ impl ObjectSchemaType for ParameterSchema {
             ParameterSchema::Object(o) => o.lookup(key),
             ParameterSchema::AllOf(o) => o.lookup(key),
             ParameterSchema::OneOf(o) => o.lookup(key),
+        }
+    }
+
+    fn lookup_schema(
+        &self,
+        key: &str,
+        get_type: &dyn WithTypeField,
+    ) -> Option<(bool, &'static Schema)> {
+        match self {
+            ParameterSchema::Object(o) => o.lookup_schema(key, get_type),
+            ParameterSchema::AllOf(o) => o.lookup_schema(key, get_type),
+            ParameterSchema::OneOf(o) => o.lookup_schema(key, get_type),
         }
     }
 
