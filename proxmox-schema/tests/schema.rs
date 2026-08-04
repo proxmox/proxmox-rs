@@ -557,13 +557,24 @@ mod one_of_type_property_clash {
 }
 
 #[cfg(feature = "test-harness")]
-#[test]
-fn test_lookup_schema_with_data() {
+mod one_of_test_schema {
     use proxmox_api_macro::json_schema;
+    use proxmox_schema::*;
 
-    const PROP_A: Schema = StringSchema::new("Property for A.").schema();
-    const PROP_CLASHING_A: Schema = BooleanSchema::new("A common clashing schema (A).").schema();
-    const INSTANCE_A: Schema = json_schema! {
+    pub const PROP_NAME: Schema = StringSchema::new("A name.").schema();
+    pub const PROP_VALUE: Schema = IntegerSchema::new("An integer.").schema();
+
+    pub const TYPE_PROPERTY: Schema = StringSchema::new("A or B")
+        .format(&ApiStringFormat::Enum(&[
+            EnumEntry::new("A", "Type A"),
+            EnumEntry::new("B", "Type B"),
+        ]))
+        .schema();
+
+    pub const PROP_A: Schema = StringSchema::new("Property for A.").schema();
+    pub const PROP_CLASHING_A: Schema =
+        BooleanSchema::new("A common clashing schema (A).").schema();
+    pub const INSTANCE_A: Schema = json_schema! {
         description: "An instance of A",
         properties: {
             "prop-a": { schema: PROP_A },
@@ -574,9 +585,10 @@ fn test_lookup_schema_with_data() {
         },
     };
 
-    const PROP_B: Schema = StringSchema::new("Property for B").schema();
-    const PROP_CLASHING_B: Schema = IntegerSchema::new("A common clashing schema (B).").schema();
-    const INSTANCE_B: Schema = json_schema! {
+    pub const PROP_B: Schema = StringSchema::new("Property for B").schema();
+    pub const PROP_CLASHING_B: Schema =
+        IntegerSchema::new("A common clashing schema (B).").schema();
+    pub const INSTANCE_B: Schema = json_schema! {
         description: "An instance of B",
         properties: {
             "prop-b": { schema: PROP_B },
@@ -584,81 +596,55 @@ fn test_lookup_schema_with_data() {
         },
     };
 
-    const PROP_B1: Schema = StringSchema::new("Property B1").schema();
-    const INSTANCE_B1: Schema = json_schema! {
+    pub const INNER_TYPE_PROPERTY: Schema = StringSchema::new("B1 or B2")
+        .format(&ApiStringFormat::Enum(&[
+            EnumEntry::new("B1", "Type B1"),
+            EnumEntry::new("B2", "Type B2"),
+        ]))
+        .schema();
+
+    pub const PROP_B1: Schema = StringSchema::new("Property B1").schema();
+    pub const INSTANCE_B1: Schema = json_schema! {
         description: "An instance of B1",
         properties: {
             "prop-b1": { schema: PROP_B1 },
         },
     };
 
-    const PROP_B2: Schema = StringSchema::new("Property B2").schema();
-    const INSTANCE_B2: Schema = json_schema! {
+    pub const PROP_B2: Schema = StringSchema::new("Property B2").schema();
+    pub const INSTANCE_B2: Schema = json_schema! {
         description: "An instance of B2",
         properties: {
             "prop-b2": { schema: PROP_B2 },
         },
     };
 
-    const SCHEMA: Schema = json_schema! {
-        description: "Collection of schemas",
-        allOf: [
+    pub const ONE_OF_SCHEMA: Schema = json_schema! {
+        description: "An A or B.",
+        "type-property": "type",
+        "type-property-schema": { schema: TYPE_PROPERTY },
+        oneOf: [
             {
-                description: "Simple Schema",
-                properties: {
-                    name: {
-                        type: String,
-                        description: "A name.",
-                    },
-                    value: {
-                        type: Integer,
-                        description: "An integer.",
-                        optional: true,
-                    },
-                },
+                "instance-type": "A",
+                schema: INSTANCE_A,
             },
             {
-                description: "An A or B.",
-                "type-property": "type",
-                "type-property-schema": {
-                    type: String,
-                    description: "A or B",
-                    format: &ApiStringFormat::Enum(&[
-                        EnumEntry::new("A", "Type A"),
-                        EnumEntry::new("B", "Type B"),
-                    ]),
-                },
-                oneOf: [
+                "instance-type": "B",
+                description: "Instance type B",
+                allOf: [
+                    { schema: INSTANCE_B },
                     {
-                        "instance-type": "A",
-                        schema: INSTANCE_A,
-                    },
-                    {
-                        "instance-type": "B",
-                        description: "Instance type B",
-                        allOf: [
-                            { schema: INSTANCE_B },
+                        description: "A B1 or B2",
+                        "type-property": "inner-type",
+                        "type-property-schema": { schema: INNER_TYPE_PROPERTY },
+                        oneOf: [
                             {
-                                description: "A B1 or B2",
-                                "type-property": "inner-type",
-                                "type-property-schema": {
-                                    type: String,
-                                    description: "B1 or B2",
-                                    format: &ApiStringFormat::Enum(&[
-                                        EnumEntry::new("B1", "Type B1"),
-                                        EnumEntry::new("B2", "Type B2"),
-                                    ]),
-                                },
-                                oneOf: [
-                                    {
-                                        "instance-type": "B1",
-                                        schema: INSTANCE_B1,
-                                    },
-                                    {
-                                        "instance-type": "B2",
-                                        schema: INSTANCE_B2,
-                                    },
-                                ],
+                                "instance-type": "B1",
+                                schema: INSTANCE_B1,
+                            },
+                            {
+                                "instance-type": "B2",
+                                schema: INSTANCE_B2,
                             },
                         ],
                     },
@@ -666,6 +652,31 @@ fn test_lookup_schema_with_data() {
             },
         ],
     };
+
+    pub const SCHEMA: Schema = json_schema! {
+        description: "Collection of schemas",
+        allOf: [
+            {
+                description: "Simple Schema",
+                properties: {
+                    name: { schema: PROP_NAME },
+                    value: {
+                        schema: PROP_VALUE,
+                        optional: true,
+                    },
+                },
+            },
+            { schema: ONE_OF_SCHEMA },
+        ],
+    };
+}
+
+#[cfg(feature = "test-harness")]
+#[test]
+fn test_lookup_schema_with_data() {
+    use proxmox_api_macro::json_schema;
+
+    use one_of_test_schema::*;
 
     let data_a = serde_json::json!({
         "type": "A",
@@ -780,5 +791,175 @@ fn test_lookup_schema_with_data() {
         schema.lookup_schema("prop-b2", &data_b2),
         Some((false, &PROP_B2)),
         "Nested oneOf lookups should work",
+    );
+}
+
+#[cfg(feature = "test-harness")]
+#[test]
+fn test_all_properties_iterator() {
+    use one_of_test_schema::*;
+
+    type ExpectedTuple<'a> = (&'a str, bool, &'static Schema, &'a [(&'a str, &'a str)]);
+
+    #[track_caller]
+    fn compare_iter(
+        iter: proxmox_schema::AllProperties,
+        expected: &[ExpectedTuple],
+        msg: &'static str,
+    ) {
+        let properties = iter.collect::<Vec<_>>();
+        assert_eq!(
+            properties.len(),
+            expected.len(),
+            "{msg} - number of elements"
+        );
+        for (a, b) in properties.into_iter().zip(expected) {
+            assert_eq!(
+                (a.name(), a.optional(), a.schema(), a.conditions()),
+                (b.0, b.1, b.2, b.3),
+                "{msg} - matching entries",
+            );
+        }
+    }
+
+    let schema = SCHEMA.any_object().expect("schema should be an object");
+
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties(),
+        &[
+            ("name",       false, &PROP_NAME,           &[]),
+            ("value",      true,  &PROP_VALUE,          &[]),
+            ("type",       false, &TYPE_PROPERTY,       &[]),
+            ("clashing",   true,  &PROP_CLASHING_A,     &[("type", "A")]),
+            ("prop-a",     false, &PROP_A,              &[("type", "A")]),
+            ("clashing",   false, &PROP_CLASHING_B,     &[("type", "B")]),
+            ("prop-b",     false, &PROP_B,              &[("type", "B")]),
+            ("inner-type", false, &INNER_TYPE_PROPERTY, &[("type", "B")]),
+            ("prop-b1",    false, &PROP_B1,             &[("type", "B"), ("inner-type", "B1")]),
+            ("prop-b2",    false, &PROP_B2,             &[("type", "B"), ("inner-type", "B2")]),
+        ],
+        "generic iteration should yield all properties, including duplicates",
+    );
+
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties().with_types_from(&json!({ "type": "A" })),
+        &[
+            ("name",     false, &PROP_NAME,       &[]),
+            ("value",    true,  &PROP_VALUE,      &[]),
+            ("type",     false, &TYPE_PROPERTY,   &[]),
+            ("clashing", true,  &PROP_CLASHING_A, &[("type", "A")]),
+            ("prop-a",   false, &PROP_A,          &[("type", "A")]),
+        ],
+        "type-specific iteration should yield the correct types (A)",
+    );
+
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties().with_types_from(&json!({ "type": "B" })),
+        &[
+            ("name",       false, &PROP_NAME,           &[]),
+            ("value",      true,  &PROP_VALUE,          &[]),
+            ("type",       false, &TYPE_PROPERTY,       &[]),
+            ("clashing",   false, &PROP_CLASHING_B,     &[("type", "B")]),
+            ("prop-b",     false, &PROP_B,              &[("type", "B")]),
+            ("inner-type", false, &INNER_TYPE_PROPERTY, &[("type", "B")]),
+        ],
+        "type-specific iteration should yield the correct types (B)",
+    );
+
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties().with_types_from(&json!({ "type": "B", "inner-type": "B1" })),
+        &[
+            ("name",       false, &PROP_NAME,           &[]),
+            ("value",      true,  &PROP_VALUE,          &[]),
+            ("type",       false, &TYPE_PROPERTY,       &[]),
+            ("clashing",   false, &PROP_CLASHING_B,     &[("type", "B")]),
+            ("prop-b",     false, &PROP_B,              &[("type", "B")]),
+            ("inner-type", false, &INNER_TYPE_PROPERTY, &[("type", "B")]),
+            ("prop-b1",    false, &PROP_B1,             &[("type", "B"), ("inner-type", "B1")]),
+        ],
+        "type-specific iteration should yield the correct types (B, B1)",
+    );
+
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties().with_types_from(&json!({ "type": "B", "inner-type": "B2" })),
+        &[
+            ("name",       false, &PROP_NAME,           &[]),
+            ("value",      true,  &PROP_VALUE,          &[]),
+            ("type",       false, &TYPE_PROPERTY,       &[]),
+            ("clashing",   false, &PROP_CLASHING_B,     &[("type", "B")]),
+            ("prop-b",     false, &PROP_B,              &[("type", "B")]),
+            ("inner-type", false, &INNER_TYPE_PROPERTY, &[("type", "B")]),
+            ("prop-b2",    false, &PROP_B2,             &[("type", "B"), ("inner-type", "B2")]),
+        ],
+        "type-specific iteration should yield the correct types (B, B2)",
+    );
+
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties().with_types_from(&json!({ "type": "INVALID" })),
+        &[
+            ("name",     false, &PROP_NAME,       &[]),
+            ("value",    true,  &PROP_VALUE,      &[]),
+            ("type",     false, &TYPE_PROPERTY,   &[]),
+        ],
+        "invalid-type iteration should not yield the oneOf contents",
+    );
+
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties().with_types_from(&json!({})),
+        &[
+            ("name",     false, &PROP_NAME,       &[]),
+            ("value",    true,  &PROP_VALUE,      &[]),
+            ("type",     false, &TYPE_PROPERTY,   &[]),
+        ],
+        "missing-type iteration should not yield the oneOf contents",
+    );
+
+    let schema = ONE_OF_SCHEMA
+        .any_object()
+        .expect("schema should be an object");
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties(),
+        &[
+            ("type",       false, &TYPE_PROPERTY,       &[]),
+            ("clashing",   true,  &PROP_CLASHING_A,     &[("type", "A")]),
+            ("prop-a",     false, &PROP_A,              &[("type", "A")]),
+            ("clashing",   false, &PROP_CLASHING_B,     &[("type", "B")]),
+            ("prop-b",     false, &PROP_B,              &[("type", "B")]),
+            ("inner-type", false, &INNER_TYPE_PROPERTY, &[("type", "B")]),
+            ("prop-b1",    false, &PROP_B1,             &[("type", "B"), ("inner-type", "B1")]),
+            ("prop-b2",    false, &PROP_B2,             &[("type", "B"), ("inner-type", "B2")]),
+        ],
+        "generic iteration should yield all properties, including duplicates",
+    );
+
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties().with_types_from(&json!({ "type": "A" })),
+        &[
+            ("type",     false, &TYPE_PROPERTY,   &[]),
+            ("clashing", true,  &PROP_CLASHING_A, &[("type", "A")]),
+            ("prop-a",   false, &PROP_A,          &[("type", "A")]),
+        ],
+        "type-specific iteration should yield the correct types (A)",
+    );
+
+    #[rustfmt::skip]
+    compare_iter(
+        schema.all_properties().with_types_from(&json!({ "type": "B" })),
+        &[
+            ("type",       false, &TYPE_PROPERTY,       &[]),
+            ("clashing",   false, &PROP_CLASHING_B,     &[("type", "B")]),
+            ("prop-b",     false, &PROP_B,              &[("type", "B")]),
+            ("inner-type", false, &INNER_TYPE_PROPERTY, &[("type", "B")]),
+        ],
+        "type-specific iteration should yield the correct types (B)",
     );
 }

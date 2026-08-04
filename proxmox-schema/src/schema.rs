@@ -6,6 +6,7 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt;
+use std::sync::Arc;
 
 use anyhow::{Error, bail, format_err};
 use serde_json::{Value, json};
@@ -1147,6 +1148,8 @@ impl AllOfSchema {
     }
 }
 
+pub type OneOfVariantList = [(&'static str, &'static Schema)];
+
 /// An object schema which is basically like a rust enum: exactly one variant may match.
 ///
 /// Contrary to JSON Schema, we require there be a 'type' property to distinguish the types.
@@ -1166,7 +1169,7 @@ pub struct OneOfSchema {
 
     /// The parameter is checked against all of the schemas in the list. Note that all schemas must
     /// be object schemas.
-    pub list: &'static [(&'static str, &'static Schema)],
+    pub list: &'static OneOfVariantList,
 }
 
 const fn assert_one_of_list_is_sorted(list: &[(&str, &Schema)]) {
@@ -1188,7 +1191,7 @@ const fn assert_one_of_list_is_sorted(list: &[(&str, &Schema)]) {
     }
 }
 
-const fn assert_only_objects_in_one_of(list: &'static [(&'static str, &'static Schema)]) {
+const fn assert_only_objects_in_one_of(list: &'static OneOfVariantList) {
     let mut i = 0;
     while i != list.len() {
         match list[i].1 {
@@ -1201,7 +1204,7 @@ const fn assert_only_objects_in_one_of(list: &'static [(&'static str, &'static S
     }
 }
 
-const fn assert_no_variant_contains(list: &'static [(&'static str, &'static Schema)], name: &str) {
+const fn assert_no_variant_contains(list: &'static OneOfVariantList, name: &str) {
     let name = name.as_bytes();
     let mut i = 0;
     while i != list.len() {
@@ -1333,7 +1336,7 @@ impl OneOfSchema {
     pub const fn new(
         description: &'static str,
         type_property_entry: &'static SchemaPropertyEntry,
-        list: &'static [(&'static str, &'static Schema)],
+        list: &'static OneOfVariantList,
     ) -> Self {
         assert_one_of_list_is_sorted(list);
         assert_only_objects_in_one_of(list);
@@ -1498,6 +1501,11 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
     fn additional_properties(&self) -> bool;
     fn default_key(&self) -> Option<&'static str>;
 
+    /// Iterate over all properties of this schema, including all oneOf variants.
+    /// While iterating over oneOf variants, the current set of type properties required to reach
+    /// an item is available in each item.
+    fn all_properties(&self) -> AllProperties<'static>;
+
     /// Resolve a deprecated property name to its canonical name.
     ///
     /// Schemas that have no aliases (the common case) inherit the default `None` here.
@@ -1613,6 +1621,275 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
     }
 }
 
+/// This manages the conditions for [`AllProperties`].
+///
+/// Entering a `oneOf` schema must call the `enter_condition` method.
+/// This will "stage" the condition name in `new_condition`. Entering a variant must call the
+/// `update_condition` method which will move a staged condition or update it.
+///
+/// This requires the type property of a [`OneOfSchema`] to be dealt with first, which is
+/// important, since we do not want to have to re-query the field for every variant if we want to
+/// only query a specific one, also, we want to allow the type property to be removed (eg. for the
+/// `ExtractValueDeserializer`) during the iteration.
+#[derive(Default)]
+struct PropertyConditions<'a> {
+    conditions: Option<Arc<Vec<(&'static str, &'static str)>>>,
+    new_condition: Option<&'static str>,
+    get_type: Option<&'a dyn WithTypeField>,
+}
+
+impl PropertyConditions<'_> {
+    fn get(&self) -> Option<Arc<Vec<(&'static str, &'static str)>>> {
+        self.conditions.clone()
+    }
+
+    fn make_mut<'a>(
+        conditions: &'a mut Option<Arc<Vec<(&'static str, &'static str)>>>,
+    ) -> &'a mut Vec<(&'static str, &'static str)> {
+        Arc::make_mut(conditions.get_or_insert_default())
+    }
+
+    /// Enter a new oneOf schema, so its type property is added to the conditions.
+    ///
+    /// Iterators first go through the type property itself, though, which does not include itself
+    /// as a condition, so we remember it as a `new_condition`, and entering the *variant* (via
+    /// `update_condition()` finally promotes it into the list.
+    ///
+    /// Returns the iterator to fill into the `PropertiesIterOneOf`.
+    fn enter_condition(
+        &mut self,
+        type_property_name: &'static str,
+        list: &'static OneOfVariantList,
+    ) -> OneOfVariantIter {
+        self.new_condition = Some(type_property_name);
+
+        match self.get_type {
+            None => list.iter(),
+            Some(filter) => {
+                let mut index = None;
+                (filter).with_type_field(type_property_name, &mut |value| {
+                    index = value.and_then(|variant| {
+                        list.binary_search_by_key(&variant, |(name, _)| name).ok()
+                    })
+                });
+                match index {
+                    // Variant exists, the property iterator should only consider the one.
+                    Some(index) => list[index..(index + 1)].iter(),
+                    // Variant not found, let's not yield any of them.
+                    None => Default::default(),
+                }
+            }
+        }
+    }
+
+    /// Update the current condition.
+    fn update_condition(&mut self, value: &'static str) {
+        if let Some(type_property_name) = self.new_condition.take() {
+            Self::make_mut(&mut self.conditions).push((type_property_name, value));
+        } else {
+            Self::make_mut(&mut self.conditions)
+                .last_mut()
+                .expect("`update_condition()` called without a prior `push()`")
+                .1 = value;
+        }
+    }
+
+    /// Leave the current oneOf schema.
+    fn pop(&mut self) {
+        // If we never iterate through any variants of an enum, `self.conditions` does not contain
+        // the type property name (although such a case should technically not be reachable, as
+        // oneOf schemas with no variants make no sense). The moment we enter a variant,
+        // `update_condition` is called and moves it there. Anyway, verify `new_condition` first.
+        if self.new_condition.take().is_none() {
+            if let Some(conditions) = &mut self.conditions {
+                let conditions = Arc::make_mut(conditions);
+                conditions.pop();
+                if conditions.is_empty() {
+                    self.conditions = None;
+                }
+            }
+        }
+    }
+}
+
+/// An iterator over the properties of an object-like schema.
+///
+/// Note that a property name can appear multiple times if it exists in multiple variants of a
+/// [`OneOfSchema`]. To know which variant the property belongs to, each item may have associated
+/// conditions with it.
+///
+/// This yields items of type [`AllPropertiesItem`].
+///
+/// When entering a [`OneOfSchema`], the type property is yielded first.
+///
+/// It is safe to subsequently remove the type property from an object used via
+/// [`with_types_from`](AllProperties::with_types_from), as its value takes effect internally
+/// immediately when the type property is
+/// being yielded.
+pub struct AllProperties<'a> {
+    iter: Vec<PropertiesIter>,
+    conditions: PropertyConditions<'a>,
+}
+
+impl AllProperties<'static> {
+    fn new_empty() -> Self {
+        Self {
+            iter: Vec::new(),
+            conditions: Default::default(),
+        }
+    }
+}
+
+impl AllProperties<'_> {
+    /// Attach a type fetcher to the iterator.
+    ///
+    /// This causes `oneOf` variants to only be iterated through if they are the currently active
+    /// type.
+    ///
+    /// Note that it does not make sense to call this in the middle of an iteration, as it may then
+    /// yield multiple but not all variants of a `oneOf` schema.
+    ///
+    /// For each contained [`OneOfSchema`] this is called only once right before the type property
+    /// is returned in the iteration.
+    pub fn with_types_from<'a>(self, get_type: &'a dyn WithTypeField) -> AllProperties<'a> {
+        AllProperties {
+            iter: self.iter,
+            conditions: PropertyConditions {
+                conditions: self.conditions.conditions,
+                new_condition: self.conditions.new_condition,
+                get_type: Some(get_type),
+            },
+        }
+    }
+
+    fn push_iter(&mut self, schema: &'static Schema) {
+        match schema {
+            Schema::Object(schema) => self.push_object(schema),
+            Schema::AllOf(schema) => self.push_all_of(schema),
+            Schema::OneOf(schema) => self.push_one_of(schema),
+            _ => panic!("non-object-schema in object properties iteration"),
+        }
+    }
+
+    fn push_object(&mut self, schema: &ObjectSchema) {
+        self.iter
+            .push(PropertiesIter::Object(schema.properties.iter()));
+    }
+
+    fn push_all_of(&mut self, schema: &AllOfSchema) {
+        self.iter.push(PropertiesIter::AllOf(schema.list.iter()));
+    }
+
+    fn push_one_of(&mut self, schema: &OneOfSchema) {
+        self.iter
+            .push(PropertiesIter::OneOf(PropertiesIterOneOf::TypeProperty(
+                schema.type_property_entry,
+                schema.list,
+            )));
+    }
+
+    fn pop_iter(&mut self) {
+        if matches!(self.iter.pop(), Some(PropertiesIter::OneOf(_))) {
+            self.conditions.pop();
+        }
+    }
+
+    fn make_item(&self, entry: SchemaPropertyEntry) -> AllPropertiesItem {
+        AllPropertiesItem {
+            entry,
+            conditions: self.conditions.get(),
+        }
+    }
+}
+
+/// An entry from a [`AllProperties`] iterator.
+///
+/// Note that each item may have associated conditions with it, in case it was reached through
+/// [`OneOfSchema`] entries.
+#[derive(Clone, Debug)]
+pub struct AllPropertiesItem {
+    entry: SchemaPropertyEntry,
+    conditions: Option<Arc<Vec<(&'static str, &'static str)>>>,
+}
+
+impl AllPropertiesItem {
+    /// The item's canonical name in the object schema.
+    pub const fn name(&self) -> &'static str {
+        self.entry.0
+    }
+
+    /// Whether the item is optional in the schema.
+    pub const fn optional(&self) -> bool {
+        self.entry.1
+    }
+
+    /// The item's schema.
+    pub const fn schema(&self) -> &'static Schema {
+        self.entry.2
+    }
+
+    /// The conditions under which this item exists.
+    ///
+    /// This is a set of key-value pairs. The keys are type properties of [`OneOfSchema`]s, and the
+    /// values are its variant names.
+    pub fn conditions(&self) -> &[(&'static str, &'static str)] {
+        match &self.conditions {
+            None => &[],
+            Some(arc) => arc,
+        }
+    }
+}
+
+/// Implementation of property iteration.
+enum PropertiesIter {
+    Object(std::slice::Iter<'static, SchemaPropertyEntry>),
+    AllOf(std::slice::Iter<'static, &'static Schema>),
+    OneOf(PropertiesIterOneOf),
+}
+
+type OneOfVariantIter = std::slice::Iter<'static, (&'static str, &'static Schema)>;
+enum PropertiesIterOneOf {
+    TypeProperty(&'static SchemaPropertyEntry, &'static OneOfVariantList),
+    Variants(OneOfVariantIter),
+}
+
+impl Iterator for AllProperties<'_> {
+    type Item = AllPropertiesItem;
+
+    fn next(&mut self) -> Option<AllPropertiesItem> {
+        loop {
+            match self.iter.last_mut()? {
+                PropertiesIter::Object(iter) => match iter.next() {
+                    None => self.pop_iter(),
+                    Some(item) => {
+                        return Some(self.make_item(*item));
+                    }
+                },
+                PropertiesIter::AllOf(iter) => match iter.next() {
+                    None => self.pop_iter(),
+                    Some(schema) => self.push_iter(schema),
+                },
+                PropertiesIter::OneOf(iter) => match iter {
+                    PropertiesIterOneOf::TypeProperty(item, list) => {
+                        let item = **item;
+                        *iter = PropertiesIterOneOf::Variants(
+                            self.conditions.enter_condition(item.0, list),
+                        );
+                        return Some(self.make_item(item));
+                    }
+                    PropertiesIterOneOf::Variants(iter) => match iter.next() {
+                        None => self.pop_iter(),
+                        Some((variant, schema)) => {
+                            self.conditions.update_condition(variant);
+                            self.push_iter(schema);
+                        }
+                    },
+                },
+            };
+        }
+    }
+}
+
 #[doc(hidden)]
 pub enum ObjectPropertyIterator {
     Simple(SimpleObjectPropertyIterator),
@@ -1649,6 +1926,12 @@ impl ObjectSchemaType for ObjectSchema {
             properties: Some(self.properties.iter()),
             nested: None,
         })
+    }
+
+    fn all_properties(&self) -> AllProperties<'static> {
+        let mut properties = AllProperties::new_empty();
+        properties.push_object(self);
+        properties
     }
 
     fn additional_properties(&self) -> bool {
@@ -1712,6 +1995,12 @@ impl ObjectSchemaType for AllOfSchema {
             properties: None,
             nested: None,
         })
+    }
+
+    fn all_properties(&self) -> AllProperties<'static> {
+        let mut properties = AllProperties::new_empty();
+        properties.push_all_of(self);
+        properties
     }
 
     fn additional_properties(&self) -> bool {
@@ -1821,6 +2110,12 @@ impl ObjectSchemaType for OneOfSchema {
             done: HashSet::new(),
             nested: None,
         })
+    }
+
+    fn all_properties(&self) -> AllProperties<'static> {
+        let mut properties = AllProperties::new_empty();
+        properties.push_one_of(self);
+        properties
     }
 
     fn additional_properties(&self) -> bool {
@@ -2519,6 +2814,14 @@ impl ObjectSchemaType for ParameterSchema {
             ParameterSchema::Object(o) => o.properties(),
             ParameterSchema::AllOf(o) => o.properties(),
             ParameterSchema::OneOf(o) => o.properties(),
+        }
+    }
+
+    fn all_properties(&self) -> AllProperties<'static> {
+        match self {
+            ParameterSchema::Object(o) => o.all_properties(),
+            ParameterSchema::AllOf(o) => o.all_properties(),
+            ParameterSchema::OneOf(o) => o.all_properties(),
         }
     }
 
