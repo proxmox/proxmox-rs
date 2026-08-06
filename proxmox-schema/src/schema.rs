@@ -2335,6 +2335,7 @@ impl ObjectSchemaType for OneOfSchema {
     }
 
     fn default_key(&self) -> Option<&'static str> {
+        // They could be different across variants, so better don't return a default key at all.
         None
     }
 

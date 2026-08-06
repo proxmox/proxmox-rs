@@ -95,7 +95,7 @@ impl std::iter::FusedIterator for PropertyIterator<'_> {}
 ///
 /// If no escape sequence is found, `Cow::Borrowed` is returned, otherwise an owned `String` is
 /// returned.
-fn parse_quoted_string<'s>(data: &'_ mut &'s str) -> Result<Cow<'s, str>, Error> {
+pub(crate) fn parse_quoted_string<'s>(data: &'_ mut &'s str) -> Result<Cow<'s, str>, Error> {
     let data_out = data;
     let data = data_out.as_bytes();
 

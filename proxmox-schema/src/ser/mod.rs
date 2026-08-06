@@ -1,5 +1,6 @@
 //! Property string serialization.
 
+use std::collections::HashMap;
 use std::fmt;
 use std::mem;
 
@@ -32,10 +33,7 @@ impl<T: fmt::Write> PropertyStringSerializer<T> {
     }
 
     fn do_object(self) -> Result<SerializeStruct<T>, Error> {
-        let schema = self.schema.any_object().ok_or_else(|| {
-            Error::msg("property string serializer used for object with non-object schema")
-        })?;
-        Ok(SerializeStruct::new(self.inner, Some(schema)))
+        SerializeStruct::try_new(self.inner, Some(self.schema))
     }
 }
 
@@ -192,16 +190,54 @@ pub struct SerializeStruct<T> {
     inner: Option<T>,
     comma: bool,
     schema: Option<&'static dyn ObjectSchemaType>,
-    value_schema: Option<&'static Schema>,
+    /// Schema and, if the value is a type property, its name.
+    value_schema: Option<(&'static Schema, Option<&'static str>)>,
+    /// This holds both the list which properties *are* type properties (the value is `None`), and
+    /// which have already been seen (the value is `Some(...)`).
+    type_properties: HashMap<&'static str, Option<String>>,
 }
 
 impl<T: fmt::Write> SerializeStruct<T> {
-    fn new(inner: T, schema: Option<&'static dyn ObjectSchemaType>) -> Self {
-        Self {
+    fn try_new(inner: T, schema: Option<&'static Schema>) -> Result<Self, Error> {
+        let mut this = Self {
+            schema: match schema {
+                None => None,
+                Some(schema) => match schema.any_object() {
+                    Some(schema) => Some(schema),
+                    None => {
+                        return Err(Error::msg(
+                            "property string serializer used for object with non-object schema",
+                        ));
+                    }
+                },
+            },
             inner: Some(inner),
             comma: false,
-            schema,
             value_schema: None,
+            type_properties: HashMap::new(),
+        };
+
+        if let Some(schema) = schema {
+            this.collect_type_properties(schema);
+        }
+
+        Ok(this)
+    }
+
+    fn collect_type_properties(&mut self, schema: &'static Schema) {
+        match schema {
+            Schema::OneOf(schema) => {
+                self.type_properties.insert(schema.type_property(), None);
+                for (_variant, schema) in schema.list {
+                    self.collect_type_properties(schema);
+                }
+            }
+            Schema::AllOf(schema) => {
+                for schema in schema.list {
+                    self.collect_type_properties(schema);
+                }
+            }
+            _ => (),
         }
     }
 
@@ -213,6 +249,10 @@ impl<T: fmt::Write> SerializeStruct<T> {
     where
         K: Serialize + ?Sized,
     {
+        // While `do_key()` should not be called twice in a row (as per serde documentation), reset
+        // the value schema so that bad callers don't get unexpected value schemas:
+        self.value_schema = None;
+
         let key = key.serialize(ElementSerializer::new(String::new(), None))?;
 
         let inner = self.inner.as_mut().unwrap();
@@ -221,8 +261,32 @@ impl<T: fmt::Write> SerializeStruct<T> {
         }
 
         if let Some(schema) = self.schema {
-            self.value_schema = schema.lookup(&key).map(|(_optional, schema)| schema);
-            if self.value_schema.is_none() && !schema.additional_properties() {
+            let type_property_name = self
+                .type_properties
+                .get_key_value(&*key) // this way we can turn the key into a `&'static str`
+                .map(|(key, _)| *key);
+
+            let value_schema = schema
+                .lookup_schema(&key, &|key: &str, func: &mut dyn FnMut(Option<&str>)| {
+                    func(
+                        self.type_properties
+                            .get(key)
+                            .and_then(|value| value.as_deref()),
+                    )
+                })
+                .map(|(_optional, schema)| schema);
+
+            if let Some(value_schema) = value_schema {
+                self.value_schema = Some((value_schema, type_property_name));
+            } else if !schema.additional_properties() {
+                // If the key exists in a currently inactive oneOf variant, provide a more useful
+                // error message:
+                if schema.lookup_all(&key).next().is_some() {
+                    return Err(Error::msg(format!(
+                        "key {key:?} is not part of the active oneOf variant (it exists in a \
+                        different one)"
+                    )));
+                }
                 return Err(Error::msg(format!(
                     "key {key:?} \
                     is not part of the schema and it does not allow additional properties"
@@ -242,9 +306,29 @@ impl<T: fmt::Write> SerializeStruct<T> {
     where
         V: Serialize + ?Sized,
     {
-        let mut inner = self.inner.take().unwrap();
-        inner = value.serialize(ElementSerializer::new(inner, self.value_schema))?;
-        self.inner = Some(inner);
+        let (value_schema, type_property_name) = match self.value_schema.take() {
+            None => (None, None),
+            Some((schema, type_property_name)) => (Some(schema), type_property_name),
+        };
+
+        match type_property_name {
+            Some(property_name) => {
+                let value = value.serialize(ElementSerializer::new(String::new(), value_schema))?;
+                self.inner.as_mut().unwrap().write_str(&value)?;
+                // Lookups need the type as parsed, not its quoted property-string form.
+                let value = if value.starts_with('"') {
+                    crate::property_string::parse_quoted_string(&mut value.as_str())?.into_owned()
+                } else {
+                    value
+                };
+                self.type_properties.insert(property_name, Some(value));
+            }
+            None => {
+                let mut inner = self.inner.take().unwrap();
+                inner = value.serialize(ElementSerializer::new(inner, value_schema))?;
+                self.inner = Some(inner);
+            }
+        }
         Ok(())
     }
 }
@@ -396,13 +480,7 @@ impl<T: fmt::Write> ElementSerializer<T> {
     }
 
     fn do_object(self) -> Result<ElementSerializeStruct<T>, Error> {
-        let schema = match self.schema {
-            Some(schema) => Some(schema.any_object().ok_or_else(|| {
-                Error::msg("property string serializer used for object with non-object schema")
-            })?),
-            None => None,
-        };
-        Ok(ElementSerializeStruct::new(self.inner, schema))
+        ElementSerializeStruct::try_new(self.inner, self.schema)
     }
 }
 
@@ -568,11 +646,11 @@ pub struct ElementSerializeStruct<T> {
 }
 
 impl<T: fmt::Write> ElementSerializeStruct<T> {
-    fn new(inner: T, schema: Option<&'static dyn ObjectSchemaType>) -> Self {
-        Self {
+    fn try_new(inner: T, schema: Option<&'static Schema>) -> Result<Self, Error> {
+        Ok(Self {
+            inner: SerializeStruct::try_new(String::new(), schema)?,
             output: inner,
-            inner: SerializeStruct::new(String::new(), schema),
-        }
+        })
     }
 
     fn finish(mut self) -> Result<T, Error> {
