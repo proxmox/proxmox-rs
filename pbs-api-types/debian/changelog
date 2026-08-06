@@ -1,3 +1,13 @@
+rust-pbs-api-types (0.2.4) bookworm; urgency=medium
+
+  * add stricter backup archive name parsing for cases where the API
+    compatible parsing is too lax, like archive names read from a backup
+    manifest
+
+  * derive PartialOrd and Ord for BackupArchiveName
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 06 Aug 2026 20:54:04 +0200
+
 rust-pbs-api-types (0.2.3) bookworm; urgency=medium
 
   * drop types which have been moved to proxmox-network-api
