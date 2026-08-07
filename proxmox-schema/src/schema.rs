@@ -79,20 +79,40 @@ impl ParameterError {
     }
 
     pub fn add_errors(&mut self, prefix: &str, err: Error) {
+        fn join_path(a: &str, b: String) -> String {
+            match (a, b) {
+                ("", b) => b,
+                (a, b) if b.is_empty() => a.to_string(),
+                (a, b) => format!("{a}/{b}"),
+            }
+        }
+
         match err.downcast::<ParameterError>() {
             Ok(param_err) => {
                 self.extend(
                     param_err
                         .into_iter()
-                        .map(|(key, err)| (format!("{prefix}/{key}"), err)),
+                        .map(|(key, err)| (join_path(prefix, key), err)),
                 );
             }
             Err(err) => self.push(prefix.to_string(), err),
         }
     }
 
-    pub(crate) fn from_list(error_list: Vec<(String, Error)>) -> Self {
-        Self { error_list }
+    /// Add the errors of `other` for paths which have no error yet.
+    ///
+    /// Used to add oneOf type errors without duplicating a report for the same property, like an
+    /// enum format error for the type property itself.
+    pub(crate) fn extend_unreported(&mut self, other: ParameterError) {
+        for (path, err) in other {
+            if !self
+                .error_list
+                .iter()
+                .any(|(existing, _)| *existing == path)
+            {
+                self.error_list.push((path, err));
+            }
+        }
     }
 }
 
@@ -515,7 +535,7 @@ impl StringSchema {
                     }
                 }
                 ApiStringFormat::PropertyString(subschema) => {
-                    crate::de::verify::verify(subschema, value)?;
+                    crate::de::verify(subschema, value)?;
                 }
                 ApiStringFormat::VerifyFn(verify_fn) => {
                     verify_fn(value)?;
@@ -1530,6 +1550,16 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
     /// an item is available in each item.
     fn all_properties(&self) -> AllProperties<'static>;
 
+    /// Check that the oneOf type properties present in `data` name existing variants, including
+    /// nested oneOfs in the selected variants.
+    ///
+    /// Lookups and property iteration with type data skip all variants of a oneOf whose type is
+    /// missing or unknown, so validation cannot rely on them to reject unknown types. Missing type
+    /// properties and their value types are left to the regular property validation.
+    fn verify_type_fields(&self, _data: &dyn WithTypeField) -> Result<(), ParameterError> {
+        Ok(())
+    }
+
     /// Resolve a deprecated property name to its canonical name.
     ///
     /// Schemas that have no aliases (the common case) inherit the default `None` here.
@@ -2204,6 +2234,20 @@ impl ObjectSchemaType for AllOfSchema {
         properties
     }
 
+    fn verify_type_fields(&self, data: &dyn WithTypeField) -> Result<(), ParameterError> {
+        let mut errors = ParameterError::new();
+        for schema in self.list {
+            if let Err(err) = schema.unwrap_any_object_schema().verify_type_fields(data) {
+                errors.extend(err);
+            }
+        }
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
+    }
+
     fn additional_properties(&self) -> bool {
         self.list.iter().any(|schema| {
             schema
@@ -2323,6 +2367,25 @@ impl ObjectSchemaType for OneOfSchema {
         let mut properties = AllProperties::new_empty();
         properties.push_one_of(self);
         properties
+    }
+
+    fn verify_type_fields(&self, data: &dyn WithTypeField) -> Result<(), ParameterError> {
+        let mut result = Ok(());
+        data.with_type_field(self.type_property(), &mut |variant| {
+            let Some(variant) = variant else { return };
+            result = match self.lookup_variant(variant) {
+                Some(schema) => schema.unwrap_any_object_schema().verify_type_fields(data),
+                None => {
+                    let mut errors = ParameterError::new();
+                    errors.push(
+                        self.type_property().to_string(),
+                        format_err!("invalid variant {variant:?}"),
+                    );
+                    Err(errors)
+                }
+            };
+        });
+        result
     }
 
     fn additional_properties(&self) -> bool {
@@ -3039,6 +3102,14 @@ impl ObjectSchemaType for ParameterSchema {
             ParameterSchema::Object(o) => o.all_properties(),
             ParameterSchema::AllOf(o) => o.all_properties(),
             ParameterSchema::OneOf(o) => o.all_properties(),
+        }
+    }
+
+    fn verify_type_fields(&self, data: &dyn WithTypeField) -> Result<(), ParameterError> {
+        match self {
+            ParameterSchema::Object(o) => o.verify_type_fields(data),
+            ParameterSchema::AllOf(o) => o.verify_type_fields(data),
+            ParameterSchema::OneOf(o) => o.verify_type_fields(data),
         }
     }
 

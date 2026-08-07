@@ -165,6 +165,7 @@ fn test_escaped_one_of_type() {
     .serialize(PropertyStringSerializer::new(String::new(), &SCHEMA))
     .unwrap();
     assert_eq!(serialized, r#"type="a\\b",payload=value"#);
+    proxmox_schema::de::verify(&SCHEMA, &serialized).expect("escaped type must select its variant");
 }
 
 #[test]
