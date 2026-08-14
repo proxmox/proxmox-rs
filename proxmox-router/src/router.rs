@@ -607,40 +607,34 @@ impl Eq for ApiHandler {}
 #[cfg(feature = "test-harness")]
 impl PartialEq for ApiHandler {
     fn eq(&self, rhs: &Self) -> bool {
-        unsafe {
-            #[allow(clippy::missing_transmute_annotations)]
-            match (self, rhs) {
-                (ApiHandler::Sync(l), ApiHandler::Sync(r)) => {
-                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
-                }
-                (ApiHandler::SerializingSync(l), ApiHandler::SerializingSync(r)) => {
-                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
-                }
-                (ApiHandler::StreamSync(l), ApiHandler::StreamSync(r)) => {
-                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
-                }
-                (ApiHandler::Async(l), ApiHandler::Async(r)) => {
-                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
-                }
-                (ApiHandler::SerializingAsync(l), ApiHandler::SerializingAsync(r)) => {
-                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
-                }
-                (ApiHandler::StreamAsync(l), ApiHandler::StreamAsync(r)) => {
-                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
-                }
-                #[cfg(feature = "server")]
-                (ApiHandler::AsyncHttp(l), ApiHandler::AsyncHttp(r)) => {
-                    core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r)
-                }
-                #[cfg(feature = "server")]
-                (
-                    ApiHandler::AsyncHttpBodyParameters(l),
-                    ApiHandler::AsyncHttpBodyParameters(r),
-                ) => core::mem::transmute::<_, usize>(l) == core::mem::transmute::<_, usize>(r),
-                _ => false,
+        // This can result in false positives and false negatives (see ptr::fn_addr_eq).
+        use core::ptr::eq;
+        match (self, rhs) {
+            (ApiHandler::Sync(l), ApiHandler::Sync(r)) => eq(*l, *r),
+            (ApiHandler::SerializingSync(l), ApiHandler::SerializingSync(r)) => eq(*l, *r),
+            (ApiHandler::StreamSync(l), ApiHandler::StreamSync(r)) => eq(*l, *r),
+            (ApiHandler::Async(l), ApiHandler::Async(r)) => eq(*l, *r),
+            (ApiHandler::SerializingAsync(l), ApiHandler::SerializingAsync(r)) => eq(*l, *r),
+            (ApiHandler::StreamAsync(l), ApiHandler::StreamAsync(r)) => eq(*l, *r),
+            #[cfg(feature = "server")]
+            (ApiHandler::AsyncHttp(l), ApiHandler::AsyncHttp(r)) => eq(*l, *r),
+            #[cfg(feature = "server")]
+            (ApiHandler::AsyncHttpBodyParameters(l), ApiHandler::AsyncHttpBodyParameters(r)) => {
+                eq(*l, *r)
             }
+            _ => false,
         }
     }
+}
+
+#[test]
+#[cfg(feature = "test-harness")]
+fn test_handler_eq() {
+    static DUMMY: ApiHandlerFn = &|_, _, _| unimplemented!();
+    static H1: ApiHandler = ApiHandler::Sync(DUMMY);
+    static H2: ApiHandler = ApiHandler::Sync(DUMMY);
+    assert!(!core::ptr::eq(&H1, &H2)); // statics have unique addresses
+    assert!(H1 == H2); // this used to fail because it compared &&dyn instead of &dyn
 }
 
 /// Lookup table to child `Router`s
