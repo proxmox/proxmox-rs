@@ -301,6 +301,12 @@ impl From<FqdnConfig> for FqdnConfigContainer {
     }
 }
 
+impl AsRef<FqdnConfig> for FqdnConfigContainer {
+    fn as_ref(&self) -> &FqdnConfig {
+        &self.fqdn
+    }
+}
+
 impl From<FqdnConfigContainer> for FqdnConfig {
     fn from(fqdn: FqdnConfigContainer) -> Self {
         fqdn.fqdn
