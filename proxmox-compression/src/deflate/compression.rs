@@ -23,6 +23,8 @@ pub enum Level {
 enum EncoderState {
     Reading,
     Writing,
+    /// Hands out compressed output the compressor still holds after a flush.
+    Draining,
     Flushing,
     Finished,
 }
@@ -36,6 +38,7 @@ pub struct DeflateEncoder<T> {
     /// This is the current amount of sent data and the window size used for intermittent flushing
     /// of the compression layer.
     flush_window: Option<(usize, usize)>,
+    flush_per_chunk: bool,
 }
 
 pub struct DeflateEncoderBuilder<T> {
@@ -44,6 +47,7 @@ pub struct DeflateEncoderBuilder<T> {
     buffer_size: usize,
     level: Level,
     flush_window: Option<usize>,
+    flush_per_chunk: bool,
 }
 
 impl<T> DeflateEncoderBuilder<T> {
@@ -69,6 +73,13 @@ impl<T> DeflateEncoderBuilder<T> {
         self
     }
 
+    /// Make each input chunk decodable without waiting for the next one or the end of the stream,
+    /// at the cost of some compression overhead. Off by default.
+    pub const fn flush_per_chunk(mut self, flush_per_chunk: bool) -> Self {
+        self.flush_per_chunk = flush_per_chunk;
+        self
+    }
+
     pub fn build(self) -> DeflateEncoder<T> {
         let level = match self.level {
             Level::Fastest => Compression::fast(),
@@ -84,6 +95,7 @@ impl<T> DeflateEncoderBuilder<T> {
             input_buffer: Bytes::new(),
             state: EncoderState::Reading,
             flush_window: self.flush_window.map(|n| (0, n)),
+            flush_per_chunk: self.flush_per_chunk,
         }
     }
 }
@@ -100,6 +112,7 @@ impl<T> DeflateEncoder<T> {
             buffer_size: super::BUFFER_SIZE,
             level: Level::Default,
             flush_window: None,
+            flush_per_chunk: false,
         }
     }
 
@@ -216,28 +229,55 @@ where
                         return Poll::Ready(Some(Err(io_format_err!("empty input during write"))));
                     }
 
-                    // in stream mode we'd like to flush regularly as the library's inner buffer is
-                    // quite huge...
-                    let flush_mode = match &mut this.flush_window {
-                        Some((at, window)) if *at >= *window => {
-                            *at = 0;
-                            FlushCompress::Sync
-                        }
-                        _ => FlushCompress::None,
+                    // A flush makes the input so far decodable without ending the compressed
+                    // stream, so the receiver need not wait for more input.
+                    let window_due =
+                        matches!(this.flush_window, Some((at, window)) if at >= window);
+                    let flush = if this.flush_per_chunk || window_due {
+                        FlushCompress::Sync
+                    } else {
+                        FlushCompress::None
                     };
 
                     let mut buf = this.input_buffer.split_off(0);
-                    let (read, res) = this.encode(&buf[..], flush_mode)?;
+                    let (read, res) = this.encode(&buf[..], flush)?;
                     this.input_buffer = buf.split_off(read);
 
                     if let Some((at, _window)) = &mut this.flush_window {
                         *at = at.saturating_add(read);
                     }
 
+                    let flushed = flush == FlushCompress::Sync && this.input_buffer.is_empty();
                     if this.input_buffer.is_empty() {
                         this.state = EncoderState::Reading;
                     }
-                    if this.buffer.is_full() || res == flate2::Status::BufError {
+                    if flushed {
+                        if let Some((at, _window)) = &mut this.flush_window {
+                            *at = 0;
+                        }
+                        // A full output buffer may leave more output inside the compressor; fetch
+                        // it before waiting for another input chunk.
+                        if this.buffer.is_full() {
+                            this.state = EncoderState::Draining;
+                        }
+                    }
+                    if this.buffer.is_full()
+                        || res == flate2::Status::BufError
+                        || (flushed && !this.buffer.is_empty())
+                    {
+                        let bytes = this.buffer.remove_data(this.buffer.len()).to_vec();
+                        return Poll::Ready(Some(Ok(bytes.into())));
+                    }
+                }
+                EncoderState::Draining => {
+                    // Repeating the flush request with a tiny output buffer keeps producing flush
+                    // output instead of finishing. A plain call fetches the pending bytes without
+                    // requesting another flush.
+                    this.encode(&[][..], FlushCompress::None)?;
+                    if !this.buffer.is_full() {
+                        this.state = EncoderState::Reading;
+                    }
+                    if !this.buffer.is_empty() {
                         let bytes = this.buffer.remove_data(this.buffer.len()).to_vec();
                         return Poll::Ready(Some(Ok(bytes.into())));
                     }
