@@ -14,6 +14,8 @@ use proxmox_io::ByteBuffer;
 enum DecoderState {
     Reading,
     Writing,
+    /// Hands out decoded output the decompressor still holds after its input was consumed.
+    Draining,
     Flushing,
     Finished,
 }
@@ -116,10 +118,27 @@ where
                     let mut buf = this.input_buffer.split_off(0);
                     let (read, res) = this.decode(&buf[..], FlushDecompress::None)?;
                     this.input_buffer = buf.split_off(read);
+                    // Yield available data even if the sender pauses before sending more. A full
+                    // output buffer may leave decoded data inside the decompressor; fetch it
+                    // before waiting for another input chunk.
                     if this.input_buffer.is_empty() {
+                        this.state = if this.buffer.is_full() {
+                            DecoderState::Draining
+                        } else {
+                            DecoderState::Reading
+                        };
+                    }
+                    if !this.buffer.is_empty() || res == flate2::Status::BufError {
+                        let bytes = this.buffer.remove_data(this.buffer.len()).to_vec();
+                        return Poll::Ready(Some(Ok(bytes.into())));
+                    }
+                }
+                DecoderState::Draining => {
+                    let (_read, _res) = this.decode(&[][..], FlushDecompress::None)?;
+                    if !this.buffer.is_full() {
                         this.state = DecoderState::Reading;
                     }
-                    if this.buffer.is_full() || res == flate2::Status::BufError {
+                    if !this.buffer.is_empty() {
                         let bytes = this.buffer.remove_data(this.buffer.len()).to_vec();
                         return Poll::Ready(Some(Ok(bytes.into())));
                     }

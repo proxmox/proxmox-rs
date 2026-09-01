@@ -188,6 +188,57 @@ si aliquod aeternum et infinitum impendere."#;
         }
     }
 
+    /// A decoder fed by a flushing encoder yields each chunk as soon as its compressed form was
+    /// received, without waiting for a full buffer or the end of the stream.
+    #[tokio::test]
+    async fn test_decoder_yields_each_flushed_chunk() {
+        use futures::FutureExt;
+
+        for is_zlib in [false, true] {
+            let (sender, receiver) = futures::channel::mpsc::unbounded();
+            let encoder = DeflateEncoder::builder(receiver)
+                .zlib(is_zlib)
+                .flush_per_chunk(true)
+                .build();
+            let mut decoder = DeflateDecoder::builder(encoder).zlib(is_zlib).build();
+            for chunk in chunker(BODY.as_bytes()) {
+                let chunk = chunk.unwrap();
+                sender.unbounded_send(Ok(chunk.clone())).unwrap();
+                let mut decoded = Vec::new();
+                while let Some(item) = decoder.next().now_or_never() {
+                    decoded.extend_from_slice(&item.unwrap().unwrap());
+                }
+                assert_eq!(decoded, chunk);
+            }
+        }
+    }
+
+    /// A flushed chunk larger than the decoder's output buffer comes out whole without further
+    /// input: the part the decompressor keeps back is drained before the next chunk is read.
+    #[tokio::test]
+    async fn test_decoder_drains_chunks_larger_than_its_buffer() {
+        use futures::FutureExt;
+
+        for is_zlib in [false, true] {
+            let (sender, receiver) = futures::channel::mpsc::unbounded();
+            let encoder = DeflateEncoder::builder(receiver)
+                .zlib(is_zlib)
+                .flush_per_chunk(true)
+                .build();
+            let mut decoder = DeflateDecoder::builder(encoder)
+                .zlib(is_zlib)
+                .buffer_size(4096)
+                .build();
+            let chunk: Vec<u8> = (0..10_000u32).map(|i| (i % 251) as u8).collect();
+            sender.unbounded_send(Ok(chunk.clone())).unwrap();
+            let mut decoded = Vec::new();
+            while let Some(item) = decoder.next().now_or_never() {
+                decoded.extend_from_slice(&item.unwrap().unwrap());
+            }
+            assert_eq!(decoded, chunk);
+        }
+    }
+
     fn flate2_encode(bytes: &[u8], is_zlib: bool) -> Result<Vec<u8>, std::io::Error> {
         if is_zlib {
             let mut e = flate2::write::ZlibEncoder::new(Vec::new(), Compression::default());
