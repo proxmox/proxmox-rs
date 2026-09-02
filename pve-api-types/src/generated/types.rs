@@ -11487,6 +11487,10 @@ pub struct NodeShellTicket {
         "current-kernel": {
             type: NodeStatusCurrentKernel,
         },
+        idle: {
+            minimum: 0,
+            type: Integer,
+        },
         loadavg: {
             items: {
                 description: "The value of the load.",
@@ -11502,6 +11506,10 @@ pub struct NodeShellTicket {
         },
         rootfs: {
             type: NodeStatusRootfs,
+        },
+        uptime: {
+            minimum: 0,
+            type: Integer,
         },
     },
 )]
@@ -11522,6 +11530,10 @@ pub struct NodeStatus {
     #[serde(rename = "current-kernel")]
     pub current_kernel: NodeStatusCurrentKernel,
 
+    /// Sum of how much time each core has spent idle, in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    pub idle: u64,
+
     /// An array of load avg for 1, 5 and 15 minutes respectively.
     pub loadavg: Vec<String>,
 
@@ -11531,6 +11543,10 @@ pub struct NodeStatus {
     pub pveversion: String,
 
     pub rootfs: NodeStatusRootfs,
+
+    /// The uptime of the system (including time spent in suspend), in seconds.
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_u64")]
+    pub uptime: u64,
 
     #[serde(flatten)]
     pub additional_properties: HashMap<String, Value>,

@@ -56178,6 +56178,11 @@
                                     },
                                     "type": "object"
                                  },
+                                 "idle": {
+                                    "description": "Sum of how much time each core has spent idle, in seconds.",
+                                    "minimum": 0,
+                                    "type": "integer"
+                                 },
                                  "loadavg": {
                                     "description": "An array of load avg for 1, 5 and 15 minutes respectively.",
                                     "items": {
@@ -56231,6 +56236,11 @@
                                        }
                                     },
                                     "type": "object"
+                                 },
+                                 "uptime": {
+                                    "description": "The uptime of the system (including time spent in suspend), in seconds.",
+                                    "minimum": 0,
+                                    "type": "integer"
                                  }
                               },
                               "type": "object"
