@@ -47,6 +47,7 @@
 /// - /cluster/bulk-action/guest/start
 /// - /cluster/bulk-action/guest/suspend
 /// - /cluster/ceph
+/// - /cluster/ceph/restart-bulk
 /// - /cluster/config
 /// - /cluster/config/apiversion
 /// - /cluster/config/nodes
@@ -153,6 +154,8 @@
 /// - /nodes/{node}/capabilities/qemu/migration
 /// - /nodes/{node}/ceph
 /// - /nodes/{node}/ceph/cfg
+/// - /nodes/{node}/ceph/releases
+/// - /nodes/{node}/ceph/restart-bulk
 /// - /nodes/{node}/certificates
 /// - /nodes/{node}/certificates/acme
 /// - /nodes/{node}/certificates/acme/certificate

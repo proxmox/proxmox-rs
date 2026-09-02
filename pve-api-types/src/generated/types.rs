@@ -3407,7 +3407,7 @@ pub struct CreateCephFs {
 pub struct CreateCephMds {
     /// Determines whether a ceph-mds daemon should poll and replay the log of
     /// an active MDS. Faster switch on MDS failure, but needs more idle
-    /// resources.
+    /// resources. Deprecated: the setting was removed in Ceph 14.1.1.
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hotstandby: Option<bool>,
@@ -15130,6 +15130,10 @@ fn test_regex_compilation_26() {
             default: false,
             optional: true,
         },
+        "host-tunnel": {
+            default: false,
+            optional: true,
+        },
         link_down: {
             default: false,
             optional: true,
@@ -15192,6 +15196,12 @@ pub struct QemuConfigNet {
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub firewall: Option<bool>,
+
+    /// Enable host GSO over UDP tunnel offload. (VirtIO only).
+    #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "host-tunnel")]
+    pub host_tunnel: Option<bool>,
 
     /// Whether this interface should be disconnected (like pulling the plug).
     #[serde(deserialize_with = "proxmox_serde::perl::deserialize_bool")]
