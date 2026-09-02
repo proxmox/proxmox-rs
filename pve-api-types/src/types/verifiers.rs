@@ -61,6 +61,7 @@ pub SDN_ROUTE_MAP_ID_RESERVED = r##"^(pve_.*|MAP_VTEP_IN|MAP_VTEP_OUT|correct_sr
 
 pub SCOPED_IP_ALIAS_RE = r##"^(dc/|guest/)?([A-Za-z][A-Za-z0-9\-\_]+)$"##;
 
+pub LINE_FEED_RE = r##"[\n\r]"##;
 }
 
 pub fn verify_volume_id(s: &str) -> Result<(), Error> {
@@ -345,4 +346,12 @@ pub fn verify_pve_acme_alias(s: &str) -> Result<(), Error> {
     } else {
         bail!("not a valid acme alias");
     }
+}
+
+pub fn verify_fw_comment_spec(s: &str) -> Result<(), Error> {
+    if LINE_FEED_RE.is_match(s) {
+        bail!("comment must not contain a line feed");
+    }
+
+    Ok(())
 }

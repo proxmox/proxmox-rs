@@ -143,6 +143,7 @@
       "pve-day-of-week": ("Code")[],
       "pve-dir-override": ("Code")[],
       "pve-fw-addr-spec": ("Code")[],
+      "pve-fw-comment-spec": ("Code")[],
       "pve-fw-conntrack-helper": ("Code")[],
       "pve-fw-dport-spec": ("Code")[],
       "pve-fw-icmp-type-spec": ("Code")[],
@@ -5290,6 +5291,7 @@
                                              },
                                              "comment": {
                                                 "description": "Descriptive comment.",
+                                                "format": "pve-fw-comment-spec",
                                                 "optional": 1,
                                                 "type": "string"
                                              },
@@ -5496,6 +5498,7 @@
                                        },
                                        "comment": {
                                           "description": "Descriptive comment.",
+                                          "format": "pve-fw-comment-spec",
                                           "optional": 1,
                                           "type": "string"
                                        },
@@ -5622,6 +5625,7 @@
                               "items": {
                                  "properties": {
                                     "comment": {
+                                       "description": "Optional comment or description.",
                                        "optional": 1,
                                        "type": "string"
                                     },
@@ -5659,6 +5663,7 @@
                               "additionalProperties": 0,
                               "properties": {
                                  "comment": {
+                                    "format": "pve-fw-comment-spec",
                                     "optional": 1,
                                     "type": "string"
                                  },
@@ -5784,6 +5789,7 @@
                                        },
                                        "comment": {
                                           "description": "Descriptive comment.",
+                                          "format": "pve-fw-comment-spec",
                                           "optional": 1,
                                           "type": "string"
                                        },
@@ -5951,6 +5957,7 @@
                                  },
                                  "comment": {
                                     "description": "Descriptive comment.",
+                                    "format": "pve-fw-comment-spec",
                                     "optional": 1,
                                     "type": "string"
                                  },
@@ -6142,6 +6149,7 @@
                                           "properties": {
                                              "cidr": ("Ref")["/root/0/children/5/children/2/children/0/children/0/info/DELETE/parameters/properties/cidr"],
                                              "comment": {
+                                                "format": "pve-fw-comment-spec",
                                                 "optional": 1,
                                                 "type": "string"
                                              },
@@ -6361,6 +6369,7 @@
                               "additionalProperties": 0,
                               "properties": {
                                  "comment": {
+                                    "format": "pve-fw-comment-spec",
                                     "optional": 1,
                                     "type": "string"
                                  },
@@ -6485,6 +6494,7 @@
                                           "type": "string"
                                        },
                                        "comment": {
+                                          "format": "pve-fw-comment-spec",
                                           "optional": 1,
                                           "type": "string"
                                        },
@@ -6818,19 +6828,24 @@
                               "items": {
                                  "properties": {
                                     "comment": {
+                                       "description": "Optional comment or description.",
                                        "optional": 1,
                                        "type": "string"
                                     },
                                     "name": {
+                                       "description": "The name of the alias or ipset.",
                                        "type": "string"
                                     },
                                     "ref": {
+                                       "description": "The reference string used in firewall rules.",
                                        "type": "string"
                                     },
                                     "scope": {
+                                       "description": "The scope of the reference (e.g., SDN).",
                                        "type": "string"
                                     },
                                     "type": {
+                                       "description": "The type of reference (alias or ipset).",
                                        "enum": [
                                           "alias",
                                           "ipset"
@@ -12176,6 +12191,7 @@
                                                          },
                                                          "comment": {
                                                             "description": "Descriptive comment.",
+                                                            "format": "pve-fw-comment-spec",
                                                             "optional": 1,
                                                             "type": "string"
                                                          },
@@ -12336,6 +12352,7 @@
                                                    },
                                                    "comment": {
                                                       "description": "Descriptive comment.",
+                                                      "format": "pve-fw-comment-spec",
                                                       "optional": 1,
                                                       "type": "string"
                                                    },
@@ -20702,6 +20719,7 @@
                                                          },
                                                          "comment": {
                                                             "description": "Descriptive comment.",
+                                                            "format": "pve-fw-comment-spec",
                                                             "optional": 1,
                                                             "type": "string"
                                                          },
@@ -20874,6 +20892,7 @@
                                                    },
                                                    "comment": {
                                                       "description": "Descriptive comment.",
+                                                      "format": "pve-fw-comment-spec",
                                                       "optional": 1,
                                                       "type": "string"
                                                    },
@@ -21507,6 +21526,7 @@
                                                 "additionalProperties": 0,
                                                 "properties": {
                                                    "comment": {
+                                                      "format": "pve-fw-comment-spec",
                                                       "optional": 1,
                                                       "type": "string"
                                                    },
@@ -39456,6 +39476,7 @@
                                                          },
                                                          "comment": {
                                                             "description": "Descriptive comment.",
+                                                            "format": "pve-fw-comment-spec",
                                                             "optional": 1,
                                                             "type": "string"
                                                          },
@@ -39628,6 +39649,7 @@
                                                    },
                                                    "comment": {
                                                       "description": "Descriptive comment.",
+                                                      "format": "pve-fw-comment-spec",
                                                       "optional": 1,
                                                       "type": "string"
                                                    },
@@ -40261,6 +40283,7 @@
                                                 "additionalProperties": 0,
                                                 "properties": {
                                                    "comment": {
+                                                      "format": "pve-fw-comment-spec",
                                                       "optional": 1,
                                                       "type": "string"
                                                    },
@@ -53768,6 +53791,7 @@
                                              },
                                              "comment": {
                                                 "description": "Descriptive comment.",
+                                                "format": "pve-fw-comment-spec",
                                                 "optional": 1,
                                                 "type": "string"
                                              },
@@ -53938,6 +53962,7 @@
                                        },
                                        "comment": {
                                           "description": "Descriptive comment.",
+                                          "format": "pve-fw-comment-spec",
                                           "optional": 1,
                                           "type": "string"
                                        },

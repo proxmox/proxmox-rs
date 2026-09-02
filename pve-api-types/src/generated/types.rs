@@ -3955,6 +3955,7 @@ pub struct CreateController {
             type: String,
         },
         comment: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_fw_comment_spec),
             optional: true,
             type: String,
             description: "Descriptive comment",
@@ -3987,6 +3988,7 @@ pub struct CreateFirewallAlias {
             description: "CIDR address",
         },
         comment: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_fw_comment_spec),
             optional: true,
             type: String,
             description: "Descriptive comment",
@@ -4996,14 +4998,18 @@ pub struct FirewallMacro {
 /// Object.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct FirewallRef {
+    /// Optional comment or description.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
 
+    /// The name of the alias or ipset.
     pub name: String,
 
+    /// The reference string used in firewall rules.
     #[serde(rename = "ref")]
     pub r#ref: String,
 
+    /// The scope of the reference (e.g., SDN).
     pub scope: String,
 
     #[serde(rename = "type")]
@@ -21996,6 +22002,7 @@ pub struct UpdateClusterOptions {
             type: String,
         },
         comment: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_fw_comment_spec),
             optional: true,
             type: String,
             description: "Descriptive comment",
@@ -22035,6 +22042,7 @@ pub struct UpdateFirewallAlias {
 #[api(
     properties: {
         comment: {
+            format: &ApiStringFormat::VerifyFn(verifiers::verify_fw_comment_spec),
             optional: true,
             type: String,
             description: "Descriptive comment",
