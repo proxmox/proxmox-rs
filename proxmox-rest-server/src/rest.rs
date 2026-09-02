@@ -907,7 +907,16 @@ fn handle_stream_as_json_seq(stream: proxmox_router::Stream) -> Result<Response<
         use futures::StreamExt;
 
         let mut stream = stream.into_inner();
-        while let Some(record) = stream.next().await {
+        loop {
+            // The handler may wait indefinitely for another record. Drop its stream when the
+            // response is no longer read, rather than once the next send fails.
+            let record = tokio::select! {
+                record = stream.next() => record,
+                _ = send.closed() => None,
+            };
+            let Some(record) = record else {
+                break;
+            };
             if send.send(Ok(record.to_bytes())).await.is_err() {
                 break;
             }
