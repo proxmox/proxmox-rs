@@ -305,9 +305,9 @@ pub type SerializingApiFuture<'a> = Pin<
 /// Returns a future Value.
 /// ```
 /// # use serde_json::{json, Value};
-/// # use tokio::sync::mpsc;
-/// # use tokio::spawn;
-/// use proxmox_router::{ApiFuture, ApiHandler, ApiMethod, Record, RpcEnvironment, StreamApiFuture};
+/// use proxmox_router::{
+///     ApiFuture, ApiHandler, ApiMethod, Record, RpcEnvironment, Stream, StreamApiFuture,
+/// };
 /// use proxmox_schema::ObjectSchema;
 ///
 ///
@@ -316,14 +316,13 @@ pub type SerializingApiFuture<'a> = Pin<
 ///    info: &ApiMethod,
 ///    rpcenv: &'a mut dyn RpcEnvironment,
 /// ) -> StreamApiFuture<'a> {
-///     let (sender, receiver) = mpsc::channel(8);
-///     tokio::spawn(async move {
-///         sender.send(Record::new("data")).await;
-///         sender.send(Record::new("more data")).await;
+///     let stream = Stream::from_producer(|mut records| async move {
+///         records.send(Record::new("data")).await?;
+///         records.send(Record::new("more data")).await?;
 ///         // ...
+///         Ok(())
 ///     });
-///     let receiver = tokio_stream::wrappers::ReceiverStream::new(receiver);
-///     Box::pin(async move { Ok(receiver.into()) })
+///     Box::pin(async move { Ok(stream) })
 /// }
 ///
 /// const API_METHOD_HELLO_FUTURE: ApiMethod = ApiMethod::new(
@@ -366,6 +365,89 @@ impl Stream {
             acc.push(i.data.into_result()?);
         }
         Ok(Value::Array(acc))
+    }
+}
+
+impl Stream {
+    /// Build a stream from a producer that sends its records through the given sender.
+    ///
+    /// The producer is polled as part of the stream: it runs only while the stream is read and is
+    /// dropped together with it. A handler whose client disconnects thus stops at once, with no
+    /// task left behind. The records the producer sent before it returned an error are delivered
+    /// first, then the error as an error record ends the stream.
+    pub fn from_producer<F, Fut>(producer: F) -> Self
+    where
+        F: FnOnce(RecordSender) -> Fut,
+        Fut: Future<Output = Result<(), Error>> + Send + 'static,
+    {
+        let (sender, receiver) = futures::channel::mpsc::channel(0);
+        let producer = producer(RecordSender { sender });
+        Self::from_boxed(Box::pin(ProducerStream {
+            producer: Some(Box::pin(producer)),
+            receiver,
+            error: None,
+        }))
+    }
+}
+
+/// Sends the records of a producer given to [`Stream::from_producer`].
+pub struct RecordSender {
+    sender: futures::channel::mpsc::Sender<Record>,
+}
+
+impl RecordSender {
+    /// Send a record, waiting until the stream takes it.
+    ///
+    /// Fails only if the stream is gone, which can happen when the sender was moved to another
+    /// task; the producer itself is dropped with the stream.
+    pub async fn send(&mut self, record: Record) -> Result<(), Error> {
+        use futures::SinkExt;
+
+        self.sender
+            .send(record)
+            .await
+            .map_err(|_| anyhow::format_err!("record stream was dropped"))
+    }
+}
+
+type ProducerFuture = Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
+
+struct ProducerStream {
+    /// The producer, until it finished.
+    producer: Option<ProducerFuture>,
+    receiver: futures::channel::mpsc::Receiver<Record>,
+    /// The producer's error, delivered after the records it sent before.
+    error: Option<Error>,
+}
+
+impl futures::Stream for ProducerStream {
+    type Item = Record;
+
+    fn poll_next(
+        mut self: Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Record>> {
+        use std::task::Poll;
+
+        loop {
+            match Pin::new(&mut self.receiver).poll_next(cx) {
+                Poll::Ready(Some(record)) => return Poll::Ready(Some(record)),
+                // All senders are gone and their records delivered.
+                Poll::Ready(None) => return Poll::Ready(self.error.take().map(Record::error)),
+                Poll::Pending => {}
+            }
+            let Some(producer) = self.producer.as_mut() else {
+                // The producer finished, but a sender it handed to another task still lives.
+                return Poll::Pending;
+            };
+            match producer.as_mut().poll(cx) {
+                Poll::Ready(result) => {
+                    self.producer = None;
+                    self.error = result.err();
+                }
+                Poll::Pending => return Poll::Pending,
+            }
+        }
     }
 }
 
@@ -1076,5 +1158,61 @@ mod test {
     fn additional_properties_allow_any_parameter() {
         let _ = ApiMethod::new_dummy(&ADDITIONAL_PARAMETERS)
             .access(None, &Permission::Privilege(&["foo", "{baz}"], 1, true));
+    }
+}
+
+#[cfg(test)]
+mod producer_stream_tests {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    use futures::StreamExt;
+
+    use super::*;
+
+    #[test]
+    fn records_arrive_in_order_and_an_error_ends_the_stream() {
+        let stream = Stream::from_producer(|mut records| async move {
+            records.send(Record::new("one")).await?;
+            records.send(Record::new("two")).await?;
+            anyhow::bail!("source failed");
+        });
+        let records: Vec<_> = futures::executor::block_on(stream.into_inner().collect());
+        let bytes: Vec<String> = records
+            .iter()
+            .map(|record| String::from_utf8(record.to_bytes()).unwrap())
+            .collect();
+        assert_eq!(
+            bytes,
+            [
+                "\x1e{\"data\":\"one\"}\n",
+                "\x1e{\"data\":\"two\"}\n",
+                "\x1e{\"error\":\"source failed\"}\n",
+            ]
+        );
+    }
+
+    #[test]
+    fn dropping_the_stream_drops_the_producer() {
+        struct Guard(Arc<AtomicBool>);
+        impl Drop for Guard {
+            fn drop(&mut self) {
+                self.0.store(true, Ordering::SeqCst);
+            }
+        }
+        let dropped = Arc::new(AtomicBool::new(false));
+        let guard = Guard(Arc::clone(&dropped));
+        let mut stream = Stream::from_producer(|mut records| async move {
+            let _guard = guard;
+            records.send(Record::new("first")).await?;
+            futures::future::pending::<()>().await;
+            Ok(())
+        })
+        .into_inner();
+        let first = futures::executor::block_on(stream.next()).unwrap();
+        assert_eq!(first.to_bytes(), b"\x1e{\"data\":\"first\"}\n");
+        assert!(!dropped.load(Ordering::SeqCst));
+        drop(stream);
+        assert!(dropped.load(Ordering::SeqCst));
     }
 }
