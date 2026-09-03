@@ -1067,7 +1067,9 @@ pub(crate) async fn handle_api_request<Env: RpcEnvironment>(
                         |err| proxmox_lang::io_format_err!("error during compression: {}", err),
                     ))
                     .zlib(true)
-                    .flush_window(is_streaming.then_some(64 * 1024))
+                    // The streaming handlers emit one record per body chunk. Do not hold it in
+                    // the compressor while waiting for the next record, which may come late.
+                    .flush_per_chunk(is_streaming)
                     .build(),
                 )
             })
