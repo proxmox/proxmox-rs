@@ -1113,6 +1113,7 @@ impl AllOfSchema {
         deprecated(note = "lookup without data ignores clashing oneOf keys, use lookup_schema")
     )]
     pub fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)> {
+        #[allow(deprecated)]
         for entry in self.list {
             if let Some(v) = entry
                 .any_object()
@@ -1400,6 +1401,7 @@ impl OneOfSchema {
             return Some((false, self.type_schema()));
         }
 
+        #[allow(deprecated)]
         for (_variant, entry) in self.list {
             if let Some(v) = entry
                 .any_object()
@@ -2209,6 +2211,7 @@ impl ObjectSchemaType for AllOfSchema {
     }
 
     fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)> {
+        #[allow(deprecated)]
         AllOfSchema::lookup(self, key)
     }
 
@@ -2314,6 +2317,7 @@ pub struct SimpleObjectPropertyIterator {
 impl Iterator for SimpleObjectPropertyIterator {
     type Item = &'static SchemaPropertyEntry;
 
+    #[allow(deprecated)]
     fn next(&mut self) -> Option<&'static SchemaPropertyEntry> {
         loop {
             match self.nested.as_mut().and_then(Iterator::next) {
@@ -2343,6 +2347,7 @@ impl ObjectSchemaType for OneOfSchema {
     }
 
     fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)> {
+        #[allow(deprecated)]
         OneOfSchema::lookup(self, key)
     }
 
@@ -2468,6 +2473,7 @@ pub struct OneOfPropertyIterator {
 impl Iterator for OneOfPropertyIterator {
     type Item = &'static SchemaPropertyEntry;
 
+    #[allow(deprecated)]
     fn next(&mut self) -> Option<&'static SchemaPropertyEntry> {
         if self.done.insert(self.type_property_entry.0) {
             return Some(self.type_property_entry);
@@ -3096,6 +3102,7 @@ impl ObjectSchemaType for ParameterSchema {
     }
 
     fn properties(&self) -> ObjectPropertyIterator {
+        #[allow(deprecated)]
         match self {
             ParameterSchema::Object(o) => o.properties(),
             ParameterSchema::AllOf(o) => o.properties(),
