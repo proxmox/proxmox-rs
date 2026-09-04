@@ -1654,7 +1654,7 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
                     continue;
                 }
             }
-            if let Some((_optional, prop_schema)) = self.lookup(key) {
+            if let Some((_optional, prop_schema)) = self.lookup_schema(key, map) {
                 if let Err(err) = prop_schema.verify_json(value) {
                     errors.add_errors(key, err);
                 };
@@ -1666,15 +1666,17 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
             }
         }
 
-        for (name, optional, _prop_schema) in self.properties() {
-            if *optional || data[name] != Value::Null {
+        for property in self.all_properties().with_types_from(map) {
+            let name = property.name();
+
+            if property.optional() || data[name] != Value::Null {
                 continue;
             }
             // a present alias satisfies the required-property check
             if map
                 .keys()
                 .filter_map(|k| self.lookup_alias(k))
-                .any(|canon| canon == *name)
+                .any(|canon| canon == name)
             {
                 continue;
             }
@@ -1682,6 +1684,10 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
                 name.to_string(),
                 format_err!("property is missing and it is not optional"),
             );
+        }
+
+        if let Err(type_errors) = self.verify_type_fields(map) {
+            errors.extend_unreported(type_errors);
         }
 
         if !errors.is_empty() {
