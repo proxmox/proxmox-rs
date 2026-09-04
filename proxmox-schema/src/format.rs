@@ -147,13 +147,22 @@ pub fn dump_properties(
     let mut required_list: Vec<String> = Vec::new();
     let mut optional_list: Vec<String> = Vec::new();
 
-    for (prop, optional, schema) in param.properties() {
-        if skip.iter().any(|n| n == prop) {
+    for property in param.all_properties() {
+        let name = property.name();
+
+        if skip.contains(&name) {
             continue;
         }
 
-        let mut param_descr =
-            get_property_description(prop, schema, style, DocumentationFormat::ReST);
+        let schema = property.schema();
+
+        let mut param_descr = get_property_description_with_conditions(
+            name,
+            schema,
+            style,
+            DocumentationFormat::ReST,
+            property.conditions(),
+        );
 
         if !indent.is_empty() {
             param_descr = format!("{indent}{param_descr}"); // indent first line
@@ -186,7 +195,7 @@ pub fn dump_properties(
                 }
             }
         }
-        if *optional {
+        if property.optional() {
             optional_list.push(param_descr);
         } else {
             required_list.push(param_descr);
@@ -218,12 +227,27 @@ pub fn dump_properties(
     res
 }
 
+#[cfg_attr(
+    proxmox_schema = "strict",
+    deprecated(note = "caller is not oneOf aware - use get_property_description_with_conditions")
+)]
 /// Helper to format an object property, including name, type and description.
 pub fn get_property_description(
     name: &str,
     schema: &Schema,
     style: ParameterDisplayStyle,
     format: DocumentationFormat,
+) -> String {
+    get_property_description_with_conditions(name, schema, style, format, &[])
+}
+
+/// Helper to format an object property, including name, type and description.
+pub fn get_property_description_with_conditions(
+    name: &str,
+    schema: &Schema,
+    style: ParameterDisplayStyle,
+    format: DocumentationFormat,
+    conditions: &[(&'static str, &'static str)],
 ) -> String {
     let type_text = get_schema_type_text(schema, style);
 
@@ -269,6 +293,16 @@ pub fn get_property_description(
         None => String::from(descr),
     };
 
+    let conditions_text = if conditions.is_empty() {
+        String::new()
+    } else {
+        let conditions: Vec<String> = conditions
+            .iter()
+            .map(|(key, value)| format!("{key}={value:?}"))
+            .collect();
+        format!("(if {})", conditions.join(", "))
+    };
+
     if format == DocumentationFormat::ReST {
         let mut text = match style {
             ParameterDisplayStyle::Config => {
@@ -288,6 +322,10 @@ pub fn get_property_description(
             }
         };
 
+        if !conditions_text.is_empty() {
+            text.push_str(&wrap_text("  ", "  ", &conditions_text, 80));
+            text.push('\n');
+        }
         text.push_str(&wrap_text("  ", "  ", &descr, 80));
 
         text
@@ -302,6 +340,10 @@ pub fn get_property_description(
         let mut text = format!(" {display_name:-10} {type_text}{default_text}");
         let indent = "             ";
         text.push('\n');
+        if !conditions_text.is_empty() {
+            text.push_str(&wrap_text(indent, indent, &conditions_text, 80));
+            text.push('\n');
+        }
         text.push_str(&wrap_text(indent, indent, &descr, 80));
 
         text
