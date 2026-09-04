@@ -182,3 +182,114 @@ fn object_to_writer(output: &mut dyn Write, object: &Object) -> Result<(), Error
     }
     Ok(())
 }
+
+#[test]
+fn test_config() {
+    use proxmox_schema::{
+        AllOfSchema, ApiStringFormat, EnumEntry, IntegerSchema, ObjectSchema, OneOfSchema,
+        StringSchema,
+    };
+
+    static STRING_SCHEMA: Schema = StringSchema::new("A test string").schema();
+
+    static PROP_COMMON_1: Schema = StringSchema::new("Common 1").schema();
+    static PROP_COMMON_2: Schema = IntegerSchema::new("Common 2").schema();
+    static PROP_ONE: Schema = StringSchema::new("Property 1").schema();
+    static PROP_TWO: Schema = IntegerSchema::new("Property 2").schema();
+    static PROP_CLASHING_A: Schema = StringSchema::new("Clashing Property 1").schema();
+    static PROP_CLASHING_B: Schema = IntegerSchema::new("Clashing Property 2").schema();
+
+    static PROP_ENUM_TYPE: Schema = StringSchema::new("Type: A or B")
+        .format(&ApiStringFormat::Enum(&[
+            EnumEntry::new("A", "Type A"),
+            EnumEntry::new("B", "Type B"),
+        ]))
+        .schema();
+
+    static ENUM_COMMON: Schema = ObjectSchema::new(
+        "Common Object Data",
+        &[
+            ("common1", false, &PROP_COMMON_1),
+            ("common2", true, &PROP_COMMON_2),
+        ],
+    )
+    .additional_properties(false)
+    .schema();
+
+    static ENUM_A: Schema = ObjectSchema::new(
+        "Type A Object",
+        &[
+            ("clashing", false, &PROP_CLASHING_A),
+            ("prop-one", false, &PROP_ONE),
+        ],
+    )
+    .additional_properties(false)
+    .schema();
+
+    static ENUM_B: Schema = ObjectSchema::new(
+        "Type B Object",
+        &[
+            ("clashing", false, &PROP_CLASHING_B),
+            ("prop-two", false, &PROP_TWO),
+        ],
+    )
+    .additional_properties(false)
+    .schema();
+
+    static ENUM_ONE_OF: Schema = OneOfSchema::new(
+        "Object A or B.",
+        &("type", false, &PROP_ENUM_TYPE),
+        &[("A", &ENUM_A), ("B", &ENUM_B)],
+    )
+    .schema();
+
+    static ENUM_SCHEMA: Schema = AllOfSchema::new(
+        "An enum with common and clashing values.",
+        &[&ENUM_COMMON, &ENUM_ONE_OF],
+    )
+    .schema();
+
+    static ENUM_STR_SCHEMA: Schema = StringSchema::new("An enum with common and clashing values.")
+        .format(&ApiStringFormat::PropertyString(&ENUM_SCHEMA))
+        .schema();
+
+    static CONFIG_SCHEMA: Schema = ObjectSchema::new(
+        "config schema",
+        &[
+            ("complex", false, &ENUM_STR_SCHEMA),
+            ("prop1", false, &STRING_SCHEMA),
+        ],
+    )
+    .schema();
+
+    const CONFIG_STR: &str = "\
+        complex: common1=hey,type=A,prop-one=One,clashing=Text\n\
+        prop1: Hello\n\
+    ";
+
+    let value = crate::value_from_str(CONFIG_STR, &CONFIG_SCHEMA).expect("failed to parse config");
+    let config = crate::value_to_bytes(&value, &CONFIG_SCHEMA).expect("failed to recreate config");
+    let config =
+        std::str::from_utf8(&config).expect("rewritten config contains non-utf8 characters");
+    assert_eq!(
+        config, CONFIG_STR,
+        "recreated configuration does not match the original"
+    );
+
+    // the type selects the schema of a clashing property, even if it comes last
+    assert_eq!(
+        value_from_str(
+            "clashing: 42\ncommon1: hello\nprop-two: 7\ntype: B\n",
+            &ENUM_SCHEMA
+        )
+        .unwrap(),
+        serde_json::json!({"clashing": 42, "common1": "hello", "prop-two": 7, "type": "B"}),
+    );
+
+    // the first invalid line is reported, repeat as the order would vary between hash maps
+    for _ in 0..16 {
+        let err = value_from_str("prop-one: One\nclashing: invalid\ntype: B\n", &ENUM_ONE_OF)
+            .unwrap_err();
+        assert!(err.to_string().contains("'prop-one'"), "{err}");
+    }
+}
