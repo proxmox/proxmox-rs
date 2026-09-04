@@ -3193,6 +3193,12 @@ fn do_parse_parameter_strings(
     // alias and its canonical (or two different aliases) regardless of scalar vs. array.
     let mut first_raw = HashMap::<String, String>::new();
 
+    // To provide type lookups for oneOf schemas:
+    let data_map = data
+        .iter()
+        .map(|(key, value)| (key.as_str(), value.as_str()))
+        .collect::<HashMap<&str, &str>>();
+
     for (raw_key, value) in data {
         let (key, alias_from): (&str, Option<&str>) = match schema.lookup_alias(raw_key) {
             Some(canonical) => (canonical, Some(raw_key.as_str())),
@@ -3214,7 +3220,7 @@ fn do_parse_parameter_strings(
         } else {
             first_raw.insert(key.to_string(), raw_key.clone());
         }
-        if let Some((_optional, prop_schema)) = schema.lookup(key) {
+        if let Some((_optional, prop_schema)) = schema.lookup_schema(key, &data_map) {
             match prop_schema {
                 Schema::Array(array_schema) => {
                     if params[key] == Value::Null {
@@ -3269,8 +3275,9 @@ fn do_parse_parameter_strings(
     }
 
     if test_required && errors.is_empty() {
-        for (name, optional, _prop_schema) in schema.properties() {
-            if *optional || params[name] != Value::Null {
+        for property in schema.all_properties().with_types_from(&data_map) {
+            let name = property.name();
+            if property.optional() || params[name] != Value::Null {
                 continue;
             }
             errors.push(
@@ -3278,6 +3285,10 @@ fn do_parse_parameter_strings(
                 format_err!("parameter is missing and it is not optional."),
             );
         }
+    }
+
+    if let Err(type_errors) = schema.verify_type_fields(&data_map) {
+        errors.extend_unreported(type_errors);
     }
 
     if !errors.is_empty() {
