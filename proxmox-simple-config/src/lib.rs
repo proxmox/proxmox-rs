@@ -2,6 +2,7 @@
 
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
+use std::collections::HashMap;
 use std::io::Write;
 
 use anyhow::{Error, bail, format_err};
@@ -43,27 +44,37 @@ pub fn value_from_str(input: &str, schema: &'static Schema) -> Result<Value, Err
         config.insert("description".to_string(), Value::String(description));
     }
 
+    let mut entries = Vec::new();
     for (lineno, line) in lines {
         let line = line.trim();
         if line.starts_with('#') || line.is_empty() {
             continue;
         }
 
-        parse_line(&mut config, line, schema)
-            .map_err(|err| format_err!("line {}: {}", lineno, err))?;
+        if let Some((key, value)) =
+            parse_line(line).map_err(|err| format_err!("line {lineno}: {err}"))?
+        {
+            entries.push((lineno, key, value));
+        }
+    }
+
+    // oneOf type properties may follow the variant properties whose schema they select.
+    let type_data: HashMap<&str, &str> = entries
+        .iter()
+        .map(|(_lineno, key, value)| (*key, *value))
+        .collect();
+    for (lineno, key, value) in &entries {
+        parse_key_value(&mut config, key, value, schema, &type_data)
+            .map_err(|err| format_err!("line {lineno}: {err}"))?;
     }
 
     Ok(Value::Object(config))
 }
 
 /// Parse a single `key: value` line from a config file.
-fn parse_line(
-    config: &mut Object,
-    line: &str,
-    schema: &'static dyn ObjectSchemaType,
-) -> Result<(), Error> {
+fn parse_line(line: &str) -> Result<Option<(&str, &str)>, Error> {
     if line.starts_with('#') || line.is_empty() {
-        return Ok(());
+        return Ok(None);
     }
 
     let colon = line
@@ -75,8 +86,7 @@ fn parse_line(
 
     let key = &line[..colon];
     let value = line[(colon + 1)..].trim_start();
-
-    parse_key_value(config, key, value, schema)
+    Ok(Some((key, value)))
 }
 
 /// Lookup the key in the schema, parse the value and insert it into the config object.
@@ -85,8 +95,9 @@ fn parse_key_value(
     key: &str,
     value: &str,
     schema: &'static dyn ObjectSchemaType,
+    with_type_field: &dyn proxmox_schema::WithTypeField,
 ) -> Result<(), Error> {
-    let schema = match schema.lookup(key) {
+    let schema = match schema.lookup_schema(key, with_type_field) {
         Some((_optional, schema)) => Some(schema),
         None if schema.additional_properties() => None,
         None => bail!(
