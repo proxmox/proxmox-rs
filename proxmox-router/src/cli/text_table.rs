@@ -1,10 +1,11 @@
+use std::collections::HashMap;
 use std::io::{IsTerminal, Write};
 
 use anyhow::{Error, bail, format_err};
 use serde_json::Value;
 use unicode_width::UnicodeWidthStr;
 
-use proxmox_schema::{ObjectSchemaType, OneOfSchema, Schema, SchemaPropertyEntry};
+use proxmox_schema::{ObjectSchemaType, OneOfSchema, Schema};
 
 /// allows to configure the default output format using environment vars
 pub const ENV_VAR_PROXMOX_OUTPUT_FORMAT: &str = "PROXMOX_OUTPUT_FORMAT";
@@ -352,6 +353,33 @@ struct TableColumn {
     right_align: bool,
 }
 
+fn all_schemas_match<F>(
+    schema: &dyn ObjectSchemaType,
+    property: &str,
+    func: F,
+) -> Result<bool, Error>
+where
+    F: Fn(bool, &'static Schema) -> bool,
+{
+    schema
+        .lookup_all(property)
+        .map(|property| func(property.optional(), property.schema()))
+        .reduce(|a, b| a && b)
+        .ok_or_else(|| format_err!("Property {property} does not exist in schema."))
+}
+
+fn all_schemas_numeric_or_bool(
+    schema: &dyn ObjectSchemaType,
+    property: &str,
+) -> Result<bool, Error> {
+    all_schemas_match(schema, property, |_optional, schema| {
+        matches!(
+            schema,
+            Schema::Integer(_) | Schema::Number(_) | Schema::Boolean(_)
+        )
+    })
+}
+
 fn format_table<W: Write>(
     output: W,
     list: &mut [Value],
@@ -359,7 +387,7 @@ fn format_table<W: Write>(
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
     let properties_to_print = if options.column_config.is_empty() {
-        extract_properties_to_print(schema.properties())
+        extract_properties_to_print(schema.all_properties())
     } else {
         options
             .column_config
@@ -382,11 +410,9 @@ fn format_table<W: Write>(
     let mut sortinfo = Vec::new();
 
     for (sortkey, sort_order) in sortkeys {
-        let (_optional, sort_prop_schema) = match schema.lookup(&sortkey) {
-            Some(tup) => tup,
-            None => bail!("property {} does not exist in schema.", sortkey),
-        };
-        let numeric_sort = matches!(sort_prop_schema, Schema::Integer(_) | Schema::Number(_));
+        let numeric_sort = all_schemas_match(schema, &sortkey, |_optional, schema| {
+            matches!(schema, Schema::Integer(_) | Schema::Number(_))
+        })?;
         sortinfo.push((sortkey, sort_order, numeric_sort));
     }
 
@@ -440,19 +466,11 @@ fn format_table<W: Write>(
     let mut column_names = Vec::new();
 
     for name in properties_to_print.iter() {
-        let (_optional, prop_schema) = match schema.lookup(name) {
-            Some(tup) => tup,
-            None => bail!("property {} does not exist in schema.", name),
-        };
-
-        let is_numeric = matches!(
-            prop_schema,
-            Schema::Integer(_) | Schema::Number(_) | Schema::Boolean(_)
-        );
+        let is_numeric_or_bool = all_schemas_numeric_or_bool(schema, name)?;
 
         let (header, right_align, renderer) = options.lookup_column_info(name);
 
-        let right_align = right_align.unwrap_or(is_numeric);
+        let right_align = right_align.unwrap_or(is_numeric_or_bool);
 
         let mut max_width = if options.noheader || options.noborder {
             0
@@ -467,6 +485,25 @@ fn format_table<W: Write>(
             let result = if let Some(renderer) = renderer {
                 (renderer)(&entry[name], entry)
             } else {
+                let prop_schema = match schema.lookup_schema(name, entry) {
+                    Some((_optional, schema)) => schema,
+                    None => {
+                        // If the schema does not exist at this point, but existed further up, then
+                        // it was part of a oneOf variant which is *not* active in this entry,
+                        // making this entry technically invalid.
+                        // Since it's not our job to *validate* the entry here, we'll just grab
+                        // whatever schema we can get instead:
+
+                        // expect: We do a `lookup_all` iteration above and bail out if the
+                        // property does not exist, so this cannot be `None`.
+                        schema
+                            .lookup_all(name)
+                            .next()
+                            .expect("property vanished from schema")
+                            .schema()
+                    }
+                };
+
                 data_to_text(&entry[name], prop_schema)
             };
 
@@ -610,7 +647,7 @@ fn format_object<W: Write>(
     options: &TableFormatOptions,
 ) -> Result<(), Error> {
     let properties_to_print = if options.column_config.is_empty() {
-        extract_properties_to_print(schema.properties())
+        extract_properties_to_print(schema.all_properties().with_types_from(data))
     } else {
         options
             .column_config
@@ -656,9 +693,9 @@ fn format_object_with_properties<W: Write>(
     let mut all_right_aligned = true;
 
     for name in properties_to_print.iter() {
-        let (optional, prop_schema) = match schema.lookup(name) {
+        let (optional, prop_schema) = match schema.lookup_schema(name, data) {
             Some(tup) => tup,
-            None => bail!("property {} does not exist in schema.", name),
+            None => bail!("Property {name} does not exist in schema."),
         };
 
         let is_numeric = matches!(
@@ -751,15 +788,28 @@ fn format_one_of<W: Write>(
     format_object_with_properties(output, data, schema, options, properties_to_print)
 }
 
-fn extract_properties_to_print<I>(properties: I) -> Vec<String>
+fn extract_properties_to_print<I>(property_iter: I) -> Vec<String>
 where
-    I: Iterator<Item = &'static SchemaPropertyEntry>,
+    I: IntoIterator<Item = proxmox_schema::AllPropertiesItem>,
 {
+    // Preserve schema order: the leftmost default column also determines the default sort key.
+    let mut indices = HashMap::new();
+    let mut properties: Vec<(&str, bool)> = Vec::new();
+
+    for property in property_iter {
+        let name = property.name();
+        let index = *indices.entry(name).or_insert_with(|| {
+            properties.push((name, true));
+            properties.len() - 1
+        });
+        properties[index].1 &= property.optional();
+    }
+
     let mut result = Vec::new();
     let mut opt_properties = Vec::new();
 
-    for (name, optional, _prop_schema) in properties {
-        if *optional {
+    for (name, optional) in properties {
+        if optional {
             opt_properties.push(name.to_string());
         } else {
             result.push(name.to_string());
@@ -782,7 +832,10 @@ fn extract_one_of_variant_properties(
         .lookup_variant(variant_name)
         .ok_or_else(|| format_err!("invalid variant '{variant_name}'"))?;
     Ok(extract_properties_to_print(
-        variant_schema.unwrap_object_schema().properties(),
+        variant_schema
+            .unwrap_any_object_schema()
+            .all_properties()
+            .with_types_from(value),
     ))
 }
 

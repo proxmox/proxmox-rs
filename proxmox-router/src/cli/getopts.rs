@@ -74,9 +74,21 @@ pub(crate) fn parse_argument_list<T: AsRef<str>>(
                 None => {
                     let mut want_bool = false;
                     let mut can_default = false;
-                    if let Some((_opt, Schema::Boolean(boolean_schema))) = schema.lookup(&name) {
-                        want_bool = true;
-                        can_default = matches!(boolean_schema.default, Some(false) | None);
+
+                    let mut properties = schema.lookup_all(&name).peekable();
+                    if properties.peek().is_some() {
+                        can_default = true;
+
+                        for property in properties {
+                            if let Schema::Boolean(schema) = property.schema() {
+                                want_bool = true;
+                                can_default = can_default && schema.default != Some(true);
+                            } else {
+                                want_bool = false;
+                                can_default = false;
+                                break;
+                            }
+                        }
                     }
 
                     let mut next_is_argument = false;
@@ -147,10 +159,12 @@ pub fn parse_arguments<T: AsRef<str>>(
 
     for i in 0..arg_param.len() {
         let name = arg_param[i];
-        if let Some((optional, param_schema)) = schema.lookup(name) {
+        // NOTE: we assume `arg_param` cannot point to clashing oneOf variants
+        if let Some(property) = schema.lookup_all(name).next() {
+            let optional = property.optional();
             if i == arg_param.len() - 1 {
                 last_arg_param_is_optional = optional;
-                if let Schema::Array(_) = param_schema {
+                if let Schema::Array(_) = property.schema() {
                     last_arg_param_is_array = true;
                 }
             } else if optional {

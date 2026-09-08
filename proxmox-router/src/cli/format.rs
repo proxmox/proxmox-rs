@@ -7,7 +7,8 @@ use serde::Serialize;
 use serde_json::Value;
 
 use proxmox_schema::format::{
-    DocumentationFormat, ParameterDisplayStyle, get_property_description, get_schema_type_text,
+    DocumentationFormat, ParameterDisplayStyle, get_property_description_with_conditions,
+    get_schema_type_text,
 };
 use proxmox_schema::*;
 
@@ -95,12 +96,13 @@ pub(crate) fn generate_usage_str_do<'cli>(
     let mut args = String::new();
 
     for positional_arg in arg_param {
-        match schema.lookup(positional_arg) {
-            Some((optional, param_schema)) => {
+        // Positional parameters cannot have clashing schemas across oneOf variants.
+        match schema.lookup_all(positional_arg).next() {
+            Some(property) => {
                 args.push(' ');
 
-                let is_array = matches!(param_schema, Schema::Array(_));
-                if optional {
+                let is_array = matches!(property.schema(), Schema::Array(_));
+                if property.optional() {
                     args.push('[');
                 }
                 if is_array {
@@ -112,7 +114,7 @@ pub(crate) fn generate_usage_str_do<'cli>(
                 if is_array {
                     args.push('}');
                 }
-                if optional {
+                if property.optional() {
                     args.push(']');
                 }
 
@@ -124,25 +126,33 @@ pub(crate) fn generate_usage_str_do<'cli>(
 
     let mut arg_descr = String::new();
     for positional_arg in arg_param {
-        let (_optional, param_schema) = schema.lookup(positional_arg).unwrap();
-        let param_descr = get_property_description(
-            positional_arg,
-            param_schema,
-            ParameterDisplayStyle::Fixed,
-            format,
-        );
-        if !arg_descr.is_empty() {
-            arg_descr.push_str("\n\n");
+        for property in schema.lookup_all(positional_arg) {
+            let param_descr = get_property_description_with_conditions(
+                positional_arg,
+                property.schema(),
+                ParameterDisplayStyle::Fixed,
+                format,
+                property.conditions(),
+            );
+            if !arg_descr.is_empty() {
+                arg_descr.push_str("\n\n");
+            }
+            arg_descr.push_str(&param_descr);
         }
-        arg_descr.push_str(&param_descr);
     }
 
     let mut options = String::new();
 
-    let mut properties: Vec<_> = schema.properties().collect();
-    properties.sort_by(|a, b| a.0.cmp(b.0));
+    let mut properties: Vec<_> = schema.all_properties().collect();
+    properties.sort_by(|a, b| a.name().cmp(b.name()));
 
-    for (prop, optional, param_schema) in properties {
+    // A property can exist in multiple oneOf variants: describe each, but list a required one only
+    // once in the synopsis.
+    let mut synopsis_done = HashSet::new();
+    for property in &properties {
+        let prop = property.name();
+        let param_schema = property.schema();
+
         if done_hash.contains(prop) {
             continue;
         }
@@ -152,28 +162,34 @@ pub(crate) fn generate_usage_str_do<'cli>(
 
         let type_text = get_schema_type_text(param_schema, ParameterDisplayStyle::Arg);
 
-        let prop_descr =
-            get_property_description(prop, param_schema, ParameterDisplayStyle::Arg, format);
+        let prop_descr = get_property_description_with_conditions(
+            prop,
+            param_schema,
+            ParameterDisplayStyle::Arg,
+            format,
+            property.conditions(),
+        );
 
-        if *optional {
+        if property.optional() {
             if !options.is_empty() {
                 options.push('\n');
             }
             options.push_str(&prop_descr);
         } else {
-            args.push_str(" --");
-            args.push_str(prop);
-            args.push(' ');
-            args.push_str(&type_text);
+            if synopsis_done.insert(prop) {
+                args.push_str(" --");
+                args.push_str(prop);
+                args.push(' ');
+                args.push_str(&type_text);
+            }
 
             if !arg_descr.is_empty() {
                 arg_descr.push_str("\n\n");
             }
             arg_descr.push_str(&prop_descr);
         }
-
-        done_hash.insert(prop);
     }
+    done_hash.extend(properties.iter().map(|property| property.name()));
 
     let option_indicator = if !options.is_empty() {
         " [OPTIONS]"
@@ -209,11 +225,15 @@ pub(crate) fn generate_usage_str_do<'cli>(
     let mut global_options = String::new();
 
     let mut properties: Vec<_> = global_options_iter
-        .flat_map(|o| o.schema.any_object().unwrap().properties())
+        .flat_map(|o| o.schema.any_object().unwrap().all_properties())
         .collect();
-    properties.sort_by(|a, b| a.0.cmp(b.0));
+    properties.sort_by(|a, b| a.name().cmp(b.name()));
 
-    for (name, _optional, param_schema) in properties {
+    let mut listed = HashSet::new();
+    for property in properties {
+        let name = property.name();
+        let param_schema = property.schema();
+
         if done_hash.contains(name) {
             continue;
         }
@@ -230,6 +250,10 @@ pub(crate) fn generate_usage_str_do<'cli>(
             // entire tree or just a single command's documentation to know whether to print all of
             // them?
 
+            // Only names are listed here, so list a property of multiple variants once.
+            if !listed.insert(name) {
+                continue;
+            }
             if !global_options.is_empty() {
                 global_options.push_str("\n\n");
             }
@@ -241,11 +265,12 @@ pub(crate) fn generate_usage_str_do<'cli>(
             if !global_options.is_empty() {
                 global_options.push('\n');
             }
-            global_options.push_str(&get_property_description(
+            global_options.push_str(&get_property_description_with_conditions(
                 name,
                 param_schema,
                 ParameterDisplayStyle::Arg,
                 format,
+                property.conditions(),
             ));
         }
     }
@@ -328,15 +353,7 @@ impl<'cli> UsageState<'cli> {
             // option with its full type signature and description here would dwarf the
             // per-command usage lines that follow; users get the full description via
             // `<binary> help <subcommand>` (which uses Full) or on a parameter error.
-            let mut names: Vec<_> = opts
-                .iter()
-                .flat_map(|opt| {
-                    opt.schema
-                        .any_object()
-                        .expect("non-object schema in global options")
-                        .properties()
-                })
-                .collect();
+            let mut names: Vec<_> = opts.iter().flat_map(|opt| opt.properties()).collect();
             names.sort_by(|a, b| a.0.cmp(b.0));
 
             // Qualify with the prefix so the line cannot be misread as belonging to the
@@ -349,7 +366,7 @@ impl<'cli> UsageState<'cli> {
             } else {
                 let _ = write!(out, "Global options for `{prefix}`:");
             }
-            for (name, _optional, schema) in &names {
+            for (name, schema) in &names {
                 let type_text = get_schema_type_text(schema, ParameterDisplayStyle::Arg);
                 let _ = write!(out, " --{name} {type_text}");
             }
@@ -369,15 +386,18 @@ impl<'cli> UsageState<'cli> {
                 .schema
                 .any_object()
                 .expect("non-object schema in global options")
-                .properties()
+                .all_properties()
                 .collect();
-            properties.sort_by(|a, b| a.0.cmp(b.0));
-            for (name, _optional, schema) in properties {
-                let _ = write!(
-                    out,
-                    "\n\n{}",
-                    get_property_description(name, schema, ParameterDisplayStyle::Arg, format)
+            properties.sort_by(|a, b| a.name().cmp(b.name()));
+            for property in properties {
+                let description = get_property_description_with_conditions(
+                    property.name(),
+                    property.schema(),
+                    ParameterDisplayStyle::Arg,
+                    format,
+                    property.conditions(),
                 );
+                let _ = write!(out, "\n\n{description}");
             }
         }
 

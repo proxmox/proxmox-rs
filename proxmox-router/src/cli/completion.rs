@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use proxmox_schema::*;
 
@@ -13,14 +13,18 @@ fn record_done_argument(
     key: &str,
     value: &str,
 ) {
-    if let Some((_, schema)) = parameters.lookup(key) {
-        match schema {
-            Schema::Array(_) => { /* do nothing ?? */ }
-            _ => {
-                done.insert(key.to_owned(), value.to_owned());
-            }
-        }
+    // NOTE: the "parsing" vs recording of "done" arguments needs to be separated better, so that
+    // we can use as much information as we possibly can extract from the existing arguments to
+    // find the correct schema.
+    // For now, skip if "any" oneOf variant has an Array schema.
+    // Ideally we'd be able to figure out which variant is in use.
+    if parameters
+        .lookup_all(key)
+        .any(|property| matches!(property.schema(), Schema::Array(_)))
+    {
+        return;
     }
+    done.insert(key.to_owned(), value.to_owned());
 }
 
 fn get_property_completion(
@@ -119,10 +123,12 @@ fn get_simple_completion_do(
 
     if !arg_param.is_empty() {
         let prop_name = arg_param[0];
-        if let Some((optional, schema)) = cli_cmd.info.parameters.lookup(prop_name) {
-            let is_array_param = matches!(schema, Schema::Array(_));
+        // NOTE: We currently do not support `arg_param` entries to be part of clashing oneOf
+        // variants, so just get the first schema:
+        if let Some(property) = cli_cmd.info.parameters.lookup_all(prop_name).next() {
+            let is_array_param = matches!(property.schema(), Schema::Array(_));
 
-            if (optional || is_array_param) && args[0].starts_with('-') {
+            if (property.optional() || is_array_param) && args[0].starts_with('-') {
                 // argument parameter is optional (or array) , and arg
                 // looks like an option, so assume its empty and
                 // complete the rest
@@ -152,7 +158,7 @@ fn get_simple_completion_do(
 
                 if args.len() == 1 {
                     return get_property_completion(
-                        schema,
+                        property.schema(),
                         prop_name,
                         completion_functions,
                         &args[0],
@@ -188,13 +194,8 @@ fn get_simple_completion_do(
         let last = &args[args.len() - 2];
         if last.starts_with("--") && last.len() > 2 {
             let prop_name = &last[2..];
-            if let Some(schema) = global_option_schemas.get(prop_name).copied().or_else(|| {
-                cli_cmd
-                    .info
-                    .parameters
-                    .lookup(prop_name)
-                    .map(|(_, schema)| schema)
-            }) {
+
+            if let Some(schema) = global_option_schemas.get(prop_name).copied() {
                 return get_property_completion(
                     schema,
                     prop_name,
@@ -203,7 +204,26 @@ fn get_simple_completion_do(
                     done,
                 );
             }
-            return Vec::new();
+
+            let mut out = Vec::new();
+            let mut seen = HashSet::new();
+            for property in cli_cmd.info.parameters.lookup_all(prop_name) {
+                if !matches_known_types(property.conditions(), done) {
+                    continue;
+                }
+                out.extend(
+                    get_property_completion(
+                        property.schema(),
+                        prop_name,
+                        completion_functions,
+                        prefix,
+                        done,
+                    )
+                    .into_iter()
+                    .filter(|value| seen.insert(value.clone())),
+                );
+            }
+            return out;
         }
     }
 
@@ -217,19 +237,33 @@ fn get_simple_completion_do(
             completions.push(option);
         }
     }
-    for (name, _optional, _schema) in cli_cmd.info.parameters.properties() {
-        if done.contains_key(*name) {
+    let mut seen: HashSet<_> = global_option_schemas.keys().copied().collect();
+    for property in cli_cmd.info.parameters.all_properties() {
+        let name = property.name();
+
+        if done.contains_key(name) {
             continue;
         }
-        if cli_cmd.arg_param.contains(name) {
+
+        if !matches_known_types(property.conditions(), done) || !seen.insert(name) {
             continue;
         }
-        let option = String::from("--") + name;
+
+        if cli_cmd.arg_param.contains(&name) {
+            continue;
+        }
+        let option = format!("--{name}");
         if option.starts_with(prefix) {
             completions.push(option);
         }
     }
     completions
+}
+
+fn matches_known_types(conditions: &[(&str, &str)], done: &HashMap<String, String>) -> bool {
+    conditions
+        .iter()
+        .all(|(key, value)| done.get(*key).is_none_or(|known| known == value))
 }
 
 impl CommandLineInterface {
@@ -356,20 +390,23 @@ struct CompletionParser {
 }
 
 impl CompletionParser {
+    /// This is for "fixed parameters" only, so we don't realistically expect more than a single
+    /// schema for the parameter `key`.
     fn record_done_argument(&mut self, parameters: ParameterSchema, key: &str, value: &str) {
-        if let Some(schema) = self
-            .global_option_schemas
-            .get(key)
-            .copied()
-            .or_else(|| parameters.lookup(key).map(|(_, schema)| schema))
+        if let Some(schema) = self.global_option_schemas.get(key)
+            && matches!(schema, Schema::Array(_))
         {
-            match schema {
-                Schema::Array(_) => { /* do nothing ?? */ }
-                _ => {
-                    self.done_arguments.insert(key.to_owned(), value.to_owned());
-                }
-            }
+            return;
         }
+
+        if parameters
+            .lookup_all(key)
+            .any(|property| matches!(property.schema(), Schema::Array(_)))
+        {
+            return;
+        }
+
+        self.done_arguments.insert(key.to_owned(), value.to_owned());
     }
 
     /// Enable the current global options to be recognized by the argument parser.

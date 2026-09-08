@@ -14,6 +14,7 @@
 
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::io::{self, Write};
 use std::sync::Arc;
 
@@ -21,7 +22,7 @@ use anyhow::{Error, bail, format_err};
 use serde::Deserialize;
 use serde_json::Value;
 
-use proxmox_schema::{ApiType, Schema};
+use proxmox_schema::{ApiType, ObjectSchemaType, Schema};
 
 use crate::{ApiFuture, ApiMethod};
 
@@ -396,17 +397,16 @@ impl GlobalOptions {
             let schema: proxmox_schema::ParameterSchema = match &T::API_SCHEMA {
                 Schema::Object(s) => s.into(),
                 Schema::AllOf(s) => s.into(),
+                Schema::OneOf(_) => panic!("oneOf support not implemented for global options"),
                 // FIXME: ParameterSchema should impl `TryFrom<&'static Schema>`
                 _ => panic!("non-object schema in command line interface"),
             };
 
             let mut params = Vec::new();
-            for (name, _optional, _schema) in T::API_SCHEMA
-                .any_object()
-                .expect("non-object schema in command line interface")
-                .properties()
-            {
-                let name = *name;
+            // Extract inactive variant properties too, so validation rejects them rather than
+            // silently dropping recognized global options.
+            for property in schema.all_properties() {
+                let name = property.name();
                 if let Some(value) = args.remove(name) {
                     params.push((name.to_string(), value));
                 }
@@ -428,12 +428,17 @@ impl GlobalOptions {
     }
 
     /// Get an `Iterator` over the properties of `T`.
+    ///
+    /// A property contained in multiple oneOf variants is yielded once, with the schema of its
+    /// first occurrence, as clashing oneOf keys are not supported for global options.
     fn properties(&self) -> impl Iterator<Item = (&'static str, &'static Schema)> {
+        let mut seen = HashSet::new();
         self.schema
             .any_object()
             .expect("non-object schema in command line interface")
-            .properties()
-            .map(|(name, _optional, schema)| (*name, *schema))
+            .all_properties()
+            .filter(move |property| seen.insert(property.name()))
+            .map(|property| (property.name(), property.schema()))
     }
 }
 
