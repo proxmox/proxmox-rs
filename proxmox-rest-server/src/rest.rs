@@ -685,8 +685,19 @@ async fn get_request_parameters(
         } else {
             serde_json::from_str(utf8_data)?
         };
-        for (k, v) in uri_param {
-            if let Some((_optional, prop_schema)) = param_schema.lookup(&k) {
+
+        for (k, v) in &uri_param {
+            let with_type_field = |key: &str, func: &mut dyn FnMut(Option<&str>)| {
+                // Since uri_param gets merged into the params hash we consider them first, so the
+                // type lookups happen as if the merge already happened.
+                if let Some(value) = uri_param.get(key) {
+                    func(Some(value));
+                } else {
+                    func(params[key].as_str());
+                }
+            };
+            if let Some((_optional, prop_schema)) = param_schema.lookup_schema(&k, &with_type_field)
+            {
                 params[&k] = prop_schema.parse_simple_value(&v)?;
             }
         }
