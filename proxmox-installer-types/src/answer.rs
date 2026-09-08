@@ -14,7 +14,7 @@ use std::{
     str::FromStr,
 };
 
-use proxmox_network_types::{fqdn::Fqdn, ip_address::Cidr};
+use proxmox_network_types::{MacAddress, fqdn::Fqdn, ip_address::Cidr};
 
 #[cfg(feature = "api-types")]
 use proxmox_schema::{
@@ -436,7 +436,7 @@ pub struct NetworkInterfacePinningOptionsAnswer {
     pub enabled: bool,
     /// Maps MAC address to custom name
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
-    pub mapping: HashMap<String, String>,
+    pub mapping: HashMap<MacAddress, String>,
 }
 
 #[cfg_attr(feature = "api-types", api(

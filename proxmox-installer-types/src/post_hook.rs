@@ -1,8 +1,8 @@
 //! Defines API types for the proxmox-auto-installer post-installation hook.
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
-use proxmox_network_types::ip_address::Cidr;
+use proxmox_network_types::{MacAddress, ip_address::Cidr};
 #[cfg(feature = "api-types")]
 use proxmox_schema::api;
 
@@ -89,8 +89,9 @@ pub struct DiskInfo {
 pub struct NetworkInterfaceInfo {
     /// Name of the interface
     pub name: String,
-    /// MAC address of the interface
-    pub mac: String,
+    /// MAC address of the interface, in lowercase notation as reported by the kernel
+    #[serde(serialize_with = "serialize_lowercase_mac_address")]
+    pub mac: MacAddress,
     /// (Designated) IP address of the interface
     #[serde(skip_serializing_if = "Option::is_none")]
     pub address: Option<Cidr>,
@@ -212,4 +213,35 @@ pub struct PostHookInfo {
 
 fn bool_is_false(value: &bool) -> bool {
     !value
+}
+
+// receivers may compare the addresses verbatim, as they were passed through from the kernel before
+fn serialize_lowercase_mac_address<S: Serializer>(
+    mac: &MacAddress,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    serializer.serialize_str(&mac.to_string().to_lowercase())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::NetworkInterfaceInfo;
+
+    #[test]
+    fn network_interface_mac_address_is_serialized_in_lowercase() {
+        let info = NetworkInterfaceInfo {
+            name: "nic0".to_owned(),
+            mac: "AB:CD:EF:12:34:56".parse().unwrap(),
+            address: None,
+            is_management: false,
+            is_pinned: false,
+            udev_properties: Default::default(),
+        };
+
+        let serialized = toml::to_string(&info).unwrap();
+        assert!(
+            serialized.contains(r#"mac = "ab:cd:ef:12:34:56""#),
+            "{serialized}"
+        );
+    }
 }
