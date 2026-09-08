@@ -9,12 +9,17 @@
 use anyhow::{Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, HashMap, HashSet},
     fmt::{self, Display},
     str::FromStr,
 };
 
-use proxmox_network_types::{MacAddress, fqdn::Fqdn, ip_address::Cidr};
+use proxmox_network_types::{
+    MacAddress,
+    bond::{BondXmitHashPolicy, LinuxBondMode},
+    fqdn::Fqdn,
+    ip_address::Cidr,
+};
 
 #[cfg(feature = "api-types")]
 use proxmox_schema::{
@@ -441,6 +446,111 @@ pub struct NetworkInterfacePinningOptionsAnswer {
 
 #[cfg_attr(feature = "api-types", api(
     properties: {
+        members: {
+            description: "List of interface MAC addresses to add as bond members.",
+            type: Array,
+            items: {
+                type: MacAddress,
+            },
+        },
+    },
+))]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+/// Options for creating a bond for the management interface with the given
+/// physical interfaces and mode.
+pub struct NetworkBondOptions {
+    /// List of interface MAC addresses to add as bond members.
+    pub members: Vec<MacAddress>,
+    /// Mode for the bond to set.
+    pub mode: LinuxBondMode,
+    /// Bond hash policy. Only used with '802.3ad' and 'balance-xor' mode.
+    #[serde(default = "NetworkBondOptions::default_hash_policy")]
+    pub hash_policy: BondXmitHashPolicy,
+    /// Primary bond interface. Only used with 'active-backup' mode.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub primary_interface: Option<MacAddress>,
+}
+
+impl NetworkBondOptions {
+    /// List of all available bond modes, ordered by their mode number in the Linux kernel.
+    pub const MODES: &[LinuxBondMode] = {
+        use LinuxBondMode::*;
+        &[
+            BalanceRr,
+            ActiveBackup,
+            BalanceXor,
+            Broadcast,
+            Ieee802_3ad,
+            BalanceTlb,
+            BalanceAlb,
+        ]
+    };
+
+    /// List of all available hash policies.
+    pub const HASH_POLICIES: &[BondXmitHashPolicy] = {
+        use BondXmitHashPolicy::*;
+        &[Layer2, Layer2_3, Layer3_4]
+    };
+
+    /// Returns the default hash policy for new bonds.
+    const fn default_hash_policy() -> BondXmitHashPolicy {
+        BondXmitHashPolicy::Layer2
+    }
+
+    /// Does some basic checks on the options.
+    ///
+    /// This includes checks for:
+    /// - There are at least two members
+    /// - No member is given more than once
+    /// - Whether the primary interface is applicable to the mode
+    /// - Whether the primary interface (if given) is a member
+    pub fn verify(&self) -> Result<()> {
+        if self.members.len() < 2 {
+            bail!(
+                "bond setup requires at least 2 interfaces, got {}",
+                self.members.len()
+            );
+        }
+
+        let mut seen = HashSet::new();
+        if let Some(duplicate) = self.members.iter().find(|mac| !seen.insert(*mac)) {
+            bail!("bond member {duplicate} is given more than once");
+        }
+
+        if let Some(primary_if) = &self.primary_interface {
+            if self.mode != LinuxBondMode::ActiveBackup {
+                bail!("primary bond interface can only be set in active-backup mode");
+            }
+
+            if !self.members.contains(primary_if) {
+                bail!(
+                    "primary bond interface {primary_if} must be a member of the bond (members: {})",
+                    self.members
+                        .iter()
+                        .fold(String::new(), |acc, mac| format!("{acc}, {mac}"))
+                        .trim_start_matches(", ")
+                );
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl Default for NetworkBondOptions {
+    fn default() -> Self {
+        Self {
+            members: Vec::new(),
+            mode: LinuxBondMode::ActiveBackup,
+            hash_policy: Self::default_hash_policy(),
+            primary_interface: None,
+        }
+    }
+}
+
+#[cfg_attr(feature = "api-types", api(
+    properties: {
         filter: {
             type: Object,
             properties: {},
@@ -465,6 +575,9 @@ pub struct NetworkConfigFromAnswer {
     /// Off by default. Allowed for both `from-dhcp` and `from-answer` modes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interface_name_pinning: Option<NetworkInterfacePinningOptionsAnswer>,
+    /// If set, sets up a Linux bond for the management interface.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bond: Option<NetworkBondOptions>,
 }
 
 #[cfg_attr(feature = "api-types", api)]
@@ -476,6 +589,9 @@ pub struct NetworkConfigFromDhcp {
     /// Off by default. Allowed for both `from-dhcp` and `from-answer` modes.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interface_name_pinning: Option<NetworkInterfacePinningOptionsAnswer>,
+    /// If set, sets up a Linux bond for the management interface.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bond: Option<NetworkBondOptions>,
 }
 
 #[cfg_attr(feature = "api-types", api(
@@ -502,6 +618,14 @@ impl NetworkConfig {
         match self {
             Self::FromDhcp(dhcp) => dhcp.interface_name_pinning.as_ref(),
             Self::FromAnswer(answer) => answer.interface_name_pinning.as_ref(),
+        }
+    }
+
+    /// Returns the management network Linux bond options, if any.
+    pub const fn bond(&self) -> Option<&NetworkBondOptions> {
+        match self {
+            Self::FromDhcp(dhcp) => dhcp.bond.as_ref(),
+            Self::FromAnswer(answer) => answer.bond.as_ref(),
         }
     }
 }
@@ -1474,5 +1598,98 @@ mod tests {
             btrfs: None,
         };
         assert!(setup.filesystem_details().is_ok());
+    }
+
+    #[test]
+    fn network_bond_requires_at_least_two_members() {
+        let mut bond = NetworkBondOptions::default();
+        let res = bond.verify();
+        assert!(res.is_err());
+        assert_eq!(
+            res.unwrap_err().to_string(),
+            "bond setup requires at least 2 interfaces, got 0"
+        );
+
+        bond.members = vec!["12:34:56:ab:cd:df".parse().unwrap()];
+
+        let res = bond.verify();
+        assert!(res.is_err());
+        assert_eq!(
+            res.unwrap_err().to_string(),
+            "bond setup requires at least 2 interfaces, got 1"
+        );
+
+        bond.members = vec![
+            "12:34:56:ab:cd:df".parse().unwrap(),
+            "ab:cd:df:12:34:56".parse().unwrap(),
+        ];
+        assert!(bond.verify().is_ok());
+    }
+
+    #[test]
+    fn network_bond_rejects_duplicate_members() {
+        let bond = NetworkBondOptions {
+            members: vec![
+                "12:34:56:ab:cd:df".parse().unwrap(),
+                "12:34:56:AB:CD:DF".parse().unwrap(),
+            ],
+            ..Default::default()
+        };
+
+        let res = bond.verify();
+        assert!(res.is_err());
+        assert_eq!(
+            res.unwrap_err().to_string(),
+            "bond member 12:34:56:AB:CD:DF is given more than once"
+        );
+    }
+
+    #[test]
+    fn network_bond_primary_if_only_with_active_backup() {
+        let mut bond = NetworkBondOptions {
+            members: vec![
+                "12:34:56:ab:cd:df".parse().unwrap(),
+                "ab:cd:df:12:34:56".parse().unwrap(),
+            ],
+            primary_interface: Some("12:34:56:ab:cd:df".parse().unwrap()),
+            ..Default::default()
+        };
+
+        for m in NetworkBondOptions::MODES {
+            bond.mode = *m;
+            match m {
+                LinuxBondMode::ActiveBackup => assert!(bond.verify().is_ok()),
+                _ => {
+                    let res = bond.verify();
+                    assert!(res.is_err());
+                    assert_eq!(
+                        res.unwrap_err().to_string(),
+                        "primary bond interface can only be set in active-backup mode"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn network_bond_primary_if_must_be_member() {
+        let mut bond = NetworkBondOptions {
+            members: vec![
+                "12:34:56:ab:cd:df".parse().unwrap(),
+                "ab:cd:df:12:34:56".parse().unwrap(),
+            ],
+            primary_interface: Some("12:34:56:ab:cd:df".parse().unwrap()),
+            ..Default::default()
+        };
+        assert!(bond.verify().is_ok());
+
+        bond.primary_interface = Some("ab:12:cd:34:ef:56".parse().unwrap());
+
+        let res = bond.verify();
+        assert!(res.is_err());
+        assert_eq!(
+            res.unwrap_err().to_string(),
+            "primary bond interface AB:12:CD:34:EF:56 must be a member of the bond (members: 12:34:56:AB:CD:DF, AB:CD:DF:12:34:56)"
+        );
     }
 }
