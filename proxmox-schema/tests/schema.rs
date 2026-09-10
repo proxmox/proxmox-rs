@@ -574,16 +574,15 @@ mod one_of_test_schema {
     pub const PROP_A: Schema = StringSchema::new("Property for A.").schema();
     pub const PROP_CLASHING_A: Schema =
         BooleanSchema::new("A common clashing schema (A).").schema();
-    pub const INSTANCE_A: Schema = json_schema! {
-        description: "An instance of A",
-        properties: {
-            "prop-a": { schema: PROP_A },
-            "clashing": {
-                optional: true,
-                schema: PROP_CLASHING_A,
-            },
-        },
-    };
+    pub const INSTANCE_A: Schema = ObjectSchema::new(
+        "An instance of A",
+        &[
+            ("clashing", true, &PROP_CLASHING_A),
+            ("prop-a", false, &PROP_A),
+        ],
+    )
+    .property_aliases(&[("old-a", "prop-a")])
+    .schema();
 
     pub const PROP_B: Schema = StringSchema::new("Property for B").schema();
     pub const PROP_CLASHING_B: Schema =
@@ -961,5 +960,105 @@ fn test_all_properties_iterator() {
             ("inner-type", false, &INNER_TYPE_PROPERTY, &[("type", "B")]),
         ],
         "type-specific iteration should yield the correct types (B)",
+    );
+}
+
+#[cfg(feature = "test-harness")]
+#[test]
+fn test_lookup_all_iterator() {
+    use one_of_test_schema::*;
+
+    type ExpectedTuple<'a> = (&'a str, bool, &'static Schema, &'a [(&'a str, &'a str)]);
+
+    #[track_caller]
+    fn compare_iter<I>(iter: I, expected: &[ExpectedTuple], msg: &'static str)
+    where
+        I: Iterator<Item = proxmox_schema::LookupAllItem>,
+    {
+        let properties = iter.collect::<Vec<_>>();
+        assert_eq!(
+            properties.len(),
+            expected.len(),
+            "{msg} - number of elements"
+        );
+        for (a, b) in properties.into_iter().zip(expected) {
+            assert_eq!(
+                (a.name(), a.optional(), a.schema(), a.conditions()),
+                (b.0, b.1, b.2, b.3),
+                "{msg} - matching entries",
+            );
+        }
+    }
+
+    let schema = SCHEMA.any_object().expect("schema should be an object");
+
+    compare_iter(
+        schema.lookup_all("name"),
+        &[("name", false, &PROP_NAME, &[])],
+        "lookup_all failed to find 'name' property",
+    );
+
+    compare_iter(
+        schema.lookup_all("value"),
+        &[("value", true, &PROP_VALUE, &[])],
+        "lookup_all failed to find 'value' property",
+    );
+    compare_iter(
+        schema.lookup_all("prop-a"),
+        &[("prop-a", false, &PROP_A, &[("type", "A")])],
+        "lookup_all failed to find 'prop-a' property",
+    );
+    compare_iter(
+        schema.lookup_all("old-a"),
+        &[("prop-a", false, &PROP_A, &[("type", "A")])],
+        "lookup_all on alias should yield an item with the canonicalized name",
+    );
+    compare_iter(
+        schema.lookup_all("prop-b"),
+        &[("prop-b", false, &PROP_B, &[("type", "B")])],
+        "lookup_all failed to find 'prop-b' property",
+    );
+    compare_iter(
+        schema.lookup_all("clashing"),
+        &[
+            ("clashing", true, &PROP_CLASHING_A, &[("type", "A")]),
+            ("clashing", false, &PROP_CLASHING_B, &[("type", "B")]),
+        ],
+        "lookup_all failed to correctly list all 'clashing' properties",
+    );
+    compare_iter(
+        schema.lookup_all("prop-b1"),
+        &[(
+            "prop-b1",
+            false,
+            &PROP_B1,
+            &[("type", "B"), ("inner-type", "B1")],
+        )],
+        "lookup_all failed to find 'prop-b1' property",
+    );
+    compare_iter(
+        schema.lookup_all("prop-b2"),
+        &[(
+            "prop-b2",
+            false,
+            &PROP_B2,
+            &[("type", "B"), ("inner-type", "B2")],
+        )],
+        "lookup_all failed to find 'prop-b2' property",
+    );
+    compare_iter(
+        schema.lookup_all("non-existent"),
+        &[],
+        "lookup_all on non-existent property should be empty",
+    );
+    compare_iter(
+        schema.lookup_all("type"),
+        &[("type", false, &TYPE_PROPERTY, &[])],
+        "lookup_all on type property",
+    );
+    compare_iter(
+        schema.lookup_all("inner-type"),
+        &[("inner-type", false, &INNER_TYPE_PROPERTY, &[("type", "B")])],
+        "lookup_all on nested type property",
     );
 }

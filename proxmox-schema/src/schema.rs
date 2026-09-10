@@ -922,13 +922,19 @@ impl ObjectSchema {
     }
 
     pub fn lookup(&self, key: &str) -> Option<(bool, &'static Schema)> {
+        self.lookup_with_canonical_name(key)
+            .map(|(_name, optional, schema)| (*optional, *schema))
+    }
+
+    /// Lookup the schema of a property which may be an alias, including the canonical name in the
+    /// returned tuple.
+    pub fn lookup_with_canonical_name(&self, key: &str) -> Option<&'static SchemaPropertyEntry> {
         let key = self.lookup_alias(key).unwrap_or(key);
         if let Ok(ind) = self
             .properties
             .binary_search_by_key(&key, |(name, _, _)| name)
         {
-            let (_name, optional, prop_schema) = self.properties[ind];
-            Some((optional, prop_schema))
+            Some(&self.properties[ind])
         } else {
             None
         }
@@ -1526,6 +1532,23 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
         get_type: &dyn WithTypeField,
     ) -> Option<(bool, &'static Schema)>;
 
+    /// Lookup all schemas for a key.
+    ///
+    /// When a schema involves a `oneOf` schema, the same property name can be used in multiple
+    /// variants with different schemas. When the types are known, like when looking up a schema
+    /// for an already existing object,
+    /// [`lookup_schema`](ObjectSchemaType::lookup_schema) can be used and supplied with the data
+    /// to lookup the variants.
+    ///
+    /// When no data is available, looking up a single schema is often the wrong thing to do.
+    ///
+    /// This method allows iterating through all keys of the same name. The items yielded by the
+    /// iterator provide a set of conditions as key-value pairs which are required for a property
+    /// to be "active". Without `oneOf` schemas, this list will simply be empty. Otherwise, the
+    /// type property values will be filled in. There may be multiple such conditions if multiple
+    /// `oneOf` schemas are nested.
+    fn lookup_all<'k>(&self, key: &'k str) -> LookupAll<'k>;
+
     /// Rewrite deprecated alias keys in `value` to their canonical names.
     ///
     /// For object values, every key registered via [`ObjectSchema::property_aliases`] is renamed
@@ -1621,7 +1644,7 @@ pub trait ObjectSchemaType: private::Sealed + Send + Sync {
     }
 }
 
-/// This manages the conditions for [`AllProperties`].
+/// This manages the conditions for [`AllProperties`] and [`LookupAll`].
 ///
 /// Entering a `oneOf` schema must call the `enter_condition` method.
 /// This will "stage" the condition name in `new_condition`. Entering a variant must call the
@@ -1890,6 +1913,154 @@ impl Iterator for AllProperties<'_> {
     }
 }
 
+/// An iterator over all properties of a specific name in an object-like schema.
+///
+/// The yielded items include the canonical name, in case an alias was looked up.
+/// This means that it is possible to see multiple different names if oneOf variants contain
+/// objects with aliases.
+///
+/// Like in an [`AllProperties`] iterator, each item has a set of conditions attached to it.
+pub struct LookupAll<'a> {
+    name: &'a str,
+    iter: Vec<LookupIter>,
+    conditions: PropertyConditions<'static>,
+}
+
+impl<'a> LookupAll<'a> {
+    fn new(name: &'a str) -> Self {
+        Self {
+            name,
+            iter: Vec::new(),
+            conditions: Default::default(),
+        }
+    }
+
+    fn push_iter(&mut self, schema: &'static Schema) {
+        match schema {
+            Schema::Object(schema) => self.push_object(schema),
+            Schema::AllOf(schema) => self.push_all_of(schema),
+            Schema::OneOf(schema) => self.push_one_of(schema),
+            _ => panic!("non-object-schema in object lookup-all iteration"),
+        }
+    }
+
+    fn push_object(&mut self, schema: &ObjectSchema) {
+        if let Some(entry) = schema.lookup_with_canonical_name(self.name) {
+            self.iter.push(LookupIter::Object(entry));
+        }
+    }
+
+    fn push_all_of(&mut self, schema: &AllOfSchema) {
+        self.iter.push(LookupIter::AllOf(schema.list.iter()));
+    }
+
+    fn push_one_of(&mut self, schema: &OneOfSchema) {
+        self.iter
+            .push(LookupIter::OneOf(PropertiesIterOneOf::TypeProperty(
+                schema.type_property_entry,
+                schema.list,
+            )));
+    }
+
+    fn pop_iter(&mut self) {
+        if matches!(self.iter.pop(), Some(LookupIter::OneOf(_))) {
+            self.conditions.pop();
+        }
+    }
+
+    fn make_item(&self, entry: SchemaPropertyEntry) -> LookupAllItem {
+        LookupAllItem {
+            inner: AllPropertiesItem {
+                entry,
+                conditions: self.conditions.get(),
+            },
+        }
+    }
+}
+
+/// An entry from a [`LookupAll`] iterator.
+///
+/// Note that each item may have associated conditions with it, in case it was reached through
+/// [`OneOfSchema`] entries.
+#[derive(Clone, Debug)]
+pub struct LookupAllItem {
+    // reuse AllPropertiesItem - it is currently identical.
+    inner: AllPropertiesItem,
+}
+
+impl LookupAllItem {
+    /// The item's canonical name in the object schema.
+    pub const fn name(&self) -> &'static str {
+        self.inner.name()
+    }
+
+    /// Whether the item is optional in the schema.
+    pub const fn optional(&self) -> bool {
+        self.inner.optional()
+    }
+
+    /// The item's schema.
+    pub const fn schema(&self) -> &'static Schema {
+        self.inner.schema()
+    }
+
+    /// The conditions under which this item exists.
+    ///
+    /// This is a set of key-value pairs. The keys are type properties of [`OneOfSchema`]s, and the
+    /// values are its variant names.
+    pub fn conditions(&self) -> &[(&'static str, &'static str)] {
+        self.inner.conditions()
+    }
+}
+
+enum LookupIter {
+    Object(&'static SchemaPropertyEntry),
+    AllOf(std::slice::Iter<'static, &'static Schema>),
+    OneOf(PropertiesIterOneOf),
+}
+
+impl Iterator for LookupAll<'_> {
+    type Item = LookupAllItem;
+
+    fn next(&mut self) -> Option<LookupAllItem> {
+        loop {
+            match self.iter.last_mut()? {
+                LookupIter::Object(entry) => {
+                    let entry = **entry;
+                    self.pop_iter();
+                    return Some(self.make_item(entry));
+                }
+                LookupIter::AllOf(iter) => match iter.next() {
+                    Some(schema) => self.push_iter(schema),
+                    None => self.pop_iter(),
+                },
+                LookupIter::OneOf(iter) => match iter {
+                    PropertiesIterOneOf::TypeProperty(item, list) => {
+                        let item = **item;
+                        *iter = PropertiesIterOneOf::Variants(
+                            self.conditions.enter_condition(item.0, list),
+                        );
+                        if self.name == item.0 {
+                            // If we requested the type property, we're done with this oneOf
+                            // schema, as it is illegal for it to contain the type property again
+                            // within itself.
+                            self.pop_iter();
+                            return Some(self.make_item(item));
+                        }
+                    }
+                    PropertiesIterOneOf::Variants(iter) => match iter.next() {
+                        None => self.pop_iter(),
+                        Some((variant, schema)) => {
+                            self.conditions.update_condition(variant);
+                            self.push_iter(schema);
+                        }
+                    },
+                },
+            }
+        }
+    }
+}
+
 #[doc(hidden)]
 pub enum ObjectPropertyIterator {
     Simple(SimpleObjectPropertyIterator),
@@ -1918,6 +2089,12 @@ impl ObjectSchemaType for ObjectSchema {
 
     fn lookup_schema(&self, key: &str, _: &dyn WithTypeField) -> Option<(bool, &'static Schema)> {
         ObjectSchema::lookup(self, key)
+    }
+
+    fn lookup_all<'k>(&self, key: &'k str) -> LookupAll<'k> {
+        let mut lookup = LookupAll::new(key);
+        lookup.push_object(self);
+        lookup
     }
 
     fn properties(&self) -> ObjectPropertyIterator {
@@ -1987,6 +2164,12 @@ impl ObjectSchemaType for AllOfSchema {
         get_type: &dyn WithTypeField,
     ) -> Option<(bool, &'static Schema)> {
         AllOfSchema::lookup_schema(self, key, get_type)
+    }
+
+    fn lookup_all<'k>(&self, key: &'k str) -> LookupAll<'k> {
+        let mut lookup = LookupAll::new(key);
+        lookup.push_all_of(self);
+        lookup
     }
 
     fn properties(&self) -> ObjectPropertyIterator {
@@ -2101,6 +2284,12 @@ impl ObjectSchemaType for OneOfSchema {
         get_type: &dyn WithTypeField,
     ) -> Option<(bool, &'static Schema)> {
         OneOfSchema::lookup_schema(self, key, get_type)
+    }
+
+    fn lookup_all<'k>(&self, key: &'k str) -> LookupAll<'k> {
+        let mut lookup = LookupAll::new(key);
+        lookup.push_one_of(self);
+        lookup
     }
 
     fn properties(&self) -> ObjectPropertyIterator {
@@ -2806,6 +2995,14 @@ impl ObjectSchemaType for ParameterSchema {
             ParameterSchema::Object(o) => o.lookup_schema(key, get_type),
             ParameterSchema::AllOf(o) => o.lookup_schema(key, get_type),
             ParameterSchema::OneOf(o) => o.lookup_schema(key, get_type),
+        }
+    }
+
+    fn lookup_all<'k>(&self, key: &'k str) -> LookupAll<'k> {
+        match self {
+            ParameterSchema::Object(o) => o.lookup_all(key),
+            ParameterSchema::AllOf(o) => o.lookup_all(key),
+            ParameterSchema::OneOf(o) => o.lookup_all(key),
         }
     }
 
