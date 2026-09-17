@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
-use std::path::PathBuf;
+use std::fs::read_to_string;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
@@ -72,4 +73,28 @@ impl TestImage {
     pub fn extract(&self) -> Result<Option<Config>, ProxmoxOciError> {
         parse_and_extract_image(&self.path, &self.extract_dir, Some(&Arch::Amd64))
     }
+}
+
+/// Extract an image whose layers try to modify a directory outside of the extraction target, and
+/// check that this fails with an illegal path error and leaves that directory untouched.
+///
+/// `layers` gets the path of that directory, which contains a `foreign.txt` file.
+pub fn assert_breakout_rejected(
+    layers: impl FnOnce(&Path) -> Vec<Vec<LayerEntry>>,
+) -> Result<TestImage> {
+    let mut cleanup = Cleanup::default();
+    let foreign_dir = cleanup.tmp_dir("foreign dir")?;
+    std::fs::write(foreign_dir.join("foreign.txt"), "Hello\n")?;
+
+    let image = TestImage::new(layers(&foreign_dir))?;
+    let err = image
+        .extract()
+        .expect_err("extracting an image with illegal paths should fail");
+    assert!(
+        err.to_string().contains("illegal path"),
+        "unexpected error: {err}"
+    );
+    assert_eq!(read_to_string(foreign_dir.join("foreign.txt"))?, "Hello\n");
+
+    Ok(image)
 }

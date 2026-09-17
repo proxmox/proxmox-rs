@@ -236,6 +236,25 @@ fn extract_image_rootfs<R: Read + Seek, P: AsRef<Path>>(
     Ok(())
 }
 
+/// Validate a path previously received from a `tar::Entry`.
+///
+/// Tar files may contain arbitrary paths, so reject absolute paths and paths containing parent
+/// directory references, as joining them onto the target directory would lead outside of it.
+pub(crate) fn validate_path(path: &Path) -> io::Result<()> {
+    use std::path::Component;
+
+    if !path
+        .components()
+        .all(|c| matches!(c, Component::Normal(_) | Component::CurDir))
+    {
+        return Err(io::Error::other(format!(
+            "illegal path {path:?} in layer - absolute paths and '..' components are not allowed"
+        )));
+    }
+
+    Ok(())
+}
+
 /// Apply whiteouts on previous layers
 fn apply_whiteouts<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> io::Result<()> {
     let mut archive = Archive::new(reader);
@@ -247,6 +266,8 @@ fn apply_whiteouts<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
         }
 
         let filepath = file.path()?;
+        validate_path(&filepath)?;
+
         if let Some(filename) = filepath.file_name() {
             if filename == OPAQUE_WHITEOUT_NAME {
                 if let Some(parent) = filepath.parent() {
@@ -291,12 +312,16 @@ fn extract_archive<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
     let mut directories = Vec::new();
     for entry in archive.entries()? {
         let mut file = entry?;
+
+        let filepath = file.path()?;
+        validate_path(&filepath)?;
+
         if file.header().entry_type() == EntryType::Directory {
             directories.push(file);
             continue;
         } else if file.header().entry_type() == EntryType::Regular {
             // Skip whiteout files
-            if let Some(filename) = file.path()?.file_name() {
+            if let Some(filename) = filepath.file_name() {
                 if filename == OPAQUE_WHITEOUT_NAME {
                     continue;
                 } else if let Some(filename) = filename.to_str() {
@@ -308,7 +333,7 @@ fn extract_archive<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
         }
 
         // If a file or directory already exists at this path, remove it first.
-        let file_path_abs = target_path.as_ref().join(file.path()?);
+        let file_path_abs = target_path.as_ref().join(filepath);
         if file_path_abs.exists() {
             if file_path_abs.is_dir() {
                 remove_dir_all(file_path_abs)?;

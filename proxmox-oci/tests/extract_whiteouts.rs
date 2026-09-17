@@ -1,7 +1,10 @@
+use std::fs::read_to_string;
+use std::path::Path;
+
 use anyhow::Result;
 
 mod helper;
-use helper::{LayerEntry, TestImage};
+use helper::{LayerEntry, TestImage, assert_breakout_rejected};
 
 #[test]
 fn test_whiteout_root_breakout() -> Result<()> {
@@ -67,6 +70,26 @@ fn test_whiteout_dead_symlink_parent() -> Result<()> {
     image.extract()?;
 
     assert!(image.extract_dir.join("etc/passwd").exists());
+
+    Ok(())
+}
+
+#[test]
+fn test_whiteout_opaque_foreign_dir() -> Result<()> {
+    let image = assert_breakout_rejected(|foreign_dir| {
+        let foreign_dir = Path::new("etc/../..").join(foreign_dir.file_name().unwrap());
+        vec![
+            vec![LayerEntry::file("etc/file", b"data\n")],
+            vec![LayerEntry::file(foreign_dir.join(".wh..wh..opq"), b"")],
+            vec![LayerEntry::file("etc/after", b"after\n")],
+        ]
+    })?;
+
+    assert_eq!(
+        read_to_string(image.extract_dir.join("etc/file"))?,
+        "data\n"
+    );
+    assert!(!image.extract_dir.join("etc/after").exists());
 
     Ok(())
 }

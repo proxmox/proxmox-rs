@@ -1,9 +1,10 @@
 use std::fs::read_to_string;
+use std::path::Path;
 
 use anyhow::Result;
 
 mod helper;
-use helper::{LayerEntry, TestImage};
+use helper::{LayerEntry, TestImage, assert_breakout_rejected};
 
 #[test]
 fn test_replace_file() -> Result<()> {
@@ -42,6 +43,30 @@ fn test_replace_dir_with_file() -> Result<()> {
     image.extract()?;
 
     assert!(image.extract_dir.join("etc/a").is_file());
+
+    Ok(())
+}
+
+#[test]
+fn test_replace_foreign_file() -> Result<()> {
+    let image = assert_breakout_rejected(|foreign_dir| {
+        let foreign_dir = Path::new("etc/../..").join(foreign_dir.file_name().unwrap());
+        vec![
+            vec![LayerEntry::file("etc/file", b"data\n")],
+            // A symlink, as whiteout handling would already reject a regular file.
+            vec![LayerEntry::symlink(
+                foreign_dir.join("foreign.txt"),
+                "replaced",
+            )],
+            vec![LayerEntry::file("etc/after", b"after\n")],
+        ]
+    })?;
+
+    assert_eq!(
+        read_to_string(image.extract_dir.join("etc/file"))?,
+        "data\n"
+    );
+    assert!(!image.extract_dir.join("etc/after").exists());
 
     Ok(())
 }

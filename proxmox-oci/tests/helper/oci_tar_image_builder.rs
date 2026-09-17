@@ -90,7 +90,16 @@ impl OciTarImageBuilder {
                 };
                 header.set_size(content.len() as u64);
                 header.set_cksum();
-                layer_tar.append_data(&mut header, entry.path, &*content)?;
+                let old = header.as_old_mut();
+                let path = entry.path.as_os_str().as_encoded_bytes();
+                if path.len() < old.name.len() {
+                    // Skip path validity checks:
+                    old.name[..path.len()].copy_from_slice(path);
+                    header.set_cksum();
+                    layer_tar.append(&header, &*content)?;
+                } else {
+                    layer_tar.append_data(&mut header, entry.path, &*content)?;
+                }
             }
 
             let layer_bytes = layer_tar.into_inner()?;
