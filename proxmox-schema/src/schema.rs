@@ -1124,6 +1124,9 @@ impl OneOfSchema {
     /// created outside of a `const` context is wrapped in a `const {}` block.
     /// (The `#[sortable]` attribute can be used to automate the sorting).
     ///
+    /// The type property reuses the same tuple type as object properties, however, it must not be
+    /// marked as optional.
+    ///
     /// This is okay:
     ///
     /// ```
@@ -1206,6 +1209,32 @@ impl OneOfSchema {
     ///     ],
     /// ).schema();
     /// ```
+    ///
+    /// ```compile_fail,E0080
+    /// # use proxmox_schema::{OneOfSchema, ObjectSchema, Schema, StringSchema};
+    /// # const SCHEMA_V1: Schema = ObjectSchema::new(
+    /// #     "Some Object",
+    /// #     &[
+    /// #         ("key1", false, &StringSchema::new("A String").schema()),
+    /// #         ("key2", false, &StringSchema::new("Another String").schema()),
+    /// #     ],
+    /// # ).schema();
+    /// # const SCHEMA_V2: Schema = ObjectSchema::new(
+    /// #     "Another Object",
+    /// #     &[
+    /// #         ("key3", false, &StringSchema::new("A String").schema()),
+    /// #         ("key4", false, &StringSchema::new("Another String").schema()),
+    /// #     ],
+    /// # ).schema();
+    /// const SCHEMA: Schema = OneOfSchema::new(
+    ///     "Some enum",
+    ///     &("type", true, &StringSchema::new("v1 or v2").schema()),
+    ///     &[
+    ///         ("v1", &SCHEMA_V1),
+    ///         ("v2", &SCHEMA_V2),
+    ///     ],
+    /// ).schema();
+    /// ```
     pub const fn new(
         description: &'static str,
         type_property_entry: &'static SchemaPropertyEntry,
@@ -1214,6 +1243,7 @@ impl OneOfSchema {
         assert_one_of_list_is_sorted(list);
         assert_only_objects_in_one_of(list);
         assert_no_variant_contains(list, type_property_entry.0);
+        assert!(!type_property_entry.1, "type property must not be optional");
         Self {
             description,
             type_property_entry,
