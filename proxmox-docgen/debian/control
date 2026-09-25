@@ -4,7 +4,7 @@ Priority: optional
 Build-Depends: debhelper-compat (= 13),
  dh-sequence-cargo
 Build-Depends-Arch: cargo:native <!nocheck>,
- rustc:native (>= 1.85) <!nocheck>,
+ rustc:native (>= 1.88) <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-proxmox-router-3+default-dev (>= 3.3.0-~~) <!nocheck>,
  librust-proxmox-schema-5+default-dev (>= 5.4.0-~~) <!nocheck>,
