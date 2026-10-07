@@ -31,11 +31,11 @@ pub(crate) fn aws_sign_v4_signature(
     // headers are required. however, in order to prevent data tampering, you should consider
     // including all the headers in the signature calculation."
     // See https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-header-based-auth.html
-    let mut canonical_headers = Vec::new();
-    let mut signed_headers = Vec::new();
-    for (key, value) in request.headers() {
-        canonical_headers.push(format!(
-            "{}:{}",
+    let req_headers = request.headers();
+    let mut headers = Vec::with_capacity(req_headers.len());
+
+    for (key, value) in req_headers {
+        headers.push((
             // Header name has to be lower case, key.as_str() does guarantee that, see
             // https://docs.rs/http/0.2.0/http/header/struct.HeaderName.html
             key.as_str(),
@@ -43,23 +43,36 @@ pub(crate) fn aws_sign_v4_signature(
             // https://docs.rs/http/0.2.0/http/header/struct.HeaderValue.html
             value.to_str()?,
         ));
-        signed_headers.push(key.as_str());
     }
-    canonical_headers.sort();
-    signed_headers.sort();
+
+    headers.sort_unstable_by(|a, b| a.0.cmp(b.0));
+
+    let mut canonical_headers = Vec::with_capacity(headers.len());
+    let mut signed_headers = Vec::with_capacity(headers.len());
+    for (key, value) in headers {
+        canonical_headers.push(format!("{key}:{value}"));
+        signed_headers.push(key);
+    }
     let signed_headers_string = signed_headers.join(";");
 
     let mut canonical_queries = Url::parse(&request.uri().to_string())?
         .query_pairs()
         .map(|(key, value)| {
-            format!(
-                "{}={}",
+            (
                 aws_sign_v4_uri_encode(&key, false),
                 aws_sign_v4_uri_encode(&value, false),
             )
         })
+        .collect::<Vec<(String, String)>>();
+
+    // The parameters are sorted by name after encoding, duplicate names are ordered by value,
+    // see https://docs.aws.amazon.com/IAM/latest/UserGuide/create-signed-request.html
+    canonical_queries.sort_unstable();
+
+    let canonical_queries = canonical_queries
+        .into_iter()
+        .map(|(key, value)| format!("{key}={value}"))
         .collect::<Vec<String>>();
-    canonical_queries.sort();
 
     let canonical_request = format!(
         "{}\n{}\n{}\n{}\n\n{}\n{}",
