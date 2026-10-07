@@ -420,12 +420,6 @@ impl S3Client {
         let payload_digest = hex::encode(hasher.finish());
         let payload_len = contents.len();
 
-        let epoch = proxmox_time::epoch_i64();
-        let datetime = proxmox_time::strftime_utc(AWS_SIGN_V4_DATETIME_FORMAT, epoch)?;
-
-        request
-            .headers_mut()
-            .insert("x-amz-date", HeaderValue::from_str(&datetime)?);
         request
             .headers_mut()
             .insert("host", HeaderValue::from_str(&host_header)?);
@@ -452,13 +446,27 @@ impl S3Client {
                 .insert("Content-MD5", HeaderValue::from_str(&md5_digest)?);
         }
 
-        let signature = aws_sign_v4_signature(&request, &self.options, epoch, &payload_digest)?;
+        self.sign_request(&mut request, &payload_digest)?;
 
-        request
+        Ok(request)
+    }
+
+    /// Set or update the `x-amz-date` header to the current time, calculate the request signature
+    /// based on the provided payload digest and set or update the authorization header accordingly.
+    fn sign_request(&self, request: &mut Request<Body>, payload_digest: &str) -> Result<(), Error> {
+        let epoch = proxmox_time::epoch_i64();
+        let datetime = proxmox_time::strftime_utc(AWS_SIGN_V4_DATETIME_FORMAT, epoch)?;
+
+        let _prev_date = request
+            .headers_mut()
+            .insert("x-amz-date", HeaderValue::from_str(&datetime)?);
+
+        let signature = aws_sign_v4_signature(request, &self.options, epoch, payload_digest)?;
+        let _prev_auth = request
             .headers_mut()
             .insert(header::AUTHORIZATION, HeaderValue::from_str(&signature)?);
 
-        Ok(request)
+        Ok(())
     }
 
     /// Send API request to the configured endpoint using the inner https client.
