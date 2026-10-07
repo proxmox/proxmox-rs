@@ -398,59 +398,6 @@ impl S3Client {
         ))
     }
 
-    /// Prepare API request by adding commonly required headers and perform request signing
-    async fn prepare(&self, mut request: Request<Body>) -> Result<Request<Body>, Error> {
-        let host_header = request
-            .uri()
-            .authority()
-            .ok_or_else(|| format_err!("request missing authority"))?
-            .to_string();
-
-        // Content verification for aws s3 signature
-        let mut hasher = Sha256::new();
-        let contents = request
-            .body()
-            .as_bytes()
-            .ok_or_else(|| format_err!("cannot prepare request with streaming body"))?;
-        hasher.update(contents);
-        // Use MD5 as upload integrity check, as other methods are not supported by all S3 object
-        // store providers and might be ignored and this is recommended by AWS as described in
-        // https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax
-        let payload_md5 = md5::compute(contents);
-        let payload_digest = hex::encode(hasher.finish());
-        let payload_len = contents.len();
-
-        request
-            .headers_mut()
-            .insert("host", HeaderValue::from_str(&host_header)?);
-        request.headers_mut().insert(
-            "x-amz-content-sha256",
-            HeaderValue::from_str(&payload_digest)?,
-        );
-
-        let set_content_length_header = match request.method() {
-            &Method::PUT | &Method::POST => true,
-            &Method::DELETE if payload_len > 0 => true,
-            _ => false,
-        };
-        if set_content_length_header {
-            request.headers_mut().insert(
-                header::CONTENT_LENGTH,
-                HeaderValue::from_str(&payload_len.to_string())?,
-            );
-        }
-        if payload_len > 0 {
-            let md5_digest = proxmox_base64::encode(*payload_md5);
-            request
-                .headers_mut()
-                .insert("Content-MD5", HeaderValue::from_str(&md5_digest)?);
-        }
-
-        self.sign_request(&mut request, &payload_digest)?;
-
-        Ok(request)
-    }
-
     /// Set or update the `x-amz-date` header to the current time, calculate the request signature
     /// based on the provided payload digest and set or update the authorization header accordingly.
     fn sign_request(&self, request: &mut Request<Body>, payload_digest: &str) -> Result<(), Error> {
@@ -475,17 +422,57 @@ impl S3Client {
         request: Request<Body>,
         timeout: Option<Duration>,
     ) -> Result<Response<Incoming>, Error> {
-        let request = self.prepare(request).await?;
-
-        let (parts, body) = request.into_parts();
+        let (mut parts, body) = request.into_parts();
         let body_bytes = body
             .bytes()
             .ok_or_else(|| format_err!("cannot prepare request with streaming body"))?;
 
+        let host_header = parts
+            .uri
+            .authority()
+            .ok_or_else(|| format_err!("request missing authority"))?
+            .to_string();
+
+        // Content verification for aws s3 signature
+        let mut hasher = Sha256::new();
+        hasher.update(&body_bytes);
+        // Use MD5 as upload integrity check, as other methods are not supported by all S3 object
+        // store providers and might be ignored and this is recommended by AWS as described in
+        // https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#API_PutObject_RequestSyntax
+        let payload_md5 = md5::compute(&body_bytes);
+        let payload_digest = hex::encode(hasher.finish());
+        let payload_len = body_bytes.len();
+
+        parts
+            .headers
+            .insert("host", HeaderValue::from_str(&host_header)?);
+        parts.headers.insert(
+            "x-amz-content-sha256",
+            HeaderValue::from_str(&payload_digest)?,
+        );
+
+        let set_content_length_header = match parts.method {
+            Method::PUT | Method::POST => true,
+            Method::DELETE if payload_len > 0 => true,
+            _ => false,
+        };
+        if set_content_length_header {
+            parts.headers.insert(
+                header::CONTENT_LENGTH,
+                HeaderValue::from_str(&payload_len.to_string())?,
+            );
+        }
+        if payload_len > 0 {
+            let md5_digest = proxmox_base64::encode(*payload_md5);
+            parts
+                .headers
+                .insert("Content-MD5", HeaderValue::from_str(&md5_digest)?);
+        }
+
         let deadline = timeout.map(|timeout| tokio::time::Instant::now() + timeout);
 
         for retry in 0..MAX_S3_HTTP_REQUEST_RETRY {
-            let request = Request::from_parts(parts.clone(), Body::from(body_bytes.clone()));
+            let mut request = Request::from_parts(parts.clone(), Body::from(body_bytes.clone()));
             if let Some(limiter) = &self.active_request_rate_limiter {
                 if matches!(parts.method, Method::PUT | Method::POST | Method::DELETE) {
                     let sleep = limiter.register_traffic(Instant::now(), 1);
@@ -508,6 +495,8 @@ impl S3Client {
                     tokio::time::sleep(sleep).await;
                 }
             }
+
+            self.sign_request(&mut request, &payload_digest)?;
 
             let response = if let Some(deadline) = deadline {
                 tokio::time::timeout_at(deadline, self.client.request(request))
