@@ -101,7 +101,7 @@ pub enum ProxmoxOciError {
     ExtractError(#[from] ExtractError),
 }
 
-/// Extract the rootfs of an OCI image tar and return the image config.
+/// Extract the rootfs of an OCI image tar and return its execution parameters.
 ///
 /// # Arguments
 ///
@@ -109,6 +109,11 @@ pub enum ProxmoxOciError {
 /// * `rootfs_path` - Destination path where the rootfs will be extracted to
 /// * `arch` - Optional CPU architecture used to pick the first matching manifest from a multi-arch
 ///   image index. If `None`, the first manifest will be used.
+///
+/// # Returns
+///
+/// On success, this returns the optional container execution parameters
+/// if present in the image configuration.
 pub fn parse_and_extract_image<P: AsRef<Path>>(
     oci_tar_path: P,
     rootfs_path: P,
