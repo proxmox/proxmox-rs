@@ -1,3 +1,24 @@
+rust-pve-api-types (8.1.13-1) trixie; urgency=medium
+
+  * node status: add the 'uptime' and 'idle' fields, which PVE always
+    returns, so callers no longer need to read them from the additional
+    properties.
+
+  * firewall: verify that alias and IP set entry comments contain no line
+    breaks, matching the format PVE enforces, so schema validation rejects
+    such comments early instead of only the PVE node.
+
+  * update to the current PVE API:
+    - qemu: add the 'host-tunnel' network device option for GSO over UDP
+      tunnel offload.
+    - qemu: accept the newer CPU model versions as reported model of custom
+      CPU models.
+    - apt: fix the 'riscv64' package architecture, which was misspelled as
+      'risc64' and so only matched the unknown-value fallback. The enum
+      variant is renamed to 'Riscv64' accordingly.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 15 Oct 2026 22:23:09 +0200
+
 rust-pve-api-types (8.1.12-1) trixie; urgency=medium
 
   * expose additional API endpoints: The termproxy and vncproxy calls for

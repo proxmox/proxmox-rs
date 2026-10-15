@@ -8,12 +8,12 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  libstd-rust-dev <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-async-trait-0.1+default-dev <!nocheck>,
- librust-proxmox-api-macro-1+default-dev (>= 1.5.0-~~) <!nocheck>,
+ librust-proxmox-api-macro-1+default-dev (>= 1.7.0-~~) <!nocheck>,
  librust-proxmox-apt-api-types-3+default-dev <!nocheck>,
  librust-proxmox-fixed-string-0.1+default-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~) <!nocheck>,
- librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.4.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev (>= 5.4.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.4.0-~~) <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+perl-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
@@ -36,12 +36,12 @@ Depends:
  ${misc:Depends},
  librust-anyhow-1+default-dev,
  librust-async-trait-0.1+default-dev,
- librust-proxmox-api-macro-1+default-dev (>= 1.5.0-~~),
+ librust-proxmox-api-macro-1+default-dev (>= 1.7.0-~~),
  librust-proxmox-apt-api-types-3+default-dev,
  librust-proxmox-fixed-string-0.1+default-dev,
- librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.4.0-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.4.0-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.4.0-~~),
  librust-proxmox-serde-1+default-dev,
  librust-proxmox-serde-1+perl-dev,
  librust-proxmox-serde-1+serde-json-dev,
@@ -59,8 +59,8 @@ Provides:
  librust-pve-api-types-8+default-dev (= ${binary:Version}),
  librust-pve-api-types-8.1-dev (= ${binary:Version}),
  librust-pve-api-types-8.1+default-dev (= ${binary:Version}),
- librust-pve-api-types-8.1.12-dev (= ${binary:Version}),
- librust-pve-api-types-8.1.12+default-dev (= ${binary:Version})
+ librust-pve-api-types-8.1.13-dev (= ${binary:Version}),
+ librust-pve-api-types-8.1.13+default-dev (= ${binary:Version})
 Description: Proxmox VE API types - Rust source code
  Source code for Debianized Rust crate "pve-api-types"
 
@@ -76,7 +76,7 @@ Depends:
 Provides:
  librust-pve-api-types-8+client-dev (= ${binary:Version}),
  librust-pve-api-types-8.1+client-dev (= ${binary:Version}),
- librust-pve-api-types-8.1.12+client-dev (= ${binary:Version})
+ librust-pve-api-types-8.1.13+client-dev (= ${binary:Version})
 Description: Proxmox VE API types - feature "client"
  This metapackage enables feature "client" for the Rust pve-api-types crate, by
  pulling in any additional dependencies needed by that feature.
@@ -91,7 +91,7 @@ Depends:
 Provides:
  librust-pve-api-types-8+client-util-dev (= ${binary:Version}),
  librust-pve-api-types-8.1+client-util-dev (= ${binary:Version}),
- librust-pve-api-types-8.1.12+client-util-dev (= ${binary:Version})
+ librust-pve-api-types-8.1.13+client-util-dev (= ${binary:Version})
 Description: Proxmox VE API types - feature "client-util"
  This metapackage enables feature "client-util" for the Rust pve-api-types
  crate, by pulling in any additional dependencies needed by that feature.
