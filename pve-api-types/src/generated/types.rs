@@ -95,9 +95,9 @@ pub enum AptUpdateInfoArch {
     #[serde(rename = "ppc64el")]
     /// ppc64el.
     Ppc64el,
-    #[serde(rename = "risc64")]
-    /// risc64.
-    Risc64,
+    #[serde(rename = "riscv64")]
+    /// riscv64.
+    Riscv64,
     #[serde(rename = "s390x")]
     /// s390x.
     S390x,
@@ -13220,6 +13220,12 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "Cascadelake-Server-v5")]
     /// Cascadelake-Server-v5.
     CascadelakeServerV5,
+    #[serde(rename = "Cascadelake-Server-v6")]
+    /// Cascadelake-Server-v6.
+    CascadelakeServerV6,
+    #[serde(rename = "Cascadelake-Server-v7")]
+    /// Cascadelake-Server-v7.
+    CascadelakeServerV7,
     /// ClearwaterForest.
     ClearwaterForest,
     #[serde(rename = "ClearwaterForest-v2")]
@@ -13228,6 +13234,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "ClearwaterForest-v3")]
     /// ClearwaterForest-v3.
     ClearwaterForestV3,
+    #[serde(rename = "ClearwaterForest-v4")]
+    /// ClearwaterForest-v4.
+    ClearwaterForestV4,
     /// Conroe.
     Conroe,
     /// Cooperlake.
@@ -13267,6 +13276,9 @@ pub enum PveVmCpuConfReportedModel {
     CortexA78ae,
     /// DiamondRapids.
     DiamondRapids,
+    #[serde(rename = "DiamondRapids-v2")]
+    /// DiamondRapids-v2.
+    DiamondRapidsV2,
     #[serde(rename = "EPYC")]
     /// EPYC.
     Epyc,
@@ -13276,6 +13288,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "EPYC-Genoa-v2")]
     /// EPYC-Genoa-v2.
     EpycGenoaV2,
+    #[serde(rename = "EPYC-Genoa-v3")]
+    /// EPYC-Genoa-v3.
+    EpycGenoaV3,
     #[serde(rename = "EPYC-IBPB")]
     /// EPYC-IBPB.
     EpycIbpb,
@@ -13288,6 +13303,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "EPYC-Milan-v3")]
     /// EPYC-Milan-v3.
     EpycMilanV3,
+    #[serde(rename = "EPYC-Milan-v4")]
+    /// EPYC-Milan-v4.
+    EpycMilanV4,
     #[serde(rename = "EPYC-Rome")]
     /// EPYC-Rome.
     EpycRome,
@@ -13306,6 +13324,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "EPYC-Turin")]
     /// EPYC-Turin.
     EpycTurin,
+    #[serde(rename = "EPYC-Turin-v2")]
+    /// EPYC-Turin-v2.
+    EpycTurinV2,
     #[serde(rename = "EPYC-v3")]
     /// EPYC-v3.
     EpycV3,
@@ -13329,6 +13350,12 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "GraniteRapids-v5")]
     /// GraniteRapids-v5.
     GraniteRapidsV5,
+    #[serde(rename = "GraniteRapids-v6")]
+    /// GraniteRapids-v6.
+    GraniteRapidsV6,
+    #[serde(rename = "GraniteRapids-v7")]
+    /// GraniteRapids-v7.
+    GraniteRapidsV7,
     /// Haswell.
     Haswell,
     #[serde(rename = "Haswell-IBRS")]
@@ -13370,6 +13397,12 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "Icelake-Server-v7")]
     /// Icelake-Server-v7.
     IcelakeServerV7,
+    #[serde(rename = "Icelake-Server-v8")]
+    /// Icelake-Server-v8.
+    IcelakeServerV8,
+    #[serde(rename = "Icelake-Server-v9")]
+    /// Icelake-Server-v9.
+    IcelakeServerV9,
     /// IvyBridge.
     IvyBridge,
     #[serde(rename = "IvyBridge-IBRS")]
@@ -13458,6 +13491,12 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "SapphireRapids-v6")]
     /// SapphireRapids-v6.
     SapphireRapidsV6,
+    #[serde(rename = "SapphireRapids-v7")]
+    /// SapphireRapids-v7.
+    SapphireRapidsV7,
+    #[serde(rename = "SapphireRapids-v8")]
+    /// SapphireRapids-v8.
+    SapphireRapidsV8,
     /// SierraForest.
     SierraForest,
     #[serde(rename = "SierraForest-v2")]
@@ -13472,6 +13511,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "SierraForest-v5")]
     /// SierraForest-v5.
     SierraForestV5,
+    #[serde(rename = "SierraForest-v6")]
+    /// SierraForest-v6.
+    SierraForestV6,
     #[serde(rename = "Skylake-Client")]
     /// Skylake-Client.
     SkylakeClient,
@@ -13499,6 +13541,9 @@ pub enum PveVmCpuConfReportedModel {
     #[serde(rename = "Skylake-Server-v5")]
     /// Skylake-Server-v5.
     SkylakeServerV5,
+    #[serde(rename = "Skylake-Server-v6")]
+    /// Skylake-Server-v6.
+    SkylakeServerV6,
     /// Westmere.
     Westmere,
     #[serde(rename = "Westmere-IBRS")]

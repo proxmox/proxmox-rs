@@ -47,6 +47,8 @@
 /// - /cluster/bulk-action/guest/start
 /// - /cluster/bulk-action/guest/suspend
 /// - /cluster/ceph
+/// - /cluster/ceph/health-mute
+/// - /cluster/ceph/health-mute/{code}
 /// - /cluster/ceph/restart-bulk
 /// - /cluster/config
 /// - /cluster/config/apiversion
