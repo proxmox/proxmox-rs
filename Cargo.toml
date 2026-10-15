@@ -166,7 +166,7 @@ proxmox-apt-api-types = { version = "3.0.0", path = "proxmox-apt-api-types" }
 proxmox-auth-api = { version = "1.0.5", path = "proxmox-auth-api" }
 proxmox-async = { version = "0.5.0", path = "proxmox-async" }
 proxmox-base64 = {  version = "1.0.0", path = "proxmox-base64" }
-proxmox-compression = { version = "1.0.0", path = "proxmox-compression" }
+proxmox-compression = { version = "1.0.2", path = "proxmox-compression" }
 proxmox-const-utils = { version = "0.1.0", path = "proxmox-const-utils" }
 proxmox-daemon = { version = "1.0.0", path = "proxmox-daemon" }
 proxmox-disks = { version = "0.2.0", path = "proxmox-disks" }
