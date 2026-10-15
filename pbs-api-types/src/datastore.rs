@@ -1,5 +1,7 @@
+use std::borrow::Borrow;
 use std::convert::{AsRef, TryFrom};
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::LazyLock;
@@ -2162,6 +2164,18 @@ impl TryFrom<&str> for BackupArchiveName {
 impl AsRef<str> for BackupArchiveName {
     fn as_ref(&self) -> &str {
         &self.name
+    }
+}
+
+impl Borrow<str> for BackupArchiveName {
+    fn borrow(&self) -> &str {
+        &self.name
+    }
+}
+
+impl Hash for BackupArchiveName {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.name.hash(state)
     }
 }
 
