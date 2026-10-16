@@ -205,7 +205,11 @@ impl LdapRealmSyncJob {
 
         if let Some(existing_user) = existing_user {
             if existing_user != new_or_updated_user {
-                let verb = if self.dry_run { "would update" } else { "updating" };
+                let verb = if self.dry_run {
+                    "would update"
+                } else {
+                    "updating"
+                };
                 log::info!("{verb} user {user_id}:");
                 for change in describe_user_changes(&existing_user, &new_or_updated_user) {
                     log::info!("  {change}");

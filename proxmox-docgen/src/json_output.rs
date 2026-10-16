@@ -1,5 +1,5 @@
-use proxmox_schema::format::wrap_text;
 use proxmox_schema::Schema;
+use proxmox_schema::format::wrap_text;
 
 /// The JSON type name of `schema`, as it appears in the output.
 ///

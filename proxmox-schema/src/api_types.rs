@@ -313,12 +313,18 @@ fn test_regexes() {
 fn test_blockdevice_name_regexes() {
     for name in ["sda", "sdaa", "hdb", "vdc", "xvda", "nvme0n1", "nvme10n12"] {
         assert!(BLOCKDEVICE_NAME_REGEX.is_match(name), "{name:?}");
-        assert!(BLOCKDEVICE_DISK_AND_PARTITION_NAME_REGEX.is_match(name), "{name:?}");
+        assert!(
+            BLOCKDEVICE_DISK_AND_PARTITION_NAME_REGEX.is_match(name),
+            "{name:?}"
+        );
     }
 
     for name in ["sda1", "xvda12", "nvme0n1p1"] {
         assert!(!BLOCKDEVICE_NAME_REGEX.is_match(name), "{name:?}");
-        assert!(BLOCKDEVICE_DISK_AND_PARTITION_NAME_REGEX.is_match(name), "{name:?}");
+        assert!(
+            BLOCKDEVICE_DISK_AND_PARTITION_NAME_REGEX.is_match(name),
+            "{name:?}"
+        );
     }
 
     // both alternatives must be anchored at start and end
@@ -334,7 +340,10 @@ fn test_blockdevice_name_regexes() {
         "nvme0n1p1 foo",
     ] {
         assert!(!BLOCKDEVICE_NAME_REGEX.is_match(name), "{name:?}");
-        assert!(!BLOCKDEVICE_DISK_AND_PARTITION_NAME_REGEX.is_match(name), "{name:?}");
+        assert!(
+            !BLOCKDEVICE_DISK_AND_PARTITION_NAME_REGEX.is_match(name),
+            "{name:?}"
+        );
     }
 }
 
