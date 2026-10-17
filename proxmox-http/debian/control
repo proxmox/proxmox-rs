@@ -48,7 +48,7 @@ Depends:
  ${misc:Depends},
  librust-proxmox-http-dev (= ${binary:Version}),
  librust-http-1+default-dev,
- librust-proxmox-schema-5+default-dev (>= 5.4.0-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.5.0-~~),
  librust-serde-json-1+default-dev,
  librust-url-2+default-dev (>= 2.2-~~)
 Provides:
@@ -103,7 +103,7 @@ Depends:
  librust-hyper-util-0.1+http2-dev (>= 0.1.12-~~),
  librust-hyper-util-0.1+tokio-dev (>= 0.1.12-~~),
  librust-openssl-0.10+default-dev,
- librust-proxmox-compression-1+default-dev,
+ librust-proxmox-compression-1+default-dev (>= 1.0.2-~~),
  librust-tokio-1+default-dev (>= 1.6-~~),
  librust-tokio-1+io-util-dev (>= 1.6-~~),
  librust-tokio-openssl-0.6+default-dev (>= 0.6.1-~~),

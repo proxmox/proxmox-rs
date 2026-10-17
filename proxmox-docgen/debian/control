@@ -6,8 +6,8 @@ Build-Depends: debhelper-compat (= 13),
 Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native (>= 1.88) <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-proxmox-router-3+default-dev (>= 3.3.0-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.4.0-~~) <!nocheck>,
+ librust-proxmox-router-3+default-dev (>= 3.4.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.5.0-~~) <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
 Maintainer: Proxmox Support Team <support@proxmox.com>
 Standards-Version: 4.7.2
@@ -21,8 +21,8 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-proxmox-router-3+default-dev (>= 3.3.0-~~),
- librust-proxmox-schema-5+default-dev (>= 5.4.0-~~),
+ librust-proxmox-router-3+default-dev (>= 3.4.0-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.5.0-~~),
  librust-serde-json-1+default-dev
 Provides:
  librust-proxmox-docgen+default-dev (= ${binary:Version}),
