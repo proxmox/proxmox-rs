@@ -92,10 +92,9 @@ where
                     let fut = Box::pin(async move {
                         let mut linebuf = Vec::new();
                         loop {
-                            if reader.read_until(b'\x1E', &mut linebuf).await? == 0 {
+                            if !read_record(&mut reader, &mut linebuf).await? {
                                 return Ok(None);
                             }
-                            linebuf.pop(); // pop off the record separator
                             if linebuf.is_empty() {
                                 continue;
                             }
@@ -123,6 +122,67 @@ where
                 Self::Done => Poll::Ready(None),
             };
         }
+    }
+}
+
+/// Read the next record of an RFC 7464 JSON text sequence into `buf`, without its framing.
+/// Returns `false` at the end of the stream.
+///
+/// A record is a record separator (`\x1E`), the JSON text and a line feed. Waiting for the next
+/// record separator holds the latest record back for as long as the sender has nothing new to
+/// write, so a record is also complete at a line feed that ends a whole JSON text. Line feeds
+/// inside a JSON text, as in pretty-printed output, do not end the record. A record separator
+/// always ends it, so a truncated JSON text does not swallow the record that follows.
+async fn read_record<R>(reader: &mut R, buf: &mut Vec<u8>) -> io::Result<bool>
+where
+    R: AsyncBufRead + Unpin,
+{
+    buf.clear();
+    let mut read_any = false;
+    loop {
+        let available = reader.fill_buf().await?;
+        if available.is_empty() {
+            break;
+        }
+        read_any = true;
+        let (used, done) = match available.iter().position(|&b| b == b'\n' || b == b'\x1E') {
+            None => {
+                buf.extend_from_slice(available);
+                (available.len(), false)
+            }
+            Some(pos) if available[pos] == b'\n' => {
+                buf.extend_from_slice(&available[..=pos]);
+                (pos + 1, is_complete_json(buf))
+            }
+            Some(pos) => {
+                buf.extend_from_slice(&available[..pos]);
+                if buf.iter().all(u8::is_ascii_whitespace) {
+                    // the separator starts this record
+                    buf.clear();
+                    (pos + 1, false)
+                } else {
+                    // the separator starts the next record, leave it for the next call
+                    (pos, true)
+                }
+            }
+        };
+        reader.consume_unpin(used);
+        if done {
+            break;
+        }
+    }
+    while buf.last().is_some_and(u8::is_ascii_whitespace) {
+        buf.pop();
+    }
+    Ok(read_any)
+}
+
+/// Whether `text` holds a whole JSON text rather than the start of one.
+fn is_complete_json(text: &[u8]) -> bool {
+    match serde_json::from_slice::<serde::de::IgnoredAny>(text) {
+        Ok(_) => true,
+        // a syntax error is reported by the caller, more data would not fix it
+        Err(err) => !err.is_eof(),
     }
 }
 
@@ -312,5 +372,114 @@ impl AsyncBufRead for BodyBufReader {
                 self.buf_at = None;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use futures::{FutureExt, StreamExt};
+    use serde_json::Value;
+
+    use super::*;
+
+    /// A body that delivers `chunks` and then stays open, as a response does while the sender has
+    /// nothing new to write.
+    fn open_body(chunks: &[&'static [u8]]) -> Body {
+        let chunks: Vec<Result<&'static [u8], Error>> = chunks.iter().map(|c| Ok(*c)).collect();
+        Body::wrap_stream(futures::stream::iter(chunks).chain(futures::stream::pending()))
+    }
+
+    /// A body that delivers `chunks` and then ends.
+    fn closed_body(chunks: &[&'static [u8]]) -> Body {
+        let chunks: Vec<Result<&'static [u8], Error>> = chunks.iter().map(|c| Ok(*c)).collect();
+        Body::wrap_stream(futures::stream::iter(chunks))
+    }
+
+    /// The records read from `body` without waiting for more data, and whether the body ended.
+    fn read_available(body: Body) -> (Vec<String>, bool) {
+        let mut records = JsonRecords::<Value>::from_body(body);
+        let mut read = Vec::new();
+        loop {
+            match records.next().now_or_never() {
+                None => return (read, false),
+                Some(None) => return (read, true),
+                Some(Some(Ok(Record::Data(data)))) => read.push(data.to_string()),
+                Some(Some(Ok(Record::Error(error)))) => read.push(format!("error: {error}")),
+                Some(Some(Err(err))) => read.push(format!("failed: {err}")),
+            }
+        }
+    }
+
+    #[test]
+    fn a_complete_record_arrives_while_the_body_stays_open() {
+        assert_eq!(
+            read_available(open_body(&[b"\x1E{\"data\":1}\n"])),
+            (vec!["1".to_string()], false)
+        );
+        assert_eq!(
+            read_available(open_body(&[b"\x1E{\"error\":\"failed\"}\n"])),
+            (vec!["error: \"failed\"".to_string()], false)
+        );
+    }
+
+    #[test]
+    fn records_split_across_chunks_arrive_once_complete() {
+        let chunks: &[&[u8]] = &[
+            b"\x1E{\"data\":1}\n\x1E{\"da",
+            b"ta\":2}",
+            b"\n",
+            b"\x1E",
+            b"{\"data\":3}\n",
+        ];
+        assert_eq!(
+            read_available(open_body(chunks)),
+            (
+                vec!["1".to_string(), "2".to_string(), "3".to_string()],
+                false
+            )
+        );
+        // a record is held back until its line feed arrives
+        assert_eq!(
+            read_available(open_body(&[b"\x1E{\"data\":1}\n\x1E{\"data\":2}"])),
+            (vec!["1".to_string()], false)
+        );
+    }
+
+    #[test]
+    fn line_feeds_inside_a_json_text_do_not_end_its_record() {
+        assert_eq!(
+            read_available(open_body(&[b"\x1E{\n  \"data\": [\n    1\n", b"  ]\n}\n"])),
+            (vec!["[1]".to_string()], false)
+        );
+    }
+
+    #[test]
+    fn a_separator_ends_a_truncated_record() {
+        assert_eq!(
+            read_available(open_body(&[b"\x1E{\"da\x1E{\"data\":2}\n"])),
+            (
+                vec![
+                    "failed: bad json in record element: \"{\\\"da\"".to_string(),
+                    "2".to_string()
+                ],
+                false
+            )
+        );
+    }
+
+    #[test]
+    fn a_record_cut_off_by_the_end_of_the_body_keeps_its_last_byte() {
+        assert_eq!(
+            read_available(closed_body(&[b"\x1E{\"data\":1}\n\x1E{\"data\":2}"])),
+            (vec!["1".to_string(), "2".to_string()], true)
+        );
+    }
+
+    #[test]
+    fn a_record_ends_with_its_line_feed_at_the_end_of_the_body() {
+        assert_eq!(
+            read_available(closed_body(&[b"\x1E{\"data\":1}\n\x1E{\"data\":2}\n"])),
+            (vec!["1".to_string(), "2".to_string()], true)
+        );
     }
 }
