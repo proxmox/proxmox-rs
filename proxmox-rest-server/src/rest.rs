@@ -1497,6 +1497,21 @@ impl Unformatted {
 mod tests {
     use super::*;
 
+    #[tokio::test]
+    async fn json_seq_stream_stops_once_the_client_is_gone() {
+        let (send, receive) = tokio::sync::mpsc::unbounded_channel::<proxmox_router::Record>();
+        let stream = tokio_stream::wrappers::UnboundedReceiverStream::new(receive);
+        let response = handle_stream_as_json_seq(proxmox_router::Stream::from(stream)).unwrap();
+        tokio::task::yield_now().await;
+        assert!(!send.is_closed());
+
+        // the stream sends nothing, yet it is dropped with the response
+        drop(response);
+        tokio::time::timeout(std::time::Duration::from_secs(5), send.closed())
+            .await
+            .expect("stream of a gone client still running");
+    }
+
     fn headers(name: &'static str, value: &str) -> HeaderMap {
         let mut headers = HeaderMap::new();
         headers.insert(name, value.parse().unwrap());
