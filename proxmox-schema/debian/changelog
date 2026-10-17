@@ -1,3 +1,37 @@
+rust-proxmox-schema (5.5.0-1) trixie; urgency=medium
+
+  * api types: anchor the end of the ED25519 key regex. Previously, any value
+    starting with a valid base64 encoded key passed validation.
+
+  * oneOf: select the active variant through the type property, so variants
+    can use different schemas for the same property name, where previously the
+    first variant's schema was used:
+    - lookups, property iteration and the verification of property strings,
+      parameters and JSON values follow the selected variant, also when the
+      type comes after the properties of its variant.
+    - unknown types are rejected.
+    - add the lookup_schema, lookup_all and all_properties methods. The old
+      lookup and properties methods are soft-deprecated, only warning when
+      building with `--cfg proxmox_schema="strict"`.
+    - documentation shows the condition under which a property applies.
+    - serializing a property string requires the type property to come before
+      the properties of its variant, as with serde's derived implementations.
+    - a type property declared as optional is rejected at compile time.
+
+  * property strings: verification tracks aliases like their canonical
+    property, so an alias satisfies a required property and conflicts with the
+    canonical name.
+
+  * property strings: deserializing into a map, like a JSON value, rejects
+    duplicate keys instead of keeping the last value, and validation errors no
+    longer start with "schema validation failed: ".
+
+  * drop the unused de::MapAccess, de::SeqAccess and de::verify::Verifier from
+    the public API and give SchemaDeserializer a third lifetime parameter.
+    de::verify replaces de::verify::verify, which is soft-deprecated.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 17 Oct 2026 09:39:06 +0200
+
 rust-proxmox-schema (5.4.2-1) trixie; urgency=medium
 
   * api types: anchor both alternatives of the block device name regexes.
