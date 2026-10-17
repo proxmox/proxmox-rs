@@ -373,8 +373,9 @@ impl Stream {
     ///
     /// The producer is polled as part of the stream: it runs only while the stream is read and is
     /// dropped together with it. A handler whose client disconnects thus stops at once, with no
-    /// task left behind. The records the producer sent before it returned an error are delivered
-    /// first, then the error as an error record ends the stream.
+    /// task left behind. The stream ends once the producer has returned and the records it sent
+    /// are delivered, even if it dropped its sender earlier. An error it returns follows these
+    /// records as the final error record.
     pub fn from_producer<F, Fut>(producer: F) -> Self
     where
         F: FnOnce(RecordSender) -> Fut,
@@ -432,9 +433,12 @@ impl futures::Stream for ProducerStream {
         loop {
             match Pin::new(&mut self.receiver).poll_next(cx) {
                 Poll::Ready(Some(record)) => return Poll::Ready(Some(record)),
-                // All senders are gone and their records delivered.
-                Poll::Ready(None) => return Poll::Ready(self.error.take().map(Record::error)),
-                Poll::Pending => {}
+                // All senders are gone, their records delivered and the producer has returned.
+                Poll::Ready(None) if self.producer.is_none() => {
+                    return Poll::Ready(self.error.take().map(Record::error));
+                }
+                // A producer may drop its sender before it returns, so keep polling it until then.
+                Poll::Ready(None) | Poll::Pending => {}
             }
             let Some(producer) = self.producer.as_mut() else {
                 // The producer finished, but a sender it handed to another task still lives.
@@ -1166,7 +1170,7 @@ mod producer_stream_tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    use futures::StreamExt;
+    use futures::{FutureExt, StreamExt};
 
     use super::*;
 
@@ -1214,5 +1218,72 @@ mod producer_stream_tests {
         assert!(!dropped.load(Ordering::SeqCst));
         drop(stream);
         assert!(dropped.load(Ordering::SeqCst));
+    }
+
+    fn to_strings(records: Vec<Record>) -> Vec<String> {
+        records
+            .iter()
+            .map(|record| String::from_utf8(record.to_bytes()).unwrap())
+            .collect()
+    }
+
+    #[test]
+    fn an_error_without_any_record_ends_the_stream() {
+        // the sender is dropped when the closure returns, before the stream polls the producer
+        let stream = Stream::from_producer(|_records| async {
+            Err(anyhow::format_err!(
+                "source failed before producing a record"
+            ))
+        });
+        let records = futures::executor::block_on(stream.into_inner().collect());
+        assert_eq!(
+            to_strings(records),
+            ["\x1e{\"error\":\"source failed before producing a record\"}\n"]
+        );
+    }
+
+    #[test]
+    fn an_error_after_dropping_the_sender_is_delivered() {
+        let (release, released) = futures::channel::oneshot::channel::<()>();
+        let mut stream = Stream::from_producer(|records| async move {
+            drop(records);
+            let _ = released.await;
+            anyhow::bail!("final work failed");
+        })
+        .into_inner();
+        assert!(stream.next().now_or_never().is_none());
+        release.send(()).unwrap();
+        let records = futures::executor::block_on(stream.collect());
+        assert_eq!(
+            to_strings(records),
+            ["\x1e{\"error\":\"final work failed\"}\n"]
+        );
+    }
+
+    #[test]
+    fn queued_records_arrive_before_a_later_error() {
+        let (release, released) = futures::channel::oneshot::channel::<()>();
+        let mut stream = Stream::from_producer(|mut records| async move {
+            records.send(Record::new("sent")).await?;
+            // the record stays queued when the send is given up and the sender dropped
+            assert!(records.send(Record::new("queued")).now_or_never().is_none());
+            drop(records);
+            let _ = released.await;
+            anyhow::bail!("final work failed");
+        })
+        .into_inner();
+        let first = futures::executor::block_on(stream.next()).unwrap();
+        let second = futures::executor::block_on(stream.next()).unwrap();
+        assert_eq!(
+            to_strings(vec![first, second]),
+            ["\x1e{\"data\":\"sent\"}\n", "\x1e{\"data\":\"queued\"}\n"]
+        );
+        assert!(stream.next().now_or_never().is_none());
+        release.send(()).unwrap();
+        let records = futures::executor::block_on(stream.collect());
+        assert_eq!(
+            to_strings(records),
+            ["\x1e{\"error\":\"final work failed\"}\n"]
+        );
     }
 }
