@@ -58,8 +58,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-wireguard-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.4.0-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.4.0-~~),
  librust-regex-1+default-dev (>= 1.5-~~)
 Provides:
  librust-proxmox-wireguard-0+api-types-dev (= ${binary:Version}),

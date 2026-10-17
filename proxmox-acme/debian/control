@@ -9,8 +9,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-openssl-0.10+default-dev <!nocheck>,
  librust-proxmox-base64-1+default-dev <!nocheck>,
  librust-proxmox-base64-1+serde-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.4.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.4.0-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
@@ -50,8 +50,8 @@ Multi-Arch: same
 Depends:
  ${misc:Depends},
  librust-proxmox-acme-dev (= ${binary:Version}),
- librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.1.1-~~)
+ librust-proxmox-schema-5+api-macro-dev (>= 5.4.0-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.4.0-~~)
 Provides:
  librust-proxmox-acme-1+api-types-dev (= ${binary:Version}),
  librust-proxmox-acme-1.1+api-types-dev (= ${binary:Version}),
@@ -71,8 +71,8 @@ Depends:
  librust-bytes-1+default-dev,
  librust-http-body-util-0.1+default-dev,
  librust-hyper-1+default-dev,
- librust-proxmox-http-1+client-dev (>= 1.0.5-~~),
- librust-proxmox-http-1+default-dev (>= 1.0.5-~~)
+ librust-proxmox-http-1+client-dev (>= 1.0.7-~~),
+ librust-proxmox-http-1+default-dev (>= 1.0.7-~~)
 Provides:
  librust-proxmox-acme-1+async-client-dev (= ${binary:Version}),
  librust-proxmox-acme-1.1+async-client-dev (= ${binary:Version}),

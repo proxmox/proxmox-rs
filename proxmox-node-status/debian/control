@@ -6,9 +6,9 @@ Build-Depends: debhelper-compat (= 13),
 Build-Depends-Arch: cargo:native <!nocheck>,
  rustc:native (>= 1.85) <!nocheck>,
  libstd-rust-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~) <!nocheck>,
- librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.1.1-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.4.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev (>= 5.4.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.4.0-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>
@@ -24,9 +24,9 @@ Architecture: any
 Multi-Arch: same
 Depends:
  ${misc:Depends},
- librust-proxmox-schema-5+api-macro-dev (>= 5.1.1-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.1.1-~~),
- librust-proxmox-schema-5+default-dev (>= 5.1.1-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.4.0-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.4.0-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.4.0-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
  librust-serde-json-1+default-dev
@@ -53,7 +53,7 @@ Depends:
  librust-hex-0.4+default-dev,
  librust-nix-0.29+default-dev,
  librust-openssl-0.10+default-dev,
- librust-proxmox-router-3+default-dev (>= 3.2.2-~~),
+ librust-proxmox-router-3+default-dev (>= 3.3.0-~~),
  librust-proxmox-sys-1+default-dev (>= 1.0.1-~~),
  librust-tokio-1+default-dev (>= 1.6-~~)
 Provides:
