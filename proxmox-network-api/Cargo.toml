@@ -25,7 +25,7 @@ proxmox-sys = { workspace = true, optional = true }
 proxmox-schema = { workspace = true, features = ["api-macro", "api-types"] }
 proxmox-config-digest = { workspace = true, optional = true }
 proxmox-product-config = { workspace = true, optional = true }
-proxmox-network-types.workspace = true
+proxmox-network-types = { workspace = true, features = ["api-types"] }
 
 [features]
 default = []
