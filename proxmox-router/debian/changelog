@@ -1,3 +1,22 @@
+rust-proxmox-router (3.4.0-1) trixie; urgency=medium
+
+  * cli: support oneOf parameter schemas, also flattened into an allOf:
+    - parsing, completion and help follow the variant selected by the type
+      property; completion only offers options and values of that variant.
+    - help describes a property of multiple variants once per variant, with
+      the condition under which it applies.
+    - global options can use flattened oneOfs. A property shared by variants
+      is a single option, and options of an inactive variant are rejected.
+    - a table of a single object only shows the properties of its variant.
+    - positional and fixed parameters must not have clashing schemas across
+      variants.
+
+  * add Stream::from_producer for streaming API handlers. It runs a handler's
+    record producer as part of the response stream instead of as a spawned
+    task, so the producer stops as soon as the client disconnects.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 17 Oct 2026 13:46:08 +0200
+
 rust-proxmox-router (3.3.0-1) trixie; urgency=medium
 
   * add a type-keyed registry for shared state and expose it to API handlers
