@@ -1,3 +1,10 @@
+rust-proxmox-simple-config (1.1.0-1) trixie; urgency=medium
+
+  * support oneOf schemas, where the type property selects the schema of a
+    property, also when it comes after that property in the file.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 17 Oct 2026 11:27:02 +0200
+
 rust-proxmox-simple-config (1.0.1-1) trixie; urgency=medium
 
   * update proxmox-schema to 5.0.0
