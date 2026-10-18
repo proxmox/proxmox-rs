@@ -1,3 +1,11 @@
+rust-proxmox-network-api (1.0.7-1) trixie; urgency=medium
+
+  * move the Linux bond mode and transmit hash policy types to
+    proxmox-network-types and re-export them, so existing users keep working
+    unchanged.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sun, 18 Oct 2026 11:06:38 +0200
+
 rust-proxmox-network-api (1.0.6-1) trixie; urgency=medium
 
   * fix #7329: interfaces: support the IPv6 auto method, so listing interfaces
