@@ -102,6 +102,9 @@ impl Record {
     }
 
     /// Create a new error record from an error value.
+    ///
+    /// Only the error's message is sent, see [`error_value`](Self::error_value) for errors that a
+    /// client should be able to tell apart.
     pub fn error<E: Into<Error>>(error: E) -> Self {
         Self {
             data: crate::stream::Record::Error(error.into().to_string().into()),
@@ -116,6 +119,10 @@ impl Record {
     }
 
     /// Create a new structured error record from an error value.
+    ///
+    /// The value is sent as it serializes, so a client can act on its content rather than parse a
+    /// message, for example an application envelope such as `{"kind": .., "message": ..}`. The
+    /// [`stream`](crate::stream) module shows how a client reads it back.
     pub fn error_value<T: Serialize>(error: T) -> Self {
         Self {
             data: crate::stream::Record::Error(
