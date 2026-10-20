@@ -63,6 +63,29 @@ fn encode_filename_formatted(filename: &str) -> String {
     format_encoded_text(&encoded, format_prefix, ";", 0, true)
 }
 
+/// Normalizes line endings, as SMTP forbids bare CR and LF bytes (RFC 5321 Section 2.3.8): all CR
+/// bytes are dropped and every LF becomes CRLF.
+pub fn normalize_line_endings(raw: &[u8]) -> Vec<u8> {
+    // The worst case is a message of only LF bytes, which exactly doubles in size.
+    let mut normalized = Vec::with_capacity(raw.len() * 2);
+
+    for byte in raw {
+        match byte {
+            b'\r' => continue,
+            b'\n' => normalized.extend_from_slice(b"\r\n"),
+            b => normalized.push(*b),
+        }
+    }
+
+    normalized
+}
+
+/// Base64 encodes text with normalized line endings, as RFC 2045 Section 6.8 requires CRLF line
+/// breaks before encoding. Dropping bare CR bytes matches the handling of unencoded text.
+fn normalize_line_endings_base64<T: AsRef<[u8]>>(raw: T) -> String {
+    proxmox_base64::encode(normalize_line_endings(raw.as_ref()))
+}
+
 /// Helper function used to format text to not exceed line limits imposed by standards such as RFC
 /// 2045 Section 6.8 that specifies that Base64 content transfer encoded text "must be represented
 /// in lines of no more than 76 characters each". It also allows taking into account any necessary
@@ -168,7 +191,7 @@ impl Recipient {
             if !name.is_ascii() {
                 format!(
                     "=?utf-8?B?{}?= <{}>",
-                    proxmox_base64::encode(name),
+                    normalize_line_endings_base64(name),
                     self.email
                 )
             } else {
@@ -325,12 +348,13 @@ impl<'a> Mail<'a> {
         self
     }
 
-    /// Adds an attachment with a specified file name and mime-type to an email.
+    /// Adds an attachment with a specified filename and mime-type to an email. Control characters
+    /// are stripped from the filename for better compatibility.
     ///
     /// Note: Adding attachments triggers `multipart/mixed` mode.
     pub fn add_attachment(&mut self, filename: &str, mime_type: &str, content: &'a [u8]) {
         self.attachments.push(Attachment {
-            filename: filename.to_string(),
+            filename: filename.chars().filter(|c| !c.is_control()).collect(),
             mime: mime_type.to_string(),
             content,
         });
@@ -451,7 +475,8 @@ impl<'a> Mail<'a> {
 
     /// Forwards an email message to a given list of recipients.
     ///
-    /// `message` must be compatible with ``sendmail`` (the message is piped into stdin unmodified).
+    /// `message` must be compatible with ``sendmail``. It is piped into `stdin` unmodified, except
+    /// for its line endings, see [`normalize_line_endings`].
     #[cfg(feature = "mail-forwarder")]
     pub fn forward(
         mailto: &[&str],
@@ -489,7 +514,7 @@ impl<'a> Mail<'a> {
             .stdin
             .take()
             .unwrap()
-            .write_all(message)
+            .write_all(&normalize_line_endings(message))
             .with_context(|| "couldn't write to sendmail stdin")?;
 
         sendmail_process
@@ -520,7 +545,9 @@ impl<'a> Mail<'a> {
             write!(mail, "\n--{file_boundary}--")?;
         }
 
-        Ok(mail)
+        // normalize line endings from `\n` to `\r\n` and drop bare `\r` according to RFC 5321
+        // 2.3.8: https://datatracker.ietf.org/doc/html/rfc5321#section-2.3.8
+        Ok(mail.replace('\r', "").replace('\n', "\r\n"))
     }
 
     fn format_header(
@@ -561,7 +588,7 @@ impl<'a> Mail<'a> {
             writeln!(
                 header,
                 "Subject: =?utf-8?B?{}?=",
-                proxmox_base64::encode(&self.subject)
+                normalize_line_endings_base64(&self.subject)
             )?;
         } else {
             writeln!(header, "Subject: {}", self.subject)?;
@@ -571,7 +598,7 @@ impl<'a> Mail<'a> {
             writeln!(
                 header,
                 "From: =?utf-8?B?{}?= <{}>",
-                proxmox_base64::encode(&self.mail_author),
+                normalize_line_endings_base64(&self.mail_author),
                 self.mail_from
             )?;
         } else {
@@ -615,7 +642,7 @@ impl<'a> Mail<'a> {
                 writeln!(
                     header,
                     "{key}: =?utf-8?B?{}?=",
-                    proxmox_base64::encode(&value)
+                    normalize_line_endings_base64(&value)
                 )?;
             }
         }
@@ -653,7 +680,11 @@ impl<'a> Mail<'a> {
             body.push_str(&self.body_txt);
         } else {
             body.push_str("Content-Transfer-Encoding: base64\n\n");
-            body.push_str(&encode_base64_formatted(&self.body_txt));
+            // normalize line endings according to RFC 2045 Section 6.8
+            // (https://datatracker.ietf.org/doc/html/rfc2045#section-6.8).
+            body.push_str(&encode_base64_formatted(
+                self.body_txt.replace('\r', "").replace('\n', "\r\n"),
+            ));
         }
 
         if let Some(html) = &self.body_html {
@@ -666,7 +697,11 @@ impl<'a> Mail<'a> {
                 body.push_str(html);
             } else {
                 body.push_str("Content-Transfer-Encoding: base64\n\n");
-                body.push_str(&encode_base64_formatted(html));
+                // normalize line endings according to RFC 2045 Section 6.8
+                // (https://datatracker.ietf.org/doc/html/rfc2045#section-6.8).
+                body.push_str(&encode_base64_formatted(
+                    html.replace('\r', "").replace('\n', "\r\n"),
+                ));
             }
 
             write!(body, "\n--{html_boundary}--")?;
@@ -895,8 +930,8 @@ Content-Type: text/plain;
 	charset="UTF-8"
 Content-Transfer-Encoding: base64
 
-VGhpcyB1dGYtOCBlbWFpbCBzaG91bGQgaGFuZGxlIGVtb2ppcwrwn6eR8J+TpwphbmQgd2Vp
-cmQgZ2VybWFuIGNoYXJhY3RlcnM6IMO2w6TDvMOfCmFuZCBtb3JlLg=="#,
+VGhpcyB1dGYtOCBlbWFpbCBzaG91bGQgaGFuZGxlIGVtb2ppcw0K8J+nkfCfk6cNCmFuZCB3
+ZWlyZCBnZXJtYW4gY2hhcmFjdGVyczogw7bDpMO8w58NCmFuZCBtb3JlLg=="#,
         )
     }
 
@@ -1140,10 +1175,10 @@ Content-Transfer-Encoding: 7bit
         ];
 
         let mail = Mail::new(
-            "Sender Näme",
-            "from@example.com",
-            "Subject Linë",
-            "Lorem Ipsum Dolor Sit\nAmët",
+            "Sender Nä\rme",
+            "from@example.\rcom",
+            "Subject Linë\r",
+            "Lorem Ipsum Dolor \rSit\nAmët",
         )
         .with_recipient_and_name("Receiver Näme", "receiver@example.com")
         .with_attachment("deadbeef.bin", "application/octet-stream", &bin)
@@ -1176,14 +1211,14 @@ Content-Type: text/plain;
 	charset="UTF-8"
 Content-Transfer-Encoding: base64
 
-TG9yZW0gSXBzdW0gRG9sb3IgU2l0CkFtw6t0
+TG9yZW0gSXBzdW0gRG9sb3IgU2l0DQpBbcOrdA==
 ------_=_NextPart_002_1732806251
 Content-Type: text/html;
 	charset="UTF-8"
 Content-Transfer-Encoding: base64
 
-PGh0bWwgbGFuZz0iZGUtYXQiPjxoZWFkPjwvaGVhZD48Ym9keT4KCTxwcmU+CgkJTG9yZW0g
-SXBzdW0gRMO2bG9yIFNpdCBBbWV0Cgk8L3ByZT4KPC9ib2R5PjwvaHRtbD4=
+PGh0bWwgbGFuZz0iZGUtYXQiPjxoZWFkPjwvaGVhZD48Ym9keT4NCgk8cHJlPg0KCQlMb3Jl
+bSBJcHN1bSBEw7Zsb3IgU2l0IEFtZXQNCgk8L3ByZT4NCjwvYm9keT48L2h0bWw+
 ------_=_NextPart_002_1732806251--
 ------_=_NextPart_001_1732806251
 Content-Type: application/octet-stream;
@@ -1343,5 +1378,176 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
             .trim();
 
         assert_eq!(suffixed, out);
+    }
+
+    #[test]
+    fn normalize_line_endings_handles_lf_crlf_and_bare_cr() {
+        assert_eq!(normalize_line_endings(b""), b"");
+        assert_eq!(normalize_line_endings(b"x\r\n"), b"x\r\n");
+        assert_eq!(normalize_line_endings(b"\n\r\n\r\xff"), b"\r\n\r\n\xff");
+    }
+
+    #[test]
+    fn line_endings_are_normalized_when_not_encoded() {
+        let bin: [u8; 63] = [
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0x0d,
+        ];
+
+        let mail = Mail::new(
+            "Se\rnder Name",
+            "fro\rm@example.com",
+            "Sub\rject Line",
+            "Lor\rem Ipsum Dolor Sit\nAmet",
+        )
+        .with_recipient_and_name("R\receiver Name", "receive\rr@example.com")
+        .with_attachment("deadb\reef.bin", "application/octet-stream", &bin)
+        .with_html_alt("<html lang=\"de-at\"><head></head><body>\n\t<pre>\n\t\tLorem Ipsum Dolor Si\rt Amet\n\t</pre>\n</body></html>")
+        .with_header("X-CR-HEADE\r", "value\r");
+
+        let body = mail.format_mail(1732806251).expect("could not format mail");
+
+        assert!(body.is_ascii());
+
+        let expected = r#"Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_1732806251"
+MIME-Version: 1.0
+Subject: Subject Line
+From: Sender Name <from@example.com>
+To: Receiver Name <receiver@example.com>
+Date: Thu, 28 Nov 2024 16:04:11 +0100
+Auto-Submitted: auto-generated;
+X-CR-HEADE: value
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_1732806251
+Content-Type: multipart/alternative; boundary="----_=_NextPart_002_1732806251"
+MIME-Version: 1.0
+
+------_=_NextPart_002_1732806251
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Lorem Ipsum Dolor Sit
+Amet
+------_=_NextPart_002_1732806251
+Content-Type: text/html;
+	charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+<html lang="de-at"><head></head><body>
+	<pre>
+		Lorem Ipsum Dolor Sit Amet
+	</pre>
+</body></html>
+------_=_NextPart_002_1732806251--
+------_=_NextPart_001_1732806251
+Content-Type: application/octet-stream;
+	name="deadbeef.bin"
+Content-Disposition: attachment;
+	filename*0*=UTF-8''deadbeef.bin
+Content-Transfer-Encoding: base64
+
+3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
+3q2+796tvu8N
+------_=_NextPart_001_1732806251--"#;
+
+        // manually compare here to ensure we split specifically only on `\r\n` line endings
+
+        let lines1 = body.split("\r\n");
+        let lines2 = expected.split("\n");
+
+        for ((i, line1), line2) in lines1.enumerate().zip(lines2) {
+            if !(line1.starts_with("Date:") && line2.starts_with("Date:")) {
+                assert_eq!(line1, line2, "lines at {i} do not match");
+            }
+        }
+
+        assert_eq!(body.lines().count(), expected.lines().count());
+    }
+
+    #[test]
+    fn line_endings_are_normalized_when_encoded() {
+        let bin: [u8; 63] = [
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+            0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0x0d,
+        ];
+
+        let mail = Mail::new(
+            "Se\rnder Näme",
+            "fro\rm@example.com",
+            "Sub\rject Linë",
+            "Lor\rem Ipsum \r\nDolor Sit\nAmët",
+        )
+        .with_recipient_and_name("R\receiver Näme", "receive\rr@example.com")
+        .with_attachment("🐄💀.\x7fb\rin", "ima\rge/bmp", &bin)
+        .with_html_alt("<html lang=\"de-at\"><head></head><body>\n\t<pre>\r\n\t\tLorem Ipsum Dölor Si\rt Amet\n\t</pre>\n</body></html>")
+        .with_header("X-CR-HEADE\r", "valüe\r");
+
+        let body = mail.format_mail(1732806251).expect("could not format mail");
+
+        assert!(body.is_ascii());
+
+        let expected = r#"Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_1732806251"
+MIME-Version: 1.0
+Subject: =?utf-8?B?U3ViamVjdCBMaW7Dqw==?=
+From: =?utf-8?B?U2VuZGVyIE7DpG1l?= <from@example.com>
+To: =?utf-8?B?UmVjZWl2ZXIgTsOkbWU=?= <receiver@example.com>
+Date: Thu, 28 Nov 2024 16:04:11 +0100
+Auto-Submitted: auto-generated;
+X-CR-HEADE: =?utf-8?B?dmFsw7xl?=
+
+This is a multi-part message in MIME format.
+
+------_=_NextPart_001_1732806251
+Content-Type: multipart/alternative; boundary="----_=_NextPart_002_1732806251"
+MIME-Version: 1.0
+
+------_=_NextPart_002_1732806251
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+TG9yZW0gSXBzdW0gDQpEb2xvciBTaXQNCkFtw6t0
+------_=_NextPart_002_1732806251
+Content-Type: text/html;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+PGh0bWwgbGFuZz0iZGUtYXQiPjxoZWFkPjwvaGVhZD48Ym9keT4NCgk8cHJlPg0KCQlMb3Jl
+bSBJcHN1bSBEw7Zsb3IgU2l0IEFtZXQNCgk8L3ByZT4NCjwvYm9keT48L2h0bWw+
+------_=_NextPart_002_1732806251--
+------_=_NextPart_001_1732806251
+Content-Type: image/bmp;
+	name="=?utf-8?B?8J+QhPCfkoAuYmlu?="
+Content-Disposition: attachment;
+	filename*0*=UTF-8''%F0%9F%90%84%F0%9F%92%80.bin
+Content-Transfer-Encoding: base64
+
+3q2+796tvu/erb7v3q3erb7v3q2+796tvu/erd6tvu/erb7v3q2+796t3q2+796tvu/erb7v
+3q2+796tvu8N
+------_=_NextPart_001_1732806251--"#;
+
+        // manually compare here to ensure we split specifically only on `\r\n` line endings
+
+        let lines1 = body.split("\r\n");
+        let lines2 = expected.split("\n");
+
+        for ((i, line1), line2) in lines1.enumerate().zip(lines2) {
+            if !(line1.starts_with("Date:") && line2.starts_with("Date:")) {
+                assert_eq!(line1, line2, "lines at {i} do not match");
+            }
+        }
+
+        assert_eq!(body.lines().count(), expected.lines().count());
     }
 }
