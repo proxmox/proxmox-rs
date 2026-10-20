@@ -1,3 +1,25 @@
+rust-proxmox-installer-types (0.3.0-1) trixie; urgency=medium
+
+  * implement AsRef<FqdnConfig> for FqdnConfigContainer, simplifying
+    matching on it.
+
+  * use the MacAddress type for the MAC addresses in the interface name
+    pinning map of the answer and in the network interface info of the
+    post-hook data. This is a breaking change.
+
+  * answer: add options for setting up a bond for the management
+    interface, with its members given by MAC address or selected by a
+    filter on udev properties.
+
+  * answer: add option for setting the VLAN tag of the management network,
+    for static network configurations.
+
+  * fetch: report schema version 1.1 in the answer fetch data, as installers
+    built with this version accept the bond and VLAN answer options, and add
+    helpers to compare it with the schema version an answer requires.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 21 Oct 2026 01:06:49 +0200
+
 rust-proxmox-installer-types (0.2.1-1) trixie; urgency=medium
 
   * make FqdnConfigContainer::fqdn pub
