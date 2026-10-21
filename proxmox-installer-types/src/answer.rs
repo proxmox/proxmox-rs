@@ -764,7 +764,7 @@ impl DiskSetup {
                                     raid.min_disks(),
                                 );
                             }
-                            if raid.requires_even_disks() && n % 2 != 0 {
+                            if raid.requires_even_disks() && !n.is_multiple_of(2) {
                                 bail!("ZFS {raid} needs an even number of disks, got {n}");
                             }
                         }
@@ -793,7 +793,7 @@ impl DiskSetup {
                                     raid.min_disks(),
                                 );
                             }
-                            if raid.requires_even_disks() && n % 2 != 0 {
+                            if raid.requires_even_disks() && !n.is_multiple_of(2) {
                                 bail!("Btrfs {raid} needs an even number of disks, got {n}");
                             }
                         }
