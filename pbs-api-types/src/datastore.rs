@@ -6,6 +6,7 @@ use std::sync::LazyLock;
 
 use anyhow::{Error, bail, format_err};
 use const_format::concatcp;
+use proxmox_time::TimeSpan;
 use serde::de::IntoDeserializer;
 use serde::de::value::{Error as ValueError, StrDeserializer};
 use serde::{Deserialize, Serialize};
@@ -440,6 +441,22 @@ pub const COUNTER_RESET_SCHEDULE_SCHEMA: Schema =
         .type_text("<calendar-event>")
         .schema();
 
+pub const MAX_SNAPSHOT_TIME_SKEW_SECS: u64 = 24 * 60 * 60;
+pub const DEFAULT_SNAPSHOT_TIME_SKEW_SECS: u64 = 60;
+pub const MAX_SNAPSHOT_TIME_SKEW_FORMAT: ApiStringFormat = ApiStringFormat::VerifyFn(|val| {
+    let timespan: TimeSpan = val.parse()?;
+    if timespan.as_secs() > MAX_SNAPSHOT_TIME_SKEW_SECS {
+        bail!("time span exceeds 1 day maximum");
+    }
+    Ok(())
+});
+
+pub const MAX_SNAPSHOT_TIME_SKEW_SCHEMA: Schema =
+    StringSchema::new("Maximum allowed time skew between new snapshot's timestamp and server system time (<= 1 day, default = 1 minute)")
+        .format(&MAX_SNAPSHOT_TIME_SKEW_FORMAT)
+        .type_text("<time-span>")
+        .schema();
+
 #[api(
     properties: {
         name: {
@@ -509,6 +526,10 @@ pub const COUNTER_RESET_SCHEDULE_SCHEMA: Schema =
             optional: true,
             schema: COUNTER_RESET_SCHEDULE_SCHEMA,
         },
+        "max-snapshot-time-skew": {
+            optional: true,
+            schema: MAX_SNAPSHOT_TIME_SKEW_SCHEMA,
+        },
     }
 )]
 #[derive(Serialize, Deserialize, Updater, Clone, PartialEq)]
@@ -577,6 +598,10 @@ pub struct DataStoreConfig {
     /// Notification threshold related counter reset schedule
     #[serde(skip_serializing_if = "Option::is_none")]
     pub counter_reset_schedule: Option<String>,
+
+    /// Maximum allowed time skew between new snapshot's timestamp and server system time.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_snapshot_time_skew: Option<String>,
 }
 
 #[api]
@@ -619,6 +644,7 @@ impl DataStoreConfig {
             backend: None,
             notification_thresholds: None,
             counter_reset_schedule: None,
+            max_snapshot_time_skew: None,
         }
     }
 
