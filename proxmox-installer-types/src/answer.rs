@@ -89,12 +89,22 @@ pub mod fetch {
         /// major: Incremented for incompatible/breaking API changes, e.g. removing an existing
         /// field.
         /// minor: Incremented when adding functionality in a backwards-compatible matter, e.g.
-        /// adding a new field.
+        /// adding a new field or accepting new answer file options.
         pub version: String,
     }
 
     impl AnswerFetchDataSchema {
-        const SCHEMA_VERSION: &str = "1.0";
+        const SCHEMA_VERSION: &str = "1.1";
+
+        /// Returns the version as `(major, minor)` tuple, or `None` if it is malformed.
+        ///
+        /// Answer servers can compare it with
+        /// [`super::AutoInstallerConfig::required_fetch_schema_version`] to tell whether the
+        /// installer accepts all options used in an answer.
+        pub fn version(&self) -> Option<(u32, u32)> {
+            let (major, minor) = self.version.split_once('.')?;
+            Some((major.parse().ok()?, minor.parse().ok()?))
+        }
     }
 
     impl Default for AnswerFetchDataSchema {
@@ -117,7 +127,8 @@ pub mod fetch {
     /// Data sent in the body of POST request when retrieving the answer file via HTTP(S).
     ///
     /// NOTE: The format is versioned through `schema.version` (`$schema.version` in the
-    /// resulting JSON), ensure you update it when this struct or any of its members gets modified.
+    /// resulting JSON), ensure you update it when this struct or any of its members gets modified,
+    /// or when the installer starts to accept new answer file options.
     pub struct AnswerFetchData {
         /// Metadata for the answer file fetch payload
         // This field is prefixed by `$` on purpose, to indicate that it is document metadata and not
@@ -152,6 +163,22 @@ pub struct AutoInstallerConfig {
     /// Optional one-time hook to run on the first boot into the newly provisioned
     /// system.
     pub first_boot: Option<FirstBootHookInfo>,
+}
+
+impl AutoInstallerConfig {
+    /// Returns the answer fetch schema version, as `(major, minor)` tuple, an installer has to
+    /// report at least to accept all options used in this answer.
+    ///
+    /// Installers reject answers with options they do not know, so answer servers can compare
+    /// this with [`fetch::AnswerFetchDataSchema::version()`] of the request to avoid sending an
+    /// answer the installer cannot use.
+    pub fn required_fetch_schema_version(&self) -> (u32, u32) {
+        if self.network.bond().is_some() || self.network.vlan().is_some() {
+            return (1, 1);
+        }
+
+        (1, 0)
+    }
 }
 
 /// Machine root password schema.
@@ -1582,6 +1609,74 @@ pub fn email_validate(email: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const MINIMAL_ANSWER: &str = r#"
+        [global]
+        country = "at"
+        keyboard = "de"
+        mailto = "root@example.invalid"
+        timezone = "Europe/Vienna"
+        root-password = "123456789"
+        fqdn = "pve.example.invalid"
+
+        [network]
+        source = "from-dhcp"
+
+        [disk-setup]
+        filesystem = "ext4"
+        disk-list = ["sda"]
+    "#;
+
+    #[test]
+    fn fetch_schema_version_is_parsed() {
+        let schema = |version: &str| fetch::AnswerFetchDataSchema {
+            version: version.to_owned(),
+        };
+
+        assert_eq!(
+            fetch::AnswerFetchDataSchema::default().version(),
+            Some((1, 1))
+        );
+        assert_eq!(schema("1.0").version(), Some((1, 0)));
+        assert_eq!(schema("2.10").version(), Some((2, 10)));
+
+        for invalid in ["", "1", "1.", ".1", "1.x", "1.1.1", "-1.0"] {
+            assert_eq!(schema(invalid).version(), None, "version '{invalid}'");
+        }
+    }
+
+    #[test]
+    fn required_fetch_schema_version_follows_used_options() {
+        let answer: AutoInstallerConfig = toml::from_str(MINIMAL_ANSWER).unwrap();
+        assert_eq!(answer.required_fetch_schema_version(), (1, 0));
+
+        let static_network = r#"
+            source = "from-answer"
+            cidr = "192.0.2.10/24"
+            dns = "192.0.2.1"
+            gateway = "192.0.2.1"
+            filter.ID_NET_NAME = "enp1s0"
+        "#;
+        let with_network =
+            |network: &str| MINIMAL_ANSWER.replace(r#"source = "from-dhcp""#, network);
+
+        let answer: AutoInstallerConfig = toml::from_str(&with_network(static_network)).unwrap();
+        assert_eq!(answer.required_fetch_schema_version(), (1, 0));
+
+        let vlan = format!("{static_network}\nvlan.vid = 10");
+        let answer: AutoInstallerConfig = toml::from_str(&with_network(&vlan)).unwrap();
+        assert_eq!(answer.required_fetch_schema_version(), (1, 1));
+
+        let bond = r#"
+            source = "from-dhcp"
+
+            [network.bond]
+            members = ["aa:bb:cc:dd:ee:01", "aa:bb:cc:dd:ee:02"]
+            mode = "active-backup"
+        "#;
+        let answer: AutoInstallerConfig = toml::from_str(&with_network(bond)).unwrap();
+        assert_eq!(answer.required_fetch_schema_version(), (1, 1));
+    }
 
     fn disks(n: usize) -> Vec<String> {
         (0..n).map(|i| format!("sd{i}")).collect()
