@@ -551,6 +551,39 @@ impl Default for NetworkBondOptions {
 
 #[cfg_attr(feature = "api-types", api(
     properties: {
+        vid: {
+            type: Integer,
+            // 0 and 4095 are reserved, 1 is the untagged default PVID of VLAN-aware bridges on
+            // Linux.
+            minimum: 2,
+            maximum: 4094,
+        }
+    },
+))]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+/// Options for setting up a VLAN configuration on the management interface.
+pub struct NetworkVlanOptions {
+    /// VLAN tag to configure.
+    pub vid: u16,
+}
+
+impl NetworkVlanOptions {
+    /// Verifies whether the VLAN configuration is valid.
+    pub fn verify(&self) -> Result<()> {
+        if self.vid < 2 || self.vid > 4094 {
+            bail!(
+                "VLAN tag must be between 2 and 4094 inclusive, got {}",
+                self.vid
+            );
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg_attr(feature = "api-types", api(
+    properties: {
         filter: {
             type: Object,
             properties: {},
@@ -578,6 +611,9 @@ pub struct NetworkConfigFromAnswer {
     /// If set, sets up a Linux bond for the management interface.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bond: Option<NetworkBondOptions>,
+    /// If set, configures the given VLAN for the management interface.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vlan: Option<NetworkVlanOptions>,
 }
 
 #[cfg_attr(feature = "api-types", api)]
@@ -626,6 +662,17 @@ impl NetworkConfig {
         match self {
             Self::FromDhcp(dhcp) => dhcp.bond.as_ref(),
             Self::FromAnswer(answer) => answer.bond.as_ref(),
+        }
+    }
+
+    /// Returns the management network VLAN options, if any.
+    ///
+    /// Only available with a static configuration, with DHCP the installed system uses the VLAN of
+    /// the installation environment.
+    pub const fn vlan(&self) -> Option<&NetworkVlanOptions> {
+        match self {
+            Self::FromDhcp(_) => None,
+            Self::FromAnswer(answer) => answer.vlan.as_ref(),
         }
     }
 }
@@ -1690,6 +1737,31 @@ mod tests {
         assert_eq!(
             res.unwrap_err().to_string(),
             "primary bond interface AB:12:CD:34:EF:56 must be a member of the bond (members: 12:34:56:AB:CD:DF, AB:CD:DF:12:34:56)"
+        );
+    }
+
+    #[test]
+    fn network_vlan_id_must_be_valid() {
+        let mut vlan = NetworkVlanOptions { vid: 2 };
+        assert!(vlan.verify().is_ok());
+
+        vlan.vid = 4094;
+        assert!(vlan.verify().is_ok());
+
+        vlan.vid = 1;
+        let res = vlan.verify();
+        assert!(res.is_err());
+        assert_eq!(
+            res.unwrap_err().to_string(),
+            "VLAN tag must be between 2 and 4094 inclusive, got 1"
+        );
+
+        vlan.vid = 4095;
+        let res = vlan.verify();
+        assert!(res.is_err());
+        assert_eq!(
+            res.unwrap_err().to_string(),
+            "VLAN tag must be between 2 and 4094 inclusive, got 4095"
         );
     }
 }
