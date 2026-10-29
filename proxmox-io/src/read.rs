@@ -49,16 +49,14 @@ use crate::vec;
 ///
 /// [`Endian`]: https://docs.rs/endian_trait/0.6/endian_trait/trait.Endian.html
 pub trait ReadExt {
-    /// Read data into a newly allocated vector. This is a shortcut for:
-    /// ```ignore
-    /// let mut data = Vec::with_capacity(len);
-    /// unsafe {
-    ///     data.set_len(len);
-    /// }
-    /// reader.read_exact(&mut data)?;
-    /// ```
+    /// Read an exact amount of data into a newly allocated vector.
     ///
-    /// With this trait, we just use:
+    /// Returns [`io::ErrorKind::UnexpectedEof`] if not enough data could be read.
+    ///
+    /// Allocation failures may result in [`io::ErrorKind::OutOfMemory`], but
+    /// callers should not rely on this because many systems overcommit memory.
+    ///
+    /// Example:
     /// ```no_run
     /// use proxmox_io::ReadExt;
     /// # fn code(mut reader: std::fs::File, len: usize) -> std::io::Result<()> {
@@ -230,9 +228,22 @@ pub trait ReadExt {
 
 impl<R: io::Read> ReadExt for R {
     fn read_exact_allocated(&mut self, size: usize) -> io::Result<Vec<u8>> {
-        let mut out = unsafe { vec::uninitialized(size) };
-        self.read_exact(&mut out)?;
-        Ok(out)
+        let mut out = vec![];
+        out.try_reserve_exact(size)?;
+
+        let limit = size.try_into().map_err(|_| io::ErrorKind::InvalidInput)?;
+
+        use io::Read;
+        self.take(limit).read_to_end(&mut out)?;
+
+        if out.len() != size {
+            Err(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                "failed to fill whole buffer",
+            ))
+        } else {
+            Ok(out)
+        }
     }
 
     unsafe fn read_host_value<T: Endian>(&mut self) -> io::Result<T> {
@@ -306,4 +317,24 @@ impl<R: io::Read> ReadExt for R {
             }
         }
     }
+}
+
+#[test]
+fn test_read_exact_allocated() {
+    let input = [1, 2, 3];
+
+    let mut r = input.as_slice();
+    assert_eq!(r.read_exact_allocated(3).unwrap(), &input);
+
+    let mut r = input.as_slice();
+    assert_eq!(
+        r.read_exact_allocated(4).unwrap_err().kind(),
+        io::ErrorKind::UnexpectedEof
+    );
+
+    let mut r = input.as_slice();
+    assert_eq!(
+        r.read_exact_allocated(usize::MAX).unwrap_err().kind(),
+        io::ErrorKind::OutOfMemory
+    );
 }
