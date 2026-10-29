@@ -61,10 +61,9 @@ pub struct Uuid(Box<[u8; 16]>);
 impl Uuid {
     /// Generate a uuid with `uuid_generate(3)`.
     pub fn generate() -> Self {
-        use std::alloc::{Layout, alloc};
-        let uuid = unsafe { alloc(Layout::new::<[u8; 16]>()) as *mut [u8; 16] };
-        unsafe { uuid_generate(uuid) };
-        Self(unsafe { Box::from_raw(uuid) })
+        let mut uuid = Box::new_uninit();
+        unsafe { uuid_generate(uuid.as_mut_ptr()) };
+        Self(unsafe { uuid.assume_init() })
     }
 
     /// Get a reference to the internal 16 byte array.
@@ -92,12 +91,10 @@ impl Uuid {
     /// assert_eq!(uuid1, uuid2);
     /// ```
     pub fn parse_str(src: &str) -> Result<Self, UuidError> {
-        use std::alloc::{Layout, alloc};
-        let uuid: *mut [u8; 16] = unsafe { alloc(Layout::new::<[u8; 16]>()) as *mut [u8; 16] };
+        let mut uuid = [0; 16];
         if src.len() == 36 {
             // Unfortunately the manpage of `uuid_parse(3)` states that it technically requires a
             // terminating null byte at the end, which we don't have, so do this manually:
-            let uuid: &mut [u8] = unsafe { &mut (&mut *uuid)[..] };
             let src = src.as_bytes();
             if src[8] != b'-' || src[13] != b'-' || src[18] != b'-' || src[23] != b'-' {
                 return Err(UuidError);
@@ -118,7 +115,6 @@ impl Uuid {
                 uuid[i] = (hex_digit(src[2 * i + 4])? << 4) | hex_digit(src[2 * i + 5])?;
             }
         } else if src.len() == 32 {
-            let uuid: &mut [u8] = unsafe { &mut (&mut *uuid)[..] };
             let src = src.as_bytes();
             for i in 0..16 {
                 uuid[i] = (hex_digit(src[2 * i])? << 4) | hex_digit(src[2 * i + 1])?;
@@ -126,7 +122,7 @@ impl Uuid {
         } else {
             return Err(UuidError);
         }
-        Ok(Self(unsafe { Box::from_raw(uuid) }))
+        Ok(Self(Box::new(uuid)))
     }
 }
 
