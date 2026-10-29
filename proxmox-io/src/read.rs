@@ -5,8 +5,6 @@ use std::mem;
 
 use endian_trait::Endian;
 
-use crate::vec;
-
 /// Adds some additional related functionality for types implementing [`Read`](std::io::Read).
 ///
 /// Particularly for reading into a newly allocated buffer, appending to a `Vec<u8>` or reading
@@ -307,7 +305,7 @@ impl<R: io::Read> ReadExt for R {
 
     fn skip_to_end(&mut self) -> io::Result<usize> {
         let mut skipped_bytes = 0;
-        let mut buf = unsafe { vec::uninitialized(32 * 1024) };
+        let mut buf = vec![0; 32 * 1024];
         loop {
             match self.read(&mut buf) {
                 Ok(0) => return Ok(skipped_bytes),
