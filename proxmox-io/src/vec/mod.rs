@@ -17,7 +17,7 @@
 //!
 //! Examples:
 //! ```no_run
-//! use proxmox_io::vec::{self, ByteVecExt};
+//! use proxmox_io::vec;
 //!
 //! # let size = 64usize;
 //! # let more = 64usize;
@@ -25,14 +25,7 @@
 //!
 //! let mut buffer = unsafe { vec::uninitialized(size) }; // an actually uninitialized buffer
 //! vec::clear(&mut buffer); // zero out an &mut [u8]
-//!
-//! vec::clear(unsafe {
-//!     buffer.grow_uninitialized(more) // grow the buffer with uninitialized bytes
-//! });
 //! ```
-
-mod byte_vec;
-pub use byte_vec::ByteVecExt;
 
 /// Create an uninitialized byte vector of a specific size.
 ///
