@@ -47,13 +47,27 @@ pub use byte_vec::ByteVecExt;
 ///
 /// # Safety
 ///
-/// It's generally not unsafe to use this method, but the contents are uninitialized, and since
-/// this does not return a `MaybeUninit` type to track the initialization state, this is simply
-/// marked as unsafe for good measure.
+/// It is unsafe to use this method because reading uninitialized memory is
+/// undefined behavior and allows the compiler to do anything. It can delete
+/// code-paths leading to such reads and optimize (x == x + 1) to true.
+///
+/// The following example prints "hello 0 0" with opt-level=3:
+/// ```no_run
+/// unsafe {
+///     let ptr = std::alloc::alloc(std::alloc::Layout::array::<u8>(42).unwrap());
+///     let data = Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, 42));
+///     let x = data[0];
+///     println!("hello {} {}", x, x + 1); // prints hello 0 0
+/// }
+/// ```
 #[inline]
 pub unsafe fn uninitialized(len: usize) -> Vec<u8> {
     unsafe {
-        let data = std::alloc::alloc(std::alloc::Layout::array::<u8>(len).unwrap());
+        let layout = std::alloc::Layout::array::<u8>(len).unwrap();
+        let data = std::alloc::alloc(layout);
+        if data.is_null() {
+            std::alloc::handle_alloc_error(layout);
+        }
         Vec::from_raw_parts(data, len, len)
     }
 }

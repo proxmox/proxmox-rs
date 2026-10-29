@@ -285,15 +285,15 @@ impl<R: io::Read> ReadExt for R {
     }
 
     unsafe fn read_host_value_boxed<T>(&mut self) -> io::Result<Box<T>> {
-        // FIXME: Change this once #![feature(new_uninit)] lands for Box<T>!
-
         unsafe {
-            let ptr = std::alloc::alloc(std::alloc::Layout::new::<T>()) as *mut T;
+            let mut result = Box::<T>::new_uninit();
+            // If this reads uninitialized memory from result or lies about
+            // having written to it that would be undefined behavior.
             self.read_exact(std::slice::from_raw_parts_mut(
-                ptr as *mut u8,
-                mem::size_of::<T>(),
+                result.as_mut_ptr().cast::<u8>(),
+                size_of::<T>(),
             ))?;
-            Ok(Box::from_raw(ptr))
+            Ok(result.assume_init())
         }
     }
 
