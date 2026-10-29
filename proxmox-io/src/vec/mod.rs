@@ -23,47 +23,9 @@
 //! # let more = 64usize;
 //! let mut buffer = vec::undefined(size); // A zero-initialized buffer
 //!
-//! let mut buffer = unsafe { vec::uninitialized(size) }; // an actually uninitialized buffer
+//! let mut buffer = [1, 2, 3];
 //! vec::clear(&mut buffer); // zero out an &mut [u8]
 //! ```
-
-/// Create an uninitialized byte vector of a specific size.
-///
-/// This is just a shortcut for:
-/// ```no_run
-/// # let len = 64usize;
-/// let mut v = Vec::<u8>::with_capacity(len);
-/// unsafe {
-///     v.set_len(len);
-/// }
-/// ```
-///
-/// # Safety
-///
-/// It is unsafe to use this method because reading uninitialized memory is
-/// undefined behavior and allows the compiler to do anything. It can delete
-/// code-paths leading to such reads and optimize (x == x + 1) to true.
-///
-/// The following example prints "hello 0 0" with opt-level=3:
-/// ```no_run
-/// unsafe {
-///     let ptr = std::alloc::alloc(std::alloc::Layout::array::<u8>(42).unwrap());
-///     let data = Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, 42));
-///     let x = data[0];
-///     println!("hello {} {}", x, x + 1); // prints hello 0 0
-/// }
-/// ```
-#[inline]
-pub unsafe fn uninitialized(len: usize) -> Vec<u8> {
-    unsafe {
-        let layout = std::alloc::Layout::array::<u8>(len).unwrap();
-        let data = std::alloc::alloc(layout);
-        if data.is_null() {
-            std::alloc::handle_alloc_error(layout);
-        }
-        Vec::from_raw_parts(data, len, len)
-    }
-}
 
 /// Shortcut to zero out a slice of bytes.
 #[inline]
