@@ -12,9 +12,6 @@ pub fn uninitialized(len: usize) -> Box<[u8]> {
 
 /// Zero-initialized bytes, meant for large sizes to avoid busting the stack.
 pub fn zeroed(len: usize) -> Box<[u8]> {
-    let mut bytes = uninitialized(len);
-    unsafe {
-        std::ptr::write_bytes(bytes.as_mut_ptr(), 0, bytes.len());
-    }
-    bytes
+    // SAFETY: zero is a valid bit-pattern for u8
+    unsafe { Box::new_zeroed_slice(len).assume_init() }
 }

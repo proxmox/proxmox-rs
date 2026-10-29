@@ -69,11 +69,7 @@ pub fn clear(data: &mut [u8]) {
 /// Create a newly allocated, zero initialized byte vector.
 #[inline]
 pub fn zeroed(len: usize) -> Vec<u8> {
-    unsafe {
-        let mut out = uninitialized(len);
-        clear(&mut out);
-        out
-    }
+    vec![0; len]
 }
 
 /// Create a newly allocated byte vector of a specific size with "undefined" content.
