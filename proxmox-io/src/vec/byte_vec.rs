@@ -25,13 +25,6 @@
 /// # }
 /// ```
 ///
-/// Note that this module also provides a safe alternative for the case where
-/// `grow_uninitialized()` is directly followed by a `read_exact()` call via the [`ReadExt`]
-/// trait:
-/// ```ignore
-/// file.append_to_vec(&mut data, 1024)?;
-/// ```
-///
 /// [`ReadExt`]: crate::ReadExt
 pub trait ByteVecExt {
     /// Grow a vector without initializing its elements. The difference to simply using `reserve`
@@ -55,13 +48,6 @@ pub trait ByteVecExt {
     /// file.read_exact(unsafe { buffer.grow_uninitialized(1024) })?;
     /// # Ok(())
     /// # }
-    /// ```
-    ///
-    /// Although for the above case it is recommended to use the even shorter version from the
-    /// [`ReadExt`] trait:
-    /// ```ignore
-    /// // use crate::tools::vec::ByteVecExt;
-    /// file.append_to_vec(&mut buffer, 1024)?;
     /// ```
     ///
     /// # Safety

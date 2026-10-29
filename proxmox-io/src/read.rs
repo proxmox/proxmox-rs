@@ -5,7 +5,7 @@ use std::mem;
 
 use endian_trait::Endian;
 
-use crate::vec::{self, ByteVecExt};
+use crate::vec;
 
 /// Adds some additional related functionality for types implementing [`Read`](std::io::Read).
 ///
@@ -22,9 +22,6 @@ use crate::vec::{self, ByteVecExt};
 /// // read some bytes into a newly allocated Vec<u8>:
 /// let mut data = file.read_exact_allocated(64)?;
 ///
-/// // appending data to a vector:
-/// let actually_appended = file.append_to_vec(&mut data, 64)?; // .read() version
-/// file.append_exact_to_vec(&mut data, 64)?; // .read_exact() version
 /// # Ok(())
 /// # }
 /// ```
@@ -70,12 +67,6 @@ pub trait ReadExt {
     /// # }
     /// ```
     fn read_exact_allocated(&mut self, size: usize) -> io::Result<Vec<u8>>;
-
-    /// Append data to a vector, growing it as necessary. Returns the amount of data appended.
-    fn append_to_vec(&mut self, out: &mut Vec<u8>, size: usize) -> io::Result<usize>;
-
-    /// Append an exact amount of data to a vector, growing it as necessary.
-    fn append_exact_to_vec(&mut self, out: &mut Vec<u8>, size: usize) -> io::Result<()>;
 
     /// Read a value with host endianness.
     ///
@@ -242,27 +233,6 @@ impl<R: io::Read> ReadExt for R {
         let mut out = unsafe { vec::uninitialized(size) };
         self.read_exact(&mut out)?;
         Ok(out)
-    }
-
-    fn append_to_vec(&mut self, out: &mut Vec<u8>, size: usize) -> io::Result<usize> {
-        let pos = out.len();
-        unsafe {
-            out.grow_uninitialized(size);
-        }
-        let got = self.read(&mut out[pos..])?;
-        unsafe {
-            out.set_len(pos + got);
-        }
-        Ok(got)
-    }
-
-    fn append_exact_to_vec(&mut self, out: &mut Vec<u8>, size: usize) -> io::Result<()> {
-        let pos = out.len();
-        unsafe {
-            out.grow_uninitialized(size);
-        }
-        self.read_exact(&mut out[pos..])?;
-        Ok(())
     }
 
     unsafe fn read_host_value<T: Endian>(&mut self) -> io::Result<T> {
