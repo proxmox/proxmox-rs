@@ -12,6 +12,7 @@
 //!
 //! let mac: MacAddress = "BC:24:11:49:8D:75".parse().expect("valid MAC");
 //! assert_eq!(mac.to_string(), "BC:24:11:49:8D:75");
+//! assert_eq!(format!("{mac:x}"), "bc:24:11:49:8d:75");
 //! ```
 //!
 //! # API Schema
@@ -56,7 +57,7 @@
 //! # }
 //! ```
 
-use std::fmt::Display;
+use std::fmt::{Display, LowerHex};
 use std::net::Ipv6Addr;
 
 use serde_with::{DeserializeFromStr, SerializeDisplay};
@@ -215,6 +216,18 @@ impl Display for MacAddress {
     }
 }
 
+impl LowerHex for MacAddress {
+    /// Formats the MAC address as a lowercase hexadecimal string separated by colons, like the
+    /// Linux kernel shows it.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
+            self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5]
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -230,6 +243,7 @@ mod tests {
             let mac_address = input.parse::<MacAddress>().expect("valid mac address");
 
             assert_eq!(input.to_uppercase(), mac_address.to_string());
+            assert_eq!(input.to_lowercase(), format!("{mac_address:x}"));
         }
 
         for input in [
