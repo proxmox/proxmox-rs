@@ -130,6 +130,9 @@ const_regex! {
     /// A ED25519 key has always 32 bytes of raw key material, base64 needs 4 * (n / 3) characters
     /// to represent n bytes -> 4 * (32 / 3) = 42.6.., thus 43 + 1 padding character.
     pub ED25519_BASE64_KEY_REGEX =r"^[a-zA-Z0-9+/-]{43}=$";
+
+    /// Regex for matching a non-empty string that does not contain any whitespace.
+    pub NON_EMPTY_NO_WHITESPACE_REGEX = r"^\S+$";
 }
 
 pub const SAFE_ID_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&SAFE_ID_REGEX);
@@ -161,6 +164,9 @@ pub const HTTP_URL_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&HTTP_URL_
 pub const DNS_ALIAS_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&DNS_ALIAS_REGEX);
 pub const DNS_NAME_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&DNS_NAME_REGEX);
 pub const DNS_NAME_OR_IP_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&DNS_NAME_OR_IP_REGEX);
+
+pub const NON_EMPTY_NO_WHITESPACE_FORMAT: ApiStringFormat =
+    ApiStringFormat::Pattern(&NON_EMPTY_NO_WHITESPACE_REGEX);
 
 pub const IP_V4_SCHEMA: Schema = StringSchema::new("IPv4 address.")
     .format(&IP_V4_FORMAT)
@@ -345,6 +351,25 @@ fn test_blockdevice_name_regexes() {
             "{name:?}"
         );
     }
+}
+
+#[test]
+fn test_non_empty_no_whitespace_regex() {
+    assert!(NON_EMPTY_NO_WHITESPACE_REGEX.is_match("abc"));
+    assert!(NON_EMPTY_NO_WHITESPACE_REGEX.is_match("äöü€"));
+    assert!(NON_EMPTY_NO_WHITESPACE_REGEX.is_match("abc123&_.*#$%^&*()_"));
+
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match(""));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match(" "));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match("abc\n"));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match("ab c"));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match("äöü €"));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match("ab\nc"));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match("ab\rc"));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match("ab\r\nc"));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match("ab\tc"));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match("ab\u{a0}c"));
+    assert!(!NON_EMPTY_NO_WHITESPACE_REGEX.is_match("ab\u{2028}c"));
 }
 
 #[test]
