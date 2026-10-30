@@ -452,6 +452,13 @@ pub struct NetworkInterfacePinningOptionsAnswer {
             items: {
                 type: MacAddress,
             },
+            optional: true,
+        },
+        filter: {
+            type: Object,
+            properties: {},
+            additional_properties: true,
+            optional: true,
         },
     },
 ))]
@@ -461,7 +468,16 @@ pub struct NetworkInterfacePinningOptionsAnswer {
 /// physical interfaces and mode.
 pub struct NetworkBondOptions {
     /// List of interface MAC addresses to add as bond members.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub members: Vec<MacAddress>,
+    /// Filter against udev properties to select the members, instead of listing their MAC
+    /// addresses, for answers used on several machines.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub filter: BTreeMap<String, String>,
+    /// Set whether it is enough that any filter matches on an interface or all given filters must
+    /// match to select it as member.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter_match: Option<FilterMatch>,
     /// Mode for the bond to set.
     pub mode: LinuxBondMode,
     /// Bond hash policy. Only used with '802.3ad' and 'balance-xor' mode.
@@ -501,11 +517,27 @@ impl NetworkBondOptions {
     /// Does some basic checks on the options.
     ///
     /// This includes checks for:
+    /// - Members are either given or selected by a filter
     /// - There are at least two members
     /// - No member is given more than once
     /// - Whether the primary interface is applicable to the mode
     /// - Whether the primary interface (if given) is a member
+    ///
+    /// With a filter, the members are only known once it is applied to the interfaces of a
+    /// machine, so only the mode of a primary interface is checked then.
     pub fn verify(&self) -> Result<()> {
+        if !self.filter.is_empty() {
+            if !self.members.is_empty() {
+                bail!("bond members must be given either by MAC address or by a filter, not both");
+            }
+
+            if self.primary_interface.is_some() && self.mode != LinuxBondMode::ActiveBackup {
+                bail!("primary bond interface can only be set in active-backup mode");
+            }
+
+            return Ok(());
+        }
+
         if self.members.len() < 2 {
             bail!(
                 "bond setup requires at least 2 interfaces, got {}",
@@ -542,6 +574,8 @@ impl Default for NetworkBondOptions {
     fn default() -> Self {
         Self {
             members: Vec::new(),
+            filter: BTreeMap::new(),
+            filter_match: None,
             mode: LinuxBondMode::ActiveBackup,
             hash_policy: Self::default_hash_policy(),
             primary_interface: None,
@@ -1671,6 +1705,37 @@ mod tests {
             "ab:cd:df:12:34:56".parse().unwrap(),
         ];
         assert!(bond.verify().is_ok());
+    }
+
+    #[test]
+    fn network_bond_members_by_filter() {
+        let answer = r#"
+            mode = "802.3ad"
+            filter.ID_NET_DRIVER = "ice"
+            filter.ID_PATH = "pci-0000:41:00.*"
+            filter-match = "all"
+        "#;
+        let mut bond: NetworkBondOptions = toml::from_str(answer).unwrap();
+        assert!(bond.members.is_empty());
+        assert_eq!(bond.filter.len(), 2);
+        assert_eq!(bond.filter_match, Some(FilterMatch::All));
+        assert!(bond.verify().is_ok());
+
+        bond.primary_interface = Some("12:34:56:ab:cd:df".parse().unwrap());
+        assert_eq!(
+            bond.verify().unwrap_err().to_string(),
+            "primary bond interface can only be set in active-backup mode"
+        );
+
+        bond.primary_interface = None;
+        bond.members = vec![
+            "12:34:56:ab:cd:df".parse().unwrap(),
+            "ab:cd:df:12:34:56".parse().unwrap(),
+        ];
+        assert_eq!(
+            bond.verify().unwrap_err().to_string(),
+            "bond members must be given either by MAC address or by a filter, not both"
+        );
     }
 
     #[test]
