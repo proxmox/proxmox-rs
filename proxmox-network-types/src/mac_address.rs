@@ -69,10 +69,10 @@ use proxmox_schema::{ApiStringFormat, ApiType, Schema, StringSchema, UpdaterType
 #[derive(Error, Debug)]
 pub enum MacAddressError {
     /// The input string did not contain the correct amount of octets.
-    #[error("the hostname must be from 1 to 63 characters long")]
+    #[error("the MAC address must consist of 6 octets")]
     InvalidLength,
     /// The input string contained characters that are not valid hexadecimal digits.
-    #[error("the hostname contains invalid symbols")]
+    #[error("the MAC address contains invalid characters")]
     InvalidSymbols,
 }
 
