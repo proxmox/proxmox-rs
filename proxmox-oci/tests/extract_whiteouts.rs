@@ -1,4 +1,6 @@
+use std::ffi::OsStr;
 use std::fs::read_to_string;
+use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 
 use anyhow::Result;
@@ -168,6 +170,23 @@ fn test_whiteout_opaque_in_dir_replacing_symlink() -> Result<()> {
     assert!(image.extract_dir.join("usr/bin/sh").exists());
     assert!(image.extract_dir.join("bin/new").exists());
     assert!(!image.extract_dir.join("bin/sh").exists());
+
+    Ok(())
+}
+
+#[test]
+fn test_whiteout_non_utf8_name() -> Result<()> {
+    let name = OsStr::from_bytes(b"file-\xff");
+    let whiteout = OsStr::from_bytes(b".wh.file-\xff");
+
+    let image = TestImage::new(vec![
+        vec![LayerEntry::file(name, b"data")],
+        vec![LayerEntry::file(whiteout, b"")],
+    ])?;
+    image.extract()?;
+
+    assert!(!image.extract_dir.join(name).exists());
+    assert!(!image.extract_dir.join(whiteout).exists());
 
     Ok(())
 }

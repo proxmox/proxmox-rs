@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::{File, read_dir, remove_dir_all, remove_file};
 use std::io::{self, ErrorKind, Read, Seek, SeekFrom};
+use std::os::unix::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -17,7 +18,7 @@ use thiserror::Error;
 mod oci_tar_image;
 use oci_tar_image::{OciTarImage, OciTarImageBlob};
 
-const WHITEOUT_PREFIX: &str = ".wh.";
+const WHITEOUT_PREFIX: &[u8] = b".wh.";
 const OPAQUE_WHITEOUT_NAME: &str = ".wh..wh..opq";
 
 fn compute_digest<R: Read, H: Digest>(
@@ -326,13 +327,12 @@ fn remove_replaced_paths<R: Read>(reader: &mut R, target_path: &Path) -> io::Res
 
 fn is_whiteout(path: &Path) -> bool {
     path.file_name()
-        .and_then(OsStr::to_str)
-        .is_some_and(|name| name.starts_with(WHITEOUT_PREFIX))
+        .is_some_and(|name| name.as_bytes().starts_with(WHITEOUT_PREFIX))
 }
 
 /// Apply the whiteout file at `path` on previous layers.
 fn apply_whiteout(target_path: &Path, path: &Path) -> io::Result<()> {
-    let Some(filename) = path.file_name().and_then(OsStr::to_str) else {
+    let Some(filename) = path.file_name() else {
         return Ok(());
     };
 
@@ -344,14 +344,14 @@ fn apply_whiteout(target_path: &Path, path: &Path) -> io::Result<()> {
                 remove_path(&direntry?.path())?;
             }
         }
-    } else if let Some(filename_stripped) = filename.strip_prefix(WHITEOUT_PREFIX) {
+    } else if let Some(filename_stripped) = filename.as_bytes().strip_prefix(WHITEOUT_PREFIX) {
         let whiteout_path = match filename_stripped {
-            "." => match path.parent() {
+            b"." => match path.parent() {
                 Some(p) if p.parent().is_some() => p,
                 _ => return Ok(()), // Prevent whiteout of root directory
             },
-            ".." => return Ok(()), // Prevent whiteout of grandparent directory
-            fname => &path.with_file_name(fname),
+            b".." => return Ok(()), // Prevent whiteout of grandparent directory
+            fname => &path.with_file_name(OsStr::from_bytes(fname)),
         };
         if let Some(whiteout_abs_path) = resolve_in_target(target_path, whiteout_path)? {
             remove_path(&whiteout_abs_path)?;
