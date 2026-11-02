@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs::{File, read_dir, remove_dir_all, remove_file};
 use std::io::{self, ErrorKind, Read, Seek, SeekFrom};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use flate2::read::GzDecoder;
@@ -190,6 +190,7 @@ fn extract_image_rootfs<R: Read + Seek, P: AsRef<Path>>(
     target_path: P,
 ) -> Result<(), ExtractError> {
     let (mut oci_tar_image, layer_map) = build_layer_map(oci_tar_image, image_manifest)?;
+    let target_path = target_path.as_ref().canonicalize()?;
 
     for layer in image_config.rootfs().diff_ids() {
         let layer_digest = oci_spec::image::Digest::from_str(layer)
@@ -255,8 +256,40 @@ pub(crate) fn validate_path(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Join the `path` of a layer entry onto the resolved `target_path`, resolving its parent only.
+///
+/// Fails if the parent leads outside of the target through a symlink, like the tar crate checks
+/// before unpacking, assuming that nothing else modifies the target meanwhile. Returns `None` if
+/// the parent does not exist or `path` has no last component.
+fn resolve_in_target(target_path: &Path, path: &Path) -> io::Result<Option<PathBuf>> {
+    let (Some(parent), Some(name)) = (path.parent(), path.file_name()) else {
+        return Ok(None);
+    };
+    Ok(resolve_dir_in_target(target_path, parent)?.map(|dir| dir.join(name)))
+}
+
+/// Resolve the directory `dir` of a layer entry within the resolved `target_path`, see
+/// [`resolve_in_target`].
+fn resolve_dir_in_target(target_path: &Path, dir: &Path) -> io::Result<Option<PathBuf>> {
+    let resolved = match target_path.join(dir).canonicalize() {
+        Ok(resolved) => resolved,
+        Err(err) if matches!(err.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) => {
+            return Ok(None);
+        }
+        Err(err) => return Err(err),
+    };
+
+    if !resolved.starts_with(target_path) {
+        return Err(io::Error::other(format!(
+            "illegal path {dir:?} in layer - a symlink leads outside of the target directory"
+        )));
+    }
+
+    Ok(Some(resolved))
+}
+
 /// Apply whiteouts on previous layers
-fn apply_whiteouts<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> io::Result<()> {
+fn apply_whiteouts<R: Read>(reader: &mut R, target_path: &Path) -> io::Result<()> {
     let mut archive = Archive::new(reader);
 
     for entry in archive.entries()? {
@@ -270,12 +303,11 @@ fn apply_whiteouts<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
 
         if let Some(filename) = filepath.file_name() {
             if filename == OPAQUE_WHITEOUT_NAME {
-                if let Some(parent) = filepath.parent() {
-                    let whiteout_abs_path = target_path.as_ref().join(parent);
-                    if whiteout_abs_path.exists() {
-                        for direntry in read_dir(whiteout_abs_path)? {
-                            remove_path(&direntry?.path())?;
-                        }
+                if let Some(parent) = filepath.parent()
+                    && let Some(whiteout_abs_path) = resolve_dir_in_target(target_path, parent)?
+                {
+                    for direntry in read_dir(whiteout_abs_path)? {
+                        remove_path(&direntry?.path())?;
                     }
                 }
             } else if let Some(filename) = filename.to_str() {
@@ -289,7 +321,10 @@ fn apply_whiteouts<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
                         ".." => continue, // Prevent whiteout of grandparent directory
                         fname => &filepath.with_file_name(fname),
                     };
-                    remove_path(&target_path.as_ref().join(whiteout_path))?;
+                    if let Some(whiteout_abs_path) = resolve_in_target(target_path, whiteout_path)?
+                    {
+                        remove_path(&whiteout_abs_path)?;
+                    }
                 }
             }
         }
@@ -298,7 +333,7 @@ fn apply_whiteouts<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
     Ok(())
 }
 
-fn extract_archive<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> io::Result<()> {
+fn extract_archive<R: Read>(reader: &mut R, target_path: &Path) -> io::Result<()> {
     let mut archive = Archive::new(reader);
     archive.set_preserve_ownerships(true);
     archive.set_preserve_permissions(true);
@@ -330,26 +365,26 @@ fn extract_archive<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
         }
 
         // If a file or directory already exists at this path, remove it first.
-        remove_path(&target_path.as_ref().join(filepath))?;
+        if let Some(file_path_abs) = resolve_in_target(target_path, &filepath)? {
+            remove_path(&file_path_abs)?;
+        }
 
-        file.unpack_in(&target_path)?;
+        file.unpack_in(target_path)?;
     }
 
     // Apply the directories in reverse topological order,
     // to avoid failure on restrictive parent directory permissions.
     directories.sort_by(|a, b| b.path_bytes().cmp(&a.path_bytes()));
     for mut dir in directories {
-        let dir_path_abs = target_path.as_ref().join(dir.path()?);
-
-        // Remove the trailing slash
-        let dir_path_abs = dir_path_abs.components().as_path();
-
         // If a file already exists at this path, remove it first.
-        if dir_path_abs.exists() && !dir_path_abs.is_dir() {
+        if let Some(dir_path_abs) = resolve_in_target(target_path, &dir.path()?)?
+            && dir_path_abs.exists()
+            && !dir_path_abs.is_dir()
+        {
             remove_file(dir_path_abs)?;
         }
 
-        dir.unpack_in(&target_path)?;
+        dir.unpack_in(target_path)?;
     }
 
     Ok(())

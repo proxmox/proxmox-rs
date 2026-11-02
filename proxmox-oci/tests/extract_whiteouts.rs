@@ -124,3 +124,27 @@ fn test_whiteout_opaque_with_dangling_symlink() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_whiteout_symlink_parent_breakout() -> Result<()> {
+    assert_breakout_rejected(|foreign_dir| {
+        vec![
+            vec![LayerEntry::symlink("etc/link", foreign_dir)],
+            vec![LayerEntry::file("etc/link/.wh.foreign.txt", b"")],
+        ]
+    })?;
+
+    Ok(())
+}
+
+#[test]
+fn test_whiteout_opaque_symlink_breakout() -> Result<()> {
+    assert_breakout_rejected(|foreign_dir| {
+        vec![
+            vec![LayerEntry::symlink("etc/link", foreign_dir)],
+            vec![LayerEntry::file("etc/link/.wh..wh..opq", b"")],
+        ]
+    })?;
+
+    Ok(())
+}

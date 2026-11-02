@@ -70,3 +70,27 @@ fn test_replace_foreign_file() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_replace_file_through_symlink_parent() -> Result<()> {
+    assert_breakout_rejected(|foreign_dir| {
+        vec![
+            vec![LayerEntry::symlink("etc/link", foreign_dir)],
+            vec![LayerEntry::file("etc/link/foreign.txt", b"replaced\n")],
+        ]
+    })?;
+
+    Ok(())
+}
+
+#[test]
+fn test_replace_file_with_dir_through_symlink_parent() -> Result<()> {
+    assert_breakout_rejected(|foreign_dir| {
+        vec![
+            vec![LayerEntry::symlink("etc/link", foreign_dir)],
+            vec![LayerEntry::dir("etc/link/foreign.txt")],
+        ]
+    })?;
+
+    Ok(())
+}
