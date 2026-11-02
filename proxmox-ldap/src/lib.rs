@@ -106,6 +106,10 @@ impl Connection {
     /// The user's domain is queried is by performing an LDAP search with the configured bind_dn
     /// and bind_password. If no bind_dn is provided, an anonymous search is attempted.
     pub async fn authenticate_user(&self, username: &str, password: &str) -> Result<(), Error> {
+        if password.is_empty() {
+            bail!("Empty passwords are not supported")
+        }
+
         let user_dn = self.search_user_dn(username).await?;
 
         let mut ldap = self.create_connection().await?;
@@ -444,6 +448,27 @@ impl Display for FilterElement<'_> {
 #[cfg(test)]
 mod tests {
     use super::FilterElement::*;
+    use super::{Config, Connection, ConnectionMode};
+
+    #[test]
+    fn test_reject_empty_password() {
+        let connection = Connection::new(Config {
+            servers: vec!["localhost".into()],
+            port: Some(1),
+            user_attr: "cn".into(),
+            base_dn: "dc=example,dc=com".into(),
+            bind_dn: None,
+            bind_password: None,
+            tls_mode: ConnectionMode::Ldap,
+            verify_certificate: false,
+            additional_trusted_certificates: None,
+            certificate_store_path: None,
+        });
+
+        let err = proxmox_async::runtime::block_on(connection.authenticate_user("test1", ""))
+            .unwrap_err();
+        assert_eq!(err.to_string(), "Empty passwords are not supported");
+    }
 
     #[test]
     fn test_filter_elements_to_string() {
