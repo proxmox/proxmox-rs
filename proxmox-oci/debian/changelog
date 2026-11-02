@@ -1,3 +1,21 @@
+rust-proxmox-oci (0.2.2-1) trixie; urgency=medium
+
+  * rootfs extraction:
+    - reject layer entries with absolute paths or '..' components, and
+      entries whose path leads out of the rootfs through a symlink from an
+      earlier layer. Applying whiteouts or replacing existing paths could
+      otherwise remove files outside of the rootfs. Images with such entries
+      now fail to extract.
+    - let a directory from a later layer replace a symlink, as on an overlay
+      file system, instead of keeping the symlink and applying the directory's
+      contents, whiteouts and permissions to the symlink's target, which could
+      even be outside of the rootfs.
+    - fix whiteouts being ignored for dangling symlinks and for file names
+      that are not valid UTF-8, and opaque whiteouts of directories containing
+      a dangling symlink failing the extraction.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 02 Nov 2026 18:21:09 +0100
+
 rust-proxmox-oci (0.2.1-1) bookworm; urgency=medium
 
   * fix rootfs extraction when paths already exist. Remove paths from previous
