@@ -93,3 +93,34 @@ fn test_whiteout_opaque_foreign_dir() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_whiteout_dangling_symlink() -> Result<()> {
+    let image = TestImage::new(vec![
+        vec![LayerEntry::symlink("dangling", "dne")],
+        vec![LayerEntry::file(".wh.dangling", b"")],
+    ])?;
+    image.extract()?;
+
+    assert!(!image.extract_dir.join("dangling").is_symlink());
+
+    Ok(())
+}
+
+#[test]
+fn test_whiteout_opaque_with_dangling_symlink() -> Result<()> {
+    let image = TestImage::new(vec![
+        vec![
+            LayerEntry::file("etc/passwd", b"passwd"),
+            LayerEntry::symlink("etc/dangling", "dne"),
+        ],
+        vec![LayerEntry::file("etc/.wh..wh..opq", b"")],
+    ])?;
+    image.extract()?;
+
+    assert!(image.extract_dir.join("etc").is_dir());
+    assert!(!image.extract_dir.join("etc/passwd").exists());
+    assert!(!image.extract_dir.join("etc/dangling").is_symlink());
+
+    Ok(())
+}

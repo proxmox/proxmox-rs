@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs::{File, read_dir, remove_dir_all, remove_file};
-use std::io::{self, Read, Seek, SeekFrom};
-use std::path::{Path, PathBuf};
+use std::io::{self, ErrorKind, Read, Seek, SeekFrom};
+use std::path::Path;
 use std::str::FromStr;
 
 use flate2::read::GzDecoder;
@@ -274,7 +274,7 @@ fn apply_whiteouts<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
                     let whiteout_abs_path = target_path.as_ref().join(parent);
                     if whiteout_abs_path.exists() {
                         for direntry in read_dir(whiteout_abs_path)? {
-                            remove_path(direntry?.path())?;
+                            remove_path(&direntry?.path())?;
                         }
                     }
                 }
@@ -289,10 +289,7 @@ fn apply_whiteouts<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
                         ".." => continue, // Prevent whiteout of grandparent directory
                         fname => &filepath.with_file_name(fname),
                     };
-                    let whiteout_abs_path = target_path.as_ref().join(whiteout_path);
-                    if whiteout_abs_path.exists() {
-                        remove_path(whiteout_abs_path)?;
-                    }
+                    remove_path(&target_path.as_ref().join(whiteout_path))?;
                 }
             }
         }
@@ -333,14 +330,7 @@ fn extract_archive<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
         }
 
         // If a file or directory already exists at this path, remove it first.
-        let file_path_abs = target_path.as_ref().join(filepath);
-        if file_path_abs.exists() {
-            if file_path_abs.is_dir() {
-                remove_dir_all(file_path_abs)?;
-            } else {
-                remove_file(file_path_abs)?;
-            }
-        }
+        remove_path(&target_path.as_ref().join(filepath))?;
 
         file.unpack_in(&target_path)?;
     }
@@ -365,10 +355,12 @@ fn extract_archive<R: Read, P: AsRef<Path>>(reader: &mut R, target_path: P) -> i
     Ok(())
 }
 
-fn remove_path(path: PathBuf) -> io::Result<()> {
-    if path.metadata()?.is_dir() {
-        remove_dir_all(path)
-    } else {
-        remove_file(path)
+/// Remove whatever exists at `path`, without following a symlink there.
+fn remove_path(path: &Path) -> io::Result<()> {
+    match path.symlink_metadata() {
+        Ok(metadata) if metadata.is_dir() => remove_dir_all(path),
+        Ok(_) => remove_file(path),
+        Err(err) if matches!(err.kind(), ErrorKind::NotFound | ErrorKind::NotADirectory) => Ok(()),
+        Err(err) => Err(err),
     }
 }
