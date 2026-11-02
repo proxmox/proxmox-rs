@@ -1,3 +1,12 @@
+rust-proxmox-ldap (1.1.2-1) trixie; urgency=medium
+
+  * reject empty passwords before contacting the LDAP server. An empty
+    password makes a simple bind unauthenticated, which servers allowing such
+    binds report as success, so any existing directory user could pass the
+    password check with just their user name.
+
+ -- Proxmox Support Team <support@proxmox.com>  Mon, 02 Nov 2026 21:08:03 +0100
+
 rust-proxmox-ldap (1.1.1-1) trixie; urgency=medium
 
   * escape the user-provided user name when using it in the LDAP search
