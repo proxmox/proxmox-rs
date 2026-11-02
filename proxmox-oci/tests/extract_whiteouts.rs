@@ -148,3 +148,26 @@ fn test_whiteout_opaque_symlink_breakout() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_whiteout_opaque_in_dir_replacing_symlink() -> Result<()> {
+    let image = TestImage::new(vec![
+        vec![
+            LayerEntry::dir("usr/bin"),
+            LayerEntry::file("usr/bin/sh", b"sh"),
+            LayerEntry::symlink("bin", "usr/bin"),
+        ],
+        vec![
+            LayerEntry::dir("bin"),
+            LayerEntry::file("bin/.wh..wh..opq", b""),
+            LayerEntry::file("bin/new", b"new"),
+        ],
+    ])?;
+    image.extract()?;
+
+    assert!(image.extract_dir.join("usr/bin/sh").exists());
+    assert!(image.extract_dir.join("bin/new").exists());
+    assert!(!image.extract_dir.join("bin/sh").exists());
+
+    Ok(())
+}

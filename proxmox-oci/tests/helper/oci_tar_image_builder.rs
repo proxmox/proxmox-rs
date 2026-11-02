@@ -80,6 +80,7 @@ impl OciTarImageBuilder {
                     }
                     EntryKind::Dir => {
                         header.set_entry_type(tar::EntryType::Directory);
+                        header.set_mode(0o755);
                         vec![]
                     }
                     EntryKind::Symlink(target) => {

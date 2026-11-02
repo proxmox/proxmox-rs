@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ffi::OsStr;
 use std::fs::{File, read_dir, remove_dir_all, remove_file};
 use std::io::{self, ErrorKind, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
@@ -227,7 +228,7 @@ fn extract_image_rootfs<R: Read + Seek, P: AsRef<Path>>(
             }
         };
 
-        apply_whiteouts(&mut decode_fn(&mut layer_file)?, &target_path)?;
+        remove_replaced_paths(&mut decode_fn(&mut layer_file)?, &target_path)?;
         layer_file.seek(SeekFrom::Start(0))?;
         extract_archive(&mut decode_fn(&mut layer_file)?, &target_path)?;
 
@@ -288,45 +289,72 @@ fn resolve_dir_in_target(target_path: &Path, dir: &Path) -> io::Result<Option<Pa
     Ok(Some(resolved))
 }
 
-/// Apply whiteouts on previous layers
-fn apply_whiteouts<R: Read>(reader: &mut R, target_path: &Path) -> io::Result<()> {
+/// Remove what a layer replaces with directories or whites out from previous layers.
+fn remove_replaced_paths<R: Read>(reader: &mut R, target_path: &Path) -> io::Result<()> {
     let mut archive = Archive::new(reader);
 
+    let mut directories = Vec::new();
+    let mut whiteouts = Vec::new();
     for entry in archive.entries()? {
-        let file = entry?;
-        if file.header().entry_type() != EntryType::Regular {
-            continue;
+        let entry = entry?;
+        let path = entry.path()?;
+        validate_path(&path)?;
+
+        match entry.header().entry_type() {
+            EntryType::Directory => directories.push(path.into_owned()),
+            EntryType::Regular if is_whiteout(&path) => whiteouts.push(path.into_owned()),
+            _ => {}
         }
+    }
 
-        let filepath = file.path()?;
-        validate_path(&filepath)?;
+    // Parents first and before whiteouts, so nothing resolves through a symlink being replaced.
+    directories.sort();
+    for dir in directories {
+        if let Some(dir_path_abs) = resolve_in_target(target_path, &dir)?
+            && dir_path_abs.symlink_metadata().is_ok_and(|m| !m.is_dir())
+        {
+            remove_file(dir_path_abs)?;
+        }
+    }
 
-        if let Some(filename) = filepath.file_name() {
-            if filename == OPAQUE_WHITEOUT_NAME {
-                if let Some(parent) = filepath.parent()
-                    && let Some(whiteout_abs_path) = resolve_dir_in_target(target_path, parent)?
-                {
-                    for direntry in read_dir(whiteout_abs_path)? {
-                        remove_path(&direntry?.path())?;
-                    }
-                }
-            } else if let Some(filename) = filename.to_str() {
-                // TODO: Simplify this once OsStr::strip_prefix is implemented
-                if let Some(filename_stripped) = filename.strip_prefix(WHITEOUT_PREFIX) {
-                    let whiteout_path = match filename_stripped {
-                        "." => match filepath.parent() {
-                            Some(p) if p.parent().is_some() => p,
-                            _ => continue, // Prevent whiteout of root directory
-                        },
-                        ".." => continue, // Prevent whiteout of grandparent directory
-                        fname => &filepath.with_file_name(fname),
-                    };
-                    if let Some(whiteout_abs_path) = resolve_in_target(target_path, whiteout_path)?
-                    {
-                        remove_path(&whiteout_abs_path)?;
-                    }
-                }
+    for whiteout in whiteouts {
+        apply_whiteout(target_path, &whiteout)?;
+    }
+
+    Ok(())
+}
+
+fn is_whiteout(path: &Path) -> bool {
+    path.file_name()
+        .and_then(OsStr::to_str)
+        .is_some_and(|name| name.starts_with(WHITEOUT_PREFIX))
+}
+
+/// Apply the whiteout file at `path` on previous layers.
+fn apply_whiteout(target_path: &Path, path: &Path) -> io::Result<()> {
+    let Some(filename) = path.file_name().and_then(OsStr::to_str) else {
+        return Ok(());
+    };
+
+    if filename == OPAQUE_WHITEOUT_NAME {
+        if let Some(parent) = path.parent()
+            && let Some(whiteout_abs_path) = resolve_dir_in_target(target_path, parent)?
+        {
+            for direntry in read_dir(whiteout_abs_path)? {
+                remove_path(&direntry?.path())?;
             }
+        }
+    } else if let Some(filename_stripped) = filename.strip_prefix(WHITEOUT_PREFIX) {
+        let whiteout_path = match filename_stripped {
+            "." => match path.parent() {
+                Some(p) if p.parent().is_some() => p,
+                _ => return Ok(()), // Prevent whiteout of root directory
+            },
+            ".." => return Ok(()), // Prevent whiteout of grandparent directory
+            fname => &path.with_file_name(fname),
+        };
+        if let Some(whiteout_abs_path) = resolve_in_target(target_path, whiteout_path)? {
+            remove_path(&whiteout_abs_path)?;
         }
     }
 
@@ -351,17 +379,8 @@ fn extract_archive<R: Read>(reader: &mut R, target_path: &Path) -> io::Result<()
         if file.header().entry_type() == EntryType::Directory {
             directories.push(file);
             continue;
-        } else if file.header().entry_type() == EntryType::Regular {
-            // Skip whiteout files
-            if let Some(filename) = filepath.file_name() {
-                if filename == OPAQUE_WHITEOUT_NAME {
-                    continue;
-                } else if let Some(filename) = filename.to_str() {
-                    if filename.starts_with(WHITEOUT_PREFIX) {
-                        continue;
-                    }
-                }
-            }
+        } else if file.header().entry_type() == EntryType::Regular && is_whiteout(&filepath) {
+            continue;
         }
 
         // If a file or directory already exists at this path, remove it first.
@@ -376,12 +395,11 @@ fn extract_archive<R: Read>(reader: &mut R, target_path: &Path) -> io::Result<()
     // to avoid failure on restrictive parent directory permissions.
     directories.sort_by(|a, b| b.path_bytes().cmp(&a.path_bytes()));
     for mut dir in directories {
-        // If a file already exists at this path, remove it first.
+        // Skip a directory replaced by a later entry, also to not apply it through a symlink.
         if let Some(dir_path_abs) = resolve_in_target(target_path, &dir.path()?)?
-            && dir_path_abs.exists()
-            && !dir_path_abs.is_dir()
+            && dir_path_abs.symlink_metadata().is_ok_and(|m| !m.is_dir())
         {
-            remove_file(dir_path_abs)?;
+            continue;
         }
 
         dir.unpack_in(target_path)?;

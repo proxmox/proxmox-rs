@@ -1,10 +1,11 @@
 use std::fs::read_to_string;
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 
 use anyhow::Result;
 
 mod helper;
-use helper::{LayerEntry, TestImage, assert_breakout_rejected};
+use helper::{Cleanup, LayerEntry, TestImage, assert_breakout_rejected};
 
 #[test]
 fn test_replace_file() -> Result<()> {
@@ -91,6 +92,90 @@ fn test_replace_file_with_dir_through_symlink_parent() -> Result<()> {
             vec![LayerEntry::dir("etc/link/foreign.txt")],
         ]
     })?;
+
+    Ok(())
+}
+
+#[test]
+fn test_replace_symlink_with_dir() -> Result<()> {
+    let mut cleanup = Cleanup::default();
+    let foreign_dir = cleanup.tmp_dir("foreign dir")?;
+    let foreign_mode = foreign_dir.metadata()?.permissions().mode();
+
+    let image = TestImage::new(vec![
+        vec![LayerEntry::symlink("etc/a", &foreign_dir)],
+        vec![LayerEntry::dir("etc/a")],
+    ])?;
+    image.extract()?;
+
+    assert!(image.extract_dir.join("etc/a").symlink_metadata()?.is_dir());
+    assert_eq!(foreign_dir.metadata()?.permissions().mode(), foreign_mode);
+
+    Ok(())
+}
+
+#[test]
+fn test_replace_symlink_with_populated_dir() -> Result<()> {
+    let image = TestImage::new(vec![
+        vec![
+            LayerEntry::dir("usr/bin"),
+            LayerEntry::file("usr/bin/sh", b"sh"),
+            LayerEntry::symlink("bin", "usr/bin"),
+        ],
+        vec![
+            LayerEntry::dir("bin"),
+            LayerEntry::file("bin/new", b"new"),
+            LayerEntry::dir("bin/sub"),
+            LayerEntry::file("bin/sub/leaf", b"leaf"),
+        ],
+    ])?;
+    image.extract()?;
+
+    let extract_dir = &image.extract_dir;
+    assert!(extract_dir.join("bin").symlink_metadata()?.is_dir());
+    assert_eq!(read_to_string(extract_dir.join("bin/new"))?, "new");
+    assert_eq!(read_to_string(extract_dir.join("bin/sub/leaf"))?, "leaf");
+    assert_eq!(read_to_string(extract_dir.join("usr/bin/sh"))?, "sh");
+    assert!(!extract_dir.join("usr/bin/new").exists());
+    assert!(!extract_dir.join("usr/bin/sub").exists());
+
+    Ok(())
+}
+
+#[test]
+fn test_replace_dir_with_symlink_in_same_layer() -> Result<()> {
+    let mut cleanup = Cleanup::default();
+    let foreign_dir = cleanup.tmp_dir("foreign dir")?;
+    let foreign_mode = foreign_dir.metadata()?.permissions().mode();
+
+    let image = TestImage::new(vec![vec![
+        LayerEntry::dir("etc/a"),
+        LayerEntry::symlink("etc/a", &foreign_dir),
+    ]])?;
+    image.extract()?;
+
+    assert!(image.extract_dir.join("etc/a").is_symlink());
+    assert_eq!(foreign_dir.metadata()?.permissions().mode(), foreign_mode);
+
+    Ok(())
+}
+
+#[test]
+fn test_replace_symlink_with_dir_after_its_entries() -> Result<()> {
+    let image = TestImage::new(vec![
+        vec![
+            LayerEntry::dir("usr/bin"),
+            LayerEntry::file("usr/bin/sh", b"sh"),
+            LayerEntry::symlink("bin", "usr/bin"),
+        ],
+        vec![LayerEntry::file("bin/new", b"new"), LayerEntry::dir("bin")],
+    ])?;
+    image.extract()?;
+
+    let extract_dir = &image.extract_dir;
+    assert!(extract_dir.join("bin").symlink_metadata()?.is_dir());
+    assert_eq!(read_to_string(extract_dir.join("bin/new"))?, "new");
+    assert!(!extract_dir.join("usr/bin/new").exists());
 
     Ok(())
 }
