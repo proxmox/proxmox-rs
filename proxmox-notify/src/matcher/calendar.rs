@@ -44,3 +44,26 @@ impl FromStr for CalendarMatcher {
 
 proxmox_serde::forward_deserialize_to_from_str!(CalendarMatcher);
 proxmox_serde::forward_serialize_to_display!(CalendarMatcher);
+
+#[cfg(test)]
+mod test {
+    use serde_json::Value;
+
+    use crate::{Notification, Severity, matcher::MatchDirective as _};
+
+    use super::*;
+
+    #[test]
+    fn test_calendar_matcher() {
+        let mut notification =
+            Notification::from_template(Severity::Notice, "test", Value::Null, Default::default());
+
+        // Fr 22 Mai 2026 12:45:00 CEST
+        notification.metadata.timestamp = 1779446700;
+
+        // Match on a wide rage to avoid issues when running this test case
+        // in a different time zone.
+        let matcher: CalendarMatcher = "thu..sat 0-23".parse().unwrap();
+        assert!(matcher.matches(&notification).unwrap());
+    }
+}
