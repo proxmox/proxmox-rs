@@ -1,3 +1,29 @@
+rust-proxmox-notify (2.0.0-1) trixie; urgency=medium
+
+  * the matcher API changed incompatibly: the field, severity and calendar
+    matcher types moved into submodules, MatcherConfig gained the
+    'expression' field, and its legacy fields need the 'legacy-matchers'
+    feature.
+
+  * log which matchers matched a notification to ease debugging.
+
+  * matcher: add the 'expression' option for nested match rules. It holds a
+    JSON-encoded rule tree that combines all-of, any-of, one-of and not with
+    calendar, field and severity rules at any depth, lifting the single-level
+    limit of the 'match-*', 'mode' and 'invert-match' keys. These legacy keys
+    are now behind the 'legacy-matchers' feature, which the PVE and PBS
+    contexts enable, and are evaluated as an equivalent expression.
+
+  * api: add a getter that returns a matcher with its legacy keys converted to
+    an equivalent expression, allowing UIs to migrate existing matchers.
+
+  * api: when creating or updating a matcher, reject empty all-of, any-of and
+    one-of rules, field or severity matchers without values, invalid field
+    names, field matchers with both values and a regex, and mixing legacy keys
+    with 'expression'. Store expressions in minified form.
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 03 Nov 2026 20:04:31 +0100
+
 rust-proxmox-notify (1.0.3-1) trixie; urgency=medium
 
   * update proxmox-schema to 5.0.0
