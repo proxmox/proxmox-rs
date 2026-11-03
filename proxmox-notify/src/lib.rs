@@ -599,6 +599,10 @@ impl Bus {
 mod tests {
     use std::{cell::RefCell, rc::Rc};
 
+    use proxmox_match_expression::Expression;
+
+    use crate::matcher::{expression::NotificationMatcher, severity::SeverityMatcher};
+
     use super::*;
 
     #[derive(Default, Clone)]
@@ -638,6 +642,10 @@ mod tests {
         }
     }
 
+    fn expression_to_string(expression: Expression<NotificationMatcher>) -> String {
+        serde_json::to_string(&expression).unwrap()
+    }
+
     #[test]
     fn test_add_mock_endpoint() -> Result<(), Error> {
         let mock = MockEndpoint::new("endpoint");
@@ -647,6 +655,7 @@ mod tests {
 
         let matcher = MatcherConfig {
             target: vec!["endpoint".into()],
+            expression: Some(expression_to_string(Expression::Constant(true))),
             ..Default::default()
         };
 
@@ -677,14 +686,24 @@ mod tests {
 
         bus.add_matcher(MatcherConfig {
             name: "matcher1".into(),
-            match_severity: vec!["warning,error".parse()?],
+            expression: Some(expression_to_string(
+                SeverityMatcher {
+                    severities: vec![Severity::Error, Severity::Warning],
+                }
+                .into(),
+            )),
             target: vec!["mock1".into()],
             ..Default::default()
         });
 
         bus.add_matcher(MatcherConfig {
             name: "matcher2".into(),
-            match_severity: vec!["error".parse()?],
+            expression: Some(expression_to_string(
+                SeverityMatcher {
+                    severities: vec![Severity::Error],
+                }
+                .into(),
+            )),
             target: vec!["mock2".into()],
             ..Default::default()
         });

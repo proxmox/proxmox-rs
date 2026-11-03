@@ -1,11 +1,12 @@
 use std::fmt;
 use std::str::FromStr;
 
+use proxmox_match_expression::Expression;
 use serde::{Deserialize, Serialize};
 
 use proxmox_time::DailyDuration;
 
-use crate::{Error, Notification};
+use crate::{Error, Notification, matcher::expression::NotificationMatcher};
 
 use super::MatchDirective;
 
@@ -53,6 +54,12 @@ pub struct CalendarMatcher {
     schedule: DailyDurationWrapper,
 }
 
+impl From<CalendarMatcher> for Expression<NotificationMatcher> {
+    fn from(value: CalendarMatcher) -> Self {
+        Expression::Match(NotificationMatcher::Calendar(value))
+    }
+}
+
 impl MatchDirective for CalendarMatcher {
     fn matches(&self, notification: &Notification) -> Result<bool, Error> {
         self.schedule
@@ -62,43 +69,51 @@ impl MatchDirective for CalendarMatcher {
     }
 }
 
-/// Match the timestamp of a notification.
-///
-/// This is a wrapper that serializes into an inline format that can be used
-/// in a section config key-value pair.
-#[derive(Clone, Debug)]
-pub struct InlineCalendarMatcher(CalendarMatcher);
+#[cfg(feature = "legacy-matchers")]
+pub mod inline {
+    use super::*;
 
-impl MatchDirective for InlineCalendarMatcher {
-    fn matches(&self, notification: &Notification) -> Result<bool, Error> {
-        self.0.matches(notification)
+    /// Match the timestamp of a notification.
+    ///
+    /// This is a wrapper that serializes into an inline format that can be used
+    /// in a section config key-value pair.
+    #[derive(Clone, Debug)]
+    pub struct InlineCalendarMatcher(CalendarMatcher);
+
+    impl MatchDirective for InlineCalendarMatcher {
+        fn matches(&self, notification: &Notification) -> Result<bool, Error> {
+            self.0.matches(notification)
+        }
     }
+
+    impl fmt::Display for InlineCalendarMatcher {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            f.write_str(self.0.schedule.as_str())
+        }
+    }
+
+    impl FromStr for InlineCalendarMatcher {
+        type Err = Error;
+
+        fn from_str(s: &str) -> Result<Self, Error> {
+            Ok(Self(CalendarMatcher {
+                schedule: s.parse()?,
+            }))
+        }
+    }
+
+    impl InlineCalendarMatcher {
+        pub fn into_inner(self) -> CalendarMatcher {
+            self.0
+        }
+    }
+
+    proxmox_serde::forward_deserialize_to_from_str!(InlineCalendarMatcher);
+    proxmox_serde::forward_serialize_to_display!(InlineCalendarMatcher);
 }
 
-impl fmt::Display for InlineCalendarMatcher {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.0.schedule.as_str())
-    }
-}
-
-impl FromStr for InlineCalendarMatcher {
-    type Err = Error;
-
-    fn from_str(s: &str) -> Result<Self, Error> {
-        Ok(Self(CalendarMatcher {
-            schedule: s.parse()?,
-        }))
-    }
-}
-
-impl InlineCalendarMatcher {
-    pub fn into_inner(self) -> CalendarMatcher {
-        self.0
-    }
-}
-
-proxmox_serde::forward_deserialize_to_from_str!(InlineCalendarMatcher);
-proxmox_serde::forward_serialize_to_display!(InlineCalendarMatcher);
+#[cfg(feature = "legacy-matchers")]
+pub use inline::*;
 
 #[cfg(test)]
 mod test {
@@ -118,7 +133,9 @@ mod test {
 
         // Match on a wide rage to avoid issues when running this test case
         // in a different time zone.
-        let matcher: InlineCalendarMatcher = "thu..sat 0-23".parse().unwrap();
+        let matcher = CalendarMatcher {
+            schedule: "thu..sat 0-23".parse().unwrap(),
+        };
         assert!(matcher.matches(&notification).unwrap());
     }
 
@@ -128,11 +145,6 @@ mod test {
 
         let calendar_matcher: CalendarMatcher = serde_json::from_str(calendar_matcher).unwrap();
 
-        let s = serde_json::to_string(&calendar_matcher).unwrap();
-        let m: CalendarMatcher = serde_json::from_str(&s).unwrap();
-
-        let a = InlineCalendarMatcher(m);
-
-        assert_eq!(a.to_string(), "thu..sat 0-23");
+        let _s = serde_json::to_string(&calendar_matcher).unwrap();
     }
 }

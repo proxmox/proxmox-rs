@@ -34,6 +34,7 @@ pub fn get_matcher(config: &Config, name: &str) -> Result<MatcherConfig, HttpErr
 ///
 /// The caller is responsible for any needed permission checks.
 /// Returns the endpoint or a `HttpError` if the matcher was not found (`404 Not found`).
+#[cfg(feature = "legacy-matchers")]
 pub fn get_matcher_as_expression(config: &Config, name: &str) -> Result<MatcherConfig, HttpError> {
     let mut matcher: MatcherConfig = config
         .config
@@ -110,37 +111,49 @@ pub fn update_matcher(
     if let Some(delete) = delete {
         for deletable_property in delete {
             match deletable_property {
+                #[cfg(feature = "legacy-matchers")]
                 DeleteableMatcherProperty::MatchSeverity => matcher.match_severity.clear(),
+                #[cfg(feature = "legacy-matchers")]
                 DeleteableMatcherProperty::MatchField => matcher.match_field.clear(),
+                #[cfg(feature = "legacy-matchers")]
                 DeleteableMatcherProperty::MatchCalendar => matcher.match_calendar.clear(),
-                DeleteableMatcherProperty::Target => matcher.target.clear(),
-                DeleteableMatcherProperty::Mode => matcher.mode = None,
+                #[cfg(feature = "legacy-matchers")]
                 DeleteableMatcherProperty::InvertMatch => matcher.invert_match = None,
-                DeleteableMatcherProperty::Comment => matcher.comment = None,
-                DeleteableMatcherProperty::Disable => matcher.disable = None,
+                #[cfg(feature = "legacy-matchers")]
+                DeleteableMatcherProperty::Mode => matcher.mode = None,
                 DeleteableMatcherProperty::Expression => matcher.expression = None,
+                DeleteableMatcherProperty::Comment => matcher.comment = None,
+                DeleteableMatcherProperty::Target => matcher.target.clear(),
+                DeleteableMatcherProperty::Disable => matcher.disable = None,
             }
         }
     }
 
-    if let Some(match_severity) = matcher_updater.match_severity {
-        matcher.match_severity = match_severity;
+    #[cfg(feature = "legacy-matchers")]
+    {
+        if let Some(match_severity) = matcher_updater.match_severity {
+            matcher.match_severity = match_severity;
+        }
+
+        if let Some(match_field) = matcher_updater.match_field {
+            matcher.match_field = match_field;
+        }
+
+        if let Some(match_calendar) = matcher_updater.match_calendar {
+            matcher.match_calendar = match_calendar;
+        }
+
+        if let Some(mode) = matcher_updater.mode {
+            matcher.mode = Some(mode);
+        }
+
+        if let Some(invert_match) = matcher_updater.invert_match {
+            matcher.invert_match = Some(invert_match);
+        }
     }
 
-    if let Some(match_field) = matcher_updater.match_field {
-        matcher.match_field = match_field;
-    }
-
-    if let Some(match_calendar) = matcher_updater.match_calendar {
-        matcher.match_calendar = match_calendar;
-    }
-
-    if let Some(mode) = matcher_updater.mode {
-        matcher.mode = Some(mode);
-    }
-
-    if let Some(invert_match) = matcher_updater.invert_match {
-        matcher.invert_match = Some(invert_match);
+    if let Some(expression) = matcher_updater.expression {
+        matcher.expression = Some(expression);
     }
 
     if let Some(comment) = matcher_updater.comment {
@@ -150,11 +163,6 @@ pub fn update_matcher(
     if let Some(disable) = matcher_updater.disable {
         matcher.disable = Some(disable);
     }
-
-    if let Some(expression) = matcher_updater.expression {
-        matcher.expression = Some(expression);
-    }
-
     if let Some(target) = matcher_updater.target {
         super::ensure_endpoints_exist(config, target.as_slice())?;
         matcher.target = target;
@@ -198,7 +206,6 @@ mod tests {
 
     use super::*;
 
-    use crate::matcher::MatchModeOperator;
     use crate::matcher::expression::NotificationMatcher;
 
     fn empty_config() -> Config {
@@ -250,7 +257,10 @@ matcher: matcher2
     }
 
     #[test]
+    #[cfg(feature = "legacy-matchers")]
     fn test_matcher_update() -> Result<(), HttpError> {
+        use crate::matcher::MatchModeOperator;
+
         let mut config = config_with_two_matchers();
 
         let digest = config.digest;
@@ -306,6 +316,52 @@ matcher: matcher2
     }
 
     #[test]
+    #[cfg(not(feature = "legacy-matchers"))]
+    fn test_matcher_update() -> Result<(), HttpError> {
+        let mut config = config_with_two_matchers();
+
+        let digest = config.digest;
+
+        update_matcher(
+            &mut config,
+            "matcher1",
+            MatcherConfigUpdater {
+                expression: Some(valid_expression_string()),
+                target: Some(vec!["foo".into()]),
+                comment: Some("new comment".into()),
+                ..Default::default()
+            },
+            None,
+            Some(&digest),
+        )?;
+
+        let matcher = get_matcher(&config, "matcher1")?;
+
+        assert_eq!(matcher.comment, Some("new comment".into()));
+
+        // Test property deletion
+        update_matcher(
+            &mut config,
+            "matcher1",
+            Default::default(),
+            Some(&[
+                DeleteableMatcherProperty::Target,
+                DeleteableMatcherProperty::Comment,
+                DeleteableMatcherProperty::Expression,
+            ]),
+            Some(&digest),
+        )?;
+
+        let matcher = get_matcher(&config, "matcher1")?;
+
+        assert!(matcher.target.is_empty());
+        assert!(matcher.expression.is_none());
+        assert_eq!(matcher.comment, None);
+
+        Ok(())
+    }
+
+    #[test]
     fn test_matcher_delete() -> Result<(), HttpError> {
         let mut config = config_with_two_matchers();
 
@@ -316,6 +372,7 @@ matcher: matcher2
     }
 
     #[test]
+    #[cfg(feature = "legacy-matchers")]
     fn test_update_matcher_mutually_exclusive_with_expression() -> Result<(), HttpError> {
         let mut config = config_with_two_matchers();
         let digest = config.digest;
@@ -366,6 +423,7 @@ matcher: matcher2
     }
 
     #[test]
+    #[cfg(feature = "legacy-matchers")]
     fn test_add_mutually_exclusive_with_expression() -> Result<(), HttpError> {
         let mut config = empty_config();
 

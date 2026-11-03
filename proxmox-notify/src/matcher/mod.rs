@@ -17,10 +17,6 @@ pub mod expression;
 pub mod field;
 pub mod severity;
 
-use calendar::InlineCalendarMatcher;
-use field::InlineFieldMatcher;
-use severity::InlineSeverityMatcher;
-
 pub const MATCHER_TYPENAME: &str = "matcher";
 
 #[api]
@@ -35,6 +31,7 @@ pub enum MatchModeOperator {
     Any,
 }
 
+#[cfg(feature = "legacy-matchers")]
 #[api(
     properties: {
         name: {
@@ -87,17 +84,17 @@ pub struct MatcherConfig {
     /// List of matched metadata fields.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
-    pub match_field: Vec<InlineFieldMatcher>,
+    pub match_field: Vec<field::InlineFieldMatcher>,
 
     /// List of matched severity levels.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
-    pub match_severity: Vec<InlineSeverityMatcher>,
+    pub match_severity: Vec<severity::InlineSeverityMatcher>,
 
     /// List of matched severity levels.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
-    pub match_calendar: Vec<InlineCalendarMatcher>,
+    pub match_calendar: Vec<calendar::InlineCalendarMatcher>,
     /// Decide if 'all' or 'any' match statements must match.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<MatchModeOperator>,
@@ -139,20 +136,79 @@ pub struct MatcherConfig {
     pub origin: Option<Origin>,
 }
 
+#[cfg(not(feature = "legacy-matchers"))]
+#[api(
+    properties: {
+        name: {
+            schema: ENTITY_NAME_SCHEMA,
+        },
+        comment: {
+            optional: true,
+            schema: COMMENT_SCHEMA,
+        },
+        "target": {
+            type: Array,
+            items: {
+                schema: ENTITY_NAME_SCHEMA,
+            },
+            optional: true,
+        },
+    })]
+#[derive(Clone, Debug, Serialize, Deserialize, Updater, Default)]
+#[serde(rename_all = "kebab-case")]
+/// Config for notification matchers.
+pub struct MatcherConfig {
+    /// Name of the matcher.
+    #[updater(skip)]
+    pub name: String,
+
+    /// Match expression as inline JSON.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expression: Option<String>,
+
+    /// Targets to notify.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    pub target: Vec<String>,
+
+    /// Comment.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+
+    /// Disable this matcher.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable: Option<bool>,
+
+    /// Origin of this config entry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[updater(skip)]
+    pub origin: Option<Origin>,
+}
+
 trait MatchDirective {
     fn matches(&self, notification: &Notification) -> Result<bool, Error>;
 }
 
 impl MatcherConfig {
     pub fn matches(&self, notification: &Notification) -> Result<Option<&[String]>, Error> {
+        #[cfg(feature = "legacy-matchers")]
         self.warn_about_invalid_configuration();
 
-        let expression = if let Some(expression_str) = &self.expression {
-            serde_json::from_str(expression_str).map_err(|err| {
-                Error::FilterFailed(format!("could not deserialize filter expression: {err:#}"))
-            })?
-        } else {
-            self.generate_expression_from_legacy_config()
+        let expression: Expression<NotificationMatcher> = {
+            if let Some(expression_str) = &self.expression {
+                serde_json::from_str(expression_str).map_err(|err| {
+                    Error::FilterFailed(format!("could not deserialize filter expression: {err:#}"))
+                })?
+            } else {
+                #[cfg(feature = "legacy-matchers")]
+                {
+                    self.generate_expression_from_legacy_config()
+                }
+                #[cfg(not(feature = "legacy-matchers"))]
+                {
+                    Expression::Constant(true)
+                }
+            }
         };
 
         // Later, once we have a notification history, we can also save the evaluated expression.
@@ -164,6 +220,7 @@ impl MatcherConfig {
             .then_some(self.target.as_slice()))
     }
 
+    #[cfg(feature = "legacy-matchers")]
     pub(crate) fn generate_expression_from_legacy_config(&self) -> Expression<NotificationMatcher> {
         if self.match_severity.is_empty()
             && self.match_field.is_empty()
@@ -205,12 +262,14 @@ impl MatcherConfig {
 
     /// Ensure the validity of this matcher.
     pub(crate) fn ensure_valid(&self) -> Result<(), Error> {
+        #[cfg(feature = "legacy-matchers")]
         self.ensure_no_ignored_properties()?;
         self.ensure_valid_expression()?;
 
         Ok(())
     }
 
+    #[cfg(feature = "legacy-matchers")]
     fn ensure_no_ignored_properties(&self) -> Result<(), Error> {
         if self.expression.is_some() {
             let conflicting_properties = self.properties_conflicting_with_expression();
@@ -283,6 +342,7 @@ impl MatcherConfig {
         Ok(())
     }
 
+    #[cfg(feature = "legacy-matchers")]
     fn warn_about_invalid_configuration(&self) {
         if self.expression.is_some() {
             let conflicting_properties = self.properties_conflicting_with_expression();
@@ -297,6 +357,7 @@ impl MatcherConfig {
         }
     }
 
+    #[cfg(feature = "legacy-matchers")]
     fn properties_conflicting_with_expression(&self) -> Vec<&'static str> {
         let mut conflicting_properties = Vec::new();
 
@@ -330,14 +391,19 @@ pub enum DeleteableMatcherProperty {
     /// Delete `disable`
     Disable,
     /// Delete `invert-match`
+    #[cfg(feature = "legacy-matchers")]
     InvertMatch,
     /// Delete `match-calendar`
+    #[cfg(feature = "legacy-matchers")]
     MatchCalendar,
     /// Delete `match-field`
+    #[cfg(feature = "legacy-matchers")]
     MatchField,
     /// Delete `match-severity`
+    #[cfg(feature = "legacy-matchers")]
     MatchSeverity,
     /// Delete `mode`
+    #[cfg(feature = "legacy-matchers")]
     Mode,
     /// Delete `expression`
     Expression,
@@ -386,14 +452,14 @@ pub fn check_matches<'a>(
 
 #[cfg(test)]
 mod tests {
-    use serde_json::Value;
-
-    use crate::Severity;
-
-    use super::*;
 
     #[test]
+    #[cfg(feature = "legacy-matchers")]
     fn test_empty_matcher_matches_always() {
+        use super::*;
+        use crate::Severity;
+        use serde_json::Value;
+
         let notification =
             Notification::from_template(Severity::Notice, "test", Value::Null, Default::default());
 
