@@ -1,3 +1,9 @@
+rust-pbs-api-types (1.0.21-1) trixie; urgency=medium
+
+  * datastore.cfg: add `max-snapshot-time-skew` option
+
+ -- Proxmox Support Team <support@proxmox.com>  Tue, 03 Nov 2026 10:26:33 +0100
+
 rust-pbs-api-types (1.0.20-1) trixie; urgency=medium
 
   * add stricter archive name parsing that rejects server side type extension
