@@ -1,49 +1,104 @@
 use std::fmt;
 use std::str::FromStr;
 
+use serde::{Deserialize, Serialize};
+
 use proxmox_time::DailyDuration;
 
 use crate::{Error, Notification};
 
 use super::MatchDirective;
 
-/// Match timestamp of the notification.
+/// Convenience wrapper around [`DailyDuration`] that implements [`Serialize`] and
+/// [`Deserialize`].
 #[derive(Clone, Debug)]
+struct DailyDurationWrapper {
+    schedule: String,
+    daily_duration: DailyDuration,
+}
+
+impl fmt::Display for DailyDurationWrapper {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl FromStr for DailyDurationWrapper {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Error> {
+        let daily_duration = proxmox_time::parse_daily_duration(s)
+            .map_err(|e| Error::Generic(format!("could not parse schedule: {e}")))?;
+
+        Ok(Self {
+            daily_duration,
+            schedule: s.to_string(),
+        })
+    }
+}
+
+impl DailyDurationWrapper {
+    fn as_str(&self) -> &str {
+        &self.schedule
+    }
+}
+
+proxmox_serde::forward_deserialize_to_from_str!(DailyDurationWrapper);
+proxmox_serde::forward_serialize_to_display!(DailyDurationWrapper);
+
+/// Match timestamp of the notification.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub struct CalendarMatcher {
-    schedule: DailyDuration,
-    original: String,
+    schedule: DailyDurationWrapper,
 }
 
 impl MatchDirective for CalendarMatcher {
     fn matches(&self, notification: &Notification) -> Result<bool, Error> {
         self.schedule
+            .daily_duration
             .time_match(notification.metadata.timestamp, false)
             .map_err(|err| Error::Generic(format!("could not match timestamp: {err}")))
     }
 }
 
-impl fmt::Display for CalendarMatcher {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(&self.original)
+/// Match the timestamp of a notification.
+///
+/// This is a wrapper that serializes into an inline format that can be used
+/// in a section config key-value pair.
+#[derive(Clone, Debug)]
+pub struct InlineCalendarMatcher(CalendarMatcher);
+
+impl MatchDirective for InlineCalendarMatcher {
+    fn matches(&self, notification: &Notification) -> Result<bool, Error> {
+        self.0.matches(notification)
     }
 }
 
-impl FromStr for CalendarMatcher {
+impl fmt::Display for InlineCalendarMatcher {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str(self.0.schedule.as_str())
+    }
+}
+
+impl FromStr for InlineCalendarMatcher {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {
-        let schedule = proxmox_time::parse_daily_duration(s)
-            .map_err(|e| Error::Generic(format!("could not parse schedule: {e}")))?;
-
-        Ok(Self {
-            schedule,
-            original: s.to_string(),
-        })
+        Ok(Self(CalendarMatcher {
+            schedule: s.parse()?,
+        }))
     }
 }
 
-proxmox_serde::forward_deserialize_to_from_str!(CalendarMatcher);
-proxmox_serde::forward_serialize_to_display!(CalendarMatcher);
+impl InlineCalendarMatcher {
+    pub fn into_inner(self) -> CalendarMatcher {
+        self.0
+    }
+}
+
+proxmox_serde::forward_deserialize_to_from_str!(InlineCalendarMatcher);
+proxmox_serde::forward_serialize_to_display!(InlineCalendarMatcher);
 
 #[cfg(test)]
 mod test {
@@ -63,7 +118,21 @@ mod test {
 
         // Match on a wide rage to avoid issues when running this test case
         // in a different time zone.
-        let matcher: CalendarMatcher = "thu..sat 0-23".parse().unwrap();
+        let matcher: InlineCalendarMatcher = "thu..sat 0-23".parse().unwrap();
         assert!(matcher.matches(&notification).unwrap());
+    }
+
+    #[test]
+    fn test_calendar_matcher_de_ser_roundtrip() {
+        let calendar_matcher = "{ \"schedule\": \"thu..sat 0-23\" }";
+
+        let calendar_matcher: CalendarMatcher = serde_json::from_str(calendar_matcher).unwrap();
+
+        let s = serde_json::to_string(&calendar_matcher).unwrap();
+        let m: CalendarMatcher = serde_json::from_str(&s).unwrap();
+
+        let a = InlineCalendarMatcher(m);
+
+        assert_eq!(a.to_string(), "thu..sat 0-23");
     }
 }

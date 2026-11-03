@@ -14,7 +14,7 @@ pub mod calendar;
 pub mod field;
 pub mod severity;
 
-use calendar::CalendarMatcher;
+use calendar::InlineCalendarMatcher;
 use field::InlineFieldMatcher;
 use severity::InlineSeverityMatcher;
 
@@ -112,7 +112,7 @@ pub struct MatcherConfig {
     /// List of matched severity levels.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
-    pub match_calendar: Vec<CalendarMatcher>,
+    pub match_calendar: Vec<InlineCalendarMatcher>,
     /// Decide if 'all' or 'any' match statements must match.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mode: Option<MatchModeOperator>,
