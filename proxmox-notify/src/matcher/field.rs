@@ -54,6 +54,18 @@ impl MatchDirective for FieldMatcher {
             }
         })
     }
+
+    fn validate(&self) -> Result<(), Error> {
+        if let FieldMatcher::Exact { values, .. } = self {
+            if values.is_empty() {
+                return Err(Error::Generic(
+                    "field matcher must contain values to match".to_string(),
+                ));
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(feature = "legacy-matchers")]
@@ -95,6 +107,10 @@ pub mod inline {
     impl MatchDirective for InlineFieldMatcher {
         fn matches(&self, notification: &Notification) -> Result<bool, Error> {
             self.0.matches(notification)
+        }
+
+        fn validate(&self) -> Result<(), Error> {
+            self.0.validate()
         }
     }
 

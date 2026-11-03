@@ -67,6 +67,10 @@ impl MatchDirective for CalendarMatcher {
             .time_match(notification.metadata.timestamp, false)
             .map_err(|err| Error::Generic(format!("could not match timestamp: {err}")))
     }
+
+    fn validate(&self) -> Result<(), Error> {
+        Ok(())
+    }
 }
 
 #[cfg(feature = "legacy-matchers")]
@@ -83,6 +87,10 @@ pub mod inline {
     impl MatchDirective for InlineCalendarMatcher {
         fn matches(&self, notification: &Notification) -> Result<bool, Error> {
             self.0.matches(notification)
+        }
+
+        fn validate(&self) -> Result<(), Error> {
+            self.0.validate()
         }
     }
 

@@ -32,6 +32,19 @@ impl MatchExpression for NotificationMatcher {
     }
 }
 
+impl NotificationMatcher {
+    /// Validate any additional constraints that cannot be expressed in the type system.
+    pub(crate) fn validate(&self) -> Result<(), Error> {
+        use crate::matcher::MatchDirective;
+
+        match self {
+            NotificationMatcher::Field(field_matcher) => field_matcher.validate(),
+            NotificationMatcher::Calendar(calendar_matcher) => calendar_matcher.validate(),
+            NotificationMatcher::Severity(severity_matcher) => severity_matcher.validate(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use proxmox_match_expression::Expression;

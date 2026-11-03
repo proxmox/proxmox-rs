@@ -187,6 +187,8 @@ pub struct MatcherConfig {
 
 trait MatchDirective {
     fn matches(&self, notification: &Notification) -> Result<bool, Error>;
+    /// Validate any additional constraints that cannot be expressed in the type system.
+    fn validate(&self) -> Result<(), Error>;
 }
 
 impl MatcherConfig {
@@ -332,6 +334,9 @@ impl MatcherConfig {
                     ));
                 }
             }
+            Expression::Match(matcher) => {
+                matcher.validate()?;
+            }
             _ => {}
         }
 
@@ -452,6 +457,7 @@ pub fn check_matches<'a>(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
     #[cfg(feature = "legacy-matchers")]
@@ -471,6 +477,55 @@ mod tests {
             };
 
             assert!(config.matches(&notification).unwrap().is_some())
+        }
+    }
+
+    #[test]
+    fn test_expression_constraints() {
+        let empty_any_of = r#"
+            {
+              "any-of": []
+            }"#;
+        let empty_all_of = r#"
+            {
+              "all-of": []
+            }"#;
+        let empty_one_of = r#"
+            {
+              "one-of": []
+            }"#;
+
+        let empty_field_matcher = r#"
+            {
+              "match": {
+                "type": "field",
+                "field": "something",
+                "values": []
+              }
+            }"#;
+
+        let empty_severity_matcher = r#"
+            {
+              "match": {
+                "type": "severity",
+                "severities": []
+              }
+            }"#;
+
+        for expr in [
+            empty_one_of,
+            empty_all_of,
+            empty_any_of,
+            empty_field_matcher,
+            empty_severity_matcher,
+        ] {
+            let config = MatcherConfig {
+                name: "matcher".to_string(),
+                expression: Some(expr.into()),
+                ..Default::default()
+            };
+
+            assert!(config.ensure_valid().is_err());
         }
     }
 }

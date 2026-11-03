@@ -22,6 +22,16 @@ impl MatchDirective for SeverityMatcher {
     fn matches(&self, notification: &Notification) -> Result<bool, Error> {
         Ok(self.severities.contains(&notification.metadata.severity))
     }
+
+    fn validate(&self) -> Result<(), Error> {
+        if self.severities.is_empty() {
+            return Err(Error::Generic(
+                "severity matcher must contain severities to match".to_string(),
+            ));
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(feature = "legacy-matchers")]
@@ -42,6 +52,10 @@ pub mod inline {
         /// Check if this directive matches a given notification
         fn matches(&self, notification: &Notification) -> Result<bool, Error> {
             self.0.matches(notification)
+        }
+
+        fn validate(&self) -> Result<(), Error> {
+            self.0.validate()
         }
     }
 
