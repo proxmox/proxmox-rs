@@ -534,4 +534,49 @@ mod tests {
             assert!(config.ensure_valid().is_err());
         }
     }
+
+    #[test]
+    fn test_invalid_fields() {
+        let exact_field_matcher_template = r#"
+            {
+              "match": {
+                "type": "field",
+                "field": "%FIELD%",
+                "values": ["abc"]
+              }
+            }"#;
+
+        let regex_field_matcher_template = r#"
+            {
+              "match": {
+                "type": "field",
+                "field": "%FIELD%",
+                "regex": "abc"
+              }
+            }"#;
+
+        for (field, valid) in [
+            ("some-field", true),
+            ("some_field", true),
+            ("some-", true),
+            ("some.field", true),
+            ("-some", false),
+            ("some%field", false),
+            ("", false),
+        ] {
+            for tpl in [exact_field_matcher_template, regex_field_matcher_template] {
+                let mut config = MatcherConfig {
+                    name: "matcher".to_string(),
+                    expression: Some(tpl.replace("%FIELD%", field)),
+                    ..Default::default()
+                };
+
+                assert_eq!(
+                    config.ensure_valid().is_ok(),
+                    valid,
+                    "{field} should be {valid}"
+                );
+            }
+        }
+    }
 }

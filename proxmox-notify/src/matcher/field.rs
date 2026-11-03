@@ -56,11 +56,25 @@ impl MatchDirective for FieldMatcher {
     }
 
     fn validate(&self) -> Result<(), Error> {
-        if let FieldMatcher::Exact { values, .. } = self {
-            if values.is_empty() {
-                return Err(Error::Generic(
-                    "field matcher must contain values to match".to_string(),
-                ));
+        match self {
+            FieldMatcher::Exact { field, values } => {
+                if values.is_empty() {
+                    return Err(Error::Generic(
+                        "field matcher must contain values to match".to_string(),
+                    ));
+                }
+                if !SAFE_ID_REGEX.is_match(field) {
+                    return Err(Error::Generic(
+                        "field name does not match regex pattern".to_string(),
+                    ));
+                }
+            }
+            FieldMatcher::Regex { field, .. } => {
+                if !SAFE_ID_REGEX.is_match(field) {
+                    return Err(Error::Generic(
+                        "field name does not match regex pattern".to_string(),
+                    ));
+                }
             }
         }
 
