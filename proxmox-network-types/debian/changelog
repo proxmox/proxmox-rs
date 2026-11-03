@@ -1,3 +1,10 @@
+rust-proxmox-network-types (1.2.1-1) trixie; urgency=medium
+
+  * bond: implement FromStr for the bond mode and transmit hash policy
+    types, parsing the names they are serialized and displayed with.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 06 Nov 2026 23:07:16 +0100
+
 rust-proxmox-network-types (1.2.0-1) trixie; urgency=medium
 
   * add Linux bond mode and transmit hash policy types, moved over from
