@@ -11,7 +11,6 @@ pub struct SeverityMatcher {
     severities: Vec<Severity>,
 }
 
-/// Common trait implemented by all matching directives
 impl MatchDirective for SeverityMatcher {
     /// Check if this directive matches a given notification
     fn matches(&self, notification: &Notification) -> Result<bool, Error> {
@@ -19,14 +18,29 @@ impl MatchDirective for SeverityMatcher {
     }
 }
 
-impl fmt::Display for SeverityMatcher {
+/// Match severity of the notification.
+///
+/// This is a wrapper that serializes into an inline format that can be used
+/// in a section config key-value pair.
+#[derive(Clone, Debug)]
+pub struct InlineSeverityMatcher(SeverityMatcher);
+
+/// Common trait implemented by all matching directives
+impl MatchDirective for InlineSeverityMatcher {
+    /// Check if this directive matches a given notification
+    fn matches(&self, notification: &Notification) -> Result<bool, Error> {
+        self.0.matches(notification)
+    }
+}
+
+impl fmt::Display for InlineSeverityMatcher {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let severities: Vec<String> = self.severities.iter().map(|s| format!("{s}")).collect();
+        let severities: Vec<String> = self.0.severities.iter().map(|s| format!("{s}")).collect();
         f.write_str(&severities.join(","))
     }
 }
 
-impl FromStr for SeverityMatcher {
+impl FromStr for InlineSeverityMatcher {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Self, Error> {
@@ -39,28 +53,31 @@ impl FromStr for SeverityMatcher {
             severities.push(severity)
         }
 
-        Ok(Self { severities })
+        Ok(Self(SeverityMatcher { severities }))
     }
 }
 
-proxmox_serde::forward_deserialize_to_from_str!(SeverityMatcher);
-proxmox_serde::forward_serialize_to_display!(SeverityMatcher);
+impl InlineSeverityMatcher {
+    pub fn into_inner(self) -> SeverityMatcher {
+        self.0
+    }
+}
+
+proxmox_serde::forward_deserialize_to_from_str!(InlineSeverityMatcher);
+proxmox_serde::forward_serialize_to_display!(InlineSeverityMatcher);
 
 #[cfg(test)]
 mod test {
     use serde_json::Value;
 
-    use crate::{
-        Notification, Severity,
-        matcher::{MatchDirective as _, severity::SeverityMatcher},
-    };
+    use super::*;
 
     #[test]
     fn test_severities() {
         let notification =
             Notification::from_template(Severity::Notice, "test", Value::Null, Default::default());
 
-        let matcher: SeverityMatcher = "info,notice,warning,error".parse().unwrap();
+        let matcher: InlineSeverityMatcher = "info,notice,warning,error".parse().unwrap();
         assert!(matcher.matches(&notification).unwrap());
     }
 }
