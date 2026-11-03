@@ -442,6 +442,7 @@ pub fn check_matches<'a>(
     notification: &Notification,
 ) -> HashSet<&'a str> {
     let mut targets = HashSet::new();
+    let mut matching_matchers = Vec::new();
 
     for matcher in matchers {
         if matcher.disable.unwrap_or_default() {
@@ -451,12 +452,25 @@ pub fn check_matches<'a>(
         }
 
         match matcher.matches(notification) {
-            Ok(t) => {
-                let t = t.unwrap_or_default();
+            Ok(Some(t)) => {
+                matching_matchers.push(matcher.name.as_str());
                 targets.extend(t.iter().map(|s| s.as_str()));
             }
+            Ok(None) => {}
             Err(err) => error!("matcher '{matcher}' failed: {err}", matcher = matcher.name),
         }
+    }
+
+    if !matching_matchers.is_empty() {
+        let target_list = Vec::from_iter(targets.iter().copied());
+
+        info!(
+            "notification matched the following matchers: {}. The following targets will be notified: {}",
+            matching_matchers.join(", "),
+            target_list.join(", ")
+        );
+    } else {
+        info!("notification was not matched by any matcher");
     }
 
     targets
