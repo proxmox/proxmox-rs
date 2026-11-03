@@ -76,7 +76,7 @@ pub enum MatchModeOperator {
             optional: true,
         },
     })]
-#[derive(Debug, Serialize, Deserialize, Updater, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Updater, Default)]
 #[serde(rename_all = "kebab-case")]
 /// Config for notification matchers.
 pub struct MatcherConfig {
@@ -148,7 +148,6 @@ impl MatcherConfig {
         self.warn_about_invalid_configuration();
 
         let expression = if let Some(expression_str) = &self.expression {
-
             serde_json::from_str(expression_str).map_err(|err| {
                 Error::FilterFailed(format!("could not deserialize filter expression: {err:#}"))
             })?
@@ -202,6 +201,86 @@ impl MatcherConfig {
         } else {
             root
         }
+    }
+
+    /// Ensure the validity of this matcher.
+    pub(crate) fn ensure_valid(&self) -> Result<(), Error> {
+        self.ensure_no_ignored_properties()?;
+        self.ensure_valid_expression()?;
+
+        Ok(())
+    }
+
+    fn ensure_no_ignored_properties(&self) -> Result<(), Error> {
+        if self.expression.is_some() {
+            let conflicting_properties = self.properties_conflicting_with_expression();
+
+            if !conflicting_properties.is_empty() {
+                let joined = conflicting_properties.join(", ");
+                return Err(Error::Generic(format!(
+                    "'expression' property is mutually exclusive with: {joined}"
+                )));
+            }
+        }
+
+        Ok(())
+    }
+
+    fn ensure_valid_expression(&self) -> Result<(), Error> {
+        if let Some(expression) = &self.expression {
+            match serde_json::from_str::<Expression<NotificationMatcher>>(expression) {
+                Ok(expr) => {
+                    Self::verify_match_expression_constraints(&expr)?;
+                }
+                Err(err) => {
+                    return Err(Error::Generic(format!(
+                        "'expression' is not valid: {err:#}"
+                    )));
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Recursively walk expression nodes and verify any additional constraints on them:
+    ///
+    ///   - all-of/any-of/one-of *must* have child nodes:
+    ///     The generic proxmox-match-expression crates handles empty combinators just fine,
+    ///     however, from a UX perspective, it makes sense to require them to have child nodes.
+    fn verify_match_expression_constraints(
+        expr: &Expression<NotificationMatcher>,
+    ) -> Result<(), Error> {
+        match expr {
+            Expression::AllOf(expressions) => {
+                if expressions.is_empty() {
+                    return Err(Error::Generic(
+                        "'expression' may not contain an empty 'all-of' rule".to_string(),
+                    ));
+                }
+            }
+            Expression::AnyOf(expressions) => {
+                if expressions.is_empty() {
+                    return Err(Error::Generic(
+                        "'expression' may not contain an empty 'any-of' rule".to_string(),
+                    ));
+                }
+            }
+            Expression::OneOf(expressions) => {
+                if expressions.is_empty() {
+                    return Err(Error::Generic(
+                        "'expression' may not contain an empty 'one-of' rule".to_string(),
+                    ));
+                }
+            }
+            _ => {}
+        }
+
+        for child_expression in expr.children() {
+            Self::verify_match_expression_constraints(child_expression)?;
+        }
+
+        Ok(())
     }
 
     fn warn_about_invalid_configuration(&self) {
@@ -260,6 +339,8 @@ pub enum DeleteableMatcherProperty {
     MatchSeverity,
     /// Delete `mode`
     Mode,
+    /// Delete `expression`
+    Expression,
     /// Delete `target`
     Target,
 }

@@ -40,6 +40,10 @@ pub fn add_matcher(config: &mut Config, matcher_config: MatcherConfig) -> Result
     super::ensure_unique(config, &matcher_config.name)?;
     super::ensure_endpoints_exist(config, &matcher_config.target)?;
 
+    matcher_config
+        .ensure_valid()
+        .map_err(|err| http_err!(BAD_REQUEST, "invalid matcher config: {err}"))?;
+
     config
         .config
         .set_data(&matcher_config.name, MATCHER_TYPENAME, &matcher_config)
@@ -83,6 +87,7 @@ pub fn update_matcher(
                 DeleteableMatcherProperty::InvertMatch => matcher.invert_match = None,
                 DeleteableMatcherProperty::Comment => matcher.comment = None,
                 DeleteableMatcherProperty::Disable => matcher.disable = None,
+                DeleteableMatcherProperty::Expression => matcher.expression = None,
             }
         }
     }
@@ -115,10 +120,18 @@ pub fn update_matcher(
         matcher.disable = Some(disable);
     }
 
+    if let Some(expression) = matcher_updater.expression {
+        matcher.expression = Some(expression);
+    }
+
     if let Some(target) = matcher_updater.target {
         super::ensure_endpoints_exist(config, target.as_slice())?;
         matcher.target = target;
     }
+
+    matcher
+        .ensure_valid()
+        .map_err(|err| http_err!(BAD_REQUEST, "invalid matcher config: {err}"))?;
 
     config
         .config
@@ -150,8 +163,12 @@ pub fn delete_matcher(config: &mut Config, name: &str) -> Result<(), HttpError> 
 
 #[cfg(all(test, feature = "sendmail"))]
 mod tests {
+    use proxmox_match_expression::Expression;
+
     use super::*;
+
     use crate::matcher::MatchModeOperator;
+    use crate::matcher::expression::NotificationMatcher;
 
     fn empty_config() -> Config {
         Config::new("", "").unwrap()
@@ -170,6 +187,11 @@ matcher: matcher2
             "",
         )
         .unwrap()
+    }
+
+    fn valid_expression_string() -> String {
+        let expr = Expression::<NotificationMatcher>::Constant(true);
+        serde_json::to_string(&expr).unwrap()
     }
 
     #[test]
@@ -258,6 +280,103 @@ matcher: matcher2
 
         delete_matcher(&mut config, "matcher1")?;
         assert!(delete_matcher(&mut config, "matcher1").is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_matcher_mutually_exclusive_with_expression() -> Result<(), HttpError> {
+        let mut config = config_with_two_matchers();
+        let digest = config.digest;
+
+        let proto = MatcherConfigUpdater {
+            expression: Some(valid_expression_string()),
+            ..Default::default()
+        };
+
+        let mut updater = proto.clone();
+        updater.match_field = Some(vec!["exact:foo=bar".parse().unwrap()]);
+
+        assert!(update_matcher(&mut config, "matcher1", updater, None, Some(&digest),).is_err());
+
+        let mut updater = proto.clone();
+        updater.match_calendar = Some(vec!["mon..sun 12-13".parse().unwrap()]);
+
+        assert!(update_matcher(&mut config, "matcher1", updater, None, Some(&digest),).is_err());
+
+        let mut updater = proto.clone();
+        updater.match_severity = Some(vec!["info,warning".parse().unwrap()]);
+
+        assert!(update_matcher(&mut config, "matcher1", updater, None, Some(&digest),).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_invalid_expression() -> Result<(), HttpError> {
+        let mut config = config_with_two_matchers();
+        let digest = config.digest;
+
+        assert!(
+            update_matcher(
+                &mut config,
+                "matcher1",
+                MatcherConfigUpdater {
+                    expression: Some("invalid".into()),
+                    ..Default::default()
+                },
+                None,
+                Some(&digest),
+            )
+            .is_err()
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_mutually_exclusive_with_expression() -> Result<(), HttpError> {
+        let mut config = empty_config();
+
+        let proto = MatcherConfig {
+            name: "matcher3".into(),
+            expression: Some(valid_expression_string()),
+            ..Default::default()
+        };
+
+        let mut entity = proto.clone();
+        entity.match_field = vec!["exact:foo=bar".parse().unwrap()];
+
+        assert!(add_matcher(&mut config, entity).is_err());
+
+        let mut entity = proto.clone();
+        entity.match_severity = vec!["info,warning".parse().unwrap()];
+
+        assert!(add_matcher(&mut config, entity).is_err());
+
+        let mut entity = proto.clone();
+        entity.match_calendar = vec!["mon..sun 12-13".parse().unwrap()];
+
+        assert!(add_matcher(&mut config, entity).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_add_invalid_expression() -> Result<(), HttpError> {
+        let mut config = empty_config();
+
+        assert!(
+            add_matcher(
+                &mut config,
+                MatcherConfig {
+                    name: "matcher2".into(),
+                    expression: Some("invalid".into()),
+                    ..Default::default()
+                }
+            )
+            .is_err()
+        );
 
         Ok(())
     }
