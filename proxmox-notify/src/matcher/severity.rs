@@ -1,14 +1,16 @@
 use std::fmt;
 use std::str::FromStr;
 
+use serde::{Deserialize, Serialize};
+
 use crate::{Error, Notification, Severity};
 
 use super::MatchDirective;
 
 /// Match severity of the notification.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SeverityMatcher {
-    severities: Vec<Severity>,
+    pub(crate) severities: Vec<Severity>,
 }
 
 impl MatchDirective for SeverityMatcher {

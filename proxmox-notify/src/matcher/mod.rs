@@ -1,16 +1,19 @@
 use std::collections::HashSet;
 use std::fmt::Debug;
 
+use proxmox_match_expression::Expression;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 
 use proxmox_schema::api_types::COMMENT_SCHEMA;
 use proxmox_schema::{Updater, api};
 
+use crate::matcher::expression::NotificationMatcher;
 use crate::schema::ENTITY_NAME_SCHEMA;
 use crate::{Error, Notification, Origin};
 
 pub mod calendar;
+pub mod expression;
 pub mod field;
 pub mod severity;
 
@@ -30,24 +33,6 @@ pub enum MatchModeOperator {
     All,
     /// At least one filter property has to match (OR)
     Any,
-}
-
-impl MatchModeOperator {
-    /// Apply the mode operator to two bools, lhs and rhs
-    fn apply(&self, lhs: bool, rhs: bool) -> bool {
-        match self {
-            MatchModeOperator::All => lhs && rhs,
-            MatchModeOperator::Any => lhs || rhs,
-        }
-    }
-
-    // https://en.wikipedia.org/wiki/Identity_element
-    fn neutral_element(&self) -> bool {
-        match self {
-            MatchModeOperator::All => true,
-            MatchModeOperator::Any => false,
-        }
-    }
 }
 
 #[api(
@@ -121,6 +106,20 @@ pub struct MatcherConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub invert_match: Option<bool>,
 
+    /// Match expression as inline JSON. This option is mutually exclusive with
+    /// the following options.
+    ///
+    ///   - match-field
+    ///   - match-calendar
+    ///   - match-severity
+    ///   - invert-match
+    ///   - mode
+    ///
+    /// All of the above can be represented as (sub)-expressions of this
+    /// expression.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expression: Option<String>,
+
     /// Targets to notify.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
@@ -146,57 +145,99 @@ trait MatchDirective {
 
 impl MatcherConfig {
     pub fn matches(&self, notification: &Notification) -> Result<Option<&[String]>, Error> {
-        let mode = self.mode.unwrap_or_default();
+        self.warn_about_invalid_configuration();
 
-        let mut is_match = mode.neutral_element();
-        // If there are no matching directives, the matcher will always match
-        let mut no_matchers = true;
+        let expression = if let Some(expression_str) = &self.expression {
 
-        if !self.match_severity.is_empty() {
-            no_matchers = false;
-            is_match = mode.apply(
-                is_match,
-                self.check_matches(notification, &self.match_severity)?,
-            );
-        }
-        if !self.match_field.is_empty() {
-            no_matchers = false;
-            is_match = mode.apply(
-                is_match,
-                self.check_matches(notification, &self.match_field)?,
-            );
-        }
-        if !self.match_calendar.is_empty() {
-            no_matchers = false;
-            is_match = mode.apply(
-                is_match,
-                self.check_matches(notification, &self.match_calendar)?,
-            );
-        }
-
-        let invert_match = self.invert_match.unwrap_or_default();
-
-        Ok(if is_match != invert_match || no_matchers {
-            Some(&self.target)
+            serde_json::from_str(expression_str).map_err(|err| {
+                Error::FilterFailed(format!("could not deserialize filter expression: {err:#}"))
+            })?
         } else {
-            None
-        })
+            self.generate_expression_from_legacy_config()
+        };
+
+        // Later, once we have a notification history, we can also save the evaluated expression.
+        // This gives the user a trace of which rules matched and which did not.
+        let evaluated_expression = expression.evaluate(notification)?;
+
+        Ok(evaluated_expression
+            .is_match()
+            .then_some(self.target.as_slice()))
     }
 
-    /// Check if given `MatchDirectives` match a notification.
-    fn check_matches(
-        &self,
-        notification: &Notification,
-        matchers: &[impl MatchDirective],
-    ) -> Result<bool, Error> {
-        let mode = self.mode.unwrap_or_default();
-        let mut is_match = mode.neutral_element();
+    pub(crate) fn generate_expression_from_legacy_config(&self) -> Expression<NotificationMatcher> {
+        if self.match_severity.is_empty()
+            && self.match_field.is_empty()
+            && self.match_calendar.is_empty()
+        {
+            // No match clauses means that the matcher always matches.
+            // Also, 'invert-match' does not have any effect then.
+            return Expression::Constant(true);
+        }
+        let mut expressions = Vec::new();
 
-        for field_matcher in matchers {
-            is_match = mode.apply(is_match, field_matcher.matches(notification)?);
+        for m in self.match_calendar.clone() {
+            expressions.push(Expression::Match(NotificationMatcher::Calendar(
+                m.into_inner(),
+            )));
+        }
+        for m in self.match_field.clone() {
+            expressions.push(Expression::Match(NotificationMatcher::Field(
+                m.into_inner(),
+            )));
+        }
+        for m in self.match_severity.clone() {
+            expressions.push(Expression::Match(NotificationMatcher::Severity(
+                m.into_inner(),
+            )));
         }
 
-        Ok(is_match)
+        let root = match self.mode.unwrap_or_default() {
+            MatchModeOperator::All => Expression::AllOf(expressions),
+            MatchModeOperator::Any => Expression::AnyOf(expressions),
+        };
+
+        if self.invert_match.unwrap_or_default() {
+            Expression::Not(Box::new(root))
+        } else {
+            root
+        }
+    }
+
+    fn warn_about_invalid_configuration(&self) {
+        if self.expression.is_some() {
+            let conflicting_properties = self.properties_conflicting_with_expression();
+
+            if !conflicting_properties.is_empty() {
+                let joined = conflicting_properties.join(", ");
+                tracing::warn!(
+                    "matcher '{}' has 'expression' set, the following properties are ignored: {joined}",
+                    self.name
+                );
+            }
+        }
+    }
+
+    fn properties_conflicting_with_expression(&self) -> Vec<&'static str> {
+        let mut conflicting_properties = Vec::new();
+
+        if self.invert_match.is_some() {
+            conflicting_properties.push("invert-match");
+        }
+        if self.mode.is_some() {
+            conflicting_properties.push("mode");
+        }
+        if !self.match_field.is_empty() {
+            conflicting_properties.push("match-field");
+        }
+        if !self.match_severity.is_empty() {
+            conflicting_properties.push("match-severity");
+        }
+        if !self.match_calendar.is_empty() {
+            conflicting_properties.push("match-calendar");
+        }
+
+        conflicting_properties
     }
 }
 

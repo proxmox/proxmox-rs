@@ -6,6 +6,7 @@ use regex::Regex;
 use proxmox_schema::{
     ApiStringFormat, Schema, StringSchema, api_types::SAFE_ID_REGEX_STR, const_regex,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{Error, Notification};
 
@@ -30,42 +31,38 @@ pub const MATCH_FIELD_ENTRY_SCHEMA: Schema = StringSchema::new("Match metadata f
     .schema();
 
 /// Check if the notification metadata fields match
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case", untagged)]
 pub enum FieldMatcher {
     Exact {
         field: String,
-        matched_values: Vec<String>,
+        values: Vec<String>,
     },
     Regex {
         field: String,
-        matched_regex: Regex,
+        #[serde(with = "serde_regex")]
+        regex: Regex,
     },
 }
 
 impl MatchDirective for FieldMatcher {
     fn matches(&self, notification: &Notification) -> Result<bool, Error> {
         Ok(match self {
-            FieldMatcher::Exact {
-                field,
-                matched_values,
-            } => {
+            FieldMatcher::Exact { field, values } => {
                 let value = notification.metadata.additional_fields.get(field);
 
                 if let Some(value) = value {
-                    matched_values.contains(value)
+                    values.contains(value)
                 } else {
                     // Metadata field does not exist, so we do not match
                     false
                 }
             }
-            FieldMatcher::Regex {
-                field,
-                matched_regex,
-            } => {
+            FieldMatcher::Regex { field, regex } => {
                 let value = notification.metadata.additional_fields.get(field);
 
                 if let Some(value) = value {
-                    matched_regex.is_match(value)
+                    regex.is_match(value)
                 } else {
                     // Metadata field does not exist, so we do not match
                     false
@@ -96,14 +93,14 @@ impl fmt::Display for InlineFieldMatcher {
         match &self.0 {
             FieldMatcher::Exact {
                 field,
-                matched_values,
+                values: matched_values,
             } => {
                 let values = matched_values.join(",");
                 write!(f, "exact:{field}={values}")
             }
             FieldMatcher::Regex {
                 field,
-                matched_regex,
+                regex: matched_regex,
             } => {
                 let re = matched_regex.as_str();
                 write!(f, "regex:{field}={re}")
@@ -132,7 +129,7 @@ impl FromStr for InlineFieldMatcher {
 
                     Ok(Self(FieldMatcher::Regex {
                         field: field.into(),
-                        matched_regex: regex,
+                        regex,
                     }))
                 }
             }
@@ -149,7 +146,7 @@ impl FromStr for InlineFieldMatcher {
                         .collect();
                     Ok(Self(FieldMatcher::Exact {
                         field: field.into(),
-                        matched_values: values,
+                        values,
                     }))
                 }
             }
