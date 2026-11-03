@@ -29,6 +29,37 @@ pub fn get_matcher(config: &Config, name: &str) -> Result<MatcherConfig, HttpErr
         .map_err(|_| http_err!(NOT_FOUND, "matcher '{name}' not found"))
 }
 
+/// Get matcher with given `name`, translating any existing 'match-*' keys into an
+/// equivalent 'expression'.
+///
+/// The caller is responsible for any needed permission checks.
+/// Returns the endpoint or a `HttpError` if the matcher was not found (`404 Not found`).
+pub fn get_matcher_as_expression(config: &Config, name: &str) -> Result<MatcherConfig, HttpError> {
+    let mut matcher: MatcherConfig = config
+        .config
+        .lookup(MATCHER_TYPENAME, name)
+        .map_err(|_| http_err!(NOT_FOUND, "matcher '{name}' not found"))?;
+
+    if matcher.expression.is_none() {
+        let expression = matcher.generate_expression_from_legacy_config();
+        let expression_json = serde_json::to_string(&expression).map_err(|err| {
+            http_err!(
+                INTERNAL_SERVER_ERROR,
+                "could not serialize matcher expression: {err}"
+            )
+        })?;
+        matcher.expression = Some(expression_json);
+    }
+
+    matcher.match_calendar.clear();
+    matcher.match_severity.clear();
+    matcher.match_field.clear();
+    matcher.mode = None;
+    matcher.invert_match = None;
+
+    Ok(matcher)
+}
+
 /// Add new notification matcher.
 ///
 /// The caller is responsible for any needed permission checks.
