@@ -1,0 +1,6 @@
+rust-proxmox-match-expression (0.1.0-1) unstable; urgency=medium
+
+  * initial version.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 18 Jun 2026 14:02:03 +0200
+
