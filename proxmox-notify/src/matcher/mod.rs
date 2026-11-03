@@ -108,7 +108,7 @@ pub const MATCH_FIELD_ENTRY_SCHEMA: Schema = StringSchema::new("Match metadata f
     })]
 #[derive(Debug, Serialize, Deserialize, Updater, Default)]
 #[serde(rename_all = "kebab-case")]
-/// Config for Sendmail notification endpoints
+/// Config for notification matchers.
 pub struct MatcherConfig {
     /// Name of the matcher.
     #[updater(skip)]
