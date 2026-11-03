@@ -15,7 +15,7 @@ pub mod field;
 pub mod severity;
 
 use calendar::CalendarMatcher;
-use field::FieldMatcher;
+use field::InlineFieldMatcher;
 use severity::InlineSeverityMatcher;
 
 pub const MATCHER_TYPENAME: &str = "matcher";
@@ -102,7 +102,7 @@ pub struct MatcherConfig {
     /// List of matched metadata fields.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
-    pub match_field: Vec<FieldMatcher>,
+    pub match_field: Vec<InlineFieldMatcher>,
 
     /// List of matched severity levels.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

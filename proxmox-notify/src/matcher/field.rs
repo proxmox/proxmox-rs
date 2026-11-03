@@ -16,10 +16,10 @@ const_regex! {
 }
 
 pub const MATCH_FIELD_ENTRY_FORMAT: ApiStringFormat =
-    ApiStringFormat::VerifyFn(verify_field_matcher);
+    ApiStringFormat::VerifyFn(verify_inline_field_matcher);
 
-fn verify_field_matcher(s: &str) -> Result<(), anyhow::Error> {
-    let _: FieldMatcher = s.parse()?;
+fn verify_inline_field_matcher(s: &str) -> Result<(), anyhow::Error> {
+    let _: InlineFieldMatcher = s.parse()?;
     Ok(())
 }
 
@@ -75,12 +75,25 @@ impl MatchDirective for FieldMatcher {
     }
 }
 
-impl fmt::Display for FieldMatcher {
+/// Check if the notification metadata fields match
+///
+/// This is a wrapper that serializes into an inline format that can be used
+/// in a section config key-value pair.
+#[derive(Clone, Debug)]
+pub struct InlineFieldMatcher(FieldMatcher);
+
+impl MatchDirective for InlineFieldMatcher {
+    fn matches(&self, notification: &Notification) -> Result<bool, Error> {
+        self.0.matches(notification)
+    }
+}
+
+impl fmt::Display for InlineFieldMatcher {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Attention, Display is used to implement Serialize, do not
         // change the format.
 
-        match self {
+        match &self.0 {
             FieldMatcher::Exact {
                 field,
                 matched_values,
@@ -99,7 +112,7 @@ impl fmt::Display for FieldMatcher {
     }
 }
 
-impl FromStr for FieldMatcher {
+impl FromStr for InlineFieldMatcher {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Error> {
         if !MATCH_FIELD_ENTRY_REGEX.is_match(s) {
@@ -117,10 +130,10 @@ impl FromStr for FieldMatcher {
                     let regex = Regex::new(expected_value_regex)
                         .map_err(|err| Error::FilterFailed(format!("invalid regex: {err}")))?;
 
-                    Ok(Self::Regex {
+                    Ok(Self(FieldMatcher::Regex {
                         field: field.into(),
                         matched_regex: regex,
-                    })
+                    }))
                 }
             }
         } else if let Some(remaining) = s.strip_prefix("exact:") {
@@ -134,10 +147,10 @@ impl FromStr for FieldMatcher {
                         .map(str::trim)
                         .map(String::from)
                         .collect();
-                    Ok(Self::Exact {
+                    Ok(Self(FieldMatcher::Exact {
                         field: field.into(),
                         matched_values: values,
-                    })
+                    }))
                 }
             }
         } else {
@@ -148,8 +161,14 @@ impl FromStr for FieldMatcher {
     }
 }
 
-proxmox_serde::forward_deserialize_to_from_str!(FieldMatcher);
-proxmox_serde::forward_serialize_to_display!(FieldMatcher);
+impl InlineFieldMatcher {
+    pub fn into_inner(self) -> FieldMatcher {
+        self.0
+    }
+}
+
+proxmox_serde::forward_deserialize_to_from_str!(InlineFieldMatcher);
+proxmox_serde::forward_serialize_to_display!(InlineFieldMatcher);
 
 #[cfg(test)]
 mod tests {
@@ -169,16 +188,16 @@ mod tests {
         let notification =
             Notification::from_template(Severity::Notice, "test", Value::Null, fields);
 
-        let matcher: FieldMatcher = "exact:foo=bar".parse().unwrap();
+        let matcher: InlineFieldMatcher = "exact:foo=bar".parse().unwrap();
         assert!(matcher.matches(&notification).unwrap());
 
-        let matcher: FieldMatcher = "regex:foo=b.*".parse().unwrap();
+        let matcher: InlineFieldMatcher = "regex:foo=b.*".parse().unwrap();
         assert!(matcher.matches(&notification).unwrap());
 
-        let matcher: FieldMatcher = "regex:notthere=b.*".parse().unwrap();
+        let matcher: InlineFieldMatcher = "regex:notthere=b.*".parse().unwrap();
         assert!(!matcher.matches(&notification).unwrap());
 
-        let matcher: FieldMatcher = "exact:foo=bar,test".parse().unwrap();
+        let matcher: InlineFieldMatcher = "exact:foo=bar,test".parse().unwrap();
         assert!(matcher.matches(&notification).unwrap());
 
         let mut fields = HashMap::new();
@@ -195,7 +214,7 @@ mod tests {
             Notification::from_template(Severity::Notice, "test", Value::Null, fields);
         assert!(!matcher.matches(&notification).unwrap());
 
-        assert!("regex:'3=b.*".parse::<FieldMatcher>().is_err());
-        assert!("invalid:'bar=b.*".parse::<FieldMatcher>().is_err());
+        assert!("regex:'3=b.*".parse::<InlineFieldMatcher>().is_err());
+        assert!("invalid:'bar=b.*".parse::<InlineFieldMatcher>().is_err());
     }
 }
