@@ -94,4 +94,19 @@ mod test {
 
         let _: Expression<NotificationMatcher> = serde_json::from_str(e).unwrap();
     }
+
+    #[test]
+    fn test_field_matcher_ambigious_variant() {
+        let e = r#"
+            {
+              "match": {
+                "type": "field",
+                "field": "something",
+                "regex": "^abc$",
+                "values": ["a", "b"]
+                }
+            }"#;
+
+        assert!(serde_json::from_str::<Expression<NotificationMatcher>>(e).is_err());
+    }
 }

@@ -10,7 +10,7 @@ use super::MatchDirective;
 
 /// Check if the notification metadata fields match
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case", untagged)]
+#[serde(rename_all = "kebab-case", untagged, deny_unknown_fields)]
 pub enum FieldMatcher {
     Exact {
         field: String,
