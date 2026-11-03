@@ -1,3 +1,13 @@
+rust-proxmox-installer-types (0.3.1-1) trixie; urgency=medium
+
+  * answer: implement Display for RebootMode and FilterMatch, using the
+    names of the answer file.
+
+  * answer: show MAC addresses in lowercase in the errors about bond
+    members, like the installers do everywhere else.
+
+ -- Proxmox Support Team <support@proxmox.com>  Fri, 06 Nov 2026 23:07:16 +0100
+
 rust-proxmox-installer-types (0.3.0-1) trixie; urgency=medium
 
   * implement AsRef<FqdnConfig> for FqdnConfigContainer, simplifying

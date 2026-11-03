@@ -9,8 +9,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-proxmox-network-types-1+default-dev (>= 1.2.0-~~) <!nocheck>,
  librust-proxmox-node-status-1+default-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev (>= 5.5.0-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.5.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.6.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.6.0-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-1+derive-dev <!nocheck>,
@@ -30,8 +30,8 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-proxmox-network-types-1+default-dev (>= 1.2.0-~~),
  librust-proxmox-node-status-1+default-dev,
- librust-proxmox-schema-5+api-macro-dev (>= 5.5.0-~~),
- librust-proxmox-schema-5+default-dev (>= 5.5.0-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.6.0-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.6.0-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-1+derive-dev,
@@ -47,9 +47,9 @@ Provides:
  librust-proxmox-installer-types-0.3-dev (= ${binary:Version}),
  librust-proxmox-installer-types-0.3+default-dev (= ${binary:Version}),
  librust-proxmox-installer-types-0.3+legacy-dev (= ${binary:Version}),
- librust-proxmox-installer-types-0.3.0-dev (= ${binary:Version}),
- librust-proxmox-installer-types-0.3.0+default-dev (= ${binary:Version}),
- librust-proxmox-installer-types-0.3.0+legacy-dev (= ${binary:Version})
+ librust-proxmox-installer-types-0.3.1-dev (= ${binary:Version}),
+ librust-proxmox-installer-types-0.3.1+default-dev (= ${binary:Version}),
+ librust-proxmox-installer-types-0.3.1+legacy-dev (= ${binary:Version})
 Description: Type definitions used within the installer - Rust source code
  Source code for Debianized Rust crate "proxmox-installer-types"
 
@@ -64,7 +64,7 @@ Depends:
 Provides:
  librust-proxmox-installer-types-0+api-types-dev (= ${binary:Version}),
  librust-proxmox-installer-types-0.3+api-types-dev (= ${binary:Version}),
- librust-proxmox-installer-types-0.3.0+api-types-dev (= ${binary:Version})
+ librust-proxmox-installer-types-0.3.1+api-types-dev (= ${binary:Version})
 Description: Type definitions used within the installer - feature "api-types"
  This metapackage enables feature "api-types" for the Rust proxmox-installer-
  types crate, by pulling in any additional dependencies needed by that feature.
