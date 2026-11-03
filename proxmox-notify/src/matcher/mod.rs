@@ -263,7 +263,7 @@ impl MatcherConfig {
     }
 
     /// Ensure the validity of this matcher.
-    pub(crate) fn ensure_valid(&self) -> Result<(), Error> {
+    pub(crate) fn ensure_valid(&mut self) -> Result<(), Error> {
         #[cfg(feature = "legacy-matchers")]
         self.ensure_no_ignored_properties()?;
         self.ensure_valid_expression()?;
@@ -287,11 +287,17 @@ impl MatcherConfig {
         Ok(())
     }
 
-    fn ensure_valid_expression(&self) -> Result<(), Error> {
+    fn ensure_valid_expression(&mut self) -> Result<(), Error> {
         if let Some(expression) = &self.expression {
             match serde_json::from_str::<Expression<NotificationMatcher>>(expression) {
                 Ok(expr) => {
                     Self::verify_match_expression_constraints(&expr)?;
+
+                    // Storing the *serialized* expression makes sure that
+                    // we have a minified, single-line JSON string
+                    self.expression = Some(serde_json::to_string(&expr).map_err(|err| {
+                        Error::Generic(format!("could not serialize expression: {err:#}"))
+                    })?);
                 }
                 Err(err) => {
                     return Err(Error::Generic(format!(
@@ -519,7 +525,7 @@ mod tests {
             empty_field_matcher,
             empty_severity_matcher,
         ] {
-            let config = MatcherConfig {
+            let mut config = MatcherConfig {
                 name: "matcher".to_string(),
                 expression: Some(expr.into()),
                 ..Default::default()

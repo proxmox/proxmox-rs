@@ -68,7 +68,10 @@ pub fn get_matcher_as_expression(config: &Config, name: &str) -> Result<MatcherC
 /// Returns a `HttpError` if:
 ///   - an entity with the same name already exists (`400 Bad request`)
 ///   - the configuration could not be saved (`500 Internal server error`)
-pub fn add_matcher(config: &mut Config, matcher_config: MatcherConfig) -> Result<(), HttpError> {
+pub fn add_matcher(
+    config: &mut Config,
+    mut matcher_config: MatcherConfig,
+) -> Result<(), HttpError> {
     super::ensure_unique(config, &matcher_config.name)?;
     super::ensure_endpoints_exist(config, &matcher_config.target)?;
 
@@ -418,6 +421,81 @@ matcher: matcher2
             )
             .is_err()
         );
+
+        Ok(())
+    }
+
+    fn nested_expression() -> Expression<NotificationMatcher> {
+        Expression::AllOf(vec![
+            Expression::Constant(true),
+            Expression::Not(Box::new(Expression::AnyOf(vec![Expression::Constant(
+                false,
+            )]))),
+        ])
+    }
+
+    #[test]
+    fn test_update_minifies_pretty_printed_expression() -> Result<(), HttpError> {
+        let mut config = config_with_two_matchers();
+        let digest = config.digest;
+
+        let expr = nested_expression();
+        let pretty = serde_json::to_string_pretty(&expr).unwrap();
+        assert!(pretty.contains('\n'));
+
+        update_matcher(
+            &mut config,
+            "matcher1",
+            MatcherConfigUpdater {
+                expression: Some(pretty),
+                ..Default::default()
+            },
+            None,
+            Some(&digest),
+        )?;
+
+        let matcher = get_matcher(&config, "matcher1")?;
+        let stored = matcher.expression.expect("expression should be set");
+
+        assert_eq!(stored, serde_json::to_string(&expr).unwrap());
+        assert!(!stored.contains(char::is_whitespace));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_normalizes_expression_with_extra_whitespace() -> Result<(), HttpError> {
+        let mut config = config_with_two_matchers();
+        let digest = config.digest;
+
+        // Same expression as `nested_expression`, but handwritten, with all sorts of
+        // odd whitespace characters.
+        let raw = "{\r\n\t\"all-of\" :\t[\r\n  {  \"constant\":true },\r\n\t{\"not\": \
+                   {\"any-of\": [ {\"constant\" : false} ] } }\r\n]\r\n}\r\n";
+
+        update_matcher(
+            &mut config,
+            "matcher1",
+            MatcherConfigUpdater {
+                expression: Some(raw.into()),
+                ..Default::default()
+            },
+            None,
+            Some(&digest),
+        )?;
+
+        let matcher = get_matcher(&config, "matcher1")?;
+        let stored = matcher.expression.expect("expression should be set");
+
+        assert_eq!(stored, serde_json::to_string(&nested_expression()).unwrap());
+
+        // The normalized expression should stay the same after
+        // a read/write cycle of the config
+        let (raw_config, raw_private_config) = config.write().unwrap();
+        let config = Config::new(&raw_config, &raw_private_config).unwrap();
+        let matcher = get_matcher(&config, "matcher1")?;
+
+        assert_eq!(matcher.expression, Some(stored));
 
         Ok(())
     }
