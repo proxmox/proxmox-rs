@@ -5,8 +5,9 @@ use proxmox_match_expression::Expression;
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 
+use proxmox_api_macro::api;
+use proxmox_schema::Updater;
 use proxmox_schema::api_types::COMMENT_SCHEMA;
-use proxmox_schema::{Updater, api};
 
 use crate::matcher::expression::NotificationMatcher;
 use crate::schema::ENTITY_NAME_SCHEMA;
@@ -31,7 +32,6 @@ pub enum MatchModeOperator {
     Any,
 }
 
-#[cfg(feature = "legacy-matchers")]
 #[api(
     properties: {
         name: {
@@ -84,23 +84,28 @@ pub struct MatcherConfig {
     /// List of matched metadata fields.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg(feature = "legacy-matchers")]
     pub match_field: Vec<field::InlineFieldMatcher>,
 
     /// List of matched severity levels.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg(feature = "legacy-matchers")]
     pub match_severity: Vec<severity::InlineSeverityMatcher>,
 
     /// List of matched severity levels.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg(feature = "legacy-matchers")]
     pub match_calendar: Vec<calendar::InlineCalendarMatcher>,
     /// Decide if 'all' or 'any' match statements must match.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg(feature = "legacy-matchers")]
     pub mode: Option<MatchModeOperator>,
 
     /// Invert match of the whole filter.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg(feature = "legacy-matchers")]
     pub invert_match: Option<bool>,
 
     /// Match expression as inline JSON. This option is mutually exclusive with
@@ -114,55 +119,6 @@ pub struct MatcherConfig {
     ///
     /// All of the above can be represented as (sub)-expressions of this
     /// expression.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub expression: Option<String>,
-
-    /// Targets to notify.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[updater(serde(skip_serializing_if = "Option::is_none"))]
-    pub target: Vec<String>,
-
-    /// Comment.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub comment: Option<String>,
-
-    /// Disable this matcher.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub disable: Option<bool>,
-
-    /// Origin of this config entry.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[updater(skip)]
-    pub origin: Option<Origin>,
-}
-
-#[cfg(not(feature = "legacy-matchers"))]
-#[api(
-    properties: {
-        name: {
-            schema: ENTITY_NAME_SCHEMA,
-        },
-        comment: {
-            optional: true,
-            schema: COMMENT_SCHEMA,
-        },
-        "target": {
-            type: Array,
-            items: {
-                schema: ENTITY_NAME_SCHEMA,
-            },
-            optional: true,
-        },
-    })]
-#[derive(Clone, Debug, Serialize, Deserialize, Updater, Default)]
-#[serde(rename_all = "kebab-case")]
-/// Config for notification matchers.
-pub struct MatcherConfig {
-    /// Name of the matcher.
-    #[updater(skip)]
-    pub name: String,
-
-    /// Match expression as inline JSON.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expression: Option<String>,
 
