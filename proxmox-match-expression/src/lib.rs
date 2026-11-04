@@ -203,9 +203,26 @@ impl<M> From<EvaluatedExpressionWithResult<M>> for EvaluatedExpression<M> {
     }
 }
 
-impl<M, D, E> Expression<M>
+impl<M> Expression<M> {
+    /// The direct child nodes, uniform across all combinator kinds.
+    ///
+    /// 'not' yields its single operand as a one-element slice; leaf nodes ('constant', 'match')
+    /// yield an empty slice. This lets a generic tree walker recurse without special-casing each
+    /// variant.
+    pub fn children(&self) -> &[Expression<M>] {
+        match self {
+            Expression::AllOf(expressions)
+            | Expression::AnyOf(expressions)
+            | Expression::OneOf(expressions) => expressions,
+            Expression::Not(expression) => std::slice::from_ref(&**expression),
+            Expression::Constant(_) | Expression::Match(_) => &[],
+        }
+    }
+}
+
+impl<M> Expression<M>
 where
-    M: Clone + MatchExpression<Data = D, Error = E>,
+    M: Clone + MatchExpression,
 {
     /// Evaluate this expression against a provided variable.
     ///
@@ -223,7 +240,7 @@ where
     /// If you need fast evaluation and do not care about the trace, feel free to add a
     /// `evaluate_fast` (or similar), which does early returns as appropriate and simply returns
     /// `bool`.
-    pub fn evaluate(&self, data: &D) -> Result<EvaluatedExpressionWithResult<M>, E> {
+    pub fn evaluate(&self, data: &M::Data) -> Result<EvaluatedExpressionWithResult<M>, M::Error> {
         let evaluated_expression = match self {
             Expression::AllOf(expressions) => {
                 let (matches, evaluated_expressions) =
@@ -284,27 +301,12 @@ where
         Ok(evaluated_expression)
     }
 
-    /// The direct child nodes, uniform across all combinator kinds.
-    ///
-    /// 'not' yields its single operand as a one-element slice; leaf nodes ('constant', 'match')
-    /// yield an empty slice. This lets a generic tree walker recurse without special-casing each
-    /// variant.
-    pub fn children(&self) -> &[Expression<M>] {
-        match &self {
-            Expression::AllOf(expressions)
-            | Expression::AnyOf(expressions)
-            | Expression::OneOf(expressions) => expressions,
-            Expression::Not(expression) => std::slice::from_ref(&**expression),
-            Expression::Constant(_) | Expression::Match(_) => &[],
-        }
-    }
-
     fn evaluate_subexpressions(
-        data: &D,
+        data: &M::Data,
         expressions: &[Expression<M>],
         initial: bool,
         op: impl Fn(bool, bool) -> bool,
-    ) -> Result<(bool, Vec<EvaluatedExpressionWithResult<M>>), E> {
+    ) -> Result<(bool, Vec<EvaluatedExpressionWithResult<M>>), M::Error> {
         let mut matches = initial;
 
         let mut evaluated_expressions = Vec::new();
