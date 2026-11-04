@@ -2,7 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
-use proxmox_schema::{ApiType, Updater, UpdaterType, api};
+use proxmox_api_macro::api;
+use proxmox_schema::{ApiType, Updater, UpdaterType};
 
 // Helpers for type checks:
 struct AssertTypeEq<T>(T);
@@ -18,7 +19,7 @@ macro_rules! assert_type_eq {
 }
 
 #[api(min_length: 3, max_length: 64)]
-#[derive(UpdaterType)]
+#[derive(proxmox_api_macro::UpdaterType)]
 /// Custom String.
 pub struct Custom(String);
 assert_type_eq!(
