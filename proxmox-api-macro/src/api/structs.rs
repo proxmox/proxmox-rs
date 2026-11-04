@@ -517,6 +517,7 @@ fn derive_updater(
             impl ::proxmox_schema::Updater for #updater_name {
                 fn is_empty(&self) -> bool {
                     #is_empty_impl
+                    true
                 }
             }
         ));
@@ -619,17 +620,22 @@ fn handle_updater_field(
 
     field.ty = syn::Type::Path(updater);
 
+    // The field keeps its `#[cfg]` attributes, so every reference to it must carry them as well.
+    let checked_attrs = CheckedAttributes::from_slice(&field.attrs);
+
     if field_schema.flatten_in_struct {
         let updater_ty = &field.ty;
-        all_of_schemas
-            .extend(quote::quote! {&<#updater_ty as ::proxmox_schema::ApiType>::API_SCHEMA,});
+        all_of_schemas.extend(quote::quote! {
+            #checked_attrs
+            &<#updater_ty as ::proxmox_schema::ApiType>::API_SCHEMA,
+        });
     }
 
-    if !is_empty_impl.is_empty() {
-        is_empty_impl.extend(quote::quote! { && });
-    }
     is_empty_impl.extend(quote::quote! {
-        self.#field_name.is_empty()
+        #checked_attrs
+        if !self.#field_name.is_empty() {
+            return false;
+        }
     });
 
     Ok(FieldAction::Keep)

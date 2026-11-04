@@ -172,3 +172,99 @@ pub struct RenamedStuff {
     #[updater(skip)]
     more: MyType,
 }
+
+#[api]
+/// A struct with conditionally compiled fields.
+#[derive(Updater)]
+#[serde(rename_all = "kebab-case")]
+pub struct WithCfg {
+    /// A test string.
+    one_field: String,
+
+    /// Enabled field.
+    #[cfg(true)]
+    enabled_field: String,
+
+    /// Disabled field.
+    #[cfg(false)]
+    disabled_field: String,
+}
+
+#[test]
+fn test_with_cfg() {
+    pub const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::ObjectSchema::new(
+        "A struct with conditionally compiled fields.",
+        &[
+            (
+                "enabled-field",
+                true,
+                &::proxmox_schema::StringSchema::new("Enabled field.").schema(),
+            ),
+            (
+                "one-field",
+                true,
+                &::proxmox_schema::StringSchema::new("A test string.").schema(),
+            ),
+        ],
+    )
+    .schema();
+
+    assert_eq!(TEST_SCHEMA, WithCfgUpdater::API_SCHEMA);
+
+    let mut updater = WithCfgUpdater::default();
+    assert!(updater.is_empty());
+    updater.enabled_field = Some("value".to_string());
+    assert!(!updater.is_empty());
+}
+
+#[api]
+/// A struct without any compiled-in updater field.
+#[derive(Updater)]
+pub struct AllCfg {
+    /// Not part of the updater.
+    #[updater(skip)]
+    name: String,
+
+    /// Disabled field.
+    #[cfg(false)]
+    disabled_field: String,
+}
+
+#[test]
+fn test_all_cfg() {
+    pub const TEST_SCHEMA: ::proxmox_schema::Schema =
+        ::proxmox_schema::ObjectSchema::new("A struct without any compiled-in updater field.", &[])
+            .schema();
+
+    assert_eq!(TEST_SCHEMA, AllCfgUpdater::API_SCHEMA);
+    assert!(AllCfgUpdater::default().is_empty());
+}
+
+#[api(
+    properties: {
+        simple: { type: Simple },
+    },
+)]
+/// A struct with a configured-out flattened field.
+#[derive(Updater)]
+pub struct FlattenedWithCfg {
+    /// An extra field.
+    extra: String,
+
+    #[cfg(false)]
+    #[serde(flatten)]
+    simple: Simple,
+}
+
+#[test]
+fn test_flattened_with_cfg() {
+    match FlattenedWithCfgUpdater::API_SCHEMA {
+        ::proxmox_schema::Schema::AllOf(all_of) => assert_eq!(all_of.list.len(), 1),
+        _ => panic!("expected an AllOf schema"),
+    }
+
+    let mut updater = FlattenedWithCfgUpdater::default();
+    assert!(updater.is_empty());
+    updater.extra = Some("value".to_string());
+    assert!(!updater.is_empty());
+}
