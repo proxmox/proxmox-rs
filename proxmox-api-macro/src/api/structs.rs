@@ -512,18 +512,14 @@ fn derive_updater(
         finish_all_of_struct(schema, &stru, all_of_schemas)?
     };
 
-    if !is_empty_impl.is_empty() {
-        output.extend(quote::quote!(
-            impl ::proxmox_schema::Updater for #updater_name {
-                fn is_empty(&self) -> bool {
-                    #is_empty_impl
-                    true
-                }
-            }
-        ));
-    }
-
     output.extend(quote::quote!(
+        impl ::proxmox_schema::Updater for #updater_name {
+            fn is_empty(&self) -> bool {
+                #is_empty_impl
+                true
+            }
+        }
+
         impl ::proxmox_schema::UpdaterType for #original_name {
             type Updater = #updater_name;
         }

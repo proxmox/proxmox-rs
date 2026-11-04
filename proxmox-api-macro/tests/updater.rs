@@ -268,3 +268,17 @@ fn test_flattened_with_cfg() {
     updater.extra = Some("value".to_string());
     assert!(!updater.is_empty());
 }
+
+#[api]
+/// A struct whose fields are all skipped for the updater.
+#[derive(Updater)]
+pub struct AllSkipped {
+    /// Not part of the updater.
+    #[updater(skip)]
+    name: String,
+}
+
+#[test]
+fn test_all_skipped() {
+    assert!(AllSkippedUpdater::default().is_empty());
+}
