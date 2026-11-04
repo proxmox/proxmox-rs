@@ -1,6 +1,5 @@
-rust-proxmox-match-expression (0.1.0-1) unstable; urgency=medium
+rust-proxmox-match-expression (0.1.0-1) trixie; urgency=medium
 
   * initial version.
 
- -- Proxmox Support Team <support@proxmox.com>  Thu, 18 Jun 2026 14:02:03 +0200
-
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 04 Nov 2026 21:22:09 +0100
