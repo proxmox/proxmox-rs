@@ -1,3 +1,17 @@
+rust-proxmox-api-macro (1.7.1-1) trixie; urgency=medium
+
+  * updater: support #[cfg] on struct fields.
+
+  * updater: fix deriving for structs whose fields are all skipped.
+
+  * fix looking up flattened and updater fields by serialized names like
+    'wire-name', which could fail to compile.
+
+  * string enums: reject unknown values in the schema if #[cfg] disables the
+    untagged fallback variant, like deserialization does.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 04 Nov 2026 11:43:26 +0100
+
 rust-proxmox-api-macro (1.7.0-1) trixie; urgency=medium
 
   * support #[state] parameters, which API handlers use to declare the
