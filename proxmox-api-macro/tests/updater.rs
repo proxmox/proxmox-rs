@@ -282,3 +282,66 @@ pub struct AllSkipped {
 fn test_all_skipped() {
     assert!(AllSkippedUpdater::default().is_empty());
 }
+
+#[api]
+/// A struct with renamed fields.
+#[derive(Deserialize, Serialize, Updater)]
+pub struct Renamed {
+    /// A field whose name is not a valid identifier.
+    #[serde(rename = "wire-name")]
+    value: String,
+
+    /// A renamed field which should not appear in the updater.
+    #[serde(rename = "skipped-name")]
+    #[updater(skip)]
+    skipped: String,
+}
+
+#[test]
+fn test_renamed() {
+    pub const TEST_SCHEMA: ::proxmox_schema::Schema = ::proxmox_schema::ObjectSchema::new(
+        "A struct with renamed fields.",
+        &[(
+            "wire-name",
+            true,
+            &::proxmox_schema::StringSchema::new("A field whose name is not a valid identifier.")
+                .schema(),
+        )],
+    )
+    .schema();
+
+    assert_eq!(TEST_SCHEMA, RenamedUpdater::API_SCHEMA);
+
+    let updater = RenamedUpdater {
+        value: Some("value".to_string()),
+    };
+    assert!(!updater.is_empty());
+    assert_eq!(
+        serde_json::to_value(&updater).unwrap(),
+        serde_json::json!({ "wire-name": "value" }),
+    );
+}
+
+#[api(
+    properties: {
+        "inner-part": { type: Simple },
+    },
+)]
+/// A struct with a flattened field whose name is not a valid identifier.
+#[derive(Updater)]
+#[serde(rename_all = "kebab-case")]
+pub struct FlattenedRenamed {
+    /// An extra field.
+    extra_field: String,
+
+    #[serde(flatten)]
+    inner_part: Simple,
+}
+
+#[test]
+fn test_flattened_renamed() {
+    match FlattenedRenamedUpdater::API_SCHEMA {
+        ::proxmox_schema::Schema::AllOf(all_of) => assert_eq!(all_of.list.len(), 2),
+        _ => panic!("expected an AllOf schema"),
+    }
+}

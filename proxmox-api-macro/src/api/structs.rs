@@ -312,8 +312,7 @@ fn handle_regular_struct(
         let obj = schema.item.check_object_mut()?;
         // remove flattened fields
         for field in to_remove {
-            //if !obj.remove_property_by_ident(&field)
-            if let Some(item) = obj.find_property_by_ident_mut(&field) {
+            if let Some(item) = obj.find_property_mut(&field) {
                 item.flatten_in_struct = true;
             } else {
                 error!(
@@ -544,7 +543,6 @@ fn handle_updater_field(
     let serde_attrs = serde::FieldAttrib::try_from(&field.attrs[..])?;
 
     let field_name = field.ident.as_ref().expect("unnamed field in FieldsNamed");
-    let field_name_string = field_name.to_string();
 
     let (name, name_span) = {
         let ident: &Ident = field
@@ -563,26 +561,15 @@ fn handle_updater_field(
     };
 
     if updater_attrs.skip() {
-        if !schema.remove_obj_property_by_ident(&name)
-            && !schema.remove_obj_property_by_ident(&field_name_string)
-        {
+        if !schema.remove_obj_property(&name) {
             bail!(name_span, "failed to find schema entry for {:?}", name);
         }
         return Ok(FieldAction::Skip);
     }
 
-    let field_schema = match schema.find_obj_property_by_ident_mut(&name) {
+    let field_schema = match schema.find_obj_property_mut(&name) {
         Some(obj) => obj,
-        None => match schema.find_obj_property_by_ident_mut(&field_name_string) {
-            Some(obj) => obj,
-            None => {
-                bail!(
-                    field_name.span(),
-                    "failed to find schema entry for {:?}",
-                    field_name_string,
-                );
-            }
-        },
+        None => bail!(name_span, "failed to find schema entry for {:?}", name),
     };
 
     let span = Span::call_site();

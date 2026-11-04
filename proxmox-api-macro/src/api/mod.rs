@@ -199,10 +199,15 @@ impl Schema {
             .and_then(|obj| obj.find_property_by_ident_mut(key))
     }
 
-    fn remove_obj_property_by_ident(&mut self, key: &str) -> bool {
+    fn find_obj_property_mut(&mut self, name: &str) -> Option<&mut ObjectEntry> {
+        self.as_object_mut()
+            .and_then(|obj| obj.find_property_mut(name))
+    }
+
+    fn remove_obj_property(&mut self, name: &str) -> bool {
         self.as_object_mut()
             .expect("tried to remove object property on non-object schema")
-            .remove_property_by_ident(key)
+            .remove_property(name)
     }
 
     // FIXME: Should we turn the property list into a map? We used to have no need to find keys in
@@ -792,11 +797,17 @@ impl SchemaObject {
             .find(|p| p.name.as_ident_str() == key)
     }
 
-    fn remove_property_by_ident(&mut self, key: &str) -> bool {
+    fn find_property_mut(&mut self, name: &str) -> Option<&mut ObjectEntry> {
+        self.properties_
+            .iter_mut()
+            .find(|p| p.name.as_str() == name)
+    }
+
+    fn remove_property(&mut self, name: &str) -> bool {
         match self
             .properties_
             .iter()
-            .position(|p| p.name.as_ident_str() == key)
+            .position(|p| p.name.as_str() == name)
         {
             Some(idx) => {
                 self.properties_.remove(idx);
