@@ -111,8 +111,8 @@ pub trait MatchExpression {
 
     /// Evaluate this expression.
     ///
-    /// If there are no errors, this should return `Ok(true)` or `Ok(false)`, depending on
-    /// whether this leaf-node expression matched the provided data or not.
+    /// If there are no errors, this should return `Ok(true)` or `Ok(false)`, depending on whether
+    /// this leaf-node expression matched the provided data or not.
     fn evaluate(&self, data: &Self::Data) -> Result<bool, Self::Error>;
 }
 
@@ -154,9 +154,8 @@ pub enum EvaluatedExpression<M> {
 
 /// Evaluated expression resulting from [`Expression::evaluate`].
 ///
-/// This type contains the original expression, augmented with per-node
-/// results. This is useful for recording 'traces', e.g. for recording
-/// exactly why an expression matched on the data or not.
+/// This type contains the original expression, augmented with per-node results. This is useful for
+/// recording 'traces', e.g. for recording exactly why an expression matched on the data or not.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct EvaluatedExpressionWithResult<M> {
     /// The actual expression.
@@ -184,9 +183,9 @@ impl<M> EvaluatedExpressionWithResult<M> {
 
     /// The direct child nodes, uniform across all combinator kinds.
     ///
-    /// 'not' yields its single operand as a one-element slice; leaf nodes
-    /// ('constant', 'match') yield an empty slice. This lets a generic tree
-    /// walker recurse without special-casing each variant.
+    /// 'not' yields its single operand as a one-element slice; leaf nodes ('constant', 'match')
+    /// yield an empty slice. This lets a generic tree walker recurse without special-casing each
+    /// variant.
     pub fn children(&self) -> &[EvaluatedExpressionWithResult<M>] {
         match &self.expression {
             EvaluatedExpression::AllOf(expressions)
@@ -287,9 +286,9 @@ where
 
     /// The direct child nodes, uniform across all combinator kinds.
     ///
-    /// 'not' yields its single operand as a one-element slice; leaf nodes
-    /// ('constant', 'match') yield an empty slice. This lets a generic tree
-    /// walker recurse without special-casing each variant.
+    /// 'not' yields its single operand as a one-element slice; leaf nodes ('constant', 'match')
+    /// yield an empty slice. This lets a generic tree walker recurse without special-casing each
+    /// variant.
     pub fn children(&self) -> &[Expression<M>] {
         match &self {
             Expression::AllOf(expressions)
@@ -479,9 +478,8 @@ mod test {
         ];
         assert!(eval(expr).unwrap());
 
-        // Two of three match. This must *not* match: it distinguishes
-        // 'exactly one' from XOR-parity, which would report a match for
-        // any odd number of matching sub-expressions.
+        // Two of three match. This must *not* match: it distinguishes 'exactly one' from
+        // XOR-parity, which would report a match for any odd number of matching sub-expressions.
         let expr = one_of![
             Expression::Constant(true),
             Expression::Constant(true),
@@ -489,8 +487,8 @@ mod test {
         ];
         assert!(!eval(expr).unwrap());
 
-        // Three of three match. XOR-parity would (incorrectly) report a
-        // match here, since three is odd.
+        // Three of three match. XOR-parity would (incorrectly) report a match here, since three is
+        // odd.
         let expr = one_of![
             Expression::Constant(true),
             Expression::Constant(true),
