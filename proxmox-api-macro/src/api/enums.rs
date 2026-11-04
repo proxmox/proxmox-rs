@@ -105,7 +105,7 @@ fn handle_string_enum(
     let mut default_value = None;
 
     let mut variants = TokenStream::new();
-    let mut has_untagged_other = false;
+    let mut untagged_other = None;
     for variant in &mut enum_ty.variants {
         let checked_attrs = CheckedAttributes::from_slice(&variant.attrs);
 
@@ -115,7 +115,7 @@ fn handle_string_enum(
             syn::Fields::Unit => (),
             syn::Fields::Unnamed(_) => {
                 if attrs.untagged.is_some() {
-                    has_untagged_other = true;
+                    untagged_other = Some(checked_attrs);
                     continue;
                 } else {
                     bail!(variant => "unnamed variants not supported in string enums");
@@ -171,10 +171,11 @@ fn handle_string_enum(
         None => TokenStream::new(),
     };
 
-    let format_is_optional = if has_untagged_other {
-        quote::quote! { .format_is_optional(true) }
-    } else {
-        TokenStream::new()
+    // Values outside of the enum are only valid if the fallback variant is actually compiled in.
+    let format_is_optional = match untagged_other.map(|attrs| attrs.cfg_predicate()) {
+        None => TokenStream::new(),
+        Some(None) => quote::quote! { .format_is_optional(true) },
+        Some(Some(predicate)) => quote::quote! { .format_is_optional(::core::cfg!(#predicate)) },
     };
 
     Ok(quote_spanned! { name.span() =>

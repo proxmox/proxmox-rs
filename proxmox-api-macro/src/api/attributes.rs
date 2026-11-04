@@ -1,4 +1,4 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{TokenStream, TokenTree};
 use syn::meta::ParseNestedMeta;
 
 use crate::util;
@@ -125,6 +125,31 @@ impl CheckedAttributes {
                 .filter(|attr| attr.path().is_ident("cfg"))
                 .cloned()
                 .collect(),
+        }
+    }
+
+    /// The condition of all `#[cfg]` attributes combined, or `None` if there are none.
+    pub fn cfg_predicate(&self) -> Option<TokenStream> {
+        let predicates: Vec<TokenStream> = self
+            .attrs
+            .iter()
+            .filter_map(|attr| match &attr.meta {
+                syn::Meta::List(list) => {
+                    // The predicate may be followed by a comma, which is invalid within `all()`.
+                    let mut tokens: Vec<TokenTree> = list.tokens.clone().into_iter().collect();
+                    if matches!(tokens.last(), Some(TokenTree::Punct(p)) if p.as_char() == ',') {
+                        tokens.pop();
+                    }
+                    Some(TokenStream::from_iter(tokens))
+                }
+                _ => None,
+            })
+            .collect();
+
+        match predicates.as_slice() {
+            [] => None,
+            [predicate] => Some(predicate.clone()),
+            _ => Some(quote::quote! { all(#(#predicates),*) }),
         }
     }
 }

@@ -318,6 +318,57 @@ fn enum_with_other() {
         .expect("check_constraints on 'other' value failed");
 }
 
+#[api]
+/// An enum with a configured-out fallback value.
+#[derive(Debug, PartialEq, Eq, Deserialize)]
+pub enum WithDisabledOther {
+    /// First value.
+    First,
+
+    /// Unknown values.
+    #[cfg(false)]
+    #[serde(untagged)]
+    Other(String),
+}
+
+#[api]
+/// An enum with a configured-in fallback value.
+#[derive(Debug, PartialEq, Eq, Deserialize)]
+pub enum WithEnabledOther {
+    /// First value.
+    First,
+
+    /// Unknown values.
+    #[rustfmt::skip] // keep the valid trailing comma
+    #[cfg(true,)]
+    #[cfg(not(false))]
+    #[serde(untagged)]
+    Other(String),
+}
+
+#[test]
+fn enum_with_cfg_other() {
+    const WITH_DISABLED_OTHER_SCHEMA: ::proxmox_schema::Schema =
+        ::proxmox_schema::StringSchema::new("An enum with a configured-out fallback value.")
+            .format(&::proxmox_schema::ApiStringFormat::Enum(&[EnumEntry::new(
+                "First",
+                "First value.",
+            )]))
+            .schema();
+
+    assert_eq!(WITH_DISABLED_OTHER_SCHEMA, WithDisabledOther::API_SCHEMA);
+    let schema = const { WithDisabledOther::API_SCHEMA.unwrap_string_schema() };
+    schema
+        .check_constraints("any string")
+        .expect_err("check_constraints accepted a value without fallback variant");
+
+    let schema = const { WithEnabledOther::API_SCHEMA.unwrap_string_schema() };
+    assert!(schema.format_is_optional);
+    schema
+        .check_constraints("any string")
+        .expect("check_constraints on 'other' value failed");
+}
+
 #[api(
     properties: {
         "verify-mode": {
