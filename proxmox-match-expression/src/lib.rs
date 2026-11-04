@@ -41,7 +41,7 @@
 //!     StringMatcher::AllUppercase.into(),
 //! ];
 //!
-//! // Expressions implement `[Serialize]` and `[Deserialize]`
+//! // Expressions implement `Serialize` and `Deserialize`.
 //! let expected_serialized_expr = r#"{
 //!  "any-of": [
 //!    {
@@ -67,8 +67,8 @@
 //! let evaluated_expression = expr.evaluate(&"AAAAA".to_string()).unwrap();
 //! assert!(evaluated_expression.is_match());
 //!
-//! // `[Expression::evaluate]` returns [`EvaluatedExpression`], which contains a full trace
-//! // of all expressions that were evaluated.
+//! // `Expression::evaluate` returns an `EvaluatedExpressionWithResult`, which contains a full
+//! // trace of all expressions that were evaluated.
 //!
 //! let serialized = serde_json::to_string_pretty(&evaluated_expression).unwrap();
 //! let expected = r#"{
@@ -120,7 +120,7 @@ pub trait MatchExpression {
 #[serde(rename_all = "kebab-case")]
 /// Match expression.
 pub enum Expression<M> {
-    /// Match if all of the sub-expression match.
+    /// Match if all of the sub-expressions match.
     AllOf(Vec<Expression<M>>),
     /// Match if any of the sub-expressions matches.
     AnyOf(Vec<Expression<M>>),
@@ -224,22 +224,20 @@ impl<M> Expression<M>
 where
     M: Clone + MatchExpression,
 {
-    /// Evaluate this expression against a provided variable.
+    /// Evaluate this expression against the provided data.
     ///
-    /// This function returns an `EvaluatedExpression`, replicating the exact structure
-    /// of `self`, but annotated with a per-subexpression trace to record which of
-    /// the subexpressions matched or not.
+    /// The returned [`EvaluatedExpressionWithResult`] replicates the structure of `self`, annotated
+    /// with whether each sub-expression matched.
     ///
-    /// # Note
-    /// This evaluates the expression and *all* sub-expressions fully and does not return
-    /// early if the final result is already determined by the already evaluated sub-expressions
-    /// (for instance, [`Expression::AnyOf`] and the first sub-expression matched).
-    /// This is done so that we can return the full trace via the [`EvaluatedExpressionWithResult`]
-    /// type.
+    /// Evaluation does not short-circuit when the boolean result is determined, for instance by a
+    /// matching first sub-expression of [`Expression::AnyOf`], so that on success the trace
+    /// contains every sub-expression.
     ///
-    /// If you need fast evaluation and do not care about the trace, feel free to add a
-    /// `evaluate_fast` (or similar), which does early returns as appropriate and simply returns
-    /// `bool`.
+    /// # Errors
+    ///
+    /// Returns immediately on the first error from a [`MatchExpression`] leaf-node. The whole
+    /// evaluation fails without returning a trace, even if the result does not depend on that
+    /// leaf-node.
     pub fn evaluate(&self, data: &M::Data) -> Result<EvaluatedExpressionWithResult<M>, M::Error> {
         let evaluated_expression = match self {
             Expression::AllOf(expressions) => {
