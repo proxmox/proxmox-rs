@@ -1,3 +1,13 @@
+rust-proxmox-uuid (1.1.1-1) trixie; urgency=medium
+
+  * fix implicit autoref on raw pointer
+
+  * fix doc test under edition 2024
+
+  * avoid potential null dereference and memory leaks
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 05 Nov 2026 09:55:44 +0100
+
 rust-proxmox-uuid (1.1.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
