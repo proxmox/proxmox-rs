@@ -30,8 +30,8 @@ Provides:
  librust-proxmox-uuid-1+default-dev (= ${binary:Version}),
  librust-proxmox-uuid-1.1-dev (= ${binary:Version}),
  librust-proxmox-uuid-1.1+default-dev (= ${binary:Version}),
- librust-proxmox-uuid-1.1.0-dev (= ${binary:Version}),
- librust-proxmox-uuid-1.1.0+default-dev (= ${binary:Version})
+ librust-proxmox-uuid-1.1.1-dev (= ${binary:Version}),
+ librust-proxmox-uuid-1.1.1+default-dev (= ${binary:Version})
 Description: Bindings for libuuid with optional serde support - Rust source code
  Source code for Debianized Rust crate "proxmox-uuid"
 
@@ -45,7 +45,7 @@ Depends:
 Provides:
  librust-proxmox-uuid-1+serde-dev (= ${binary:Version}),
  librust-proxmox-uuid-1.1+serde-dev (= ${binary:Version}),
- librust-proxmox-uuid-1.1.0+serde-dev (= ${binary:Version})
+ librust-proxmox-uuid-1.1.1+serde-dev (= ${binary:Version})
 Description: Bindings for libuuid with optional serde support - feature "serde"
  This metapackage enables feature "serde" for the Rust proxmox-uuid crate, by
  pulling in any additional dependencies needed by that feature.
