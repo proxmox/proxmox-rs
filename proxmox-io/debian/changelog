@@ -1,3 +1,25 @@
+rust-proxmox-io (1.3.0-1) trixie; urgency=medium
+
+  * request zeroed memory instead of manually clearing it
+
+  * avoid potential null dereference and memory leak on error path
+
+  * remove boxed::uninitialized because it is unsound and unused
+
+  * remove unused append_to_vec functions, they could leak uninitialized memory
+    to callers
+
+  * remove unused ByteVecExt trait with grow_ and resize_uninitialized
+
+  * propagate OOM errors to avoid crashing and fix potential UB in
+    read_exact_allocated by not passing uninitialized memory to arbitrary
+    readers
+
+  * replace vec::uninitialized in skip_to_end with explicit zeroing, and remove
+    the now unused helper
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 05 Nov 2026 09:57:47 +0100
+
 rust-proxmox-io (1.2.1-1) trixie; urgency=medium
 
   * introduce RangeReader for bounded reads on a sub-range of an underlying
