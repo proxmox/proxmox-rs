@@ -49,3 +49,38 @@ pub enum BondXmitHashPolicy {
 
 serde_plain::derive_display_from_serialize!(BondXmitHashPolicy);
 serde_plain::derive_fromstr_from_deserialize!(BondXmitHashPolicy);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bond_mode_names() {
+        for (mode, name) in [
+            (LinuxBondMode::BalanceRr, "balance-rr"),
+            (LinuxBondMode::ActiveBackup, "active-backup"),
+            (LinuxBondMode::BalanceXor, "balance-xor"),
+            (LinuxBondMode::Broadcast, "broadcast"),
+            (LinuxBondMode::Ieee802_3ad, "802.3ad"),
+            (LinuxBondMode::BalanceTlb, "balance-tlb"),
+            (LinuxBondMode::BalanceAlb, "balance-alb"),
+        ] {
+            assert_eq!(mode.to_string(), name);
+            assert_eq!(name.parse::<LinuxBondMode>().unwrap(), mode);
+        }
+        assert!("lacp".parse::<LinuxBondMode>().is_err());
+    }
+
+    #[test]
+    fn bond_hash_policy_names() {
+        for (policy, name) in [
+            (BondXmitHashPolicy::Layer2, "layer2"),
+            (BondXmitHashPolicy::Layer2_3, "layer2+3"),
+            (BondXmitHashPolicy::Layer3_4, "layer3+4"),
+        ] {
+            assert_eq!(policy.to_string(), name);
+            assert_eq!(name.parse::<BondXmitHashPolicy>().unwrap(), policy);
+        }
+        assert!("layer2+4".parse::<BondXmitHashPolicy>().is_err());
+    }
+}
