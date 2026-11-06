@@ -575,7 +575,7 @@ impl NetworkBondOptions {
 
         let mut seen = HashSet::new();
         if let Some(duplicate) = self.members.iter().find(|mac| !seen.insert(*mac)) {
-            bail!("bond member {duplicate} is given more than once");
+            bail!("bond member {duplicate:x} is given more than once");
         }
 
         if let Some(primary_if) = &self.primary_interface {
@@ -585,10 +585,10 @@ impl NetworkBondOptions {
 
             if !self.members.contains(primary_if) {
                 bail!(
-                    "primary bond interface {primary_if} must be a member of the bond (members: {})",
+                    "primary bond interface {primary_if:x} must be a member of the bond (members: {})",
                     self.members
                         .iter()
-                        .fold(String::new(), |acc, mac| format!("{acc}, {mac}"))
+                        .fold(String::new(), |acc, mac| format!("{acc}, {mac:x}"))
                         .trim_start_matches(", ")
                 );
             }
@@ -1849,7 +1849,7 @@ mod tests {
         assert!(res.is_err());
         assert_eq!(
             res.unwrap_err().to_string(),
-            "bond member 12:34:56:AB:CD:DF is given more than once"
+            "bond member 12:34:56:ab:cd:df is given more than once"
         );
     }
 
@@ -1898,7 +1898,7 @@ mod tests {
         assert!(res.is_err());
         assert_eq!(
             res.unwrap_err().to_string(),
-            "primary bond interface AB:12:CD:34:EF:56 must be a member of the bond (members: 12:34:56:AB:CD:DF, AB:CD:DF:12:34:56)"
+            "primary bond interface ab:12:cd:34:ef:56 must be a member of the bond (members: 12:34:56:ab:cd:df, ab:cd:df:12:34:56)"
         );
     }
 
