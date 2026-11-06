@@ -266,6 +266,7 @@ pub enum RebootMode {
 }
 
 serde_plain::derive_fromstr_from_deserialize!(RebootMode);
+serde_plain::derive_display_from_serialize!(RebootMode);
 
 #[derive(Clone, Deserialize, Debug, Serialize, PartialEq)]
 #[cfg_attr(feature = "api-types", derive(Updater))]
@@ -893,6 +894,7 @@ pub enum FilterMatch {
 }
 
 serde_plain::derive_fromstr_from_deserialize!(FilterMatch);
+serde_plain::derive_display_from_serialize!(FilterMatch);
 
 #[cfg_attr(feature = "api-types", api(
     properties: {
