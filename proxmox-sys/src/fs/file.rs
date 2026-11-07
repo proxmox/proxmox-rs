@@ -168,9 +168,8 @@ pub fn make_tmp_file<P: AsRef<Path>>(
 ///
 /// This first creates a temporary file and then rotates it in place.
 ///
-/// `fsync`: use `fsync(2)` sycall to synchronize a file's in-core
-/// state with storage device. This makes sure the is consistent even
-/// aftert a power loss.
+/// `fsync`: use `fsync(2)` to synchronize the new file and the directory holding it with the storage
+/// device, so the replacement is complete and persists even after a power loss.
 pub fn replace_file<P: AsRef<Path>>(
     path: P,
     data: &[u8],
@@ -207,7 +206,26 @@ pub fn replace_file<P: AsRef<Path>>(
         );
     }
 
+    if fsync {
+        fsync_parent_dir(path.as_ref())?;
+    }
+
     Ok(())
+}
+
+/// Synchronize the directory holding `path`, which makes a rename into it persistent.
+fn fsync_parent_dir(path: &Path) -> Result<(), Error> {
+    let dir = match path.parent() {
+        Some(dir) if !dir.as_os_str().is_empty() => dir,
+        _ => Path::new("."),
+    };
+    let dir_file =
+        File::open(dir).map_err(|err| format_err!("unable to open directory {dir:?} - {err}"))?;
+    match unistd::fsync(dir_file.as_raw_fd()) {
+        // file systems that cannot synchronize directories
+        Ok(()) | Err(Errno::EINVAL) => Ok(()),
+        Err(err) => bail!("fsync of directory {dir:?} failed - {err}"),
+    }
 }
 
 /// Like open(2), but allows setting initial data, perm, owner and group
@@ -542,6 +560,17 @@ mod test {
                 assert_eq!(std::fs::read(&path).unwrap(), expected);
             }
         }
+    }
+
+    #[test]
+    fn replace_file_with_fsync() {
+        let dir = crate::fs::make_tmp_dir("./tests", None).unwrap();
+        let path = dir.join("replaced");
+        for data in [b"first".as_slice(), b"second"] {
+            replace_file(&path, data, CreateOptions::new(), true).unwrap();
+            assert_eq!(std::fs::read(&path).unwrap(), data);
+        }
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
