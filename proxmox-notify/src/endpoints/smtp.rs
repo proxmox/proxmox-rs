@@ -313,8 +313,14 @@ fn build_forwarded_message(
     // lettre will automatically set the `Content-Transfer-Encoding: binary` header,
     // which we need to remove. The actual transfer encoding is later
     // copied from the original message headers.
-    let body = Body::new_with_encoding(raw_body.to_vec(), ContentTransferEncoding::Binary)
-        .map_err(|_| Error::Generic("could not create body".into()))?;
+    //
+    // lettre sends byte bodies as they are and only dot-stuffs lines that follow a CRLF, so
+    // forwarded mail with LF line endings needs normalizing first.
+    let body = Body::new_with_encoding(
+        proxmox_sendmail::normalize_line_endings(raw_body),
+        ContentTransferEncoding::Binary,
+    )
+    .map_err(|_| Error::Generic("could not create body".into()))?;
     let mut message = email_builder
         .subject(parsed_message.subject().unwrap_or_default())
         .body(body)
