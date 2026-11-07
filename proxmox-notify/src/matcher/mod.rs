@@ -93,7 +93,7 @@ pub struct MatcherConfig {
     #[cfg(feature = "legacy-matchers")]
     pub match_severity: Vec<severity::InlineSeverityMatcher>,
 
-    /// List of matched severity levels.
+    /// List of matched calendar entries.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[updater(serde(skip_serializing_if = "Option::is_none"))]
     #[cfg(feature = "legacy-matchers")]
