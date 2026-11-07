@@ -1,3 +1,18 @@
+rust-proxmox-sendmail (1.0.4-1) trixie; urgency=medium
+
+  * fix #7814: normalize line endings of sent and forwarded mail to CRLF
+    and drop bare CR bytes, as SMTP does not allow bare CR or LF. This
+    no longer depends on the local MTA to convert line endings.
+
+  * strip all control characters from attachment filenames to avoid
+    compatibility issues with mail clients.
+
+  * add a public helper to normalize line endings, so that code sending
+    mail by other means, like the SMTP notification target, can apply
+    the same normalization.
+
+ -- Proxmox Support Team <support@proxmox.com>  Sat, 07 Nov 2026 20:51:45 +0100
+
 rust-proxmox-sendmail (1.0.3-1) trixie; urgency=medium
 
   * add a builder API for mail headers to provide a simple interface for
