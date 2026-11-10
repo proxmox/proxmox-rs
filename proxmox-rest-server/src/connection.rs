@@ -491,7 +491,7 @@ impl AcceptBuilder {
                 }
             }
             Err(err) => {
-                log::error!("[{peer}] failed to check for TLS handshake: {err}");
+                log::error!("[{peer}] failed to check for TLS handshake: {err:#}");
             }
         }
     }
@@ -552,9 +552,11 @@ impl AcceptBuilder {
                 .context("couldn't peek into incoming TCP stream")
         };
 
-        tokio::time::timeout(timeout, future)
-            .await
-            .context("timed out while waiting for client to initiate TLS handshake")?
+        // The elapsed error carries no information beyond the timeout itself, so do not keep it as
+        // the cause.
+        tokio::time::timeout(timeout, future).await.map_err(|_| {
+            format_err!("timed out while waiting for client to initiate TLS handshake")
+        })?
     }
 }
 
@@ -656,7 +658,7 @@ mod tests {
         let err = result.expect_err("check must time out");
         assert_eq!(
             format!("{err:#}"),
-            "timed out while waiting for client to initiate TLS handshake: deadline has elapsed",
+            "timed out while waiting for client to initiate TLS handshake",
         );
     }
 
