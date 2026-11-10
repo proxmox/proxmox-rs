@@ -503,9 +503,15 @@ impl AcceptBuilder {
         const HANDSHAKE_BYTES_LEN: usize = 5;
 
         let future = async {
-            let mut previous_peek_len = 0;
-            incoming_stream
-                .async_io(tokio::io::Interest::READABLE, || {
+            loop {
+                // Charge each iteration against tokio's cooperative scheduling
+                // budget, like tokio's own IO helpers do, so that the loop
+                // cannot starve other tasks or the timeout.
+                tokio::task::consume_budget().await;
+
+                let ready = incoming_stream.ready(tokio::io::Interest::READABLE).await?;
+
+                let peek_res = incoming_stream.try_io(tokio::io::Interest::READABLE, || {
                     let mut buf = [0; HANDSHAKE_BYTES_LEN];
 
                     use std::os::fd::{AsRawFd, FromRawFd};
@@ -518,23 +524,23 @@ impl AcceptBuilder {
                     let std_stream =
                         unsafe { ManuallyDrop::new(std::net::TcpStream::from_raw_fd(raw_fd)) };
 
-                    let peek_res = std_stream.peek(&mut buf);
-
-                    match peek_res {
+                    match std_stream.peek(&mut buf) {
                         // If we didn't get enough bytes, raise an EAGAIN / EWOULDBLOCK which tells
-                        // tokio to await the readiness of the socket again. This should normally
-                        // only be used if the socket isn't actually ready, but is fine to do here
-                        // in our case.
+                        // tokio to clear the readiness of the socket, so that we wait for more
+                        // data. This should normally only be used if the socket isn't actually
+                        // ready, but is fine to do here in our case.
                         //
-                        // This means we will peek into the stream's queue until we got
-                        // HANDSHAKE_BYTE_LEN bytes or an error.
+                        // Only stop waiting on definite signs of a closed connection:
+                        // 1. an empty peek
+                        // 2. a closed read side
+                        //
+                        // The socket can be marked as readable again without any new data, for
+                        // example if more data arrived between tokio receiving a readiness event
+                        // and `peek()`. So, readiness *alone* is not a sign of a closed connection.
                         Ok(peek_len) if peek_len < HANDSHAKE_BYTES_LEN => {
-                            // if we detect the same peek len again but still got a readable stream,
-                            // the connection was probably closed, so abort here
-                            if peek_len == previous_peek_len {
+                            if peek_len == 0 || ready.is_read_closed() {
                                 Err(io::ErrorKind::ConnectionAborted.into())
                             } else {
-                                previous_peek_len = peek_len;
                                 Err(io::ErrorKind::WouldBlock.into())
                             }
                         }
@@ -547,16 +553,21 @@ impl AcceptBuilder {
                             }
                         }),
                     }
-                })
-                .await
-                .context("couldn't peek into incoming TCP stream")
+                });
+
+                match peek_res {
+                    Err(err) if err.kind() == io::ErrorKind::WouldBlock => continue,
+                    res => break res,
+                }
+            }
         };
 
-        // The elapsed error carries no information beyond the timeout itself, so do not keep it as
-        // the cause.
-        tokio::time::timeout(timeout, future).await.map_err(|_| {
-            format_err!("timed out while waiting for client to initiate TLS handshake")
-        })?
+        tokio::time::timeout(timeout, future)
+            .await
+            .map_err(|_| {
+                format_err!("timed out while waiting for client to initiate TLS handshake")
+            })?
+            .context("couldn't peek into incoming TCP stream")
     }
 }
 
