@@ -300,6 +300,7 @@ struct AcceptFlags {
 }
 
 /// Outcome of checking whether a client initiates a TLS handshake on a new connection.
+#[derive(Debug)]
 enum TlsHandshakeCheck {
     /// The client sent the beginning of a TLS handshake.
     ///
@@ -592,7 +593,198 @@ fn contains_tls_handshake_fragment(buf: &[u8]) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::io;
+    use std::time::Duration;
+
+    use anyhow::Error;
+    use tokio::io::AsyncWriteExt;
+    use tokio::net::TcpListener;
+    use tokio::net::TcpStream;
+
+    use super::AcceptBuilder;
+    use super::TlsHandshakeCheck;
     use super::contains_tls_handshake_fragment;
+
+    /// Timeout for checks that are expected to finish on their own.
+    const CHECK_TIMEOUT: Duration = Duration::from_secs(10);
+
+    /// Timeout for checks that are expected to time out.
+    const SHORT_CHECK_TIMEOUT: Duration = Duration::from_millis(200);
+
+    /// Runs `client` against a fresh local connection and checks that connection on the server side
+    /// for a TLS handshake.
+    ///
+    /// If `client` returns its stream, the connection is kept open until the check has finished.
+    async fn check_client<F, Fut>(timeout: Duration, client: F) -> Result<TlsHandshakeCheck, Error>
+    where
+        F: FnOnce(TcpStream) -> Fut + Send + 'static,
+        Fut: Future<Output = Option<TcpStream>> + Send,
+    {
+        let listener = TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("failed to set up local TCP listener");
+
+        let addr = listener.local_addr().unwrap();
+
+        let client = tokio::spawn(async move {
+            let stream = TcpStream::connect(addr)
+                .await
+                .expect("failed to connect to address of local TCP listener");
+
+            client(stream).await
+        });
+
+        let (server_stream, _) = listener
+            .accept()
+            .await
+            .expect("failed to accept incoming connection");
+
+        let result = AcceptBuilder::wait_for_client_tls_handshake(&server_stream, timeout).await;
+
+        drop(client.await.unwrap());
+
+        result
+    }
+
+    /// Asserts that the check failed because of the connection itself, not because of a timeout.
+    fn assert_connection_error(result: Result<TlsHandshakeCheck, Error>) {
+        let err = result.expect_err("check must fail");
+        assert!(err.downcast_ref::<io::Error>().is_some(), "{err:#}");
+    }
+
+    fn assert_timeout_error(result: Result<TlsHandshakeCheck, Error>) {
+        let err = result.expect_err("check must time out");
+        assert_eq!(
+            format!("{err:#}"),
+            "timed out while waiting for client to initiate TLS handshake: deadline has elapsed",
+        );
+    }
+
+    #[tokio::test]
+    async fn a_tls_client_is_detected() {
+        let result = check_client(CHECK_TIMEOUT, |mut stream| async move {
+            stream
+                .write_all(&[0x16, 0x3, 0x1, 0x02, 0x00])
+                .await
+                .unwrap();
+            Some(stream)
+        })
+        .await;
+
+        assert!(
+            matches!(result, Ok(TlsHandshakeCheck::Initiated)),
+            "{result:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_plain_client_is_detected() {
+        let result = check_client(CHECK_TIMEOUT, |mut stream| async move {
+            stream.write_all(b"GET / HTTP/1.1\r\n").await.unwrap();
+            Some(stream)
+        })
+        .await;
+
+        assert!(
+            matches!(result, Ok(TlsHandshakeCheck::NotInitiated)),
+            "{result:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_client_sending_small_chunks_is_detected() {
+        let result = check_client(CHECK_TIMEOUT, |mut stream| async move {
+            for chunk in [&b"G"[..], b"E", b"T", b" / HTTP/1.1\r\n"] {
+                stream.write_all(chunk).await.unwrap();
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+            Some(stream)
+        })
+        .await;
+
+        assert!(
+            matches!(result, Ok(TlsHandshakeCheck::NotInitiated)),
+            "{result:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_client_closing_without_data_is_reported() {
+        let result = check_client(CHECK_TIMEOUT, |stream| async move {
+            drop(stream);
+            None
+        })
+        .await;
+
+        assert_connection_error(result);
+    }
+
+    #[tokio::test]
+    async fn a_client_closing_after_partial_data_is_reported() {
+        let result = check_client(CHECK_TIMEOUT, |mut stream| async move {
+            stream.write_all(&[0x16, 0x3]).await.unwrap();
+            drop(stream);
+            None
+        })
+        .await;
+
+        assert_connection_error(result);
+    }
+
+    #[tokio::test]
+    async fn a_client_shutting_down_after_partial_data_is_reported() {
+        let result = check_client(CHECK_TIMEOUT, |mut stream| async move {
+            stream.write_all(&[0x16, 0x3]).await.unwrap();
+            stream.shutdown().await.unwrap();
+            Some(stream)
+        })
+        .await;
+
+        assert_connection_error(result);
+    }
+
+    #[tokio::test]
+    async fn a_client_resetting_without_data_is_reported() {
+        let result = check_client(CHECK_TIMEOUT, |stream| async move {
+            stream.set_linger(Some(Duration::ZERO)).unwrap();
+            drop(stream);
+            None
+        })
+        .await;
+
+        assert_connection_error(result);
+    }
+
+    #[tokio::test]
+    async fn a_client_resetting_after_partial_data_is_reported() {
+        let result = check_client(CHECK_TIMEOUT, |mut stream| async move {
+            stream.write_all(&[0x16, 0x3]).await.unwrap();
+            stream.set_linger(Some(Duration::ZERO)).unwrap();
+            drop(stream);
+            None
+        })
+        .await;
+
+        assert_connection_error(result);
+    }
+
+    #[tokio::test]
+    async fn an_idle_client_times_out() {
+        let result = check_client(SHORT_CHECK_TIMEOUT, |stream| async move { Some(stream) }).await;
+
+        assert_timeout_error(result);
+    }
+
+    #[tokio::test]
+    async fn a_client_stalling_after_partial_data_times_out() {
+        let result = check_client(SHORT_CHECK_TIMEOUT, |mut stream| async move {
+            stream.write_all(&[0x16, 0x3]).await.unwrap();
+            Some(stream)
+        })
+        .await;
+
+        assert_timeout_error(result);
+    }
 
     #[test]
     fn a_handshake_fragment_is_detected() {
