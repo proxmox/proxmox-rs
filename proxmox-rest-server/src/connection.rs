@@ -299,6 +299,17 @@ struct AcceptFlags {
     is_debug: bool,
 }
 
+/// Outcome of checking whether a client initiates a TLS handshake on a new connection.
+enum TlsHandshakeCheck {
+    /// The client sent the beginning of a TLS handshake.
+    ///
+    /// See [contains_tls_handshake_fragment] for details on how this is
+    /// checked.
+    Initiated,
+    /// The client sent data that does not start a TLS handshake.
+    NotInitiated,
+}
+
 impl AcceptBuilder {
     async fn accept_connections(
         self,
@@ -466,10 +477,10 @@ impl AcceptBuilder {
             Self::wait_for_client_tls_handshake(socket_ref, CLIENT_HANDSHAKE_TIMEOUT).await;
 
         match handshake_res {
-            Ok(true) => {
+            Ok(TlsHandshakeCheck::Initiated) => {
                 Self::do_accept_tls(state, flags, secure_sender).await;
             }
-            Ok(false) => {
+            Ok(TlsHandshakeCheck::NotInitiated) => {
                 let insecure_stream = Box::pin(state.socket);
 
                 if let Err(send_err) = insecure_sender.send(Ok(insecure_stream)).await {
@@ -487,7 +498,7 @@ impl AcceptBuilder {
     async fn wait_for_client_tls_handshake(
         incoming_stream: &TcpStream,
         timeout: Duration,
-    ) -> Result<bool, Error> {
+    ) -> Result<TlsHandshakeCheck, Error> {
         const HANDSHAKE_BYTES_LEN: usize = 5;
 
         let future = async {
@@ -527,7 +538,13 @@ impl AcceptBuilder {
                             }
                         }
                         // Either we got Ok(HANDSHAKE_BYTES_LEN) or some error.
-                        res => res.map(|_| contains_tls_handshake_fragment(&buf)),
+                        res => res.map(|_| {
+                            if contains_tls_handshake_fragment(&buf) {
+                                TlsHandshakeCheck::Initiated
+                            } else {
+                                TlsHandshakeCheck::NotInitiated
+                            }
+                        }),
                     }
                 })
                 .await
