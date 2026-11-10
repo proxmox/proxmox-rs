@@ -309,6 +309,9 @@ enum TlsHandshakeCheck {
     Initiated,
     /// The client sent data that does not start a TLS handshake.
     NotInitiated,
+    /// The client closed or reset the connection before sending enough data for
+    /// the check.
+    ConnectionClosed,
 }
 
 impl AcceptBuilder {
@@ -490,6 +493,13 @@ impl AcceptBuilder {
                     );
                 }
             }
+            Ok(TlsHandshakeCheck::ConnectionClosed) => {
+                // Health checks and port scanners often connect without sending
+                // anything, so keep this out of the logs by default
+                log::debug!(
+                    "[{peer}] client closed the connection before the TLS handshake check completed"
+                );
+            }
             Err(err) => {
                 log::error!("[{peer}] failed to check for TLS handshake: {err:#}");
             }
@@ -539,12 +549,17 @@ impl AcceptBuilder {
                         // and `peek()`. So, readiness *alone* is not a sign of a closed connection.
                         Ok(peek_len) if peek_len < HANDSHAKE_BYTES_LEN => {
                             if peek_len == 0 || ready.is_read_closed() {
-                                Err(io::ErrorKind::ConnectionAborted.into())
+                                Ok(TlsHandshakeCheck::ConnectionClosed)
                             } else {
                                 Err(io::ErrorKind::WouldBlock.into())
                             }
                         }
-                        // Either we got Ok(HANDSHAKE_BYTES_LEN) or some error.
+                        // Some clients, for example health checks, reset the connection by closing
+                        // their socket with SO_LINGER set to zero to avoid lingering connections.
+                        Err(err) if err.kind() == io::ErrorKind::ConnectionReset => {
+                            Ok(TlsHandshakeCheck::ConnectionClosed)
+                        }
+                        // Either we got Ok(HANDSHAKE_BYTES_LEN) or some other error.
                         res => res.map(|_| {
                             if contains_tls_handshake_fragment(&buf) {
                                 TlsHandshakeCheck::Initiated
@@ -606,7 +621,6 @@ fn contains_tls_handshake_fragment(buf: &[u8]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use std::io;
     use std::time::Duration;
 
     use anyhow::Error;
@@ -659,10 +673,11 @@ mod tests {
         result
     }
 
-    /// Asserts that the check failed because of the connection itself, not because of a timeout.
-    fn assert_connection_error(result: Result<TlsHandshakeCheck, Error>) {
-        let err = result.expect_err("check must fail");
-        assert!(err.downcast_ref::<io::Error>().is_some(), "{err:#}");
+    fn assert_connection_closed(result: Result<TlsHandshakeCheck, Error>) {
+        assert!(
+            matches!(result, Ok(TlsHandshakeCheck::ConnectionClosed)),
+            "{result:?}"
+        );
     }
 
     fn assert_timeout_error(result: Result<TlsHandshakeCheck, Error>) {
@@ -729,7 +744,7 @@ mod tests {
         })
         .await;
 
-        assert_connection_error(result);
+        assert_connection_closed(result);
     }
 
     #[tokio::test]
@@ -741,7 +756,7 @@ mod tests {
         })
         .await;
 
-        assert_connection_error(result);
+        assert_connection_closed(result);
     }
 
     #[tokio::test]
@@ -753,7 +768,7 @@ mod tests {
         })
         .await;
 
-        assert_connection_error(result);
+        assert_connection_closed(result);
     }
 
     #[tokio::test]
@@ -765,7 +780,7 @@ mod tests {
         })
         .await;
 
-        assert_connection_error(result);
+        assert_connection_closed(result);
     }
 
     #[tokio::test]
@@ -778,7 +793,7 @@ mod tests {
         })
         .await;
 
-        assert_connection_error(result);
+        assert_connection_closed(result);
     }
 
     #[tokio::test]
