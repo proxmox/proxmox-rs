@@ -621,10 +621,11 @@ fn contains_tls_handshake_fragment(buf: &[u8]) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use std::time::Duration;
 
     use anyhow::Error;
-    use tokio::io::AsyncWriteExt;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::TcpListener;
     use tokio::net::TcpStream;
 
@@ -812,6 +813,87 @@ mod tests {
         .await;
 
         assert_timeout_error(result);
+    }
+
+    /// The socket can be reported readable again without new data having arrived, for example
+    /// when its send buffer drains while bytes are still queued for reading. The check must keep
+    /// waiting in that case instead of mistaking the repeated byte count for a closed connection.
+    #[tokio::test]
+    async fn a_client_sending_data_after_repeated_readiness_is_detected() {
+        let listener = TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("failed to set up local TCP listener");
+
+        let addr = listener.local_addr().unwrap();
+
+        let (filled_tx, filled_rx) = tokio::sync::oneshot::channel::<usize>();
+        let (drained_tx, drained_rx) = tokio::sync::oneshot::channel::<()>();
+
+        let client = tokio::spawn(async move {
+            let mut stream = TcpStream::connect(addr)
+                .await
+                .expect("failed to connect to address of local TCP listener");
+
+            stream.write_all(b"GE").await.unwrap();
+
+            // Read back everything the server wrote so that its send buffer runs full first and
+            // then empties again.
+            let mut remaining = filled_rx.await.unwrap();
+            let mut buf = vec![0; 64 * 1024];
+            while remaining > 0 {
+                remaining -= stream.read(&mut buf).await.unwrap();
+            }
+
+            drained_rx.await.unwrap();
+            stream.write_all(b"T / HTTP/1.1\r\n").await.unwrap();
+            stream
+        });
+
+        let (server_stream, _) = listener
+            .accept()
+            .await
+            .expect("failed to accept incoming connection");
+        let server_stream = Arc::new(server_stream);
+
+        let check = tokio::spawn({
+            let server_stream = Arc::clone(&server_stream);
+            async move {
+                AcceptBuilder::wait_for_client_tls_handshake(&server_stream, CHECK_TIMEOUT).await
+            }
+        });
+
+        // Give the check time to peek at the first two bytes.
+        tokio::time::sleep(Duration::from_millis(50)).await;
+
+        // Fill the send buffer until the kernel reports it as full, while the client does not
+        // read yet.
+        let chunk = [0; 64 * 1024];
+        let mut written = 0;
+        loop {
+            server_stream.writable().await.unwrap();
+            match server_stream.try_write(&chunk) {
+                Ok(len) => written += len,
+                Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => break,
+                Err(err) => panic!("failed to fill send buffer: {err}"),
+            }
+        }
+        filled_tx.send(written).unwrap();
+
+        // The drained send buffer is reported as a readiness event that also carries the still
+        // queued bytes. Let the check, which was woken by the same event, run before the client
+        // sends the rest.
+        server_stream.writable().await.unwrap();
+        tokio::task::yield_now().await;
+        drained_tx.send(()).unwrap();
+
+        let result = check.await.unwrap();
+
+        drop(client.await.unwrap());
+
+        assert!(
+            matches!(result, Ok(TlsHandshakeCheck::NotInitiated)),
+            "{result:?}"
+        );
     }
 
     #[test]
