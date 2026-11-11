@@ -1,3 +1,16 @@
+rust-proxmox-notify (2.0.1-1) trixie; urgency=medium
+
+  * fix #7814: smtp: normalize the line endings of forwarded mails to CRLF, as
+    postfix hands locally delivered mail over with LF line endings, which
+    strict SMTP relays reject. This also prevents a line consisting of a single
+    dot from ending the message early on relays that accept bare LF line
+    endings.
+
+  * fix #8127: matcher: fix the description of the match-calendar option, which
+    was copied from match-severity.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 11 Nov 2026 20:48:47 +0100
+
 rust-proxmox-notify (2.0.0-1) trixie; urgency=medium
 
   * the matcher API changed incompatibly: the field, severity and calendar
