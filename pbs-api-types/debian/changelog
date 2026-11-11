@@ -1,3 +1,13 @@
+rust-pbs-api-types (1.0.22-1) trixie; urgency=medium
+
+  * zfs: add a schema with verification for the ZFS recordsize, accepting
+    powers of two between 512 and 16m with an optional k or m suffix.
+
+  * implement Hash and Borrow<str> for BackupArchiveName, so that it can be
+    used directly as set or map key while lookups by plain &str stay possible.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 11 Nov 2026 20:48:47 +0100
+
 rust-pbs-api-types (1.0.21-1) trixie; urgency=medium
 
   * datastore.cfg: add `max-snapshot-time-skew` option

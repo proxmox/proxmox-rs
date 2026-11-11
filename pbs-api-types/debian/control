@@ -26,8 +26,8 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~) <!nocheck>,
- librust-proxmox-uuid-1+default-dev (>= 1.1.0-~~) <!nocheck>,
- librust-proxmox-uuid-1+serde-dev (>= 1.1.0-~~) <!nocheck>,
+ librust-proxmox-uuid-1+default-dev (>= 1.1.1-~~) <!nocheck>,
+ librust-proxmox-uuid-1+serde-dev (>= 1.1.1-~~) <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
  librust-serde-1+default-dev <!nocheck>,
  librust-serde-json-1+default-dev <!nocheck>,
@@ -63,8 +63,8 @@ Depends:
  librust-proxmox-serde-1+default-dev,
  librust-proxmox-serde-1+serde-json-dev,
  librust-proxmox-time-2+default-dev (>= 2.1.0-~~),
- librust-proxmox-uuid-1+default-dev (>= 1.1.0-~~),
- librust-proxmox-uuid-1+serde-dev (>= 1.1.0-~~),
+ librust-proxmox-uuid-1+default-dev (>= 1.1.1-~~),
+ librust-proxmox-uuid-1+serde-dev (>= 1.1.1-~~),
  librust-regex-1+default-dev (>= 1.5-~~),
  librust-serde-1+default-dev,
  librust-serde-json-1+default-dev,
@@ -78,8 +78,8 @@ Provides:
  librust-pbs-api-types-1.0-dev (= ${binary:Version}),
  librust-pbs-api-types-1.0+default-dev (= ${binary:Version}),
  librust-pbs-api-types-1.0+enum-fallback-dev (= ${binary:Version}),
- librust-pbs-api-types-1.0.21-dev (= ${binary:Version}),
- librust-pbs-api-types-1.0.21+default-dev (= ${binary:Version}),
- librust-pbs-api-types-1.0.21+enum-fallback-dev (= ${binary:Version})
+ librust-pbs-api-types-1.0.22-dev (= ${binary:Version}),
+ librust-pbs-api-types-1.0.22+default-dev (= ${binary:Version}),
+ librust-pbs-api-types-1.0.22+enum-fallback-dev (= ${binary:Version})
 Description: API types for Proxmox Backup Server - Rust source code
  Source code for Debianized Rust crate "pbs-api-types"
