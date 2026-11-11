@@ -1,3 +1,11 @@
+rust-proxmox-sys (1.0.4-1) trixie; urgency=medium
+
+  * fs: also sync the parent directory when replacing a file with fsync
+    requested, so that the rename is persistent once the call returns and the
+    old file cannot reappear after a power loss.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 11 Nov 2026 20:48:47 +0100
+
 rust-proxmox-sys (1.0.3-1) trixie; urgency=medium
 
   * fs: preserve append mode when atomically creating files, preventing
