@@ -1,3 +1,14 @@
+rust-proxmox-s3-client (1.4.3-1) trixie; urgency=medium
+
+  * fix the sorting of canonical headers and query parameters for AWS signature
+    v4, they were sorted by combined key and value strings instead of by key,
+    which could result in signature mismatches.
+
+  * re-sign requests on every retry with the current time, so that retries
+    after a long back-off do not fail with RequestTimeTooSkewed errors.
+
+ -- Proxmox Support Team <support@proxmox.com>  Wed, 11 Nov 2026 20:48:47 +0100
+
 rust-proxmox-s3-client (1.4.2-1) trixie; urgency=medium
 
   * request limits: keep active and passive traffic in separate buckets so the

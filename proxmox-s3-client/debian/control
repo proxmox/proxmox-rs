@@ -9,9 +9,9 @@ Build-Depends-Arch: cargo:native <!nocheck>,
  librust-anyhow-1+default-dev <!nocheck>,
  librust-const-format-0.2+default-dev <!nocheck>,
  librust-proxmox-human-byte-1+default-dev <!nocheck>,
- librust-proxmox-schema-5+api-macro-dev (>= 5.5.0-~~) <!nocheck>,
- librust-proxmox-schema-5+api-types-dev (>= 5.5.0-~~) <!nocheck>,
- librust-proxmox-schema-5+default-dev (>= 5.5.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-macro-dev (>= 5.6.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+api-types-dev (>= 5.6.0-~~) <!nocheck>,
+ librust-proxmox-schema-5+default-dev (>= 5.6.0-~~) <!nocheck>,
  librust-proxmox-serde-1+default-dev <!nocheck>,
  librust-proxmox-serde-1+serde-json-dev <!nocheck>,
  librust-regex-1+default-dev (>= 1.5-~~) <!nocheck>,
@@ -32,9 +32,9 @@ Depends:
  librust-anyhow-1+default-dev,
  librust-const-format-0.2+default-dev,
  librust-proxmox-human-byte-1+default-dev,
- librust-proxmox-schema-5+api-macro-dev (>= 5.5.0-~~),
- librust-proxmox-schema-5+api-types-dev (>= 5.5.0-~~),
- librust-proxmox-schema-5+default-dev (>= 5.5.0-~~),
+ librust-proxmox-schema-5+api-macro-dev (>= 5.6.0-~~),
+ librust-proxmox-schema-5+api-types-dev (>= 5.6.0-~~),
+ librust-proxmox-schema-5+default-dev (>= 5.6.0-~~),
  librust-proxmox-serde-1+default-dev,
  librust-proxmox-serde-1+serde-json-dev,
  librust-regex-1+default-dev (>= 1.5-~~),
@@ -51,9 +51,9 @@ Provides:
  librust-proxmox-s3-client-1.4-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.4+api-types-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.4+default-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.4.2-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.4.2+api-types-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.4.2+default-dev (= ${binary:Version})
+ librust-proxmox-s3-client-1.4.3-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.4.3+api-types-dev (= ${binary:Version}),
+ librust-proxmox-s3-client-1.4.3+default-dev (= ${binary:Version})
 Description: Low level REST API client for AWS S3 compatible object stores - Rust source code
  Source code for Debianized Rust crate "proxmox-s3-client"
 
@@ -100,7 +100,7 @@ Depends:
 Provides:
  librust-proxmox-s3-client-1+impl-dev (= ${binary:Version}),
  librust-proxmox-s3-client-1.4+impl-dev (= ${binary:Version}),
- librust-proxmox-s3-client-1.4.2+impl-dev (= ${binary:Version})
+ librust-proxmox-s3-client-1.4.3+impl-dev (= ${binary:Version})
 Description: Low level REST API client for AWS S3 compatible object stores - feature "impl"
  This metapackage enables feature "impl" for the Rust proxmox-s3-client crate,
  by pulling in any additional dependencies needed by that feature.
