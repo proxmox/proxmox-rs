@@ -1,3 +1,16 @@
+rust-proxmox-network-api (1.0.8-1) trixie; urgency=medium
+
+  * convert carriage returns in interface comments to newlines when writing the
+    network configuration. ifupdown2 reads a standalone carriage return as a
+    line break, which allowed injecting configuration lines through a comment.
+
+  * reject interface comments containing the '${' or '<%' template tags, and
+    export the comment schemas for API users. If python3-mako is installed,
+    ifupdown2 renders the interfaces file as a template, which would execute
+    such tags as Python code.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 12 Nov 2026 23:58:28 +0100
+
 rust-proxmox-network-api (1.0.7-1) trixie; urgency=medium
 
   * move the Linux bond mode and transmit hash policy types to
