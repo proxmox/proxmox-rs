@@ -114,6 +114,10 @@ fn write_iface_attributes(iface: &Interface, w: &mut dyn Write) -> Result<(), Er
     Ok(())
 }
 
+fn sanitize_comment(comment: &str) -> String {
+    comment.replace("\r\n", "\n").replace("\r", "\n")
+}
+
 // Write attributes depending on address family inet (IPv4)
 fn write_iface_attributes_v4(
     iface: &Interface,
@@ -133,7 +137,7 @@ fn write_iface_attributes_v4(
         writeln!(w, "\t{option}")?;
     }
 
-    if let Some(ref comments) = iface.comments {
+    if let Some(comments) = iface.comments.as_deref().map(sanitize_comment) {
         for comment in comments.lines() {
             writeln!(w, "#{comment}")?;
         }
@@ -161,7 +165,7 @@ fn write_iface_attributes_v6(
         writeln!(w, "\t{option}")?;
     }
 
-    if let Some(ref comments) = iface.comments6 {
+    if let Some(comments) = iface.comments6.as_deref().map(sanitize_comment) {
         for comment in comments.lines() {
             writeln!(w, "#{comment}")?;
         }
