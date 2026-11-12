@@ -174,6 +174,12 @@ impl Reloader {
                     child
                 );
                 std::mem::drop(pnew);
+                // Reap the intermediate process first, so that the new server is already
+                // reparented to the service manager when it learns the new main PID below. systemd
+                // supervises a new main process as its own child only if it is one at that moment.
+                if let Err(err) = nix::sys::wait::waitpid(child, None) {
+                    log::error!("failed to reap intermediate reload process: {err}");
+                }
                 let mut pold = std::fs::File::from(pold);
                 let mut child_pid = (0 as libc::pid_t).to_ne_bytes();
                 let child = nix::unistd::Pid::from_raw(match pold.read_exact(&mut child_pid) {
