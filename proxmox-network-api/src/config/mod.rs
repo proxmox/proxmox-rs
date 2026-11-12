@@ -779,6 +779,39 @@ iface individual_name inet manual
     }
 
     #[test]
+    fn test_write_network_config_carriage_returns_in_comments() {
+        let iface_name = String::from("cr");
+
+        let mut iface = Interface::new(iface_name.clone());
+        iface.interface_type = Eth;
+        iface.method = Some(Manual);
+        iface.method6 = Some(Manual);
+        iface.active = true;
+        iface.comments = Some("foo\rbar\rbaz".to_string());
+        iface.comments6 = Some("foo\r\nbar\r\nbaz".to_string());
+
+        let nw_config = NetworkConfig {
+            interfaces: BTreeMap::from([(iface_name.clone(), iface)]),
+            order: vec![Iface(iface_name.clone())],
+        };
+
+        assert_eq!(
+            String::try_from(nw_config).unwrap().trim(),
+            r#"
+iface cr inet manual
+#foo
+#bar
+#baz
+
+iface cr inet6 manual
+#foo
+#bar
+#baz"#
+                .trim()
+        );
+    }
+
+    #[test]
     fn test_vlan_parse_vlan_id_from_name() {
         assert_eq!(parse_vlan_id_from_name("vlan100"), Some(100));
         assert_eq!(parse_vlan_id_from_name("vlan"), None);
