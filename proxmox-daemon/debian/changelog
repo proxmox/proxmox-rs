@@ -1,3 +1,17 @@
+rust-proxmox-daemon (1.0.1-1) trixie; urgency=medium
+
+  * reap the intermediate process of a reload before announcing the new main
+    process to systemd. If it had not exited yet, systemd did not supervise the
+    new process as its own child, could not collect its exit status, and for
+    units with KillMode=mixed killed the service with SIGKILL on stop instead
+    of sending SIGTERM first.
+
+  * keep a shutdown or reload request made before the daemon starts waiting for
+    one, for example a SIGHUP right after startup. Such a request got lost, and
+    the daemon then no longer reacted to any further SIGINT or SIGHUP.
+
+ -- Proxmox Support Team <support@proxmox.com>  Thu, 12 Nov 2026 23:58:28 +0100
+
 rust-proxmox-daemon (1.0.0-1) trixie; urgency=medium
 
   * re-build for Debian Trixie based releases.
