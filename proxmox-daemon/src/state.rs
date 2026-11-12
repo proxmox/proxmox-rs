@@ -33,7 +33,9 @@ pub fn request_shutdown() {
     log::info!("request_shutdown");
 
     if !SHUTDOWN_REQUESTED.swap(true, Ordering::Release) {
-        let _ = shutdown_listeners().send(true);
+        // Unlike send(), this also keeps the value without a receiver, for any shutdown_future()
+        // that only subscribes later.
+        shutdown_listeners().send_replace(true);
     }
 }
 
@@ -118,4 +120,15 @@ pub fn fail_on_shutdown() -> Result<(), Error> {
         bail!("Server shutdown requested - aborting task");
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use futures::FutureExt;
+
+    #[test]
+    fn shutdown_requested_before_anyone_waits_is_seen() {
+        super::request_shutdown();
+        assert!(super::shutdown_future().now_or_never().is_some());
+    }
 }
