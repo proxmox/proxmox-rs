@@ -23,6 +23,27 @@ pub static VLAN_INTERFACE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 
 pub const NETWORK_INTERFACE_FORMAT: ApiStringFormat = ApiStringFormat::Pattern(&SAFE_ID_REGEX);
 
+fn verify_ifupdown2_comment(comment: &str) -> Result<(), Error> {
+    if comment.contains("${") || comment.contains("<%") {
+        bail!("comments must not contain the template tags '${{' or '<%'");
+    }
+
+    Ok(())
+}
+
+pub const IFUPDOWN2_COMMENT_FORMAT: ApiStringFormat =
+    ApiStringFormat::VerifyFn(verify_ifupdown2_comment);
+
+pub const IFUPDOWN2_COMMENT_SCHEMA: Schema =
+    StringSchema::new("Comments (inet, may span multiple lines)")
+        .format(&IFUPDOWN2_COMMENT_FORMAT)
+        .schema();
+
+pub const IFUPDOWN2_COMMENT6_SCHEMA: Schema =
+    StringSchema::new("Comments (inet6, may span multiple lines)")
+        .format(&IFUPDOWN2_COMMENT_FORMAT)
+        .schema();
+
 #[api()]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -128,13 +149,11 @@ pub const NETWORK_INTERFACE_LIST_SCHEMA: Schema =
             },
         },
         comments: {
-            description: "Comments (inet, may span multiple lines)",
-            type: String,
+            schema: IFUPDOWN2_COMMENT_SCHEMA,
             optional: true,
         },
         comments6: {
-            description: "Comments (inet6, may span multiple lines)",
-            type: String,
+            schema: IFUPDOWN2_COMMENT6_SCHEMA,
             optional: true,
         },
         bridge_ports: {
@@ -385,13 +404,11 @@ pub enum DeletableInterfaceProperty {
                 optional: true,
             },
             comments: {
-                description: "Comments (inet, may span multiple lines)",
-                type: String,
+                schema: IFUPDOWN2_COMMENT_SCHEMA,
                 optional: true,
             },
             comments6: {
-                description: "Comments (inet5, may span multiple lines)",
-                type: String,
+                schema: IFUPDOWN2_COMMENT6_SCHEMA,
                 optional: true,
             },
             cidr: {
